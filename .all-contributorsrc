@@ -1,5 +1,5 @@
 {
-  "projectName": "FMTM",
+  "projectName": "fmtm",
   "projectOwner": "hotosm",
   "repoType": "github",
   "repoHost": "https://github.com",
@@ -9,7 +9,17 @@
   "imageSize": 100,
   "commit": true,
   "commitConvention": "angular",
-  "contributors": [],
+  "contributors": [
+    {
+      "login": "Ndacyayisenga-droid",
+      "name": "Tayebwa Noah",
+      "avatar_url": "https://avatars.githubusercontent.com/u/58124613?v=4",
+      "profile": "https://github.com/Ndacyayisenga-droid",
+      "contributions": [
+        "doc"
+      ]
+    }
+  ],
   "contributorsPerLine": 7,
   "linkToUsage": true
 }
