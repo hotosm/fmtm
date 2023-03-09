@@ -5,7 +5,7 @@ The FMTM codebase consists of:
 - An API backend in FastAPI (code in: `src/backend`)
 - A frontend website (soon to be a PWA) in react (code in: `src/frontend`)
 
-<img src="https://github.com/hotosm/fmtm/blob/main/images/dataflow.png?raw=true"  width=800 height= 800>
+<img src="https://github.com/Linda-Njau/fmtm/blob/branch-docchanges/images/dataflow.png?raw=true"  width=800 height= 800>
 
 ## Prerequisites for Contribution
 
