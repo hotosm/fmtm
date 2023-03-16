@@ -19,6 +19,16 @@ jobs:
           DOTENV: ${{ secrets.DOTENV }}
         run: echo "${{ secrets.DOTENV }}" > .env
 
+      - name: Append Traefik ENV to .env
+        env:
+        run: >
+          cat << EOF >> .env
+          TRAEFIK_FMTM_API_HOST=fmtm-api.hotosm.org
+          TRAEFIK_UI_MAIN_HOST=fmtm.hotosm.org
+          TRAEFIK_UI_MAP_HOST=map.fmtm.hotosm.org
+          TRAEFIK_LETSENCRYPT_ACME_EMAIL=admin@hotosm.org
+          EOF
+
       - uses: webfactory/ssh-agent@v0.7.0
         with:
           ssh-private-key: ${{ secrets.FMTM_HOTOSM_ORG_PRIV_KEY }}
