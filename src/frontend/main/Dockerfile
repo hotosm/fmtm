@@ -1,11 +1,12 @@
 FROM docker.io/node:18 as builder
-ARG MAINTAINER=admin@hotosm.org
 
-ARG API_URL=https://fmtm-api.hotosm.org
+ARG MAINTAINER=admin@hotosm.org
+ARG API_URL
+ARG FRONTEND_MAIN_URL
+ARG FRONTEND_MAP_URL
+
 ENV API_URL=${API_URL}
-ARG FRONTEND_MAIN_URL=https://fmtm.hotosm.org
 ENV FRONTEND_MAIN_URL=${FRONTEND_MAIN_URL}
-ARG FRONTEND_MAP_URL=https://map.fmtm.hotosm.org
 ENV FRONTEND_MAP_URL=${FRONTEND_MAP_URL}
 
 LABEL fmtm.hotosm.org.maintainer="${MAINTAINER}" \

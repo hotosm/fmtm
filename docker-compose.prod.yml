@@ -45,7 +45,7 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.letsencrypt.acme.email=admin@hotosm.org"
+      - "--certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_LETSENCRYPT_ACME_EMAIL:-admin@hotosm.org}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/certificates/acme.json"
       ## Enable below for staging tests
       # - "--certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
@@ -95,7 +95,7 @@ services:
       - "traefik.http.routers.api.tls.certresolver=letsencrypt"
       # The Go regex below requires escaping or changing, is this possible?
       # - "traefik.http.routers.api.rule=HostRegexp(`${API_URL}`, `{regex:[a-z]+\.[a-z].*}`)"
-      - "traefik.http.routers.api.rule=Host(`fmtm-api.hotosm.org`)"
+      - "traefik.http.routers.api.rule=Host(`${TRAEFIK_FMTM_API_HOST}`)"
       - "traefik.http.services.api-svc.loadbalancer.server.port=8000"
       - "traefik.http.routers.api.service=api-svc"
 
@@ -103,6 +103,11 @@ services:
     image: "quay.io/hotosm/fmtm-mf-main:latest"
     build:
       context: src/frontend/main
+      args:
+        APP_NAME: main
+        API_URL: ${API_URL}
+        FRONTEND_MAIN_URL: ${FRONTEND_MAIN_URL}
+        FRONTEND_MAP_URL: ${FRONTEND_MAP_URL}
     container_name: fmtm_main
     depends_on:
       - api
@@ -118,14 +123,19 @@ services:
       - "traefik.http.routers.ui-main.tls.certresolver=letsencrypt"
       # The Go regex below requires escaping or changing, is this possible?
       # - "traefik.http.routers.ui-main.rule=HostRegexp(`${FRONTEND_MAIN_URL}`, `{regex:[a-z]+\.[a-z].*}`)"
-      - "traefik.http.routers.ui-main.rule=Host(`fmtm.hotosm.org`)"
-      - "traefik.http.services.ui-main-svc.loadbalancer.server.port=8080"
+      - "traefik.http.routers.ui-main.rule=Host(`${TRAEFIK_UI_MAIN_HOST}`)"
+      - "traefik.>http.services.ui-main-svc.loadbalancer.server.port=8080"
       - "traefik.http.routers.ui-main.service=ui-main-svc"
 
   ui-map:
     image: "quay.io/hotosm/fmtm-mf-map:latest"
     build:
       context: src/frontend/fmtm_openlayer_map
+      args:
+        APP_NAME: fmtm_openlayer_map
+        API_URL: ${API_URL}
+        FRONTEND_MAIN_URL: ${FRONTEND_MAIN_URL}
+        FRONTEND_MAP_URL: ${FRONTEND_MAP_URL}
     container_name: fmtm_map
     depends_on:
       - api
@@ -141,7 +151,7 @@ services:
       - "traefik.http.routers.ui-map.tls.certresolver=letsencrypt"
       # The Go regex below requires escaping or changing, is this possible?
       # - "traefik.http.routers.ui-map.rule=HostRegexp(`${FRONTEND_MAP_URL}`, `{regex:[a-z]+\.[a-z].*}`)"
-      - "traefik.http.routers.ui-map.rule=Host(`map.fmtm.hotosm.org`)"
+      - "traefik.http.routers.ui-map.rule=Host(`${TRAEFIK_UI_MAP_HOST}`)"
       - "traefik.http.services.ui-map-svc.loadbalancer.server.port=8080"
       - "traefik.http.routers.ui-map.service=ui-map-svc"
 
