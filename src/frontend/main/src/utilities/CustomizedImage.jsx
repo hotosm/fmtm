@@ -1,6 +1,8 @@
 import React from "react";
 import cardImg from '../assets/images/project_icon.png';
 import logo from '../assets/images/hotLog.png'
+import osm from '../assets/images/OSM_black.png'
+
 
 const Switcher = ({ status, style }) => {
     switch (status) {
@@ -8,7 +10,8 @@ const Switcher = ({ status, style }) => {
             return <img src={cardImg} style={style} />
         case 'logo':
             return <img src={logo} style={style} />
-
+        case 'osm':
+            return <img src={osm} style={style} />    
     }
 }
 
