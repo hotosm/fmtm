@@ -26,18 +26,6 @@ const routes = createBrowserRouter(
                     element: <Tabbed />,
                 },
                 {
-                    path: "/login",
-                    element: <Login />,
-                },
-                {
-                    path: "/signup",
-                    element: <Create />,
-                },
-                {
-                    path: "/recoveraccess",
-                    element: <Forgot />,
-                },
-                {
                     path: '/project_details/:id',
                     element: <Suspense fallback={<div></div>}>
                         <ProjectDetails />
