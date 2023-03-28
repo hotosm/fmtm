@@ -25,6 +25,7 @@ from ..users.user_crud import create_user
 from ..users import user_schemas
 
 
+# create a fixture that creates sample users
 @pytest.fixture
 def users(db):
     create_user(db, user_schemas.UserIn(username="admin", password="admin"))
@@ -32,29 +33,35 @@ def users(db):
     create_user(db, user_schemas.UserIn(username="test", password="test"))
 
 
+# test listing all users
 def test_list_users(users, client):
     response = client.get("/users")
     assert len(response.json()) == 3
 
 
+# test creating a user
 def test_create_users(client):
+    # test creating a user with valid data
     response = client.post('/users/',json={
                                         "username": "test3",
                                         "password": "test1"
                                         })
     assert response.status_code == status.HTTP_200_OK
 
+    # test creating a user with existing username
     response = client.post('/users/',json={
                                         "username": "niraj",
                                         "password": "niraj"
                                         })
     assert response.status_code == status.HTTP_200_OK
 
+    # test creating a user with missing required fields
     response = client.post('/users/',json={
                                         "username": "niraj"
                                         })
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
+    # test creating a user with invalid data
     response = client.post('/users/',json={
                                         "username": "niraj",
                                         "password": "niraj"
