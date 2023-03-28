@@ -25,7 +25,7 @@ from ..models.enums import ProjectPriority, ProjectStatus
 from ..tasks import tasks_schemas
 from ..users.user_schemas import User
 
-
+# Schema for project info
 class ProjectInfo(BaseModel):
     name: str
     short_description: str
@@ -33,20 +33,19 @@ class ProjectInfo(BaseModel):
     class Config:
         orm_mode = True
 
+# Schema for updating a project
 class ProjectUpdate(BaseModel):
     name: Union[str, None]
     short_description: Union[str, None]
     description: Union[str, None]
 
-
+# Schema for uploading a new project
 class BETAProjectUpload(BaseModel):
     author: User
     project_info: ProjectInfo
     xform_title: str
-    # city: str
-    # country: str
 
-
+# Schema for project summary
 class ProjectSummary(BaseModel):
     id: int = -1
     priority: ProjectPriority = ProjectPriority.MEDIUM
@@ -63,14 +62,13 @@ class ProjectSummary(BaseModel):
     class Config:
         orm_mode = True
 
-
+# Base schema for a project
 class ProjectBase(BaseModel):
     id: int
     odkid: int
     author: User
     project_info: List[ProjectInfo]
     status: ProjectStatus
-    # location_str: str
     outline_geojson: Feature = None
     project_tasks: List[tasks_schemas.Task] = None
     xform_title: str = None
@@ -78,6 +76,6 @@ class ProjectBase(BaseModel):
     class Config:
         orm_mode = True
 
-
+# Output schema for a project
 class ProjectOut(ProjectBase):
     pass
