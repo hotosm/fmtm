@@ -18,7 +18,6 @@
 
 from fastapi import UploadFile
 from fastapi.logger import logger as log
-
 from ..central.central_crud import create_odk_project
 from ..db import database
 from ..projects.project_crud import (
@@ -33,11 +32,15 @@ from ..users.user_schemas import User, UserIn
 
 def load_test_data_as_test_user() -> None:
     """Load in the test data .zip files to the API."""
-    db = next(database.get_db())
-    user = UserIn(username="test", password="test")
 
-    # Create user
+    # Get database connection
+    db = next(database.get_db())
+
+    # Create a test user
+    user = UserIn(username="test", password="test")
     log.debug(f"Checking for existing user: {user}")
+
+    # Check if user already exists, else create a new user
     test_user = get_user_by_username(db, username=user.username)
     if not test_user:
         log.debug(f"Creating user: {user}")
@@ -59,6 +62,7 @@ def load_test_data_as_test_user() -> None:
     test_zips = [f"{test_data_path}/{name}.zip" for name in test_names]
 
     for index, name in enumerate(test_names):
+        # Create a project object
         project_obj = BETAProjectUpload(
             author=User(username="test", id=user_id),
             project_info=ProjectInfo(
@@ -66,16 +70,17 @@ def load_test_data_as_test_user() -> None:
                 short_description=f"Test{index}: {name}",
                 description=f"Test{index}: {name}",
             ),
-            # city=name,
-            # country="Unknown",
         )
         log.debug(f"Creating ODKCentral project for: {project_obj}")
+
+        # Create a new project in ODKCentral and store the project ID
         odkproject = create_odk_project(project_obj.project_info.name)
         log.debug("Submitting project to API")
         new_project = create_project_with_project_info(
             db, project_obj, odkproject["id"]
         )
 
+        # Upload the zip file for the project
         log.debug(
             f"Updating project {name} with boundaries "
             f"and QR codes from zip {test_zips[index]}"
