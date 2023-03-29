@@ -24,17 +24,19 @@ from sqlalchemy.orm import Session
 from ..db import database
 from . import user_crud, user_schemas
 
-# create a new router object with prefix, tags, and response object
+
 router = APIRouter(
+    """ create a new router object with prefix, tags, and response object """
     prefix="/users",
     tags=["users"],
     dependencies=[Depends(database.get_db)],
     responses={404: {"description": "Not found"}},
 )
 
-# create a new user and return the user's details
+
 @router.post("/", response_model=user_schemas.UserOut)
 def create_user(user: user_schemas.UserIn, db: Session = Depends(database.get_db)):
+    """ create a new user and return the user's details """
     existing_user = user_crud.get_user_by_username(db, username=user.username)
     # check if the username is already registered or not
     if existing_user:
@@ -42,9 +44,10 @@ def create_user(user: user_schemas.UserIn, db: Session = Depends(database.get_db
     # create a new user and return the user details
     return user_crud.create_user(db=db, user=user)
 
-# get all users, and filter users based on username, skip, and limit parameters
+
 @router.get("/", response_model=List[user_schemas.UserOut])
 def get_users(
+    """ get all users, and filter users based on username, skip, and limit parameters """
     username: str = "",
     skip: int = 0,
     limit: int = 100,
@@ -56,9 +59,10 @@ def get_users(
     return users
     # TODO error thrown when no users are in db
 
-# get a single user details using user id
+
 @router.get("/{id}", response_model=user_schemas.UserOut)
 async def get_user_by_id(id: int, db: Session = Depends(database.get_db)):
+    """ get a single user details using user id """
     # get the user details based on the user id
     user = user_crud.get_user(db, user_id=id)
     # if the user exists, return the user details
