@@ -16,37 +16,37 @@
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
-# Importing necessary libraries from SQLAlchemy for database operations
+''' Importing necessary libraries from SQLAlchemy for database operations '''
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# Importing database configuration settings
+''' Importing database configuration settings '''
 from ..config import settings
 
-# Setting up the database URL using configuration settings
+''' Setting up the database URL using configuration settings '''
 SQLALCHEMY_DATABASE_URL = settings.DB_URL
 
-# Creating a SQLAlchemy database engine object that will be used to connect to the database
+''' Creating a SQLAlchemy database engine object that will be used to connect to the database '''
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
-# Creating a SQLAlchemy session factory object that will be used to create new database sessions
+''' Creating a SQLAlchemy session factory object that will be used to create new database sessions '''
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Creating a SQLAlchemy declarative base object that will be used to define database models
+''' Creating a SQLAlchemy declarative base object that will be used to define database models '''
 Base = declarative_base()
 
-# Retrieving the metadata associated with the declarative base object
+''' Retrieving the metadata associated with the declarative base object '''
 FmtmMetadata = Base.metadata
 
-# Defining a function to get a database session from the session factory
+''' Defining a function to get a database session from the session factory '''
 def get_db():
-    # Creating a new database session
+    ''' Creating a new database session '''
     db = SessionLocal()
     try:
-        # Yielding the session to the calling function for use in database operations
+        ''' Yielding the session to the calling function for use in database operations '''
         yield db
     finally:
-        # Closing the session after the calling function is done with it
+        ''' Closing the session after the calling function is done with it '''
         db.close()
 
