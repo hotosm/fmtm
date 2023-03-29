@@ -33,14 +33,16 @@ def users(db):
     create_user(db, user_schemas.UserIn(username="test", password="test"))
 
 
-# test listing all users
+
 def test_list_users(users, client):
+    """ test listing all users """
     response = client.get("/users")
     assert len(response.json()) == 3
 
 
-# test creating a user
+
 def test_create_users(client):
+    """ test creating a user """
     # test creating a user with valid data
     response = client.post('/users/',json={
                                         "username": "test3",
