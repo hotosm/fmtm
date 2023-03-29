@@ -25,28 +25,32 @@ from ..models.enums import ProjectPriority, ProjectStatus
 from ..tasks import tasks_schemas
 from ..users.user_schemas import User
 
-# Schema for project info
+
 class ProjectInfo(BaseModel):
+    """ Schema for project info """
     name: str
     short_description: str
     description: str
     class Config:
         orm_mode = True
 
-# Schema for updating a project
+
 class ProjectUpdate(BaseModel):
+    """ Schema for updating a project """
     name: Union[str, None]
     short_description: Union[str, None]
     description: Union[str, None]
 
-# Schema for uploading a new project
+        
 class BETAProjectUpload(BaseModel):
+    """ Schema for uploading a new project """
     author: User
     project_info: ProjectInfo
     xform_title: str
 
-# Schema for project summary
+
 class ProjectSummary(BaseModel):
+    """ Schema for project summary """
     id: int = -1
     priority: ProjectPriority = ProjectPriority.MEDIUM
     priority_str: str = priority.name
@@ -62,8 +66,9 @@ class ProjectSummary(BaseModel):
     class Config:
         orm_mode = True
 
-# Base schema for a project
+
 class ProjectBase(BaseModel):
+    """ Base schema for a project """
     id: int
     odkid: int
     author: User
@@ -76,6 +81,7 @@ class ProjectBase(BaseModel):
     class Config:
         orm_mode = True
 
-# Output schema for a project
+ 
 class ProjectOut(ProjectBase):
+    """ Output schema for a project """
     pass
