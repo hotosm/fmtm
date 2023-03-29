@@ -33,10 +33,10 @@ from ..users.user_schemas import User, UserIn
 def load_test_data_as_test_user() -> None:
     """Load in the test data .zip files to the API."""
 
-    # Get database connection
+    ''' Get database connection '''
     db = next(database.get_db())
 
-    # Create a test user
+    ''' Create a test user '''
     user = UserIn(username="test", password="test")
     log.debug(f"Checking for existing user: {user}")
 
@@ -62,7 +62,7 @@ def load_test_data_as_test_user() -> None:
     test_zips = [f"{test_data_path}/{name}.zip" for name in test_names]
 
     for index, name in enumerate(test_names):
-        # Create a project object
+        ''' Create a project object '''
         project_obj = BETAProjectUpload(
             author=User(username="test", id=user_id),
             project_info=ProjectInfo(
