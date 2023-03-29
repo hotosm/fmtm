@@ -16,46 +16,46 @@
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
-# Import required modules
+''' Import required modules '''
 import datetime
 from geoalchemy2 import Geometry
 from geoalchemy2.shape import to_shape
 from geojson_pydantic import Feature
 from shapely.geometry import mapping
 
-# Define a function to return current UTC timestamp
+''' Define a function to return current UTC timestamp '''
 def timestamp():
     """Used in SQL Alchemy models to ensure we refresh timestamp when new models initialised."""
     return datetime.datetime.utcnow()
 
-# Define a function to convert Geometry object to GeoJSON format
+''' Define a function to convert Geometry object to GeoJSON format '''
 def geometry_to_geojson(geometry: Geometry, properties: str = {}):
-    # Check if a geometry is passed
+    ''' Check if a geometry is passed '''
     if geometry:
-        # Convert the geometry to a Shapely shape object
+        ''' Convert the geometry to a Shapely shape object '''
         shape = to_shape(geometry)
-        # Construct a GeoJSON feature using the shape and properties
+        ''' Construct a GeoJSON feature using the shape and properties '''
         geojson = {
             "type": "Feature",
             "geometry": mapping(shape),
             "properties": properties,
         }
-        # Create and return a GeoJSON feature object using the constructed geojson dictionary
+        ''' Create and return a GeoJSON feature object using the constructed geojson dictionary '''
         return Feature(**geojson)
 
-# Define a function to get centroid of a geometry in GeoJSON format
+''' Define a function to get centroid of a geometry in GeoJSON format '''
 def get_centroid(geometry: Geometry, properties: str = {}):
-    # Check if a geometry is passed
+    ''' Check if a geometry is passed '''
     if geometry:
-        # Convert the geometry to a Shapely shape object
+        ''' Convert the geometry to a Shapely shape object '''
         shape = to_shape(geometry)
-        # Get the centroid of the shape
+        ''' Get the centroid of the shape '''
         point = shape.centroid
-        # Construct a GeoJSON feature using the centroid and properties
+        ''' Construct a GeoJSON feature using the centroid and properties '''
         geojson = {
             "type": "Feature",
             "geometry": mapping(point),
             "properties": properties,
         }
-        # Create and return a GeoJSON feature object using the constructed geojson dictionary
+        ''' Create and return a GeoJSON feature object using the constructed geojson dictionary '''
         return Feature(**geojson)
