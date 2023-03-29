@@ -5,9 +5,9 @@ They never forget the people they are building for (^^)
 
 So who are we building field mapping solutions for? In short:
 
-- The field mapping manager (coordinating field mapping)
-- The field mapper (collecting data)
-- The validator (quality checking the data)
+-  The field mapping manager who coordinates field mapping activities.
+-  The field mapper who collects data in the field.
+-  The validator who checks the quality of the collected data.
 
 Below is an overview of the user flow of the field mapper, the mapping coordinator and the validator.
 
@@ -21,6 +21,13 @@ Click on [this virtual whiteboard](https://miro.com/app/board/uXjVPX4XLcI=/?move
 
 ![Screenshot 2022-10-10 at 14 29 53](https://user-images.githubusercontent.com/107098623/194867381-53813f19-71b1-4342-866f-10c963b7460b.png)
 
+Some of the key points covered are:
+
+-  Understanding the area and purpose of the mapping project
+-  Knowing what data to collect and how to collect it
+-  Staying safe and respecting the community while collecting data
+-  Properly documenting the collected data and any issues encountered
+
 # The field mapping manager (data coordination)
 
 Click on [this virtual whiteboard](https://miro.com/app/board/uXjVPX4XLcI=/?moveToWidget=3458764535077658755&cot=14) to see all the steps a field mapping coordinator or manager goes through. A sneak-peek here:
@@ -28,6 +35,13 @@ Click on [this virtual whiteboard](https://miro.com/app/board/uXjVPX4XLcI=/?move
 - See also data collection approach [>>in this training guide<<](https://hotosm.github.io/pdc-documentation/en/pages/01-osm-field-surveyor-guideliness/01-metodologi-pengumpulan-data/01_metodologi_pengumpulan_data/)
 
 ![Screenshot 2022-10-10 at 13 48 40](https://user-images.githubusercontent.com/107098623/194859584-31dae52a-e918-4cd8-9071-24791750d6bb.png)
+
+Some of the key points covered are:
+
+-  Planning and organizing the mapping project
+-  Communicating with field mappers and validators
+-  Monitoring progress and addressing any issues
+-  Ensuring quality control and documentation standards are met
 
 # The validator (data quality)
 
@@ -40,3 +54,13 @@ Click on [this virtual whiteboard](https://miro.com/app/board/uXjVPX4XLcI=/?move
   ["Common Feedback I give while Validating Building Projects"](https://www.openstreetmap.org/user/Becky%20Candy/diary)
 
 ![Screenshot 2022-10-10 at 14 45 39](https://user-images.githubusercontent.com/107098623/194870234-fa9497cb-d9e4-43ff-b7dd-ad731f8be488.png)
+
+
+Some of the key points covered are:
+
+-  Understanding the mapping project and the intended use of the collected data
+-  Verifying the accuracy and completeness of the collected data
+-  Ensuring consistency with existing data and standards
+-  Providing clear and constructive feedback to field mappers and coordinators
+
+Overall, understanding the needs and considerations of each of these three user groups is essential for building effective field mapping solutions.
