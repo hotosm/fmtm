@@ -1,8 +1,9 @@
 from typing import Any, List
 import math
 
-"""Helper function to determine the next and previous pages given the current page and total number of pages."""
+
 def get_pages_nav(total_pages, current_page):
+    """Helper function to determine the next and previous pages given the current page and total number of pages."""
     next_page = None
     prev_page = None
     if current_page + 1 <= total_pages:
@@ -12,8 +13,9 @@ def get_pages_nav(total_pages, current_page):
     return next_page, prev_page
 
 
-"""Function to paginate data based on the provided page number, page size and total content."""
+
 def paginate_data(
+    """Function to paginate data based on the provided page number, page size and total content."""
         data: List[dict],
         page_no:int,
         page_size:int,
