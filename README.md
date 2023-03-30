@@ -14,12 +14,28 @@
 
 A project to provide tools for Open Mapping campaigns
 
-While we have pretty good field mapping applications, we don’t have great tools to coordinate field mapping. However, we have most of the elements needed to create a field mapping-oriented version of the HOT Tasking Manager, which allows people to select specific areas and complete tasks in a coordinated, organized fashion.
+The Field Mapping Tasking Manager (FMTM) is a project that aims to provide tools for coordinating field mapping activities in Open Mapping campaigns. While there are existing field mapping applications, there is a lack of efficient tools to coordinate these activities. The FMTM builds on the HOT Tasking Manager and other mapping applications to provide a more streamlined and organized process for completing mapping tasks.
 
-It’s already possible to implement a sort of Field Mapping Tasking Manager workflow using existing tools (mostly based on ODK, particularly the new "select from map" functionality), but it’s pretty labor-intensive and tricky. We’re working on some automation to ease the pain points, which moves us closer to a fully-fledged Field Mapping Tasking Manager (FMTM).
+Currently, it is possible to implement a Field Mapping Tasking Manager workflow using existing tools, but it requires significant effort and can be challenging. The FMTM project is developing automation features to address these challenges and make the process more accessible to users.
+
+By providing a centralized platform for organizing and managing mapping tasks, assigning them to specific users, and tracking their progress, the FMTM aims to simplify the coordination of mapping activities. The tool also provides analytics and reporting features, allowing users to gain insights into mapping campaigns and adjust their strategies accordingly.
+
+## Features
+
+The FMTM application is designed to allow campaign managers to create and manage mapping campaigns, allocate specific mapping tasks to individual mappers, and monitor the progress of those tasks in real-time. Some of the key features of the application include:
+
+ - Task splitting: Campaign managers can split larger mapping tasks into smaller, more manageable sub-tasks.
+ - Team management: Campaign managers can create teams of mappers and assign specific tasks to those teams.
+ - Project-specific instructions and guidance: Campaign managers can provide instructions and guidance to mappers specific to the project they are working on.
+ - Real-time progress monitoring: Campaign managers can monitor the progress of mapping tasks in real-time, allowing them to quickly identify and address any issues or bottlenecks.
+
+## Integration with ODK Central
+
+The FMTM application integrates with ODK Central, which provides the survey forms and features to be mapped. Once a mapper has completed a task, the data is submitted to the ODK Central server, where it can be reviewed and edited by campaign managers before being exported for use in mapping projects.
 
 Background and description of the project and idea are here: please have a look at this [blog](https://www.hotosm.org/updates/field-mapping-is-the-future-a-tasking-manager-workflow-using-odk/) if you haven't yet! [Overview, timeline & relevant links](https://docs.google.com/presentation/d/1UrBG1X4MXwVd8Ps498FDlAYvesIailjjPPJfR_B4SUs/edit#slide=id.g15c1f409958_0_0)
 for the Field Mapping Tasking Manager (FMTM)
+
 
 ## [side project] FMTM Turkey Earthquake Response Support
 
