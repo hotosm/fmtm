@@ -108,34 +108,29 @@ Q: Can I use the mapping data for my own research or projects?
 
 A: The mapping data on the FMTM is generally open and available for use, but it is important to check the specific project requirements and licenses before using the data for your own research or projects.
 
-# Troubleshooting
+# Troubleshooting common errors in Field Mapping Tasking Manager
 
-## Error messages in the Field Mapping Tasking Manager
+If you encounter error messages while using the Field Mapping Tasking Manager (FMTM), here are some steps you can take to troubleshoot:
 
-If you are seeing error messages in the Field Mapping Tasking Manager, there are a few things you can try:
+- Check that you have entered all required fields correctly and that there are no typos or formatting errors.
+- Make sure you have provided all necessary permissions and credentials to access the ODK Central server.
+- Check that the ODK Central server is up and running and that there are no server-side issues.
+- Check the ODK Central API documentation for any known issues or error codes that may be relevant to your problem.
+- Try refreshing the page or restarting the server.
 
--  Check that you have entered all required fields correctly and that there are no typos or formatting errors.
--  Check that you have provided all necessary permissions and credentials to access the ODK Central server.
--  Check that the ODK Central server is up and running and that there are no server-side issues.
--  Check the ODK Central API documentation for any known issues or error codes that may be relevant to your problem.
--  Try refreshing the page or restarting the server.
+Here are some specific errors you might encounter and steps to address them:
 
-## Error: "ImportError: cannot import name 'app' from 'app'"
+- Error: "ImportError: cannot import name 'app' from 'app'"
+Possible causes of this error may also comprise inaccurate or missing dependencies or configuration settings. To troubleshoot this issue, verify that all dependencies are correctly installed and that the configuration settings are precise.
 
-This error occurs when trying to run FMTM using the command flask run and indicates that there is a problem with the application code. One possible cause of this error is that the Flask app has not been properly initialized. To fix this issue, make sure that the app variable is defined in the __init__.py file in the root directory of the FMTM app.
-
-## Error: "Internal Server Error"
-
+- Error: "Internal Server Error"
 This error message usually indicates a problem with the FMTM server, such as a failure to connect to the ODK Central server or a problem with the database. To troubleshoot this issue, check the logs for any error messages that may provide more information about the cause of the problem. If you are unable to resolve the issue, try restarting the FMTM server or resetting the ODK Central server.
 
-## Error: "Unable to connect to ODK Central server"
-
+- Error: "Unable to connect to ODK Central server"
 This error occurs when FMTM is unable to connect to the ODK Central server, which may be caused by a number of factors such as incorrect server settings or network connectivity issues. To troubleshoot this issue, check the server settings to ensure that the correct URL, username, and password have been entered. You may also want to check the network connection and make sure that the server is accessible from the FMTM server.
 
-## Error: "The requested URL was not found on the server"
-
+- Error: "The requested URL was not found on the server"
 This error indicates that the requested page or resource could not be found on the server, which may be caused by a number of factors such as an incorrect URL or server configuration. To troubleshoot this issue, check the URL to ensure that it is correct and corresponds to a valid resource on the server. You may also want to check the server configuration to ensure that the resource has been properly configured and is accessible from the FMTM server.
 
-## Error: "ODK Collect app crashes when trying to submit data"
-
-This error may occur when using ODK Collect to submit data collected in the field, and may be caused by a number of factors such as incorrect form settings or data format issues. To troubleshoot this issue, check the form settings to ensure that they are configured correctly and that the data format is compatible with ODK Collect. You may also want to try submitting the data again or resetting the ODK Collect app to its default settings.
+- Error: "ODK Collect app crashes when trying to submit data"
+This error may occur when using ODK Collect to submit data collected in the field, and may be caused because of a problem with the data extract contents. To troubleshoot this issue, check the data extract to ensure that it is valid and does not contain any errors. You can do this by using the ODK Briefcase tool to export and verify the data.
