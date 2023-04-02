@@ -52,7 +52,7 @@ To prepare the appropriate map files for ODK, we are taking our inspiration from
 Campaign managers select an Area of Interest (AOI) and organize field mappers to go out and collect data. They need to:
 
 - Select an AOI polygon by creating a GeoJSON or by tracing a polygon in a Web map
-- Choose a task division scheme (number of features or area per task, and possibly variations on what features to use as the preferred splitting lines)
+- Choose a task division scheme (number of features or area per task, and possible variations on what features to use as the preferred splitting lines)
 - Provide specific instructions and guidance for field mappers on the project.
 - Provide a URL to a mobile-friendly Web page where field mappers can, from their mobile phone, select a task that is not already "checked out" (or possibly simply allocate areas to the field mappers).
 - See the status of tasks (open, "checked out", completed but not validated, requires rework, validated, etc) in the Web browser on their computer
@@ -70,7 +70,7 @@ Validators review the data collected by field mappers and assess its quality. If
 
 - Access completed data sets of "submissions" as Comma Separated Values and/or OSM XML so that they can review it.
 - Mark areas as validated or requiring rework
-- Communicate with field mappers if rework is necessary
+- Communicate with field mappers if the rework is necessary
 - Merge good-quality data into OSM (probably from JOSM).
 - Mark areas as completed and merged.
 
