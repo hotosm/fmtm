@@ -43,7 +43,7 @@ then click "Create pull request" to submit it.
 - Review and address feedback: The FMTM maintainers will review your pull request and provide feedback. Address any requested changes and push the changes
 to your forked repository. The pull request will automatically update with your changes.
 
-- Merge your pull request: Once your pull request has been approved, the FMTM maintainers will merge your changes into the developmennt branch.
+- Merge your pull request: Once your pull request has been approved, the FMTM maintainers will merge your changes into the development branch.
 
 ## Report bugs and suggest improvements
 
