@@ -8,12 +8,12 @@
 
 **Backend Builds**
 
-| Backend API | ODKCentral API  | ODKCentral Proxy  |
-|---|---|---|
-| [![Backend Build](https://quay.io/repository/hotosm/fmtm-backend/status "Backend Build")](https://quay.io/repository/hotosm/backend) | [![Central-API Build](https://quay.io/repository/hotosm/odkcentral-api/status "Central-API Build")](https://quay.io/repository/hotosm/odkcentral-api)  |  [![Central-Proxy Build](https://quay.io/repository/hotosm/odkcentral-proxy/status "Central-Proxy Build")](https://quay.io/repository/hotosm/odkcentral-proxy)  |
+| Backend API                                                                                                                          | ODKCentral API                                                                                                                                        | ODKCentral Proxy                                                                                                                                              |
+| ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [![Backend Build](https://quay.io/repository/hotosm/fmtm-backend/status "Backend Build")](https://quay.io/repository/hotosm/backend) | [![Central-API Build](https://quay.io/repository/hotosm/odkcentral-api/status "Central-API Build")](https://quay.io/repository/hotosm/odkcentral-api) | [![Central-Proxy Build](https://quay.io/repository/hotosm/odkcentral-proxy/status "Central-Proxy Build")](https://quay.io/repository/hotosm/odkcentral-proxy) |
 
 **Microfrontend Builds**
-|  Main | Map |
+| Main | Map |
 |---|---|
 | [![Frontend Main Build](https://quay.io/repository/hotosm/fmtm-mf-main/status "Frontend Main Build")](https://quay.io/repository/hotosm/fmtm-mf-main)| [![Frontend Map Build](https://quay.io/repository/hotosm/fmtm-mf-map/status "Frontend Map Build")](https://quay.io/repository/hotosm/fmtm-mf-map) |
 
@@ -38,7 +38,7 @@ HOT is already in the early stages of developing the Field Mapping Tasking Manag
 
 # How to contribute
 
-👍🎉We are actively looking for contributors for this project- from design, user testing and both front and backend developers. We have a specific request for volunteer developers at the moment!
+👍🎉We are actively looking for contributors for this project which include designers, user testing, frontend and backend developers. We have a specific request for volunteer developers at the moment!
 ![image](https://user-images.githubusercontent.com/98902727/218812430-3c07b60e-4fd2-4f05-a289-bf37d6f0b9cd.png)
 Please take a look at our [Wiki pages](https://github.com/hotosm/fmtm/wiki/Home/90b86d34ddd42f0eafd03ea7e6d443eb37db2df6) and [contributor guidance](https://github.com/hotosm/fmtm/wiki/Contribution) for more details! Reach out to us if any questions! 👍🎉
 
@@ -93,13 +93,13 @@ The ODK Collect app connects to a back-end server (in this case ODK Central), wh
 
 ## ODK Central server
 
-An ODK Central server functions as the back end for the field data collectors. ODK Collect is an application that can be downloaded on Android phones. Devs must have access to an ODK Central server with a username and password granting admin credentials.
+An ODK Central server functions as the back end for the field data collectors. ODK Collect is an application that can be downloaded on Android phones. Developers must have access to an ODK Central server with a username and password granting admin credentials.
 
 [Here are the instructions for setting up an ODK Central server on Digital Ocean](https://docs.getodk.org/central-install-digital-ocean/) (It's very similar on AWS)
 
 ## Field Mapping Tasking Manager Web App
 
-The FMTM web app is a Python/Flask/Leaflet app that serves as a front end for the ODK Central server, using the [ODK Central API](https://odkcentral.docs.apiary.io/#) to allocate specific areas/features to individual mappers, and receive their data submissions.
+The FMTM web app is a Python/FastApi/Leaflet app that serves as a front end for the ODK Central server, using the [ODK Central API](https://odkcentral.docs.apiary.io/#) to allocate specific areas/features to individual mappers, and receive their data submissions.
 
 ### Manager Web Interface (with PC browser-friendlymap view)
 
