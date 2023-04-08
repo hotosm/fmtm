@@ -7,9 +7,8 @@
 [![pytest](https://github.com/hotosm/fmtm/actions/workflows/pytest.yml/badge.svg?branch=main)](https://github.com/hotosm/fmtm/actions/workflows/pytest.yml) [![Publish Docs to Wiki](https://github.com/hotosm/fmtm/actions/workflows/wiki.yml/badge.svg?branch=main)](https://github.com/hotosm/fmtm/actions/workflows/wiki.yml) [![Production Deploy](https://github.com/hotosm/fmtm/actions/workflows/prod_deploy.yml/badge.svg?branch=main)](https://github.com/hotosm/fmtm/actions/workflows/prod_deploy.yml)
 
 **Backend Builds**
-
-| Backend API                                                                                                                          | ODKCentral API                                                                                                                                        | ODKCentral Proxy                                                                                                                                              |
-| ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend API | ODKCentral API | ODKCentral Proxy |
+|---|---|---|
 | [![Backend Build](https://quay.io/repository/hotosm/fmtm-backend/status "Backend Build")](https://quay.io/repository/hotosm/backend) | [![Central-API Build](https://quay.io/repository/hotosm/odkcentral-api/status "Central-API Build")](https://quay.io/repository/hotosm/odkcentral-api) | [![Central-Proxy Build](https://quay.io/repository/hotosm/odkcentral-proxy/status "Central-Proxy Build")](https://quay.io/repository/hotosm/odkcentral-proxy) |
 
 **Microfrontend Builds**
