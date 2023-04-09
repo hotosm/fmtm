@@ -43,13 +43,13 @@ Please take a look at our [Wiki pages](https://github.com/hotosm/fmtm/wiki/Home/
 
 # Using OpenDataKit's Select From Map feature
 
-As of mid-2022, ODK incorporates a new functionality, select from map, that allows field mappers to select an object from a map, view the existing attributes, and fill out a form adding new information and attributes to that object. For example, a mapper can approach a building, select that building from a map view within ODK on their mobile phone, and add the opening hours, number of floors, construction material, or any number of useful attributes in a well-structured questionnaire format
+As of mid-2022, ODK incorporates a new functionality, **Select From Map**. This new functionality, allows field mappers to select an object from a map, view the existing attributes, and fill out a form adding new information and attributes to that object. For example, a mapper can approach a building, select that building from a map view within ODK on their mobile phone, and add the opening hours, number of floors, construction material, or any number of useful attributes in a well-structured questionnaire format
 
-<img src="https://github.com/hotosm/fmtm/blob/main/images/ODK_Select_one_from_file_map_screenshot.jpg?raw=true"  width=600 height=600>
+<img src="./images/ODK_Select_one_from_file_map_screenshot.jpg?raw=true"  width=600 height=600>
 
 To prepare the appropriate map files for ODK, we are taking our inspiration from the [HOT Tasking Manager](https://tasks.hotosm.org/), which allows remote mappers to choose well-defined small "task" areas, ensuring full coverage of the project area and no unintended duplication of tasks.
 
-<img src="https://github.com/hotosm/fmtm/blob/main/images/HOT_TM_task_selection_screenshot.jpg?raw=true"  width=600 height=600>
+<img src="./images/HOT_TM_task_selection_screenshot.jpg?raw=true"  width=600 height=600>
 
 # Users
 
@@ -61,7 +61,7 @@ Campaign managers select an Area of Interest (AOI) and organize field mappers to
 - Choose a task division scheme (number of features or area per task, and possibly variations on what features to use as the preferred splitting lines)
 - Provide specific instructions and guidance for field mappers on the project.
 - Provide a URL to a mobile-friendly Web page where field mappers can, from their mobile phone, select a task that is not already "checked out" (or possibly simply allocate areas to the field mappers).
-- See the status of tasks (open, "checked out", completed but not validated, requires rework, validated, etc) in the Web browser on their computer
+- See the status of tasks (open, checked out, completed but not validated, requires rework, validated, etc) in the Web browser on their computer
 
 ## Field mappers
 
