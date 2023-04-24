@@ -2,18 +2,18 @@
 
 # Table of content
 
-## Software requirements
+- Software requirements
 
-- Fork and Clone the FMTM repository
-- Development: Setup Your Local Environment
-- Start the API with Docker
-- Setup ODK Central User
-- Import Test Data
-- Check Authentication
+- Setting up the Backend
 
-## Setting up the Backend
+  - Fork and Clone the FMTM repository
+  - Development: Setup Your Local Environment
+  - Start the API with Docker
+  - Setup ODK Central User
+  - Import Test Data
+  - Check Authentication
 
-## Setting up the Frontend
+- Setting up the Frontend
 
 # Software Requirements
 
