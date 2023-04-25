@@ -1,4 +1,4 @@
-> NOTE: This is an installation guide to quickly get the fmtm app up and running. For a more detailed guide on how to install the fmtm app and contribute, checkout the [docs](./docs)
+> NOTE: This is an installation guide to quickly get the fmtm app up and running. For a detailed guide on how to install the fmtm app using different methods and contributing, checkout the [docs](./docs)
 
 # Table of content
 
@@ -14,6 +14,10 @@
   - Check Authentication
 
 - Setting up the Frontend
+
+  - Fork and Clone the FMTM repository
+  - The Microfrontend configuration
+  - Start the Frontends with Docker
 
 # Software Requirements
 
@@ -153,3 +157,60 @@ Once you have deployed, you will need to check that you can properly authenticat
 3.  Check your access token: Hit `/auth/me/` and pass your `access_token` You should get your osm id, username and profile picture id
 
 That's it, you have successfully set up the backend!!
+
+# Setting up the Frontend
+
+## Fork and Clone the FMTM repository
+
+### 1. Fork the repository
+
+Forking creates a copy of the repository in your own GitHub account.
+Go to the [Field Mapping Tasking Manager repository](https://github.com/hotosm/fmtm) and click the "Fork" button in the top right corner of the page.
+
+### 2. Clone the forked repository
+
+Clone the forked repository to your local machine using the following command:
+
+`git clone https://github.com/<your-username>/fmtm.git`
+
+Make sure to replace `<your-username>` with your GitHub username.
+
+## The Microfrontend configuration
+
+The FMTM frontend is built using a microfrontend architecture, divided into modules that can be developed, tested, and deployed independently.
+
+Webpack remote modules are used to achieve this, dynamically loading code from other microfrontend applications.
+
+In theory, this should improve the performance and scalability of the application.
+However, great care should be taken with watching dependency versions across modules, to prevent loading more js content than is required.
+
+List of current microfrontend modules:
+
+- **main**:
+  - Description: The main frontend, displays projects and tasks.
+  - Location: src/frontend/main
+  - Port: 8080.
+- **fmtm_openlayers_map**:
+  - Description: The map component, displays tasks on a map.
+  - Location: src/frontend/fmtm_openlayers_map
+  - Port: 8081.
+
+## Start the Frontends with Docker
+
+This is the easiest way to manage multiple frontends at once.
+
+### Starting the Frontend Containers
+
+1. You will need to [Install Docker](https://docs.docker.com/engine/install/) and ensure that it is running on your local machine.
+2. From the command line: navigate to the top level directory of the FMTM project.
+3. From the command line run: `docker compose build ui-main ui-map`
+   This is essential, as the development containers for the frontend are different to production.
+4. Once everything is built, from the command line run: `docker compose up -d ui-main ui-map`
+
+5. If everything goes well you should now be able to **navigate to the project in your browser:**
+   - **Main:** <http://127.0.0.1:8080>
+   - **Map:** <http://127.0.0.1:8081>
+
+That's it!! you have successfully set up the frontend!!
+
+> NOTE: For a detailed guide, installation tips and other installation methods, check out the [docs folder](./docs)
