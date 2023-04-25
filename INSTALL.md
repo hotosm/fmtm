@@ -19,7 +19,7 @@
    - [The Microfrontend configuration](#the-microfrontend-configuration)
    - [Start the Frontends with Docker](#start-the-frontends-with-docker)
 
-# 1. Software Requirements
+# 1. Software Requirements <a name="software-requirements"></a>
 
 Before you can install and use this application, you will need to have the following software installed and configured on your system
 
@@ -34,7 +34,7 @@ To install Docker, please follow the instructions on the official Docker website
 
     https://docs.docker.com/engine/install/
 
-# 2. Setting up the Backend
+# 2. Setting up the Backend <a name="setting-up-the-backend"></a>
 
 ## Fork and Clone the FMTM repository
 
@@ -168,7 +168,7 @@ Once you have deployed, you will need to check that you can properly authenticat
 
 That's it, you have successfully set up the backend!!
 
-# 3. Setting up the Frontend
+# 3. Setting up the Frontend <a name="setting-up-the-frontend"></a>
 
 ## Fork and Clone the FMTM repository
 
