@@ -6,18 +6,18 @@
 
 2. Setting up the Backend
 
-- Fork and Clone the FMTM repository
-- Development: Setup Your Local Environment
-- Start the API with Docker
-- Setup ODK Central User
-- Import Test Data
-- Check Authentication
+   - Fork and Clone the FMTM repository
+   - Development: Setup Your Local Environment
+   - Start the API with Docker
+   - Setup ODK Central User
+   - Import Test Data
+   - Check Authentication
 
 3. Setting up the Frontend
 
-- Fork and Clone the FMTM repository
-- The Microfrontend configuration
-- Start the Frontends with Docker
+   - Fork and Clone the FMTM repository
+   - The Microfrontend configuration
+   - Start the Frontends with Docker
 
 # 1. Software Requirements
 
