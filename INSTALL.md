@@ -2,24 +2,24 @@
 
 # Table of content
 
-- Software requirements
+1. Software requirements
 
-- Setting up the Backend
+2. Setting up the Backend
 
-  - Fork and Clone the FMTM repository
-  - Development: Setup Your Local Environment
-  - Start the API with Docker
-  - Setup ODK Central User
-  - Import Test Data
-  - Check Authentication
+- Fork and Clone the FMTM repository
+- Development: Setup Your Local Environment
+- Start the API with Docker
+- Setup ODK Central User
+- Import Test Data
+- Check Authentication
 
-- Setting up the Frontend
+3. Setting up the Frontend
 
-  - Fork and Clone the FMTM repository
-  - The Microfrontend configuration
-  - Start the Frontends with Docker
+- Fork and Clone the FMTM repository
+- The Microfrontend configuration
+- Start the Frontends with Docker
 
-- # Software Requirements
+# 1. Software Requirements
 
 Before you can install and use this application, you will need to have the following software installed and configured on your system
 
@@ -34,7 +34,7 @@ To install Docker, please follow the instructions on the official Docker website
 
     https://docs.docker.com/engine/install/
 
-- # Setting up the Backend
+# 2. Setting up the Backend
 
 ## Fork and Clone the FMTM repository
 
@@ -168,7 +168,7 @@ Once you have deployed, you will need to check that you can properly authenticat
 
 That's it, you have successfully set up the backend!!
 
-- # Setting up the Frontend
+# 3. Setting up the Frontend
 
 ## Fork and Clone the FMTM repository
 
