@@ -1,23 +1,23 @@
 > NOTE: This is an installation guide to quickly get the fmtm app up and running. For a detailed guide on how to install the fmtm app using different methods and contributing, checkout the [docs](./docs)
 
-# Table of content
+# Table of Contents
 
-1. Software requirements
+1. [Software Requirements](#software-requirements)
 
-2. Setting up the Backend
+2. [Setting up the Backend](#setting-up-the-backend)
 
-   - Fork and Clone the FMTM repository
-   - Development: Setup Your Local Environment
-   - Start the API with Docker
-   - Setup ODK Central User
-   - Import Test Data
-   - Check Authentication
+   - [Fork and Clone the FMTM repository](#fork-and-clone-the-fmtm-repository)
+   - [Development: Setup Your Local Environment](#development-setup-your-local-environment)
+   - [Start the API with Docker](#start-the-api-with-docker)
+   - [Setup ODK Central User](#setup-odk-central-user)
+   - [Import Test Data](#import-test-data)
+   - [Check Authentication](#check-authentication)
 
-3. Setting up the Frontend
+3. [Setting up the Frontend](#setting-up-the-frontend)
 
-   - Fork and Clone the FMTM repository
-   - The Microfrontend configuration
-   - Start the Frontends with Docker
+   - [Fork and Clone the FMTM repository](#fork-and-clone-the-fmtm-repository-1)
+   - [The Microfrontend configuration](#the-microfrontend-configuration)
+   - [Start the Frontends with Docker](#start-the-frontends-with-docker)
 
 # 1. Software Requirements
 
