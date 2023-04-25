@@ -21,8 +21,18 @@
 
 # Software Requirements
 
-- Git
+Before you can install and use this application, you will need to have the following software installed and configured on your system
+
+- Git(or any other Terminal)
 - Docker
+
+To install Git, please follow the instructions on the official Git website:
+
+    https://git-scm.com/downloads
+
+To install Docker, please follow the instructions on the official Docker website:
+
+    https://docs.docker.com/engine/install/
 
 # Setting up the Backend
 
