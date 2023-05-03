@@ -4,11 +4,13 @@
 
 They never forget the people they are building for (^^)
 
-So who are we building field mapping solutions for? In short, we build solutions for:
+So who are we building field mapping solutions for? In short, we build
+solutions for:
 
 ## The field mapping manager (coordinating field mapping)
-The field mapping manager is responsible for coordinating field mapping
-activities, ensuring the accuracy and completeness of the data
+
+The field mapping manager is responsible for coordinating field
+mapping activities, ensuring the accuracy and completeness of the data
 collected, and managing the data itself. This involves a number of key
 steps, including:
 
@@ -81,19 +83,11 @@ If you want to see this workflow in more detail, click on [this virtual whiteboa
 
 ![Screenshot 2022-10-10 at 14 29 53](https://user-images.githubusercontent.com/107098623/194867381-53813f19-71b1-4342-866f-10c963b7460b.png)
 
-<<<<<<< HEAD
-Some of the key points covered are:
-
--  Understanding the area and purpose of the mapping project
--  Knowing what data to collect and how to collect it
--  Staying safe and respecting the community while collecting data
--  Properly documenting the collected data and any issues encountered
-
-# The field mapping manager (data coordination)
-=======
 # The Field Mapping Manager (The person who coordinates field mapping)
-The **Field Mapping Manager** is tasked with coordinating all mapping activities, ensuring that **Field Mappers** are safe and qualified to work, as well as monitoring data quality. The **Field Mapping Manager** has to consider 3 main activities:
->>>>>>> development
+The **Field Mapping Manager** is tasked with coordinating all mapping
+activities, ensuring that **Field Mappers** are safe and qualified to
+work, as well as monitoring data quality. The **Field Mapping
+Manager** has to consider 3 main activities:
 
 1. **Pre-field data collection activities**
     - Setting up and testing tools
@@ -117,20 +111,7 @@ If you want more information, click on [this virtual whiteboard!](https://miro.c
 
 ![Screenshot 2022-10-10 at 13 48 40](https://user-images.githubusercontent.com/107098623/194859584-31dae52a-e918-4cd8-9071-24791750d6bb.png)
 
-<<<<<<< HEAD
-
-Some of the key points covered are:
-
--  Planning and organizing the mapping project
--  Communicating with field mappers and validators
--  Monitoring progress and addressing any issues
--  Ensuring quality control and documentation standards are met
-
-# The validator (data quality)
-=======
 # The Validator (The person who checks the quality of data collected)
->>>>>>> development
-
 
 ![Screenshot 2022-10-20 at 12 14 16](https://user-images.githubusercontent.com/107098623/196922048-c156b8ed-7f1a-404b-a636-fcfca2c0b328.png)
 
