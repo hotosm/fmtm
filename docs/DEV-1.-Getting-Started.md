@@ -11,17 +11,25 @@ The FMTM codebase consists of:
 
 ### 1. Review documentation
 
-Don't forget to review the [Contribution](https://github.com/hotosm/fmtm/wiki/Contribution) guidelines and our [Code of Conduct](https://github.com/hotosm/fmtm/wiki/Code-of-Conduct) before contributing!
-Here are the steps to contribute to the frontend of Field Mapping Tasking Manager:
+Don't forget to review the
+[Contribution](https://github.com/hotosm/fmtm/wiki/Contribution)
+guidelines and our [Code of
+Conduct](https://github.com/hotosm/fmtm/wiki/Code-of-Conduct) before
+contributing!
+Here are the steps to contribute to the frontend of Field Mapping
+Tasking Manager:
 
 ### 2. Fork the repository
 
 Forking creates a copy of the repository in your own GitHub account.
-Go to the [Field Mapping Tasking Manager repository](https://github.com/hotosm/fmtm) and click the "Fork" button in the top right corner of the page.
+Go to the [Field Mapping Tasking Manager
+repository](https://github.com/hotosm/fmtm) and click the "Fork"
+button in the top right corner of the page.
 
 ### 3. Navigate to your working directory
 
-Open a terminal and navigate to the directory you want to work in using the following command:
+Open a terminal and navigate to the directory you want to work in
+using the following command:
 
 `cd <work-dir>`
 
@@ -29,7 +37,8 @@ Make sure to replace `<work-dir>` with the name of your directory.
 
 ### 4. Clone the forked repository
 
-Clone the forked repository to your local machine using the following command:
+Clone the forked repository to your local machine using the following
+command:
 
 `git clone https://github.com/<your-username>/fmtm.git`
 
@@ -41,7 +50,8 @@ Create a new branch for your changes using the following command:
 
 `git checkout -b branch-name`
 
-Make sure to give your branch a descriptive name that reflects the changes you'll be making.
+Make sure to give your branch a descriptive name that reflects the
+changes you'll be making.
 
 ### 6. Make changes
 
@@ -53,23 +63,30 @@ Add the changes you've made using the following command:
 
 `git add <file-name>`
 
-Make sure you replace `<file-name>` with the name of the file you made changes to.
+Make sure you replace `<file-name>` with the name of the file you made
+changes to.
 
 ### 8. Commit and push
 
-Once you've added changes, commit them to your local branch using the following command:
+Once you've added changes, commit them to your local branch using the
+following command:
 
 `git commit -m "Add feature"`
 
-Make sure to write a descriptive commit message that explains the changes you've made. Then, push your changes to your forked repository using the following command:
+Make sure to write a descriptive commit message that explains the
+changes you've made. Then, push your changes to your forked repository
+using the following command:
 
 `git push origin branch-name`
 
 ### 9. Submit a pull request
 
 Go to your forked repository on GitHub and click the "Pull requests" tab.  
-Change the base branch from `main` to `development`, select the branch that contains your changes from the compare branch, then click "Create pull request".  
-This will open a new pull request in the fmtm repository, where you can describe your changes and request that they be merged into the main codebase.
+Change the base branch from `main` to `development`, select the branch
+that contains your changes from the compare branch, then click "Create
+pull request".   This will open a new pull request in the fmtm
+repository, where you can describe your changes and request that they
+be merged into the main codebase.
 
 > Note: After a PR has been approved and merged, if the branch is no longer in use, delete it both locally and remotely. Otherwise we get buried in dead branches we don't need.  
 > Use the following commands:  
@@ -84,23 +101,34 @@ These steps are essential to run and test your code!
 
 ### 1. Setup OSM OAUTH 2.0
 
-The FMTM uses OAUTH2 with OSM to authenticate users. To properly configure your FMTM project, you will need to create keys for OSM.
+The FMTM uses OAUTH2 with OSM to authenticate users. To properly
+configure your FMTM project, you will need to create keys for OSM.
 
-1. [Login to OSM](https://www.openstreetmap.org/login) (_If you do not have an account yet, click the signup button at the top navigation bar to create one_). Click the drop down arrow on the extreme right of the navigation bar and select My Settings.
+1. [Login to OSM](https://www.openstreetmap.org/login) (_If you do not
+   have an account yet, click the signup button at the top navigation
+   bar to create one_). Click the drop down arrow on the extreme right
+   of the navigation bar and select My Settings.
 
-2. Register your local fmtm backend app to OAuth 2 applications. Put your login redirect url as `http://127.0.0.1:8000/auth/callback/`, For Production replace the URL as production API Url
+2. Register your local fmtm backend app to OAuth 2 applications. Put
+   your login redirect url as `http://127.0.0.1:8000/auth/callback/`,
+   For Production replace the URL as production API Url.
 
 > Note: `127.0.0.1` is required instead of `localhost` due to OSM restrictions.
 
 <img width="716" alt="image" src="https://user-images.githubusercontent.com/36752999/216319298-1444a62f-ba6b-4439-bb4f-2075fdf03291.png">
 
-3. Right now read user preferences permission is enough later on fmtm may need permission to modify the map option which should be updated on OSM_SCOPE variable on .env , Keep read_prefs for now.
+3. Right now read user preferences permission is enough later on fmtm
+   may need permission to modify the map option which should be
+   updated on OSM_SCOPE variable on .env , Keep read_prefs for now.
 
-4. Now Copy your Client ID and Client Secret. Put them in the `OSM_CLIENT_ID` and `OSM_CLIENT_SECRET` field of your `.env` file
+4. Now Copy your Client ID and Client Secret. Put them in the
+   `OSM_CLIENT_ID` and `OSM_CLIENT_SECRET` field of your `.env` file.
 
 ### 2. Create an `.env` File
 
-Environmental variables are used throughout this project. To get started, create `.env` file in the top level dir, Sample is `.env.example`
+Environmental variables are used throughout this project. To get
+started, create `.env` file in the top level dir, Sample is
+`.env.example`.
 
     cp .env.example .env
 
@@ -144,7 +172,9 @@ Your env should look like this
 
 ### Check Deployment
 
-For details on how to run this project locally for development, please look at: [DEV 2. Backend](https://github.com/hotosm/fmtm/wiki/DEV-2.-Backend)
+For details on how to run this project locally for development, please
+look at:
+[DEV 2. Backend](https://github.com/hotosm/fmtm/wiki/DEV-2.-Backend)
 
 ### Check Authentication
 
@@ -156,19 +186,30 @@ Once you have deployed, you will need to check that you can properly authenticat
     <img width="698" alt="image" src="../images/endpoints_responsible_for_auth_screenshot-2023-03-26-092756.png">
 
 2. Select the `/auth/osm_login/` endpoint, click `Try it out` and then `Execute`.  
-    This would give you the Login URL where you can supply your osm username and password.
+    This would give you the Login URL where you can supply your osm
+    username and password.
 
     Your response should look like this:
 
         {"login_url": "https://www.openstreetmap.org/oauth2/authorize/?response_type=code&client_id=xxxx"}
 
-    Now copy and paste your login_url in a new tab. You would be redirected to OSM for your LOGIN. Give FMTM the necessary permission.
+    Now copy and paste your login_url in a new tab. You would be
+    redirected to OSM for your LOGIN. Give FMTM the necessary
+    permission.
 
-    After a successful login, you will get your `access_token` for FMTM, Copy it. Now, you can use it for rest of the endpoints that needs authorization.
+    After a successful login, you will get your `access_token` for
+    FMTM, Copy it. Now, you can use it for rest of the endpoints that
+    needs authorization.
 
-3. Check your access token: Select the `/auth/me/` endpoint and click `Try it out`.  
-    Pass in the `access_token` you copied in the previous step into the `access-token` field and click `Execute`. You should get your osm id, username and profile picture id.
+3. Check your access token: Select the `/auth/me/` endpoint and click
+    `Try it out`. Pass in the `access_token` you copied in the
+    previous step into the `access-token` field and click
+    `Execute`. You should get your osm id, username and profile picture id.
 
 # Start Developing
 
-Don't forget to review [Contribution](https://github.com/hotosm/fmtm/wiki/Contribution) guidelines and our [Code of Conduct](https://github.com/hotosm/fmtm/wiki/Code-of-Conduct) before contributing!
+Don't forget to review
+[Contribution](https://github.com/hotosm/fmtm/wiki/Contribution)
+guidelines and our [Code of
+Conduct](https://github.com/hotosm/fmtm/wiki/Code-of-Conduct) before
+contributing!

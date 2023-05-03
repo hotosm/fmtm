@@ -16,18 +16,22 @@ And then connect to the database
 
         docker exec -it fmtm-db-1 psql -U fmtm fmtm
 
-    This will open the psql command-line interface and connect you to the fmtm database.
+    This will open the psql command-line interface and connect you to
+    the fmtm database.
 
-- Once connected to the fmtm database, you can switch to a different database using the command:
+- Once connected to the fmtm database, you can switch to a different
+  database using the command:
 
         \c dbname
-    Replace "dbname" with the name of the database you want to switch to. forexample `\c fmtm`
+    Replace "dbname" with the name of the database you want to switch
+    to. forexample `\c fmtm`
 
 - You can list all the databases using the command:
 
         \l
 
-- To list all the schemas of the currently connected database, use the command:
+- To list all the schemas of the currently connected database, use the
+  command:
 
         \dn
 
@@ -87,7 +91,10 @@ And then connect to the database
 
 # Migrations
 
-Migrations are a way to manage changes to the database schema over time. We haven't yet implemented migrations in fmtm, but if you need to drop all tables, you can use the following commands while connected to the fmtm database:
+Migrations are a way to manage changes to the database schema over
+time. We haven't yet implemented migrations in fmtm, but if you need
+to drop all tables, you can use the following commands while connected
+to the fmtm database:
 
 If you need to drop all tables, connect to fmtm and...
 
@@ -108,4 +115,7 @@ If you need to drop all tables, connect to fmtm and...
     drop table users cascade;
     drop table x_form cascade;
 
-**Note:** Remember to use caution when dropping tables, as this will permanently delete all data in those tables. If you make any changes to the database, be sure to commit them to ensure that they are saved.
+**Note:** Remember to use caution when dropping tables, as this will
+permanently delete all data in those tables. If you make any changes
+to the database, be sure to commit them to ensure that they are
+saved.
