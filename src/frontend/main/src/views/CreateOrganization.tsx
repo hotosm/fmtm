@@ -97,11 +97,13 @@ const CreateOrganizationForm = () => {
             helperText={errors.description}
             FormHelperTextProps={inputFormStyles()}
           />
-          <CoreModules.FormControl fullWidth margin="normal">
-            <InputLabel id="dropdown-label">Dropdown</InputLabel>
+
+          <CoreModules.FormControl fullWidth margin="normal" variant="filled">
+            <CoreModules.InputLabel id="demo-simple-select-helper-label">Organization type</CoreModules.InputLabel>
             <CoreModules.Select
-              labelId="dropdown-label"
-              id="type"
+              id="demo-simple-select-helper-label"
+              labelId="demo-simple-select-helper-label"
+              label="Organization type"
               value={values.type || ''}
               onChange={(e) => {
                 handleCustomChange('type', e.target.value);
