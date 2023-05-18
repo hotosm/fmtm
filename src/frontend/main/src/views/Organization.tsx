@@ -14,6 +14,8 @@ const Organization = () => {
     cursor: 'pointer',
   };
 
+  const url = 'https://fmtm.naxa.com.np/d907cf67fe587072a592.png';
+
   const [searchKeyword, setSearchKeyword] = useState('');
 
   const handleSearchChange = (event) => {
@@ -91,9 +93,9 @@ const Organization = () => {
                 {data.description}
               </CoreModules.Typography>
             </CoreModules.CardContent>
-            <CoreModules.Link to={data.url} target="_blank">
-              <CoreModules.Avatar alt={data.title} src={data.logo}>
-                {!data.logo || data.logo === 'string' ? data.name[0] : null}
+            <CoreModules.Link to={data.url} target="_blank" style={{ textDecoration: 'none' }}>
+              <CoreModules.Avatar alt={data.title} src={data.logo} sx={{ height: '45px', width: '45px' }}>
+                {!data.logo || data.logo === 'string' ? data.name[0] : url}
               </CoreModules.Avatar>
             </CoreModules.Link>
           </CoreModules.Card>

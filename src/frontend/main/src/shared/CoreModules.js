@@ -40,6 +40,8 @@ import {
     Avatar,
     InputAdornment,
     InputLabel,
+    Tooltip,
+    Breadcrumbs,
 } from "@mui/material";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import axios from 'axios';
@@ -116,4 +118,6 @@ export default {
     Avatar,
     InputAdornment,
     InputLabel,
+    Tooltip,
+    Breadcrumbs,
 }
