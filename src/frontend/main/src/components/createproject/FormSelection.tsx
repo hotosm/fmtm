@@ -1,16 +1,87 @@
-import React, { useEffect, useRef } from 'react';
-import windowDimention from '../../hooks/WindowDimension';
+import React, { useEffect, useRef, useState } from 'react';
 import enviroment from '../../environment';
 import CoreModules from '../../shared/CoreModules';
 import FormGroup from '@mui/material/FormGroup';
 import { CreateProjectService, FormCategoryService, GenerateProjectLog } from '../../api/CreateProjectService';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { CreateProjectActions } from '../../store/slices/CreateProjectSlice';
-import { InputLabel, MenuItem, Select } from '@mui/material';
+import { InputLabel, LinearProgress, MenuItem, Select } from '@mui/material';
 import AssetModules from '../../shared/AssetModules.js';
 import useForm from '../../hooks/useForm';
 import SelectFormValidation from './validation/SelectFormValidation';
 import { CommonActions } from '../../store/slices/CommonSlice';
+
+const theme = CoreModules.createTheme({
+  palette: {
+    primary: {
+      main: '#7679d1',
+    },
+    secondary: {
+      main: '#dba7f0',
+    },
+  },
+});
+
+const totalSteps = 5;
+
+const LoadingBar = ({ steps, activeStep }) => {
+  const calculateProgress = (totalSteps, activeStep) => {
+    return (activeStep / totalSteps) * 100;
+  };
+
+  const calculateRemainingTime = (totalSteps, activeStep, elapsedSeconds) => {
+    const averageSecondsPerStep = elapsedSeconds / activeStep;
+    const remainingSteps = totalSteps - activeStep;
+    const remainingTime = remainingSteps * averageSecondsPerStep;
+    return remainingTime.toFixed(2);
+  };
+
+  const startTimestamp = useRef(Date.now());
+
+  useEffect(() => {
+    startTimestamp.current = Date.now();
+  }, [activeStep]);
+
+  const elapsedSeconds = (Date.now() - startTimestamp.current) / 1000;
+  const completedPercentage = calculateProgress(steps, activeStep);
+  const remainingTime = calculateRemainingTime(steps, activeStep, elapsedSeconds);
+
+  return (
+    <CoreModules.Box>
+      <CoreModules.Box sx={{ display: 'flex', width: '80%', justifyContent: 'space-between', alignItems: 'center' }}>
+        <CoreModules.Typography variant="subtitle6">
+          Your Progress
+          <CoreModules.Typography variant="subtitle1">{`${completedPercentage}% Completed`}</CoreModules.Typography>
+        </CoreModules.Typography>
+
+        <CoreModules.Typography variant="subtitle6">{`${remainingTime} secs remaining`}</CoreModules.Typography>
+      </CoreModules.Box>
+      <CoreModules.ThemeProvider theme={theme}>
+        <CoreModules.Tooltip title={`Step : ${totalSteps} / ${activeStep + 1}`} placement="top">
+          <CoreModules.Box
+            component="span"
+            sx={{
+              position: 'absolute',
+              borderRadius: '20%',
+            }}
+          >
+            <LinearProgress
+              variant="determinate"
+              value={completedPercentage}
+              sx={{
+                borderRadius: '12px',
+                height: '20px',
+                width: 430,
+                backgroundImage: `linear-gradient(to right, ${theme.palette.primary.main} 0%, ${
+                  theme.palette.secondary.main
+                } ${calculateProgress(steps, totalSteps)}%, grey ${calculateProgress(steps, activeStep)}%, grey 100%)`,
+              }}
+            />
+          </CoreModules.Box>
+        </CoreModules.Tooltip>
+      </CoreModules.ThemeProvider>
+    </CoreModules.Box>
+  );
+};
 
 // import { SelectPicker } from 'rsuite';
 let generateProjectLogIntervalCb = null;
@@ -155,149 +226,164 @@ const FormSelection: React.FC = () => {
     submission,
     SelectFormValidation,
   );
-  return (
-    <CoreModules.Stack sx={{ width: '50%' }}>
-      <form onSubmit={handleSubmit}>
-        <FormGroup>
-          <CoreModules.FormControl sx={{ mb: 3, width: '30%' }} variant="filled">
-            <InputLabel
-              id="form-category"
-              sx={{
-                '&.Mui-focused': {
-                  color: defaultTheme.palette.black,
-                },
-              }}
-            >
-              Data Extract Category
-            </InputLabel>
-            <Select
-              labelId="data_extractWays-label"
-              id="data_extractWays"
-              value={values.data_extractWays}
-              label="Data Extract Category"
-              onChange={(e) => handleCustomChange('data_extractWays', e.target.value)}
-            >
-              {/* onChange={(e) => dispatch(CreateProjectActions.SetProjectDetails({ key: 'xform_title', value: e.target.value }))} > */}
-              {selectExtractWays?.map((form) => (
-                <MenuItem value={form.value}>{form.label}</MenuItem>
-              ))}
-            </Select>
-            {errors.data_extractWays && (
-              <CoreModules.FormLabel component="h3" sx={{ color: defaultTheme.palette.error.main }}>
-                {errors.data_extractWays}
-              </CoreModules.FormLabel>
-            )}
-          </CoreModules.FormControl>
-          <CoreModules.FormControl sx={{ mb: 3, width: '30%' }} variant="filled">
-            <InputLabel
-              id="form-category"
-              sx={{
-                '&.Mui-focused': {
-                  color: defaultTheme.palette.black,
-                },
-              }}
-            >
-              Form Category
-            </InputLabel>
-            <Select
-              labelId="form_category-label"
-              id="form_category"
-              value={values.xform_title}
-              label="Form Category"
-              onChange={(e) => handleCustomChange('xform_title', e.target.value)}
-            >
-              {/* onChange={(e) => dispatch(CreateProjectActions.SetProjectDetails({ key: 'xform_title', value: e.target.value }))} > */}
-              {formCategoryData?.map((form) => (
-                <MenuItem value={form.value}>{form.label}</MenuItem>
-              ))}
-            </Select>
-            {errors.xform_title && (
-              <CoreModules.FormLabel component="h3" sx={{ color: defaultTheme.palette.error.main }}>
-                {errors.xform_title}
-              </CoreModules.FormLabel>
-            )}
-          </CoreModules.FormControl>
-          <CoreModules.FormControl sx={{ mb: 3, width: '30%' }} variant="filled">
-            <InputLabel
-              id="form-category"
-              sx={{
-                '&.Mui-focused': {
-                  color: defaultTheme.palette.black,
-                },
-              }}
-            >
-              Form Selection
-            </InputLabel>
-            <Select
-              labelId="form_ways-label"
-              id="form_ways"
-              value={values.form_ways}
-              label="Form Ways"
-              onChange={(e) => handleCustomChange('form_ways', e.target.value)}
-              // onChange={(e) => dispatch(CreateProjectActions.SetProjectDetails({ key: 'form_ways', value: e.target.value }))}
-            >
-              {selectFormWays?.map((form) => (
-                <MenuItem value={form.value}>{form.label}</MenuItem>
-              ))}
-            </Select>
-            {errors.form_ways && (
-              <CoreModules.FormLabel component="h3" sx={{ color: defaultTheme.palette.error.main }}>
-                {errors.form_ways}
-              </CoreModules.FormLabel>
-            )}
-          </CoreModules.FormControl>
 
-          {values.form_ways === 'Upload a Custom Form' ? (
-            <>
-              <a download>
-                Download Form Template{' '}
-                <CoreModules.IconButton style={{ borderRadius: 0 }} color="primary" component="label">
-                  <AssetModules.FileDownloadIcon style={{ color: '#2DCB70' }} />
-                </CoreModules.IconButton>
-              </a>
-              <CoreModules.FormLabel>Upload XLS Form</CoreModules.FormLabel>
-              <CoreModules.Button variant="contained" component="label">
-                <CoreModules.Input
-                  type="file"
-                  onChange={(e) => {
-                    handleCustomChange('uploaded_form', e.target.files);
-                    // setFormFileUpload(e.target.files)
-                  }}
-                />
-              </CoreModules.Button>
-              {!values.uploaded_form && (
-                <CoreModules.FormLabel component="h3" sx={{ mt: 2, color: defaultTheme.palette.error.main }}>
-                  Form File is required.
+  const [activeStep, setActiveStep] = useState(0);
+
+  useEffect(() => {
+    setActiveStep(1.5);
+  }, []);
+
+  return (
+    <CoreModules.Stack sx={{ width: '80%', display: 'flex', flexDirection: 'row' }}>
+      <CoreModules.Stack sx={{ width: '50%' }}>
+        <form onSubmit={handleSubmit}>
+          <FormGroup>
+            <CoreModules.FormControl sx={{ mb: 3, width: '60%' }} variant="filled">
+              <InputLabel
+                id="form-category"
+                sx={{
+                  '&.Mui-focused': {
+                    color: defaultTheme.palette.black,
+                  },
+                }}
+              >
+                Data Extract Category
+              </InputLabel>
+              <Select
+                labelId="data_extractWays-label"
+                id="data_extractWays"
+                value={values.data_extractWays}
+                label="Data Extract Category"
+                onChange={(e) => handleCustomChange('data_extractWays', e.target.value)}
+              >
+                {/* onChange={(e) => dispatch(CreateProjectActions.SetProjectDetails({ key: 'xform_title', value: e.target.value }))} > */}
+                {selectExtractWays?.map((form) => (
+                  <MenuItem value={form.value}>{form.label}</MenuItem>
+                ))}
+              </Select>
+              {errors.data_extractWays && (
+                <CoreModules.FormLabel component="h3" sx={{ color: defaultTheme.palette.error.main }}>
+                  {errors.data_extractWays}
                 </CoreModules.FormLabel>
               )}
-            </>
-          ) : null}
-
-          <CoreModules.Stack sx={{ display: 'flex', flexDirection: 'row', gap: 12 }}>
-            {/* Previous Button  */}
-            <Link to="/create-project">
-              <CoreModules.Button variant="outlined" color="error" sx={{ padding: '8px' }}>
-                Previous
-              </CoreModules.Button>
-            </Link>
-            {/* END */}
-
-            {/* Submit Button For Create Project on Area Upload */}
-            <CoreModules.Stack sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <CoreModules.Button
-                sx={{ padding: '8px' }}
-                variant="contained"
-                color="error"
-                type="submit"
-                // disabled={!fileUpload ? true : false}
+            </CoreModules.FormControl>
+            <CoreModules.FormControl sx={{ mb: 3, width: '60%' }} variant="filled">
+              <InputLabel
+                id="form-category"
+                sx={{
+                  '&.Mui-focused': {
+                    color: defaultTheme.palette.black,
+                  },
+                }}
               >
-                Next
-              </CoreModules.Button>
+                Form Category
+              </InputLabel>
+              <Select
+                labelId="form_category-label"
+                id="form_category"
+                value={values.xform_title}
+                label="Form Category"
+                onChange={(e) => handleCustomChange('xform_title', e.target.value)}
+              >
+                {/* onChange={(e) => dispatch(CreateProjectActions.SetProjectDetails({ key: 'xform_title', value: e.target.value }))} > */}
+                {formCategoryData?.map((form) => (
+                  <MenuItem value={form.value}>{form.label}</MenuItem>
+                ))}
+              </Select>
+              {errors.xform_title && (
+                <CoreModules.FormLabel component="h3" sx={{ color: defaultTheme.palette.error.main }}>
+                  {errors.xform_title}
+                </CoreModules.FormLabel>
+              )}
+            </CoreModules.FormControl>
+            <CoreModules.FormControl sx={{ mb: 3, width: '60%' }} variant="filled">
+              <InputLabel
+                id="form-category"
+                sx={{
+                  '&.Mui-focused': {
+                    color: defaultTheme.palette.black,
+                  },
+                }}
+              >
+                Form Selection
+              </InputLabel>
+              <Select
+                labelId="form_ways-label"
+                id="form_ways"
+                value={values.form_ways}
+                label="Form Ways"
+                onChange={(e) => handleCustomChange('form_ways', e.target.value)}
+                // onChange={(e) => dispatch(CreateProjectActions.SetProjectDetails({ key: 'form_ways', value: e.target.value }))}
+              >
+                {selectFormWays?.map((form) => (
+                  <MenuItem value={form.value}>{form.label}</MenuItem>
+                ))}
+              </Select>
+              {errors.form_ways && (
+                <CoreModules.FormLabel component="h3" sx={{ color: defaultTheme.palette.error.main }}>
+                  {errors.form_ways}
+                </CoreModules.FormLabel>
+              )}
+            </CoreModules.FormControl>
+
+            {values.form_ways === 'Upload a Custom Form' ? (
+              <>
+                <a download>
+                  Download Form Template{' '}
+                  <CoreModules.IconButton style={{ borderRadius: 0 }} color="primary" component="label">
+                    <AssetModules.FileDownloadIcon style={{ color: '#2DCB70' }} />
+                  </CoreModules.IconButton>
+                </a>
+                <CoreModules.FormLabel>Upload XLS Form</CoreModules.FormLabel>
+                <CoreModules.Button variant="contained" component="label">
+                  <CoreModules.Input
+                    type="file"
+                    onChange={(e) => {
+                      handleCustomChange('uploaded_form', e.target.files);
+                      // setFormFileUpload(e.target.files)
+                    }}
+                  />
+                </CoreModules.Button>
+                {!values.uploaded_form && (
+                  <CoreModules.FormLabel component="h3" sx={{ mt: 2, color: defaultTheme.palette.error.main }}>
+                    Form File is required.
+                  </CoreModules.FormLabel>
+                )}
+              </>
+            ) : null}
+
+            <CoreModules.Stack
+              sx={{ display: 'flex', flexDirection: 'row', width: '60%', justifyContent: 'space-between' }}
+            >
+              {/* Previous Button  */}
+              <Link to="/create-project">
+                <CoreModules.Button variant="outlined" color="error" sx={{ padding: '8px' }}>
+                  Previous
+                </CoreModules.Button>
+              </Link>
+              {/* END */}
+
+              {/* Submit Button For Create Project on Area Upload */}
+              <CoreModules.Stack>
+                <CoreModules.Button
+                  sx={{ padding: '8px' }}
+                  variant="contained"
+                  color="error"
+                  type="submit"
+                  // disabled={!fileUpload ? true : false}
+                >
+                  Next
+                </CoreModules.Button>
+              </CoreModules.Stack>
+              {/* END */}
             </CoreModules.Stack>
-            {/* END */}
-          </CoreModules.Stack>
-        </FormGroup>
-      </form>
+          </FormGroup>
+        </form>
+      </CoreModules.Stack>
+      <CoreModules.Stack sx={{ display: 'flex', flexDirection: 'col', gap: 2, width: '40%' }}>
+        <CoreModules.Typography variant="subtitle1">Progress Bar</CoreModules.Typography>
+        <LoadingBar steps={totalSteps} activeStep={activeStep} />
+      </CoreModules.Stack>
       {generateProjectLog ? (
         <CoreModules.Stack sx={{ width: '60%', height: '68vh' }}>
           <div
