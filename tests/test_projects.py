@@ -16,6 +16,5 @@
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
-
 def test_example():
     assert True
