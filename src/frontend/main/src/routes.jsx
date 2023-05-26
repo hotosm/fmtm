@@ -10,6 +10,9 @@ import { Suspense } from 'react';
 import CreateProject from './views/CreateProject';
 import ProtectedRoute from './utilities/ProtectedRoute';
 import NotFoundPage from './views/NotFound404';
+import Organization from './views/Organization';
+import CreateOrganization from './views/CreateOrganization';
+import Authorized from './views/Authorized';
 
 const ProjectDetails = React.lazy(() => import('map/ProjectDetails'));
 const Submissions = React.lazy(() => import('map/Submissions'));
@@ -20,6 +23,14 @@ const routes = createBrowserRouter([
       {
         path: '/',
         element: <Home />,
+      },
+      {
+        path: '/organization',
+        element: <Organization />,
+      },
+      {
+        path: '/createOrganization',
+        element: <CreateOrganization />,
       },
       // {
       //     path: '/explore',
@@ -72,16 +83,6 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/select-form',
-        element: (
-          <ProtectedRoute>
-            <Suspense fallback={<div>Loading...</div>}>
-              <CreateProject />
-            </Suspense>
-          </ProtectedRoute>
-        ),
-      },
-      {
         path: '/upload-area',
         element: (
           <ProtectedRoute>
@@ -92,18 +93,44 @@ const routes = createBrowserRouter([
         ),
       },
       {
+        path: '/define-tasks',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <CreateProject />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/select-form',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <CreateProject />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: '/basemap-selection',
-        element: <ProtectedRoute>
-                    <Suspense fallback={<div>Loading...</div>}>
-                        <CreateProject />
-                    </Suspense>
-                </ProtectedRoute>
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <CreateProject />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/osmauth',
+        element:<Suspense fallback={<div>Loading...</div>}>
+                  <Authorized/>
+                </Suspense>
       },
       {
         path: '*',
-        element: (
-          <NotFoundPage />
-        ),
+        element: <NotFoundPage />,
       },
     ],
   },

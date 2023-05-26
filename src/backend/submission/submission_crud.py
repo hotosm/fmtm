@@ -25,6 +25,7 @@ from ..central.central_crud import xform
 from ..projects import project_crud
 from ..central.central_crud import project
 from fastapi.responses import FileResponse
+from fastapi import HTTPException
 
 
 def get_submission_of_project(
@@ -39,6 +40,11 @@ def get_submission_of_project(
     """
 
     project_info = project_crud.get_project_by_id(db, project_id)
+
+    # Return empty list if project is not found
+    if not project_info:
+        return []
+
     odkid = project_info.odkid
     project_name = project_info.project_name_prefix
     form_category = project_info.xform_title
@@ -55,15 +61,11 @@ def get_submission_of_project(
 
             # XML Form Id is a combination or project_name, category and task_id
             xml_form_id = f'{project_name}_{form_category}_{id}'.split('_')[2]
-
-            print('xml_form_id',xml_form_id)
             submission_list = xform.listSubmissions(odkid, xml_form_id)
-            print('submission_list ',submission_list)
+
+            # data.append(submission_list)
             if isinstance(submission_list,list):
                 for submission in submission_list:
-                    # App User Id is a combination of project_name, category and task_id 
-                    # Need to access from api
-                    submission['submitted_by'] = f'{project_name}_{form_category}_{id}'
                     data.append(submission)
         return data
 
@@ -81,6 +83,11 @@ def get_forms_of_project(
         project_id: int
     ):
     project_info = project_crud.get_project_by_id(db, project_id)
+
+    # Return empty list if project is not found
+    if not project_info:
+        return []
+
     odkid = project_info.odkid
 
     result = project.listForms(odkid)
@@ -92,6 +99,11 @@ def list_app_users_or_project(
         project_id: int
     ):
     project_info = project_crud.get_project_by_id(db, project_id)
+
+    # Return empty list if project is not found
+    if not project_info:
+        return []
+
     odkid = project_info.odkid
     result = project.listAppUsers(odkid)
     return result
@@ -111,6 +123,12 @@ def download_submission(
     ):
 
     project_info = project_crud.get_project_by_id(db, project_id)
+
+    # Return empty list if project is not found
+    if not project_info:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+
     central_url = project_info.odk_central_url
     odkid = project_info.odkid
     project_name = project_info.project_name_prefix
@@ -175,6 +193,11 @@ def get_submission_points(
             else all the submission points made in the projects are returned.
     """
     project_info = project_crud.get_project_by_id(db, project_id)
+
+    # Return empty list if project is not found
+    if not project_info:
+        raise HTTPException(status_code=404, detail="Project not found")
+
     odkid = project_info.odkid
     project_name = project_info.project_name_prefix
     form_category = project_info.xform_title

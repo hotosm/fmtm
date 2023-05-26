@@ -21,17 +21,25 @@ import View from "ol/View";
 import { HomeActions } from "fmtm/HomeSlice";
 import CoreModules from "fmtm/CoreModules";
 import AssetModules from "fmtm/AssetModules";
+import { ProjectBuildingGeojsonService } from "../api/SubmissionService";
+import GeoJSON from 'ol/format/GeoJSON';
+import { get } from 'ol/proj';
 
 import Overlay from "ol/Overlay";
+import { defaultStyles, getStyles } from "../components/MapComponent/OpenLayersComponent/helpers/styleUtils";
 // import XYZ from "ol/source/XYZ.js";
 // import { toLonLat } from "ol/proj";
 // import { toStringHDMS } from "ol/coordinate";
-
+const basicGeojsonTemplate = {
+  "type": "FeatureCollection",
+  "features": []
+};
 const Home = () => {
   const dispatch = CoreModules.useDispatch();
   const params = CoreModules.useParams();
   const defaultTheme = CoreModules.useSelector((state) => state.theme.hotTheme);
   const state = CoreModules.useSelector((state) => state.project);
+  const projectState = CoreModules.useSelector((state) => state.project);
 
   const projectInfo = CoreModules.useSelector(
     (state) => state.home.selectedProject
@@ -67,6 +75,11 @@ const Home = () => {
 
   //Fetch project for the first time
   useEffect(() => {
+    if (
+      state.projectTaskBoundries.findIndex(
+        (project) => project.id == environment.decode(encodedId)
+      ) == -1
+    ) {
       dispatch(
         ProjectById(
           `${environment.baseApiUrl}/projects/${environment.decode(encodedId)}`,
@@ -74,9 +87,51 @@ const Home = () => {
         ),
         state.projectTaskBoundries
       );
+      dispatch(ProjectBuildingGeojsonService(`${environment.baseApiUrl}/projects/${environment.decode(encodedId)}/features`))
 
+    }else{
+      dispatch(ProjectActions.SetProjectTaskBoundries([]))
+      dispatch(
+        ProjectById(
+          `${environment.baseApiUrl}/projects/${environment.decode(encodedId)}`,
+          state.projectTaskBoundries
+        ),
+        state.projectTaskBoundries
+      );
+    }
+    if (Object.keys(state.projectInfo).length == 0) {
+      dispatch(ProjectActions.SetProjectInfo(projectInfo));
+    } else {
+      if (state.projectInfo.id != environment.decode(encodedId)) {
+        dispatch(ProjectActions.SetProjectInfo(projectInfo));
+      }
+    }
   }, [params.id]);
 
+  //Added Building Geojson on Project Details Page
+  useEffect(() => {
+    if(!map) return
+    
+    const buildingGeojsonFeatureCollection = {
+      ...basicGeojsonTemplate,
+      features: projectState?.projectBuildingGeojson.map((feature) => ({ ...feature.geometry, id: feature.id }))
+
+      // features: projectState?.projectTaskBoundries?.map((task) => {
+      //     return { ...task.taskBoundries?.[0]?.outline_geojson, id: task.taskBoundries?.[0]?.outline_geojson?.properties.uid }
+      // })
+    };
+    const buildingFeaturesLayer = new VectorLayer({
+      source: new VectorSource({
+        features: new GeoJSON().readFeatures(buildingGeojsonFeatureCollection, {
+          featureProjection: get('EPSG:4326'),
+        }),
+      }),
+      // style:(styles,feature,resolution)=> getStyles({ styles:defaultStyles, feature, resolution })
+    });
+    map.addLayer(buildingFeaturesLayer);
+
+  }, [map,projectState?.projectBuildingGeojson])
+  
   useEffect(() => {
     const container = document.getElementById("popup");
     const closer = document.getElementById("popup-closer");
@@ -99,7 +154,7 @@ const Home = () => {
       }
     }
     // Bind the event listener for outside click and trigger handleClickOutside
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
 
     closer.style.textDecoration = "none";
     closer.style.color = defaultTheme.palette.info["main"];
@@ -112,6 +167,7 @@ const Home = () => {
     const initalFeaturesLayer = new VectorLayer({
       source: new VectorSource(),
     });
+    
 
     const view = new View({
       projection: "EPSG:4326",
@@ -130,7 +186,7 @@ const Home = () => {
           source: new OSM(),
           visible: true,
         }),
-        initalFeaturesLayer,
+        initalFeaturesLayer
       ],
       overlays: [overlay],
       view: view,
@@ -138,12 +194,12 @@ const Home = () => {
 
     initialMap.on("click", function (event) {
       initialMap.forEachFeatureAtPixel(event.pixel, function (feature, layer) {
-        const status = feature.getId().replace("_", ",").split(",")[1];
+        const status = feature.getId()?.toString()?.replace("_", ",")?.split(",")?.[1];
         if (
           environment.tasksStatus.findIndex((data) => data.label == status) !=
           -1
         ) {
-          setTaskId(feature.getId().split("_")[0]);
+          setTaskId(feature?.getId()?.split("_")?.[0]);
           const coordinate = event.coordinate;
           overlay.setPosition(coordinate);
           setFeaturesLayer(feature);
@@ -159,12 +215,12 @@ const Home = () => {
     setView(view);
     setFeaturesLayer(initalFeaturesLayer);
 
-    return ()=>{
-       /**
-     * Removed handleClickOutside Eventlistener on unmount
-     */
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
+    return () => {
+      /**
+       * Removed handleClickOutside Eventlistener on unmount
+       */
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   useEffect(() => {
@@ -175,7 +231,6 @@ const Home = () => {
   }, [map, y]);
 
   TasksLayer(map, mainView, featuresLayer);
-
   return (
     <CoreModules.Stack spacing={2}>
       {/* Home snackbar */}
@@ -277,17 +332,29 @@ const Home = () => {
           state={state}
           type={type}
         />
-              <CoreModules.Stack direction={"column"} spacing={1} justifyContent="flex-end" >
-                <CoreModules.Link to={`/submissions/${encodedId}`} style={{display:'flex',justifyContent:'flex-end',textDecoration:'none',marginRight:'15px'}}>
-                  <CoreModules.Button
-                      variant="contained"
-                      color="error"
-                      sx={{"width":"10%"}}
-                  >
-                    Go To Submission        
-                  </CoreModules.Button>
-                </CoreModules.Link>
-              </CoreModules.Stack>
+        <CoreModules.Stack
+          direction={"column"}
+          spacing={1}
+          justifyContent="flex-end"
+        >
+          <CoreModules.Link
+            to={`/submissions/${encodedId}`}
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              textDecoration: "none",
+              marginRight: "15px",
+            }}
+          >
+            <CoreModules.Button
+              variant="contained"
+              color="error"
+              sx={{ width: "10%" }}
+            >
+              Go To Submission
+            </CoreModules.Button>
+          </CoreModules.Link>
+        </CoreModules.Stack>
         <OpenLayersMap
           defaultTheme={defaultTheme}
           stateDialog={stateDialog}

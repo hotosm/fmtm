@@ -16,10 +16,14 @@
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
+import os
 import json
+import uuid
+
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, Request, BackgroundTasks
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, Form, BackgroundTasks
+from osm_fieldwork.make_data_extract import getChoices
 from fastapi.logger import logger as logger
 from sqlalchemy.orm import Session
 
@@ -204,13 +208,19 @@ async def upload_project_boundary_with_zip(
 @router.post("/upload_xlsform")
 async def upload_custom_xls(
     upload: UploadFile = File(...),
-    project_id: int=None,
+    category: str = Form(...),
     db: Session = Depends(database.get_db),
 ):
-    # read entire file
-    content = await upload.read()
-    category = upload.filename.split(".")[0]
-    project_crud.upload_xlsform(db, project_id, content, category)
+    """
+        Upload a custom XLSForm to the database.
+        Parameters:
+        - upload: the XLSForm file
+        - category: the category of the XLSForm
+    """
+
+    content = await upload.read() # read file content
+    name = upload.filename.split(".")[0] # get name of file without extension
+    project_crud.upload_xlsform(db, content,name, category)
 
     # FIXME: fix return value
     return {"xform_title": f"{category}"}
@@ -256,9 +266,17 @@ async def upload_multi_project_boundary(
 async def upload_project_boundary(
     project_id: int,
     upload: UploadFile = File(...),
-    dimension : int = 500,
+    dimension : int = Form(500),
     db: Session = Depends(database.get_db),
 ):
+    
+    # Validating for .geojson File.
+    file_name = os.path.splitext(upload.filename)
+    file_ext = file_name[1]
+    allowed_extensions = ['.geojson','.json']
+    if file_ext not in allowed_extensions:
+        raise HTTPException(status_code=400, detail="Provide a valid .geojson file")
+
     # read entire file
     content = await upload.read()
     boundary = json.loads(content)
@@ -304,6 +322,7 @@ async def download_task_boundaries(
 async def generate_files(
     background_tasks: BackgroundTasks,
     project_id: int,
+    extractPolygon: bool = Form(False),
     upload: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
 ):
@@ -320,6 +339,7 @@ async def generate_files(
     Parameters:
 
     project_id (int): The ID of the project for which files are being generated. This is a required field.
+    polygon (bool): A boolean flag indicating whether the polygon is extracted or not.
 
     upload (UploadFile): An uploaded file that is used as input for generating the files. 
         This is not a required field. A file should be provided if user wants to upload a custom xls form.
@@ -328,11 +348,32 @@ async def generate_files(
     Message (str): A success message containing the project ID.
 
     """
-    # await project_crud.generate_appuser_files(db, project_id, upload)
-    background_tasks.add_task(project_crud.generate_appuser_files, db, project_id, upload)
+
+    contents = None
+    xform_title = None
+    if upload:
+        # Validating for .XLS File.
+        file_name = os.path.splitext(upload.filename)
+        file_ext = file_name[1]
+        allowed_extensions = ['.xls']
+        if file_ext not in allowed_extensions:
+            raise HTTPException(status_code=400, detail="Provide a valid .xls file")
+        xform_title = file_name[0]
+        contents = await upload.read()
+
+    # generate a unique task ID using uuid
+    background_task_id = uuid.uuid4()
+
+    # insert task and task ID into database
+    await project_crud.insert_background_task_into_database(db, task_id = background_task_id)
+
+    background_tasks.add_task(project_crud.generate_appuser_files, db, project_id, extractPolygon, contents, xform_title, background_task_id)
 
     # FIXME: fix return value
-    return {"Message": f"{project_id}"}
+    return {
+            "Message": f"{project_id}",
+            "task_id": f"{background_task_id}"
+            }
 
 
 @router.get("/organization/")
@@ -381,6 +422,7 @@ async def create_organization(
 @router.get("/{project_id}/features",  response_model=List[project_schemas.Feature])
 def get_project_features(
     project_id: int,
+    task_id: int = None,
     db: Session = Depends(database.get_db),
 ):
     """
@@ -395,5 +437,129 @@ def get_project_features(
     - Returns a JSON object containing a list of features.
 
     """
-    features = project_crud.get_project_features(db, project_id)
+    features = project_crud.get_project_features(db, project_id, task_id)
     return features
+
+
+@router.get("/generate-log/")
+async def generate_log(
+    project_id : int,
+    uuid:uuid.UUID,
+    db: Session = Depends(database.get_db)
+):
+    """
+    Get the contents of a log file in a log format.
+
+    ### Response
+    - **200 OK**: Returns the contents of the log file in a log format. Each line is separated by a newline character "\n".
+
+    - **500 Internal Server Error**: Returns an error message if the log file cannot be generated.
+
+    ### Return format
+    Task Status and Logs are returned in a JSON format.
+    """
+    try:
+        # Get the backgrund task status
+        task_status = await project_crud.get_background_task_status(uuid, db)
+        extract_completion_count = await project_crud.get_extract_completion_count(project_id, db)
+
+        with open(f"{project_id}_generate.log", "r") as f:
+            lines = f.readlines()
+            last_100_lines = lines[-50:]
+            logs = ''.join(last_100_lines)
+            return {
+                'status':task_status.name,
+                'progress':extract_completion_count,
+                'logs':logs
+            }
+    except Exception as e:
+        logger.error(e)
+        return "Error in generating log file"
+
+
+@router.get("/categories/")
+async def get_categories():
+    """
+    Get api for fetching all the categories.
+
+    This endpoint fetches all the categories from osm_fieldwork.
+
+    ## Response
+    - Returns a JSON object containing a list of categories and their respoective forms.
+
+    """
+    
+    categories = getChoices() # categories are fetched from osm_fieldwork.make_data_extracts.getChoices()
+    return categories
+
+
+@router.post("/preview_tasks/")
+async def preview_tasks(
+    upload: UploadFile = File(...),
+    dimension : int = Form(500)
+):
+    """
+    Preview tasks for a project.
+
+    This endpoint allows you to preview tasks for a project.
+
+    ## Request Body
+    - `project_id` (int): the project's id. Required.
+
+    ## Response
+    - Returns a JSON object containing a list of tasks.
+
+    """
+
+    # Validating for .geojson File.
+    file_name = os.path.splitext(upload.filename)
+    file_ext = file_name[1]
+    allowed_extensions = ['.geojson','.json']
+    if file_ext not in allowed_extensions:
+        raise HTTPException(status_code=400, detail="Provide a valid .geojson file")
+
+    # read entire file
+    content = await upload.read()
+    boundary = json.loads(content)
+
+    result = await project_crud.preview_tasks(boundary, dimension)
+    return result
+
+
+@router.post("/add_features/")
+async def add_features(
+    background_tasks: BackgroundTasks,
+    project_id : int,
+    upload: UploadFile = File(...),
+    db: Session = Depends(database.get_db)
+):
+    """
+    Add features to a project.
+
+    This endpoint allows you to add features to a project.
+
+    ## Request Body
+    - `project_id` (int): the project's id. Required.
+    - `upload` (file): Geojson files with the features. Required.
+
+    """
+
+    # Validating for .geojson File.
+    file_name = os.path.splitext(upload.filename)
+    file_ext = file_name[1]
+    allowed_extensions = ['.geojson','.json']
+    if file_ext not in allowed_extensions:
+        raise HTTPException(status_code=400, detail="Provide a valid .geojson file")
+
+    # read entire file
+    content = await upload.read()
+    features = json.loads(content)
+
+    # generate a unique task ID using uuid
+    background_task_id = uuid.uuid4()
+
+    # insert task and task ID into database
+    await project_crud.insert_background_task_into_database(db, task_id = background_task_id)
+
+    background_tasks.add_task(project_crud.add_features_into_database, db, project_id, features, background_task_id)
+    return True

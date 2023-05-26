@@ -62,10 +62,12 @@ class ProjectPriority(IntEnum, Enum):
 class UserRole(IntEnum, Enum):
     """Describes the role a user can be assigned, app doesn't support multiple roles."""
 
-    READ_ONLY = -1
     MAPPER = 0
     ADMIN = 1
-
+    VALIDATOR = 2
+    FIELD_ADMIN = 3
+    ORGANIZATION_ADMIN = 4
+    READ_ONLY = 5
 
 class MappingLevel(IntEnum, Enum):
     """The mapping level the mapper has achieved."""
@@ -207,3 +209,12 @@ class ProjectSplitStrategy(IntEnum, Enum):
     GRID = 0
     OSM_VECTORS = 1
     OTHER = 2
+
+
+class BackgroundTaskStatus(IntEnum, Enum):
+    """Enum describing fast api background Task Statuses."""
+
+    PENDING = 1
+    FAILED = 2
+    RECEIVED = 3
+    SUCCESS = 4

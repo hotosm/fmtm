@@ -74,15 +74,21 @@ const ThemeSlice = CoreModules.createSlice({
 
             },
             typography: {
-                //default
+                //default font family changed to BarlowMedium
                 fontSize: 16,
-                fontFamily: 'ArchivoMedium',
+                // fontFamily: 'ArchivoMedium',
+                fontFamily: 'BarlowMedium',
                 //custom
                 htmlFontSize: 18,
 
                 caption: {
                     fontFamily: 'BarlowBold',
                     fontSize: 24,
+                },
+                // new font size added
+                condensed: {
+                    fontSize: 36,
+                    fontWeight: 'bold'
                 },
                 subtitle1: {
                     fontFamily: 'BarlowBold',
