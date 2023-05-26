@@ -20,7 +20,7 @@ from fastapi import APIRouter, Depends
 from fastapi.logger import logger as log
 from fastapi.responses import JSONResponse
 
-# from ..odkconvert.make_data_extract import PostgresClient, OverpassClient
+# from ..osm_field.make_data_extract import PostgresClient, OverpassClient
 from ..db import database
 from ..debug import debug_schemas
 from ..debug.debug_crud import load_test_data_as_test_user
