@@ -23,6 +23,10 @@ In fact, we are specifically looking for input from developers with **Python ski
 
 The [issue queue](https://github.com/hotosm/fmtm/issues) is the best way to get started. There are issue templates for BUGs and FEATURES that you can use, you could also create your own. Once you have submitted an issue, it will be assigned one label from the following [label categories](https://github.com/hotosm/fmtm/labels). If you are wondering where to start, you can filter by the **good first issue label**.
 
+## Useful Resources for Contribution 
+- [Getting Started](https://github.com/hotosm/fmtm/wiki/DEV-1.-Getting-Started)
+- [FAQs](https://github.com/hotosm/fmtm/wiki/FAQ)
+
 ## Thank you
 
 Thank you very much in advance for your contributions!! Please ensure you refer to our **Code of Conduct**.
