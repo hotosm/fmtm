@@ -29,5 +29,5 @@ The [issue queue](https://github.com/hotosm/fmtm/issues) is the best way to get 
 
 ## Thank you
 
-Thank you very much in advance for your contributions!! Please ensure you refer to our **Code of Conduct**.
+Thank you very much in advance for your contributions!! Please ensure you refer to our [Code of Conduct](https://github.com/hotosm/fmtm/wiki/Code-of-Conduct).
 If you've read the guidelines, but are still not sure how to contribute on Github, please reach out to us via our Slack **#geospatial-tech-and-innovation**.
