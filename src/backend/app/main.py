@@ -120,7 +120,7 @@ async def startup_event():
     """Commands to run on server startup."""
     logger.debug("Starting up FastAPI server.")
     logger.debug("Connecting to DB with SQLAlchemy")
-    Base.metadata.create_all(bind=engine)
+    # Base.metadata.create_all(bind=engine)
 
     # Read in XLSForms
     read_xlsforms(next(get_db()), xlsforms_path)
