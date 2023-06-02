@@ -25,6 +25,7 @@ expertise to collect accurate and high-quality data.
 - ***Coordination:*** The field mapping manager must coordinate the activities
 of the field mappers, ensuring that they are working together
 effectively and efficiently.
+<img align="left" width="500px" src="https://user-images.githubusercontent.com/107098623/194864145-598d6212-9e0b-4c9d-ba90-92e5cd3fa488.png"/>
 
 ## The field mapper (collecting data)
 The field mapper is responsible for collecting data in the field. To
@@ -61,9 +62,10 @@ level of quality and accuracy.
 
 Below is an overview of the user flow of the **Field Mapper**, the **Mapping Coordinator / Field Mapping Manager** and the **Validator**.
 
+
 [Click here](https://miro.com/app/board/uXjVPX4XLcI=/?moveToWidget=3458764534814634286&cot=14) to see an overview of who you are building for, which actions they take and some ideas for solutions!
 
-![Screenshot 2022-10-10 at 14 14 23](https://user-images.githubusercontent.com/107098623/194864145-598d6212-9e0b-4c9d-ba90-92e5cd3fa488.png)
+<!-- ![Screenshot 2022-10-10 at 14 14 23](https://user-images.githubusercontent.com/107098623/194864145-598d6212-9e0b-4c9d-ba90-92e5cd3fa488.png) -->
 
 # The Field Mapper (The person who collects data)
 The **Field Mapper** surveys locations and collects data from them. The basic work flow that a **Field Mapper** has to consider is as follows:
@@ -80,8 +82,9 @@ The **Field Mapper** surveys locations and collects data from them. The basic wo
 9. Once the task is complete, signal that your task is finished. This lets the **Validator** know that they can check the quality of your data
 
 If you want to see this workflow in more detail, click on [this virtual whiteboard!](https://miro.com/app/board/uXjVPX4XLcI=/?moveToWidget=3458764535074723879&cot=14) Here's a sneak-peek:
+<img align="centre" width="1000px" height="600px" src="https://user-images.githubusercontent.com/107098623/194867381-53813f19-71b1-4342-866f-10c963b7460b.png"/>
 
-![Screenshot 2022-10-10 at 14 29 53](https://user-images.githubusercontent.com/107098623/194867381-53813f19-71b1-4342-866f-10c963b7460b.png)
+<!-- ![Screenshot 2022-10-10 at 14 29 53](https://user-images.githubusercontent.com/107098623/194867381-53813f19-71b1-4342-866f-10c963b7460b.png) -->
 
 # The Field Mapping Manager (The person who coordinates field mapping)
 The **Field Mapping Manager** is tasked with coordinating all mapping
