@@ -131,7 +131,7 @@ A back end that converts the project parameters entered by the Campaign Manager 
 
 ### Field Mapper Web Interface (with mobile-friendly map view)
 
-- Ideally with a link that opens ODK Collect directly from the browser, but if that's hard, the fallback is downloading a QR code and importing it into ODK Collect.
+ Ideally with a link that opens ODK Collect directly from the browser, but if that's hard, the fallback is downloading a QR code and importing it into ODK Collect.
 
 ## Contributors ✨
 
