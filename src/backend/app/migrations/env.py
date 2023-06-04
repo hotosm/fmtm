@@ -14,6 +14,20 @@ from db.db_models import Base
 target_metadata = Base.metadata
 
 
+exclude_tables = config.get_section("alembic:exclude").get("tables", "").split(",")
+
+def include_object(object, name, type_, reflected, compare_to):
+    """
+    Custom helper function that enables us to ignore our excluded tables in the autogen sweep
+    """
+    if type_ == "table" and name in exclude_tables:
+        return False
+    else:
+        return alembic_helpers.include_object(
+            object, name, type_, reflected, compare_to
+        )
+
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -29,6 +43,7 @@ def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
+        include_object=include_object,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -52,7 +67,9 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(connection=connection, 
+                            include_object=include_object,
+                          target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
