@@ -113,6 +113,7 @@ class Settings(BaseSettings):
     OSM_LOGIN_REDIRECT_URI: AnyUrl
     OSM_SECRET_KEY: str
     OAUTHLIB_INSECURE_TRANSPORT: Optional[str] = 1
+    SQLALCHEMY_URL: Optional[str]
 
     class Config:
         """Pydantic settings config."""
