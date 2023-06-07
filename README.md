@@ -46,11 +46,11 @@ Please take a look at our [Wiki pages](https://github.com/hotosm/fmtm/wiki/Home/
 
 As of mid-2022, ODK incorporates a new functionality, select from map, that allows field mappers to select an object from a map, view the existing attributes, and fill out a form adding new information and attributes to that object. For example, a mapper can approach a building, select that building from a map view within ODK on their mobile phone, and add the opening hours, number of floors, construction material, or any number of useful attributes in a well-structured questionnaire format
 
-<img src="https://github.com/hotosm/fmtm/blob/main/images/ODK_Select_one_from_file_map_screenshot.jpg?raw=true"  width=400>
+
 
 To prepare the appropriate map files for ODK, we are taking our inspiration from the [HOT Tasking Manager](https://tasks.hotosm.org/), which allows remote mappers to choose well-defined small "task" areas, ensuring full coverage of the project area and no unintended duplication of tasks.
 
-<img src="https://github.com/hotosm/fmtm/blob/main/images/HOT_TM_task_selection_screenshot.jpg?raw=true"  width=600 height=600>
+
 
 # Users
 
@@ -101,6 +101,8 @@ An ODK Central server functions as the back end for the field data collectors. O
 
 The FMTM web app is a Python/Flask/Leaflet app that serves as a front end for the ODK Central server, using the [ODK Central API](https://odkcentral.docs.apiary.io/#) to allocate specific areas/features to individual mappers, and receive their data submissions.
 
+![1](https://github.com/hotosm/fmtm/assets/97789856/305be31a-96b4-42df-96fc-6968e9bd4e5f)
+
 ### Manager Web Interface (with PC browser-friendlymap view)
 
 A computer-screen-optimized web app that allows Campaign Managers to:
@@ -110,6 +112,28 @@ A computer-screen-optimized web app that allows Campaign Managers to:
 - Provide instructions and guidance specific to the project
 - View areas that are at various stages of completion
 - Provide a project-specific URL that field mappers can access from their mobile phones to select and map tasks.
+
+### Steps to create a project in FMTM
+- Go to [fmtm](https://fmtm.hotosm.org/) .
+- If you are new then on the top right cornor click on Sign up and create an account . Else , Sign in to your existing account .
+- Click the '+ CREATE NEW PROJECT' button.
+- Enter the project details.
+
+![2](https://github.com/hotosm/fmtm/assets/97789856/97c38c80-aa0e-4fe2-b8a5-f4ee43a9a63a)
+
+- Upload Area in the GEOJSON file format.
+
+![3](https://github.com/hotosm/fmtm/assets/97789856/680eb831-790a-48f1-8997-c20b5213909d)
+
+- Define the tasks of the project.
+
+![Screenshot 2023-06-07 232152](https://github.com/hotosm/fmtm/assets/97789856/b735a661-d0f6-46b8-b548-5ad7b1928480)
+
+- Select Form .
+
+![Screenshot 2023-06-07 232316](https://github.com/hotosm/fmtm/assets/97789856/475a6070-4897-4e84-8050-6ecf024d0095)
+
+- Click on Submit button.
 
 ### FMTM back end
 
