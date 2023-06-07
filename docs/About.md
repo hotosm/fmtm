@@ -34,11 +34,11 @@ OpenDataKit's Select From Map feature is a useful tool for field mappers to coll
 
 To prepare map files for ODK, inspiration is taken from the HOT Tasking Manager, which allows remote mappers to choose well-defined small "task" areas, ensuring full coverage of the project area and no unintended duplication of tasks. For example, a mapper can approach a building, select that building from a map view within ODK on their mobile phone, and add the opening hours, number of floors, construction material, or any number of useful attributes in a well-structured questionnaire format
 
-<img src="https://github.com/hotosm/fmtm/blob/main/images/ODK_Select_one_from_file_map_screenshot.jpg?raw=true"  width=800 height= 800>
+<!-- <img src="https://github.com/hotosm/fmtm/blob/main/images/ODK_Select_one_from_file_map_screenshot.jpg?raw=true"  width=800 height= 800> -->
 
 To prepare the appropriate map files for ODK, we are taking our inspiration from the [HOT Tasking Manager](https://tasks.hotosm.org/), which allows remote mappers to choose well-defined small "task" areas, ensuring full coverage of the project area and no unintended duplication of tasks.
 
-<img src="https://github.com/hotosm/fmtm/blob/main/images/HOT_TM_task_selection_screenshot.jpg?raw=true"  width=800 height= 800>
+<!-- <img src="https://github.com/hotosm/fmtm/blob/main/images/HOT_TM_task_selection_screenshot.jpg?raw=true"  width=800 height= 800> -->
 
 # Users
 
@@ -91,6 +91,8 @@ An ODK Central server that functions as the back end for the field data collecto
 
 The FMTM web app is a Python/Flask/Leaflet app that serves as a front end for the ODK Central server, using the [ODK Central API](https://odkcentral.docs.apiary.io/#) to allocate specific areas/features to individual mappers, and receive their data submissions.
 
+![1](https://github.com/hotosm/fmtm/assets/97789856/305be31a-96b4-42df-96fc-6968e9bd4e5f)
+
 ### Manager Web Interface (with PC browser-friendlymap view)
 
 A computer-screen-optimized web app that allows Campaign Managers to:
@@ -101,6 +103,27 @@ A computer-screen-optimized web app that allows Campaign Managers to:
 - View areas that are at various stages of completion
 - Provide a project-specific URL that field mappers can access from their mobile phones to select and map tasks.
 
+### Steps to create a project in FMTM
+- Go to [fmtm](https://fmtm.hotosm.org/) .
+- If you are new then on the top right cornor click on Sign up and create an account . Else , Sign in to your existing account .
+- Click the '+ CREATE NEW PROJECT' button.
+- Enter the project details.
+
+![2](https://github.com/hotosm/fmtm/assets/97789856/97c38c80-aa0e-4fe2-b8a5-f4ee43a9a63a)
+
+- Upload Area in the GEOJSON file format.
+
+![3](https://github.com/hotosm/fmtm/assets/97789856/680eb831-790a-48f1-8997-c20b5213909d)
+
+- Define the tasks of the project.
+
+![Screenshot 2023-06-07 232152](https://github.com/hotosm/fmtm/assets/97789856/b735a661-d0f6-46b8-b548-5ad7b1928480)
+
+- Select Form .
+
+![Screenshot 2023-06-07 232316](https://github.com/hotosm/fmtm/assets/97789856/475a6070-4897-4e84-8050-6ecf024d0095)
+
+- Click on Submit button.
 ### FMTM back end
 
 A back end that converts the project parameters entered by the Campaign Manager in the Manager Web Interface into a corresponding ODK Central project. Its functions include:
@@ -121,4 +144,7 @@ A back end that converts the project parameters entered by the Campaign Manager 
 
 ### Field Mapper Web Interface (with mobile-friendly map view)
 
-- Ideally with a link that opens ODK Collect directly from the browser, but if that's hard, the fallback is downloading a QR code and importing it into ODK Collect.
+ Ideally with a link that opens ODK Collect directly from the browser, but if that's hard, the fallback is downloading a QR code and importing it into ODK Collect.
+
+![5](https://github.com/hotosm/fmtm/assets/97789856/9343a4bc-462c-44af-af93-8a67907837b3)
+
