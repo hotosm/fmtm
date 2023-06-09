@@ -7,7 +7,7 @@ _How was FMTM born ?_
 <br>
 <br>
 It started due to the efforts of Rob Savoye, Senior Technical Lead at Humanitarian OpenStreetMap Team. HOT uses ODK heavily, but most of the data never makes it into OSM because all the data processing is manual and slow, so it doesn't get done.<img align="right" width="300px" src="https://github.com/hotosm/osm-fieldwork/assets/97789856/afc791c7-6cc9-4496-aa93-ab02733f30b8"/> 
-Rob convinced HOT to let him work on this as a small side project. Then Ivan(Senior Humanitarian Advisor at Humanitarian OpenStreetMap Team) heard about what Rob was working on and goes "That's the missing piece I needed!". He'd been wanting to build FMTM for years, but lacked the ability to process the data. He got HOT interested enough to direct some resources to his idea, so FMTM was born.
+Rob convinced HOT to let him work on this as a small side project. Then Ivan Gayton(Senior Humanitarian Advisor at Humanitarian OpenStreetMap Team) heard about what Rob was working on and goes "That's the missing piece I needed!". He'd been wanting to build FMTM for years, but lacked the ability to process the data. He got HOT interested enough to direct some resources to his idea, so FMTM was born.
 <!-- <img align="left" width="300px" src="https://github.com/hotosm/osm-fieldwork/assets/97789856/afc791c7-6cc9-4496-aa93-ab02733f30b8"/> -->
 _Want to know about OSM-fieldwork project ?_ Click [here](https://github.com/hotosm/osm-fieldwork/wiki) 
 <br>
