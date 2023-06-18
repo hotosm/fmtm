@@ -99,4 +99,4 @@ def test_categories(client):
     assert response.status_code == status.HTTP_200_OK
 
 
-# TODOtest adding tests for the remaining endpoints
+# @freedischTODO adding tests for the remaining endpoints
