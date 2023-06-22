@@ -18,52 +18,9 @@
 
 import pytest
 from fastapi import status
-from ..projects.project_schemas import BETAProjectUpload
-from ..projects.project_crud import create_project_with_project_info
 
 
 @pytest.fixture
-def projects(db):
-    create_project_with_project_info(db, BETAProjectUpload(author={
-        "username": "Freenine"
-    }, project_info={
-        "name": "project1",
-        "short_description": "short_description1",
-        "description": "description1",
-
-    }, xform_title="form1", odk_central={
-        "odk_central_url": "centralurl",
-        "odk_central_user": "centraluser",
-        "odk_central_password": "password"
-    }))
-
-    create_project_with_project_info(db, BETAProjectUpload(author={
-        "username": "Freenine2"
-    }, project_info={
-        "name": "project2",
-        "short_description": "short_description2",
-        "description": "description2",
-
-    }, xform_title="form1", odk_central={
-        "odk_central_url": "centralurl2",
-        "odk_central_user": "centraluser2",
-        "odk_central_password": "password2"
-    }))
-
-    create_project_with_project_info(db, BETAProjectUpload(author={
-        "username": "Freenine3"
-    }, project_info={
-        "name": "project3",
-        "short_description": "short_description3",
-        "description": "description3",
-
-    }, xform_title="form1", odk_central={
-        "odk_central_url": "centralurl3",
-        "odk_central_user": "centraluser3",
-        "odk_central_password": "password3"
-    }))
-
-
 def test_list_projects(client):
     response = client.get("/projects")
     assert len(response.json()) == 3
