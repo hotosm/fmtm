@@ -1,11 +1,10 @@
-# Welcome To The Field Mapping Wiki!!
+# :hugs: Welcome To The Field Mapping Wiki :hugs:
 
-**What is ONE thing all the greatest solutions out there have in common?**
+### _**What is ONE thing all the greatest solutions out there have in common?**_
 
-They never forget the people they are building for (^^)
+They never forget the people they are building for (^^) :smiley:
 
-So who are we building field mapping solutions for? In short, we build
-solutions for:
+So who are we building field mapping solutions for? In short, we build solutions for:
 
 ## The field mapping manager (coordinating field mapping)
 
@@ -60,31 +59,10 @@ resolve any discrepancies.
 validation protocols and guidelines, ensuring that the data meets a high
 level of quality and accuracy.
 
-Below is an overview of the user flow of the **Field Mapper**, the **Mapping Coordinator / Field Mapping Manager** and the **Validator**.
-
-
 [Click here](https://miro.com/app/board/uXjVPX4XLcI=/?moveToWidget=3458764534814634286&cot=14) to see an overview of who you are building for, which actions they take and some ideas for solutions!
 
+Below is an overview of the user flow of the **Field Mapper**, the **Mapping Coordinator / Field Mapping Manager** and the **Validator**.
 <!-- ![Screenshot 2022-10-10 at 14 14 23](https://user-images.githubusercontent.com/107098623/194864145-598d6212-9e0b-4c9d-ba90-92e5cd3fa488.png) -->
-
-# The Field Mapper (The person who collects data)
-The **Field Mapper** surveys locations and collects data from them. The basic work flow that a **Field Mapper** has to consider is as follows:
-1. Find a phone that:
-    - Works well with the app
-    - Has mobile data or an internet plan
-2. Install all necessary apps on the phone
-3. Access the **OSM** registration site and register
-4. Follow the tutorial and choose a campaign
-5. Select a task from the campaign
-6. Launch the map app which allows you to see the moving map of the points that you are now responsible for.
-7. Complete each point within the task, making sure to answer the questions in the form for each one.
-8. Send the data of each point until the task is complete
-9. Once the task is complete, signal that your task is finished. This lets the **Validator** know that they can check the quality of your data
-
-If you want to see this workflow in more detail, click on [this virtual whiteboard!](https://miro.com/app/board/uXjVPX4XLcI=/?moveToWidget=3458764535074723879&cot=14) Here's a sneak-peek:
-<img align="centre" width="1000px" height="600px" src="https://user-images.githubusercontent.com/107098623/194867381-53813f19-71b1-4342-866f-10c963b7460b.png"/>
-
-<!-- ![Screenshot 2022-10-10 at 14 29 53](https://user-images.githubusercontent.com/107098623/194867381-53813f19-71b1-4342-866f-10c963b7460b.png) -->
 
 # The Field Mapping Manager (The person who coordinates field mapping)
 The **Field Mapping Manager** is tasked with coordinating all mapping
@@ -113,6 +91,27 @@ If you want more information, click on [this virtual whiteboard!](https://miro.c
 - See also data collection approach [>>in this training guide<<](https://hotosm.github.io/pdc-documentation/en/pages/01-osm-field-surveyor-guideliness/01-metodologi-pengumpulan-data/01_metodologi_pengumpulan_data/)
 
 ![Screenshot 2022-10-10 at 13 48 40](https://user-images.githubusercontent.com/107098623/194859584-31dae52a-e918-4cd8-9071-24791750d6bb.png)
+
+
+# The Field Mapper (The person who collects data)
+The **Field Mapper** surveys locations and collects data from them. The basic work flow that a **Field Mapper** has to consider is as follows:
+1. Find a phone that:
+    - Works well with the app.
+    - Has mobile data or an internet plan.
+2. Install all necessary apps on the phone.
+3. Access the **OSM** registration site and register.
+4. Follow the tutorial and choose a campaign.
+5. Select a task from the campaign.
+6. Launch the map app which allows you to see the moving map of the points that you are now responsible for.
+7. Complete each point within the task, making sure to answer the questions in the form for each one.
+8. Send the data of each point until the task is complete.
+9. Once the task is complete, signal that your task is finished. This lets the **Validator** know that they can check the quality of your data.
+
+If you want to see this workflow in more detail, click on [this virtual whiteboard!](https://miro.com/app/board/uXjVPX4XLcI=/?moveToWidget=3458764535074723879&cot=14) Here's a sneak-peek:
+
+<img align="centre" width="1000px" height="600px" src="https://user-images.githubusercontent.com/107098623/194867381-53813f19-71b1-4342-866f-10c963b7460b.png"/>
+<!-- ![Screenshot 2022-10-10 at 14 29 53](https://user-images.githubusercontent.com/107098623/194867381-53813f19-71b1-4342-866f-10c963b7460b.png) -->
+
 
 # The Validator (The person who checks the quality of data collected)
 
