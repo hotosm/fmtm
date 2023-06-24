@@ -1,6 +1,8 @@
 ## :question: Frequently Asked Questions :question:
+
 ### For Users
-**Q:** What is FMTM?
+
+Q: What is FMTM?
 
 **A:** FMTM stands for Field Monitoring Task Manager. It is a web-based
 application that facilitates remote monitoring of field activities for
