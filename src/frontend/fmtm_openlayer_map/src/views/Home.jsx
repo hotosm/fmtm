@@ -21,20 +21,8 @@ import View from "ol/View";
 import { HomeActions } from "fmtm/HomeSlice";
 import CoreModules from "fmtm/CoreModules";
 import AssetModules from "fmtm/AssetModules";
-import { ProjectBuildingGeojsonService } from "../api/SubmissionService";
-import GeoJSON from 'ol/format/GeoJSON';
-import { get } from 'ol/proj';
 
 import Overlay from "ol/Overlay";
-import { defaultStyles, getStyles } from "../components/MapComponent/OpenLayersComponent/helpers/styleUtils";
-import ProjectMap from "../components/ProjectMap/ProjectMap";
-// import XYZ from "ol/source/XYZ.js";
-// import { toLonLat } from "ol/proj";
-// import { toStringHDMS } from "ol/coordinate";
-const basicGeojsonTemplate = {
-  "type": "FeatureCollection",
-  "features": []
-};
 const Home = () => {
   const dispatch = CoreModules.useDispatch();
   const params = CoreModules.useParams();
@@ -75,7 +63,7 @@ const Home = () => {
 
   //Fetch project for the first time
   useEffect(() => {
-
+    dispatch(ProjectActions.SetNewProjectTrigger());
     if (
       state.projectTaskBoundries.findIndex(
         (project) => project.id == environment.decode(encodedId)
@@ -149,7 +137,7 @@ const Home = () => {
 
 
     const view = new View({
-      projection: "EPSG:4326",
+      projection: "EPSG:3857",
       center: [0, 0],
       zoom: 4,
     });
@@ -211,7 +199,8 @@ const Home = () => {
       setTop(topX);
     }
   }, [map, y]);
-
+  // if(map && mainView && featuresLayer){
+  // }
   TasksLayer(map, mainView, featuresLayer);
   return (
     <CoreModules.Stack spacing={2}>
@@ -314,16 +303,14 @@ const Home = () => {
           state={state}
           type={type}
         />
-        <CoreModules.Stack
-          direction={"column"}
-          spacing={1}
-          justifyContent="flex-end"
-        >
+       
+        <div style={{display:'flex',justifyContent:'flex-end',alignItems:'flex-end'}}>
           <CoreModules.Link
             to={`/projectInfo/${encodedId}`}
             style={{
               display: "flex",
               justifyContent: "flex-end",
+              alignItems: "flex-end",
               textDecoration: "none",
               marginRight: "15px",
             }}
@@ -331,12 +318,11 @@ const Home = () => {
             <CoreModules.Button
               variant="contained"
               color="error"
-              sx={{ width: "10%" }}
             >
               ProjectInfo
             </CoreModules.Button>
           </CoreModules.Link>
-        </CoreModules.Stack>
+        </div>
         {/* <ProjectMap /> */}
         {params?.id && <OpenLayersMap
           key={params.id}

@@ -5,13 +5,13 @@ import enviroment from "../environment";
 import { CommonActions } from '../store/slices/CommonSlice';
 
 
-const CreateProjectService: Function = (url: string, payload: any, fileUpload: any, formUpload: any) => {
+const CreateProjectService: Function = (url: string, payload: any, fileUpload: any, formUpload: any,dataExtractFile:any) => {
 
     return async (dispatch) => {
         dispatch(CreateProjectActions.CreateProjectLoading(true))
         dispatch(CommonActions.SetLoading(true))
 
-        const postCreateProjectDetails = async (url, payload, fileUpload) => {
+        const postCreateProjectDetails = async (url, payload, fileUpload,formUpload) => {
 
             try {
                 const postNewProjectDetails = await axios.post(url, payload)
@@ -23,7 +23,8 @@ const CreateProjectService: Function = (url: string, payload: any, fileUpload: a
                 } else if (payload.splitting_algorithm === 'Use natural Boundary') {
                     await dispatch(UploadAreaService(`${enviroment.baseApiUrl}/projects/task_split/${resp.id}/`, fileUpload));
                 } else {
-                    await dispatch(UploadAreaService(`${enviroment.baseApiUrl}/projects/${resp.id}/upload`, fileUpload, { dimension: payload.dimension }));
+                    await dispatch(UploadAreaService(`${enviroment.baseApiUrl}/projects/${resp.id}/upload_multi_polygon`, fileUpload));
+                    // await dispatch(UploadAreaService(`${enviroment.baseApiUrl}/projects/${resp.id}/upload`, fileUpload, { dimension: payload.dimension }));
                 }
                 dispatch(
                     CommonActions.SetSnackBar({
@@ -33,12 +34,14 @@ const CreateProjectService: Function = (url: string, payload: any, fileUpload: a
                         duration: 2000,
                     })
                 );
-                await dispatch(GenerateProjectQRService(`${enviroment.baseApiUrl}/projects/${resp.id}/generate`, payload, formUpload));
+                await dispatch(GenerateProjectQRService(`${enviroment.baseApiUrl}/projects/${resp.id}/generate`, payload, formUpload,dataExtractFile));
                 dispatch(CommonActions.SetLoading(false))
+                dispatch(CreateProjectActions.CreateProjectLoading(true))
 
 
             } catch (error) {
                 dispatch(CommonActions.SetLoading(false))
+                dispatch(CreateProjectActions.CreateProjectLoading(true))
 
                 // Added Snackbar toast for error message 
                 dispatch(
@@ -51,10 +54,13 @@ const CreateProjectService: Function = (url: string, payload: any, fileUpload: a
                 );
                 //END
                 dispatch(CreateProjectActions.CreateProjectLoading(false));
+            }finally{
+                dispatch(CreateProjectActions.CreateProjectLoading(false))
+
             }
         }
 
-        await postCreateProjectDetails(url, payload, fileUpload);
+        await postCreateProjectDetails(url, payload, fileUpload,formUpload);
 
     }
 
@@ -122,7 +128,7 @@ const UploadAreaService: Function = (url: string, filePayload: any, payload: any
     }
 
 }
-const GenerateProjectQRService: Function = (url: string, payload: any, formUpload: any) => {
+const GenerateProjectQRService: Function = (url: string, payload: any, formUpload: any,dataExtractFile:any) => {
 
     return async (dispatch) => {
         dispatch(CreateProjectActions.GenerateProjectQRLoading(true))
@@ -137,9 +143,15 @@ const GenerateProjectQRService: Function = (url: string, payload: any, formUploa
                 if (payload.form_ways === 'Upload a Custom Form') {
                     generateApiFormData.append('extract_polygon', payload.data_extractWays === 'Polygon' ? true : false,);
                     generateApiFormData.append('upload', formUpload);
+                    if(dataExtractFile){
+                        generateApiFormData.append('data_extracts', dataExtractFile);
+                    }
                 } else {
                     generateApiFormData.append('extract_polygon', payload.data_extractWays === 'Polygon' ? true : false,);
                     generateApiFormData.append('upload', '');
+                    if(dataExtractFile){
+                        generateApiFormData.append('data_extracts', dataExtractFile);
+                    }
 
                 }
                 const postNewProjectDetails = await axios.post(url, generateApiFormData,
@@ -258,7 +270,7 @@ const GenerateProjectLog: Function = (url: string, params: any) => {
 const GetDividedTaskFromGeojson: Function = (url: string, payload: any) => {
 
     return async (dispatch) => {
-        dispatch(CreateProjectActions.GetDividedTaskFromGeojsonLoading(true))
+        dispatch(CreateProjectActions.SetDividedTaskFromGeojsonLoading(true))
 
         const getDividedTaskFromGeojson = async (url, payload) => {
             try {
@@ -268,9 +280,11 @@ const GetDividedTaskFromGeojson: Function = (url: string, payload: any) => {
                 const getGetDividedTaskFromGeojsonResponse = await axios.post(url, dividedTaskFormData)
                 const resp: OrganisationListModel = getGetDividedTaskFromGeojsonResponse.data;
                 dispatch(CreateProjectActions.SetDividedTaskGeojson(resp));
-
+                dispatch(CreateProjectActions.SetDividedTaskFromGeojsonLoading(false));
             } catch (error) {
-                dispatch(CreateProjectActions.GetDividedTaskFromGeojsonLoading(false));
+                dispatch(CreateProjectActions.SetDividedTaskFromGeojsonLoading(false));
+            }finally{
+                dispatch(CreateProjectActions.SetDividedTaskFromGeojsonLoading(false));
             }
         }
 

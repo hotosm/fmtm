@@ -11,11 +11,12 @@ import useForm from '../../hooks/useForm';
 import SelectFormValidation from './validation/SelectFormValidation';
 import { CommonActions } from '../../store/slices/CommonSlice';
 import LoadingBar from './LoadingBar';
+import environment from '../../environment';
 
 // import { SelectPicker } from 'rsuite';
 let generateProjectLogIntervalCb = null;
 
-const FormSelection: React.FC = () => {
+const FormSelection: React.FC = ({ geojsonFile,customFormFile,setCustomFormFile, customFormInputValue, setCustomFormInputValue,dataExtractFile }) => {
   const defaultTheme: any = CoreModules.useSelector<any>((state) => state.theme.hotTheme);
   const navigate = useNavigate();
 
@@ -50,6 +51,8 @@ const FormSelection: React.FC = () => {
 
   const dividedTaskGeojson = CoreModules.useSelector((state) => state.createproject.dividedTaskGeojson);
   // //we use use-selector from redux to get state of dividedTaskGeojson from createProject slice
+  const projectDetailsLoading = CoreModules.useSelector((state) => state.createproject.projectDetailsLoading);
+  // //we use use-selector from redux to get state of dividedTaskGeojson from createProject slice
 
   // Fetching form category list
   useEffect(() => {
@@ -58,6 +61,12 @@ const FormSelection: React.FC = () => {
   // END
 
   const submission = () => {
+    const newDividedTaskGeojson = JSON.stringify(dividedTaskGeojson);
+    const parsedNewDividedTaskGeojson = JSON.parse(newDividedTaskGeojson);
+    const exparsedNewDividedTaskGeojson = JSON.stringify(parsedNewDividedTaskGeojson);
+    var newUpdatedTaskGeojsonFile = new File([exparsedNewDividedTaskGeojson], "AOI.geojson", {type: "application/geo+json" })
+    // console.log(f,'file F');
+    // setGeojsonFile(f);
     dispatch(
       CreateProjectService(
         `${enviroment.baseApiUrl}/projects/create_project`,
@@ -85,8 +94,9 @@ const FormSelection: React.FC = () => {
           // "uploaded_form": projectDetails.uploaded_form,
           data_extractWays: projectDetails.data_extractWays,
         },
-        projectDetails?.areaGeojson,
-        values.uploaded_form?.[0],
+        newUpdatedTaskGeojsonFile,
+        customFormFile,
+        dataExtractFile
       ),
     );
     // navigate("/select-form", { replace: true, state: { values: values } });
@@ -97,6 +107,7 @@ const FormSelection: React.FC = () => {
     dispatch(FormCategoryService(`${enviroment.baseApiUrl}/central/list-forms`));
     return () => {
       clearInterval(generateProjectLogIntervalCb);
+      generateProjectLogIntervalCb = null
       dispatch(CreateProjectActions.SetGenerateProjectLog(null));
     };
   }, []);
@@ -118,7 +129,8 @@ const FormSelection: React.FC = () => {
   useEffect(() => {
     if (generateQrSuccess && generateProjectLog?.status === 'SUCCESS') {
       clearInterval(generateProjectLogIntervalCb);
-      navigate('/');
+      const encodedProjectId =  environment.encode(projectDetailsResponse?.id)
+      navigate(`/project_details/${encodedProjectId}`);
       dispatch(
         CommonActions.SetSnackBar({
           open: true,
@@ -168,15 +180,15 @@ const FormSelection: React.FC = () => {
     SelectFormValidation,
   );
   const parsedTaskGeojsonCount =
-    dividedTaskGeojson?.features?.length || JSON?.parse(dividedTaskGeojson)?.features?.length || projectDetails?.areaGeojson?.features?.length;
+    dividedTaskGeojson?.features?.length ||
+    JSON?.parse(dividedTaskGeojson)?.features?.length ||
+    projectDetails?.areaGeojson?.features?.length;
   const totalSteps = dividedTaskGeojson?.features ? dividedTaskGeojson?.features?.length : parsedTaskGeojsonCount;
 
   return (
     <CoreModules.Stack
       sx={{
-        width: { xs: '95%', md: '80%' },
-        display: 'flex',
-        flexDirection: { xs: 'column', md: 'row' },
+        width: { xs: '100%', md: '80%' },
         justifyContent: 'space-between',
         gap: '4rem',
         marginLeft: { md: '215px !important' },
@@ -185,92 +197,12 @@ const FormSelection: React.FC = () => {
     >
       <form onSubmit={handleSubmit}>
         <FormGroup>
-          <Grid container spacing={5}>
-            <Grid item xs={40} md={40} sx={{ display: 'flex', flexDirection: 'column' }}>
-              <CoreModules.FormControl sx={{ mb: 3 }}>
-                <InputLabel
-                  id="form-category"
-                  sx={{
-                    '&.Mui-focused': {
-                      color: defaultTheme.palette.black,
-                    },
-                  }}
-                >
-                  Data Extract Category
-                </InputLabel>
-                <Select
-                  labelId="data_extractWays-label"
-                  id="data_extractWays"
-                  value={values.data_extractWays}
-                  label="Data Extract Category"
-                  sx={{
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      border: '2px solid black',
-                    },
-                  }}
-                  onChange={(e) => {
-                    handleCustomChange('data_extractWays', e.target.value);
-                    dispatch(
-                      CreateProjectActions.SetIndividualProjectDetailsData({
-                        ...projectDetails,
-                        data_extractWays: e.target.value,
-                      }),
-                    );
-                  }}
-                >
-                  {/* onChange={(e) => dispatch(CreateProjectActions.SetProjectDetails({ key: 'xform_title', value: e.target.value }))} > */}
-                  {selectExtractWays?.map((form) => (
-                    <MenuItem value={form.value}>{form.label}</MenuItem>
-                  ))}
-                </Select>
-                {errors.data_extractWays && (
-                  <CoreModules.FormLabel component="h3" sx={{ color: defaultTheme.palette.error.main }}>
-                    {errors.data_extractWays}
-                  </CoreModules.FormLabel>
-                )}
-              </CoreModules.FormControl>
-              <CoreModules.FormControl sx={{ mb: 3 }}>
-                <InputLabel
-                  id="form-category"
-                  sx={{
-                    '&.Mui-focused': {
-                      color: defaultTheme.palette.black,
-                    },
-                  }}
-                >
-                  Form Category
-                </InputLabel>
-                <Select
-                  labelId="form_category-label"
-                  id="form_category"
-                  value={values.xform_title}
-                  label="Form Category"
-                  sx={{
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      border: '2px solid black',
-                    },
-                  }}
-                  onChange={(e) => {
-                    handleCustomChange('xform_title', e.target.value);
-                    dispatch(
-                      CreateProjectActions.SetIndividualProjectDetailsData({
-                        ...projectDetails,
-                        xform_title: e.target.value,
-                      }),
-                    );
-                  }}
-                >
-                  {/* onChange={(e) => dispatch(CreateProjectActions.SetProjectDetails({ key: 'xform_title', value: e.target.value }))} > */}
-                  {formCategoryData?.map((form) => (
-                    <MenuItem value={form.value}>{form.label}</MenuItem>
-                  ))}
-                </Select>
-                {errors.xform_title && (
-                  <CoreModules.FormLabel component="h3" sx={{ color: defaultTheme.palette.error.main }}>
-                    {errors.xform_title}
-                  </CoreModules.FormLabel>
-                )}
-              </CoreModules.FormControl>
+          <Grid
+            container
+            spacing={{ xs: 2, md: 10 }}
+            sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' } }}
+          >
+            <Grid item xs={16} md={4} sx={{ display: 'flex', flexDirection: 'column' }}>
               <CoreModules.FormControl sx={{ mb: 3 }}>
                 <InputLabel
                   id="form-category"
@@ -301,7 +233,7 @@ const FormSelection: React.FC = () => {
                       }),
                     );
                   }}
-                // onChange={(e) => dispatch(CreateProjectActions.SetProjectDetails({ key: 'form_ways', value: e.target.value }))}
+                  // onChange={(e) => dispatch(CreateProjectActions.SetProjectDetails({ key: 'form_ways', value: e.target.value }))}
                 >
                   {selectFormWays?.map((form) => (
                     <MenuItem value={form.value}>{form.label}</MenuItem>
@@ -326,19 +258,15 @@ const FormSelection: React.FC = () => {
                   <CoreModules.Button variant="contained" component="label">
                     <CoreModules.Input
                       type="file"
+                      
+                      value={customFormInputValue}
                       onChange={(e) => {
-                        handleCustomChange('uploaded_form', e.target.files);
-                        dispatch(
-                          CreateProjectActions.SetIndividualProjectDetailsData({
-                            ...projectDetails,
-                            uploaded_form: e.target.files[0],
-                            uploadedFormFileName: e.target.files[0].name,
-                          }),
-                        );
-
-                        // setFormFileUpload(e.target.files)
+                        setCustomFormFile(e.target.files[0]);
                       }}
+                      inputProps={{ "accept":".xml, .xls, .xlsx" }}
+
                     />
+                    <CoreModules.Typography component="h4">{customFormFile?.name}</CoreModules.Typography>
                   </CoreModules.Button>
                   {!values.uploaded_form && (
                     <CoreModules.FormLabel component="h3" sx={{ mt: 2, color: defaultTheme.palette.error.main }}>
@@ -348,14 +276,14 @@ const FormSelection: React.FC = () => {
                 </>
               ) : null}
             </Grid>
-            <Grid item xs={8}>
+            <Grid item md={8}>
               <CoreModules.Stack>
                 {generateProjectLog ? (
-                  <CoreModules.Stack sx={{ display: 'flex', flexDirection: 'col', gap: 2, width: '60%', pb: '2rem' }}>
+                  <CoreModules.Stack
+                    sx={{ display: 'flex', flexDirection: 'col', gap: 2, width: { xs: '100%', md: '60%' }, pb: '2rem' }}
+                  >
                     <LoadingBar
                       title={'Task Progress'}
-                      // steps={totalSteps}
-                      // activeStep={10}
                       activeStep={generateProjectLog.progress}
                       totalSteps={totalSteps}
                     />
@@ -401,16 +329,19 @@ const FormSelection: React.FC = () => {
             {/* END */}
 
             {/* Submit Button For Create Project on Area Upload */}
-            <CoreModules.Stack sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <CoreModules.Button
-                sx={{ px: '20px' }}
-                variant="contained"
-                color="error"
-                type="submit"
-              // disabled={!fileUpload ? true : false}
+            <CoreModules.Stack sx={{ display: 'flex', justifyContent: 'flex-end' }}> 
+            <CoreModules.LoadingButton
+              disabled={projectDetailsLoading}               
+              type="submit"
+              loading={projectDetailsLoading}
+              loadingPosition="end"
+              endIcon={<AssetModules.SettingsSuggestIcon />}
+              variant="contained"                            
+              color="error"
               >
                 Submit
-              </CoreModules.Button>
+              </CoreModules.LoadingButton>
+              
             </CoreModules.Stack>
             {/* END */}
           </CoreModules.Stack>

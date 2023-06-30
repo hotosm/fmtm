@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import enviroment from '../../environment';
 import CoreModules from '../../shared/CoreModules';
+import AssetModules from '../../shared/AssetModules.js';
 import FormGroup from '@mui/material/FormGroup';
 import { GetDividedTaskFromGeojson } from '../../api/CreateProjectService';
 import { useNavigate, Link } from 'react-router-dom';
@@ -12,8 +13,8 @@ import DefineTaskValidation from './validation/DefineTaskValidation';
 
 // const DefineAreaMap = React.lazy(() => import('map/DefineAreaMap'));
 // const DefineAreaMap = React.lazy(() => import('map/DefineAreaMap'));
-
-const DefineTasks: React.FC = () => {
+const alogrithmList = [{id:1,value:'Divide on Square',label:'Divide on Square'}, {id:2,value:'Choose Area as Tasks',label:'Choose Area as Tasks'}];
+const DefineTasks: React.FC = ({geojsonFile,setGeojsonFile}) => {
   const navigate = useNavigate();
   const defaultTheme: any = CoreModules.useSelector<any>((state) => state.theme.hotTheme);
 
@@ -31,8 +32,9 @@ const DefineTasks: React.FC = () => {
 
   const submission = () => {
     // const previousValues = location.state.values;
+    generateTasksOnMap();
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData({ ...projectDetails, ...formValues }));
-    navigate('/select-form');
+    navigate('/data-extract');
   };
 
   const {
@@ -45,16 +47,15 @@ const DefineTasks: React.FC = () => {
   const generateTasksOnMap = () => {
     dispatch(
       GetDividedTaskFromGeojson(`${enviroment.baseApiUrl}/projects/preview_tasks/`, {
-        geojson: projectDetails.areaGeojson,
+        geojson: geojsonFile,
         dimension: formValues?.dimension,
       }),
     );
   };
+  
+  
+
   // 'Use natural Boundary'
-  const algorithmListData = ['Divide on Square', 'Choose Area as Tasks'].map((item) => ({
-    label: item,
-    value: item,
-  }));
   const inputFormStyles = () => {
     return {
       style: {
@@ -66,9 +67,12 @@ const DefineTasks: React.FC = () => {
   };
   const dividedTaskGeojson = CoreModules.useSelector((state) => state.createproject.dividedTaskGeojson);
   const parsedTaskGeojsonCount =
-    dividedTaskGeojson?.features?.length || JSON?.parse(dividedTaskGeojson)?.features?.length;
+  dividedTaskGeojson?.features?.length || JSON?.parse(dividedTaskGeojson)?.features?.length;
   // // passing payloads for creating project from form whenever user clicks submit on upload area passing previous project details form aswell
-  // const filteredAlgorithmListData = algorithmListData?.filter((algo) => parsedTaskGeojsonCount > 1 ? algo.label === 'Choose Area as Tasks' : algo);
+  const algorithmListData =alogrithmList;
+  const dividedTaskLoading = CoreModules.useSelector((state) => state.createproject.dividedTaskLoading);
+
+  
   return (
     <CoreModules.Stack
       sx={{
@@ -110,7 +114,7 @@ const DefineTasks: React.FC = () => {
               }}
             >
               {algorithmListData?.map((listData) => (
-                <MenuItem value={listData.value}>{listData.label}</MenuItem>
+                <MenuItem key={listData.id} value={listData.value}>{listData.label}</MenuItem>
               ))}
             </Select>
             {errors.splitting_algorithm && (
@@ -141,7 +145,7 @@ const DefineTasks: React.FC = () => {
                     id="dimension"
                     label=""
                     type="number"
-                    min="10"
+                    min="9"
                     inputProps={{ sx: { padding: '8.5px 14px' } }}
                     sx={{
                       '& .MuiOutlinedInput-root': {
@@ -156,7 +160,7 @@ const DefineTasks: React.FC = () => {
                     }}
                     // onChange={(e) => dispatch(CreateProjectActions.SetProjectDetails({ key: 'dimension', value: e.target.value }))}
                     // helperText={errors.username}
-                    InputProps={{ inputProps: { min: 50 } }}
+                    InputProps={{ inputProps: { min: 9 } }}
                     FormHelperTextProps={inputFormStyles()}
                   />
                   {errors.dimension && (
@@ -165,9 +169,19 @@ const DefineTasks: React.FC = () => {
                     </CoreModules.FormLabel>
                   )}
                 </CoreModules.Stack>
-                <CoreModules.Button variant="contained" color="error" onClick={generateTasksOnMap}>
-                  Generate Tasks
-                </CoreModules.Button>
+                <CoreModules.LoadingButton
+                    disabled={formValues?.dimension < 10}
+                    onClick={generateTasksOnMap}
+                    loading={dividedTaskLoading}
+                    loadingPosition="end"
+                    endIcon={<AssetModules.SettingsSuggestIcon />}
+                    variant="contained"                            
+                    color="error"
+                    >
+                
+                Generate Tasks
+                </CoreModules.LoadingButton>
+               
               </CoreModules.Stack>
             </CoreModules.FormControl>
           )}
@@ -192,7 +206,7 @@ const DefineTasks: React.FC = () => {
             {/* END */}
 
             <CoreModules.Stack sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <CoreModules.Button variant="contained" color="error" sx={{ width: '20%' }} type="submit">
+              <CoreModules.Button disabled={!dividedTaskGeojson} variant="contained" color="error" sx={{ width: '20%' }} type="submit">
                 Next
               </CoreModules.Button>
             </CoreModules.Stack>
@@ -200,7 +214,7 @@ const DefineTasks: React.FC = () => {
           {/* END */}
         </FormGroup>
       </form>
-      <DefineAreaMap />
+      <DefineAreaMap uploadedGeojson={geojsonFile} setGeojsonFile={setGeojsonFile}/>
     </CoreModules.Stack>
   );
 };

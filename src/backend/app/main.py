@@ -34,7 +34,6 @@ from .auth import auth_routes
 from .central import central_routes
 from .config import settings
 from .db.database import Base, engine, get_db
-from .debug import debug_routes
 from .projects import project_routes
 from .projects.project_crud import read_xlsforms
 from .submission import submission_routes
@@ -87,9 +86,6 @@ def get_application() -> FastAPI:
     _app.include_router(auth_routes.router)
     _app.include_router(submission_routes.router)
     _app.include_router(organization_routes.router)
-
-    if settings.DEBUG:
-        _app.include_router(debug_routes.router)
 
     return _app
 

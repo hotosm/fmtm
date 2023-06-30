@@ -42,17 +42,19 @@ from geojson import dump
 from osm_fieldwork.make_data_extract import PostgresClient
 from osm_fieldwork.OdkCentral import OdkAppUser
 from osm_fieldwork.xlsforms import xlsforms_path
-from shapely import wkt
+from shapely import wkt,wkb
 from shapely.geometry import MultiPolygon, Polygon, mapping, shape
 from sqlalchemy import (
     column,
     inspect,
     select,
     table,
+    func,
 )
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
+from osm_fieldwork.filter_data import FilterData
 
 from ..central import central_crud
 from ..config import settings
@@ -61,7 +63,6 @@ from ..db.postgis_utils import geometry_to_geojson, timestamp
 from ..tasks import tasks_crud
 from ..users import user_crud
 
-# from ..osm_fieldwork.make_data_extract import PostgresClient, OverpassClient
 from . import project_schemas
 
 # --------------
@@ -79,13 +80,13 @@ def get_projects(
         db_projects = (
             db.query(db_models.DbProject)
             .filter(db_models.DbProject.author_id == user_id)
+            .order_by(db_models.DbProject.id.asc())
             .offset(skip)
             .limit(limit)
             .all()
         )
     else:
-
-        db_projects = db.query(db_models.DbProject).offset(skip).limit(limit).all()
+        db_projects = db.query(db_models.DbProject).order_by(db_models.DbProject.id.asc()).offset(skip).limit(limit).all()
     if db_objects:
         return db_projects
     return convert_to_app_projects(db_projects)
@@ -936,12 +937,78 @@ def get_odk_id_for_project(db: Session, project_id: int):
     return project_info.odkid
 
 
+def upload_custom_data_extracts(db: Session, 
+                                project_id: int, 
+                                contents: str,
+                                category: str = 'buildings',
+                                ):
+    """
+    Uploads custom data extracts to the database.
+
+    Args:
+        db (Session): The database session object.
+        project_id (int): The ID of the project.
+        contents (str): The custom data extracts contents.
+
+    Returns:
+        bool: True if the upload is successful.
+    """
+
+    project = get_project(db, project_id)
+
+    if not project:
+        raise HTTPException(
+            status_code=404, detail="Project not found")
+
+    project_geojson = json.loads(db.query(func.ST_AsGeoJSON(project.outline)).scalar())
+
+    features_data = json.loads(contents)
+
+    # Data Cleaning
+    cleaned = FilterData()
+    models = xlsforms_path.replace("xlsforms", "data_models")
+    xlsfile = f"{category}.xls" # FIXME: for custom form
+    file = f"{xlsforms_path}/{xlsfile}"
+    if os.path.exists(file):
+        title, extract = cleaned.parse(file)
+    elif os.path.exists(f"{file}x"):
+        title, extract = cleaned.parse(f"{file}x")
+    # Remove anything in the data extract not in the choices sheet.
+    cleaned_data = cleaned.cleanData(features_data)
+
+    for feature in cleaned_data["features"]:
+
+        feature_shape = shape(feature['geometry'])
+
+        if not (shape(project_geojson).contains(feature_shape)):
+            continue
+
+        # If the osm extracts contents do not have a title, provide an empty text for that.
+        feature["properties"]["title"] = ""
+
+        feature_shape = shape(feature['geometry'])
+
+        wkb_element = from_shape(feature_shape, srid=4326)
+        feature_mapping = {
+            'project_id': project_id,
+            'geometry': wkb_element,
+            'properties': feature["properties"],
+        }
+        featuree = db_models.DbFeatures(**feature_mapping)
+        db.add(featuree)
+        db.commit()
+
+    return True
+
+
 def generate_appuser_files(
     db: Session,
     project_id: int,
     extract_polygon: bool,
     upload: str,
+    extracts_contents: str,
     category: str,
+    form_type: str,
     background_task_id: uuid.UUID,
 ):
     """Generate the files for each appuser.
@@ -953,6 +1020,7 @@ def generate_appuser_files(
             - extract_polygon: boolean to determine if we should extract the polygon
             - upload: the xls file to upload if we have a custom form
             - category: the category of the project
+            - form_type: weather the form is xls, xlsx or xml
             - background_task_id: the task_id of the background task running this function.
         """
 
@@ -1031,7 +1099,7 @@ def generate_appuser_files(
             xform_title = one.xform_title if one.xform_title else None
 
             if upload:
-                xlsform = "/tmp/custom_form.xls"
+                xlsform = f"/tmp/custom_form.{form_type}"
                 contents = upload
                 with open(xlsform, "wb") as f:
                     f.write(contents)
@@ -1040,51 +1108,56 @@ def generate_appuser_files(
 
             category = xform_title
 
-            print('Category ', category)
+            # Data Extracts
+            if extracts_contents is not None:
+                upload_custom_data_extracts(db, project_id, extracts_contents)
 
-            # OSM Extracts for whole project
-            pg = PostgresClient('https://raw-data-api0.hotosm.org/v1', "underpass")
-            outfile = f"/tmp/{prefix}_{xform_title}.geojson"  # This file will store osm extracts
+            else:
 
-            outline = eval(one.outline)
-            outline_geojson = pg.getFeatures(boundary = outline, 
-                                                filespec = outfile,
-                                                polygon = extract_polygon,
-                                                xlsfile = f'{category}.xls',
-                                                category = category
-                                                )
+                # OSM Extracts for whole project
+                pg = PostgresClient('https://raw-data-api0.hotosm.org/v1', "underpass")
+                outfile = f"/tmp/{prefix}_{xform_title}.geojson"  # This file will store osm extracts
 
-            updated_outline_geojson = {
-                "type": "FeatureCollection",
-                "features": []}
+                outline = eval(one.outline)
+                outline_geojson = pg.getFeatures(boundary = outline, 
+                                                    filespec = outfile,
+                                                    polygon = extract_polygon,
+                                                    xlsfile = f'{category}.xls',
+                                                    category = category
+                                                    )
 
-            # Collect feature mappings for bulk insert
-            feature_mappings = []
+                updated_outline_geojson = {
+                    "type": "FeatureCollection",
+                    "features": []}
 
-            for feature in outline_geojson["features"]:
-                
-                # If the osm extracts contents do not have a title, provide an empty text for that.
-                feature["properties"]["title"] = ""
+                # Collect feature mappings for bulk insert
+                feature_mappings = []
 
-                feature_shape = shape(feature['geometry'])
+                for feature in outline_geojson["features"]:
+                    
+                    # If the osm extracts contents do not have a title, provide an empty text for that.
+                    feature["properties"]["title"] = ""
 
-                # If the centroid of the Polygon is not inside the outline, skip the feature.
-                if extract_polygon and (not shape(outline).contains(shape(feature_shape.centroid))):
-                    continue
+                    feature_shape = shape(feature['geometry'])
 
-                wkb_element = from_shape(feature_shape, srid=4326)
-                feature_mapping = {
-                    'project_id': project_id,
-                    'category_title': category,
-                    'geometry': wkb_element,
-                    'properties': feature["properties"],
-                }
-                updated_outline_geojson['features'].append(feature)
-                feature_mappings.append(feature_mapping)
+                    # If the centroid of the Polygon is not inside the outline, skip the feature.
+                    if extract_polygon and (not shape(outline).contains(shape(feature_shape.centroid))):
+                        continue
 
-            # Bulk insert the osm extracts into the db.
-            db.bulk_insert_mappings(db_models.DbFeatures, feature_mappings)
+                    wkb_element = from_shape(feature_shape, srid=4326)
+                    feature_mapping = {
+                        'project_id': project_id,
+                        'category_title': category,
+                        'geometry': wkb_element,
+                        'properties': feature["properties"],
+                    }
+                    updated_outline_geojson['features'].append(feature)
+                    feature_mappings.append(feature_mapping)
 
+                # Bulk insert the osm extracts into the db.
+                db.bulk_insert_mappings(db_models.DbFeatures, feature_mappings)
+
+            # Generating QR Code, XForm and uploading OSM Extracts to the form. Creating app users and updating the role of that user.
             for poly in result.fetchall():
 
                 name = f"{prefix}_{category}_{poly.id}"
@@ -1151,8 +1224,7 @@ def generate_appuser_files(
                     dump(features, jsonfile)
 
                 outfile = central_crud.generate_updated_xform(
-                    db, poly.id, xlsform, xform
-                )
+                    xlsform, xform, form_type)
 
                 # Update tasks table qith qr_Code id
                 task = tasks_crud.get_task(db, poly.id)
