@@ -29,10 +29,15 @@ from fastapi import (
     Form,
     HTTPException,
     UploadFile,
+    Response
 )
+from fastapi.responses import FileResponse
+from osm_fieldwork.xlsforms import xlsforms_path
 from fastapi.logger import logger as logger
 from osm_fieldwork.make_data_extract import getChoices
 from sqlalchemy.orm import Session
+
+import json
 
 from ..central import central_crud
 from ..db import database
@@ -100,7 +105,7 @@ async def delete_project(project_id: int, db: Session = Depends(database.get_db)
         odk_central_password = project.odk_central_password,
         )
 
-    central_crud.delete_odk_project(project_id, odk_credentials)
+    central_crud.delete_odk_project(project.odkid, odk_credentials)
 
     deleted_project = project_crud.delete_project_by_id(db, project_id)
     if deleted_project:
@@ -143,7 +148,7 @@ async def create_project(
         raise HTTPException(status_code=404, detail="Project not found")
 
 
-@router.put("/project/{id}", response_model=project_schemas.ProjectOut)
+@router.put("/{id}", response_model=project_schemas.ProjectOut)
 async def update_project(
     id: int,
     project_info: project_schemas.BETAProjectUpload,
@@ -169,7 +174,7 @@ async def update_project(
         raise HTTPException(status_code=404, detail="Project not found")
 
 
-@router.patch("/project/{id}", response_model=project_schemas.ProjectOut)
+@router.patch("/{id}", response_model=project_schemas.ProjectOut)
 async def project_partial_update(
     id: int,
     project_info: project_schemas.ProjectUpdate,
@@ -279,9 +284,8 @@ async def upload_multi_project_boundary(
     return {"message": "Project Boundary Uploaded", "project_id": f"{project_id}"}
 
 
-@router.post("/task_split/{project_id}/")
+@router.post("/task_split")
 async def task_split(
-    project_id: int,
     upload: UploadFile = File(...),
     db: Session = Depends(database.get_db)
     ):
@@ -289,7 +293,7 @@ async def task_split(
     # read entire file
     content = await upload.read()
 
-    result = await project_crud.split_into_tasks(db, project_id, content)
+    result = await project_crud.split_into_tasks(db, content)
 
     return result
 
@@ -342,6 +346,41 @@ async def upload_project_boundary(
     }
 
 
+@router.post("/edit_project_boundary/{project_id}/")
+async def edit_project_boundary(
+    project_id: int,
+    upload: UploadFile = File(...),
+    dimension: int = Form(500),
+    db: Session = Depends(database.get_db)
+    ):
+
+    # Validating for .geojson File.
+    file_name = os.path.splitext(upload.filename)
+    file_ext = file_name[1]
+    allowed_extensions = [".geojson", ".json"]
+    if file_ext not in allowed_extensions:
+        raise HTTPException(status_code=400, detail="Provide a valid .geojson file")
+
+    # read entire file
+    content = await upload.read()
+    boundary = json.loads(content)
+
+    result = project_crud.update_project_boundary(db, project_id, boundary, dimension)
+    if not result:
+        raise HTTPException(
+            status_code=428, detail=f"Project with id {project_id} does not exist"
+        )
+
+    # Get the number of tasks in a project
+    task_count = await tasks_crud.get_task_count_in_project(db, project_id)
+
+    return {
+        "message": "Project Boundary Uploaded", 
+        "project_id": project_id,
+        "task_count": task_count
+    }
+
+
 @router.post("/{project_id}/download")
 async def download_project_boundary(
     project_id: int,
@@ -349,19 +388,33 @@ async def download_project_boundary(
 ):
     """Download the boundary polygon for this project."""
     out = project_crud.download_geometry(db, project_id, False)
-    # FIXME: fix return value
-    return {"Message": out}
+    
+    buffer = json.dumps(out['filespec']).encode()
+
+    headers = {
+        "Content-Disposition": "attachment; filename=out.geojson",
+        "Content-Type": "application/media",
+    }
+
+    return Response(buffer, headers=headers)
 
 
-@router.post("/{project_id}/download_tasks")
+@router.get("/{project_id}/download_tasks")
 async def download_task_boundaries(
     project_id: int,
     db: Session = Depends(database.get_db),
 ):
     """Download the task boundary polygons for this project."""
     out = project_crud.download_geometry(db, project_id, True)
-    # FIXME: fix return value
-    return {"Message": out}
+    
+    buffer = json.dumps(out['filespec']).encode()
+    
+    headers = {
+        "Content-Disposition": "attachment; filename=task_outline.geojson",
+        "Content-Type": "application/media",
+    }
+
+    return Response(buffer, headers=headers)
 
 
 @router.post("/{project_id}/generate")
@@ -396,6 +449,16 @@ async def generate_files(
     """
     contents = None
     xform_title = None
+
+    project = project_crud.get_project(db, project_id)
+    if not project:
+        raise HTTPException(
+            status_code=428, detail=f"Project with id {project_id} does not exist"
+        )
+
+    project.data_extract_type = 'polygon' if extract_polygon else 'centroid'
+    db.commit()
+
     if upload:
         # Validating for .XLS File.
         file_name = os.path.splitext(upload.filename)
@@ -405,6 +468,9 @@ async def generate_files(
             raise HTTPException(status_code=400, detail="Provide a valid .xls file")
         xform_title = file_name[0]
         contents = await upload.read()
+
+        project.form_xls = contents
+        db.commit()
 
     if data_extracts:
         # Validating for .geojson File.
@@ -610,3 +676,88 @@ async def add_features(
         background_task_id,
     )
     return True
+
+
+@router.get("/download_form/{project_id}/")
+async def download_form(project_id: int, 
+                        db: Session = Depends(database.get_db)
+                        ):
+    project = project_crud.get_project(db, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    headers = {
+        "Content-Disposition": "attachment; filename=submission_data.xls",
+        "Content-Type": "application/json",
+    }
+    if not project.form_xls:
+        project_category = project.xform_title
+        xlsform_path = f"{xlsforms_path}/{project_category}.xls"
+        if os.path.exists(xlsform_path):
+            return FileResponse(xlsform_path, filename="form.xls")
+        else:
+            raise HTTPException(status_code=404, detail="Form not found")
+    return Response(content=project.form_xls, headers=headers)
+
+
+@router.post("/update_category")
+async def update_project_category(
+    # background_tasks: BackgroundTasks,
+    project_id: int,
+    category: str,
+    upload: Optional[UploadFile] = File(None),
+    db: Session = Depends(database.get_db),
+    ):
+
+    contents = None
+
+    project = project_crud.get_project(db, project_id)
+    if not project:
+        raise HTTPException(
+            status_code=400, detail=f"Project with id {project_id} does not exist"
+        )
+
+    current_category = project.xform_title
+    if current_category == category:
+        raise HTTPException(status_code=400, detail="Current category is same as new category")
+
+
+    if upload:
+        # Validating for .XLS File.
+        file_name = os.path.splitext(upload.filename)
+        file_ext = file_name[1]
+        allowed_extensions = [".xls", '.xlsx', '.xml']
+        if file_ext not in allowed_extensions:
+            raise HTTPException(status_code=400, detail="Provide a valid .xls file")
+        contents = await upload.read()
+
+        project.form_xls = contents
+        db.commit()
+    else:
+        form_path = f"{xlsforms_path}/{category}.xls"
+        contents = open(form_path, 'rb')
+
+    project.category = category
+    db.commit()
+
+    # Update odk forms
+    form_updated = await project_crud.update_project_form(
+        db, 
+        project_id,  
+        contents,    # Form Contents
+        file_ext[1:] if upload else 'xls',
+        )
+
+
+    return True
+
+
+@router.get("/download_template/")
+async def download_template(category: str, db: Session = Depends(database.get_db)):
+    xlsform_path = f"{xlsforms_path}/{category}.xls"
+    if os.path.exists(xlsform_path):
+        return FileResponse(xlsform_path, filename="form.xls")
+    else:
+        raise HTTPException(status_code=404, detail="Form not found")
+
+        

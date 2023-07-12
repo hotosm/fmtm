@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { CreateProjectActions } from '../store/slices/CreateProjectSlice';
-import { CreateProjectDetailsModel, FormCategoryListModel, OrganisationListModel } from '../models/createproject/createProjectModel';
+import { ProjectDetailsModel, FormCategoryListModel, OrganisationListModel } from '../models/createproject/createProjectModel';
 import enviroment from "../environment";
 import { CommonActions } from '../store/slices/CommonSlice';
 
@@ -15,7 +15,7 @@ const CreateProjectService: Function = (url: string, payload: any, fileUpload: a
 
             try {
                 const postNewProjectDetails = await axios.post(url, payload)
-                const resp: CreateProjectDetailsModel = postNewProjectDetails.data;
+                const resp: ProjectDetailsModel = postNewProjectDetails.data;
                 await dispatch(CreateProjectActions.PostProjectDetails(resp));
 
                 if (payload.splitting_algorithm === 'Choose Area as Tasks') {
@@ -39,7 +39,7 @@ const CreateProjectService: Function = (url: string, payload: any, fileUpload: a
                 dispatch(CreateProjectActions.CreateProjectLoading(true))
 
 
-            } catch (error) {
+            } catch (error:any) {
                 dispatch(CommonActions.SetLoading(false))
                 dispatch(CreateProjectActions.CreateProjectLoading(true))
 
@@ -109,7 +109,7 @@ const UploadAreaService: Function = (url: string, filePayload: any, payload: any
                 await dispatch(CreateProjectActions.UploadAreaLoading(false))
                 await dispatch(CreateProjectActions.PostUploadAreaSuccess(postNewProjectDetails.data))
 
-            } catch (error) {
+            } catch (error:any) {
                 console.log(error, 'error');
                 dispatch(
                     CommonActions.SetSnackBar({
@@ -134,20 +134,21 @@ const GenerateProjectQRService: Function = (url: string, payload: any, formUploa
         dispatch(CreateProjectActions.GenerateProjectQRLoading(true))
         dispatch(CommonActions.SetLoading(true))
 
-        const postUploadArea = async (url, payload, formUpload) => {
+        const postUploadArea = async (url, payload:any, formUpload) => {
             // debugger;
             console.log(formUpload, 'formUpload');
             console.log(payload, 'payload');
             try {
+                const isPolygon =payload.data_extractWays === 'Polygon';
                 const generateApiFormData = new FormData();
                 if (payload.form_ways === 'Upload a Custom Form') {
-                    generateApiFormData.append('extract_polygon', payload.data_extractWays === 'Polygon' ? true : false,);
+                    generateApiFormData.append('extract_polygon', isPolygon.toString());
                     generateApiFormData.append('upload', formUpload);
                     if(dataExtractFile){
                         generateApiFormData.append('data_extracts', dataExtractFile);
                     }
                 } else {
-                    generateApiFormData.append('extract_polygon', payload.data_extractWays === 'Polygon' ? true : false,);
+                    generateApiFormData.append('extract_polygon', isPolygon.toString());
                     generateApiFormData.append('upload', '');
                     if(dataExtractFile){
                         generateApiFormData.append('data_extracts', dataExtractFile);
@@ -166,7 +167,7 @@ const GenerateProjectQRService: Function = (url: string, payload: any, formUploa
                 await dispatch(CreateProjectActions.ClearCreateProjectFormData())
                 await dispatch(CreateProjectActions.GenerateProjectQRSuccess(resp))
 
-            } catch (error) {
+            } catch (error:any) {
                 dispatch(CommonActions.SetLoading(false))
                 dispatch(
                     CommonActions.SetSnackBar({
@@ -227,7 +228,7 @@ const UploadCustomXLSFormService: Function = (url: string, payload: any) => {
                 await dispatch(CreateProjectActions.UploadCustomXLSFormLoading(false))
                 await dispatch(CreateProjectActions.UploadCustomXLSFormSuccess(postCustomXLSForm.data))
 
-            } catch (error) {
+            } catch (error:any) {
                 dispatch(
                     CommonActions.SetSnackBar({
                         open: true,
@@ -293,4 +294,142 @@ const GetDividedTaskFromGeojson: Function = (url: string, payload: any) => {
     }
 
 }
-export { UploadAreaService, CreateProjectService, FormCategoryService, GenerateProjectQRService, OrganisationService, UploadCustomXLSFormService, GenerateProjectLog, GetDividedTaskFromGeojson }
+
+const GetIndividualProjectDetails: Function = (url: string, payload: any) => {
+
+    return async (dispatch) => {
+        dispatch(CreateProjectActions.SetIndividualProjectDetailsLoading(true))
+
+        const getIndividualProjectDetails = async (url, payload) => {
+            try {
+                const getIndividualProjectDetailsResponse = await axios.get(url, { params: payload })
+                const resp: ProjectDetailsModel = getIndividualProjectDetailsResponse.data;
+                const formattedOutlineGeojson = {type:'FeatureCollection',features:[{...resp.outline_geojson,id:1}]}
+                const modifiedResponse = {...resp,
+                    name:resp.project_info?.[0].name,
+                    description:resp.project_info?.[0].description,
+                    short_description:resp.project_info?.[0].short_description,
+                    outline_geojson:formattedOutlineGeojson
+                }
+
+                dispatch(CreateProjectActions.SetIndividualProjectDetails(modifiedResponse));
+                dispatch(CreateProjectActions.SetIndividualProjectDetailsLoading(false));
+            } catch (error) {
+                dispatch(CreateProjectActions.SetIndividualProjectDetailsLoading(false));
+            }finally{
+                dispatch(CreateProjectActions.SetIndividualProjectDetailsLoading(false));
+            }
+        }
+
+        await getIndividualProjectDetails(url, payload);
+    }
+}
+
+const TaskSplittingPreviewService: Function = (url: string,fileUpload:any) => {
+
+    return async (dispatch) => {
+        dispatch(CreateProjectActions.GetTaskSplittingPreviewLoading(true))
+
+        const getTaskSplittingGeojson = async (url,fileUpload) => {
+            try {
+                const taskSplittingFileFormData = new FormData();
+                taskSplittingFileFormData.append("upload", fileUpload);
+                const getTaskSplittingResponse = await axios.post(url,taskSplittingFileFormData)
+                const resp: OrganisationListModel = getTaskSplittingResponse.data;
+                dispatch(CreateProjectActions.GetTaskSplittingPreview(resp));
+                dispatch(CreateProjectActions.GetTaskSplittingPreviewLoading(false));
+
+            } catch (error) {
+                dispatch(CreateProjectActions.GetTaskSplittingPreviewLoading(false));
+            }finally{
+                dispatch(CreateProjectActions.GetTaskSplittingPreviewLoading(false));
+            }
+        }
+
+        await getTaskSplittingGeojson(url,fileUpload);
+
+    }
+
+}
+const PatchProjectDetails: Function = (url: string, payload: any) => {
+
+    return async (dispatch) => {
+        dispatch(CreateProjectActions.SetPatchProjectDetailsLoading(true))
+
+        const patchProjectDetails = async (url, payload) => {
+            try {
+                const getIndividualProjectDetailsResponse = await axios.patch(url, payload)
+                const resp: ProjectDetailsModel = getIndividualProjectDetailsResponse.data;
+                // dispatch(CreateProjectActions.SetIndividualProjectDetails(modifiedResponse));
+                dispatch(CreateProjectActions.SetPatchProjectDetails(resp));
+                dispatch(CreateProjectActions.SetPatchProjectDetailsLoading(false));
+                dispatch(
+                    CommonActions.SetSnackBar({
+                        open: true,
+                        message: 'Project Successfully Edited',
+                        variant: "success",
+                        duration: 2000,
+                    })
+                );
+            } catch (error) {
+                dispatch(CreateProjectActions.SetPatchProjectDetailsLoading(false));
+            }finally{
+                dispatch(CreateProjectActions.SetPatchProjectDetailsLoading(false));
+            }
+        }
+
+        await patchProjectDetails(url, payload);
+
+    }
+
+}
+const PostFormUpdate: Function = (url: string, payload: any) => {
+
+    return async (dispatch) => {
+        dispatch(CreateProjectActions.SetPostFormUpdateLoading(true))
+
+        const postFormUpdate = async (url, payload) => {
+            try {
+                const formFormData = new FormData();
+                formFormData.append('form',payload);
+                const postFormUpdateResponse = await axios.post(url, formFormData)
+                const resp: ProjectDetailsModel = postFormUpdateResponse.data;
+                // dispatch(CreateProjectActions.SetIndividualProjectDetails(modifiedResponse));
+                // dispatch(CreateProjectActions.SetPostFormUpdate(resp));
+                dispatch(CreateProjectActions.SetPostFormUpdateLoading(false));
+                dispatch(
+                    CommonActions.SetSnackBar({
+                        open: true,
+                        message: 'Form Successfully Updated',
+                        variant: "success",
+                        duration: 2000,
+                    })
+                );
+            } catch (error) {
+                dispatch(CreateProjectActions.SetPostFormUpdateLoading(false));
+            }finally{
+                dispatch(CreateProjectActions.SetPostFormUpdateLoading(false));
+            }
+        }
+
+        await postFormUpdate(url, payload);
+
+    }
+
+}
+
+
+export { 
+    UploadAreaService, 
+    CreateProjectService, 
+    FormCategoryService, 
+    GenerateProjectQRService, 
+    OrganisationService, 
+    UploadCustomXLSFormService, 
+    GenerateProjectLog, 
+    GetDividedTaskFromGeojson,
+    TaskSplittingPreviewService,
+    GetIndividualProjectDetails,
+    PatchProjectDetails,
+    PostFormUpdate
+}
