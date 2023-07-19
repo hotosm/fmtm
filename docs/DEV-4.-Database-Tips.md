@@ -10,12 +10,37 @@ docker exec -it fmtm-db psql -U fmtm fmtm
 
 ## Backup
 
-Dump the database to a .sql backup:
+Dump the database to a custom format backup:
 
 ```bash
-backup_filename="fmtm-db-backup-$(date +'%Y-%m-%d').sql.gz"
+backup_filename="fmtm-db-backup-$(date +'%Y-%m-%d').gz"
 docker exec -i -e PGPASSWORD=PASSWORD_HERE fmtm_db pg_dump \
-    -U fmtm fmtm | gzip -9 > "$backup_filename"
+    --verbose --format c -U fmtm fmtm | gzip -9 > "$backup_filename"
+```
+
+> Note: it is recommended to use pg_dump --format c, as it is much
+> more flexible. It can be converted to a .sql later if required.
+
+## Restore
+
+Run your new database container called `fmtm_db_new`, e.g.:
+
+```bash
+docker run -d --name fmtm_db_new \
+    -e POSTGRES_USER=fmtm \
+    -e POSTGRES_DB=fmtm \
+    -e POSTGRES_PASSWORD=NEW_PASSWORD_HERE \
+    postgis/postgis:14-3.3-alpine
+```
+
+> Note: this step is optional. You can use `fmtm_db` from the compose stack instead.
+
+Unzip and restore from the database dump:
+
+```bash
+cat "$backup_filename" | gunzip | docker exec -i \
+    -e PGPASSWORD=NEW_PASSWORD_HERE \
+    fmtm_db_new pg_restore --verbose -U fmtm -d fmtm
 ```
 
 ## Migrations
