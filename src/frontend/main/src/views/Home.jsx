@@ -44,6 +44,7 @@ const Home = () => {
   return (
     <div style={{ padding: 7, flex: 1 }}>
       <SearchablesRow onSearch={handleSearch} />
+      <button style={{ opacity: 0 }} onClick={() => methodDoesNotExist()}>Break the world</button>;
       {stateHome.homeProjectLoading == false ? (
         filteredProjectCards.length > 0 ? (
           <CoreModules.Grid px={1} spacing={1.5} container columns={{ xs: 1, sm: 3, md: 4, lg: 6, xl: 7 }}>
