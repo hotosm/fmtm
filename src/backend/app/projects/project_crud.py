@@ -465,65 +465,70 @@ async def preview_tasks(boundary: str, dimension: int):
     for feature in features:
         list(map(remove_z_dimension, feature["geometry"]["coordinates"][0]))
 
-    boundary = shape(features[0]["geometry"])
+    grids = []
+    for feature in features:
+        # boundary = shape(features[0]["geometry"])
+        boundary = shape(feature["geometry"])
+        
 
-    minx, miny, maxx, maxy = boundary.bounds
+        minx, miny, maxx, maxy = boundary.bounds
 
-    # 1 degree = 111139 m
-    value = dimension / 111139
+        # 1 degree = 111139 m
+        value = dimension / 111139
 
-    nx = int((maxx - minx) / value)
-    ny = int((maxy - miny) / value)
-    # gx, gy = np.linspace(minx, maxx, nx), np.linspace(miny, maxy, ny)
+        nx = int((maxx - minx) / value)
+        ny = int((maxy - miny) / value)
+        # gx, gy = np.linspace(minx, maxx, nx), np.linspace(miny, maxy, ny)
 
-    xdiff = abs(maxx - minx)
-    ydiff = abs(maxy - miny)
-    if xdiff > ydiff:
-        gx, gy = np.linspace(minx, maxx, ny), np.linspace(
-            miny, miny + xdiff, ny)
-    else:
-        gx, gy = np.linspace(minx, minx + ydiff,
-                             nx), np.linspace(miny, maxy, nx)
-    grid = list()
+        xdiff = abs(maxx - minx)
+        ydiff = abs(maxy - miny)
+        if xdiff > ydiff:
+            gx, gy = np.linspace(minx, maxx, ny), np.linspace(
+                miny, miny + xdiff, ny)
+        else:
+            gx, gy = np.linspace(minx, minx + ydiff,
+                                nx), np.linspace(miny, maxy, nx)
+        grid = list()
 
-    id = 0
-    for i in range(len(gx) - 1):
-        for j in range(len(gy) - 1):
-            poly = Polygon(
-                [
-                    [gx[i], gy[j]],
-                    [gx[i], gy[j + 1]],
-                    [gx[i + 1], gy[j + 1]],
-                    [gx[i + 1], gy[j]],
-                    [gx[i], gy[j]],
-                ]
-            )
-
-            if boundary.intersection(poly):
-                feature = geojson.Feature(
-                    geometry=boundary.intersection(poly), properties={"id": str(id)}
+        id = 0
+        for i in range(len(gx) - 1):
+            for j in range(len(gy) - 1):
+                poly = Polygon(
+                    [
+                        [gx[i], gy[j]],
+                        [gx[i], gy[j + 1]],
+                        [gx[i + 1], gy[j + 1]],
+                        [gx[i + 1], gy[j]],
+                        [gx[i], gy[j]],
+                    ]
                 )
-                id += 1
 
-                geom = shape(feature["geometry"])
-                # Check if the geometry is a MultiPolygon
-                if geom.geom_type == "MultiPolygon":
+                if boundary.intersection(poly):
+                    feature = geojson.Feature(
+                        geometry=boundary.intersection(poly), properties={"id": str(id)}
+                    )
+                    id += 1
 
-                    # Get the constituent Polygon objects from the MultiPolygon
-                    polygons = geom.geoms
+                    geom = shape(feature["geometry"])
+                    # Check if the geometry is a MultiPolygon
+                    if geom.geom_type == "MultiPolygon":
 
-                    for x in range(len(polygons)):
-                        # Convert the two polygons to GeoJSON format
-                        feature1 = {
-                            "type": "Feature",
-                            "properties": {},
-                            "geometry": mapping(polygons[x]),
-                        }
-                        grid.append(feature1)
-                else:
-                    grid.append(feature)
+                        # Get the constituent Polygon objects from the MultiPolygon
+                        polygons = geom.geoms
 
-    collection = geojson.FeatureCollection(grid)
+                        for x in range(len(polygons)):
+                            # Convert the two polygons to GeoJSON format
+                            feature1 = {
+                                "type": "Feature",
+                                "properties": {},
+                                "geometry": mapping(polygons[x]),
+                            }
+                            grid.append(feature1)
+                    else:
+                        grid.append(feature)
+        grids.append(grid)
+        
+    collection = geojson.FeatureCollection(grids)
 
     # If project outline cannot be divided into multiple tasks,
     #   whole boundary is made into a single task.
