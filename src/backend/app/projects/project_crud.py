@@ -526,8 +526,8 @@ async def preview_tasks(boundary: str, dimension: int):
                             grid.append(feature1)
                     else:
                         grid.append(feature)
-        grids.append(grid)
-        
+        grids += grid
+     
     collection = geojson.FeatureCollection(grids)
 
     # If project outline cannot be divided into multiple tasks,
@@ -609,12 +609,12 @@ async def split_into_tasks(
     project_id = uuid.uuid4()
 
     outline = json.loads(boundary)
-
+    
     """Update the boundary polyon on the database."""
     # boundary_data = outline["features"][0]["geometry"]
+
     if outline.get("features", None) is not None:
         boundary_data = outline["features"][0]["geometry"]
-    
     else:
         boundary_data = outline
         

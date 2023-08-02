@@ -346,11 +346,22 @@ async def task_split(
     # read entire file
     await upload.seek(0)
     content = await upload.read()
-
-    result = await project_crud.split_into_tasks(db, content, no_of_buildings)
-
-    return result
-
+    content_json = json.loads(content)
+    
+    results = []
+    for idx, _ in enumerate(content_json['features']):
+        _content = json.dumps(
+            {"features": [content_json['features'][idx]] })
+        result = await project_crud.split_into_tasks(db, _content, no_of_buildings)
+        results.append(result)
+    
+    combined_geojson = {**content_json, "features": []}
+    
+    for geo in results:
+        if geo.get("features", None):
+            combined_geojson["features"].extend(geo["features"])
+            
+    return combined_geojson
 
 @router.post("/{project_id}/upload")
 async def upload_project_boundary(
@@ -651,7 +662,7 @@ async def preview_tasks(upload: UploadFile = File(...), dimension: int = Form(50
     await upload.seek(0)
     content = await upload.read()
     boundary = json.loads(content)
-    
+
     result = await project_crud.preview_tasks(boundary, dimension)
     return result
 
