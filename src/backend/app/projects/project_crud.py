@@ -70,6 +70,8 @@ import requests
 import time
 import zipfile
 from io import BytesIO
+from concurrent.futures import ProcessPoolExecutor
+
 
 
 # --------------
@@ -1391,11 +1393,13 @@ def generate_appuser_files(
             # Generating QR Code, XForm and uploading OSM Extracts to the form.
             # Creating app users and updating the role of that user.
             tasks_list = tasks_crud.get_task_lists(db, project_id)
-
-            for task in tasks_list:
-                generate_task_files(db, project_id, task,
-                                    xlsform, form_type, odk_credentials)
-
+            # with mutl processor
+            with ProcessPoolExecutor() as executor:
+                executor.map(
+                    lambda task: generate_task_files(db, project_id, task,
+                                        xlsform, form_type, odk_credentials),
+                    tasks_list)
+                
         # Update background task status to COMPLETED
         update_background_task_status_in_database(
             db, background_task_id, 4
