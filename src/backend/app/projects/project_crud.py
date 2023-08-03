@@ -71,6 +71,7 @@ import time
 import zipfile
 from io import BytesIO
 from concurrent.futures import ProcessPoolExecutor
+from ..db import database
 
 
 
@@ -1145,7 +1146,7 @@ def generate_task_files(
         db, odk_id, appuser.json(
         )["token"], project_name, odk_credentials.odk_central_url
     )
-
+    
     task = tasks_crud.get_task(db, task_id)
     task.qr_code_id = create_qr["qr_code_id"]
     db.commit()
@@ -1236,6 +1237,10 @@ def generate_task_files(
 
     return True
 
+
+def generate_task_files_wrapper(project_id, task, xlsform, form_type, odk_credentials):
+    for db in database.get_db():
+        generate_task_files(db, project_id, task, xlsform, form_type, odk_credentials)
 
 def generate_appuser_files(
     db: Session,
@@ -1393,14 +1398,12 @@ def generate_appuser_files(
             # Generating QR Code, XForm and uploading OSM Extracts to the form.
             # Creating app users and updating the role of that user.
             tasks_list = tasks_crud.get_task_lists(db, project_id)
-            # with mutl processor
-            with ProcessPoolExecutor() as executor:
-                executor.map(
-                    lambda task: generate_task_files(db, project_id, task,
-                                        xlsform, form_type, odk_credentials),
-                    tasks_list)
+
+            with ThreadPoolExecutor() as executor:
+                # Submit the tasks using executor.submit and collect the Future objects
+                # futures = [executor.submit(generate_task_files_wrapper, task) for task in tasks_list]
+                futures = {executor.submit(generate_task_files_wrapper, project_id, task, xlsform, form_type, odk_credentials): task for task in tasks_list}
                 
-        # Update background task status to COMPLETED
         update_background_task_status_in_database(
             db, background_task_id, 4
         )  # 4 is COMPLETED
