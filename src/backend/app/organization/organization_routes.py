@@ -50,6 +50,19 @@ def get_organisations(
     return organizations
 
 
+@router.get('/{organization_id}')
+async def get_organization_detail(
+    organization_id: int,
+    db: Session = Depends(database.get_db)
+):
+    """Get API for fetching detail about a organiation based on id"""
+    organization = await organization_crud.get_organisation_by_id(db, organization_id)
+    if not organization:
+        raise HTTPException(status_code=404, detail="Organization not found")
+    
+    return organization
+    
+
 @router.post("/")
 async def create_organization(
     name: str = Form(),  # Required field for organization name
@@ -93,3 +106,22 @@ async def delete_organisations(
     db.delete(organization)
     db.commit()
     return {"Message": "Organization Deleted Successfully."}
+
+
+@router.put("/{organization_id}/update/")
+async def update_organization(
+    organization_id: int, 
+    name: str = Form(...),  # Required field for organization name
+    description: str = Form(None),  # Optional field for organization description
+    url: str = Form(None),  # Optional field for organization URL
+    logo: UploadFile = File(None), # Optional field for organization logo
+    db: Session = Depends(database.get_db)
+):
+    """PUT API to update the details of an organization"""
+    try:
+        organization = await organization_crud.update_organization_info(db, organization_id, name, description, url, logo)
+        print(organization.__dict__)
+        return organization
+    except:
+        raise
+    

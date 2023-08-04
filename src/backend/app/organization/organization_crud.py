@@ -140,3 +140,27 @@ async def get_organisation_by_id(db: Session, id: int):
         db.query(db_models.DbOrganisation).filter(db_models.DbOrganisation.id == id).first()
     )
     return db_organization
+
+
+async def update_organization_info(
+    db: Session, 
+    organization_id, name: str,
+    description: str,
+    url: str,
+    logo: UploadFile
+    ):
+    organization = await get_organisation_by_id(db, organization_id)
+    if not organization:
+        raise HTTPException(status_code=404, detail='Organization not found')
+    
+    organization.name = name
+    organization.slug = generate_slug(name)
+    organization.description = description
+    organization.url = url
+    organization.logo = await upload_image(db, logo) if logo else None
+    
+    db.commit()
+    db.refresh(organization)
+    return organization
+    
+    
