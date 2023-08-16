@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 const useForm = (initialState, callback, validate) => {
   const [values, setValues] = useState(initialState);
@@ -11,7 +11,7 @@ const useForm = (initialState, callback, validate) => {
   };
 
   const handleCustomChange = (name, value) => {
-    setValues((prev) => ({ ...prev, ...initialState, [name]: value }));
+    setValues((prev) => ({ ...prev, [name]: value }));
     // setErrors(validate({ ...values, [name]: value }));
   };
 

@@ -217,35 +217,35 @@ def upload_xform_media(project_id: int, xform_id:str, filespec: str,    odk_cred
 
 
 def create_odk_xform(
-    project_id: int, xform_id: str, filespec: str, odk_credentials: project_schemas.ODKCentral = None,
-    draft: bool = False,
-    upload_media = True
+    project_id: int, 
+    xform_id: str, 
+    filespec: str, 
+    odk_credentials: project_schemas.ODKCentral = None,
+    create_draft: bool = False,
+    upload_media = True,
+    convert_to_draft_when_publishing = True
+
 ):
     """Create an XForm on a remote ODK Central server."""
     title = os.path.basename(os.path.splitext(filespec)[0])
     # result = xform.createForm(project_id, title, filespec, True)
     # Pass odk credentials of project in xform
-    if odk_credentials:
-        url = odk_credentials.odk_central_url
-        user = odk_credentials.odk_central_user
-        pw = odk_credentials.odk_central_password
 
-    else:
-        logger.debug("ODKCentral connection variables not set in function")
-        logger.debug("Attempting extraction from environment variables")
-        url = settings.ODK_CENTRAL_URL
-        user = settings.ODK_CENTRAL_USER
-        pw = settings.ODK_CENTRAL_PASSWD
-
+    if not odk_credentials:
+        odk_credentials = project_schemas.ODKCentral(
+            odk_central_url=settings.ODK_CENTRAL_URL,
+            odk_central_user=settings.ODK_CENTRAL_USER,
+            odk_central_password=settings.ODK_CENTRAL_PASSWD,
+        )
     try:
-        xform = OdkForm(url, user, pw)
+        xform = get_odk_form(odk_credentials)
     except Exception as e:
         logger.error(e)
         raise HTTPException(
             status_code=500, detail={"message": "Connection failed to odk central"}
         ) from e
 
-    result = xform.createForm(project_id, xform_id, filespec, draft)
+    result = xform.createForm(project_id, xform_id, filespec, create_draft)
 
     if result != 200 and result != 409:
         return result
@@ -254,7 +254,11 @@ def create_odk_xform(
     # This modifies an existing published XForm to be in draft mode.
     # An XForm must be in draft mode to upload an attachment.
     if upload_media:
-        result = xform.uploadMedia(project_id, title, data)
+        result = xform.uploadMedia(project_id, 
+                                   title, 
+                                   data, 
+                                   convert_to_draft_when_publishing
+                                   )
 
     result = xform.publishForm(project_id, title)
     return result
@@ -279,6 +283,16 @@ def list_odk_xforms(project_id: int, odk_central: project_schemas.ODKCentral = N
     xforms = project.listForms(project_id)
     # FIXME: make sure it's a valid project id
     return xforms
+
+
+def get_form_full_details(
+        odk_project_id: int,
+        form_id: str,
+        odk_central: project_schemas.ODKCentral
+    ):
+    form = get_odk_form(odk_central)
+    form_details = form.getFullDetails(odk_project_id, form_id)
+    return form_details.json()
 
 
 def list_task_submissions(odk_project_id:int, form_id: str, odk_central: project_schemas.ODKCentral = None):
@@ -326,6 +340,32 @@ def download_submissions(
     data = xform.getSubmissions(project_id, xform_id, submission_id, True, get_json)
     fixed = str(data, "utf-8")
     return fixed.splitlines()
+
+
+async def test_form_validity(
+    xform_content: str,
+    form_type: str
+    ):
+    """
+        Validate an XForm.
+        Parameters:
+            xform_content: form to be tested
+            form_type: type of form (xls or xlsx)
+    """
+    try:
+        xlsform_path = f"/tmp/validate_form.{form_type}"
+        outfile = f"/tmp/outfile.xml"
+
+        with open(xlsform_path, "wb") as f:
+            f.write(xform_content)
+
+        xls2xform_convert(xlsform_path=xlsform_path, xform_path=outfile, validate=False)
+        return {"message": "Your form is valid"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail={
+            "message": "Your form is invalid",
+            "possible_reason":str(e)
+        })
 
 
 def generate_updated_xform(
@@ -377,7 +417,9 @@ def generate_updated_xform(
                     ] = extract
             if "data" in inst:
                 if "data" == inst:
-                    xml["h:html"]["h:head"]["model"]["instance"]["data"]["@id"] = xform
+                    xml["h:html"]["h:head"]["model"]["instance"]["data"]["@id"] = id
+                    # xml["h:html"]["h:head"]["model"]["instance"]["data"]["@id"] = xform
+
                 else:
                     xml["h:html"]["h:head"]["model"]["instance"][0]["data"]["@id"] = id
         except Exception:
@@ -435,7 +477,7 @@ def create_qrcode(project_id: int,
 
     # Generate qr code using segno
     qrcode = segno.make(qr_data, micro=False)
-    qrcode.save(f"{name}.png", scale=5)
+    qrcode.save(f"/tmp/{name}_qr.png", scale=5)
     return qr_data
 
 

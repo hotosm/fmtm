@@ -126,6 +126,52 @@ Example launch.json config for vscode:
 
 > Note: either port 5678 needs to be bound to your localhost (default), or the `host` parameter can be set to the container IP address.
 
+## Debugging osm-fieldwork
+
+`osm-fieldwork` is an integral package for much of the functionality in FMTM.
+
+Creating a new release during development may not always be feasible.
+
+**Via Dockerfile**
+
+- The debug stages in the backend Dockerfile install the latest osm-fieldwork repo `main` branch.
+- To re-build, run: `docker compose build api --no-cache`.
+
+> Note: this is useful to debug functionality not yet released in a stable version on PyPi.
+
+**Via Bind-Mount**
+
+- Alternatively, a development version of osm-fieldwork can be mounted into the FMTM container.
+- Clone the osm-fieldwork repo to the same root directory as FMTM.
+- Uncomment the line in docker-compose.yml
+
+```yaml
+- ../osm-fieldwork/osm_fieldwork:/home/appuser/.local/lib/python3.10/site-packages/osm_fieldwork
+```
+
+- Run the docker container with your local version of osm-fieldwork.
+- Code changes to osm-fieldwork should be reflected immediately. If they are not, run:
+  `docker compose restart api`.
+
+> Note: this is useful for debugging features during active development.
+
+## Running JOSM in the dev stack
+
+- Run JOSM with FMTM:
+
+```bash
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.josm.yml \
+  up -d
+```
+
+This adds JOSM to the docker compose stack for local development.
+Access the JOSM Remote API: <http://localhost:8111>
+Access the JOSM GUI in browser: <http://localhost:8112>
+
+You can now call the JOSM API from FMTM and changes will be reflected in the GUI.
+
 ## Conclusion
 
 Running the FMTM project is easy with Docker. You can also run the

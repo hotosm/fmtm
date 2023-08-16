@@ -2,20 +2,19 @@ import React, { useEffect } from 'react';
 import CoreModules from '../shared/CoreModules';
 import environment from '../environment';
 import useForm from '../hooks/useForm';
-import { useDispatch } from 'react-redux';
 import OrganizationAddValidation from '../components/organization/Validation/OrganizationAddValidation';
 import { PostOrganizationDataService } from '../api/OrganizationService';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { OrganizationAction } from '../store/slices/organizationSlice';
 
-
 const CreateOrganizationForm = () => {
-  const dispatch = useDispatch();
+  const dispatch = CoreModules.useAppDispatch();
   const navigate = useNavigate();
-  const defaultTheme: any = CoreModules.useSelector<any>((state) => state.theme.hotTheme);
-  const postOrganizationData: any = CoreModules.useSelector<any>((state) => state.organization.postOrganizationData);
-  const postOrganizationDataLoading: any = CoreModules.useSelector<any>((state) => state.organization.postOrganizationDataLoading);
-  const organizationFormData: any = CoreModules.useSelector<any>((state) => state.organization.organizationFormData);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const defaultTheme: any = CoreModules.useAppSelector((state) => state.theme.hotTheme);
+  const postOrganizationData: any = CoreModules.useAppSelector((state) => state.organization.postOrganizationData);
+
+  const organizationFormData: any = CoreModules.useAppSelector((state) => state.organization.organizationFormData);
 
   const submission = () => {
     dispatch(PostOrganizationDataService(`${environment.baseApiUrl}/organization/`, values));
@@ -25,7 +24,6 @@ const CreateOrganizationForm = () => {
     submission,
     OrganizationAddValidation,
   );
-    console.log(values,'values');
   const inputFormStyles = () => {
     return {
       style: {
@@ -38,15 +36,15 @@ const CreateOrganizationForm = () => {
 
   useEffect(() => {
     if (postOrganizationData) {
-
-      navigate('/organization');
-      dispatch(OrganizationAction.postOrganizationData(null))
-      dispatch(OrganizationAction.SetOrganizationFormData({}))
+      dispatch(OrganizationAction.postOrganizationData(null));
+      dispatch(OrganizationAction.SetOrganizationFormData({}));
+      if (searchParams.get('popup') === 'true') {
+        window.close();
+      } else {
+        navigate('/organization');
+      }
     }
-
-
-  }, [postOrganizationData])
-
+  }, [postOrganizationData]);
 
   return (
     <CoreModules.Box
@@ -158,7 +156,6 @@ const CreateOrganizationForm = () => {
                 >
                   Upload Logo
                 </CoreModules.FormLabel>
-                
               </CoreModules.Box>
               <CoreModules.Button variant="contained" component="span">
                 <CoreModules.Input

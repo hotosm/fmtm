@@ -9,36 +9,31 @@ import { CreateProjectActions } from '../../store/slices/CreateProjectSlice';
 import { OrganisationService } from '../../api/CreateProjectService';
 import environment from '../../environment';
 import { MenuItem, Select } from '@mui/material';
-import CustomizedModal from '../../utilities/CustomizedModal';
-import OrganizationAddForm from '../organization/OrganizationAddForm';
+import { createPopup } from '../../utilfunctions/createPopup';
+import { useAppSelector } from '../../types/reduxTypes';
 
 const ProjectDetailsForm: React.FC = () => {
-  const [openOrganizationModal, setOpenOrganizationModal] = useState(false);
+  const defaultTheme: any = CoreModules.useAppSelector((state) => state.theme.hotTheme);
+  // // const state:any = CoreModules.useAppSelector(state=>state.project.projectData)
 
-  const defaultTheme: any = CoreModules.useSelector<any>((state) => state.theme.hotTheme);
-  // // const state:any = useSelector<any>(state=>state.project.projectData)
   // // console.log('state main :',state)
 
   // const { type } = windowDimention();
   // //get window dimension
   const navigate = useNavigate();
 
-  const dispatch = CoreModules.useDispatch();
+  const dispatch = CoreModules.useAppDispatch();
   // //dispatch function to perform redux state mutation
 
-  const projectDetails: any = CoreModules.useSelector<any>((state) => state.createproject.projectDetails);
+  const projectDetails: any = useAppSelector((state) => state.createproject.projectDetails);
   // //we use use selector from redux to get all state of projectDetails from createProject slice
 
-  const organizationListData: any = CoreModules.useSelector<any>((state) => state.createproject.organizationList);
+  const organizationListData: any = useAppSelector((state) => state.createproject.organizationList);
   // //we use use selector from redux to get all state of projectDetails from createProject slice
 
   useEffect(() => {
     // dispatch(OrganisationService(`${environment.baseApiUrl}/organization/`));
   }, []);
-
-  
-
-  
 
   const submission = () => {
     // submitForm();
@@ -53,8 +48,6 @@ const ProjectDetailsForm: React.FC = () => {
     CreateProjectValidation,
   );
 
-  
-  
   const inputFormStyles = () => {
     return {
       style: {
@@ -72,14 +65,14 @@ const ProjectDetailsForm: React.FC = () => {
     dispatch(OrganisationService(`${environment.baseApiUrl}/organization/`));
   };
   useEffect(() => {
-    window.addEventListener("focus", onFocus);
-    onFocus()
+    window.addEventListener('focus', onFocus);
+    onFocus();
     // Calls onFocus when the window first loads
     return () => {
-        window.removeEventListener("focus", onFocus);
-        // window.removeEventListener("blur", onBlur);
+      window.removeEventListener('focus', onFocus);
+      // window.removeEventListener("blur", onBlur);
     };
-}, []);
+  }, []);
   return (
     <CoreModules.Stack sx={{ width: { xs: '95%' }, marginLeft: { md: '215px !important' } }}>
       <form onSubmit={handleSubmit} style={{ paddingBottom: '4rem' }}>
@@ -134,24 +127,32 @@ const ProjectDetailsForm: React.FC = () => {
                 value={values.organization || ''}
                 // label="Organization"
                 onChange={(e) => {
-                  handleCustomChange('organization', e.target.value);                }}
+                  handleCustomChange('organization', e.target.value);
+                }}
               >
                 {organizationList?.map((org) => (
-                  <MenuItem value={org.value}>{org.label}</MenuItem>
+                  <MenuItem key={org.value} value={org.value}>
+                    {org.label}
+                  </MenuItem>
                 ))}
               </Select>
-              <a href="/createOrganization" target='_blank' rel='noreferrer'>
               <CoreModules.IconButton
-                  sx={{ width: 'auto' }}
-                  // disabled={qrcode == "" ? true : false}
-                  color="info"
-                  aria-label="download qrcode"
+                onClick={() => createPopup('Create Organization', 'createOrganization?popup=true')}
+                sx={{ width: 'auto' }}
+                // disabled={qrcode == "" ? true : false}
+                color="info"
+                aria-label="download qrcode"
               >
-                  <AssetModules.AddIcon
-                      sx={{ fontSize: 25, border: '1px solid', borderRadius: '20px', backgroundColor: defaultTheme.palette.success.main, color: 'white', }}
-                  />
+                <AssetModules.AddIcon
+                  sx={{
+                    fontSize: 25,
+                    border: '1px solid',
+                    borderRadius: '20px',
+                    backgroundColor: defaultTheme.palette.success.main,
+                    color: 'white',
+                  }}
+                />
               </CoreModules.IconButton>
-              </a>
             </CoreModules.Stack>
             {errors.organization && (
               <CoreModules.FormLabel component="h3" sx={{ color: defaultTheme.palette.error.main }}>
@@ -294,6 +295,37 @@ const ProjectDetailsForm: React.FC = () => {
           </CoreModules.FormControl>
           {/* END */}
 
+          {/* Project Name Form Input For Create Project */}
+          <CoreModules.FormControl sx={{ mb: 0, width: { md: '50%', lg: '30%' } }}>
+            <CoreModules.Box sx={{ display: 'flex', flexDirection: 'row', pt: 0 }}>
+              <CoreModules.FormLabel component="h3">Tags</CoreModules.FormLabel>
+            </CoreModules.Box>
+            <CoreModules.TextField
+              id="hashtags"
+              name="hashtags"
+              type="hashtags"
+              autoComplete="on"
+              label=""
+              variant="outlined"
+              inputProps={{ sx: { padding: '8.5px 14px' } }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'black',
+                  },
+                },
+              }}
+              value={values.hashtags}
+              onChange={(e) => {
+                handleCustomChange('hashtags', e.target.value);
+              }}
+              helperText={errors.hashtags}
+              FormHelperTextProps={inputFormStyles()}
+            />
+            {/* <CoreModules.FormLabel component="h3" sx={{ display:'flex'}}>{errors.name} <CoreModules.FormLabel component="h4" sx={{color:'red'}}>*</CoreModules.FormLabel></CoreModules.FormLabel> */}
+          </CoreModules.FormControl>
+          {/* END */}
+
           {/* Short Description Form Input For Create Project */}
           <CoreModules.FormControl sx={{ mb: 3, width: { md: '50%', lg: '50%' } }}>
             <CoreModules.Box sx={{ display: 'flex', flexDirection: 'row' }}>
@@ -371,9 +403,6 @@ const ProjectDetailsForm: React.FC = () => {
           </CoreModules.Box>
         </CoreModules.FormGroup>
       </form>
-      <CustomizedModal isOpen={openOrganizationModal} toggleOpen={setOpenOrganizationModal}>
-        <OrganizationAddForm />
-      </CustomizedModal>
     </CoreModules.Stack>
   );
 };

@@ -11,33 +11,37 @@ import { InputLabel, MenuItem, Select } from '@mui/material';
 import DefineAreaMap from 'map/DefineAreaMap';
 import useForm from '../../hooks/useForm';
 import DefineTaskValidation from './validation/DefineTaskValidation';
+import { useAppSelector } from '../../types/reduxTypes';
 
-// const DefineAreaMap = React.lazy(() => import('map/DefineAreaMap'));
-// const DefineAreaMap = React.lazy(() => import('map/DefineAreaMap'));
-const alogrithmList = [{id:1,value:'Divide on Square',label:'Divide on Square'}, {id:2,value:'Choose Area as Tasks',label:'Choose Area as Tasks'},{id:3,value:'Task Splitting Algorithm',label:'Task Splitting Algorithm'}];
-const DefineTasks: React.FC<any> = ({geojsonFile,setGeojsonFile}) => {
+const alogrithmList = [
+  { id: 1, value: 'Divide on Square', label: 'Divide on Square' },
+  { id: 2, value: 'Choose Area as Tasks', label: 'Choose Area as Tasks' },
+  { id: 3, value: 'Task Splitting Algorithm', label: 'Task Splitting Algorithm' },
+];
+const DefineTasks: React.FC<any> = ({ geojsonFile, setGeojsonFile }) => {
   const navigate = useNavigate();
-  const defaultTheme: any = CoreModules.useSelector<any>((state) => state.theme.hotTheme);
+  const defaultTheme: any = CoreModules.useAppSelector((state) => state.theme.hotTheme);
+  const drawnGeojson = CoreModules.useAppSelector((state) => state.createproject.drawnGeojson);
 
-  // // const state:any = useSelector<any>(state=>state.project.projectData)
+  // // const state:any = CoreModules.useAppSelector(state=>state.project.projectData)
   // // console.log('state main :',state)
 
   // const { type } = windowDimention();
   // //get window dimension
 
-  const dispatch = CoreModules.useDispatch();
+  const dispatch = CoreModules.useAppDispatch();
   // //dispatch function to perform redux state mutation
 
-  const projectDetails = CoreModules.useSelector((state: any) => state.createproject.projectDetails);
+  const projectDetails = useAppSelector((state) => state.createproject.projectDetails);
   // //we use use-selector from redux to get all state of projectDetails from createProject slice
 
   const submission = () => {
     // const previousValues = location.state.values;
-    if(formValues.splitting_algorithm === 'Divide on Square'){
+    if (formValues.splitting_algorithm === 'Divide on Square') {
       generateTasksOnMap();
     }
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData({ ...projectDetails, ...formValues }));
-    navigate('/data-extract');
+    navigate('/select-form');
   };
 
   const {
@@ -48,21 +52,54 @@ const DefineTasks: React.FC<any> = ({geojsonFile,setGeojsonFile}) => {
   }: any = useForm(projectDetails, submission, DefineTaskValidation);
 
   const generateTasksOnMap = () => {
-    dispatch(
-      GetDividedTaskFromGeojson(`${enviroment.baseApiUrl}/projects/preview_tasks/`, {
-        geojson: geojsonFile,
-        dimension: formValues?.dimension,
-      }),
-    );
+    if (drawnGeojson) {
+      const drawnGeojsonString = JSON.stringify(drawnGeojson, null, 2);
+
+      const blob = new Blob([drawnGeojsonString], { type: 'application/json' });
+
+      // Create a file object from the Blob
+      const drawnGeojsonFile = new File([blob], 'data.json', { type: 'application/json' });
+      dispatch(
+        GetDividedTaskFromGeojson(`${enviroment.baseApiUrl}/projects/preview_tasks/`, {
+          geojson: drawnGeojsonFile,
+          dimension: formValues?.dimension,
+        }),
+      );
+    } else {
+      dispatch(
+        GetDividedTaskFromGeojson(`${enviroment.baseApiUrl}/projects/preview_tasks/`, {
+          geojson: geojsonFile,
+          dimension: formValues?.dimension,
+        }),
+      );
+    }
   };
-  
+
   const generateTaskWithSplittingAlgorithm = () => {
-    dispatch(
-      TaskSplittingPreviewService(`${enviroment.baseApiUrl}/projects/task_split/`,geojsonFile),
-    );
+    if (drawnGeojson) {
+      const drawnGeojsonString = JSON.stringify(drawnGeojson, null, 2);
+
+      const blob = new Blob([drawnGeojsonString], { type: 'application/json' });
+
+      // Create a file object from the Blob
+      const drawnGeojsonFile = new File([blob], 'data.json', { type: 'application/json' });
+      dispatch(
+        TaskSplittingPreviewService(
+          `${enviroment.baseApiUrl}/projects/task_split`,
+          drawnGeojsonFile,
+          formValues?.no_of_buildings,
+        ),
+      );
+    } else {
+      dispatch(
+        TaskSplittingPreviewService(
+          `${enviroment.baseApiUrl}/projects/task_split`,
+          geojsonFile,
+          formValues?.no_of_buildings,
+        ),
+      );
+    }
   };
-  
-  
 
   // 'Use natural Boundary'
   const inputFormStyles = () => {
@@ -74,15 +111,16 @@ const DefineTasks: React.FC<any> = ({geojsonFile,setGeojsonFile}) => {
       }, // or className: 'your-class'
     };
   };
-  const dividedTaskGeojson = CoreModules.useSelector((state) => state.createproject.dividedTaskGeojson);
+  const dividedTaskGeojson = CoreModules.useAppSelector((state) => state.createproject.dividedTaskGeojson);
   const parsedTaskGeojsonCount =
-  dividedTaskGeojson?.features?.length || JSON?.parse(dividedTaskGeojson)?.features?.length;
+    dividedTaskGeojson?.features?.length || JSON?.parse(dividedTaskGeojson)?.features?.length;
   // // passing payloads for creating project from form whenever user clicks submit on upload area passing previous project details form aswell
-  const algorithmListData =alogrithmList;
-  const dividedTaskLoading = CoreModules.useSelector((state) => state.createproject.dividedTaskLoading);
-  const taskSplittingGeojsonLoading = CoreModules.useSelector((state) => state.createproject.taskSplittingGeojsonLoading);
+  const algorithmListData = alogrithmList;
+  const dividedTaskLoading = CoreModules.useAppSelector((state) => state.createproject.dividedTaskLoading);
+  const taskSplittingGeojsonLoading = CoreModules.useAppSelector(
+    (state) => state.createproject.taskSplittingGeojsonLoading,
+  );
 
-  
   return (
     <CoreModules.Stack
       sx={{
@@ -124,7 +162,9 @@ const DefineTasks: React.FC<any> = ({geojsonFile,setGeojsonFile}) => {
               }}
             >
               {algorithmListData?.map((listData) => (
-                <MenuItem key={listData.id} value={listData.value}>{listData.label}</MenuItem>
+                <MenuItem key={listData.id} value={listData.value}>
+                  {listData.label}
+                </MenuItem>
               ))}
             </Select>
             {errors.splitting_algorithm && (
@@ -180,35 +220,82 @@ const DefineTasks: React.FC<any> = ({geojsonFile,setGeojsonFile}) => {
                   )}
                 </CoreModules.Stack>
                 <CoreModules.LoadingButton
-                    disabled={formValues?.dimension < 10}
-                    onClick={generateTasksOnMap}
-                    loading={dividedTaskLoading}
-                    loadingPosition="end"
-                    endIcon={<AssetModules.SettingsSuggestIcon />}
-                    variant="contained"                            
-                    color="error"
-                    >
-                
-                Generate Tasks
+                  disabled={formValues?.dimension < 10}
+                  onClick={generateTasksOnMap}
+                  loading={dividedTaskLoading}
+                  loadingPosition="end"
+                  endIcon={<AssetModules.SettingsSuggestIcon />}
+                  variant="contained"
+                  color="error"
+                >
+                  Generate Tasks
                 </CoreModules.LoadingButton>
-               
               </CoreModules.Stack>
             </CoreModules.FormControl>
           )}
-           {formValues.splitting_algorithm === 'Task Splitting Algorithm' ?
-            <CoreModules.LoadingButton
-                sx={{mb:3}}
-                // disabled={formValues?.dimension < 10}
-                onClick={generateTaskWithSplittingAlgorithm}
-                loading={taskSplittingGeojsonLoading}
-                loadingPosition="end"
-                endIcon={<AssetModules.SettingsSuggestIcon />}
-                variant="contained"                            
-                color="error"
+          {formValues.splitting_algorithm === 'Task Splitting Algorithm' ? (
+            <>
+              <CoreModules.Box sx={{ display: 'flex', flexDirection: 'row' }}>
+                <CoreModules.FormLabel component="h3">Average No. of Building in Task</CoreModules.FormLabel>
+                <CoreModules.FormLabel component="h3" sx={{ color: 'red' }}>
+                  *
+                </CoreModules.FormLabel>
+              </CoreModules.Box>
+              <CoreModules.Stack
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '20px',
+                }}
+              >
+                <CoreModules.Stack sx={{ display: 'flex', flexDirection: 'column', width: '50%' }}>
+                  <CoreModules.TextField
+                    id="no_of_buildings"
+                    disabled={taskSplittingGeojsonLoading}
+                    label=""
+                    type="number"
+                    min="5"
+                    inputProps={{ sx: { padding: '8.5px 14px' } }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '&.Mui-focused fieldset': {
+                          borderColor: 'black',
+                        },
+                      },
+                    }}
+                    value={formValues.no_of_buildings}
+                    onChange={(e) => {
+                      handleCustomChange('no_of_buildings', e.target.value);
+                    }}
+                    // onChange={(e) => dispatch(CreateProjectActions.SetProjectDetails({ key: 'no_of_buildings', value: e.target.value }))}
+                    // helperText={errors.username}
+                    InputProps={{ inputProps: { min: 9 } }}
+                    FormHelperTextProps={inputFormStyles()}
+                  />
+                  {errors.no_of_buildings && (
+                    <CoreModules.FormLabel component="h3" sx={{ color: defaultTheme.palette.error.main }}>
+                      {errors.no_of_buildings}
+                    </CoreModules.FormLabel>
+                  )}
+                </CoreModules.Stack>
+                <CoreModules.LoadingButton
+                  sx={{ mb: 3 }}
+                  // disabled={formValues?.no_of_buildings < 10}
+                  onClick={generateTaskWithSplittingAlgorithm}
+                  loading={taskSplittingGeojsonLoading}
+                  loadingPosition="end"
+                  endIcon={<AssetModules.SettingsSuggestIcon />}
+                  variant="contained"
+                  color="error"
                 >
-            
-              Generate Tasks
-            </CoreModules.LoadingButton>:null}
+                  Generate Tasks
+                </CoreModules.LoadingButton>
+              </CoreModules.Stack>
+            </>
+          ) : null}
+
           {parsedTaskGeojsonCount ? (
             <CoreModules.Stack direction="row" alignItems="center" spacing={2}>
               <h2>Total Tasks:</h2>
@@ -219,7 +306,14 @@ const DefineTasks: React.FC<any> = ({geojsonFile,setGeojsonFile}) => {
 
           {/* Submit Button For Create Project on Area Upload */}
           <CoreModules.Stack
-            sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-evenly', gap: '5rem' }}
+            sx={{
+              display: 'flex',
+              flexDirection: 'row',
+              width: '100%',
+              justifyContent: 'space-evenly',
+              gap: '5rem',
+              mt: 6,
+            }}
           >
             {/* Previous Button  */}
             <Link to="/upload-area">
@@ -230,7 +324,13 @@ const DefineTasks: React.FC<any> = ({geojsonFile,setGeojsonFile}) => {
             {/* END */}
 
             <CoreModules.Stack sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <CoreModules.Button disabled={!dividedTaskGeojson} variant="contained" color="error" sx={{ width: '20%' }} type="submit">
+              <CoreModules.Button
+                disabled={!dividedTaskGeojson}
+                variant="contained"
+                color="error"
+                sx={{ width: '20%' }}
+                type="submit"
+              >
                 Next
               </CoreModules.Button>
             </CoreModules.Stack>
@@ -238,7 +338,7 @@ const DefineTasks: React.FC<any> = ({geojsonFile,setGeojsonFile}) => {
           {/* END */}
         </FormGroup>
       </form>
-      <DefineAreaMap uploadedGeojson={geojsonFile} setGeojsonFile={setGeojsonFile}/>
+      <DefineAreaMap uploadedGeojson={geojsonFile} setGeojsonFile={setGeojsonFile} />
     </CoreModules.Stack>
   );
 };

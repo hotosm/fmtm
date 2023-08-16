@@ -1,14 +1,17 @@
 import React from "react";
 import CoreModules from "fmtm/CoreModules";
 import ProjectCard from "./ProjectCard";
+import environment from "fmtm/environment";
 
-const ProjectInfoSidebar = ({ taskInfo }) => {
-  const dispatch = CoreModules.useDispatch();
+const ProjectInfoSidebar = ({ projectId, taskInfo }) => {
+  const dispatch = CoreModules.useAppDispatch();
+  const params = CoreModules.useParams();
   const taskInfoData = Array.from(taskInfo);
-  const selectedTask = CoreModules.useSelector(
+  const selectedTask = CoreModules.useAppSelector(
     (state) => state.task.selectedTask
   );
 
+  const encodedId = params.projectId;
   const onTaskClick = (taskId) => {
     dispatch(CoreModules.TaskActions.SetSelectedTask(taskId));
   };
@@ -67,11 +70,31 @@ const ProjectInfoSidebar = ({ taskInfo }) => {
             <CoreModules.Box
               sx={{ display: "flex", justifyContent: "space-between" }}
             >
-              <CoreModules.Box>
+              <CoreModules.Box sx={{ flex: 1 }}>
                 <CoreModules.Typography variant="h1" color="#929db3">
                   #{task.task_id}
                 </CoreModules.Typography>
               </CoreModules.Box>
+              <CoreModules.Link
+                to={`/project/${encodedId}/tasks/${environment.encode(
+                  task.task_id
+                )}`}
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  textDecoration: "none",
+                  marginRight: "5px",
+                }}
+              >
+                <CoreModules.Button
+                  variant="outlined"
+                  color="error"
+                  sx={{ width: "fit-content", height: "fit-content" }}
+                  size="small"
+                >
+                  Go To Task Submissions
+                </CoreModules.Button>
+              </CoreModules.Link>
               <CoreModules.Button
                 variant="outlined"
                 color="error"
@@ -107,7 +130,7 @@ const ProjectInfoSidebar = ({ taskInfo }) => {
           },
         }}
       >
-        <CoreModules.Box sx={{ borderBottom: "1px solid #F0F0F0" }}>
+        {/* <CoreModules.Box sx={{ borderBottom: "1px solid #F0F0F0" }}>
           <CoreModules.Typography variant="h1">
             Api Listing
           </CoreModules.Typography>
@@ -124,7 +147,7 @@ const ProjectInfoSidebar = ({ taskInfo }) => {
           <ProjectCard />
           <ProjectCard />
           <ProjectCard />
-        </CoreModules.Box>
+        </CoreModules.Box> */}
       </CoreModules.Card>
     </CoreModules.Box>
   );

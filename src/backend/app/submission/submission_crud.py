@@ -16,6 +16,11 @@
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
+import os
+import zipfile
+import concurrent.futures
+import logging
+import threading
 import csv
 import io
 import os
@@ -92,7 +97,7 @@ def get_submission_of_project(db: Session, project_id: int, task_id: int = None)
     else:
         # If task_id is provided, submission made to this particular task is returned.
         xml_form_id = f"{project_name}_{form_category}_{task_id}".split("_")[2]
-        submission_list = xform.listSubmissions(odkid, xml_form_id)
+        submission_list = xform.listSubmissionBasicInfo(odkid, xml_form_id)
         for x in submission_list:
             x["submitted_by"] = f"{project_name}_{form_category}_{task_id}"
         return submission_list
@@ -132,16 +137,42 @@ def create_zip_file(files, output_file_path):
     return output_file_path
 
 
-async def convert_to_osm_for_task(odk_id: int, form_id: int, xform: any):
+async def convert_json_to_osm_xml(file_path):
 
-    # This file stores the submission data.
-    file_path = f"/tmp/{odk_id}_{form_id}.json"
+    jsonin = JsonDump()
+    infile = Path(file_path)
 
-    # Get the submission data from ODK Central
-    file = xform.getSubmissions(odk_id, form_id, None, False, True)
+    base = os.path.splitext(infile.name)[0]
 
-    with open(file_path, "wb") as f:
-        f.write(file)
+    osmoutfile = f"/tmp/{base}.osm"
+    jsonin.createOSM(osmoutfile)
+
+    data = jsonin.parse(infile.as_posix())
+
+    for entry in data:
+        feature = jsonin.createEntry(entry)
+        # Sometimes bad entries, usually from debugging XForm design, sneak in
+        if len(feature) == 0:
+            continue
+        if len(feature) > 0:
+            if "lat" not in feature["attrs"]:
+                if 'geometry' in feature['tags']:
+                    if type(feature['tags']['geometry']) == str:
+                        coords = list(feature['tags']['geometry'])
+                    else:
+                        coords = feature['tags']['geometry']['coordinates']
+                    feature['attrs'] = {'lat': coords[1], 'lon': coords[0]}
+                else:
+                    logger.warning("Bad record! %r" % feature)
+                    continue
+            jsonin.writeOSM(feature)
+
+    jsonin.finishOSM()
+    logger.info("Wrote OSM XML file: %r" % osmoutfile)
+    return osmoutfile
+
+
+async def convert_json_to_osm(file_path):
 
     jsonin = JsonDump()
     infile = Path(file_path)
@@ -181,7 +212,24 @@ async def convert_to_osm_for_task(odk_id: int, form_id: int, xform: any):
     jsonin.finishGeoJson()
     logger.info("Wrote OSM XML file: %r" % osmoutfile)
     logger.info("Wrote GeoJson file: %r" % jsonoutfile)
+    return osmoutfile, jsonoutfile
 
+
+async def convert_to_osm_for_task(odk_id: int, form_id: int, xform: any):
+
+    # This file stores the submission data.
+    file_path = f"/tmp/{odk_id}_{form_id}.json"
+
+    # Get the submission data from ODK Central
+    file = xform.getSubmissions(odk_id, form_id, None, False, True)
+
+    if file is None:
+        return None, None
+
+    with open(file_path, "wb") as f:
+        f.write(file)
+
+    osmoutfile, jsonoutfile = await convert_json_to_osm(file_path)
     return osmoutfile, jsonoutfile
 
 
@@ -207,20 +255,49 @@ async def convert_to_osm(db: Session, project_id: int, task_id: int):
     # Get ODK Form with odk credentials from the project.
     xform = get_odk_form(odk_credentials)
 
-    # XML Form Id is a combination or project_name, category and task_id
-    xml_form_id = f"{project_name}_{form_category}_{task_id}".split("_")[2]
-
-    # Get the task lists of the project if task_id is not provided
-    tasks = [task_id] if task_id else tasks_crud.get_task_lists(db, project_id)
-
     # Create a new ZIP file for the extracted files
-    final_zip_file_path = f"{project_name}_{form_category}_osm.zip"
+    final_zip_file_path = f"/tmp/{project_name}_{form_category}_osm.zip"
 
-    for task in tasks:
-        xml_form_id = f"{project_name}_{form_category}_{task}".split("_")[2]
+    # Remove the ZIP file if it already exists
+    if os.path.exists(final_zip_file_path):
+        os.remove(final_zip_file_path)
 
-        # Get the osm xml and geojson files for the task
-        osmoutfile, jsonoutfile = await convert_to_osm_for_task(odkid, xml_form_id, xform)
+    # Submission JSON
+    if task_id:
+        submission = xform.getSubmissions(odkid, task_id, None, False, True)
+        submission = (json.loads(submission))['value']
+    else:
+        submission = get_all_submissions(db, project_id)
+
+    if not submission:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    # JSON FILE PATH
+    jsoninfile = "/tmp/json_infile.json"
+
+    # Write the submission to a file
+    with open(jsoninfile, 'w') as f:
+        f.write(json.dumps(submission))
+
+    # Convert the submission to osm xml format
+    osmoutfile, jsonoutfile = await convert_json_to_osm(jsoninfile)
+
+    if osmoutfile and jsonoutfile:
+
+        #FIXME: Need to fix this when generating osm file
+
+        # Remove the extra closing </osm> tag from the end of the file
+        with open(osmoutfile, 'r') as f:
+            osmoutfile_data = f.read()
+            # Find the last index of the closing </osm> tag
+            last_osm_index = osmoutfile_data.rfind('</osm>')
+            # Remove the extra closing </osm> tag from the end
+            processed_xml_string = osmoutfile_data[:last_osm_index] + osmoutfile_data[last_osm_index + len('</osm>'):]
+
+        # Write the modified XML data back to the file
+        with open(osmoutfile, 'w') as f:
+            f.write(processed_xml_string)
+
 
         # Add the files to the ZIP file
         with zipfile.ZipFile(final_zip_file_path, mode="a") as final_zip_file:
@@ -228,6 +305,144 @@ async def convert_to_osm(db: Session, project_id: int, task_id: int):
             final_zip_file.write(jsonoutfile)
 
     return FileResponse(final_zip_file_path)
+
+
+
+def download_submission_for_project(db, project_id):
+    print('Download submission for a project')
+
+    project_info = project_crud.get_project(db, project_id)
+
+    # Return empty list if project is not found
+    if not project_info:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    odkid = project_info.odkid
+    project_name = project_info.project_name_prefix
+    form_category = project_info.xform_title
+    project_tasks = project_info.tasks
+
+    # ODK Credentials
+    odk_credentials = project_schemas.ODKCentral(
+        odk_central_url=project_info.odk_central_url,
+        odk_central_user=project_info.odk_central_user,
+        odk_central_password=project_info.odk_central_password,
+    )
+
+    # Get ODK Form with odk credentials from the project.
+    xform = get_odk_form(odk_credentials)
+
+    def download_submission_for_task(task_id):
+        logging.info(f"Thread {threading.current_thread().name} - Downloading submission for Task ID {task_id}")
+        xml_form_id = f"{project_name}_{form_category}_{task_id}".split("_")[2]
+        file = xform.getSubmissionMedia(odkid, xml_form_id)
+        file_path = f"{project_name}_{form_category}_submission_{task_id}.zip"
+        with open(file_path, "wb") as f:
+            f.write(file.content)
+        return file_path
+
+    def extract_files(zip_file_path):
+        logging.info(f"Thread {threading.current_thread().name} - Extracting files from {zip_file_path}")
+        with zipfile.ZipFile(zip_file_path, "r") as zip_file:
+            extract_dir = os.path.splitext(zip_file_path)[0]
+            zip_file.extractall(extract_dir)
+            return [os.path.join(extract_dir, f) for f in zip_file.namelist()]
+
+    # Set up logging configuration
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(threadName)s] %(message)s")
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        task_list = [x.id for x in project_tasks]
+
+        # Download submissions using thread pool
+        futures = {executor.submit(download_submission_for_task, task_id): task_id for task_id in task_list}
+
+        files = []
+        for future in concurrent.futures.as_completed(futures):
+            task_id = futures[future]
+            try:
+                file_path = future.result()
+                files.append(file_path)
+                logging.info(f"Thread {threading.current_thread().name} - Task {task_id} - Download completed.")
+            except Exception as e:
+                logging.error(f"Thread {threading.current_thread().name} - Error occurred while downloading submission for task {task_id}: {e}")
+
+        # Extract files using thread pool
+        extracted_files = []
+        futures = {executor.submit(extract_files, file_path): file_path for file_path in files}
+        for future in concurrent.futures.as_completed(futures):
+            file_path = futures[future]
+            try:
+                extracted_files.extend(future.result())
+                logging.info(f"Thread {threading.current_thread().name} - Extracted files from {file_path}")
+            except Exception as e:
+                logging.error(f"Thread {threading.current_thread().name} - Error occurred while extracting files from {file_path}: {e}")
+
+    # Create a new ZIP file for the extracted files
+    final_zip_file_path = f"{project_name}_{form_category}_submissions_final.zip"
+    with zipfile.ZipFile(final_zip_file_path, mode="w") as final_zip_file:
+        for file_path in extracted_files:
+            final_zip_file.write(file_path)
+
+    return final_zip_file_path
+
+
+def get_all_submissions(db: Session, project_id):
+    project_info = project_crud.get_project(db, project_id)
+
+    # ODK Credentials
+    odk_credentials = project_schemas.ODKCentral(
+        odk_central_url=project_info.odk_central_url,
+        odk_central_user=project_info.odk_central_user,
+        odk_central_password=project_info.odk_central_password,
+    )
+
+    project = get_odk_project(odk_credentials)
+
+    task_lists = tasks_crud.get_task_lists(db, project_id)
+    submissions = project.getAllSubmissions(project_info.odkid, task_lists)
+    return submissions
+
+
+def get_project_submission(db: Session, project_id: int):
+    project_info = project_crud.get_project(db, project_id)
+
+    # Return empty list if project is not found
+    if not project_info:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    odkid = project_info.odkid
+    project_name = project_info.project_name_prefix
+    form_category = project_info.xform_title
+    project_tasks = project_info.tasks
+
+    # ODK Credentials
+    odk_credentials = project_schemas.ODKCentral(
+        odk_central_url=project_info.odk_central_url,
+        odk_central_user=project_info.odk_central_user,
+        odk_central_password=project_info.odk_central_password,
+    )
+
+    # Get ODK Form with odk credentials from the project.
+    xform = get_odk_form(odk_credentials)
+
+    submissions = []
+
+    task_list = [x.id for x in project_tasks]
+    for id in task_list:
+        xml_form_id = f"{project_name}_{form_category}_{id}".split("_")[
+            2]
+        file = xform.getSubmissions(
+            odkid, xml_form_id, None, False, True)
+        if not file:
+            json_data = None
+        else:
+            json_data = json.loads(file)
+            json_data_value = json_data.get('value')
+            if json_data_value:
+                submissions.extend(json_data_value)
+
+    return submissions
 
 
 def download_submission(db: Session, project_id: int, task_id: int, export_json: bool):
@@ -252,7 +467,6 @@ def download_submission(db: Session, project_id: int, task_id: int, export_json:
 
     # Get ODK Form with odk credentials from the project.
     xform = get_odk_form(odk_credentials)
-
     if not export_json:
         file_path = f"{project_id}_submissions.zip"
 
@@ -284,8 +498,6 @@ def download_submission(db: Session, project_id: int, task_id: int, export_json:
 
             extracted_files = []
             for file_path in files:
-                print(file_path,'---filepath')
-                print(files,'---files')
                 with zipfile.ZipFile(file_path, "r") as zip_file:
                     zip_file.extractall(
                         os.path.splitext(file_path)[0]
@@ -324,7 +536,6 @@ def download_submission(db: Session, project_id: int, task_id: int, export_json:
                     2]
                 file = xform.getSubmissions(
                     odkid, xml_form_id, None, False, True)
-                print(file,'----file')
                 if not file:
                     json_data = None
                 else:

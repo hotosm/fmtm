@@ -219,3 +219,6 @@ class BackgroundTaskStatus(IntEnum, Enum):
     FAILED = 2
     RECEIVED = 3
     SUCCESS = 4
+
+
+TILES_SOURCE = ["esri", "bing", "google", "topo"]
