@@ -46,7 +46,7 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 
 
 def get_user(db: Session, user_id: int, db_obj: bool = False):
-     """
+    """
     Get a user from the database by their ID.
 
     Args:
@@ -65,7 +65,7 @@ def get_user(db: Session, user_id: int, db_obj: bool = False):
 
 
 def get_user_by_username(db: Session, username: str):
-     """
+    """
     Get a user from the database by their username.
 
     Args:
@@ -140,7 +140,7 @@ def verify_password(user_password, hashed_password):
     Returns:
         bool: True if the passwords match, False otherwise.
         
-     """
+    """
     is_valid = bcrypt.checkpw(
         user_password.encode("utf8"), hashed_password.encode("utf8")
     )
@@ -157,12 +157,12 @@ def unhash_password(hashed_password: str):
     Returns:
         str: The hashed password.
         
-     """
+    """
     return hashed_password
 
 
 def verify_user(db: Session, questionable_user: user_schemas.UserIn):
-    """
+  """
   Verify if a given username and password are valid and registered in the database.
 
   Args:
