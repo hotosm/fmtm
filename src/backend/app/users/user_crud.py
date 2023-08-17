@@ -57,6 +57,7 @@ def get_user(db: Session, user_id: int, db_obj: bool = False):
     Returns:
         user_schemas.User: The user with the given ID.
     """
+    
     db_user = db.query(db_models.DbUser).filter(db_models.DbUser.id == user_id).first()
     if db_obj:
         return db_user
