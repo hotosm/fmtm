@@ -162,19 +162,19 @@ def unhash_password(hashed_password: str):
 
 
 def verify_user(db: Session, questionable_user: user_schemas.UserIn):
-  """
-  Verify if a given username and password are valid and registered in the database.
+    """
+    Verify if a given username and password are valid and registered in the database.
 
-  Args:
-      db (Session): The database session.
-      questionable_user (user_schemas.UserIn): The data for the questionable user.
+    Args:
+        db (Session): The database session.
+        questionable_user (user_schemas.UserIn): The data for the questionable user.
 
-  Returns:
-      dict[str,str]: A dictionary containing information about the verified user.
+    Returns:
+        dict[str,str]: A dictionary containing information about the verified user.
 
-  Raises:
-      HTTPException: If the username is not registered or if the password is incorrect.
-  """
+    Raises:
+        HTTPException: If the username is not registered or if the password is incorrect.
+    """
     db_user = get_user_by_username(db, questionable_user.username)
     if db_user:
         if verify_password(questionable_user.password, db_user.password):
@@ -210,14 +210,14 @@ def convert_to_app_user(db_user: db_models.DbUser):
 
 def convert_to_app_users(db_users: List[db_models.DbUser]):
     """
-  Convert a list of database user objects to a list of app user objects.
+    Convert a list of database user objects to a list of app user objects.
 
-  Args:
-      db_users (List[db_models.DbUser]): The list of database user objects.
+    Args:
+        db_users (List[db_models.DbUser]): The list of database user objects.
 
-  Returns:
-      List[user_schemas.User]: The list of app user objects.
-  """
+    Returns:
+        List[user_schemas.User]: The list of app user objects.
+    """
     if db_users and len(db_users) > 0:
         app_users = []
         for user in db_users:
