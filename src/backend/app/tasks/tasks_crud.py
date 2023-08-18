@@ -43,6 +43,16 @@ from ..users import user_crud
 
 
 async def get_task_count_in_project(db: Session, project_id: int):
+    """
+    Get the number of tasks in a project.
+
+    Args:
+        db (Session): Database session.
+        project_id (int): Project ID.
+
+    Returns:
+        int: Number of tasks in the project.
+    """
     query = f"""select count(*) from tasks where project_id = {project_id}"""
     result = db.execute(query)
     return result.fetchone()[0]
@@ -50,7 +60,14 @@ async def get_task_count_in_project(db: Session, project_id: int):
 
 def get_task_lists(db: Session, project_id: int):
     """
-    Get a list of tasks for a project
+    Get a list of tasks for a project.
+
+    Args:
+        db (Session): Database session.
+        project_id (int): Project ID.
+
+    Returns:
+        List[int]: List of task IDs for the project.
     """
     query = f"""select id from tasks where project_id = {project_id}"""
     result = db.execute(query)
@@ -61,6 +78,19 @@ def get_task_lists(db: Session, project_id: int):
 def get_tasks(
     db: Session, project_id: int, user_id: int, skip: int = 0, limit: int = 1000
 ):
+    """
+    Get a list of tasks for a project or user.
+
+    Args:
+        db (Session): Database session.
+        project_id (int): Project ID.
+        user_id (int): User ID.
+        skip (int, optional): Number of tasks to skip. Defaults to 0.
+        limit (int, optional): Maximum number of tasks to return. Defaults to 1000.
+
+    Returns:
+        List[Task]: List of Task objects.
+    """
     if project_id:
         db_tasks = (
             db.query(db_models.DbTask)
@@ -83,6 +113,17 @@ def get_tasks(
 
 
 def get_task(db: Session, task_id: int, db_obj: bool = False):
+    """
+    Get a task by its ID.
+
+    Args:
+        db (Session): Database session.
+        task_id (int): Task ID.
+        db_obj (bool, optional): Whether to return the database object or not. Defaults to False.
+
+    Returns:
+        Task or DbTask: Task object or DbTask object if `db_obj` is True.
+    """
     db_task = db.query(db_models.DbTask).filter(
         db_models.DbTask.id == task_id).first()
     if db_obj:
@@ -91,6 +132,22 @@ def get_task(db: Session, task_id: int, db_obj: bool = False):
 
 
 def update_task_status(db: Session, user_id: int, task_id: int, new_status: TaskStatus):
+    """
+    Update the status of a task.
+
+    Args:
+        db (Session): Database session.
+        user_id (int): User ID.
+        task_id (int): Task ID.
+        new_status (TaskStatus): New status for the task.
+
+    Raises:
+        HTTPException: If the user ID is not provided or if the user does not exist.
+
+    Returns:
+        Task: Updated Task object.
+    """
+
     if not user_id:
         raise HTTPException(status_code=400, detail="User id required.")
 
@@ -159,6 +216,18 @@ def update_qrcode(
     qr_id: int,
     project_id: int,
 ):
+    """
+    Update the QR code for a task.
+
+    Args:
+        db (Session): Database session.
+        task_id (int): Task ID.
+        qr_id (int): QR code ID.
+        project_id (int): Project ID.
+
+    Returns:
+        bool: True if the update was successful, False otherwise.
+    """
     task = table("tasks", column("qr_code_id"), column("id"))
     where = f"task.c.id={task_id}"
     value = {"qr_code_id": qr_id}
@@ -180,6 +249,17 @@ def update_qrcode(
 def create_task_history_for_status_change(
     db_task: db_models.DbTask, new_status: TaskStatus, db_user: db_models.DbUser
 ):
+    """
+    Create a task history entry for a status change.
+
+    Args:
+        db_task (db_models.DbTask): Database task object.
+        new_status (TaskStatus): New status for the task.
+        db_user (db_models.DbUser): Database user object.
+
+    Returns:
+        DbTaskHistory: New task history entry.
+    """
     new_task_history = db_models.DbTaskHistory(
         project_id=db_task.project_id,
         task_id=db_task.id,
@@ -210,6 +290,15 @@ def create_task_history_for_status_change(
 
 
 def convert_to_app_history(db_histories: List[db_models.DbTaskHistory]):
+    """
+    Convert a list of database task history entries to application task history entries.
+
+    Args:
+        db_histories (List[db_models.DbTaskHistory]): List of database task history entries.
+
+    Returns:
+        List[TaskHistoryBase]: List of application task history entries.
+    """
     if db_histories:
         app_histories: List[tasks_schemas.TaskHistoryBase] = []
         for db_history in db_histories:
@@ -221,6 +310,15 @@ def convert_to_app_history(db_histories: List[db_models.DbTaskHistory]):
 
 
 def convert_to_app_task(db_task: db_models.DbTask):
+    """
+    Convert a database task object to an application task object.
+
+    Args:
+        db_task (db_models.DbTask): Database task object.
+
+    Returns:
+        Task: Application task object.
+    """
     if db_task:
         app_task: tasks_schemas.Task = db_task
         app_task.task_status_str = tasks_schemas.TaskStatusOption[
@@ -260,6 +358,15 @@ def convert_to_app_task(db_task: db_models.DbTask):
 
 
 def convert_to_app_tasks(db_tasks: List[db_models.DbTask]):
+    """
+    Convert a list of database task objects to a list of application task objects.
+
+    Args:
+        db_tasks (List[db_models.DbTask]): List of database task objects.
+
+    Returns:
+        List[Task]: List of application task objects.
+    """
     if db_tasks and len(db_tasks) > 0:
         app_tasks = []
         for task in db_tasks:
@@ -275,6 +382,19 @@ def get_qr_codes_for_task(
     db: Session,
     task_id: int,
 ):
+    """
+    Get the QR code for a task.
+
+    Args:
+        db (Session): Database session.
+        task_id (int): Task ID.
+
+    Raises:
+        HTTPException: If the task does not exist.
+
+    Returns:
+        dict: Dictionary containing the task ID and the QR code in base64 format.
+    """
     task = get_task(db=db, task_id=task_id)
     if task:
         if task.qr_code:
@@ -290,6 +410,16 @@ def get_qr_codes_for_task(
 
 
 async def get_task_by_id(db: Session, task_id: int):
+    """
+    Get a database task object by its ID.
+
+    Args:
+        db (Session): Database session.
+        task_id (int): Task ID.
+
+    Returns:
+        DbTask: Database task object.
+    """
     task = (
         db.query(db_models.DbTask)
         .filter(db_models.DbTask.id == task_id)
@@ -306,6 +436,21 @@ async def update_task_files(db: Session,
                             task_id: int,
                             category: str,
                             task_boundary: str):
+    """
+    Update the task files for a project.
+
+    Args:
+        db (Session): Database session.
+        project_id (int): Project ID.
+        project_odk_id (int): Project ODK ID.
+        project_name (str): Project name.
+        task_id (int): Task ID.
+        category (str): Category of the task.
+        task_boundary (str): Task boundary.
+
+    Returns:
+        bool: True if the update was successful, False otherwise.
+    """
 
     # This file will store osm extracts
     task_polygons = f"/tmp/{project_name}_{category}_{task_id}.geojson"
@@ -371,6 +516,20 @@ async def edit_task_boundary(
     task_id: int,
     boundary: str
 ):
+    """
+    Edit the boundary of a task.
+
+    Args:
+        db (Session): Database session.
+        task_id (int): Task ID.
+        boundary (str): New boundary for the task.
+
+    Raises:
+        HTTPException: If the task does not exist.
+
+    Returns:
+        bool: True if the update was successful, False otherwise.
+    """
     geometry = boundary['features'][0]['geometry']
 
     """Update the boundary polyon on the database."""

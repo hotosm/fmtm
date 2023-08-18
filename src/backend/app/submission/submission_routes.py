@@ -42,15 +42,16 @@ async def read_submissions(
     task_id: int = None,
     db: Session = Depends(database.get_db),
 ):
-    """This api returns the submission made in the project.
-    It takes two parameters: project_id and task_id.
+    """
+    Returns the submission made in the project.
 
+    Args:
+        project_id (int): The ID of the project. This endpoint returns the submission made in this project.
+        task_id (int, optional): The ID of the task. If provided, this endpoint returns the submissions made for this task. Defaults to None.
+        db (Session, optional): A database session. Defaults to Depends(database.get_db).
 
-    project_id: The ID of the project. This endpoint returns the submission made in this project.
-
-    task_id: The ID of the task. This parameter is optional. If task_id is provided, this endpoint returns the submissions made for this task.
-
-    Returns the list of submissions.
+    Returns:
+        Any: The list of submissions.
     """
     return submission_crud.get_submission_of_project(db, project_id, task_id)
 
@@ -60,13 +61,15 @@ async def list_forms(
     project_id: int,
     db: Session = Depends(database.get_db),
 ):
-    """This api returns the list of forms in the odk central.
+    """
+    Returns the list of forms in the odk central.
 
-    It takes one parameter: project_id.
+    Args:
+        project_id (int): The ID of the project. This endpoint returns the list of forms in this project.
+        db (Session, optional): A database session. Defaults to Depends(database.get_db).
 
-    project_id: The ID of the project. This endpoint returns the list of forms in this project.
-
-    Returns the list of forms details provided by the central api.
+    Returns:
+        Any: The list of forms details provided by the central api.
     """
     return submission_crud.get_forms_of_project(db, project_id)
 
@@ -76,13 +79,15 @@ async def list_app_users(
     project_id: int,
     db: Session = Depends(database.get_db),
 ):
-    """This api returns the list of forms in the odk central.
+    """
+    Returns the list of app users in a project.
 
-    It takes one parameter: project_id.
+    Args:
+        project_id (int): The ID of the project. This endpoint returns the list of app users in this project.
+        db (Session, optional): A database session. Defaults to Depends(database.get_db).
 
-    project_id: The ID of the project. This endpoint returns the list of forms in this project.
-
-    Returns the list of forms details provided by the central api.
+    Returns:
+        Any: The list of app users details provided by the central api.
     """
     return submission_crud.list_app_users_or_project(db, project_id)
 
@@ -94,13 +99,17 @@ async def download_submission(
     export_json: bool = True,
     db: Session = Depends(database.get_db),
 ):
-    """This api downloads the the submission made in the project.
-    It takes two parameters: project_id and task_id.
+    """
+    Downloads the submission made in a project.
 
-    project_id: The ID of the project. This endpoint returns the submission made in this project.
+    Args:
+        project_id (int): The ID of the project. This endpoint returns the submission made in this project.
+        task_id (int, optional): The ID of the task. If provided, this endpoint returns the submissions made for this task. Defaults to None.
+        export_json (bool, optional): If True, exports submission data as a JSON file. If False, exports submission data as a ZIP file. Defaults to True.
+        db (Session, optional): A database session. Defaults to Depends(database.get_db).
 
-    task_id: The ID of the task. This parameter is optional. If task_id is provided, this endpoint returns the submissions made for this task.
-
+    Returns:
+        Any: A FileResponse object containing the downloaded submission data as a ZIP or JSON file.
     """
     if not (task_id or export_json):
         file = submission_crud.download_submission_for_project(db, project_id)
@@ -115,11 +124,16 @@ async def submission_points(
     task_id: int = None,
     db: Session = Depends(database.get_db),
 ):
-    """This api returns the submission points of a project.
-    It takes two parameter: project_id and task_id.
+    """
+    Returns the submission points of a project.
 
-    project_id: The ID of the project. This endpoint returns the submission points of this project.
-    task_id: The task_id of the project. This endpoint returns the submission points of this task.
+    Args:
+        project_id (int): The ID of the project. This endpoint returns the submission points of this project.
+        task_id (int, optional): The ID of the task. If provided, this endpoint returns the submission points made for this task. Defaults to None.
+        db (Session, optional): A database session. Defaults to Depends(database.get_db).
+
+    Returns:
+        Any: The list of submission points.
     """
     return submission_crud.get_submission_points(db, project_id, task_id)
 
@@ -132,15 +146,16 @@ async def convert_to_osm(
 ):
 
     """
-        This api converts the submission to osm format.
-        It takes two parameter: project_id and task_id.
+    Converts submission data to OSM format.
 
-        task_id is optional. 
-        If task_id is provided, this endpoint converts the submission of this task.
-        If task_id is not provided, this endpoint converts the submission of the whole project.
+    Args:
+        project_id (int): The ID of the project. This endpoint converts submission data for this project.
+        task_id (int, optional): The ID of the task. If provided, this endpoint converts submission data for this task only. Defaults to None.
+        db (Session, optional): A database session. Defaults to Depends(database.get_db).
 
+    Returns:
+        Any: A FileResponse object containing a ZIP file with converted OSM data.
     """
-
     return await submission_crud.convert_to_osm(db, project_id, task_id)
 
 
@@ -149,6 +164,16 @@ async def get_submission_count(
     project_id: int,
     db: Session = Depends(database.get_db),
     ):
+    """
+    Returns the submission count for a project.
+
+    Args:
+        project_id (int): The ID of the project. This endpoint returns the submission count for this project.
+        db (Session, optional): A database session. Defaults to Depends(database.get_db).
+
+    Returns:
+        int: The submission count for the specified project.
+    """
     return await submission_crud.get_submission_count_of_a_project(db, project_id)
 
 
@@ -157,6 +182,16 @@ async def conflate_osm_date(
     project_id: int,
     db: Session = Depends(database.get_db),
     ):
+    """
+    Conflates OSM data for a project.
+
+    Args:
+        project_id (int): The ID of the project. This endpoint conflates OSM data for this project.
+        db (Session, optional): A database session. Defaults to Depends(database.get_db).
+
+    Returns:
+        Any: The conflated OSM data for the specified project.
+    """
 
     # Submission JSON
     submission = submission_crud.get_all_submissions(db, project_id)
@@ -210,6 +245,16 @@ async def get_osm_xml(
     project_id: int,
     db: Session = Depends(database.get_db),
     ):
+    """
+    Returns an OSM XML file for a project.
+
+    Args:
+        project_id (int): The ID of the project. This endpoint returns an OSM XML file for this project.
+        db (Session, optional): A database session. Defaults to Depends(database.get_db).
+
+    Returns:
+        Response: A Response object containing an OSM XML file for the specified project.
+    """
 
     # JSON FILE PATH
     jsoninfile = "/tmp/json_infile.json"
