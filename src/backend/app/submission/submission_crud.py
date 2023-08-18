@@ -41,9 +41,16 @@ from fastapi.logger import logger as logger
 
 
 def get_submission_of_project(db: Session, project_id: int, task_id: int = None):
-    """Gets the submission of project.
-    This function takes project_id and task_id as a parameter.
-    If task_id is provided, it returns all the submission made to that particular task, else all the submission made in the projects are returned.
+    """
+    Gets the submission of project.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+        task_id (int, optional): The ID of the task. If provided, only submissions for this task are returned. Defaults to None.
+
+    Returns:
+        list: A list of submissions for the specified project and task (if provided).
     """
     project_info = project_crud.get_project(db, project_id)
 
@@ -104,6 +111,16 @@ def get_submission_of_project(db: Session, project_id: int, task_id: int = None)
 
 
 def get_forms_of_project(db: Session, project_id: int):
+    """
+    Gets the forms of a project.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+
+    Returns:
+        list: A list of forms for the specified project.
+    """
     project_info = project_crud.get_project_by_id(db, project_id)
 
     # Return empty list if project is not found
@@ -118,6 +135,16 @@ def get_forms_of_project(db: Session, project_id: int):
 
 
 def list_app_users_or_project(db: Session, project_id: int):
+    """
+    Lists the app users of a project.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+
+    Returns:
+        list: A list of app users for the specified project.
+    """
     project_info = project_crud.get_project_by_id(db, project_id)
 
     # Return empty list if project is not found
@@ -131,6 +158,16 @@ def list_app_users_or_project(db: Session, project_id: int):
 
 
 def create_zip_file(files, output_file_path):
+    """
+    Creates a zip file containing the specified files.
+
+    Args:
+        files (list): A list of file paths to include in the zip file.
+        output_file_path (str): The path to save the zip file to.
+
+    Returns:
+        str: The path to the created zip file.
+    """
     with zipfile.ZipFile(output_file_path, mode="w") as zip_file:
         for file_path in files:
             zip_file.write(file_path)
@@ -138,6 +175,15 @@ def create_zip_file(files, output_file_path):
 
 
 async def convert_json_to_osm_xml(file_path):
+    """
+    Converts a JSON file to an OSM XML file.
+
+    Args:
+        file_path (str): The path to the JSON file to be converted.
+
+    Returns:
+        str: The path to the created OSM XML file.
+    """
 
     jsonin = JsonDump()
     infile = Path(file_path)
@@ -173,6 +219,15 @@ async def convert_json_to_osm_xml(file_path):
 
 
 async def convert_json_to_osm(file_path):
+    """
+    Converts a JSON file to an OSM XML file and a GeoJSON file.
+
+    Args:
+        file_path (str): The path to the JSON file to be converted.
+
+    Returns:
+        Tuple[str, str]: A tuple containing the paths to the created OSM XML and GeoJSON files.
+    """
 
     jsonin = JsonDump()
     infile = Path(file_path)
@@ -216,6 +271,17 @@ async def convert_json_to_osm(file_path):
 
 
 async def convert_to_osm_for_task(odk_id: int, form_id: int, xform: any):
+    """
+    Converts submission data from ODK Central to OSM XML and GeoJSON files.
+
+    Args:
+        odk_id (int): The ID of the ODK project.
+        form_id (int): The ID of the ODK form.
+        xform (any): An instance of an ODK form object.
+
+    Returns:
+        Tuple[str, str]: A tuple containing the paths to the created OSM XML and GeoJSON files.
+    """
 
     # This file stores the submission data.
     file_path = f"/tmp/{odk_id}_{form_id}.json"
@@ -234,6 +300,17 @@ async def convert_to_osm_for_task(odk_id: int, form_id: int, xform: any):
 
 
 async def convert_to_osm(db: Session, project_id: int, task_id: int):
+    """
+    Converts submission data from a project to OSM XML and GeoJSON files and returns a ZIP file containing the converted files.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+        task_id (int): The ID of the task.
+
+    Returns:
+        FileResponse: A FileResponse object containing the ZIP file with the converted OSM XML and GeoJSON files.
+    """
 
     project_info = project_crud.get_project(db, project_id)
 
@@ -309,6 +386,16 @@ async def convert_to_osm(db: Session, project_id: int, task_id: int):
 
 
 def download_submission_for_project(db, project_id):
+    """
+    Downloads submission data for a project.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+
+    Returns:
+        None
+    """
     print('Download submission for a project')
 
     project_info = project_crud.get_project(db, project_id)
@@ -333,6 +420,16 @@ def download_submission_for_project(db, project_id):
     xform = get_odk_form(odk_credentials)
 
     def download_submission_for_task(task_id):
+        """
+        Downloads submission data for a task.
+
+        Args:
+            task_id (int): The ID of the task.
+
+        Returns:
+            str: The path to the downloaded ZIP file containing the submission data.
+        """
+
         logging.info(f"Thread {threading.current_thread().name} - Downloading submission for Task ID {task_id}")
         xml_form_id = f"{project_name}_{form_category}_{task_id}".split("_")[2]
         file = xform.getSubmissionMedia(odkid, xml_form_id)
@@ -342,6 +439,15 @@ def download_submission_for_project(db, project_id):
         return file_path
 
     def extract_files(zip_file_path):
+        """
+        Extracts files from a ZIP file.
+
+        Args:
+            zip_file_path (str): The path to the ZIP file to extract files from.
+
+        Returns:
+            List[str]: A list of paths to the extracted files.
+        """
         logging.info(f"Thread {threading.current_thread().name} - Extracting files from {zip_file_path}")
         with zipfile.ZipFile(zip_file_path, "r") as zip_file:
             extract_dir = os.path.splitext(zip_file_path)[0]
@@ -388,6 +494,16 @@ def download_submission_for_project(db, project_id):
 
 
 def get_all_submissions(db: Session, project_id):
+    """
+    Gets all submissions for a project.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+
+    Returns:
+        Any: The submission data for the specified project.
+    """
     project_info = project_crud.get_project(db, project_id)
 
     # ODK Credentials
@@ -405,6 +521,16 @@ def get_all_submissions(db: Session, project_id):
 
 
 def get_project_submission(db: Session, project_id: int):
+    """
+    Gets submission data for a project.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+
+    Returns:
+        Any: The submission data for the specified project.
+    """
     project_info = project_crud.get_project(db, project_id)
 
     # Return empty list if project is not found
@@ -446,6 +572,18 @@ def get_project_submission(db: Session, project_id: int):
 
 
 def download_submission(db: Session, project_id: int, task_id: int, export_json: bool):
+    """
+    Downloads submission data for a project.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+        task_id (int): The ID of the task. If not provided, submission data for all tasks in the project are downloaded.
+        export_json (bool): If True, the submission data is exported as a JSON file. If False, the submission data is exported as a ZIP file.
+
+    Returns:
+        Union[FileResponse, Response]: A FileResponse object containing the downloaded submission data as a ZIP or JSON file.
+    """
 
     project_info = project_crud.get_project(db, project_id)
 
@@ -556,10 +694,16 @@ def download_submission(db: Session, project_id: int, task_id: int, export_json:
 
 
 def get_submission_points(db: Session, project_id: int, task_id: int = None):
-    """Gets the submission points of project.
-    This function takes project_id and task_id as a parameter.
-    If task_id is provided, it returns all the submission points made to that particular task,
-        else all the submission points made in the projects are returned.
+    """
+    Gets the submission points of a project.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+        task_id (int, optional): The ID of the task. If provided, only submission points for this task are returned. Defaults to None.
+
+    Returns:
+        Union[List[Dict[str, Any]], None]: A list of GeoJSON Feature objects representing the submission points for the specified project and task (if provided), or None if an error occurred.
     """
     project_info = project_crud.get_project_by_id(db, project_id)
 
@@ -625,6 +769,16 @@ def get_submission_points(db: Session, project_id: int, task_id: int = None):
 
 async def get_submission_count_of_a_project(db:Session, 
                                       project_id: int):
+    """
+    Gets the submission count for a project.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+
+    Returns:
+        int: The submission count for the specified project.
+    """
 
     project_info = project_crud.get_project(db, project_id)
 
