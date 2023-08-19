@@ -39,7 +39,18 @@ from ..projects import project_schemas
 
 
 def get_odk_project(odk_central: project_schemas.ODKCentral = None):
-    """Helper function to get the OdkProject with credentials."""
+    """
+    Get an instance of the OdkProject class with the provided credentials.
+
+    Args:
+        odk_central (project_schemas.ODKCentral, optional): The ODK Central credentials. Defaults to None.
+
+    Returns:
+        An instance of the OdkProject class.
+
+    Raises:
+        HTTPException: If there is an error creating a project on ODK Central.
+    """
     if odk_central:
         url = odk_central.odk_central_url
         user = odk_central.odk_central_user
@@ -64,7 +75,18 @@ def get_odk_project(odk_central: project_schemas.ODKCentral = None):
 
 
 def get_odk_form(odk_central: project_schemas.ODKCentral = None):
-    """Helper function to get the OdkForm with credentials."""
+    """
+    Get an instance of the OdkForm class with the provided credentials.
+
+    Args:
+        odk_central (project_schemas.ODKCentral, optional): The ODK Central credentials. Defaults to None.
+
+    Returns:
+        An instance of the OdkForm class.
+
+    Raises:
+        HTTPException: If there is an error creating a project on ODK Central.
+    """
     if odk_central:
         url = odk_central.odk_central_url
         user = odk_central.odk_central_user
@@ -90,7 +112,18 @@ def get_odk_form(odk_central: project_schemas.ODKCentral = None):
 
 
 def get_odk_app_user(odk_central: project_schemas.ODKCentral = None):
-    """Helper function to get the OdkAppUser with credentials."""
+    """
+    Get an instance of the OdkAppUser class with the provided credentials.
+
+    Args:
+        odk_central (project_schemas.ODKCentral, optional): The ODK Central credentials. Defaults to None.
+
+    Returns:
+        An instance of the OdkAppUser class.
+
+    Raises:
+        HTTPException: If there is an error creating a project on ODK Central.
+    """
     if odk_central:
         url = odk_central.odk_central_url
         user = odk_central.odk_central_user
@@ -115,13 +148,33 @@ def get_odk_app_user(odk_central: project_schemas.ODKCentral = None):
 
 
 def list_odk_projects(odk_central: project_schemas.ODKCentral = None):
-    """List all projects on a remote ODK Server."""
+    """
+    List all projects on a remote ODK Server.
+
+    Args:
+        odk_central (project_schemas.ODKCentral, optional): The ODK Central credentials. Defaults to None.
+
+    Returns:
+        A list of projects on the remote ODK Server.
+    """
     project = get_odk_project(odk_central)
     return project.listProjects()
 
 
 def create_odk_project(name: str, odk_central: project_schemas.ODKCentral = None):
-    """Create a project on a remote ODK Server."""
+    """
+    Create a project on a remote ODK Server.
+
+    Args:
+        name (str): The name of the project to create.
+        odk_central (project_schemas.ODKCentral, optional): The ODK Central credentials. Defaults to None.
+
+    Returns:
+        The result of creating the project on the remote ODK Server.
+
+    Raises:
+        HTTPException: If there is an error creating a project on ODK Central or if authentication fails.
+    """
     project = get_odk_project(odk_central)
 
     try:
@@ -143,7 +196,16 @@ def create_odk_project(name: str, odk_central: project_schemas.ODKCentral = None
 
 
 def delete_odk_project(project_id: int, odk_central: project_schemas.ODKCentral = None):
-    """Delete a project from a remote ODK Server."""
+    """
+    Delete a project from a remote ODK Server.
+
+    Args:
+        project_id (int): The ID of the project to delete.
+        odk_central (project_schemas.ODKCentral, optional): The ODK Central credentials. Defaults to None.
+
+    Returns:
+        The result of deleting the project from the remote ODK Server.
+    """
     # FIXME: when a project is deleted from Central, we have to update the
     # odkid in the projects table
     try:
@@ -156,8 +218,16 @@ def delete_odk_project(project_id: int, odk_central: project_schemas.ODKCentral 
 
 
 def create_appuser(project_id: int, name: str, odk_credentials: project_schemas.ODKCentral = None):
-    """Create an app-user on a remote ODK Server.
-    If odk credentials of the project are provided, use them to create an app user.
+    """
+    Create an app-user on a remote ODK Server.
+
+    Args:
+        project_id (int): The ID of the project to create an app-user for.
+        name (str): The name of the app-user to create.
+        odk_credentials (project_schemas.ODKCentral, optional): The ODK Central credentials. Defaults to None.
+
+    Returns:
+        The result of creating an app-user on the remote ODK Server.
     """
     if odk_credentials:
         url = odk_credentials.odk_central_url
@@ -180,13 +250,35 @@ def create_appuser(project_id: int, name: str, odk_credentials: project_schemas.
 def delete_app_user(
     project_id: int, name: str, odk_central: project_schemas.ODKCentral = None
 ):
-    """Delete an app-user from a remote ODK Server."""
+    """
+    Delete an app-user from a remote ODK Server.
+
+    Args:
+        project_id (int): The ID of the project to delete an app-user from.
+        name (str): The name of the app-user to delete.
+        odk_central (project_schemas.ODKCentral, optional): The ODK Central credentials. Defaults to None.
+
+    Returns:
+        The result of deleting an app-user from the remote ODK Server.
+    """
     appuser = get_odk_app_user(odk_central)
     result = appuser.delete(project_id, name)
     return result
 
 
 def upload_xform_media(project_id: int, xform_id:str, filespec: str,    odk_credentials: dict = None):
+    """
+    Upload media for an XForm on a remote ODK Central server.
+
+    Args:
+        project_id (int): The ID of the project to upload media for.
+        xform_id (str): The ID of the XForm to upload media for.
+        filespec (str): The path to the media file to upload.
+        odk_credentials (dict, optional): A dictionary containing the ODK Central credentials. Defaults to None.
+
+    Returns:
+        The result of uploading media for an XForm on the remote ODK Central server.
+    """
 
     title = os.path.basename(os.path.splitext(filespec)[0])
 
@@ -226,7 +318,21 @@ def create_odk_xform(
     convert_to_draft_when_publishing = True
 
 ):
-    """Create an XForm on a remote ODK Central server."""
+    """
+    Create an XForm on a remote ODK Central server.
+
+    Args:
+        project_id (int): The ID of the project to create an XForm for.
+        xform_id (str): The ID of the XForm to create.
+        filespec (str): The path to the XLSForm file to use for creating the XForm.
+        odk_credentials (project_schemas.ODKCentral, optional): The ODK Central credentials. Defaults to None.
+        create_draft (bool, optional): Whether to create a draft version of the XForm. Defaults to False.
+        upload_media (bool, optional): Whether to upload media for the XForm. Defaults to True.
+        convert_to_draft_when_publishing (bool, optional): Whether to convert an existing published XForm to draft mode when publishing. Defaults to True.
+
+    Returns:
+        The result of creating an XForm on the remote ODK Central server.
+    """
     title = os.path.basename(os.path.splitext(filespec)[0])
     # result = xform.createForm(project_id, title, filespec, True)
     # Pass odk credentials of project in xform
@@ -270,7 +376,18 @@ def delete_odk_xform(
     filespec: str,
     odk_central: project_schemas.ODKCentral = None,
 ):
-    """Delete an XForm from a remote ODK Central server."""
+    """
+    Delete an XForm from a remote ODK Central server.
+
+    Args:
+        project_id (int): The ID of the project to delete an XForm from.
+        xform_id (str): The ID of the XForm to delete.
+        filespec (str): The path to the XLSForm file used to create the XForm.
+        odk_central (project_schemas.ODKCentral, optional): The ODK Central credentials. Defaults to None.
+
+    Returns:
+        The result of deleting an XForm from the remote ODK Central server.
+    """
     xform = get_odk_form(odk_central)
     result = xform.deleteForm(project_id, xform_id, filespec, True)
     # FIXME: make sure it's a valid project id
@@ -278,7 +395,16 @@ def delete_odk_xform(
 
 
 def list_odk_xforms(project_id: int, odk_central: project_schemas.ODKCentral = None):
-    """List all XForms in an ODK Central project."""
+    """
+    List all XForms in an ODK Central project.
+
+    Args:
+        project_id (int): The ID of the project to list XForms for.
+        odk_central (project_schemas.ODKCentral, optional): The ODK Central credentials. Defaults to None.
+
+    Returns:
+        A list of XForms in the specified ODK Central project.
+    """
     project = get_odk_project(odk_central)
     xforms = project.listForms(project_id)
     # FIXME: make sure it's a valid project id
@@ -290,19 +416,50 @@ def get_form_full_details(
         form_id: str,
         odk_central: project_schemas.ODKCentral
     ):
+    """
+    Get the full details of an XForm in an ODK Central project.
+
+    Args:
+        odk_project_id (int): The ID of the ODK Central project to get the full details of an XForm for.
+        form_id (str): The ID of the XForm to get the full details for.
+        odk_central (project_schemas.ODKCentral): The ODK Central credentials.
+
+    Returns:
+        A dictionary containing the full details of the specified XForm in the specified ODK Central project.
+    """
     form = get_odk_form(odk_central)
     form_details = form.getFullDetails(odk_project_id, form_id)
     return form_details.json()
 
 
 def list_task_submissions(odk_project_id:int, form_id: str, odk_central: project_schemas.ODKCentral = None):
+    """
+    List submissions for a specific task in an ODK Central project.
+
+    Args:
+        odk_project_id (int): The ID of the ODK Central project to list submissions for.
+        form_id (str): The ID of the form to list submissions for.
+        odk_central (project_schemas.ODKCentral, optional): The ODK Central credentials. Defaults to None.
+
+    Returns:
+        A list of submissions for the specified task in the specified ODK Central project.
+    """
     project = get_odk_form(odk_central)
     submissions = project.listSubmissions(odk_project_id, form_id)
     return submissions
 
 
 def list_submissions(project_id: int, odk_central: project_schemas.ODKCentral = None):
-    """List submissions from a remote ODK server."""
+    """
+    List all submissions from a remote ODK server.
+
+    Args:
+        project_id (int): The ID of the project to list submissions for.
+        odk_central (project_schemas.ODKCentral, optional): The ODK Central credentials. Defaults to None.
+
+    Returns:
+        A list of all submissions from the remote ODK server for the specified project.
+    """
     project = get_odk_project(odk_central)
     xform = get_odk_form(odk_central)
     submissions = list()
@@ -314,7 +471,20 @@ def list_submissions(project_id: int, odk_central: project_schemas.ODKCentral = 
 
 
 def get_form_list(db: Session, skip: int, limit: int):
-    """Returns the list of id and title of xforms from the database."""
+    """
+    Get a list of IDs and titles of XForms from the database.
+
+    Args:
+        db (Session): The database session.
+        skip (int): The number of records to skip before returning results.
+        limit (int): The maximum number of records to return.
+
+    Returns:
+        A list of tuples containing the IDs and titles of XForms from the database.
+
+    Raises:
+        HTTPException: If there is an error querying the database.
+    """
     try:
         return (
             db.query(db_models.DbXForm.id, db_models.DbXForm.title)
@@ -334,7 +504,19 @@ def download_submissions(
     get_json: bool = True,
     odk_central: project_schemas.ODKCentral = None,
 ):
-    """Download submissions from a remote ODK server."""
+    """
+    Download submissions from a remote ODK server.
+
+    Args:
+        project_id (int): The ID of the project to download submissions for.
+        xform_id (str): The ID of the XForm to download submissions for.
+        submission_id (str, optional): The ID of a specific submission to download. Defaults to None.
+        get_json (bool, optional): Whether to return submissions in JSON format. Defaults to True.
+        odk_central (project_schemas.ODKCentral, optional): The ODK Central credentials. Defaults to None.
+
+    Returns:
+        A list of downloaded submissions from the remote ODK server for the specified parameters.
+    """    
     xform = get_odk_form(odk_central)
     # FIXME: should probably filter by timestamps or status value
     data = xform.getSubmissions(project_id, xform_id, submission_id, True, get_json)
@@ -347,10 +529,17 @@ async def test_form_validity(
     form_type: str
     ):
     """
-        Validate an XForm.
-        Parameters:
-            xform_content: form to be tested
-            form_type: type of form (xls or xlsx)
+    Validate an XForm.
+
+    Args:
+        xform_content (str): The content of the XForm to validate.
+        form_type (str): The type of the XForm (xls or xlsx).
+
+    Returns:
+        A dictionary containing a message indicating whether the XForm is valid.
+
+    Raises:
+        HTTPException: If the XForm is invalid.
     """
     try:
         xlsform_path = f"/tmp/validate_form.{form_type}"
@@ -373,7 +562,20 @@ def generate_updated_xform(
     xform: str,
     form_type : str,
 ):
-    """Update the version in an XForm so it's unique."""
+    """
+    Update the version in an XForm so it's unique.
+
+    Args:
+        xlsform (str): The path to the XLSForm file used to create the XForm.
+        xform (str): The path to the XForm file to update.
+        form_type (str): The type of the XForm (xls, xlsx, or xml).
+
+    Returns:
+        The path to the updated XForm file.
+
+    Raises:
+        HTTPException: If there is an error converting the XLSForm to an XForm or if the generated XForm file is empty.
+    """
     name = os.path.basename(xform).replace(".xml", "")
     outfile = xform
     if form_type != 'xml':
@@ -452,7 +654,18 @@ def create_qrcode(project_id: int,
                   name: str,
                   odk_central_url: str = None
                   ):
-    """Create the QR Code for an app-user."""
+    """
+    Create a QR Code for an app-user.
+
+    Args:
+        project_id (int): The ID of the project to create a QR Code for.
+        token (str): The token to use for creating the QR Code.
+        name (str): The name of the app-user to create a QR Code for.
+        odk_central_url (str, optional): The URL of the ODK Central server. Defaults to None.
+
+    Returns:
+        A dictionary containing the settings for generating a QR Code for an app-user.
+    """
     if not odk_central_url:
         logger.debug("ODKCentral connection variables not set in function")
         logger.debug("Attempting extraction from environment variables")
@@ -487,7 +700,15 @@ def upload_media(
     filespec: str,
     odk_central: project_schemas.ODKCentral = None,
 ):
-    """Upload a data file to Central."""
+    """
+    Upload a data file to ODK Central.
+
+    Args:
+        project_id (int): The ID of the project to upload a data file for.
+        xform_id (str): The ID of the XForm to upload a data file for.
+        filespec (str): The path to the data file to upload.
+        odk_central (project_schemas.ODKCentral, optional): The ODK Central credentials. Defaults to None.
+    """
     xform = get_odk_form(odk_central)
     xform.uploadMedia(project_id, xform_id, filespec)
 
@@ -498,7 +719,15 @@ def download_media(
     filespec: str,
     odk_central: project_schemas.ODKCentral = None,
 ):
-    """Upload a data file to Central."""
+    """
+    Download a data file from ODK Central.
+
+    Args:
+        project_id (int): The ID of the project to download a data file for.
+        xform_id (str): The ID of the XForm to download a data file for.
+        filespec (str): The path to save the downloaded data file to.
+        odk_central (project_schemas.ODKCentral, optional): The ODK Central credentials. Defaults to None.
+    """
     xform = get_odk_form(odk_central)
     filename = "test"
     xform.getMedia(project_id, xform_id, filename)
@@ -508,7 +737,16 @@ def convert_csv(
     filespec: str,
     data: bytes,
 ):
-    """Convert ODK CSV to OSM XML and GeoJson."""
+    """
+    Convert an ODK CSV file to OSM XML and GeoJson.
+
+    Args:
+        filespec (str): The path to the CSV file to convert.
+        data (bytes): The content of the CSV file.
+
+    Returns:
+        True if the conversion is successful.
+    """
     pathlib.Path(osm_fieldwork.__file__).resolve().parent
     csvin = CSVDump("/xforms.yaml")
 
