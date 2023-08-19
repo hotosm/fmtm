@@ -62,12 +62,35 @@ async def read_projects(
     limit: int = 100,
     db: Session = Depends(database.get_db),
 ):
+    """
+    Get a list of projects.
+
+    Args:
+        user_id (int, optional): The ID of the user to filter projects by. Defaults to None.
+        skip (int, optional): The number of projects to skip. Defaults to 0.
+        limit (int, optional): The maximum number of projects to return. Defaults to 100.
+        db (Session, optional): The database session. Injected by FastAPI.
+
+    Returns:
+        List[project_schemas.ProjectOut]: A list of projects.
+    """
     projects = project_crud.get_projects(db, user_id, skip, limit)
     return projects
 
 
 @router.post("/near_me", response_model=project_schemas.ProjectSummary)
 def get_task(lat: float, long: float, user_id: int = None):
+    """
+    Get a task near the specified location.
+
+    Args:
+        lat (float): The latitude of the location.
+        long (float): The longitude of the location.
+        user_id (int, optional): The ID of the user. Defaults to None.
+
+    Returns:
+        project_schemas.ProjectSummary: A summary of the project.
+    """
     return "Coming..."
 
 
@@ -79,6 +102,19 @@ async def read_project_summaries(
     limit: int = 100,
     db: Session = Depends(database.get_db),
 ):
+    """
+    Get a list of project summaries.
+
+    Args:
+        user_id (int, optional): The ID of the user to filter projects by. Defaults to None.
+        hashtags (str, optional): A comma-separated list of hashtags to filter projects by. Defaults to None.
+        skip (int, optional): The number of projects to skip. Defaults to 0.
+        limit (int, optional): The maximum number of projects to return. Defaults to 100.
+        db (Session, optional): The database session. Injected by FastAPI.
+
+    Returns:
+        List[project_schemas.ProjectSummary]: A list of project summaries.
+    """
     if hashtags:
         hashtags = hashtags.split(',') # create list of hashtags
         hashtags = list(filter(lambda hashtag: hashtag.startswith('#'), hashtags))  # filter hashtags that do start with #
@@ -89,6 +125,20 @@ async def read_project_summaries(
 
 @router.get("/{project_id}", response_model=project_schemas.ProjectOut)
 async def read_project(project_id: int, db: Session = Depends(database.get_db)):
+    """
+    Get a project by its ID.
+
+    Args:
+        project_id (int): The ID of the project.
+        db (Session, optional): The database session. Injected by FastAPI.
+
+    Returns:
+        project_schemas.ProjectOut: The project.
+
+    Raises:
+        HTTPException: If the project is not found.
+        
+    """
     project = project_crud.get_project_by_id(db, project_id)
     if project:
         return project
@@ -98,7 +148,19 @@ async def read_project(project_id: int, db: Session = Depends(database.get_db)):
 
 @router.delete("/delete/{project_id}")
 async def delete_project(project_id: int, db: Session = Depends(database.get_db)):
-    """Delete a project from ODK Central and the local database."""
+    """
+    Delete a project by its ID.
+
+    Args:
+        project_id (int): The ID of the project.
+        db (Session, optional): The database session. Injected by FastAPI.
+
+    Returns:
+        The deleted project.
+
+    Raises:
+        HTTPException: If the project is not found.
+    """
     # FIXME: should check for error
 
     project = project_crud.get_project(db, project_id)
@@ -127,7 +189,20 @@ async def create_project(
     project_info: project_schemas.BETAProjectUpload,
     db: Session = Depends(database.get_db),
 ):
-    """Create a project in ODK Central and the local database."""
+    """
+    Create a new project.
+
+    Args:
+        project_info (project_schemas.BETAProjectUpload): The information about the new project.
+        db (Session, optional): The database session. Injected by FastAPI.
+
+    Returns:
+        The created project.
+        
+    Raises:
+        HTTPException: If there is a connection error to ODK Central.
+        
+    """
     logger.debug(f"Creating project {project_info.project_info.name}")
 
     if project_info.odk_central.odk_central_url.endswith("/"):
@@ -163,7 +238,21 @@ async def update_odk_credentials(
     project_id: int,
     db: Session = Depends(database.get_db)
 ):
-    """Update odk credential of a project"""
+    """
+    Update the ODK credentials of a project.
+
+    Args:
+        background_task (BackgroundTasks): The background tasks object.
+        odk_central_cred (project_schemas.ODKCentral): The new ODK Central credentials.
+        project_id (int): The ID of the project to update.
+        db (Session, optional): The database session. Injected by FastAPI.
+
+    Returns:
+        The response from generating files.
+
+    Raises:
+        HTTPException: If the project is not found or if there is a connection error to ODK Central.
+    """
     if odk_central_cred.odk_central_url.endswith("/"):
         odk_central_cred.odk_central_url = odk_central_cred.odk_central_url[:-1]
     
@@ -205,18 +294,20 @@ async def update_project(
     project_info: project_schemas.BETAProjectUpload,
     db: Session = Depends(database.get_db),
 ):
-    """Update an existing project by ID.
+    """
+    Update an existing project by its ID.
 
-    Parameters:
-    - id: ID of the project to update
-    - author: Author username and id
-    - project_info: Updated project information
+    Args:
+        id (int): The ID of the project to update.
+        project_info (project_schemas.BETAProjectUpload): The updated information about the project.
+        db (Session, optional): The database session. Injected by FastAPI.
 
     Returns:
-    - Updated project information
+        The updated project.
 
     Raises:
-    - HTTPException with 404 status code if project not found
+        HTTPException: If the project is not found.
+        
     """
     project = project_crud.update_project_info(db, project_info, id)
     if project:
@@ -231,19 +322,20 @@ async def project_partial_update(
     project_info: project_schemas.ProjectUpdate,
     db: Session = Depends(database.get_db),
 ):
-    """Partial Update an existing project by ID.
+    """
+    Partially update an existing project by its ID.
 
-    Parameters:
-    - id
-    - name
-    - short_description
-    - description
+    Args:
+        id (int): The ID of the project to update.
+        project_info (project_schemas.ProjectUpdate): The updated information about the project.
+        db (Session, optional): The database session. Injected by FastAPI.
 
     Returns:
-    - Updated project information
+        The updated project.
 
     Raises:
-    - HTTPException with 404 status code if project not found
+        HTTPException: If the project is not found.
+        
     """
     # Update project informations
     project = project_crud.partial_update_project_info(db, project_info, id)
@@ -262,6 +354,23 @@ async def upload_project_boundary_with_zip(
     upload: UploadFile,
     db: Session = Depends(database.get_db),
 ):
+    """
+    Upload a ZIP file with task geojson polygons and QR codes for an existing project.
+
+    Args:
+        project_id (int): The ID of the project to upload to.
+        project_name_prefix (str): The prefix for the project name.
+        task_type_prefix (str): The prefix for the task type.
+        upload (UploadFile): The ZIP file to upload.
+        db (Session, optional): The database session. Injected by FastAPI.
+
+    Returns:
+        The updated project or a message indicating that uploading failed.
+
+    Raises:
+        HTTPException: If there is a connection error to ODK Central.
+        
+    """
     r"""Upload a ZIP with task geojson polygons and QR codes for an existing project.
 
     {PROJECT_NAME}/\n
@@ -288,10 +397,16 @@ async def upload_custom_xls(
     category: str = Form(...),
     db: Session = Depends(database.get_db),
 ):
-    """Upload a custom XLSForm to the database.
-    Parameters:
-    - upload: the XLSForm file
-    - category: the category of the XLSForm.
+    """
+    Upload a custom XLSForm to the database.
+
+    Args:
+        upload (UploadFile): The XLSForm file to upload.
+        category (str): The category of the XLSForm.
+        db (Session, optional): The database session. Injected by FastAPI.
+
+    Returns:
+        A dictionary with the title of the XLSForm.
     """
     content = await upload.read()  # read file content
     name = upload.filename.split(".")[0]  # get name of file without extension
@@ -307,16 +422,20 @@ async def upload_multi_project_boundary(
     upload: UploadFile = File(...),
     db: Session = Depends(database.get_db),
 ):
-    """This API allows for the uploading of a multi-polygon project boundary
-        in JSON format for a specified project ID. Each polygon in the uploaded geojson are made a single task.
+    """
+    Upload a multi-polygon project boundary in JSON format for a specified project ID.
 
-    Required Parameters:
-    project_id: ID of the project to which the boundary is being uploaded.
-    upload: a file upload containing the multi-polygon boundary in geojson format.
+    Args:
+        project_id (int): The ID of the project to which the boundary is being uploaded.
+        upload (UploadFile): A file upload containing the multi-polygon boundary in geojson format.
+        db (Session, optional): The database session. Injected by FastAPI.
 
     Returns:
-    A success message indicating that the boundary was successfully uploaded.
-    If the project ID does not exist in the database, an HTTP 428 error is raised.
+        A dictionary with a message and the project ID.
+
+    Raises:
+        HTTPException: If the project ID does not exist in the database.
+        
     """
     # read entire file
     await upload.seek(0)
@@ -342,6 +461,18 @@ async def task_split(
     no_of_buildings: int = Form(50),
     db: Session = Depends(database.get_db)
     ):
+    """
+    Split a task into subtasks.
+
+    Args:
+        upload (UploadFile): The file to split.
+        no_of_buildings (int, optional): The number of buildings per subtask. Defaults to 50.
+        db (Session, optional): The database session. Injected by FastAPI.
+
+    Returns:
+        The result of splitting the task into subtasks.
+        
+    """
 
     # read entire file
     await upload.seek(0)
@@ -360,16 +491,20 @@ async def upload_project_boundary(
     db: Session = Depends(database.get_db),
 ):
     """
-    Uploads the project boundary. The boundary is uploaded as a geojson file.
+    Uploads the project boundary as a geojson file.
 
-    Params:
-    - project_id (int): The ID of the project to update.
-    - upload (UploadFile): The boundary file to upload.
-    - dimension (int): The new dimension of the project.
-    - db (Session): The database session to use.
+    Args:
+        project_id (int): The ID of the project to update.
+        upload (UploadFile): The boundary file to upload.
+        dimension (int, optional): The new dimension of the project. Defaults to 500.
+        db (Session, optional): The database session. Injected by FastAPI.
 
     Returns:
-    - Dict: A dictionary with a message, the project ID, and the number of tasks in the project.
+        A dictionary with a message, the project ID, and the number of tasks in the project.
+
+    Raises:
+        HTTPException: If the provided file is not valid or if the project ID does not exist in the database.
+        
     """
 
     # Validating for .geojson File.
@@ -408,6 +543,19 @@ async def edit_project_boundary(
     dimension: int = Form(500),
     db: Session = Depends(database.get_db)
     ):
+    """
+    Edit the boundary of a project.
+
+    Args:
+        project_id (int): The ID of the project to update.
+        upload (UploadFile): The boundary file to upload.
+        dimension (int, optional): The new dimension of the project. Defaults to 500.
+        db (Session, optional): The database session. Injected by FastAPI.
+
+    Returns:
+        None.
+        
+    """
 
     # Validating for .geojson File.
     file_name = os.path.splitext(upload.filename)
@@ -442,10 +590,14 @@ async def validate_form(
     form: UploadFile,
     ):
     """
-        Tests the validity of the xls form uploaded.
+    Tests the validity of the uploaded XLS form.
 
-        Parameters:
-            - form: The xls form to validate
+    Args:
+        form (UploadFile): The XLS form to validate.
+
+    Returns:
+        The result of testing the form's validity.
+        
     """
     file_name = os.path.splitext(form.filename)
     file_ext = file_name[1]
@@ -468,26 +620,23 @@ async def generate_files(
     data_extracts: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
 ):
-    """Generate required media files tasks in the project based on the provided params.
+    """
+    Generate required media files for tasks in the project based on the provided parameters.
 
-    Accepts a project ID, category, custom form flag, and an uploaded file as inputs.
-    The generated files are associated with the project ID and stored in the database.
-    This api generates qr_code, forms. This api also creates an app user for each task and provides the required roles.
-    Some of the other functionality of this api includes converting a xls file provided by the user to the xform,
-    generates osm data extracts and uploads it to the form.
-
-
-    Parameters:
-
-    project_id (int): The ID of the project for which files are being generated. This is a required field.
-    polygon (bool): A boolean flag indicating whether the polygon is extracted or not.
-
-    upload (UploadFile): An uploaded file that is used as input for generating the files.
-        This is not a required field. A file should be provided if user wants to upload a custom xls form.
+    Args:
+        background_tasks (BackgroundTasks): The background tasks object.
+        project_id (int): The ID of the project for which files are being generated.
+        extract_polygon (bool, optional): A boolean flag indicating whether the polygon is extracted or not. Defaults to False.
+        upload (Optional[UploadFile], optional): An uploaded file that is used as input for generating the files. A file should be provided if user wants to upload a custom xls form. Defaults to None.
+        data_extracts (Optional[UploadFile], optional): An uploaded file containing data extracts. Defaults to None.
+        db (Session, optional): The database session. Injected by FastAPI.
 
     Returns:
-    Message (str): A success message containing the project ID.
+        A dictionary with a message containing the project ID and a task ID.
 
+    Raises:
+        HTTPException: If the project ID does not exist in the database or if an invalid file is provided.
+        
     """
     contents = None
     xform_title = None
@@ -557,6 +706,17 @@ async def update_project_form(
     form: Optional[UploadFile],
     db: Session = Depends(database.get_db),
     ):
+    """
+    Update the project form.
+
+    Args:
+        project_id (int): The project's ID.
+        form (UploadFile, optional): The uploaded form file (.xls). Defaults to None.
+        db (Session, optional): The database session. Defaults to Depends(database.get_db).
+
+    Returns:
+        dict: The updated form information.
+    """
 
     file_name = os.path.splitext(form.filename)
     file_ext = file_name[1]
@@ -581,16 +741,16 @@ def get_project_features(
     task_id: int = None,
     db: Session = Depends(database.get_db),
 ):
-    """Get api for fetching all the features of a project.
+    """
+    Get all the features of a project.
 
-    This endpoint allows you to get all the features of a project.
+    Args:
+        project_id (int): The project's ID.
+        task_id (int, optional): The task ID. Defaults to None.
+        db (Session, optional): The database session. Defaults to Depends(database.get_db).
 
-    ## Request Body
-    - `project_id` (int): the project's id. Required.
-
-    ## Response
-    - Returns a JSON object containing a list of features.
-
+    Returns:
+        List[project_schemas.Feature]: A list of project features.
     """
     features = project_crud.get_project_features(db, project_id, task_id)
     return features
@@ -600,6 +760,18 @@ def get_project_features(
 async def generate_log(
     project_id: int, uuid: uuid.UUID, db: Session = Depends(database.get_db)
 ):
+    
+    """
+    Get the contents of a log file in a log format.
+
+    Args:
+        project_id (int): The project's ID.
+        uuid (uuid.UUID): The UUID of the background task.
+        db (Session, optional): The database session. Defaults to Depends(database.get_db).
+
+    Returns:
+        dict: Task status, message, progress, and logs.
+    """
     r"""Get the contents of a log file in a log format.
 
     ### Response
@@ -634,13 +806,12 @@ async def generate_log(
 
 @router.get("/categories/")
 async def get_categories():
-    """Get api for fetching all the categories.
+    """
+    Get all the categories from osm_fieldwork.
 
-    This endpoint fetches all the categories from osm_fieldwork.
-
-    ## Response
-    - Returns a JSON object containing a list of categories and their respoective forms.
-
+    Returns:
+        A list of categories and their respective forms.
+        
     """
     categories = (
         getChoices()
@@ -650,16 +821,19 @@ async def get_categories():
 
 @router.post("/preview_tasks/")
 async def preview_tasks(upload: UploadFile = File(...), dimension: int = Form(500)):
-    """Preview tasks for a project.
+    """
+    Preview tasks for a project.
 
-    This endpoint allows you to preview tasks for a project.
+    Args:
+        upload (UploadFile): The boundary file to preview tasks for.
+        dimension (int, optional): The dimension of the tasks. Defaults to 500.
 
-    ## Request Body
-    - `project_id` (int): the project's id. Required.
+    Returns:
+        The result of previewing tasks for a project.
 
-    ## Response
-    - Returns a JSON object containing a list of tasks.
-
+    Raises:
+        HTTPException: If an invalid file is provided.
+        
     """
     # Validating for .geojson File.
     file_name = os.path.splitext(upload.filename)
@@ -684,14 +858,17 @@ async def add_features(
     upload: UploadFile = File(...),
     db: Session = Depends(database.get_db),
 ):
-    """Add features to a project.
+    """
+    Add features to a project.
 
-    This endpoint allows you to add features to a project.
+    Args:
+        background_tasks (BackgroundTasks): Background task manager.
+        project_id (int): The project's ID.
+        upload (UploadFile): The uploaded GeoJSON file (.geojson).
+        db (Session): The database session.
 
-    ## Request Body
-    - `project_id` (int): the project's id. Required.
-    - `upload` (file): Geojson files with the features. Required.
-
+    Returns:
+        bool: True if features were added successfully.
     """
     # Validating for .geojson File.
     file_name = os.path.splitext(upload.filename)
@@ -726,6 +903,16 @@ async def add_features(
 async def download_form(project_id: int, 
                         db: Session = Depends(database.get_db)
                         ):
+    """
+    Download the form associated with a project.
+
+    Args:
+        project_id (int): The project's ID.
+        db (Session): The database session.
+
+    Returns:
+        Response: The downloaded form file.
+    """
     project = project_crud.get_project(db, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -752,6 +939,18 @@ async def update_project_category(
     upload: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
     ):
+    """
+    Update the project category.
+
+    Args:
+        project_id (int): The project's ID.
+        category (str): The new category.
+        upload (Optional[UploadFile]): The optional uploaded .xls file.
+        db (Session): The database session.
+
+    Returns:
+        bool: True if the category was updated successfully.
+    """
 
     contents = None
 
@@ -795,6 +994,16 @@ async def update_project_category(
 
 @router.get("/download_template/")
 async def download_template(category: str, db: Session = Depends(database.get_db)):
+    """
+    Download a template based on the provided category.
+
+    Args:
+        category (str): The category of the template.
+        db (Session): The database session.
+
+    Returns:
+        Response: The downloaded template file.
+    """
     xlsform_path = f"{xlsforms_path}/{category}.xls"
     if os.path.exists(xlsform_path):
         return FileResponse(xlsform_path, filename="form.xls")
@@ -911,5 +1120,15 @@ async def download_tiles(
     tile_id:int,
     db: Session = Depends(database.get_db)
     ):
+    """
+    Download generated tiles for a project.
+
+    Args:
+        tile_id (int): The ID of the tiles to be downloaded.
+        db (Session): The database session.
+
+    Returns:
+        FileResponse: The downloaded tiles in MBTiles format.
+    """
     tiles_path = db.query(db_models.DbTilesPath).filter(db_models.DbTilesPath.id == str(tile_id)).first()
     return FileResponse(tiles_path.path, headers={"Content-Disposition": f"attachment; filename=tiles.mbtiles"})

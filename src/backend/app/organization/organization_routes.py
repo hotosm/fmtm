@@ -45,7 +45,16 @@ def get_organisations(
     db: Session = Depends(database.get_db),
 
 ):
-    """Get api for fetching organization list."""
+    """
+    Get the list of organizations.
+
+    Args:
+        db (Session): SQLAlchemy database session.
+
+    Returns:
+        List[DbOrganisation]: A list of organization records from the database.
+    """
+    
     organizations = organization_crud.get_organisations(db)
     return organizations
 
@@ -61,7 +70,7 @@ async def create_organization(
     """
     Create an organization with the given details.
 
-    Parameters:
+    Args:
         name (str): The name of the organization. Required.
         description (str): The description of the organization. Optional.
         url (str): The URL of the organization. Optional.
@@ -84,6 +93,18 @@ async def create_organization(
 async def delete_organisations(
     organization_id: int, db: Session = Depends(database.get_db)
     ):
+    """
+    Upload an image file.
+
+    This function saves an uploaded image file to the specified directory and returns the filename.
+
+    Args:
+        db (Session): SQLAlchemy database session.
+        file (UploadFile): The uploaded image file.
+
+    Returns:
+        str: The filename of the uploaded image.
+    """
 
     organization = await organization_crud.get_organisation_by_id(db, organization_id)
 

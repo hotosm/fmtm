@@ -22,27 +22,28 @@ async def generate_files(
     upload: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
 ):
-    """Generate required media files tasks in the project based on the provided params.
+    """
+    Generate required media files and tasks for a project based on the provided parameters.
 
-    Accepts a project ID, category, custom form flag, and an uploaded file as inputs.
+    This function accepts a project ID, category, custom form flag, and an uploaded file as inputs.
     The generated files are associated with the project ID and stored in the database.
-    This function generates qr_code, forms. This utility function also creates an app user for each task and provides the required roles.
-    Some of the other functionality of this utility includes converting a xls file provided by the user to the xform,
-    generates osm data extracts and uploads it to the form.
+    This utility function generates QR codes, forms, and other media files.
+    It also creates an app user for each task and assigns the required roles.
+    Additionally, this function can convert an uploaded XLS file provided by the user to an XForm,
+    generate OSM data extracts, and upload them to the form.
 
-
-    Parameters:
-
-    project_id (int): The ID of the project for which files are being generated. This is a required field.
-    polygon (bool): A boolean flag indicating whether the polygon is extracted or not.
-
-    upload (UploadFile): An uploaded file that is used as input for generating the files.
-        This is not a required field. A file should be provided if user wants to upload a custom xls form.
+    Args:
+        project_id (int): The ID of the project for which files are being generated. This is a required field.
+        extract_polygon (bool): A boolean flag indicating whether a polygon is extracted or not.
+        upload (UploadFile, optional): An uploaded file that is used as input for generating the files.
+            This is not a required field. A file should be provided if the user wants to upload a custom XLS form.
+        db (Session): A SQLAlchemy database session.
 
     Returns:
-    Message (str): A success message containing the project ID.
+        dict: A dictionary containing a success message and the associated task ID.
 
     """
+    
     contents = None
     xform_title = None
 

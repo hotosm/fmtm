@@ -86,6 +86,20 @@ def get_projects(
     db: Session, user_id: int, skip: int = 0, limit: int = 100, db_objects: bool = False,
     hashtags: List[str] = None
 ):
+    """
+    Gets a list of projects.
+
+    Args:
+        db (Session): A database session.
+        user_id (int): The ID of the user. Only projects created by this user are returned.
+        skip (int, optional): The number of projects to skip. Defaults to 0.
+        limit (int, optional): The maximum number of projects to return. Defaults to 100.
+        db_objects (bool, optional): If True, returns database objects instead of app projects. Defaults to False.
+        hashtags (List[str], optional): A list of hashtags to filter projects by. Only projects with these hashtags are returned. Defaults to None.
+
+    Returns:
+        Any: A list of projects.
+    """
     filters = []
     if user_id:
         filters.append(db_models.DbProject.author_id == user_id) 
@@ -115,6 +129,19 @@ def get_projects(
 
 
 def get_project_summaries(db: Session, user_id: int, skip: int = 0, limit: int = 100, hashtags: str = None):
+    """
+    Gets a list of project summaries.
+
+    Args:
+        db (Session): A database session.
+        user_id (int): The ID of the user. Only summaries for projects created by this user are returned.
+        skip (int, optional): The number of project summaries to skip. Defaults to 0.
+        limit (int, optional): The maximum number of project summaries to return. Defaults to 100.
+        hashtags (str, optional): A list of hashtags to filter project summaries by. Only summaries for projects with these hashtags are returned. Defaults to None.
+
+    Returns:
+        Any: A list of project summaries.
+    """
     # TODO: Just get summaries, something like:
     #     db_projects = db.query(db_models.DbProject).with_entities(
     #         db_models.DbProject.id,
@@ -135,6 +162,16 @@ def get_project_summaries(db: Session, user_id: int, skip: int = 0, limit: int =
 
 
 def get_project_by_id_w_all_tasks(db: Session, project_id: int):
+    """
+    Gets a project by its ID and includes all tasks.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+
+    Returns:
+        Any: An app project object containing all tasks for the specified project.
+    """
     db_project = (
         db.query(db_models.DbProject)
         .filter(db_models.DbProject.id == project_id)
@@ -145,6 +182,16 @@ def get_project_by_id_w_all_tasks(db: Session, project_id: int):
 
 
 def get_project(db: Session, project_id: int):
+    """
+    Gets a project by its ID.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+
+    Returns:
+        Any: A database object representing the specified project.
+    """
     db_project = (
         db.query(db_models.DbProject)
         .filter(db_models.DbProject.id == project_id)
@@ -154,6 +201,16 @@ def get_project(db: Session, project_id: int):
 
 
 def get_project_by_id(db: Session, project_id: int):
+    """
+    Gets a project by its ID.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+
+    Returns:
+        Any: A database object representing the specified project.
+    """
 
     db_project = (
         db.query(db_models.DbProject)
@@ -165,6 +222,16 @@ def get_project_by_id(db: Session, project_id: int):
 
 
 def get_project_info_by_id(db: Session, project_id: int):
+    """
+    Gets project information by its ID.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+
+    Returns:
+        Any: An app project info object representing the specified project.
+    """
 
     db_project_info = (
         db.query(db_models.DbProjectInfo)
@@ -176,6 +243,16 @@ def get_project_info_by_id(db: Session, project_id: int):
 
 
 def delete_project_by_id(db: Session, project_id: int):
+    """
+    Deletes a project by its ID.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+
+    Returns:
+        str: A message indicating that the specified project was deleted.
+    """
     try:
         db_project = (
             db.query(db_models.DbProject)
@@ -195,6 +272,17 @@ def delete_project_by_id(db: Session, project_id: int):
 def partial_update_project_info(
     db: Session, project_metadata: project_schemas.ProjectUpdate, project_id
 ):
+    """
+    Partially updates a project's information.
+
+    Args:
+        db (Session): A database session.
+        project_metadata (project_schemas.ProjectUpdate): The updated project information.
+        project_id (int): The ID of the project.
+
+    Returns:
+        Any: An app project object representing the updated project.
+    """
 
     # Get the project from db
     db_project = get_project_by_id(db, project_id)
@@ -226,6 +314,17 @@ def partial_update_project_info(
 def update_project_info(
     db: Session, project_metadata: project_schemas.BETAProjectUpload, project_id
 ):
+    """
+    Updates a project's information.
+
+    Args:
+        db (Session): A database session.
+        project_metadata (project_schemas.BETAProjectUpload): The updated project information.
+        project_id (int): The ID of the project.
+
+    Returns:
+        Any: An app project object representing the updated project.
+    """
     user = project_metadata.author
     project_info_1 = project_metadata.project_info
 
@@ -273,6 +372,17 @@ def update_project_info(
 def create_project_with_project_info(
     db: Session, project_metadata: project_schemas.BETAProjectUpload, project_id
 ):
+    """
+    Creates a new project with the specified information.
+
+    Args:
+        db (Session): A database session.
+        project_metadata (project_schemas.BETAProjectUpload): The information for the new project.
+        project_id (int): The ID of the new project.
+
+    Returns:
+        Any: An app project object representing the newly created project.
+    """
     project_user = project_metadata.author
     project_info_1 = project_metadata.project_info
     xform_title = project_metadata.xform_title
@@ -344,6 +454,18 @@ def upload_xlsform(
     name: str,
     category: str,
 ):
+    """
+    Uploads an XLSForm to the database.
+
+    Args:
+        db (Session): A database session.
+        xlsform (str): The XLSForm data to upload.
+        name (str): The name of the XLSForm.
+        category (str): The category of the XLSForm.
+
+    Returns:
+        bool: True if the XLSForm was successfully uploaded, False otherwise.
+    """
     try:
         forms = table(
             "xlsforms",
@@ -370,9 +492,16 @@ def update_multi_polygon_project_boundary(
     project_id: int,
     boundary: str,
 ):
-    """This function receives the project_id and boundary as a parameter
-    and creates a task for each polygon in the database.
-    This function also creates a project outline from the multiple polygons received.
+    """
+    Updates a project's boundary with multiple polygons.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+        boundary (str): A GeoJSON string representing the new boundary.
+
+    Returns:
+        bool: True if the project's boundary was successfully updated, False otherwise.
     """
     try:
 
@@ -441,8 +570,16 @@ def update_multi_polygon_project_boundary(
 
 
 async def preview_tasks(boundary: str, dimension: int):
-    """Preview tasks by returning a list of task objects."""
-    """Use a lambda function to remove the "z" dimension from each coordinate in the feature's geometry """
+    """
+    Previews tasks by returning a list of task objects.
+
+    Args:
+        boundary (str): A GeoJSON string representing the boundary of the tasks to preview.
+        dimension (int): The dimension of the tasks to preview.
+
+    Returns:
+        Any: A list of task objects representing the previewed tasks.
+    """
 
     def remove_z_dimension(coord):
         return coord.pop() if len(coord) == 3 else None
@@ -541,6 +678,15 @@ async def preview_tasks(boundary: str, dimension: int):
 
 
 def get_osm_extracts(boundary: str):
+    """
+    Gets OSM extracts for a specified boundary.
+
+    Args:
+        boundary (str): A GeoJSON string representing the boundary to get OSM extracts for.
+
+    Returns:
+        Any: A GeoJSON object containing the OSM extracts for the specified boundary.
+    """
     # Filters for osm extracts
     query = {"filters": {
         "tags": {
@@ -603,6 +749,17 @@ def get_osm_extracts(boundary: str):
 async def split_into_tasks(
     db: Session, boundary: str, no_of_buildings:int
 ):
+    """
+    Splits a project into tasks.
+
+    Args:
+        db (Session): A database session.
+        boundary (str): A GeoJSON string representing the boundary of the project to split into tasks.
+        no_of_buildings (int): The number of buildings to include in each task.
+
+    Returns:
+        Any: A GeoJSON object containing the tasks for the specified project.
+    """
 
     project_id = uuid.uuid4()
 
@@ -752,7 +909,19 @@ async def split_into_tasks(
 def update_project_boundary(
     db: Session, project_id: int, boundary: str, dimension: int
 ):
-    # verify project exists in db
+    """
+    Updates a project's boundary.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+        boundary (str): A GeoJSON string representing the new boundary.
+        dimension (int): The dimension of the tasks to create.
+
+    Returns:
+        bool: True if the project's boundary was successfully updated, False otherwise.
+    """
+    
     db_project = get_project_by_id(db, project_id)
     if not db_project:
         logger.error(f"Project {project_id} doesn't exist!")
@@ -843,6 +1012,19 @@ def update_project_with_zip(
     task_type_prefix: str,
     uploaded_zip: UploadFile,
 ):
+    """
+    Updates a project with data from a ZIP file.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+        project_name_prefix (str): The prefix for the project's name.
+        task_type_prefix (str): The prefix for the task type.
+        uploaded_zip (UploadFile): The uploaded ZIP file containing the data to update the project with.
+
+    Returns:
+        Any: An app project object representing the updated project.
+    """
     # TODO: ensure that logged in user is user who created this project, return 403 (forbidden) if not authorized
 
     # ensure file upload is zip
@@ -999,7 +1181,16 @@ def read_xlsforms(
     db: Session,
     directory: str,
 ):
-    """Read the list of XLSForms from the disk."""
+    """
+    Reads a list of XLSForms from a directory.
+
+    Args:
+        db (Session): A database session.
+        directory (str): The path to the directory containing the XLSForms.
+
+    Returns:
+        List[str]: A list of XLSForms read from the specified directory.
+    """
     xlsforms = list()
     for xls in os.listdir(directory):
         if xls.endswith(".xls") or xls.endswith(".xlsx"):
@@ -1033,7 +1224,16 @@ def read_xlsforms(
 
 
 def get_odk_id_for_project(db: Session, project_id: int):
-    """Get the odk project id for the fmtm project id."""
+    """
+    Gets the ODK project ID for a specified project.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+
+    Returns:
+        Any: The ODK project ID for the specified project.
+    """
     project = table(
         "projects",
         column("odkid"),
@@ -1125,6 +1325,21 @@ def generate_task_files(
         form_type: str,
         odk_credentials: project_schemas.ODKCentral
 ):
+    """
+    Generates task files for a specified project.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+        task_id (int): The ID of the task.
+        xlsform (str): The XLSForm data to use when generating the task files.
+        form_type (str): The type of form to use when generating the task files.
+        odk_credentials (project_schemas.ODKCentral): The ODK credentials to use when generating the task files.
+
+    Returns:
+        bool: True if the task files were successfully generated, False otherwise.
+    """
+
 
     project = get_project(db, project_id)
     odk_id = project.odkid
@@ -1248,18 +1463,23 @@ def generate_appuser_files(
     form_type: str,
     background_task_id: uuid.UUID,
 ):
-    """Generate the files for each appuser.
-        QR code, new XForm, and the OSM data extract.
+    """
+    Generates app user files for a specified project.
 
-        Parameters:
-            - db: the database session
-            - project_id: Project ID
-            - extract_polygon: boolean to determine if we should extract the polygon
-            - upload: the xls file to upload if we have a custom form
-            - category: the category of the project
-            - form_type: weather the form is xls, xlsx or xml
-            - background_task_id: the task_id of the background task running this function.
-        """
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+        extract_polygon (bool): If True, extracts polygons from OSM data.
+        upload (str): The data to upload when generating the app user files.
+        extracts_contents (str): The contents of the extracts to use when generating the app user files.
+        category (str): The category of the XLSForm to use when generating the app user files.
+        form_type (str): The type of form to use when generating the app user files.
+        background_task_id (uuid.UUID): The ID of the background task.
+
+    Returns:
+        Any: An object representing the generated app user files.
+    """
+    
 
     try:
         ## Logging ##
@@ -1423,6 +1643,19 @@ def create_qrcode(
     project_name: str,
     odk_central_url: str = None,
 ):
+    """
+    Creates a QR code for an app user.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+        token (str): The token to use when creating the QR code.
+        project_name (str): The name of the project.
+        odk_central_url (str, optional): The URL of the ODK Central server. Defaults to None.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the created QR code and its ID.
+    """
     # Make QR code for an app_user.
     qrcode = central_crud.create_qrcode(
         project_id, token, project_name, odk_central_url
@@ -1508,6 +1741,17 @@ def get_task_geometry(db: Session,
 
 
 def create_task_grid(db: Session, project_id: int, delta: int):
+    """
+    Creates a grid of tasks for a specified project.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+        delta (int): The dimension of the tasks to create.
+
+    Returns:
+        Any: A GeoJSON object containing the grid of tasks for the specified project.
+    """
     try:
         # Query DB for project AOI
         projects = table("projects", column("outline"), column("id"))
@@ -1608,6 +1852,17 @@ def create_task_grid(db: Session, project_id: int, delta: int):
 
 
 def get_json_from_zip(zip, filename: str, error_detail: str):
+    """
+    Gets a JSON object from a file in a ZIP archive.
+
+    Args:
+        zip (ZipFile): The ZIP archive to read from.
+        filename (str): The name of the file to read from.
+        error_detail (str): The error detail to include in the exception message if an error occurs.
+
+    Returns:
+        Any: A JSON object representing the data read from the specified file in the ZIP archive.
+    """
     try:
         with zip.open(filename) as file:
             data = file.read()
@@ -1620,6 +1875,18 @@ def get_json_from_zip(zip, filename: str, error_detail: str):
 def get_outline_from_geojson_file_in_zip(
     zip, filename: str, error_detail: str, feature_index: int = 0
 ):
+    """
+    Gets an outline from a GeoJSON file in a ZIP archive.
+
+    Args:
+        zip (ZipFile): The ZIP archive to read from.
+        filename (str): The name of the GeoJSON file to read from.
+        error_detail (str): The error detail to include in the exception message if an error occurs.
+        feature_index (int, optional): The index of the feature to get the outline for. Defaults to 0.
+
+    Returns:
+        Any: A shape object representing the outline of the specified feature in the GeoJSON file.
+    """
     try:
         with zip.open(filename) as file:
             data = file.read()
@@ -1638,6 +1905,16 @@ def get_outline_from_geojson_file_in_zip(
 
 
 def get_shape_from_json_str(feature: str, error_detail: str):
+    """
+    Gets a shape object from a JSON string representing a feature.
+
+    Args:
+        feature (str): A JSON string representing a feature.
+        error_detail (str): The error detail to include in the exception message if an error occurs.
+
+    Returns:
+        Any: A shape object representing the specified feature.
+    """
     try:
         geom = feature["geometry"]
         return shape(geom)
@@ -1650,6 +1927,17 @@ def get_shape_from_json_str(feature: str, error_detail: str):
 
 
 def get_dbqrcode_from_file(zip, qr_filename: str, error_detail: str):
+    """
+    Gets a database QR code object from a file in a ZIP archive.
+
+    Args:
+        zip (ZipFile): The ZIP archive to read from.
+        qr_filename (str): The name of the QR code file to read from.
+        error_detail (str): The error detail to include in the exception message if an error occurs.
+
+    Returns:
+        Any: A database QR code object representing the data read from the    specified file in the ZIP archive.
+    """
     try:
         with zip.open(qr_filename) as qr_file:
             binary_qrcode = qr_file.read()
@@ -1677,6 +1965,15 @@ def get_dbqrcode_from_file(zip, qr_filename: str, error_detail: str):
 
 
 def convert_to_app_project(db_project: db_models.DbProject):
+    """
+    Converts a database project object to an app project object.
+
+    Args:
+        db_project (db_models.DbProject): The database project object to convert.
+
+    Returns:
+        Any: An app project object representing the specified database project.
+    """
     if db_project:
         app_project: project_schemas.Project = db_project
 
@@ -1693,6 +1990,15 @@ def convert_to_app_project(db_project: db_models.DbProject):
 
 
 def convert_to_app_project_info(db_project_info: db_models.DbProjectInfo):
+    """
+    Converts a database project info object to an app project info object.
+
+    Args:
+        db_project_info (db_models.DbProjectInfo): The database project info object to convert.
+
+    Returns:
+        Any: An app project info object representing the specified database project info.
+    """
     if db_project_info:
         app_project_info: project_schemas.ProjectInfo = db_project_info
         return app_project_info
@@ -1701,6 +2007,15 @@ def convert_to_app_project_info(db_project_info: db_models.DbProjectInfo):
 
 
 def convert_to_app_projects(db_projects: List[db_models.DbProject]):
+    """
+    Converts a list of database project objects to a list of app project objects.
+
+    Args:
+        db_projects (List[db_models.DbProject]): The list of database project objects to convert.
+
+    Returns:
+        List[Any]: A list of app project objects representing the specified database projects.
+    """
     if db_projects and len(db_projects) > 0:
         app_projects = []
         for project in db_projects:
@@ -1713,6 +2028,15 @@ def convert_to_app_projects(db_projects: List[db_models.DbProject]):
 
 
 def convert_to_project_summary(db_project: db_models.DbProject):
+    """
+    Converts a database project object to a project summary object.
+
+    Args:
+        db_project (db_models.DbProject): The database project object to convert.
+
+    Returns:
+        Any: A project summary object representing the specified database project.
+    """
     if db_project:
         summary: project_schemas.ProjectSummary = db_project
 
@@ -1735,6 +2059,15 @@ def convert_to_project_summary(db_project: db_models.DbProject):
 
 
 def convert_to_project_summaries(db_projects: List[db_models.DbProject]):
+    """
+    Converts a list of database project objects to a list of project summary objects.
+
+    Args:
+        db_projects (List[db_models.DbProject]): The list of database project objects to convert.
+
+    Returns:
+        List[Any]: A list of project summary objects representing the specified database projects.
+    """
     if db_projects and len(db_projects) > 0:
         project_summaries = []
         for project in db_projects:
@@ -1748,6 +2081,15 @@ def convert_to_project_summaries(db_projects: List[db_models.DbProject]):
 
 
 def convert_to_project_feature(db_project_feature: db_models.DbFeatures):
+    """
+    Converts a database feature object to a project feature object.
+
+    Args:
+        db_project_feature (db_models.DbFeatures): The database feature object to convert.
+
+    Returns:
+        Any: A project feature object representing the specified database feature.
+    """
     if db_project_feature:
         app_project_feature: project_schemas.Feature = db_project_feature
 
@@ -1763,6 +2105,15 @@ def convert_to_project_feature(db_project_feature: db_models.DbFeatures):
 
 
 def convert_to_project_features(db_project_features: List[db_models.DbFeatures]):
+    """
+    Converts a list of database feature objects to a list of project feature objects.
+
+    Args:
+        db_project_features (List[db_models.DbFeatures]): The list of database feature objects to convert.
+
+    Returns:
+        List[Any]: A list of project feature objects representing the specified database features.
+    """
     if db_project_features and len(db_project_features) > 0:
         app_project_features = []
         for project_feature in db_project_features:
@@ -1775,6 +2126,17 @@ def convert_to_project_features(db_project_features: List[db_models.DbFeatures])
 
 
 def get_project_features(db: Session, project_id: int, task_id: int = None):
+    """
+    Gets the features for a specified project and task.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+        task_id (int, optional): The ID of the task. If not specified, all features for the specified project are returned. Defaults to None.
+
+    Returns:
+        List[Any]: A list of feature objects representing the features for the specified project and task.
+    """
     if task_id:
         features = (
             db.query(db_models.DbFeatures)
@@ -1792,6 +2154,16 @@ def get_project_features(db: Session, project_id: int, task_id: int = None):
 
 
 async def get_extract_completion_count(project_id: int, db: Session):
+    """
+    Gets the extract completion count for a specified project.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+
+    Returns:
+        Any: The extract completion count for the specified project.
+    """
     project = (
         db.query(db_models.DbProject)
         .filter(db_models.DbProject.id == project_id)
@@ -1801,7 +2173,16 @@ async def get_extract_completion_count(project_id: int, db: Session):
 
 
 async def get_background_task_status(task_id: uuid.UUID, db: Session):
-    """Get the status of a background task."""
+    """
+    Gets the status of a background task.
+
+    Args:
+        task_id (uuid.UUID): The ID of the background task.
+        db (Session): A database session.
+
+    Returns:
+        Tuple[int, str]: A tuple containing the status and message of the specified background task.
+    """
     task = (
         db.query(db_models.BackgroundTasks)
         .filter(db_models.BackgroundTasks.id == str(task_id))
@@ -1813,11 +2194,16 @@ async def get_background_task_status(task_id: uuid.UUID, db: Session):
 async def insert_background_task_into_database(
     db: Session, task_id: uuid.UUID, name: str = None
 ):
-    """Inserts a new task into the database
-    Params:
-        db: database session
-        task_id: uuid of the task
-        name: name of the task.
+    """
+    Inserts a new background task into the database.
+
+    Args:
+        db (Session): A database session.
+        task_id (uuid.UUID): The ID of the background task.
+        name (str, optional): The name of the background task. Defaults to None.
+
+    Returns:
+        bool: True if the background task was successfully inserted into the database, False otherwise.
     """
     task = db_models.BackgroundTasks(
         id=str(task_id), name=name, status=1
@@ -1833,11 +2219,17 @@ async def insert_background_task_into_database(
 def update_background_task_status_in_database(
     db: Session, task_id: uuid.UUID, status: int, message: str = None
 ):
-    """Updates the status of a task in the database
-    Params:
-        db: database session
-        task_id: uuid of the task
-        status: status of the task.
+    """
+    Updates the status of a background task in the database.
+
+    Args:
+        db (Session): A database session.
+        task_id (uuid.UUID): The ID of the background task.
+        status (int): The new status of the background task.
+        message (str, optional): The new message of the background task. Defaults to None.
+
+    Returns:
+        bool: True if the status of the background task was successfully updated in the database, False otherwise.
     """
     db.query(db_models.BackgroundTasks).filter(
         db_models.BackgroundTasks.id == str(task_id)
@@ -1853,11 +2245,17 @@ def update_background_task_status_in_database(
 def add_features_into_database(
     db: Session, project_id: int, features: dict, background_task_id: uuid.UUID
 ):
-    """Inserts a new task into the database
-    Params:
-          db: database session
-          project_id: id of the project
-          features: features to be added.
+    """
+    Adds features into the database for a specified project.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+        features (dict): The features to add to the database.
+        background_task_id (uuid.UUID): The ID of the background task.
+
+    Returns:
+        bool: True if the features were successfully added to the database, False otherwise.
     """
     success = 0
     failure = 0
@@ -1894,6 +2292,18 @@ async def update_project_form(
         form_type: str,
         form: UploadFile = File(None)
         ):
+    """
+    Updates a project's form.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+        form_type (str): The type of form to use when updating the project's form.
+        form (UploadFile, optional): The uploaded form file to use when updating the project's form. Defaults to File(None).
+
+    Returns:
+        Any: An object representing the updated project's form.
+    """
 
     project = get_project(db, project_id)
     category = project.xform_title
@@ -2055,6 +2465,18 @@ async def update_project_form(
 async def update_odk_credentials(project_instance: project_schemas.BETAProjectUpload, 
                           odk_central_cred: project_schemas.ODKCentral,
                           odkid: int, db: Session):
+    """
+    Updates the ODK credentials for a specified project.
+
+    Args:
+        project_instance (project_schemas.BETAProjectUpload): The project instance to update.
+        odk_central_cred (project_schemas.ODKCentral): The new ODK credentials to use.
+        odkid (int): The ODK ID to use.
+        db (Session): A database session.
+
+    Returns:
+        None
+    """
     project_instance.odkid = odkid
     project_instance.odk_central_url = odk_central_cred.odk_central_url
     project_instance.odk_central_user = odk_central_cred.odk_central_user
@@ -2066,7 +2488,17 @@ async def update_odk_credentials(project_instance: project_schemas.BETAProjectUp
 
 async def get_extracted_data_from_db(db:Session, project_id:int, outfile:str):
 
-    """Get the geojson of those features for this project"""
+    """
+    Gets extracted data from the database for a specified project.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+        outfile (str): The path to the file to write the extracted data to.
+
+    Returns:
+        None
+    """
 
     query = f'''SELECT jsonb_build_object(
                 'type', 'FeatureCollection',
@@ -2097,8 +2529,23 @@ async def get_project_tiles(db: Session,
                             source: str,
                             background_task_id: uuid.UUID,
                             ):
+    """
+    Gets the tiles for a specified project.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+        source (str): The source of the tiles.
+        background_task_id (uuid.UUID): The ID of the background task.
+
+    Returns:
+        None
+    """
+        
+
     try:
-        """Get the tiles for a project"""
+        
+        
 
         zooms = [12,13,14,15,16,17,18,19]
         source = source
@@ -2179,6 +2626,16 @@ async def get_project_tiles(db: Session,
 
 
 async def get_mbtiles_list(db: Session, project_id: int):
+    """
+    Gets a list of MBTiles for a specified project.
+
+    Args:
+        db (Session): A database session.
+        project_id (int): The ID of the project.
+
+    Returns:
+        List[Dict[str, Any]]: A list of dictionaries representing the MBTiles for the specified project.
+    """
     try:
         tiles_list = db.query(db_models.DbTilesPath.id, 
                               db_models.DbTilesPath.project_id, 
