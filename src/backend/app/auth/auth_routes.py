@@ -34,23 +34,30 @@ router = APIRouter(
 
 @router.post("/login/")
 def login(user: user_schemas.UserIn, db: Session = Depends(database.get_db)):
-    """The Login API allows users to authenticate themselves with the application.
-    Username and password are passed and users information is obtained in the response.
+    """
+    Authenticate a user with the application.
+
+    Args:
+        user (user_schemas.UserIn): The user to authenticate.
+        db (Session, optional): The database session. Injected by FastAPI.
+
+    Returns:
+        The result of verifying the user.
     """
     return user_crud.verify_user(db, user)
 
 
 @router.get("/osm_login/")
 def login_url(request: Request, osm_auth=Depends(init_osm_auth)):
-    """Generate Login URL for authentication using OAuth2 Application registered with OpenStreetMap.
-    Click on the download url returned to get access_token.
+    """
+    Generate a login URL for authentication using OAuth2 Application registered with OpenStreetMap.
 
-    Parameters: None
+    Args:
+        request (Request): The request object.
+        osm_auth (init_osm_auth, optional): The OSM authentication object. Injected by FastAPI.
 
     Returns:
-    -------
-    - login_url (string) - URL to authorize user to the application via. Openstreetmap
-        OAuth2 with client_id, redirect_uri, and permission scope as query_string parameters
+        A JSONResponse with the login URL.
     """
     login_url = osm_auth.login()
     log.debug(f"Login URL returned: {login_url}")
@@ -59,16 +66,15 @@ def login_url(request: Request, osm_auth=Depends(init_osm_auth)):
 
 @router.get("/callback/")
 def callback(request: Request, osm_auth=Depends(init_osm_auth)):
-    """Performs token exchange between OpenStreetMap and Export tool API.
+    """
+    Perform token exchange between OpenStreetMap and Export tool API.
 
-    Core will use Oauth secret key from configuration while deserializing token,
-    provides access token that can be used for authorized endpoints.
-
-    Parameters: None
+    Args:
+        request (Request): The request object.
+        osm_auth (init_osm_auth, optional): The OSM authentication object. Injected by FastAPI.
 
     Returns:
-    -------
-    - access_token (string)
+        A JSONResponse with the access token.
     """
     access_token = osm_auth.callback(str(request.url))
     log.debug(f"Access token returned: {access_token}")
@@ -81,12 +87,15 @@ def my_data(
         db: Session = Depends(database.get_db),
         user_data: AuthUser = Depends(login_required)
     ):
-    """Read the access token and provide  user details from OSM user's API endpoint,
-    also integrated with underpass .
+    """
+    Retrieve user data from OSM user's API endpoint.
 
-    Parameters:None
+    Args:
+        db (Session, optional): The database session. Injected by FastAPI.
+        user_data (AuthUser, optional): The authenticated user data. Injected by FastAPI.
 
-    Returns: user_data
+    Returns:
+        A JSONResponse with the user data.
     """
 
 

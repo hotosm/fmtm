@@ -43,7 +43,12 @@ router = APIRouter(
 
 @router.get("/projects")
 async def list_projects():
-    """List projects in Central."""
+    """
+    List projects in ODK Central.
+
+    Returns:
+        A dictionary containing a list of projects in ODK Central.
+    """
     # TODO update for option to pass credentials by user
     projects = central_crud.list_odk_projects()
     if projects is None:
@@ -57,7 +62,17 @@ async def create_appuser(
     name: str,
     db: Session = Depends(database.get_db),
 ):
-    """Create an appuser in Central."""
+    """
+    Create an app-user in ODK Central.
+
+    Args:
+        project_id (int): The ID of the project to create an app-user for.
+        name (str): The name of the app-user to create.
+        db (Session, optional): The database session. Injected by FastAPI.
+
+    Returns:
+        The result of creating an app-user in ODK Central.
+    """
     appuser = central_crud.create_appuser(project_id, name=name)
     # tasks = tasks_crud.update_qrcode(db, task_id, qrcode['id'])
     return project_crud.create_qrcode(db, project_id, appuser.get("token"), name)
@@ -77,17 +92,16 @@ async def get_form_lists(
     skip: int = 0,
     limit: int = 100
 ):
-    """This function retrieves a list of XForms from a database,
-    with the option to skip a certain number of records and limit the number of records returned.
+    """
+    Retrieve a list of XForms from a database.
 
-    
-    Parameters:
-    skip:int: the number of records to skip before starting to retrieve records. Defaults to 0 if not provided.
-    limit:int: the maximum number of records to retrieve. Defaults to 10 if not provided.
-
+    Args:
+        db (Session, optional): The database session. Injected by FastAPI.
+        skip (int, optional): The number of records to skip before returning results. Defaults to 0.
+        limit (int, optional): The maximum number of records to return. Defaults to 100.
 
     Returns:
-    A list of dictionary containing the id and title of each XForm record retrieved from the database.
+        A list of dictionaries containing the ID and title of each XForm record retrieved from the database.
     """
     forms = central_crud.get_form_list(db, skip, limit)
     return forms
@@ -98,7 +112,16 @@ async def download_submissions(
     project_id: int,
     db: Session = Depends(database.get_db),
 ):
-    """Download the submissions data from Central."""
+    """
+    Download submissions data from ODK Central.
+
+    Args:
+        project_id (int): The ID of the project to download submissions data for.
+        db (Session, optional): The database session. Injected by FastAPI.
+
+    Returns:
+        A dictionary containing the downloaded submissions data from ODK Central for the specified project.
+    """
     project = table(
         "projects", column("project_name_prefix"), column("xform_title"), column("id"), column("odkid")
     )
@@ -134,6 +157,17 @@ async def list_submissions(
     xml_form_id: str = None,
     db: Session = Depends(database.get_db),
     ):
+    """
+    List submissions data from ODK Central.
+
+    Args:
+        project_id (int): The ID of the project to list submissions data for.
+        xml_form_id (str, optional): The ID of the XML form to list submissions data for. Defaults to None.
+        db (Session, optional): The database session. Injected by FastAPI.
+
+    Returns:
+        A list of submissions data from ODK Central for the specified parameters.
+    """    
     try:
         project = table(
             "projects", column("project_name_prefix"), column("xform_title"), column("id"), column("odkid")
@@ -181,16 +215,20 @@ async def get_submission(
     submission_id: str=None,
     db: Session = Depends(database.get_db),
 ):
-    """This api returns the submission json.
+    """
+    Retrieve submission data from ODK Central.
 
-    Parameters:
-    project_id:int the id of the project in the database.
-    xml_form_id:str: the xmlFormId of the form in Central.
-    submission_id:str: the submission id of the submission in Central.
+    Args:
+        project_id (int): The ID of the project to retrieve submission data for.
+        xmlFormId (str, optional): The ID of the XML form to retrieve submission data for. Defaults to None.
+        submission_id (str, optional): The ID of a specific submission to retrieve. Defaults to None.
+        db (Session, optional): The database session. Injected by FastAPI.
 
-    If the submission_id is provided, an individual submission is returned.
+    Returns:
+        A list of submission data from ODK Central for the specified parameters.
 
-    Returns: Submission json.
+    Raises:
+        HTTPException: If there is an error retrieving submission data from ODK Central.
     """
     try:
         """Download the submissions data from Central."""
