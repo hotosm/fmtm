@@ -1,5 +1,7 @@
 # see https://gist.github.com/alexanderjulo/4073388
 
+"""List of languages and countries"""
+
 languages = [
     ("aa", "Afar"),
     ("ab", "Abkhazian"),
