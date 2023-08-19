@@ -20,10 +20,12 @@ from enum import Enum
 
 
 class StrEnum(str, Enum):
+    """Designed to work with string-based enumerations"""
     pass
 
 
 class IntEnum(int, Enum):
+    """It is intended for integer-based enumerations"""
     pass
 
 
@@ -119,6 +121,16 @@ class TaskStatus(IntEnum, Enum):
 
 
 def verify_valid_status_update(old_status: TaskStatus, new_status: TaskStatus):
+    """
+    Verify if the transition from the old status to the new status is valid.
+
+    Args:
+        old_status (TaskStatus): The previous status of the task.
+        new_status (TaskStatus): The new status to transition to.
+
+    Returns:
+        bool: True if the status transition is valid, False otherwise.
+    """
     if old_status is TaskStatus.READY:
         return new_status in [
             TaskStatus.LOCKED_FOR_MAPPING,
@@ -169,6 +181,15 @@ class TaskAction(IntEnum, Enum):
 
 
 def is_status_change_action(task_action):
+    """
+    Check if a given task action is related to changing the status of a task.
+
+    Args:
+        task_action: The task action to check.
+
+    Returns:
+        bool: True if the task action involves changing the status, False otherwise.
+    """
     return task_action in [
         TaskAction.RELEASED_FOR_MAPPING,
         TaskAction.LOCKED_FOR_MAPPING,
@@ -182,6 +203,15 @@ def is_status_change_action(task_action):
 
 
 def get_action_for_status_change(task_status: TaskStatus):
+    """
+    Check if a given task action is related to changing the status of a task.
+
+    Args:
+        task_action: The task action to check.
+
+    Returns:
+        bool: True if the task action involves changing the status, False otherwise.
+    """
     return TaskAction.RELEASED_FOR_MAPPING
     # match task_status:
     #     case TaskStatus.READY:
@@ -201,12 +231,18 @@ def get_action_for_status_change(task_status: TaskStatus):
 
 
 class TaskType(IntEnum, Enum):
+    """
+    Enum describing different types of tasks.
+    """
     BUILDINGS = 0
     AMENITIES = 1
     OTHER = 2
 
 
 class ProjectSplitStrategy(IntEnum, Enum):
+    """
+    Enum describing different strategies for splitting projects.
+    """
     GRID = 0
     OSM_VECTORS = 1
     OTHER = 2
