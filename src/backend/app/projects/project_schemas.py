@@ -27,6 +27,15 @@ from ..users.user_schemas import User
 
 
 class ODKCentral(BaseModel):
+    """
+    Represents the configuration details for an ODK Central instance.
+
+    Attributes:
+        odk_central_url (str): The URL of the ODK Central instance.
+        odk_central_user (str): The username for ODK Central.
+        odk_central_password (str): The password for ODK Central.
+
+    """
     odk_central_url: str
     odk_central_user: str
     odk_central_password: str
@@ -36,6 +45,15 @@ class ODKCentral(BaseModel):
 
 
 class ProjectInfo(BaseModel):
+    """
+    Basic information about a project.
+
+    Attributes:
+        name (str): The project's name.
+        short_description (str): A short description of the project.
+        description (str): The full description of the project.
+
+    """
     name: str
     short_description: str
     description: str
@@ -45,12 +63,32 @@ class ProjectInfo(BaseModel):
 
 
 class ProjectUpdate(BaseModel):
+    """
+    Represents the fields that can be updated for a project.
+
+    Attributes:
+        name (Union[str, None]): The updated project name.
+        short_description (Union[str, None]): The updated short description.
+        description (Union[str, None]): The updated full description.
+
+    """
     name: Union[str, None]
     short_description: Union[str, None]
     description: Union[str, None]
 
 
 class BETAProjectUpload(BaseModel):
+    """
+    Data needed to upload a new project.
+
+    Attributes:
+        author (User): The author of the project.
+        project_info (ProjectInfo): Information about the project.
+        xform_title (Union[str, None]): The title of the XForm.
+        odk_central (ODKCentral): Configuration for ODK Central.
+        hashtags (Union[List[str], None]): List of hashtags for the project.
+
+    """
     author: User
     project_info: ProjectInfo
     xform_title: Union[str, None]
@@ -61,6 +99,24 @@ class BETAProjectUpload(BaseModel):
 
 
 class ProjectSummary(BaseModel):
+    """
+    Summary view of project details.
+
+    Attributes:
+        id (int): The project's ID.
+        priority (ProjectPriority): The priority of the project.
+        priority_str (str): String representation of priority.
+        title (str): The project's title.
+        location_str (str): String representation of project location.
+        description (str): The project's description.
+        num_contributors (int): Number of contributors.
+        total_tasks (int): Total number of tasks.
+        tasks_mapped (int): Number of mapped tasks.
+        tasks_validated (int): Number of validated tasks.
+        tasks_bad (int): Number of problematic tasks.
+        hashtags (List[str]): List of project hashtags.
+
+    """
     id: int = -1
     priority: ProjectPriority = ProjectPriority.MEDIUM
     priority_str: str = priority.name
@@ -79,6 +135,21 @@ class ProjectSummary(BaseModel):
 
 
 class ProjectBase(BaseModel):
+    """
+    Base structure of a project.
+
+    Attributes:
+        id (int): The project's ID.
+        odkid (int): The ODK ID of the project.
+        author (User): The author of the project.
+        project_info (List[ProjectInfo]): List of project information.
+        status (ProjectStatus): The status of the project.
+        outline_geojson (Feature): Outline geometry of the project.
+        project_tasks (List[tasks_schemas.Task]): List of project tasks.
+        xform_title (str): Title of the XForm.
+        hashtags (List[str]): List of project hashtags.
+
+    """
     id: int
     odkid: int
     author: User
@@ -95,11 +166,27 @@ class ProjectBase(BaseModel):
 
 
 class ProjectOut(ProjectBase):
+    """
+    Detailed project information.
+
+    Inherits from ProjectBase and provides additional information.
+
+    """
     pass
 
 
 
 class Feature(BaseModel):
+    """
+    Represents a feature associated with a project.
+
+    Attributes:
+        id (int): The feature's ID.
+        project_id (int): The project's ID.
+        task_id (int, optional): The task's ID.
+        geometry (Feature): The feature's geometry.
+
+    """
     id: int
     project_id: int
     task_id: int = None
