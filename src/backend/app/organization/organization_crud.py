@@ -36,10 +36,30 @@ IMAGEDIR = "app/images/"
 def get_organisations(
     db: Session,
 ):
+    """
+    Retrieve a list of organisations from the database.
+
+    Args:
+        db (Session): SQLAlchemy database session.
+
+    Returns:
+        List[DbOrganisation]: A list of organisation records from the database.
+    """
     db_organisation = db.query(db_models.DbOrganisation).all()
     return db_organisation
 
 def generate_slug(text: str) -> str:
+    """
+    Generate a slug from the given text.
+
+    This function removes special characters, replaces spaces with hyphens, and ensures a clean slug format.
+
+    Args:
+        text (str): The input text to generate a slug from.
+
+    Returns:
+        str: The generated slug.
+    """
     # Remove special characters and replace spaces with hyphens
     slug = re.sub(r'[^\w\s-]', '', text).strip().lower().replace(' ', '-')
     # Remove consecutive hyphens
@@ -48,6 +68,18 @@ def generate_slug(text: str) -> str:
 
 
 async def get_organisation_by_name(db: Session, name: str):
+    """
+    Retrieve an organisation by its name from the database.
+
+    This function performs a case-insensitive search for the organisation name.
+
+    Args:
+        db (Session): SQLAlchemy database session.
+        name (str): The name of the organisation to retrieve.
+
+    Returns:
+        DbOrganisation: The organisation record from the database, or None if not found.
+    """
 
     # Construct the SQL query with the case-insensitive search
     query = f"SELECT * FROM organisations WHERE LOWER(name) LIKE LOWER('%{name}%') LIMIT 1"
@@ -61,6 +93,18 @@ async def get_organisation_by_name(db: Session, name: str):
 
 
 async def upload_image(db: Session, file: UploadFile(None)):
+    """
+    Upload an image file.
+
+    This function saves an uploaded image file to the specified directory and returns the filename.
+
+    Args:
+        db (Session): SQLAlchemy database session.
+        file (UploadFile): The uploaded image file.
+
+    Returns:
+        str: The filename of the uploaded image.
+    """
     # Check if file with the same name exists
     filename = file.filename
     file_path = f"{IMAGEDIR}{filename}"
