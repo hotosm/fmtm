@@ -142,8 +142,20 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "varun2948",
+      "name": "Deepak Pradhan (Varun)",
+      "avatar_url": "https://avatars.githubusercontent.com/u/37866666?v=4",
+      "profile": "https://github.com/varun2948",
+      "contributions": [
+        "code",
+        "ideas",
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
-  "linkToUsage": true
+  "linkToUsage": true,
+  "commitType": "docs"
 }
