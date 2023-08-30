@@ -1278,8 +1278,8 @@ def generate_appuser_files(
         - background_task_id: the task_id of the background task running this function.
     """
     try:
-        log_file = log.add(f"/tmp/{project_id}_generate.log", format="{message}")
-        log.info(f"Starting generate_appuser_files for project {project_id}")
+        create_project_log = log.bind(task="create_project")
+        create_project_log.info(f"Starting generate_appuser_files for project {project_id}")
 
         # Get the project table contents.
         project = table(
@@ -1412,9 +1412,6 @@ def generate_appuser_files(
         update_background_task_status_in_database(
             db, background_task_id, 4
         )  # 4 is COMPLETED
-
-        # Stop logging in file for this project.
-        log.remove(log_file)
 
     except Exception as e:
         log.warning(str(e))

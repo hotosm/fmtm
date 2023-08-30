@@ -134,6 +134,9 @@ def get_logger():
             # format=log_json_format, # JSON format func
         )
 
+        log.add("/opt/logs/create_project.log",
+                enqueue=True
+                )
 
 api = get_application()
 
