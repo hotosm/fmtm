@@ -21,10 +21,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     environment:
-      name: ${{ github.base_ref || github.ref_name }}
+      name: ${{ github.event_name == 'push' && github.ref_name || github.base_ref }}
 
     container:
-      image: ghcr.io/hotosm/fmtm/backend:ci-${{ github.base_ref || github.ref_name }}
+      image: ghcr.io/hotosm/fmtm/backend:ci-${{ github.event_name == 'push' && github.ref_name || github.base_ref }}
       env:
         ODK_CENTRAL_URL: https://central-proxy
         ODK_CENTRAL_USER: test@hotosm.org
