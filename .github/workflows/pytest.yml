@@ -26,12 +26,12 @@ jobs:
     container:
       image: ghcr.io/hotosm/fmtm/backend:ci-${{ github.base_ref || github.ref_name }}
       env:
-        ODK_CENTRAL_URL: ${{ env.ODK_CENTRAL_URL }}
-        ODK_CENTRAL_USER: ${{ env.ODK_CENTRAL_USER }}
-        ODK_CENTRAL_PASSWD: ${{ env.ODK_CENTRAL_PASSWD }}
-        OSM_CLIENT_ID: ${{ env.OSM_CLIENT_ID }}
-        OSM_CLIENT_SECRET: ${{ env.OSM_CLIENT_SECRET }}
-        OSM_SECRET_KEY: ${{ env.OSM_SECRET_KEY }}
+        ODK_CENTRAL_URL: ${{ vars.ODK_CENTRAL_URL }}
+        ODK_CENTRAL_USER: ${{ vars.ODK_CENTRAL_USER }}
+        ODK_CENTRAL_PASSWD: ${{ vars.ODK_CENTRAL_PASSWD }}
+        OSM_CLIENT_ID: ${{ vars.OSM_CLIENT_ID }}
+        OSM_CLIENT_SECRET: ${{ vars.OSM_CLIENT_SECRET }}
+        OSM_SECRET_KEY: ${{ vars.OSM_SECRET_KEY }}
       options: --user root
 
     services:
