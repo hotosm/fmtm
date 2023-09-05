@@ -45,12 +45,13 @@ from osm_fieldwork import basemapper
 from osm_fieldwork.make_data_extract import PostgresClient
 from osm_fieldwork.OdkCentral import OdkAppUser
 from osm_fieldwork.xlsforms import xlsforms_path
-from osm_fieldwork.json2osm import json2osm
+from osm_fieldwork import json2osm
 from shapely import wkt
 from shapely.geometry import MultiPolygon, Polygon, mapping, shape
 from sqlalchemy import and_, column, func, inspect, select, table
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from sqlalchemy.sql import text
 from cpuinfo import get_cpu_info
 from ..db import database
@@ -437,14 +438,13 @@ def update_multi_polygon_project_boundary(
             )
             db.commit()
 
-        # Generate project outline from tasks
-        # query = f'''SELECT ST_AsText(ST_Buffer(ST_Union(outline), 0.5, 'endcap=round')) as oval_envelope
-        #            FROM tasks
-        #           where project_id={project_id};'''
 
-        query = f"""SELECT ST_AsText(ST_ConvexHull(ST_Collect(outline)))
-                    FROM tasks
-                    WHERE project_id={project_id};"""
+
+        # Generate project outline from tasks
+        query = text(f"""SELECT ST_AsText(ST_ConvexHull(ST_Collect(outline)))
+                        FROM tasks
+                        WHERE project_id={project_id};""")
+
         log.debug("Generating project outline from tasks")
         result = db.execute(query)
         data = result.fetchone()
@@ -1214,7 +1214,7 @@ def generate_task_files(
     # Get the features for this task.
     # Postgis query to filter task inside this task outline and of this project
     # Update those features and set task_id
-    query = f"""UPDATE features
+    query = text(f"""UPDATE features
                 SET task_id={task_id}
                 WHERE id IN (
                     SELECT id
@@ -1223,12 +1223,12 @@ def generate_task_files(
                     AND ST_IsValid(geometry)
                     AND ST_IsValid('{task.outline}'::Geometry)
                     AND ST_Contains('{task.outline}'::Geometry, ST_Centroid(geometry))
-                )"""
+                )""")
 
     result = db.execute(query)
 
     # Get the geojson of those features for this task.
-    query = f"""SELECT jsonb_build_object(
+    query = text(f"""SELECT jsonb_build_object(
                 'type', 'FeatureCollection',
                 'features', jsonb_agg(feature)
                 )
@@ -1241,9 +1241,10 @@ def generate_task_files(
                 ) AS feature
                 FROM features
                 WHERE project_id={project_id} and task_id={task_id}
-                ) features;"""
+                ) features;""")
 
     result = db.execute(query)
+
     features = result.fetchone()[0]
 
     upload_media = False if features['features'] is None else True
