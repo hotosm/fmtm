@@ -59,9 +59,9 @@ const ProjectDetailsForm = () => {
           <span>Here are the instructions for setting up a Central ODK Server on Digital Ocean.</span>
         </p>
       </div>
-      <div className="xl:fmtm-w-[83%] xl:fmtm-h-[60vh] fmtm-bg-white fmtm-px-11 fmtm-py-6 fmtm-overflow-y-scroll scrollbar">
-        <div className="fmtm-w-full fmtm-flex xl:fmtm-gap-14">
-          <div className="fmtm-flex fmtm-flex-col fmtm-gap-6 xl:fmtm-w-[50%]">
+      <div className="xl:fmtm-w-[83%] fmtm-h-[60vh] fmtm-bg-white fmtm-px-11 fmtm-py-6 fmtm-overflow-y-scroll scrollbar">
+        <div className="fmtm-w-full fmtm-flex fmtm-gap-14">
+          <div className="fmtm-flex fmtm-flex-col fmtm-gap-6 fmtm-w-[50%]">
             <InputTextField
               label="Project Name"
               value={values.name}
@@ -111,7 +111,7 @@ const ProjectDetailsForm = () => {
               </p>
             </div>
           </div>
-          <div className="xl:fmtm-w-[50%] fmtm-flex fmtm-flex-col fmtm-gap-6">
+          <div className="fmtm-w-[50%] fmtm-flex fmtm-flex-col fmtm-gap-6">
             <InputTextField
               label="Organization Name"
               value={values.organisation_name}
@@ -129,7 +129,7 @@ const ProjectDetailsForm = () => {
         <div className="fmtm-w-fit fmtm-mx-auto fmtm-mt-10">
           <Button
             btnText="NEXT"
-            btnType="other"
+            btnType="primary"
             type="button"
             onClick={() => console.log('next')}
             className="fmtm-font-bold"
