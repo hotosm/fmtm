@@ -14,6 +14,7 @@ import Organization from './views/Organization';
 import CreateOrganization from './views/CreateOrganization';
 import Authorized from './views/Authorized';
 import SubmissionDetails from './views/SubmissionDetails';
+import CreateNewProject from './views/CreateNewProject';
 import ProjectDetails from 'map/ProjectDetails';
 
 // const ProjectDetails = React.lazy(() => import('map/ProjectDetails'));
@@ -108,7 +109,7 @@ const routes = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
-              <CreateProject />
+              <CreateNewProject />
             </Suspense>
           </ProtectedRoute>
         ),
@@ -118,7 +119,7 @@ const routes = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
-              <CreateProject />
+              <CreateNewProject />
             </Suspense>
           </ProtectedRoute>
         ),
@@ -128,7 +129,7 @@ const routes = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
-              <CreateProject />
+              <CreateNewProject />
             </Suspense>
           </ProtectedRoute>
         ),
@@ -138,7 +139,7 @@ const routes = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
-              <CreateProject />
+              <CreateNewProject />
             </Suspense>
           </ProtectedRoute>
         ),
@@ -148,7 +149,7 @@ const routes = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
-              <CreateProject />
+              <CreateNewProject />
             </Suspense>
           </ProtectedRoute>
         ),
@@ -158,7 +159,7 @@ const routes = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
-              <CreateProject />
+              <CreateNewProject />
             </Suspense>
           </ProtectedRoute>
         ),
