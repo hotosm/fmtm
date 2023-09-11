@@ -84,18 +84,18 @@ const ProjectDetailsForm = () => {
               fieldType="text"
             />
             <InputTextField
-              id="odk_central_password"
-              label="Central ODK Password"
-              value={values?.odk_central_password}
-              onChange={(e) => handleCustomChange('odk_central_password', e.target.value)}
-              fieldType="password"
-            />
-            <InputTextField
               id="odk_central_user"
               label="Central ODK Email/Username"
               value={values?.odk_central_user}
               onChange={(e) => handleCustomChange('odk_central_user', e.target.value)}
               fieldType="text"
+            />
+            <InputTextField
+              id="odk_central_password"
+              label="Central ODK Password"
+              value={values?.odk_central_password}
+              onChange={(e) => handleCustomChange('odk_central_password', e.target.value)}
+              fieldType="password"
             />
             <div>
               <InputTextField
