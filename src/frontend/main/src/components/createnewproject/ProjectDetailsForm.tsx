@@ -9,6 +9,8 @@ import useForm from '../../hooks/useForm';
 import CreateProjectValidation from '../../components/createproject/validation/CreateProjectValidation';
 import Button from '../../components/common/Button';
 import { CommonActions } from '../../store/slices/CommonSlice';
+import AssetModules from '../../shared/AssetModules.js';
+import { createPopup } from '../../utilfunctions/createPopup';
 
 const ProjectDetailsForm = ({ flag }) => {
   const dispatch = useDispatch();
@@ -123,13 +125,20 @@ const ProjectDetailsForm = ({ flag }) => {
             </div>
           </div>
           <div className="md:fmtm-w-[50%] fmtm-flex fmtm-flex-col fmtm-gap-6">
-            <InputTextField
-              id="organisation_name"
-              label="Organization Name"
-              value={values?.organisation_name}
-              onChange={(e) => handleCustomChange('organisation_name', e.target.value)}
-              fieldType="text"
-            />
+            <div className="fmtm-flex fmtm-items-end ">
+              <InputTextField
+                id="organisation_name"
+                label="Organization Name"
+                value={values?.organisation_name}
+                onChange={(e) => handleCustomChange('organisation_name', e.target.value)}
+                fieldType="text"
+                classNames="fmtm-w-[70%] fmtm-mr-4"
+              />
+              <AssetModules.AddIcon
+                className="fmtm-bg-red-600 fmtm-text-white fmtm-rounded-full fmtm-mb-[0.15rem] hover:fmtm-bg-red-700 hover:fmtm-cursor-pointer"
+                onClick={() => createPopup('Create Organization', 'createOrganization?popup=true')}
+              />
+            </div>
             <TextArea
               id="description"
               label="Description"
