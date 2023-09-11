@@ -7,6 +7,7 @@ interface IInputTextFieldProps {
   id?: string;
   label: string;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   errorMsg?: string;
   value: string;
   placeholder?: string;
@@ -24,6 +25,7 @@ function InputTextField({
   id,
   label,
   onChange,
+  onKeyDown,
   errorMsg,
   value,
   placeholder,
@@ -56,7 +58,7 @@ function InputTextField({
           maxLength={maxLength}
           onChange={onChange}
           disabled={disabled}
-          onKeyDown={(event) => fieldType === 'number' && blockInvalidChar(event)}
+          onKeyDown={onKeyDown}
         />
       </div>
       {errorMsg && <p className="fmtm-form-error fmtm-text-red-600 fmtm-text-sm fmtm-py-1 fmtm-pl-4">{errorMsg}</p>}

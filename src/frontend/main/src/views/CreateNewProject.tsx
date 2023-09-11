@@ -11,7 +11,7 @@ import SelectForm from '../components/createnewproject/SelectForm';
 
 const CreateNewProject = () => {
   const currentStep = CoreModules.useAppSelector((state) => state.common.currentStepFormStep.create_project);
-  const getCreteProjectContent = (): JSX.Element => {
+  const getCreateProjectContent = (): JSX.Element => {
     switch (currentStep.step) {
       case 1:
         return <ProjectDetailsForm />;
@@ -36,7 +36,7 @@ const CreateNewProject = () => {
             <StepSwitcher data={createProjectSteps} flag={'create_project'} />
           </div>
         </div>
-        <div className="fmtm-mx-5">{(() => getCreteProjectContent())()}</div>
+        <div className="fmtm-mx-5 fmtm-mb-5">{(() => getCreateProjectContent())()}</div>
       </div>
     </div>
   );
