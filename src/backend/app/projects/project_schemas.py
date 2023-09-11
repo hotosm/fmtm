@@ -39,9 +39,9 @@ class ProjectInfo(BaseModel):
 
 
 class ProjectUpdate(BaseModel):
-    name: Union[str, None]
-    short_description: Union[str, None]
-    description: Union[str, None]
+    name: Optional[str] = None
+    short_description: Optional[str] = None
+    description: Optional[str] = None
 
 
 class BETAProjectUpload(BaseModel):
@@ -49,7 +49,7 @@ class BETAProjectUpload(BaseModel):
     project_info: ProjectInfo
     xform_title: Union[str, None]
     odk_central: ODKCentral
-    hashtags: Union[List[str], None]
+    hashtags: Optional[List[str]] = None
     organisation_id: Optional[int] = None
     # city: str
     # country: str
