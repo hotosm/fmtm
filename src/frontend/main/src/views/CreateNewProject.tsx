@@ -4,16 +4,27 @@ import React from 'react';
 import { createProjectSteps } from '../constants/StepFormConstants';
 import CoreModules from '../shared/CoreModules.js';
 import ProjectDetailsForm from '../components/createnewproject/ProjectDetailsForm';
+import UploadArea from '../components/createnewproject/UploadArea';
+import DataExtract from '../components/createnewproject/DataExtract';
+import SplitTasks from '../components/createnewproject/SplitTasks';
+import SelectForm from '../components/createnewproject/SelectForm';
 
 const CreateNewProject = () => {
   const currentStep = CoreModules.useAppSelector((state) => state.common.currentStepFormStep.create_project);
-  console.log(currentStep.step);
-  const getCreteProjectContent = () => {
+  const getCreteProjectContent = (): JSX.Element => {
     switch (currentStep.step) {
       case 1:
         return <ProjectDetailsForm />;
+      case 2:
+        return <UploadArea />;
+      case 3:
+        return <DataExtract />;
+      case 4:
+        return <SplitTasks />;
+      case 5:
+        return <SelectForm />;
       default:
-        console.log('haha');
+        return <ProjectDetailsForm />;
     }
   };
   return (
@@ -25,7 +36,7 @@ const CreateNewProject = () => {
             <StepSwitcher data={createProjectSteps} flag={'create_project'} />
           </div>
         </div>
-        <div>{(() => getCreteProjectContent())()}</div>
+        <div className="fmtm-mx-5">{(() => getCreteProjectContent())()}</div>
       </div>
     </div>
   );

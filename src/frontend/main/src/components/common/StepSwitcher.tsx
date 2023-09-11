@@ -6,14 +6,19 @@ import CoreModules from '../../shared/CoreModules.js';
 const StepSwitcher = ({ data, flag }) => {
   interface IStep {
     step: number;
-    children: string;
+    children: IStepChildren[];
   }
 
   interface IIndividualStep {
     step: number;
     label: string;
     name: string;
-    children: string;
+    children: IStepChildren[];
+  }
+
+  interface IStepChildren {
+    page: number;
+    name: string;
   }
   const dispatch = CoreModules.useAppDispatch();
   const currentStep = CoreModules.useAppSelector((state) => state.common.currentStepFormStep[flag]);
