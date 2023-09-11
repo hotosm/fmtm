@@ -701,15 +701,15 @@ def process_polygon(db:Session, project_id:uuid.UUID, boundary_data:str, no_of_b
         db.commit()
     else:
         # Remove the polygons outside of the project AOI using a parameterized query
-        query = f"""
+        query = text(f"""
                     DELETE FROM ways_poly
                     WHERE NOT ST_Within(ST_Centroid(ways_poly.geom), (SELECT geom FROM project_aoi WHERE project_id = '{project_id}'));
-                """
+                """)
         result = db.execute(query)
         db.commit()
     with open('app/db/split_algorithm.sql', 'r') as sql_file:
         query = sql_file.read()
-    result = db.execute(query, params={'num_buildings': no_of_buildings})
+    result = db.execute(text(query), params={'num_buildings': no_of_buildings})
     result = result.fetchall()
     db.query(db_models.DbBuildings).delete()
     db.query(db_models.DbOsmLines).delete()
@@ -1549,7 +1549,7 @@ def get_task_geometry(db: Session, project_id: int):
 async def get_project_features_geojson(db:Session, project_id:int):
 
     # Get the geojson of those features for this task.
-    query = f"""SELECT jsonb_build_object(
+    query = text(f"""SELECT jsonb_build_object(
                 'type', 'FeatureCollection',
                 'features', jsonb_agg(feature)
                 )
@@ -1563,7 +1563,7 @@ async def get_project_features_geojson(db:Session, project_id:int):
                 FROM features
                 WHERE project_id={project_id}
                 ) features;
-            """
+            """)
 
     result = db.execute(query)
     features = result.fetchone()[0]
@@ -2088,7 +2088,7 @@ async def update_project_form(
         # Get the features for this task.
         # Postgis query to filter task inside this task outline and of this project
         # Update those features and set task_id
-        query = f"""UPDATE features
+        query = text(f"""UPDATE features
                     SET task_id={task}
                     WHERE id in (
                     
@@ -2096,12 +2096,12 @@ async def update_project_form(
                     FROM features
                     WHERE project_id={project_id} and ST_Intersects(geometry, '{task_obj.outline}'::Geometry)
 
-                    )"""
+                    )""")
 
         result = db.execute(query)
 
         # Get the geojson of those features for this task.
-        query = f"""SELECT jsonb_build_object(
+        query = text(f"""SELECT jsonb_build_object(
                     'type', 'FeatureCollection',
                     'features', jsonb_agg(feature)
                     )
@@ -2114,7 +2114,7 @@ async def update_project_form(
                     ) AS feature
                     FROM features
                     WHERE project_id={project_id} and task_id={task}
-                    ) features;"""
+                    ) features;""")
 
         result = db.execute(query)
         features = result.fetchone()[0]
@@ -2154,7 +2154,7 @@ async def update_odk_credentials(
 
 async def get_extracted_data_from_db(db: Session, project_id: int, outfile: str):
     """Get the geojson of those features for this project."""
-    query = f"""SELECT jsonb_build_object(
+    query = text(f"""SELECT jsonb_build_object(
                 'type', 'FeatureCollection',
                 'features', jsonb_agg(feature)
                 )
@@ -2167,7 +2167,7 @@ async def get_extracted_data_from_db(db: Session, project_id: int, outfile: str)
                 ) AS feature
                 FROM features
                 WHERE project_id={project_id}
-                ) features;"""
+                ) features;""")
 
     result = db.execute(query)
     features = result.fetchone()[0]
@@ -2208,7 +2208,7 @@ def get_project_tiles(
         db.commit()
 
         # Project Outline
-        query = f"""SELECT jsonb_build_object(
+        query = text(f"""SELECT jsonb_build_object(
                     'type', 'FeatureCollection',
                     'features', jsonb_agg(feature)
                     )
@@ -2220,7 +2220,7 @@ def get_project_tiles(
                     ) AS feature
                     FROM projects
                     WHERE id={project_id}
-                    ) features;"""
+                    ) features;""")
 
         result = db.execute(query)
         features = result.fetchone()[0]
@@ -2233,7 +2233,7 @@ def get_project_tiles(
             jsonfile.truncate(0)
             dump(features, jsonfile)
 
-        basemap = basemapper.BaseMapper(boundary_file, base, source)
+        basemap = basemapper.BaseMapper(boundary_file, base, source, False)
         outf = basemapper.DataFile(outfile, basemap.getFormat())
         suffix = os.path.splitext(outfile)[1]
         if suffix == ".mbtiles":

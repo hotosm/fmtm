@@ -20,7 +20,7 @@
 from functools import lru_cache
 from typing import Any, Optional, Union
 
-from pydantic import AnyUrl, Extra, FieldValidationInfo, PostgresDsn, field_validator
+from pydantic import Extra, FieldValidationInfo, PostgresDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -35,13 +35,13 @@ class Settings(BaseSettings):
     FRONTEND_MAIN_URL: Optional[str]
     FRONTEND_MAP_URL: Optional[str]
 
-    EXTRA_CORS_ORIGINS: Optional[Union[str, list[AnyUrl]]] = []
+    EXTRA_CORS_ORIGINS: Optional[Union[str, list[str]]] = []
 
     @field_validator("EXTRA_CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(
         cls,
-        val: Union[str, list[AnyUrl]],
+        val: Union[str, list[str]],
         info: FieldValidationInfo,
     ) -> Union[list[str], str]:
         """Build and validate CORS origins list.
@@ -53,8 +53,8 @@ class Settings(BaseSettings):
 
         # Build default origins from env vars
         url_scheme = info.data.get("URL_SCHEME")
-        main_url = info.data.get("URL_SCHEME")
-        map_url = info.data.get("URL_SCHEME")
+        main_url = info.data.get("FRONTEND_MAIN_URL")
+        map_url = info.data.get("FRONTEND_MAP_URL")
         if url_scheme and main_url and map_url:
             default_origins = [
                 f"{url_scheme}://{main_url}",
@@ -99,16 +99,16 @@ class Settings(BaseSettings):
         # Convert Url type to string
         return str(pg_url)
 
-    ODK_CENTRAL_URL: Optional[AnyUrl]
-    ODK_CENTRAL_USER: Optional[str]
-    ODK_CENTRAL_PASSWD: Optional[str]
+    ODK_CENTRAL_URL: Optional[str] = ""
+    ODK_CENTRAL_USER: Optional[str] = ""
+    ODK_CENTRAL_PASSWD: Optional[str] = ""
 
     OSM_CLIENT_ID: str
     OSM_CLIENT_SECRET: str
     OSM_SECRET_KEY: str
-    OSM_URL: AnyUrl = "https://www.openstreetmap.org"
+    OSM_URL: str = "https://www.openstreetmap.org"
     OSM_SCOPE: str = "read_prefs"
-    OSM_LOGIN_REDIRECT_URI: AnyUrl = "http://127.0.0.1:8080/osmauth/"
+    OSM_LOGIN_REDIRECT_URI: str = "http://127.0.0.1:8080/osmauth/"
 
     SENTRY_DSN: Optional[str] = None
 
