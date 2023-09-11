@@ -52,6 +52,10 @@ services:
       args:
         APP_VERSION: debug
     container_name: fmtm_api
+    # Uncomment these to debug with a terminal debugger like pdb
+    # Then `docker attach fmtm_api` to debug
+    # stdin_open: true
+    # tty: true
     volumes:
       - fmtm_logs:/opt/logs
       - fmtm_images:/opt/app/images
