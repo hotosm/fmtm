@@ -8,8 +8,11 @@ on:
   # Allow manual trigger (workflow_dispatch)
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 env:
-  USER_TOKEN: ${{ secrets.WIKI_DEPLOY_TOKEN }}
+  TOKEN: ${{ secrets.GITHUB_TOKEN }}
   USER_NAME: svcfmtm
   USER_EMAIL: fmtm@hotosm.org
   ORG: ${{ github.event.repository.owner.name }}
@@ -31,7 +34,7 @@ jobs:
           git init
           git config user.name $USER_NAME
           git config user.email $USER_EMAIL
-          git pull https://$USER_TOKEN@github.com/$ORG/$REPO_NAME.wiki.git
+          git pull https://x-access-token:$TOKEN@github.com/$ORG/$REPO_NAME.wiki.git
 
       - name: Push content to wiki
         run: |
@@ -40,4 +43,4 @@ jobs:
           cd tmp_wiki
           git add .
           git commit -m "docs: automated wiki update on push"
-          git push -f --set-upstream https://$USER_TOKEN@github.com/$ORG/$REPO_NAME.wiki.git master
+          git push -f --set-upstream https://x-access-token:$TOKEN@github.com/$ORG/$REPO_NAME.wiki.git master
