@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../types/reduxTypes';
 import useForm from '../../hooks/useForm';
 import CreateProjectValidation from '../../components/createproject/validation/CreateProjectValidation';
+import Button from '../../components/common/Button';
 
 const ProjectDetailsForm = () => {
   const dispatch = useDispatch();
@@ -58,62 +59,80 @@ const ProjectDetailsForm = () => {
           <span>Here are the instructions for setting up a Central ODK Server on Digital Ocean.</span>
         </p>
       </div>
-      <div className="xl:fmtm-w-[83%] xl:fmtm-h-[60vh] fmtm-bg-white fmtm-px-11 fmtm-py-6 fmtm-flex xl:fmtm-gap-14 fmtm-overflow-y-scroll scrollbar">
-        <div className="fmtm-flex fmtm-flex-col fmtm-gap-6 xl:fmtm-w-[50%]">
-          <InputTextField
-            label="Project Name"
-            value={values.name}
-            onChange={(e) => handleCustomChange('name', e.target.value)}
-            fieldType="text"
-          />
-          <TextArea
-            label="Short Description"
-            rows={3}
-            value={values.short_description}
-            onChange={(e) => handleCustomChange('short_description', e.target.value)}
-          />
-          <InputTextField
-            label="ODK Central URL"
-            value={values.odk_central_url}
-            onChange={(e) => handleCustomChange('odk_central_url', e.target.value)}
-            fieldType="text"
-          />
-          <InputTextField
-            label="Central ODK Password"
-            value={values.odk_central_password}
-            onChange={(e) => handleCustomChange('odk_central_password', e.target.value)}
-            fieldType="text"
-          />
-          <InputTextField
-            label="Central ODK Email/Username"
-            value={values.odk_central_user}
-            onChange={(e) => handleCustomChange('odk_central_user', e.target.value)}
-            fieldType="text"
-          />
-          <InputTextField
-            label="Changeset Comment"
-            value={values.hashtags}
-            onChange={(e) => {
-              handleHashtagOnChange(e);
-            }}
-            onKeyDown={(e) => {
-              handleHashtagKeyPress(e);
-            }}
-            fieldType="text"
-          />
+      <div className="xl:fmtm-w-[83%] xl:fmtm-h-[60vh] fmtm-bg-white fmtm-px-11 fmtm-py-6 fmtm-overflow-y-scroll scrollbar">
+        <div className="fmtm-w-full fmtm-flex xl:fmtm-gap-14">
+          <div className="fmtm-flex fmtm-flex-col fmtm-gap-6 xl:fmtm-w-[50%]">
+            <InputTextField
+              label="Project Name"
+              value={values.name}
+              onChange={(e) => handleCustomChange('name', e.target.value)}
+              fieldType="text"
+            />
+            <TextArea
+              label="Short Description"
+              rows={3}
+              value={values.short_description}
+              onChange={(e) => handleCustomChange('short_description', e.target.value)}
+            />
+            <InputTextField
+              label="ODK Central URL"
+              value={values.odk_central_url}
+              onChange={(e) => handleCustomChange('odk_central_url', e.target.value)}
+              fieldType="text"
+            />
+            <InputTextField
+              label="Central ODK Password"
+              value={values.odk_central_password}
+              onChange={(e) => handleCustomChange('odk_central_password', e.target.value)}
+              fieldType="text"
+            />
+            <InputTextField
+              label="Central ODK Email/Username"
+              value={values.odk_central_user}
+              onChange={(e) => handleCustomChange('odk_central_user', e.target.value)}
+              fieldType="text"
+            />
+            <div>
+              <InputTextField
+                label="Changeset Comment"
+                value={values.hashtags}
+                onChange={(e) => {
+                  handleHashtagOnChange(e);
+                }}
+                onKeyDown={(e) => {
+                  handleHashtagKeyPress(e);
+                }}
+                fieldType="text"
+              />
+              <p className="fmtm-text-sm fmtm-text-gray-500 fmtm-leading-4 fmtm-mt-2">
+                *Default comments added to uploaded changeset comment field. Users should also be encouraged to add text
+                describing what they mapped. Hashtags are sometimes used for analysis later, but should be human
+                informative and not overused, #group #event
+              </p>
+            </div>
+          </div>
+          <div className="xl:fmtm-w-[50%] fmtm-flex fmtm-flex-col fmtm-gap-6">
+            <InputTextField
+              label="Organization Name"
+              value={values.organisation_name}
+              onChange={(e) => handleCustomChange('organisation_name', e.target.value)}
+              fieldType="text"
+            />
+            <TextArea
+              label="Description"
+              rows={3}
+              value={values.description}
+              onChange={(e) => handleCustomChange('description', e.target.value)}
+            />
+          </div>
         </div>
-        <div className="xl:fmtm-w-[50%] fmtm-flex fmtm-flex-col fmtm-gap-6">
-          <InputTextField
-            label="Organization Name"
-            value={values.organisation_name}
-            onChange={(e) => handleCustomChange('organisation_name', e.target.value)}
-            fieldType="text"
-          />
-          <TextArea
-            label="Description"
-            rows={3}
-            value={values.description}
-            onChange={(e) => handleCustomChange('description', e.target.value)}
+        <div className="fmtm-w-fit fmtm-mx-auto fmtm-mt-10">
+          <Button
+            btnText="NEXT"
+            btnType="other"
+            type="button"
+            onClick={() => console.log('next')}
+            className="fmtm-font-bold"
           />
         </div>
       </div>
