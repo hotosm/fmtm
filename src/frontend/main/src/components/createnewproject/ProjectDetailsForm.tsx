@@ -1,6 +1,10 @@
-import React from 'react';
+import InputTextField from '../../components/common/InputTextField';
+import React, { useState } from 'react';
 
 const ProjectDetailsForm = () => {
+  const [values, setValues] = useState('');
+  const [values1, setValues1] = useState('');
+
   return (
     <div className="fmtm-flex fmtm-gap-7">
       <div className="fmtm-bg-white xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6">
@@ -11,9 +15,23 @@ const ProjectDetailsForm = () => {
           <span>Here are the instructions for setting up a Central ODK Server on Digital Ocean.</span>
         </p>
       </div>
-      <div className="xl:fmtm-w-[83%] fmtm-bg-white fmtm-px-5 fmtm-py-6">
-        <div></div>
-        <div></div>
+      <div className="xl:fmtm-w-[83%] fmtm-bg-white fmtm-px-11 fmtm-py-6 fmtm-flex xl:fmtm-gap-14">
+        <div className="xl:fmtm-w-[60%]">
+          <InputTextField
+            label="Project Name"
+            value={values}
+            onChange={(e) => setValues(e.target.value)}
+            fieldType="text"
+          />
+        </div>
+        <div className="xl:fmtm-w-[40%]">
+          <InputTextField
+            label="Organization Name"
+            value={values1}
+            onChange={(e) => setValues1(e.target.value)}
+            fieldType="text"
+          />
+        </div>
       </div>
     </div>
   );
