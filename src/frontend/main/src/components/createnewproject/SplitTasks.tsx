@@ -1,6 +1,6 @@
 import React from 'react';
 
-const SplitTasks = () => {
+const SplitTasks = ({ flag, page }) => {
   return <div>SplitTasks</div>;
 };
 

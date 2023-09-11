@@ -2,11 +2,7 @@ interface ICreateProjectSteps {
   step: number;
   label: string;
   name: string;
-  children?: IStepChildren[];
-}
-interface IStepChildren {
-  page: number;
-  name: string;
+  children?: number;
 }
 
 export const createProjectSteps: ICreateProjectSteps[] = [
@@ -19,29 +15,19 @@ export const createProjectSteps: ICreateProjectSteps[] = [
     step: 2,
     label: '02',
     name: 'Upload Area',
-    children: [
-      { page: 1, name: 'UploadArea1' },
-      { page: 2, name: 'UploadArea2' },
-    ],
+    children: 1,
   },
   {
     step: 3,
     label: '03',
     name: 'Data Extract',
-    children: [
-      { page: 1, name: 'DataExtract1' },
-      { page: 2, name: 'DataExtract2' },
-    ],
+    children: 1,
   },
   {
     step: 4,
     label: '04',
     name: 'Split Tasks',
-    children: [
-      { page: 1, name: 'DefineTasks1' },
-      { page: 2, name: 'DefineTasks2' },
-      { page: 3, name: 'DefineTasks3' },
-    ],
+    children: 1,
   },
   {
     step: 5,

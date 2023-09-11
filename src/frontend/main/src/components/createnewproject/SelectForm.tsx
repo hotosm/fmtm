@@ -1,6 +1,6 @@
 import React from 'react';
 
-const SelectForm = () => {
+const SelectForm = ({ flag }) => {
   return <div>SelectForm</div>;
 };
 

@@ -8,8 +8,9 @@ import { useAppSelector } from '../../types/reduxTypes';
 import useForm from '../../hooks/useForm';
 import CreateProjectValidation from '../../components/createproject/validation/CreateProjectValidation';
 import Button from '../../components/common/Button';
+import { CommonActions } from '../../store/slices/CommonSlice';
 
-const ProjectDetailsForm = () => {
+const ProjectDetailsForm = ({ flag }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -47,6 +48,10 @@ const ProjectDetailsForm = () => {
     ) {
       e.preventDefault();
     }
+  };
+
+  const toggleStepNext = () => {
+    dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 2, children: 1 }));
   };
 
   return (
@@ -139,7 +144,7 @@ const ProjectDetailsForm = () => {
             btnText="NEXT"
             btnType="primary"
             type="button"
-            onClick={() => console.log('next')}
+            onClick={() => toggleStepNext()}
             className="fmtm-font-bold"
           />
         </div>

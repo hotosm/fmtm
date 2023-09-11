@@ -1,6 +1,6 @@
 import React from 'react';
 
-const DataExtract = () => {
+const DataExtract = ({ flag, page }) => {
   return <div>DataExtract</div>;
 };
 
