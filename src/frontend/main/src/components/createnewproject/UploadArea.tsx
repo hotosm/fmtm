@@ -1,6 +1,6 @@
+import React, { useState } from 'react';
 import { CommonActions } from '../../store/slices/CommonSlice';
 import Button from '../../components/common/Button';
-import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import RadioButton from '../../components/common/RadioButton';
 import AssetModules from '../../shared/AssetModules.js';
@@ -15,7 +15,7 @@ const UploadArea = ({ flag, page }) => {
 
   const [uploadOption, setUloadOption] = useState('');
 
-  const toggleStepNext = (step) => {
+  const toggleStep = (step) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
   };
   return (
@@ -81,14 +81,14 @@ const UploadArea = ({ flag, page }) => {
                 btnText="PREVIOUS"
                 btnType="secondary"
                 type="button"
-                onClick={() => toggleStepNext(1)}
+                onClick={() => toggleStep(1)}
                 className="fmtm-font-bold"
               />
               <Button
                 btnText="NEXT"
                 btnType="primary"
                 type="button"
-                onClick={() => toggleStepNext(3)}
+                onClick={() => toggleStep(3)}
                 className="fmtm-font-bold"
               />
             </div>
