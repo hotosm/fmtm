@@ -39,6 +39,7 @@ import {
   ArrowLeft as ArrowLeftIcon,
   ArrowRight as ArrowRightIcon,
   Done as DoneIcon,
+  Replay as ReplayIcon,
 } from '@mui/icons-material';
 import LockPng from '../assets/images/lock.png';
 import RedLockPng from '../assets/images/red-lock.png';
@@ -88,4 +89,5 @@ export default {
   ArrowLeftIcon,
   ArrowRightIcon,
   DoneIcon,
+  ReplayIcon,
 };
