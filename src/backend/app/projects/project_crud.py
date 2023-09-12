@@ -830,15 +830,20 @@ def update_project_boundary(
         )
 
     """ Apply the lambda function to each coordinate in its geometry """
+    multi_polygons = []
     for feature in features:
         list(map(remove_z_dimension, feature["geometry"]["coordinates"][0]))
+        if feature["geometry"]["type"] == "MultiPolygon":
+            multi_polygons.append(Polygon(feature["geometry"]["coordinates"][0][0]))
+    
 
     """Update the boundary polyon on the database."""
-    outline = shape(features[0]["geometry"])
-
-    # If the outline is a multipolygon, use the first polygon
-    if isinstance(outline, MultiPolygon):
-        outline = outline.geoms[0]
+    if multi_polygons:
+        outline = multi_polygons[0]
+        for geom in multi_polygons[1:]:
+            outline = outline.union(geom)
+    else:
+        outline = shape(features[0]["geometry"])
 
     db_project.outline = outline.wkt
     db_project.centroid = outline.centroid.wkt
