@@ -1,6 +1,6 @@
 import TextArea from '../../components/common/TextArea';
 import InputTextField from '../../components/common/InputTextField';
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { CreateProjectActions } from '../../store/slices/CreateProjectSlice';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -11,12 +11,25 @@ import Button from '../../components/common/Button';
 import { CommonActions } from '../../store/slices/CommonSlice';
 import AssetModules from '../../shared/AssetModules.js';
 import { createPopup } from '../../utilfunctions/createPopup';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/common/Select';
+import { OrganisationService } from '../../api/CreateProjectService';
+import environment from '../../environment';
 
 const ProjectDetailsForm = ({ flag }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const projectDetails: any = useAppSelector((state) => state.createproject.projectDetails);
+  const organizationListData: any = useAppSelector((state) => state.createproject.organizationList);
+
+  const organizationList = organizationListData.map((item) => ({ label: item.name, value: item.id }));
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(values));
@@ -29,6 +42,18 @@ const ProjectDetailsForm = ({ flag }) => {
     submission,
     CreateProjectValidation,
   );
+
+  const onFocus = () => {
+    dispatch(OrganisationService(`${environment.baseApiUrl}/organization/`));
+  };
+  useEffect(() => {
+    window.addEventListener('focus', onFocus);
+    onFocus();
+    // Calls onFocus when the window first loads
+    return () => {
+      window.removeEventListener('focus', onFocus);
+    };
+  }, []);
 
   const hashtagPrefix = '#FMTM ';
 
@@ -125,19 +150,30 @@ const ProjectDetailsForm = ({ flag }) => {
             </div>
           </div>
           <div className="md:fmtm-w-[50%] fmtm-flex fmtm-flex-col fmtm-gap-6">
-            <div className="fmtm-flex fmtm-items-end ">
-              <InputTextField
-                id="organisation_name"
-                label="Organization Name"
-                value={values?.organisation_name}
-                onChange={(e) => handleCustomChange('organisation_name', e.target.value)}
-                fieldType="text"
-                classNames="fmtm-w-[70%] fmtm-mr-4"
-              />
-              <AssetModules.AddIcon
-                className="fmtm-bg-red-600 fmtm-text-white fmtm-rounded-full fmtm-mb-[0.15rem] hover:fmtm-bg-red-700 hover:fmtm-cursor-pointer"
-                onClick={() => createPopup('Create Organization', 'createOrganization?popup=true')}
-              />
+            <div>
+              <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold ">Organization Name</p>
+              <div className="fmtm-flex fmtm-items-end ">
+                <div className="fmtm-w-[25rem]">
+                  <Select value={values.value} onValueChange={(value) => handleCustomChange('organisation_id', value)}>
+                    <SelectTrigger className="">
+                      <SelectValue placeholder="Select an Organization" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {organizationList?.map((org) => (
+                          <SelectItem key={org.value} value={org.value}>
+                            {org.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <AssetModules.AddIcon
+                  className="fmtm-bg-red-600 fmtm-text-white fmtm-rounded-full fmtm-mb-[0.15rem] hover:fmtm-bg-red-700 hover:fmtm-cursor-pointer fmtm-ml-5"
+                  onClick={() => createPopup('Create Organization', 'createOrganization?popup=true')}
+                />
+              </div>
             </div>
             <TextArea
               id="description"
