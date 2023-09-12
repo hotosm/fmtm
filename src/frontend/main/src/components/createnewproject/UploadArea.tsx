@@ -15,8 +15,8 @@ const UploadArea = ({ flag, page }) => {
 
   const [uploadOption, setUloadOption] = useState('');
 
-  const toggleStepNext = () => {
-    dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 2, children: 2 }));
+  const toggleStepNext = (step) => {
+    dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
   };
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
@@ -81,14 +81,14 @@ const UploadArea = ({ flag, page }) => {
                 btnText="PREVIOUS"
                 btnType="secondary"
                 type="button"
-                onClick={() => toggleStepNext()}
+                onClick={() => toggleStepNext(1)}
                 className="fmtm-font-bold"
               />
               <Button
                 btnText="NEXT"
                 btnType="primary"
                 type="button"
-                onClick={() => toggleStepNext()}
+                onClick={() => toggleStepNext(3)}
                 className="fmtm-font-bold"
               />
             </div>
