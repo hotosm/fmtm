@@ -487,10 +487,20 @@ async def preview_tasks(boundary: str, dimension: int):
         )
 
     """ Apply the lambda function to each coordinate in its geometry ro remove the z-dimension - if it exists"""
+    multi_polygons = []
     for feature in features:
         list(map(remove_z_dimension, feature["geometry"]["coordinates"][0]))
+        if feature["geometry"]["type"] == "MultiPolygon":
+            multi_polygons.append(Polygon(feature["geometry"]["coordinates"][0][0]))
+    
 
-    boundary = shape(features[0]["geometry"])
+    """Update the boundary polyon on the database."""
+    if multi_polygons:
+        boundary = multi_polygons[0]
+        for geom in multi_polygons[1:]:
+            boundary = boundary.union(geom)
+    else:
+        boundary = shape(features[0]["geometry"])
 
     minx, miny, maxx, maxy = boundary.bounds
 
