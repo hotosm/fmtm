@@ -13,7 +13,7 @@ interface IButton {
 const btnStyle = (btnType, className) => {
   switch (btnType) {
     case 'primary':
-      return `${className} hover:fmtm-bg-red-700 fmtm-flex fmtm-px-4 fmtm-py-1 fmtm-bg-red-600 fmtm-text-white fmtm-rounded-[8px] fmtm-w-full`;
+      return `${className} hover:fmtm-bg-red-700 fmtm-flex fmtm-px-4 fmtm-py-1 fmtm-bg-primaryRed fmtm-text-white fmtm-rounded-[8px] fmtm-w-full`;
     case 'secondary':
       return `hover:fmtm-bg-gray-100 fmtm-flex fmtm-bg-white  fmtm-px-4 fmtm-py-1 fmtm-border border-[#E0E0E0] fmtm-rounded-[8px] ${className}`;
 
@@ -26,11 +26,11 @@ const btnStyle = (btnType, className) => {
 };
 
 const Button = ({ btnText, btnType, type, onClick, className, count, dataTip }: IButton) => (
-  <div>
+  <div className="fmtm-w-fit">
     <button
       type={type ? 'submit' : 'button'}
       onClick={onClick}
-      className={`fmtm-text-lg  fmtm-group ${btnStyle(btnType, className)}`}
+      className={`fmtm-text-lg fmtm-group ${btnStyle(btnType, className)}`}
       title={dataTip}
     >
       <p className="fmtm-whitespace-nowrap">{btnText}</p>
