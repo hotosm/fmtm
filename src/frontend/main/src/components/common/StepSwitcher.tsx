@@ -36,20 +36,20 @@ const StepSwitcher = ({ data, flag }) => {
                 </div>
                 <div className="fmtm-flex fmtm-items-center">
                   <div
-                    className={`lg:fmtm-w-7 lg:fmtm-h-7 xl:fmtm-w-9 xl:fmtm-h-9 fmtm-rounded-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-border-[0.15rem] fmtm-border-red-600 hover:fmtm-cursor-pointer  ${
-                      currentStep.step >= index ? 'fmtm-bg-red-600' : 'fmtm-bg-transparent'
+                    className={`lg:fmtm-w-7 lg:fmtm-h-7 xl:fmtm-w-9 xl:fmtm-h-9 fmtm-rounded-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-border-[0.15rem] fmtm-border-primaryRed hover:fmtm-cursor-pointer  ${
+                      currentStep.step >= index ? 'fmtm-bg-primaryRed' : 'fmtm-bg-transparent'
                     }`}
                     onClick={() => toggleStep(step)}
                   >
                     <AssetModules.DoneIcon
                       className={`${
-                        currentStep.step >= index ? 'fmtm-text-white' : 'fmtm-text-red-600'
+                        currentStep.step >= index ? 'fmtm-text-white' : 'fmtm-text-primaryRed'
                       } lg:fmtm-text-lg xl:fmtm-text-xl`}
                     />
                   </div>
                   {data?.length > index && (
                     <div
-                      className={`fmtm-border-t-[3px] fmtm-border-red-600 fmtm-w-[6rem] xl:fmtm-w-[10rem] 2xl:fmtm-w-[12rem] fmtm-mx-4 ${
+                      className={`fmtm-border-t-[3px] fmtm-border-primaryRed fmtm-w-[6rem] xl:fmtm-w-[10rem] 2xl:fmtm-w-[12rem] fmtm-mx-4 ${
                         currentStep.step - 1 >= index ? 'fmtm-border-solid' : 'fmtm-border-dashed'
                       }`}
                     ></div>
