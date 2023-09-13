@@ -1,4 +1,4 @@
-> NOTE: This is an installation guide to quickly get the fmtm app up and running. For a detailed guide on how to install the fmtm app using different methods and contributing, checkout the [docs](./docs)
+> NOTE: This is an installation guide to quickly get the fmtm app up and running. For a detailed guide on how to install the fmtm app using different methods and contributing, checkout the [dev docs](https://hotosm.github.io/fmtm/dev/Setup/)
 
 # Table of Contents
 
@@ -229,5 +229,3 @@ This is the easiest way to manage multiple frontends at once.
    - **Map:** <http://127.0.0.1:8081>
 
 That's it, you have successfully set up the frontend!!
-
-> NOTE: For a detailed guide, installation tips and other installation methods, check out the [docs folder](./docs)

@@ -581,7 +581,7 @@ def get_osm_extracts(boundary: str):
     else:
         query["geometry"] = json_boundary
 
-    base_url = "https://raw-data-api0.hotosm.org/v1"
+    base_url = settings.UNDERPASS_API_URL
     query_url = f"{base_url}/snapshot/"
     headers = {"accept": "application/json", "Content-Type": "application/json"}
 
@@ -1394,7 +1394,7 @@ def generate_appuser_files(
                 project_log.info(f"Extracting Data from OSM")
 
                 # OSM Extracts for whole project
-                pg = PostgresClient("https://raw-data-api0.hotosm.org/v1", "underpass")
+                pg = PostgresClient(settings.UNDERPASS_API_URL, "underpass")
                 # This file will store osm extracts
                 outfile = f"/tmp/{prefix}_{xform_title}.geojson"
 
@@ -1549,7 +1549,7 @@ def get_task_geometry(db: Session, project_id: int):
 async def get_project_features_geojson(db:Session, project_id:int):
 
     # Get the geojson of those features for this task.
-    query = f"""SELECT jsonb_build_object(
+    query = text(f"""SELECT jsonb_build_object(
                 'type', 'FeatureCollection',
                 'features', jsonb_agg(feature)
                 )
@@ -1563,7 +1563,7 @@ async def get_project_features_geojson(db:Session, project_id:int):
                 FROM features
                 WHERE project_id={project_id}
                 ) features;
-            """
+            """)
 
     result = db.execute(query)
     features = result.fetchone()[0]
@@ -2019,7 +2019,7 @@ async def update_project_form(
     db.commit()
 
     # OSM Extracts for whole project
-    pg = PostgresClient("https://raw-data-api0.hotosm.org/v1", "underpass")
+    pg = PostgresClient(settings.UNDERPASS_API_URL, "underpass")
     outfile = (
         f"/tmp/{project_title}_{category}.geojson"  # This file will store osm extracts
     )
@@ -2088,7 +2088,7 @@ async def update_project_form(
         # Get the features for this task.
         # Postgis query to filter task inside this task outline and of this project
         # Update those features and set task_id
-        query = f"""UPDATE features
+        query = text(f"""UPDATE features
                     SET task_id={task}
                     WHERE id in (
                     
@@ -2096,12 +2096,12 @@ async def update_project_form(
                     FROM features
                     WHERE project_id={project_id} and ST_Intersects(geometry, '{task_obj.outline}'::Geometry)
 
-                    )"""
+                    )""")
 
         result = db.execute(query)
 
         # Get the geojson of those features for this task.
-        query = f"""SELECT jsonb_build_object(
+        query = text(f"""SELECT jsonb_build_object(
                     'type', 'FeatureCollection',
                     'features', jsonb_agg(feature)
                     )
@@ -2114,7 +2114,7 @@ async def update_project_form(
                     ) AS feature
                     FROM features
                     WHERE project_id={project_id} and task_id={task}
-                    ) features;"""
+                    ) features;""")
 
         result = db.execute(query)
         features = result.fetchone()[0]
@@ -2154,7 +2154,7 @@ async def update_odk_credentials(
 
 async def get_extracted_data_from_db(db: Session, project_id: int, outfile: str):
     """Get the geojson of those features for this project."""
-    query = f"""SELECT jsonb_build_object(
+    query = text(f"""SELECT jsonb_build_object(
                 'type', 'FeatureCollection',
                 'features', jsonb_agg(feature)
                 )
@@ -2167,7 +2167,7 @@ async def get_extracted_data_from_db(db: Session, project_id: int, outfile: str)
                 ) AS feature
                 FROM features
                 WHERE project_id={project_id}
-                ) features;"""
+                ) features;""")
 
     result = db.execute(query)
     features = result.fetchone()[0]
@@ -2208,7 +2208,7 @@ def get_project_tiles(
         db.commit()
 
         # Project Outline
-        query = f"""SELECT jsonb_build_object(
+        query = text(f"""SELECT jsonb_build_object(
                     'type', 'FeatureCollection',
                     'features', jsonb_agg(feature)
                     )
@@ -2220,7 +2220,7 @@ def get_project_tiles(
                     ) AS feature
                     FROM projects
                     WHERE id={project_id}
-                    ) features;"""
+                    ) features;""")
 
         result = db.execute(query)
         features = result.fetchone()[0]
@@ -2233,7 +2233,7 @@ def get_project_tiles(
             jsonfile.truncate(0)
             dump(features, jsonfile)
 
-        basemap = basemapper.BaseMapper(boundary_file, base, source)
+        basemap = basemapper.BaseMapper(boundary_file, base, source, False)
         outf = basemapper.DataFile(outfile, basemap.getFormat())
         suffix = os.path.splitext(outfile)[1]
         if suffix == ".mbtiles":
