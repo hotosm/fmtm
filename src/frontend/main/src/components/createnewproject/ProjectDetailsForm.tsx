@@ -100,6 +100,7 @@ const ProjectDetailsForm = ({ flag }) => {
               value={values?.name}
               onChange={(e) => handleCustomChange('name', e.target.value)}
               fieldType="text"
+              required
             />
             <TextArea
               id="short_description"
@@ -107,6 +108,7 @@ const ProjectDetailsForm = ({ flag }) => {
               rows={3}
               value={values?.short_description}
               onChange={(e) => handleCustomChange('short_description', e.target.value)}
+              required
             />
             <InputTextField
               id="odk_central_url"
@@ -114,6 +116,7 @@ const ProjectDetailsForm = ({ flag }) => {
               value={values?.odk_central_url}
               onChange={(e) => handleCustomChange('odk_central_url', e.target.value)}
               fieldType="text"
+              required
             />
             <InputTextField
               id="odk_central_user"
@@ -121,6 +124,7 @@ const ProjectDetailsForm = ({ flag }) => {
               value={values?.odk_central_user}
               onChange={(e) => handleCustomChange('odk_central_user', e.target.value)}
               fieldType="text"
+              required
             />
             <InputTextField
               id="odk_central_password"
@@ -128,6 +132,7 @@ const ProjectDetailsForm = ({ flag }) => {
               value={values?.odk_central_password}
               onChange={(e) => handleCustomChange('odk_central_password', e.target.value)}
               fieldType="password"
+              required
             />
             <div>
               <InputTextField
@@ -141,6 +146,7 @@ const ProjectDetailsForm = ({ flag }) => {
                   handleHashtagKeyPress(e);
                 }}
                 fieldType="text"
+                required
               />
               <p className="fmtm-text-sm fmtm-text-gray-500 fmtm-leading-4 fmtm-mt-2">
                 *Default comments added to uploaded changeset comment field. Users should also be encouraged to add text
@@ -181,6 +187,7 @@ const ProjectDetailsForm = ({ flag }) => {
               rows={3}
               value={values?.description}
               onChange={(e) => handleCustomChange('description', e.target.value)}
+              required
             />
           </div>
         </div>
