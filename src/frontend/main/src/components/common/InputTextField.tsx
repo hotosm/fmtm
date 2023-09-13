@@ -19,6 +19,7 @@ interface IInputTextFieldProps {
   minRange?: string;
   maxLength?: number;
   disabled?: boolean;
+  required?: boolean;
 }
 
 function InputTextField({
@@ -37,10 +38,14 @@ function InputTextField({
   minRange,
   maxLength,
   disabled,
+  required,
 }: IInputTextFieldProps) {
   return (
     <div className={`fmtm-custom-textField ${classNames}`}>
-      <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold">{label}</p>
+      <div className="fmtm-flex fmtm-gap-1">
+        <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold">{label}</p>
+        {required && <p className="fmtm-text-red-500 fmtm-text-[1.2rem]">*</p>}
+      </div>
       <div
         className={`fmtm-border-[1px] fmtm-border-gray-300 fmtm-h-[1.8rem] fmtm-w-full fmtm-justify-between fmtm-flex fmtm-items-center fmtm-overflow-hidden`}
       >
