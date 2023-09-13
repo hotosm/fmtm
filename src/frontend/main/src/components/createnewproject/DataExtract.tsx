@@ -39,7 +39,7 @@ const DataExtract = ({ flag }) => {
           <div className="fmtm-flex fmtm-flex-col fmtm-gap-6 lg:fmtm-w-[40%] fmtm-justify-between">
             <div>
               <RadioButton
-                topic="Select one of the option to upload area"
+                topic="You may choose to use OSM data or upload your own data extract"
                 options={dataExtractOptions}
                 direction="column"
                 onChangeData={(value) => setExtractOption(value)}
