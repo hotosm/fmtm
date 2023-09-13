@@ -16,7 +16,7 @@ const osmFeatureTypeOptions = [
   { name: 'osm_feature_type', value: 'polygon', label: 'Polygon' },
 ];
 
-const DataExtract = ({ flag, page }) => {
+const DataExtract = ({ flag }) => {
   const dispatch = useDispatch();
 
   const [extractOption, setExtractOption] = useState('');

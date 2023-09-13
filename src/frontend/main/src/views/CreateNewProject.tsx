@@ -11,17 +11,16 @@ import SelectForm from '../components/createnewproject/SelectForm';
 
 const CreateNewProject = () => {
   const currentStep = CoreModules.useAppSelector((state) => state.common.currentStepFormStep.create_project);
-  console.log(currentStep);
   const getCreateProjectContent = (): JSX.Element => {
     switch (currentStep.step) {
       case 1:
         return <ProjectDetailsForm flag="create_project" />;
       case 2:
-        return <UploadArea flag="create_project" page={currentStep.children} />;
+        return <UploadArea flag="create_project" />;
       case 3:
-        return <DataExtract flag="create_project" page={currentStep.children} />;
+        return <DataExtract flag="create_project" />;
       case 4:
-        return <SplitTasks flag="create_project" page={currentStep.children} />;
+        return <SplitTasks flag="create_project" />;
       case 5:
         return <SelectForm flag="create_project" />;
       default:

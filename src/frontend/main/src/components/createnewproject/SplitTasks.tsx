@@ -11,7 +11,7 @@ const dataExtractOptions = [
   { name: 'define_tasks', value: 'task_splitting_algorithm', label: 'Task Splitting Algorithm' },
 ];
 
-const SplitTasks = ({ flag, page }) => {
+const SplitTasks = ({ flag }) => {
   const dispatch = useDispatch();
 
   const [defineOption, setDefineOption] = useState('');

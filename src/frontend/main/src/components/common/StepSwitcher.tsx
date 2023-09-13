@@ -6,21 +6,19 @@ import CoreModules from '../../shared/CoreModules.js';
 const StepSwitcher = ({ data, flag }) => {
   interface IStep {
     step: number;
-    children: number;
   }
 
   interface IIndividualStep {
     step: number;
     label: string;
     name: string;
-    children: number;
   }
 
   const dispatch = CoreModules.useAppDispatch();
   const currentStep = CoreModules.useAppSelector((state) => state.common.currentStepFormStep[flag]);
 
   const toggleStep = (step: IStep) => {
-    dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step.step, children: step.children }));
+    dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step.step }));
   };
   return (
     <div className="fmtm-flex fmtm-w-fit fmtm-mx-auto fmtm-py-5 fmtm-flex-wrap fmtm-gap-3 fmtm-justify-center">

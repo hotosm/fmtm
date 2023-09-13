@@ -13,7 +13,6 @@ const CommonSlice = CoreModules.createSlice({
     currentStepFormStep: {
       create_project: {
         step: 1,
-        children: '',
       },
     },
   },
@@ -28,7 +27,7 @@ const CommonSlice = CoreModules.createSlice({
       state.organization = action.payload;
     },
     SetCurrentStepFormStep(state, action) {
-      state.currentStepFormStep[action.payload.flag] = { step: action.payload.step, children: action.payload.children };
+      state.currentStepFormStep[action.payload.flag] = { step: action.payload.step };
     },
   },
 });

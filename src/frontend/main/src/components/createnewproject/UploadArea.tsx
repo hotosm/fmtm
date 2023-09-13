@@ -10,7 +10,7 @@ const uploadAreaOptions = [
   { name: 'upload_area', value: 'upload_file', label: 'Upload File' },
 ];
 
-const UploadArea = ({ flag, page }) => {
+const UploadArea = ({ flag }) => {
   const dispatch = useDispatch();
 
   const [uploadOption, setUloadOption] = useState('');
@@ -60,7 +60,7 @@ const UploadArea = ({ flag, page }) => {
                       btnText="Select a file"
                       btnType="primary"
                       type="button"
-                      onClick={() => console.log('reset')}
+                      onClick={() => console.log('select file')}
                       className=""
                     />
                     <div className="fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-slate-100 fmtm-duration-300 fmtm-cursor-pointer">
