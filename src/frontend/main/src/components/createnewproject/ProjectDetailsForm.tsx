@@ -157,7 +157,10 @@ const ProjectDetailsForm = ({ flag }) => {
           </div>
           <div className="md:fmtm-w-[50%] fmtm-flex fmtm-flex-col fmtm-gap-6">
             <div>
-              <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold ">Organization Name</p>
+              <div className="fmtm-flex fmtm-gap-1">
+                <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold ">Organization Name</p>
+                <p className="fmtm-text-red-500 fmtm-text-[1.2rem]">*</p>
+              </div>
               <div className="fmtm-flex fmtm-items-end ">
                 <div className="fmtm-w-[25rem]">
                   <Select value={values.value} onValueChange={(value) => handleCustomChange('organisation_id', value)}>
