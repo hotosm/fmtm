@@ -8,6 +8,7 @@ interface IButton {
   className?: string;
   count?: number;
   dataTip?: string;
+  icon?: React.ReactNode;
 }
 
 const btnStyle = (btnType, className) => {
@@ -24,13 +25,12 @@ const btnStyle = (btnType, className) => {
       return 'fmtm-primary';
   }
 };
-
-const Button = ({ btnText, btnType, type, onClick, className, count, dataTip }: IButton) => (
+const Button = ({ btnText, btnType, type, onClick, className, count, dataTip, icon }: IButton) => (
   <div className="fmtm-w-fit">
     <button
       type={type ? 'submit' : 'button'}
       onClick={onClick}
-      className={`fmtm-text-lg fmtm-group ${btnStyle(btnType, className)}`}
+      className={`fmtm-text-lg fmtm-group fmtm-flex fmtm-items-center fmtm-gap-4 ${btnStyle(btnType, className)}`}
       title={dataTip}
     >
       <p className="fmtm-whitespace-nowrap">{btnText}</p>
@@ -39,6 +39,7 @@ const Button = ({ btnText, btnType, type, onClick, className, count, dataTip }: 
           {count}
         </p>
       )}
+      {icon && icon}
     </button>
   </div>
 );

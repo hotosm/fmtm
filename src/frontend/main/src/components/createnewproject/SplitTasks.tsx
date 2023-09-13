@@ -71,6 +71,7 @@ const SplitTasks = ({ flag }) => {
                       type="button"
                       onClick={() => console.log('gen task')}
                       className=""
+                      icon={<AssetModules.SettingsIcon className="fmtm-text-white" />}
                     />
                     <Button
                       btnText="Stop generating"
