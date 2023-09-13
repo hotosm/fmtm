@@ -4,6 +4,7 @@ interface IRadioButton {
   name: string;
   value: string;
   label: string | number;
+  icon?: React.ReactNode;
 }
 
 interface RadioButtonProps {
@@ -31,6 +32,7 @@ const RadioButton: React.FC<RadioButtonProps> = ({ topic, options, direction, on
               onChange={(e) => onChangeData(e.target.value)}
             />
             <p className="fmtm-text-lg fmtm-bg-white fmtm-text-gray-500">{option.label}</p>
+            {option.icon && option.icon}
           </div>
         );
       })}

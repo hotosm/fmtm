@@ -41,6 +41,7 @@ import {
   Done as DoneIcon,
   Replay as ReplayIcon,
   Settings as SettingsIcon,
+  DriveFolderUpload as DriveFolderUploadIcon,
 } from '@mui/icons-material';
 import LockPng from '../assets/images/lock.png';
 import RedLockPng from '../assets/images/red-lock.png';
@@ -92,4 +93,5 @@ export default {
   DoneIcon,
   ReplayIcon,
   SettingsIcon,
+  DriveFolderUploadIcon,
 };

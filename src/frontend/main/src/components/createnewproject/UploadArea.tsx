@@ -4,10 +4,21 @@ import Button from '../../components/common/Button';
 import { useDispatch } from 'react-redux';
 import RadioButton from '../../components/common/RadioButton';
 import AssetModules from '../../shared/AssetModules.js';
+import DrawSvg from './DrawSvg';
 
 const uploadAreaOptions = [
-  { name: 'upload_area', value: 'draw', label: 'Draw' },
-  { name: 'upload_area', value: 'upload_file', label: 'Upload File' },
+  {
+    name: 'upload_area',
+    value: 'draw',
+    label: 'Draw',
+    icon: <DrawSvg />,
+  },
+  {
+    name: 'upload_area',
+    value: 'upload_file',
+    label: 'Upload File',
+    icon: <AssetModules.DriveFolderUploadIcon className="fmtm-text-gray-500" sx={{ height: '30px', width: '30px' }} />,
+  },
 ];
 
 const UploadArea = ({ flag }) => {
