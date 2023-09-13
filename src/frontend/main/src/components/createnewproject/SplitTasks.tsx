@@ -4,7 +4,6 @@ import RadioButton from '../../components/common/RadioButton';
 import AssetModules from '../../shared/AssetModules.js';
 import { useDispatch } from 'react-redux';
 import { CommonActions } from '../../store/slices/CommonSlice';
-import InputTextField from '../../components/common/InputTextField';
 
 const dataExtractOptions = [
   { name: 'define_tasks', value: 'divide_on_square', label: 'Divide on square' },
@@ -101,7 +100,7 @@ const SplitTasks = ({ flag, page }) => {
                 btnText="NEXT"
                 btnType="primary"
                 type="button"
-                onClick={() => toggleStep(4)}
+                onClick={() => toggleStep(5)}
                 className="fmtm-font-bold"
               />
             </div>
