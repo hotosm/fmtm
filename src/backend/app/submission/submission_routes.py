@@ -242,3 +242,10 @@ async def get_osm_xml(
     # Create a plain XML response
     response = Response(content=processed_xml_string, media_type="application/xml")
     return response
+
+
+@router.get("/user_info/{project_id}")
+async def get_user_info(project_id: int,
+                        db: Session = Depends(database.get_db)
+                        ):
+    return await submission_crud.get_odk_user_info(db, project_id)

@@ -37,6 +37,8 @@ from ..tasks import tasks_crud
 from ..projects import project_crud, project_schemas
 from osm_fieldwork.json2osm import JsonDump
 from pathlib import Path
+from ..central import central_crud
+from collections import defaultdict
 
 
 def get_submission_of_project(db: Session, project_id: int, task_id: int = None):
@@ -708,3 +710,29 @@ async def get_submission_count_of_a_project(db:Session,
                 files.extend(json_data_value)
 
     return len(files)
+
+
+async def get_odk_user_info(db: Session, project_id):
+    project = project_crud.get_project(db, project_id)
+    odkid = project.odkid
+
+    # Get odk credentials from project.
+    odk_credentials = {
+        "odk_central_url": project.odk_central_url,
+        "odk_central_user": project.odk_central_user,
+        "odk_central_password": project.odk_central_password,
+    }
+
+    odk_credentials = project_schemas.ODKCentral(**odk_credentials)
+
+    odk_project = central_crud.get_odk_project(odk_credentials)
+    filters = {
+        "$select":"username"
+    }
+    result = odk_project.getAllSubmissions(odkid, None, filters)
+
+    username_counts = defaultdict(int)
+    for item in result:
+        username = item["username"]
+        username_counts[username] += 1
+    return username_counts
