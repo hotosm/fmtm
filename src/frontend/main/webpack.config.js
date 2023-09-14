@@ -168,7 +168,7 @@ module.exports = function (webpackEnv) {
         ),
       ),
 
-      new EnvironmentPlugin(['API_URL', 'FRONTEND_MAIN_URL', 'FRONTEND_MAP_URL']),
+      new EnvironmentPlugin(['API_URL', 'FRONTEND_MAIN_URL']),
     ],
   };
 };
