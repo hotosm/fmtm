@@ -1356,153 +1356,153 @@ def generate_appuser_files(
         - form_type: weather the form is xls, xlsx or xml
         - background_task_id: the task_id of the background task running this function.
     """
-    # try:
-    project_log = log.bind(task="create_project", project_id=project_id)
-    
-    project_log.info(f"Starting generate_appuser_files for project {project_id}")
+    try:
+        project_log = log.bind(task="create_project", project_id=project_id)
+        
+        project_log.info(f"Starting generate_appuser_files for project {project_id}")
 
-    # Get the project table contents.
-    project = table(
-        "projects",
-        column("project_name_prefix"),
-        column("xform_title"),
-        column("id"),
-        column("odk_central_url"),
-        column("odk_central_user"),
-        column("odk_central_password"),
-        column("outline"),
-    )
+        # Get the project table contents.
+        project = table(
+            "projects",
+            column("project_name_prefix"),
+            column("xform_title"),
+            column("id"),
+            column("odk_central_url"),
+            column("odk_central_user"),
+            column("odk_central_password"),
+            column("outline"),
+        )
 
-    where = f"id={project_id}"
-    sql = select(
-        project.c.project_name_prefix,
-        project.c.xform_title,
-        project.c.id,
-        project.c.odk_central_url,
-        project.c.odk_central_user,
-        project.c.odk_central_password,
-        geoalchemy2.functions.ST_AsGeoJSON(project.c.outline).label("outline"),
-    ).where(text(where))
-    result = db.execute(sql)
+        where = f"id={project_id}"
+        sql = select(
+            project.c.project_name_prefix,
+            project.c.xform_title,
+            project.c.id,
+            project.c.odk_central_url,
+            project.c.odk_central_user,
+            project.c.odk_central_password,
+            geoalchemy2.functions.ST_AsGeoJSON(project.c.outline).label("outline"),
+        ).where(text(where))
+        result = db.execute(sql)
 
-    # There should only be one match
-    if result.rowcount != 1:
-        log.warning(str(sql))
-        if result.rowcount < 1:
-            raise HTTPException(status_code=400, detail="Project not found")
-        else:
-            raise HTTPException(status_code=400, detail="Multiple projects found")
+        # There should only be one match
+        if result.rowcount != 1:
+            log.warning(str(sql))
+            if result.rowcount < 1:
+                raise HTTPException(status_code=400, detail="Project not found")
+            else:
+                raise HTTPException(status_code=400, detail="Multiple projects found")
 
-    one = result.first()
+        one = result.first()
 
-    if one:
-        prefix = one.project_name_prefix
+        if one:
+            prefix = one.project_name_prefix
 
-        # Get odk credentials from project.
-        odk_credentials = {
-            "odk_central_url": one.odk_central_url,
-            "odk_central_user": one.odk_central_user,
-            "odk_central_password": one.odk_central_password,
-        }
+            # Get odk credentials from project.
+            odk_credentials = {
+                "odk_central_url": one.odk_central_url,
+                "odk_central_user": one.odk_central_user,
+                "odk_central_password": one.odk_central_password,
+            }
 
-        odk_credentials = project_schemas.ODKCentral(**odk_credentials)
+            odk_credentials = project_schemas.ODKCentral(**odk_credentials)
 
-        xform_title = one.xform_title if one.xform_title else None
+            xform_title = one.xform_title if one.xform_title else None
 
-        if upload:
-            xlsform = f"/tmp/custom_form.{form_type}"
-            contents = upload
-            with open(xlsform, "wb") as f:
-                f.write(contents)
-        else:
-            xlsform = f"{xlsforms_path}/{xform_title}.xls"
+            if upload:
+                xlsform = f"/tmp/custom_form.{form_type}"
+                contents = upload
+                with open(xlsform, "wb") as f:
+                    f.write(contents)
+            else:
+                xlsform = f"{xlsforms_path}/{xform_title}.xls"
 
-        category = xform_title
+            category = xform_title
 
-        # Data Extracts
-        if extracts_contents is not None:
-            project_log.info(f"Uploading data extracts")
-            upload_custom_data_extracts(db, project_id, extracts_contents)
+            # Data Extracts
+            if extracts_contents is not None:
+                project_log.info(f"Uploading data extracts")
+                upload_custom_data_extracts(db, project_id, extracts_contents)
 
-        else:
-            project_log.info(f"Extracting Data from OSM")
+            else:
+                project_log.info(f"Extracting Data from OSM")
 
-            # OSM Extracts for whole project
-            pg = PostgresClient(settings.UNDERPASS_API_URL, "underpass")
-            # This file will store osm extracts
-            outfile = f"/tmp/{prefix}_{xform_title}.geojson"
+                # OSM Extracts for whole project
+                pg = PostgresClient(settings.UNDERPASS_API_URL, "underpass")
+                # This file will store osm extracts
+                outfile = f"/tmp/{prefix}_{xform_title}.geojson"
 
-            outline = json.loads(one.outline)
-            outline_geojson = pg.getFeatures(
-                boundary=outline,
-                filespec=outfile,
-                polygon=extract_polygon,
-                xlsfile=f"{category}.xls",
-                category=category,
-            )
-
-            updated_outline_geojson = {"type": "FeatureCollection", "features": []}
-
-            # Collect feature mappings for bulk insert
-            feature_mappings = []
-
-            for feature in outline_geojson["features"]:
-                # If the osm extracts contents do not have a title, provide an empty text for that.
-                feature["properties"]["title"] = ""
-
-                feature_shape = shape(feature["geometry"])
-
-                # If the centroid of the Polygon is not inside the outline, skip the feature.
-                if extract_polygon and (
-                    not shape(outline).contains(shape(feature_shape.centroid))
-                ):
-                    continue
-
-                wkb_element = from_shape(feature_shape, srid=4326)
-                feature_mapping = {
-                    "project_id": project_id,
-                    "category_title": category,
-                    "geometry": wkb_element,
-                    "properties": feature["properties"],
-                }
-                updated_outline_geojson["features"].append(feature)
-                feature_mappings.append(feature_mapping)
-
-            # Bulk insert the osm extracts into the db.
-            db.bulk_insert_mappings(db_models.DbFeatures, feature_mappings)
-
-        # Generating QR Code, XForm and uploading OSM Extracts to the form.
-        # Creating app users and updating the role of that user.
-        tasks_list = tasks_crud.get_task_lists(db, project_id)
-
-        # info = get_cpu_info()
-        # cores = info["count"]
-        # with concurrent.futures.ThreadPoolExecutor(max_workers=cores) as executor:
-        #     futures = {executor.submit(generate_task_files_wrapper, project_id, task, xlsform, form_type, odk_credentials): task for task in tasks_list}
-
-        #     for future in concurrent.futures.as_completed(futures):
-        #         log.debug(f"Waiting for thread to complete..")
-
-        for task in tasks_list:
-            try:
-                generate_task_files(
-                    db, project_id, task, xlsform, form_type, odk_credentials,
+                outline = json.loads(one.outline)
+                outline_geojson = pg.getFeatures(
+                    boundary=outline,
+                    filespec=outfile,
+                    polygon=extract_polygon,
+                    xlsfile=f"{category}.xls",
+                    category=category,
                 )
-            except Exception as e:
-                log.warning(str(e))
-                continue
-    # # Update background task status to COMPLETED
-    update_background_task_status_in_database(
-        db, background_task_id, 4
-    )  # 4 is COMPLETED
 
-    # except Exception as e:
-    #     log.warning(str(e))
+                updated_outline_geojson = {"type": "FeatureCollection", "features": []}
+
+                # Collect feature mappings for bulk insert
+                feature_mappings = []
+
+                for feature in outline_geojson["features"]:
+                    # If the osm extracts contents do not have a title, provide an empty text for that.
+                    feature["properties"]["title"] = ""
+
+                    feature_shape = shape(feature["geometry"])
+
+                    # If the centroid of the Polygon is not inside the outline, skip the feature.
+                    if extract_polygon and (
+                        not shape(outline).contains(shape(feature_shape.centroid))
+                    ):
+                        continue
+
+                    wkb_element = from_shape(feature_shape, srid=4326)
+                    feature_mapping = {
+                        "project_id": project_id,
+                        "category_title": category,
+                        "geometry": wkb_element,
+                        "properties": feature["properties"],
+                    }
+                    updated_outline_geojson["features"].append(feature)
+                    feature_mappings.append(feature_mapping)
+
+                # Bulk insert the osm extracts into the db.
+                db.bulk_insert_mappings(db_models.DbFeatures, feature_mappings)
+
+            # Generating QR Code, XForm and uploading OSM Extracts to the form.
+            # Creating app users and updating the role of that user.
+            tasks_list = tasks_crud.get_task_lists(db, project_id)
+
+            # info = get_cpu_info()
+            # cores = info["count"]
+            # with concurrent.futures.ThreadPoolExecutor(max_workers=cores) as executor:
+            #     futures = {executor.submit(generate_task_files_wrapper, project_id, task, xlsform, form_type, odk_credentials): task for task in tasks_list}
+
+            #     for future in concurrent.futures.as_completed(futures):
+            #         log.debug(f"Waiting for thread to complete..")
+
+            for task in tasks_list:
+                try:
+                    generate_task_files(
+                        db, project_id, task, xlsform, form_type, odk_credentials,
+                    )
+                except Exception as e:
+                    log.warning(str(e))
+                    continue
+        # # Update background task status to COMPLETED
+        update_background_task_status_in_database(
+            db, background_task_id, 4
+        )  # 4 is COMPLETED
+
+    except Exception as e:
+        log.warning(str(e))
 
         # Update background task status to FAILED
-        # update_background_task_status_in_database(
-        #     db, background_task_id, 2, str(e)
-        # )  # 2 is FAILED
+        update_background_task_status_in_database(
+            db, background_task_id, 2, str(e)
+        )  # 2 is FAILED
 
 
 def create_qrcode(
