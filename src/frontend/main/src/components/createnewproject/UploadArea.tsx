@@ -25,7 +25,6 @@ const uploadAreaOptions = [
 const UploadArea = ({ flag }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [uploadOption, setUloadOption] = useState('');
 
@@ -78,16 +77,12 @@ const UploadArea = ({ flag }) => {
               {uploadOption === 'upload_file' && (
                 <div className="fmtm-mt-5 fmtm-pb-3">
                   <div className="fmtm-flex fmtm-items-center fmtm-gap-4">
-                    <div
-                      role="button"
-                      onClick={() => fileInputRef?.current?.click()}
-                      className="fmtm-bg-primaryRed fmtm-px-4 fmtm-py-1 fmtm-text-white fmtm-rounded-md"
-                    >
-                      <label id="file-input">
-                        <p>Select a file</p>
-                        <input ref={fileInputRef} type="file" className="fmtm-hidden" onChange={changeFileHandler} />
-                      </label>
-                    </div>
+                    <label id="file-input">
+                      <p className="fmtm-bg-primaryRed fmtm-px-4 fmtm-py-1 fmtm-text-white fmtm-rounded-md hover:fmtm-bg-red-700 fmtm-cursor-pointer">
+                        Select a file
+                      </p>
+                      <input type="file" className="fmtm-hidden" onChange={changeFileHandler} />
+                    </label>
                     <div className="fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-slate-100 fmtm-duration-300 fmtm-cursor-pointer">
                       <AssetModules.ReplayIcon className="fmtm-text-gray-600" onClick={() => setSelectedFileName('')} />
                     </div>
