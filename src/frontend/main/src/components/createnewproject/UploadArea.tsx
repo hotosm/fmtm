@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { CommonActions } from '../../store/slices/CommonSlice';
 import Button from '../../components/common/Button';
 import { useDispatch } from 'react-redux';
@@ -23,7 +23,7 @@ const uploadAreaOptions = [
   },
 ];
 
-const UploadArea = ({ flag, setGeojsonFile }) => {
+const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -34,13 +34,9 @@ const UploadArea = ({ flag, setGeojsonFile }) => {
     navigate(url);
   };
 
-  const [selectedFileName, setSelectedFileName] = useState('');
-
   const changeFileHandler = (e) => {
-    const { files } = e.target;
     dispatch(CreateProjectActions.SetDividedTaskGeojson(null));
     setGeojsonFile(e.target.files[0]);
-    setSelectedFileName(files[0].name);
   };
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
@@ -96,14 +92,13 @@ const UploadArea = ({ flag, setGeojsonFile }) => {
                         className="fmtm-text-gray-600"
                         onClick={() => {
                           setGeojsonFile(null);
-                          setSelectedFileName('');
                         }}
                       />
                     </div>
                   </div>
-                  {selectedFileName && (
+                  {geojsonFile && (
                     <div className="fmtm-mt-2">
-                      <p>{selectedFileName}</p>
+                      <p>{geojsonFile?.name}</p>
                     </div>
                   )}
                   <p className="fmtm-text-gray-700 fmtm-mt-3">

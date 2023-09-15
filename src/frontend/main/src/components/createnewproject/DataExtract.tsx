@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import Button from '../../components/common/Button';
 import { useDispatch } from 'react-redux';
 import { CommonActions } from '../../store/slices/CommonSlice';
@@ -17,7 +17,7 @@ const osmFeatureTypeOptions = [
   { name: 'osm_feature_type', value: 'polygon', label: 'Polygon' },
 ];
 
-const DataExtract = ({ flag, setLineExtractFile }) => {
+const DataExtract = ({ flag, lineExtractFile, setLineExtractFile }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -28,12 +28,8 @@ const DataExtract = ({ flag, setLineExtractFile }) => {
     navigate(url);
   };
 
-  const [selectedFileName, setSelectedFileName] = useState('');
-
   const changeFileHandler = (e) => {
-    const { files } = e.target;
     setLineExtractFile(e.target.files[0]);
-    setSelectedFileName(files[0].name);
   };
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
@@ -75,12 +71,15 @@ const DataExtract = ({ flag, setLineExtractFile }) => {
                       <input type="file" className="fmtm-hidden" onChange={changeFileHandler} />
                     </label>
                     <div className="fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-slate-100 fmtm-duration-300 fmtm-cursor-pointer">
-                      <AssetModules.ReplayIcon className="fmtm-text-gray-600" onClick={() => setSelectedFileName('')} />
+                      <AssetModules.ReplayIcon
+                        className="fmtm-text-gray-600"
+                        onClick={() => setLineExtractFile(null)}
+                      />
                     </div>
                   </div>
-                  {selectedFileName && (
+                  {lineExtractFile && (
                     <div className="fmtm-mt-2">
-                      <p>{selectedFileName}</p>
+                      <p>{lineExtractFile?.name}</p>
                     </div>
                   )}
                   <p className="fmtm-text-gray-700 fmtm-mt-10">

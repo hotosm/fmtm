@@ -62,9 +62,15 @@ const CreateNewProject = () => {
       case '/create-project':
         return <ProjectDetailsForm flag="create_project" />;
       case '/upload-area':
-        return <UploadArea flag="create_project" setGeojsonFile={setGeojsonFile} />;
+        return <UploadArea flag="create_project" geojsonFile={geojsonFile} setGeojsonFile={setGeojsonFile} />;
       case '/data-extract':
-        return <DataExtract flag="create_project" setLineExtractFile={setLineExtractFile} />;
+        return (
+          <DataExtract
+            flag="create_project"
+            lineExtractFile={lineExtractFile}
+            setLineExtractFile={setLineExtractFile}
+          />
+        );
       case '/define-tasks':
         return <SplitTasks flag="create_project" />;
       case '/select-form':
