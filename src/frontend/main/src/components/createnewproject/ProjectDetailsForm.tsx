@@ -33,8 +33,7 @@ const ProjectDetailsForm = ({ flag }) => {
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(values));
-    dispatch(CreateProjectActions.SetCreateProjectFormStep('upload-area'));
-    navigate('/upload-area', { replace: true, state: { values: values } });
+    dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 2 }));
   };
 
   const { handleSubmit, handleCustomChange, values, errors }: any = useForm(
@@ -77,10 +76,6 @@ const ProjectDetailsForm = ({ flag }) => {
     }
   };
 
-  const toggleStepNext = () => {
-    dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 2, children: 1 }));
-  };
-
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
       <div className="fmtm-bg-white xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6">
@@ -91,7 +86,11 @@ const ProjectDetailsForm = ({ flag }) => {
           <span>Here are the instructions for setting up a Central ODK Server on Digital Ocean.</span>
         </p>
       </div>
-      <div className="xl:fmtm-w-[83%] lg:fmtm-h-[60vh] xl:fmtm-h-[58vh] fmtm-bg-white fmtm-px-11 fmtm-py-6 lg:fmtm-overflow-y-scroll lg:scrollbar">
+
+      <form
+        className="xl:fmtm-w-[83%] lg:fmtm-h-[60vh] xl:fmtm-h-[58vh] fmtm-bg-white fmtm-px-11 fmtm-py-6 lg:fmtm-overflow-y-scroll lg:scrollbar"
+        onSubmit={handleSubmit}
+      >
         <div className="fmtm-w-full fmtm-flex fmtm-gap-6 md:fmtm-gap-14 fmtm-flex-col md:fmtm-flex-row">
           <div className="fmtm-flex fmtm-flex-col fmtm-gap-6 md:fmtm-w-[50%]">
             <InputTextField
@@ -101,6 +100,7 @@ const ProjectDetailsForm = ({ flag }) => {
               onChange={(e) => handleCustomChange('name', e.target.value)}
               fieldType="text"
               required
+              errorMsg={errors.name}
             />
             <TextArea
               id="short_description"
@@ -109,6 +109,7 @@ const ProjectDetailsForm = ({ flag }) => {
               value={values?.short_description}
               onChange={(e) => handleCustomChange('short_description', e.target.value)}
               required
+              errorMsg={errors.short_description}
             />
             <InputTextField
               id="odk_central_url"
@@ -117,6 +118,7 @@ const ProjectDetailsForm = ({ flag }) => {
               onChange={(e) => handleCustomChange('odk_central_url', e.target.value)}
               fieldType="text"
               required
+              errorMsg={errors.odk_central_url}
             />
             <InputTextField
               id="odk_central_user"
@@ -125,6 +127,7 @@ const ProjectDetailsForm = ({ flag }) => {
               onChange={(e) => handleCustomChange('odk_central_user', e.target.value)}
               fieldType="text"
               required
+              errorMsg={errors.odk_central_user}
             />
             <InputTextField
               id="odk_central_password"
@@ -133,6 +136,7 @@ const ProjectDetailsForm = ({ flag }) => {
               onChange={(e) => handleCustomChange('odk_central_password', e.target.value)}
               fieldType="password"
               required
+              errorMsg={errors.odk_central_password}
             />
             <div>
               <InputTextField
@@ -147,6 +151,7 @@ const ProjectDetailsForm = ({ flag }) => {
                 }}
                 fieldType="text"
                 required
+                errorMsg={errors.hashtag}
               />
               <p className="fmtm-text-sm fmtm-text-gray-500 fmtm-leading-4 fmtm-mt-2">
                 *Default comments added to uploaded changeset comment field. Users should also be encouraged to add text
@@ -163,14 +168,17 @@ const ProjectDetailsForm = ({ flag }) => {
               </div>
               <div className="fmtm-flex fmtm-items-end ">
                 <div className="fmtm-w-[25rem]">
-                  <Select value={values.value} onValueChange={(value) => handleCustomChange('organisation_id', value)}>
+                  <Select
+                    value={values?.organisation_id?.toString()}
+                    onValueChange={(value) => handleCustomChange('organisation_id', parseInt(value))}
+                  >
                     <SelectTrigger className="">
                       <SelectValue placeholder="Select an Organization" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
                         {organizationList?.map((org) => (
-                          <SelectItem key={org.value} value={org.value}>
+                          <SelectItem key={org.value} value={org?.value?.toString()}>
                             {org.label}
                           </SelectItem>
                         ))}
@@ -183,6 +191,9 @@ const ProjectDetailsForm = ({ flag }) => {
                   onClick={() => createPopup('Create Organization', 'createOrganization?popup=true')}
                 />
               </div>
+              {errors.organisation_id && (
+                <p className="fmtm-form-error fmtm-text-red-600 fmtm-text-sm fmtm-py-1">{errors.organisation_id}</p>
+              )}
             </div>
             <TextArea
               id="description"
@@ -191,19 +202,14 @@ const ProjectDetailsForm = ({ flag }) => {
               value={values?.description}
               onChange={(e) => handleCustomChange('description', e.target.value)}
               required
+              errorMsg={errors.description}
             />
           </div>
         </div>
         <div className="fmtm-w-fit fmtm-mx-auto fmtm-mt-10">
-          <Button
-            btnText="NEXT"
-            btnType="primary"
-            type="button"
-            onClick={() => toggleStepNext()}
-            className="fmtm-font-bold"
-          />
+          <Button btnText="NEXT" btnType="primary" type="submit" className="fmtm-font-bold" />
         </div>
-      </div>
+      </form>
     </div>
   );
 };
