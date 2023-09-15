@@ -3,15 +3,9 @@ import AssetModules from '../../shared/AssetModules.js';
 import { CommonActions } from '../../store/slices/CommonSlice';
 import CoreModules from '../../shared/CoreModules.js';
 import { useNavigate } from 'react-router-dom';
+import { IIndividualStep } from '../../types/ICommon.js';
 
 const StepSwitcher = ({ data, flag }) => {
-  interface IIndividualStep {
-    url: string;
-    step: number;
-    label: string;
-    name: string;
-  }
-
   const dispatch = CoreModules.useAppDispatch();
   const navigate = useNavigate();
   const currentStep = CoreModules.useAppSelector((state) => state.common.currentStepFormStep[flag]);

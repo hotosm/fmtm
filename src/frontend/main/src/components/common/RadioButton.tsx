@@ -1,18 +1,5 @@
 import React from 'react';
-
-interface IRadioButton {
-  name: string;
-  value: string;
-  label: string | number;
-  icon?: React.ReactNode;
-}
-
-interface RadioButtonProps {
-  topic?: string;
-  options: IRadioButton[];
-  direction: 'row' | 'column';
-  onChangeData: (value: string) => void;
-}
+import { RadioButtonProps } from '../../types/ICommon';
 
 const RadioButton: React.FC<RadioButtonProps> = ({ topic, options, direction, onChangeData }) => (
   <div>

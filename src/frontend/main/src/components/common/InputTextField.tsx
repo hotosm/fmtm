@@ -1,26 +1,8 @@
 /* eslint-disable react/no-unstable-nested-components */
 import React from 'react';
+import { IInputTextFieldProps } from '../../types/ICommon';
 // import PropTypes from 'prop-types';
 export const blockInvalidChar = (e) => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault();
-
-interface IInputTextFieldProps {
-  id?: string;
-  label: string;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
-  errorMsg?: string;
-  value: string;
-  placeholder?: string;
-  fieldType: string;
-  name?: string;
-  flag?: string;
-  classNames?: string;
-  maxRange?: string;
-  minRange?: string;
-  maxLength?: number;
-  disabled?: boolean;
-  required?: boolean;
-}
 
 function InputTextField({
   id,

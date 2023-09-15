@@ -1,15 +1,5 @@
 import React from 'react';
-
-interface IButton {
-  btnText: string;
-  btnType: 'primary' | 'secondary' | 'other';
-  type: 'submit' | 'button';
-  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
-  className?: string;
-  count?: number;
-  dataTip?: string;
-  icon?: React.ReactNode;
-}
+import { IButton } from '../../types/ICommon';
 
 const btnStyle = (btnType, className) => {
   switch (btnType) {

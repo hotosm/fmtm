@@ -1,20 +1,6 @@
 /* eslint-disable react/no-unstable-nested-components */
 import React from 'react';
-
-interface IInputTextFieldProps {
-  id?: string;
-  label: string;
-  rows: number;
-  onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  errorMsg?: string;
-  value: string;
-  placeholder?: string;
-  name?: string;
-  classNames?: string;
-  maxLength?: number;
-  disabled?: boolean;
-  required?: boolean;
-}
+import { ITextAreaFieldProps } from '../../types/ICommon';
 
 function TextArea({
   id,
@@ -29,7 +15,7 @@ function TextArea({
   maxLength,
   disabled,
   required,
-}: IInputTextFieldProps) {
+}: ITextAreaFieldProps) {
   return (
     <div className={`fmtm-custom-textField ${classNames}`}>
       <div className="fmtm-flex fmtm-gap-1">
