@@ -53,7 +53,7 @@ function TextArea({
           disabled={disabled}
         />
       </div>
-      {errorMsg && <p className="fmtm-form-error fmtm-text-red-600 fmtm-text-sm fmtm-py-1 fmtm-pl-4">{errorMsg}</p>}
+      {errorMsg && <p className="fmtm-form-error fmtm-text-red-600 fmtm-text-sm fmtm-py-1">{errorMsg}</p>}
     </div>
   );
 }
