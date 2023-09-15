@@ -6,6 +6,7 @@ import RadioButton from '../../components/common/RadioButton';
 import AssetModules from '../../shared/AssetModules.js';
 import DrawSvg from './DrawSvg';
 import { useNavigate } from 'react-router-dom';
+import { CreateProjectActions } from '../../store/slices/CreateProjectSlice';
 
 const uploadAreaOptions = [
   {
@@ -22,7 +23,7 @@ const uploadAreaOptions = [
   },
 ];
 
-const UploadArea = ({ flag }) => {
+const UploadArea = ({ flag, setGeojsonFile }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -35,8 +36,10 @@ const UploadArea = ({ flag }) => {
 
   const [selectedFileName, setSelectedFileName] = useState('');
 
-  const changeFileHandler = (event) => {
-    const { files } = event.target;
+  const changeFileHandler = (e) => {
+    const { files } = e.target;
+    dispatch(CreateProjectActions.SetDividedTaskGeojson(null));
+    setGeojsonFile(e.target.files[0]);
     setSelectedFileName(files[0].name);
   };
   return (
@@ -81,10 +84,21 @@ const UploadArea = ({ flag }) => {
                       <p className="fmtm-bg-primaryRed fmtm-px-4 fmtm-py-1 fmtm-text-white fmtm-rounded-md hover:fmtm-bg-red-700 fmtm-cursor-pointer">
                         Select a file
                       </p>
-                      <input type="file" className="fmtm-hidden" onChange={changeFileHandler} />
+                      <input
+                        type="file"
+                        className="fmtm-hidden"
+                        onChange={changeFileHandler}
+                        accept=".geojson, .json"
+                      />
                     </label>
                     <div className="fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-slate-100 fmtm-duration-300 fmtm-cursor-pointer">
-                      <AssetModules.ReplayIcon className="fmtm-text-gray-600" onClick={() => setSelectedFileName('')} />
+                      <AssetModules.ReplayIcon
+                        className="fmtm-text-gray-600"
+                        onClick={() => {
+                          setGeojsonFile(null);
+                          setSelectedFileName('');
+                        }}
+                      />
                     </div>
                   </div>
                   {selectedFileName && (

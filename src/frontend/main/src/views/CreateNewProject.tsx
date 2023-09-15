@@ -1,6 +1,6 @@
 import StepSwitcher from '../components/common/StepSwitcher';
 import CreateProjectHeader from '../components/createnewproject/CreateProjectHeader';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createProjectSteps } from '../constants/StepFormConstants';
 import CoreModules from '../shared/CoreModules.js';
 import ProjectDetailsForm from '../components/createnewproject/ProjectDetailsForm';
@@ -15,6 +15,8 @@ import { CommonActions } from '.././store/slices/CommonSlice';
 const CreateNewProject = () => {
   const location = useLocation();
   const dispatch = useDispatch();
+
+  const [geojsonFile, setGeojsonFile] = useState(null);
 
   useEffect(() => {
     switch (location.pathname) {
@@ -59,7 +61,7 @@ const CreateNewProject = () => {
       case '/create-project':
         return <ProjectDetailsForm flag="create_project" />;
       case '/upload-area':
-        return <UploadArea flag="create_project" />;
+        return <UploadArea flag="create_project" setGeojsonFile={setGeojsonFile} />;
       case '/data-extract':
         return <DataExtract flag="create_project" />;
       case '/define-tasks':
