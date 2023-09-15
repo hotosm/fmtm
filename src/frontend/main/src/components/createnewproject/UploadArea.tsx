@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { CommonActions } from '../../store/slices/CommonSlice';
 import Button from '../../components/common/Button';
 import { useDispatch } from 'react-redux';
@@ -23,11 +23,19 @@ const uploadAreaOptions = [
 
 const UploadArea = ({ flag }) => {
   const dispatch = useDispatch();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [uploadOption, setUloadOption] = useState('');
 
   const toggleStep = (step) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
+  };
+
+  const [selectedFileName, setSelectedFileName] = useState('');
+
+  const changeFileHandler = (event) => {
+    const { files } = event.target;
+    setSelectedFileName(files[0].name);
   };
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
@@ -67,17 +75,25 @@ const UploadArea = ({ flag }) => {
               {uploadOption === 'upload_file' && (
                 <div className="fmtm-mt-5 fmtm-pb-3">
                   <div className="fmtm-flex fmtm-items-center fmtm-gap-4">
-                    <Button
-                      btnText="Select a file"
-                      btnType="primary"
-                      type="button"
-                      onClick={() => console.log('select file')}
-                      className=""
-                    />
+                    <div
+                      role="button"
+                      onClick={() => fileInputRef?.current?.click()}
+                      className="fmtm-bg-primaryRed fmtm-px-4 fmtm-py-1 fmtm-text-white fmtm-rounded-md"
+                    >
+                      <label id="file-input">
+                        <p>Select a file</p>
+                        <input ref={fileInputRef} type="file" className="fmtm-hidden" onChange={changeFileHandler} />
+                      </label>
+                    </div>
                     <div className="fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-slate-100 fmtm-duration-300 fmtm-cursor-pointer">
-                      <AssetModules.ReplayIcon className="fmtm-text-gray-600" />
+                      <AssetModules.ReplayIcon className="fmtm-text-gray-600" onClick={() => setSelectedFileName('')} />
                     </div>
                   </div>
+                  {selectedFileName && (
+                    <div className="fmtm-mt-2">
+                      <p>{selectedFileName}</p>
+                    </div>
+                  )}
                   <p className="fmtm-text-gray-700 fmtm-mt-3">
                     *The supported file formats are zipped shapefile, geojson or kml files.
                   </p>
