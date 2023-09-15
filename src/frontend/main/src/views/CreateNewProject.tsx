@@ -17,6 +17,7 @@ const CreateNewProject = () => {
   const dispatch = useDispatch();
 
   const [geojsonFile, setGeojsonFile] = useState(null);
+  const [lineExtractFile, setLineExtractFile] = useState(null);
 
   useEffect(() => {
     switch (location.pathname) {
@@ -63,7 +64,7 @@ const CreateNewProject = () => {
       case '/upload-area':
         return <UploadArea flag="create_project" setGeojsonFile={setGeojsonFile} />;
       case '/data-extract':
-        return <DataExtract flag="create_project" />;
+        return <DataExtract flag="create_project" setLineExtractFile={setLineExtractFile} />;
       case '/define-tasks':
         return <SplitTasks flag="create_project" />;
       case '/select-form':

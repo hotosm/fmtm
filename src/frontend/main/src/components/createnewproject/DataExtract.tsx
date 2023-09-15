@@ -17,7 +17,7 @@ const osmFeatureTypeOptions = [
   { name: 'osm_feature_type', value: 'polygon', label: 'Polygon' },
 ];
 
-const DataExtract = ({ flag }) => {
+const DataExtract = ({ flag, setLineExtractFile }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -30,8 +30,9 @@ const DataExtract = ({ flag }) => {
 
   const [selectedFileName, setSelectedFileName] = useState('');
 
-  const changeFileHandler = (event) => {
-    const { files } = event.target;
+  const changeFileHandler = (e) => {
+    const { files } = e.target;
+    setLineExtractFile(e.target.files[0]);
     setSelectedFileName(files[0].name);
   };
   return (
