@@ -4,7 +4,7 @@ interface IButton {
   btnText: string;
   btnType: 'primary' | 'secondary' | 'other';
   type: 'submit' | 'button';
-  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   className?: string;
   count?: number;
   dataTip?: string;
