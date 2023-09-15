@@ -5,6 +5,7 @@ import { useDispatch } from 'react-redux';
 import RadioButton from '../../components/common/RadioButton';
 import AssetModules from '../../shared/AssetModules.js';
 import DrawSvg from './DrawSvg';
+import { useNavigate } from 'react-router-dom';
 
 const uploadAreaOptions = [
   {
@@ -23,12 +24,14 @@ const uploadAreaOptions = [
 
 const UploadArea = ({ flag }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [uploadOption, setUloadOption] = useState('');
 
-  const toggleStep = (step) => {
+  const toggleStep = (step, url) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
+    navigate(url);
   };
 
   const [selectedFileName, setSelectedFileName] = useState('');
@@ -108,14 +111,14 @@ const UploadArea = ({ flag }) => {
                 btnText="PREVIOUS"
                 btnType="secondary"
                 type="button"
-                onClick={() => toggleStep(1)}
+                onClick={() => toggleStep(1, '/create-project')}
                 className="fmtm-font-bold"
               />
               <Button
                 btnText="NEXT"
                 btnType="primary"
                 type="button"
-                onClick={() => toggleStep(3)}
+                onClick={() => toggleStep(3, '/data-extract')}
                 className="fmtm-font-bold"
               />
             </div>

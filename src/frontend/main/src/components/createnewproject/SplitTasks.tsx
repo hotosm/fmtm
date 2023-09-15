@@ -4,6 +4,7 @@ import RadioButton from '../../components/common/RadioButton';
 import AssetModules from '../../shared/AssetModules.js';
 import { useDispatch } from 'react-redux';
 import { CommonActions } from '../../store/slices/CommonSlice';
+import { useNavigate } from 'react-router-dom';
 
 const dataExtractOptions = [
   { name: 'define_tasks', value: 'divide_on_square', label: 'Divide on square' },
@@ -13,11 +14,13 @@ const dataExtractOptions = [
 
 const SplitTasks = ({ flag }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [defineOption, setDefineOption] = useState('');
 
-  const toggleStep = (step) => {
+  const toggleStep = (step, url) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
+    navigate(url);
   };
 
   return (
@@ -94,14 +97,14 @@ const SplitTasks = ({ flag }) => {
                 btnText="PREVIOUS"
                 btnType="secondary"
                 type="button"
-                onClick={() => toggleStep(3)}
+                onClick={() => toggleStep(3, '/data-extract')}
                 className="fmtm-font-bold"
               />
               <Button
                 btnText="NEXT"
                 btnType="primary"
                 type="button"
-                onClick={() => toggleStep(5)}
+                onClick={() => toggleStep(5, '/select-form')}
                 className="fmtm-font-bold"
               />
             </div>

@@ -10,17 +10,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/common/Select';
+import { useNavigate } from 'react-router-dom';
 
 const selectFormWaysList = ['Use Existing Form', 'Upload a Custom Form'];
 
 const SelectForm = ({ flag }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const selectFormWays = selectFormWaysList.map((item) => ({ label: item, value: item }));
 
-  const [defineOption, setDefineOption] = useState('');
-
-  const toggleStep = (step) => {
+  const toggleStep = (step, url) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
+    navigate(url);
   };
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
@@ -90,7 +91,7 @@ const SelectForm = ({ flag }) => {
                 btnText="PREVIOUS"
                 btnType="secondary"
                 type="button"
-                onClick={() => toggleStep(4)}
+                onClick={() => toggleStep(4, '/define-tasks')}
                 className="fmtm-font-bold"
               />
               <Button

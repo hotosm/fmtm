@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { CommonActions } from '../../store/slices/CommonSlice';
 import RadioButton from '../../components/common/RadioButton';
 import AssetModules from '../../shared/AssetModules.js';
+import { useNavigate } from 'react-router-dom';
 
 const dataExtractOptions = [
   { name: 'data_extract', value: 'osm_data_extract', label: 'Use OSM data extract' },
@@ -18,12 +19,14 @@ const osmFeatureTypeOptions = [
 
 const DataExtract = ({ flag }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [extractOption, setExtractOption] = useState({});
 
-  const toggleStep = (step) => {
+  const toggleStep = (step, url) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
+    navigate(url);
   };
 
   const [selectedFileName, setSelectedFileName] = useState('');
@@ -95,14 +98,14 @@ const DataExtract = ({ flag }) => {
                 btnText="PREVIOUS"
                 btnType="secondary"
                 type="button"
-                onClick={() => toggleStep(2)}
+                onClick={() => toggleStep(2, '/upload-area')}
                 className="fmtm-font-bold"
               />
               <Button
                 btnText="NEXT"
                 btnType="primary"
                 type="button"
-                onClick={() => toggleStep(4)}
+                onClick={() => toggleStep(4, '/define-tasks')}
                 className="fmtm-font-bold"
               />
             </div>

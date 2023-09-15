@@ -2,23 +2,23 @@ import React from 'react';
 import AssetModules from '../../shared/AssetModules.js';
 import { CommonActions } from '../../store/slices/CommonSlice';
 import CoreModules from '../../shared/CoreModules.js';
+import { useNavigate } from 'react-router-dom';
 
 const StepSwitcher = ({ data, flag }) => {
-  interface IStep {
-    step: number;
-  }
-
   interface IIndividualStep {
+    url: string;
     step: number;
     label: string;
     name: string;
   }
 
   const dispatch = CoreModules.useAppDispatch();
+  const navigate = useNavigate();
   const currentStep = CoreModules.useAppSelector((state) => state.common.currentStepFormStep[flag]);
 
-  const toggleStep = (step: IStep) => {
+  const toggleStep = (step: IIndividualStep) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step.step }));
+    navigate(step.url);
   };
   return (
     <div className="fmtm-flex fmtm-w-fit fmtm-mx-auto fmtm-py-5 fmtm-flex-wrap fmtm-gap-3 fmtm-justify-center">
