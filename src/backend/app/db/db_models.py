@@ -667,6 +667,8 @@ class DbProject(Base):
     extract_completed_count = Column(Integer, default=0)
 
     form_xls = Column(LargeBinary)           # XLSForm file if custom xls is uploaded
+    form_config_file = Column(LargeBinary)   # Yaml config file if custom xls is uploaded
+
     data_extract_type = Column(String)       # Type of data extract (Polygon or Centroid)
     task_split_type = Column(String)         # Type of split (Grid or Feature)
     hashtags = Column(ARRAY(String))         # Project hashtag
@@ -737,6 +739,7 @@ class BackgroundTasks(Base):
 
     id = Column(String, primary_key=True)
     name = Column(String)
+    project_id = Column(Integer, nullable=True)
     status = Column(Enum(BackgroundTaskStatus), nullable=False)
     message = Column(String)
 

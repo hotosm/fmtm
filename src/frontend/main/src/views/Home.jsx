@@ -5,13 +5,16 @@ import windowDimention from '../hooks/WindowDimension';
 import { HomeSummaryService } from '../api/HomeService';
 import enviroment from '../environment';
 import ProjectCardSkeleton from '../components/home/ProjectCardSkeleton';
-import SearchablesRow from '../components/home/HomePageFilters';
+import HomePageFilters from '../components/home/HomePageFilters';
 import CoreModules from '../shared/CoreModules';
+import AssetModules from '../shared/AssetModules';
+import ProjectListMap from '../components/home/ProjectListMap';
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const defaultTheme = CoreModules.useAppSelector((state) => state.theme.hotTheme);
+  const showMapStatus = CoreModules.useAppSelector((state) => state.home.showMapStatus);
   // const state:any = CoreModules.useAppSelector(state=>state.project.projectData)
   // console.log('state main :',state)
 
@@ -39,47 +42,97 @@ const Home = () => {
     setSearchQuery(query);
   };
 
-  const filteredProjectCards = stateHome.homeProjectSummary.filter((value) => value.title.includes(searchQuery));
+  const filteredProjectCards = stateHome.homeProjectSummary.filter((value) =>
+    value.title.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   return (
-    <div style={{ padding: 7, flex: 1 }}>
-      <SearchablesRow onSearch={handleSearch} />
-      {stateHome.homeProjectLoading == false ? (
-        filteredProjectCards.length > 0 ? (
-          <CoreModules.Grid px={1} spacing={1.5} container columns={{ xs: 1, sm: 3, md: 4, lg: 6, xl: 7 }}>
-            {filteredProjectCards.map((value, index) => (
-              <CoreModules.Grid item xs={1} sm={1} md={1} lg={1} xl={1} key={index}>
-                <ExploreProjectCard data={value} key={index} />
-              </CoreModules.Grid>
-            ))}
-          </CoreModules.Grid>
+    <div
+      style={{ padding: 7, flex: 1, background: '#F5F5F5' }}
+      className="fmtm-flex fmtm-flex-col fmtm-justify-between"
+    >
+      <div>
+        <HomePageFilters
+          onSearch={handleSearch}
+          filteredProjectCount={filteredProjectCards?.length}
+          totalProjectCount={stateHome.homeProjectSummary.length}
+        />
+        {stateHome.homeProjectLoading == false ? (
+          <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5">
+            <div className={`fmtm-w-full ${showMapStatus ? 'lg:fmtm-w-[50%]' : ''} `}>
+              {filteredProjectCards.length > 0 ? (
+                <div>
+                  <div
+                    className={`fmtm-px-[1rem] fmtm-grid fmtm-gap-5 ${
+                      !showMapStatus
+                        ? 'fmtm-grid-cols-1 sm:fmtm-grid-cols-2 md:fmtm-grid-cols-3 lg:fmtm-grid-cols-4 xl:fmtm-grid-cols-5 2xl:fmtm-grid-cols-6'
+                        : 'fmtm-grid-cols-1 sm:fmtm-grid-cols-2 md:fmtm-grid-cols-3 lg:fmtm-grid-cols-2 2xl:fmtm-grid-cols-3 lg:fmtm-h-[33rem] lg:fmtm-overflow-y-scroll lg:scrollbar fmtm-pr-1'
+                    }`}
+                  >
+                    {filteredProjectCards.map((value, index) => (
+                      <ExploreProjectCard data={value} key={index} />
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <CoreModules.Typography
+                  variant="h2"
+                  color="error"
+                  sx={{ p: 2, textAlign: 'center' }}
+                  className="fmtm-h-full fmtm-flex fmtm-justify-center fmtm-items-center"
+                >
+                  No projects found.
+                </CoreModules.Typography>
+              )}
+            </div>
+            {showMapStatus && <ProjectListMap />}
+          </div>
         ) : (
-          <CoreModules.Typography variant="h2" color="error" sx={{ p: 2, textAlign: 'center' }}>
-            No projects found.
-          </CoreModules.Typography>
-        )
-      ) : (
-        <CoreModules.Stack
-          sx={{
-            display: {
-              xs: 'flex',
-              sm: 'flex',
-              md: 'flex',
-              lg: 'flex',
-              xl: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'left',
-              width: '100%',
-            },
-          }}
-        >
-          <ProjectCardSkeleton defaultTheme={defaultTheme} cardsPerRow={cardsPerRow} />
-        </CoreModules.Stack>
-      )}
-      {/*pagingation*/}
-      {/* <CoreModules.Stack sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', marginTop: '1%' }}>
+          <CoreModules.Stack
+            sx={{
+              display: {
+                xs: 'flex',
+                sm: 'flex',
+                md: 'flex',
+                lg: 'flex',
+                xl: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'left',
+                width: '100%',
+              },
+            }}
+          >
+            <ProjectCardSkeleton defaultTheme={defaultTheme} cardsPerRow={cardsPerRow} />
+          </CoreModules.Stack>
+        )}
+        {/*pagingation*/}
+        {/* <CoreModules.Stack sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', marginTop: '1%' }}>
         <CoreModules.Pagination color="standard" count={10} variant="outlined" />
       </CoreModules.Stack> */}
+      </div>
+
+      {/* <div className="fmtm-flex fmtm-justify-end fmtm-mr-4 fmtm-py-1 fmtm-gap-3">
+        <div>1-5 of 10 </div>
+        <AssetModules.ArrowLeftIcon
+          sx={{
+            fontSize: 25,
+            color: '#555555',
+            cursor: 'pointer',
+          }}
+        />
+        <AssetModules.ArrowRightIcon
+          sx={{
+            fontSize: 25,
+            color: '#555555',
+            cursor: 'pointer',
+          }}
+        />
+        <div>Jump to</div>
+        <input
+          type="number"
+          className="fmtm-w-10 fmtm-rounded-md fmtm-border-[1px] fmtm-border-[#E7E2E2] fmtm-outline-none"
+        />
+      </div> */}
     </div>
   );
 };

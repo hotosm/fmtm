@@ -2,12 +2,17 @@ import React, { useState } from 'react';
 import windowDimention from '../../hooks/WindowDimension';
 import CoreModules from '../../shared/CoreModules';
 import AssetModules from '../../shared/AssetModules';
+import Switch from '../common/Switch';
+import { HomeActions } from '../../store/slices/HomeSlice';
 
 //Home Filter
-const HomePageFilters = ({ onSearch }) => {
+const HomePageFilters = ({ onSearch, filteredProjectCount, totalProjectCount }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const dispatch = CoreModules.useAppDispatch();
 
   const defaultTheme: any = CoreModules.useAppSelector((state) => state.theme.hotTheme);
+  const showMapStatus: boolean = CoreModules.useAppSelector((state) => state.home.showMapStatus);
+
   const { windowSize } = windowDimention();
   const searchableInnerStyle: any = {
     toolbar: {
@@ -98,23 +103,72 @@ const HomePageFilters = ({ onSearch }) => {
       {/* <======End======> */}
 
       {/* full Searchables container in md,lg,xl size */}
-      <CoreModules.Stack
-        sx={{ display: { xs: 'none', md: 'flex' } }}
-        direction={'row'}
-        spacing={2}
-        justifyContent="center"
-      >
-        {/* <CoreModules.Button
-                    variant="outlined"
-                    color="error"
-                    startIcon={<AssetModules.AutoAwesome />}
-                    style={searchableInnerStyle.outlineBtn}
-                >
-                    Filters
-                </CoreModules.Button> */}
-      </CoreModules.Stack>
+
       {/* Create New Project Button  */}
-      <CoreModules.Stack
+      <div className="fmtm-px-4 fmtm-py-3 ">
+        <div className="fmtm-flex fmtm-items-center fmtm-gap-4">
+          <h5 className="fmtm-text-2xl">PROJECTS</h5>
+          <CoreModules.Link
+            to={'/create-project'}
+            style={{
+              textDecoration: 'none',
+            }}
+          >
+            <button className="fmtm-bg-primaryRed fmtm-px-4 fmtm-py-2 fmtm-rounded fmtm-w-auto fmtm-text-white fmtm-uppercase">
+              + Create New Project{' '}
+            </button>
+          </CoreModules.Link>
+        </div>
+        <div className="fmtm-flex fmtm-justify-between">
+          <div className="fmtm-mt-3 fmtm-flex fmtm-items-center fmtm-gap-1">
+            <div className=" fmtm-border-[#E7E2E2] fmtm-border-2 fmtm-w-fit fmtm-flex fmtm-bg-white fmtm-p-2 fmtm-items-center">
+              <input
+                type="search"
+                className="fmtm-h-7 fmtm-p-2"
+                placeholder="Search Projects"
+                onChange={(e) => onSearch(e.target.value)}
+              ></input>
+              <i className="material-icons">search</i>
+            </div>
+            <AssetModules.FilterAltIcon
+              sx={{
+                fontSize: 25,
+                color: '#9B9999',
+                cursor: 'pointer',
+              }}
+            />
+          </div>
+          <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
+            <p>Show Map</p>
+            <Switch
+              checked={showMapStatus}
+              onCheckedChange={() => dispatch(HomeActions.SetShowMapStatus(!showMapStatus))}
+            />
+          </div>
+        </div>
+        <div className="fmtm-mt-6 fmtm-mb-1 fmtm-flex fmtm-items-center fmtm-justify-between">
+          <p className="fmtm-text-[#A8A6A6]">
+            showing {filteredProjectCount} of {totalProjectCount} projects
+          </p>
+          {/* <div className="fmtm-flex fmtm-gap-1">
+            <AssetModules.WindowIcon
+              sx={{
+                fontSize: 25,
+                color: '#555555',
+                cursor: 'pointer',
+              }}
+            />
+            <AssetModules.ListViewIcon
+              sx={{
+                fontSize: 25,
+                color: '#555555',
+                cursor: 'pointer',
+              }}
+            />
+          </div> */}
+        </div>
+      </div>
+      {/* <CoreModules.Stack
         sx={{
           display: 'flex',
           flexDirection: 'row',
@@ -124,29 +178,6 @@ const HomePageFilters = ({ onSearch }) => {
           p: 1,
         }}
       >
-        {/* <CoreModules.FormControl size="small" sx={{ m: 1, minWidth: 120, width: 250 }} margin="normal">
-          <CoreModules.InputLabel
-            id="demo-simple-select-helper-label"
-            sx={{
-              '&.Mui-focused': {
-                color: defaultTheme.palette.black,
-              },
-            }}
-          >
-            Projects
-          </CoreModules.InputLabel>
-          <CoreModules.Select
-            labelId="demo-simple-select-helper-label"
-            id="demo-simple-select-helper"
-            value="dropdown"
-            label="Age"
-          >
-            {organizationDataList?.map((org) => (
-              <CoreModules.MenuItem value={org.value}>{org.label}</CoreModules.MenuItem>
-            ))}
-          </CoreModules.Select>
-        </CoreModules.FormControl> */}
-
         <CoreModules.Link
           to={'/create-project'}
           style={{
@@ -190,8 +221,7 @@ const HomePageFilters = ({ onSearch }) => {
           />
         </CoreModules.Box>
 
-        {/* <======End======> */}
-      </CoreModules.Stack>
+      </CoreModules.Stack> */}
       {/* <======End======> */}
 
       {/* Search field in mobile size */}

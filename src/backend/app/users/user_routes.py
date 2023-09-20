@@ -33,27 +33,6 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=user_schemas.UserOut)
-def create_user(user: user_schemas.UserIn, db: Session = Depends(database.get_db)):
-    """
-    Create a new user in the database.
-
-    Args:
-        user (user_schemas.UserIn): The data for the new user.
-        db (Session, optional): The database session. Defaults to Depends(database.get_db).
-
-    Returns:
-        user_schemas.UserOut: The newly created user.
-
-    Raises:
-        HTTPException: If the username is already registered.
-    """
-    existing_user = user_crud.get_user_by_username(db, username=user.username)
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Username already registered")
-    return user_crud.create_user(db=db, user=user)
-
-
 @router.get("/", response_model=List[user_schemas.UserOut])
 def get_users(
     username: str = "",

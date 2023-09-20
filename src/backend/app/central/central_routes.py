@@ -15,11 +15,11 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
+from loguru import logger as log
 
 import json
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.logger import logger as logger
 from fastapi.responses import JSONResponse
 from sqlalchemy import (
     column,
@@ -82,7 +82,7 @@ async def create_appuser(
 # async def list_submissions(project_id: int):
 #     """List the submissions data from Central"""
 #     submissions = central_crud.list_submissions(project_id)
-#     logger.info("/central/list_submissions is Unimplemented!")
+#     log.info("/central/list_submissions is Unimplemented!")
 #     return {"data": submissions}
 
 
@@ -204,7 +204,7 @@ async def list_submissions(
 
         return submissions
     except Exception as e:
-        logger.error(e)
+        log.error(e)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
@@ -292,7 +292,7 @@ async def get_submission(
 
         return submissions
     except Exception as e:
-        logger.error(e)
+        log.error(e)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
@@ -302,7 +302,7 @@ async def get_submission(
 #         filespec: str
 # ):
 #     """Upload the XForm and data files to Central"""
-#     logger.warning("/central/upload is Unimplemented!")
+#     log.warning("/central/upload is Unimplemented!")
 #     return {"message": "Hello World from /central/upload"}
 
 
@@ -316,5 +316,5 @@ async def get_submission(
 #     """
 #     # FileResponse("README.md")
 #     # xxx = central_crud.does_central_exist()
-#     logger.warning("/central/download is Unimplemented!")
+#     log.warning("/central/download is Unimplemented!")
 #     return {"message": "Hello World from /central/download"}

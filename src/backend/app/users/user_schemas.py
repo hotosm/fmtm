@@ -28,21 +28,11 @@ class UserBase(BaseModel):
     username: str
 
 
-class UserIn(UserBase):
-    """
-    A model for user data when creating a new user.
-    """
-    password: str
-
-
 class User(UserBase):
     """
     A model for user data in the database.
     """
     id: int
-
-    class Config:
-        orm_mode = True
 
 
 class UserOut(UserBase):
@@ -51,16 +41,6 @@ class UserOut(UserBase):
     """
     id: int
     role: str
-
-    class Config:
-        orm_mode = True
-
-
-class LoginResult(BaseModel):
-    """
-    A model for the result of a login attempt.
-    """
-    user: UserOut
 
 
 class UserRole(BaseModel):

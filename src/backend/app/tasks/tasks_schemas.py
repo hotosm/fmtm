@@ -56,9 +56,6 @@ class TaskHistoryBase(BaseModel):
     action_text: str
     action_date: datetime
 
-    class Config:
-        orm_mode = True
-
 
 class TaskHistoryOut(TaskHistoryBase):
     """
@@ -88,10 +85,6 @@ class TaskBasicInfo(BaseModel):
     locked_by_username: str = None
     task_history: List[TaskHistoryBase]
 
-    class Config:
-        orm_mode = True
-
-
 
 class TaskBase(BaseModel):
     """
@@ -120,9 +113,6 @@ class TaskBase(BaseModel):
     locked_by_uid: int = None
     locked_by_username: str = None
     task_history: List[TaskHistoryBase]
-
-    class Config:
-        orm_mode = True
 
 
 class Task(TaskBase):

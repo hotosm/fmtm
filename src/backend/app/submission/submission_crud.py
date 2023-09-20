@@ -15,11 +15,12 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
+from loguru import logger as log
 
+import asyncio
 import os
 import zipfile
 import concurrent.futures
-import logging
 import threading
 import csv
 import io
@@ -27,7 +28,6 @@ import os
 import zipfile
 import json
 from datetime import datetime
-import logging
 from fastapi import HTTPException, Response
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
@@ -37,7 +37,6 @@ from ..tasks import tasks_crud
 from ..projects import project_crud, project_schemas
 from osm_fieldwork.json2osm import JsonDump
 from pathlib import Path
-from fastapi.logger import logger as logger
 
 
 def get_submission_of_project(db: Session, project_id: int, task_id: int = None):
@@ -174,6 +173,42 @@ def create_zip_file(files, output_file_path):
     return output_file_path
 
 
+# async def convert_json_to_osm_xml(file_path):
+
+#     jsonin = JsonDump()
+#     infile = Path(file_path)
+
+#     base = os.path.splitext(infile.name)[0]
+
+#     osmoutfile = f"/tmp/{base}.osm"
+#     jsonin.createOSM(osmoutfile)
+
+#     data = jsonin.parse(infile.as_posix())
+
+#     for entry in data:
+#         feature = jsonin.createEntry(entry)
+#         # Sometimes bad entries, usually from debugging XForm design, sneak in
+#         if len(feature) == 0:
+#             continue
+#         if len(feature) > 0:
+#             if "lat" not in feature["attrs"]:
+#                 if 'geometry' in feature['tags']:
+#                     if type(feature['tags']['geometry']) == str:
+#                         coords = list(feature['tags']['geometry'])
+#                     else:
+#                         coords = feature['tags']['geometry']['coordinates']
+#                     feature['attrs'] = {'lat': coords[1], 'lon': coords[0]}
+#                 else:
+#                     log.warning("Bad record! %r" % feature)
+#                     continue
+#             jsonin.writeOSM(feature)
+
+#     jsonin.finishOSM()
+#     log.info("Wrote OSM XML file: %r" % osmoutfile)
+#     return osmoutfile
+
+
+
 async def convert_json_to_osm_xml(file_path):
     """
     Converts a JSON file to an OSM XML file.
@@ -185,6 +220,7 @@ async def convert_json_to_osm_xml(file_path):
         str: The path to the created OSM XML file.
     """
 
+    # TODO refactor to simply use json2osm(file_path)
     jsonin = JsonDump()
     infile = Path(file_path)
 
@@ -195,11 +231,10 @@ async def convert_json_to_osm_xml(file_path):
 
     data = jsonin.parse(infile.as_posix())
 
-    for entry in data:
+    async def process_entry_async(entry):
         feature = jsonin.createEntry(entry)
-        # Sometimes bad entries, usually from debugging XForm design, sneak in
         if len(feature) == 0:
-            continue
+            return None
         if len(feature) > 0:
             if "lat" not in feature["attrs"]:
                 if 'geometry' in feature['tags']:
@@ -209,12 +244,22 @@ async def convert_json_to_osm_xml(file_path):
                         coords = feature['tags']['geometry']['coordinates']
                     feature['attrs'] = {'lat': coords[1], 'lon': coords[0]}
                 else:
-                    logger.warning("Bad record! %r" % feature)
-                    continue
-            jsonin.writeOSM(feature)
+                    log.warning("Bad record! %r" % feature)
+                    return None
+            return feature
 
-    jsonin.finishOSM()
-    logger.info("Wrote OSM XML file: %r" % osmoutfile)
+    async def write_osm_async(features):
+        for feature in features:
+            if feature:
+                jsonin.writeOSM(feature)
+        jsonin.finishOSM()
+        log.info("Wrote OSM XML file: %r" % osmoutfile)
+        return osmoutfile
+
+    data_processing_tasks = [process_entry_async(entry) for entry in data]
+    processed_features = await asyncio.gather(*data_processing_tasks)
+    await write_osm_async(processed_features)
+
     return osmoutfile
 
 
@@ -229,6 +274,7 @@ async def convert_json_to_osm(file_path):
         Tuple[str, str]: A tuple containing the paths to the created OSM XML and GeoJSON files.
     """
 
+    # TODO refactor to simply use json2osm(file_path)
     jsonin = JsonDump()
     infile = Path(file_path)
 
@@ -258,15 +304,15 @@ async def convert_json_to_osm(file_path):
                         # del feature['tags']['geometry']
                     feature['attrs'] = {'lat': coords[1], 'lon': coords[0]}
                 else:
-                    logger.warning("Bad record! %r" % feature)
+                    log.warning("Bad record! %r" % feature)
                     continue
             jsonin.writeOSM(feature)
             jsonin.writeGeoJson(feature)
 
     jsonin.finishOSM()
     jsonin.finishGeoJson()
-    logger.info("Wrote OSM XML file: %r" % osmoutfile)
-    logger.info("Wrote GeoJson file: %r" % jsonoutfile)
+    log.info("Wrote OSM XML file: %r" % osmoutfile)
+    log.info("Wrote GeoJson file: %r" % jsonoutfile)
     return osmoutfile, jsonoutfile
 
 
@@ -420,17 +466,7 @@ def download_submission_for_project(db, project_id):
     xform = get_odk_form(odk_credentials)
 
     def download_submission_for_task(task_id):
-        """
-        Downloads submission data for a task.
-
-        Args:
-            task_id (int): The ID of the task.
-
-        Returns:
-            str: The path to the downloaded ZIP file containing the submission data.
-        """
-
-        logging.info(f"Thread {threading.current_thread().name} - Downloading submission for Task ID {task_id}")
+        log.info(f"Thread {threading.current_thread().name} - Downloading submission for Task ID {task_id}")
         xml_form_id = f"{project_name}_{form_category}_{task_id}".split("_")[2]
         file = xform.getSubmissionMedia(odkid, xml_form_id)
         file_path = f"{project_name}_{form_category}_submission_{task_id}.zip"
@@ -439,23 +475,12 @@ def download_submission_for_project(db, project_id):
         return file_path
 
     def extract_files(zip_file_path):
-        """
-        Extracts files from a ZIP file.
-
-        Args:
-            zip_file_path (str): The path to the ZIP file to extract files from.
-
-        Returns:
-            List[str]: A list of paths to the extracted files.
-        """
-        logging.info(f"Thread {threading.current_thread().name} - Extracting files from {zip_file_path}")
+        log.info(f"Thread {threading.current_thread().name} - Extracting files from {zip_file_path}")
         with zipfile.ZipFile(zip_file_path, "r") as zip_file:
             extract_dir = os.path.splitext(zip_file_path)[0]
             zip_file.extractall(extract_dir)
             return [os.path.join(extract_dir, f) for f in zip_file.namelist()]
 
-    # Set up logging configuration
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(threadName)s] %(message)s")
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         task_list = [x.id for x in project_tasks]
@@ -469,9 +494,9 @@ def download_submission_for_project(db, project_id):
             try:
                 file_path = future.result()
                 files.append(file_path)
-                logging.info(f"Thread {threading.current_thread().name} - Task {task_id} - Download completed.")
+                log.info(f"Thread {threading.current_thread().name} - Task {task_id} - Download completed.")
             except Exception as e:
-                logging.error(f"Thread {threading.current_thread().name} - Error occurred while downloading submission for task {task_id}: {e}")
+                log.error(f"Thread {threading.current_thread().name} - Error occurred while downloading submission for task {task_id}: {e}")
 
         # Extract files using thread pool
         extracted_files = []
@@ -480,9 +505,9 @@ def download_submission_for_project(db, project_id):
             file_path = futures[future]
             try:
                 extracted_files.extend(future.result())
-                logging.info(f"Thread {threading.current_thread().name} - Extracted files from {file_path}")
+                log.info(f"Thread {threading.current_thread().name} - Extracted files from {file_path}")
             except Exception as e:
-                logging.error(f"Thread {threading.current_thread().name} - Error occurred while extracting files from {file_path}: {e}")
+                log.error(f"Thread {threading.current_thread().name} - Error occurred while extracting files from {file_path}: {e}")
 
     # Create a new ZIP file for the extracted files
     final_zip_file_path = f"{project_name}_{form_category}_submissions_final.zip"
@@ -493,17 +518,7 @@ def download_submission_for_project(db, project_id):
     return final_zip_file_path
 
 
-def get_all_submissions(db: Session, project_id):
-    """
-    Gets all submissions for a project.
-
-    Args:
-        db (Session): A database session.
-        project_id (int): The ID of the project.
-
-    Returns:
-        Any: The submission data for the specified project.
-    """
+async def get_all_submissions(db: Session, project_id):
     project_info = project_crud.get_project(db, project_id)
 
     # ODK Credentials

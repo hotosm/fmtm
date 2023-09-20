@@ -1,0 +1,83 @@
+name: pytest
+
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        required: true
+        type: string
+      environment:
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment || 'test' }}
+    env:
+      ODK_CENTRAL_PASSWD: ${{ secrets.ODK_CENTRAL_PASSWD }}
+      OSM_CLIENT_ID: ${{ secrets.OSM_CLIENT_ID }}
+      OSM_CLIENT_SECRET: ${{ secrets.OSM_CLIENT_SECRET }}
+      OSM_SECRET_KEY: ${{ secrets.OSM_SECRET_KEY }}
+
+    container:
+      image: ghcr.io/hotosm/fmtm/backend:${{ inputs.image_tag }}
+      env:
+        ODK_CENTRAL_URL: ${{ vars.ODK_CENTRAL_URL }}
+        ODK_CENTRAL_USER: ${{ vars.ODK_CENTRAL_USER }}
+        ODK_CENTRAL_PASSWD: ${{ env.ODK_CENTRAL_PASSWD }}
+        OSM_CLIENT_ID: ${{ env.OSM_CLIENT_ID }}
+        OSM_CLIENT_SECRET: ${{ env.OSM_CLIENT_SECRET }}
+        OSM_SECRET_KEY: ${{ env.OSM_SECRET_KEY }}
+        FRONTEND_MAIN_URL: ${{ vars.FRONTEND_MAIN_URL }}
+      options: --user root
+
+    services:
+      # Start backend database
+      fmtm-db:
+        image: "postgis/postgis:14-3.3-alpine"
+        env:
+          POSTGRES_PASSWORD: fmtm
+          POSTGRES_DB: fmtm
+          POSTGRES_USER: fmtm
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      # Start ODK Central database
+      central-db:
+        image: "postgis/postgis:14-3.3-alpine"
+        env:
+          POSTGRES_PASSWORD: odk
+          POSTGRES_DB: odk
+          POSTGRES_USER: odk
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      # Start ODK Central
+      central:
+        image: "ghcr.io/hotosm/fmtm/odkcentral:v2023.2.1"
+        env:
+          SYSADMIN_EMAIL: ${{ vars.ODK_CENTRAL_USER }}
+          SYSADMIN_PASSWD: ${{ secrets.ODK_CENTRAL_PASSWD }}
+          DB_HOST: central-db
+
+      # Start proxy to access ODK Central
+      central-proxy:
+        image: "ghcr.io/hotosm/fmtm/odkcentral-proxy:latest"
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run pytest as appuser
+        run: |
+          cd src/backend
+          gosu appuser pytest

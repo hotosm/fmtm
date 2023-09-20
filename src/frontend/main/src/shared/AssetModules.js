@@ -29,6 +29,15 @@ import {
   ExitToApp as ExitToAppIcon,
   SettingsSuggest as SettingsSuggestIcon,
   ArrowBack as ArrowBackIcon,
+  Task as TaskIcon,
+  UploadFile as SubmissionIcon,
+  PlaylistAddCheck as FeatureIcon,
+  Bolt as BoltIcon,
+  Window as WindowIcon,
+  FormatListBulleted as ListViewIcon,
+  FilterAlt as FilterAltIcon,
+  ArrowLeft as ArrowLeftIcon,
+  ArrowRight as ArrowRightIcon,
 } from '@mui/icons-material';
 import LockPng from '../assets/images/lock.png';
 import RedLockPng from '../assets/images/red-lock.png';
@@ -68,4 +77,13 @@ export default {
   ArrowBackIcon,
   LockPng,
   RedLockPng,
+  TaskIcon,
+  SubmissionIcon,
+  FeatureIcon,
+  BoltIcon,
+  WindowIcon,
+  ListViewIcon,
+  FilterAltIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
 };

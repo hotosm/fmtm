@@ -165,34 +165,12 @@ do
     fi
 done
 
-# FRONTEND MAP
-echo
-echo "Enter the FMTM Map Frontend URL."
-echo "If you have a valid domain name, enter it here."
-while true
-do
-    read -e -p "Enter d for default 127.0.0.1:8080, else your IP/domain: " frontend_map_url
-    
-    if [ "$frontend_map_url" != "d" ]
-    then
-        echo "Using $FRONTEND_MAP_URL"
-        break
-    elif [ "$api_url" = "" ]
-    then
-        echo "Invalid input!"
-    else 
-        echo "Using $FRONTEND_MAP_URL"
-        FRONTEND_MAP_URL="frontend_map_url"
-        break
-    fi
-done
-
 echo
 echo "Please enter your OSM authentication details"
 read -e -p "Client ID: " OSM_CLIENT_ID
 read -e -p "Client Secret: " OSM_CLIENT_SECRET
 read -e -p "Secret Key: " OSM_SECRET_KEY
-echo "Login redirect URI (default http://127.0.0.1:8000/auth/callback/): "
+echo "Login redirect URI (default http://127.0.0.1:8080/osmauth/): "
 while true
 do
     read -e -p "Enter a URI, or nothing for default: " auth_redirect_uri
@@ -212,6 +190,8 @@ echo
 echo "Generating dotenv file ${DOTENV_NAME}"
 
 echo "### ODK Central ###"
+# FIXME set central version via command line
+echo "ODK_CENTRAL_VERSION=v2023.2.1" >> "${DOTENV_NAME}"
 echo "ODK_CENTRAL_URL=${ODK_CENTRAL_URL}" >> "${DOTENV_NAME}"
 echo "ODK_CENTRAL_USER=${ODK_CENTRAL_USER}" >> "${DOTENV_NAME}"
 echo "ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}" >> "${DOTENV_NAME}"
@@ -224,7 +204,6 @@ echo "### FMTM ###"
 echo "URL_SCHEME=${URL_SCHEME}" >> "${DOTENV_NAME}"
 echo "API_URL=${API_URL}" >> "${DOTENV_NAME}"
 echo "FRONTEND_MAIN_URL=${FRONTEND_MAIN_URL}" >> "${DOTENV_NAME}"
-echo "FRONTEND_MAP_URL=${FRONTEND_MAP_URL}" >> "${DOTENV_NAME}"
 
 echo "### OSM ###"
 echo "OSM_CLIENT_ID=${OSM_CLIENT_ID}" >> "${DOTENV_NAME}"

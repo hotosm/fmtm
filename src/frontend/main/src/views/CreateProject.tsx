@@ -16,6 +16,8 @@ const CreateProject: React.FC = () => {
   const [inputValue, setInputValue] = useState(null);
   const [dataExtractFile, setDataExtractFile] = useState(null);
   const [dataExtractFileValue, setDataExtractFileValue] = useState(null);
+  const [lineExtractFile, setLineExtractFile] = useState(null);
+  const [lineExtractFileValue, setLineExtractFileValue] = useState(null);
   const dispatch = CoreModules.useAppDispatch();
   const location = useLocation();
   const boxSX = {
@@ -210,7 +212,7 @@ const CreateProject: React.FC = () => {
           />
         ) : null}
         {location.pathname === '/define-tasks' ? (
-          <DefineTasks geojsonFile={geojsonFile} setGeojsonFile={setGeojsonFile} />
+          <DefineTasks geojsonFile={geojsonFile} setGeojsonFile={setGeojsonFile} dataExtractFile={dataExtractFile} />
         ) : null}
         {location.pathname === '/data-extract' ? (
           <DataExtract
@@ -220,6 +222,10 @@ const CreateProject: React.FC = () => {
             setDataExtractFile={setDataExtractFile}
             dataExtractFileValue={dataExtractFileValue}
             setDataExtractFileValue={setDataExtractFileValue}
+            lineExtractFile={lineExtractFile}
+            setLineExtractFile={setLineExtractFile}
+            lineExtractFileValue={lineExtractFileValue}
+            setLineExtractFileValue={setLineExtractFileValue}
           />
         ) : null}
         {location.pathname === '/select-form' ? (
@@ -230,6 +236,7 @@ const CreateProject: React.FC = () => {
             customFormInputValue={customFormInputValue}
             setCustomFormInputValue={setCustomFormInputValue}
             dataExtractFile={dataExtractFile}
+            lineExtractFile={lineExtractFile}
           />
         ) : null}
         {/* {location.pathname === "/basemap-selection" ? <BasemapSelection /> : null} */}

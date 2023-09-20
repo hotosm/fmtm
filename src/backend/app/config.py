@@ -15,16 +15,13 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
-
 """Config file for Pydantic and FastAPI, using environment variables."""
 
-import logging
 from functools import lru_cache
 from typing import Any, Optional, Union
 
-from pydantic import AnyUrl, BaseSettings, PostgresDsn, validator
-
-logger = logging.getLogger(__name__)
+from pydantic import Extra, FieldValidationInfo, PostgresDsn, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -34,16 +31,18 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     LOG_LEVEL: str = "DEBUG"
 
-    URL_SCHEME: Optional[str]
+    URL_SCHEME: Optional[str] = "http"
     FRONTEND_MAIN_URL: Optional[str]
-    FRONTEND_MAP_URL: Optional[str]
 
-    EXTRA_CORS_ORIGINS: Optional[Union[str, list[AnyUrl]]]
+    EXTRA_CORS_ORIGINS: Optional[Union[str, list[str]]] = []
 
-    @validator("EXTRA_CORS_ORIGINS", pre=True)
+    @field_validator("EXTRA_CORS_ORIGINS", mode="before")
+    @classmethod
     def assemble_cors_origins(
-        cls, val: Union[str, list[AnyUrl]], values: dict
-    ) -> list[str]:
+        cls,
+        val: Union[str, list[str]],
+        info: FieldValidationInfo,
+    ) -> Union[list[str], str]:
         """Build and validate CORS origins list.
 
         By default, the provided frontend URLs are included in the origins list.
@@ -52,13 +51,11 @@ class Settings(BaseSettings):
         default_origins = []
 
         # Build default origins from env vars
-        url_scheme = values.get("URL_SCHEME")
-        main_url = values.get("FRONTEND_MAIN_URL")
-        map_url = values.get("FRONTEND_MAP_URL")
-        if url_scheme and main_url and map_url:
+        url_scheme = info.data.get("URL_SCHEME")
+        main_url = info.data.get("FRONTEND_MAIN_URL")
+        if url_scheme and main_url:
             default_origins = [
                 f"{url_scheme}://{main_url}",
-                f"{url_scheme}://{map_url}",
             ]
 
         if val is None:
@@ -81,53 +78,49 @@ class Settings(BaseSettings):
     FMTM_DB_PASSWORD: Optional[str] = "fmtm"
     FMTM_DB_NAME: Optional[str] = "fmtm"
 
-    FMTM_DB_URL: Optional[PostgresDsn]
+    FMTM_DB_URL: Optional[PostgresDsn] = None
 
-    @validator("FMTM_DB_URL", pre=True)
-    def assemble_db_connection(cls, v: str, values: dict[str, Any]) -> Any:
+    @field_validator("FMTM_DB_URL", mode="after")
+    @classmethod
+    def assemble_db_connection(cls, v: Optional[str], info: FieldValidationInfo) -> Any:
         """Build Postgres connection from environment variables."""
         if isinstance(v, str):
             return v
-        if not (user := values.get("FMTM_DB_USER")):
-            raise ValueError("FMTM_DB_USER is not present in the environment")
-        if not (password := values.get("FMTM_DB_PASSWORD")):
-            raise ValueError("FMTM_DB_PASSWORD is not present in the environment")
-        if not (host := values.get("FMTM_DB_HOST")):
-            raise ValueError("FMTM_DB_HOST is not present in the environment")
-        return PostgresDsn.build(
+        pg_url = PostgresDsn.build(
             scheme="postgresql",
-            user=user,
-            password=password,
-            host=host,
-            path=f"/{values.get('FMTM_DB_NAME') or ''}",
+            username=info.data.get("FMTM_DB_USER"),
+            password=info.data.get("FMTM_DB_PASSWORD"),
+            host=info.data.get("FMTM_DB_HOST"),
+            path=info.data.get("FMTM_DB_NAME", ""),
         )
+        # Convert Url type to string
+        return str(pg_url)
 
-    ODK_CENTRAL_URL: Optional[AnyUrl]
-    ODK_CENTRAL_USER: Optional[str]
-    ODK_CENTRAL_PASSWD: Optional[str]
+    ODK_CENTRAL_URL: Optional[str] = ""
+    ODK_CENTRAL_USER: Optional[str] = ""
+    ODK_CENTRAL_PASSWD: Optional[str] = ""
 
     OSM_CLIENT_ID: str
     OSM_CLIENT_SECRET: str
-    OSM_URL: AnyUrl
-    OSM_SCOPE: str
-    OSM_LOGIN_REDIRECT_URI: AnyUrl
     OSM_SECRET_KEY: str
-    OAUTHLIB_INSECURE_TRANSPORT: Optional[str] = 1
+    OSM_URL: str = "https://www.openstreetmap.org"
+    OSM_SCOPE: str = "read_prefs"
+    OSM_LOGIN_REDIRECT_URI: str = "http://127.0.0.1:8080/osmauth/"
 
-    SENTRY_DSN: Optional[str]
+    UNDERPASS_API_URL: str = "https://raw-data-api0.hotosm.org/v1"
+    SENTRY_DSN: Optional[str] = None
 
-    class Config:
-        """Pydantic settings config."""
-
-        case_sensitive = True
-        env_file = ".env"
+    model_config = SettingsConfigDict(
+        case_sensitive=True, env_file=".env", extra=Extra.allow
+    )
 
 
 @lru_cache
 def get_settings():
     """Cache settings when accessed throughout app."""
     _settings = Settings()
-    # logger.info(f"Loaded settings: {_settings.dict()}")
+    if _settings.DEBUG:
+        print(f"Loaded settings: {_settings.dict()}")
     return _settings
 
 

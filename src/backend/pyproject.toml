@@ -24,36 +24,31 @@ authors = [
     {name = "HOTOSM", email = "sysadmin@hotosm.org"},
 ]
 dependencies = [
-    "fastapi==0.85.1",
-    "pydantic==1.10.2",
-    "geojson-pydantic==0.4.3",
-    "uvicorn==0.19.0",
-    "fastapi-sqlalchemy==0.2.1",
-    "psycopg2==2.9.3",
-    "geoalchemy2==0.12.5",
-    "alembic==1.8.1",
-    "sqlmodel==0.0.8",
-    "geojson==2.5.0",
+    "uvicorn==0.23.2",
+    "fastapi==0.103.0",
+    "pydantic>=2.3.0",
+    "pydantic-settings>=2.0.3",
+    "geojson-pydantic==1.0.0",
+    "python-multipart>=0.0.6",
+    "psycopg2==2.9.7",
+    "geoalchemy2==0.14.1",
+    "geojson==3.0.1",
     "shapely==2.0.1",
-    "OSMPythonTools==0.3.5",
-    "osm-login-python==0.0.4",
-    "pyxform==1.12.0",
+    "pyxform==1.12.1",
     "qrcode==7.4.2",
-    "pyxform==1.12.0",
     "xmltodict==0.13.0",
-    "python-multipart==0.0.5",
-    "python-json-logger==2.0.6",
-    "SQLAlchemy-Utils==0.40.0",
-    "bcrypt==4.0.1",
+    "SQLAlchemy-Utils==0.41.1",
     "segno==1.5.2",
-    "osm-fieldwork==0.3.5",
-    "sentry-sdk==1.9.6",
+    "osm-fieldwork==0.3.6rc1",
+    "sentry-sdk==1.30.0",
     "py-cpuinfo==9.0.0",
-    "gdal==3.6.2",
+    "loguru>=0.7.0",
+    "osm-login-python @ git+https://github.com/spwoodcock/osm-login-python@build/pep631-support",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.12"
 readme = "../../README.md"
 license = {text = "GPL-3.0-only"}
+
 [build-system]
 requires = ["pdm-pep517>=1.0.0"]
 build-backend = "pdm.pep517.api"
@@ -63,15 +58,32 @@ source-includes = ["../../CHANGELOG.md", "../../LICENSE", "../../README.md"]
 version = {from = "app/__version__.py"}
 [tool.pdm.dev-dependencies]
 dev = [
-    "ipdb==0.13.11",
-    "debugpy==1.6.6",
-    "pytest==7.2.2",
-    "httpx==0.23.3",
-    "commitizen>=3.2.2",
+    "pre-commit>=3.3.3",
+    "black>=23.7.0",
+    "commitizen>=3.6.0",
+]
+test = [
+    "pytest>=7.2.2",
+    "httpx>=0.23.3",
+]
+debug = [
+    "ipdb>=0.13.13",
+    "debugpy>=1.6.7.post1",
+]
+docs = [
+    "mkdocs>=1.5.2",
+    "mkdocs-material>=9.2.6",
+    "mkdocstrings-python>=1.6.0",
+    "mkdocs-exclude>=1.0.2",
+    "python-dotenv>=1.0.0",
 ]
 
+[tool.black]
+line-length = 88
+target-versions = ["py310", "py311"]
+
 [tool.ruff]
-target-version = "py39"
+target-version = "py310"
 line-length = 88
 select = ["I", "E", "W", "D", "B", "F", "N", "Q"]
 ignore = ["N805", "B008"]

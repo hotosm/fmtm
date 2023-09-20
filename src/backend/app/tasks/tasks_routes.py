@@ -29,6 +29,7 @@ from ..users import user_schemas
 from . import tasks_crud, tasks_schemas
 from ..projects import project_crud, project_schemas
 from ..central import central_crud
+from sqlalchemy.sql import text
 
 
 router = APIRouter(
@@ -102,6 +103,33 @@ async def read_tasks(
         return tasks
     else:
         raise HTTPException(status_code=404, detail="Tasks not found")
+
+
+@router.get("/point_on_surface")
+async def get_point_on_surface(
+    project_id:int,
+    db: Session = Depends(database.get_db)
+    ):
+
+    """
+    Get a point on the surface of the geometry for each task of the project.
+
+    Parameters:
+        project_id (int): The ID of the project.
+
+    Returns:
+        List[Tuple[int, str]]: A list of tuples containing the task ID and the centroid as a string.
+    """
+
+    query = text(f"""
+            SELECT id, ARRAY_AGG(ARRAY[ST_X(ST_PointOnSurface(outline)), ST_Y(ST_PointOnSurface(outline))]) AS point
+            FROM tasks
+            WHERE project_id = {project_id}
+            GROUP BY id; """)
+
+    result = db.execute(query)
+    result_dict_list = [{"id": row[0], "point": row[1]} for row in result.fetchall()]
+    return result_dict_list
 
 
 @router.post("/near_me", response_model=tasks_schemas.TaskOut)
@@ -238,8 +266,6 @@ async def task_features_count(
         dict or list or str or NoneType or Response or JSONResponse or HTMLResponse or RedirectResponse or StreamingResponse or FileResponse or UJSONResponse or ORJSONResponse or MsgpackResponse: Feature count for tasks in the project.
     """
 
-    task_list = tasks_crud.get_task_lists(db, project_id)
-
     # Get the project object.
     project = project_crud.get_project(db, project_id)
 
@@ -250,37 +276,22 @@ async def task_features_count(
         odk_central_password = project.odk_central_password,
         )
 
-    def process_task(task):
-        """
-        Process a task to get its feature and submission counts.
+    odk_details = central_crud.list_odk_xforms(project.odkid, odk_credentials, True)
 
-        Args:
-            task (int): Task ID.
-
-        Returns:
-            dict: Dictionary containing the task ID, feature count, and submission count.
-        """
-        feature_count_query = f"""
-            select count(*) from features where project_id = {project_id} and task_id = {task}
-        """
+    # Assemble the final data list
+    data = []
+    for x in odk_details:
+        feature_count_query = text(f"""
+            select count(*) from features where project_id = {project_id} and task_id = {x['xmlFormId']}
+        """)
         result = db.execute(feature_count_query)
         feature_count = result.fetchone()
 
-        submission_list = central_crud.list_task_submissions(
-            project.odkid, task, odk_credentials)
+        data.append({
+            'task_id': x['xmlFormId'],
+            'submission_count': x['submissions'],
+            'last_submission': x['lastSubmission'],
+            'feature_count': feature_count[0]
+        })
 
-        # form_details = central_crud.get_form_full_details(project.odkid, task, odk_credentials)
-        return {
-            "task_id": task,
-            "feature_count": feature_count["count"],
-            # 'submission_count': form_details['submissions'],
-            "submission_count": len(submission_list)
-            if isinstance(submission_list, list)
-            else 0,
-        }
-
-    loop = asyncio.get_event_loop()
-    tasks = [loop.run_in_executor(None, process_task, task) for task in task_list]
-    processed_results = await asyncio.gather(*tasks)
-
-    return processed_results
+    return data

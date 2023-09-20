@@ -1,11 +1,10 @@
 import { CreateProjectStateTypes } from 'store/types/ICreateProject';
-import CoreModules from '../../shared/CoreModules';
 import { createSlice } from '@reduxjs/toolkit';
 
 export const initialState: CreateProjectStateTypes = {
   editProjectDetails: { name: '', description: '', short_description: '' },
   editProjectResponse: null,
-  projectDetails: { dimension: 10, no_of_buildings: 5 },
+  projectDetails: { dimension: 10, no_of_buildings: 5, hashtags: 'hotosm-fmtm ' },
   projectDetailsResponse: null,
   projectDetailsLoading: false,
   editProjectDetailsLoading: false,
@@ -28,6 +27,8 @@ export const initialState: CreateProjectStateTypes = {
   updateBoundaryLoading: false,
   drawnGeojson: null,
   drawToggle: false,
+  validateCustomFormLoading: false,
+  validateCustomFormResponse: null,
 };
 
 const CreateProject = createSlice({
@@ -45,7 +46,7 @@ const CreateProject = createSlice({
     },
     ClearCreateProjectFormData(state) {
       // state.projectDetailsResponse = null
-      state.projectDetails = { dimension: 10, no_of_buildings: 5 };
+      state.projectDetails = { dimension: 10, no_of_buildings: 5, hashtags: 'hotosm-fmtm ' };
       state.projectArea = null;
     },
     UploadAreaLoading(state, action) {
@@ -135,6 +136,12 @@ const CreateProject = createSlice({
     },
     SetDrawToggle(state, action) {
       state.drawToggle = action.payload;
+    },
+    ValidateCustomFormLoading(state, action) {
+      state.validateCustomFormLoading = action.payload;
+    },
+    ValidateCustomForm(state, action) {
+      state.validateCustomFormResponse = action.payload;
     },
   },
 });

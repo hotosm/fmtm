@@ -16,13 +16,18 @@
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
-from fastapi import APIRouter, Depends, Request, HTTPException
-from fastapi.logger import logger as log
+"""Auth routes, using OSM OAuth2 endpoints."""
+
+from loguru import logger as log
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from ..db.db_models import DbUser
+from ..config import settings
+
+
 from ..db import database
-from ..users import user_crud, user_schemas
+from ..db.db_models import DbUser
+from ..users import user_crud
 from .osm import AuthUser, init_osm_auth, login_required
 
 router = APIRouter(
@@ -30,21 +35,6 @@ router = APIRouter(
     tags=["auth"],
     responses={404: {"description": "Not found"}},
 )
-
-
-@router.post("/login/")
-def login(user: user_schemas.UserIn, db: Session = Depends(database.get_db)):
-    """
-    Authenticate a user with the application.
-
-    Args:
-        user (user_schemas.UserIn): The user to authenticate.
-        db (Session, optional): The database session. Injected by FastAPI.
-
-    Returns:
-        The result of verifying the user.
-    """
-    return user_crud.verify_user(db, user)
 
 
 @router.get("/osm_login/")
@@ -76,19 +66,20 @@ def callback(request: Request, osm_auth=Depends(init_osm_auth)):
     Returns:
         A JSONResponse with the access token.
     """
-    access_token = osm_auth.callback(str(request.url))
+    print("Call back api requested", request.url)
+    
+    access_token = osm_auth.callback(str(request.url).replace('http',settings.URL_SCHEME))
     log.debug(f"Access token returned: {access_token}")
-    print(access_token, 'access_token')
     return JSONResponse(content={"access_token": access_token}, status_code=200)
 
 
 @router.get("/me/", response_model=AuthUser)
 def my_data(
-        db: Session = Depends(database.get_db),
-        user_data: AuthUser = Depends(login_required)
-    ):
-    """
-    Retrieve user data from OSM user's API endpoint.
+    db: Session = Depends(database.get_db),
+    user_data: AuthUser = Depends(login_required),
+):
+    """Read the access token and provide  user details from OSM user's API endpoint,
+    also integrated with underpass .
 
     Args:
         db (Session, optional): The database session. Injected by FastAPI.
@@ -97,21 +88,19 @@ def my_data(
     Returns:
         A JSONResponse with the user data.
     """
-
-
     # Save user info in User table
-    user = user_crud.get_user_by_id(db, user_data['id'])
+    user = user_crud.get_user_by_id(db, user_data["id"])
     if not user:
-        user_by_username = user_crud.get_user_by_username(db, user_data['username'])
+        user_by_username = user_crud.get_user_by_username(db, user_data["username"])
         if user_by_username:
             raise HTTPException(
-                status_code=400, detail=f"User with this username {user_data['username']} already exists. \
-                                            Please contact the administrator for this."
+                status_code=400,
+                detail=f"User with this username {user_data['username']} already exists. \
+                                            Please contact the administrator for this.",
             )
 
-        db_user = DbUser(id=user_data['id'], username=user_data['username'])
+        db_user = DbUser(id=user_data["id"], username=user_data["username"])
         db.add(db_user)
         db.commit()
-
 
     return JSONResponse(content={"user_data": user_data}, status_code=200)

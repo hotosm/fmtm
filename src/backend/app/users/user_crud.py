@@ -17,8 +17,6 @@
 #
 from typing import List
 
-import bcrypt
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from ..db import db_models
@@ -81,114 +79,10 @@ def get_user_by_username(db: Session, username: str):
     return convert_to_app_user(db_user)
 
 
-def create_user(db: Session, user: user_schemas.UserIn):
-    """
-    Create a new user in the database.
-
-    Args:
-        db (Session): The database session.
-        user (user_schemas.UserIn): The data for the new user.
-
-    Returns:
-        user_schemas.User: The newly created user.
-
-    Raises:
-        Exception: If no data is provided for the new user.
-    """
-    if user:
-        db_user = db_models.DbUser(
-            username=user.username, password=hash_password(user.password)
-        )
-        db.add(db_user)
-        db.commit()
-        db.refresh(db_user)  # now contains generated id etc.
-
-        return convert_to_app_user(db_user)
-
-    return Exception("No user passed in")
-
-
-# ---------------------------
-# ---- SUPPORT FUNCTIONS ----
-# ---------------------------
-
-
-def hash_password(password: str):
-    
-    """
-    Hash a password using bcrypt.
-
-    Args:
-        password (str): The password to hash.
-
-    Returns:
-        str: The hashed password.
-    """
-    hashed_password_encoded = bcrypt.hashpw(password.encode("utf8"), bcrypt.gensalt())
-    hashed_password = hashed_password_encoded.decode("utf8")
-    return hashed_password
-
-
-def verify_password(user_password, hashed_password):
-    """"
-    Verify if a given password matches a hashed password.
-
-    Args:
-        user_password (str): The password entered by the user.
-        hashed_password (str): The hashed password stored in the database.
-
-    Returns:
-        bool: True if the passwords match, False otherwise.
-        
-    """
-    is_valid = bcrypt.checkpw(
-        user_password.encode("utf8"), hashed_password.encode("utf8")
-    )
-    return is_valid
-
-
-def unhash_password(hashed_password: str):
-    """
-    Returns hashed password
-
-    Args:
-        hashed_password (str): The hashed password stored in the database.
-
-    Returns:
-        str: The hashed password.
-        
-    """
-    return hashed_password
-
-
-def verify_user(db: Session, questionable_user: user_schemas.UserIn):
-    """
-    Verify if a given username and password are valid and registered in the database.
-
-    Args:
-        db (Session): The database session.
-        questionable_user (user_schemas.UserIn): The data for the questionable user.
-
-    Returns:
-        dict[str,str]: A dictionary containing information about the verified user.
-
-    Raises:
-        HTTPException: If the username is not registered or if the password is incorrect.
-    """
-    db_user = get_user_by_username(db, questionable_user.username)
-    if db_user:
-        if verify_password(questionable_user.password, db_user.password):
-            return {"id": db_user.id, "name": db_user.username, "role": db_user.role}
-
-        else:
-            raise HTTPException(status_code=400, detail="Incorrect password.")
-    else:
-        raise HTTPException(status_code=400, detail="Username not registered.")
-
-
 # --------------------
 # ---- CONVERTERS ----
 # --------------------
+
 
 # TODO: write tests for these
 def convert_to_app_user(db_user: db_models.DbUser):
@@ -252,7 +146,6 @@ def get_user_role_by_user_id(db: Session, user_id: int):
 
 
 async def create_user_roles(user_role: user_schemas.UserRoles, db: Session):
-
     db_user_role = db_models.DbUserRoles(
         user_id=user_role.user_id,
         role=user_role.role,

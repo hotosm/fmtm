@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import enviroment from '../../environment';
 import CoreModules from '../../shared/CoreModules';
 import AssetModules from '../../shared/AssetModules.js';
@@ -8,7 +8,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { CreateProjectActions } from '../../store/slices/CreateProjectSlice';
 import { InputLabel, MenuItem, Select } from '@mui/material';
 //@ts-ignore
-import DefineAreaMap from 'map/DefineAreaMap';
+import DefineAreaMap from '../../views/DefineAreaMap';
 import useForm from '../../hooks/useForm';
 import DefineTaskValidation from './validation/DefineTaskValidation';
 import { useAppSelector } from '../../types/reduxTypes';
@@ -18,7 +18,7 @@ const alogrithmList = [
   { id: 2, value: 'Choose Area as Tasks', label: 'Choose Area as Tasks' },
   { id: 3, value: 'Task Splitting Algorithm', label: 'Task Splitting Algorithm' },
 ];
-const DefineTasks: React.FC<any> = ({ geojsonFile, setGeojsonFile }) => {
+const DefineTasks: React.FC<any> = ({ geojsonFile, setGeojsonFile, dataExtractFile }) => {
   const navigate = useNavigate();
   const defaultTheme: any = CoreModules.useAppSelector((state) => state.theme.hotTheme);
   const drawnGeojson = CoreModules.useAppSelector((state) => state.createproject.drawnGeojson);
@@ -88,6 +88,7 @@ const DefineTasks: React.FC<any> = ({ geojsonFile, setGeojsonFile }) => {
           `${enviroment.baseApiUrl}/projects/task_split`,
           drawnGeojsonFile,
           formValues?.no_of_buildings,
+          dataExtractFile ? true : false,
         ),
       );
     } else {
@@ -96,6 +97,7 @@ const DefineTasks: React.FC<any> = ({ geojsonFile, setGeojsonFile }) => {
           `${enviroment.baseApiUrl}/projects/task_split`,
           geojsonFile,
           formValues?.no_of_buildings,
+          dataExtractFile ? true : false,
         ),
       );
     }
@@ -271,7 +273,7 @@ const DefineTasks: React.FC<any> = ({ geojsonFile, setGeojsonFile }) => {
                     }}
                     // onChange={(e) => dispatch(CreateProjectActions.SetProjectDetails({ key: 'no_of_buildings', value: e.target.value }))}
                     // helperText={errors.username}
-                    InputProps={{ inputProps: { min: 9 } }}
+                    InputProps={{ inputProps: { min: 5 } }}
                     FormHelperTextProps={inputFormStyles()}
                   />
                   {errors.no_of_buildings && (
@@ -316,7 +318,7 @@ const DefineTasks: React.FC<any> = ({ geojsonFile, setGeojsonFile }) => {
             }}
           >
             {/* Previous Button  */}
-            <Link to="/upload-area">
+            <Link to="/data-extract">
               <CoreModules.Button sx={{ width: '100px' }} variant="outlined" color="error">
                 Previous
               </CoreModules.Button>
@@ -338,7 +340,11 @@ const DefineTasks: React.FC<any> = ({ geojsonFile, setGeojsonFile }) => {
           {/* END */}
         </FormGroup>
       </form>
-      <DefineAreaMap uploadedGeojson={geojsonFile} setGeojsonFile={setGeojsonFile} />
+      <DefineAreaMap
+        uploadedGeojson={geojsonFile}
+        setGeojsonFile={setGeojsonFile}
+        uploadedDataExtractFile={dataExtractFile}
+      />
     </CoreModules.Stack>
   );
 };

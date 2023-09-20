@@ -7,6 +7,7 @@ import {
 } from '../models/createproject/createProjectModel';
 import enviroment from '../environment';
 import { CommonActions } from '../store/slices/CommonSlice';
+import { ValidateCustomFormResponse } from 'store/types/ICreateProject';
 
 const CreateProjectService: Function = (
   url: string,
@@ -14,6 +15,7 @@ const CreateProjectService: Function = (
   fileUpload: any,
   formUpload: any,
   dataExtractFile: any,
+  lineExtractFile: any,
 ) => {
   return async (dispatch) => {
     dispatch(CreateProjectActions.CreateProjectLoading(true));
@@ -45,6 +47,22 @@ const CreateProjectService: Function = (
             duration: 2000,
           }),
         );
+        if (dataExtractFile) {
+          const dataExtractFormData = new FormData();
+          dataExtractFormData.append('upload', dataExtractFile);
+          const postDataExtract = await axios.post(
+            `${enviroment.baseApiUrl}/projects/add_features/?project_id=${resp.id}&feature_type=buildings`,
+            dataExtractFormData,
+          );
+        }
+        if (lineExtractFile) {
+          const lineExtractFormData = new FormData();
+          lineExtractFormData.append('upload', lineExtractFile);
+          const postLineExtract = await axios.post(
+            `${enviroment.baseApiUrl}/projects/add_features/?project_id=${resp.id}&feature_type=lines`,
+            lineExtractFormData,
+          );
+        }
         await dispatch(
           GenerateProjectQRService(
             `${enviroment.baseApiUrl}/projects/${resp.id}/generate`,
@@ -53,6 +71,7 @@ const CreateProjectService: Function = (
             dataExtractFile,
           ),
         );
+
         dispatch(CommonActions.SetLoading(false));
         dispatch(CreateProjectActions.CreateProjectLoading(true));
       } catch (error: any) {
@@ -304,15 +323,21 @@ const GetIndividualProjectDetails: Function = (url: string, payload: any) => {
   };
 };
 
-const TaskSplittingPreviewService: Function = (url: string, fileUpload: any, no_of_buildings: string) => {
+const TaskSplittingPreviewService: Function = (
+  url: string,
+  fileUpload: any,
+  no_of_buildings: string,
+  isCustomDataExtract: boolean,
+) => {
   return async (dispatch) => {
     dispatch(CreateProjectActions.GetTaskSplittingPreviewLoading(true));
 
-    const getTaskSplittingGeojson = async (url, fileUpload) => {
+    const getTaskSplittingGeojson = async (url, fileUpload, isCustomDataExtract) => {
       try {
         const taskSplittingFileFormData = new FormData();
         taskSplittingFileFormData.append('upload', fileUpload);
         taskSplittingFileFormData.append('no_of_buildings', no_of_buildings);
+        taskSplittingFileFormData.append('has_data_extracts', isCustomDataExtract);
 
         const getTaskSplittingResponse = await axios.post(url, taskSplittingFileFormData);
         const resp: OrganisationListModel = getTaskSplittingResponse.data;
@@ -325,7 +350,7 @@ const TaskSplittingPreviewService: Function = (url: string, fileUpload: any, no_
       }
     };
 
-    await getTaskSplittingGeojson(url, fileUpload);
+    await getTaskSplittingGeojson(url, fileUpload, isCustomDataExtract);
   };
 };
 const PatchProjectDetails: Function = (url: string, payload: any) => {
@@ -437,6 +462,47 @@ const EditProjectBoundaryService: Function = (url: string, geojsonUpload: any, d
   };
 };
 
+const ValidateCustomForm: Function = (url: string, formUpload: any) => {
+  return async (dispatch) => {
+    dispatch(CreateProjectActions.ValidateCustomFormLoading(true));
+
+    const validateCustomForm = async (url: any, formUpload: any) => {
+      try {
+        const formUploadFormData = new FormData();
+        formUploadFormData.append('form', formUpload);
+
+        const getTaskSplittingResponse = await axios.post(url, formUploadFormData);
+        const resp: ValidateCustomFormResponse = getTaskSplittingResponse.data;
+        dispatch(CreateProjectActions.ValidateCustomForm(resp));
+        dispatch(CreateProjectActions.ValidateCustomFormLoading(false));
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: JSON.stringify(resp.message),
+            variant: 'success',
+            duration: 2000,
+          }),
+        );
+      } catch (error) {
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message:
+              JSON.stringify(`${error.response.data.message}, ${error.response.data.possible_reason}`) ||
+              'Something Went Wrong',
+            variant: 'error',
+            duration: 2000,
+          }),
+        );
+        dispatch(CreateProjectActions.ValidateCustomFormLoading(false));
+      } finally {
+        dispatch(CreateProjectActions.ValidateCustomFormLoading(false));
+      }
+    };
+
+    await validateCustomForm(url, formUpload);
+  };
+};
 export {
   UploadAreaService,
   CreateProjectService,
@@ -451,4 +517,5 @@ export {
   PatchProjectDetails,
   PostFormUpdate,
   EditProjectBoundaryService,
+  ValidateCustomForm,
 };

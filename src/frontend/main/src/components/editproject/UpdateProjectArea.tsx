@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import CoreModules from '../../shared/CoreModules.js';
-import AssetModules from '../../shared/AssetModules.js';
-import EditProjectArea from 'map/EditProjectArea';
+import CoreModules from '../../shared/CoreModules';
+import AssetModules from '../../shared/AssetModules';
+import EditProjectArea from '../../views/EditProjectArea';
 import enviroment from '../../environment';
 import { EditProjectBoundaryService, GetDividedTaskFromGeojson } from '../../api/CreateProjectService';
 
@@ -10,8 +10,6 @@ const UpdateProjectArea = ({ projectId }) => {
   const [uploadAOI, setUploadAOI] = useState<any>(null);
   const [geojsonAOI, setGeojsonAOI] = useState<any>(null);
   const [projectBoundaryDetails, setProjectBoundaryDetails] = useState<any>({ dimension: 10 });
-  const outline_geojson = CoreModules.useAppSelector((state) => state.createproject.editProjectDetails.outline_geojson);
-  const dividedTaskGeojson = CoreModules.useAppSelector((state) => state.createproject.dividedTaskGeojson);
   const dividedTaskGeojsonLoading = CoreModules.useAppSelector((state) => state.createproject.dividedTaskLoading);
   const updateBoundaryLoading = CoreModules.useAppSelector((state) => state.createproject.updateBoundaryLoading);
   const defaultTheme: any = CoreModules.useAppSelector((state) => state.theme.hotTheme);
@@ -34,12 +32,12 @@ const UpdateProjectArea = ({ projectId }) => {
     };
   }, [uploadAOI]);
 
-  useEffect(() => {
-    if (!outline_geojson) return;
-    setGeojsonAOI(outline_geojson);
-    if (!dividedTaskGeojson) return;
-    setGeojsonAOI(dividedTaskGeojson);
-  }, [dividedTaskGeojson, outline_geojson]);
+  // useEffect(() => {
+  //   if (!outline_geojson) return;
+  //   setGeojsonAOI(outline_geojson);
+  //   if (!dividedTaskGeojson) return;
+  //   setGeojsonAOI(dividedTaskGeojson);
+  // }, [dividedTaskGeojson, outline_geojson]);
 
   const generateTasksOnMap = () => {
     dispatch(

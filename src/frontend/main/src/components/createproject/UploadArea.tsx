@@ -6,7 +6,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { CreateProjectActions } from '../../store/slices/CreateProjectSlice';
 import DrawSvg from '../createproject/DrawSvg';
 // @ts-ignore
-const DefineAreaMap = React.lazy(() => import('map/DefineAreaMap'));
+const DefineAreaMap = React.lazy(() => import('../../views/DefineAreaMap'));
 
 const UploadArea: React.FC<any> = ({ geojsonFile, setGeojsonFile, setInputValue, inputValue }: any) => {
   const navigate = useNavigate();
@@ -119,7 +119,7 @@ const UploadArea: React.FC<any> = ({ geojsonFile, setGeojsonFile, setInputValue,
       <DefineAreaMap
         uploadedGeojson={geojsonFile}
         onDraw={(geojson) => {
-          dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
+          dispatch(CreateProjectActions.SetDividedTaskGeojson(JSON.parse(geojson)));
         }}
       />
     </CoreModules.Stack>

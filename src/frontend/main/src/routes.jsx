@@ -1,8 +1,9 @@
 import React, { Suspense } from 'react';
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  // Navigate,
+} from 'react-router-dom';
 import Home from './views/Home';
-import Login from './views/Login';
-import Create from './views/Create';
 import Tabbed from './views/Tabbed';
 import MainView from './views/MainView';
 import CreateProject from './views/CreateProject';
@@ -13,11 +14,12 @@ import Organization from './views/Organization';
 import CreateOrganization from './views/CreateOrganization';
 import Authorized from './views/Authorized';
 import SubmissionDetails from './views/SubmissionDetails';
+import ProjectDetails from './views/ProjectDetails';
 
-const ProjectDetails = React.lazy(() => import('map/ProjectDetails'));
-const Submissions = React.lazy(() => import('map/Submissions'));
-const Tasks = React.lazy(() => import('map/Tasks'));
-const ProjectInfo = React.lazy(() => import('map/ProjectInfo'));
+// const ProjectDetails = React.lazy(() => import('./views/ProjectDetails'));
+const Submissions = React.lazy(() => import('./views/Submissions'));
+const Tasks = React.lazy(() => import('./views/Tasks'));
+const ProjectInfo = React.lazy(() => import('./views/ProjectInfo'));
 
 const routes = createBrowserRouter([
   {
@@ -42,14 +44,6 @@ const routes = createBrowserRouter([
       {
         path: '/tabbed',
         element: <Tabbed />,
-      },
-      {
-        path: '/login',
-        element: <Login />,
-      },
-      {
-        path: '/signup',
-        element: <Create />,
       },
 
       {
@@ -103,7 +97,7 @@ const routes = createBrowserRouter([
         path: '/project_details/:id',
         element: (
           <ProtectedRoute>
-            <Suspense fallback={<div></div>}>
+            <Suspense fallback={<div>Loading...</div>}>
               <ProjectDetails />
             </Suspense>
           </ProtectedRoute>
