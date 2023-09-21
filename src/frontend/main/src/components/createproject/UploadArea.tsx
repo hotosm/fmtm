@@ -22,6 +22,9 @@ const UploadArea: React.FC<any> = ({ geojsonFile, setGeojsonFile, setInputValue,
 
   // passing payloads for creating project from form whenever user clicks submit on upload area passing previous project details form aswell
   const onCreateProjectSubmission = () => {
+    console.log(drawnGeojson, 'drawnGeojson');
+    console.log(geojsonFile, 'geojsonFile');
+
     if (drawnGeojson) {
       dispatch(CreateProjectActions.SetCreateProjectFormStep('select-form'));
       navigate('/data-extract');
@@ -119,7 +122,9 @@ const UploadArea: React.FC<any> = ({ geojsonFile, setGeojsonFile, setInputValue,
       <DefineAreaMap
         uploadedGeojson={geojsonFile}
         onDraw={(geojson) => {
-          dispatch(CreateProjectActions.SetDividedTaskGeojson(JSON.parse(geojson)));
+          // dispatch(CreateProjectActions.SetDividedTaskGeojson(JSON.parse(geojson)));
+          dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
+          // setGeojsonFile(JSON.parse(geojson));
         }}
       />
     </CoreModules.Stack>

@@ -109,7 +109,7 @@ const routes = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
-              <CreateNewProject />
+              <CreateProject />
             </Suspense>
           </ProtectedRoute>
         ),
@@ -119,7 +119,7 @@ const routes = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
-              <CreateNewProject />
+              <CreateProject />
             </Suspense>
           </ProtectedRoute>
         ),
@@ -129,7 +129,7 @@ const routes = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
-              <CreateNewProject />
+              <CreateProject />
             </Suspense>
           </ProtectedRoute>
         ),
@@ -139,7 +139,7 @@ const routes = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
-              <CreateNewProject />
+              <CreateProject />
             </Suspense>
           </ProtectedRoute>
         ),
@@ -149,13 +149,73 @@ const routes = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
-              <CreateNewProject />
+              <CreateProject />
             </Suspense>
           </ProtectedRoute>
         ),
       },
       {
         path: '/basemap-selection',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <CreateProject />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/new-create-project',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <CreateNewProject />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/new-upload-area',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <CreateNewProject />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/new-data-extract',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <CreateNewProject />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/new-define-tasks',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <CreateNewProject />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/new-select-form',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <CreateNewProject />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/new-basemap-selection',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
