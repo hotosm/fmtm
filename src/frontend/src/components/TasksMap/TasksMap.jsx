@@ -1,16 +1,14 @@
-import React from "react";
-import useOLMap from "../../hooks/useOlMap";
-import { MapContainer as MapComponent } from "../MapComponent/OpenLayersComponent";
-import LayerSwitcherControl from "../MapComponent/OpenLayersComponent/LayerSwitcher/index.js";
-import { VectorLayer } from "../MapComponent/OpenLayersComponent/Layers";
+import React from 'react';
+import useOLMap from '../../hooks/useOlMap';
+import { MapContainer as MapComponent } from '../MapComponent/OpenLayersComponent';
+import LayerSwitcherControl from '../MapComponent/OpenLayersComponent/LayerSwitcher/index.js';
+import { VectorLayer } from '../MapComponent/OpenLayersComponent/Layers';
 
 function elastic(t) {
-  return (
-    Math.pow(2, -10 * t) * Math.sin(((t - 0.075) * (2 * Math.PI)) / 0.3) + 1
-  );
+  return Math.pow(2, -10 * t) * Math.sin(((t - 0.075) * (2 * Math.PI)) / 0.3) + 1;
 }
 const basicGeojsonTemplate = {
-  type: "FeatureCollection",
+  type: 'FeatureCollection',
   features: [],
 };
 const TasksMap = ({ projectTaskBoundries, projectBuildingGeojson }) => {
@@ -23,17 +21,17 @@ const TasksMap = ({ projectTaskBoundries, projectBuildingGeojson }) => {
     zoom: 4,
     maxZoom: 25,
   });
-  console.log(projectTaskBoundries, "projectTaskBoundries");
+  console.log(projectTaskBoundries, 'projectTaskBoundries');
 
   return (
-    <div className="map-container" style={{ height: "100%" }}>
+    <div className="map-container" style={{ height: '100%' }}>
       <MapComponent
         ref={mapRef}
         mapInstance={map}
         className="map naxatw-relative naxatw-min-h-full naxatw-w-full"
         style={{
-          height: "100%",
-          width: "100%",
+          height: '100%',
+          width: '100%',
         }}
       >
         <LayerSwitcherControl />
