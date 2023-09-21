@@ -50,7 +50,7 @@ jobs:
         id: extract_frontend_versions
         run: |
           cd src/frontend
-          echo "FRONTEND_MAIN_VERSION=$(jq -r '.version' main/package.json)" >> $GITHUB_ENV
+          echo "FRONTEND_MAIN_VERSION=$(jq -r '.version' frontend/package.json)" >> $GITHUB_ENV
 
       - name: Build and push backend
         uses: docker/build-push-action@v4
@@ -97,7 +97,7 @@ jobs:
         id: extract_frontend_versions
         run: |
           cd src/frontend
-          echo "FRONTEND_MAIN_VERSION=$(jq -r '.version' main/package.json)" >> $GITHUB_OUTPUT
+          echo "FRONTEND_MAIN_VERSION=$(jq -r '.version' frontend/package.json)" >> $GITHUB_OUTPUT
 
       - name: Environment to .env
         run: |

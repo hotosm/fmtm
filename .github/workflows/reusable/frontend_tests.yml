@@ -20,6 +20,6 @@ jobs:
 
       - name: Test Frontend Main
         run: |
-          cd src/frontend/main
+          cd src/frontend
           npm install
           npm run test

@@ -204,7 +204,7 @@ List of current microfrontend modules:
 
 - **main**:
   - Description: The main frontend, displays projects and tasks.
-  - Location: src/frontend/main
+  - Location: src/frontend
   - Port: 8080.
 - **fmtm_openlayers_map**:
   - Description: The map component, displays tasks on a map.

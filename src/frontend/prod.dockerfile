@@ -15,11 +15,11 @@ LABEL org.hotosm.fmtm.app-name="${APP_NAME}" \
       org.hotosm.fmtm.main-url="${FRONTEND_MAIN_URL}"
 
 WORKDIR /app
-COPY ./${APP_NAME}/package*.json ./
+COPY ./package*.json ./
 RUN npm install
 
 ENV NODE_ENV production
-COPY ${APP_NAME}/ .
+COPY . .
 RUN npm run build
 
 
