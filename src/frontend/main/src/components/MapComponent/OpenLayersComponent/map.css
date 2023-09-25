@@ -86,12 +86,12 @@
   border-radius: 5px !important;
 }
 .layer-switcher button::before {
-  font-family: "Material Icons";
-  content: "layers";
+  font-family: 'Material Icons';
+  content: 'layers';
   position: relative;
   top: -3px;
 }
 
 .ol-attribution {
   display: none !important;
-}/*# sourceMappingURL=map.css.map */
+} /*# sourceMappingURL=map.css.map */

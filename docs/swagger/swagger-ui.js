@@ -44,7 +44,7 @@
                     ? S(e.replace(/^.*#\/definitions\//, ""))
                     : -1 !== c()(e).call(e, "#/components/schemas/")
                     ? S(e.replace(/^.*#\/components\/schemas\//, ""))
-                    : void 0
+                    : void 0,
                 ),
                 o()(this, "getRefSchema", (e) => {
                   let { specSelectors: t } = this.props;
@@ -81,13 +81,13 @@
                   m().createElement(
                     "span",
                     { className: "model-title__text" },
-                    u || l
+                    u || l,
                   ),
                   m().createElement("img", {
                     src: n(2517),
                     height: "20px",
                     width: "20px",
-                  })
+                  }),
                 );
               const S = s.isOAS3() && a.get("deprecated");
               switch (
@@ -107,7 +107,7 @@
                       isRef: c,
                       includeReadOnly: p,
                       includeWriteOnly: d,
-                    })
+                    }),
                   );
                 case "array":
                   return m().createElement(
@@ -120,7 +120,7 @@
                       required: o,
                       includeReadOnly: p,
                       includeWriteOnly: d,
-                    })
+                    }),
                   );
                 default:
                   return m().createElement(
@@ -132,7 +132,7 @@
                       name: l,
                       deprecated: S,
                       required: o,
-                    })
+                    }),
                   );
               }
             }
@@ -208,14 +208,14 @@
                         target: "_blank",
                         rel: "noopener noreferrer",
                         href: `${n}/debug?url=${encodeURIComponent(
-                          this.state.url
+                          this.state.url,
                         )}`,
                       },
                       c().createElement(h, {
                         src: `${n}?url=${encodeURIComponent(this.state.url)}`,
                         alt: "Online validator badge",
-                      })
-                    )
+                      }),
+                    ),
                   )
                 : null;
             }
@@ -308,7 +308,7 @@
               t &&
                 !d.hasWarnedAboutDeprecation &&
                 (console.warn(
-                  "useUnsafeMarkdown display configuration parameter is deprecated since >3.26.0 and will be removed in v4.0.0."
+                  "useUnsafeMarkdown display configuration parameter is deprecated since >3.26.0 and will be removed in v4.0.0.",
                 ),
                 (d.hasWarnedAboutDeprecation = !0)),
               c().sanitize(e, {
@@ -465,7 +465,7 @@
                   break;
                 default:
                   console.warn(
-                    `Warning: invalid passwordType ${c} was passed, not including client id and secret`
+                    `Warning: invalid passwordType ${c} was passed, not including client id and secret`,
                   );
               }
               return n.authorizeRequest({
@@ -583,7 +583,7 @@
                   "Content-Type": "application/x-www-form-urlencoded",
                   "X-Requested-With": "XMLHttpRequest",
                 },
-                g
+                g,
               );
               s.fetch({
                 url: E,
@@ -732,12 +732,12 @@
                   (this.rootInjects.preauthorizeApiKey = r()(g).call(
                     g,
                     null,
-                    e
+                    e,
                   )),
                   (this.rootInjects.preauthorizeBasic = r()(h).call(
                     h,
                     null,
-                    e
+                    e,
                   ));
               },
               components: {
@@ -900,7 +900,7 @@
               var n;
               let { specSelectors: s } = e;
               console.warn(
-                "WARNING: getDefinitionsByNames is deprecated and will be removed in the next major version."
+                "WARNING: getDefinitionsByNames is deprecated and will be removed in the next major version.",
               );
               let a = s.securityDefinitions(),
                 o = (0, f.List)();
@@ -960,7 +960,7 @@
             },
             x = (0, g.createSelector)(
               y,
-              (e) => e.get("authorized") || (0, f.Map)()
+              (e) => e.get("authorized") || (0, f.Map)(),
             ),
             C = (e, t) => (e) => {
               var n;
@@ -972,7 +972,7 @@
                     return (
                       -1 ===
                       u()(
-                        (t = m()((n = h()(e))).call(n, (e) => !!r.get(e)))
+                        (t = m()((n = h()(e))).call(n, (e) => !!r.get(e))),
                       ).call(t, !1)
                     );
                   }).length
@@ -1022,12 +1022,12 @@
                   s &&
                     a &&
                     (document.cookie = `${e.get(
-                      "name"
+                      "name",
                     )}=${t}; SameSite=None; Secure`);
                 } catch (e) {
                   console.error(
                     "Error persisting cookie based apiKey in document.cookie.",
-                    e
+                    e,
                   );
                 }
             },
@@ -1049,7 +1049,7 @@
               } catch (e) {
                 console.error(
                   "Error deleting cookie based apiKey from document.cookie.",
-                  e
+                  e,
                 );
               }
               e(n);
@@ -1099,7 +1099,7 @@
           const c = {
             getLocalConfig: () =>
               (0, s.parseYamlConfig)(
-                '---\nurl: "https://petstore.swagger.io/v2/swagger.json"\ndom_id: "#swagger-ui"\nvalidatorUrl: "https://validator.swagger.io/validator"\n'
+                '---\nurl: "https://petstore.swagger.io/v2/swagger.json"\ndom_id: "#swagger-ui"\nvalidatorUrl: "https://validator.swagger.io/validator"\n',
               ),
           };
           function i() {
@@ -1242,8 +1242,10 @@
                     2 === n.length
                       ? (0, p.setHash)(
                           (0, h.oJ)(
-                            `/${encodeURIComponent(o)}/${encodeURIComponent(l)}`
-                          )
+                            `/${encodeURIComponent(o)}/${encodeURIComponent(
+                              l,
+                            )}`,
+                          ),
                         )
                       : 1 === n.length &&
                         (0, p.setHash)((0, h.oJ)(`/${encodeURIComponent(o)}`));
@@ -1267,21 +1269,21 @@
                   const e = s.isShownKeyFromUrlHashArray([p]);
                   u()(p).call(p, "_") > -1 &&
                     (console.warn(
-                      "Warning: escaping deep link whitespace with `_` will be unsupported in v4.0, use `%20` instead."
+                      "Warning: escaping deep link whitespace with `_` will be unsupported in v4.0, use `%20` instead.",
                     ),
                     n.show(
                       c()(e).call(e, (e) => e.replace(/_/g, " ")),
-                      !0
+                      !0,
                     )),
                     n.show(e, !0);
                 }
                 (u()(p).call(p, "_") > -1 || u()(m).call(m, "_") > -1) &&
                   (console.warn(
-                    "Warning: escaping deep link whitespace with `_` will be unsupported in v4.0, use `%20` instead."
+                    "Warning: escaping deep link whitespace with `_` will be unsupported in v4.0, use `%20` instead.",
                   ),
                   n.show(
                     c()(l).call(l, (e) => e.replace(/_/g, " ")),
-                    !0
+                    !0,
                   )),
                   n.show(l, !0),
                   n.scrollTo(l);
@@ -1378,7 +1380,7 @@
                 return o().createElement(
                   "span",
                   { ref: this.onLoad },
-                  o().createElement(e, this.props)
+                  o().createElement(e, this.props),
                 );
               }
             };
@@ -1407,7 +1409,7 @@
                 return o().createElement(
                   "span",
                   { ref: this.onLoad },
-                  o().createElement(e, this.props)
+                  o().createElement(e, this.props),
                 );
               }
             };
@@ -1448,10 +1450,10 @@
                             s.newThrownErr(
                               r()(
                                 new Error(
-                                  (t.message || t.statusText) + " " + e
+                                  (t.message || t.statusText) + " " + e,
                                 ),
-                                { source: "fetch" }
-                              )
+                                { source: "fetch" },
+                              ),
                             ),
                             void (
                               !t.status &&
@@ -1469,18 +1471,18 @@
                                   ) {
                                     const e = r()(
                                       new Error(
-                                        `Possible mixed-content issue? The page was loaded over https:// but a ${t.protocol}// URL was specified. Check that you are not attempting to load mixed content.`
+                                        `Possible mixed-content issue? The page was loaded over https:// but a ${t.protocol}// URL was specified. Check that you are not attempting to load mixed content.`,
                                       ),
-                                      { source: "fetch" }
+                                      { source: "fetch" },
                                     );
                                     return void s.newThrownErr(e);
                                   }
                                   if (t.origin !== d.Z.location.origin) {
                                     const e = r()(
                                       new Error(
-                                        `Possible cross-origin (CORS) issue? The URL origin (${t.origin}) does not match the page (${d.Z.location.origin}). Check the server returns the correct 'Access-Control-Allow-*' headers.`
+                                        `Possible cross-origin (CORS) issue? The URL origin (${t.origin}) does not match the page (${d.Z.location.origin}). Check the server returns the correct 'Access-Control-Allow-*' headers.`,
                                       ),
-                                      { source: "fetch" }
+                                      { source: "fetch" },
                                     );
                                     s.newThrownErr(e);
                                   }
@@ -1532,7 +1534,7 @@
                   selectors: {
                     loadingStatus: (0, p.createSelector)(
                       (e) => e || (0, m.Map)(),
-                      (e) => e.get("loadingStatus") || null
+                      (e) => e.get("loadingStatus") || null,
                     ),
                   },
                 },
@@ -1624,11 +1626,11 @@
                     return console.error("Transformer error:", t), e;
                   }
                 },
-                e
+                e,
               );
             return o()((t = r()(s).call(s, (e) => !!e))).call(
               t,
-              (e) => (!e.get("line") && e.get("path"), e)
+              (e) => (!e.get("line") && e.get("path"), e),
             );
           }
         },
@@ -1667,9 +1669,9 @@
                             : s[n + 1]
                             ? e + t + " "
                             : e + t,
-                        "should be a"
+                        "should be a",
                       );
-                    })(t)
+                    })(t),
                 );
               }
               return e;
@@ -1723,7 +1725,7 @@
                   s = r()(f, n, { type: "thrown" });
                 return e
                   .update("errors", (e) =>
-                    (e || (0, h.List)()).push((0, h.fromJS)(s))
+                    (e || (0, h.List)()).push((0, h.fromJS)(s)),
                   )
                   .update("errors", (e) => (0, g.default)(e));
               },
@@ -1731,14 +1733,14 @@
                 let { payload: n } = t;
                 return (
                   (n = o()(n).call(n, (e) =>
-                    (0, h.fromJS)(r()(f, e, { type: "thrown" }))
+                    (0, h.fromJS)(r()(f, e, { type: "thrown" })),
                   )),
                   e
                     .update("errors", (e) => {
                       var t;
                       return c()((t = e || (0, h.List)())).call(
                         t,
-                        (0, h.fromJS)(n)
+                        (0, h.fromJS)(n),
                       );
                     })
                     .update("errors", (e) => (0, g.default)(e))
@@ -1753,7 +1755,7 @@
                     .update("errors", (e) =>
                       (e || (0, h.List)())
                         .push((0, h.fromJS)(s))
-                        .sortBy((e) => e.get("line"))
+                        .sortBy((e) => e.get("line")),
                     )
                     .update("errors", (e) => (0, g.default)(e))
                 );
@@ -1762,14 +1764,14 @@
                 let { payload: n } = t;
                 return (
                   (n = o()(n).call(n, (e) =>
-                    (0, h.fromJS)(r()(f, e, { type: "spec" }))
+                    (0, h.fromJS)(r()(f, e, { type: "spec" })),
                   )),
                   e
                     .update("errors", (e) => {
                       var t;
                       return c()((t = e || (0, h.List)())).call(
                         t,
-                        (0, h.fromJS)(n)
+                        (0, h.fromJS)(n),
                       );
                     })
                     .update("errors", (e) => (0, g.default)(e))
@@ -1782,7 +1784,7 @@
                   (s = s.set("type", "auth")),
                   e
                     .update("errors", (e) =>
-                      (e || (0, h.List)()).push((0, h.fromJS)(s))
+                      (e || (0, h.List)()).push((0, h.fromJS)(s)),
                     )
                     .update("errors", (e) => (0, g.default)(e))
                 );
@@ -1818,7 +1820,7 @@
             r = n(6814);
           const a = (0, r.createSelector)(
               (e) => e,
-              (e) => e.get("errors", (0, s.List)())
+              (e) => e.get("errors", (0, s.List)()),
             ),
             o = (0, r.createSelector)(a, (e) => e.last());
         },
@@ -1863,11 +1865,11 @@
                   "aria-hidden": "true",
                   focusable: "false",
                 },
-                a
+                a,
               ),
               o().createElement("path", {
                 d: "M17.418 6.109c.272-.268.709-.268.979 0s.271.701 0 .969l-7.908 7.83c-.27.268-.707.268-.979 0l-7.908-7.83c-.27-.268-.27-.701 0-.969.271-.268.709-.268.979 0L10 13.25l7.418-7.141z",
-              })
+              }),
             );
           };
           l.defaultProps = { className: null, width: 20, height: 20 };
@@ -1895,11 +1897,11 @@
                   "aria-hidden": "true",
                   focusable: "false",
                 },
-                a
+                a,
               ),
               o().createElement("path", {
                 d: "M 17.418 14.908 C 17.69 15.176 18.127 15.176 18.397 14.908 C 18.667 14.64 18.668 14.207 18.397 13.939 L 10.489 6.109 C 10.219 5.841 9.782 5.841 9.51 6.109 L 1.602 13.939 C 1.332 14.207 1.332 14.64 1.602 14.908 C 1.873 15.176 2.311 15.176 2.581 14.908 L 10 7.767 L 17.418 14.908 Z",
-              })
+              }),
             );
           };
           l.defaultProps = { className: null, width: 20, height: 20 };
@@ -1927,11 +1929,11 @@
                   "aria-hidden": "true",
                   focusable: "false",
                 },
-                a
+                a,
               ),
               o().createElement("path", {
                 d: "M13.25 10L6.109 2.58c-.268-.27-.268-.707 0-.979.268-.27.701-.27.969 0l7.83 7.908c.268.271.268.709 0 .979l-7.83 7.908c-.268.271-.701.27-.969 0-.268-.269-.268-.707 0-.979L13.25 10z",
-              })
+              }),
             );
           };
           l.defaultProps = { className: null, width: 20, height: 20 };
@@ -1959,11 +1961,11 @@
                   "aria-hidden": "true",
                   focusable: "false",
                 },
-                a
+                a,
               ),
               o().createElement("path", {
                 d: "M14.348 14.849c-.469.469-1.229.469-1.697 0L10 11.819l-2.651 3.029c-.469.469-1.229.469-1.697 0-.469-.469-.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-.469-.469-.469-1.228 0-1.697.469-.469 1.228-.469 1.697 0L10 8.183l2.651-3.031c.469-.469 1.228-.469 1.697 0 .469.469.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c.469.469.469 1.229 0 1.698z",
-              })
+              }),
             );
           };
           l.defaultProps = { className: null, width: 20, height: 20 };
@@ -1991,7 +1993,7 @@
                   "aria-hidden": "true",
                   focusable: "false",
                 },
-                a
+                a,
               ),
               o().createElement(
                 "g",
@@ -2000,8 +2002,8 @@
                   fill: "#ffffff",
                   fillRule: "evenodd",
                   d: "M2 13h4v1H2v-1zm5-6H2v1h5V7zm2 3V8l-3 3 3 3v-2h5v-2H9zM4.5 9H2v1h2.5V9zM2 12h2.5v-1H2v1zm9 1h1v2c-.02.28-.11.52-.3.7-.19.18-.42.28-.7.3H1c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h3c0-1.11.89-2 2-2 1.11 0 2 .89 2 2h3c.55 0 1 .45 1 1v5h-1V6H1v9h10v-2zM2 5h8c0-.55-.45-1-1-1H8c-.55 0-1-.45-1-1s-.45-1-1-1-1 .45-1 1-.45 1-1 1H3c-.55 0-1 .45-1 1z",
-                })
-              )
+                }),
+              ),
             );
           };
           l.defaultProps = { className: null, width: 15, height: 16 };
@@ -2029,11 +2031,11 @@
                   "aria-hidden": "true",
                   focusable: "false",
                 },
-                a
+                a,
               ),
               o().createElement("path", {
                 d: "M15.8 8H14V5.6C14 2.703 12.665 1 10 1 7.334 1 6 2.703 6 5.6V8H4c-.553 0-1 .646-1 1.199V17c0 .549.428 1.139.951 1.307l1.197.387C5.672 18.861 6.55 19 7.1 19h5.8c.549 0 1.428-.139 1.951-.307l1.196-.387c.524-.167.953-.757.953-1.306V9.199C17 8.646 16.352 8 15.8 8zM12 8H8V5.199C8 3.754 8.797 3 10 3c1.203 0 2 .754 2 2.199V8z",
-              })
+              }),
             );
           };
           l.defaultProps = { className: null, width: 20, height: 20 };
@@ -2061,11 +2063,11 @@
                   "aria-hidden": "true",
                   focusable: "false",
                 },
-                a
+                a,
               ),
               o().createElement("path", {
                 d: "M15.8 8H14V5.6C14 2.703 12.665 1 10 1 7.334 1 6 2.703 6 5.6V6h2v-.801C8 3.754 8.797 3 10 3c1.203 0 2 .754 2 2.199V8H4c-.553 0-1 .646-1 1.199V17c0 .549.428 1.139.951 1.307l1.197.387C5.672 18.861 6.55 19 7.1 19h5.8c.549 0 1.428-.139 1.951-.307l1.196-.387c.524-.167.953-.757.953-1.306V9.199C17 8.646 16.352 8 15.8 8z",
-              })
+              }),
             );
           };
           l.defaultProps = { className: null, width: 20, height: 20 };
@@ -2108,7 +2110,7 @@
                 (e) => {
                   a(e, !t);
                 },
-                [t, a]
+                [t, a],
               );
             return r().createElement(
               "button",
@@ -2120,7 +2122,7 @@
               r().createElement(
                 "div",
                 { className: "json-schema-2020-12-accordion__children" },
-                n
+                n,
               ),
               r().createElement(
                 "span",
@@ -2130,8 +2132,8 @@
                     "json-schema-2020-12-accordion__icon--collapsed": !t,
                   }),
                 },
-                r().createElement(c, null)
-              )
+                r().createElement(c, null),
+              ),
             );
           };
           c.defaultProps = { expanded: !1 };
@@ -2149,7 +2151,7 @@
               (e) => {
                 n(e, !t);
               },
-              [t, n]
+              [t, n],
             );
             return r().createElement(
               "button",
@@ -2158,7 +2160,7 @@
                 className: "json-schema-2020-12-expand-deep-button",
                 onClick: a,
               },
-              t ? "Collapse all" : "Expand all"
+              t ? "Collapse all" : "Expand all",
             );
           };
         },
@@ -2236,13 +2238,13 @@
                 (e, t) => {
                   f(t), !t && v(!1), p(e, t, !1);
                 },
-                [p]
+                [p],
               ),
               de = (0, a.useCallback)(
                 (e, t) => {
                   f(t), v(t), p(e, t, !0);
                 },
-                [p]
+                [p],
               );
             return o().createElement(
               u.JSONSchemaLevelContext.Provider,
@@ -2273,9 +2275,9 @@
                             o().createElement(
                               _,
                               { expanded: g, onChange: me },
-                              o().createElement(ae, { title: s, schema: n })
+                              o().createElement(ae, { title: s, schema: n }),
                             ),
-                            o().createElement(pe, { expanded: g, onClick: de })
+                            o().createElement(pe, { expanded: g, onClick: de }),
                           )
                         : o().createElement(ae, { title: s, schema: n }),
                       o().createElement(ce, { schema: n }),
@@ -2287,8 +2289,8 @@
                           o().createElement(ne, {
                             key: `${e.scope}-${e.value}`,
                             constraint: e,
-                          })
-                        )
+                          }),
+                        ),
                     ),
                     o().createElement(
                       "div",
@@ -2324,7 +2326,7 @@
                               o().createElement(z, { schema: n }),
                               o().createElement(X, { schema: n }),
                               o().createElement(B, { schema: n }),
-                              o().createElement(re, { schema: n })
+                              o().createElement(re, { schema: n }),
                             ),
                           o().createElement(ee, { schema: n }),
                           o().createElement(te, { schema: n }),
@@ -2341,12 +2343,12 @@
                           o().createElement(P, { schema: n }),
                           !C && x && o().createElement(R, { schema: n }),
                           o().createElement(q, { schema: n }),
-                          o().createElement(T, { schema: n })
-                        )
-                    )
-                  )
-                )
-              )
+                          o().createElement(T, { schema: n }),
+                        ),
+                    ),
+                  ),
+                ),
+              ),
             );
           });
           p.defaultProps = {
@@ -2372,7 +2374,7 @@
               },
               r().createElement("path", {
                 d: "M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z",
-              })
+              }),
             );
         },
         4922: (e, t, n) => {
@@ -2396,7 +2398,7 @@
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                     },
-                    "$anchor"
+                    "$anchor",
                   ),
                   r().createElement(
                     "span",
@@ -2404,8 +2406,8 @@
                       className:
                         "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                     },
-                    t.$anchor
-                  )
+                    t.$anchor,
+                  ),
                 )
               : null;
           };
@@ -2431,7 +2433,7 @@
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                     },
-                    "$comment"
+                    "$comment",
                   ),
                   r().createElement(
                     "span",
@@ -2439,8 +2441,8 @@
                       className:
                         "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                     },
-                    t.$comment
-                  )
+                    t.$comment,
+                  ),
                 )
               : null;
           };
@@ -2496,8 +2498,8 @@
                           className:
                             "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                         },
-                        "$defs"
-                      )
+                        "$defs",
+                      ),
                     ),
                     u().createElement(v, { expanded: l, onClick: w }),
                     u().createElement(
@@ -2506,7 +2508,7 @@
                         className:
                           "json-schema-2020-12__attribute json-schema-2020-12__attribute--primary",
                       },
-                      "object"
+                      "object",
                     ),
                     u().createElement(
                       "ul",
@@ -2516,7 +2518,7 @@
                           {
                             "json-schema-2020-12-keyword__children--collapsed":
                               !l,
-                          }
+                          },
                         ),
                       },
                       l &&
@@ -2531,12 +2533,12 @@
                                 key: t,
                                 className: "json-schema-2020-12-property",
                               },
-                              u().createElement(S, { name: t, schema: n })
+                              u().createElement(S, { name: t, schema: n }),
                             );
-                          })
-                        )
-                    )
-                  )
+                          }),
+                        ),
+                    ),
+                  ),
                 );
           };
         },
@@ -2561,7 +2563,7 @@
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                     },
-                    "$dynamicAnchor"
+                    "$dynamicAnchor",
                   ),
                   r().createElement(
                     "span",
@@ -2569,8 +2571,8 @@
                       className:
                         "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                     },
-                    t.$dynamicAnchor
-                  )
+                    t.$dynamicAnchor,
+                  ),
                 )
               : null;
           };
@@ -2596,7 +2598,7 @@
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                     },
-                    "$dynamicRef"
+                    "$dynamicRef",
                   ),
                   r().createElement(
                     "span",
@@ -2604,8 +2606,8 @@
                       className:
                         "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                     },
-                    t.$dynamicRef
-                  )
+                    t.$dynamicRef,
+                  ),
                 )
               : null;
           };
@@ -2631,7 +2633,7 @@
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                     },
-                    "$id"
+                    "$id",
                   ),
                   r().createElement(
                     "span",
@@ -2639,8 +2641,8 @@
                       className:
                         "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                     },
-                    t.$id
-                  )
+                    t.$id,
+                  ),
                 )
               : null;
           };
@@ -2666,7 +2668,7 @@
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                     },
-                    "$ref"
+                    "$ref",
                   ),
                   r().createElement(
                     "span",
@@ -2674,8 +2676,8 @@
                       className:
                         "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                     },
-                    t.$ref
-                  )
+                    t.$ref,
+                  ),
                 )
               : null;
           };
@@ -2701,7 +2703,7 @@
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                     },
-                    "$schema"
+                    "$schema",
                   ),
                   r().createElement(
                     "span",
@@ -2709,8 +2711,8 @@
                       className:
                         "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                     },
-                    t.$schema
-                  )
+                    t.$schema,
+                  ),
                 )
               : null;
           };
@@ -2754,8 +2756,8 @@
                           className:
                             "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                         },
-                        "$vocabulary"
-                      )
+                        "$vocabulary",
+                      ),
                     ),
                     c().createElement(
                       "strong",
@@ -2763,7 +2765,7 @@
                         className:
                           "json-schema-2020-12__attribute json-schema-2020-12__attribute--primary",
                       },
-                      "object"
+                      "object",
                     ),
                     c().createElement(
                       "ul",
@@ -2780,7 +2782,7 @@
                                 {
                                   "json-schema-2020-12-$vocabulary-uri--disabled":
                                     !n,
-                                }
+                                },
                               ),
                             },
                             c().createElement(
@@ -2789,11 +2791,11 @@
                                 className:
                                   "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                               },
-                              t
-                            )
+                              t,
+                            ),
                           );
-                        })
-                    )
+                        }),
+                    ),
                   )
               : null;
           };
@@ -2816,7 +2818,7 @@
                 className:
                   "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
               },
-              "Additional properties"
+              "Additional properties",
             );
             return r().createElement(
               "div",
@@ -2835,8 +2837,8 @@
                         className:
                           "json-schema-2020-12__attribute json-schema-2020-12__attribute--primary",
                       },
-                      "allowed"
-                    )
+                      "allowed",
+                    ),
                   )
                 : !1 === s
                 ? r().createElement(
@@ -2849,10 +2851,10 @@
                         className:
                           "json-schema-2020-12__attribute json-schema-2020-12__attribute--primary",
                       },
-                      "forbidden"
-                    )
+                      "forbidden",
+                    ),
                   )
-                : r().createElement(o, { name: l, schema: s })
+                : r().createElement(o, { name: l, schema: s }),
             );
           };
         },
@@ -2905,8 +2907,8 @@
                           className:
                             "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                         },
-                        "All of"
-                      )
+                        "All of",
+                      ),
                     ),
                     c().createElement(y, { expanded: i, onClick: w }),
                     c().createElement(S, { schema: { allOf: n } }),
@@ -2918,7 +2920,7 @@
                           {
                             "json-schema-2020-12-keyword__children--collapsed":
                               !i,
-                          }
+                          },
                         ),
                       },
                       i &&
@@ -2935,12 +2937,12 @@
                               c().createElement(v, {
                                 name: `#${t} ${s.getTitle(e)}`,
                                 schema: e,
-                              })
-                            )
-                          )
-                        )
-                    )
-                  )
+                              }),
+                            ),
+                          ),
+                        ),
+                    ),
+                  ),
                 )
               : null;
           };
@@ -2994,8 +2996,8 @@
                           className:
                             "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                         },
-                        "Any of"
-                      )
+                        "Any of",
+                      ),
                     ),
                     c().createElement(y, { expanded: i, onClick: w }),
                     c().createElement(S, { schema: { anyOf: n } }),
@@ -3007,7 +3009,7 @@
                           {
                             "json-schema-2020-12-keyword__children--collapsed":
                               !i,
-                          }
+                          },
                         ),
                       },
                       i &&
@@ -3024,12 +3026,12 @@
                               c().createElement(v, {
                                 name: `#${t} ${s.getTitle(e)}`,
                                 schema: e,
-                              })
-                            )
-                          )
-                        )
-                    )
-                  )
+                              }),
+                            ),
+                          ),
+                        ),
+                    ),
+                  ),
                 )
               : null;
           };
@@ -3056,7 +3058,7 @@
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                     },
-                    "Const"
+                    "Const",
                   ),
                   r().createElement(
                     "span",
@@ -3064,8 +3066,8 @@
                       className:
                         "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--const",
                     },
-                    n.stringify(t.const)
-                  )
+                    n.stringify(t.const),
+                  ),
                 )
               : null;
           };
@@ -3083,7 +3085,7 @@
                 {
                   className: `json-schema-2020-12__constraint json-schema-2020-12__constraint--${t.scope}`,
                 },
-                t.value
+                t.value,
               );
             },
             o = r().memo(a);
@@ -3105,7 +3107,7 @@
                 className:
                   "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
               },
-              "Contains"
+              "Contains",
             );
             return r().createElement(
               "div",
@@ -3113,7 +3115,7 @@
                 className:
                   "json-schema-2020-12-keyword json-schema-2020-12-keyword--contains",
               },
-              r().createElement(s, { name: o, schema: t.contains })
+              r().createElement(s, { name: o, schema: t.contains }),
             );
           };
         },
@@ -3134,7 +3136,7 @@
                 className:
                   "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
               },
-              "Content schema"
+              "Content schema",
             );
             return r().createElement(
               "div",
@@ -3142,7 +3144,7 @@
                 className:
                   "json-schema-2020-12-keyword json-schema-2020-12-keyword--contentSchema",
               },
-              r().createElement(s, { name: o, schema: t.contentSchema })
+              r().createElement(s, { name: o, schema: t.contentSchema }),
             );
           };
         },
@@ -3168,7 +3170,7 @@
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                     },
-                    "Default"
+                    "Default",
                   ),
                   r().createElement(
                     "span",
@@ -3176,8 +3178,8 @@
                       className:
                         "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--const",
                     },
-                    n.stringify(t.default)
-                  )
+                    n.stringify(t.default),
+                  ),
                 )
               : null;
           };
@@ -3206,7 +3208,7 @@
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                     },
-                    "Required when defined"
+                    "Required when defined",
                   ),
                   o().createElement(
                     "ul",
@@ -3221,11 +3223,11 @@
                             className:
                               "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--warning",
                           },
-                          e
-                        )
-                      )
-                    )
-                  )
+                          e,
+                        ),
+                      ),
+                    ),
+                  ),
                 );
           };
         },
@@ -3280,8 +3282,8 @@
                           className:
                             "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                         },
-                        "Dependent schemas"
-                      )
+                        "Dependent schemas",
+                      ),
                     ),
                     u().createElement(v, { expanded: l, onClick: w }),
                     u().createElement(
@@ -3290,7 +3292,7 @@
                         className:
                           "json-schema-2020-12__attribute json-schema-2020-12__attribute--primary",
                       },
-                      "object"
+                      "object",
                     ),
                     u().createElement(
                       "ul",
@@ -3300,7 +3302,7 @@
                           {
                             "json-schema-2020-12-keyword__children--collapsed":
                               !l,
-                          }
+                          },
                         ),
                       },
                       l &&
@@ -3315,12 +3317,12 @@
                                 key: t,
                                 className: "json-schema-2020-12-property",
                               },
-                              u().createElement(S, { name: t, schema: n })
+                              u().createElement(S, { name: t, schema: n }),
                             );
-                          })
-                        )
-                    )
-                  )
+                          }),
+                        ),
+                    ),
+                  ),
                 );
           };
         },
@@ -3340,7 +3342,7 @@
                     className:
                       "json-schema-2020-12__attribute json-schema-2020-12__attribute--warning",
                   },
-                  "deprecated"
+                  "deprecated",
                 );
           };
         },
@@ -3365,8 +3367,8 @@
                       className:
                         "json-schema-2020-12-core-keyword__value json-schema-2020-12-core-keyword__value--secondary",
                     },
-                    t.description
-                  )
+                    t.description,
+                  ),
                 )
               : null;
           };
@@ -3388,7 +3390,7 @@
                 className:
                   "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
               },
-              "Else"
+              "Else",
             );
             return r().createElement(
               "div",
@@ -3396,7 +3398,7 @@
                 className:
                   "json-schema-2020-12-keyword json-schema-2020-12-keyword--if",
               },
-              r().createElement(s, { name: o, schema: t.else })
+              r().createElement(s, { name: o, schema: t.else }),
             );
           };
         },
@@ -3427,7 +3429,7 @@
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                     },
-                    "Allowed values"
+                    "Allowed values",
                   ),
                   c().createElement(
                     "ul",
@@ -3443,11 +3445,11 @@
                             className:
                               "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--const",
                           },
-                          t
-                        )
+                          t,
+                        ),
                       );
-                    })
-                  )
+                    }),
+                  ),
                 )
               : null;
           };
@@ -3469,7 +3471,7 @@
                 className:
                   "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
               },
-              "If"
+              "If",
             );
             return r().createElement(
               "div",
@@ -3477,7 +3479,7 @@
                 className:
                   "json-schema-2020-12-keyword json-schema-2020-12-keyword--if",
               },
-              r().createElement(s, { name: o, schema: t.if })
+              r().createElement(s, { name: o, schema: t.if }),
             );
           };
         },
@@ -3498,7 +3500,7 @@
                 className:
                   "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
               },
-              "Items"
+              "Items",
             );
             return r().createElement(
               "div",
@@ -3506,7 +3508,7 @@
                 className:
                   "json-schema-2020-12-keyword json-schema-2020-12-keyword--items",
               },
-              r().createElement(s, { name: o, schema: t.items })
+              r().createElement(s, { name: o, schema: t.items }),
             );
           };
         },
@@ -3527,7 +3529,7 @@
                 className:
                   "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
               },
-              "Not"
+              "Not",
             );
             return r().createElement(
               "div",
@@ -3535,7 +3537,7 @@
                 className:
                   "json-schema-2020-12-keyword json-schema-2020-12-keyword--not",
               },
-              r().createElement(s, { name: o, schema: t.not })
+              r().createElement(s, { name: o, schema: t.not }),
             );
           };
         },
@@ -3588,8 +3590,8 @@
                           className:
                             "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                         },
-                        "One of"
-                      )
+                        "One of",
+                      ),
                     ),
                     c().createElement(y, { expanded: i, onClick: w }),
                     c().createElement(S, { schema: { oneOf: n } }),
@@ -3601,7 +3603,7 @@
                           {
                             "json-schema-2020-12-keyword__children--collapsed":
                               !i,
-                          }
+                          },
                         ),
                       },
                       i &&
@@ -3618,12 +3620,12 @@
                               c().createElement(v, {
                                 name: `#${t} ${s.getTitle(e)}`,
                                 schema: e,
-                              })
-                            )
-                          )
-                        )
-                    )
-                  )
+                              }),
+                            ),
+                          ),
+                        ),
+                    ),
+                  ),
                 )
               : null;
           };
@@ -3661,10 +3663,10 @@
                       return u().createElement(
                         "li",
                         { key: t, className: "json-schema-2020-12-property" },
-                        u().createElement(a, { name: t, schema: n })
+                        u().createElement(a, { name: t, schema: n }),
                       );
-                    })
-                  )
+                    }),
+                  ),
                 );
           };
         },
@@ -3717,8 +3719,8 @@
                           className:
                             "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                         },
-                        "Prefix items"
-                      )
+                        "Prefix items",
+                      ),
                     ),
                     c().createElement(y, { expanded: i, onClick: w }),
                     c().createElement(S, { schema: { prefixItems: n } }),
@@ -3730,7 +3732,7 @@
                           {
                             "json-schema-2020-12-keyword__children--collapsed":
                               !i,
-                          }
+                          },
                         ),
                       },
                       i &&
@@ -3747,12 +3749,12 @@
                               c().createElement(v, {
                                 name: `#${t} ${s.getTitle(e)}`,
                                 schema: e,
-                              })
-                            )
-                          )
-                        )
-                    )
-                  )
+                              }),
+                            ),
+                          ),
+                        ),
+                    ),
+                  ),
                 )
               : null;
           };
@@ -3809,10 +3811,10 @@
                           name: t,
                           schema: r,
                           dependentRequired: o,
-                        })
+                        }),
                       );
-                    })
-                  )
+                    }),
+                  ),
                 );
           };
         },
@@ -3833,7 +3835,7 @@
                   className:
                     "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                 },
-                "Property names"
+                "Property names",
               );
             return n.hasKeyword(t, "propertyNames")
               ? r().createElement(
@@ -3842,7 +3844,7 @@
                     className:
                       "json-schema-2020-12-keyword json-schema-2020-12-keyword--propertyNames",
                   },
-                  r().createElement(o, { name: l, schema: s })
+                  r().createElement(o, { name: l, schema: s }),
                 )
               : null;
           };
@@ -3863,7 +3865,7 @@
                     className:
                       "json-schema-2020-12__attribute json-schema-2020-12__attribute--muted",
                   },
-                  "read-only"
+                  "read-only",
                 );
           };
         },
@@ -3884,7 +3886,7 @@
                 className:
                   "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
               },
-              "Then"
+              "Then",
             );
             return r().createElement(
               "div",
@@ -3892,7 +3894,7 @@
                 className:
                   "json-schema-2020-12-keyword json-schema-2020-12-keyword--then",
               },
-              r().createElement(s, { name: o, schema: t.then })
+              r().createElement(s, { name: o, schema: t.then }),
             );
           };
         },
@@ -3909,7 +3911,7 @@
               ? r().createElement(
                   "div",
                   { className: "json-schema-2020-12__title" },
-                  t || s.getTitle(n)
+                  t || s.getTitle(n),
                 )
               : null;
           };
@@ -3932,7 +3934,7 @@
                 className:
                   "json-schema-2020-12__attribute json-schema-2020-12__attribute--primary",
               },
-              `${s}${o}`
+              `${s}${o}`,
             );
           };
           o.defaultProps = { isCircular: !1 };
@@ -3956,7 +3958,7 @@
                 className:
                   "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
               },
-              "Unevaluated items"
+              "Unevaluated items",
             );
             return r().createElement(
               "div",
@@ -3964,7 +3966,7 @@
                 className:
                   "json-schema-2020-12-keyword json-schema-2020-12-keyword--unevaluatedItems",
               },
-              r().createElement(o, { name: l, schema: s })
+              r().createElement(o, { name: l, schema: s }),
             );
           };
         },
@@ -3986,7 +3988,7 @@
                 className:
                   "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
               },
-              "Unevaluated properties"
+              "Unevaluated properties",
             );
             return r().createElement(
               "div",
@@ -3994,7 +3996,7 @@
                 className:
                   "json-schema-2020-12-keyword json-schema-2020-12-keyword--unevaluatedProperties",
               },
-              r().createElement(o, { name: l, schema: s })
+              r().createElement(o, { name: l, schema: s }),
             );
           };
         },
@@ -4014,7 +4016,7 @@
                     className:
                       "json-schema-2020-12__attribute json-schema-2020-12__attribute--muted",
                   },
-                  "write-only"
+                  "write-only",
                 );
           };
         },
@@ -4131,7 +4133,7 @@
                         "number",
                         "integer",
                         "string",
-                      ])
+                      ]),
                     ).call(t, a)
                   ? a
                   : (() => {
@@ -4295,7 +4297,7 @@
               const r = T(
                 "characters",
                 null == e ? void 0 : e.minLength,
-                null == e ? void 0 : e.maxLength
+                null == e ? void 0 : e.maxLength,
               );
               null !== r && t.push({ scope: "string", value: r }),
                 null != e &&
@@ -4319,19 +4321,19 @@
               const a = T(
                 null != e && e.hasUniqueItems ? "unique items" : "items",
                 null == e ? void 0 : e.minItems,
-                null == e ? void 0 : e.maxItems
+                null == e ? void 0 : e.maxItems,
               );
               null !== a && t.push({ scope: "array", value: a });
               const o = T(
                 "contained items",
                 null == e ? void 0 : e.minContains,
-                null == e ? void 0 : e.maxContains
+                null == e ? void 0 : e.maxContains,
               );
               null !== o && t.push({ scope: "array", value: o });
               const l = T(
                 "properties",
                 null == e ? void 0 : e.minProperties,
-                null == e ? void 0 : e.maxProperties
+                null == e ? void 0 : e.maxProperties,
               );
               return null !== l && t.push({ scope: "object", value: l }), t;
             },
@@ -4345,8 +4347,8 @@
                         let [s, r] = n;
                         return c()(r) && m()(r).call(r, e) ? (t.add(s), t) : t;
                       },
-                      new (_())()
-                    )
+                      new (_())(),
+                    ),
                   )
                 : [];
             };
@@ -4474,7 +4476,7 @@
                 r().createElement(
                   W.JSONSchemaContext.Provider,
                   { value: n },
-                  r().createElement(e, t)
+                  r().createElement(e, t),
                 );
             return (
               (s.contexts = { JSONSchemaContext: W.JSONSchemaContext }),
@@ -4735,7 +4737,7 @@
             !(function (e, t) {
               if (t.has(e))
                 throw new TypeError(
-                  "Cannot initialize the same private elements twice on an object"
+                  "Cannot initialize the same private elements twice on an object",
                 );
             })(e, t),
               t.set(e, n);
@@ -4783,7 +4785,7 @@
             !(function (e, t) {
               if (t.has(e))
                 throw new TypeError(
-                  "Cannot initialize the same private elements twice on an object"
+                  "Cannot initialize the same private elements twice on an object",
                 );
             })(e, t),
               t.set(e, n);
@@ -4921,7 +4923,7 @@
                   )
                     s.required = h()((l = s.required || [])).call(
                       l,
-                      (e) => e !== a
+                      (e) => e !== a,
                     );
                   else s.properties[a] = y(o, r, n);
                 }
@@ -5477,7 +5479,7 @@
                 p = !l && r()(e.anyOf) && e.anyOf.length > 0;
               if (!l && (i || p)) {
                 const t = (0, k.typeCast)(
-                  i ? (0, I.pick)(e.oneOf) : (0, I.pick)(e.anyOf)
+                  i ? (0, I.pick)(e.oneOf) : (0, I.pick)(e.anyOf),
                 );
                 !(e = (0, P.default)(e, t, n)).xml && t.xml && (e.xml = t.xml),
                   (0, A.hasExample)(e) && (0, A.hasExample)(t) && (l = !0);
@@ -5532,7 +5534,7 @@
                             a
                               ? c()((n = e.required)).call(
                                   n,
-                                  (e) => (t += void 0 === $[e] ? 0 : 1)
+                                  (e) => (t += void 0 === $[e] ? 0 : 1),
                                 )
                               : c()((s = e.required)).call(s, (e) => {
                                   var n;
@@ -5588,7 +5590,7 @@
                           j()(
                             null === (r = e.discriminator) || void 0 === r
                               ? void 0
-                              : r.mapping
+                              : r.mapping,
                           ) &&
                           e.discriminator.propertyName === t &&
                           "string" == typeof e.$$ref
@@ -5675,15 +5677,15 @@
                   )
                     t.push(
                       ...f()((Z = E.anyOf)).call(Z, (e) =>
-                        R((0, P.default)(e, E, n), n, void 0, a)
-                      )
+                        R((0, P.default)(e, E, n), n, void 0, a),
+                      ),
                     );
                   else if (r()(E.oneOf)) {
                     var X;
                     t.push(
                       ...f()((X = E.oneOf)).call(X, (e) =>
-                        R((0, P.default)(e, E, n), n, void 0, a)
-                      )
+                        R((0, P.default)(e, E, n), n, void 0, a),
+                      ),
                     );
                   } else {
                     if (!(!a || (a && g.wrapped))) return R(E, n, void 0, a);
@@ -5698,15 +5700,15 @@
                   )
                     t.push(
                       ...f()((G = S.anyOf)).call(G, (e) =>
-                        R((0, P.default)(e, S, n), n, void 0, a)
-                      )
+                        R((0, P.default)(e, S, n), n, void 0, a),
+                      ),
                     );
                   else if (r()(S.oneOf)) {
                     var Y;
                     t.push(
                       ...f()((Y = S.oneOf)).call(Y, (e) =>
-                        R((0, P.default)(e, S, n), n, void 0, a)
-                      )
+                        R((0, P.default)(e, S, n), n, void 0, a),
+                      ),
                     );
                   } else {
                     if (!(!a || (a && g.wrapped))) return R(S, n, void 0, a);
@@ -6094,7 +6096,7 @@
                   for (; a.length < s; ) a += a[e++ % a.length];
                 }
                 return a;
-              })(J, e)
+              })(J, e),
             );
           };
         },
@@ -6207,7 +6209,7 @@
             },
             u = (0, s.createSelector)(
               (e) => e,
-              (e) => !c(e, "editor")
+              (e) => !c(e, "editor"),
             );
         },
         8989: (e, t, n) => {
@@ -6418,7 +6420,7 @@
                             s = s.push(
                               new u.Map({
                                 [t]: o()(l).call(l, (e) => void 0 !== e),
-                              })
+                              }),
                             );
                           }),
                         ("http" !== a && "apiKey" !== a) ||
@@ -6437,7 +6439,7 @@
                               c()((a = e.get("scopes_supported"))).call(
                                 a,
                                 (e, t) => e.set(t, ""),
-                                new u.Map()
+                                new u.Map(),
                               ),
                             i = (0, u.fromJS)({
                               flow: r,
@@ -6450,14 +6452,14 @@
                           s = s.push(
                             new u.Map({
                               [t]: o()(i).call(i, (e) => void 0 !== e),
-                            })
+                            }),
                           );
                         });
                       }
                     }),
                     s)
                   : s;
-              }
+              },
             )),
             (e, t) =>
               function () {
@@ -6522,10 +6524,10 @@
                           path: t.path,
                           specPath: t.specPath,
                           allowTryItOut: !1,
-                        })
-                      )
+                        }),
+                      ),
                     );
-                  })
+                  }),
                 );
           };
         },
@@ -6579,7 +6581,7 @@
               let g = this.getValue(),
                 f = c()((e = s.allErrors())).call(
                   e,
-                  (e) => e.get("authId") === r
+                  (e) => e.get("authId") === r,
                 );
               if ("basic" === h) {
                 var y;
@@ -6592,13 +6594,13 @@
                     null,
                     m().createElement("code", null, r || t.get("name")),
                     "  (http, Basic)",
-                    m().createElement(d, { path: ["securityDefinitions", r] })
+                    m().createElement(d, { path: ["securityDefinitions", r] }),
                   ),
                   e && m().createElement("h6", null, "Authorized"),
                   m().createElement(
                     o,
                     null,
-                    m().createElement(p, { source: t.get("description") })
+                    m().createElement(p, { source: t.get("description") }),
                   ),
                   m().createElement(
                     o,
@@ -6616,8 +6618,8 @@
                             "aria-label": "auth-basic-username",
                             onChange: this.onChange,
                             autoFocus: !0,
-                          })
-                        )
+                          }),
+                        ),
                   ),
                   m().createElement(
                     o,
@@ -6634,12 +6636,12 @@
                             type: "password",
                             "aria-label": "auth-basic-password",
                             onChange: this.onChange,
-                          })
-                        )
+                          }),
+                        ),
                   ),
                   u()((y = f.valueSeq())).call(y, (e, t) =>
-                    m().createElement(i, { error: e, key: t })
-                  )
+                    m().createElement(i, { error: e, key: t }),
+                  ),
                 );
               }
               var v;
@@ -6652,13 +6654,15 @@
                       null,
                       m().createElement("code", null, r || t.get("name")),
                       "  (http, Bearer)",
-                      m().createElement(d, { path: ["securityDefinitions", r] })
+                      m().createElement(d, {
+                        path: ["securityDefinitions", r],
+                      }),
                     ),
                     g && m().createElement("h6", null, "Authorized"),
                     m().createElement(
                       o,
                       null,
-                      m().createElement(p, { source: t.get("description") })
+                      m().createElement(p, { source: t.get("description") }),
                     ),
                     m().createElement(
                       o,
@@ -6674,12 +6678,12 @@
                               "aria-label": "auth-bearer-value",
                               onChange: this.onChange,
                               autoFocus: !0,
-                            })
-                          )
+                            }),
+                          ),
                     ),
                     u()((v = f.valueSeq())).call(v, (e, t) =>
-                      m().createElement(i, { error: e, key: t })
-                    )
+                      m().createElement(i, { error: e, key: t }),
+                    ),
                   )
                 : m().createElement(
                     "div",
@@ -6689,8 +6693,8 @@
                       null,
                       m().createElement("b", null, r),
                       " HTTP authentication: unsupported scheme ",
-                      `'${h}'`
-                    )
+                      `'${h}'`,
+                    ),
                   );
             }
           }
@@ -6743,9 +6747,9 @@
                   c().createElement(
                     "b",
                     null,
-                    c().createElement("code", null, t)
+                    c().createElement("code", null, t),
                   ),
-                  i ? c().createElement(s, { source: i }) : null
+                  i ? c().createElement(s, { source: i }) : null,
                 ),
                 c().createElement(
                   "pre",
@@ -6761,12 +6765,12 @@
                     if ("string" != typeof t) return "";
                     return o()((n = t.split("\n")))
                       .call(n, (t, n) =>
-                        n > 0 ? Array(e + 1).join(" ") + t : t
+                        n > 0 ? Array(e + 1).join(" ") + t : t,
                       )
                       .join("\n");
                   })(0, r()(l, null, 2)) || "{}",
-                  c().createElement("br", null)
-                )
+                  c().createElement("br", null),
+                ),
               );
             }
           }
@@ -6808,7 +6812,7 @@
                   const { path: n, method: s } = this.props;
                   return this.props.getServerVariable(
                     { namespace: `${n}:${s}`, server: e },
-                    t
+                    t,
                   );
                 }),
                 r()(this, "getEffectiveServerValue", (e) => {
@@ -6841,9 +6845,9 @@
                     o().createElement(
                       "h4",
                       { className: "opblock-title" },
-                      "Servers"
-                    )
-                  )
+                      "Servers",
+                    ),
+                  ),
                 ),
                 o().createElement(
                   "div",
@@ -6853,7 +6857,7 @@
                     { className: "message" },
                     "These ",
                     a,
-                    "-level options override the global server options."
+                    "-level options override the global server options.",
                   ),
                   o().createElement(s, {
                     servers: r,
@@ -6862,8 +6866,8 @@
                     setServerVariableValue: this.setServerVariableValue,
                     getServerVariable: this.getServerVariable,
                     getEffectiveServerValue: this.getEffectiveServerValue,
-                  })
-                )
+                  }),
+                ),
               );
             }
           }
@@ -6918,7 +6922,7 @@
                   title: t.size ? t.join(", ") : "",
                   value: n,
                   onChange: this.onDomChange,
-                })
+                }),
               );
             }
           }
@@ -7028,7 +7032,7 @@
                       null,
                       "Example values are not available for ",
                       m().createElement("code", null, S),
-                      " media types."
+                      " media types.",
                     );
               }
               if (
@@ -7060,7 +7064,7 @@
                             if (f.get("readOnly")) return;
                             let y = M ? (0, h.po)(f) : null;
                             const S = c()(
-                                (o = L.get("required", (0, d.List)()))
+                                (o = L.get("required", (0, d.List)())),
                               ).call(o, g),
                               w = f.get("type"),
                               j = f.get("format"),
@@ -7112,7 +7116,7 @@
                                   g,
                                   S
                                     ? m().createElement("span", null, " *")
-                                    : null
+                                    : null,
                                 ),
                                 m().createElement(
                                   "div",
@@ -7124,7 +7128,7 @@
                                       { className: "prop-format" },
                                       "($",
                                       j,
-                                      ")"
+                                      ")",
                                     ),
                                   M && y.size
                                     ? r()((p = y.entrySeq())).call(p, (e) => {
@@ -7135,13 +7139,13 @@
                                           xVal: s,
                                         });
                                       })
-                                    : null
+                                    : null,
                                 ),
                                 m().createElement(
                                   "div",
                                   { className: "parameter__deprecated" },
-                                  f.get("deprecated") ? "deprecated" : null
-                                )
+                                  f.get("deprecated") ? "deprecated" : null,
+                                ),
                               ),
                               m().createElement(
                                 "td",
@@ -7173,14 +7177,14 @@
                                             isDisabled: u()(_)
                                               ? 0 !== _.length
                                               : !(0, h.O2)(_),
-                                          })
+                                          }),
                                     )
-                                  : null
-                              )
+                                  : null,
+                              ),
                             );
-                          })
-                      )
-                    )
+                          }),
+                      ),
+                    ),
                   )
                 );
               }
@@ -7217,7 +7221,7 @@
                           defaultValue: W,
                           onChange: x,
                           getComponent: i,
-                        })
+                        }),
                       )
                     : m().createElement(A, {
                         getComponent: i,
@@ -7241,7 +7245,7 @@
                         getComponent: i,
                         getConfigs: p,
                       })
-                    : null
+                    : null,
                 )
               );
             };
@@ -7269,7 +7273,7 @@
                     r().createElement(
                       "span",
                       { className: "servers-title" },
-                      "Servers"
+                      "Servers",
                     ),
                     r().createElement(o, {
                       servers: a,
@@ -7278,7 +7282,7 @@
                       setServerVariableValue: n.setServerVariableValue,
                       getServerVariable: t.serverVariableValue,
                       getEffectiveServerValue: t.serverEffectiveValue,
-                    })
+                    }),
                   )
                 : null;
             }
@@ -7322,7 +7326,7 @@
                 this.setServer(
                   null === (e = t.first()) || void 0 === e
                     ? void 0
-                    : e.get("url")
+                    : e.get("url"),
                 );
             }
             UNSAFE_componentWillReceiveProps(e) {
@@ -7340,7 +7344,7 @@
                   l =
                     o()((r = this.props.servers)).call(
                       r,
-                      (e) => e.get("url") === this.props.currentServer
+                      (e) => e.get("url") === this.props.currentServer,
                     ) || (0, p.OrderedMap)();
                 if (!a) return this.setServer(t.first().get("url"));
                 let i = l.get("variables") || (0, p.OrderedMap)(),
@@ -7392,11 +7396,11 @@
                           "option",
                           { value: e.get("url"), key: e.get("url") },
                           e.get("url"),
-                          e.get("description") && ` - ${e.get("description")}`
-                        )
+                          e.get("description") && ` - ${e.get("description")}`,
+                        ),
                       )
-                      .toArray()
-                  )
+                      .toArray(),
+                  ),
                 ),
                 i
                   ? u().createElement(
@@ -7406,7 +7410,7 @@
                         "div",
                         { className: "computed-url" },
                         "Computed URL:",
-                        u().createElement("code", null, a(s))
+                        u().createElement("code", null, a(s)),
                       ),
                       u().createElement("h4", null, "Server variables"),
                       u().createElement(
@@ -7441,9 +7445,9 @@
                                             key: e,
                                             value: e,
                                           },
-                                          e
-                                        )
-                                      )
+                                          e,
+                                        ),
+                                      ),
                                     )
                                   : u().createElement("input", {
                                       type: "text",
@@ -7451,14 +7455,14 @@
                                       onChange:
                                         this.onServerVariableValueChange,
                                       "data-variable": n,
-                                    })
-                              )
+                                    }),
+                              ),
                             );
-                          })
-                        )
-                      )
+                          }),
+                        ),
+                      ),
                     )
-                  : null
+                  : null,
               );
             }
           }
@@ -7633,7 +7637,7 @@
               )
                 return e.setIn(
                   ["requestData", n, s, "errors"],
-                  (0, i.fromJS)(a)
+                  (0, i.fromJS)(a),
                 );
               if (r.missingRequiredKeys && r.missingRequiredKeys.length > 0) {
                 const { missingRequiredKeys: t } = r;
@@ -7644,13 +7648,13 @@
                     c()(t).call(
                       t,
                       (e, t) => e.setIn([t, "errors"], (0, i.fromJS)(a)),
-                      e
-                    )
+                      e,
+                    ),
                 );
               }
               return (
                 console.warn(
-                  "unexpected result: SET_REQUEST_BODY_VALIDATE_ERROR"
+                  "unexpected result: SET_REQUEST_BODY_VALIDATE_ERROR",
                 ),
                 e
               );
@@ -7663,7 +7667,7 @@
               if (!i.Map.isMap(a))
                 return e.setIn(
                   ["requestData", n, s, "errors"],
-                  (0, i.fromJS)([])
+                  (0, i.fromJS)([]),
                 );
               const [...o] = r()(a).call(a);
               return o
@@ -7674,8 +7678,8 @@
                       c()(o).call(
                         o,
                         (e, t) => e.setIn([t, "errors"], (0, i.fromJS)([])),
-                        e
-                      )
+                        e,
+                      ),
                   )
                 : e;
             },
@@ -7749,11 +7753,11 @@
               return e.getIn(n) || "";
             }),
             y = g(
-              (e, t, n) => e.getIn(["requestData", t, n, "bodyValue"]) || null
+              (e, t, n) => e.getIn(["requestData", t, n, "bodyValue"]) || null,
             ),
             v = g(
               (e, t, n) =>
-                e.getIn(["requestData", t, n, "retainBodyValue"]) || !1
+                e.getIn(["requestData", t, n, "retainBodyValue"]) || !1,
             ),
             S = (e, t, n) => (e) => {
               const {
@@ -7768,7 +7772,7 @@
                     r.specResolvedSubtree(["paths", t, n, "requestBody"]),
                     e,
                     s.activeExamplesMember(t, n, "requestBody", "requestBody"),
-                    a
+                    a,
                   );
               }
               return null;
@@ -7785,9 +7789,9 @@
                   (c = (0, h.Pz)(
                     c
                       .mapEntries((e) =>
-                        p.Map.isMap(e[1]) ? [e[0], e[1].get("value")] : e
+                        p.Map.isMap(e[1]) ? [e[0], e[1].get("value")] : e,
                       )
-                      .toJS()
+                      .toJS(),
                   )),
                 p.List.isList(c) && (c = (0, h.Pz)(c)),
                 l)
@@ -7796,7 +7800,7 @@
                   i,
                   l,
                   s.activeExamplesMember(t, n, "requestBody", "requestBody"),
-                  a
+                  a,
                 );
                 o = !!c && c !== e;
               }
@@ -7804,22 +7808,22 @@
             }),
             w = g(
               (e, t, n) =>
-                e.getIn(["requestData", t, n, "bodyInclusion"]) || (0, p.Map)()
+                e.getIn(["requestData", t, n, "bodyInclusion"]) || (0, p.Map)(),
             ),
             x = g(
-              (e, t, n) => e.getIn(["requestData", t, n, "errors"]) || null
+              (e, t, n) => e.getIn(["requestData", t, n, "errors"]) || null,
             ),
             C = g(
               (e, t, n, s, r) =>
-                e.getIn(["examples", t, n, s, r, "activeExample"]) || null
+                e.getIn(["examples", t, n, s, r, "activeExample"]) || null,
             ),
             j = g(
               (e, t, n) =>
-                e.getIn(["requestData", t, n, "requestContentType"]) || null
+                e.getIn(["requestData", t, n, "requestContentType"]) || null,
             ),
             b = g(
               (e, t, n) =>
-                e.getIn(["requestData", t, n, "responseContentType"]) || null
+                e.getIn(["requestData", t, n, "responseContentType"]) || null,
             ),
             _ = g((e, t, n) => {
               let s;
@@ -7973,7 +7977,7 @@
             };
           }
           const E = S(
-              () => (e) => e.specSelectors.specJson().get("servers", g)
+              () => (e) => e.specSelectors.specJson().get("servers", g),
             ),
             w = S((e, t) => {
               let { callbacks: n, specPath: s } = t;
@@ -7998,8 +8002,8 @@
                                         (e) => {
                                           let [t] = e;
                                           return u()(a).call(a, t);
-                                        }
-                                      ))
+                                        },
+                                      )),
                                     ).call(l, (e) => {
                                       let [t, r] = e;
                                       return {
@@ -8012,12 +8016,12 @@
                                     });
                                     return m()(e).call(e, p);
                                   },
-                                  (0, d.List)()
+                                  (0, d.List)(),
                                 )
                               : e,
-                          (0, d.List)()
+                          (0, d.List)(),
                         )
-                        .groupBy((e) => e.callbackName))
+                        .groupBy((e) => e.callbackName)),
                     )
                       .call(t, (e) => e.toArray())
                       .toObject()
@@ -8063,13 +8067,13 @@
             }),
             u = l(
               () => (e) =>
-                e.getSystem().specSelectors.specJson().hasIn(["servers", 0])
+                e.getSystem().specSelectors.specJson().hasIn(["servers", 0]),
             ),
             p = l(
               (0, s.createSelector)(
                 r.specJsonWithResolvedSubtrees,
-                (e) => e.getIn(["components", "securitySchemes"]) || null
-              )
+                (e) => e.getIn(["components", "securitySchemes"]) || null,
+              ),
             ),
             m = (e, t) =>
               function (n) {
@@ -8220,7 +8224,7 @@
                   (s = o().createElement(
                     "span",
                     { className: "model-deprecated-warning" },
-                    "Deprecated:"
+                    "Deprecated:",
                   ))),
                 o().createElement(
                   "div",
@@ -8232,8 +8236,8 @@
                       getConfigs: e,
                       depth: 1,
                       expandDepth: this.props.expandDepth || 0,
-                    })
-                  )
+                    }),
+                  ),
                 )
               );
             }
@@ -8261,8 +8265,8 @@
               r().createElement(
                 "small",
                 { className: "version-stamp" },
-                r().createElement("pre", { className: "version" }, "OAS 3.0")
-              )
+                r().createElement("pre", { className: "version" }, "OAS 3.0"),
+              ),
             );
           });
         },
@@ -8278,7 +8282,7 @@
             if (t.jsonSchema202012) {
               const e = (0, a.makeIsExpandable)(
                 t.jsonSchema202012.isExpandable,
-                n
+                n,
               );
               r()(this.fn.jsonSchema202012, {
                 isExpandable: e,
@@ -8297,7 +8301,7 @@
                   memoizedCreateXMLExample:
                     t.jsonSchema202012.memoizedCreateXMLExample,
                 },
-                n()
+                n(),
               );
               r()(this.fn, e);
             }
@@ -8326,15 +8330,15 @@
                     c,
                     { href: (0, a.Nm)(o), target: "_blank" },
                     s,
-                    " - Website"
-                  )
+                    " - Website",
+                  ),
                 ),
               l &&
                 r().createElement(
                   c,
                   { href: (0, a.Nm)(`mailto:${l}`) },
-                  o ? `Send email to ${s}` : `Contact ${s}`
-                )
+                  o ? `Send email to ${s}` : `Contact ${s}`,
+                ),
             );
           };
         },
@@ -8376,16 +8380,16 @@
                   "h2",
                   { className: "title" },
                   p,
-                  s && r().createElement(S, { version: s })
+                  s && r().createElement(S, { version: s }),
                 ),
                 (c || l) && r().createElement(w, { host: c, basePath: l }),
-                o && r().createElement(E, { getComponent: t, url: o })
+                o && r().createElement(E, { getComponent: t, url: o }),
               ),
               i && r().createElement("p", { className: "info__summary" }, i),
               r().createElement(
                 "div",
                 { className: "info__description description" },
-                r().createElement(y, { source: u })
+                r().createElement(y, { source: u }),
               ),
               m &&
                 r().createElement(
@@ -8394,8 +8398,8 @@
                   r().createElement(
                     v,
                     { target: "_blank", href: (0, a.Nm)(m) },
-                    "Terms of service"
-                  )
+                    "Terms of service",
+                  ),
                 ),
               g.size > 0 && r().createElement(C, null),
               f.size > 0 && r().createElement(x, null),
@@ -8407,9 +8411,9 @@
                     target: "_blank",
                     href: (0, a.Nm)(d),
                   },
-                  h || d
+                  h || d,
                 ),
-              r().createElement(j, null)
+              r().createElement(j, null),
             );
           };
         },
@@ -8437,8 +8441,8 @@
                   r().createElement(
                     l,
                     { target: "_blank", href: (0, a.Nm)(s) },
-                    s
-                  )
+                    s,
+                  ),
                 ),
               s &&
                 s !== o &&
@@ -8457,7 +8461,7 @@
                         r().createElement(
                           "h4",
                           { className: "center" },
-                          "Warning"
+                          "Warning",
                         ),
                         r().createElement(
                           "p",
@@ -8465,21 +8469,21 @@
                           r().createElement(
                             "strong",
                             null,
-                            "OpenAPI.jsonSchemaDialect"
+                            "OpenAPI.jsonSchemaDialect",
                           ),
                           " field contains a value different from the default value of",
                           " ",
                           r().createElement(
                             l,
                             { target: "_blank", href: o },
-                            o
+                            o,
                           ),
-                          ". Values different from the default one are currently not supported. Please either omit the field or provide it with the default value."
-                        )
-                      )
-                    )
-                  )
-                )
+                          ". Values different from the default one are currently not supported. Please either omit the field or provide it with the default value.",
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             );
           };
         },
@@ -8504,10 +8508,10 @@
                     r().createElement(
                       l,
                       { target: "_blank", href: (0, a.Nm)(o) },
-                      s
-                    )
+                      s,
+                    ),
                   )
-                : r().createElement("span", null, s)
+                : r().createElement("span", null, s),
             );
           };
         },
@@ -8538,7 +8542,7 @@
                   (e, t) => {
                     r(i, t);
                   },
-                  [i, r]
+                  [i, r],
                 );
               return o().createElement(c, {
                 name: i,
@@ -8632,8 +8636,8 @@
                       u().createElement("span", null, "Schemas"),
                       E
                         ? u().createElement(C, null)
-                        : u().createElement(j, null)
-                    )
+                        : u().createElement(j, null),
+                    ),
                   ),
                   u().createElement(
                     w,
@@ -8647,8 +8651,8 @@
                         name: t,
                         onExpand: O(t),
                       });
-                    })
-                  )
+                    }),
+                  ),
                 );
           };
         },
@@ -8686,7 +8690,7 @@
                       r().createElement(
                         "h3",
                         null,
-                        "Unable to render this definition"
+                        "Unable to render this definition",
                       ),
                       r().createElement(
                         "p",
@@ -8694,7 +8698,7 @@
                         r().createElement("code", null, "swagger"),
                         " and ",
                         r().createElement("code", null, "openapi"),
-                        " fields cannot be present in the same Swagger or OpenAPI definition. Please remove one of the fields."
+                        " fields cannot be present in the same Swagger or OpenAPI definition. Please remove one of the fields.",
                       ),
                       r().createElement(
                         "p",
@@ -8706,10 +8710,10 @@
                         " (for example,",
                         " ",
                         r().createElement("code", null, "openapi: 3.1.0"),
-                        ")."
-                      )
-                    )
-                  )
+                        ").",
+                      ),
+                    ),
+                  ),
                 )
               : n || s || a
               ? r().createElement("div", null, l)
@@ -8729,12 +8733,12 @@
                       r().createElement(
                         "h3",
                         null,
-                        "Unable to render this definition"
+                        "Unable to render this definition",
                       ),
                       r().createElement(
                         "p",
                         null,
-                        "The provided definition does not specify a valid version field."
+                        "The provided definition does not specify a valid version field.",
                       ),
                       r().createElement(
                         "p",
@@ -8746,10 +8750,10 @@
                         " (for example,",
                         " ",
                         r().createElement("code", null, "openapi: 3.1.0"),
-                        ")."
-                      )
-                    )
-                  )
+                        ").",
+                      ),
+                    ),
+                  ),
                 );
           };
         },
@@ -8788,10 +8792,10 @@
                           path: e,
                           specPath: t.specPath,
                           allowTryItOut: !1,
-                        })
-                      )
+                        }),
+                      ),
                     );
-                  })
+                  }),
                 );
           };
         },
@@ -8873,7 +8877,10 @@
               n.specSelectors.isOAS31()
                 ? m().createElement(
                     e,
-                    r()({}, s, { originalComponent: t, getSystem: n.getSystem })
+                    r()({}, s, {
+                      originalComponent: t,
+                      getSystem: n.getSystem,
+                    }),
                   )
                 : m().createElement(t, s),
             v = (e, t) => {
@@ -8893,7 +8900,7 @@
                         : void 0;
                     },
                   ];
-                })
+                }),
               );
             };
         },
@@ -8972,7 +8979,7 @@
                     selectLicenseNameField: S.selectLicenseNameField,
                     selectLicenseUrlField: S.selectLicenseUrlField,
                     selectLicenseIdentifierField: A(
-                      S.selectLicenseIdentifierField
+                      S.selectLicenseIdentifierField,
                     ),
                     selectLicenseUrl: n(S.selectLicenseUrl),
                     contact: S.contact,
@@ -8986,7 +8993,7 @@
                     selectInfoTermsOfServiceField:
                       S.selectInfoTermsOfServiceField,
                     selectInfoTermsOfServiceUrl: n(
-                      S.selectInfoTermsOfServiceUrl
+                      S.selectInfoTermsOfServiceUrl,
                     ),
                     selectExternalDocsDescriptionField:
                       S.selectExternalDocsDescriptionField,
@@ -9035,8 +9042,8 @@
                   className:
                     "json-schema-2020-12-core-keyword__value json-schema-2020-12-core-keyword__value--secondary",
                 },
-                r().createElement(a, { source: t.description })
-              )
+                r().createElement(a, { source: t.description }),
+              ),
             );
           };
         },
@@ -9092,10 +9099,10 @@
                                 className:
                                   "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                               },
-                              "Discriminator"
-                            )
+                              "Discriminator",
+                            ),
                           ),
-                          o().createElement(E, { expanded: g, onClick: C })
+                          o().createElement(E, { expanded: g, onClick: C }),
                         )
                       : o().createElement(
                           "span",
@@ -9103,7 +9110,7 @@
                             className:
                               "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                           },
-                          "Discriminator"
+                          "Discriminator",
                         ),
                     s.propertyName &&
                       o().createElement(
@@ -9112,7 +9119,7 @@
                           className:
                             "json-schema-2020-12__attribute json-schema-2020-12__attribute--muted",
                         },
-                        s.propertyName
+                        s.propertyName,
                       ),
                     o().createElement(
                       "strong",
@@ -9120,7 +9127,7 @@
                         className:
                           "json-schema-2020-12__attribute json-schema-2020-12__attribute--primary",
                       },
-                      "object"
+                      "object",
                     ),
                     o().createElement(
                       "ul",
@@ -9130,17 +9137,17 @@
                           {
                             "json-schema-2020-12-keyword__children--collapsed":
                               !g,
-                          }
+                          },
                         ),
                       },
                       g &&
                         o().createElement(
                           "li",
                           { className: "json-schema-2020-12-property" },
-                          o().createElement(i.default, { discriminator: s })
-                        )
-                    )
-                  )
+                          o().createElement(i.default, { discriminator: s }),
+                        ),
+                    ),
+                  ),
                 );
           };
         },
@@ -9176,7 +9183,7 @@
                         className:
                           "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                       },
-                      t
+                      t,
                     ),
                     u().createElement(
                       "span",
@@ -9184,8 +9191,8 @@
                         className:
                           "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                       },
-                      n
-                    )
+                      n,
+                    ),
                   );
                 });
           };
@@ -9215,7 +9222,7 @@
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                     },
-                    "Example"
+                    "Example",
                   ),
                   r().createElement(
                     "span",
@@ -9223,8 +9230,8 @@
                       className:
                         "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--const",
                     },
-                    o(t.example)
-                  )
+                    o(t.example),
+                  ),
                 )
               : null;
           };
@@ -9283,10 +9290,10 @@
                                 className:
                                   "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                               },
-                              "External documentation"
-                            )
+                              "External documentation",
+                            ),
                           ),
-                          o().createElement(E, { expanded: g, onClick: b })
+                          o().createElement(E, { expanded: g, onClick: b }),
                         )
                       : o().createElement(
                           "span",
@@ -9294,7 +9301,7 @@
                             className:
                               "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                           },
-                          "External documentation"
+                          "External documentation",
                         ),
                     o().createElement(
                       "strong",
@@ -9302,7 +9309,7 @@
                         className:
                           "json-schema-2020-12__attribute json-schema-2020-12__attribute--primary",
                       },
-                      "object"
+                      "object",
                     ),
                     o().createElement(
                       "ul",
@@ -9312,7 +9319,7 @@
                           {
                             "json-schema-2020-12-keyword__children--collapsed":
                               !g,
-                          }
+                          },
                         ),
                       },
                       g &&
@@ -9323,7 +9330,7 @@
                             o().createElement(
                               "li",
                               { className: "json-schema-2020-12-property" },
-                              o().createElement(w, { schema: s, getSystem: n })
+                              o().createElement(w, { schema: s, getSystem: n }),
                             ),
                           s.url &&
                             o().createElement(
@@ -9341,7 +9348,7 @@
                                     className:
                                       "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                                   },
-                                  "url"
+                                  "url",
                                 ),
                                 o().createElement(
                                   "span",
@@ -9355,14 +9362,14 @@
                                       target: "_blank",
                                       href: (0, i.Nm)(s.url),
                                     },
-                                    s.url
-                                  )
-                                )
-                              )
-                            )
-                        )
-                    )
-                  )
+                                    s.url,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ),
+                    ),
+                  ),
                 );
           };
         },
@@ -9421,10 +9428,10 @@
                           name: t,
                           schema: s,
                           dependentRequired: a,
-                        })
+                        }),
                       );
-                    })
-                  )
+                    }),
+                  ),
                 );
           };
         },
@@ -9479,10 +9486,10 @@
                                 className:
                                   "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                               },
-                              "XML"
-                            )
+                              "XML",
+                            ),
                           ),
-                          o().createElement(S, { expanded: h, onClick: x })
+                          o().createElement(S, { expanded: h, onClick: x }),
                         )
                       : o().createElement(
                           "span",
@@ -9490,7 +9497,7 @@
                             className:
                               "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                           },
-                          "XML"
+                          "XML",
                         ),
                     !0 === s.attribute &&
                       o().createElement(
@@ -9499,7 +9506,7 @@
                           className:
                             "json-schema-2020-12__attribute json-schema-2020-12__attribute--muted",
                         },
-                        "attribute"
+                        "attribute",
                       ),
                     !0 === s.wrapped &&
                       o().createElement(
@@ -9508,7 +9515,7 @@
                           className:
                             "json-schema-2020-12__attribute json-schema-2020-12__attribute--muted",
                         },
-                        "wrapped"
+                        "wrapped",
                       ),
                     o().createElement(
                       "strong",
@@ -9516,7 +9523,7 @@
                         className:
                           "json-schema-2020-12__attribute json-schema-2020-12__attribute--primary",
                       },
-                      "object"
+                      "object",
                     ),
                     o().createElement(
                       "ul",
@@ -9526,7 +9533,7 @@
                           {
                             "json-schema-2020-12-keyword__children--collapsed":
                               !h,
-                          }
+                          },
                         ),
                       },
                       h &&
@@ -9549,7 +9556,7 @@
                                     className:
                                       "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                                   },
-                                  "name"
+                                  "name",
                                 ),
                                 o().createElement(
                                   "span",
@@ -9557,9 +9564,9 @@
                                     className:
                                       "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                                   },
-                                  s.name
-                                )
-                              )
+                                  s.name,
+                                ),
+                              ),
                             ),
                           s.namespace &&
                             o().createElement(
@@ -9574,7 +9581,7 @@
                                     className:
                                       "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                                   },
-                                  "namespace"
+                                  "namespace",
                                 ),
                                 o().createElement(
                                   "span",
@@ -9582,9 +9589,9 @@
                                     className:
                                       "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                                   },
-                                  s.namespace
-                                )
-                              )
+                                  s.namespace,
+                                ),
+                              ),
                             ),
                           s.prefix &&
                             o().createElement(
@@ -9599,7 +9606,7 @@
                                     className:
                                       "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                                   },
-                                  "prefix"
+                                  "prefix",
                                 ),
                                 o().createElement(
                                   "span",
@@ -9607,13 +9614,13 @@
                                     className:
                                       "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                                   },
-                                  s.prefix
-                                )
-                              )
-                            )
-                        )
-                    )
-                  )
+                                  s.prefix,
+                                ),
+                              ),
+                            ),
+                        ),
+                    ),
+                  ),
                 );
           };
         },
@@ -9669,7 +9676,7 @@
               r().createElement(o, { schema: t, getSystem: n }),
               r().createElement(l, { schema: t, getSystem: n }),
               r().createElement(i, { schema: t, getSystem: n }),
-              r().createElement(c, { schema: t, getSystem: n })
+              r().createElement(c, { schema: t, getSystem: n }),
             );
           });
         },
@@ -9700,7 +9707,7 @@
                 ? (0, r.mn)(n, e, { selectedServer: t })
                 : s
                 ? `https://spdx.org/licenses/${s}.html`
-                : void 0
+                : void 0,
           );
         },
         9305: (e, t, n) => {
@@ -9751,7 +9758,7 @@
           const S = (0, g.Map)(),
             E = (0, f.createSelector)(
               (e, t) => t.specSelectors.specJson(),
-              v.isOAS31
+              v.isOAS31,
             ),
             w = () => (e) => e.specSelectors.specJson().get("webhooks", S),
             x = (0, f.createSelector)(
@@ -9772,7 +9779,7 @@
                               (a = c()((o = n.entrySeq())).call(o, (e) => {
                                 let [n] = e;
                                 return u()(t).call(t, n);
-                              }))
+                              })),
                             ).call(a, (e) => {
                               let [t, n] = e;
                               return {
@@ -9784,14 +9791,14 @@
                             });
                             return m()(e).call(e, l);
                           },
-                          (0, g.List)()
+                          (0, g.List)(),
                         )
-                        .groupBy((e) => e.path))
+                        .groupBy((e) => e.path)),
                     )
                       .call(n, (e) => e.toArray())
                       .toObject()
                   : {};
-              }
+              },
             ),
             C = () => (e) => e.specSelectors.info().get("license", S),
             j = () => (e) => e.specSelectors.license().get("name", "License"),
@@ -9802,7 +9809,7 @@
               (e, t) => t.specSelectors.selectLicenseUrlField(),
               (e, t, n) => {
                 if (n) return (0, y.mn)(n, e, { selectedServer: t });
-              }
+              },
             ),
             N = () => (e) => e.specSelectors.license().get("identifier"),
             O = () => (e) => e.specSelectors.info().get("contact", S),
@@ -9816,7 +9823,7 @@
               (e, t) => t.specSelectors.selectContactUrlField(),
               (e, t, n) => {
                 if (n) return (0, y.mn)(n, e, { selectedServer: t });
-              }
+              },
             ),
             q = () => (e) => e.specSelectors.info().get("title"),
             R = () => (e) => e.specSelectors.info().get("summary"),
@@ -9828,7 +9835,7 @@
               (e, t) => t.specSelectors.selectInfoTermsOfServiceField(),
               (e, t, n) => {
                 if (n) return (0, y.mn)(n, e, { selectedServer: t });
-              }
+              },
             ),
             J = () => (e) => e.specSelectors.externalDocs().get("description"),
             $ = () => (e) => e.specSelectors.externalDocs().get("url"),
@@ -9838,7 +9845,7 @@
               (e, t) => t.specSelectors.selectExternalDocsUrlField(),
               (e, t, n) => {
                 if (n) return (0, y.mn)(n, e, { selectedServer: t });
-              }
+              },
             ),
             K = () => (e) =>
               e.specSelectors.specJson().get("jsonSchemaDialect"),
@@ -9860,11 +9867,11 @@
                             (e[s] = (null == a ? void 0 : a.toJS()) || r), e
                           );
                         },
-                        {}
+                        {},
                       )
                     : e.toJS()
                   : {};
-              }
+              },
             );
         },
         2884: (e, t, n) => {
@@ -9885,7 +9892,7 @@
                 return s || e(...a);
               },
             a = (0, s.createOnlyOAS31SelectorWrapper)(
-              () => (e, t) => t.oas31Selectors.selectLicenseUrl()
+              () => (e, t) => t.oas31Selectors.selectLicenseUrl(),
             );
         },
         7423: (e, t, n) => {
@@ -10032,7 +10039,7 @@
                   upperFirst: l.upperFirst,
                   isExpandable: (0, o.makeIsExpandable)(
                     l.jsonSchema202012.isExpandable,
-                    t
+                    t,
                   ),
                   getProperties: o.getProperties,
                 },
@@ -10187,8 +10194,8 @@
               r().createElement(
                 "small",
                 { className: "version-stamp" },
-                r().createElement("pre", { className: "version" }, "OAS 3.1")
-              )
+                r().createElement("pre", { className: "version" }, "OAS 3.1"),
+              ),
             );
           });
         },
@@ -10366,17 +10373,17 @@
                               ? t.push(
                                   `  "${e}": {\n    "name": "${s.name}"${
                                     s.type ? `,\n    "type": "${s.type}"` : ""
-                                  }\n  }`
+                                  }\n  }`,
                                 )
                               : t.push(
                                   `  "${e}": ${c()(s, null, 2).replace(
                                     /(\r\n|\r|\n)/g,
-                                    "\n  "
-                                  )}`
+                                    "\n  ",
+                                  )}`,
                                 );
                           }
                           return `{\n${t.join(",\n")}\n}`;
-                        })(e)
+                        })(e),
                       )
                     : ("string" != typeof t && (t = c()(t)), l(t));
                 }
@@ -10464,10 +10471,10 @@
                 [j, b] = (0, p.useState)(
                   null === (t = a.getSnippetGenerators()) || void 0 === t
                     ? void 0
-                    : t.keySeq().first()
+                    : t.keySeq().first(),
                 ),
                 [_, N] = (0, p.useState)(
-                  null == a ? void 0 : a.getDefaultExpanded()
+                  null == a ? void 0 : a.getDefaultExpanded(),
                 );
               (0, p.useEffect)(() => {}, []),
                 (0, p.useEffect)(() => {
@@ -10482,15 +10489,15 @@
                           ? void 0
                           : t.contains("curl-command"))
                       );
-                    }
+                    },
                   );
                   return (
                     c()(t).call(t, (e) =>
-                      e.addEventListener("mousewheel", q, { passive: !1 })
+                      e.addEventListener("mousewheel", q, { passive: !1 }),
                     ),
                     () => {
                       c()(t).call(t, (e) =>
-                        e.removeEventListener("mousewheel", q)
+                        e.removeEventListener("mousewheel", q),
                       );
                     }
                   );
@@ -10517,7 +10524,7 @@
                         className: "curl microlight",
                         style: (0, v.C2)(h()(d, "syntaxHighlight.theme")),
                       },
-                      A
+                      A,
                     )
                   : m().createElement("textarea", {
                       readOnly: !0,
@@ -10541,7 +10548,7 @@
                   m().createElement(
                     "h4",
                     { onClick: () => I(), style: { cursor: "pointer" } },
-                    "Snippets"
+                    "Snippets",
                   ),
                   m().createElement(
                     "button",
@@ -10560,8 +10567,8 @@
                           className: "arrow",
                           width: "10",
                           height: "10",
-                        })
-                  )
+                        }),
+                  ),
                 ),
                 _ &&
                   m().createElement(
@@ -10593,10 +10600,10 @@
                           m().createElement(
                             "h4",
                             { style: t === j ? { color: "white" } : {} },
-                            n.get("title")
-                          )
+                            n.get("title"),
+                          ),
                         );
-                      })
+                      }),
                     ),
                     m().createElement(
                       "div",
@@ -10604,11 +10611,11 @@
                       m().createElement(
                         y.CopyToClipboard,
                         { text: A },
-                        m().createElement("button", null)
-                      )
+                        m().createElement("button", null),
+                      ),
                     ),
-                    m().createElement("div", null, R)
-                  )
+                    m().createElement("div", null, R),
+                  ),
               );
             };
         },
@@ -10644,7 +10651,7 @@
                 (n = c()((s = m(e))).call(s, (e, t) => {
                   const n = ((e) => a[`requestSnippetGenerator_${e}`])(t);
                   return "function" != typeof n ? null : e.set("fn", n);
-                }))
+                })),
               ).call(n, (e) => e);
             },
             h = (0, i.createSelector)(p, (e) => e.get("activeLanguage")),
@@ -10706,8 +10713,8 @@
                 null,
                 "Could not render ",
                 "t" === t ? "this component" : t,
-                ", see the console."
-              )
+                ", see the console.",
+              ),
             );
           };
         },
@@ -10729,7 +10736,7 @@
                   return o().createElement(
                     l,
                     { targetName: c, getComponent: n, fn: s },
-                    o().createElement(t, r()({}, this.props, this.context))
+                    o().createElement(t, r()({}, this.props, this.context)),
                   );
                 }
               }
@@ -10786,7 +10793,7 @@
                   r()((s = Array(u.length))).call(s, (e, t) => {
                     let { fn: n } = t;
                     return n.withErrorBoundary(e);
-                  })
+                  }),
                 );
               return {
                 fn: {
@@ -10818,7 +10825,7 @@
                   i,
                   (e, t) =>
                     t.when.test(s) ? [...e, ...t.shouldStringifyTypes] : e,
-                  u
+                  u,
                 );
               return c()(d, (e) => e === m) ? o()(p, null, 2) : p;
             };
@@ -10891,7 +10898,7 @@
               (u = o().dump(
                 o().load(i),
                 { lineWidth: -1 },
-                { schema: a.JSON_SCHEMA }
+                { schema: a.JSON_SCHEMA },
               )),
                 "\n" === u[u.length - 1] &&
                   (u = r()(u).call(u, 0, u.length - 1));
@@ -10973,7 +10980,7 @@
               (0, k.XV)(
                 e,
                 "$$ref",
-                (e) => "string" == typeof e && r()(e).call(e, "#") > -1
+                (e) => "string" == typeof e && r()(e).call(e, "#") > -1,
               ),
             R = ["maxProperties", "minProperties"],
             T = ["minItems", "maxItems"],
@@ -10997,11 +11004,11 @@
                   ...T,
                   ...M,
                   ...D,
-                ])
+                ]),
               ).call(n, (n) =>
                 ((n) => {
                   void 0 === t[n] && void 0 !== e[n] && (t[n] = e[n]);
-                })(n)
+                })(n),
               ),
               void 0 !== e.required && c()(e.required)) &&
                 ((void 0 !== t.required && t.required.length) ||
@@ -11107,7 +11114,7 @@
               s && (D[_] = []);
               const L = (t) =>
                 m()(t).call(t, (t) =>
-                  Object.prototype.hasOwnProperty.call(e, t)
+                  Object.prototype.hasOwnProperty.call(e, t),
                 );
               e &&
                 !y &&
@@ -11129,7 +11136,7 @@
                     (t = h()(t).call(
                       t,
                       0,
-                      null === (o = e) || void 0 === o ? void 0 : o.maxItems
+                      null === (o = e) || void 0 === o ? void 0 : o.maxItems,
                     ));
                   if (
                     null !==
@@ -11184,7 +11191,7 @@
                             s
                               ? o()((n = e.required)).call(
                                   n,
-                                  (e) => (t += void 0 === D[e] ? 0 : 1)
+                                  (e) => (t += void 0 === D[e] ? 0 : 1),
                                 )
                               : o()((r = e.required)).call(r, (e) => {
                                   var n;
@@ -11236,12 +11243,12 @@
                         if (
                           Object.prototype.hasOwnProperty.call(
                             e,
-                            "discriminator"
+                            "discriminator",
                           ) &&
                           e.discriminator &&
                           Object.prototype.hasOwnProperty.call(
                             e.discriminator,
-                            "mapping"
+                            "mapping",
                           ) &&
                           e.discriminator.mapping &&
                           Object.prototype.hasOwnProperty.call(e, "$$ref") &&
@@ -11353,12 +11360,12 @@
                     (C.xml.name = C.xml.name || g.name);
                 if (c()(C.anyOf))
                   n = E()((H = C.anyOf)).call(H, (e) =>
-                    $(J(C, e, t), t, void 0, s)
+                    $(J(C, e, t), t, void 0, s),
                   );
                 else if (c()(C.oneOf)) {
                   var Z;
                   n = E()((Z = C.oneOf)).call(Z, (e) =>
-                    $(J(C, e, t), t, void 0, s)
+                    $(J(C, e, t), t, void 0, s),
                   );
                 } else {
                   if (!(!s || (s && g.wrapped))) return $(C, t, void 0, s);
@@ -11591,7 +11598,7 @@
             } = n;
             ye ||
               (console.warn(
-                "specActions.resolveSpec is deprecated since v3.10.0 and will be removed in v4.0.0; use requestResolvedSubtree instead!"
+                "specActions.resolveSpec is deprecated since v3.10.0 and will be removed in v4.0.0; use requestResolvedSubtree instead!",
               ),
               (ye = !0));
             const {
@@ -11625,7 +11632,7 @@
                     (e.source = "resolver"),
                     c()(e, "message", { enumerable: !0, value: e.message }),
                     e
-                  )
+                  ),
                 );
                 l.newThrownErrBatch(e);
               }
@@ -11640,17 +11647,17 @@
                   let { path: n, system: s } = t;
                   return e.has(s) || e.set(s, []), e.get(s).push(n), e;
                 },
-                new (m())()
+                new (m())(),
               );
               (Se = []),
                 h()(e).call(e, async (e, t) => {
                   if (!t)
                     return void console.error(
-                      "debResolveSubtrees: don't have a system to operate on, aborting."
+                      "debResolveSubtrees: don't have a system to operate on, aborting.",
                     );
                   if (!t.fn.resolveSubtree)
                     return void console.error(
-                      "Error: Swagger-Client did not provide a `resolveSubtree` method, doing nothing."
+                      "Error: Swagger-Client did not provide a `resolveSubtree` method, doing nothing.",
                     );
                   const {
                       errActions: n,
@@ -11689,7 +11696,7 @@
                                 "resolver" !== e.get("source") ||
                                 !f()((n = e.get("fullPath"))).call(
                                   n,
-                                  (e, n) => e === t[n] || void 0 === t[n]
+                                  (e, n) => e === t[n] || void 0 === t[n],
                                 )
                               );
                             }),
@@ -11710,7 +11717,7 @@
                                 value: e.message,
                               }),
                               e
-                            )
+                            ),
                           );
                           n.newThrownErrBatch(e);
                         }
@@ -11723,8 +11730,8 @@
                             o()(
                               (j = E()((b = x()(C))).call(
                                 b,
-                                (e) => "openIdConnect" === e.type
-                              ))
+                                (e) => "openIdConnect" === e.type,
+                              )),
                             ).call(j, async (e) => {
                               const t = {
                                 url: e.openIdConnectUrl,
@@ -11739,7 +11746,7 @@
                               } catch (e) {
                                 console.error(e);
                               }
-                            })
+                            }),
                           ));
                         return (
                           V()(i, t, C),
@@ -11752,7 +11759,7 @@
                           p.specResolvedSubtree([]) || (0, q.Map)()
                         ).toJS(),
                         specWithCurrentSubtrees: p.specJS(),
-                      })
+                      }),
                     );
                     m.updateResolvedSubtree([], t.resultMap);
                   } catch (e) {
@@ -11844,14 +11851,14 @@
                 h()(
                   (f = E()((y = p.get("parameters"))).call(
                     y,
-                    (e) => e && !0 === e.get("allowEmptyValue")
-                  ))
+                    (e) => e && !0 === e.get("allowEmptyValue"),
+                  )),
                 ).call(f, (t) => {
                   if (
                     a.parameterInclusionSettingFor(
                       [i, u],
                       t.get("name"),
-                      t.get("in")
+                      t.get("in"),
                     )
                   ) {
                     e.parameters = e.parameters || {};
@@ -11883,13 +11890,13 @@
                 if (a && a.toJS)
                   e.requestBody = E()(
                     (v = o()(a).call(a, (e) =>
-                      q.Map.isMap(e) ? e.get("value") : e
-                    ))
+                      q.Map.isMap(e) ? e.get("value") : e,
+                    )),
                   )
                     .call(
                       v,
                       (e, t) =>
-                        (r()(e) ? 0 !== e.length : !(0, W.O2)(e)) || l.get(t)
+                        (r()(e) ? 0 !== e.length : !(0, W.O2)(e)) || l.get(t),
                     )
                     .toJS();
                 else e.requestBody = a;
@@ -12034,14 +12041,14 @@
               if (!r || !a)
                 return (
                   console.warn(
-                    "Warning: UPDATE_EMPTY_PARAM_INCLUSION could not generate a paramKey."
+                    "Warning: UPDATE_EMPTY_PARAM_INCLUSION could not generate a paramKey.",
                   ),
                   e
                 );
               const l = `${a}.${r}`;
               return e.setIn(
                 ["meta", "paths", ...s, "parameter_inclusions", l],
-                o
+                o,
               );
             },
             [d.VALIDATE_PARAMS]: (e, t) => {
@@ -12066,7 +12073,7 @@
                           e,
                           n,
                           r.get("name"),
-                          r.get("in")
+                          r.get("in"),
                         ),
                         c = (0, u.Ik)(r, a, {
                           bypassRequiredCheck: l,
@@ -12074,12 +12081,12 @@
                         });
                       return t.setIn(
                         [(0, u.V9)(r), "errors"],
-                        (0, i.fromJS)(c)
+                        (0, i.fromJS)(c),
                       );
                     },
-                    t
+                    t,
                   );
-                }
+                },
               );
             },
             [d.CLEAR_VALIDATE_PARAMS]: (e, t) => {
@@ -12089,7 +12096,8 @@
               return e.updateIn(
                 ["meta", "paths", ...n, "parameters"],
                 (0, i.fromJS)([]),
-                (e) => o()(e).call(e, (e) => e.set("errors", (0, i.fromJS)([])))
+                (e) =>
+                  o()(e).call(e, (e) => e.set("errors", (0, i.fromJS)([]))),
               );
             },
             [d.SET_RESPONSE]: (e, t) => {
@@ -12105,7 +12113,7 @@
                       message: s.err.message,
                       statusCode: s.err.statusCode,
                     },
-                    s.err.response
+                    s.err.response,
                   )
                 : s),
                 (n.headers = n.headers || {});
@@ -12267,12 +12275,12 @@
             A = (0, C.createSelector)(N, (e) => e.get("spec") || ""),
             I = (0, C.createSelector)(
               N,
-              (e) => e.get("specSource") || "not-editor"
+              (e) => e.get("specSource") || "not-editor",
             ),
             P = (0, C.createSelector)(N, (e) => e.get("json", (0, b.Map)())),
             q = (0, C.createSelector)(P, (e) => e.toJS()),
             R = (0, C.createSelector)(N, (e) =>
-              e.get("resolved", (0, b.Map)())
+              e.get("resolved", (0, b.Map)()),
             ),
             T = (e, t) => e.getIn(["resolvedSubtrees", ...t], void 0),
             M = (e, t) =>
@@ -12285,8 +12293,8 @@
               (0, b.OrderedMap)().mergeWith(
                 M,
                 e.get("json"),
-                e.get("resolvedSubtrees")
-              )
+                e.get("resolvedSubtrees"),
+              ),
             ),
             J = (e) => P(e),
             $ = (0, C.createSelector)(J, () => !1),
@@ -12297,7 +12305,7 @@
               var t;
               return r()((t = /v?([0-9]*)\.([0-9]*)\.([0-9]*)/i.exec(e))).call(
                 t,
-                1
+                1,
               );
             }),
             F = (0, C.createSelector)(D, (e) => e.get("paths")),
@@ -12324,7 +12332,7 @@
                             method: s,
                             operation: e,
                             id: `${s}-${n}`,
-                          })
+                          }),
                         ));
                     });
                   }),
@@ -12334,7 +12342,7 @@
             W = (0, C.createSelector)(J, (e) => (0, b.Set)(e.get("consumes"))),
             H = (0, C.createSelector)(J, (e) => (0, b.Set)(e.get("produces"))),
             Z = (0, C.createSelector)(J, (e) =>
-              e.get("security", (0, b.List)())
+              e.get("security", (0, b.List)()),
             ),
             G = (0, C.createSelector)(J, (e) => e.get("securityDefinitions")),
             X = (e, t) => {
@@ -12349,7 +12357,7 @@
             Q = (0, C.createSelector)(J, (e) => e.get("basePath")),
             ee = (0, C.createSelector)(J, (e) => e.get("host")),
             te = (0, C.createSelector)(J, (e) =>
-              e.get("schemes", (0, b.Map)())
+              e.get("schemes", (0, b.Map)()),
             ),
             ne = (0, C.createSelector)(B, W, H, (e, t, n) =>
               u()(e).call(e, (e) =>
@@ -12363,12 +12371,12 @@
                         e.get("produces") ||
                           e.update("produces", (e) => (0, b.Set)(e).merge(n)),
                         e
-                      )
+                      ),
                     );
                   }
                   return (0, b.Map)();
-                })
-              )
+                }),
+              ),
             ),
             se = (0, C.createSelector)(J, (e) => {
               const t = e.get("tags", (0, b.List)());
@@ -12382,7 +12390,7 @@
               return h()((n = m()(s).call(s, b.Map.isMap))).call(
                 n,
                 (e) => e.get("name") === t,
-                (0, b.Map)()
+                (0, b.Map)(),
               );
             },
             ae = (0, C.createSelector)(ne, se, (e, t) =>
@@ -12395,15 +12403,15 @@
                     : f()(n).call(
                         n,
                         (e, n) => e.update(n, (0, b.List)(), (e) => e.push(t)),
-                        e
+                        e,
                       );
                 },
                 f()(t).call(
                   t,
                   (e, t) => e.set(t.get("name"), (0, b.List)()),
-                  (0, b.OrderedMap)()
-                )
-              )
+                  (0, b.OrderedMap)(),
+                ),
+              ),
             ),
             oe = (e) => (t) => {
               var n;
@@ -12415,8 +12423,8 @@
                   (e, t) => {
                     let n = "function" == typeof r ? r : j.wh.tagsSorter[r];
                     return n ? n(e, t) : null;
-                  }
-                ))
+                  },
+                )),
               ).call(n, (t, n) => {
                 let s = "function" == typeof a ? a : j.wh.operationsSorter[a],
                   r = s ? v()(t).call(t, s) : t;
@@ -12424,13 +12432,13 @@
               });
             },
             le = (0, C.createSelector)(N, (e) =>
-              e.get("responses", (0, b.Map)())
+              e.get("responses", (0, b.Map)()),
             ),
             ce = (0, C.createSelector)(N, (e) =>
-              e.get("requests", (0, b.Map)())
+              e.get("requests", (0, b.Map)()),
             ),
             ie = (0, C.createSelector)(N, (e) =>
-              e.get("mutatedRequests", (0, b.Map)())
+              e.get("mutatedRequests", (0, b.Map)()),
             ),
             ue = (e, t, n) => le(e).getIn([t, n], null),
             pe = (e, t, n) => ce(e).getIn([t, n], null),
@@ -12439,16 +12447,16 @@
             he = (e, t, n) => {
               const s = D(e).getIn(
                   ["paths", ...t, "parameters"],
-                  (0, b.OrderedMap)()
+                  (0, b.OrderedMap)(),
                 ),
                 r = e.getIn(
                   ["meta", "paths", ...t, "parameters"],
-                  (0, b.OrderedMap)()
+                  (0, b.OrderedMap)(),
                 ),
                 a = u()(s).call(s, (e) => {
                   const t = r.get(`${n.get("in")}.${n.get("name")}`),
                     s = r.get(
-                      `${n.get("in")}.${n.get("name")}.hash-${n.hashCode()}`
+                      `${n.get("in")}.${n.get("name")}.hash-${n.hashCode()}`,
                     );
                   return (0, b.OrderedMap)().merge(e, t, s);
                 });
@@ -12457,25 +12465,25 @@
                 (e) =>
                   e.get("in") === n.get("in") &&
                   e.get("name") === n.get("name"),
-                (0, b.OrderedMap)()
+                (0, b.OrderedMap)(),
               );
             },
             ge = (e, t, n, s) => {
               const r = `${s}.${n}`;
               return e.getIn(
                 ["meta", "paths", ...t, "parameter_inclusions", r],
-                !1
+                !1,
               );
             },
             fe = (e, t, n, s) => {
               const r = D(e).getIn(
                   ["paths", ...t, "parameters"],
-                  (0, b.OrderedMap)()
+                  (0, b.OrderedMap)(),
                 ),
                 a = h()(r).call(
                   r,
                   (e) => e.get("in") === s && e.get("name") === n,
-                  (0, b.OrderedMap)()
+                  (0, b.OrderedMap)(),
                 );
               return he(e, t, a);
             },
@@ -12484,7 +12492,7 @@
               const r = D(e).getIn(["paths", t, n], (0, b.OrderedMap)()),
                 a = e.getIn(["meta", "paths", t, n], (0, b.OrderedMap)()),
                 o = u()((s = r.get("parameters", (0, b.List)()))).call(s, (s) =>
-                  he(e, [t, n], s)
+                  he(e, [t, n], s),
                 );
               return (0, b.OrderedMap)().merge(r, a).set("parameters", o);
             };
@@ -12492,13 +12500,13 @@
             t = t || [];
             let r = e.getIn(
               ["meta", "paths", ...t, "parameters"],
-              (0, b.fromJS)([])
+              (0, b.fromJS)([]),
             );
             return (
               h()(r).call(
                 r,
                 (e) =>
-                  b.Map.isMap(e) && e.get("name") === n && e.get("in") === s
+                  b.Map.isMap(e) && e.get("name") === n && e.get("in") === s,
               ) || (0, b.Map)()
             );
           }
@@ -12518,7 +12526,7 @@
                     : t.get("value");
                 return e.set((0, j.V9)(t, { allowHashes: !1 }), s);
               },
-              (0, b.fromJS)({})
+              (0, b.fromJS)({}),
             );
           }
           function we(e) {
@@ -12537,7 +12545,7 @@
             if (b.List.isList(e))
               return E()(e).call(
                 e,
-                (e) => b.Map.isMap(e) && e.get("type") === t
+                (e) => b.Map.isMap(e) && e.get("type") === t,
               );
           }
           function Ce(e, t) {
@@ -12606,7 +12614,7 @@
               t = t || [];
               let n = e.getIn(
                 ["meta", "paths", ...t, "parameters"],
-                (0, b.fromJS)([])
+                (0, b.fromJS)([]),
               );
               const s = [];
               return (
@@ -12623,7 +12631,7 @@
               let s = { requestBody: !1, requestContentType: {} },
                 r = e.getIn(
                   ["resolvedSubtrees", "paths", ...t, "requestBody"],
-                  (0, b.fromJS)([])
+                  (0, b.fromJS)([]),
                 );
               return (
                 r.size < 1 ||
@@ -12643,7 +12651,7 @@
               if ((n || s) && n === s) return !0;
               let r = e.getIn(
                 ["resolvedSubtrees", "paths", ...t, "requestBody", "content"],
-                (0, b.fromJS)([])
+                (0, b.fromJS)([]),
               );
               if (r.size < 2 || !n || !s) return !1;
               let a = r.getIn([n, "schema", "properties"], (0, b.fromJS)([])),
@@ -12849,7 +12857,7 @@
                 render() {
                   return c().createElement(
                     t,
-                    r()({}, e(), this.props, this.context)
+                    r()({}, e(), this.props, this.context),
                   );
                 }
               }
@@ -12862,7 +12870,7 @@
                   return c().createElement(
                     m.Provider,
                     { store: t },
-                    c().createElement(n, r()({}, this.props, this.context))
+                    c().createElement(n, r()({}, this.props, this.context)),
                   );
                 }
               }
@@ -12880,7 +12888,7 @@
                         : r.mapStateToProps) || ((e) => ({ state: e }));
                   return o(n, a);
                 }),
-                y(e)
+                y(e),
               )(t),
             E = (e, t, n, s) => {
               for (const r in t) {
@@ -12921,7 +12929,7 @@
                 if ("string" != typeof s)
                   throw new TypeError(
                     "Need a string, to fetch a component. Was given a " +
-                      typeof s
+                      typeof s,
                   );
                 const o = n(s);
                 return o
@@ -12994,7 +13002,7 @@
               o()(J).call(J, e)
                 ? D[e]
                 : (console.warn(
-                    `Request style '${e}' is not available, returning default instead`
+                    `Request style '${e}' is not available, returning default instead`,
                   ),
                   j());
         },
@@ -13151,7 +13159,7 @@
             return f()((n = h()(e))).call(
               n,
               (n, s) => ((n[s] = t(e[s], s)), n),
-              {}
+              {},
             );
           }
           function he(e, t) {
@@ -13162,13 +13170,13 @@
                 let r = t(e[s], s);
                 return r && "object" == typeof r && v()(n, r), n;
               },
-              {}
+              {},
             );
           }
           function ge(e) {
             return (t) => {
               let { dispatch: n, getState: s } = t;
-              return (t) => (n) => "function" == typeof n ? n(e()) : t(n);
+              return (t) => (n) => ("function" == typeof n ? n(e()) : t(n));
             };
           }
           function fe(e) {
@@ -13312,7 +13320,7 @@
                     if (
                       (u()(t).call(t, (n, s) => {
                         m()(t).call(t, (e) =>
-                          ue(e.equals) ? e.equals(n) : e === n
+                          ue(e.equals) ? e.equals(n) : e === n,
                         ).size > 1 && (e = e.add(s));
                       }),
                       0 !== e.size)
@@ -13372,7 +13380,7 @@
                         if (
                           ((e = e.toString().toLowerCase()),
                           !/^[{(]?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[)}]?$/.test(
-                            e
+                            e,
                           ))
                         )
                           return "Value must be a Guid";
@@ -13470,8 +13478,8 @@
                   "" !== s &&
                   t.push(
                     [n, "=", encodeURIComponent(s).replace(/%20/g, "+")].join(
-                      ""
-                    )
+                      "",
+                    ),
                   );
               }
               return t.join("&");
@@ -13496,7 +13504,7 @@
             const t = _()(e).call(
                 e,
                 (e, t) =>
-                  O()(t).call(t, "2") && h()(e.get("content") || {}).length > 0
+                  O()(t).call(t, "2") && h()(e.get("content") || {}).length > 0,
               ),
               n = e.get("default") || R().OrderedMap(),
               s = (n.get("content") || R().OrderedMap()).keySeq().toJS().length
@@ -13512,7 +13520,7 @@
             Pe = (e) => m()(e).call(e, (e, t) => /^x-/.test(t)),
             qe = (e) =>
               m()(e).call(e, (e, t) =>
-                /^pattern|maxLength|minLength|maximum|minimum/.test(t)
+                /^pattern|maxLength|minLength|maximum|minimum/.test(t),
               );
           function Re(e, t) {
             var n;
@@ -13552,7 +13560,7 @@
                 : {};
             if (!R().Map.isMap(e))
               throw new Error(
-                "paramToIdentifier: received a non-Im.Map parameter as input"
+                "paramToIdentifier: received a non-Im.Map parameter as input",
               );
             const s = e.get("name"),
               r = e.get("in");
@@ -13574,7 +13582,7 @@
             const s = De(e, { returnAll: !0 });
             return m()((n = o()(s).call(s, (e) => t[e]))).call(
               n,
-              (e) => void 0 !== e
+              (e) => void 0 !== e,
             )[0];
           }
           function $e() {
@@ -13692,7 +13700,7 @@
             "minItems",
             "uniqueItems",
             "enum",
-            "multipleOf"
+            "multipleOf",
           );
           function u(e) {
             let { isOAS3: t } =
@@ -14629,7 +14637,7 @@
                 boundSystem: {},
                 toolbox: {},
               },
-              t
+              t,
             ),
               (this.getSystem = g()((e = this._getSystem)).call(e, this)),
               (this.store =
@@ -14643,7 +14651,7 @@
                   return (0, A.createStore)(
                     e,
                     t,
-                    r((0, A.applyMiddleware)(...s))
+                    r((0, A.applyMiddleware)(...s)),
                   );
                 })(n, s, r))),
               this.buildSystem(!1),
@@ -14673,7 +14681,7 @@
               this.getWrappedAndBoundSelectors(n, this.getSystem),
               this.getStateThunks(n),
               this.getFn(),
-              this.getConfigs()
+              this.getConfigs(),
             )),
               e && this.rebuildReducer();
           }
@@ -14692,7 +14700,7 @@
                 Im: P(),
                 React: k(),
               },
-              this.system.rootInjects || {}
+              this.system.rootInjects || {},
             );
           }
           _getConfigs() {
@@ -14731,10 +14739,10 @@
                     })(e[n])),
                     t
                   ),
-                  {}
+                  {},
                 );
                 return i()(n).length ? (0, q.combineReducers)(n) : L;
-              })((0, $.Ay)(e, (e) => e.reducers)))
+              })((0, $.Ay)(e, (e) => e.reducers))),
             );
           }
           getType(e) {
@@ -14752,7 +14760,7 @@
             return (0, $.Ay)(e, (e) =>
               (0, $.Q2)(e, (e, t) => {
                 if ((0, $.LQ)(e)) return { [t]: e };
-              })
+              }),
             );
           }
           getWrappedAndBoundActions(e) {
@@ -14774,11 +14782,11 @@
                             };
                             if (!(0, $.LQ)(s))
                               throw new TypeError(
-                                "wrapActions needs to return a function that returns a new function (ie the wrapped action)"
+                                "wrapActions needs to return a function that returns a new function (ie the wrapped action)",
                               );
                             return z(s);
                           },
-                          e || Function.prototype
+                          e || Function.prototype,
                         ))
                       : e;
                   })
@@ -14812,11 +14820,11 @@
                             };
                             if (!(0, $.LQ)(a))
                               throw new TypeError(
-                                "wrapSelector needs to return a function that returns a new function (ie the wrapped action)"
+                                "wrapSelector needs to return a function that returns a new function (ie the wrapped action)",
                               );
                             return a;
                           },
-                          t || Function.prototype
+                          t || Function.prototype,
                         ))
                       : t;
                   })
@@ -14828,7 +14836,7 @@
             return C()((t = i()(this.system.statePlugins))).call(
               t,
               (t, n) => ((t[n] = e.get(n)), t),
-              {}
+              {},
             );
           }
           getStateThunks(e) {
@@ -14836,7 +14844,7 @@
             return C()((t = i()(this.system.statePlugins))).call(
               t,
               (t, n) => ((t[n] = () => e().get(n)), t),
-              {}
+              {},
             );
           }
           getFn() {
@@ -14865,7 +14873,7 @@
                       a[o] = arguments[o];
                     let l = z(n).apply(null, [e().getIn(r), ...a]);
                     return "function" == typeof l && (l = z(l)(t())), l;
-                  }
+                  },
               );
             });
           }
@@ -14967,7 +14975,7 @@
                   )
                     t.statePlugins[e].wrapActions[n] = N()((s = o[n])).call(
                       s,
-                      t.statePlugins[e].wrapActions[n]
+                      t.statePlugins[e].wrapActions[n],
                     );
                 }
               if ((0, $.Kn)(l))
@@ -14984,7 +14992,7 @@
                   )
                     t.statePlugins[e].wrapSelectors[n] = N()((r = l[n])).call(
                       r,
-                      t.statePlugins[e].wrapSelectors[n]
+                      t.statePlugins[e].wrapSelectors[n],
                     );
                 }
             }
@@ -15248,7 +15256,7 @@
                   null,
                   ' No layout defined for "',
                   n,
-                  '" '
+                  '" ',
                 ))
             );
           }
@@ -15303,8 +15311,8 @@
                           className: "close-modal",
                           onClick: this.close,
                         },
-                        k().createElement(i, null)
-                      )
+                        k().createElement(i, null),
+                      ),
                     ),
                     k().createElement(
                       "div",
@@ -15319,12 +15327,12 @@
                           authSelectors: t,
                           authActions: n,
                           specSelectors: a,
-                        })
-                      )
-                    )
-                  )
-                )
-              )
+                        }),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             );
           }
         }
@@ -15351,9 +15359,9 @@
                   onClick: n,
                 },
                 k().createElement("span", null, "Authorize"),
-                e ? k().createElement(a, null) : k().createElement(o, null)
+                e ? k().createElement(a, null) : k().createElement(o, null),
               ),
-              t && k().createElement(r, null)
+              t && k().createElement(r, null),
             );
           }
         }
@@ -15402,7 +15410,7 @@
               },
               e
                 ? k().createElement(n, { className: "locked" })
-                : k().createElement(s, { className: "unlocked" })
+                : k().createElement(s, { className: "unlocked" }),
             );
           }
         }
@@ -15466,7 +15474,7 @@
                         onAuthChange: this.onAuthChange,
                         authorized: i,
                         errSelectors: r,
-                      })
+                      }),
                     )
                     .toArray(),
                   k().createElement(
@@ -15479,7 +15487,7 @@
                             className: "btn modal-btn auth",
                             onClick: this.logoutClick,
                           },
-                          "Logout"
+                          "Logout",
                         )
                       : k().createElement(
                           c,
@@ -15487,7 +15495,7 @@
                             type: "submit",
                             className: "btn modal-btn auth authorize",
                           },
-                          "Authorize"
+                          "Authorize",
                         ),
                     k().createElement(
                       c,
@@ -15495,9 +15503,9 @@
                         className: "btn modal-btn auth btn-done",
                         onClick: this.close,
                       },
-                      "Close"
-                    )
-                  )
+                      "Close",
+                    ),
+                  ),
                 ),
               m && m.size
                 ? k().createElement(
@@ -15509,13 +15517,13 @@
                       k().createElement(
                         "p",
                         null,
-                        "Scopes are used to grant an application different levels of access to data on behalf of the end user. Each API may declare one or more scopes."
+                        "Scopes are used to grant an application different levels of access to data on behalf of the end user. Each API may declare one or more scopes.",
                       ),
                       k().createElement(
                         "p",
                         null,
-                        "API requires the following scopes. Select which ones you want to grant to Swagger UI."
-                      )
+                        "API requires the following scopes. Select which ones you want to grant to Swagger UI.",
+                      ),
                     ),
                     b()((e = l()(t).call(t, (e) => "oauth2" === e.get("type"))))
                       .call(e, (e, t) =>
@@ -15526,12 +15534,12 @@
                             authorized: i,
                             schema: e,
                             name: t,
-                          })
-                        )
+                          }),
+                        ),
                       )
-                      .toArray()
+                      .toArray(),
                   )
-                : null
+                : null,
             );
           }
         }
@@ -15577,7 +15585,7 @@
                   "div",
                   { key: t },
                   "Unknown security definition type ",
-                  i
+                  i,
                 );
             }
             return k().createElement("div", { key: `${t}-jump` }, c);
@@ -15593,7 +15601,7 @@
               "div",
               { className: "errors" },
               k().createElement("b", null, s, " ", t),
-              k().createElement("span", null, n)
+              k().createElement("span", null, n),
             );
           }
         }
@@ -15631,7 +15639,7 @@
             let d = this.getValue(),
               h = l()((e = r.allErrors())).call(
                 e,
-                (e) => e.get("authId") === a
+                (e) => e.get("authId") === a,
               );
             return k().createElement(
               "div",
@@ -15641,13 +15649,13 @@
                 null,
                 k().createElement("code", null, a || n.get("name")),
                 " (apiKey)",
-                k().createElement(m, { path: ["securityDefinitions", a] })
+                k().createElement(m, { path: ["securityDefinitions", a] }),
               ),
               d && k().createElement("h6", null, "Authorized"),
               k().createElement(
                 c,
                 null,
-                k().createElement(p, { source: n.get("description") })
+                k().createElement(p, { source: n.get("description") }),
               ),
               k().createElement(
                 c,
@@ -15656,8 +15664,8 @@
                   "p",
                   null,
                   "Name: ",
-                  k().createElement("code", null, n.get("name"))
-                )
+                  k().createElement("code", null, n.get("name")),
+                ),
               ),
               k().createElement(
                 c,
@@ -15666,8 +15674,8 @@
                   "p",
                   null,
                   "In: ",
-                  k().createElement("code", null, n.get("in"))
-                )
+                  k().createElement("code", null, n.get("in")),
+                ),
               ),
               k().createElement(
                 c,
@@ -15682,12 +15690,12 @@
                         type: "text",
                         onChange: this.onChange,
                         autoFocus: !0,
-                      })
-                    )
+                      }),
+                    ),
               ),
               b()((t = h.valueSeq())).call(t, (e, t) =>
-                k().createElement(u, { error: e, key: t })
-              )
+                k().createElement(u, { error: e, key: t }),
+              ),
             );
           }
         }
@@ -15729,7 +15737,7 @@
             let d = this.getValue().username,
               h = l()((e = a.allErrors())).call(
                 e,
-                (e) => e.get("authId") === r
+                (e) => e.get("authId") === r,
               );
             return k().createElement(
               "div",
@@ -15738,13 +15746,13 @@
                 "h4",
                 null,
                 "Basic authorization",
-                k().createElement(p, { path: ["securityDefinitions", r] })
+                k().createElement(p, { path: ["securityDefinitions", r] }),
               ),
               d && k().createElement("h6", null, "Authorized"),
               k().createElement(
                 c,
                 null,
-                k().createElement(m, { source: n.get("description") })
+                k().createElement(m, { source: n.get("description") }),
               ),
               k().createElement(
                 c,
@@ -15761,8 +15769,8 @@
                         name: "username",
                         onChange: this.onChange,
                         autoFocus: !0,
-                      })
-                    )
+                      }),
+                    ),
               ),
               k().createElement(
                 c,
@@ -15778,12 +15786,12 @@
                         name: "password",
                         type: "password",
                         onChange: this.onChange,
-                      })
-                    )
+                      }),
+                    ),
               ),
               b()((t = h.valueSeq())).call(t, (e, t) =>
-                k().createElement(u, { error: e, key: t })
-              )
+                k().createElement(u, { error: e, key: t }),
+              ),
             );
           }
         }
@@ -15807,13 +15815,13 @@
                       k().createElement(
                         "div",
                         { className: "example__section-header" },
-                        "Example Description"
+                        "Example Description",
                       ),
                       k().createElement(
                         "p",
                         null,
-                        k().createElement(a, { source: t.get("description") })
-                      )
+                        k().createElement(a, { source: t.get("description") }),
+                      ),
                     )
                   : null,
                 n && t.has("value")
@@ -15823,14 +15831,14 @@
                       k().createElement(
                         "div",
                         { className: "example__section-header" },
-                        "Example Value"
+                        "Example Value",
                       ),
                       k().createElement(o, {
                         getConfigs: r,
                         value: (0, $.Pz)(t.get("value")),
-                      })
+                      }),
                     )
-                  : null
+                  : null,
               )
             : null;
         }
@@ -15894,7 +15902,7 @@
                 ? k().createElement(
                     "span",
                     { className: "examples-select__section-label" },
-                    "Examples: "
+                    "Examples: ",
                   )
                 : null,
               k().createElement(
@@ -15908,7 +15916,7 @@
                   ? k().createElement(
                       "option",
                       { value: "__MODIFIED__VALUE__" },
-                      "[Modified value]"
+                      "[Modified value]",
                     )
                   : null,
                 b()(e)
@@ -15916,11 +15924,11 @@
                     k().createElement(
                       "option",
                       { key: t, value: t },
-                      e.get("summary") || t
-                    )
+                      e.get("summary") || t,
+                    ),
                   )
-                  .valueSeq()
-              )
+                  .valueSeq(),
+              ),
             );
           }
         }
@@ -15931,7 +15939,7 @@
               t[n] = arguments[n];
             return console.log(
               "DEBUG: ExamplesSelect was not given an onSelect callback",
-              ...t
+              ...t,
             );
           },
           currentExampleKey: null,
@@ -16030,7 +16038,7 @@
               c = this._getValueForExample(e.currentKey, e),
               i = l()(n).call(
                 n,
-                (e) => e.get("value") === t || (0, $.Pz)(e.get("value")) === t
+                (e) => e.get("value") === t || (0, $.Pz)(e.get("value")) === t,
               );
             if (i.size) {
               let t;
@@ -16081,7 +16089,7 @@
               t[n] = arguments[n];
             return console.log(
               "ExamplesSelectValueRetainer: no `onSelect` function was provided",
-              ...t
+              ...t,
             );
           },
           updateValue: function () {
@@ -16089,7 +16097,7 @@
               t[n] = arguments[n];
             return console.log(
               "ExamplesSelectValueRetainer: no `updateValue` function was provided",
-              ...t
+              ...t,
             );
           },
         });
@@ -16192,7 +16200,7 @@
                         m.push(
                           b()((y = [e, f[e]]))
                             .call(y, encodeURIComponent)
-                            .join("=")
+                            .join("="),
                         );
                     }
                     const v = l.get("authorizationUrl");
@@ -16200,7 +16208,7 @@
                     S = o ? Je()((0, $.Nm)(v), o, !0).toString() : (0, $.Nm)(v);
                     let E,
                       x = [S, m.join("&")].join(
-                        -1 === me()(v).call(v, "?") ? "?" : "&"
+                        -1 === me()(v).call(v, "?") ? "?" : "&",
                       );
                     (E =
                       "implicit" === p
@@ -16241,7 +16249,7 @@
                   this.setState({
                     scopes: l()((c = this.state.scopes)).call(
                       c,
-                      (e) => e !== a
+                      (e) => e !== a,
                     ),
                   });
                 }
@@ -16264,8 +16272,8 @@
                         Re()(
                           (t =
                             this.props.schema.get("allowedScopes") ||
-                            this.props.schema.get("scopes"))
-                        ).call(t)
+                            this.props.schema.get("scopes")),
+                        ).call(t),
                       ),
                     })
                   : this.setState({ scopes: [] });
@@ -16341,7 +16349,7 @@
               O = !!r.authorized().get(o),
               A = l()((e = a.allErrors())).call(
                 e,
-                (e) => e.get("authId") === o
+                (e) => e.get("authId") === o,
               ),
               I = !l()(A).call(A, (e) => "validation" === e.get("source")).size,
               P = n.get("description");
@@ -16355,7 +16363,7 @@
                 " (OAuth2, ",
                 _,
                 ") ",
-                k().createElement(h, { path: ["securityDefinitions", o] })
+                k().createElement(h, { path: ["securityDefinitions", o] }),
               ),
               this.state.appName
                 ? k().createElement(
@@ -16363,7 +16371,7 @@
                     null,
                     "Application: ",
                     this.state.appName,
-                    " "
+                    " ",
                   )
                 : null,
               P && k().createElement(g, { source: n.get("description") }),
@@ -16373,27 +16381,27 @@
                   "p",
                   null,
                   "OpenID Connect URL: ",
-                  k().createElement("code", null, v)
+                  k().createElement("code", null, v),
                 ),
               (j === S || j === w) &&
                 k().createElement(
                   "p",
                   null,
                   "Authorization URL: ",
-                  k().createElement("code", null, n.get("authorizationUrl"))
+                  k().createElement("code", null, n.get("authorizationUrl")),
                 ),
               (j === E || j === w || j === x) &&
                 k().createElement(
                   "p",
                   null,
                   "Token URL:",
-                  k().createElement("code", null, " ", n.get("tokenUrl"))
+                  k().createElement("code", null, " ", n.get("tokenUrl")),
                 ),
               k().createElement(
                 "p",
                 { className: "flow" },
                 "Flow: ",
-                k().createElement("code", null, _)
+                k().createElement("code", null, _),
               ),
               j !== E
                 ? null
@@ -16406,7 +16414,7 @@
                       k().createElement(
                         "label",
                         { htmlFor: "oauth_username" },
-                        "username:"
+                        "username:",
                       ),
                       O
                         ? k().createElement(
@@ -16414,7 +16422,7 @@
                             null,
                             " ",
                             this.state.username,
-                            " "
+                            " ",
                           )
                         : k().createElement(
                             p,
@@ -16425,8 +16433,8 @@
                               "data-name": "username",
                               onChange: this.onInputChange,
                               autoFocus: !0,
-                            })
-                          )
+                            }),
+                          ),
                     ),
                     k().createElement(
                       u,
@@ -16434,7 +16442,7 @@
                       k().createElement(
                         "label",
                         { htmlFor: "oauth_password" },
-                        "password:"
+                        "password:",
                       ),
                       O
                         ? k().createElement("code", null, " ****** ")
@@ -16446,8 +16454,8 @@
                               type: "password",
                               "data-name": "password",
                               onChange: this.onInputChange,
-                            })
-                          )
+                            }),
+                          ),
                     ),
                     k().createElement(
                       u,
@@ -16455,7 +16463,7 @@
                       k().createElement(
                         "label",
                         { htmlFor: "password_type" },
-                        "Client credentials location:"
+                        "Client credentials location:",
                       ),
                       O
                         ? k().createElement(
@@ -16463,7 +16471,7 @@
                             null,
                             " ",
                             this.state.passwordType,
-                            " "
+                            " ",
                           )
                         : k().createElement(
                             p,
@@ -16478,16 +16486,16 @@
                               k().createElement(
                                 "option",
                                 { value: "basic" },
-                                "Authorization header"
+                                "Authorization header",
                               ),
                               k().createElement(
                                 "option",
                                 { value: "request-body" },
-                                "Request body"
-                              )
-                            )
-                          )
-                    )
+                                "Request body",
+                              ),
+                            ),
+                          ),
+                    ),
                   ),
               (j === x || j === S || j === w || j === E) &&
                 (!O || (O && this.state.clientId)) &&
@@ -16497,7 +16505,7 @@
                   k().createElement(
                     "label",
                     { htmlFor: "client_id" },
-                    "client_id:"
+                    "client_id:",
                   ),
                   O
                     ? k().createElement("code", null, " ****** ")
@@ -16511,8 +16519,8 @@
                           initialValue: this.state.clientId,
                           "data-name": "clientId",
                           onChange: this.onInputChange,
-                        })
-                      )
+                        }),
+                      ),
                 ),
               (j === x || j === w || j === E) &&
                 k().createElement(
@@ -16521,7 +16529,7 @@
                   k().createElement(
                     "label",
                     { htmlFor: "client_secret" },
-                    "client_secret:"
+                    "client_secret:",
                   ),
                   O
                     ? k().createElement("code", null, " ****** ")
@@ -16534,8 +16542,8 @@
                           type: "password",
                           "data-name": "clientSecret",
                           onChange: this.onInputChange,
-                        })
-                      )
+                        }),
+                      ),
                 ),
               !O && N && N.size
                 ? k().createElement(
@@ -16548,13 +16556,13 @@
                       k().createElement(
                         "a",
                         { onClick: this.selectScopes, "data-all": !0 },
-                        "select all"
+                        "select all",
                       ),
                       k().createElement(
                         "a",
                         { onClick: this.selectScopes },
-                        "select none"
-                      )
+                        "select none",
+                      ),
                     ),
                     b()(N)
                       .call(N, (e, t) => {
@@ -16585,23 +16593,23 @@
                                 k().createElement(
                                   "p",
                                   { className: "name" },
-                                  t
+                                  t,
                                 ),
                                 k().createElement(
                                   "p",
                                   { className: "description" },
-                                  e
-                                )
-                              )
-                            )
-                          )
+                                  e,
+                                ),
+                              ),
+                            ),
+                          ),
                         );
                       })
-                      .toArray()
+                      .toArray(),
                   )
                 : null,
               b()((t = A.valueSeq())).call(t, (e, t) =>
-                k().createElement(d, { error: e, key: t })
+                k().createElement(d, { error: e, key: t }),
               ),
               k().createElement(
                 "div",
@@ -16614,7 +16622,7 @@
                           className: "btn modal-btn auth authorize",
                           onClick: this.logout,
                         },
-                        "Logout"
+                        "Logout",
                       )
                     : k().createElement(
                         m,
@@ -16622,7 +16630,7 @@
                           className: "btn modal-btn auth authorize",
                           onClick: this.authorize,
                         },
-                        "Authorize"
+                        "Authorize",
                       )),
                 k().createElement(
                   m,
@@ -16630,9 +16638,9 @@
                     className: "btn modal-btn auth btn-done",
                     onClick: this.close,
                   },
-                  "Close"
-                )
-              )
+                  "Close",
+                ),
+              ),
             );
           }
         }
@@ -16651,7 +16659,7 @@
                 className: "btn btn-clear opblock-control__btn",
                 onClick: this.onClick,
               },
-              "Clear"
+              "Clear",
             );
           }
         }
@@ -16661,7 +16669,7 @@
               "div",
               null,
               k().createElement("h5", null, "Response headers"),
-              k().createElement("pre", { className: "microlight" }, t)
+              k().createElement("pre", { className: "microlight" }, t),
             );
           },
           Ve = (e) => {
@@ -16670,7 +16678,7 @@
               "div",
               null,
               k().createElement("h5", null, "Request duration"),
-              k().createElement("pre", { className: "microlight" }, t, " ms")
+              k().createElement("pre", { className: "microlight" }, t, " ms"),
             );
           };
         class Ue extends k().Component {
@@ -16713,7 +16721,7 @@
                   e,
                   ": ",
                   t,
-                  " "
+                  " ",
                 );
               }),
               C = 0 !== x.length,
@@ -16735,8 +16743,8 @@
                     "div",
                     { className: "request-url" },
                     k().createElement("h4", null, "Request URL"),
-                    k().createElement("pre", { className: "microlight" }, m)
-                  )
+                    k().createElement("pre", { className: "microlight" }, m),
+                  ),
                 ),
               k().createElement("h4", null, "Server response"),
               k().createElement(
@@ -16751,14 +16759,14 @@
                     k().createElement(
                       "td",
                       { className: "col_header response-col_status" },
-                      "Code"
+                      "Code",
                     ),
                     k().createElement(
                       "td",
                       { className: "col_header response-col_description" },
-                      "Details"
-                    )
-                  )
+                      "Details",
+                    ),
+                  ),
                 ),
                 k().createElement(
                   "tbody",
@@ -16774,9 +16782,9 @@
                         ? k().createElement(
                             "div",
                             { className: "response-undocumented" },
-                            k().createElement("i", null, " Undocumented ")
+                            k().createElement("i", null, " Undocumented "),
                           )
-                        : null
+                        : null,
                     ),
                     k().createElement(
                       "td",
@@ -16799,11 +16807,11 @@
                           })
                         : null,
                       C ? k().createElement(Ke, { headers: x }) : null,
-                      s && y ? k().createElement(Ve, { duration: y }) : null
-                    )
-                  )
-                )
-              )
+                      s && y ? k().createElement(Ve, { duration: y }) : null,
+                    ),
+                  ),
+                ),
+              ),
             );
           }
         }
@@ -16856,8 +16864,8 @@
                               tag: t,
                             });
                       })
-                      .toArray()
-                  )
+                      .toArray(),
+                  ),
                 );
               });
           }
@@ -16874,9 +16882,9 @@
                     ? k().createElement(
                         "h3",
                         null,
-                        " No operations defined in spec! "
+                        " No operations defined in spec! ",
                       )
-                    : null
+                    : null,
                 );
           }
         }
@@ -16940,7 +16948,7 @@
                   ? k().createElement(
                       "small",
                       null,
-                      k().createElement(d, { source: S })
+                      k().createElement(d, { source: S }),
                     )
                   : k().createElement("small", null),
                 v
@@ -16957,9 +16965,9 @@
                             onClick: (e) => e.stopPropagation(),
                             target: "_blank",
                           },
-                          E || v
-                        )
-                      )
+                          E || v,
+                        ),
+                      ),
                     )
                   : null,
                 k().createElement(
@@ -16972,10 +16980,10 @@
                   },
                   C
                     ? k().createElement(f, { className: "arrow" })
-                    : k().createElement(y, { className: "arrow" })
-                )
+                    : k().createElement(y, { className: "arrow" }),
+                ),
               ),
-              k().createElement(m, { isOpened: C }, n)
+              k().createElement(m, { isOpened: C }, n),
             );
           }
         }
@@ -17082,7 +17090,7 @@
                     k().createElement(
                       "h4",
                       { className: "opblock-title_normal" },
-                      " Warning: Deprecated"
+                      " Warning: Deprecated",
                     ),
                   P &&
                     k().createElement(
@@ -17091,8 +17099,8 @@
                       k().createElement(
                         "div",
                         { className: "opblock-description" },
-                        k().createElement(H, { source: P })
-                      )
+                        k().createElement(H, { source: P }),
+                      ),
                     ),
                   T
                     ? k().createElement(
@@ -17101,7 +17109,7 @@
                         k().createElement(
                           "h4",
                           { className: "opblock-title_normal" },
-                          "Find more details"
+                          "Find more details",
                         ),
                         k().createElement(
                           "div",
@@ -17112,7 +17120,7 @@
                               {
                                 className: "opblock-external-docs__description",
                               },
-                              k().createElement(H, { source: q.description })
+                              k().createElement(H, { source: q.description }),
                             ),
                           k().createElement(
                             Q,
@@ -17121,9 +17129,9 @@
                               className: "opblock-external-docs__link",
                               href: (0, $.Nm)(T),
                             },
-                            T
-                          )
-                        )
+                            T,
+                          ),
+                        ),
                       )
                     : null,
                   M && M.size
@@ -17171,7 +17179,7 @@
                           method: x,
                           specActions: m,
                           currentScheme: L,
-                        })
+                        }),
                       )
                     : null,
                   !A || !N || ne.length <= 0
@@ -17184,9 +17192,9 @@
                           "ul",
                           null,
                           b()(ne).call(ne, (e, t) =>
-                            k().createElement("li", { key: t }, " ", e, " ")
-                          )
-                        )
+                            k().createElement("li", { key: t }, " ", e, " "),
+                          ),
+                        ),
                       ),
                   k().createElement(
                     "div",
@@ -17212,13 +17220,13 @@
                           path: w,
                           method: x,
                         })
-                      : null
+                      : null,
                   ),
                   I
                     ? k().createElement(
                         "div",
                         { className: "loading-container" },
-                        k().createElement("div", { className: "loading" })
+                        k().createElement("div", { className: "loading" }),
                       )
                     : null,
                   D
@@ -17243,9 +17251,9 @@
                     : null,
                   ee && V.size
                     ? k().createElement(X, { extensions: V, getComponent: u })
-                    : null
-                )
-              )
+                    : null,
+                ),
+              ),
             );
           }
         }
@@ -17313,16 +17321,16 @@
                   ? k().createElement(
                       "div",
                       { className: "opblock-summary-description" },
-                      Ge()(f || l)
+                      Ge()(f || l),
                     )
                   : null,
                 g && (h || d)
                   ? k().createElement(
                       "span",
                       { className: "opblock-summary-operation-id" },
-                      h || d
+                      h || d,
                     )
-                  : null
+                  : null,
               ),
               k().createElement(x, { textToCopy: `${o.get(1)}` }),
               N
@@ -17345,9 +17353,9 @@
                 },
                 e
                   ? k().createElement(C, { className: "arrow" })
-                  : k().createElement(j, { className: "arrow" })
+                  : k().createElement(j, { className: "arrow" }),
               ),
-              k().createElement(w, { path: o })
+              k().createElement(w, { path: o }),
             );
           }
         }
@@ -17362,7 +17370,7 @@
             return k().createElement(
               "span",
               { className: "opblock-summary-method" },
-              e.toUpperCase()
+              e.toUpperCase(),
             );
           }
         }
@@ -17397,7 +17405,7 @@
                 isShown: s,
                 path: (0, $.oJ)(`${a}/${o}`),
                 text: c,
-              })
+              }),
             );
           }
         }
@@ -17411,7 +17419,7 @@
               k().createElement(
                 "div",
                 { className: "opblock-section-header" },
-                k().createElement("h4", null, "Extensions")
+                k().createElement("h4", null, "Extensions"),
               ),
               k().createElement(
                 "div",
@@ -17428,14 +17436,14 @@
                       k().createElement(
                         "td",
                         { className: "col_header" },
-                        "Field"
+                        "Field",
                       ),
                       k().createElement(
                         "td",
                         { className: "col_header" },
-                        "Value"
-                      )
-                    )
+                        "Value",
+                      ),
+                    ),
                   ),
                   k().createElement(
                     "tbody",
@@ -17447,10 +17455,10 @@
                         xKey: t,
                         xVal: n,
                       });
-                    })
-                  )
-                )
-              )
+                    }),
+                  ),
+                ),
+              ),
             );
           },
           st = (e) => {
@@ -17460,7 +17468,7 @@
               "tr",
               null,
               k().createElement("td", null, t),
-              k().createElement("td", null, p()(s))
+              k().createElement("td", null, p()(s)),
             );
           };
         var rt = n(4235),
@@ -17494,11 +17502,11 @@
             var e;
             const t = l()((e = Pe()(p.current.childNodes))).call(
               e,
-              (e) => !!e.nodeType && e.classList.contains("microlight")
+              (e) => !!e.nodeType && e.classList.contains("microlight"),
             );
             return (
               at()(t).call(t, (e) =>
-                e.addEventListener("mousewheel", m, { passive: !1 })
+                e.addEventListener("mousewheel", m, { passive: !1 }),
               ),
               () => {
                 at()(t).call(t, (e) => e.removeEventListener("mousewheel", m));
@@ -17522,8 +17530,8 @@
                 k().createElement(
                   gt.CopyToClipboard,
                   { text: t },
-                  k().createElement("button", null)
-                )
+                  k().createElement("button", null),
+                ),
               ),
             r
               ? k().createElement(
@@ -17534,7 +17542,7 @@
                       ht()(t, n);
                     },
                   },
-                  "Download"
+                  "Download",
                 )
               : null,
             u
@@ -17544,16 +17552,16 @@
                     language: c,
                     className: lt()(s, "microlight"),
                     style: (0, ct.C2)(
-                      ut()(i, "syntaxHighlight.theme", "agate")
+                      ut()(i, "syntaxHighlight.theme", "agate"),
                     ),
                   },
-                  t
+                  t,
                 )
               : k().createElement(
                   "pre",
                   { className: lt()(s, "microlight") },
-                  t
-                )
+                  t,
+                ),
           );
         };
         ft.defaultProps = { fileName: "response.txt" };
@@ -17564,8 +17572,8 @@
               ue()(this, "onChangeProducesWrapper", (e) =>
                 this.props.specActions.changeProducesValue(
                   [this.props.path, this.props.method],
-                  e
-                )
+                  e,
+                ),
               ),
               ue()(this, "onResponseContentTypeChange", (e) => {
                 let { controlsAcceptHeader: t, value: n } = e;
@@ -17628,8 +17636,8 @@
                         contentTypes: v,
                         controlId: w,
                         onChange: this.onChangeProducesWrapper,
-                      })
-                    )
+                      }),
+                    ),
               ),
               k().createElement(
                 "div",
@@ -17647,7 +17655,7 @@
                         method: this.props.method,
                         displayRequestDuration: c,
                       }),
-                      k().createElement("h4", null, "Responses")
+                      k().createElement("h4", null, "Responses"),
                     )
                   : null,
                 k().createElement(
@@ -17667,21 +17675,21 @@
                       k().createElement(
                         "td",
                         { className: "col_header response-col_status" },
-                        "Code"
+                        "Code",
                       ),
                       k().createElement(
                         "td",
                         { className: "col_header response-col_description" },
-                        "Description"
+                        "Description",
                       ),
                       a.isOAS3()
                         ? k().createElement(
                             "td",
                             { className: "col col_header response-col_links" },
-                            "Links"
+                            "Links",
                           )
-                        : null
-                    )
+                        : null,
+                    ),
                   ),
                   k().createElement(
                     "tbody",
@@ -17710,16 +17718,16 @@
                             u,
                             p,
                             "responses",
-                            t
+                            t,
                           ),
                           oas3Actions: d,
                           getComponent: s,
                         });
                       })
-                      .toArray()
-                  )
-                )
-              )
+                      .toArray(),
+                  ),
+                ),
+              ),
             );
           }
         }
@@ -17844,7 +17852,7 @@
                       getConfigs: n,
                       language: s,
                       value: (0, $.Pz)(e),
-                    })
+                    }),
                   )
                 );
               }
@@ -17860,7 +17868,7 @@
                 k().createElement(
                   "div",
                   { className: "response-col_description__inner" },
-                  k().createElement(N, { source: a.get("description") })
+                  k().createElement(N, { source: a.get("description") }),
                 ),
                 v && S.size
                   ? b()((e = S.entrySeq())).call(e, (e) => {
@@ -17886,7 +17894,7 @@
                         k().createElement(
                           "small",
                           { className: "response-control-media-type__title" },
-                          "Media type"
+                          "Media type",
                         ),
                         k().createElement(A, {
                           value: this.state.responseContentType,
@@ -17905,9 +17913,9 @@
                               },
                               "Controls ",
                               k().createElement("code", null, "Accept"),
-                              " header."
+                              " header.",
                             )
-                          : null
+                          : null,
                       ),
                       J
                         ? k().createElement(
@@ -17916,7 +17924,7 @@
                             k().createElement(
                               "small",
                               { className: "response-control-examples__title" },
-                              "Examples"
+                              "Examples",
                             ),
                             k().createElement(P, {
                               examples: J,
@@ -17929,9 +17937,9 @@
                                   contextName: r,
                                 }),
                               showLabels: !1,
-                            })
+                            }),
                           )
-                        : null
+                        : null,
                     )
                   : null,
                 z || R
@@ -17949,14 +17957,16 @@
                   ? k().createElement(q, {
                       example: J.get(
                         this.getTargetExamplesKey(),
-                        (0, I.Map)({})
+                        (0, I.Map)({}),
                       ),
                       getComponent: i,
                       getConfigs: u,
                       omitValue: !0,
                     })
                   : null,
-                E ? k().createElement(C, { headers: E, getComponent: i }) : null
+                E
+                  ? k().createElement(C, { headers: E, getComponent: i })
+                  : null,
               ),
               y
                 ? k().createElement(
@@ -17972,9 +17982,9 @@
                             getComponent: i,
                           });
                         })
-                      : k().createElement("i", null, "No links")
+                      : k().createElement("i", null, "No links"),
                   )
-                : null
+                : null,
             );
           }
         }
@@ -17989,7 +17999,7 @@
             { className: "response__extension" },
             t,
             ": ",
-            String(n)
+            String(n),
           );
         };
         var jt = n(9478),
@@ -18067,8 +18077,8 @@
                             href: l,
                             onClick: () => J.Z.navigator.msSaveOrOpenBlob(o, c),
                           },
-                          "Download file"
-                        )
+                          "Download file",
+                        ),
                       )
                     : k().createElement(
                         "div",
@@ -18076,14 +18086,14 @@
                         k().createElement(
                           "a",
                           { href: l, download: c },
-                          "Download file"
-                        )
+                          "Download file",
+                        ),
                       );
               } else
                 m = k().createElement(
                   "pre",
                   { className: "microlight" },
-                  "Download headers detected but your browser does not support downloading binary via XHR (Blob)."
+                  "Download headers detected but your browser does not support downloading binary via XHR (Blob).",
                 );
             else if (/json/i.test(t)) {
               let t = null;
@@ -18141,8 +18151,8 @@
                           k().createElement(
                             "audio",
                             { controls: !0, key: n },
-                            k().createElement("source", { src: n, type: t })
-                          )
+                            k().createElement("source", { src: n, type: t }),
+                          ),
                         )
                       : "string" == typeof e
                       ? k().createElement(c, {
@@ -18160,7 +18170,7 @@
                             k().createElement(
                               "p",
                               { className: "i" },
-                              "Unrecognized response type; displaying content as text."
+                              "Unrecognized response type; displaying content as text.",
                             ),
                             k().createElement(c, {
                               downloadable: !0,
@@ -18168,12 +18178,12 @@
                               value: l,
                               getConfigs: r,
                               canCopy: !0,
-                            })
+                            }),
                           )
                         : k().createElement(
                             "p",
                             { className: "i" },
-                            "Unrecognized response type; unable to display."
+                            "Unrecognized response type; unable to display.",
                           )
                       : null);
             return m
@@ -18181,7 +18191,7 @@
                   "div",
                   null,
                   k().createElement("h5", null, "Response body"),
-                  m
+                  m,
                 )
               : null;
           }
@@ -18216,7 +18226,7 @@
                       callbackVisible: !0,
                       parametersVisible: !1,
                     })
-                  : void 0
+                  : void 0,
               ),
               ue()(this, "onChangeMediaType", (e) => {
                 let { value: t, pathMethod: n } = e,
@@ -18273,9 +18283,9 @@
                       const n = t.get("in");
                       return e[n] ?? (e[n] = []), e[n].push(t), e;
                     },
-                    {}
-                  )
-                ))
+                    {},
+                  ),
+                )),
               ).call(e, (e, t) => N()(e).call(e, t), []);
             return k().createElement(
               "div",
@@ -18298,8 +18308,8 @@
                         k().createElement(
                           "h4",
                           { className: "opblock-title" },
-                          k().createElement("span", null, "Parameters")
-                        )
+                          k().createElement("span", null, "Parameters"),
+                        ),
                       ),
                       g.get("callbacks")
                         ? k().createElement(
@@ -18313,10 +18323,10 @@
                             k().createElement(
                               "h4",
                               { className: "opblock-title" },
-                              k().createElement("span", null, "Callbacks")
-                            )
+                              k().createElement("span", null, "Callbacks"),
+                            ),
                           )
-                        : null
+                        : null,
                     )
                   : k().createElement(
                       "div",
@@ -18324,8 +18334,8 @@
                       k().createElement(
                         "h4",
                         { className: "opblock-title" },
-                        "Parameters"
-                      )
+                        "Parameters",
+                      ),
                     ),
                 r
                   ? k().createElement(y, {
@@ -18336,7 +18346,7 @@
                       onTryoutClick: t,
                       onResetClick: () => n(m),
                     })
-                  : null
+                  : null,
               ),
               this.state.parametersVisible
                 ? k().createElement(
@@ -18360,7 +18370,7 @@
                                   {
                                     className: "col_header parameters-col_name",
                                   },
-                                  "Name"
+                                  "Name",
                                 ),
                                 k().createElement(
                                   "th",
@@ -18368,9 +18378,9 @@
                                     className:
                                       "col_header parameters-col_description",
                                   },
-                                  "Description"
-                                )
-                              )
+                                  "Description",
+                                ),
+                              ),
                             ),
                             k().createElement(
                               "tbody",
@@ -18393,16 +18403,16 @@
                                   oas3Selectors: h,
                                   pathMethod: m,
                                   isExecute: x,
-                                })
-                              )
-                            )
-                          )
+                                }),
+                              ),
+                            ),
+                          ),
                         )
                       : k().createElement(
                           "div",
                           { className: "opblock-description-wrapper" },
-                          k().createElement("p", null, "No parameters")
-                        )
+                          k().createElement("p", null, "No parameters"),
+                        ),
                   )
                 : null,
               this.state.callbackVisible
@@ -18415,7 +18425,7 @@
                     k().createElement(E, {
                       callbacks: (0, I.Map)(g.get("callbacks")),
                       specPath: S()(o).call(o, 0, -1).push("callbacks"),
-                    })
+                    }),
                   )
                 : null,
               j &&
@@ -18434,7 +18444,7 @@
                           _.get("required") && "required"
                         }`,
                       },
-                      "Request body"
+                      "Request body",
                     ),
                     k().createElement(
                       "label",
@@ -18447,8 +18457,8 @@
                         },
                         className: "body-param-content-type",
                         ariaLabel: "Request content type",
-                      })
-                    )
+                      }),
+                    ),
                   ),
                   k().createElement(
                     "div",
@@ -18471,7 +18481,7 @@
                       activeExamplesKey: h.activeExamplesMember(
                         ...m,
                         "requestBody",
-                        "requestBody"
+                        "requestBody",
                       ),
                       updateActiveExamplesKey: (e) => {
                         this.props.oas3Actions.setActiveExamplesMember({
@@ -18500,9 +18510,9 @@
                         });
                       },
                       contentType: h.requestContentType(...m),
-                    })
-                  )
-                )
+                    }),
+                  ),
+                ),
             );
           }
         }
@@ -18521,7 +18531,7 @@
               { className: "parameter__extension" },
               t,
               ": ",
-              String(n)
+              String(n),
             );
           },
           Tt = { onChange: () => {}, isIncludedOptions: {} };
@@ -18556,8 +18566,8 @@
                   checked: !t && e,
                   onChange: this.onCheckboxChange,
                 }),
-                "Send empty value"
-              )
+                "Send empty value",
+              ),
             );
           }
         }
@@ -18623,7 +18633,7 @@
                     const e = s.activeExamplesMember(
                       ...t,
                       "parameters",
-                      this.getParamKey()
+                      this.getParamKey(),
                     );
                     n =
                       void 0 !== a.getIn(["examples", e, "value"])
@@ -18646,7 +18656,7 @@
                         c &&
                         !a.get("examples") &&
                         this.onChangeWrapper(
-                          I.List.isList(c) ? c : (0, $.Pz)(c)
+                          I.List.isList(c) ? c : (0, $.Pz)(c),
                         );
                 }
               }),
@@ -18762,7 +18772,7 @@
                         : "parameter__name",
                     },
                     n.get("name"),
-                    V ? k().createElement("span", null, " *") : null
+                    V ? k().createElement("span", null, " *") : null,
                   ),
                   k().createElement(
                     "div",
@@ -18775,20 +18785,20 @@
                         { className: "prop-format" },
                         "($",
                         T,
-                        ")"
-                      )
+                        ")",
+                      ),
                   ),
                   k().createElement(
                     "div",
                     { className: "parameter__deprecated" },
-                    d && n.get("deprecated") ? "deprecated" : null
+                    d && n.get("deprecated") ? "deprecated" : null,
                   ),
                   k().createElement(
                     "div",
                     { className: "parameter__in" },
                     "(",
                     n.get("in"),
-                    ")"
+                    ")",
                   ),
                   g && F.size
                     ? b()((e = F.entrySeq())).call(e, (e) => {
@@ -18809,7 +18819,7 @@
                           xVal: n,
                         });
                       })
-                    : null
+                    : null,
                 ),
                 k().createElement(
                   "td",
@@ -18844,7 +18854,7 @@
                     k().createElement(
                       "div",
                       null,
-                      "Error: your browser does not support FormData"
+                      "Error: your browser does not support FormData",
                     ),
                   d && n.get("examples")
                     ? k().createElement(
@@ -18859,10 +18869,10 @@
                           currentKey: m.activeExamplesMember(
                             ...u,
                             "parameters",
-                            this.getParamKey()
+                            this.getParamKey(),
                           ),
                           currentUserInputValue: U,
-                        })
+                        }),
                       )
                     : null,
                   S
@@ -18896,7 +18906,7 @@
                         isIncluded: i.parameterInclusionSettingFor(
                           u,
                           n.get("name"),
-                          n.get("in")
+                          n.get("in"),
                         ),
                         isDisabled: !(0, $.O2)(U),
                       })
@@ -18908,14 +18918,14 @@
                           m.activeExamplesMember(
                             ...u,
                             "parameters",
-                            this.getParamKey()
+                            this.getParamKey(),
                           ),
                         ]),
                         getComponent: r,
                         getConfigs: a,
                       })
-                    : null
-                )
+                    : null,
+                ),
               )
             );
           }
@@ -19011,8 +19021,8 @@
               ue()(this, "onChangeProducesWrapper", (e) =>
                 this.props.specActions.changeProducesValue(
                   [this.props.path, this.props.method],
-                  e
-                )
+                  e,
+                ),
               );
           }
           render() {
@@ -19024,7 +19034,7 @@
                 onClick: this.onClick,
                 disabled: e,
               },
-              "Execute"
+              "Execute",
             );
           }
         }
@@ -19041,7 +19051,7 @@
                   k().createElement(
                     "h4",
                     { className: "headers__title" },
-                    "Headers:"
+                    "Headers:",
                   ),
                   k().createElement(
                     "table",
@@ -19055,19 +19065,19 @@
                         k().createElement(
                           "th",
                           { className: "header-col" },
-                          "Name"
+                          "Name",
                         ),
                         k().createElement(
                           "th",
                           { className: "header-col" },
-                          "Description"
+                          "Description",
                         ),
                         k().createElement(
                           "th",
                           { className: "header-col" },
-                          "Type"
-                        )
-                      )
+                          "Type",
+                        ),
+                      ),
                     ),
                     k().createElement(
                       "tbody",
@@ -19087,12 +19097,12 @@
                             k().createElement(
                               "td",
                               { className: "header-col" },
-                              t
+                              t,
                             ),
                             k().createElement(
                               "td",
                               { className: "header-col" },
-                              a ? k().createElement(r, { source: a }) : null
+                              a ? k().createElement(r, { source: a }) : null,
                             ),
                             k().createElement(
                               "td",
@@ -19105,13 +19115,13 @@
                                     propVal: l,
                                     propClass: "header-example",
                                   })
-                                : null
-                            )
+                                : null,
+                            ),
                           );
                         })
-                        .toArray()
-                    )
-                  )
+                        .toArray(),
+                    ),
+                  ),
                 )
               : null;
           }
@@ -19130,7 +19140,7 @@
             let c = t.allErrors(),
               i = l()(c).call(
                 c,
-                (e) => "thrown" === e.get("type") || "error" === e.get("level")
+                (e) => "thrown" === e.get("type") || "error" === e.get("level"),
               );
             if (!i || i.count() < 1) return null;
             let u = n.isShown(["errorPane"], !0),
@@ -19144,7 +19154,7 @@
                 k().createElement(
                   "h4",
                   { className: "errors__title" },
-                  "Errors"
+                  "Errors",
                 ),
                 k().createElement(
                   "button",
@@ -19152,8 +19162,8 @@
                     className: "btn errors__clear-btn",
                     onClick: () => s.show(["errorPane"], !u),
                   },
-                  u ? "Hide" : "Show"
-                )
+                  u ? "Hide" : "Show",
+                ),
               ),
               k().createElement(
                 a,
@@ -19176,9 +19186,9 @@
                           jumpToLine: o,
                         })
                       : void 0;
-                  })
-                )
-              )
+                  }),
+                ),
+              ),
             );
           }
         }
@@ -19204,14 +19214,14 @@
                             "small",
                             null,
                             " at ",
-                            t.get("path")
+                            t.get("path"),
                           )
-                        : null
+                        : null,
                     ),
                     k().createElement(
                       "span",
                       { className: "message thrown" },
-                      t.get("message")
+                      t.get("message"),
                     ),
                     k().createElement(
                       "div",
@@ -19221,12 +19231,12 @@
                             "a",
                             { onClick: g()(n).call(n, null, s) },
                             "Jump to line ",
-                            s
+                            s,
                           )
-                        : null
-                    )
+                        : null,
+                    ),
                   )
-                : null
+                : null,
             );
           },
           zt = (e) => {
@@ -19239,7 +19249,7 @@
                         "small",
                         null,
                         "at ",
-                        t.get("path").join(".")
+                        t.get("path").join("."),
                       )
                     : k().createElement("small", null, "at ", t.get("path")))
                 : t.get("line") &&
@@ -19248,7 +19258,7 @@
                     "small",
                     null,
                     "on line ",
-                    t.get("line")
+                    t.get("line"),
                   )),
               k().createElement(
                 "div",
@@ -19262,12 +19272,12 @@
                         null,
                         Bt(t.get("source")) + " " + t.get("level"),
                         " ",
-                        s
+                        s,
                       ),
                       k().createElement(
                         "span",
                         { className: "message" },
-                        t.get("message")
+                        t.get("message"),
                       ),
                       k().createElement(
                         "div",
@@ -19277,12 +19287,12 @@
                               "a",
                               { onClick: g()(n).call(n, null, t.get("line")) },
                               "Jump to line ",
-                              t.get("line")
+                              t.get("line"),
                             )
-                          : null
-                      )
+                          : null,
+                      ),
                     )
-                  : null
+                  : null,
               )
             );
           };
@@ -19297,7 +19307,7 @@
           constructor() {
             super(...arguments),
               ue()(this, "onChangeWrapper", (e) =>
-                this.props.onChange(e.target.value)
+                this.props.onChange(e.target.value),
               );
           }
           componentDidMount() {
@@ -19336,10 +19346,10 @@
                     },
                     b()(s)
                       .call(s, (e) =>
-                        k().createElement("option", { key: e, value: e }, e)
+                        k().createElement("option", { key: e, value: e }, e),
                       )
-                      .toArray()
-                  )
+                      .toArray(),
+                  ),
                 )
               : null;
           }
@@ -19359,7 +19369,7 @@
           return Xt()(
             (e = l()(n)
               .call(n, (e) => !!e)
-              .join(" "))
+              .join(" ")),
           ).call(e);
         }
         class Qt extends k().Component {
@@ -19369,7 +19379,7 @@
             let s = "swagger-container" + (t ? "-full" : "");
             return k().createElement(
               "section",
-              Zt()({}, n, { className: Yt(n.className, s) })
+              Zt()({}, n, { className: Yt(n.className, s) }),
             );
           }
         }
@@ -19415,7 +19425,7 @@
               "div",
               Zt()({}, this.props, {
                 className: Yt(this.props.className, "wrapper"),
-              })
+              }),
             );
           }
         }
@@ -19425,7 +19435,7 @@
               "button",
               Zt()({}, this.props, {
                 className: Yt(this.props.className, "button"),
-              })
+              }),
             );
           }
         }
@@ -19445,7 +19455,7 @@
                   ? (t = b()(
                       (a = l()(r).call(r, function (e) {
                         return e.selected;
-                      }))
+                      })),
                     ).call(a, function (e) {
                       return e.value;
                     }))
@@ -19487,9 +19497,9 @@
                 return k().createElement(
                   "option",
                   { key: t, value: String(e) },
-                  String(e)
+                  String(e),
                 );
-              })
+              }),
             );
           }
         }
@@ -19501,7 +19511,7 @@
               Zt()({}, this.props, {
                 rel: "noopener noreferrer",
                 className: Yt(this.props.className, "link"),
-              })
+              }),
             );
           }
         }
@@ -19512,7 +19522,7 @@
             { className: "no-margin" },
             " ",
             t,
-            " "
+            " ",
           );
         };
         class un extends k().Component {
@@ -19557,7 +19567,7 @@
               k().createElement(
                 "h4",
                 { className: "overview-title" },
-                "Overview"
+                "Overview",
               ),
               b()(r)
                 .call(r, (e, s) => {
@@ -19575,7 +19585,7 @@
                       },
                       " ",
                       l ? "-" : "+",
-                      s
+                      s,
                     ),
                     k().createElement(
                       a,
@@ -19598,8 +19608,8 @@
                             onClick: n.show,
                           });
                         })
-                        .toArray()
-                    )
+                        .toArray(),
+                    ),
                   );
                 })
                 .toArray(),
@@ -19607,8 +19617,8 @@
                 k().createElement(
                   "h3",
                   null,
-                  " No operations defined in spec! "
-                )
+                  " No operations defined in spec! ",
+                ),
             );
           }
         }
@@ -19641,10 +19651,10 @@
                 k().createElement(
                   "small",
                   { className: `bold-label-${t}` },
-                  t.toUpperCase()
+                  t.toUpperCase(),
                 ),
-                k().createElement("span", { className: "bold-label" }, e)
-              )
+                k().createElement("span", { className: "bold-label" }, e),
+              ),
             );
           }
         }
@@ -19662,7 +19672,7 @@
             } = this.props;
             return k().createElement(
               "input",
-              Zt()({}, s, { ref: (e) => (this.inputRef = e) })
+              Zt()({}, s, { ref: (e) => (this.inputRef = e) }),
             );
           }
         }
@@ -19675,7 +19685,7 @@
               "[ Base URL: ",
               e,
               t,
-              " ]"
+              " ]",
             );
           }
         }
@@ -19686,7 +19696,7 @@
             return k().createElement(
               n,
               { target: "_blank", href: (0, $.Nm)(e) },
-              k().createElement("span", { className: "url" }, " ", e)
+              k().createElement("span", { className: "url" }, " ", e),
             );
           }
         }
@@ -19728,15 +19738,15 @@
                   "h2",
                   { className: "title" },
                   u,
-                  c && k().createElement(S, { version: c })
+                  c && k().createElement(S, { version: c }),
                 ),
                 n || s ? k().createElement(w, { host: n, basePath: s }) : null,
-                t && k().createElement(E, { getComponent: r, url: t })
+                t && k().createElement(E, { getComponent: r, url: t }),
               ),
               k().createElement(
                 "div",
                 { className: "description" },
-                k().createElement(y, { source: i })
+                k().createElement(y, { source: i }),
               ),
               p &&
                 k().createElement(
@@ -19745,8 +19755,8 @@
                   k().createElement(
                     v,
                     { target: "_blank", href: (0, $.Nm)(p) },
-                    "Terms of service"
-                  )
+                    "Terms of service",
+                  ),
                 ),
               (null == m ? void 0 : m.size) > 0 &&
                 k().createElement(C, {
@@ -19770,9 +19780,9 @@
                       target: "_blank",
                       href: (0, $.Nm)(g),
                     },
-                    f || g
+                    f || g,
                   )
-                : null
+                : null,
             );
           }
         }
@@ -19804,7 +19814,7 @@
                     getComponent: t,
                     selectedServer: c,
                   })
-                : null
+                : null,
             );
           }
         }
@@ -19831,15 +19841,15 @@
                     l,
                     { href: (0, $.Nm)(a), target: "_blank" },
                     r,
-                    " - Website"
-                  )
+                    " - Website",
+                  ),
                 ),
               o &&
                 k().createElement(
                   l,
                   { href: (0, $.Nm)(`mailto:${o}`) },
-                  a ? `Send email to ${r}` : `Contact ${r}`
-                )
+                  a ? `Send email to ${r}` : `Contact ${r}`,
+                ),
             );
           }
         }
@@ -19865,10 +19875,10 @@
                     k().createElement(
                       o,
                       { target: "_blank", href: (0, $.Nm)(a) },
-                      r
-                    )
+                      r,
+                    ),
                   )
-                : k().createElement("span", null, r)
+                : k().createElement("span", null, r),
             );
           }
         }
@@ -19891,8 +19901,8 @@
               k().createElement(
                 gt.CopyToClipboard,
                 { text: this.props.textToCopy },
-                k().createElement(t, null)
-              )
+                k().createElement(t, null),
+              ),
             );
           }
         }
@@ -19943,9 +19953,9 @@
                           onChange: this.onFilterChange,
                           value: !0 === o || "true" === o ? "" : o,
                           disabled: r,
-                        })
-                      )
-                    )
+                        }),
+                      ),
+                    ),
               )
             );
           }
@@ -19990,7 +20000,7 @@
                 this.onChange(s, { isXml: n, isEditBox: this.state.isEditBox });
               }),
               ue()(this, "toggleIsEditBox", () =>
-                this.setState((e) => ({ isEditBox: !e.isEditBox }))
+                this.setState((e) => ({ isEditBox: !e.isEditBox })),
               ),
               (this.state = { isEditBox: !1, value: "" });
           }
@@ -20016,7 +20026,7 @@
               u = o("contentType");
             let p = (s ? s.parameterWithMetaByIdentity(r, t) : t).get(
                 "errors",
-                (0, I.List)()
+                (0, I.List)(),
               ),
               m = s.contentTypeValues(r).get("requestContentType"),
               d =
@@ -20063,8 +20073,8 @@
                               : "btn edit body-param__example-edit",
                             onClick: this.toggleIsEditBox,
                           },
-                          g ? "Cancel" : "Edit"
-                        )
+                          g ? "Cancel" : "Edit",
+                        ),
                       )
                     : null,
                   k().createElement(
@@ -20077,9 +20087,9 @@
                       onChange: e,
                       className: "body-param-content-type",
                       ariaLabel: "Parameter content type",
-                    })
-                  )
-                )
+                    }),
+                  ),
+                ),
               )
             );
           }
@@ -20104,7 +20114,7 @@
                       className: "curl microlight",
                       style: (0, ct.C2)(ut()(s, "syntaxHighlight.theme")),
                     },
-                    n
+                    n,
                   )
                 : k().createElement("textarea", {
                     readOnly: !0,
@@ -20121,10 +20131,10 @@
                 k().createElement(
                   gt.CopyToClipboard,
                   { text: n },
-                  k().createElement("button", null)
-                )
+                  k().createElement("button", null),
+                ),
               ),
-              k().createElement("div", null, r)
+              k().createElement("div", null, r),
             );
           }
         }
@@ -20158,17 +20168,17 @@
               k().createElement(
                 "span",
                 { className: "schemes-title" },
-                "Schemes"
+                "Schemes",
               ),
               k().createElement(
                 "select",
                 { onChange: this.onChange, value: n },
                 b()((e = t.valueSeq()))
                   .call(e, (e) =>
-                    k().createElement("option", { value: e, key: e }, e)
+                    k().createElement("option", { value: e, key: e }, e),
                   )
-                  .toArray()
-              )
+                  .toArray(),
+              ),
             );
           }
         }
@@ -20198,7 +20208,7 @@
                 this.props.onToggle &&
                   this.props.onToggle(
                     this.props.modelName,
-                    !this.state.expanded
+                    !this.state.expanded,
                   ),
                   this.setState({ expanded: !this.state.expanded });
               }),
@@ -20208,7 +20218,7 @@
                   P().is(t, this.props.specPath) && this.toggleCollapsed(),
                     this.props.layoutActions.readyToScroll(
                       this.props.specPath,
-                      e.parentElement
+                      e.parentElement,
                     );
                 }
               });
@@ -20236,7 +20246,7 @@
               ? k().createElement(
                   "span",
                   { className: t || "" },
-                  this.props.children
+                  this.props.children,
                 )
               : k().createElement(
                   "span",
@@ -20258,10 +20268,10 @@
                       k().createElement(
                         "span",
                         null,
-                        this.state.collapsedContent
-                      )
+                        this.state.collapsedContent,
+                      ),
                   ),
-                  this.state.expanded && this.props.children
+                  this.state.expanded && this.props.children,
                 );
           }
         }
@@ -20344,8 +20354,8 @@
                       onClick: this.activeTab,
                       role: "tab",
                     },
-                    r ? "Edit Value" : "Example Value"
-                  )
+                    r ? "Edit Value" : "Example Value",
+                  ),
                 ),
                 n &&
                   k().createElement(
@@ -20367,9 +20377,9 @@
                         onClick: this.activeTab,
                         role: "tab",
                       },
-                      f ? "Schema" : "Model"
-                    )
-                  )
+                      f ? "Schema" : "Model",
+                    ),
+                  ),
               ),
               "example" === this.state.activeTab &&
                 k().createElement(
@@ -20386,7 +20396,7 @@
                     k().createElement(p, {
                       value: "(no example available)",
                       getConfigs: a,
-                    })
+                    }),
                 ),
               "model" === this.state.activeTab &&
                 k().createElement(
@@ -20408,8 +20418,8 @@
                     specPath: o,
                     includeReadOnly: l,
                     includeWriteOnly: c,
-                  })
-                )
+                  }),
+                ),
             );
           }
         }
@@ -20439,8 +20449,8 @@
                     depth: 1,
                     onToggle: this.onToggle,
                     expandDepth: this.props.expandDepth || 0,
-                  })
-                )
+                  }),
+                ),
               )
             );
           }
@@ -20452,7 +20462,7 @@
               ue()(this, "getSchemaBasePath", () =>
                 this.props.specSelectors.isOAS3()
                   ? ["components", "schemas"]
-                  : ["definitions"]
+                  : ["definitions"],
               ),
               ue()(this, "getCollapsedContent", () => " "),
               ue()(this, "handleToggle", (e, t) => {
@@ -20468,7 +20478,7 @@
                 e &&
                   this.props.layoutActions.readyToScroll(
                     this.getSchemaBasePath(),
-                    e
+                    e,
                   );
               }),
               ue()(this, "onLoadModel", (e) => {
@@ -20476,7 +20486,7 @@
                   const t = e.getAttribute("data-name");
                   this.props.layoutActions.readyToScroll(
                     [...this.getSchemaBasePath(), t],
-                    e
+                    e,
                   );
                 }
               });
@@ -20519,8 +20529,8 @@
                     onClick: () => r.show(i, !u),
                   },
                   k().createElement("span", null, p ? "Schemas" : "Models"),
-                  u ? k().createElement(f, null) : k().createElement(y, null)
-                )
+                  u ? k().createElement(f, null) : k().createElement(y, null),
+                ),
               ),
               k().createElement(
                 d,
@@ -20561,8 +20571,8 @@
                         k().createElement(
                           "span",
                           { className: "model model-title" },
-                          v
-                        )
+                          v,
+                        ),
                       );
                     return k().createElement(
                       "div",
@@ -20576,7 +20586,7 @@
                       k().createElement(
                         "span",
                         { className: "models-jump-to-path" },
-                        k().createElement(g, { specPath: u })
+                        k().createElement(g, { specPath: u }),
                       ),
                       k().createElement(
                         h,
@@ -20593,12 +20603,12 @@
                           hideSelfOnExpand: !0,
                           expanded: c > 0 && S,
                         },
-                        E
-                      )
+                        E,
+                      ),
                     );
                   })
-                  .toArray()
-              )
+                  .toArray(),
+              ),
             );
           }
         }
@@ -20616,8 +20626,8 @@
               { collapsedContent: r },
               "[ ",
               t.join(", "),
-              " ]"
-            )
+              " ]",
+            ),
           );
         };
         class Kn extends O.Component {
@@ -20660,7 +20670,7 @@
                       "minProperties",
                       "nullable",
                       "example",
-                    ])
+                    ]),
                   ).call(n, t)
                 );
               }),
@@ -20677,7 +20687,7 @@
                 k().createElement(
                   "span",
                   { className: "model-jump-to-path" },
-                  k().createElement(M, { specPath: g })
+                  k().createElement(M, { specPath: g }),
                 ),
               F = k().createElement(
                 "span",
@@ -20685,7 +20695,7 @@
                 k().createElement("span", null, "{"),
                 "...",
                 k().createElement("span", null, "}"),
-                c ? k().createElement(U, null) : ""
+                c ? k().createElement(U, null) : "",
               ),
               z = y.isOAS3() ? r.get("anyOf") : null,
               B = y.isOAS3() ? r.get("oneOf") : null,
@@ -20700,13 +20710,13 @@
                     k().createElement(
                       "span",
                       { className: "model-hint" },
-                      r.get("$$ref")
+                      r.get("$$ref"),
                     ),
                   k().createElement(
                     "span",
                     { className: "model-title__text" },
-                    O
-                  )
+                    O,
+                  ),
                 );
             return k().createElement(
               "span",
@@ -20723,7 +20733,7 @@
                 k().createElement(
                   "span",
                   { className: "brace-open object" },
-                  "{"
+                  "{",
                 ),
                 c ? k().createElement(U, null) : null,
                 k().createElement(
@@ -20743,8 +20753,8 @@
                             k().createElement(
                               "td",
                               null,
-                              k().createElement(D, { source: j })
-                            )
+                              k().createElement(D, { source: j }),
+                            ),
                           )
                         : null,
                       R &&
@@ -20758,16 +20768,16 @@
                             k().createElement(
                               V,
                               { target: "_blank", href: (0, $.Nm)(R) },
-                              T || R
-                            )
-                          )
+                              T || R,
+                            ),
+                          ),
                         ),
                       q
                         ? k().createElement(
                             "tr",
                             { className: "property" },
                             k().createElement("td", null, "deprecated:"),
-                            k().createElement("td", null, "true")
+                            k().createElement("td", null, "true"),
                           )
                         : null,
                       _ && _.size
@@ -20778,7 +20788,7 @@
                                 (!t.get("readOnly") || E) &&
                                 (!t.get("writeOnly") || w)
                               );
-                            }))
+                            })),
                           )
                             .call(e, (e) => {
                               let [t, n] = e,
@@ -20799,8 +20809,8 @@
                                       k().createElement(
                                         "span",
                                         { className: "star" },
-                                        "*"
-                                      )
+                                        "*",
+                                      ),
                                   ),
                                   k().createElement(
                                     "td",
@@ -20817,10 +20827,10 @@
                                           getConfigs: u,
                                           schema: n,
                                           depth: m + 1,
-                                        }
-                                      )
-                                    )
-                                  )
+                                        },
+                                      ),
+                                    ),
+                                  ),
                                 )
                               );
                             })
@@ -20830,7 +20840,7 @@
                         ? k().createElement(
                             "tr",
                             null,
-                            k().createElement("td", null, " ")
+                            k().createElement("td", null, " "),
                           )
                         : null,
                       C
@@ -20843,7 +20853,7 @@
                                 "tr",
                                 { key: t, className: "extension" },
                                 k().createElement("td", null, t),
-                                k().createElement("td", null, p()(s))
+                                k().createElement("td", null, p()(s)),
                               );
                             })
                             .toArray()
@@ -20865,9 +20875,9 @@
                                   getConfigs: u,
                                   schema: N,
                                   depth: m + 1,
-                                })
-                              )
-                            )
+                                }),
+                              ),
+                            ),
                           )
                         : null,
                       z
@@ -20891,11 +20901,11 @@
                                       getConfigs: u,
                                       schema: e,
                                       depth: m + 1,
-                                    })
-                                  )
-                                )
-                              )
-                            )
+                                    }),
+                                  ),
+                                ),
+                              ),
+                            ),
                           )
                         : null,
                       B
@@ -20919,11 +20929,11 @@
                                       getConfigs: u,
                                       schema: e,
                                       depth: m + 1,
-                                    })
-                                  )
-                                )
-                              )
-                            )
+                                    }),
+                                  ),
+                                ),
+                              ),
+                            ),
                           )
                         : null,
                       W
@@ -20946,16 +20956,16 @@
                                     getConfigs: u,
                                     schema: W,
                                     depth: m + 1,
-                                  })
-                                )
-                              )
-                            )
+                                  }),
+                                ),
+                              ),
+                            ),
                           )
-                        : null
-                    )
-                  )
+                        : null,
+                    ),
+                  ),
                 ),
-                k().createElement("span", { className: "brace-close" }, "}")
+                k().createElement("span", { className: "brace-close" }, "}"),
               ),
               P.size
                 ? b()((s = P.entrySeq())).call(s, (e) => {
@@ -20967,7 +20977,7 @@
                       propClass: "property",
                     });
                   })
-                : null
+                : null,
             );
           }
         }
@@ -20998,7 +21008,7 @@
                       "description",
                       "$$ref",
                       "externalDocs",
-                    ])
+                    ]),
                   ).call(n, t)
                 );
               }),
@@ -21017,8 +21027,8 @@
                   k().createElement(
                     "span",
                     { className: "model-title__text" },
-                    m
-                  )
+                    m,
+                  ),
                 );
             return k().createElement(
               "span",
@@ -21050,8 +21060,8 @@
                     k().createElement(
                       E,
                       { target: "_blank", href: (0, $.Nm)(h) },
-                      g || h
-                    )
+                      g || h,
+                    ),
                   ),
                 k().createElement(
                   "span",
@@ -21065,11 +21075,11 @@
                       schema: p,
                       required: !1,
                       depth: r + 1,
-                    })
-                  )
+                    }),
+                  ),
                 ),
-                "]"
-              )
+                "]",
+              ),
             );
           }
         }
@@ -21108,7 +21118,7 @@
                         "description",
                         "$$ref",
                         "externalDocs",
-                      ])
+                      ]),
                     ).call(n, t)
                   );
                 })
@@ -21128,8 +21138,8 @@
                   k().createElement(
                     "span",
                     { className: "model-title__text" },
-                    f
-                  )
+                    f,
+                  ),
                 );
             return k().createElement(
               "span",
@@ -21155,7 +21165,7 @@
                       { className: "prop-format" },
                       "($",
                       d,
-                      ")"
+                      ")",
                     ),
                   S.size
                     ? b()((e = S.entrySeq())).call(e, (e) => {
@@ -21187,8 +21197,8 @@
                       k().createElement(
                         N,
                         { target: "_blank", href: (0, $.Nm)(E) },
-                        w || E
-                      )
+                        w || E,
+                      ),
                     ),
                   h && h.size
                     ? k().createElement(
@@ -21206,15 +21216,15 @@
                               "   ",
                               t,
                               ": ",
-                              String(n)
+                              String(n),
                             );
                           })
-                          .toArray()
+                          .toArray(),
                       )
                     : null,
-                  g && k().createElement(C, { value: g, getComponent: r })
-                )
-              )
+                  g && k().createElement(C, { value: g, getComponent: r }),
+                ),
+              ),
             );
           }
         }
@@ -21226,7 +21236,7 @@
             k().createElement("br", null),
             t,
             ": ",
-            String(n)
+            String(n),
           );
         };
         class Bn extends k().Component {
@@ -21247,19 +21257,19 @@
                 ? k().createElement(
                     "button",
                     { className: "btn try-out__btn cancel", onClick: t },
-                    "Cancel"
+                    "Cancel",
                   )
                 : k().createElement(
                     "button",
                     { className: "btn try-out__btn", onClick: e },
-                    "Try it out "
+                    "Try it out ",
                   ),
               o &&
                 k().createElement(
                   "button",
                   { className: "btn try-out__btn reset", onClick: n },
-                  "Reset"
-                )
+                  "Reset",
+                ),
             );
           }
         }
@@ -21298,7 +21308,7 @@
                       k().createElement(
                         "h3",
                         null,
-                        "Unable to render this definition"
+                        "Unable to render this definition",
                       ),
                       k().createElement(
                         "p",
@@ -21306,7 +21316,7 @@
                         k().createElement("code", null, "swagger"),
                         " and ",
                         k().createElement("code", null, "openapi"),
-                        " fields cannot be present in the same Swagger or OpenAPI definition. Please remove one of the fields."
+                        " fields cannot be present in the same Swagger or OpenAPI definition. Please remove one of the fields.",
                       ),
                       k().createElement(
                         "p",
@@ -21317,10 +21327,10 @@
                         k().createElement("code", null, "openapi: 3.0.n"),
                         " (for example, ",
                         k().createElement("code", null, "openapi: 3.0.0"),
-                        ")."
-                      )
-                    )
-                  )
+                        ").",
+                      ),
+                    ),
+                  ),
                 )
               : t || n
               ? k().createElement("div", null, this.props.children)
@@ -21340,12 +21350,12 @@
                       k().createElement(
                         "h3",
                         null,
-                        "Unable to render this definition"
+                        "Unable to render this definition",
                       ),
                       k().createElement(
                         "p",
                         null,
-                        "The provided definition does not specify a valid version field."
+                        "The provided definition does not specify a valid version field.",
                       ),
                       k().createElement(
                         "p",
@@ -21356,10 +21366,10 @@
                         k().createElement("code", null, "openapi: 3.0.n"),
                         " (for example, ",
                         k().createElement("code", null, "openapi: 3.0.0"),
-                        ")."
-                      )
-                    )
-                  )
+                        ").",
+                      ),
+                    ),
+                  ),
                 );
           }
         }
@@ -21373,7 +21383,7 @@
             return k().createElement(
               "small",
               null,
-              k().createElement("pre", { className: "version" }, " ", t, " ")
+              k().createElement("pre", { className: "version" }, " ", t, " "),
             );
           },
           Zn = (e) => {
@@ -21385,7 +21395,7 @@
                 onClick: t ? (e) => e.preventDefault() : null,
                 href: t ? `#/${n}` : null,
               },
-              k().createElement("span", null, s)
+              k().createElement("span", null, s),
             );
           },
           Gn = () =>
@@ -21407,56 +21417,56 @@
                     { viewBox: "0 0 20 20", id: "unlocked" },
                     k().createElement("path", {
                       d: "M15.8 8H14V5.6C14 2.703 12.665 1 10 1 7.334 1 6 2.703 6 5.6V6h2v-.801C8 3.754 8.797 3 10 3c1.203 0 2 .754 2 2.199V8H4c-.553 0-1 .646-1 1.199V17c0 .549.428 1.139.951 1.307l1.197.387C5.672 18.861 6.55 19 7.1 19h5.8c.549 0 1.428-.139 1.951-.307l1.196-.387c.524-.167.953-.757.953-1.306V9.199C17 8.646 16.352 8 15.8 8z",
-                    })
+                    }),
                   ),
                   k().createElement(
                     "symbol",
                     { viewBox: "0 0 20 20", id: "locked" },
                     k().createElement("path", {
                       d: "M15.8 8H14V5.6C14 2.703 12.665 1 10 1 7.334 1 6 2.703 6 5.6V8H4c-.553 0-1 .646-1 1.199V17c0 .549.428 1.139.951 1.307l1.197.387C5.672 18.861 6.55 19 7.1 19h5.8c.549 0 1.428-.139 1.951-.307l1.196-.387c.524-.167.953-.757.953-1.306V9.199C17 8.646 16.352 8 15.8 8zM12 8H8V5.199C8 3.754 8.797 3 10 3c1.203 0 2 .754 2 2.199V8z",
-                    })
+                    }),
                   ),
                   k().createElement(
                     "symbol",
                     { viewBox: "0 0 20 20", id: "close" },
                     k().createElement("path", {
                       d: "M14.348 14.849c-.469.469-1.229.469-1.697 0L10 11.819l-2.651 3.029c-.469.469-1.229.469-1.697 0-.469-.469-.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-.469-.469-.469-1.228 0-1.697.469-.469 1.228-.469 1.697 0L10 8.183l2.651-3.031c.469-.469 1.228-.469 1.697 0 .469.469.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c.469.469.469 1.229 0 1.698z",
-                    })
+                    }),
                   ),
                   k().createElement(
                     "symbol",
                     { viewBox: "0 0 20 20", id: "large-arrow" },
                     k().createElement("path", {
                       d: "M13.25 10L6.109 2.58c-.268-.27-.268-.707 0-.979.268-.27.701-.27.969 0l7.83 7.908c.268.271.268.709 0 .979l-7.83 7.908c-.268.271-.701.27-.969 0-.268-.269-.268-.707 0-.979L13.25 10z",
-                    })
+                    }),
                   ),
                   k().createElement(
                     "symbol",
                     { viewBox: "0 0 20 20", id: "large-arrow-down" },
                     k().createElement("path", {
                       d: "M17.418 6.109c.272-.268.709-.268.979 0s.271.701 0 .969l-7.908 7.83c-.27.268-.707.268-.979 0l-7.908-7.83c-.27-.268-.27-.701 0-.969.271-.268.709-.268.979 0L10 13.25l7.418-7.141z",
-                    })
+                    }),
                   ),
                   k().createElement(
                     "symbol",
                     { viewBox: "0 0 20 20", id: "large-arrow-up" },
                     k().createElement("path", {
                       d: "M 17.418 14.908 C 17.69 15.176 18.127 15.176 18.397 14.908 C 18.667 14.64 18.668 14.207 18.397 13.939 L 10.489 6.109 C 10.219 5.841 9.782 5.841 9.51 6.109 L 1.602 13.939 C 1.332 14.207 1.332 14.64 1.602 14.908 C 1.873 15.176 2.311 15.176 2.581 14.908 L 10 7.767 L 17.418 14.908 Z",
-                    })
+                    }),
                   ),
                   k().createElement(
                     "symbol",
                     { viewBox: "0 0 24 24", id: "jump-to" },
                     k().createElement("path", {
                       d: "M19 7v4H5.83l3.58-3.59L8 6l-6 6 6 6 1.41-1.41L5.83 13H21V7z",
-                    })
+                    }),
                   ),
                   k().createElement(
                     "symbol",
                     { viewBox: "0 0 24 24", id: "expand" },
                     k().createElement("path", {
                       d: "M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z",
-                    })
+                    }),
                   ),
                   k().createElement(
                     "symbol",
@@ -21468,11 +21478,11 @@
                         fill: "#ffffff",
                         fillRule: "evenodd",
                         d: "M2 13h4v1H2v-1zm5-6H2v1h5V7zm2 3V8l-3 3 3 3v-2h5v-2H9zM4.5 9H2v1h2.5V9zM2 12h2.5v-1H2v1zm9 1h1v2c-.02.28-.11.52-.3.7-.19.18-.42.28-.7.3H1c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h3c0-1.11.89-2 2-2 1.11 0 2 .89 2 2h3c.55 0 1 .45 1 1v5h-1V6H1v9h10v-2zM2 5h8c0-.55-.45-1-1-1H8c-.55 0-1-.45-1-1s-.45-1-1-1-1 .45-1 1-.45 1-1 1H3c-.55 0-1 .45-1 1z",
-                      })
-                    )
-                  )
-                )
-              )
+                      }),
+                    ),
+                  ),
+                ),
+              ),
             );
         var Xn = n(2552);
         class Yn extends k().Component {
@@ -21509,8 +21519,8 @@
                   k().createElement(
                     "div",
                     { className: "loading-container" },
-                    k().createElement("div", { className: "loading" })
-                  )
+                    k().createElement("div", { className: "loading" }),
+                  ),
                 )),
               "failed" === E &&
                 (w = k().createElement(
@@ -21522,10 +21532,10 @@
                     k().createElement(
                       "h4",
                       { className: "title" },
-                      "Failed to load API definition."
+                      "Failed to load API definition.",
                     ),
-                    k().createElement(p, null)
-                  )
+                    k().createElement(p, null),
+                  ),
                 )),
               "failedConfig" === E)
             ) {
@@ -21540,10 +21550,10 @@
                   k().createElement(
                     "h4",
                     { className: "title" },
-                    "Failed to load remote configuration."
+                    "Failed to load remote configuration.",
                   ),
-                  k().createElement("p", null, n)
-                )
+                  k().createElement("p", null, n),
+                ),
               );
             }
             if (
@@ -21552,14 +21562,14 @@
                 (w = k().createElement(
                   "h4",
                   null,
-                  "No API definition provided."
+                  "No API definition provided.",
                 )),
               w)
             )
               return k().createElement(
                 "div",
                 { className: "swagger-ui" },
-                k().createElement("div", { className: "loading-container" }, w)
+                k().createElement("div", { className: "loading-container" }, w),
               );
             const x = t.servers(),
               C = t.schemes(),
@@ -21584,8 +21594,8 @@
                   k().createElement(
                     u,
                     { mobile: 12 },
-                    k().createElement(r, null)
-                  )
+                    k().createElement(r, null),
+                  ),
                 ),
                 j || b || _
                   ? k().createElement(
@@ -21596,8 +21606,8 @@
                         { className: "schemes wrapper", mobile: 12 },
                         j ? k().createElement(m, null) : null,
                         b ? k().createElement(d, null) : null,
-                        _ ? k().createElement(h, null) : null
-                      )
+                        _ ? k().createElement(h, null) : null,
+                      ),
                     )
                   : null,
                 k().createElement(g, null),
@@ -21607,8 +21617,8 @@
                   k().createElement(
                     u,
                     { mobile: 12, desktop: 12 },
-                    k().createElement(o, null)
-                  )
+                    k().createElement(o, null),
+                  ),
                 ),
                 v &&
                   k().createElement(
@@ -21617,8 +21627,8 @@
                     k().createElement(
                       u,
                       { mobile: 12, desktop: 12 },
-                      k().createElement(c, null)
-                    )
+                      k().createElement(c, null),
+                    ),
                   ),
                 k().createElement(
                   i,
@@ -21626,10 +21636,10 @@
                   k().createElement(
                     u,
                     { mobile: 12, desktop: 12 },
-                    k().createElement(l, null)
-                  )
-                )
-              )
+                    k().createElement(l, null),
+                  ),
+                ),
+              ),
             );
           }
         }
@@ -21680,7 +21690,7 @@
                   onChange: s,
                   schema: e,
                   disabled: o,
-                })
+                }),
               )
             );
           }
@@ -21774,10 +21784,10 @@
                     value: t.push(
                       e.getSampleSchema(this.state.schema.get("items"), !1, {
                         includeWriteOnly: !0,
-                      })
+                      }),
                     ),
                   }),
-                  this.onChange
+                  this.onChange,
                 );
               }),
               ue()(this, "onEnumChange", (e) => {
@@ -21804,7 +21814,7 @@
             r = r.toJS ? r.toJS() : w()(r) ? r : [];
             const c = l()(r).call(r, (e) => "string" == typeof e),
               i = b()(
-                (e = l()(r).call(r, (e) => void 0 !== e.needRemove))
+                (e = l()(r).call(r, (e) => void 0 !== e.needRemove)),
               ).call(e, (e) => e.error),
               u = this.state.value,
               p = !!(u && u.count && u.count() > 0),
@@ -21845,7 +21855,7 @@
                     const c = (0, I.fromJS)([
                       ...b()((s = l()(r).call(r, (e) => e.index === n))).call(
                         s,
-                        (e) => e.error
+                        (e) => e.error,
                       ),
                     ]);
                     return k().createElement(
@@ -21876,7 +21886,7 @@
                               schema: g,
                               getComponent: t,
                               fn: a,
-                            })
+                            }),
                           ),
                       o
                         ? null
@@ -21889,8 +21899,8 @@
                               title: i.length ? i : "",
                               onClick: () => this.removeItem(n),
                             },
-                            " - "
-                          )
+                            " - ",
+                          ),
                     );
                   })
                 : null,
@@ -21907,8 +21917,8 @@
                     },
                     "Add ",
                     d ? `${d} ` : "",
-                    "item"
-                  )
+                    "item",
+                  ),
             );
           }
         }
@@ -22049,7 +22059,7 @@
                   value: (0, $.Pz)(t),
                   disabled: s,
                   onChange: this.handleOnChange,
-                })
+                }),
               )
             );
           }
@@ -22206,7 +22216,7 @@
               window.location.host
             }${window.location.pathname.substring(
               0,
-              a()((t = window.location.pathname)).call(t, "/")
+              a()((t = window.location.pathname)).call(t, "/"),
             )}/oauth2-redirect.html`,
             persistAuthorization: !1,
             configs: {},
@@ -22270,7 +22280,7 @@
                   spec: { spec: "", url: o.url },
                   requestSnippets: o.requestSnippets,
                 },
-                o.initialState
+                o.initialState,
               ),
             };
           if (o.initialState)
@@ -22313,7 +22323,7 @@
                 null === n.dom_id ||
                   null === n.domNode ||
                   console.error(
-                    "Skipped rendering: no `dom_id` or `domNode` was specified"
+                    "Skipped rendering: no `dom_id` or `domNode` was specified",
                   );
               return h;
             },
@@ -22326,7 +22336,7 @@
                   requestInterceptor: o.requestInterceptor,
                   responseInterceptor: o.responseInterceptor,
                 },
-                g
+                g,
               ),
               h)
             : g();
@@ -22336,6 +22346,6 @@
       })(),
       (s = s.default)
     );
-  })()
+  })(),
 );
 //# sourceMappingURL=swagger-ui.js.map

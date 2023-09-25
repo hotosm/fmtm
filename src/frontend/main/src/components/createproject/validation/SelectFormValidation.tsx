@@ -1,4 +1,3 @@
-
 interface ProjectValues {
   xform_title: string;
   form_ways: string;
@@ -17,7 +16,6 @@ function SelectFormValidation(values: ProjectValues) {
   if (!values?.form_ways) {
     errors.form_ways = 'Form Selection is Required.';
   }
-
 
   console.log(errors);
   return errors;

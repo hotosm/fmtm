@@ -38,7 +38,7 @@
                 c = new i(
                   (function (t, e, r) {
                     return (3 * (e + r)) / 4 - r;
-                  })(0, u, a)
+                  })(0, u, a),
                 ),
                 f = 0,
                 l = a > 0 ? u - 4 : u;
@@ -82,7 +82,7 @@
                 : 2 === i &&
                   ((e = (t[n - 2] << 8) + t[n - 1]),
                   o.push(
-                    r[e >> 10] + r[(e >> 4) & 63] + r[(e << 2) & 63] + "="
+                    r[e >> 10] + r[(e >> 4) & 63] + r[(e << 2) & 63] + "=",
                   ));
               return o.join("");
             });
@@ -114,7 +114,7 @@
                   r[((o = i) >> 18) & 63] +
                     r[(o >> 12) & 63] +
                     r[(o >> 6) & 63] +
-                    r[63 & o]
+                    r[63 & o],
                 );
             return u.join("");
           }
@@ -138,7 +138,7 @@
           function s(t) {
             if (t > u)
               throw new RangeError(
-                'The value "' + t + '" is invalid for option "size"'
+                'The value "' + t + '" is invalid for option "size"',
               );
             const e = new Uint8Array(t);
             return Object.setPrototypeOf(e, a.prototype), e;
@@ -147,7 +147,7 @@
             if ("number" == typeof t) {
               if ("string" == typeof e)
                 throw new TypeError(
-                  'The "string" argument must be of type string. Received type number'
+                  'The "string" argument must be of type string. Received type number',
                 );
               return l(t);
             }
@@ -176,7 +176,7 @@
             if (null == t)
               throw new TypeError(
                 "The first argument must be one of type string, Buffer, ArrayBuffer, Array, or Array-like Object. Received type " +
-                  typeof t
+                  typeof t,
               );
             if ($(t, ArrayBuffer) || (t && $(t.buffer, ArrayBuffer)))
               return p(t, e, r);
@@ -187,7 +187,7 @@
               return p(t, e, r);
             if ("number" == typeof t)
               throw new TypeError(
-                'The "value" argument must not be of type number. Received type number'
+                'The "value" argument must not be of type number. Received type number',
               );
             const n = t.valueOf && t.valueOf();
             if (null != n && n !== t) return a.from(n, e, r);
@@ -211,7 +211,7 @@
               return a.from(t[Symbol.toPrimitive]("string"), e, r);
             throw new TypeError(
               "The first argument must be one of type string, Buffer, ArrayBuffer, Array, or Array-like Object. Received type " +
-                typeof t
+                typeof t,
             );
           }
           function f(t) {
@@ -219,7 +219,7 @@
               throw new TypeError('"size" argument must be of type number');
             if (t < 0)
               throw new RangeError(
-                'The value "' + t + '" is invalid for option "size"'
+                'The value "' + t + '" is invalid for option "size"',
               );
           }
           function l(t) {
@@ -253,7 +253,7 @@
               throw new RangeError(
                 "Attempt to allocate Buffer larger than maximum size: 0x" +
                   u.toString(16) +
-                  " bytes"
+                  " bytes",
               );
             return 0 | t;
           }
@@ -263,7 +263,7 @@
             if ("string" != typeof t)
               throw new TypeError(
                 'The "string" argument must be one of type string, Buffer, or ArrayBuffer. Received type ' +
-                  typeof t
+                  typeof t,
               );
             const r = t.length,
               n = arguments.length > 2 && !0 === arguments[2];
@@ -422,7 +422,7 @@
               })(e),
               t,
               r,
-              n
+              n,
             );
           }
           function N(t, e, r, n) {
@@ -443,7 +443,7 @@
               })(e, t.length - r),
               t,
               r,
-              n
+              n,
             );
           }
           function m(t, e, r) {
@@ -534,7 +534,7 @@
               "undefined" == typeof console ||
               "function" != typeof console.error ||
               console.error(
-                "This browser lacks typed array (Uint8Array) support which is required by `buffer` v5.x. Use `buffer` v4.x if you require old browser support."
+                "This browser lacks typed array (Uint8Array) support which is required by `buffer` v5.x. Use `buffer` v4.x if you require old browser support.",
               ),
             Object.defineProperty(a.prototype, "parent", {
               enumerable: !0,
@@ -584,7 +584,7 @@
                 !a.isBuffer(t) || !a.isBuffer(e))
               )
                 throw new TypeError(
-                  'The "buf1", "buf2" arguments must be one of type Buffer or Uint8Array'
+                  'The "buf1", "buf2" arguments must be one of type Buffer or Uint8Array',
                 );
               if (t === e) return 0;
               let r = t.length,
@@ -617,7 +617,7 @@
             (a.concat = function (t, e) {
               if (!Array.isArray(t))
                 throw new TypeError(
-                  '"list" argument must be an Array of Buffers'
+                  '"list" argument must be an Array of Buffers',
                 );
               if (0 === t.length) return a.alloc(0);
               let r;
@@ -634,7 +634,7 @@
                 else {
                   if (!a.isBuffer(e))
                     throw new TypeError(
-                      '"list" argument must be an Array of Buffers'
+                      '"list" argument must be an Array of Buffers',
                     );
                   e.copy(n, i);
                 }
@@ -648,7 +648,7 @@
               const t = this.length;
               if (t % 2 != 0)
                 throw new RangeError(
-                  "Buffer size must be a multiple of 16-bits"
+                  "Buffer size must be a multiple of 16-bits",
                 );
               for (let e = 0; e < t; e += 2) d(this, e, e + 1);
               return this;
@@ -657,7 +657,7 @@
               const t = this.length;
               if (t % 4 != 0)
                 throw new RangeError(
-                  "Buffer size must be a multiple of 32-bits"
+                  "Buffer size must be a multiple of 32-bits",
                 );
               for (let e = 0; e < t; e += 4)
                 d(this, e, e + 3), d(this, e + 1, e + 2);
@@ -667,7 +667,7 @@
               const t = this.length;
               if (t % 8 != 0)
                 throw new RangeError(
-                  "Buffer size must be a multiple of 64-bits"
+                  "Buffer size must be a multiple of 64-bits",
                 );
               for (let e = 0; e < t; e += 8)
                 d(this, e, e + 7),
@@ -709,7 +709,7 @@
               )
                 throw new TypeError(
                   'The "target" argument must be one of type Buffer or Uint8Array. Received type ' +
-                    typeof t
+                    typeof t,
                 );
               if (
                 (void 0 === e && (e = 0),
@@ -751,7 +751,7 @@
               else {
                 if (!isFinite(e))
                   throw new Error(
-                    "Buffer.write(string, encoding, offset[, length]) is no longer supported"
+                    "Buffer.write(string, encoding, offset[, length]) is no longer supported",
                   );
                 (e >>>= 0),
                   isFinite(r)
@@ -830,7 +830,7 @@
           function E(t, e, r, n, i, o) {
             if (!a.isBuffer(t))
               throw new TypeError(
-                '"buffer" argument must be a Buffer instance'
+                '"buffer" argument must be a Buffer instance',
               );
             if (e > i || e < o)
               throw new RangeError('"value" argument is out of bounds');
@@ -1055,7 +1055,7 @@
               return (
                 (BigInt(n) << BigInt(32)) +
                 BigInt(
-                  e + 256 * this[++t] + 65536 * this[++t] + this[++t] * 2 ** 24
+                  e + 256 * this[++t] + 65536 * this[++t] + this[++t] * 2 ** 24,
                 )
               );
             })),
@@ -1069,7 +1069,7 @@
               return (
                 (BigInt(n) << BigInt(32)) +
                 BigInt(
-                  this[++t] * 2 ** 24 + 65536 * this[++t] + 256 * this[++t] + r
+                  this[++t] * 2 ** 24 + 65536 * this[++t] + 256 * this[++t] + r,
                 )
               );
             })),
@@ -1274,7 +1274,7 @@
                 t,
                 e,
                 -BigInt("0x8000000000000000"),
-                BigInt("0x7fffffffffffffff")
+                BigInt("0x7fffffffffffffff"),
               );
             })),
             (a.prototype.writeBigInt64BE = H(function (t, e = 0) {
@@ -1283,7 +1283,7 @@
                 t,
                 e,
                 -BigInt("0x8000000000000000"),
-                BigInt("0x7fffffffffffffff")
+                BigInt("0x7fffffffffffffff"),
               );
             })),
             (a.prototype.writeFloatLE = function (t, e, r) {
@@ -1361,7 +1361,7 @@
                   u = o.length;
                 if (0 === u)
                   throw new TypeError(
-                    'The value "' + t + '" is invalid for argument "value"'
+                    'The value "' + t + '" is invalid for argument "value"',
                   );
                 for (i = 0; i < r - e; ++i) this[i + e] = o[i % u];
               }
@@ -1440,7 +1440,7 @@
             throw new B.ERR_OUT_OF_RANGE(
               r || "offset",
               `>= ${r ? 1 : 0} and <= ${e}`,
-              t
+              t,
             );
           }
           Q(
@@ -1450,14 +1450,14 @@
                 ? `${t} is outside of buffer bounds`
                 : "Attempt to access memory outside buffer bounds";
             },
-            RangeError
+            RangeError,
           ),
             Q(
               "ERR_INVALID_ARG_TYPE",
               function (t, e) {
                 return `The "${t}" argument must be of type number. Received type ${typeof e}`;
               },
-              TypeError
+              TypeError,
             ),
             Q(
               "ERR_OUT_OF_RANGE",
@@ -1477,7 +1477,7 @@
                   n
                 );
               },
-              RangeError
+              RangeError,
             );
           const W = /[^+/0-9A-Za-z-_]/g;
           function q(t, e) {
@@ -1522,7 +1522,7 @@
                   (r >> 18) | 240,
                   ((r >> 12) & 63) | 128,
                   ((r >> 6) & 63) | 128,
-                  (63 & r) | 128
+                  (63 & r) | 128,
                 );
               }
             }
@@ -1537,7 +1537,7 @@
                   return "";
                 for (; t.length % 4 != 0; ) t += "=";
                 return t;
-              })(t)
+              })(t),
             );
           }
           function Z(t, e, r, n) {
@@ -2117,7 +2117,7 @@
                     function () {
                       return 1;
                     },
-                  1
+                  1,
                 );
               })
             );
@@ -2253,7 +2253,7 @@
               o(
                 (function () {
                   return arguments;
-                })()
+                })(),
               );
           t.exports = n
             ? o
@@ -3203,8 +3203,8 @@
                           p(this, "b", { value: 3, enumerable: !1 });
                         },
                       }),
-                      { b: 2 }
-                    )
+                      { b: 2 },
+                    ),
                   ).b
               )
                 return !0;
@@ -3673,7 +3673,7 @@
                 function (t) {
                   return n(r, this);
                 },
-                { arity: 1 }
+                { arity: 1 },
               );
           };
         },
@@ -3939,7 +3939,7 @@
                   else c(p + 1), f(h, p++, o);
                 return (h.length = p), h;
               },
-            }
+            },
           );
         },
         290: (t, e, r) => {
@@ -3958,7 +3958,7 @@
               filter: function (t) {
                 return i(this, t, arguments.length > 1 ? arguments[1] : void 0);
               },
-            }
+            },
           );
         },
         833: (t, e, r) => {
@@ -3979,10 +3979,10 @@
                   return i(
                     this,
                     t,
-                    arguments.length > 1 ? arguments[1] : void 0
+                    arguments.length > 1 ? arguments[1] : void 0,
                   );
                 },
-              }
+              },
             ),
             o(u);
         },
@@ -3992,7 +3992,7 @@
             i = r(6837);
           n(
             { target: "Array", proto: !0, forced: [].forEach != i },
-            { forEach: i }
+            { forEach: i },
           );
         },
         7690: (t, e, r) => {
@@ -4013,7 +4013,7 @@
               includes: function (t) {
                 return i(this, t, arguments.length > 1 ? arguments[1] : void 0);
               },
-            }
+            },
           ),
             u("includes");
         },
@@ -4032,7 +4032,7 @@
                 var e = arguments.length > 1 ? arguments[1] : void 0;
                 return a ? s(this, t, e) || 0 : o(this, t, e);
               },
-            }
+            },
           );
         },
         2988: (t, e, r) => {
@@ -4067,7 +4067,7 @@
                 ? ((t.target = void 0), c(void 0, !0))
                 : c("keys" == r ? n : "values" == r ? e[n] : [n, e[n]], !1);
             },
-            "values"
+            "values",
           );
           var M = (o.Arguments = o.Array);
           if (
@@ -4090,7 +4090,7 @@
               map: function (t) {
                 return i(this, t, arguments.length > 1 ? arguments[1] : void 0);
               },
-            }
+            },
           );
         },
         1876: (t, e, r) => {
@@ -4110,7 +4110,7 @@
                 var e = arguments.length;
                 return i(this, t, e, e > 1 ? arguments[1] : void 0);
               },
-            }
+            },
           );
         },
         186: (t, e, r) => {
@@ -4158,7 +4158,7 @@
                   g in h && f(n, l, h[g]);
                 return (n.length = l), n;
               },
-            }
+            },
           );
         },
         6026: (t, e, r) => {
@@ -4171,7 +4171,7 @@
               some: function (t) {
                 return i(this, t, arguments.length > 1 ? arguments[1] : void 0);
               },
-            }
+            },
           );
         },
         4115: (t, e, r) => {
@@ -4267,7 +4267,7 @@
                           ? 1
                           : -1;
                       };
-                    })(t)
+                    })(t),
                   ),
                     r = s(i),
                     n = 0;
@@ -4278,7 +4278,7 @@
                 for (; n < f; ) a(e, n++);
                 return e;
               },
-            }
+            },
           );
         },
         8084: () => {},
@@ -4287,7 +4287,7 @@
             i = r(8308);
           n(
             { target: "Function", proto: !0, forced: Function.bind !== i },
-            { bind: i }
+            { bind: i },
           );
         },
         2619: (t, e, r) => {
@@ -4355,7 +4355,7 @@
                     i = o(x ? D : M, null, n);
                   return m && "string" == typeof i ? v(i, _, I) : i;
                 },
-              }
+              },
             );
         },
         9120: (t, e, r) => {
@@ -4373,7 +4373,7 @@
               arity: 2,
               forced: Object.assign !== i,
             },
-            { assign: i }
+            { assign: i },
           );
         },
         6450: (t, e, r) => {
@@ -4387,7 +4387,7 @@
               forced: Object.defineProperty !== o,
               sham: !i,
             },
-            { defineProperty: o }
+            { defineProperty: o },
           );
         },
         7144: (t, e, r) => {
@@ -4411,7 +4411,7 @@
                 var e = u.f;
                 return e ? e(s(t)) : [];
               },
-            }
+            },
           );
         },
         1724: (t, e, r) => {
@@ -4430,7 +4430,7 @@
               keys: function (t) {
                 return o(i(t));
               },
-            }
+            },
           );
         },
         5967: () => {},
@@ -4451,10 +4451,10 @@
                 return !!~c(
                   s(u(this)),
                   s(o(t)),
-                  arguments.length > 1 ? arguments[1] : void 0
+                  arguments.length > 1 ? arguments[1] : void 0,
                 );
               },
-            }
+            },
           );
         },
         7971: (t, e, r) => {
@@ -4481,7 +4481,7 @@
               return i >= r.length
                 ? s(void 0, !0)
                 : ((t = n(r, i)), (e.index += t.length), s(t, !1));
-            }
+            },
           );
         },
         4761: (t, e, r) => {
@@ -4516,12 +4516,12 @@
                 var e = a(f(this));
                 c(t);
                 var r = s(
-                    M(arguments.length > 1 ? arguments[1] : void 0, e.length)
+                    M(arguments.length > 1 ? arguments[1] : void 0, e.length),
                   ),
                   n = a(t);
                 return p ? p(e, n, r) : y(e, r, r + n.length) === n;
               },
-            }
+            },
           );
         },
         6371: (t, e, r) => {
@@ -4534,7 +4534,7 @@
               trim: function () {
                 return i(this);
               },
-            }
+            },
           );
         },
         8555: (t, e, r) => {
@@ -4608,7 +4608,7 @@
                       get: function () {
                         return V(this, "a", { value: 7 }).a;
                       },
-                    })
+                    }),
                   ).a
                 );
               })
@@ -4720,7 +4720,7 @@
               "toString",
               function () {
                 return G(this).tag;
-              }
+              },
             ),
             I(q, "withoutSetter", function (t) {
               return ut(T(t), t);
@@ -4744,7 +4744,7 @@
               s || I(W, "propertyIsEnumerable", ct, { unsafe: !0 }))),
             n(
               { global: !0, constructor: !0, wrap: !0, forced: !c, sham: !c },
-              { Symbol: q }
+              { Symbol: q },
             ),
             B(v(nt), function (t) {
               O(t);
@@ -4758,7 +4758,7 @@
                 useSimple: function () {
                   it = !1;
                 },
-              }
+              },
             ),
             n(
               { target: "Object", stat: !0, forced: !c, sham: !a },
@@ -4769,11 +4769,11 @@
                 defineProperty: st,
                 defineProperties: at,
                 getOwnPropertyDescriptor: ft,
-              }
+              },
             ),
             n(
               { target: "Object", stat: !0, forced: !c },
-              { getOwnPropertyNames: lt }
+              { getOwnPropertyNames: lt },
             ),
             k(),
             U(q, R),
@@ -4798,7 +4798,7 @@
                 var r = i("Symbol")(e);
                 return (c[e] = r), (f[r] = e), r;
               },
-            }
+            },
           );
         },
         1732: (t, e, r) => {
@@ -4828,7 +4828,7 @@
                 if (!o(t)) throw TypeError(u(t) + " is not a symbol");
                 if (i(c, t)) return c[t];
               },
-            }
+            },
           );
         },
         5915: (t, e, r) => {
@@ -4879,19 +4879,19 @@
         7618: (t, e, r) => {
           r(6887)(
             { target: "Symbol", stat: !0 },
-            { isRegisteredSymbol: r(2087) }
+            { isRegisteredSymbol: r(2087) },
           );
         },
         2731: (t, e, r) => {
           r(6887)(
             { target: "Symbol", stat: !0, name: "isRegisteredSymbol" },
-            { isRegistered: r(2087) }
+            { isRegistered: r(2087) },
           );
         },
         6989: (t, e, r) => {
           r(6887)(
             { target: "Symbol", stat: !0, forced: !0 },
-            { isWellKnownSymbol: r(6559) }
+            { isWellKnownSymbol: r(6559) },
           );
         },
         5605: (t, e, r) => {
@@ -4902,7 +4902,7 @@
               name: "isWellKnownSymbol",
               forced: !0,
             },
-            { isWellKnown: r(6559) }
+            { isWellKnown: r(6559) },
           );
         },
         5799: (t, e, r) => {
@@ -5442,7 +5442,7 @@
               if (!e)
                 throw new TypeError(
                   "Expected Array or iterable object of [k, v] entries, or keyed object: " +
-                    t
+                    t,
                 );
               return e;
             }
@@ -5450,7 +5450,7 @@
               var e = ft(t);
               if (!e)
                 throw new TypeError(
-                  "Expected Array or iterable object of values: " + t
+                  "Expected Array or iterable object of values: " + t,
                 );
               return e;
             }
@@ -5459,7 +5459,7 @@
               if (!e)
                 throw new TypeError(
                   "Expected Array or iterable object of values, or keyed object: " +
-                    t
+                    t,
                 );
               return e;
             }
@@ -5505,7 +5505,7 @@
                     r,
                     $(e).map(function (r, n) {
                       return yt(t, r, n, e);
-                    })
+                    }),
                   )
                 : wt(e)
                 ? t.call(
@@ -5513,7 +5513,7 @@
                     r,
                     Z(e).map(function (r, n) {
                       return yt(t, r, n, e);
-                    })
+                    }),
                   )
                 : e;
             }
@@ -5801,7 +5801,7 @@
                       : new _t(
                           this.get(t, this._end),
                           this.get(e, this._end),
-                          this._step
+                          this._step,
                         ));
               }),
               (_t.prototype.indexOf = function (t) {
@@ -5922,7 +5922,7 @@
               else {
                 if (void 0 !== Tt && !1 === Tt(t))
                   throw new Error(
-                    "Non-extensible objects are not allowed as keys."
+                    "Non-extensible objects are not allowed as keys.",
                   );
                 if (Et)
                   Object.defineProperty(t, Yt, {
@@ -5939,14 +5939,14 @@
                   (t.propertyIsEnumerable = function () {
                     return this.constructor.prototype.propertyIsEnumerable.apply(
                       this,
-                      arguments
+                      arguments,
                     );
                   }),
                     (t.propertyIsEnumerable[Yt] = e);
                 else {
                   if (void 0 === t.nodeType)
                     throw new Error(
-                      "Unable to set a non-enumerable property on object."
+                      "Unable to set a non-enumerable property on object.",
                     );
                   t[Yt] = e;
                 }
@@ -5983,7 +5983,7 @@
             function Pt(t) {
               Lt(
                 t !== 1 / 0,
-                "Cannot perform this action with an infinite size."
+                "Cannot perform this action with an infinite size.",
               );
             }
             function Gt(t) {
@@ -6216,7 +6216,7 @@
                 (1 << u) | (1 << s),
                 u === s
                   ? [ae(t, e, r + w, n, i)]
-                  : ((o = new Kt(e, n, i)), u < s ? [t, o] : [o, t])
+                  : ((o = new Kt(e, n, i)), u < s ? [t, o] : [o, t]),
               );
             }
             function ce(t, e, r, n) {
@@ -6658,7 +6658,7 @@
                       this._root,
                       this._tail,
                       t,
-                      this.__hash
+                      this.__hash,
                     )
                   : ((this.__ownerID = t), this);
               }),
@@ -7423,7 +7423,7 @@
                         }
                       : function (t, e) {
                           o[e] = t[1];
-                        }
+                        },
                   ),
                 n ? Z(o) : a(t) ? $(o) : X(o)
               );
@@ -7489,8 +7489,8 @@
                               null,
                               r.map(function (t) {
                                 return t.value;
-                              })
-                            )
+                              }),
+                            ),
                           )
                     );
                   });
@@ -7649,7 +7649,7 @@
                       function (i) {
                         return t(i, e ? --r : r++, n);
                       }),
-                  e
+                  e,
                 );
               }),
               (Je.prototype.__iterator = function (t, e) {
@@ -7752,7 +7752,7 @@
               (jr.prototype.set = function (t, e) {
                 if (!this.has(t))
                   throw new Error(
-                    'Cannot set unknown key "' + t + '" on ' + mr(this)
+                    'Cannot set unknown key "' + t + '" on ' + mr(this),
                   );
                 if (
                   this._map &&
@@ -8417,7 +8417,7 @@
                       return dt(r, t);
                     },
                     void 0,
-                    e
+                    e,
                   );
                 },
                 getIn: function (t, e) {
@@ -8535,7 +8535,7 @@
                       .map(function (i, o) {
                         return t.call(e, [o, i], n++, r);
                       })
-                      .fromEntrySeq()
+                      .fromEntrySeq(),
                   );
                 },
                 mapKeys: function (t, e) {
@@ -8547,7 +8547,7 @@
                       .map(function (n, i) {
                         return t.call(e, n, i, r);
                       })
-                      .flip()
+                      .flip(),
                   );
                 },
               });
@@ -8598,9 +8598,9 @@
                       }
                     : function (t) {
                         n = (n + St(t)) | 0;
-                      }
+                      },
                 ),
-                n
+                n,
               );
             }
             function sn(t, e) {
@@ -8610,7 +8610,7 @@
                 (e = Dt((e << 13) | (e >>> -13), 5)),
                 (e = Dt(
                   (e = ((e + 3864292196) | 0) ^ t) ^ (e >>> 16),
-                  2246822507
+                  2246822507,
                 )),
                 (e = It((e = Dt(e ^ (e >>> 13), 3266489909)) ^ (e >>> 16)))
               );
@@ -8658,7 +8658,7 @@
                   var n = this.slice(0, t);
                   return yr(
                     this,
-                    1 === r ? n : n.concat(m(arguments, 2), this.slice(t + e))
+                    1 === r ? n : n.concat(m(arguments, 2), this.slice(t + e)),
                   );
                 },
                 findLastIndex: function (t, e) {
@@ -8681,7 +8681,7 @@
                           return r === t;
                         },
                         void 0,
-                        e
+                        e,
                       );
                 },
                 has: function (t) {
@@ -9185,9 +9185,9 @@
                   .replace(/[\\^$.*+?()[\]{}|]/g, "\\$&")
                   .replace(
                     /hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g,
-                    "$1.*?"
+                    "$1.*?",
                   ) +
-                "$"
+                "$",
             );
           t.exports = function (t) {
             return !(!o(t) || i(t)) && (n(t) ? h : s).test(u(t));
@@ -9956,7 +9956,7 @@
         },
         2689: (t) => {
           var e = RegExp(
-            "[\\u200d\\ud800-\\udfff\\u0300-\\u036f\\ufe20-\\ufe2f\\u20d0-\\u20ff\\ufe0e\\ufe0f]"
+            "[\\u200d\\ud800-\\udfff\\u0300-\\u036f\\ufe20-\\ufe2f\\u20d0-\\u20ff\\ufe0e\\ufe0f]",
           );
           t.exports = function (t) {
             return e.test(t);
@@ -10425,7 +10425,7 @@
                 s,
                 _,
               ].join("|"),
-              "g"
+              "g",
             );
           t.exports = function (t) {
             return t.match(j) || [];
@@ -10503,7 +10503,7 @@
             a = n(
               (function () {
                 return arguments;
-              })()
+              })(),
             )
               ? n
               : function (t) {
@@ -10760,7 +10760,7 @@
                     s = (function (t) {
                       if (null == t)
                         throw new TypeError(
-                          "Object.assign cannot be called with null or undefined"
+                          "Object.assign cannot be called with null or undefined",
                         );
                       return Object(t);
                     })(t),
@@ -10922,7 +10922,7 @@
               })
             : (t.exports = function () {
                 throw new Error(
-                  "Secure random number generation is not supported by this browser.\nUse Chrome, Firefox or Internet Explorer 11"
+                  "Secure random number generation is not supported by this browser.\nUse Chrome, Firefox or Internet Explorer 11",
                 );
               });
         },
@@ -11096,7 +11096,7 @@
                           (!u.key || (a && a.key === u.key)
                             ? ""
                             : ("" + u.key).replace(m, "$&/") + "/") +
-                          t
+                          t,
                       )),
                     e.push(u)),
                 1
@@ -11126,8 +11126,8 @@
                     31,
                     "[object Object]" === e
                       ? "object with keys {" + Object.keys(t).join(", ") + "}"
-                      : e
-                  )
+                      : e,
+                  ),
                 ))
               );
             return a;
@@ -11156,7 +11156,7 @@
                   },
                   function (e) {
                     0 === t._status && ((t._status = 2), (t._result = e));
-                  }
+                  },
                 );
             }
             if (1 === t._status) return t._result;
@@ -11183,7 +11183,7 @@
                 function () {
                   e.apply(this, arguments);
                 },
-                r
+                r,
               );
             },
             count: function (t) {
@@ -11413,7 +11413,7 @@
             var e = n[t];
             if (!e)
               throw new Error(
-                t + " is not supported (we accept pull requests)"
+                t + " is not supported (we accept pull requests)",
               );
             return new e();
           });
@@ -12135,7 +12135,7 @@
               var o = r.call(t, e || "default");
               if ("object" !== i(o)) return o;
               throw new TypeError(
-                "@@toPrimitive must return a primitive value."
+                "@@toPrimitive must return a primitive value.",
               );
             }
             return ("string" === e ? String : Number)(t);
@@ -12250,8 +12250,8 @@
               o.createElement(
                 r,
                 null,
-                o.createElement(n, null, o.createElement(s, null))
-              )
+                o.createElement(n, null, o.createElement(s, null)),
+              ),
             );
           }
         }
@@ -12318,7 +12318,7 @@
           "minItems",
           "uniqueItems",
           "enum",
-          "multipleOf"
+          "multipleOf",
         );
         r(2282), r(9072), r(8764).Buffer;
         const L = () => {
@@ -12375,10 +12375,10 @@
                           (t) =>
                             encodeURIComponent(t) +
                             "=" +
-                            encodeURIComponent(n[t])
+                            encodeURIComponent(n[t]),
                         )
                         .join("&"))
-                    }`
+                    }`,
                   );
               }),
               a()(this, "setSelectedUrl", (t) => {
@@ -12441,7 +12441,7 @@
               let t = [];
               f()(c).call(c, (e, r) => {
                 t.push(
-                  o.createElement("option", { key: r, value: e.url }, e.name)
+                  o.createElement("option", { key: r, value: e.url }, e.name),
                 );
               }),
                 l.push(
@@ -12457,9 +12457,9 @@
                         onChange: this.onUrlSelect,
                         value: c[this.state.selectedIndex].url,
                       },
-                      t
-                    )
-                  )
+                      t,
+                    ),
+                  ),
                 );
             } else
               (p = this.downloadUrl),
@@ -12470,7 +12470,7 @@
                     onChange: this.onUrlChange,
                     value: this.state.url,
                     disabled: s,
-                  })
+                  }),
                 ),
                 l.push(
                   o.createElement(
@@ -12479,8 +12479,8 @@
                       className: "download-url-button",
                       onClick: this.downloadUrl,
                     },
-                    "Explore"
-                  )
+                    "Explore",
+                  ),
                 );
             return o.createElement(
               "div",
@@ -12495,10 +12495,12 @@
                   o.createElement(
                     "form",
                     { className: "download-url-wrapper", onSubmit: p },
-                    h()(l).call(l, (t, e) => (0, o.cloneElement)(t, { key: e }))
-                  )
-                )
-              )
+                    h()(l).call(l, (t, e) =>
+                      (0, o.cloneElement)(t, { key: e }),
+                    ),
+                  ),
+                ),
+              ),
             );
           }
         }
@@ -12604,7 +12606,7 @@
                 i[u - s],
                 o[u - s],
                 t.position - (i[u] - i[u - s]),
-                l
+                l,
               )),
                 (c =
                   x.repeat(" ", e.indent) +
@@ -12631,7 +12633,7 @@
                 i[u + s],
                 o[u + s],
                 t.position - (i[u] - i[u + s]),
-                l
+                l,
               )),
                 (c +=
                   x.repeat(" ", e.indent) +
@@ -12664,7 +12666,7 @@
                     e +
                     '" is met in definition of "' +
                     t +
-                    '" YAML type.'
+                    '" YAML type.',
                 );
             }),
             (this.options = e),
@@ -12705,7 +12707,7 @@
                 this.kind +
                 '" is specified for "' +
                 t +
-                '" YAML type.'
+                '" YAML type.',
             );
         };
         function z(t, e) {
@@ -12738,7 +12740,7 @@
               (!Array.isArray(t.implicit) && !Array.isArray(t.explicit))
             )
               throw new I(
-                "Schema.extend argument should be a Type, [ Type ], or a schema definition ({ implicit: [...], explicit: [...] })"
+                "Schema.extend argument should be a Type, [ Type ], or a schema definition ({ implicit: [...], explicit: [...] })",
               );
             t.implicit && (e = e.concat(t.implicit)),
               t.explicit && (r = r.concat(t.explicit));
@@ -12746,21 +12748,21 @@
           e.forEach(function (t) {
             if (!(t instanceof E))
               throw new I(
-                "Specified list of YAML types (or a single Type object) contains a non-Type object."
+                "Specified list of YAML types (or a single Type object) contains a non-Type object.",
               );
             if (t.loadKind && "scalar" !== t.loadKind)
               throw new I(
-                "There is a non-scalar type in the implicit list of a schema. Implicit resolving of such types is not supported."
+                "There is a non-scalar type in the implicit list of a schema. Implicit resolving of such types is not supported.",
               );
             if (t.multi)
               throw new I(
-                "There is a multi type in the implicit list of a schema. Multi tags can only be listed as explicit."
+                "There is a multi type in the implicit list of a schema. Multi tags can only be listed as explicit.",
               );
           }),
             r.forEach(function (t) {
               if (!(t instanceof E))
                 throw new I(
-                  "Specified list of YAML types (or a single Type object) contains a non-Type object."
+                  "Specified list of YAML types (or a single Type object) contains a non-Type object.",
                 );
             });
           var n = Object.create(O.prototype);
@@ -12994,7 +12996,7 @@
             },
           }),
           q = new RegExp(
-            "^(?:[-+]?(?:[0-9][0-9_]*)(?:\\.[0-9_]*)?(?:[eE][-+]?[0-9]+)?|\\.[0-9_]+(?:[eE][-+]?[0-9]+)?|[-+]?\\.(?:inf|Inf|INF)|\\.(?:nan|NaN|NAN))$"
+            "^(?:[-+]?(?:[0-9][0-9_]*)(?:\\.[0-9_]*)?(?:[eE][-+]?[0-9]+)?|\\.[0-9_]+(?:[eE][-+]?[0-9]+)?|[-+]?\\.(?:inf|Inf|INF)|\\.(?:nan|NaN|NAN))$",
           );
         var J = /^[-+]?[0-9]+e/;
         var Z = new E("tag:yaml.org,2002:float", {
@@ -13061,7 +13063,7 @@
           X = $,
           V = new RegExp("^([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])$"),
           H = new RegExp(
-            "^([0-9][0-9][0-9][0-9])-([0-9][0-9]?)-([0-9][0-9]?)(?:[Tt]|[ \\t]+)([0-9][0-9]?):([0-9][0-9]):([0-9][0-9])(?:\\.([0-9]*))?(?:[ \\t]*(Z|([-+])([0-9][0-9]?)(?::([0-9][0-9]))?))?$"
+            "^([0-9][0-9][0-9][0-9])-([0-9][0-9]?)-([0-9][0-9]?)(?:[Tt]|[ \\t]+)([0-9][0-9]?):([0-9][0-9]):([0-9][0-9])(?:\\.([0-9]*))?(?:[ \\t]*(Z|([-+])([0-9][0-9]?)(?::([0-9][0-9]))?))?$",
           );
         var K = new E("tag:yaml.org,2002:timestamp", {
           kind: "scalar",
@@ -13352,7 +13354,7 @@
             ? String.fromCharCode(t)
             : String.fromCharCode(
                 55296 + ((t - 65536) >> 10),
-                56320 + ((t - 65536) & 1023)
+                56320 + ((t - 65536) & 1023),
               );
         }
         for (
@@ -13421,19 +13423,19 @@
               jt.test(n) ||
                 Ut(
                   t,
-                  "ill-formed tag handle (first argument) of the TAG directive"
+                  "ill-formed tag handle (first argument) of the TAG directive",
                 ),
               lt.call(t.tagMap, n) &&
                 Ut(
                   t,
                   'there is a previously declared suffix for "' +
                     n +
-                    '" tag handle'
+                    '" tag handle',
                 ),
               Nt.test(i) ||
                 Ut(
                   t,
-                  "ill-formed tag prefix (second argument) of the TAG directive"
+                  "ill-formed tag prefix (second argument) of the TAG directive",
                 );
             try {
               i = decodeURIComponent(i);
@@ -13463,7 +13465,7 @@
             x.isObject(r) ||
               Ut(
                 t,
-                "cannot merge mappings; the provided source object is unacceptable"
+                "cannot merge mappings; the provided source object is unacceptable",
               ),
               u = 0,
               s = (i = Object.keys(r)).length;
@@ -13685,7 +13687,7 @@
             t.position === e &&
               Ut(
                 t,
-                "name of an anchor node must contain at least one character"
+                "name of an anchor node must contain at least one character",
               ),
             (t.anchor = t.input.slice(e, t.position)),
             !0
@@ -13769,7 +13771,7 @@
                               ((t.position = t.firstTabInLine),
                               Ut(
                                 t,
-                                "tab characters must not be used in indentation"
+                                "tab characters must not be used in indentation",
                               )),
                             (n = t.input.charCodeAt(t.position + 1)),
                             (o = t.line),
@@ -13789,7 +13791,7 @@
                                 It((c = t.input.charCodeAt(++t.position))) ||
                                   Ut(
                                     t,
-                                    "a whitespace character is expected after the key-value separator within a block mapping"
+                                    "a whitespace character is expected after the key-value separator within a block mapping",
                                   ),
                                   d &&
                                     (Ft(t, h, p, y, M, null, u, s, a),
@@ -13803,14 +13805,14 @@
                                 if (!g) return (t.tag = f), (t.anchor = l), !0;
                                 Ut(
                                   t,
-                                  "can not read an implicit mapping pair; a colon is missed"
+                                  "can not read an implicit mapping pair; a colon is missed",
                                 );
                               }
                             } else {
                               if (!g) return (t.tag = f), (t.anchor = l), !0;
                               Ut(
                                 t,
-                                "can not read a block mapping entry; a multiline key may not be an implicit key"
+                                "can not read a block mapping entry; a multiline key may not be an implicit key",
                               );
                             }
                           } else
@@ -13825,7 +13827,7 @@
                               ? ((d = !1), (i = !0))
                               : Ut(
                                   t,
-                                  "incomplete explicit mapping pair; a key node is missed; or followed by a non-tabulated empty line"
+                                  "incomplete explicit mapping pair; a key node is missed; or followed by a non-tabulated empty line",
                                 ),
                               (t.position += 1),
                               (c = n);
@@ -13934,7 +13936,7 @@
                     }
                     Ut(
                       t,
-                      "unexpected end of the stream within a flow collection"
+                      "unexpected end of the stream within a flow collection",
                     );
                   })(t, h)
                   ? (w = !0)
@@ -13976,12 +13978,12 @@
                             0 === i
                               ? Ut(
                                   t,
-                                  "bad explicit indentation width of a block scalar; it cannot be less than one"
+                                  "bad explicit indentation width of a block scalar; it cannot be less than one",
                                 )
                               : c
                               ? Ut(
                                   t,
-                                  "repeat of an indentation width identifier"
+                                  "repeat of an indentation width identifier",
                                 )
                               : ((f = e + i - 1), (c = !0));
                           }
@@ -14068,12 +14070,12 @@
                             : t.position === t.lineStart && Wt(t)
                             ? Ut(
                                 t,
-                                "unexpected end of the document within a single quoted scalar"
+                                "unexpected end of the document within a single quoted scalar",
                               )
                             : (t.position++, (i = t.position));
                       Ut(
                         t,
-                        "unexpected end of the stream within a single quoted scalar"
+                        "unexpected end of the stream within a single quoted scalar",
                       );
                     })(t, h) ||
                     (function (t, e) {
@@ -14110,7 +14112,7 @@
                           ) {
                             for (i = u, o = 0; i > 0; i--)
                               (u = bt(
-                                (s = t.input.charCodeAt(++t.position))
+                                (s = t.input.charCodeAt(++t.position)),
                               )) >= 0
                                 ? (o = (o << 4) + u)
                                 : Ut(t, "expected hexadecimal character");
@@ -14125,13 +14127,13 @@
                             : t.position === t.lineStart && Wt(t)
                             ? Ut(
                                 t,
-                                "unexpected end of the document within a double quoted scalar"
+                                "unexpected end of the document within a double quoted scalar",
                               )
                             : (t.position++, (n = t.position));
                       }
                       Ut(
                         t,
-                        "unexpected end of the stream within a double quoted scalar"
+                        "unexpected end of the stream within a double quoted scalar",
                       );
                     })(t, h)
                       ? (w = !0)
@@ -14150,7 +14152,7 @@
                             t.position === e &&
                               Ut(
                                 t,
-                                "name of an alias node must contain at least one character"
+                                "name of an alias node must contain at least one character",
                               ),
                             (r = t.input.slice(e, t.position)),
                             lt.call(t.anchorMap, r) ||
@@ -14264,7 +14266,7 @@
                   t,
                   'unacceptable node kind for !<?> tag; it should be "scalar", not "' +
                     t.kind +
-                    '"'
+                    '"',
                 ),
                 a = 0,
                 c = t.implicitTypes.length;
@@ -14303,14 +14305,14 @@
                     l.kind +
                     '", not "' +
                     t.kind +
-                    '"'
+                    '"',
                 ),
               l.resolve(t.result, t.tag)
                 ? ((t.result = l.construct(t.result, t.tag)),
                   null !== t.anchor && (t.anchorMap[t.anchor] = t.result))
                 : Ut(
                     t,
-                    "cannot resolve a node with !<" + t.tag + "> explicit tag"
+                    "cannot resolve a node with !<" + t.tag + "> explicit tag",
                   );
           }
           return (
@@ -14347,7 +14349,7 @@
                 (r = t.input.slice(e, t.position)).length < 1 &&
                   Ut(
                     t,
-                    "directive name must not be less than one character in length"
+                    "directive name must not be less than one character in length",
                   );
               0 !== i;
 
@@ -14423,7 +14425,7 @@
               if (0 !== r.length) {
                 if (1 === r.length) return r[0];
                 throw new I(
-                  "expected a single document in the stream, but found more"
+                  "expected a single document in the stream, but found more",
                 );
               }
             },
@@ -14499,7 +14501,7 @@
           else {
             if (!(t <= 4294967295))
               throw new I(
-                "code point within a string may not be greater than 0xFFFFFFFF"
+                "code point within a string may not be greater than 0xFFFFFFFF",
               );
             (r = "U"), (n = 8);
           }
@@ -14709,7 +14711,7 @@
                 },
                 t.quotingType,
                 t.forceQuotes && !n,
-                i
+                i,
               )
             ) {
               case Fe:
@@ -14745,8 +14747,8 @@
                         }
                         return o;
                       })(e, u),
-                      o
-                    )
+                      o,
+                    ),
                   )
                 );
               case qe:
@@ -14856,7 +14858,7 @@
                         s.tag +
                         '> tag resolver accepts not "' +
                         a +
-                        '" style'
+                        '" style',
                     );
                   n = s.represent[a](e, a);
                 }
@@ -14986,7 +14988,7 @@
             null !== t.tag &&
               "?" !== t.tag &&
               ((s = encodeURI(
-                "!" === t.tag[0] ? t.tag.slice(1) : t.tag
+                "!" === t.tag[0] ? t.tag.slice(1) : t.tag,
               ).replace(/!/g, "%21")),
               (s =
                 "!" === t.tag[0]
@@ -15024,7 +15026,7 @@
                 t +
                 " is removed in js-yaml 4. Use yaml." +
                 e +
-                " instead, which is now safe by default."
+                " instead, which is now safe by default.",
             );
           };
         }
@@ -15115,7 +15117,7 @@
           Mr = {
             getLocalConfig: () =>
               or(
-                '---\nurl: "https://petstore.swagger.io/v2/swagger.json"\ndom_id: "#swagger-ui"\nvalidatorUrl: "https://validator.swagger.io/validator"\n'
+                '---\nurl: "https://petstore.swagger.io/v2/swagger.json"\ndom_id: "#swagger-ui"\nvalidatorUrl: "https://validator.swagger.io/validator"\n',
               ),
           };
         var wr = r(2320),
@@ -15134,7 +15136,7 @@
                 return o.createElement(
                   i,
                   { targetName: u, getComponent: r, fn: n },
-                  o.createElement(e, _r()({}, this.props, this.context))
+                  o.createElement(e, _r()({}, this.props, this.context)),
                 );
               }
             }
@@ -15158,8 +15160,8 @@
                 null,
                 "Could not render ",
                 "t" === e ? "this component" : e,
-                ", see the console."
-              )
+                ", see the console.",
+              ),
             );
           };
         class mr extends o.Component {
@@ -15234,7 +15236,7 @@
                     dr()((n = Array(o.length))).call(n, (t, e) => {
                       let { fn: r } = e;
                       return r.withErrorBoundary(t);
-                    })
+                    }),
                   );
                 return {
                   fn: { componentDidCatch: jr, withErrorBoundary: Nr(i) },
@@ -15254,6 +15256,6 @@
       })(),
       (n = n.default)
     );
-  })()
+  })(),
 );
 //# sourceMappingURL=swagger-ui-standalone-preset.js.map

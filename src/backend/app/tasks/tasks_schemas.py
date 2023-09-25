@@ -28,8 +28,7 @@ from ..models.enums import TaskStatus
 
 
 def get_task_status_strings():
-    """
-    Get the task status strings.
+    """Get the task status strings.
 
     Returns:
         Enum: Enum containing the task status strings.
@@ -44,29 +43,27 @@ TaskStatusOption = get_task_status_strings()
 
 
 class TaskHistoryBase(BaseModel):
-    """
-    Base model for a task history entry.
+    """Base model for a task history entry.
 
     Attributes:
         id (int): Task history ID.
         action_text (str): Text describing the action taken.
         action_date (datetime): Date and time of the action.
     """
+
     id: int
     action_text: str
     action_date: datetime
 
 
 class TaskHistoryOut(TaskHistoryBase):
-    """
-    Output model for a task history entry.
-    """
+    """Output model for a task history entry."""
+
     pass
 
 
 class TaskBasicInfo(BaseModel):
-    """
-    Basic information about a task.
+    """Basic information about a task.
 
     Attributes:
         id (int): Task ID.
@@ -77,6 +74,7 @@ class TaskBasicInfo(BaseModel):
         locked_by_username (str, optional): Username of the user who has locked the task. Defaults to None.
         task_history (List[TaskHistoryBase]): List of task history entries for the task.
     """
+
     id: int
     project_id: int
     project_task_index: int
@@ -87,8 +85,7 @@ class TaskBasicInfo(BaseModel):
 
 
 class TaskBase(BaseModel):
-    """
-    Base model for a task.
+    """Base model for a task.
 
     Attributes:
         id (int): Task ID.
@@ -102,6 +99,7 @@ class TaskBase(BaseModel):
         locked_by_username (str, optional): Username of the user who has locked the task. Defaults to None.
         task_history (List[TaskHistoryBase]): List of task history entries for the task.
     """
+
     id: int
     project_id: int
     project_task_index: int
@@ -116,13 +114,13 @@ class TaskBase(BaseModel):
 
 
 class Task(TaskBase):
-    """
-    Model for a task.
+    """Model for a task.
 
     Attributes:
         qr_code_base64 (str): Base64 representation of the QR code for the task.
         task_status_str (TaskStatusOption): String representation of the task status.
     """
+
     # geometry_geojson: str
     qr_code_base64: str
     task_status_str: TaskStatusOption
@@ -130,18 +128,17 @@ class Task(TaskBase):
 
 
 class TaskOut(TaskBase):
-    """
-    Output model for a task.
+    """Output model for a task.
 
     Attributes:
         task_status_str (TaskStatusOption): String representation of the task status.
     """
+
     task_status_str: TaskStatusOption
     pass
 
 
 class TaskDetails(TaskBase):
-    """
-    Detailed information about a task.
-    """
+    """Detailed information about a task."""
+
     pass
