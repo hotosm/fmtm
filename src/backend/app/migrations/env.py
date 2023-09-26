@@ -1,11 +1,9 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from alembic import context
 from config import settings
 from geoalchemy2 import alembic_helpers
-
-from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.SQLALCHEMY_URL)
@@ -14,15 +12,15 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 from db.db_models import Base
+
 target_metadata = Base.metadata
 
 
 exclude_tables = config.get_section("alembic:exclude").get("tables", "").split(",")
 
+
 def include_object(object, name, type_, reflected, compare_to):
-    """
-    Custom helper function that enables us to ignore our excluded tables in the autogen sweep
-    """
+    """Custom helper function that enables us to ignore our excluded tables in the autogen sweep."""
     if type_ == "table" and name in exclude_tables:
         return False
     else:
@@ -70,9 +68,11 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, 
-                            include_object=include_object,
-                          target_metadata=target_metadata)
+        context.configure(
+            connection=connection,
+            include_object=include_object,
+            target_metadata=target_metadata,
+        )
 
         with context.begin_transaction():
             context.run_migrations()
