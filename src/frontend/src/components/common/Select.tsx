@@ -112,25 +112,35 @@ interface ICustomSelect {
   placeholder: string;
   data: any;
   dataKey: string;
-  value: string;
+  value?: string;
+  valueKey: string;
   label: string;
-  onValueChange: (value: string | null) => void;
+  onValueChange: (value: string | null | number) => void;
 }
 
-export const CustomSelect = ({ title, placeholder, data, dataKey, value, label, onValueChange }: ICustomSelect) => {
+export const CustomSelect = ({
+  title,
+  placeholder,
+  data,
+  dataKey,
+  value,
+  valueKey,
+  label,
+  onValueChange,
+}: ICustomSelect) => {
   return (
-    <div className="fmtm-mb-5">
+    <div className="">
       <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold ">{title}</p>
       <div className="fmtm-flex fmtm-items-end ">
         <div className="fmtm-w-[14rem]">
-          <Select onValueChange={(value) => onValueChange(value)}>
+          <Select value={value} onValueChange={(value) => onValueChange(value)}>
             <SelectTrigger className="">
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
                 {data?.map((item) => (
-                  <SelectItem key={item[dataKey]} value={item[value]}>
+                  <SelectItem key={item[dataKey]} value={item[valueKey].toString()}>
                     {item[label]}
                   </SelectItem>
                 ))}
