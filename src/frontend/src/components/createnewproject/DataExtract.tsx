@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import enviroment from '../../environment';
 import { FormCategoryService } from '../../api/CreateProjectService';
 import CoreModules from '../../shared/CoreModules.js';
@@ -24,6 +24,7 @@ const osmFeatureTypeOptions = [
 const DataExtract = ({ flag, customFormFile, setCustomFormFile }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const customFileRef: any = useRef();
 
   const [extractOption, setExtractOption] = useState({});
   const formCategoryList = CoreModules.useAppSelector((state) => state.createproject.formCategoryList);
@@ -41,6 +42,10 @@ const DataExtract = ({ flag, customFormFile, setCustomFormFile }) => {
     dispatch(FormCategoryService(`${enviroment.baseApiUrl}/central/list-forms`));
   }, []);
 
+  const resetFile = () => {
+    customFileRef.current.value = '';
+    setCustomFormFile(null);
+  };
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
       <div className="fmtm-bg-white lg:fmtm-w-[20%] xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6">
@@ -89,6 +94,8 @@ const DataExtract = ({ flag, customFormFile, setCustomFormFile }) => {
                     >
                       <p>Select a file</p>
                       <input
+                        id="data-extract-custom-file"
+                        ref={customFileRef}
                         type="file"
                         className="fmtm-hidden"
                         onChange={changeFileHandler}
@@ -96,7 +103,7 @@ const DataExtract = ({ flag, customFormFile, setCustomFormFile }) => {
                       />
                     </label>
                     <div className="fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-slate-100 fmtm-duration-300 fmtm-cursor-pointer">
-                      <AssetModules.ReplayIcon className="fmtm-text-gray-600" onClick={() => setCustomFormFile(null)} />
+                      <AssetModules.ReplayIcon className="fmtm-text-gray-600" onClick={() => resetFile()} />
                     </div>
                   </div>
                   {customFormFile && (
