@@ -34,7 +34,7 @@ const ProjectDetailsForm = ({ flag }) => {
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(values));
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 2 }));
-    navigate('/upload-area');
+    navigate('/new-upload-area');
   };
 
   const { handleSubmit, handleCustomChange, values, errors }: any = useForm(

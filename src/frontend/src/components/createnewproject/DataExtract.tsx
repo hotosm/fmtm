@@ -98,14 +98,14 @@ const DataExtract = ({ flag }) => {
                 btnText="PREVIOUS"
                 btnType="secondary"
                 type="button"
-                onClick={() => toggleStep(2, '/upload-area')}
+                onClick={() => toggleStep(2, '/new-upload-area')}
                 className="fmtm-font-bold"
               />
               <Button
                 btnText="NEXT"
                 btnType="primary"
                 type="button"
-                onClick={() => toggleStep(4, '/define-tasks')}
+                onClick={() => toggleStep(4, '/new-define-tasks')}
                 className="fmtm-font-bold"
               />
             </div>

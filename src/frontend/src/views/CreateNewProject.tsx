@@ -18,19 +18,19 @@ const CreateNewProject = () => {
 
   useEffect(() => {
     switch (location.pathname) {
-      case '/create-project':
+      case '/new-create-project':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 1 }));
         break;
-      case '/upload-area':
+      case '/new-upload-area':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 2 }));
         break;
-      case '/data-extract':
+      case '/new-data-extract':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 3 }));
         break;
-      case '/define-tasks':
+      case '/new-define-tasks':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 4 }));
         break;
-      case '/select-form':
+      case '/new-select-form':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 5 }));
         break;
       default:
@@ -56,15 +56,15 @@ const CreateNewProject = () => {
     //     return <ProjectDetailsForm flag="create_project" />;
     // }
     switch (location.pathname) {
-      case '/create-project':
+      case '/new-create-project':
         return <ProjectDetailsForm flag="create_project" />;
-      case '/upload-area':
+      case '/new-upload-area':
         return <UploadArea flag="create_project" />;
-      case '/data-extract':
+      case '/new-data-extract':
         return <DataExtract flag="create_project" />;
-      case '/define-tasks':
+      case '/new-define-tasks':
         return <SplitTasks flag="create_project" />;
-      case '/select-form':
+      case '/new-select-form':
         return <SelectForm flag="create_project" />;
       default:
         return <ProjectDetailsForm flag="create_project" />;

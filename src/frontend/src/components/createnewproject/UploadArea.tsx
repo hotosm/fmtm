@@ -111,14 +111,14 @@ const UploadArea = ({ flag }) => {
                 btnText="PREVIOUS"
                 btnType="secondary"
                 type="button"
-                onClick={() => toggleStep(1, '/create-project')}
+                onClick={() => toggleStep(1, '/new-create-project')}
                 className="fmtm-font-bold"
               />
               <Button
                 btnText="NEXT"
                 btnType="primary"
                 type="button"
-                onClick={() => toggleStep(3, '/data-extract')}
+                onClick={() => toggleStep(3, '/new-data-extract')}
                 className="fmtm-font-bold"
               />
             </div>

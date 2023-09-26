@@ -91,7 +91,7 @@ const SelectForm = ({ flag }) => {
                 btnText="PREVIOUS"
                 btnType="secondary"
                 type="button"
-                onClick={() => toggleStep(4, '/define-tasks')}
+                onClick={() => toggleStep(4, '/new-define-tasks')}
                 className="fmtm-font-bold"
               />
               <Button
