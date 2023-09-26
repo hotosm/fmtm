@@ -146,6 +146,10 @@ const VectorLayer = ({
       }
     });
     setVectorLayer(vectorLyr);
+    return () => {
+      setVectorLayer(null);
+      map.un('click', () => {});
+    };
   }, [map, geojson]);
 
   useEffect(() => {
