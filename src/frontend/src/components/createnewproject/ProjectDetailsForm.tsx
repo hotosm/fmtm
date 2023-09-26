@@ -159,7 +159,7 @@ const ProjectDetailsForm = ({ flag }) => {
               <div className="fmtm-flex fmtm-items-center ">
                 <CustomSelect
                   title="Organization Name"
-                  placeholder="Select form category"
+                  placeholder="Organization Name"
                   data={organizationList}
                   dataKey="value"
                   value={values.organisation_id?.toString()}
