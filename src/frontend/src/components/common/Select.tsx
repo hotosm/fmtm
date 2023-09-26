@@ -152,5 +152,3 @@ export const CustomSelect = ({
     </div>
   );
 };
-
-export { Select, SelectGroup, SelectValue, SelectTrigger, SelectContent, SelectLabel, SelectItem, SelectSeparator };
