@@ -22,10 +22,9 @@ const uploadAreaOptions = [
   },
 ];
 
-const UploadArea = ({ flag }) => {
+const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [uploadOption, setUloadOption] = useState('');
 
@@ -34,12 +33,11 @@ const UploadArea = ({ flag }) => {
     navigate(url);
   };
 
-  const [selectedFileName, setSelectedFileName] = useState('');
-
   const changeFileHandler = (event) => {
     const { files } = event.target;
-    setSelectedFileName(files[0].name);
+    setGeojsonFile(files[0]);
   };
+
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
       <div className="fmtm-bg-white lg:fmtm-w-[20%] xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6">
@@ -78,23 +76,25 @@ const UploadArea = ({ flag }) => {
               {uploadOption === 'upload_file' && (
                 <div className="fmtm-mt-5 fmtm-pb-3">
                   <div className="fmtm-flex fmtm-items-center fmtm-gap-4">
-                    <div
-                      role="button"
-                      onClick={() => fileInputRef?.current?.click()}
-                      className="fmtm-bg-primaryRed fmtm-px-4 fmtm-py-1 fmtm-text-white fmtm-rounded-md"
+                    <label
+                      id="file-input"
+                      className="fmtm-bg-primaryRed fmtm-text-white fmtm-px-4 fmtm-py-1 fmtm-rounded-md fmtm-cursor-pointer"
                     >
-                      <label id="file-input">
-                        <p>Select a file</p>
-                        <input ref={fileInputRef} type="file" className="fmtm-hidden" onChange={changeFileHandler} />
-                      </label>
-                    </div>
+                      <p>Select a file</p>
+                      <input
+                        type="file"
+                        className="fmtm-hidden"
+                        onChange={changeFileHandler}
+                        accept=".geojson, .json"
+                      />
+                    </label>
                     <div className="fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-slate-100 fmtm-duration-300 fmtm-cursor-pointer">
-                      <AssetModules.ReplayIcon className="fmtm-text-gray-600" onClick={() => setSelectedFileName('')} />
+                      <AssetModules.ReplayIcon className="fmtm-text-gray-600" onClick={() => setGeojsonFile(null)} />
                     </div>
                   </div>
-                  {selectedFileName && (
+                  {geojsonFile && (
                     <div className="fmtm-mt-2">
-                      <p>{selectedFileName}</p>
+                      <p>{geojsonFile?.name}</p>
                     </div>
                   )}
                   <p className="fmtm-text-gray-700 fmtm-mt-3">
