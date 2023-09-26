@@ -60,7 +60,7 @@ const DataExtract = ({ flag, customFormFile, setCustomFormFile }) => {
                 placeholder="Select form category"
                 data={formCategoryList}
                 dataKey="id"
-                value="id"
+                valueKey="id"
                 label="title"
                 onValueChange={(value) => console.log(value)}
               />
