@@ -97,14 +97,14 @@ const SplitTasks = ({ flag }) => {
                 btnText="PREVIOUS"
                 btnType="secondary"
                 type="button"
-                onClick={() => toggleStep(3, '/data-extract')}
+                onClick={() => toggleStep(3, '/new-data-extract')}
                 className="fmtm-font-bold"
               />
               <Button
                 btnText="NEXT"
                 btnType="primary"
                 type="button"
-                onClick={() => toggleStep(5, '/select-form')}
+                onClick={() => toggleStep(5, '/new-select-form')}
                 className="fmtm-font-bold"
               />
             </div>
