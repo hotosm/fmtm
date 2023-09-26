@@ -12,9 +12,10 @@ interface RadioButtonProps {
   options: IRadioButton[];
   direction: 'row' | 'column';
   onChangeData: (value: string) => void;
+  value: string;
 }
 
-const RadioButton: React.FC<RadioButtonProps> = ({ topic, options, direction, onChangeData }) => (
+const RadioButton: React.FC<RadioButtonProps> = ({ topic, options, direction, onChangeData, value }) => (
   <div>
     <div>
       <p className="fmtm-text-xl fmtm-font-[600] fmtm-mb-3">{topic}</p>
@@ -29,7 +30,10 @@ const RadioButton: React.FC<RadioButtonProps> = ({ topic, options, direction, on
               name={option.name}
               value={option.value}
               className="fmtm-accent-primaryRed fmtm-cursor-pointer"
-              onChange={(e) => onChangeData(e.target.value)}
+              onChange={(e) => {
+                onChangeData(e.target.value);
+              }}
+              checked={option.value === value}
             />
             <label
               htmlFor={option.value}
