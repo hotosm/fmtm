@@ -90,7 +90,6 @@ const DataExtract = ({ flag, customFormFile, setCustomFormFile }) => {
                   value={formValues.formCategorySelection}
                   onValueChange={(value) => {
                     handleCustomChange('formCategorySelection', value);
-                    dispatch(CreateProjectActions.SetFormCategorySelection(value));
                   }}
                 />
               </div>
