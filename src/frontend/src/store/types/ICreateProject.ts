@@ -26,6 +26,7 @@ export type CreateProjectStateTypes = {
   drawToggle: boolean;
   validateCustomFormLoading: boolean;
   validateCustomFormResponse: ValidateCustomFormResponse | null;
+  uploadAreaSelection: string | null;
 };
 export type ValidateCustomFormResponse = {
   detail: { message: string; possible_reason: string };
