@@ -1,10 +1,14 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import enviroment from '../../environment';
+import { FormCategoryService } from '../../api/CreateProjectService';
+import CoreModules from '../../shared/CoreModules.js';
 import Button from '../../components/common/Button';
 import { useDispatch } from 'react-redux';
 import { CommonActions } from '../../store/slices/CommonSlice';
 import RadioButton from '../../components/common/RadioButton';
 import AssetModules from '../../shared/AssetModules.js';
 import { useNavigate } from 'react-router-dom';
+import { CustomSelect } from '../../components/common/Select';
 
 const dataExtractOptions = [
   { name: 'data_extract', value: 'osm_data_extract', label: 'Use OSM data extract' },
@@ -22,6 +26,7 @@ const DataExtract = ({ flag, customFormFile, setCustomFormFile }) => {
   const navigate = useNavigate();
 
   const [extractOption, setExtractOption] = useState({});
+  const formCategoryList = CoreModules.useAppSelector((state) => state.createproject.formCategoryList);
 
   const toggleStep = (step, url) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
@@ -31,6 +36,11 @@ const DataExtract = ({ flag, customFormFile, setCustomFormFile }) => {
     const { files } = event.target;
     setCustomFormFile(files[0]);
   };
+
+  useEffect(() => {
+    dispatch(FormCategoryService(`${enviroment.baseApiUrl}/central/list-forms`));
+  }, []);
+
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
       <div className="fmtm-bg-white lg:fmtm-w-[20%] xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6">
@@ -45,6 +55,15 @@ const DataExtract = ({ flag, customFormFile, setCustomFormFile }) => {
         <div className="fmtm-w-full fmtm-flex fmtm-gap-6 md:fmtm-gap-14 fmtm-flex-col md:fmtm-flex-row fmtm-h-full">
           <div className="fmtm-flex fmtm-flex-col fmtm-gap-6 lg:fmtm-w-[40%] fmtm-justify-between">
             <div>
+              <CustomSelect
+                title="Select form category"
+                placeholder="Select form category"
+                data={formCategoryList}
+                dataKey="id"
+                value="id"
+                label="title"
+                onValueChange={(value) => console.log(value)}
+              />
               <RadioButton
                 topic="You may choose to use OSM data or upload your own data extract"
                 options={dataExtractOptions}
