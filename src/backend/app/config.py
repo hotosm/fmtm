@@ -106,6 +106,7 @@ class Settings(BaseSettings):
     OSM_URL: str = "https://www.openstreetmap.org"
     OSM_SCOPE: str = "read_prefs"
     OSM_LOGIN_REDIRECT_URI: str = "http://127.0.0.1:8080/osmauth/"
+    SQLALCHEMY_URL: Optional[str]
 
     UNDERPASS_API_URL: str = "https://raw-data-api0.hotosm.org/v1"
     SENTRY_DSN: Optional[str] = None
