@@ -40,6 +40,7 @@ export const initialState: CreateProjectStateTypes = {
   drawToggle: false,
   validateCustomFormLoading: false,
   validateCustomFormResponse: null,
+  uploadAreaSelection: null,
 };
 
 const CreateProject = createSlice({
@@ -153,6 +154,9 @@ const CreateProject = createSlice({
     },
     ValidateCustomForm(state, action) {
       state.validateCustomFormResponse = action.payload;
+    },
+    SetUploadAreaSelection(state, action) {
+      state.uploadAreaSelection = action.payload;
     },
   },
 });
