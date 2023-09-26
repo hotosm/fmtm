@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect } from 'react';
 import { CommonActions } from '../../store/slices/CommonSlice';
 import Button from '../../components/common/Button';
 import { useDispatch } from 'react-redux';
@@ -31,6 +31,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
   const navigate = useNavigate();
   const drawnGeojson = CoreModules.useAppSelector((state) => state.createproject.drawnGeojson);
   const uploadAreaSelection = CoreModules.useAppSelector((state) => state.createproject.uploadAreaSelection);
+  const drawToggle = CoreModules.useAppSelector((state) => state.createproject.drawToggle);
 
   const toggleStep = (step, url) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
@@ -43,18 +44,17 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
   };
 
   const onCreateProjectSubmission = () => {
-    if (drawnGeojson) {
-      // dispatch(CreateProjectActions.SetCreateProjectFormStep('select-form'));
-      // navigate('/data-extract');
-      toggleStep(3, '/new-data-extract');
-    } else if (!drawnGeojson && !geojsonFile) {
+    if (!drawnGeojson && !geojsonFile) {
       return;
     } else {
-      // dispatch(CreateProjectActions.SetCreateProjectFormStep('select-form'));
-      // navigate('/data-extract');
       toggleStep(3, '/new-data-extract');
     }
   };
+
+  useEffect(() => {
+    setGeojsonFile(null);
+    dispatch(CreateProjectActions.SetDrawnGeojson(null));
+  }, [uploadAreaSelection]);
 
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
@@ -76,6 +76,11 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
                 direction="row"
                 onChangeData={(value) => {
                   dispatch(CreateProjectActions.SetUploadAreaSelection(value));
+                  if (value === 'draw') {
+                    dispatch(CreateProjectActions.SetDrawToggle(!drawToggle));
+                  } else {
+                    dispatch(CreateProjectActions.SetDrawToggle(false));
+                  }
                 }}
                 value={uploadAreaSelection}
               />
@@ -86,7 +91,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
                     btnText="Click to Reset"
                     btnType="primary"
                     type="button"
-                    onClick={() => console.log('reset')}
+                    onClick={() => dispatch(CreateProjectActions.SetDrawnGeojson(null))}
                     className=""
                   />
                   <p className="fmtm-text-gray-700 fmtm-pt-8">
