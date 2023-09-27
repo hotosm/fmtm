@@ -132,13 +132,13 @@ export const CustomSelect = ({
     <div className="">
       <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold ">{title}</p>
       <div className="fmtm-flex fmtm-items-end ">
-        <div className="fmtm-w-[14rem]">
+        <div className="fmtm-w-[14rem] ">
           <Select value={value} onValueChange={(value) => onValueChange(value)}>
             <SelectTrigger className="">
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
             <SelectContent>
-              <SelectGroup>
+              <SelectGroup className="fmtm-max-h-72 fmtm-overflow-y-auto">
                 {data?.map((item) => (
                   <SelectItem key={item[dataKey]} value={item[valueKey].toString()}>
                     {item[label]}

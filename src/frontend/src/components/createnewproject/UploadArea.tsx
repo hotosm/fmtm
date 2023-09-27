@@ -50,7 +50,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
     if (!drawnGeojson && !geojsonFile) {
       return;
     } else {
-      toggleStep(3, '/new-data-extract');
+      toggleStep(3, '/new-select-form');
     }
   };
 

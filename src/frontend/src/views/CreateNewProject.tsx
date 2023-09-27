@@ -2,7 +2,6 @@ import StepSwitcher from '../components/common/StepSwitcher';
 import CreateProjectHeader from '../components/createnewproject/CreateProjectHeader';
 import React, { useEffect, useState } from 'react';
 import { createProjectSteps } from '../constants/StepFormConstants';
-import CoreModules from '../shared/CoreModules.js';
 import ProjectDetailsForm from '../components/createnewproject/ProjectDetailsForm';
 import UploadArea from '../components/createnewproject/UploadArea';
 import DataExtract from '../components/createnewproject/DataExtract';
@@ -27,13 +26,13 @@ const CreateNewProject = () => {
       case '/new-upload-area':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 2 }));
         break;
-      case '/new-data-extract':
+      case '/new-select-form':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 3 }));
         break;
-      case '/new-define-tasks':
+      case '/new-data-extract':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 4 }));
         break;
-      case '/new-select-form':
+      case '/new-define-tasks':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 5 }));
         break;
       default:
@@ -63,6 +62,8 @@ const CreateNewProject = () => {
         return <ProjectDetailsForm flag="create_project" />;
       case '/new-upload-area':
         return <UploadArea flag="create_project" geojsonFile={geojsonFile} setGeojsonFile={setGeojsonFile} />;
+      case '/new-select-form':
+        return <SelectForm flag="create_project" />;
       case '/new-data-extract':
         return (
           <DataExtract flag="create_project" customFormFile={customFormFile} setCustomFormFile={setCustomFormFile} />
