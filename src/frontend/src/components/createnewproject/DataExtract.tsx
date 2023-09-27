@@ -6,13 +6,13 @@ import Button from '../../components/common/Button';
 import { useDispatch } from 'react-redux';
 import { CommonActions } from '../../store/slices/CommonSlice';
 import RadioButton from '../../components/common/RadioButton';
-import AssetModules from '../../shared/AssetModules.js';
 import { useNavigate } from 'react-router-dom';
 import { CustomSelect } from '../../components/common/Select';
 import { CreateProjectActions } from '../../store/slices/CreateProjectSlice';
 import useForm from '../../hooks/useForm';
 import { useAppSelector } from '../../types/reduxTypes';
 import DataExtractValidation from './validation/DataExtractValidation';
+import FileInputComponent from '../../components/common/FileInputComponent';
 
 const dataExtractOptions = [
   { name: 'data_extract', value: 'osm_data_extract', label: 'Use OSM data extract' },
@@ -79,7 +79,7 @@ const DataExtract = ({ flag, customFormFile, setCustomFormFile }) => {
             className="fmtm-flex fmtm-flex-col fmtm-gap-6 lg:fmtm-w-[40%] fmtm-justify-between"
           >
             <div>
-              <div className="fmtm-mb-5">
+              {/* <div className="fmtm-mb-5">
                 <CustomSelect
                   title="Select form category"
                   placeholder="Select form category"
@@ -92,7 +92,7 @@ const DataExtract = ({ flag, customFormFile, setCustomFormFile }) => {
                     handleCustomChange('formCategorySelection', value);
                   }}
                 />
-              </div>
+              </div> */}
               <RadioButton
                 topic="You may choose to use OSM data or upload your own data extract"
                 options={dataExtractOptions}
@@ -116,35 +116,20 @@ const DataExtract = ({ flag, customFormFile, setCustomFormFile }) => {
                 </div>
               )}
               {formValues.dataExtractWays === 'custom_data_extract' && (
-                <div className="fmtm-mt-6 fmtm-pb-3">
-                  <div className="fmtm-flex fmtm-items-center fmtm-gap-4">
-                    <label
-                      id="file-input"
-                      className="fmtm-bg-primaryRed fmtm-text-white fmtm-px-4 fmtm-py-1 fmtm-rounded-md fmtm-cursor-pointer"
-                    >
-                      <p>Select a file</p>
-                      <input
-                        id="data-extract-custom-file"
-                        ref={customFileRef}
-                        type="file"
-                        className="fmtm-hidden"
-                        onChange={changeFileHandler}
-                        accept=".geojson, .json"
-                      />
-                    </label>
-                    <div className="fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-slate-100 fmtm-duration-300 fmtm-cursor-pointer">
-                      <AssetModules.ReplayIcon className="fmtm-text-gray-600" onClick={() => resetFile()} />
-                    </div>
-                  </div>
-                  {customFormFile && (
-                    <div className="fmtm-mt-2">
-                      <p>{customFormFile?.name}</p>
-                    </div>
-                  )}
-                  <p className="fmtm-text-gray-700 fmtm-mt-10">
-                    *The supported file formats are zipped shapefile, geojson or kml files.
-                  </p>
-                </div>
+                <>
+                  <FileInputComponent
+                    customFileRef={customFileRef}
+                    onChange={changeFileHandler}
+                    onResetFile={resetFile}
+                    customFormFile={customFormFile}
+                  />
+                  <FileInputComponent
+                    customFileRef={customFileRef}
+                    onChange={changeFileHandler}
+                    onResetFile={resetFile}
+                    customFormFile={customFormFile}
+                  />
+                </>
               )}
             </div>
             <div className="fmtm-flex fmtm-gap-5 fmtm-mx-auto fmtm-mt-10 fmtm-my-5">
