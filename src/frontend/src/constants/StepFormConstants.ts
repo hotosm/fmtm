@@ -3,7 +3,6 @@ interface ICreateProjectSteps {
   step: number;
   label: string;
   name: string;
-  children?: number;
 }
 
 export const createProjectSteps: ICreateProjectSteps[] = [
@@ -18,26 +17,23 @@ export const createProjectSteps: ICreateProjectSteps[] = [
     step: 2,
     label: '02',
     name: 'Upload Area',
-    children: 1,
-  },
-  {
-    url: '/new-data-extract',
-    step: 3,
-    label: '03',
-    name: 'Data Extract',
-    children: 1,
-  },
-  {
-    url: '/new-define-tasks',
-    step: 4,
-    label: '04',
-    name: 'Split Tasks',
-    children: 1,
   },
   {
     url: '/new-select-form',
+    step: 3,
+    label: '03',
+    name: 'Select Form',
+  },
+  {
+    url: '/new-data-extract',
+    step: 4,
+    label: '04',
+    name: 'Data Extract',
+  },
+  {
+    url: '/new-define-tasks',
     step: 5,
     label: '05',
-    name: 'Select Form',
+    name: 'Split Tasks',
   },
 ];
