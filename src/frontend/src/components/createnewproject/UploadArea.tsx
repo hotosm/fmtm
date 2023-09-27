@@ -30,9 +30,11 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const geojsonFileRef: any = useRef(null);
+
   const drawnGeojson = CoreModules.useAppSelector((state) => state.createproject.drawnGeojson);
   const uploadAreaSelection = CoreModules.useAppSelector((state) => state.createproject.uploadAreaSelection);
   const drawToggle = CoreModules.useAppSelector((state) => state.createproject.drawToggle);
+  const totalAreaSelection = CoreModules.useAppSelector((state) => state.createproject.totalAreaSelection);
 
   const toggleStep = (step, url) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
@@ -55,11 +57,16 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
   useEffect(() => {
     setGeojsonFile(null);
     dispatch(CreateProjectActions.SetDrawnGeojson(null));
+    dispatch(CreateProjectActions.SetTotalAreaSelection(null));
   }, [uploadAreaSelection]);
 
   const resetFile = () => {
-    geojsonFileRef.current.value = '';
+    if (geojsonFileRef.current) {
+      geojsonFileRef.current.value = '';
+    }
     setGeojsonFile(null);
+    dispatch(CreateProjectActions.SetDrawnGeojson(null));
+    dispatch(CreateProjectActions.SetTotalAreaSelection(null));
   };
 
   return (
@@ -97,11 +104,11 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
                     btnText="Click to Reset"
                     btnType="primary"
                     type="button"
-                    onClick={() => dispatch(CreateProjectActions.SetDrawnGeojson(null))}
+                    onClick={() => resetFile()}
                     className=""
                   />
                   <p className="fmtm-text-gray-700 fmtm-pt-8">
-                    Total Area: <span className="fmtm-font-bold">234 sq.km</span>
+                    Total Area: <span className="fmtm-font-bold">{totalAreaSelection}</span>
                   </p>
                 </div>
               )}
@@ -160,10 +167,11 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
           <div className="fmtm-w-full lg:fmtm-w-[60%] fmtm-flex fmtm-flex-col fmtm-gap-6 fmtm-bg-gray-300 fmtm-h-[60vh] lg:fmtm-h-full">
             <DefineAreaMap
               uploadedGeojson={geojsonFile}
-              onDraw={(geojson) => {
+              onDraw={(geojson, area) => {
                 // dispatch(CreateProjectActions.SetDividedTaskGeojson(JSON.parse(geojson)));
                 dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
                 // setGeojsonFile(JSON.parse(geojson));
+                dispatch(CreateProjectActions.SetTotalAreaSelection(area));
               }}
             />
           </div>

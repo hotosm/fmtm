@@ -27,6 +27,7 @@ export type CreateProjectStateTypes = {
   validateCustomFormLoading: boolean;
   validateCustomFormResponse: ValidateCustomFormResponse | null;
   uploadAreaSelection: string | null;
+  totalAreaSelection: string | null;
 };
 export type ValidateCustomFormResponse = {
   detail: { message: string; possible_reason: string };

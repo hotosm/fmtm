@@ -41,6 +41,7 @@ export const initialState: CreateProjectStateTypes = {
   validateCustomFormLoading: false,
   validateCustomFormResponse: null,
   uploadAreaSelection: null,
+  totalAreaSelection: null,
 };
 
 const CreateProject = createSlice({
@@ -157,6 +158,9 @@ const CreateProject = createSlice({
     },
     SetUploadAreaSelection(state, action) {
       state.uploadAreaSelection = action.payload;
+    },
+    SetTotalAreaSelection(state, action) {
+      state.totalAreaSelection = action.payload;
     },
   },
 });
