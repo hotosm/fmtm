@@ -30,6 +30,7 @@ import { get } from 'ol/proj';
 import { buildingStyle, basicGeojsonTemplate } from '../utilities/mapUtils';
 import Button from '../../src/components/common/Button';
 import Accordion from '../../src/components/common/Accordion';
+import MapLegends from '../components/MapLegends';
 
 const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -455,15 +456,10 @@ const Home = () => {
               collapsed={true}
               disableHeaderClickToggle
               onToggle={() => {}}
-              header={<div className="fmtm-text-xl fmtm-font-normal">Map Legends</div>}
+              header={<div className="fmtm-text-[#2C3038] fmtm-font-bold fmtm-text-xl">Map Legends</div>}
               body={
-                <div className="fmtm-mt-2">
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit. Omnis fuga quam, dolorum sit animi, voluptas
-                  culpa dolor illo quia totam reprehenderit molestiae soluta asperiores accusamus nemo voluptates in.
-                  Laudantium iure eius esse delectus minus fuga quos libero perspiciatis debitis sequi labore sed rem
-                  laboriosam consequuntur aut, quaerat dignissimos architecto non ab, at quae harum impedit itaque.
-                  Pariatur nobis sit quod nam ratione veritatis reprehenderit natus, cumque doloremque nulla possimus et
-                  quibusdam qui rem. Mollitia aspernatur nihil ut maxime cum
+                <div className="fmtm-mt-4">
+                  <MapLegends defaultTheme={defaultTheme} />
                 </div>
               }
             />
