@@ -28,6 +28,7 @@ export type CreateProjectStateTypes = {
   validateCustomFormResponse: ValidateCustomFormResponse | null;
   uploadAreaSelection: string | null;
   totalAreaSelection: string | null;
+  splitTasksSelection: string | null;
 };
 export type ValidateCustomFormResponse = {
   detail: { message: string; possible_reason: string };
