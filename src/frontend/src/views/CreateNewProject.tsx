@@ -70,8 +70,6 @@ const CreateNewProject = () => {
         );
       case '/new-define-tasks':
         return <SplitTasks flag="create_project" geojsonFile={geojsonFile} setGeojsonFile={setGeojsonFile} />;
-      case '/new-select-form':
-        return <SelectForm flag="create_project" />;
       default:
         return <ProjectDetailsForm flag="create_project" />;
     }
