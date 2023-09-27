@@ -284,11 +284,12 @@ const OpenLayersMap = ({
   }, [map, currentLocLayer]);
 
   return (
-    <CoreModules.Stack spacing={1} p={2.5} direction={'column'}>
+    <CoreModules.Stack spacing={1} direction={'column'} className="fmtm-px-0 sm:fmtm-px-[1rem] fmtm-py-[1rem]">
       <CoreModules.Stack
-        style={{ border: `4px solid ${defaultTheme.palette.error.main}` }}
+        // style={{ border: `4px solid ${defaultTheme.palette.error.main}` }}
         justifyContent={'center'}
         height={608}
+        className="fmtm-border-y-[4px] sm:fmtm-border-x-[4px] fmtm-border-primaryRed"
       >
         <div ref={mapElement} id="map_container"></div>
         <div id="popup" className="ol-popup">
