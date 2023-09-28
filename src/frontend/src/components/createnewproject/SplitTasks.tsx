@@ -30,14 +30,13 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile }) => {
   };
 
   const submission = () => {
-    // // const previousValues = location.state.values;
+    dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
     // if (formValues.splitting_algorithm === 'Divide on Square') {
     //   generateTasksOnMap();
     // }
     // dispatch(CreateProjectActions.SetIndividualProjectDetailsData({ ...projectDetails, ...formValues }));
     // navigate('/select-form');
-
-    toggleStep(5, '/new-select-form');
+    // toggleStep(5, '/new-select-form');
   };
 
   const {
@@ -67,29 +66,45 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile }) => {
                   topic="Select an option to split the task"
                   options={alogrithmList}
                   direction="column"
-                  onChangeData={(value) => dispatch(CreateProjectActions.SetSplitTasksSelection(value))}
+                  onChangeData={(value) => {
+                    handleCustomChange('splitTaskOption', value);
+                    dispatch(CreateProjectActions.SetSplitTasksSelection(value));
+                  }}
+                  errorMsg={errors.splitTaskOption}
                 />
                 {splitTasksSelection === 'divide_on_square' && (
-                  <div className="fmtm-mt-6 fmtm-flex fmtm-items-center fmtm-gap-4">
-                    <p className="fmtm-text-gray-500">Dimension of square in metres: </p>
-                    <input
-                      type="number"
-                      value=""
-                      onChange={(e) => console.log(e.target.value)}
-                      className="fmtm-outline-none fmtm-border-[1px] fmtm-border-gray-600 fmtm-h-7 fmtm-w-16 fmtm-px-2 "
-                    />
-                  </div>
+                  <>
+                    <div className="fmtm-mt-6 fmtm-flex fmtm-items-center fmtm-gap-4">
+                      <p className="fmtm-text-gray-500">Dimension of square in metres: </p>
+                      <input
+                        type="number"
+                        value={formValues.dimension}
+                        onChange={(e) => handleCustomChange('dimension', e.target.value)}
+                        className="fmtm-outline-none fmtm-border-[1px] fmtm-border-gray-600 fmtm-h-7 fmtm-w-16 fmtm-px-2 "
+                      />
+                    </div>
+                    {errors.dimension && (
+                      <p className="fmtm-form-error fmtm-text-red-600 fmtm-text-sm fmtm-py-1">{errors.dimension}</p>
+                    )}
+                  </>
                 )}
-                {splitTasksSelection === 'task_splitting_algorithm' && (
-                  <div className="fmtm-mt-6 fmtm-flex fmtm-items-center fmtm-gap-4">
-                    <p className="fmtm-text-gray-500">Average number of buildings per task: </p>
-                    <input
-                      type="number"
-                      value=""
-                      onChange={(e) => console.log(e.target.value)}
-                      className="fmtm-outline-none fmtm-border-[1px] fmtm-border-gray-600 fmtm-h-7 fmtm-w-16 fmtm-px-2 "
-                    />
-                  </div>
+                {formValues.splitTaskOption === 'task_splitting_algorithm' && (
+                  <>
+                    <div className="fmtm-mt-6 fmtm-flex fmtm-items-center fmtm-gap-4">
+                      <p className="fmtm-text-gray-500">Average number of buildings per task: </p>
+                      <input
+                        type="number"
+                        value={formValues.average_buildings_per_task}
+                        onChange={(e) => handleCustomChange('average_buildings_per_task', e.target.value)}
+                        className="fmtm-outline-none fmtm-border-[1px] fmtm-border-gray-600 fmtm-h-7 fmtm-w-16 fmtm-px-2 "
+                      />
+                    </div>
+                    {errors.average_buildings_per_task && (
+                      <p className="fmtm-form-error fmtm-text-red-600 fmtm-text-sm fmtm-py-1">
+                        {errors.average_buildings_per_task}
+                      </p>
+                    )}
+                  </>
                 )}
                 {(splitTasksSelection === 'divide_on_square' || splitTasksSelection === 'task_splitting_algorithm') && (
                   <div className="fmtm-mt-6 fmtm-pb-3">
@@ -127,7 +142,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile }) => {
                   className="fmtm-font-bold"
                 />
                 <Button
-                  btnText="NEXT"
+                  btnText="SUBMIT"
                   btnType="primary"
                   // type="button"
                   // onClick={() => toggleStep(5, '/new-select-form')}
