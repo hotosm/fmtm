@@ -7,7 +7,6 @@ import { useDispatch } from 'react-redux';
 import { CommonActions } from '../../store/slices/CommonSlice';
 import RadioButton from '../../components/common/RadioButton';
 import { useNavigate } from 'react-router-dom';
-import { CustomSelect } from '../../components/common/Select';
 import { CreateProjectActions } from '../../store/slices/CreateProjectSlice';
 import useForm from '../../hooks/useForm';
 import { useAppSelector } from '../../types/reduxTypes';
@@ -25,18 +24,17 @@ const osmFeatureTypeOptions = [
   { name: 'osm_feature_type', value: 'polygon', label: 'Polygon' },
 ];
 
-const DataExtract = ({ flag, customFormFile, setCustomFormFile }) => {
+const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygonUpload, setCustomPolygonUpload }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const customFileRef: any = useRef();
 
   const projectDetails: any = useAppSelector((state) => state.createproject.projectDetails);
-  const formCategoryList = CoreModules.useAppSelector((state) => state.createproject.formCategoryList);
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
-    dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 3 }));
-    navigate('/new-upload-area');
+    dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 5 }));
+    navigate('/new-define-tasks');
   };
   const {
     handleSubmit,
@@ -49,23 +47,14 @@ const DataExtract = ({ flag, customFormFile, setCustomFormFile }) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
     navigate(url);
   };
-  const changeFileHandler = (event) => {
+  const changeFileHandler = (event, setFileUploadToState) => {
     const { files } = event.target;
-    setCustomFormFile(files[0]);
+    setFileUploadToState(files[0]);
   };
 
-  useEffect(() => {
-    dispatch(FormCategoryService(`${enviroment.baseApiUrl}/central/list-forms`));
-  }, []);
-
-  const resetFile = () => {
-    customFileRef.current.value = '';
-    setCustomFormFile(null);
+  const resetFile = (setFileUploadToState) => {
+    setFileUploadToState(null);
   };
-
-  useEffect(() => {
-    dispatch(FormCategoryService(`${enviroment.baseApiUrl}/central/list-forms`));
-  }, []);
 
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
@@ -106,6 +95,7 @@ const DataExtract = ({ flag, customFormFile, setCustomFormFile }) => {
                 onChangeData={(value) => {
                   handleCustomChange('dataExtractWays', value);
                 }}
+                errorMsg={errors.dataExtractWays}
               />
               {formValues.dataExtractWays === 'osm_data_extract' && (
                 <div className="fmtm-mt-6">
@@ -117,22 +107,31 @@ const DataExtract = ({ flag, customFormFile, setCustomFormFile }) => {
                     onChangeData={(value) => {
                       handleCustomChange('dataExtractFeatureType', value);
                     }}
+                    errorMsg={errors.dataExtractFeatureType}
                   />
                 </div>
               )}
               {formValues.dataExtractWays === 'custom_data_extract' && (
                 <>
                   <FileInputComponent
-                    customFileRef={customFileRef}
-                    onChange={changeFileHandler}
-                    onResetFile={resetFile}
-                    customFormFile={customFormFile}
+                    // customFileRef={customFileRef}
+                    onChange={(e) => changeFileHandler(e, setCustomPolygonUpload)}
+                    onResetFile={() => resetFile(setCustomPolygonUpload)}
+                    customFile={customPolygonUpload}
+                    btnText="Upload a Polygon"
+                    accept=".geojson,.json"
+                    fileDescription="*The supported file formats are .geojson, .json"
+                    errorMsg={errors.customPolygonUpload}
                   />
                   <FileInputComponent
-                    customFileRef={customFileRef}
-                    onChange={changeFileHandler}
-                    onResetFile={resetFile}
-                    customFormFile={customFormFile}
+                    // customFileRef={customFileRef}
+                    onChange={(e) => changeFileHandler(e, setCustomLineUpload)}
+                    onResetFile={() => resetFile(setCustomLineUpload)}
+                    customFile={customLineUpload}
+                    btnText="Upload a Line"
+                    accept=".geojson,.json"
+                    fileDescription="*The supported file formats are .geojson, .json"
+                    errorMsg={errors.customFormUpload}
                   />
                 </>
               )}
