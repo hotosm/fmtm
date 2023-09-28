@@ -83,7 +83,7 @@ const MapLegends = ({ direction, spacing, iconBtnProps, defaultTheme, valueStatu
                   className="fmtm-w-10 fmtm-h-10"
                 ></CoreModules.IconButton>
               ) : (
-                <AssetModules.LockIcon />
+                <AssetModules.LockIcon sx={{ fontSize: '40px' }} />
               )}
             </div>
             <p className="fmtm-text-lg">{data.value}</p>
