@@ -636,20 +636,18 @@ def create_odk_xform_for_janakpur(
 
     if result != 200 and result != 409:
         return result
-    data = f"/tmp/{title}.geojson"
 
     # This modifies an existing published XForm to be in draft mode.
     # An XForm must be in draft mode to upload an attachment.
     if upload_media:
-
-        # Upload buildings file 
+        # Upload buildings file
         building_file = f"/tmp/buildings_{title}.geojson"
 
         result = xform.uploadMedia(
             project_id, title, building_file, convert_to_draft_when_publishing
         )
 
-        # Upload roads file 
+        # Upload roads file
         road_file = f"/tmp/roads_{title}.geojson"
         result = xform.uploadMedia(
             project_id, title, road_file, convert_to_draft_when_publishing
@@ -657,7 +655,6 @@ def create_odk_xform_for_janakpur(
 
     result = xform.publishForm(project_id, title)
     return result
-
 
 
 def generate_updated_xform_for_janakpur(
@@ -716,11 +713,11 @@ def generate_updated_xform_for_janakpur(
         try:
             if "src" in inst.attrib:
                 print("SRC = Present")
-                if (inst.attrib["src"]) == "jr://file/buildings.geojson":   #FIXME
+                if (inst.attrib["src"]) == "jr://file/buildings.geojson":  # FIXME
                     print("INST attribs = ", inst.attrib["src"])
                     inst.attrib["src"] = buildings_extract
 
-                if (inst.attrib["src"]) == "jr://file/roads.geojson":   #FIXME
+                if (inst.attrib["src"]) == "jr://file/roads.geojson":  # FIXME
                     inst.attrib["src"] = roads_extract
 
             # Looking for data tags

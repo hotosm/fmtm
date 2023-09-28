@@ -1058,7 +1058,6 @@ async def project_centroid(
     return result_dict_list
 
 
-
 @router.post("/{project_id}/generate_files_for_janakpur")
 async def generate_files_janakpur(
     background_tasks: BackgroundTasks,
@@ -1067,10 +1066,8 @@ async def generate_files_janakpur(
     roads_file: UploadFile,
     form: UploadFile,
     db: Session = Depends(database.get_db),
-    ):
-    """
-        Generate required media files tasks in the project based on the provided params.
-    """
+):
+    """Generate required media files tasks in the project based on the provided params."""
     log.debug(f"Generating media files tasks for project: {project_id}")
     xform_title = None
 

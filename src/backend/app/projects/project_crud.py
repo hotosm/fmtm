@@ -410,8 +410,6 @@ def update_multi_polygon_project_boundary(
             #     To be used in lambda, to remove z dimension from
             #     each coordinate in the feature's geometry.
             #     """
-            #     print("COord = ", coord)
-            #     print('length of coord = ',len(coord))
             #     return coord.pop() if len(coord) == 3 else None
 
             # # Apply the lambda function to each coordinate in its geometry
@@ -1171,7 +1169,10 @@ def upload_custom_data_extracts(
         properties = flatten_dict(feature["properties"])
 
         db_feature = db_models.DbFeatures(
-            project_id=project_id, geometry=wkb_element, properties=properties, category_title=category
+            project_id=project_id,
+            geometry=wkb_element,
+            properties=properties,
+            category_title=category,
         )
         db.add(db_feature)
     db.commit()
@@ -2453,7 +2454,6 @@ def generate_appuser_files_for_janakpur(
         project_obj = get_project(db, project_id)
 
         for task_id in tasks_list:
-
             # Generate taskFiles
             name = f"{project_name}_{category}_{task_id}"
 
@@ -2481,8 +2481,6 @@ def generate_appuser_files_for_janakpur(
 
             # This file will store xml contents of an xls form.
             xform = f"/tmp/{name}.xml"
-            
-            print("XFORM = ", xform)
 
             buildings_extracts = f"/tmp/buildings_{name}.geojson"  # This file will store osm extracts
             roads_extracts = f"/tmp/roads_{name}.geojson"  # This file will store osm extracts
@@ -2540,7 +2538,7 @@ def generate_appuser_files_for_janakpur(
                             'properties', properties
                         ) AS feature
                         FROM features
-                        WHERE project_id={project_id}
+                        WHERE project_id={project_id} and task_id={task_id} and category_title='highways'
                         ) features;"""
             )
             highway_result = db.execute(highway_query)
