@@ -31,6 +31,9 @@ import { buildingStyle, basicGeojsonTemplate } from '../utilities/mapUtils';
 import Button from '../../src/components/common/Button';
 import Accordion from '../../src/components/common/Accordion';
 import MapLegends from '../components/MapLegends';
+import TaskSectionPopup from '../components/ProjectDetails/TaskSectionPopup';
+import DialogTaskActions from '../components/DialogTaskActions';
+import QrcodeComponent from '../components/QrcodeComponent';
 
 const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -501,6 +504,16 @@ const Home = () => {
           states={state}
         />
       </CoreModules.Stack>
+      {featuresLayer != undefined && (
+        <TaskSectionPopup
+          body={
+            <div>
+              <DialogTaskActions map={map} view={mainView} feature={featuresLayer} taskId={taskId} />
+              <QrcodeComponent defaultTheme={defaultTheme} task={taskId} type={type} />
+            </div>
+          }
+        />
+      )}
     </CoreModules.Stack>
   );
 };

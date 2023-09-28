@@ -19,6 +19,7 @@ import AssetModules from '../shared/AssetModules';
 import { Modal } from '../components/common/Modal';
 import Button from './common/Button';
 import { ProjectActions } from '../store/slices/ProjectSlice';
+import TaskSectionModal from './ProjectDetails/TaskSectionPopup';
 let currentLocationLayer = null;
 const OpenLayersMap = ({
   defaultTheme,
@@ -306,19 +307,21 @@ const OpenLayersMap = ({
             </CoreModules.Stack>
           )}
         </div> */}
-        {featuresLayer != undefined && (
-          <Modal
-            title={<p></p>}
-            description={
-              <div>
-                <DialogTaskActions map={map} view={mainView} feature={featuresLayer} taskId={taskId} />
-                <QrcodeComponent defaultTheme={defaultTheme} task={taskId} type={windowType} />
-              </div>
-            }
-            open={taskModalStatus}
-            onOpenChange={(value) => dispatch(ProjectActions.ToggleTaskModalStatus(value))}
-          />
-        )}
+        {/* {featuresLayer != undefined && (
+          <div>
+            <Modal
+              title={<p></p>}
+              description={
+                <div>
+                  <DialogTaskActions map={map} view={mainView} feature={featuresLayer} taskId={taskId} />
+                  <QrcodeComponent defaultTheme={defaultTheme} task={taskId} type={windowType} />
+                </div>
+              }
+              open={taskModalStatus}
+              onOpenChange={(value) => dispatch(ProjectActions.ToggleTaskModalStatus(value))}
+            />
+          </div>
+        )} */}
       </CoreModules.Stack>
     </CoreModules.Stack>
   );
