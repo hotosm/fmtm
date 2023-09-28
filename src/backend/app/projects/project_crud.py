@@ -1169,7 +1169,10 @@ def upload_custom_data_extracts(
         properties = flatten_dict(feature["properties"])
 
         db_feature = db_models.DbFeatures(
-            project_id=project_id, geometry=wkb_element, properties=properties, category_title=category
+            project_id=project_id,
+            geometry=wkb_element,
+            properties=properties,
+            category_title=category,
         )
         db.add(db_feature)
     db.commit()
@@ -2359,15 +2362,15 @@ async def convert_geojson_to_osm(geojson_file: str):
 
 
 def generate_appuser_files_for_janakpur(
-        db: Session,
-        project_id: int,
-        form: str,
-        building_extracts_contents: str,
-        road_extracts_contents: str,
-        category: str,
-        form_type: str,
-        background_task_id: uuid.UUID,
-    ):
+    db: Session,
+    project_id: int,
+    form: str,
+    building_extracts_contents: str,
+    road_extracts_contents: str,
+    category: str,
+    form_type: str,
+    background_task_id: uuid.UUID,
+):
     project_log = log.bind(task="create_project", project_id=project_id)
 
     project_log.info(f"Starting generate_appuser_files for project {project_id}")
@@ -2440,7 +2443,9 @@ def generate_appuser_files_for_janakpur(
 
         if road_extracts_contents is not None:
             project_log.info("Uploading roads data")
-            upload_custom_data_extracts(db, project_id, road_extracts_contents, "highways")
+            upload_custom_data_extracts(
+                db, project_id, road_extracts_contents, "highways"
+            )
 
         # Generating QR Code, XForm and uploading OSM Extracts to the form.
         # Creating app users and updating the role of that usegenerate_updated_xformr.
@@ -2451,7 +2456,6 @@ def generate_appuser_files_for_janakpur(
         project_obj = get_project(db, project_id)
 
         for task_id in tasks_list:
-
             # Generate taskFiles
             name = f"{project_name}_{category}_{task_id}"
 
@@ -2479,11 +2483,15 @@ def generate_appuser_files_for_janakpur(
 
             # This file will store xml contents of an xls form.
             xform = f"/tmp/{name}.xml"
-            
+
             print("XFORM = ", xform)
 
-            buildings_extracts = f"/tmp/buildings_{name}.geojson"  # This file will store osm extracts
-            roads_extracts = f"/tmp/roads_{name}.geojson"  # This file will store osm extracts
+            buildings_extracts = (
+                f"/tmp/buildings_{name}.geojson"  # This file will store osm extracts
+            )
+            roads_extracts = (
+                f"/tmp/roads_{name}.geojson"  # This file will store osm extracts
+            )
 
             # xform_id_format
             xform_id = f"{name}".split("_")[2]
@@ -2558,7 +2566,9 @@ def generate_appuser_files_for_janakpur(
                 dump(highway_features, jsonfile)
 
             project_log.info(f"Generating xform for task {task_id}")
-            outfile = central_crud.generate_updated_xform_for_janakpur(xlsform, xform, form_type)
+            outfile = central_crud.generate_updated_xform_for_janakpur(
+                xlsform, xform, form_type
+            )
 
             # Create an odk xform
             project_log.info(f"Uploading media in {task_id}")
