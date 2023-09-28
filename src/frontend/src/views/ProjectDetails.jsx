@@ -112,36 +112,36 @@ const Home = () => {
   }, [params.id]);
 
   useEffect(() => {
-    const container = document.getElementById('popup');
-    const closer = document.getElementById('popup-closer');
+    // const container = document.getElementById('popup');
+    // const closer = document.getElementById('popup-closer');
 
-    const overlay = new Overlay({
-      element: container,
-      autoPan: {
-        animation: {
-          duration: 250,
-        },
-      },
-    });
+    // const overlay = new Overlay({
+    //   element: container,
+    //   autoPan: {
+    //     animation: {
+    //       duration: 250,
+    //     },
+    //   },
+    // });
     /**
      * Function to setPosition of Popup to Undefined so that the popup closes
      */
-    function handleClickOutside(event) {
-      if (container && !container.contains(event.target)) {
-        overlay.setPosition(undefined);
-        closer.blur();
-      }
-    }
+    // function handleClickOutside(event) {
+    //   if (container && !container.contains(event.target)) {
+    //     overlay.setPosition(undefined);
+    //     closer.blur();
+    //   }
+    // }
     // Bind the event listener for outside click and trigger handleClickOutside
     // document.addEventListener("mousedown", handleClickOutside);
 
-    closer.style.textDecoration = 'none';
-    closer.style.color = defaultTheme.palette.info['main'];
-    closer.onclick = function () {
-      overlay.setPosition(undefined);
-      closer.blur();
-      return false;
-    };
+    // closer.style.textDecoration = 'none';
+    // closer.style.color = defaultTheme.palette.info['main'];
+    // closer.onclick = function () {
+    //   overlay.setPosition(undefined);
+    //   closer.blur();
+    //   return false;
+    // };
 
     const initalFeaturesLayer = new VectorLayer({
       source: new VectorSource(),
@@ -172,7 +172,7 @@ const Home = () => {
           visible: true,
         }),
       ],
-      overlays: [overlay],
+      // overlays: [overlay],
       view: view,
     });
     initialMap.on('click', function (event) {
@@ -181,8 +181,9 @@ const Home = () => {
         if (environment.tasksStatus.findIndex((data) => data.label == status) != -1) {
           setTaskId(feature?.getId()?.split('_')?.[0]);
           const coordinate = event.coordinate;
-          overlay.setPosition(coordinate);
+          // overlay.setPosition(coordinate);
           setFeaturesLayer(feature);
+          dispatch(ProjectActions.ToggleTaskModalStatus(true));
           dispatch(
             ProjectBuildingGeojsonService(
               `${environment.baseApiUrl}/projects/${decodedId}/features?task_id=${feature?.getId()?.split('_')?.[0]}`,
@@ -199,12 +200,13 @@ const Home = () => {
     setMap(initialMap);
     setView(view);
     setFeaturesLayer(initalFeaturesLayer);
+    dispatch(ProjectActions.ToggleTaskModalStatus(false));
 
     return () => {
       /**
        * Removed handleClickOutside Eventlistener on unmount
        */
-      document.removeEventListener('mousedown', handleClickOutside);
+      // document.removeEventListener('mousedown', handleClickOutside);
       mapElement.current = null;
       setFeaturesLayer();
       setView();
