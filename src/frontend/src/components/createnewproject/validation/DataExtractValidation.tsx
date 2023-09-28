@@ -1,5 +1,4 @@
 interface ProjectValues {
-  formCategorySelection: string;
   form_ways: string;
   dataExtractWays: string;
   data_extractFile: object;
@@ -7,7 +6,6 @@ interface ProjectValues {
   dataExtractFeatureType: string;
 }
 interface ValidationErrors {
-  formCategorySelection?: string;
   form_ways?: string;
   dataExtractWays?: string;
   data_extractFile?: string;
@@ -18,9 +16,6 @@ interface ValidationErrors {
 function DataExtractValidation(values: ProjectValues) {
   const errors: ValidationErrors = {};
 
-  if (!values?.formCategorySelection) {
-    errors.formCategorySelection = 'Form Category is Required.';
-  }
   if (!values.dataExtractWays) {
     errors.dataExtractWays = 'Select Data Extract Options.';
   }
