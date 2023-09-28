@@ -2538,7 +2538,7 @@ def generate_appuser_files_for_janakpur(
                             'properties', properties
                         ) AS feature
                         FROM features
-                        WHERE project_id={project_id} and task_id={task_id} and category_title='highways'
+                        WHERE project_id={project_id} and category_title='highways'
                         ) features;"""
             )
             highway_result = db.execute(highway_query)
