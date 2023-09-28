@@ -187,6 +187,9 @@ const Home = () => {
           // overlay.setPosition(coordinate);
           setFeaturesLayer(feature);
           dispatch(ProjectActions.ToggleTaskModalStatus(true));
+          document.querySelector('#project-details-map').scrollIntoView({
+            behavior: 'smooth',
+          });
           dispatch(
             ProjectBuildingGeojsonService(
               `${environment.baseApiUrl}/projects/${decodedId}/features?task_id=${feature?.getId()?.split('_')?.[0]}`,

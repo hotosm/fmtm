@@ -292,6 +292,7 @@ const OpenLayersMap = ({
   return (
     <CoreModules.Stack spacing={1} direction={'column'} className="fmtm-px-0 sm:fmtm-px-[1rem] fmtm-py-[1rem]">
       <CoreModules.Stack
+        id="project-details-map"
         // style={{ border: `4px solid ${defaultTheme.palette.error.main}` }}
         justifyContent={'center'}
         height={608}
