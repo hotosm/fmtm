@@ -1169,7 +1169,7 @@ def upload_custom_data_extracts(
         properties = flatten_dict(feature["properties"])
 
         db_feature = db_models.DbFeatures(
-            project_id=project_id, geometry=wkb_element, properties=properties
+            project_id=project_id, geometry=wkb_element, properties=properties, category_title=category
         )
         db.add(db_feature)
     db.commit()
