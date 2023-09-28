@@ -32,7 +32,7 @@ from app.config import settings
 
 from ..central import central_crud
 from ..db import db_models
-from ..db.postgis_utils import geometry_to_geojson, get_centroid
+from ..db.postgis_utils import geometry_to_geojson
 from ..models.enums import (
     TaskStatus,
     get_action_for_status_change,

@@ -42,7 +42,6 @@ def geometry_to_geojson(geometry: Geometry, properties: str = {}, id: int = None
         return Feature(**geojson)
 
 
-
 def get_centroid(geometry: Geometry, properties: str = {}):
     if geometry:
         shape = to_shape(geometry)
