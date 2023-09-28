@@ -39,6 +39,7 @@ def geometry_to_geojson(geometry: Geometry, properties: str = {}, id: int = None
             "id": id,
             # "bbox": shape.bounds,
         }
+        return Feature(**geojson)
 
 
 
