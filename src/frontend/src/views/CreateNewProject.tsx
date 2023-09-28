@@ -16,7 +16,8 @@ const CreateNewProject = () => {
   const dispatch = useDispatch();
 
   const [geojsonFile, setGeojsonFile] = useState(null);
-  const [customFormFile, setCustomFormFile] = useState(null);
+  const [customLineUpload, setCustomLineUpload] = useState(null);
+  const [customPolygonUpload, setCustomPolygonUpload] = useState(null);
 
   useEffect(() => {
     switch (location.pathname) {
@@ -41,22 +42,7 @@ const CreateNewProject = () => {
     }
   }, [location.pathname]);
 
-  // const currentStep = CoreModules.useAppSelector((state) => state.common.currentStepFormStep.create_project);
   const getCreateProjectContent = (): JSX.Element => {
-    // switch (currentStep.step) {
-    //   case 1:
-    //     return <ProjectDetailsForm flag="create_project" />;
-    //   case 2:
-    //     return <UploadArea flag="create_project" />;
-    //   case 3:
-    //     return <DataExtract flag="create_project" />;
-    //   case 4:
-    //     return <SplitTasks flag="create_project" />;
-    //   case 5:
-    //     return <SelectForm flag="create_project" />;
-    //   default:
-    //     return <ProjectDetailsForm flag="create_project" />;
-    // }
     switch (location.pathname) {
       case '/new-create-project':
         return <ProjectDetailsForm flag="create_project" />;
@@ -66,7 +52,13 @@ const CreateNewProject = () => {
         return <SelectForm flag="create_project" />;
       case '/new-data-extract':
         return (
-          <DataExtract flag="create_project" customFormFile={customFormFile} setCustomFormFile={setCustomFormFile} />
+          <DataExtract
+            flag="create_project"
+            customLineUpload={customLineUpload}
+            setCustomLineUpload={setCustomLineUpload}
+            customPolygonUpload={customPolygonUpload}
+            setCustomPolygonUpload={setCustomPolygonUpload}
+          />
         );
       case '/new-define-tasks':
         return <SplitTasks flag="create_project" geojsonFile={geojsonFile} setGeojsonFile={setGeojsonFile} />;
