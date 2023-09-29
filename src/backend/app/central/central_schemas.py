@@ -15,30 +15,29 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
-from loguru import logger as log
-
 from enum import Enum
 
+from loguru import logger as log
 from pydantic import BaseModel
 
 
 class CentralBase(BaseModel):
-    """
-    A Pydantic model representing the base information for interacting with an ODK Central server.
+    """A Pydantic model representing the base information for interacting with an ODK Central server.
 
     Attributes:
         central_url (str): The URL of the ODK Central server.
     """
+
     central_url: str
 
 
 class Central(CentralBase):
-    """
-    A Pydantic model representing additional information for interacting with an ODK Central server.
+    """A Pydantic model representing additional information for interacting with an ODK Central server.
 
     Attributes:
         geometry_geojson (str): The geometry of a GeoJSON file.
     """
+
     geometry_geojson: str
     # qr_code_binary: bytes
 
@@ -48,12 +47,12 @@ class CentralOut(CentralBase):
 
 
 class CentralFileType(BaseModel):
-    """
-    A Pydantic model representing an enumeration of file types that can be used with ODK Central.
+    """A Pydantic model representing an enumeration of file types that can be used with ODK Central.
 
     Attributes:
         filetype (Enum): An enumeration of file types.
     """
+
     filetype: Enum("FileType", ["xform", "extract", "zip", "xlsform", "all"])
     log.debug("Hello World!")
 

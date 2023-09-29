@@ -15,8 +15,6 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
-from loguru import logger as log
-
 import json
 import os
 import uuid
@@ -34,6 +32,7 @@ from fastapi import (
     UploadFile,
 )
 from fastapi.responses import FileResponse
+from loguru import logger as log
 from osm_fieldwork.make_data_extract import getChoices
 from osm_fieldwork.xlsforms import xlsforms_path
 from sqlalchemy.orm import Session
@@ -43,7 +42,6 @@ from ..db import database, db_models
 from ..models.enums import TILES_SOURCE
 from ..tasks import tasks_crud
 from . import project_crud, project_schemas, utils
-
 
 router = APIRouter(
     prefix="/projects",
@@ -60,8 +58,7 @@ async def read_projects(
     limit: int = 100,
     db: Session = Depends(database.get_db),
 ):
-    """
-    Get a list of projects.
+    """Get a list of projects.
 
     Args:
         user_id (int, optional): The ID of the user to filter projects by. Defaults to None.
@@ -97,7 +94,9 @@ async def get_projet_details(project_id: int, db: Session = Depends(database.get
         odk_central_password=project.odk_central_password,
     )
 
-    odk_details = await central_crud.get_project_full_details(project.odkid, odk_credentials)
+    odk_details = await central_crud.get_project_full_details(
+        project.odkid, odk_credentials
+    )
 
     # Features count
     query = f"select count(*) from features where project_id={project_id} and task_id is not null"
@@ -105,19 +104,18 @@ async def get_projet_details(project_id: int, db: Session = Depends(database.get
     features = result.fetchone()[0]
 
     return {
-        'id':project_id,
-        'name':odk_details['name'],
-        'createdAt':odk_details['createdAt'],
-        'tasks':odk_details['forms'],
-        'lastSubmission':odk_details['lastSubmission'],
-        'total_features':features
+        "id": project_id,
+        "name": odk_details["name"],
+        "createdAt": odk_details["createdAt"],
+        "tasks": odk_details["forms"],
+        "lastSubmission": odk_details["lastSubmission"],
+        "total_features": features,
     }
 
 
 @router.post("/near_me", response_model=project_schemas.ProjectSummary)
 def get_task(lat: float, long: float, user_id: int = None):
-    """
-    Get a task near the specified location.
+    """Get a task near the specified location.
 
     Args:
         lat (float): The latitude of the location.
@@ -138,8 +136,7 @@ async def read_project_summaries(
     limit: int = 100,
     db: Session = Depends(database.get_db),
 ):
-    """
-    Get a list of project summaries.
+    """Get a list of project summaries.
 
     Args:
         user_id (int, optional): The ID of the user to filter projects by. Defaults to None.
@@ -163,8 +160,7 @@ async def read_project_summaries(
 
 @router.get("/{project_id}", response_model=project_schemas.ProjectOut)
 async def read_project(project_id: int, db: Session = Depends(database.get_db)):
-    """
-    Get a project by its ID.
+    """Get a project by its ID.
 
     Args:
         project_id (int): The ID of the project.
@@ -175,7 +171,7 @@ async def read_project(project_id: int, db: Session = Depends(database.get_db)):
 
     Raises:
         HTTPException: If the project is not found.
-        
+
     """
     project = project_crud.get_project_by_id(db, project_id)
     if project:
@@ -186,8 +182,7 @@ async def read_project(project_id: int, db: Session = Depends(database.get_db)):
 
 @router.delete("/delete/{project_id}")
 async def delete_project(project_id: int, db: Session = Depends(database.get_db)):
-    """
-    Delete a project by its ID.
+    """Delete a project by its ID.
 
     Args:
         project_id (int): The ID of the project.
@@ -309,8 +304,7 @@ async def update_project(
     project_info: project_schemas.BETAProjectUpload,
     db: Session = Depends(database.get_db),
 ):
-    """
-    Update an existing project by its ID.
+    """Update an existing project by its ID.
 
     Args:
         id (int): The ID of the project to update.
@@ -322,7 +316,7 @@ async def update_project(
 
     Raises:
         HTTPException: If the project is not found.
-        
+
     """
     project = project_crud.update_project_info(db, project_info, id)
     if project:
@@ -337,8 +331,7 @@ async def project_partial_update(
     project_info: project_schemas.ProjectUpdate,
     db: Session = Depends(database.get_db),
 ):
-    """
-    Partially update an existing project by its ID.
+    """Partially update an existing project by its ID.
 
     Args:
         id (int): The ID of the project to update.
@@ -350,7 +343,7 @@ async def project_partial_update(
 
     Raises:
         HTTPException: If the project is not found.
-        
+
     """
     # Update project informations
     project = project_crud.partial_update_project_info(db, project_info, id)
@@ -369,8 +362,7 @@ async def upload_project_boundary_with_zip(
     upload: UploadFile,
     db: Session = Depends(database.get_db),
 ):
-    """
-    Upload a ZIP file with task geojson polygons and QR codes for an existing project.
+    """Upload a ZIP file with task geojson polygons and QR codes for an existing project.
 
     Args:
         project_id (int): The ID of the project to upload to.
@@ -384,7 +376,7 @@ async def upload_project_boundary_with_zip(
 
     Raises:
         HTTPException: If there is a connection error to ODK Central.
-        
+
     """
     r"""Upload a ZIP with task geojson polygons and QR codes for an existing project.
 
@@ -412,8 +404,7 @@ async def upload_custom_xls(
     category: str = Form(...),
     db: Session = Depends(database.get_db),
 ):
-    """
-    Upload a custom XLSForm to the database.
+    """Upload a custom XLSForm to the database.
 
     Args:
         upload (UploadFile): The XLSForm file to upload.
@@ -437,8 +428,7 @@ async def upload_multi_project_boundary(
     upload: UploadFile = File(...),
     db: Session = Depends(database.get_db),
 ):
-    """
-    Upload a multi-polygon project boundary in JSON format for a specified project ID.
+    """Upload a multi-polygon project boundary in JSON format for a specified project ID.
 
     Args:
         project_id (int): The ID of the project to which the boundary is being uploaded.
@@ -450,7 +440,7 @@ async def upload_multi_project_boundary(
 
     Raises:
         HTTPException: If the project ID does not exist in the database.
-        
+
     """
     log.debug(
         "Uploading project boundary multipolygon for " f"project ID: {project_id}"
@@ -478,10 +468,9 @@ async def task_split(
     upload: UploadFile = File(...),
     no_of_buildings: int = Form(50),
     has_data_extracts: bool = Form(False),
-    db: Session = Depends(database.get_db)
-    ):
-    """
-    Split a task into subtasks.
+    db: Session = Depends(database.get_db),
+):
+    """Split a task into subtasks.
 
     Args:
         upload (UploadFile): The file to split.
@@ -490,14 +479,15 @@ async def task_split(
 
     Returns:
         The result of splitting the task into subtasks.
-        
-    """
 
+    """
     # read entire file
     await upload.seek(0)
     content = await upload.read()
 
-    result = await project_crud.split_into_tasks(db, content, no_of_buildings, has_data_extracts)
+    result = await project_crud.split_into_tasks(
+        db, content, no_of_buildings, has_data_extracts
+    )
 
     return result
 
@@ -522,7 +512,7 @@ async def upload_project_boundary(
 
     Raises:
         HTTPException: If the provided file is not valid or if the project ID does not exist in the database.
-        
+
     """
     # Validating for .geojson File.
     file_name = os.path.splitext(upload.filename)
@@ -619,8 +609,7 @@ async def generate_files(
     data_extracts: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
 ):
-    """
-    Generate required media files for tasks in the project based on the provided parameters.
+    """Generate required media files for tasks in the project based on the provided parameters.
 
     Args:
         background_tasks (BackgroundTasks): The background tasks object.
@@ -635,7 +624,7 @@ async def generate_files(
 
     Raises:
         HTTPException: If the project ID does not exist in the database or if an invalid file is provided.
-        
+
     """
     log.debug(f"Generating media files tasks for project: {project_id}")
     contents = None
@@ -666,13 +655,15 @@ async def generate_files(
 
         if config_file:
             config_file_name = os.path.splitext(config_file.filename)
-            config_file_ext = config_file_name[1]     
+            config_file_ext = config_file_name[1]
             if not config_file_ext == ".yaml":
-                raise HTTPException(status_code=400, detail="Provide a valid .yaml config file")
+                raise HTTPException(
+                    status_code=400, detail="Provide a valid .yaml config file"
+                )
             await config_file.seek(0)
             config_file_contents = await config_file.read()
             project.form_config_file = config_file_contents
-        
+
         db.commit()
 
     if data_extracts:
@@ -742,8 +733,7 @@ def get_project_features(
     task_id: int = None,
     db: Session = Depends(database.get_db),
 ):
-    """
-    Get all the features of a project.
+    """Get all the features of a project.
 
     Args:
         project_id (int): The project's ID.
@@ -761,9 +751,7 @@ def get_project_features(
 async def generate_log(
     project_id: int, uuid: uuid.UUID, db: Session = Depends(database.get_db)
 ):
-    
-    """
-    Get the contents of a log file in a log format.
+    """Get the contents of a log file in a log format.
 
     Args:
         project_id (int): The project's ID.
@@ -794,8 +782,13 @@ async def generate_log(
 
         with open("/opt/logs/create_project.json", "r") as log_file:
             logs = [json.loads(line) for line in log_file]
-            
-            filtered_logs = [log.get("record",{}).get("message",None) for log in logs if log.get("record", {}).get("extra", {}).get("project_id") == project_id]
+
+            filtered_logs = [
+                log.get("record", {}).get("message", None)
+                for log in logs
+                if log.get("record", {}).get("extra", {}).get("project_id")
+                == project_id
+            ]
             last_50_logs = filtered_logs[-50:]
 
             logs = "\n".join(last_50_logs)
@@ -812,12 +805,11 @@ async def generate_log(
 
 @router.get("/categories/")
 async def get_categories():
-    """
-    Get all the categories from osm_fieldwork.
+    """Get all the categories from osm_fieldwork.
 
     Returns:
         A list of categories and their respective forms.
-        
+
     """
     categories = (
         getChoices()
@@ -827,8 +819,7 @@ async def get_categories():
 
 @router.post("/preview_tasks/")
 async def preview_tasks(upload: UploadFile = File(...), dimension: int = Form(500)):
-    """
-    Preview tasks for a project.
+    """Preview tasks for a project.
 
     Args:
         upload (UploadFile): The boundary file to preview tasks for.
@@ -839,7 +830,7 @@ async def preview_tasks(upload: UploadFile = File(...), dimension: int = Form(50
 
     Raises:
         HTTPException: If an invalid file is provided.
-        
+
     """
     # Validating for .geojson File.
     file_name = os.path.splitext(upload.filename)
@@ -861,11 +852,12 @@ async def preview_tasks(upload: UploadFile = File(...), dimension: int = Form(50
 async def add_features(
     background_tasks: BackgroundTasks,
     upload: UploadFile = File(...),
-    feature_type: str = Query(..., description="Select feature type ", enum=["buildings","lines"]),
+    feature_type: str = Query(
+        ..., description="Select feature type ", enum=["buildings", "lines"]
+    ),
     db: Session = Depends(database.get_db),
 ):
-    """
-    Add features to a project.
+    """Add features to a project.
 
     This endpoint allows you to add features to a project.
 
@@ -900,7 +892,7 @@ async def add_features(
         db,
         features,
         background_task_id,
-        feature_type
+        feature_type,
     )
     return True
 
@@ -972,8 +964,7 @@ async def update_project_category(
 
 @router.get("/download_template/")
 async def download_template(category: str, db: Session = Depends(database.get_db)):
-    """
-    Download a template based on the provided category.
+    """Download a template based on the provided category.
 
     Args:
         category (str): The category of the template.
@@ -1035,19 +1026,15 @@ async def download_task_boundaries(
 
 
 @router.get("/features/download/")
-async def download_features(
-    project_id: int,
-    db: Session = Depends(database.get_db)
-):
+async def download_features(project_id: int, db: Session = Depends(database.get_db)):
     """Downloads the features of a project as a GeoJSON file.
-    
-        Args:
-            project_id (int): The id of the project.
-    
-        Returns:
-            Response: The HTTP response object containing the downloaded file.
-    """
 
+    Args:
+        project_id (int): The id of the project.
+
+    Returns:
+        Response: The HTTP response object containing the downloaded file.
+    """
     out = await project_crud.get_project_features_geojson(db, project_id)
 
     headers = {
@@ -1144,15 +1131,16 @@ async def download_task_boundary_osm(
     response = Response(content=content, media_type="application/xml")
     return response
 
+
 from sqlalchemy.sql import text
+
 
 @router.get("/centroid/")
 async def project_centroid(
-                        project_id:int = None,
-                        db: Session = Depends(database.get_db),
-                        ):
-    """
-    Get a centroid of each projects.
+    project_id: int = None,
+    db: Session = Depends(database.get_db),
+):
+    """Get a centroid of each projects.
 
     Parameters:
         project_id (int): The ID of the project.
@@ -1160,11 +1148,12 @@ async def project_centroid(
     Returns:
         List[Tuple[int, str]]: A list of tuples containing the task ID and the centroid as a string.
     """
-
-    query = text(f"""SELECT id, ARRAY_AGG(ARRAY[ST_X(ST_Centroid(outline)), ST_Y(ST_Centroid(outline))]) AS centroid
+    query = text(
+        f"""SELECT id, ARRAY_AGG(ARRAY[ST_X(ST_Centroid(outline)), ST_Y(ST_Centroid(outline))]) AS centroid
             FROM projects
             WHERE {f"id={project_id}" if project_id else "1=1"}
-            GROUP BY id;""")
+            GROUP BY id;"""
+    )
 
     result = db.execute(query)
     result_dict_list = [{"id": row[0], "centroid": row[1]} for row in result.fetchall()]

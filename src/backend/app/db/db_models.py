@@ -60,8 +60,7 @@ from .postgis_utils import timestamp
 
 
 class DbUser(Base):
-    """
-    A SQLAlchemy model representing a user.
+    """A SQLAlchemy model representing a user.
 
     Attributes:
         id (BigInteger): The ID of the user.
@@ -134,8 +133,7 @@ organisation_managers = Table(
 
 
 class DbOrganisation(Base):
-    """
-    A SQLAlchemy model representing an organisation.
+    """A SQLAlchemy model representing an organisation.
 
     Attributes:
         id (Integer): The ID of the organisation.
@@ -168,8 +166,7 @@ class DbOrganisation(Base):
 
 
 class DbTeam(Base):
-    """
-    A SQLAlchemy model representing a team.
+    """A SQLAlchemy model representing a team.
 
     Attributes:
         id (Integer): The ID of the team.
@@ -177,7 +174,7 @@ class DbTeam(Base):
         name (String): The name of the team.
         logo (String): The URL of the team's logo.
         description (String): A description of the team.
-        invite_only (Boolean): Whether this team is invite-only or not. 
+        invite_only (Boolean): Whether this team is invite-only or not.
     """
 
     __tablename__ = "teams"
@@ -209,8 +206,7 @@ project_allowed_users = Table(
 
 
 class DbProjectTeams(Base):
-    """
-    A SQLAlchemy model representing the relationship between a project and its teams.
+    """A SQLAlchemy model representing the relationship between a project and its teams.
 
     Attributes:
         team_id (Integer): The ID of the team.
@@ -219,6 +215,7 @@ class DbProjectTeams(Base):
         project (relationship): A relationship to the project that this team is associated with.
         team (relationship): A relationship to the team that is associated with this project.
     """
+
     __tablename__ = "project_teams"
     team_id = Column(Integer, ForeignKey("teams.id"), primary_key=True)
     project_id = Column(Integer, ForeignKey("projects.id"), primary_key=True)
@@ -233,8 +230,7 @@ class DbProjectTeams(Base):
 
 
 class DbProjectInfo(Base):
-    """
-    A SQLAlchemy model representing localized information for a project.
+    """A SQLAlchemy model representing localized information for a project.
 
     Attributes:
         project_id (Integer): The ID of the project.
@@ -265,8 +261,7 @@ class DbProjectInfo(Base):
 
 
 class DbProjectChat(Base):
-    """
-    A SQLAlchemy model representing chat messages for a project.
+    """A SQLAlchemy model representing chat messages for a project.
 
     Attributes:
         id (BigInteger): The ID of the chat message.
@@ -289,8 +284,7 @@ class DbProjectChat(Base):
 
 
 class DbXForm(Base):
-    """
-    A SQLAlchemy model representing an XForm template or custom upload.
+    """A SQLAlchemy model representing an XForm template or custom upload.
 
     Attributes:
         id (Integer): The ID of the XForm.
@@ -313,8 +307,7 @@ class DbXForm(Base):
 
 
 class DbTaskInvalidationHistory(Base):
-    """
-    A SQLAlchemy model representing the most recent history of task invalidation and subsequent validation.
+    """A SQLAlchemy model representing the most recent history of task invalidation and subsequent validation.
 
     Attributes:
         id (Integer): The ID of this invalidation history record.
@@ -327,7 +320,7 @@ class DbTaskInvalidationHistory(Base):
         invalidated_date (DateTime): The date and time when this task was invalidated by the invalidator user.
         invalidation_history_id (Integer): The ID of a previous invalidation history record for this task, if any.
         validator_id (BigInteger): The ID of the user who validated this task after it was invalidated, if any.
-    """    
+    """
 
     __tablename__ = "task_invalidation_history"
     id = Column(Integer, primary_key=True)
@@ -361,8 +354,7 @@ class DbTaskInvalidationHistory(Base):
 
 
 class DbTaskMappingIssue(Base):
-    """
-    A SQLAlchemy model representing an issue with a task mapping that contributed to invalidation of the task.
+    """A SQLAlchemy model representing an issue with a task mapping that contributed to invalidation of the task.
 
     Attributes:
         id (Integer): The ID of the task mapping issue.
@@ -387,8 +379,7 @@ class DbTaskMappingIssue(Base):
 
 
 class DbMappingIssueCategory(Base):
-    """
-    A SQLAlchemy model representing a category of task mapping issues identified during validation.
+    """A SQLAlchemy model representing a category of task mapping issues identified during validation.
 
     Attributes:
         id (Integer): The ID of the mapping issue category.
@@ -405,8 +396,7 @@ class DbMappingIssueCategory(Base):
 
 
 class DbTaskHistory(Base):
-    """
-    A SQLAlchemy model representing the history associated with a task.
+    """A SQLAlchemy model representing the history associated with a task.
 
     Attributes:
         id (Integer): The ID of this task history record.
@@ -418,7 +408,7 @@ class DbTaskHistory(Base):
         user_id (BigInteger): The ID of the user who performed this action on this task.
         invalidation_history (relationship): A relationship to a list of invalidation history records for this task, if any.
         actioned_by (relationship): A relationship to the user who performed this action on this task.
-        task_mapping_issues (relationship): A relationship to a list of mapping issues for this task, if any. 
+        task_mapping_issues (relationship): A relationship to a list of mapping issues for this task, if any.
     """
 
     __tablename__ = "task_history"
@@ -453,13 +443,12 @@ class DbTaskHistory(Base):
 
 
 class DbQrCode(Base):
-    """
-    A SQLAlchemy model representing a QR Code.
+    """A SQLAlchemy model representing a QR Code.
 
     Attributes:
         id (Integer): The ID of the QR Code.
         filename (String): The filename of the QR Code image file.
-        image (LargeBinary): The binary data for the QR Code image file. 
+        image (LargeBinary): The binary data for the QR Code image file.
     """
 
     __tablename__ = "qr_code"
@@ -470,8 +459,7 @@ class DbQrCode(Base):
 
 
 class DbTask(Base):
-    """
-    A SQLAlchemy model representing an individual mapping Task.
+    """A SQLAlchemy model representing an individual mapping Task.
 
     Attributes:
         id (Integer): The ID of the Task.
@@ -479,7 +467,7 @@ class DbTask(Base):
         project_task_index (Integer): The index of this Task within its project.
         project_task_name (String): The name of this Task within its project.
         outline (Geometry("POLYGON", srid=4326)): The outline geometry for this Task in WGS84 coordinates.
-    """    
+    """
 
     __tablename__ = "tasks"
 
@@ -666,12 +654,13 @@ class DbProject(Base):
     # Count of tasks where osm extracts is completed, used for progress bar.
     extract_completed_count = Column(Integer, default=0)
 
-    form_xls = Column(LargeBinary)           # XLSForm file if custom xls is uploaded
-    form_config_file = Column(LargeBinary)   # Yaml config file if custom xls is uploaded
+    form_xls = Column(LargeBinary)  # XLSForm file if custom xls is uploaded
+    form_config_file = Column(LargeBinary)  # Yaml config file if custom xls is uploaded
 
-    data_extract_type = Column(String)       # Type of data extract (Polygon or Centroid)
-    task_split_type = Column(String)         # Type of split (Grid or Feature)
-    hashtags = Column(ARRAY(String))         # Project hashtag
+    data_extract_type = Column(String)  # Type of data extract (Polygon or Centroid)
+    task_split_type = Column(String)  # Type of split (Grid or Feature)
+    hashtags = Column(ARRAY(String))  # Project hashtag
+
 
 # TODO: Add index on project geometry, tried to add in __table args__
 # Index("idx_geometry", DbProject.geometry, postgresql_using="gist")
@@ -726,8 +715,7 @@ class DbFeatures(Base):
 
 
 class BackgroundTasks(Base):
-    """
-    A SQLAlchemy model representing a background task.
+    """A SQLAlchemy model representing a background task.
 
     Attributes:
         id (String): The ID of the background task.
@@ -735,6 +723,7 @@ class BackgroundTasks(Base):
         status (Enum): The status of the background task.
         message (String): A message associated with the background task.
     """
+
     __tablename__ = "background_tasks"
 
     id = Column(String, primary_key=True)
@@ -745,8 +734,7 @@ class BackgroundTasks(Base):
 
 
 class DbUserRoles(Base):
-    """
-    A SQLAlchemy model representing the roles of a user in various contexts.
+    """A SQLAlchemy model representing the roles of a user in various contexts.
 
     Attributes:
         user_id (BigInteger): The ID of the user.
@@ -755,8 +743,9 @@ class DbUserRoles(Base):
         organization (relationship): A relationship to the organization that this role is associated with, if any.
         project_id (Integer): The ID of the project that this role is associated with, if any.
         project (relationship): A relationship to the project that this role is associated with, if any.
-        role (Enum): The role of the user in the specified context. 
+        role (Enum): The role of the user in the specified context.
     """
+
     __tablename__ = "user_roles"
 
     user_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
@@ -769,17 +758,17 @@ class DbUserRoles(Base):
 
 
 class DbProjectAOI(Base):
-    """
-    A SQLAlchemy model representing an Area of Interest for a project.
+    """A SQLAlchemy model representing an Area of Interest for a project.
 
     Attributes:
         id (Integer): The ID of the Area of Interest.
         project_id (String): The ID of the project that this Area of Interest is associated with.
-        geom (Geometry(geometry_type="GEOMETRY", srid=4326)): The geometry of this Area of Interest in WGS84 coordinates. 
-        tags (JSONB): A JSON object containing tags for this Area of Interest. 
+        geom (Geometry(geometry_type="GEOMETRY", srid=4326)): The geometry of this Area of Interest in WGS84 coordinates.
+        tags (JSONB): A JSON object containing tags for this Area of Interest.
     """
+
     __tablename__ = "project_aoi"
-    
+
     id = Column(Integer, primary_key=True)
     project_id = Column(String)
     geom = Column(Geometry(geometry_type="GEOMETRY", srid=4326))
@@ -787,17 +776,17 @@ class DbProjectAOI(Base):
 
 
 class DbOsmLines(Base):
-    """
-    A SQLAlchemy model representing OSM lines for a project.
+    """A SQLAlchemy model representing OSM lines for a project.
 
     Attributes:
         id (Integer): The ID of the OSM line.
         project_id (String): The ID of the project that this OSM line is associated with.
-        geom (Geometry(geometry_type="GEOMETRY", srid=4326)): The geometry of this OSM line in WGS84 coordinates. 
-        tags (JSONB): A JSON object containing tags for this OSM line. 
+        geom (Geometry(geometry_type="GEOMETRY", srid=4326)): The geometry of this OSM line in WGS84 coordinates.
+        tags (JSONB): A JSON object containing tags for this OSM line.
     """
+
     __tablename__ = "ways_line"
-    
+
     id = Column(Integer, primary_key=True)
     project_id = Column(String)
     geom = Column(Geometry(geometry_type="GEOMETRY", srid=4326))
@@ -805,15 +794,15 @@ class DbOsmLines(Base):
 
 
 class DbBuildings(Base):
-    """
-    A SQLAlchemy model representing buildings for a project.
+    """A SQLAlchemy model representing buildings for a project.
 
     Attributes:
         id (Integer): The ID of the building.
         project_id (String): The ID of the project that this building is associated with.
         osm_id (String): The OSM ID of this building, if any.
         geom (Geometry(geometry_type="GEOMETRY", srid=4326)): The geometry of this building in WGS84 coordinates.
-    """    
+    """
+
     __tablename__ = "ways_poly"
 
     id = Column(Integer, primary_key=True)
@@ -824,8 +813,7 @@ class DbBuildings(Base):
 
 
 class DbTilesPath(Base):
-    """
-    A SQLAlchemy model representing the path to an MBTiles file for a project.
+    """A SQLAlchemy model representing the path to an MBTiles file for a project.
 
     Attributes:
         id (Integer): The ID of the MBTiles path.
@@ -834,9 +822,8 @@ class DbTilesPath(Base):
         path (String): The path to the MBTiles file.
         tile_source (String): The source of the tiles used to generate the MBTiles file.
         background_task_id (String): The ID of the background task associated with this MBTiles path.
-        created_at (DateTime): The date and time when this MBTiles path was created. 
+        created_at (DateTime): The date and time when this MBTiles path was created.
     """
-
 
     __tablename__ = "mbtiles_path"
 

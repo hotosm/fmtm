@@ -13,22 +13,21 @@ if settings.DEBUG:
 
 
 class AuthUser(BaseModel):
-    """
-    A Pydantic model representing an authenticated user.
+    """A Pydantic model representing an authenticated user.
 
     Attributes:
         id (int): The ID of the user.
         username (str): The username of the user.
         img_url (Union[str, None]): The URL of the user's profile image, or None if not provided.
     """
+
     id: int
     username: str
     img_url: Union[str, None]
 
 
 def init_osm_auth():
-    """
-    Initialize an instance of the Auth class from the osm_login_python.core module.
+    """Initialize an instance of the Auth class from the osm_login_python.core module.
 
     Returns:
         An instance of the Auth class.
@@ -44,8 +43,7 @@ def init_osm_auth():
 
 
 def login_required(access_token: str = Header(...)):
-    """
-    A dependency that deserializes an access token from the request header.
+    """A dependency that deserializes an access token from the request header.
 
     Args:
         access_token (str, optional): The access token from the request header. Injected by FastAPI.
