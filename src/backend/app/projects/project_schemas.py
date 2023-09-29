@@ -16,7 +16,7 @@
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
 from geojson_pydantic import Feature as GeojsonFeature
 from pydantic import BaseModel
@@ -27,8 +27,7 @@ from ..users.user_schemas import User
 
 
 class ODKCentral(BaseModel):
-    """
-    Represents the configuration details for an ODK Central instance.
+    """Represents the configuration details for an ODK Central instance.
 
     Attributes:
         odk_central_url (str): The URL of the ODK Central instance.
@@ -36,14 +35,14 @@ class ODKCentral(BaseModel):
         odk_central_password (str): The password for ODK Central.
 
     """
+
     odk_central_url: str
     odk_central_user: str
     odk_central_password: str
 
 
 class ProjectInfo(BaseModel):
-    """
-    Basic information about a project.
+    """Basic information about a project.
 
     Attributes:
         name (str): The project's name.
@@ -51,6 +50,7 @@ class ProjectInfo(BaseModel):
         description (str): The full description of the project.
 
     """
+
     name: str
     short_description: str
     description: str
@@ -63,8 +63,7 @@ class ProjectUpdate(BaseModel):
 
 
 class BETAProjectUpload(BaseModel):
-    """
-    Data needed to upload a new project.
+    """Data needed to upload a new project.
 
     Attributes:
         author (User): The author of the project.
@@ -74,6 +73,7 @@ class BETAProjectUpload(BaseModel):
         hashtags (Union[List[str], None]): List of hashtags for the project.
 
     """
+
     author: User
     project_info: ProjectInfo
     xform_title: Union[str, None]
@@ -92,8 +92,7 @@ class Feature(BaseModel):
 
 
 class ProjectSummary(BaseModel):
-    """
-    Summary view of project details.
+    """Summary view of project details.
 
     Attributes:
         id (int): The project's ID.
@@ -110,6 +109,7 @@ class ProjectSummary(BaseModel):
         hashtags (List[str]): List of project hashtags.
 
     """
+
     id: int = -1
     priority: ProjectPriority = ProjectPriority.MEDIUM
     priority_str: str = priority.name
@@ -127,8 +127,7 @@ class ProjectSummary(BaseModel):
 
 
 class ProjectBase(BaseModel):
-    """
-    Base structure of a project.
+    """Base structure of a project.
 
     Attributes:
         id (int): The project's ID.
@@ -142,6 +141,7 @@ class ProjectBase(BaseModel):
         hashtags (List[str]): List of project hashtags.
 
     """
+
     id: int
     odkid: int
     author: User
@@ -156,13 +156,10 @@ class ProjectBase(BaseModel):
 
 
 class ProjectOut(ProjectBase):
-    """
-    Detailed project information.
+    """Detailed project information.
 
     Inherits from ProjectBase and provides additional information.
 
     """
+
     pass
-
-
-

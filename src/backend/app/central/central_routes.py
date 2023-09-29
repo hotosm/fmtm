@@ -15,12 +15,11 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
-from loguru import logger as log
-
 import json
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
+from loguru import logger as log
 from sqlalchemy import (
     column,
     select,
@@ -43,8 +42,7 @@ router = APIRouter(
 
 @router.get("/projects")
 async def list_projects():
-    """
-    List projects in ODK Central.
+    """List projects in ODK Central.
 
     Returns:
         A dictionary containing a list of projects in ODK Central.
@@ -62,8 +60,7 @@ async def create_appuser(
     name: str,
     db: Session = Depends(database.get_db),
 ):
-    """
-    Create an app-user in ODK Central.
+    """Create an app-user in ODK Central.
 
     Args:
         project_id (int): The ID of the project to create an app-user for.
@@ -92,8 +89,7 @@ async def get_form_lists(
     skip: int = 0,
     limit: int = 100
 ):
-    """
-    Retrieve a list of XForms from a database.
+    """Retrieve a list of XForms from a database.
 
     Args:
         db (Session, optional): The database session. Injected by FastAPI.
@@ -112,8 +108,7 @@ async def download_submissions(
     project_id: int,
     db: Session = Depends(database.get_db),
 ):
-    """
-    Download submissions data from ODK Central.
+    """Download submissions data from ODK Central.
 
     Args:
         project_id (int): The ID of the project to download submissions data for.
@@ -157,8 +152,7 @@ async def list_submissions(
     xml_form_id: str = None,
     db: Session = Depends(database.get_db),
     ):
-    """
-    List submissions data from ODK Central.
+    """List submissions data from ODK Central.
 
     Args:
         project_id (int): The ID of the project to list submissions data for.
@@ -215,8 +209,7 @@ async def get_submission(
     submission_id: str=None,
     db: Session = Depends(database.get_db),
 ):
-    """
-    Retrieve submission data from ODK Central.
+    """Retrieve submission data from ODK Central.
 
     Args:
         project_id (int): The ID of the project to retrieve submission data for.

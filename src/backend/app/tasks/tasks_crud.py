@@ -15,19 +15,20 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
-from loguru import logger as log
-
 import base64
 from typing import List
 
 from fastapi import HTTPException
 from geoalchemy2.shape import from_shape
 from geojson import dump
+from loguru import logger as log
 from osm_fieldwork.make_data_extract import PostgresClient
 from shapely.geometry import shape
 from sqlalchemy import column, select, table
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
+
+from app.config import settings
 
 from ..central import central_crud
 from ..db import db_models
@@ -40,7 +41,6 @@ from ..models.enums import (
 from ..projects import project_crud
 from ..tasks import tasks_schemas
 from ..users import user_crud
-from app.config import settings
 
 
 async def get_task_count_in_project(db: Session, project_id: int):
@@ -51,11 +51,13 @@ async def get_task_count_in_project(db: Session, project_id: int):
 
 def get_task_lists(db: Session, project_id: int):
     """Get a list of tasks for a project."""
-    query = text("""
+    query = text(
+        """
         SELECT id
         FROM tasks
         WHERE project_id = :project_id
-    """)
+    """
+    )
 
     # Then execute the query with the desired parameter
     result = db.execute(query, {"project_id": project_id})
@@ -68,8 +70,7 @@ def get_task_lists(db: Session, project_id: int):
 def get_tasks(
     db: Session, project_id: int, user_id: int, skip: int = 0, limit: int = 1000
 ):
-    """
-    Get a list of tasks for a project or user.
+    """Get a list of tasks for a project or user.
 
     Args:
         db (Session): Database session.
@@ -110,8 +111,7 @@ def get_task(db: Session, task_id: int, db_obj: bool = False):
 
 
 def update_task_status(db: Session, user_id: int, task_id: int, new_status: TaskStatus):
-    """
-    Update the status of a task.
+    """Update the status of a task.
 
     Args:
         db (Session): Database session.
@@ -125,7 +125,6 @@ def update_task_status(db: Session, user_id: int, task_id: int, new_status: Task
     Returns:
         Task: Updated Task object.
     """
-
     if not user_id:
         raise HTTPException(status_code=400, detail="User id required.")
 
@@ -138,10 +137,11 @@ def update_task_status(db: Session, user_id: int, task_id: int, new_status: Task
     db_task = get_task(db, task_id, db_obj=True)
 
     if db_task:
-        if db_task.task_status in [TaskStatus.LOCKED_FOR_MAPPING, TaskStatus.LOCKED_FOR_VALIDATION]:
-            if not (
-                user_id is not db_task.locked_by                
-            ):
+        if db_task.task_status in [
+            TaskStatus.LOCKED_FOR_MAPPING,
+            TaskStatus.LOCKED_FOR_VALIDATION,
+        ]:
+            if not (user_id is not db_task.locked_by):
                 raise HTTPException(
                     status_code=401,
                     detail=f"User {user_id} with username {db_user.username} has not locked this task.",
@@ -194,8 +194,7 @@ def update_qrcode(
     qr_id: int,
     project_id: int,
 ):
-    """
-    Update the QR code for a task.
+    """Update the QR code for a task.
 
     Args:
         db (Session): Database session.
@@ -227,8 +226,7 @@ def update_qrcode(
 def create_task_history_for_status_change(
     db_task: db_models.DbTask, new_status: TaskStatus, db_user: db_models.DbUser
 ):
-    """
-    Create a task history entry for a status change.
+    """Create a task history entry for a status change.
 
     Args:
         db_task (db_models.DbTask): Database task object.
@@ -268,8 +266,7 @@ def create_task_history_for_status_change(
 
 
 def convert_to_app_history(db_histories: List[db_models.DbTaskHistory]):
-    """
-    Convert a list of database task history entries to application task history entries.
+    """Convert a list of database task history entries to application task history entries.
 
     Args:
         db_histories (List[db_models.DbTaskHistory]): List of database task history entries.
@@ -292,8 +289,7 @@ def convert_to_app_history(db_histories: List[db_models.DbTaskHistory]):
 
 
 def convert_to_app_task(db_task: db_models.DbTask):
-    """
-    Convert a database task object to an application task object.
+    """Convert a database task object to an application task object.
 
     Args:
         db_task (db_models.DbTask): Database task object.
@@ -332,9 +328,7 @@ def convert_to_app_task(db_task: db_models.DbTask):
             log.debug("Task currently locked by user " f"{app_task.locked_by_username}")
 
         if db_task.qr_code:
-            log.debug(
-                f"QR code found for task ID {db_task.id}. Converting to base64"
-            )
+            log.debug(f"QR code found for task ID {db_task.id}. Converting to base64")
             app_task.qr_code_base64 = base64.b64encode(db_task.qr_code.image)
         else:
             log.warning(f"No QR code found for task ID {db_task.id}")
@@ -369,8 +363,7 @@ def get_qr_codes_for_task(
     db: Session,
     task_id: int,
 ):
-    """
-    Get the QR code for a task.
+    """Get the QR code for a task.
 
     Args:
         db (Session): Database session.
