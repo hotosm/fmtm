@@ -25,8 +25,7 @@ from shapely.geometry import mapping
 
 
 def timestamp():
-    """
-    Get the current UTC timestamp.
+    """Get the current UTC timestamp.
 
     Returns:
         The current UTC timestamp as a datetime object.
@@ -35,8 +34,7 @@ def timestamp():
 
 
 def geometry_to_geojson(geometry: Geometry, properties: str = {}, id: int = None):
-    """
-    Convert a geometry object to a GeoJSON Feature.
+    """Convert a geometry object to a GeoJSON Feature.
 
     Args:
         geometry (Geometry): The geometry object to convert.
@@ -53,14 +51,13 @@ def geometry_to_geojson(geometry: Geometry, properties: str = {}, id: int = None
             "geometry": mapping(shape),
             "properties": properties,
             "id": id,
-            "bbox":shape.bounds
+            "bbox": shape.bounds,
         }
         return Feature(**geojson)
 
 
 def get_centroid(geometry: Geometry, properties: str = {}):
-    """
-    Get the centroid of a geometry object as a GeoJSON Feature.
+    """Get the centroid of a geometry object as a GeoJSON Feature.
 
     Args:
         geometry (Geometry): The geometry object to get the centroid of.

@@ -6,7 +6,7 @@ import LayerGroup from 'ol/layer/Group';
 import LayerTile from 'ol/layer/Tile';
 import SourceOSM from 'ol/source/OSM';
 import LayerSwitcher from 'ol-layerswitcher';
-import React,{ useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 import { XYZ } from 'ol/source';
 
@@ -125,7 +125,6 @@ const monochromeMidNight = (visible = false) =>
       crossOrigin: 'Anonymous',
     }),
   });
-
 
 const LayerSwitcherControl = ({ map, visible = 'osm' }) => {
   useEffect(() => {

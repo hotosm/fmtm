@@ -1,9 +1,9 @@
 import math
 from typing import List
 
+
 def get_pages_nav(total_pages: int, current_page: int) -> tuple[int, int]:
-    """
-    Generate navigation links for pagination.
+    """Generate navigation links for pagination.
 
     Args:
         total_pages (int): Total number of pages.
@@ -20,9 +20,11 @@ def get_pages_nav(total_pages: int, current_page: int) -> tuple[int, int]:
         prev_page = current_page - 1
     return next_page, prev_page
 
-def paginate_data(data: List[dict], page_no: int, page_size: int, total_content: int) -> dict[str, any]:
-    """
-    Paginate a list of data.
+
+def paginate_data(
+    data: List[dict], page_no: int, page_size: int, total_content: int
+) -> dict[str, any]:
+    """Paginate a list of data.
 
     Args:
         data (List[dict]): The list of data to be paginated.
@@ -42,4 +44,3 @@ def paginate_data(data: List[dict], page_no: int, page_size: int, total_content:
         "prev_page": prev_page,
         "results": data,
     }
-

@@ -40,8 +40,7 @@ def get_users(
     limit: int = 100,
     db: Session = Depends(database.get_db),
 ):
-    """
-    Get a list of users from the database.
+    """Get a list of users from the database.
 
     Args:
         username (str, optional): Filter users by username. Defaults to "".
@@ -59,8 +58,7 @@ def get_users(
 
 @router.get("/{id}", response_model=user_schemas.UserOut)
 async def get_user_by_id(id: int, db: Session = Depends(database.get_db)):
-    """
-    Get a user from the database by their ID.
+    """Get a user from the database by their ID.
 
     Args:
         id (int): The ID of the user to retrieve.
@@ -97,7 +95,6 @@ async def create_user_role(
         Status Code 200 (OK): If the role is successfully created
         Status Code 400 (Bad Request): If the user is already assigned a role
     """
-    
     existing_user_role = user_crud.get_user_role_by_user_id(
         db, user_id=user_role.user_id
     )
@@ -115,8 +112,7 @@ async def create_user_role(
 
 @router.get("/user-role-options/")
 async def get_user_roles():
-    """
-    Get a list of available roles for users.
+    """Get a list of available roles for users.
 
     Returns:
         dict[str,str]: A dictionary containing all available roles and their values.

@@ -15,17 +15,17 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
-import os
 import json
-from fastapi import APIRouter, Depends, HTTPException, Response
-from ..projects import project_crud, project_schemas
-from loguru import logger as log
-from sqlalchemy.orm import Session
+import os
+
+from fastapi import APIRouter, Depends, Response
 from fastapi.responses import FileResponse
 from osm_fieldwork.odk_merge import OdkMerge
 from osm_fieldwork.osmfile import OsmFile
-from ..projects import project_crud
+from sqlalchemy.orm import Session
+
 from ..db import database
+from ..projects import project_crud
 from . import submission_crud
 
 router = APIRouter(
@@ -42,8 +42,7 @@ async def read_submissions(
     task_id: int = None,
     db: Session = Depends(database.get_db),
 ):
-    """
-    Returns the submission made in the project.
+    """Returns the submission made in the project.
 
     Args:
         project_id (int): The ID of the project. This endpoint returns the submission made in this project.
@@ -61,8 +60,7 @@ async def list_forms(
     project_id: int,
     db: Session = Depends(database.get_db),
 ):
-    """
-    Returns the list of forms in the odk central.
+    """Returns the list of forms in the odk central.
 
     Args:
         project_id (int): The ID of the project. This endpoint returns the list of forms in this project.
@@ -79,8 +77,7 @@ async def list_app_users(
     project_id: int,
     db: Session = Depends(database.get_db),
 ):
-    """
-    Returns the list of app users in a project.
+    """Returns the list of app users in a project.
 
     Args:
         project_id (int): The ID of the project. This endpoint returns the list of app users in this project.
@@ -99,8 +96,7 @@ async def download_submission(
     export_json: bool = True,
     db: Session = Depends(database.get_db),
 ):
-    """
-    Downloads the submission made in a project.
+    """Downloads the submission made in a project.
 
     Args:
         project_id (int): The ID of the project. This endpoint returns the submission made in this project.
@@ -124,8 +120,7 @@ async def submission_points(
     task_id: int = None,
     db: Session = Depends(database.get_db),
 ):
-    """
-    Returns the submission points of a project.
+    """Returns the submission points of a project.
 
     Args:
         project_id (int): The ID of the project. This endpoint returns the submission points of this project.
@@ -144,9 +139,7 @@ async def convert_to_osm(
     task_id: int = None,
     db: Session = Depends(database.get_db),
 ):
-
-    """
-    Converts submission data to OSM format.
+    """Converts submission data to OSM format.
 
     Args:
         project_id (int): The ID of the project. This endpoint converts submission data for this project.
@@ -163,9 +156,8 @@ async def convert_to_osm(
 async def get_submission_count(
     project_id: int,
     db: Session = Depends(database.get_db),
-    ):
-    """
-    Returns the submission count for a project.
+):
+    """Returns the submission count for a project.
 
     Args:
         project_id (int): The ID of the project. This endpoint returns the submission count for this project.
@@ -181,9 +173,8 @@ async def get_submission_count(
 async def conflate_osm_date(
     project_id: int,
     db: Session = Depends(database.get_db),
-    ):
-    """
-    Conflates OSM data for a project.
+):
+    """Conflates OSM data for a project.
 
     Args:
         project_id (int): The ID of the project. This endpoint conflates OSM data for this project.
@@ -192,7 +183,6 @@ async def conflate_osm_date(
     Returns:
         Any: The conflated OSM data for the specified project.
     """
-
     # Submission JSON
     submission = submission_crud.get_all_submissions(db, project_id)
 
@@ -213,28 +203,31 @@ async def conflate_osm_date(
         os.remove(jsoninfile)
 
     # Write the submission to a file
-    with open(jsoninfile, 'w') as f:
+    with open(jsoninfile, "w") as f:
         f.write(json.dumps(submission))
 
     # Convert the submission to osm xml format
     osmoutfile, jsonoutfile = await submission_crud.convert_json_to_osm(jsoninfile)
 
     # Remove the extra closing </osm> tag from the end of the file
-    with open(osmoutfile, 'r') as f:
+    with open(osmoutfile, "r") as f:
         osmoutfile_data = f.read()
         # Find the last index of the closing </osm> tag
-        last_osm_index = osmoutfile_data.rfind('</osm>')
+        last_osm_index = osmoutfile_data.rfind("</osm>")
         # Remove the extra closing </osm> tag from the end
-        processed_xml_string = osmoutfile_data[:last_osm_index] + osmoutfile_data[last_osm_index + len('</osm>'):]
-    
+        processed_xml_string = (
+            osmoutfile_data[:last_osm_index]
+            + osmoutfile_data[last_osm_index + len("</osm>") :]
+        )
+
     # Write the modified XML data back to the file
-    with open(osmoutfile, 'w') as f:
+    with open(osmoutfile, "w") as f:
         f.write(processed_xml_string)
 
     odkf = OsmFile(outfile)
     osm = odkf.loadFile(osmoutfile)
     if osm:
-        odk_merge = OdkMerge(data_extracts_file,None)
+        odk_merge = OdkMerge(data_extracts_file, None)
         data = odk_merge.conflateData(osm)
         return data
     return []
@@ -244,7 +237,7 @@ async def conflate_osm_date(
 async def get_osm_xml(
     project_id: int,
     db: Session = Depends(database.get_db),
-    ):
+):
     # JSON FILE PATH
     jsoninfile = f"/tmp/{project_id}_json_infile.json"
 
@@ -256,22 +249,25 @@ async def get_osm_xml(
     submission = await submission_crud.get_all_submissions(db, project_id)
 
     # Write the submission to a file
-    with open(jsoninfile, 'w') as f:
+    with open(jsoninfile, "w") as f:
         f.write(json.dumps(submission))
 
     # Convert the submission to osm xml format
     osmoutfile = await submission_crud.convert_json_to_osm_xml(jsoninfile)
 
     # Remove the extra closing </osm> tag from the end of the file
-    with open(osmoutfile, 'r') as f:
+    with open(osmoutfile, "r") as f:
         osmoutfile_data = f.read()
         # Find the last index of the closing </osm> tag
-        last_osm_index = osmoutfile_data.rfind('</osm>')
+        last_osm_index = osmoutfile_data.rfind("</osm>")
         # Remove the extra closing </osm> tag from the end
-        processed_xml_string = osmoutfile_data[:last_osm_index] + osmoutfile_data[last_osm_index + len('</osm>'):]
+        processed_xml_string = (
+            osmoutfile_data[:last_osm_index]
+            + osmoutfile_data[last_osm_index + len("</osm>") :]
+        )
 
     # Write the modified XML data back to the file
-    with open(osmoutfile, 'w') as f:
+    with open(osmoutfile, "w") as f:
         f.write(processed_xml_string)
 
     # Create a plain XML response
