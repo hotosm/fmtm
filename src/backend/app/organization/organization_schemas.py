@@ -18,10 +18,8 @@
 from pydantic import BaseModel
 
 
-
 class Organisation(BaseModel):
-    """
-    Represents an organization.
+    """Represents an organization.
 
     Attributes:
         slug (str): The unique identifier (slug) for the organization.

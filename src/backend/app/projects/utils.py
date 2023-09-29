@@ -9,11 +9,11 @@ from fastapi import (
     HTTPException,
     UploadFile,
 )
-from loguru import logger as log
 from sqlalchemy.orm import Session
 
 from ..db import database
 from . import project_crud
+
 
 async def generate_files(
     background_tasks: BackgroundTasks,
@@ -22,8 +22,7 @@ async def generate_files(
     upload: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
 ):
-    """
-    Generate required media files and tasks for a project based on the provided parameters.
+    """Generate required media files and tasks for a project based on the provided parameters.
 
     This function accepts a project ID, category, custom form flag, and an uploaded file as inputs.
     The generated files are associated with the project ID and stored in the database.
@@ -43,7 +42,6 @@ async def generate_files(
         dict: A dictionary containing a success message and the associated task ID.
 
     """
-    
     contents = None
     xform_title = None
 
@@ -53,11 +51,11 @@ async def generate_files(
             status_code=428, detail=f"Project with id {project_id} does not exist"
         )
 
-    project.data_extract_type = 'polygon' if extract_polygon else 'centroid'
+    project.data_extract_type = "polygon" if extract_polygon else "centroid"
     db.commit()
 
     if upload:
-        file_ext = 'xls'
+        file_ext = "xls"
         contents = upload
 
     # generate a unique task ID using uuid
@@ -76,7 +74,7 @@ async def generate_files(
         contents,
         None,
         xform_title,
-        file_ext if upload else 'xls',
+        file_ext if upload else "xls",
         background_task_id,
     )
 

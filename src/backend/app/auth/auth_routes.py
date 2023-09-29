@@ -18,13 +18,12 @@
 
 """Auth routes, using OSM OAuth2 endpoints."""
 
-from loguru import logger as log
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
+from loguru import logger as log
 from sqlalchemy.orm import Session
+
 from ..config import settings
-
-
 from ..db import database
 from ..db.db_models import DbUser
 from ..users import user_crud
@@ -39,8 +38,7 @@ router = APIRouter(
 
 @router.get("/osm_login/")
 def login_url(request: Request, osm_auth=Depends(init_osm_auth)):
-    """
-    Generate a login URL for authentication using OAuth2 Application registered with OpenStreetMap.
+    """Generate a login URL for authentication using OAuth2 Application registered with OpenStreetMap.
 
     Args:
         request (Request): The request object.
@@ -56,8 +54,7 @@ def login_url(request: Request, osm_auth=Depends(init_osm_auth)):
 
 @router.get("/callback/")
 def callback(request: Request, osm_auth=Depends(init_osm_auth)):
-    """
-    Perform token exchange between OpenStreetMap and Export tool API.
+    """Perform token exchange between OpenStreetMap and Export tool API.
 
     Args:
         request (Request): The request object.
@@ -67,8 +64,10 @@ def callback(request: Request, osm_auth=Depends(init_osm_auth)):
         A JSONResponse with the access token.
     """
     print("Call back api requested", request.url)
-    
-    access_token = osm_auth.callback(str(request.url).replace('http',settings.URL_SCHEME))
+
+    access_token = osm_auth.callback(
+        str(request.url).replace("http", settings.URL_SCHEME)
+    )
     log.debug(f"Access token returned: {access_token}")
     return JSONResponse(content={"access_token": access_token}, status_code=200)
 

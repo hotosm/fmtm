@@ -28,8 +28,7 @@ from . import user_schemas
 
 
 def get_users(db: Session, skip: int = 0, limit: int = 100):
-    """
-    Get a list of users from the database.
+    """Get a list of users from the database.
 
     Args:
         db (Session): The database session.
@@ -44,8 +43,7 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 
 
 def get_user(db: Session, user_id: int, db_obj: bool = False):
-    """
-    Get a user from the database by their ID.
+    """Get a user from the database by their ID.
 
     Args:
         db (Session): The database session.
@@ -55,7 +53,6 @@ def get_user(db: Session, user_id: int, db_obj: bool = False):
     Returns:
         user_schemas.User: The user with the given ID.
     """
-    
     db_user = db.query(db_models.DbUser).filter(db_models.DbUser.id == user_id).first()
     if db_obj:
         return db_user
@@ -63,8 +60,7 @@ def get_user(db: Session, user_id: int, db_obj: bool = False):
 
 
 def get_user_by_username(db: Session, username: str):
-    """
-    Get a user from the database by their username.
+    """Get a user from the database by their username.
 
     Args:
         db (Session): The database session.
@@ -86,8 +82,7 @@ def get_user_by_username(db: Session, username: str):
 
 # TODO: write tests for these
 def convert_to_app_user(db_user: db_models.DbUser):
-    """
-    Convert a database user object to an app user object.
+    """Convert a database user object to an app user object.
 
     Args:
         db_user (db_models.DbUser): The database user object.
@@ -103,8 +98,7 @@ def convert_to_app_user(db_user: db_models.DbUser):
 
 
 def convert_to_app_users(db_users: List[db_models.DbUser]):
-    """
-    Convert a list of database user objects to a list of app user objects.
+    """Convert a list of database user objects to a list of app user objects.
 
     Args:
         db_users (List[db_models.DbUser]): The list of database user objects.
@@ -124,8 +118,7 @@ def convert_to_app_users(db_users: List[db_models.DbUser]):
 
 
 def get_user_role_by_user_id(db: Session, user_id: int):
-    """
-    Get the role of a user from the database by their ID.
+    """Get the role of a user from the database by their ID.
 
     Args:
         db (Session): The database session.
@@ -134,7 +127,6 @@ def get_user_role_by_user_id(db: Session, user_id: int):
     Returns:
         str: The role of the user with the given ID.
     """
-    
     db_user_role = (
         db.query(db_models.DbUserRoles)
         .filter(db_models.DbUserRoles.user_id == user_id)
@@ -170,8 +162,7 @@ async def create_user_roles(user_role: user_schemas.UserRoles, db: Session):
 
 
 def get_user_by_id(db: Session, user_id: int):
-    """
-    Get a user from the database by their ID.
+    """Get a user from the database by their ID.
 
     Args:
         db (Session): The database session.
