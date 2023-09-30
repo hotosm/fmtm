@@ -1,9 +1,11 @@
 from logging.config import fileConfig
-
+from alembic import op
 from alembic import context
 from config import settings
 from geoalchemy2 import alembic_helpers
 from sqlalchemy import engine_from_config, pool
+from sqlalchemy.engine import reflection
+from db.db_models import Base
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.FMTM_DB_URL)
@@ -11,13 +13,32 @@ config.set_main_option("sqlalchemy.url", settings.FMTM_DB_URL)
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-from db.db_models import Base
 
 target_metadata = Base.metadata
 
 
 exclude_tables = config.get_section("alembic:exclude").get("tables", "").split(",")
 
+
+def table_does_not_exist(table, schema=None):
+    config = op.get_context().config
+    engine = engine_from_config(
+        config.get_section(config.config_ini_section), prefix='sqlalchemy.')
+    insp = reflection.Inspector.from_engine(engine)
+    return insp.has_table(table, schema) == False
+ 
+ 
+def table_has_column(table, column):
+    config = op.get_context().config
+    engine = engine_from_config(
+        config.get_section(config.config_ini_section), prefix='sqlalchemy.')
+    insp = reflection.Inspector.from_engine(engine)
+    has_column = False
+    for col in insp.get_columns(table):
+        if column not in col['name']:
+            continue
+        has_column = True
+    return has_column
 
 def include_object(object, name, type_, reflected, compare_to):
     """Custom helper function that enables us to ignore our excluded tables in the autogen sweep."""
