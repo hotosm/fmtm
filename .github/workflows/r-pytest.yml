@@ -78,5 +78,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run pytest
         run: |
+          id
+          echo $PATH
+          pip list
           cd src/backend
           pytest
