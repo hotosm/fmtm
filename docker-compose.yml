@@ -80,7 +80,6 @@ services:
       context: src/frontend
       dockerfile: debug.dockerfile
       args:
-        APP_NAME: main
         API_URL: ${URL_SCHEME}://${API_URL}
         FRONTEND_MAIN_URL: ${URL_SCHEME}://${FRONTEND_MAIN_URL}
     container_name: fmtm
