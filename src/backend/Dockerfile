@@ -90,7 +90,6 @@ RUN set -ex \
     -y --no-install-recommends \
         "nano" \
         "curl" \
-        "gosu" \
         "libpcre3" \
         "mime-support" \
         "postgresql-client" \
@@ -109,7 +108,7 @@ WORKDIR /opt
 # Add app code
 COPY app/ /opt/app/
 # Add non-root user, permissions
-RUN useradd -r -u 900 -m -c "hotosm account" -d /home/appuser -s /bin/false appuser \
+RUN useradd -r -u 1001 -m -c "hotosm account" -d /home/appuser -s /bin/false appuser \
     && mkdir -p /opt/logs /opt/tiles \
     && chown -R appuser:appuser /opt /home/appuser \
     && chmod +x /container-entrypoint.sh
@@ -148,13 +147,23 @@ USER appuser
 
 
 FROM debug-no-odk as ci
-COPY --from=extract-deps --chown=appuser \
+# Run all ci as root
+USER root
+ENV PATH="/root/.local/bin:$PATH"
+RUN set -ex \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install \
+    -y --no-install-recommends \
+        "gosu" \
+        "git" \
+    && rm -rf /var/lib/apt/lists/*
+RUN mv /home/appuser/.local /root/.local
+COPY --from=extract-deps \
     /opt/python/requirements-ci.txt /opt/python/
 RUN pip install --user --upgrade --no-warn-script-location \
     --no-cache-dir -r \
     /opt/python/requirements-ci.txt \
     && rm -r /opt/python
-COPY --chown=appuser tests/ /opt/tests/
 # Pre-compile packages to .pyc (init speed gains)
 RUN python -c "import compileall; compileall.compile_path(maxlevels=10, quiet=1)"
 # Override entrypoint, as not possible in Github action
