@@ -150,22 +150,23 @@ USER appuser
 FROM runtime as ci
 # Run all ci as root
 USER root
+COPY --from=extract-deps \
+    /opt/python/requirements-ci.txt /opt/python/
 ENV PATH="/root/.local/bin:$PATH"
-RUN set -ex \
+RUN mv /home/appuser/.local /root/.local \
+    && chown -R root:root /root \
+    && set -ex \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install \
     -y --no-install-recommends \
         "git" \
-    && rm -rf /var/lib/apt/lists/*
-RUN mv /home/appuser/.local /root/.local
-COPY --from=extract-deps \
-    /opt/python/requirements-ci.txt /opt/python/
-RUN pip install --user --upgrade --no-warn-script-location \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --user --upgrade --no-warn-script-location \
     --no-cache-dir -r \
     /opt/python/requirements-ci.txt \
-    && rm -r /opt/python
-# Pre-compile packages to .pyc (init speed gains)
-RUN python -c "import compileall; compileall.compile_path(maxlevels=10, quiet=1)"
+    && rm -r /opt/python \
+    # Pre-compile packages to .pyc (init speed gains)
+    && python -c "import compileall; compileall.compile_path(maxlevels=10, quiet=1)"
 # Override entrypoint, as not possible in Github action
 ENTRYPOINT [""]
 CMD [""]
