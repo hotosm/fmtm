@@ -152,16 +152,15 @@ FROM runtime as ci
 USER root
 COPY --from=extract-deps \
     /opt/python/requirements-ci.txt /opt/python/
-ENV PATH="/root/.local/bin:$PATH"
-RUN mv /home/appuser/.local /root/.local \
-    && chown -R root:root /root \
+RUN mv /home/appuser/.local/bin/* /usr/local/bin/ \
+    && mv /home/appuser/.local/lib/python3.10/site-packages/* /usr/local/lib/python3.10/site-packages/ \
     && set -ex \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install \
     -y --no-install-recommends \
         "git" \
     && rm -rf /var/lib/apt/lists/* \
-    && pip install --user --upgrade --no-warn-script-location \
+    && pip install --upgrade --no-warn-script-location \
     --no-cache-dir -r \
     /opt/python/requirements-ci.txt \
     && rm -r /opt/python \
