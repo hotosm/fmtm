@@ -76,20 +76,14 @@ services:
 
   migrations:
     image: "ghcr.io/hotosm/fmtm/backend:debug"
-    build:
-      context: src/backend
-      target: migrations
-      args:
-        APP_VERSION: debug
     container_name: fmtm_migrations
-    volumes:
-      - ./src/backend/migrations:/opt/migrations
     depends_on:
       - api
     env_file:
       - .env
     networks:
       - fmtm-dev
+    command: ["alembic", "upgrade", "head"]
     restart: "no"
 
   ui-main:

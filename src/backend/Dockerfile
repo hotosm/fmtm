@@ -106,7 +106,7 @@ COPY --from=build \
     /home/appuser/.local
 WORKDIR /opt
 # Add app code
-COPY app/ /opt/app/
+COPY app migrations alembic.ini /opt/
 # Add non-root user, permissions
 RUN useradd -r -u 1001 -m -c "hotosm account" -d /home/appuser -s /bin/false appuser \
     && mkdir -p /opt/logs /opt/tiles \
@@ -142,13 +142,6 @@ COPY --from=ghcr.io/hotosm/fmtm/odkcentral-proxy:latest \
     /etc/nginx/central-fullchain.crt /usr/local/share/ca-certificates/
 RUN update-ca-certificates
 USER appuser
-
-
-
-FROM runtime as migrations
-COPY alembic.ini .
-RUN python -c "import compileall; compileall.compile_path(maxlevels=10, quiet=1)"
-CMD ["alembic", "upgrade", "head"]
 
 
 
