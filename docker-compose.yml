@@ -42,7 +42,7 @@ services:
       - "5438:5432"
     networks:
       - fmtm-dev
-    restart: unless-stopped
+    restart: "unless-stopped"
 
   api:
     image: "ghcr.io/hotosm/fmtm/backend:debug"
@@ -96,7 +96,7 @@ services:
       - "8080:8080"
     networks:
       - fmtm-dev
-    restart: unless-stopped
+    restart: "unless-stopped"
 
   central-db:
     image: "postgis/postgis:14-3.3-alpine"
@@ -111,7 +111,7 @@ services:
       - "5434:5432"
     networks:
       - fmtm-dev
-    restart: unless-stopped
+    restart: "unless-stopped"
 
   central:
     image: "ghcr.io/hotosm/fmtm/odkcentral:v2023.2.1"
@@ -122,7 +122,6 @@ services:
     container_name: central_api
     depends_on:
       - central-db
-      - pyxform
     environment:
       - DOMAIN=local
       - SYSADMIN_EMAIL=${ODK_CENTRAL_USER}
@@ -154,7 +153,7 @@ services:
         "--",
         "./init-user-and-start.sh",
       ]
-    restart: unless-stopped
+    restart: "unless-stopped"
 
   central-proxy:
     image: "ghcr.io/hotosm/fmtm/odkcentral-proxy:latest"
@@ -165,10 +164,4 @@ services:
       - central
     networks:
       - fmtm-dev
-    restart: unless-stopped
-
-  pyxform:
-    image: "ghcr.io/getodk/pyxform-http:v1.10.1.1"
-    networks:
-      - fmtm-dev
-    restart: always
+    restart: "unless-stopped"
