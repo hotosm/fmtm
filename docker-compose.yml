@@ -74,7 +74,7 @@ services:
       - fmtm-dev
     restart: unless-stopped
 
-  ui-main:
+  ui:
     image: "ghcr.io/hotosm/fmtm/frontend:debug"
     build:
       context: src/frontend
@@ -83,7 +83,7 @@ services:
         APP_NAME: main
         API_URL: ${URL_SCHEME}://${API_URL}
         FRONTEND_MAIN_URL: ${URL_SCHEME}://${FRONTEND_MAIN_URL}
-    container_name: fmtm_main
+    container_name: fmtm
     depends_on:
       - api
     volumes:
