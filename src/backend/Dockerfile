@@ -122,7 +122,6 @@ USER appuser
 
 
 FROM runtime as debug-no-odk
-USER appuser
 COPY --from=extract-deps --chown=appuser \
     /opt/python/requirements-debug.txt /opt/python/
 RUN pip install --user --upgrade --no-warn-script-location \
@@ -146,7 +145,14 @@ USER appuser
 
 
 
-FROM debug-no-odk as ci
+FROM runtime as migrations
+COPY alembic.ini .
+RUN python -c "import compileall; compileall.compile_path(maxlevels=10, quiet=1)"
+CMD ["alembic", "upgrade", "head"]
+
+
+
+FROM runtime as ci
 # Run all ci as root
 USER root
 ENV PATH="/root/.local/bin:$PATH"

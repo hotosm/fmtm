@@ -172,10 +172,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 async def startup_event():
     """Commands to run on server startup."""
     log.debug("Starting up FastAPI server.")
-    log.debug("Connecting to DB with SQLAlchemy")
-    # Base.metadata.create_all(bind=engine)
-
-    # Read in XLSForms
+    log.debug("Reading XLSForms from DB.")
     read_xlsforms(next(get_db()), xlsforms_path)
 
 

@@ -72,7 +72,25 @@ services:
       - "5678:5678"
     networks:
       - fmtm-dev
-    restart: unless-stopped
+    restart: "unless-stopped"
+
+  migrations:
+    image: "ghcr.io/hotosm/fmtm/backend:debug"
+    build:
+      context: src/backend
+      target: migrations
+      args:
+        APP_VERSION: debug
+    container_name: fmtm_migrations
+    volumes:
+      - ./src/backend/migrations:/opt/migrations
+    depends_on:
+      - api
+    env_file:
+      - .env
+    networks:
+      - fmtm-dev
+    restart: "no"
 
   ui-main:
     image: "ghcr.io/hotosm/fmtm/frontend:debug"

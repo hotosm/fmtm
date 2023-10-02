@@ -8,3 +8,4 @@
 !container-entrypoint.sh
 !pyproject.toml
 !pdm.lock
+!alembic.ini
