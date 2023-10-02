@@ -41,7 +41,7 @@ from sqlalchemy.orm import (  # , declarative_base  # , declarative_base
     relationship,
 )
 
-from ..models.enums import (
+from app.models.enums import (
     BackgroundTaskStatus,
     MappingLevel,
     MappingPermission,
