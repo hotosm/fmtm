@@ -651,7 +651,9 @@ async def split_into_tasks(
         log.debug("Project boundary GeoJSON = FeatureCollection")
         boundary_data.extend(feature["geometry"] for feature in outline["features"])
         result.extend(
-            split_polygon_into_tasks(db, project_id, data, no_of_buildings, has_data_extracts)
+            split_polygon_into_tasks(
+                db, project_id, data, no_of_buildings, has_data_extracts
+            )
             for data in boundary_data
         )
 
@@ -664,7 +666,9 @@ async def split_into_tasks(
         geometries = outline["geometries"]
         boundary_data.extend(iter(geometries))
         result.extend(
-            split_polygon_into_tasks(db, project_id, data, no_of_buildings, has_data_extracts)
+            split_polygon_into_tasks(
+                db, project_id, data, no_of_buildings, has_data_extracts
+            )
             for data in boundary_data
         )
         for inner_list in result:
@@ -690,7 +694,8 @@ async def split_into_tasks(
     else:
         log.error(
             "Project boundary not one of: Polygon, Feature, GeometryCollection,"
-            " FeatureCollection. Task splitting failed.")
+            " FeatureCollection. Task splitting failed."
+        )
     return {
         "type": "FeatureCollection",
         "features": all_results,
