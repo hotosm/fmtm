@@ -155,7 +155,6 @@ RUN set -ex \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install \
     -y --no-install-recommends \
-        "gosu" \
         "git" \
     && rm -rf /var/lib/apt/lists/*
 RUN mv /home/appuser/.local /root/.local
