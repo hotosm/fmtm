@@ -1,10 +1,13 @@
+"""Main alembic migrations file."""
+
 from logging.config import fileConfig
 
 from alembic import context
-from config import settings
-from db.db_models import Base
 from geoalchemy2 import alembic_helpers
 from sqlalchemy import engine_from_config, pool
+
+from app.config import settings
+from app.db.db_models import Base
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.FMTM_DB_URL)
@@ -20,7 +23,7 @@ exclude_tables = config.get_section("alembic:exclude").get("tables", "").split("
 
 
 def include_object(object, name, type_, reflected, compare_to):
-    """Custom helper function that enables us to ignore our excluded tables in the autogen sweep."""
+    """Ignore our excluded tables in the autogen sweep."""
     if type_ == "table" and name in exclude_tables:
         return False
     else:
