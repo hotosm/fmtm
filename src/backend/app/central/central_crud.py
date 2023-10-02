@@ -382,11 +382,11 @@ async def test_form_validity(xform_content: str, form_type: str):
             f.write(xform_content)
 
         xls2xform_convert(xlsform_path=xlsform_path, xform_path=outfile, validate=False)
-        
+
         namespaces = {
-        "h": "http://www.w3.org/1999/xhtml",
-        "odk": "http://www.opendatakit.org/xforms",
-        "xforms": "http://www.w3.org/2002/xforms",
+            "h": "http://www.w3.org/1999/xhtml",
+            "odk": "http://www.opendatakit.org/xforms",
+            "xforms": "http://www.w3.org/2002/xforms",
         }
 
         import xml.etree.ElementTree as ET
@@ -402,15 +402,12 @@ async def test_form_validity(xform_content: str, form_type: str):
             try:
                 if "src" in inst.attrib:
                     if (inst.attrib["src"].split("."))[1] == "geojson":
-                        parts = (inst.attrib["src"].split("."))[0].split('/')
+                        parts = (inst.attrib["src"].split("."))[0].split("/")
                         geojson_name = parts[-1]
                         geojson_list.append(geojson_name)
             except Exception:
                 continue
-        return {
-            "required media": geojson_list,
-            "message": "Your form is valid"
-            }
+        return {"required media": geojson_list, "message": "Your form is valid"}
     except Exception as e:
         return JSONResponse(
             content={"message": "Your form is invalid", "possible_reason": str(e)},
