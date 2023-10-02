@@ -17,19 +17,29 @@
 #
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists
+from typing import Generator, Any
 
 from app.config import settings
 from app.db.database import Base, get_db
-from app.main import api
+from app.main import api, get_application
+from app.db.db_models import DbOrganisation, DbProject, DbUser
+from sqlalchemy.sql import text
 
 engine = create_engine(settings.FMTM_DB_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base.metadata.create_all(bind=engine)
 
+@pytest.fixture(autouse=True)
+def app() -> Generator[FastAPI, Any, None]:
+    """
+    Create a fresh database on each test case.
+    """
+    yield get_application()
 
 @pytest.fixture(scope="session")
 def db_engine():
@@ -55,6 +65,19 @@ def db(db_engine):
 
     db.rollback()
     connection.close()
+
+@pytest.fixture(scope="function")
+def get_ids(db):
+    user_id_query = text(f"SELECT id FROM {DbUser.__table__.name} LIMIT 1")
+    organization_id_query = text(f"SELECT id FROM {DbOrganisation.__table__.name} LIMIT 1")
+    project_id_query = text(f"SELECT id FROM {DbProject.__table__.name} LIMIT 1")
+
+    user_id = db.execute(user_id_query).scalar()
+    organization_id = db.execute(organization_id_query).scalar()
+    project_id = db.execute(project_id_query).scalar()
+
+    return {"user_id": user_id, "organization_id": organization_id, "project_id": project_id}
+
 
 
 @pytest.fixture(scope="function")
