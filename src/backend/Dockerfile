@@ -106,7 +106,9 @@ COPY --from=build \
     /home/appuser/.local
 WORKDIR /opt
 # Add app code
-COPY app migrations alembic.ini /opt/
+COPY app/ /opt/app/
+COPY migrations/ /opt/migrations/
+COPY alembic.ini /opt/
 # Add non-root user, permissions
 RUN useradd -r -u 1001 -m -c "hotosm account" -d /home/appuser -s /bin/false appuser \
     && mkdir -p /opt/logs /opt/tiles \
