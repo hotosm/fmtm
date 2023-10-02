@@ -33,7 +33,7 @@ from .__version__ import __version__
 from .auth import auth_routes
 from .central import central_routes
 from .config import settings
-from .db.database import Base, engine, get_db
+from .db.database import get_db
 from .organization import organization_routes
 from .projects import project_routes
 from .projects.project_crud import read_xlsforms

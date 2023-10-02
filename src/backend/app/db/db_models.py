@@ -55,6 +55,7 @@ from app.models.enums import (
     UserRole,
     ValidationPermission,
 )
+
 from .database import Base, FmtmMetadata
 from .postgis_utils import timestamp
 
