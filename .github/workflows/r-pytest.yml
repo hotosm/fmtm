@@ -34,7 +34,6 @@ jobs:
         OSM_CLIENT_SECRET: ${{ env.OSM_CLIENT_SECRET }}
         OSM_SECRET_KEY: ${{ env.OSM_SECRET_KEY }}
         FRONTEND_MAIN_URL: ${{ vars.FRONTEND_MAIN_URL }}
-      options: --user root
 
     services:
       # Start backend database
@@ -76,7 +75,7 @@ jobs:
         image: "ghcr.io/hotosm/fmtm/odkcentral-proxy:latest"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Run pytest as appuser
         run: |
           cd src/backend

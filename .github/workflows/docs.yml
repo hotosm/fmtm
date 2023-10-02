@@ -10,90 +10,43 @@ on:
   # Allow manual trigger (workflow_dispatch)
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
-  build_doxygen:
-    name: Build Doxygen Docs
+  get_cache_key:
     runs-on: ubuntu-latest
+    outputs:
+      cache_key: ${{ steps.set_cache_key.outputs.cache_key }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Set cache key
+        id: set_cache_key
+        run: echo "cache_key=docs-build-$(date --utc +'%Y-%m-%d_%H:%M:%S')" >> $GITHUB_OUTPUT
 
-      - name: Setup Doxygen
-        run: sudo apt-get update && sudo apt-get install -y doxygen
-
-      - name: Write cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            .cache
-            docs/apidocs
-            docs/openapi.json
-          key: doc-build-${{ env.cache_id }}
-
-      - name: Build Doxygen Docs
-        run: |
-          cd docs
-          doxygen
+  build_doxygen:
+    uses: hotosm/gh-workflows/.github/workflows/doxygen_build.yml@main
+    needs: [get_cache_key]
+    with:
+      cache_paths: |
+        docs/apidocs
+      cache_key: ${{ needs.get_cache_key.outputs.cache_key }}
 
   build_openapi_json:
-    name: Build OpenAPI
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/hotosm/fmtm/backend:ci-main
-      options: --user root
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Read cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            .cache
-            docs/apidocs
-            docs/openapi.json
-          key: doc-build-${{ env.cache_id }}
-          restore-keys: |
-            doc-build-
-
-      - name: Build OpenAPi JSON
-        run: |
-          chmod -R 777 .
-          gosu appuser python scripts/gen_openapi_json.py -o docs/openapi.json
+    uses: hotosm/gh-workflows/.github/workflows/openapi_build.yml@main
+    needs: [get_cache_key]
+    with:
+      image: ghcr.io/hotosm/fmtm/backend:ci-${{ github.ref_name }}
+      example_env_file_path: ".env.example"
+      cache_paths: |
+        docs/openapi.json
+      cache_key: ${{ needs.get_cache_key.outputs.cache_key }}
 
   publish_docs:
-    name: Publish Docs
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/hotosm/fmtm/backend:ci-main
-      options: --user root
-    needs: [build_doxygen, build_openapi_json]
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Read cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            .cache
-            docs/apidocs
-            docs/openapi.json
-          key: doc-build-${{ env.cache_id }}
-          restore-keys: |
-            doc-build-
-
-      - name: Install Git
-        run: |
-          apt-get update
-          apt-get install -y git --no-install-recommends
-
-      - name: Publish
-        run: |
-          chmod -R 777 .
-          gosu appuser mkdocs gh-deploy --force
+    uses: hotosm/gh-workflows/.github/workflows/mkdocs_build.yml@main
+    needs:
+      - get_cache_key
+      - build_doxygen
+      - build_openapi_json
+    with:
+      image: ghcr.io/hotosm/fmtm/backend:ci-${{ github.ref_name }}
+      cache_paths: |
+        docs/apidocs
+        docs/openapi.json
+      cache_key: ${{ needs.get_cache_key.outputs.cache_key }}
