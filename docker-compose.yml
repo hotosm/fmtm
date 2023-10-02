@@ -77,8 +77,6 @@ services:
   migrations:
     image: "ghcr.io/hotosm/fmtm/backend:debug"
     container_name: fmtm_migrations
-    volumes:
-      - ./src/backend/migrations/versions:/opt/migrations/versions
     depends_on:
       - api
     env_file:
