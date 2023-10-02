@@ -4,6 +4,11 @@ import CoreModules from '../shared/CoreModules';
 import { createLoginWindow } from '../utilfunctions/login';
 
 const ProtectedRoute = ({ children }) => {
+  // Bypass check if NODE_ENV=development (local dev)
+  if (process.env.NODE_ENV === 'development') {
+    return children;
+  }
+
   const token = CoreModules.useAppSelector((state) => state.login.loginToken);
   if (token == null) {
     createLoginWindow('/');
