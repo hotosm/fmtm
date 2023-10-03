@@ -76,8 +76,9 @@ services:
       - .env
     networks:
       - fmtm-net
+    entrypoint: ["/migrate-entrypoint.sh"]
     command: ["alembic", "upgrade", "head"]
-    restart: "no"
+    restart: "on-failure:3"
 
   ui-main:
     image: "ghcr.io/hotosm/fmtm/frontend:debug"
