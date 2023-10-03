@@ -14,12 +14,6 @@ module.exports = function (webpackEnv) {
   const isEnvDevelopment = webpackEnv === 'development';
   const isEnvProduction = webpackEnv === 'production';
 
-  envVars = ['NODE_ENV', 'API_URL', 'FRONTEND_MAIN_URL'];
-  // Add additional environment variables for development
-  if (!isEnvProduction) {
-    envVars.push('ODK_CENTRAL_URL', 'ODK_CENTRAL_USER', 'ODK_CENTRAL_PASSWD');
-  }
-
   return {
     stats: 'errors-warnings',
     cache: true,
@@ -174,7 +168,14 @@ module.exports = function (webpackEnv) {
         ),
       ),
       // Load in required environment variables
-      new EnvironmentPlugin(envVars),
+      new EnvironmentPlugin({
+        NODE_ENV: 'development',
+        API_URL: '',
+        FRONTEND_MAIN_URL: '',
+        ODK_CENTRAL_URL: '',
+        ODK_CENTRAL_USER: '',
+        ODK_CENTRAL_PASSWD: '',
+      }),
     ],
   };
 };
