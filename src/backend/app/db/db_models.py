@@ -67,7 +67,7 @@ class DbUser(Base):
 
     id = Column(BigInteger, primary_key=True, index=True)
     username = Column(String, unique=True)
-    role = Column(Enum(UserRole), default=UserRole.MAPPER, nullable=False)
+    role = Column(Enum(UserRole), default=UserRole.MAPPER)
 
     name = Column(String)
     city = Column(String)
