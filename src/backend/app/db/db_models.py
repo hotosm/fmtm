@@ -396,9 +396,12 @@ class DbProject(Base):
 
     # PROJECT CREATION
     author_id = Column(
-        BigInteger, ForeignKey("users.id", name="fk_users"), nullable=False
+        BigInteger,
+        ForeignKey("users.id", name="fk_users"),
+        nullable=False,
+        server_default=20386219,
     )
-    author = relationship(DbUser)
+    author = relationship(DbUser, default=20386219)
     created = Column(DateTime, default=timestamp, nullable=False)
     task_creation_mode = Column(
         Enum(TaskCreationMode), default=TaskCreationMode.UPLOAD, nullable=False
