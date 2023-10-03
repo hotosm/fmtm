@@ -77,11 +77,12 @@ class DbUser(Base):
     is_expert = Column(Boolean, default=False)
 
     mapping_level = Column(
-        Enum(MappingLevel), default=MappingLevel.BEGINNER, nullable=False
+        Enum(MappingLevel),
+        default=MappingLevel.BEGINNER,
     )
-    tasks_mapped = Column(Integer, default=0, nullable=False)
-    tasks_validated = Column(Integer, default=0, nullable=False)
-    tasks_invalidated = Column(Integer, default=0, nullable=False)
+    tasks_mapped = Column(Integer, default=0)
+    tasks_validated = Column(Integer, default=0)
+    tasks_invalidated = Column(Integer, default=0)
     projects_mapped = Column(ARRAY(Integer))
 
     # mentions_notifications = Column(Boolean, default=True, nullable=False)
