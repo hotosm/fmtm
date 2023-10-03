@@ -83,6 +83,7 @@ services:
       - .env
     networks:
       - fmtm-dev
+    entrypoint: ["/migrate-entrypoint.sh"]
     command: ["alembic", "upgrade", "head"]
     restart: "no"
 
