@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Set cache key
         id: set_cache_key
-        run: echo "cache_key=docs-build-$(date --utc '+%V')" >> $GITHUB_OUTPUT
+        run: echo "cache_key=docs-build-$(date --utc +'%Y-%m-%d_%H:%M:%S')" >> $GITHUB_OUTPUT
 
   build_doxygen:
     uses: hotosm/gh-workflows/.github/workflows/doxygen_build.yml@main
@@ -32,7 +32,7 @@ jobs:
     uses: hotosm/gh-workflows/.github/workflows/openapi_build.yml@main
     needs: [get_cache_key]
     with:
-      image: ghcr.io/hotosm/fmtm/backend:ci-main
+      image: ghcr.io/hotosm/fmtm/backend:ci-${{ github.ref_name }}
       example_env_file_path: ".env.example"
       cache_paths: |
         docs/openapi.json
@@ -45,6 +45,7 @@ jobs:
       - build_doxygen
       - build_openapi_json
     with:
+      image: ghcr.io/hotosm/fmtm/backend:ci-${{ github.ref_name }}
       cache_paths: |
         docs/apidocs
         docs/openapi.json
