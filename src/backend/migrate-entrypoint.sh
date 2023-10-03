@@ -27,6 +27,8 @@ fi
 
 # Create default svc user
 psql "postgresql://${FMTM_DB_USER}:${FMTM_DB_PASSWORD}@${FMTM_DB_HOST}/${FMTM_DB_NAME}" \
-    -c "INSERT INTO users (id, username) VALUES (20386219, 'svcfmtm') ON CONFLICT (id) DO NOTHING;"
+    -c "INSERT INTO users (id, username, role) \
+        VALUES (20386219, 'svcfmtm', 'MAPPER') \
+        ON CONFLICT (id) DO NOTHING;"
 
 exec "$@"
