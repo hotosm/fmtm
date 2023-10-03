@@ -2,10 +2,11 @@ import { Navigate } from 'react-router-dom';
 import React from 'react';
 import CoreModules from '../shared/CoreModules';
 import { createLoginWindow } from '../utilfunctions/login';
+import environment from '../environment';
 
 const ProtectedRoute = ({ children }) => {
   // Bypass check if NODE_ENV=development (local dev)
-  if (process.env.NODE_ENV === 'development') {
+  if (environment.nodeEnv === 'development') {
     return children;
   }
 

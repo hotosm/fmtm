@@ -50,10 +50,10 @@ const ProjectDetailsForm: React.FC = () => {
 
   // Inject ODK vars if NODE_ENV=development (local dev)
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      handleCustomChange('odk_central_url', process.env.ODK_CENTRAL_URL);
-      handleCustomChange('odk_central_user', process.env.ODK_CENTRAL_USER);
-      handleCustomChange('odk_central_password', process.env.ODK_CENTRAL_PASSWD);
+    if (environment.nodeEnv === 'development') {
+      handleCustomChange('odk_central_url', environment.odkCentralUrl);
+      handleCustomChange('odk_central_user', environment.odkCentralUser);
+      handleCustomChange('odk_central_password', environment.odkCentralPass);
     }
   }, []);
 
