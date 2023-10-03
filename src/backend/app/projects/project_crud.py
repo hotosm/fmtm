@@ -646,63 +646,44 @@ async def split_into_tasks(
     all_results = []
     boundary_data = []
     result = []
-
     if outline["type"] == "FeatureCollection":
-        log.debug("Project boundary GeoJSON = FeatureCollection")
         boundary_data.extend(feature["geometry"] for feature in outline["features"])
         result.extend(
-            split_polygon_into_tasks(
-                db, project_id, data, no_of_buildings, has_data_extracts
-            )
+            process_polygon(db, project_id, data, no_of_buildings, has_data_extracts)
             for data in boundary_data
         )
-
         for inner_list in result:
-            if inner_list:
-                all_results.extend(iter(inner_list))
+            all_results.extend(iter(inner_list))
 
     elif outline["type"] == "GeometryCollection":
-        log.debug("Project boundary GeoJSON = GeometryCollection")
         geometries = outline["geometries"]
         boundary_data.extend(iter(geometries))
         result.extend(
-            split_polygon_into_tasks(
-                db, project_id, data, no_of_buildings, has_data_extracts
-            )
+            process_polygon(db, project_id, data, no_of_buildings, has_data_extracts)
             for data in boundary_data
         )
         for inner_list in result:
-            if inner_list:
-                all_results.extend(iter(inner_list))
+            all_results.extend(iter(inner_list))
 
     elif outline["type"] == "Feature":
-        log.debug("Project boundary GeoJSON = Feature")
         boundary_data = outline["geometry"]
-        result = split_polygon_into_tasks(
+        result = process_polygon(
             db, project_id, boundary_data, no_of_buildings, has_data_extracts
         )
         all_results.extend(iter(result))
-
-    elif outline["type"] == "Polygon":
-        log.debug("Project boundary GeoJSON = Polygon")
+    else:
         boundary_data = outline
-        result = split_polygon_into_tasks(
+        result = process_polygon(
             db, project_id, boundary_data, no_of_buildings, has_data_extracts
         )
         all_results.extend(result)
-
-    else:
-        log.error(
-            "Project boundary not one of: Polygon, Feature, GeometryCollection,"
-            " FeatureCollection. Task splitting failed."
-        )
     return {
         "type": "FeatureCollection",
         "features": all_results,
     }
 
 
-def split_polygon_into_tasks(
+def process_polygon(
     db: Session,
     project_id: uuid.UUID,
     boundary_data: str,
@@ -746,30 +727,16 @@ def split_polygon_into_tasks(
         )
         result = db.execute(query)
         db.commit()
-
-    # TODO replace with fmtm_splitter algo
     with open("app/db/split_algorithm.sql", "r") as sql_file:
         query = sql_file.read()
-    log.debug(f"STARTED project {project_id} task splitting")
     result = db.execute(text(query), params={"num_buildings": no_of_buildings})
     result = result.fetchall()
     db.query(db_models.DbBuildings).delete()
     db.query(db_models.DbOsmLines).delete()
     db.query(db_models.DbProjectAOI).delete()
     db.commit()
-    log.debug(f"COMPLETE project {project_id} task splitting")
 
-    features = result[0][0]["features"]
-    if not features:
-        log.warning(
-            f"Project {project_id}: no tasks returned from splitting algorithm. "
-            f"Params: 'num_buildings': {no_of_buildings}"
-        )
-        return []
-
-    features = json.loads(features)
-    log.debug(f"Project {project_id} split into {len(features)} tasks")
-    return features
+    return result[0][0]["features"]
 
 
 # def update_project_boundary(

@@ -86,15 +86,16 @@ services:
     command: ["alembic", "upgrade", "head"]
     restart: "no"
 
-  ui:
+  ui-main:
     image: "ghcr.io/hotosm/fmtm/frontend:debug"
     build:
       context: src/frontend
       dockerfile: debug.dockerfile
       args:
+        APP_NAME: main
         API_URL: ${URL_SCHEME}://${API_URL}
         FRONTEND_MAIN_URL: ${URL_SCHEME}://${FRONTEND_MAIN_URL}
-    container_name: fmtm
+    container_name: fmtm_main
     depends_on:
       - api
     volumes:
@@ -103,9 +104,6 @@ services:
     environment:
       - API_URL=${URL_SCHEME}://${API_URL}
       - FRONTEND_MAIN_URL=${URL_SCHEME}://${FRONTEND_MAIN_URL}
-      - ODK_CENTRAL_URL=${ODK_CENTRAL_URL}
-      - ODK_CENTRAL_USER=${ODK_CENTRAL_USER}
-      - ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}
     ports:
       - "8080:8080"
     networks:
