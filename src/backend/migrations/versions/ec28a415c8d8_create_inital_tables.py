@@ -21,8 +21,8 @@ depends_on = None
 
 
 def upgrade() -> None:
-
     import imp
+
     alembic_helpers = imp.load_source(
         "alembic_helpers",
         (os.getcwd() + "/" + op.get_context().script.dir + "/alembic_helpers.py"),
