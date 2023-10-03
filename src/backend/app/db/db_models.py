@@ -400,9 +400,9 @@ class DbProject(Base):
         BigInteger,
         ForeignKey("users.id", name="fk_users"),
         nullable=False,
-        server_default=20386219,
+        server_default="20386219",
     )
-    author = relationship(DbUser, default=20386219)
+    author = relationship(DbUser)
     created = Column(DateTime, default=timestamp, nullable=False)
     task_creation_mode = Column(
         Enum(TaskCreationMode), default=TaskCreationMode.UPLOAD, nullable=False
