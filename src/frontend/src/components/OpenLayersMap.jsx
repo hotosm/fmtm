@@ -20,6 +20,7 @@ import { Modal } from '../components/common/Modal';
 import Button from './common/Button';
 import { ProjectActions } from '../store/slices/ProjectSlice';
 import TaskSectionModal from './ProjectDetails/TaskSectionPopup';
+import VectorLayer from 'ol/layer/Vector';
 let currentLocationLayer = null;
 const OpenLayersMap = ({
   defaultTheme,
@@ -85,23 +86,37 @@ const OpenLayersMap = ({
 
           // map.getView().setZoom(15);
         } else if (e.target.id == 'taskBoundries') {
-          if (state.projectTaskBoundries.length != 0 && map != undefined) {
-            if (state.projectTaskBoundries.findIndex((project) => project.id == environment.decode(params.id)) != -1) {
-              const index = state.projectTaskBoundries.findIndex(
-                (project) => project.id == environment.decode(params.id),
-              );
-              const centroid =
-                state.projectTaskBoundries[index].taskBoundries[
-                  state.projectTaskBoundries[index].taskBoundries.length - 1
-                ].outline_centroid.geometry.coordinates;
-
-              mainView.animate({
-                center: centroid,
-                duration: 2000,
-                easing: elastic,
-              });
+          const layers = map.getAllLayers();
+          let extent;
+          layers.map((layer) => {
+            if (layer instanceof VectorLayer) {
+              const layerName = layer.getProperties().name;
+              if (layerName === 'project-area') {
+                extent = layer.getSource().getExtent();
+              }
             }
-          }
+          });
+          map.getView().fit(extent, {
+            padding: [10, 10, 10, 10],
+          });
+
+          // if (state.projectTaskBoundries.length != 0 && map != undefined) {
+          //   if (state.projectTaskBoundries.findIndex((project) => project.id == environment.decode(params.id)) != -1) {
+          //     const index = state.projectTaskBoundries.findIndex(
+          //       (project) => project.id == environment.decode(params.id),
+          //     );
+          //     const centroid =
+          //       state.projectTaskBoundries[index].taskBoundries[
+          //         state.projectTaskBoundries[index].taskBoundries.length - 1
+          //       ].outline_centroid.geometry.coordinates;
+
+          //     mainView.animate({
+          //       center: centroid,
+          //       duration: 2000,
+          //       easing: elastic,
+          //     });
+          //   }
+          // }
 
           map.getTargetElement().classList.remove('spinner');
         }
