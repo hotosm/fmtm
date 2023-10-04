@@ -84,7 +84,6 @@ services:
     networks:
       - fmtm-dev
     entrypoint: ["/migrate-entrypoint.sh"]
-    command: ["alembic", "upgrade", "head"]
     restart: "on-failure:3"
 
   ui:
