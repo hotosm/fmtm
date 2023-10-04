@@ -138,12 +138,18 @@ const OpenLayersMap = ({
           img.id = `${elmnt}`;
           img.addEventListener('click', handleOnClick, false);
           btn.appendChild(img);
+          btn.style.display = 'flex';
+          btn.style.alignItems = 'center';
+          btn.style.justifyContent = 'center';
         } else if (elmnt == 'taskBoundries') {
           let img = document.createElement('img');
           img.src = gridIcon;
           img.id = `${elmnt}`;
           img.addEventListener('click', handleOnClick, false);
           btn.appendChild(img);
+          btn.style.display = 'flex';
+          btn.style.alignItems = 'center';
+          btn.style.justifyContent = 'center';
         }
         btn.id = `${elmnt}`;
         btn.style.backgroundColor = 'white';
