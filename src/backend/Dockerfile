@@ -153,8 +153,8 @@ ARG PYTHON_IMG_TAG
 COPY --from=extract-deps \
     /opt/python/requirements-ci.txt /opt/python/
 RUN mv /home/appuser/.local/bin/* /usr/local/bin/ \
-    && mv "/home/appuser/.local/lib/python${PYTHON_IMG_TAG}/site-packages/*" \
-    "/usr/local/lib/python${PYTHON_IMG_TAG}/site-packages/" \
+    && mv /home/appuser/.local/lib/python${PYTHON_IMG_TAG}/site-packages/* \
+    /usr/local/lib/python${PYTHON_IMG_TAG}/site-packages/ \
     && set -ex \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install \
