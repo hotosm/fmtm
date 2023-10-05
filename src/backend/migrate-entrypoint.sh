@@ -57,12 +57,12 @@ wait_for_db() {
 }
 
 create_db_schema_if_missing() {
-    table_count=$(psql -t "$db_url" -c "
-        SELECT COUNT(*) FROM information_schema.tables
-        WHERE table_schema NOT IN ('pg_catalog', 'information_schema');
+    table_exists=$(psql -t "$db_url" -c "
+        SELECT EXISTS (SELECT 1 FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = 'projects');
     ")
     
-    if [ "$table_count" -gt 0 ]; then
+    if [ "$table_exists" = "t" ]; then
         echo "Data exists in the database. Skipping schema creation."
         return 0
     else
