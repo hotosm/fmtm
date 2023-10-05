@@ -42,9 +42,9 @@ from geojson import dump
 from loguru import logger as log
 from osm_fieldwork import basemapper
 from osm_fieldwork.json2osm import json2osm
-from osm_rawdata.postgres import PostgresClient
 from osm_fieldwork.OdkCentral import OdkAppUser
 from osm_fieldwork.xlsforms import xlsforms_path
+from osm_rawdata.postgres import PostgresClient
 from shapely import wkt
 from shapely.geometry import (
     LineString,
@@ -1448,7 +1448,6 @@ def generate_appuser_files(
         one = result.first()
 
         if one:
-            prefix = one.project_name_prefix
 
             # Get odk credentials from project.
             odk_credentials = {
@@ -1478,16 +1477,21 @@ def generate_appuser_files(
 
             else:
                 import osm_fieldwork as of
+
                 rootdir = of.__path__[0]
 
-                project = db.query(db_models.DbProject).filter(db_models.DbProject.id == project_id).first()
+                project = (
+                    db.query(db_models.DbProject)
+                    .filter(db_models.DbProject.id == project_id)
+                    .first()
+                )
                 config_file_contents = project.form_config_file
 
                 project_log.info("Extracting Data from OSM")
-                
+
                 config_path = "/tmp/config.yaml"
                 if config_file_contents:
-                    with open(config_path, "w",encoding="utf-8") as config_file_handle:
+                    with open(config_path, "w", encoding="utf-8") as config_file_handle:
                         config_file_handle.write(config_file_contents.decode("utf-8"))
                 else:
                     config_path = f"{rootdir}/data_models/{category}.yaml"
@@ -1495,7 +1499,7 @@ def generate_appuser_files(
                 # # OSM Extracts for whole project
                 pg = PostgresClient("underpass", config_path)
                 outline = json.loads(one.outline)
-                boundary = {"type":"Feature","properties":{},"geometry":outline}
+                boundary = {"type": "Feature", "properties": {}, "geometry": outline}
                 outline_geojson = pg.execQuery(boundary)
 
                 updated_outline_geojson = {"type": "FeatureCollection", "features": []}
