@@ -70,7 +70,7 @@ create_db_schema_if_missing() {
         pretty_echo "Creating schema."
         psql "$db_url" -f "/opt/migrations/init/fmtm_base_schema.sql"
         pretty_echo "Schema created successfully."
-        return 1
+        return 0
     fi
 }
 
