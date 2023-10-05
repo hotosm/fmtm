@@ -299,8 +299,8 @@ ALTER SEQUENCE public.mbtiles_path_id_seq OWNED BY public.mbtiles_path.id;
 
 
 CREATE TABLE public."_migrations" (
-    script_name text
-    date_executed timestamp without time zone,
+    script_name text,
+    date_executed timestamp without time zone
 );
 ALTER TABLE public."_migrations" OWNER TO fmtm;
 

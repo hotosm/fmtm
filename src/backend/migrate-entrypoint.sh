@@ -66,9 +66,10 @@ create_db_schema_if_missing() {
         echo "Data exists in the database. Skipping schema creation."
         return 0
     else
-        echo "No data found in the database. Creating schema."
+        echo "No data found in the database."
+        pretty_echo "Creating schema."
         psql "$db_url" -f "/opt/migrations/init/fmtm_base_schema.sql"
-        echo "Schema created successfully."
+        pretty_echo "Schema created successfully."
         return 1
     fi
 }
