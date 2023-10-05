@@ -19,7 +19,3 @@ COMMIT;
 -- ADD COLUMN IF NOT EXISTS password character varying;
 -- -- Commit the transaction
 -- COMMIT;
-
-
--- ## Print a success message
-RAISE NOTICE 'Migration complete for public.users "password" field.';

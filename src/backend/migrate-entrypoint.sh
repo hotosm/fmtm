@@ -142,6 +142,7 @@ execute_migrations() {
     BEGIN
         INSERT INTO public."_migrations" (date_executed, script_name)
         VALUES (NOW(), '$script_name');
+        RAISE NOTICE 'Successfully applied migration: $script_name';
     EXCEPTION
         WHEN OTHERS THEN
             RAISE NOTICE 'Failed to add migration to database: $script_name';
