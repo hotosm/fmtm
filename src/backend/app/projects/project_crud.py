@@ -42,7 +42,7 @@ from geojson import dump
 from loguru import logger as log
 from osm_fieldwork import basemapper
 from osm_fieldwork.json2osm import json2osm
-from osm_fieldwork.make_data_extract import PostgresClient
+from osm_rawdata.postgres import PostgresClient
 from osm_fieldwork.OdkCentral import OdkAppUser
 from osm_fieldwork.xlsforms import xlsforms_path
 from shapely import wkt
@@ -1477,21 +1477,26 @@ def generate_appuser_files(
                 upload_custom_data_extracts(db, project_id, extracts_contents)
 
             else:
+                import osm_fieldwork as of
+                rootdir = of.__path__[0]
+
+                project = db.query(db_models.DbProject).filter(db_models.DbProject.id == project_id).first()
+                config_file_contents = project.form_config_file
+
                 project_log.info("Extracting Data from OSM")
+                
+                config_path = "/tmp/config.yaml"
+                if config_file_contents:
+                    with open(config_path, "w",encoding="utf-8") as config_file_handle:
+                        config_file_handle.write(config_file_contents.decode("utf-8"))
+                else:
+                    config_path = f"{rootdir}/data_models/{category}.yaml"
 
-                # OSM Extracts for whole project
-                pg = PostgresClient(settings.UNDERPASS_API_URL, "underpass")
-                # This file will store osm extracts
-                outfile = f"/tmp/{prefix}_{xform_title}.geojson"
-
+                # # OSM Extracts for whole project
+                pg = PostgresClient("underpass", config_path)
                 outline = json.loads(one.outline)
-                outline_geojson = pg.getFeatures(
-                    boundary=outline,
-                    filespec=outfile,
-                    polygon=extract_polygon,
-                    xlsfile=f"{category}.xls",
-                    category=category,
-                )
+                boundary = {"type":"Feature","properties":{},"geometry":outline}
+                outline_geojson = pg.execQuery(boundary)
 
                 updated_outline_geojson = {"type": "FeatureCollection", "features": []}
 
@@ -1519,7 +1524,6 @@ def generate_appuser_files(
                     }
                     updated_outline_geojson["features"].append(feature)
                     feature_mappings.append(feature_mapping)
-
                 # Bulk insert the osm extracts into the db.
                 db.bulk_insert_mappings(db_models.DbFeatures, feature_mappings)
 
