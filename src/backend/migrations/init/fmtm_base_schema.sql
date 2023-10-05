@@ -155,11 +155,11 @@ SET default_table_access_method = heap;
 
 -- Tables
 
-CREATE TABLE IF NOT EXISTS public._migrations (
+CREATE TABLE IF NOT EXISTS public."_migrations" (
     date_executed TIMESTAMP,
     script_name TEXT
 );
-ALTER TABLE public._migrations OWNER TO fmtm;
+ALTER TABLE public."_migrations" OWNER TO fmtm;
 
 
 CREATE TABLE public.background_tasks (
@@ -298,11 +298,11 @@ ALTER TABLE public.mbtiles_path_id_seq OWNER TO fmtm;
 ALTER SEQUENCE public.mbtiles_path_id_seq OWNED BY public.mbtiles_path.id;
 
 
-CREATE TABLE public._migrations (
-    date_executed timestamp without time zone,
+CREATE TABLE public."_migrations" (
     script_name text
+    date_executed timestamp without time zone,
 );
-ALTER TABLE public._migrations OWNER TO fmtm;
+ALTER TABLE public."_migrations" OWNER TO fmtm;
 
 
 CREATE TABLE public.organisation_managers (
@@ -732,8 +732,8 @@ ALTER TABLE ONLY public.xlsforms ALTER COLUMN id SET DEFAULT nextval('public.xls
 
 -- Constraints for primary keys
 
-ALTER TABLE public._migrations
-    ADD CONSTRAINT _migrations_pkey PRIMARY KEY (script_name);
+ALTER TABLE public."_migrations"
+    ADD CONSTRAINT "_migrations_pkey" PRIMARY KEY (script_name);
 
 ALTER TABLE ONLY public.background_tasks
     ADD CONSTRAINT background_tasks_pkey PRIMARY KEY (id);
