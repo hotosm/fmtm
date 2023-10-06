@@ -40,6 +40,7 @@ from fastapi import File, HTTPException, UploadFile
 from geoalchemy2.shape import from_shape
 from geojson import dump
 from loguru import logger as log
+from osm_fieldwork.filter_data import FilterData
 from osm_fieldwork import basemapper
 from osm_fieldwork.json2osm import json2osm
 from osm_fieldwork.OdkCentral import OdkAppUser
@@ -1460,15 +1461,15 @@ def generate_appuser_files(
 
             xform_title = one.xform_title if one.xform_title else None
 
+            category = xform_title
             if upload:
-                xlsform = f"/tmp/custom_form.{form_type}"
+                xlsform = f"/tmp/{category}.{form_type}"
                 contents = upload
                 with open(xlsform, "wb") as f:
                     f.write(contents)
             else:
                 xlsform = f"{xlsforms_path}/{xform_title}.xls"
 
-            category = xform_title
 
             # Data Extracts
             if extracts_contents is not None:
@@ -1500,14 +1501,16 @@ def generate_appuser_files(
                 pg = PostgresClient("underpass", config_path)
                 outline = json.loads(one.outline)
                 boundary = {"type": "Feature", "properties": {}, "geometry": outline}
-                outline_geojson = pg.execQuery(boundary)
+                data_extract = pg.execQuery(boundary)
+                filter = FilterData(xlsform)
+                filtered_data_extract= filter.cleanData(data_extract)
 
-                updated_outline_geojson = {"type": "FeatureCollection", "features": []}
+                updated_data_extract = {"type": "FeatureCollection", "features": []}
 
                 # Collect feature mappings for bulk insert
                 feature_mappings = []
 
-                for feature in outline_geojson["features"]:
+                for feature in filtered_data_extract["features"]:
                     # If the osm extracts contents do not have a title, provide an empty text for that.
                     feature["properties"]["title"] = ""
 
@@ -1526,7 +1529,7 @@ def generate_appuser_files(
                         "geometry": wkb_element,
                         "properties": feature["properties"],
                     }
-                    updated_outline_geojson["features"].append(feature)
+                    updated_data_extract["features"].append(feature)
                     feature_mappings.append(feature_mapping)
                 # Bulk insert the osm extracts into the db.
                 db.bulk_insert_mappings(db_models.DbFeatures, feature_mappings)
