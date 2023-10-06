@@ -40,8 +40,8 @@ from fastapi import File, HTTPException, UploadFile
 from geoalchemy2.shape import from_shape
 from geojson import dump
 from loguru import logger as log
-from osm_fieldwork.filter_data import FilterData
 from osm_fieldwork import basemapper
+from osm_fieldwork.filter_data import FilterData
 from osm_fieldwork.json2osm import json2osm
 from osm_fieldwork.OdkCentral import OdkAppUser
 from osm_fieldwork.xlsforms import xlsforms_path
@@ -1449,7 +1449,6 @@ def generate_appuser_files(
         one = result.first()
 
         if one:
-
             # Get odk credentials from project.
             odk_credentials = {
                 "odk_central_url": one.odk_central_url,
@@ -1469,7 +1468,6 @@ def generate_appuser_files(
                     f.write(contents)
             else:
                 xlsform = f"{xlsforms_path}/{xform_title}.xls"
-
 
             # Data Extracts
             if extracts_contents is not None:
@@ -1503,7 +1501,7 @@ def generate_appuser_files(
                 boundary = {"type": "Feature", "properties": {}, "geometry": outline}
                 data_extract = pg.execQuery(boundary)
                 filter = FilterData(xlsform)
-                filtered_data_extract= filter.cleanData(data_extract)
+                filtered_data_extract = filter.cleanData(data_extract)
 
                 updated_data_extract = {"type": "FeatureCollection", "features": []}
 
