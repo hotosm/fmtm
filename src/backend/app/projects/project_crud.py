@@ -1448,7 +1448,6 @@ def generate_appuser_files(
         one = result.first()
 
         if one:
-
             # Get odk credentials from project.
             odk_credentials = {
                 "odk_central_url": one.odk_central_url,
