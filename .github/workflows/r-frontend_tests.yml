@@ -25,6 +25,4 @@ jobs:
 
       - name: Test Frontend
         working-directory: src/frontend/main
-        run: |
-          pnpm ci --only-dev
-          pnpm run test
+        run: pnpm run test
