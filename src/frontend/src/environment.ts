@@ -1,6 +1,6 @@
 export default {
-  nodeEnv: process.env.NODE_ENV,
-  baseApiUrl: process.env.API_URL,
+  nodeEnv: import.meta.env.NODE_ENV,
+  baseApiUrl: import.meta.env.API_URL,
   odkCentralUrl: process.env.ODK_CENTRAL_URL,
   odkCentralUser: process.env.ODK_CENTRAL_USER,
   odkCentralPass: process.env.ODK_CENTRAL_PASSWD,
