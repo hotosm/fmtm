@@ -2396,7 +2396,7 @@ async def update_project_form(
             f"""UPDATE features
                     SET task_id={task}
                     WHERE id in (
-                    
+
                     SELECT id
                     FROM features
                     WHERE project_id={project_id} and ST_Intersects(geometry, '{task_obj.outline}'::Geometry)

@@ -2411,8 +2411,19 @@
   }
 }
 .swagger-ui .sans-serif {
-  font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, helvetica,
-    helvetica neue, ubuntu, roboto, noto, segoe ui, arial, sans-serif;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    avenir next,
+    avenir,
+    helvetica,
+    helvetica neue,
+    ubuntu,
+    roboto,
+    noto,
+    segoe ui,
+    arial,
+    sans-serif;
 }
 .swagger-ui .serif {
   font-family: georgia, serif;
@@ -2428,13 +2439,22 @@
   font-family: Consolas, monaco, monospace;
 }
 .swagger-ui .courier {
-  font-family: Courier Next, courier, monospace;
+  font-family:
+    Courier Next,
+    courier,
+    monospace;
 }
 .swagger-ui .helvetica {
-  font-family: helvetica neue, helvetica, sans-serif;
+  font-family:
+    helvetica neue,
+    helvetica,
+    sans-serif;
 }
 .swagger-ui .avenir {
-  font-family: avenir next, avenir, sans-serif;
+  font-family:
+    avenir next,
+    avenir,
+    sans-serif;
 }
 .swagger-ui .athelas {
   font-family: athelas, georgia, serif;
@@ -2446,10 +2466,14 @@
   font-family: times, serif;
 }
 .swagger-ui .bodoni {
-  font-family: Bodoni MT, serif;
+  font-family:
+    Bodoni MT,
+    serif;
 }
 .swagger-ui .calisto {
-  font-family: Calisto MT, serif;
+  font-family:
+    Calisto MT,
+    serif;
 }
 .swagger-ui .garamond {
   font-family: garamond, serif;
@@ -7756,7 +7780,9 @@
   transform: translate(-50%, -50%);
 }
 .swagger-ui .loading-container .loading:before {
-  animation: rotation 1s linear infinite, opacity 0.5s;
+  animation:
+    rotation 1s linear infinite,
+    opacity 0.5s;
   backface-visibility: hidden;
   border: 2px solid rgba(85, 85, 85, 0.1);
   border-radius: 100%;

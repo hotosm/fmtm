@@ -27,6 +27,7 @@ class Organisation(BaseModel):
         description (str): The description of the organization.
         url (str): The URL of the organization's website.
     """
+
     # id: int
     slug: str
     name: str

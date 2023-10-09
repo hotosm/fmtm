@@ -147,7 +147,7 @@ var ut = {
                 ? p(e.replace(/^.*#\/definitions\//, ""))
                 : -1 !== (0, o.default)(e).call(e, "#/components/schemas/")
                 ? p(e.replace(/^.*#\/components\/schemas\//, ""))
-                : void 0
+                : void 0,
             ),
             (0, s.default)(this, "getRefSchema", (e) => {
               let { specSelectors: t } = this.props;
@@ -184,13 +184,13 @@ var ut = {
               i.default.createElement(
                 "span",
                 { className: "model-title__text" },
-                d || l
+                d || l,
               ),
               i.default.createElement("img", {
                 src: n(2517),
                 height: "20px",
                 width: "20px",
-              })
+              }),
             );
           const E = a.isOAS3() && s.get("deprecated");
           switch (
@@ -208,7 +208,7 @@ var ut = {
                   isRef: c,
                   includeReadOnly: p,
                   includeWriteOnly: m,
-                })
+                }),
               );
             case "array":
               return i.default.createElement(
@@ -221,7 +221,7 @@ var ut = {
                   required: o,
                   includeReadOnly: p,
                   includeWriteOnly: m,
-                })
+                }),
               );
             default:
               return i.default.createElement(
@@ -233,7 +233,7 @@ var ut = {
                   name: l,
                   deprecated: E,
                   required: o,
-                })
+                }),
               );
           }
         }
@@ -304,14 +304,14 @@ var ut = {
                     target: "_blank",
                     rel: "noopener noreferrer",
                     href: `${a}/debug?url=${encodeURIComponent(
-                      this.state.url
+                      this.state.url,
                     )}`,
                   },
                   s.default.createElement(u, {
                     src: `${a}?url=${encodeURIComponent(this.state.url)}`,
                     alt: "Online validator badge",
-                  })
-                )
+                  }),
+                ),
               )
             : null;
         }
@@ -402,7 +402,7 @@ var ut = {
           t &&
             !p.hasWarnedAboutDeprecation &&
             (console.warn(
-              "useUnsafeMarkdown display configuration parameter is deprecated since >3.26.0 and will be removed in v4.0.0."
+              "useUnsafeMarkdown display configuration parameter is deprecated since >3.26.0 and will be removed in v4.0.0.",
             ),
             (p.hasWarnedAboutDeprecation = !0)),
           i.default.sanitize(e, {
@@ -552,7 +552,7 @@ var ut = {
               break;
             default:
               console.warn(
-                `Warning: invalid passwordType ${c} was passed, not including client id and secret`
+                `Warning: invalid passwordType ${c} was passed, not including client id and secret`,
               );
           }
           return a.authorizeRequest({
@@ -664,7 +664,7 @@ var ut = {
               "Content-Type": "application/x-www-form-urlencoded",
               "X-Requested-With": "XMLHttpRequest",
             },
-            h
+            h,
           );
           o.fetch({
             url: S,
@@ -805,12 +805,12 @@ var ut = {
               (this.rootInjects.preauthorizeApiKey = (0, n.default)(f).call(
                 f,
                 null,
-                e
+                e,
               )),
               (this.rootInjects.preauthorizeBasic = (0, n.default)(m).call(
                 m,
                 null,
-                e
+                e,
               ));
           },
           components: {
@@ -956,7 +956,7 @@ var ut = {
           var a;
           let { specSelectors: r } = e;
           console.warn(
-            "WARNING: getDefinitionsByNames is deprecated and will be removed in the next major version."
+            "WARNING: getDefinitionsByNames is deprecated and will be removed in the next major version.",
           );
           let s = r.securityDefinitions(),
             o = (0, u.List)();
@@ -995,7 +995,7 @@ var ut = {
             return (
               (0, n.default)(s).call(s, (e) => {
                 let a = (0, r.default)(t).call(t, (t) =>
-                  t.get(e.keySeq().first())
+                  t.get(e.keySeq().first()),
                 );
                 a &&
                   ((0, n.default)(e).call(e, (t, r) => {
@@ -1018,7 +1018,7 @@ var ut = {
         },
         g = (0, c.createSelector)(
           d,
-          (e) => e.get("authorized") || (0, u.Map)()
+          (e) => e.get("authorized") || (0, u.Map)(),
         ),
         y = (e, t) => (e) => {
           var a;
@@ -1032,8 +1032,8 @@ var ut = {
                   (0, o.default)(
                     (t = (0, l.default)((a = (0, i.default)(e))).call(
                       a,
-                      (e) => !!r.get(e)
-                    ))
+                      (e) => !!r.get(e),
+                    )),
                   ).call(t, !1)
                 );
               }).length
@@ -1072,12 +1072,12 @@ var ut = {
               r &&
                 s &&
                 (document.cookie = `${e.get(
-                  "name"
+                  "name",
                 )}=${t}; SameSite=None; Secure`);
             } catch (e) {
               console.error(
                 "Error persisting cookie based apiKey in document.cookie.",
-                e
+                e,
               );
             }
         },
@@ -1099,7 +1099,7 @@ var ut = {
           } catch (e) {
             console.error(
               "Error deleting cookie based apiKey from document.cookie.",
-              e
+              e,
             );
           }
           e(a);
@@ -1145,7 +1145,7 @@ var ut = {
       const i = {
         getLocalConfig: () =>
           (0, n.parseYamlConfig)(
-            '---\nurl: "https://petstore.swagger.io/v2/swagger.json"\ndom_id: "#swagger-ui"\nvalidatorUrl: "https://validator.swagger.io/validator"\n'
+            '---\nurl: "https://petstore.swagger.io/v2/swagger.json"\ndom_id: "#swagger-ui"\nvalidatorUrl: "https://validator.swagger.io/validator"\n',
           ),
       };
       function c() {
@@ -1271,8 +1271,8 @@ var ut = {
                 2 === a.length
                   ? (0, i.setHash)(
                       (0, u.oJ)(
-                        `/${encodeURIComponent(o)}/${encodeURIComponent(l)}`
-                      )
+                        `/${encodeURIComponent(o)}/${encodeURIComponent(l)}`,
+                      ),
                     )
                   : 1 === a.length &&
                     (0, i.setHash)((0, u.oJ)(`/${encodeURIComponent(o)}`));
@@ -1291,7 +1291,7 @@ var ut = {
               "/" === t[0] && (t = (0, s.default)(t).call(t, 1));
             const r = (0, o.default)((i = t.split("/"))).call(
                 i,
-                (e) => e || ""
+                (e) => e || "",
               ),
               c = n.isShownKeyFromUrlHashArray(r),
               [u, d = "", p = ""] = c;
@@ -1299,22 +1299,22 @@ var ut = {
               const e = n.isShownKeyFromUrlHashArray([d]);
               (0, l.default)(d).call(d, "_") > -1 &&
                 (console.warn(
-                  "Warning: escaping deep link whitespace with `_` will be unsupported in v4.0, use `%20` instead."
+                  "Warning: escaping deep link whitespace with `_` will be unsupported in v4.0, use `%20` instead.",
                 ),
                 a.show(
                   (0, o.default)(e).call(e, (e) => e.replace(/_/g, " ")),
-                  !0
+                  !0,
                 )),
                 a.show(e, !0);
             }
             ((0, l.default)(d).call(d, "_") > -1 ||
               (0, l.default)(p).call(p, "_") > -1) &&
               (console.warn(
-                "Warning: escaping deep link whitespace with `_` will be unsupported in v4.0, use `%20` instead."
+                "Warning: escaping deep link whitespace with `_` will be unsupported in v4.0, use `%20` instead.",
               ),
               a.show(
                 (0, o.default)(c).call(c, (e) => e.replace(/_/g, " ")),
-                !0
+                !0,
               )),
               a.show(c, !0),
               a.scrollTo(c);
@@ -1409,7 +1409,7 @@ var ut = {
             return r.default.createElement(
               "span",
               { ref: this.onLoad },
-              r.default.createElement(e, this.props)
+              r.default.createElement(e, this.props),
             );
           }
         };
@@ -1435,7 +1435,7 @@ var ut = {
             return r.default.createElement(
               "span",
               { ref: this.onLoad },
-              r.default.createElement(e, this.props)
+              r.default.createElement(e, this.props),
             );
           }
         };
@@ -1471,8 +1471,8 @@ var ut = {
                         s.newThrownErr(
                           (0, n.default)(
                             new Error((t.message || t.statusText) + " " + e),
-                            { source: "fetch" }
-                          )
+                            { source: "fetch" },
+                          ),
                         ),
                         void (
                           !t.status &&
@@ -1490,18 +1490,18 @@ var ut = {
                               ) {
                                 const e = (0, n.default)(
                                   new Error(
-                                    `Possible mixed-content issue? The page was loaded over https:// but a ${t.protocol}// URL was specified. Check that you are not attempting to load mixed content.`
+                                    `Possible mixed-content issue? The page was loaded over https:// but a ${t.protocol}// URL was specified. Check that you are not attempting to load mixed content.`,
                                   ),
-                                  { source: "fetch" }
+                                  { source: "fetch" },
                                 );
                                 return void s.newThrownErr(e);
                               }
                               if (t.origin !== c.Z.location.origin) {
                                 const e = (0, n.default)(
                                   new Error(
-                                    `Possible cross-origin (CORS) issue? The URL origin (${t.origin}) does not match the page (${c.Z.location.origin}). Check the server returns the correct 'Access-Control-Allow-*' headers.`
+                                    `Possible cross-origin (CORS) issue? The URL origin (${t.origin}) does not match the page (${c.Z.location.origin}). Check the server returns the correct 'Access-Control-Allow-*' headers.`,
                                   ),
-                                  { source: "fetch" }
+                                  { source: "fetch" },
                                 );
                                 s.newThrownErr(e);
                               }
@@ -1538,7 +1538,7 @@ var ut = {
                   return (
                     -1 === (0, s.default)(t).call(t, e) &&
                       console.error(
-                        `Error: ${e} is not one of ${(0, o.default)(t)}`
+                        `Error: ${e} is not one of ${(0, o.default)(t)}`,
                       ),
                     { type: "spec_update_loading_status", payload: e }
                   );
@@ -1553,7 +1553,7 @@ var ut = {
               selectors: {
                 loadingStatus: (0, l.createSelector)(
                   (e) => e || (0, i.Map)(),
-                  (e) => e.get("loadingStatus") || null
+                  (e) => e.get("loadingStatus") || null,
                 ),
               },
             },
@@ -1641,11 +1641,11 @@ var ut = {
                 return console.error("Transformer error:", t), e;
               }
             },
-            e
+            e,
           );
         return (0, s.default)((t = (0, n.default)(r).call(r, (e) => !!e))).call(
           t,
-          (e) => (!e.get("line") && e.get("path"), e)
+          (e) => (!e.get("line") && e.get("path"), e),
         );
       }
     },
@@ -1679,9 +1679,9 @@ var ut = {
                         : n[a + 1]
                         ? e + t + " "
                         : e + t,
-                    "should be a"
+                    "should be a",
                   );
-                })(t)
+                })(t),
             );
           }
           return e;
@@ -1727,7 +1727,7 @@ var ut = {
               r = (0, n.default)(d, a, { type: "thrown" });
             return e
               .update("errors", (e) =>
-                (e || (0, c.List)()).push((0, c.fromJS)(r))
+                (e || (0, c.List)()).push((0, c.fromJS)(r)),
               )
               .update("errors", (e) => (0, u.default)(e));
           },
@@ -1735,14 +1735,14 @@ var ut = {
             let { payload: a } = t;
             return (
               (a = (0, r.default)(a).call(a, (e) =>
-                (0, c.fromJS)((0, n.default)(d, e, { type: "thrown" }))
+                (0, c.fromJS)((0, n.default)(d, e, { type: "thrown" })),
               )),
               e
                 .update("errors", (e) => {
                   var t;
                   return (0, s.default)((t = e || (0, c.List)())).call(
                     t,
-                    (0, c.fromJS)(a)
+                    (0, c.fromJS)(a),
                   );
                 })
                 .update("errors", (e) => (0, u.default)(e))
@@ -1757,7 +1757,7 @@ var ut = {
                 .update("errors", (e) =>
                   (e || (0, c.List)())
                     .push((0, c.fromJS)(n))
-                    .sortBy((e) => e.get("line"))
+                    .sortBy((e) => e.get("line")),
                 )
                 .update("errors", (e) => (0, u.default)(e))
             );
@@ -1766,14 +1766,14 @@ var ut = {
             let { payload: a } = t;
             return (
               (a = (0, r.default)(a).call(a, (e) =>
-                (0, c.fromJS)((0, n.default)(d, e, { type: "spec" }))
+                (0, c.fromJS)((0, n.default)(d, e, { type: "spec" })),
               )),
               e
                 .update("errors", (e) => {
                   var t;
                   return (0, s.default)((t = e || (0, c.List)())).call(
                     t,
-                    (0, c.fromJS)(a)
+                    (0, c.fromJS)(a),
                   );
                 })
                 .update("errors", (e) => (0, u.default)(e))
@@ -1786,7 +1786,7 @@ var ut = {
               (r = r.set("type", "auth")),
               e
                 .update("errors", (e) =>
-                  (e || (0, c.List)()).push((0, c.fromJS)(r))
+                  (e || (0, c.List)()).push((0, c.fromJS)(r)),
                 )
                 .update("errors", (e) => (0, u.default)(e))
             );
@@ -1821,7 +1821,7 @@ var ut = {
         r = a(8639);
       const s = (0, r.createSelector)(
           (e) => e,
-          (e) => e.get("errors", (0, n.List)())
+          (e) => e.get("errors", (0, n.List)()),
         ),
         o = (0, r.createSelector)(s, (e) => e.last());
     },
@@ -1839,7 +1839,7 @@ var ut = {
       function s(e, t) {
         return (0, n.default)(e).call(
           e,
-          (e, a) => -1 !== (0, r.default)(a).call(a, t)
+          (e, a) => -1 !== (0, r.default)(a).call(a, t),
         );
       }
     },
@@ -1862,11 +1862,11 @@ var ut = {
               "aria-hidden": "true",
               focusable: "false",
             },
-            o
+            o,
           ),
           r.default.createElement("path", {
             d: "M17.418 6.109c.272-.268.709-.268.979 0s.271.701 0 .969l-7.908 7.83c-.27.268-.707.268-.979 0l-7.908-7.83c-.27-.268-.27-.701 0-.969.271-.268.709-.268.979 0L10 13.25l7.418-7.141z",
-          })
+          }),
         );
       };
       s.defaultProps = { className: null, width: 20, height: 20 };
@@ -1891,11 +1891,11 @@ var ut = {
               "aria-hidden": "true",
               focusable: "false",
             },
-            o
+            o,
           ),
           r.default.createElement("path", {
             d: "M 17.418 14.908 C 17.69 15.176 18.127 15.176 18.397 14.908 C 18.667 14.64 18.668 14.207 18.397 13.939 L 10.489 6.109 C 10.219 5.841 9.782 5.841 9.51 6.109 L 1.602 13.939 C 1.332 14.207 1.332 14.64 1.602 14.908 C 1.873 15.176 2.311 15.176 2.581 14.908 L 10 7.767 L 17.418 14.908 Z",
-          })
+          }),
         );
       };
       s.defaultProps = { className: null, width: 20, height: 20 };
@@ -1920,11 +1920,11 @@ var ut = {
               "aria-hidden": "true",
               focusable: "false",
             },
-            o
+            o,
           ),
           r.default.createElement("path", {
             d: "M13.25 10L6.109 2.58c-.268-.27-.268-.707 0-.979.268-.27.701-.27.969 0l7.83 7.908c.268.271.268.709 0 .979l-7.83 7.908c-.268.271-.701.27-.969 0-.268-.269-.268-.707 0-.979L13.25 10z",
-          })
+          }),
         );
       };
       s.defaultProps = { className: null, width: 20, height: 20 };
@@ -1949,11 +1949,11 @@ var ut = {
               "aria-hidden": "true",
               focusable: "false",
             },
-            o
+            o,
           ),
           r.default.createElement("path", {
             d: "M14.348 14.849c-.469.469-1.229.469-1.697 0L10 11.819l-2.651 3.029c-.469.469-1.229.469-1.697 0-.469-.469-.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-.469-.469-.469-1.228 0-1.697.469-.469 1.228-.469 1.697 0L10 8.183l2.651-3.031c.469-.469 1.228-.469 1.697 0 .469.469.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c.469.469.469 1.229 0 1.698z",
-          })
+          }),
         );
       };
       s.defaultProps = { className: null, width: 20, height: 20 };
@@ -1978,7 +1978,7 @@ var ut = {
               "aria-hidden": "true",
               focusable: "false",
             },
-            o
+            o,
           ),
           r.default.createElement(
             "g",
@@ -1987,8 +1987,8 @@ var ut = {
               fill: "#ffffff",
               fillRule: "evenodd",
               d: "M2 13h4v1H2v-1zm5-6H2v1h5V7zm2 3V8l-3 3 3 3v-2h5v-2H9zM4.5 9H2v1h2.5V9zM2 12h2.5v-1H2v1zm9 1h1v2c-.02.28-.11.52-.3.7-.19.18-.42.28-.7.3H1c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h3c0-1.11.89-2 2-2 1.11 0 2 .89 2 2h3c.55 0 1 .45 1 1v5h-1V6H1v9h10v-2zM2 5h8c0-.55-.45-1-1-1H8c-.55 0-1-.45-1-1s-.45-1-1-1-1 .45-1 1-.45 1-1 1H3c-.55 0-1 .45-1 1z",
-            })
-          )
+            }),
+          ),
         );
       };
       s.defaultProps = { className: null, width: 15, height: 16 };
@@ -2013,11 +2013,11 @@ var ut = {
               "aria-hidden": "true",
               focusable: "false",
             },
-            o
+            o,
           ),
           r.default.createElement("path", {
             d: "M15.8 8H14V5.6C14 2.703 12.665 1 10 1 7.334 1 6 2.703 6 5.6V8H4c-.553 0-1 .646-1 1.199V17c0 .549.428 1.139.951 1.307l1.197.387C5.672 18.861 6.55 19 7.1 19h5.8c.549 0 1.428-.139 1.951-.307l1.196-.387c.524-.167.953-.757.953-1.306V9.199C17 8.646 16.352 8 15.8 8zM12 8H8V5.199C8 3.754 8.797 3 10 3c1.203 0 2 .754 2 2.199V8z",
-          })
+          }),
         );
       };
       s.defaultProps = { className: null, width: 20, height: 20 };
@@ -2042,11 +2042,11 @@ var ut = {
               "aria-hidden": "true",
               focusable: "false",
             },
-            o
+            o,
           ),
           r.default.createElement("path", {
             d: "M15.8 8H14V5.6C14 2.703 12.665 1 10 1 7.334 1 6 2.703 6 5.6V6h2v-.801C8 3.754 8.797 3 10 3c1.203 0 2 .754 2 2.199V8H4c-.553 0-1 .646-1 1.199V17c0 .549.428 1.139.951 1.307l1.197.387C5.672 18.861 6.55 19 7.1 19h5.8c.549 0 1.428-.139 1.951-.307l1.196-.387c.524-.167.953-.757.953-1.306V9.199C17 8.646 16.352 8 15.8 8z",
-          })
+          }),
         );
       };
       s.defaultProps = { className: null, width: 20, height: 20 };
@@ -2085,7 +2085,7 @@ var ut = {
             (e) => {
               o(e, !t);
             },
-            [t, o]
+            [t, o],
           );
         return n.default.createElement(
           "button",
@@ -2097,7 +2097,7 @@ var ut = {
           n.default.createElement(
             "div",
             { className: "json-schema-2020-12-accordion__children" },
-            a
+            a,
           ),
           n.default.createElement(
             "span",
@@ -2107,8 +2107,8 @@ var ut = {
                 "json-schema-2020-12-accordion__icon--collapsed": !t,
               }),
             },
-            n.default.createElement(l, null)
-          )
+            n.default.createElement(l, null),
+          ),
         );
       };
       o.defaultProps = { expanded: !1 };
@@ -2124,7 +2124,7 @@ var ut = {
           (e) => {
             a(e, !t);
           },
-          [t, a]
+          [t, a],
         );
         return n.default.createElement(
           "button",
@@ -2133,7 +2133,7 @@ var ut = {
             className: "json-schema-2020-12-expand-deep-button",
             onClick: r,
           },
-          t ? "Collapse all" : "Expand all"
+          t ? "Collapse all" : "Expand all",
         );
       };
     },
@@ -2207,13 +2207,13 @@ var ut = {
             (e, t) => {
               h(t), !t && y(!1), u(e, t, !1);
             },
-            [u]
+            [u],
           ),
           pe = (0, r.useCallback)(
             (e, t) => {
               h(t), y(t), u(e, t, !0);
             },
-            [u]
+            [u],
           );
         return r.default.createElement(
           l.JSONSchemaLevelContext.Provider,
@@ -2244,12 +2244,12 @@ var ut = {
                         r.default.createElement(
                           C,
                           { expanded: f, onChange: de },
-                          r.default.createElement(re, { title: i, schema: a })
+                          r.default.createElement(re, { title: i, schema: a }),
                         ),
                         r.default.createElement(ue, {
                           expanded: f,
                           onClick: pe,
-                        })
+                        }),
                       )
                     : r.default.createElement(re, { title: i, schema: a }),
                   r.default.createElement(le, { schema: a }),
@@ -2261,8 +2261,8 @@ var ut = {
                       r.default.createElement(te, {
                         key: `${e.scope}-${e.value}`,
                         constraint: e,
-                      })
-                    )
+                      }),
+                    ),
                 ),
                 r.default.createElement(
                   "div",
@@ -2298,7 +2298,7 @@ var ut = {
                           r.default.createElement(K, { schema: a }),
                           r.default.createElement(Z, { schema: a }),
                           r.default.createElement(F, { schema: a }),
-                          r.default.createElement(ne, { schema: a })
+                          r.default.createElement(ne, { schema: a }),
                         ),
                       r.default.createElement(Q, { schema: a }),
                       r.default.createElement(ee, { schema: a }),
@@ -2315,12 +2315,12 @@ var ut = {
                       r.default.createElement(I, { schema: a }),
                       !b && w && r.default.createElement(P, { schema: a }),
                       r.default.createElement(R, { schema: a }),
-                      r.default.createElement(T, { schema: a })
-                    )
-                )
-              )
-            )
-          )
+                      r.default.createElement(T, { schema: a }),
+                    ),
+                ),
+              ),
+            ),
+          ),
         );
       });
       i.defaultProps = { name: "", dependentRequired: [], onExpand: () => {} };
@@ -2340,7 +2340,7 @@ var ut = {
           },
           n.default.createElement("path", {
             d: "M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z",
-          })
+          }),
         );
     },
     4922: (e, t, a) => {
@@ -2362,7 +2362,7 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                 },
-                "$anchor"
+                "$anchor",
               ),
               n.default.createElement(
                 "span",
@@ -2370,8 +2370,8 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                 },
-                t.$anchor
-              )
+                t.$anchor,
+              ),
             )
           : null;
       };
@@ -2395,7 +2395,7 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                 },
-                "$comment"
+                "$comment",
               ),
               n.default.createElement(
                 "span",
@@ -2403,8 +2403,8 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                 },
-                t.$comment
-              )
+                t.$comment,
+              ),
             )
           : null;
       };
@@ -2454,8 +2454,8 @@ var ut = {
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                     },
-                    "$defs"
-                  )
+                    "$defs",
+                  ),
                 ),
                 o.default.createElement(y, { expanded: p, onClick: S }),
                 o.default.createElement(
@@ -2464,14 +2464,16 @@ var ut = {
                     className:
                       "json-schema-2020-12__attribute json-schema-2020-12__attribute--primary",
                   },
-                  "object"
+                  "object",
                 ),
                 o.default.createElement(
                   "ul",
                   {
                     className: (0, l.default)(
                       "json-schema-2020-12-keyword__children",
-                      { "json-schema-2020-12-keyword__children--collapsed": !p }
+                      {
+                        "json-schema-2020-12-keyword__children--collapsed": !p,
+                      },
                     ),
                   },
                   p &&
@@ -2483,12 +2485,12 @@ var ut = {
                         return o.default.createElement(
                           "li",
                           { key: t, className: "json-schema-2020-12-property" },
-                          o.default.createElement(v, { name: t, schema: a })
+                          o.default.createElement(v, { name: t, schema: a }),
                         );
-                      })
-                    )
-                )
-              )
+                      }),
+                    ),
+                ),
+              ),
             );
       };
     },
@@ -2511,7 +2513,7 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                 },
-                "$dynamicAnchor"
+                "$dynamicAnchor",
               ),
               n.default.createElement(
                 "span",
@@ -2519,8 +2521,8 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                 },
-                t.$dynamicAnchor
-              )
+                t.$dynamicAnchor,
+              ),
             )
           : null;
       };
@@ -2544,7 +2546,7 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                 },
-                "$dynamicRef"
+                "$dynamicRef",
               ),
               n.default.createElement(
                 "span",
@@ -2552,8 +2554,8 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                 },
-                t.$dynamicRef
-              )
+                t.$dynamicRef,
+              ),
             )
           : null;
       };
@@ -2577,7 +2579,7 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                 },
-                "$id"
+                "$id",
               ),
               n.default.createElement(
                 "span",
@@ -2585,8 +2587,8 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                 },
-                t.$id
-              )
+                t.$id,
+              ),
             )
           : null;
       };
@@ -2610,7 +2612,7 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                 },
-                "$ref"
+                "$ref",
               ),
               n.default.createElement(
                 "span",
@@ -2618,8 +2620,8 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                 },
-                t.$ref
-              )
+                t.$ref,
+              ),
             )
           : null;
       };
@@ -2643,7 +2645,7 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                 },
-                "$schema"
+                "$schema",
               ),
               n.default.createElement(
                 "span",
@@ -2651,8 +2653,8 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                 },
-                t.$schema
-              )
+                t.$schema,
+              ),
             )
           : null;
       };
@@ -2691,8 +2693,8 @@ var ut = {
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                     },
-                    "$vocabulary"
-                  )
+                    "$vocabulary",
+                  ),
                 ),
                 s.default.createElement(
                   "strong",
@@ -2700,7 +2702,7 @@ var ut = {
                     className:
                       "json-schema-2020-12__attribute json-schema-2020-12__attribute--primary",
                   },
-                  "object"
+                  "object",
                 ),
                 s.default.createElement(
                   "ul",
@@ -2719,7 +2721,7 @@ var ut = {
                               {
                                 "json-schema-2020-12-$vocabulary-uri--disabled":
                                   !a,
-                              }
+                              },
                             ),
                           },
                           s.default.createElement(
@@ -2728,12 +2730,12 @@ var ut = {
                               className:
                                 "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                             },
-                            t
-                          )
+                            t,
+                          ),
                         );
-                      }
-                    )
-                )
+                      },
+                    ),
+                ),
               )
           : null;
       };
@@ -2754,7 +2756,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
           },
-          "Additional properties"
+          "Additional properties",
         );
         return n.default.createElement(
           "div",
@@ -2773,8 +2775,8 @@ var ut = {
                     className:
                       "json-schema-2020-12__attribute json-schema-2020-12__attribute--primary",
                   },
-                  "allowed"
-                )
+                  "allowed",
+                ),
               )
             : !1 === s
             ? n.default.createElement(
@@ -2787,10 +2789,10 @@ var ut = {
                     className:
                       "json-schema-2020-12__attribute json-schema-2020-12__attribute--primary",
                   },
-                  "forbidden"
-                )
+                  "forbidden",
+                ),
               )
-            : n.default.createElement(o, { name: l, schema: s })
+            : n.default.createElement(o, { name: l, schema: s }),
         );
       };
     },
@@ -2838,8 +2840,8 @@ var ut = {
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                     },
-                    "All of"
-                  )
+                    "All of",
+                  ),
                 ),
                 s.default.createElement(g, { expanded: d, onClick: S }),
                 s.default.createElement(v, { schema: { allOf: a } }),
@@ -2848,7 +2850,9 @@ var ut = {
                   {
                     className: (0, o.default)(
                       "json-schema-2020-12-keyword__children",
-                      { "json-schema-2020-12-keyword__children--collapsed": !d }
+                      {
+                        "json-schema-2020-12-keyword__children--collapsed": !d,
+                      },
                     ),
                   },
                   d &&
@@ -2865,12 +2869,12 @@ var ut = {
                           s.default.createElement(y, {
                             name: `#${t} ${c.getTitle(e)}`,
                             schema: e,
-                          })
-                        )
-                      )
-                    )
-                )
-              )
+                          }),
+                        ),
+                      ),
+                    ),
+                ),
+              ),
             )
           : null;
       };
@@ -2919,8 +2923,8 @@ var ut = {
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                     },
-                    "Any of"
-                  )
+                    "Any of",
+                  ),
                 ),
                 s.default.createElement(g, { expanded: d, onClick: S }),
                 s.default.createElement(v, { schema: { anyOf: a } }),
@@ -2929,7 +2933,9 @@ var ut = {
                   {
                     className: (0, o.default)(
                       "json-schema-2020-12-keyword__children",
-                      { "json-schema-2020-12-keyword__children--collapsed": !d }
+                      {
+                        "json-schema-2020-12-keyword__children--collapsed": !d,
+                      },
                     ),
                   },
                   d &&
@@ -2946,12 +2952,12 @@ var ut = {
                           s.default.createElement(y, {
                             name: `#${t} ${c.getTitle(e)}`,
                             schema: e,
-                          })
-                        )
-                      )
-                    )
-                )
-              )
+                          }),
+                        ),
+                      ),
+                    ),
+                ),
+              ),
             )
           : null;
       };
@@ -2976,7 +2982,7 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                 },
-                "Const"
+                "Const",
               ),
               n.default.createElement(
                 "span",
@@ -2984,8 +2990,8 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--const",
                 },
-                a.stringify(t.const)
-              )
+                a.stringify(t.const),
+              ),
             )
           : null;
       };
@@ -3001,7 +3007,7 @@ var ut = {
             {
               className: `json-schema-2020-12__constraint json-schema-2020-12__constraint--${t.scope}`,
             },
-            t.value
+            t.value,
           );
         },
         s = n.default.memo(r);
@@ -3021,7 +3027,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
           },
-          "Contains"
+          "Contains",
         );
         return n.default.createElement(
           "div",
@@ -3029,7 +3035,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword json-schema-2020-12-keyword--contains",
           },
-          n.default.createElement(s, { name: o, schema: t.contains })
+          n.default.createElement(s, { name: o, schema: t.contains }),
         );
       };
     },
@@ -3048,7 +3054,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
           },
-          "Content schema"
+          "Content schema",
         );
         return n.default.createElement(
           "div",
@@ -3056,7 +3062,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword json-schema-2020-12-keyword--contentSchema",
           },
-          n.default.createElement(s, { name: o, schema: t.contentSchema })
+          n.default.createElement(s, { name: o, schema: t.contentSchema }),
         );
       };
     },
@@ -3080,7 +3086,7 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                 },
-                "Default"
+                "Default",
               ),
               n.default.createElement(
                 "span",
@@ -3088,8 +3094,8 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--const",
                 },
-                a.stringify(t.default)
-              )
+                a.stringify(t.default),
+              ),
             )
           : null;
       };
@@ -3115,7 +3121,7 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                 },
-                "Required when defined"
+                "Required when defined",
               ),
               r.default.createElement(
                 "ul",
@@ -3130,11 +3136,11 @@ var ut = {
                         className:
                           "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--warning",
                       },
-                      e
-                    )
-                  )
-                )
-              )
+                      e,
+                    ),
+                  ),
+                ),
+              ),
             );
       };
     },
@@ -3183,8 +3189,8 @@ var ut = {
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                     },
-                    "Dependent schemas"
-                  )
+                    "Dependent schemas",
+                  ),
                 ),
                 o.default.createElement(y, { expanded: p, onClick: S }),
                 o.default.createElement(
@@ -3193,14 +3199,16 @@ var ut = {
                     className:
                       "json-schema-2020-12__attribute json-schema-2020-12__attribute--primary",
                   },
-                  "object"
+                  "object",
                 ),
                 o.default.createElement(
                   "ul",
                   {
                     className: (0, l.default)(
                       "json-schema-2020-12-keyword__children",
-                      { "json-schema-2020-12-keyword__children--collapsed": !p }
+                      {
+                        "json-schema-2020-12-keyword__children--collapsed": !p,
+                      },
                     ),
                   },
                   p &&
@@ -3212,12 +3220,12 @@ var ut = {
                         return o.default.createElement(
                           "li",
                           { key: t, className: "json-schema-2020-12-property" },
-                          o.default.createElement(v, { name: t, schema: a })
+                          o.default.createElement(v, { name: t, schema: a }),
                         );
-                      })
-                    )
-                )
-              )
+                      }),
+                    ),
+                ),
+              ),
             );
       };
     },
@@ -3235,7 +3243,7 @@ var ut = {
                 className:
                   "json-schema-2020-12__attribute json-schema-2020-12__attribute--warning",
               },
-              "deprecated"
+              "deprecated",
             );
       };
     },
@@ -3258,8 +3266,8 @@ var ut = {
                   className:
                     "json-schema-2020-12-core-keyword__value json-schema-2020-12-core-keyword__value--secondary",
                 },
-                t.description
-              )
+                t.description,
+              ),
             )
           : null;
       };
@@ -3279,7 +3287,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
           },
-          "Else"
+          "Else",
         );
         return n.default.createElement(
           "div",
@@ -3287,7 +3295,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword json-schema-2020-12-keyword--if",
           },
-          n.default.createElement(s, { name: o, schema: t.else })
+          n.default.createElement(s, { name: o, schema: t.else }),
         );
       };
     },
@@ -3314,7 +3322,7 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                 },
-                "Allowed values"
+                "Allowed values",
               ),
               s.default.createElement(
                 "ul",
@@ -3330,11 +3338,11 @@ var ut = {
                         className:
                           "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--const",
                       },
-                      t
-                    )
+                      t,
+                    ),
                   );
-                })
-              )
+                }),
+              ),
             )
           : null;
       };
@@ -3354,7 +3362,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
           },
-          "If"
+          "If",
         );
         return n.default.createElement(
           "div",
@@ -3362,7 +3370,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword json-schema-2020-12-keyword--if",
           },
-          n.default.createElement(s, { name: o, schema: t.if })
+          n.default.createElement(s, { name: o, schema: t.if }),
         );
       };
     },
@@ -3381,7 +3389,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
           },
-          "Items"
+          "Items",
         );
         return n.default.createElement(
           "div",
@@ -3389,7 +3397,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword json-schema-2020-12-keyword--items",
           },
-          n.default.createElement(s, { name: o, schema: t.items })
+          n.default.createElement(s, { name: o, schema: t.items }),
         );
       };
     },
@@ -3408,7 +3416,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
           },
-          "Not"
+          "Not",
         );
         return n.default.createElement(
           "div",
@@ -3416,7 +3424,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword json-schema-2020-12-keyword--not",
           },
-          n.default.createElement(s, { name: o, schema: t.not })
+          n.default.createElement(s, { name: o, schema: t.not }),
         );
       };
     },
@@ -3464,8 +3472,8 @@ var ut = {
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                     },
-                    "One of"
-                  )
+                    "One of",
+                  ),
                 ),
                 s.default.createElement(g, { expanded: d, onClick: S }),
                 s.default.createElement(v, { schema: { oneOf: a } }),
@@ -3474,7 +3482,9 @@ var ut = {
                   {
                     className: (0, o.default)(
                       "json-schema-2020-12-keyword__children",
-                      { "json-schema-2020-12-keyword__children--collapsed": !d }
+                      {
+                        "json-schema-2020-12-keyword__children--collapsed": !d,
+                      },
                     ),
                   },
                   d &&
@@ -3491,12 +3501,12 @@ var ut = {
                           s.default.createElement(y, {
                             name: `#${t} ${c.getTitle(e)}`,
                             schema: e,
-                          })
-                        )
-                      )
-                    )
-                )
-              )
+                          }),
+                        ),
+                      ),
+                    ),
+                ),
+              ),
             )
           : null;
       };
@@ -3529,10 +3539,10 @@ var ut = {
                   return o.default.createElement(
                     "li",
                     { key: t, className: "json-schema-2020-12-property" },
-                    o.default.createElement(c, { name: t, schema: a })
+                    o.default.createElement(c, { name: t, schema: a }),
                   );
-                })
-              )
+                }),
+              ),
             );
       };
     },
@@ -3580,8 +3590,8 @@ var ut = {
                       className:
                         "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
                     },
-                    "Prefix items"
-                  )
+                    "Prefix items",
+                  ),
                 ),
                 s.default.createElement(g, { expanded: d, onClick: S }),
                 s.default.createElement(v, { schema: { prefixItems: a } }),
@@ -3590,7 +3600,9 @@ var ut = {
                   {
                     className: (0, o.default)(
                       "json-schema-2020-12-keyword__children",
-                      { "json-schema-2020-12-keyword__children--collapsed": !d }
+                      {
+                        "json-schema-2020-12-keyword__children--collapsed": !d,
+                      },
                     ),
                   },
                   d &&
@@ -3607,12 +3619,12 @@ var ut = {
                           s.default.createElement(y, {
                             name: `#${t} ${c.getTitle(e)}`,
                             schema: e,
-                          })
-                        )
-                      )
-                    )
-                )
-              )
+                          }),
+                        ),
+                      ),
+                    ),
+                ),
+              ),
             )
           : null;
       };
@@ -3655,17 +3667,17 @@ var ut = {
                       key: t,
                       className: (0, c.default)(
                         "json-schema-2020-12-property",
-                        { "json-schema-2020-12-property--required": r }
+                        { "json-schema-2020-12-property--required": r },
                       ),
                     },
                     i.default.createElement(f, {
                       name: t,
                       schema: n,
                       dependentRequired: s,
-                    })
+                    }),
                   );
-                })
-              )
+                }),
+              ),
             );
       };
     },
@@ -3684,7 +3696,7 @@ var ut = {
               className:
                 "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
             },
-            "Property names"
+            "Property names",
           );
         return a.hasKeyword(t, "propertyNames")
           ? n.default.createElement(
@@ -3693,7 +3705,7 @@ var ut = {
                 className:
                   "json-schema-2020-12-keyword json-schema-2020-12-keyword--propertyNames",
               },
-              n.default.createElement(o, { name: l, schema: s })
+              n.default.createElement(o, { name: l, schema: s }),
             )
           : null;
       };
@@ -3712,7 +3724,7 @@ var ut = {
                 className:
                   "json-schema-2020-12__attribute json-schema-2020-12__attribute--muted",
               },
-              "read-only"
+              "read-only",
             );
       };
     },
@@ -3731,7 +3743,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
           },
-          "Then"
+          "Then",
         );
         return n.default.createElement(
           "div",
@@ -3739,7 +3751,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword json-schema-2020-12-keyword--then",
           },
-          n.default.createElement(s, { name: o, schema: t.then })
+          n.default.createElement(s, { name: o, schema: t.then }),
         );
       };
     },
@@ -3754,7 +3766,7 @@ var ut = {
           ? n.default.createElement(
               "div",
               { className: "json-schema-2020-12__title" },
-              t || s.getTitle(a)
+              t || s.getTitle(a),
             )
           : null;
       };
@@ -3775,7 +3787,7 @@ var ut = {
             className:
               "json-schema-2020-12__attribute json-schema-2020-12__attribute--primary",
           },
-          `${s}${o}`
+          `${s}${o}`,
         );
       };
       s.defaultProps = { isCircular: !1 };
@@ -3797,7 +3809,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
           },
-          "Unevaluated items"
+          "Unevaluated items",
         );
         return n.default.createElement(
           "div",
@@ -3805,7 +3817,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword json-schema-2020-12-keyword--unevaluatedItems",
           },
-          n.default.createElement(o, { name: l, schema: s })
+          n.default.createElement(o, { name: l, schema: s }),
         );
       };
     },
@@ -3825,7 +3837,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--primary",
           },
-          "Unevaluated properties"
+          "Unevaluated properties",
         );
         return n.default.createElement(
           "div",
@@ -3833,7 +3845,7 @@ var ut = {
             className:
               "json-schema-2020-12-keyword json-schema-2020-12-keyword--unevaluatedProperties",
           },
-          n.default.createElement(o, { name: l, schema: s })
+          n.default.createElement(o, { name: l, schema: s }),
         );
       };
     },
@@ -3851,7 +3863,7 @@ var ut = {
                 className:
                   "json-schema-2020-12__attribute json-schema-2020-12__attribute--muted",
               },
-              "write-only"
+              "write-only",
             );
       };
     },
@@ -3953,7 +3965,7 @@ var ut = {
                     "number",
                     "integer",
                     "string",
-                  ])
+                  ]),
                 ).call(t, d)
               ? d
               : (() => {
@@ -4064,7 +4076,7 @@ var ut = {
           return null === e ||
             (0, l.default)((t = ["number", "bigint", "boolean"])).call(
               t,
-              typeof e
+              typeof e,
             )
             ? String(e)
             : (0, s.default)(e)
@@ -4123,7 +4135,7 @@ var ut = {
           const r = x(
             "characters",
             null == e ? void 0 : e.minLength,
-            null == e ? void 0 : e.maxLength
+            null == e ? void 0 : e.maxLength,
           );
           null !== r && t.push({ scope: "string", value: r }),
             null != e &&
@@ -4147,19 +4159,19 @@ var ut = {
           const s = x(
             null != e && e.hasUniqueItems ? "unique items" : "items",
             null == e ? void 0 : e.minItems,
-            null == e ? void 0 : e.maxItems
+            null == e ? void 0 : e.maxItems,
           );
           null !== s && t.push({ scope: "array", value: s });
           const o = x(
             "contained items",
             null == e ? void 0 : e.minContains,
-            null == e ? void 0 : e.maxContains
+            null == e ? void 0 : e.maxContains,
           );
           null !== o && t.push({ scope: "array", value: o });
           const l = x(
             "properties",
             null == e ? void 0 : e.minProperties,
-            null == e ? void 0 : e.maxProperties
+            null == e ? void 0 : e.maxProperties,
           );
           return null !== l && t.push({ scope: "object", value: l }), t;
         },
@@ -4175,8 +4187,8 @@ var ut = {
                       ? (t.add(n), t)
                       : t;
                   },
-                  new f.default()
-                )
+                  new f.default(),
+                ),
               )
             : [];
         };
@@ -4299,7 +4311,7 @@ var ut = {
             n.default.createElement(
               z.JSONSchemaContext.Provider,
               { value: a },
-              n.default.createElement(e, t)
+              n.default.createElement(e, t),
             );
         return (
           (H.contexts = { JSONSchemaContext: z.JSONSchemaContext }),
@@ -4547,7 +4559,7 @@ var ut = {
         !(function (e, t) {
           if (t.has(e))
             throw new TypeError(
-              "Cannot initialize the same private elements twice on an object"
+              "Cannot initialize the same private elements twice on an object",
             );
         })(e, t),
           t.set(e, a);
@@ -4591,7 +4603,7 @@ var ut = {
         !(function (e, t) {
           if (t.has(e))
             throw new TypeError(
-              "Cannot initialize the same private elements twice on an object"
+              "Cannot initialize the same private elements twice on an object",
             );
         })(e, t),
           t.set(e, a);
@@ -4717,7 +4729,7 @@ var ut = {
               )
                 p.required = (0, i.default)((f = p.required || [])).call(
                   f,
-                  (e) => e !== r
+                  (e) => e !== r,
                 );
               else p.properties[r] = d(s, n, a);
             }
@@ -5209,7 +5221,7 @@ var ut = {
             C = !p && (0, n.default)(e.anyOf) && e.anyOf.length > 0;
           if (!p && (g || C)) {
             const t = (0, E.typeCast)(
-              g ? (0, w.pick)(e.oneOf) : (0, w.pick)(e.anyOf)
+              g ? (0, w.pick)(e.oneOf) : (0, w.pick)(e.anyOf),
             );
             !(e = (0, b.default)(e, t, a)).xml && t.xml && (e.xml = t.xml),
               (0, S.hasExample)(e) && (0, S.hasExample)(t) && (p = !0);
@@ -5267,7 +5279,7 @@ var ut = {
                         d
                           ? (0, s.default)((a = e.required)).call(
                               a,
-                              (e) => (t += void 0 === B[e] ? 0 : 1)
+                              (e) => (t += void 0 === B[e] ? 0 : 1),
                             )
                           : (0, s.default)((r = e.required)).call(r, (e) => {
                               var a;
@@ -5277,7 +5289,7 @@ var ut = {
                                   ? void 0
                                   : (0, o.default)(a).call(
                                       a,
-                                      (t) => void 0 !== t[e]
+                                      (t) => void 0 !== t[e],
                                     ))
                                   ? 0
                                   : 1;
@@ -5326,7 +5338,7 @@ var ut = {
                       (0, f.default)(
                         null === (r = e.discriminator) || void 0 === r
                           ? void 0
-                          : r.mapping
+                          : r.mapping,
                       ) &&
                       e.discriminator.propertyName === t &&
                       "string" == typeof e.$$ref
@@ -5408,15 +5420,15 @@ var ut = {
               )
                 t.push(
                   ...(0, c.default)((G = I.anyOf)).call(G, (e) =>
-                    _((0, b.default)(e, I, a), a, void 0, d)
-                  )
+                    _((0, b.default)(e, I, a), a, void 0, d),
+                  ),
                 );
               else if ((0, n.default)(I.oneOf)) {
                 var Y;
                 t.push(
                   ...(0, c.default)((Y = I.oneOf)).call(Y, (e) =>
-                    _((0, b.default)(e, I, a), a, void 0, d)
-                  )
+                    _((0, b.default)(e, I, a), a, void 0, d),
+                  ),
                 );
               } else {
                 if (!(!d || (d && N.wrapped))) return _(I, a, void 0, d);
@@ -5431,15 +5443,15 @@ var ut = {
               )
                 t.push(
                   ...(0, c.default)((Z = A.anyOf)).call(Z, (e) =>
-                    _((0, b.default)(e, A, a), a, void 0, d)
-                  )
+                    _((0, b.default)(e, A, a), a, void 0, d),
+                  ),
                 );
               else if ((0, n.default)(A.oneOf)) {
                 var X;
                 t.push(
                   ...(0, c.default)((X = A.oneOf)).call(X, (e) =>
-                    _((0, b.default)(e, A, a), a, void 0, d)
-                  )
+                    _((0, b.default)(e, A, a), a, void 0, d),
+                  ),
                 );
               } else {
                 if (!(!d || (d && N.wrapped))) return _(A, a, void 0, d);
@@ -5808,7 +5820,7 @@ var ut = {
               for (; o.length < s; ) o += o[e++ % o.length];
             }
             return o;
-          })(q, e)
+          })(q, e),
         );
       };
     },
@@ -5880,7 +5892,7 @@ var ut = {
             s = t.payload.mode;
           return e.setIn(
             (0, n.default)((a = ["modes"])).call(a, r),
-            (s || "") + ""
+            (s || "") + "",
           );
         },
       };
@@ -5910,7 +5922,7 @@ var ut = {
         },
         u = (0, n.createSelector)(
           (e) => e,
-          (e) => !i(e, "editor")
+          (e) => !i(e, "editor"),
         );
     },
     8989: (e, t, a) => {
@@ -6102,11 +6114,11 @@ var ut = {
                             new l.Map({
                               [t]: (0, r.default)(i).call(
                                 i,
-                                (e) => void 0 !== e
+                                (e) => void 0 !== e,
                               ),
-                            })
+                            }),
                           );
-                        }
+                        },
                       ),
                     ("http" !== i && "apiKey" !== i) ||
                       (o = o.push(new l.Map({ [t]: a }))),
@@ -6124,7 +6136,7 @@ var ut = {
                           (0, s.default)((i = e.get("scopes_supported"))).call(
                             i,
                             (e, t) => e.set(t, ""),
-                            new l.Map()
+                            new l.Map(),
                           ),
                         u = (0, l.fromJS)({
                           flow: n,
@@ -6137,14 +6149,14 @@ var ut = {
                       o = o.push(
                         new l.Map({
                           [t]: (0, r.default)(u).call(u, (e) => void 0 !== e),
-                        })
+                        }),
                       );
                     });
                   }
                 }),
                 o)
               : o;
-          }
+          },
         )),
         (e, t) =>
           function () {
@@ -6201,10 +6213,10 @@ var ut = {
                       path: t.path,
                       specPath: t.specPath,
                       allowTryItOut: !1,
-                    })
-                  )
+                    }),
+                  ),
                 );
-              })
+              }),
             );
       };
     },
@@ -6252,7 +6264,7 @@ var ut = {
           let h = this.getValue(),
             g = (0, s.default)((e = n.allErrors())).call(
               e,
-              (e) => e.get("authId") === r
+              (e) => e.get("authId") === r,
             );
           if ("basic" === f) {
             var y;
@@ -6265,13 +6277,15 @@ var ut = {
                 null,
                 l.default.createElement("code", null, r || t.get("name")),
                 "  (http, Basic)",
-                l.default.createElement(m, { path: ["securityDefinitions", r] })
+                l.default.createElement(m, {
+                  path: ["securityDefinitions", r],
+                }),
               ),
               e && l.default.createElement("h6", null, "Authorized"),
               l.default.createElement(
                 c,
                 null,
-                l.default.createElement(p, { source: t.get("description") })
+                l.default.createElement(p, { source: t.get("description") }),
               ),
               l.default.createElement(
                 c,
@@ -6289,8 +6303,8 @@ var ut = {
                         "aria-label": "auth-basic-username",
                         onChange: this.onChange,
                         autoFocus: !0,
-                      })
-                    )
+                      }),
+                    ),
               ),
               l.default.createElement(
                 c,
@@ -6307,12 +6321,12 @@ var ut = {
                         type: "password",
                         "aria-label": "auth-basic-password",
                         onChange: this.onChange,
-                      })
-                    )
+                      }),
+                    ),
               ),
               (0, o.default)((y = g.valueSeq())).call(y, (e, t) =>
-                l.default.createElement(d, { error: e, key: t })
-              )
+                l.default.createElement(d, { error: e, key: t }),
+              ),
             );
           }
           var v;
@@ -6327,13 +6341,13 @@ var ut = {
                   "  (http, Bearer)",
                   l.default.createElement(m, {
                     path: ["securityDefinitions", r],
-                  })
+                  }),
                 ),
                 h && l.default.createElement("h6", null, "Authorized"),
                 l.default.createElement(
                   c,
                   null,
-                  l.default.createElement(p, { source: t.get("description") })
+                  l.default.createElement(p, { source: t.get("description") }),
                 ),
                 l.default.createElement(
                   c,
@@ -6349,12 +6363,12 @@ var ut = {
                           "aria-label": "auth-bearer-value",
                           onChange: this.onChange,
                           autoFocus: !0,
-                        })
-                      )
+                        }),
+                      ),
                 ),
                 (0, o.default)((v = g.valueSeq())).call(v, (e, t) =>
-                  l.default.createElement(d, { error: e, key: t })
-                )
+                  l.default.createElement(d, { error: e, key: t }),
+                ),
               )
             : l.default.createElement(
                 "div",
@@ -6364,8 +6378,8 @@ var ut = {
                   null,
                   l.default.createElement("b", null, r),
                   " HTTP authentication: unsupported scheme ",
-                  `'${f}'`
-                )
+                  `'${f}'`,
+                ),
               );
         }
       }
@@ -6413,9 +6427,9 @@ var ut = {
               s.default.createElement(
                 "b",
                 null,
-                s.default.createElement("code", null, t)
+                s.default.createElement("code", null, t),
               ),
-              c ? s.default.createElement(o, { source: c }) : null
+              c ? s.default.createElement(o, { source: c }) : null,
             ),
             s.default.createElement(
               "pre",
@@ -6433,8 +6447,8 @@ var ut = {
                   .call(a, (t, a) => (a > 0 ? Array(e + 1).join(" ") + t : t))
                   .join("\n");
               })(0, (0, n.default)(i, null, 2)) || "{}",
-              s.default.createElement("br", null)
-            )
+              s.default.createElement("br", null),
+            ),
           );
         }
       }
@@ -6472,7 +6486,7 @@ var ut = {
               const { path: a, method: n } = this.props;
               return this.props.getServerVariable(
                 { namespace: `${a}:${n}`, server: e },
-                t
+                t,
               );
             }),
             (0, n.default)(this, "getEffectiveServerValue", (e) => {
@@ -6505,9 +6519,9 @@ var ut = {
                 r.default.createElement(
                   "h4",
                   { className: "opblock-title" },
-                  "Servers"
-                )
-              )
+                  "Servers",
+                ),
+              ),
             ),
             r.default.createElement(
               "div",
@@ -6517,7 +6531,7 @@ var ut = {
                 { className: "message" },
                 "These ",
                 o,
-                "-level options override the global server options."
+                "-level options override the global server options.",
               ),
               r.default.createElement(n, {
                 servers: s,
@@ -6526,8 +6540,8 @@ var ut = {
                 setServerVariableValue: this.setServerVariableValue,
                 getServerVariable: this.getServerVariable,
                 getEffectiveServerValue: this.getEffectiveServerValue,
-              })
-            )
+              }),
+            ),
           );
         }
       }
@@ -6578,7 +6592,7 @@ var ut = {
               title: t.size ? t.join(", ") : "",
               value: a,
               onChange: this.onDomChange,
-            })
+            }),
           );
         }
       }
@@ -6680,7 +6694,7 @@ var ut = {
                   null,
                   "Example values are not available for ",
                   l.default.createElement("code", null, E),
-                  " media types."
+                  " media types.",
                 );
           }
           if (
@@ -6712,7 +6726,7 @@ var ut = {
                         if (g.get("readOnly")) return;
                         let y = D ? (0, c.po)(g) : null;
                         const E = (0, s.default)(
-                            (r = U.get("required", (0, i.List)()))
+                            (r = U.get("required", (0, i.List)())),
                           ).call(r, d),
                           w = g.get("type"),
                           _ = g.get("format"),
@@ -6761,7 +6775,7 @@ var ut = {
                               d,
                               E
                                 ? l.default.createElement("span", null, " *")
-                                : null
+                                : null,
                             ),
                             l.default.createElement(
                               "div",
@@ -6773,7 +6787,7 @@ var ut = {
                                   { className: "prop-format" },
                                   "($",
                                   _,
-                                  ")"
+                                  ")",
                                 ),
                               D && y.size
                                 ? (0, n.default)((u = y.entrySeq())).call(
@@ -6785,15 +6799,15 @@ var ut = {
                                         xKey: a,
                                         xVal: n,
                                       });
-                                    }
+                                    },
                                   )
-                                : null
+                                : null,
                             ),
                             l.default.createElement(
                               "div",
                               { className: "parameter__deprecated" },
-                              g.get("deprecated") ? "deprecated" : null
-                            )
+                              g.get("deprecated") ? "deprecated" : null,
+                            ),
                           ),
                           l.default.createElement(
                             "td",
@@ -6825,14 +6839,14 @@ var ut = {
                                         isDisabled: (0, o.default)(j)
                                           ? 0 !== j.length
                                           : !(0, c.O2)(j),
-                                      })
+                                      }),
                                 )
-                              : null
-                          )
+                              : null,
+                          ),
                         );
-                      })
-                  )
-                )
+                      }),
+                  ),
+                ),
               )
             );
           }
@@ -6869,7 +6883,7 @@ var ut = {
                       defaultValue: W,
                       onChange: b,
                       getComponent: h,
-                    })
+                    }),
                   )
                 : l.default.createElement(A, {
                     getComponent: h,
@@ -6893,7 +6907,7 @@ var ut = {
                     getComponent: h,
                     getConfigs: g,
                   })
-                : null
+                : null,
             )
           );
         };
@@ -6919,7 +6933,7 @@ var ut = {
                 n.default.createElement(
                   "span",
                   { className: "servers-title" },
-                  "Servers"
+                  "Servers",
                 ),
                 n.default.createElement(o, {
                   servers: s,
@@ -6928,7 +6942,7 @@ var ut = {
                   setServerVariableValue: a.setServerVariableValue,
                   getServerVariable: t.serverVariableValue,
                   getEffectiveServerValue: t.serverEffectiveValue,
-                })
+                }),
               )
             : null;
         }
@@ -6964,7 +6978,7 @@ var ut = {
           let { servers: t, currentServer: a } = this.props;
           a ||
             this.setServer(
-              null === (e = t.first()) || void 0 === e ? void 0 : e.get("url")
+              null === (e = t.first()) || void 0 === e ? void 0 : e.get("url"),
             );
         }
         UNSAFE_componentWillReceiveProps(e) {
@@ -6980,12 +6994,12 @@ var ut = {
             var o;
             let i = (0, r.default)(t).call(
                 t,
-                (t) => t.get("url") === e.currentServer
+                (t) => t.get("url") === e.currentServer,
               ),
               c =
                 (0, r.default)((o = this.props.servers)).call(
                   o,
-                  (e) => e.get("url") === this.props.currentServer
+                  (e) => e.get("url") === this.props.currentServer,
                 ) || (0, l.OrderedMap)();
             if (!i) return this.setServer(t.first().get("url"));
             let u = c.get("variables") || (0, l.OrderedMap)(),
@@ -7037,11 +7051,11 @@ var ut = {
                       "option",
                       { value: e.get("url"), key: e.get("url") },
                       e.get("url"),
-                      e.get("description") && ` - ${e.get("description")}`
-                    )
+                      e.get("description") && ` - ${e.get("description")}`,
+                    ),
                   )
-                  .toArray()
-              )
+                  .toArray(),
+              ),
             ),
             d
               ? o.default.createElement(
@@ -7051,7 +7065,7 @@ var ut = {
                     "div",
                     { className: "computed-url" },
                     "Computed URL:",
-                    o.default.createElement("code", null, c(n))
+                    o.default.createElement("code", null, c(n)),
                   ),
                   o.default.createElement("h4", null, "Server variables"),
                   o.default.createElement(
@@ -7087,23 +7101,23 @@ var ut = {
                                           key: e,
                                           value: e,
                                         },
-                                        e
-                                      )
-                                  )
+                                        e,
+                                      ),
+                                  ),
                                 )
                               : o.default.createElement("input", {
                                   type: "text",
                                   value: i(n, a) || "",
                                   onChange: this.onServerVariableValueChange,
                                   "data-variable": a,
-                                })
-                          )
+                                }),
+                          ),
                         );
-                      })
-                    )
-                  )
+                      }),
+                    ),
+                  ),
                 )
-              : null
+              : null,
           );
         }
       }
@@ -7273,8 +7287,8 @@ var ut = {
                 (0, s.default)(t).call(
                   t,
                   (e, t) => e.setIn([t, "errors"], (0, o.fromJS)(l)),
-                  e
-                )
+                  e,
+                ),
             );
           }
           return (
@@ -7298,8 +7312,8 @@ var ut = {
                   (0, s.default)(i).call(
                     i,
                     (e, t) => e.setIn([t, "errors"], (0, o.fromJS)([])),
-                    e
-                  )
+                    e,
+                  ),
               )
             : e;
         },
@@ -7367,7 +7381,7 @@ var ut = {
         }),
         m = d((e, t, a) => e.getIn(["requestData", t, a, "bodyValue"]) || null),
         f = d(
-          (e, t, a) => e.getIn(["requestData", t, a, "retainBodyValue"]) || !1
+          (e, t, a) => e.getIn(["requestData", t, a, "retainBodyValue"]) || !1,
         ),
         h = (e, t, a) => (e) => {
           const { oas3Selectors: n, specSelectors: r, fn: s } = e.getSystem();
@@ -7378,7 +7392,7 @@ var ut = {
                 r.specResolvedSubtree(["paths", t, a, "requestBody"]),
                 e,
                 n.activeExamplesMember(t, a, "requestBody", "requestBody"),
-                s
+                s,
               );
           }
           return null;
@@ -7395,9 +7409,9 @@ var ut = {
               (d = (0, u.Pz)(
                 d
                   .mapEntries((e) =>
-                    l.Map.isMap(e[1]) ? [e[0], e[1].get("value")] : e
+                    l.Map.isMap(e[1]) ? [e[0], e[1].get("value")] : e,
                   )
-                  .toJS()
+                  .toJS(),
               )),
             l.List.isList(d) && (d = (0, u.Pz)(d)),
             i)
@@ -7406,7 +7420,7 @@ var ut = {
               p,
               i,
               n.activeExamplesMember(t, a, "requestBody", "requestBody"),
-              s
+              s,
             );
             o = !!d && d !== e;
           }
@@ -7414,20 +7428,20 @@ var ut = {
         }),
         y = d(
           (e, t, a) =>
-            e.getIn(["requestData", t, a, "bodyInclusion"]) || (0, l.Map)()
+            e.getIn(["requestData", t, a, "bodyInclusion"]) || (0, l.Map)(),
         ),
         v = d((e, t, a) => e.getIn(["requestData", t, a, "errors"]) || null),
         E = d(
           (e, t, a, n, r) =>
-            e.getIn(["examples", t, a, n, r, "activeExample"]) || null
+            e.getIn(["examples", t, a, n, r, "activeExample"]) || null,
         ),
         S = d(
           (e, t, a) =>
-            e.getIn(["requestData", t, a, "requestContentType"]) || null
+            e.getIn(["requestData", t, a, "requestContentType"]) || null,
         ),
         w = d(
           (e, t, a) =>
-            e.getIn(["requestData", t, a, "responseContentType"]) || null
+            e.getIn(["requestData", t, a, "responseContentType"]) || null,
         ),
         b = d((e, t, a) => {
           let n;
@@ -7508,7 +7522,7 @@ var ut = {
                     (0, o.default)(d).call(d, e) < 0 && d.push(e);
                   });
                 }
-              }
+              },
             ),
             (0, r.default)(d).call(d, (e) => {
               c.getIn([e, "value"]) || u.push(e);
@@ -7594,8 +7608,8 @@ var ut = {
                                     (e) => {
                                       let [t] = e;
                                       return (0, o.default)(u).call(u, t);
-                                    }
-                                  ))
+                                    },
+                                  )),
                                 ).call(d, (e) => {
                                   let [t, n] = e;
                                   return {
@@ -7612,12 +7626,12 @@ var ut = {
                                 });
                                 return (0, l.default)(e).call(e, m);
                               },
-                              (0, i.List)()
+                              (0, i.List)(),
                             )
                           : e,
-                      (0, i.List)()
+                      (0, i.List)(),
                     )
-                    .groupBy((e) => e.callbackName))
+                    .groupBy((e) => e.callbackName)),
                 )
                   .call(t, (e) => e.toArray())
                   .toObject()
@@ -7662,13 +7676,13 @@ var ut = {
         }),
         u = l(
           () => (e) =>
-            e.getSystem().specSelectors.specJson().hasIn(["servers", 0])
+            e.getSystem().specSelectors.specJson().hasIn(["servers", 0]),
         ),
         d = l(
           (0, n.createSelector)(
             r.specJsonWithResolvedSubtrees,
-            (e) => e.getIn(["components", "securitySchemes"]) || null
-          )
+            (e) => e.getIn(["components", "securitySchemes"]) || null,
+          ),
         ),
         p = (e, t) =>
           function (a) {
@@ -7802,7 +7816,7 @@ var ut = {
               (s = r.default.createElement(
                 "span",
                 { className: "model-deprecated-warning" },
-                "Deprecated:"
+                "Deprecated:",
               ))),
             r.default.createElement(
               "div",
@@ -7814,8 +7828,8 @@ var ut = {
                   getConfigs: e,
                   depth: 1,
                   expandDepth: this.props.expandDepth || 0,
-                })
-              )
+                }),
+              ),
             )
           );
         }
@@ -7840,8 +7854,8 @@ var ut = {
           n.default.createElement(
             "small",
             { className: "version-stamp" },
-            n.default.createElement("pre", { className: "version" }, "OAS 3.0")
-          )
+            n.default.createElement("pre", { className: "version" }, "OAS 3.0"),
+          ),
         );
       });
     },
@@ -7871,7 +7885,7 @@ var ut = {
               memoizedCreateXMLExample:
                 t.jsonSchema202012.memoizedCreateXMLExample,
             },
-            a()
+            a(),
           );
           (0, n.default)(this.fn, e);
         }
@@ -7898,15 +7912,15 @@ var ut = {
                 i,
                 { href: (0, r.Nm)(o), target: "_blank" },
                 s,
-                " - Website"
-              )
+                " - Website",
+              ),
             ),
           l &&
             n.default.createElement(
               i,
               { href: (0, r.Nm)(`mailto:${l}`) },
-              o ? `Send email to ${s}` : `Contact ${s}`
-            )
+              o ? `Send email to ${s}` : `Contact ${s}`,
+            ),
         );
       };
     },
@@ -7946,16 +7960,16 @@ var ut = {
               "h2",
               { className: "title" },
               d,
-              s && n.default.createElement(E, { version: s })
+              s && n.default.createElement(E, { version: s }),
             ),
             (i || l) && n.default.createElement(w, { host: i, basePath: l }),
-            o && n.default.createElement(S, { getComponent: t, url: o })
+            o && n.default.createElement(S, { getComponent: t, url: o }),
           ),
           c && n.default.createElement("p", { className: "info__summary" }, c),
           n.default.createElement(
             "div",
             { className: "info__description description" },
-            n.default.createElement(y, { source: u })
+            n.default.createElement(y, { source: u }),
           ),
           p &&
             n.default.createElement(
@@ -7964,8 +7978,8 @@ var ut = {
               n.default.createElement(
                 v,
                 { target: "_blank", href: (0, r.Nm)(p) },
-                "Terms of service"
-              )
+                "Terms of service",
+              ),
             ),
           h.size > 0 && n.default.createElement(x, null),
           g.size > 0 && n.default.createElement(b, null),
@@ -7977,9 +7991,9 @@ var ut = {
                 target: "_blank",
                 href: (0, r.Nm)(m),
               },
-              f || m
+              f || m,
             ),
-          n.default.createElement(_, null)
+          n.default.createElement(_, null),
         );
       };
     },
@@ -8005,8 +8019,8 @@ var ut = {
               n.default.createElement(
                 l,
                 { target: "_blank", href: (0, r.Nm)(s) },
-                s
-              )
+                s,
+              ),
             ),
           s &&
             s !== o &&
@@ -8025,7 +8039,7 @@ var ut = {
                     n.default.createElement(
                       "h4",
                       { className: "center" },
-                      "Warning"
+                      "Warning",
                     ),
                     n.default.createElement(
                       "p",
@@ -8033,21 +8047,21 @@ var ut = {
                       n.default.createElement(
                         "strong",
                         null,
-                        "OpenAPI.jsonSchemaDialect"
+                        "OpenAPI.jsonSchemaDialect",
                       ),
                       " field contains a value different from the default value of",
                       " ",
                       n.default.createElement(
                         l,
                         { target: "_blank", href: o },
-                        o
+                        o,
                       ),
-                      ". Values different from the default one are currently not supported. Please either omit the field or provide it with the default value."
-                    )
-                  )
-                )
-              )
-            )
+                      ". Values different from the default one are currently not supported. Please either omit the field or provide it with the default value.",
+                    ),
+                  ),
+                ),
+              ),
+            ),
         );
       };
     },
@@ -8070,10 +8084,10 @@ var ut = {
                 n.default.createElement(
                   l,
                   { target: "_blank", href: (0, r.Nm)(o) },
-                  s
-                )
+                  s,
+                ),
               )
-            : n.default.createElement("span", null, s)
+            : n.default.createElement("span", null, s),
         );
       };
     },
@@ -8102,7 +8116,7 @@ var ut = {
               (e, t) => {
                 o(i, t);
               },
-              [i, o]
+              [i, o],
             );
           return r.default.createElement(l, {
             name: i,
@@ -8190,8 +8204,8 @@ var ut = {
                   o.default.createElement("span", null, "Schemas"),
                   E
                     ? o.default.createElement(b, null)
-                    : o.default.createElement(x, null)
-                )
+                    : o.default.createElement(x, null),
+                ),
               ),
               o.default.createElement(
                 S,
@@ -8205,8 +8219,8 @@ var ut = {
                     name: t,
                     onExpand: N(t),
                   });
-                })
-              )
+                }),
+              ),
             );
       };
     },
@@ -8242,7 +8256,7 @@ var ut = {
                   n.default.createElement(
                     "h3",
                     null,
-                    "Unable to render this definition"
+                    "Unable to render this definition",
                   ),
                   n.default.createElement(
                     "p",
@@ -8250,7 +8264,7 @@ var ut = {
                     n.default.createElement("code", null, "swagger"),
                     " and ",
                     n.default.createElement("code", null, "openapi"),
-                    " fields cannot be present in the same Swagger or OpenAPI definition. Please remove one of the fields."
+                    " fields cannot be present in the same Swagger or OpenAPI definition. Please remove one of the fields.",
                   ),
                   n.default.createElement(
                     "p",
@@ -8262,10 +8276,10 @@ var ut = {
                     " (for example,",
                     " ",
                     n.default.createElement("code", null, "openapi: 3.1.0"),
-                    ")."
-                  )
-                )
-              )
+                    ").",
+                  ),
+                ),
+              ),
             )
           : a || r || s
           ? n.default.createElement("div", null, l)
@@ -8285,12 +8299,12 @@ var ut = {
                   n.default.createElement(
                     "h3",
                     null,
-                    "Unable to render this definition"
+                    "Unable to render this definition",
                   ),
                   n.default.createElement(
                     "p",
                     null,
-                    "The provided definition does not specify a valid version field."
+                    "The provided definition does not specify a valid version field.",
                   ),
                   n.default.createElement(
                     "p",
@@ -8302,10 +8316,10 @@ var ut = {
                     " (for example,",
                     " ",
                     n.default.createElement("code", null, "openapi: 3.1.0"),
-                    ")."
-                  )
-                )
-              )
+                    ").",
+                  ),
+                ),
+              ),
             );
       };
     },
@@ -8340,10 +8354,10 @@ var ut = {
                       path: e,
                       specPath: t.specPath,
                       allowTryItOut: !1,
-                    })
-                  )
+                    }),
+                  ),
                 );
-              })
+              }),
             );
       };
     },
@@ -8416,7 +8430,7 @@ var ut = {
                 (0, n.default)({}, r, {
                   originalComponent: t,
                   getSystem: a.getSystem,
-                })
+                }),
               )
             : l.default.createElement(t, r),
         m = (e, t) => {
@@ -8436,7 +8450,7 @@ var ut = {
                     : void 0;
                 },
               ];
-            })
+            }),
           );
         };
     },
@@ -8569,8 +8583,8 @@ var ut = {
               className:
                 "json-schema-2020-12-core-keyword__value json-schema-2020-12-core-keyword__value--secondary",
             },
-            n.default.createElement(s, { source: t.description })
-          )
+            n.default.createElement(s, { source: t.description }),
+          ),
         );
       };
     },
@@ -8622,10 +8636,10 @@ var ut = {
                             className:
                               "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                           },
-                          "Discriminator"
-                        )
+                          "Discriminator",
+                        ),
                       ),
-                      r.default.createElement(E, { expanded: f, onClick: b })
+                      r.default.createElement(E, { expanded: f, onClick: b }),
                     )
                   : r.default.createElement(
                       "span",
@@ -8633,7 +8647,7 @@ var ut = {
                         className:
                           "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                       },
-                      "Discriminator"
+                      "Discriminator",
                     ),
                 l.propertyName &&
                   r.default.createElement(
@@ -8642,7 +8656,7 @@ var ut = {
                       className:
                         "json-schema-2020-12__attribute json-schema-2020-12__attribute--muted",
                     },
-                    l.propertyName
+                    l.propertyName,
                   ),
                 r.default.createElement(
                   "strong",
@@ -8650,24 +8664,26 @@ var ut = {
                     className:
                       "json-schema-2020-12__attribute json-schema-2020-12__attribute--primary",
                   },
-                  "object"
+                  "object",
                 ),
                 r.default.createElement(
                   "ul",
                   {
                     className: (0, s.default)(
                       "json-schema-2020-12-keyword__children",
-                      { "json-schema-2020-12-keyword__children--collapsed": !f }
+                      {
+                        "json-schema-2020-12-keyword__children--collapsed": !f,
+                      },
                     ),
                   },
                   f &&
                     r.default.createElement(
                       "li",
                       { className: "json-schema-2020-12-property" },
-                      r.default.createElement(o.default, { discriminator: l })
-                    )
-                )
-              )
+                      r.default.createElement(o.default, { discriminator: l }),
+                    ),
+                ),
+              ),
             );
       };
     },
@@ -8695,7 +8711,7 @@ var ut = {
                     className:
                       "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                   },
-                  t
+                  t,
                 ),
                 o.default.createElement(
                   "span",
@@ -8703,8 +8719,8 @@ var ut = {
                     className:
                       "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                   },
-                  a
-                )
+                  a,
+                ),
               );
             });
       };
@@ -8732,7 +8748,7 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                 },
-                "Example"
+                "Example",
               ),
               n.default.createElement(
                 "span",
@@ -8740,8 +8756,8 @@ var ut = {
                   className:
                     "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--const",
                 },
-                o(t.example)
-              )
+                o(t.example),
+              ),
             )
           : null;
       };
@@ -8796,10 +8812,10 @@ var ut = {
                             className:
                               "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                           },
-                          "External documentation"
-                        )
+                          "External documentation",
+                        ),
                       ),
-                      r.default.createElement(E, { expanded: f, onClick: _ })
+                      r.default.createElement(E, { expanded: f, onClick: _ }),
                     )
                   : r.default.createElement(
                       "span",
@@ -8807,7 +8823,7 @@ var ut = {
                         className:
                           "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                       },
-                      "External documentation"
+                      "External documentation",
                     ),
                 r.default.createElement(
                   "strong",
@@ -8815,14 +8831,16 @@ var ut = {
                     className:
                       "json-schema-2020-12__attribute json-schema-2020-12__attribute--primary",
                   },
-                  "object"
+                  "object",
                 ),
                 r.default.createElement(
                   "ul",
                   {
                     className: (0, s.default)(
                       "json-schema-2020-12-keyword__children",
-                      { "json-schema-2020-12-keyword__children--collapsed": !f }
+                      {
+                        "json-schema-2020-12-keyword__children--collapsed": !f,
+                      },
                     ),
                   },
                   f &&
@@ -8836,7 +8854,7 @@ var ut = {
                           r.default.createElement(S, {
                             schema: l,
                             getSystem: a,
-                          })
+                          }),
                         ),
                       l.url &&
                         r.default.createElement(
@@ -8854,7 +8872,7 @@ var ut = {
                                 className:
                                   "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                               },
-                              "url"
+                              "url",
                             ),
                             r.default.createElement(
                               "span",
@@ -8865,14 +8883,14 @@ var ut = {
                               r.default.createElement(
                                 w,
                                 { target: "_blank", href: (0, o.Nm)(l.url) },
-                                l.url
-                              )
-                            )
-                          )
-                        )
-                    )
-                )
-              )
+                                l.url,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ),
+                ),
+              ),
             );
       };
     },
@@ -8917,17 +8935,17 @@ var ut = {
                       key: t,
                       className: (0, c.default)(
                         "json-schema-2020-12-property",
-                        { "json-schema-2020-12-property--required": r }
+                        { "json-schema-2020-12-property--required": r },
                       ),
                     },
                     i.default.createElement(y, {
                       name: t,
                       schema: n,
                       dependentRequired: s,
-                    })
+                    }),
                   );
-                })
-              )
+                }),
+              ),
             );
       };
     },
@@ -8978,10 +8996,10 @@ var ut = {
                             className:
                               "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                           },
-                          "XML"
-                        )
+                          "XML",
+                        ),
                       ),
-                      r.default.createElement(v, { expanded: m, onClick: w })
+                      r.default.createElement(v, { expanded: m, onClick: w }),
                     )
                   : r.default.createElement(
                       "span",
@@ -8989,7 +9007,7 @@ var ut = {
                         className:
                           "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                       },
-                      "XML"
+                      "XML",
                     ),
                 !0 === o.attribute &&
                   r.default.createElement(
@@ -8998,7 +9016,7 @@ var ut = {
                       className:
                         "json-schema-2020-12__attribute json-schema-2020-12__attribute--muted",
                     },
-                    "attribute"
+                    "attribute",
                   ),
                 !0 === o.wrapped &&
                   r.default.createElement(
@@ -9007,7 +9025,7 @@ var ut = {
                       className:
                         "json-schema-2020-12__attribute json-schema-2020-12__attribute--muted",
                     },
-                    "wrapped"
+                    "wrapped",
                   ),
                 r.default.createElement(
                   "strong",
@@ -9015,14 +9033,16 @@ var ut = {
                     className:
                       "json-schema-2020-12__attribute json-schema-2020-12__attribute--primary",
                   },
-                  "object"
+                  "object",
                 ),
                 r.default.createElement(
                   "ul",
                   {
                     className: (0, s.default)(
                       "json-schema-2020-12-keyword__children",
-                      { "json-schema-2020-12-keyword__children--collapsed": !m }
+                      {
+                        "json-schema-2020-12-keyword__children--collapsed": !m,
+                      },
                     ),
                   },
                   m &&
@@ -9045,7 +9065,7 @@ var ut = {
                                 className:
                                   "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                               },
-                              "name"
+                              "name",
                             ),
                             r.default.createElement(
                               "span",
@@ -9053,9 +9073,9 @@ var ut = {
                                 className:
                                   "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                               },
-                              o.name
-                            )
-                          )
+                              o.name,
+                            ),
+                          ),
                         ),
                       o.namespace &&
                         r.default.createElement(
@@ -9070,7 +9090,7 @@ var ut = {
                                 className:
                                   "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                               },
-                              "namespace"
+                              "namespace",
                             ),
                             r.default.createElement(
                               "span",
@@ -9078,9 +9098,9 @@ var ut = {
                                 className:
                                   "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                               },
-                              o.namespace
-                            )
-                          )
+                              o.namespace,
+                            ),
+                          ),
                         ),
                       o.prefix &&
                         r.default.createElement(
@@ -9095,7 +9115,7 @@ var ut = {
                                 className:
                                   "json-schema-2020-12-keyword__name json-schema-2020-12-keyword__name--secondary",
                               },
-                              "prefix"
+                              "prefix",
                             ),
                             r.default.createElement(
                               "span",
@@ -9103,13 +9123,13 @@ var ut = {
                                 className:
                                   "json-schema-2020-12-keyword__value json-schema-2020-12-keyword__value--secondary",
                               },
-                              o.prefix
-                            )
-                          )
-                        )
-                    )
-                )
-              )
+                              o.prefix,
+                            ),
+                          ),
+                        ),
+                    ),
+                ),
+              ),
             );
       };
     },
@@ -9159,7 +9179,7 @@ var ut = {
           n.default.createElement(o, { schema: t, getSystem: a }),
           n.default.createElement(l, { schema: t, getSystem: a }),
           n.default.createElement(c, { schema: t, getSystem: a }),
-          n.default.createElement(i, { schema: t, getSystem: a })
+          n.default.createElement(i, { schema: t, getSystem: a }),
         );
       });
     },
@@ -9187,7 +9207,7 @@ var ut = {
             ? (0, r.mn)(a, e, { selectedServer: t })
             : n
             ? `https://spdx.org/licenses/${n}.html`
-            : void 0
+            : void 0,
       );
     },
     9305: (e, t, a) => {
@@ -9231,7 +9251,7 @@ var ut = {
       const m = (0, c.Map)(),
         f = (0, u.createSelector)(
           (e, t) => t.specSelectors.specJson(),
-          p.isOAS31
+          p.isOAS31,
         ),
         h = () => (e) => e.specSelectors.specJson().get("webhooks", m),
         g = (0, u.createSelector)(
@@ -9254,8 +9274,8 @@ var ut = {
                             (e) => {
                               let [a] = e;
                               return (0, o.default)(t).call(t, a);
-                            }
-                          ))
+                            },
+                          )),
                         ).call(i, (e) => {
                           let [t, a] = e;
                           return {
@@ -9267,14 +9287,14 @@ var ut = {
                         });
                         return (0, l.default)(e).call(e, d);
                       },
-                      (0, c.List)()
+                      (0, c.List)(),
                     )
-                    .groupBy((e) => e.path))
+                    .groupBy((e) => e.path)),
                 )
                   .call(a, (e) => e.toArray())
                   .toObject()
               : {};
-          }
+          },
         ),
         y = () => (e) => e.specSelectors.info().get("license", m),
         v = () => (e) => e.specSelectors.license().get("name", "License"),
@@ -9285,7 +9305,7 @@ var ut = {
           (e, t) => t.specSelectors.selectLicenseUrlField(),
           (e, t, a) => {
             if (a) return (0, d.mn)(a, e, { selectedServer: t });
-          }
+          },
         ),
         w = () => (e) => e.specSelectors.license().get("identifier"),
         b = () => (e) => e.specSelectors.info().get("contact", m),
@@ -9298,7 +9318,7 @@ var ut = {
           (e, t) => t.specSelectors.selectContactUrlField(),
           (e, t, a) => {
             if (a) return (0, d.mn)(a, e, { selectedServer: t });
-          }
+          },
         ),
         N = () => (e) => e.specSelectors.info().get("title"),
         O = () => (e) => e.specSelectors.info().get("summary"),
@@ -9310,7 +9330,7 @@ var ut = {
           (e, t) => t.specSelectors.selectInfoTermsOfServiceField(),
           (e, t, a) => {
             if (a) return (0, d.mn)(a, e, { selectedServer: t });
-          }
+          },
         ),
         R = () => (e) => e.specSelectors.externalDocs().get("description"),
         P = () => (e) => e.specSelectors.externalDocs().get("url"),
@@ -9320,7 +9340,7 @@ var ut = {
           (e, t) => t.specSelectors.selectExternalDocsUrlField(),
           (e, t, a) => {
             if (a) return (0, d.mn)(a, e, { selectedServer: t });
-          }
+          },
         ),
         M = () => (e) => e.specSelectors.specJson().get("jsonSchemaDialect"),
         D = () => "https://spec.openapis.org/oas/3.1/dialect/base",
@@ -9339,11 +9359,11 @@ var ut = {
                       const s = t.get(n);
                       return (e[n] = (null == s ? void 0 : s.toJS()) || r), e;
                     },
-                    {}
+                    {},
                   )
                 : e.toJS()
               : {};
-          }
+          },
         );
     },
     2884: (e, t, a) => {
@@ -9361,7 +9381,7 @@ var ut = {
             return n || e(...s);
           },
         s = (0, n.createOnlyOAS31SelectorWrapper)(
-          () => (e, t) => t.oas31Selectors.selectLicenseUrl()
+          () => (e, t) => t.oas31Selectors.selectLicenseUrl(),
         );
     },
     7423: (e, t, a) => {
@@ -9499,7 +9519,7 @@ var ut = {
               upperFirst: l.upperFirst,
               isExpandable: (0, s.makeIsExpandable)(
                 l.jsonSchema202012.isExpandable,
-                t
+                t,
               ),
               getProperties: s.getProperties,
             },
@@ -9646,8 +9666,8 @@ var ut = {
           n.default.createElement(
             "small",
             { className: "version-stamp" },
-            n.default.createElement("pre", { className: "version" }, "OAS 3.1")
-          )
+            n.default.createElement("pre", { className: "version" }, "OAS 3.1"),
+          ),
         );
       });
     },
@@ -9791,7 +9811,7 @@ var ut = {
               r &&
               (0, u.default)((w = ["POST", "PUT", "PATCH"])).call(
                 w,
-                e.get("method")
+                e.get("method"),
               )
             )
               for (let [e, t] of S.entrySeq()) {
@@ -9820,17 +9840,17 @@ var ut = {
                           ? t.push(
                               `  "${e}": {\n    "name": "${n.name}"${
                                 n.type ? `,\n    "type": "${n.type}"` : ""
-                              }\n  }`
+                              }\n  }`,
                             )
                           : t.push(
                               `  "${e}": ${(0, s.default)(n, null, 2).replace(
                                 /(\r\n|\r|\n)/g,
-                                "\n  "
-                              )}`
+                                "\n  ",
+                              )}`,
                             );
                       }
                       return `{\n${t.join(",\n")}\n}`;
-                    })(e)
+                    })(e),
                   )
                 : ("string" != typeof t && (t = (0, s.default)(t)), h(t));
             }
@@ -9909,16 +9929,16 @@ var ut = {
             [x, _] = (0, l.useState)(
               null === (t = h.getSnippetGenerators()) || void 0 === t
                 ? void 0
-                : t.keySeq().first()
+                : t.keySeq().first(),
             ),
             [C, j] = (0, l.useState)(
-              null == h ? void 0 : h.getDefaultExpanded()
+              null == h ? void 0 : h.getDefaultExpanded(),
             );
           (0, l.useEffect)(() => {}, []),
             (0, l.useEffect)(() => {
               var e;
               const t = (0, n.default)(
-                (e = (0, r.default)(S.current.childNodes))
+                (e = (0, r.default)(S.current.childNodes)),
               ).call(e, (e) => {
                 var t;
                 return (
@@ -9930,11 +9950,11 @@ var ut = {
               });
               return (
                 (0, s.default)(t).call(t, (e) =>
-                  e.addEventListener("mousewheel", R, { passive: !1 })
+                  e.addEventListener("mousewheel", R, { passive: !1 }),
                 ),
                 () => {
                   (0, s.default)(t).call(t, (e) =>
-                    e.removeEventListener("mousewheel", R)
+                    e.removeEventListener("mousewheel", R),
                   );
                 }
               );
@@ -9960,10 +9980,10 @@ var ut = {
                     language: O.get("syntax"),
                     className: "curl microlight",
                     style: (0, d.C2)(
-                      (0, i.default)(v, "syntaxHighlight.theme")
+                      (0, i.default)(v, "syntaxHighlight.theme"),
                     ),
                   },
-                  k
+                  k,
                 )
               : l.default.createElement("textarea", {
                   readOnly: !0,
@@ -9987,7 +10007,7 @@ var ut = {
               l.default.createElement(
                 "h4",
                 { onClick: () => A(), style: { cursor: "pointer" } },
-                "Snippets"
+                "Snippets",
               ),
               l.default.createElement(
                 "button",
@@ -10006,8 +10026,8 @@ var ut = {
                       className: "arrow",
                       width: "10",
                       height: "10",
-                    })
-              )
+                    }),
+              ),
             ),
             C &&
               l.default.createElement(
@@ -10039,10 +10059,10 @@ var ut = {
                       l.default.createElement(
                         "h4",
                         { style: t === x ? { color: "white" } : {} },
-                        a.get("title")
-                      )
+                        a.get("title"),
+                      ),
                     );
-                  })
+                  }),
                 ),
                 l.default.createElement(
                   "div",
@@ -10050,11 +10070,11 @@ var ut = {
                   l.default.createElement(
                     u.CopyToClipboard,
                     { text: k },
-                    l.default.createElement("button", null)
-                  )
+                    l.default.createElement("button", null),
+                  ),
                 ),
-                l.default.createElement("div", null, P)
-              )
+                l.default.createElement("div", null, P),
+              ),
           );
         };
     },
@@ -10086,7 +10106,7 @@ var ut = {
             (a = (0, s.default)((r = c(e))).call(r, (e, t) => {
               const a = ((e) => o[`requestSnippetGenerator_${e}`])(t);
               return "function" != typeof a ? null : e.set("fn", a);
-            }))
+            })),
           ).call(a, (e) => e);
         },
         d = (0, o.createSelector)(i, (e) => e.get("activeLanguage")),
@@ -10140,8 +10160,8 @@ var ut = {
             null,
             "Could not render ",
             "t" === t ? "this component" : t,
-            ", see the console."
-          )
+            ", see the console.",
+          ),
         );
       };
     },
@@ -10162,8 +10182,8 @@ var ut = {
                 { targetName: l, getComponent: a, fn: s },
                 r.default.createElement(
                   t,
-                  (0, n.default)({}, this.props, this.context)
-                )
+                  (0, n.default)({}, this.props, this.context),
+                ),
               );
             }
           }
@@ -10221,7 +10241,7 @@ var ut = {
               (0, n.default)((i = Array(u.length))).call(i, (e, t) => {
                 let { fn: a } = t;
                 return a.withErrorBoundary(e);
-              })
+              }),
             );
           return {
             fn: {
@@ -10249,7 +10269,7 @@ var ut = {
               o,
               (e, t) =>
                 t.when.test(i) ? [...e, ...t.shouldStringifyTypes] : e,
-              l
+              l,
             );
           return (0, s.default)(m, (e) => e === p)
             ? (0, r.default)(d, null, 2)
@@ -10319,7 +10339,7 @@ var ut = {
           (c = r.default.dump(
             r.default.load(i),
             { lineWidth: -1 },
-            { schema: r.JSON_SCHEMA }
+            { schema: r.JSON_SCHEMA },
           )),
             "\n" === c[c.length - 1] &&
               (c = (0, n.default)(c).call(c, 0, c.length - 1));
@@ -10388,7 +10408,7 @@ var ut = {
           (0, y.XV)(
             e,
             "$$ref",
-            (e) => "string" == typeof e && (0, n.default)(e).call(e, "#") > -1
+            (e) => "string" == typeof e && (0, n.default)(e).call(e, "#") > -1,
           ),
         b = ["maxProperties", "minProperties"],
         x = ["minItems", "maxItems"],
@@ -10410,11 +10430,11 @@ var ut = {
               ...x,
               ..._,
               ...C,
-            ])
+            ]),
           ).call(a, (a) =>
             ((a) => {
               void 0 === t[a] && void 0 !== e[a] && (t[a] = e[a]);
-            })(a)
+            })(a),
           ),
           void 0 !== e.required && (0, s.default)(e.required)) &&
             ((void 0 !== t.required && t.required.length) || (t.required = []),
@@ -10514,7 +10534,7 @@ var ut = {
           p && (B[M] = []);
           const U = (t) =>
             (0, l.default)(t).call(t, (t) =>
-              Object.prototype.hasOwnProperty.call(e, t)
+              Object.prototype.hasOwnProperty.call(e, t),
             );
           e &&
             !O &&
@@ -10534,7 +10554,7 @@ var ut = {
                 (t = (0, i.default)(t).call(
                   t,
                   0,
-                  null === (o = e) || void 0 === o ? void 0 : o.maxItems
+                  null === (o = e) || void 0 === o ? void 0 : o.maxItems,
                 ));
               if (
                 null !==
@@ -10587,7 +10607,7 @@ var ut = {
                         p
                           ? (0, r.default)((a = e.required)).call(
                               a,
-                              (e) => (t += void 0 === B[e] ? 0 : 1)
+                              (e) => (t += void 0 === B[e] ? 0 : 1),
                             )
                           : (0, r.default)((n = e.required)).call(n, (e) => {
                               var a;
@@ -10597,7 +10617,7 @@ var ut = {
                                   ? void 0
                                   : (0, c.default)(a).call(
                                       a,
-                                      (t) => void 0 !== t[e]
+                                      (t) => void 0 !== t[e],
                                     ))
                                   ? 0
                                   : 1);
@@ -10644,12 +10664,12 @@ var ut = {
                     if (
                       Object.prototype.hasOwnProperty.call(
                         e,
-                        "discriminator"
+                        "discriminator",
                       ) &&
                       e.discriminator &&
                       Object.prototype.hasOwnProperty.call(
                         e.discriminator,
-                        "mapping"
+                        "mapping",
                       ) &&
                       e.discriminator.mapping &&
                       Object.prototype.hasOwnProperty.call(e, "$$ref") &&
@@ -10761,12 +10781,12 @@ var ut = {
                 (R.xml.name = R.xml.name || C.name);
             if ((0, s.default)(R.anyOf))
               a = (0, d.default)((H = R.anyOf)).call(H, (e) =>
-                N(j(R, e, t), t, void 0, p)
+                N(j(R, e, t), t, void 0, p),
               );
             else if ((0, s.default)(R.oneOf)) {
               var G;
               a = (0, d.default)((G = R.oneOf)).call(G, (e) =>
-                N(j(R, e, t), t, void 0, p)
+                N(j(R, e, t), t, void 0, p),
               );
             } else {
               if (!(!p || (p && C.wrapped))) return N(R, t, void 0, p);
@@ -11000,7 +11020,7 @@ var ut = {
         } = a;
         re ||
           (console.warn(
-            "specActions.resolveSpec is deprecated since v3.10.0 and will be removed in v4.0.0; use requestResolvedSubtree instead!"
+            "specActions.resolveSpec is deprecated since v3.10.0 and will be removed in v4.0.0; use requestResolvedSubtree instead!",
           ),
           (re = !0));
         const {
@@ -11036,7 +11056,7 @@ var ut = {
                 (e.source = "resolver"),
                 o()(e, "message", { enumerable: !0, value: e.message }),
                 e
-              )
+              ),
             );
             i.newThrownErrBatch(e);
           }
@@ -11051,17 +11071,17 @@ var ut = {
               let { path: a, system: n } = t;
               return e.has(n) || e.set(n, []), e.get(n).push(a), e;
             },
-            new i.default()
+            new i.default(),
           );
           (oe = []),
             (0, c.default)(e).call(e, async (e, t) => {
               if (!t)
                 return void console.error(
-                  "debResolveSubtrees: don't have a system to operate on, aborting."
+                  "debResolveSubtrees: don't have a system to operate on, aborting.",
                 );
               if (!t.fn.resolveSubtree)
                 return void console.error(
-                  "Error: Swagger-Client did not provide a `resolveSubtree` method, doing nothing."
+                  "Error: Swagger-Client did not provide a `resolveSubtree` method, doing nothing.",
                 );
               const {
                   errActions: a,
@@ -11099,7 +11119,7 @@ var ut = {
                             "resolver" !== e.get("source") ||
                             !(0, y.default)((a = e.get("fullPath"))).call(
                               a,
-                              (e, a) => e === t[a] || void 0 === t[a]
+                              (e, a) => e === t[a] || void 0 === t[a],
                             )
                           );
                         }),
@@ -11118,7 +11138,7 @@ var ut = {
                             value: e.message,
                           }),
                           e
-                        )
+                        ),
                       );
                       a.newThrownErrBatch(e);
                     }
@@ -11131,8 +11151,8 @@ var ut = {
                         (0, r.default)(
                           (_ = (0, E.default)((C = (0, S.default)(x))).call(
                             C,
-                            (e) => "openIdConnect" === e.type
-                          ))
+                            (e) => "openIdConnect" === e.type,
+                          )),
                         ).call(_, async (e) => {
                           const t = {
                             url: e.openIdConnectUrl,
@@ -11147,7 +11167,7 @@ var ut = {
                           } catch (e) {
                             console.error(e);
                           }
-                        })
+                        }),
                       ));
                     return (
                       (0, I.default)(l, t, x),
@@ -11160,7 +11180,7 @@ var ut = {
                       d.specResolvedSubtree([]) || (0, j.Map)()
                     ).toJS(),
                     specWithCurrentSubtrees: d.specJS(),
-                  })
+                  }),
                 );
                 p.updateResolvedSubtree([], t.resultMap);
               } catch (e) {
@@ -11240,14 +11260,14 @@ var ut = {
             (0, c.default)(
               (g = (0, E.default)((y = p.get("parameters"))).call(
                 y,
-                (e) => e && !0 === e.get("allowEmptyValue")
-              ))
+                (e) => e && !0 === e.get("allowEmptyValue"),
+              )),
             ).call(g, (t) => {
               if (
                 o.parameterInclusionSettingFor(
                   [u, d],
                   t.get("name"),
-                  t.get("in")
+                  t.get("in"),
                 )
               ) {
                 e.parameters = e.parameters || {};
@@ -11278,14 +11298,14 @@ var ut = {
             if (o && o.toJS)
               e.requestBody = (0, E.default)(
                 (v = (0, r.default)(o).call(o, (e) =>
-                  j.Map.isMap(e) ? e.get("value") : e
-                ))
+                  j.Map.isMap(e) ? e.get("value") : e,
+                )),
               )
                 .call(
                   v,
                   (e, t) =>
                     ((0, n.default)(e) ? 0 !== e.length : !(0, T.O2)(e)) ||
-                    l.get(t)
+                    l.get(t),
                 )
                 .toJS();
             else e.requestBody = o;
@@ -11425,7 +11445,7 @@ var ut = {
           if (!r || !s)
             return (
               console.warn(
-                "Warning: UPDATE_EMPTY_PARAM_INCLUSION could not generate a paramKey."
+                "Warning: UPDATE_EMPTY_PARAM_INCLUSION could not generate a paramKey.",
               ),
               e
             );
@@ -11447,7 +11467,7 @@ var ut = {
             (t) => {
               var u;
               return (0, n.default)(
-                (u = s.get("parameters", (0, o.List)()))
+                (u = s.get("parameters", (0, o.List)())),
               ).call(
                 u,
                 (t, n) => {
@@ -11456,14 +11476,14 @@ var ut = {
                       e,
                       a,
                       n.get("name"),
-                      n.get("in")
+                      n.get("in"),
                     ),
                     d = (0, l.Ik)(n, s, { bypassRequiredCheck: u, isOAS3: r });
                   return t.setIn([(0, l.V9)(n), "errors"], (0, o.fromJS)(d));
                 },
-                t
+                t,
               );
-            }
+            },
           );
         },
         [u.CLEAR_VALIDATE_PARAMS]: (e, t) => {
@@ -11475,8 +11495,8 @@ var ut = {
             (0, o.fromJS)([]),
             (e) =>
               (0, r.default)(e).call(e, (e) =>
-                e.set("errors", (0, o.fromJS)([]))
-              )
+                e.set("errors", (0, o.fromJS)([])),
+              ),
           );
         },
         [u.SET_RESPONSE]: (e, t) => {
@@ -11492,7 +11512,7 @@ var ut = {
                   message: n.err.message,
                   statusCode: n.err.statusCode,
                 },
-                n.err.response
+                n.err.response,
               )
             : n),
             (a.headers = a.headers || {});
@@ -11643,7 +11663,7 @@ var ut = {
         S = (0, m.createSelector)(y, (e) => e.get("spec") || ""),
         w = (0, m.createSelector)(
           y,
-          (e) => e.get("specSource") || "not-editor"
+          (e) => e.get("specSource") || "not-editor",
         ),
         b = (0, m.createSelector)(y, (e) => e.get("json", (0, h.Map)())),
         x = (0, m.createSelector)(b, (e) => e.toJS()),
@@ -11659,8 +11679,8 @@ var ut = {
           (0, h.OrderedMap)().mergeWith(
             j,
             e.get("json"),
-            e.get("resolvedSubtrees")
-          )
+            e.get("resolvedSubtrees"),
+          ),
         ),
         O = (e) => b(e),
         k = (0, m.createSelector)(O, () => !1),
@@ -11670,7 +11690,7 @@ var ut = {
         P = (0, m.createSelector)(R, (e) => {
           var t;
           return (0, n.default)(
-            (t = /v?([0-9]*)\.([0-9]*)\.([0-9]*)/i.exec(e))
+            (t = /v?([0-9]*)\.([0-9]*)\.([0-9]*)/i.exec(e)),
           ).call(t, 1);
         }),
         T = (0, m.createSelector)(N, (e) => e.get("paths")),
@@ -11697,7 +11717,7 @@ var ut = {
                         method: n,
                         operation: e,
                         id: `${n}-${a}`,
-                      })
+                      }),
                     ));
                 });
               }),
@@ -11732,12 +11752,12 @@ var ut = {
                     e.get("produces") ||
                       e.update("produces", (e) => (0, h.Set)(e).merge(a)),
                     e
-                  )
+                  ),
                 );
               }
               return (0, h.Map)();
-            })
-          )
+            }),
+          ),
         ),
         W = (0, m.createSelector)(O, (e) => {
           const t = e.get("tags", (0, h.List)());
@@ -11749,7 +11769,7 @@ var ut = {
           var a;
           let n = W(e) || (0, h.List)();
           return (0, i.default)(
-            (a = (0, l.default)(n).call(n, h.Map.isMap))
+            (a = (0, l.default)(n).call(n, h.Map.isMap)),
           ).call(a, (e) => e.get("name") === t, (0, h.Map)());
         },
         G = (0, m.createSelector)(z, W, (e, t) =>
@@ -11762,15 +11782,15 @@ var ut = {
                 : (0, c.default)(a).call(
                     a,
                     (e, a) => e.update(a, (0, h.List)(), (e) => e.push(t)),
-                    e
+                    e,
                   );
             },
             (0, c.default)(t).call(
               t,
               (e, t) => e.set(t.get("name"), (0, h.List)()),
-              (0, h.OrderedMap)()
-            )
-          )
+              (0, h.OrderedMap)(),
+            ),
+          ),
         ),
         Z = (e) => (t) => {
           var a;
@@ -11782,8 +11802,8 @@ var ut = {
               (e, t) => {
                 let a = "function" == typeof r ? r : f.wh.tagsSorter[r];
                 return a ? a(e, t) : null;
-              }
-            ))
+              },
+            )),
           ).call(a, (t, a) => {
             let n = "function" == typeof s ? s : f.wh.operationsSorter[s],
               r = n ? (0, u.default)(t).call(t, n) : t;
@@ -11793,7 +11813,7 @@ var ut = {
         Y = (0, m.createSelector)(y, (e) => e.get("responses", (0, h.Map)())),
         X = (0, m.createSelector)(y, (e) => e.get("requests", (0, h.Map)())),
         Q = (0, m.createSelector)(y, (e) =>
-          e.get("mutatedRequests", (0, h.Map)())
+          e.get("mutatedRequests", (0, h.Map)()),
         ),
         ee = (e, t, a) => Y(e).getIn([t, a], null),
         te = (e, t, a) => X(e).getIn([t, a], null),
@@ -11802,16 +11822,16 @@ var ut = {
         re = (e, t, a) => {
           const n = N(e).getIn(
               ["paths", ...t, "parameters"],
-              (0, h.OrderedMap)()
+              (0, h.OrderedMap)(),
             ),
             r = e.getIn(
               ["meta", "paths", ...t, "parameters"],
-              (0, h.OrderedMap)()
+              (0, h.OrderedMap)(),
             ),
             s = (0, o.default)(n).call(n, (e) => {
               const t = r.get(`${a.get("in")}.${a.get("name")}`),
                 n = r.get(
-                  `${a.get("in")}.${a.get("name")}.hash-${a.hashCode()}`
+                  `${a.get("in")}.${a.get("name")}.hash-${a.hashCode()}`,
                 );
               return (0, h.OrderedMap)().merge(e, t, n);
             });
@@ -11819,25 +11839,25 @@ var ut = {
             s,
             (e) =>
               e.get("in") === a.get("in") && e.get("name") === a.get("name"),
-            (0, h.OrderedMap)()
+            (0, h.OrderedMap)(),
           );
         },
         se = (e, t, a, n) => {
           const r = `${n}.${a}`;
           return e.getIn(
             ["meta", "paths", ...t, "parameter_inclusions", r],
-            !1
+            !1,
           );
         },
         oe = (e, t, a, n) => {
           const r = N(e).getIn(
               ["paths", ...t, "parameters"],
-              (0, h.OrderedMap)()
+              (0, h.OrderedMap)(),
             ),
             s = (0, i.default)(r).call(
               r,
               (e) => e.get("in") === n && e.get("name") === a,
-              (0, h.OrderedMap)()
+              (0, h.OrderedMap)(),
             );
           return re(e, t, s);
         },
@@ -11847,7 +11867,7 @@ var ut = {
             s = e.getIn(["meta", "paths", t, a], (0, h.OrderedMap)()),
             l = (0, o.default)((n = r.get("parameters", (0, h.List)()))).call(
               n,
-              (n) => re(e, [t, a], n)
+              (n) => re(e, [t, a], n),
             );
           return (0, h.OrderedMap)().merge(r, s).set("parameters", l);
         };
@@ -11855,12 +11875,12 @@ var ut = {
         t = t || [];
         let r = e.getIn(
           ["meta", "paths", ...t, "parameters"],
-          (0, h.fromJS)([])
+          (0, h.fromJS)([]),
         );
         return (
           (0, i.default)(r).call(
             r,
-            (e) => h.Map.isMap(e) && e.get("name") === a && e.get("in") === n
+            (e) => h.Map.isMap(e) && e.get("name") === a && e.get("in") === n,
           ) || (0, h.Map)()
         );
       }
@@ -11878,7 +11898,7 @@ var ut = {
               a && "body" === t.get("in") ? t.get("value_xml") : t.get("value");
             return e.set((0, f.V9)(t, { allowHashes: !1 }), n);
           },
-          (0, h.fromJS)({})
+          (0, h.fromJS)({}),
         );
       }
       function de(e) {
@@ -11887,7 +11907,7 @@ var ut = {
         if (h.List.isList(e))
           return (0, d.default)(e).call(
             e,
-            (e) => h.Map.isMap(e) && e.get("in") === t
+            (e) => h.Map.isMap(e) && e.get("in") === t,
           );
       }
       function pe(e) {
@@ -11896,7 +11916,7 @@ var ut = {
         if (h.List.isList(e))
           return (0, d.default)(e).call(
             e,
-            (e) => h.Map.isMap(e) && e.get("type") === t
+            (e) => h.Map.isMap(e) && e.get("type") === t,
           );
       }
       function me(e, t) {
@@ -11964,7 +11984,7 @@ var ut = {
           t = t || [];
           let a = e.getIn(
             ["meta", "paths", ...t, "parameters"],
-            (0, h.fromJS)([])
+            (0, h.fromJS)([]),
           );
           const n = [];
           return (
@@ -11981,7 +12001,7 @@ var ut = {
           let n = { requestBody: !1, requestContentType: {} },
             s = e.getIn(
               ["resolvedSubtrees", "paths", ...t, "requestBody"],
-              (0, h.fromJS)([])
+              (0, h.fromJS)([]),
             );
           return (
             s.size < 1 ||
@@ -11994,7 +12014,7 @@ var ut = {
                     const a = e[1].getIn(["schema", "required"]).toJS();
                     n.requestContentType[t] = a;
                   }
-                }
+                },
               )),
             n
           );
@@ -12003,7 +12023,7 @@ var ut = {
           if ((a || n) && a === n) return !0;
           let r = e.getIn(
             ["resolvedSubtrees", "paths", ...t, "requestBody", "content"],
-            (0, h.fromJS)([])
+            (0, h.fromJS)([]),
           );
           if (r.size < 2 || !a || !n) return !1;
           let s = r.getIn([a, "schema", "properties"], (0, h.fromJS)([])),
@@ -12210,7 +12230,7 @@ var ut = {
             render() {
               return s.default.createElement(
                 t,
-                (0, n.default)({}, e(), this.props, this.context)
+                (0, n.default)({}, e(), this.props, this.context),
               );
             }
           }
@@ -12225,8 +12245,8 @@ var ut = {
                 { store: t },
                 s.default.createElement(
                   a,
-                  (0, n.default)({}, this.props, this.context)
-                )
+                  (0, n.default)({}, this.props, this.context),
+                ),
               );
             }
           }
@@ -12244,7 +12264,7 @@ var ut = {
                     : r.mapStateToProps) || ((e) => ({ state: e }));
               return o(a, s);
             }),
-            d(e)
+            d(e),
           )(t),
         f = (e, t, a, n) => {
           for (const r in t) {
@@ -12283,7 +12303,7 @@ var ut = {
                 : {};
             if ("string" != typeof n)
               throw new TypeError(
-                "Need a string, to fetch a component. Was given a " + typeof n
+                "Need a string, to fetch a component. Was given a " + typeof n,
               );
             const o = a(n);
             return o
@@ -12382,7 +12402,7 @@ var ut = {
           (0, r.default)(w).call(w, e)
             ? S[e]
             : (console.warn(
-                `Request style '${e}' is not available, returning default instead`
+                `Request style '${e}' is not available, returning default instead`,
               ),
               m.default);
     },
@@ -12536,7 +12556,7 @@ var ut = {
         return (0, c.default)((a = (0, i.default)(e))).call(
           a,
           (a, n) => ((a[n] = t(e[n], n)), a),
-          {}
+          {},
         );
       }
       function X(e, t) {
@@ -12547,13 +12567,13 @@ var ut = {
             let r = t(e[n], n);
             return r && "object" == typeof r && (0, u.default)(a, r), a;
           },
-          {}
+          {},
         );
       }
       function Q(e) {
         return (t) => {
           let { dispatch: a, getState: n } = t;
-          return (t) => (a) => "function" == typeof a ? a(e()) : t(a);
+          return (t) => (a) => ("function" == typeof a ? a(e()) : t(a));
         };
       }
       function ee(e) {
@@ -12562,7 +12582,7 @@ var ut = {
         return a.contains(T)
           ? T
           : (0, d.default)(
-              (t = (0, l.default)(a).call(a, (e) => "2" === (e + "")[0]))
+              (t = (0, l.default)(a).call(a, (e) => "2" === (e + "")[0])),
             )
               .call(t)
               .first();
@@ -12660,7 +12680,7 @@ var ut = {
             (0, o.default)((R = t.get("properties"))).call(R, (e, t) => {
               const n = re(a[t], e, !1, s, i);
               c.push(
-                ...(0, r.default)(n).call(n, (e) => ({ propKey: t, error: e }))
+                ...(0, r.default)(n).call(n, (e) => ({ propKey: t, error: e })),
               );
             });
         }
@@ -12698,7 +12718,7 @@ var ut = {
                 if (
                   ((0, o.default)(t).call(t, (a, n) => {
                     (0, l.default)(t).call(t, (e) =>
-                      J(e.equals) ? e.equals(a) : e === a
+                      J(e.equals) ? e.equals(a) : e === a,
                     ).size > 1 && (e = e.add(n));
                   }),
                   0 !== e.size)
@@ -12757,7 +12777,7 @@ var ut = {
                     if (
                       ((e = e.toString().toLowerCase()),
                       !/^[{(]?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[)}]?$/.test(
-                        e
+                        e,
                       ))
                     )
                       return "Value must be a Guid";
@@ -12795,7 +12815,7 @@ var ut = {
             (0, o.default)(e).call(e, (e, a) => {
               const n = re(e, t.get("items"), !1, s, i);
               c.push(
-                ...(0, r.default)(n).call(n, (e) => ({ index: a, error: e }))
+                ...(0, r.default)(n).call(n, (e) => ({ index: a, error: e })),
               );
             });
         } else if ("file" === h) {
@@ -12853,7 +12873,7 @@ var ut = {
             void 0 !== n &&
               "" !== n &&
               t.push(
-                [a, "=", encodeURIComponent(n).replace(/%20/g, "+")].join("")
+                [a, "=", encodeURIComponent(n).replace(/%20/g, "+")].join(""),
               );
           }
           return t.join("&");
@@ -12878,7 +12898,7 @@ var ut = {
             e,
             (e, t) =>
               (0, h.default)(t).call(t, "2") &&
-              (0, i.default)(e.get("content") || {}).length > 0
+              (0, i.default)(e.get("content") || {}).length > 0,
           ),
           a = e.get("default") || v.default.OrderedMap(),
           n = (a.get("content") || v.default.OrderedMap()).keySeq().toJS()
@@ -12895,7 +12915,7 @@ var ut = {
         ge = (e) => (0, l.default)(e).call(e, (e, t) => /^x-/.test(t)),
         ye = (e) =>
           (0, l.default)(e).call(e, (e, t) =>
-            /^pattern|maxLength|minLength|maximum|minimum/.test(t)
+            /^pattern|maxLength|minLength|maximum|minimum/.test(t),
           );
       function ve(e, t) {
         var a;
@@ -12931,7 +12951,7 @@ var ut = {
           arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {};
         if (!v.default.Map.isMap(e))
           throw new Error(
-            "paramToIdentifier: received a non-Im.Map parameter as input"
+            "paramToIdentifier: received a non-Im.Map parameter as input",
           );
         const n = e.get("name"),
           r = e.get("in");
@@ -12952,7 +12972,7 @@ var ut = {
         var a;
         const n = we(e, { returnAll: !0 });
         return (0, l.default)(
-          (a = (0, r.default)(n).call(n, (e) => t[e]))
+          (a = (0, r.default)(n).call(n, (e) => t[e])),
         ).call(a, (e) => void 0 !== e)[0];
       }
       function xe() {
@@ -13060,7 +13080,7 @@ var ut = {
         "minItems",
         "uniqueItems",
         "enum",
-        "multipleOf"
+        "multipleOf",
       );
       function l(e) {
         let { isOAS3: t } =
@@ -13075,7 +13095,7 @@ var ut = {
               }
             : {
                 schema: (0, n.default)(e).call(e, (e, t) =>
-                  (0, r.default)(o).call(o, t)
+                  (0, r.default)(o).call(o, t),
                 ),
                 parameterContentMediaType: null,
               };
@@ -13159,7 +13179,7 @@ var ut = {
       function l(e) {
         if (e > o)
           throw new RangeError(
-            'The value "' + e + '" is invalid for option "size"'
+            'The value "' + e + '" is invalid for option "size"',
           );
         const t = new Uint8Array(e);
         return Object.setPrototypeOf(t, i.prototype), t;
@@ -13168,7 +13188,7 @@ var ut = {
         if ("number" == typeof e) {
           if ("string" == typeof t)
             throw new TypeError(
-              'The "string" argument must be of type string. Received type number'
+              'The "string" argument must be of type string. Received type number',
             );
           return d(e);
         }
@@ -13196,7 +13216,7 @@ var ut = {
         if (null == e)
           throw new TypeError(
             "The first argument must be one of type string, Buffer, ArrayBuffer, Array, or Array-like Object. Received type " +
-              typeof e
+              typeof e,
           );
         if (G(e, ArrayBuffer) || (e && G(e.buffer, ArrayBuffer)))
           return m(e, t, a);
@@ -13207,7 +13227,7 @@ var ut = {
           return m(e, t, a);
         if ("number" == typeof e)
           throw new TypeError(
-            'The "value" argument must not be of type number. Received type number'
+            'The "value" argument must not be of type number. Received type number',
           );
         const n = e.valueOf && e.valueOf();
         if (null != n && n !== e) return i.from(n, t, a);
@@ -13230,7 +13250,7 @@ var ut = {
           return i.from(e[Symbol.toPrimitive]("string"), t, a);
         throw new TypeError(
           "The first argument must be one of type string, Buffer, ArrayBuffer, Array, or Array-like Object. Received type " +
-            typeof e
+            typeof e,
         );
       }
       function u(e) {
@@ -13238,7 +13258,7 @@ var ut = {
           throw new TypeError('"size" argument must be of type number');
         if (e < 0)
           throw new RangeError(
-            'The value "' + e + '" is invalid for option "size"'
+            'The value "' + e + '" is invalid for option "size"',
           );
       }
       function d(e) {
@@ -13272,7 +13292,7 @@ var ut = {
           throw new RangeError(
             "Attempt to allocate Buffer larger than maximum size: 0x" +
               o.toString(16) +
-              " bytes"
+              " bytes",
           );
         return 0 | e;
       }
@@ -13282,7 +13302,7 @@ var ut = {
         if ("string" != typeof e)
           throw new TypeError(
             'The "string" argument must be one of type string, Buffer, or ArrayBuffer. Received type ' +
-              typeof e
+              typeof e,
           );
         const a = e.length,
           n = arguments.length > 2 && !0 === arguments[2];
@@ -13437,7 +13457,7 @@ var ut = {
           })(t),
           e,
           a,
-          n
+          n,
         );
       }
       function x(e, t, a, n) {
@@ -13458,7 +13478,7 @@ var ut = {
           })(t, e.length - a),
           e,
           a,
-          n
+          n,
         );
       }
       function C(e, t, a) {
@@ -13549,7 +13569,7 @@ var ut = {
           "undefined" == typeof console ||
           "function" != typeof console.error ||
           console.error(
-            "This browser lacks typed array (Uint8Array) support which is required by `buffer` v5.x. Use `buffer` v4.x if you require old browser support."
+            "This browser lacks typed array (Uint8Array) support which is required by `buffer` v5.x. Use `buffer` v4.x if you require old browser support.",
           ),
         Object.defineProperty(i.prototype, "parent", {
           enumerable: !0,
@@ -13599,7 +13619,7 @@ var ut = {
             !i.isBuffer(e) || !i.isBuffer(t))
           )
             throw new TypeError(
-              'The "buf1", "buf2" arguments must be one of type Buffer or Uint8Array'
+              'The "buf1", "buf2" arguments must be one of type Buffer or Uint8Array',
             );
           if (e === t) return 0;
           let a = e.length,
@@ -13647,7 +13667,7 @@ var ut = {
             else {
               if (!i.isBuffer(t))
                 throw new TypeError(
-                  '"list" argument must be an Array of Buffers'
+                  '"list" argument must be an Array of Buffers',
                 );
               t.copy(n, r);
             }
@@ -13715,7 +13735,7 @@ var ut = {
           )
             throw new TypeError(
               'The "target" argument must be one of type Buffer or Uint8Array. Received type ' +
-                typeof e
+                typeof e,
             );
           if (
             (void 0 === t && (t = 0),
@@ -13757,7 +13777,7 @@ var ut = {
           else {
             if (!isFinite(t))
               throw new Error(
-                "Buffer.write(string, encoding, offset[, length]) is no longer supported"
+                "Buffer.write(string, encoding, offset[, length]) is no longer supported",
               );
             (t >>>= 0),
               isFinite(a)
@@ -14054,7 +14074,7 @@ var ut = {
           return (
             (BigInt(n) << BigInt(32)) +
             BigInt(
-              t + 256 * this[++e] + 65536 * this[++e] + this[++e] * 2 ** 24
+              t + 256 * this[++e] + 65536 * this[++e] + this[++e] * 2 ** 24,
             )
           );
         })),
@@ -14067,7 +14087,7 @@ var ut = {
           return (
             (BigInt(n) << BigInt(32)) +
             BigInt(
-              this[++e] * 2 ** 24 + 65536 * this[++e] + 256 * this[++e] + a
+              this[++e] * 2 ** 24 + 65536 * this[++e] + 256 * this[++e] + a,
             )
           );
         })),
@@ -14264,7 +14284,7 @@ var ut = {
             e,
             t,
             -BigInt("0x8000000000000000"),
-            BigInt("0x7fffffffffffffff")
+            BigInt("0x7fffffffffffffff"),
           );
         })),
         (i.prototype.writeBigInt64BE = X(function (e, t = 0) {
@@ -14273,7 +14293,7 @@ var ut = {
             e,
             t,
             -BigInt("0x8000000000000000"),
-            BigInt("0x7fffffffffffffff")
+            BigInt("0x7fffffffffffffff"),
           );
         })),
         (i.prototype.writeFloatLE = function (e, t, a) {
@@ -14350,7 +14370,7 @@ var ut = {
               o = s.length;
             if (0 === o)
               throw new TypeError(
-                'The value "' + e + '" is invalid for argument "value"'
+                'The value "' + e + '" is invalid for argument "value"',
               );
             for (r = 0; r < a - t; ++r) this[r + t] = s[r % o];
           }
@@ -14428,7 +14448,7 @@ var ut = {
         throw new B.ERR_OUT_OF_RANGE(
           a || "offset",
           `>= ${a ? 1 : 0} and <= ${t}`,
-          e
+          e,
         );
       }
       U(
@@ -14438,14 +14458,14 @@ var ut = {
             ? `${e} is outside of buffer bounds`
             : "Attempt to access memory outside buffer bounds";
         },
-        RangeError
+        RangeError,
       ),
         U(
           "ERR_INVALID_ARG_TYPE",
           function (e, t) {
             return `The "${e}" argument must be of type number. Received type ${typeof t}`;
           },
-          TypeError
+          TypeError,
         ),
         U(
           "ERR_OUT_OF_RANGE",
@@ -14465,7 +14485,7 @@ var ut = {
               n
             );
           },
-          RangeError
+          RangeError,
         );
       const F = /[^+/0-9A-Za-z-_]/g;
       function z(e, t) {
@@ -14510,7 +14530,7 @@ var ut = {
               (a >> 18) | 240,
               ((a >> 12) & 63) | 128,
               ((a >> 6) & 63) | 128,
-              (63 & a) | 128
+              (63 & a) | 128,
             );
           }
         }
@@ -14523,7 +14543,7 @@ var ut = {
               return "";
             for (; e.length % 4 != 0; ) e += "=";
             return e;
-          })(e)
+          })(e),
         );
       }
       function H(e, t, a, n) {
@@ -15212,7 +15232,7 @@ var ut = {
           forced: Object.defineProperty !== s,
           sham: !r,
         },
-        { defineProperty: s }
+        { defineProperty: s },
       );
     },
     1910: (e, t, a) => {
@@ -15298,7 +15318,7 @@ var ut = {
           : Object.getOwnPropertySymbols
           ? function (e) {
               return Object.getOwnPropertyNames(e).concat(
-                Object.getOwnPropertySymbols(e)
+                Object.getOwnPropertySymbols(e),
               );
             }
           : function (e) {
@@ -15339,7 +15359,7 @@ var ut = {
         if ("function" != typeof e)
           throw new TypeError(
             'The "listener" argument must be of type Function. Received type ' +
-              typeof e
+              typeof e,
           );
       }
       function i(e) {
@@ -15374,7 +15394,7 @@ var ut = {
               o.length +
               " " +
               String(t) +
-              " listeners added. Use emitter.setMaxListeners() to increase limit"
+              " listeners added. Use emitter.setMaxListeners() to increase limit",
           );
           (u.name = "MaxListenersExceededWarning"),
             (u.emitter = e),
@@ -15437,7 +15457,7 @@ var ut = {
           if ("function" != typeof e.addEventListener)
             throw new TypeError(
               'The "emitter" argument must be of type EventEmitter. Received type ' +
-                typeof e
+                typeof e,
             );
           e.addEventListener(t, function r(s) {
             n.once && e.removeEventListener(t, r), a(s);
@@ -15454,7 +15474,7 @@ var ut = {
             throw new RangeError(
               'The value of "defaultMaxListeners" is out of range. It must be a non-negative number. Received ' +
                 e +
-                "."
+                ".",
             );
           o = e;
         },
@@ -15470,7 +15490,7 @@ var ut = {
             throw new RangeError(
               'The value of "n" is out of range. It must be a non-negative number. Received ' +
                 e +
-                "."
+                ".",
             );
           return (this._maxListeners = e), this;
         }),
@@ -15488,7 +15508,7 @@ var ut = {
             var o;
             if ((t.length > 0 && (o = t[0]), o instanceof Error)) throw o;
             var l = new Error(
-              "Unhandled error." + (o ? " (" + o.message + ")" : "")
+              "Unhandled error." + (o ? " (" + o.message + ")" : ""),
             );
             throw ((l.context = o), l);
           }
@@ -15754,7 +15774,7 @@ var ut = {
           })
         : (e.exports = function () {
             throw new Error(
-              "Secure random number generation is not supported by this browser.\nUse Chrome, Firefox or Internet Explorer 11"
+              "Secure random number generation is not supported by this browser.\nUse Chrome, Firefox or Internet Explorer 11",
             );
           });
     },
@@ -15770,7 +15790,7 @@ var ut = {
                 this,
                 (function (e, t, n) {
                   return "string" == typeof a ? a : a(e, t, n);
-                })(t, n, r)
+                })(t, n, r),
               ) || this
             );
           }
@@ -15807,7 +15827,7 @@ var ut = {
         function (e, t) {
           return 'The value "' + t + '" is invalid for option "' + e + '"';
         },
-        TypeError
+        TypeError,
       ),
         a(
           "ERR_INVALID_ARG_TYPE",
@@ -15843,7 +15863,7 @@ var ut = {
             }
             return (l += ". Received type ".concat(typeof a));
           },
-          TypeError
+          TypeError,
         ),
         a("ERR_STREAM_PUSH_AFTER_EOF", "stream.push() after EOF"),
         a("ERR_METHOD_NOT_IMPLEMENTED", function (e) {
@@ -15859,18 +15879,18 @@ var ut = {
         a(
           "ERR_STREAM_NULL_VALUES",
           "May not write null values to stream",
-          TypeError
+          TypeError,
         ),
         a(
           "ERR_UNKNOWN_ENCODING",
           function (e) {
             return "Unknown encoding: " + e;
           },
-          TypeError
+          TypeError,
         ),
         a(
           "ERR_STREAM_UNSHIFT_AFTER_END_EVENT",
-          "stream.unshift() after end event"
+          "stream.unshift() after end event",
         ),
         (e.exports.q = t);
     },
@@ -16909,7 +16929,7 @@ var ut = {
                   return this.getBuffer();
                 },
                 "_writableState.buffer is deprecated. Use _writableState.getBuffer instead.",
-                "DEP0003"
+                "DEP0003",
               ),
             });
           } catch (e) {}
@@ -17103,7 +17123,7 @@ var ut = {
                 var n = a.call(e, t || "default");
                 if ("object" != typeof n) return n;
                 throw new TypeError(
-                  "@@toPrimitive must return a primitive value."
+                  "@@toPrimitive must return a primitive value.",
                 );
               }
               return ("string" === t ? String : Number)(e);
@@ -17170,7 +17190,7 @@ var ut = {
                           t[u] ? a(f(void 0, !0)) : t[p](a, n);
                         }, n);
                       };
-                    })(n, this)
+                    })(n, this),
                   );
                 else {
                   var s = this[m].read();
@@ -17183,7 +17203,7 @@ var ut = {
             Symbol.asyncIterator,
             function () {
               return this;
-            }
+            },
           ),
           s(n, "return", function () {
             var e = this;
@@ -17194,7 +17214,7 @@ var ut = {
             });
           }),
           n),
-          y
+          y,
         );
       e.exports = function (e) {
         var t,
@@ -17214,7 +17234,7 @@ var ut = {
               },
               writable: !0,
             }),
-            t)
+            t),
           );
         return (
           (a[d] = null),
@@ -17263,7 +17283,7 @@ var ut = {
                 Object.defineProperty(
                   e,
                   t,
-                  Object.getOwnPropertyDescriptor(a, t)
+                  Object.getOwnPropertyDescriptor(a, t),
                 );
               });
         }
@@ -17465,7 +17485,7 @@ var ut = {
               value: function (e, t) {
                 return c(
                   this,
-                  r(r({}, t), {}, { depth: 0, customInspect: !1 })
+                  r(r({}, t), {}, { depth: 0, customInspect: !1 }),
                 );
               },
             },
@@ -18664,7 +18684,7 @@ var ut = {
                 this.lastChar,
                 this.lastTotal - this.lastNeed,
                 0,
-                this.lastNeed
+                this.lastNeed,
               ),
               this.lastChar.toString(this.encoding, 0, this.lastTotal)
             );
@@ -18738,7 +18758,7 @@ var ut = {
             u.push(
               (function (e, t) {
                 return e + '="' + r(t) + '"';
-              })(t, e[t])
+              })(t, e[t]),
             );
           });
         }
@@ -18750,8 +18770,8 @@ var ut = {
                 d.push(
                   ("<![CDATA[" + i._cdata).replace(
                     /\]\]>/g,
-                    "]]]]><![CDATA[>"
-                  ) + "]]>"
+                    "]]]]><![CDATA[>",
+                  ) + "]]>",
                 ),
               i.forEach &&
                 ((c = !1),
@@ -18793,7 +18813,7 @@ var ut = {
             !1,
             (n > 1 ? t.indents : "") +
               (t.name ? "</" + t.name + ">" : "") +
-              (t.indent && !a ? "\n" : "")
+              (t.indent && !a ? "\n" : ""),
           ),
             a && a();
         }
@@ -18814,7 +18834,7 @@ var ut = {
               (t.name ? "<" + t.name : "") +
               (t.attributes.length ? " " + t.attributes.join(" ") : "") +
               (n ? (t.name ? ">" : "") : t.name ? "/>" : "") +
-              (t.indent && n > 1 ? "\n" : "")
+              (t.indent && n > 1 ? "\n" : ""),
           ),
           !n)
         )
@@ -18892,7 +18912,7 @@ var ut = {
                   o(e, a, this._elem.icount + (a ? 1 : 0)),
                   function () {
                     t.append(!0);
-                  }
+                  },
                 );
               },
               close: function (e) {
@@ -19880,7 +19900,7 @@ var mt = {};
           boundSystem: {},
           toolbox: {},
         },
-        t
+        t,
       ),
         (this.getSystem = (0, i.default)((e = this._getSystem)).call(e, this)),
         (this.store =
@@ -19917,7 +19937,7 @@ var mt = {};
         this.getWrappedAndBoundSelectors(a, this.getSystem),
         this.getStateThunks(a),
         this.getFn(),
-        this.getConfigs()
+        this.getConfigs(),
       )),
         e && this.rebuildReducer();
     }
@@ -19936,7 +19956,7 @@ var mt = {};
           Im: y.default,
           React: h.default,
         },
-        this.system.rootInjects || {}
+        this.system.rootInjects || {},
       );
     }
     _getConfigs() {
@@ -19975,10 +19995,10 @@ var mt = {};
               })(e[a])),
               t
             ),
-            {}
+            {},
           );
           return (0, r.default)(a).length ? (0, v.combineReducers)(a) : _;
-        })((0, x.Ay)(e, (e) => e.reducers)))
+        })((0, x.Ay)(e, (e) => e.reducers))),
       );
     }
     getType(e) {
@@ -19996,7 +20016,7 @@ var mt = {};
       return (0, x.Ay)(e, (e) =>
         (0, x.Q2)(e, (e, t) => {
           if ((0, x.LQ)(e)) return { [t]: e };
-        })
+        }),
       );
     }
     getWrappedAndBoundActions(e) {
@@ -20019,11 +20039,11 @@ var mt = {};
                       };
                       if (!(0, x.LQ)(n))
                         throw new TypeError(
-                          "wrapActions needs to return a function that returns a new function (ie the wrapped action)"
+                          "wrapActions needs to return a function that returns a new function (ie the wrapped action)",
                         );
                       return k(n);
                     },
-                    e || Function.prototype
+                    e || Function.prototype,
                   ))
                 : e;
             })
@@ -20055,11 +20075,11 @@ var mt = {};
                       };
                       if (!(0, x.LQ)(s))
                         throw new TypeError(
-                          "wrapSelector needs to return a function that returns a new function (ie the wrapped action)"
+                          "wrapSelector needs to return a function that returns a new function (ie the wrapped action)",
                         );
                       return s;
                     },
-                    t || Function.prototype
+                    t || Function.prototype,
                   ))
                 : t;
             })
@@ -20069,13 +20089,13 @@ var mt = {};
     getStates(e) {
       var t;
       return (0, p.default)(
-        (t = (0, r.default)(this.system.statePlugins))
+        (t = (0, r.default)(this.system.statePlugins)),
       ).call(t, (t, a) => ((t[a] = e.get(a)), t), {});
     }
     getStateThunks(e) {
       var t;
       return (0, p.default)(
-        (t = (0, r.default)(this.system.statePlugins))
+        (t = (0, r.default)(this.system.statePlugins)),
       ).call(t, (t, a) => ((t[a] = () => e().get(a)), t), {});
     }
     getFn() {
@@ -20104,7 +20124,7 @@ var mt = {};
                 s[o] = arguments[o];
               let l = k(a).apply(null, [e().getIn(r), ...s]);
               return "function" == typeof l && (l = k(l)(t())), l;
-            }
+            },
         );
       });
     }
@@ -20144,7 +20164,7 @@ var mt = {};
       var n;
       const r = "chain" === a.pluginLoadType ? t.getComponents() : {};
       return (0, p.default)(
-        (n = (0, m.default)(e).call(e, (e) => j(e, t, a)))
+        (n = (0, m.default)(e).call(e, (e) => j(e, t, a))),
       ).call(n, O, r);
     }
     return {};
@@ -20198,7 +20218,7 @@ var mt = {};
                 t.statePlugins[e].wrapActions[a])
             )
               t.statePlugins[e].wrapActions[a] = (0, f.default)(
-                (n = o[a])
+                (n = o[a]),
               ).call(n, t.statePlugins[e].wrapActions[a]);
           }
         if ((0, x.Kn)(l))
@@ -20214,7 +20234,7 @@ var mt = {};
                 t.statePlugins[e].wrapSelectors[a])
             )
               t.statePlugins[e].wrapSelectors[a] = (0, f.default)(
-                (s = l[a])
+                (s = l[a]),
               ).call(s, t.statePlugins[e].wrapSelectors[a]);
           }
       }
@@ -20277,7 +20297,7 @@ var mt = {};
         }),
         (0, W.default)(this, "onResetClick", (e) => {
           const t = this.props.oas3Selectors.selectDefaultRequestBodyValue(
-            ...e
+            ...e,
           );
           this.props.oas3Actions.setRequestBodyValue({
             value: t,
@@ -20465,7 +20485,7 @@ var mt = {};
             null,
             ' No layout defined for "',
             a,
-            '" '
+            '" ',
           ))
       );
     }
@@ -20520,8 +20540,8 @@ var mt = {};
                     className: "close-modal",
                     onClick: this.close,
                   },
-                  h.default.createElement(c, null)
-                )
+                  h.default.createElement(c, null),
+                ),
               ),
               h.default.createElement(
                 "div",
@@ -20536,12 +20556,12 @@ var mt = {};
                     authSelectors: t,
                     authActions: a,
                     specSelectors: s,
-                  })
-                )
-              )
-            )
-          )
-        )
+                  }),
+                ),
+              ),
+            ),
+          ),
+        ),
       );
     }
   }
@@ -20568,9 +20588,9 @@ var mt = {};
           h.default.createElement("span", null, "Authorize"),
           e
             ? h.default.createElement(s, null)
-            : h.default.createElement(o, null)
+            : h.default.createElement(o, null),
         ),
-        t && h.default.createElement(r, null)
+        t && h.default.createElement(r, null),
       );
     }
   }
@@ -20619,7 +20639,7 @@ var mt = {};
         },
         e
           ? h.default.createElement(a, { className: "locked" })
-          : h.default.createElement(n, { className: "unlocked" })
+          : h.default.createElement(n, { className: "unlocked" }),
       );
     }
   }
@@ -20642,7 +20662,7 @@ var mt = {};
               .call(a, (e, t) => t)
               .toArray();
           this.setState(
-            (0, p.default)(n).call(n, (e, t) => ((e[t] = ""), e), {})
+            (0, p.default)(n).call(n, (e, t) => ((e[t] = ""), e), {}),
           ),
             t.logoutWithPersistOption(n);
         }),
@@ -20685,7 +20705,7 @@ var mt = {};
                   onAuthChange: this.onAuthChange,
                   authorized: c,
                   errSelectors: s,
-                })
+                }),
               )
               .toArray(),
             h.default.createElement(
@@ -20698,7 +20718,7 @@ var mt = {};
                       className: "btn modal-btn auth",
                       onClick: this.logoutClick,
                     },
-                    "Logout"
+                    "Logout",
                   )
                 : h.default.createElement(
                     i,
@@ -20706,7 +20726,7 @@ var mt = {};
                       type: "submit",
                       className: "btn modal-btn auth authorize",
                     },
-                    "Authorize"
+                    "Authorize",
                   ),
               h.default.createElement(
                 i,
@@ -20714,9 +20734,9 @@ var mt = {};
                   className: "btn modal-btn auth btn-done",
                   onClick: this.close,
                 },
-                "Close"
-              )
-            )
+                "Close",
+              ),
+            ),
           ),
         p && p.size
           ? h.default.createElement(
@@ -20728,19 +20748,19 @@ var mt = {};
                 h.default.createElement(
                   "p",
                   null,
-                  "Scopes are used to grant an application different levels of access to data on behalf of the end user. Each API may declare one or more scopes."
+                  "Scopes are used to grant an application different levels of access to data on behalf of the end user. Each API may declare one or more scopes.",
                 ),
                 h.default.createElement(
                   "p",
                   null,
-                  "API requires the following scopes. Select which ones you want to grant to Swagger UI."
-                )
+                  "API requires the following scopes. Select which ones you want to grant to Swagger UI.",
+                ),
               ),
               (0, m.default)(
                 (e = (0, n.default)(t).call(
                   t,
-                  (e) => "oauth2" === e.get("type")
-                ))
+                  (e) => "oauth2" === e.get("type"),
+                )),
               )
                 .call(e, (e, t) =>
                   h.default.createElement(
@@ -20750,12 +20770,12 @@ var mt = {};
                       authorized: c,
                       schema: e,
                       name: t,
-                    })
-                  )
+                    }),
+                  ),
                 )
-                .toArray()
+                .toArray(),
             )
-          : null
+          : null,
       );
     }
   }
@@ -20801,7 +20821,7 @@ var mt = {};
             "div",
             { key: t },
             "Unknown security definition type ",
-            c
+            c,
           );
       }
       return h.default.createElement("div", { key: `${t}-jump` }, i);
@@ -20817,7 +20837,7 @@ var mt = {};
         "div",
         { className: "errors" },
         h.default.createElement("b", null, n, " ", t),
-        h.default.createElement("span", null, a)
+        h.default.createElement("span", null, a),
       );
     }
   }
@@ -20850,7 +20870,7 @@ var mt = {};
       let f = this.getValue(),
         g = (0, n.default)((e = s.allErrors())).call(
           e,
-          (e) => e.get("authId") === o
+          (e) => e.get("authId") === o,
         );
       return h.default.createElement(
         "div",
@@ -20860,13 +20880,13 @@ var mt = {};
           null,
           h.default.createElement("code", null, o || a.get("name")),
           " (apiKey)",
-          h.default.createElement(p, { path: ["securityDefinitions", o] })
+          h.default.createElement(p, { path: ["securityDefinitions", o] }),
         ),
         f && h.default.createElement("h6", null, "Authorized"),
         h.default.createElement(
           i,
           null,
-          h.default.createElement(d, { source: a.get("description") })
+          h.default.createElement(d, { source: a.get("description") }),
         ),
         h.default.createElement(
           i,
@@ -20875,8 +20895,8 @@ var mt = {};
             "p",
             null,
             "Name: ",
-            h.default.createElement("code", null, a.get("name"))
-          )
+            h.default.createElement("code", null, a.get("name")),
+          ),
         ),
         h.default.createElement(
           i,
@@ -20885,8 +20905,8 @@ var mt = {};
             "p",
             null,
             "In: ",
-            h.default.createElement("code", null, a.get("in"))
-          )
+            h.default.createElement("code", null, a.get("in")),
+          ),
         ),
         h.default.createElement(
           i,
@@ -20901,12 +20921,12 @@ var mt = {};
                   type: "text",
                   onChange: this.onChange,
                   autoFocus: !0,
-                })
-              )
+                }),
+              ),
         ),
         (0, m.default)((t = g.valueSeq())).call(t, (e, t) =>
-          h.default.createElement(u, { error: e, key: t })
-        )
+          h.default.createElement(u, { error: e, key: t }),
+        ),
       );
     }
   }
@@ -20939,7 +20959,7 @@ var mt = {};
       let f = this.getValue().username,
         g = (0, n.default)((e = o.allErrors())).call(
           e,
-          (e) => e.get("authId") === s
+          (e) => e.get("authId") === s,
         );
       return h.default.createElement(
         "div",
@@ -20948,13 +20968,13 @@ var mt = {};
           "h4",
           null,
           "Basic authorization",
-          h.default.createElement(d, { path: ["securityDefinitions", s] })
+          h.default.createElement(d, { path: ["securityDefinitions", s] }),
         ),
         f && h.default.createElement("h6", null, "Authorized"),
         h.default.createElement(
           i,
           null,
-          h.default.createElement(p, { source: a.get("description") })
+          h.default.createElement(p, { source: a.get("description") }),
         ),
         h.default.createElement(
           i,
@@ -20971,8 +20991,8 @@ var mt = {};
                   name: "username",
                   onChange: this.onChange,
                   autoFocus: !0,
-                })
-              )
+                }),
+              ),
         ),
         h.default.createElement(
           i,
@@ -20988,12 +21008,12 @@ var mt = {};
                   name: "password",
                   type: "password",
                   onChange: this.onChange,
-                })
-              )
+                }),
+              ),
         ),
         (0, m.default)((t = g.valueSeq())).call(t, (e, t) =>
-          h.default.createElement(u, { error: e, key: t })
-        )
+          h.default.createElement(u, { error: e, key: t }),
+        ),
       );
     }
   }
@@ -21012,13 +21032,13 @@ var mt = {};
                 h.default.createElement(
                   "div",
                   { className: "example__section-header" },
-                  "Example Description"
+                  "Example Description",
                 ),
                 h.default.createElement(
                   "p",
                   null,
-                  h.default.createElement(s, { source: t.get("description") })
-                )
+                  h.default.createElement(s, { source: t.get("description") }),
+                ),
               )
             : null,
           a && t.has("value")
@@ -21028,14 +21048,14 @@ var mt = {};
                 h.default.createElement(
                   "div",
                   { className: "example__section-header" },
-                  "Example Value"
+                  "Example Value",
                 ),
                 h.default.createElement(o, {
                   getConfigs: r,
                   value: (0, x.Pz)(t.get("value")),
-                })
+                }),
               )
-            : null
+            : null,
         )
       : null;
   }
@@ -21096,7 +21116,7 @@ var mt = {};
           ? h.default.createElement(
               "span",
               { className: "examples-select__section-label" },
-              "Examples: "
+              "Examples: ",
             )
           : null,
         h.default.createElement(
@@ -21110,7 +21130,7 @@ var mt = {};
             ? h.default.createElement(
                 "option",
                 { value: "__MODIFIED__VALUE__" },
-                "[Modified value]"
+                "[Modified value]",
               )
             : null,
           (0, m.default)(e)
@@ -21118,11 +21138,11 @@ var mt = {};
               h.default.createElement(
                 "option",
                 { key: t, value: t },
-                e.get("summary") || t
-              )
+                e.get("summary") || t,
+              ),
             )
-            .valueSeq()
-        )
+            .valueSeq(),
+        ),
       );
     }
   }
@@ -21133,7 +21153,7 @@ var mt = {};
         t[a] = arguments[a];
       return console.log(
         "DEBUG: ExamplesSelect was not given an onSelect callback",
-        ...t
+        ...t,
       );
     },
     currentExampleKey: null,
@@ -21226,7 +21246,7 @@ var mt = {};
         i = this._getValueForExample(e.currentKey, e),
         c = (0, n.default)(a).call(
           a,
-          (e) => e.get("value") === t || (0, x.Pz)(e.get("value")) === t
+          (e) => e.get("value") === t || (0, x.Pz)(e.get("value")) === t,
         );
       if (c.size) {
         let t;
@@ -21276,7 +21296,7 @@ var mt = {};
         t[a] = arguments[a];
       return console.log(
         "ExamplesSelectValueRetainer: no `onSelect` function was provided",
-        ...t
+        ...t,
       );
     },
     updateValue: function () {
@@ -21284,7 +21304,7 @@ var mt = {};
         t[a] = arguments[a];
       return console.log(
         "ExamplesSelectValueRetainer: no `updateValue` function was provided",
-        ...t
+        ...t,
       );
     },
   });
@@ -21383,7 +21403,7 @@ var mt = {};
                   f.push(
                     (0, m.default)((S = [e, E[e]]))
                       .call(S, encodeURIComponent)
-                      .join("=")
+                      .join("="),
                   );
               }
               const w = l.get("authorizationUrl");
@@ -21393,7 +21413,7 @@ var mt = {};
                 : (0, x.Nm)(w);
               let _,
                 C = [b, f.join("&")].join(
-                  -1 === (0, H.default)(w).call(w, "?") ? "?" : "&"
+                  -1 === (0, H.default)(w).call(w, "?") ? "?" : "&",
                 );
               (_ =
                 "implicit" === p
@@ -21434,7 +21454,7 @@ var mt = {};
             this.setState({
               scopes: (0, n.default)((i = this.state.scopes)).call(
                 i,
-                (e) => e !== o
+                (e) => e !== o,
               ),
             });
           }
@@ -21457,8 +21477,8 @@ var mt = {};
                   (0, me.default)(
                     (t =
                       this.props.schema.get("allowedScopes") ||
-                      this.props.schema.get("scopes"))
-                  ).call(t)
+                      this.props.schema.get("scopes")),
+                  ).call(t),
                 ),
               })
             : this.setState({ scopes: [] });
@@ -21529,7 +21549,7 @@ var mt = {};
         k = !!s.authorized().get(l),
         A = (0, n.default)((e = o.allErrors())).call(
           e,
-          (e) => e.get("authId") === l
+          (e) => e.get("authId") === l,
         ),
         I = !(0, n.default)(A).call(A, (e) => "validation" === e.get("source"))
           .size,
@@ -21544,7 +21564,7 @@ var mt = {};
           " (OAuth2, ",
           N,
           ") ",
-          h.default.createElement(g, { path: ["securityDefinitions", l] })
+          h.default.createElement(g, { path: ["securityDefinitions", l] }),
         ),
         this.state.appName
           ? h.default.createElement(
@@ -21552,7 +21572,7 @@ var mt = {};
               null,
               "Application: ",
               this.state.appName,
-              " "
+              " ",
             )
           : null,
         R && h.default.createElement(y, { source: a.get("description") }),
@@ -21562,27 +21582,27 @@ var mt = {};
             "p",
             null,
             "OpenID Connect URL: ",
-            h.default.createElement("code", null, S)
+            h.default.createElement("code", null, S),
           ),
         (j === w || j === x) &&
           h.default.createElement(
             "p",
             null,
             "Authorization URL: ",
-            h.default.createElement("code", null, a.get("authorizationUrl"))
+            h.default.createElement("code", null, a.get("authorizationUrl")),
           ),
         (j === b || j === x || j === _) &&
           h.default.createElement(
             "p",
             null,
             "Token URL:",
-            h.default.createElement("code", null, " ", a.get("tokenUrl"))
+            h.default.createElement("code", null, " ", a.get("tokenUrl")),
           ),
         h.default.createElement(
           "p",
           { className: "flow" },
           "Flow: ",
-          h.default.createElement("code", null, N)
+          h.default.createElement("code", null, N),
         ),
         j !== b
           ? null
@@ -21595,7 +21615,7 @@ var mt = {};
                 h.default.createElement(
                   "label",
                   { htmlFor: "oauth_username" },
-                  "username:"
+                  "username:",
                 ),
                 k
                   ? h.default.createElement(
@@ -21603,7 +21623,7 @@ var mt = {};
                       null,
                       " ",
                       this.state.username,
-                      " "
+                      " ",
                     )
                   : h.default.createElement(
                       d,
@@ -21614,8 +21634,8 @@ var mt = {};
                         "data-name": "username",
                         onChange: this.onInputChange,
                         autoFocus: !0,
-                      })
-                    )
+                      }),
+                    ),
               ),
               h.default.createElement(
                 u,
@@ -21623,7 +21643,7 @@ var mt = {};
                 h.default.createElement(
                   "label",
                   { htmlFor: "oauth_password" },
-                  "password:"
+                  "password:",
                 ),
                 k
                   ? h.default.createElement("code", null, " ****** ")
@@ -21635,8 +21655,8 @@ var mt = {};
                         type: "password",
                         "data-name": "password",
                         onChange: this.onInputChange,
-                      })
-                    )
+                      }),
+                    ),
               ),
               h.default.createElement(
                 u,
@@ -21644,7 +21664,7 @@ var mt = {};
                 h.default.createElement(
                   "label",
                   { htmlFor: "password_type" },
-                  "Client credentials location:"
+                  "Client credentials location:",
                 ),
                 k
                   ? h.default.createElement(
@@ -21652,7 +21672,7 @@ var mt = {};
                       null,
                       " ",
                       this.state.passwordType,
-                      " "
+                      " ",
                     )
                   : h.default.createElement(
                       d,
@@ -21667,16 +21687,16 @@ var mt = {};
                         h.default.createElement(
                           "option",
                           { value: "basic" },
-                          "Authorization header"
+                          "Authorization header",
                         ),
                         h.default.createElement(
                           "option",
                           { value: "request-body" },
-                          "Request body"
-                        )
-                      )
-                    )
-              )
+                          "Request body",
+                        ),
+                      ),
+                    ),
+              ),
             ),
         (j === _ || j === w || j === x || j === b) &&
           (!k || (k && this.state.clientId)) &&
@@ -21686,7 +21706,7 @@ var mt = {};
             h.default.createElement(
               "label",
               { htmlFor: "client_id" },
-              "client_id:"
+              "client_id:",
             ),
             k
               ? h.default.createElement("code", null, " ****** ")
@@ -21700,8 +21720,8 @@ var mt = {};
                     initialValue: this.state.clientId,
                     "data-name": "clientId",
                     onChange: this.onInputChange,
-                  })
-                )
+                  }),
+                ),
           ),
         (j === _ || j === x || j === b) &&
           h.default.createElement(
@@ -21710,7 +21730,7 @@ var mt = {};
             h.default.createElement(
               "label",
               { htmlFor: "client_secret" },
-              "client_secret:"
+              "client_secret:",
             ),
             k
               ? h.default.createElement("code", null, " ****** ")
@@ -21723,8 +21743,8 @@ var mt = {};
                     type: "password",
                     "data-name": "clientSecret",
                     onChange: this.onInputChange,
-                  })
-                )
+                  }),
+                ),
           ),
         !k && O && O.size
           ? h.default.createElement(
@@ -21737,13 +21757,13 @@ var mt = {};
                 h.default.createElement(
                   "a",
                   { onClick: this.selectScopes, "data-all": !0 },
-                  "select all"
+                  "select all",
                 ),
                 h.default.createElement(
                   "a",
                   { onClick: this.selectScopes },
-                  "select none"
-                )
+                  "select none",
+                ),
               ),
               (0, m.default)(O)
                 .call(O, (e, t) => {
@@ -21760,7 +21780,7 @@ var mt = {};
                         disabled: k,
                         checked: (0, fe.default)((a = this.state.scopes)).call(
                           a,
-                          t
+                          t,
                         ),
                         type: "checkbox",
                         onChange: this.onScopeChange,
@@ -21775,23 +21795,23 @@ var mt = {};
                           h.default.createElement(
                             "p",
                             { className: "name" },
-                            t
+                            t,
                           ),
                           h.default.createElement(
                             "p",
                             { className: "description" },
-                            e
-                          )
-                        )
-                      )
-                    )
+                            e,
+                          ),
+                        ),
+                      ),
+                    ),
                   );
                 })
-                .toArray()
+                .toArray(),
             )
           : null,
         (0, m.default)((t = A.valueSeq())).call(t, (e, t) =>
-          h.default.createElement(f, { error: e, key: t })
+          h.default.createElement(f, { error: e, key: t }),
         ),
         h.default.createElement(
           "div",
@@ -21804,7 +21824,7 @@ var mt = {};
                     className: "btn modal-btn auth authorize",
                     onClick: this.logout,
                   },
-                  "Logout"
+                  "Logout",
                 )
               : h.default.createElement(
                   p,
@@ -21812,14 +21832,14 @@ var mt = {};
                     className: "btn modal-btn auth authorize",
                     onClick: this.authorize,
                   },
-                  "Authorize"
+                  "Authorize",
                 )),
           h.default.createElement(
             p,
             { className: "btn modal-btn auth btn-done", onClick: this.close },
-            "Close"
-          )
-        )
+            "Close",
+          ),
+        ),
       );
     }
   }
@@ -21838,7 +21858,7 @@ var mt = {};
           className: "btn btn-clear opblock-control__btn",
           onClick: this.onClick,
         },
-        "Clear"
+        "Clear",
       );
     }
   }
@@ -21848,7 +21868,7 @@ var mt = {};
         "div",
         null,
         h.default.createElement("h5", null, "Response headers"),
-        h.default.createElement("pre", { className: "microlight" }, t)
+        h.default.createElement("pre", { className: "microlight" }, t),
       );
     },
     Ee = (e) => {
@@ -21857,7 +21877,7 @@ var mt = {};
         "div",
         null,
         h.default.createElement("h5", null, "Request duration"),
-        h.default.createElement("pre", { className: "microlight" }, t, " ms")
+        h.default.createElement("pre", { className: "microlight" }, t, " ms"),
       );
     };
   class Se extends h.default.Component {
@@ -21900,7 +21920,7 @@ var mt = {};
             e,
             ": ",
             t,
-            " "
+            " ",
           );
         }),
         C = 0 !== _.length,
@@ -21922,8 +21942,8 @@ var mt = {};
               "div",
               { className: "request-url" },
               h.default.createElement("h4", null, "Request URL"),
-              h.default.createElement("pre", { className: "microlight" }, f)
-            )
+              h.default.createElement("pre", { className: "microlight" }, f),
+            ),
           ),
         h.default.createElement("h4", null, "Server response"),
         h.default.createElement(
@@ -21938,14 +21958,14 @@ var mt = {};
               h.default.createElement(
                 "td",
                 { className: "col_header response-col_status" },
-                "Code"
+                "Code",
               ),
               h.default.createElement(
                 "td",
                 { className: "col_header response-col_description" },
-                "Details"
-              )
-            )
+                "Details",
+              ),
+            ),
           ),
           h.default.createElement(
             "tbody",
@@ -21961,9 +21981,9 @@ var mt = {};
                   ? h.default.createElement(
                       "div",
                       { className: "response-undocumented" },
-                      h.default.createElement("i", null, " Undocumented ")
+                      h.default.createElement("i", null, " Undocumented "),
                     )
-                  : null
+                  : null,
               ),
               h.default.createElement(
                 "td",
@@ -21986,11 +22006,11 @@ var mt = {};
                     })
                   : null,
                 C ? h.default.createElement(ve, { headers: _ }) : null,
-                n && S ? h.default.createElement(Ee, { duration: S }) : null
-              )
-            )
-          )
-        )
+                n && S ? h.default.createElement(Ee, { duration: S }) : null,
+              ),
+            ),
+          ),
+        ),
       );
     }
   }
@@ -22043,8 +22063,8 @@ var mt = {};
                         tag: t,
                       });
                 })
-                .toArray()
-            )
+                .toArray(),
+            ),
           );
         });
     }
@@ -22061,9 +22081,9 @@ var mt = {};
               ? h.default.createElement(
                   "h3",
                   null,
-                  " No operations defined in spec! "
+                  " No operations defined in spec! ",
                 )
-              : null
+              : null,
           );
     }
   }
@@ -22125,7 +22145,7 @@ var mt = {};
             ? h.default.createElement(
                 "small",
                 null,
-                h.default.createElement(f, { source: w })
+                h.default.createElement(f, { source: w }),
               )
             : h.default.createElement("small", null),
           S
@@ -22142,9 +22162,9 @@ var mt = {};
                       onClick: (e) => e.stopPropagation(),
                       target: "_blank",
                     },
-                    b || S
-                  )
-                )
+                    b || S,
+                  ),
+                ),
               )
             : null,
           h.default.createElement(
@@ -22157,10 +22177,10 @@ var mt = {};
             },
             j
               ? h.default.createElement(v, { className: "arrow" })
-              : h.default.createElement(E, { className: "arrow" })
-          )
+              : h.default.createElement(E, { className: "arrow" }),
+          ),
         ),
-        h.default.createElement(p, { isOpened: j }, a)
+        h.default.createElement(p, { isOpened: j }, a),
       );
     }
   }
@@ -22265,7 +22285,7 @@ var mt = {};
               h.default.createElement(
                 "h4",
                 { className: "opblock-title_normal" },
-                " Warning: Deprecated"
+                " Warning: Deprecated",
               ),
             R &&
               h.default.createElement(
@@ -22274,8 +22294,8 @@ var mt = {};
                 h.default.createElement(
                   "div",
                   { className: "opblock-description" },
-                  h.default.createElement(W, { source: R })
-                )
+                  h.default.createElement(W, { source: R }),
+                ),
               ),
             M
               ? h.default.createElement(
@@ -22284,7 +22304,7 @@ var mt = {};
                   h.default.createElement(
                     "h4",
                     { className: "opblock-title_normal" },
-                    "Find more details"
+                    "Find more details",
                   ),
                   h.default.createElement(
                     "div",
@@ -22293,7 +22313,7 @@ var mt = {};
                       h.default.createElement(
                         "span",
                         { className: "opblock-external-docs__description" },
-                        h.default.createElement(W, { source: P.description })
+                        h.default.createElement(W, { source: P.description }),
                       ),
                     h.default.createElement(
                       X,
@@ -22302,9 +22322,9 @@ var mt = {};
                         className: "opblock-external-docs__link",
                         href: (0, x.Nm)(M),
                       },
-                      M
-                    )
-                  )
+                      M,
+                    ),
+                  ),
                 )
               : null,
             D && D.size
@@ -22352,7 +22372,7 @@ var mt = {};
                     method: _,
                     specActions: d,
                     currentScheme: B,
-                  })
+                  }),
                 )
               : null,
             !A || !O || te.length <= 0
@@ -22365,9 +22385,9 @@ var mt = {};
                     "ul",
                     null,
                     (0, m.default)(te).call(te, (e, t) =>
-                      h.default.createElement("li", { key: t }, " ", e, " ")
-                    )
-                  )
+                      h.default.createElement("li", { key: t }, " ", e, " "),
+                    ),
+                  ),
                 ),
             h.default.createElement(
               "div",
@@ -22391,13 +22411,13 @@ var mt = {};
                     path: b,
                     method: _,
                   })
-                : null
+                : null,
             ),
             I
               ? h.default.createElement(
                   "div",
                   { className: "loading-container" },
-                  h.default.createElement("div", { className: "loading" })
+                  h.default.createElement("div", { className: "loading" }),
                 )
               : null,
             L
@@ -22422,9 +22442,9 @@ var mt = {};
               : null,
             Q && J.size
               ? h.default.createElement(Z, { extensions: J, getComponent: c })
-              : null
-          )
-        )
+              : null,
+          ),
+        ),
       );
     }
   }
@@ -22494,16 +22514,16 @@ var mt = {};
             ? h.default.createElement(
                 "div",
                 { className: "opblock-summary-description" },
-                (0, je.default)(y || l)
+                (0, je.default)(y || l),
               )
             : null,
           g && (f || m)
             ? h.default.createElement(
                 "span",
                 { className: "opblock-summary-operation-id" },
-                f || m
+                f || m,
               )
-            : null
+            : null,
         ),
         h.default.createElement(x, { textToCopy: `${o.get(1)}` }),
         O
@@ -22526,9 +22546,9 @@ var mt = {};
           },
           e
             ? h.default.createElement(_, { className: "arrow" })
-            : h.default.createElement(C, { className: "arrow" })
+            : h.default.createElement(C, { className: "arrow" }),
         ),
-        h.default.createElement(b, { path: o })
+        h.default.createElement(b, { path: o }),
       );
     }
   }
@@ -22543,7 +22563,7 @@ var mt = {};
       return h.default.createElement(
         "span",
         { className: "opblock-summary-method" },
-        e.toUpperCase()
+        e.toUpperCase(),
       );
     }
   }
@@ -22569,7 +22589,7 @@ var mt = {};
           i,
           e,
           0,
-          h.default.createElement("wbr", { key: e })
+          h.default.createElement("wbr", { key: e }),
         );
       const c = e("DeepLink");
       return h.default.createElement(
@@ -22585,7 +22605,7 @@ var mt = {};
           isShown: n,
           path: (0, x.oJ)(`${s}/${o}`),
           text: i,
-        })
+        }),
       );
     }
   }
@@ -22599,7 +22619,7 @@ var mt = {};
         h.default.createElement(
           "div",
           { className: "opblock-section-header" },
-          h.default.createElement("h4", null, "Extensions")
+          h.default.createElement("h4", null, "Extensions"),
         ),
         h.default.createElement(
           "div",
@@ -22616,14 +22636,14 @@ var mt = {};
                 h.default.createElement(
                   "td",
                   { className: "col_header" },
-                  "Field"
+                  "Field",
                 ),
                 h.default.createElement(
                   "td",
                   { className: "col_header" },
-                  "Value"
-                )
-              )
+                  "Value",
+                ),
+              ),
             ),
             h.default.createElement(
               "tbody",
@@ -22635,10 +22655,10 @@ var mt = {};
                   xKey: t,
                   xVal: a,
                 });
-              })
-            )
-          )
-        )
+              }),
+            ),
+          ),
+        ),
       );
     },
     Re = (e) => {
@@ -22648,7 +22668,7 @@ var mt = {};
         "tr",
         null,
         h.default.createElement("td", null, t),
-        h.default.createElement("td", null, (0, s.default)(n))
+        h.default.createElement("td", null, (0, s.default)(n)),
       );
     };
   var Pe = pt(29),
@@ -22679,15 +22699,15 @@ var mt = {};
     (0, h.useEffect)(() => {
       var e;
       const t = (0, n.default)(
-        (e = (0, pe.default)(d.current.childNodes))
+        (e = (0, pe.default)(d.current.childNodes)),
       ).call(e, (e) => !!e.nodeType && e.classList.contains("microlight"));
       return (
         (0, Pe.default)(t).call(t, (e) =>
-          e.addEventListener("mousewheel", p, { passive: !1 })
+          e.addEventListener("mousewheel", p, { passive: !1 }),
         ),
         () => {
           (0, Pe.default)(t).call(t, (e) =>
-            e.removeEventListener("mousewheel", p)
+            e.removeEventListener("mousewheel", p),
           );
         }
       );
@@ -22709,8 +22729,8 @@ var mt = {};
           h.default.createElement(
             Be.CopyToClipboard,
             { text: t },
-            h.default.createElement("button", null)
-          )
+            h.default.createElement("button", null),
+          ),
         ),
       s
         ? h.default.createElement(
@@ -22721,7 +22741,7 @@ var mt = {};
                 (0, qe.default)(t, a);
               },
             },
-            "Download"
+            "Download",
           )
         : null,
       u
@@ -22731,16 +22751,16 @@ var mt = {};
               language: i,
               className: (0, Te.default)(r, "microlight"),
               style: (0, Me.C2)(
-                (0, De.default)(c, "syntaxHighlight.theme", "agate")
+                (0, De.default)(c, "syntaxHighlight.theme", "agate"),
               ),
             },
-            t
+            t,
           )
         : h.default.createElement(
             "pre",
             { className: (0, Te.default)(r, "microlight") },
-            t
-          )
+            t,
+          ),
     );
   };
   Ue.defaultProps = { fileName: "response.txt" };
@@ -22751,8 +22771,8 @@ var mt = {};
         (0, W.default)(this, "onChangeProducesWrapper", (e) =>
           this.props.specActions.changeProducesValue(
             [this.props.path, this.props.method],
-            e
-          )
+            e,
+          ),
         ),
         (0, W.default)(this, "onResponseContentTypeChange", (e) => {
           let { controlsAcceptHeader: t, value: a } = e;
@@ -22815,8 +22835,8 @@ var mt = {};
                   contentTypes: S,
                   controlId: _,
                   onChange: this.onChangeProducesWrapper,
-                })
-              )
+                }),
+              ),
         ),
         h.default.createElement(
           "div",
@@ -22834,7 +22854,7 @@ var mt = {};
                   method: this.props.method,
                   displayRequestDuration: i,
                 }),
-                h.default.createElement("h4", null, "Responses")
+                h.default.createElement("h4", null, "Responses"),
               )
             : null,
           h.default.createElement(
@@ -22854,21 +22874,21 @@ var mt = {};
                 h.default.createElement(
                   "td",
                   { className: "col_header response-col_status" },
-                  "Code"
+                  "Code",
                 ),
                 h.default.createElement(
                   "td",
                   { className: "col_header response-col_description" },
-                  "Description"
+                  "Description",
                 ),
                 s.isOAS3()
                   ? h.default.createElement(
                       "td",
                       { className: "col col_header response-col_links" },
-                      "Links"
+                      "Links",
                     )
-                  : null
-              )
+                  : null,
+              ),
             ),
             h.default.createElement(
               "tbody",
@@ -22896,16 +22916,16 @@ var mt = {};
                       u,
                       d,
                       "responses",
-                      t
+                      t,
                     ),
                     oas3Actions: f,
                     getComponent: n,
                   });
                 })
-                .toArray()
-            )
-          )
-        )
+                .toArray(),
+            ),
+          ),
+        ),
       );
     }
   }
@@ -23024,7 +23044,7 @@ var mt = {};
                 getConfigs: a,
                 language: n,
                 value: (0, x.Pz)(e),
-              })
+              }),
             )
           );
         }
@@ -23040,7 +23060,7 @@ var mt = {};
           h.default.createElement(
             "div",
             { className: "response-col_description__inner" },
-            h.default.createElement(A, { source: s.get("description") })
+            h.default.createElement(A, { source: s.get("description") }),
           ),
           w && b.size
             ? (0, m.default)((e = b.entrySeq())).call(e, (e) => {
@@ -23066,7 +23086,7 @@ var mt = {};
                   h.default.createElement(
                     "small",
                     { className: "response-control-media-type__title" },
-                    "Media type"
+                    "Media type",
                   ),
                   h.default.createElement(R, {
                     value: this.state.responseContentType,
@@ -23085,9 +23105,9 @@ var mt = {};
                         },
                         "Controls ",
                         h.default.createElement("code", null, "Accept"),
-                        " header."
+                        " header.",
                       )
-                    : null
+                    : null,
                 ),
                 B
                   ? h.default.createElement(
@@ -23096,7 +23116,7 @@ var mt = {};
                       h.default.createElement(
                         "small",
                         { className: "response-control-examples__title" },
-                        "Examples"
+                        "Examples",
                       ),
                       h.default.createElement(P, {
                         examples: B,
@@ -23109,9 +23129,9 @@ var mt = {};
                             contextName: r,
                           }),
                         showLabels: !1,
-                      })
+                      }),
                     )
-                  : null
+                  : null,
               )
             : null,
           F || M
@@ -23133,7 +23153,9 @@ var mt = {};
                 omitValue: !0,
               })
             : null,
-          _ ? h.default.createElement(N, { headers: _, getComponent: c }) : null
+          _
+            ? h.default.createElement(N, { headers: _, getComponent: c })
+            : null,
         ),
         S
           ? h.default.createElement(
@@ -23149,9 +23171,9 @@ var mt = {};
                       getComponent: c,
                     });
                   })
-                : h.default.createElement("i", null, "No links")
+                : h.default.createElement("i", null, "No links"),
             )
-          : null
+          : null,
       );
     }
   }
@@ -23166,7 +23188,7 @@ var mt = {};
       { className: "response__extension" },
       t,
       ": ",
-      String(a)
+      String(a),
     );
   };
   var We = pt(3769);
@@ -23247,8 +23269,8 @@ var mt = {};
                       href: l,
                       onClick: () => b.Z.navigator.msSaveOrOpenBlob(o, i),
                     },
-                    "Download file"
-                  )
+                    "Download file",
+                  ),
                 )
               : h.default.createElement(
                   "div",
@@ -23256,14 +23278,14 @@ var mt = {};
                   h.default.createElement(
                     "a",
                     { href: l, download: i },
-                    "Download file"
-                  )
+                    "Download file",
+                  ),
                 );
         } else
           p = h.default.createElement(
             "pre",
             { className: "microlight" },
-            "Download headers detected but your browser does not support downloading binary via XHR (Blob)."
+            "Download headers detected but your browser does not support downloading binary via XHR (Blob).",
           );
       else if (/json/i.test(t)) {
         let t = null;
@@ -23324,8 +23346,8 @@ var mt = {};
                     h.default.createElement(
                       "audio",
                       { controls: !0, key: n },
-                      h.default.createElement("source", { src: n, type: t })
-                    )
+                      h.default.createElement("source", { src: n, type: t }),
+                    ),
                   )
                 : "string" == typeof e
                 ? h.default.createElement(c, {
@@ -23343,7 +23365,7 @@ var mt = {};
                       h.default.createElement(
                         "p",
                         { className: "i" },
-                        "Unrecognized response type; displaying content as text."
+                        "Unrecognized response type; displaying content as text.",
                       ),
                       h.default.createElement(c, {
                         downloadable: !0,
@@ -23351,12 +23373,12 @@ var mt = {};
                         value: i,
                         getConfigs: o,
                         canCopy: !0,
-                      })
+                      }),
                     )
                   : h.default.createElement(
                       "p",
                       { className: "i" },
-                      "Unrecognized response type; unable to display."
+                      "Unrecognized response type; unable to display.",
                     )
                 : null);
       return p
@@ -23364,7 +23386,7 @@ var mt = {};
             "div",
             null,
             h.default.createElement("h5", null, "Response body"),
-            p
+            p,
           )
         : null;
     }
@@ -23392,7 +23414,7 @@ var mt = {};
             ? this.setState({ parametersVisible: !0, callbackVisible: !1 })
             : "callbacks" === e
             ? this.setState({ callbackVisible: !0, parametersVisible: !1 })
-            : void 0
+            : void 0,
         ),
         (0, W.default)(this, "onChangeMediaType", (e) => {
           let { value: t, pathMethod: a } = e,
@@ -23444,9 +23466,9 @@ var mt = {};
                 const a = t.get("in");
                 return e[a] ?? (e[a] = []), e[a].push(t), e;
               },
-              {}
-            )
-          ))
+              {},
+            ),
+          )),
         ).call(e, (e, t) => (0, f.default)(e).call(e, t), []);
       return h.default.createElement(
         "div",
@@ -23469,8 +23491,8 @@ var mt = {};
                   h.default.createElement(
                     "h4",
                     { className: "opblock-title" },
-                    h.default.createElement("span", null, "Parameters")
-                  )
+                    h.default.createElement("span", null, "Parameters"),
+                  ),
                 ),
                 w.get("callbacks")
                   ? h.default.createElement(
@@ -23484,10 +23506,10 @@ var mt = {};
                       h.default.createElement(
                         "h4",
                         { className: "opblock-title" },
-                        h.default.createElement("span", null, "Callbacks")
-                      )
+                        h.default.createElement("span", null, "Callbacks"),
+                      ),
                     )
-                  : null
+                  : null,
               )
             : h.default.createElement(
                 "div",
@@ -23495,8 +23517,8 @@ var mt = {};
                 h.default.createElement(
                   "h4",
                   { className: "opblock-title" },
-                  "Parameters"
-                )
+                  "Parameters",
+                ),
               ),
           r
             ? h.default.createElement(x, {
@@ -23507,7 +23529,7 @@ var mt = {};
                 onTryoutClick: t,
                 onResetClick: () => a(v),
               })
-            : null
+            : null,
         ),
         this.state.parametersVisible
           ? h.default.createElement(
@@ -23529,7 +23551,7 @@ var mt = {};
                           h.default.createElement(
                             "th",
                             { className: "col_header parameters-col_name" },
-                            "Name"
+                            "Name",
                           ),
                           h.default.createElement(
                             "th",
@@ -23537,9 +23559,9 @@ var mt = {};
                               className:
                                 "col_header parameters-col_description",
                             },
-                            "Description"
-                          )
-                        )
+                            "Description",
+                          ),
+                        ),
                       ),
                       h.default.createElement(
                         "tbody",
@@ -23561,16 +23583,16 @@ var mt = {};
                             oas3Selectors: S,
                             pathMethod: v,
                             isExecute: N,
-                          })
-                        )
-                      )
-                    )
+                          }),
+                        ),
+                      ),
+                    ),
                   )
                 : h.default.createElement(
                     "div",
                     { className: "opblock-description-wrapper" },
-                    h.default.createElement("p", null, "No parameters")
-                  )
+                    h.default.createElement("p", null, "No parameters"),
+                  ),
             )
           : null,
         this.state.callbackVisible
@@ -23580,7 +23602,7 @@ var mt = {};
               h.default.createElement(C, {
                 callbacks: (0, y.Map)(w.get("callbacks")),
                 specPath: (0, u.default)(o).call(o, 0, -1).push("callbacks"),
-              })
+              }),
             )
           : null,
         O &&
@@ -23599,7 +23621,7 @@ var mt = {};
                     k.get("required") && "required"
                   }`,
                 },
-                "Request body"
+                "Request body",
               ),
               h.default.createElement(
                 "label",
@@ -23612,8 +23634,8 @@ var mt = {};
                   },
                   className: "body-param-content-type",
                   ariaLabel: "Request content type",
-                })
-              )
+                }),
+              ),
             ),
             h.default.createElement(
               "div",
@@ -23626,7 +23648,7 @@ var mt = {};
                 requestBody: k,
                 requestBodyValue: S.requestBodyValue(...v),
                 requestBodyInclusionSetting: S.requestBodyInclusionSetting(
-                  ...v
+                  ...v,
                 ),
                 requestBodyErrors: S.requestBodyErrors(...v),
                 isExecute: N,
@@ -23634,7 +23656,7 @@ var mt = {};
                 activeExamplesKey: S.activeExamplesMember(
                   ...v,
                   "requestBody",
-                  "requestBody"
+                  "requestBody",
                 ),
                 updateActiveExamplesKey: (e) => {
                   this.props.oas3Actions.setActiveExamplesMember({
@@ -23663,9 +23685,9 @@ var mt = {};
                   });
                 },
                 contentType: S.requestContentType(...v),
-              })
-            )
-          )
+              }),
+            ),
+          ),
       );
     }
   }
@@ -23684,7 +23706,7 @@ var mt = {};
         { className: "parameter__extension" },
         t,
         ": ",
-        String(a)
+        String(a),
       );
     },
     ut = { onChange: () => {}, isIncludedOptions: {} };
@@ -23719,8 +23741,8 @@ var mt = {};
             checked: !t && e,
             onChange: this.onCheckboxChange,
           }),
-          "Send empty value"
-        )
+          "Send empty value",
+        ),
       );
     }
   }
@@ -23781,7 +23803,7 @@ var mt = {};
               const e = n.activeExamplesMember(
                 ...t,
                 "parameters",
-                this.getParamKey()
+                this.getParamKey(),
               );
               a =
                 void 0 !== s.getIn(["examples", e, "value"])
@@ -23909,7 +23931,7 @@ var mt = {};
               "div",
               { className: $ ? "parameter__name required" : "parameter__name" },
               a.get("name"),
-              $ ? h.default.createElement("span", null, " *") : null
+              $ ? h.default.createElement("span", null, " *") : null,
             ),
             h.default.createElement(
               "div",
@@ -23922,20 +23944,20 @@ var mt = {};
                   { className: "prop-format" },
                   "($",
                   L,
-                  ")"
-                )
+                  ")",
+                ),
             ),
             h.default.createElement(
               "div",
               { className: "parameter__deprecated" },
-              f && a.get("deprecated") ? "deprecated" : null
+              f && a.get("deprecated") ? "deprecated" : null,
             ),
             h.default.createElement(
               "div",
               { className: "parameter__in" },
               "(",
               a.get("in"),
-              ")"
+              ")",
             ),
             v && K.size
               ? (0, m.default)((e = K.entrySeq())).call(e, (e) => {
@@ -23956,7 +23978,7 @@ var mt = {};
                     xVal: a,
                   });
                 })
-              : null
+              : null,
           ),
           h.default.createElement(
             "td",
@@ -23991,7 +24013,7 @@ var mt = {};
               h.default.createElement(
                 "div",
                 null,
-                "Error: your browser does not support FormData"
+                "Error: your browser does not support FormData",
               ),
             f && a.get("examples")
               ? h.default.createElement(
@@ -24006,10 +24028,10 @@ var mt = {};
                     currentKey: p.activeExamplesMember(
                       ...u,
                       "parameters",
-                      this.getParamKey()
+                      this.getParamKey(),
                     ),
                     currentUserInputValue: V,
-                  })
+                  }),
                 )
               : null,
             _
@@ -24043,7 +24065,7 @@ var mt = {};
                   isIncluded: c.parameterInclusionSettingFor(
                     u,
                     a.get("name"),
-                    a.get("in")
+                    a.get("in"),
                   ),
                   isDisabled: !(0, x.O2)(V),
                 })
@@ -24055,14 +24077,14 @@ var mt = {};
                     p.activeExamplesMember(
                       ...u,
                       "parameters",
-                      this.getParamKey()
+                      this.getParamKey(),
                     ),
                   ]),
                   getComponent: r,
                   getConfigs: s,
                 })
-              : null
-          )
+              : null,
+          ),
         )
       );
     }
@@ -24150,8 +24172,8 @@ var mt = {};
         (0, W.default)(this, "onChangeProducesWrapper", (e) =>
           this.props.specActions.changeProducesValue(
             [this.props.path, this.props.method],
-            e
-          )
+            e,
+          ),
         );
     }
     render() {
@@ -24163,7 +24185,7 @@ var mt = {};
           onClick: this.onClick,
           disabled: e,
         },
-        "Execute"
+        "Execute",
       );
     }
   }
@@ -24180,7 +24202,7 @@ var mt = {};
             h.default.createElement(
               "h4",
               { className: "headers__title" },
-              "Headers:"
+              "Headers:",
             ),
             h.default.createElement(
               "table",
@@ -24194,19 +24216,19 @@ var mt = {};
                   h.default.createElement(
                     "th",
                     { className: "header-col" },
-                    "Name"
+                    "Name",
                   ),
                   h.default.createElement(
                     "th",
                     { className: "header-col" },
-                    "Description"
+                    "Description",
                   ),
                   h.default.createElement(
                     "th",
                     { className: "header-col" },
-                    "Type"
-                  )
-                )
+                    "Type",
+                  ),
+                ),
               ),
               h.default.createElement(
                 "tbody",
@@ -24226,12 +24248,12 @@ var mt = {};
                       h.default.createElement(
                         "td",
                         { className: "header-col" },
-                        t
+                        t,
                       ),
                       h.default.createElement(
                         "td",
                         { className: "header-col" },
-                        s ? h.default.createElement(r, { source: s }) : null
+                        s ? h.default.createElement(r, { source: s }) : null,
                       ),
                       h.default.createElement(
                         "td",
@@ -24244,13 +24266,13 @@ var mt = {};
                               propVal: l,
                               propClass: "header-example",
                             })
-                          : null
-                      )
+                          : null,
+                      ),
                     );
                   })
-                  .toArray()
-              )
-            )
+                  .toArray(),
+              ),
+            ),
           )
         : null;
     }
@@ -24269,7 +24291,7 @@ var mt = {};
       let i = t.allErrors(),
         c = (0, n.default)(i).call(
           i,
-          (e) => "thrown" === e.get("type") || "error" === e.get("level")
+          (e) => "thrown" === e.get("type") || "error" === e.get("level"),
         );
       if (!c || c.count() < 1) return null;
       let u = a.isShown(["errorPane"], !0),
@@ -24283,7 +24305,7 @@ var mt = {};
           h.default.createElement(
             "h4",
             { className: "errors__title" },
-            "Errors"
+            "Errors",
           ),
           h.default.createElement(
             "button",
@@ -24291,8 +24313,8 @@ var mt = {};
               className: "btn errors__clear-btn",
               onClick: () => r.show(["errorPane"], !u),
             },
-            u ? "Hide" : "Show"
-          )
+            u ? "Hide" : "Show",
+          ),
         ),
         h.default.createElement(
           o,
@@ -24315,9 +24337,9 @@ var mt = {};
                     jumpToLine: l,
                   })
                 : void 0;
-            })
-          )
-        )
+            }),
+          ),
+        ),
       );
     }
   }
@@ -24343,14 +24365,14 @@ var mt = {};
                       "small",
                       null,
                       " at ",
-                      t.get("path")
+                      t.get("path"),
                     )
-                  : null
+                  : null,
               ),
               h.default.createElement(
                 "span",
                 { className: "message thrown" },
-                t.get("message")
+                t.get("message"),
               ),
               h.default.createElement(
                 "div",
@@ -24360,12 +24382,12 @@ var mt = {};
                       "a",
                       { onClick: (0, i.default)(a).call(a, null, n) },
                       "Jump to line ",
-                      n
+                      n,
                     )
-                  : null
-              )
+                  : null,
+              ),
             )
-          : null
+          : null,
       );
     },
     wt = (e) => {
@@ -24378,7 +24400,7 @@ var mt = {};
                   "small",
                   null,
                   "at ",
-                  t.get("path").join(".")
+                  t.get("path").join("."),
                 )
               : h.default.createElement("small", null, "at ", t.get("path")))
           : t.get("line") &&
@@ -24387,7 +24409,7 @@ var mt = {};
               "small",
               null,
               "on line ",
-              t.get("line")
+              t.get("line"),
             )),
         h.default.createElement(
           "div",
@@ -24401,12 +24423,12 @@ var mt = {};
                   null,
                   bt(t.get("source")) + " " + t.get("level"),
                   " ",
-                  n
+                  n,
                 ),
                 h.default.createElement(
                   "span",
                   { className: "message" },
-                  t.get("message")
+                  t.get("message"),
                 ),
                 h.default.createElement(
                   "div",
@@ -24418,16 +24440,16 @@ var mt = {};
                           onClick: (0, i.default)(a).call(
                             a,
                             null,
-                            t.get("line")
+                            t.get("line"),
                           ),
                         },
                         "Jump to line ",
-                        t.get("line")
+                        t.get("line"),
                       )
-                    : null
-                )
+                    : null,
+                ),
               )
-            : null
+            : null,
         )
       );
     };
@@ -24442,7 +24464,7 @@ var mt = {};
     constructor() {
       super(...arguments),
         (0, W.default)(this, "onChangeWrapper", (e) =>
-          this.props.onChange(e.target.value)
+          this.props.onChange(e.target.value),
         );
     }
     componentDidMount() {
@@ -24481,10 +24503,10 @@ var mt = {};
               },
               (0, m.default)(n)
                 .call(n, (e) =>
-                  h.default.createElement("option", { key: e, value: e }, e)
+                  h.default.createElement("option", { key: e, value: e }, e),
                 )
-                .toArray()
-            )
+                .toArray(),
+            ),
           )
         : null;
     }
@@ -24502,7 +24524,7 @@ var mt = {};
     return (0, Ct.default)(
       (e = (0, n.default)(a)
         .call(a, (e) => !!e)
-        .join(" "))
+        .join(" ")),
     ).call(e);
   }
   class Nt extends h.default.Component {
@@ -24512,7 +24534,7 @@ var mt = {};
       let n = "swagger-container" + (t ? "-full" : "");
       return h.default.createElement(
         "section",
-        (0, _t.default)({}, a, { className: jt(a.className, n) })
+        (0, _t.default)({}, a, { className: jt(a.className, n) }),
       );
     }
   }
@@ -24551,7 +24573,7 @@ var mt = {};
       let i = jt(o.className, ...l);
       return h.default.createElement(
         "section",
-        (0, _t.default)({}, o, { className: i })
+        (0, _t.default)({}, o, { className: i }),
       );
     }
   }
@@ -24561,7 +24583,7 @@ var mt = {};
         "div",
         (0, _t.default)({}, this.props, {
           className: jt(this.props.className, "wrapper"),
-        })
+        }),
       );
     }
   }
@@ -24571,7 +24593,7 @@ var mt = {};
         "button",
         (0, _t.default)({}, this.props, {
           className: jt(this.props.className, "button"),
-        })
+        }),
       );
     }
   }
@@ -24591,7 +24613,7 @@ var mt = {};
             ? (t = (0, m.default)(
                 (o = (0, n.default)(s).call(s, function (e) {
                   return e.selected;
-                }))
+                })),
               ).call(o, function (e) {
                 return e.value;
               }))
@@ -24633,9 +24655,9 @@ var mt = {};
           return h.default.createElement(
             "option",
             { key: t, value: String(e) },
-            String(e)
+            String(e),
           );
-        })
+        }),
       );
     }
   }
@@ -24647,7 +24669,7 @@ var mt = {};
         (0, _t.default)({}, this.props, {
           rel: "noopener noreferrer",
           className: jt(this.props.className, "link"),
-        })
+        }),
       );
     }
   }
@@ -24658,7 +24680,7 @@ var mt = {};
       { className: "no-margin" },
       " ",
       t,
-      " "
+      " ",
     );
   };
   class Lt extends h.default.Component {
@@ -24681,7 +24703,7 @@ var mt = {};
       super(...arguments),
         (this.setTagShown = (0, i.default)((e = this._setTagShown)).call(
           e,
-          this
+          this,
         ));
     }
     _setTagShown(e, t) {
@@ -24706,7 +24728,7 @@ var mt = {};
         h.default.createElement(
           "h4",
           { className: "overview-title" },
-          "Overview"
+          "Overview",
         ),
         (0, m.default)(r)
           .call(r, (e, n) => {
@@ -24724,7 +24746,7 @@ var mt = {};
                 },
                 " ",
                 l ? "-" : "+",
-                n
+                n,
               ),
               h.default.createElement(
                 s,
@@ -24747,8 +24769,8 @@ var mt = {};
                       onClick: a.show,
                     });
                   })
-                  .toArray()
-              )
+                  .toArray(),
+              ),
             );
           })
           .toArray(),
@@ -24756,8 +24778,8 @@ var mt = {};
           h.default.createElement(
             "h3",
             null,
-            " No operations defined in spec! "
-          )
+            " No operations defined in spec! ",
+          ),
       );
     }
   }
@@ -24786,10 +24808,10 @@ var mt = {};
           h.default.createElement(
             "small",
             { className: `bold-label-${t}` },
-            t.toUpperCase()
+            t.toUpperCase(),
           ),
-          h.default.createElement("span", { className: "bold-label" }, e)
-        )
+          h.default.createElement("span", { className: "bold-label" }, e),
+        ),
       );
     }
   }
@@ -24802,7 +24824,7 @@ var mt = {};
       const { value: e, defaultValue: t, initialValue: a, ...n } = this.props;
       return h.default.createElement(
         "input",
-        (0, _t.default)({}, n, { ref: (e) => (this.inputRef = e) })
+        (0, _t.default)({}, n, { ref: (e) => (this.inputRef = e) }),
       );
     }
   }
@@ -24815,7 +24837,7 @@ var mt = {};
         "[ Base URL: ",
         e,
         t,
-        " ]"
+        " ]",
       );
     }
   }
@@ -24826,7 +24848,7 @@ var mt = {};
       return h.default.createElement(
         a,
         { target: "_blank", href: (0, x.Nm)(e) },
-        h.default.createElement("span", { className: "url" }, " ", e)
+        h.default.createElement("span", { className: "url" }, " ", e),
       );
     }
   }
@@ -24868,15 +24890,15 @@ var mt = {};
             "h2",
             { className: "title" },
             u,
-            i && h.default.createElement(S, { version: i })
+            i && h.default.createElement(S, { version: i }),
           ),
           a || n ? h.default.createElement(b, { host: a, basePath: n }) : null,
-          t && h.default.createElement(w, { getComponent: r, url: t })
+          t && h.default.createElement(w, { getComponent: r, url: t }),
         ),
         h.default.createElement(
           "div",
           { className: "description" },
-          h.default.createElement(v, { source: c })
+          h.default.createElement(v, { source: c }),
         ),
         d &&
           h.default.createElement(
@@ -24885,8 +24907,8 @@ var mt = {};
             h.default.createElement(
               E,
               { target: "_blank", href: (0, x.Nm)(d) },
-              "Terms of service"
-            )
+              "Terms of service",
+            ),
           ),
         (null == p ? void 0 : p.size) > 0 &&
           h.default.createElement(C, {
@@ -24910,9 +24932,9 @@ var mt = {};
                 target: "_blank",
                 href: (0, x.Nm)(g),
               },
-              y || g
+              y || g,
             )
-          : null
+          : null,
       );
     }
   }
@@ -24944,7 +24966,7 @@ var mt = {};
               getComponent: t,
               selectedServer: i,
             })
-          : null
+          : null,
       );
     }
   }
@@ -24971,15 +24993,15 @@ var mt = {};
               l,
               { href: (0, x.Nm)(s), target: "_blank" },
               r,
-              " - Website"
-            )
+              " - Website",
+            ),
           ),
         o &&
           h.default.createElement(
             l,
             { href: (0, x.Nm)(`mailto:${o}`) },
-            s ? `Send email to ${r}` : `Contact ${r}`
-          )
+            s ? `Send email to ${r}` : `Contact ${r}`,
+          ),
       );
     }
   }
@@ -25005,10 +25027,10 @@ var mt = {};
               h.default.createElement(
                 o,
                 { target: "_blank", href: (0, x.Nm)(s) },
-                r
-              )
+                r,
+              ),
             )
-          : h.default.createElement("span", null, r)
+          : h.default.createElement("span", null, r),
       );
     }
   }
@@ -25031,8 +25053,8 @@ var mt = {};
         h.default.createElement(
           Be.CopyToClipboard,
           { text: this.props.textToCopy },
-          h.default.createElement(t, null)
-        )
+          h.default.createElement(t, null),
+        ),
       );
     }
   }
@@ -25083,9 +25105,9 @@ var mt = {};
                     onChange: this.onFilterChange,
                     value: !0 === o || "true" === o ? "" : o,
                     disabled: r,
-                  })
-                )
-              )
+                  }),
+                ),
+              ),
         )
       );
     }
@@ -25127,7 +25149,7 @@ var mt = {};
           this.onChange(n, { isXml: a, isEditBox: this.state.isEditBox });
         }),
         (0, W.default)(this, "toggleIsEditBox", () =>
-          this.setState((e) => ({ isEditBox: !e.isEditBox }))
+          this.setState((e) => ({ isEditBox: !e.isEditBox })),
         ),
         (this.state = { isEditBox: !1, value: "" });
     }
@@ -25153,7 +25175,7 @@ var mt = {};
         u = o("contentType");
       let d = (n ? n.parameterWithMetaByIdentity(r, t) : t).get(
           "errors",
-          (0, y.List)()
+          (0, y.List)(),
         ),
         p = n.contentTypeValues(r).get("requestContentType"),
         m =
@@ -25199,8 +25221,8 @@ var mt = {};
                         : "btn edit body-param__example-edit",
                       onClick: this.toggleIsEditBox,
                     },
-                    g ? "Cancel" : "Edit"
-                  )
+                    g ? "Cancel" : "Edit",
+                  ),
                 )
               : null,
             h.default.createElement(
@@ -25213,9 +25235,9 @@ var mt = {};
                 onChange: e,
                 className: "body-param-content-type",
                 ariaLabel: "Parameter content type",
-              })
-            )
-          )
+              }),
+            ),
+          ),
         )
       );
     }
@@ -25240,7 +25262,7 @@ var mt = {};
                 className: "curl microlight",
                 style: (0, Me.C2)((0, De.default)(n, "syntaxHighlight.theme")),
               },
-              a
+              a,
             )
           : h.default.createElement("textarea", {
               readOnly: !0,
@@ -25257,10 +25279,10 @@ var mt = {};
           h.default.createElement(
             Be.CopyToClipboard,
             { text: a },
-            h.default.createElement("button", null)
-          )
+            h.default.createElement("button", null),
+          ),
         ),
-        h.default.createElement("div", null, r)
+        h.default.createElement("div", null, r),
       );
     }
   }
@@ -25294,17 +25316,17 @@ var mt = {};
         h.default.createElement(
           "span",
           { className: "schemes-title" },
-          "Schemes"
+          "Schemes",
         ),
         h.default.createElement(
           "select",
           { onChange: this.onChange, value: a },
           (0, m.default)((e = t.valueSeq()))
             .call(e, (e) =>
-              h.default.createElement("option", { value: e, key: e }, e)
+              h.default.createElement("option", { value: e, key: e }, e),
             )
-            .toArray()
-        )
+            .toArray(),
+        ),
       );
     }
   }
@@ -25337,7 +25359,7 @@ var mt = {};
             y.default.is(t, this.props.specPath) && this.toggleCollapsed(),
               this.props.layoutActions.readyToScroll(
                 this.props.specPath,
-                e.parentElement
+                e.parentElement,
               );
           }
         });
@@ -25361,7 +25383,7 @@ var mt = {};
         ? h.default.createElement(
             "span",
             { className: t || "" },
-            this.props.children
+            this.props.children,
           )
         : h.default.createElement(
             "span",
@@ -25382,10 +25404,10 @@ var mt = {};
                 h.default.createElement(
                   "span",
                   null,
-                  this.state.collapsedContent
-                )
+                  this.state.collapsedContent,
+                ),
             ),
-            this.state.expanded && this.props.children
+            this.state.expanded && this.props.children,
           );
     }
   }
@@ -25468,8 +25490,8 @@ var mt = {};
                 onClick: this.activeTab,
                 role: "tab",
               },
-              r ? "Edit Value" : "Example Value"
-            )
+              r ? "Edit Value" : "Example Value",
+            ),
           ),
           a &&
             h.default.createElement(
@@ -25491,9 +25513,9 @@ var mt = {};
                   onClick: this.activeTab,
                   role: "tab",
                 },
-                y ? "Schema" : "Model"
-              )
-            )
+                y ? "Schema" : "Model",
+              ),
+            ),
         ),
         "example" === this.state.activeTab &&
           h.default.createElement(
@@ -25510,7 +25532,7 @@ var mt = {};
               h.default.createElement(d, {
                 value: "(no example available)",
                 getConfigs: s,
-              })
+              }),
           ),
         "model" === this.state.activeTab &&
           h.default.createElement(
@@ -25532,8 +25554,8 @@ var mt = {};
               specPath: o,
               includeReadOnly: l,
               includeWriteOnly: i,
-            })
-          )
+            }),
+          ),
       );
     }
   }
@@ -25563,8 +25585,8 @@ var mt = {};
               depth: 1,
               onToggle: this.onToggle,
               expandDepth: this.props.expandDepth || 0,
-            })
-          )
+            }),
+          ),
         )
       );
     }
@@ -25576,7 +25598,7 @@ var mt = {};
         (0, W.default)(this, "getSchemaBasePath", () =>
           this.props.specSelectors.isOAS3()
             ? ["components", "schemas"]
-            : ["definitions"]
+            : ["definitions"],
         ),
         (0, W.default)(this, "getCollapsedContent", () => " "),
         (0, W.default)(this, "handleToggle", (e, t) => {
@@ -25597,7 +25619,7 @@ var mt = {};
             const t = e.getAttribute("data-name");
             this.props.layoutActions.readyToScroll(
               [...this.getSchemaBasePath(), t],
-              e
+              e,
             );
           }
         });
@@ -25639,8 +25661,8 @@ var mt = {};
             h.default.createElement("span", null, d ? "Schemas" : "Models"),
             u
               ? h.default.createElement(E, null)
-              : h.default.createElement(S, null)
-          )
+              : h.default.createElement(S, null),
+          ),
         ),
         h.default.createElement(
           f,
@@ -25681,8 +25703,8 @@ var mt = {};
                   h.default.createElement(
                     "span",
                     { className: "model model-title" },
-                    S
-                  )
+                    S,
+                  ),
                 );
               return h.default.createElement(
                 "div",
@@ -25696,7 +25718,7 @@ var mt = {};
                 h.default.createElement(
                   "span",
                   { className: "models-jump-to-path" },
-                  h.default.createElement(v, { specPath: u })
+                  h.default.createElement(v, { specPath: u }),
                 ),
                 h.default.createElement(
                   g,
@@ -25713,12 +25735,12 @@ var mt = {};
                     hideSelfOnExpand: !0,
                     expanded: i > 0 && w,
                   },
-                  b
-                )
+                  b,
+                ),
               );
             })
-            .toArray()
-        )
+            .toArray(),
+        ),
       );
     }
   }
@@ -25736,8 +25758,8 @@ var mt = {};
         { collapsedContent: r },
         "[ ",
         t.join(", "),
-        " ]"
-      )
+        " ]",
+      ),
     );
   };
   class fa extends h.Component {
@@ -25775,7 +25797,7 @@ var mt = {};
           return (
             -1 !==
             (0, H.default)(
-              (a = ["maxProperties", "minProperties", "nullable", "example"])
+              (a = ["maxProperties", "minProperties", "nullable", "example"]),
             ).call(a, t)
           );
         }),
@@ -25792,7 +25814,7 @@ var mt = {};
           h.default.createElement(
             "span",
             { className: "model-jump-to-path" },
-            h.default.createElement(L, { specPath: E })
+            h.default.createElement(L, { specPath: E }),
           ),
         K = h.default.createElement(
           "span",
@@ -25800,7 +25822,7 @@ var mt = {};
           h.default.createElement("span", null, "{"),
           "...",
           h.default.createElement("span", null, "}"),
-          c ? h.default.createElement(V, null) : ""
+          c ? h.default.createElement(V, null) : "",
         ),
         F = w.isOAS3() ? o.get("anyOf") : null,
         z = w.isOAS3() ? o.get("oneOf") : null,
@@ -25815,13 +25837,13 @@ var mt = {};
               h.default.createElement(
                 "span",
                 { className: "model-hint" },
-                o.get("$$ref")
+                o.get("$$ref"),
               ),
             h.default.createElement(
               "span",
               { className: "model-title__text" },
-              I
-            )
+              I,
+            ),
           );
       return h.default.createElement(
         "span",
@@ -25838,7 +25860,7 @@ var mt = {};
           h.default.createElement(
             "span",
             { className: "brace-open object" },
-            "{"
+            "{",
           ),
           c ? h.default.createElement(V, null) : null,
           h.default.createElement(
@@ -25858,8 +25880,8 @@ var mt = {};
                       h.default.createElement(
                         "td",
                         null,
-                        h.default.createElement(q, { source: O })
-                      )
+                        h.default.createElement(q, { source: O }),
+                      ),
                     )
                   : null,
                 M &&
@@ -25873,16 +25895,16 @@ var mt = {};
                       h.default.createElement(
                         $,
                         { target: "_blank", href: (0, x.Nm)(M) },
-                        D || M
-                      )
-                    )
+                        D || M,
+                      ),
+                    ),
                   ),
                 T
                   ? h.default.createElement(
                       "tr",
                       { className: "property" },
                       h.default.createElement("td", null, "deprecated:"),
-                      h.default.createElement("td", null, "true")
+                      h.default.createElement("td", null, "true"),
                     )
                   : null,
                 k && k.size
@@ -25893,7 +25915,7 @@ var mt = {};
                           (!t.get("readOnly") || _) &&
                           (!t.get("writeOnly") || C)
                         );
-                      }))
+                      })),
                     )
                       .call(e, (e) => {
                         let [t, a] = e,
@@ -25914,8 +25936,8 @@ var mt = {};
                                 h.default.createElement(
                                   "span",
                                   { className: "star" },
-                                  "*"
-                                )
+                                  "*",
+                                ),
                             ),
                             h.default.createElement(
                               "td",
@@ -25932,10 +25954,10 @@ var mt = {};
                                     getConfigs: p,
                                     schema: a,
                                     depth: f + 1,
-                                  }
-                                )
-                              )
-                            )
+                                  },
+                                ),
+                              ),
+                            ),
                           )
                         );
                       })
@@ -25945,7 +25967,7 @@ var mt = {};
                   ? h.default.createElement(
                       "tr",
                       null,
-                      h.default.createElement("td", null, " ")
+                      h.default.createElement("td", null, " "),
                     )
                   : null,
                 N
@@ -25958,7 +25980,11 @@ var mt = {};
                           "tr",
                           { key: t, className: "extension" },
                           h.default.createElement("td", null, t),
-                          h.default.createElement("td", null, (0, s.default)(n))
+                          h.default.createElement(
+                            "td",
+                            null,
+                            (0, s.default)(n),
+                          ),
                         );
                       })
                       .toArray()
@@ -25980,9 +26006,9 @@ var mt = {};
                             getConfigs: p,
                             schema: A,
                             depth: f + 1,
-                          })
-                        )
-                      )
+                          }),
+                        ),
+                      ),
                     )
                   : null,
                 F
@@ -26006,11 +26032,11 @@ var mt = {};
                                 getConfigs: p,
                                 schema: e,
                                 depth: f + 1,
-                              })
-                            )
-                          )
-                        )
-                      )
+                              }),
+                            ),
+                          ),
+                        ),
+                      ),
                     )
                   : null,
                 z
@@ -26034,11 +26060,11 @@ var mt = {};
                                 getConfigs: p,
                                 schema: e,
                                 depth: f + 1,
-                              })
-                            )
-                          )
-                        )
-                      )
+                              }),
+                            ),
+                          ),
+                        ),
+                      ),
                     )
                   : null,
                 W
@@ -26061,16 +26087,16 @@ var mt = {};
                               getConfigs: p,
                               schema: W,
                               depth: f + 1,
-                            })
-                          )
-                        )
-                      )
+                            }),
+                          ),
+                        ),
+                      ),
                     )
-                  : null
-              )
-            )
+                  : null,
+              ),
+            ),
           ),
-          h.default.createElement("span", { className: "brace-close" }, "}")
+          h.default.createElement("span", { className: "brace-close" }, "}"),
         ),
         P.size
           ? (0, m.default)((r = P.entrySeq())).call(r, (e) => {
@@ -26082,7 +26108,7 @@ var mt = {};
                 propClass: "property",
               });
             })
-          : null
+          : null,
       );
     }
   }
@@ -26107,7 +26133,7 @@ var mt = {};
           return (
             -1 ===
             (0, H.default)(
-              (a = ["type", "items", "description", "$$ref", "externalDocs"])
+              (a = ["type", "items", "description", "$$ref", "externalDocs"]),
             ).call(a, t)
           );
         }),
@@ -26126,8 +26152,8 @@ var mt = {};
             h.default.createElement(
               "span",
               { className: "model-title__text" },
-              p
-            )
+              p,
+            ),
           );
       return h.default.createElement(
         "span",
@@ -26159,8 +26185,8 @@ var mt = {};
               h.default.createElement(
                 b,
                 { target: "_blank", href: (0, x.Nm)(g) },
-                y || g
-              )
+                y || g,
+              ),
             ),
           h.default.createElement(
             "span",
@@ -26174,11 +26200,11 @@ var mt = {};
                 schema: d,
                 required: !1,
                 depth: s + 1,
-              })
-            )
+              }),
+            ),
           ),
-          "]"
-        )
+          "]",
+        ),
       );
     }
   }
@@ -26217,7 +26243,7 @@ var mt = {};
                   "description",
                   "$$ref",
                   "externalDocs",
-                ])
+                ]),
               ).call(a, t)
             );
           })
@@ -26237,8 +26263,8 @@ var mt = {};
             h.default.createElement(
               "span",
               { className: "model-title__text" },
-              v
-            )
+              v,
+            ),
           );
       return h.default.createElement(
         "span",
@@ -26264,7 +26290,7 @@ var mt = {};
                 { className: "prop-format" },
                 "($",
                 f,
-                ")"
+                ")",
               ),
             w.size
               ? (0, m.default)((e = w.entrySeq())).call(e, (e) => {
@@ -26296,8 +26322,8 @@ var mt = {};
                 h.default.createElement(
                   k,
                   { target: "_blank", href: (0, x.Nm)(b) },
-                  _ || b
-                )
+                  _ || b,
+                ),
               ),
             g && g.size
               ? h.default.createElement(
@@ -26315,15 +26341,15 @@ var mt = {};
                         "   ",
                         t,
                         ": ",
-                        String(a)
+                        String(a),
                       );
                     })
-                    .toArray()
+                    .toArray(),
                 )
               : null,
-            y && h.default.createElement(j, { value: y, getComponent: s })
-          )
-        )
+            y && h.default.createElement(j, { value: y, getComponent: s }),
+          ),
+        ),
       );
     }
   }
@@ -26335,7 +26361,7 @@ var mt = {};
       h.default.createElement("br", null),
       t,
       ": ",
-      String(a)
+      String(a),
     );
   };
   class Ea extends h.default.Component {
@@ -26356,19 +26382,19 @@ var mt = {};
           ? h.default.createElement(
               "button",
               { className: "btn try-out__btn cancel", onClick: t },
-              "Cancel"
+              "Cancel",
             )
           : h.default.createElement(
               "button",
               { className: "btn try-out__btn", onClick: e },
-              "Try it out "
+              "Try it out ",
             ),
         o &&
           h.default.createElement(
             "button",
             { className: "btn try-out__btn reset", onClick: a },
-            "Reset"
-          )
+            "Reset",
+          ),
       );
     }
   }
@@ -26402,7 +26428,7 @@ var mt = {};
                 h.default.createElement(
                   "h3",
                   null,
-                  "Unable to render this definition"
+                  "Unable to render this definition",
                 ),
                 h.default.createElement(
                   "p",
@@ -26410,7 +26436,7 @@ var mt = {};
                   h.default.createElement("code", null, "swagger"),
                   " and ",
                   h.default.createElement("code", null, "openapi"),
-                  " fields cannot be present in the same Swagger or OpenAPI definition. Please remove one of the fields."
+                  " fields cannot be present in the same Swagger or OpenAPI definition. Please remove one of the fields.",
                 ),
                 h.default.createElement(
                   "p",
@@ -26421,10 +26447,10 @@ var mt = {};
                   h.default.createElement("code", null, "openapi: 3.0.n"),
                   " (for example, ",
                   h.default.createElement("code", null, "openapi: 3.0.0"),
-                  ")."
-                )
-              )
-            )
+                  ").",
+                ),
+              ),
+            ),
           )
         : t || a
         ? h.default.createElement("div", null, this.props.children)
@@ -26444,12 +26470,12 @@ var mt = {};
                 h.default.createElement(
                   "h3",
                   null,
-                  "Unable to render this definition"
+                  "Unable to render this definition",
                 ),
                 h.default.createElement(
                   "p",
                   null,
-                  "The provided definition does not specify a valid version field."
+                  "The provided definition does not specify a valid version field.",
                 ),
                 h.default.createElement(
                   "p",
@@ -26460,10 +26486,10 @@ var mt = {};
                   h.default.createElement("code", null, "openapi: 3.0.n"),
                   " (for example, ",
                   h.default.createElement("code", null, "openapi: 3.0.0"),
-                  ")."
-                )
-              )
-            )
+                  ").",
+                ),
+              ),
+            ),
           );
     }
   }
@@ -26477,7 +26503,7 @@ var mt = {};
       return h.default.createElement(
         "small",
         null,
-        h.default.createElement("pre", { className: "version" }, " ", t, " ")
+        h.default.createElement("pre", { className: "version" }, " ", t, " "),
       );
     },
     ba = (e) => {
@@ -26489,7 +26515,7 @@ var mt = {};
           onClick: t ? (e) => e.preventDefault() : null,
           href: t ? `#/${a}` : null,
         },
-        h.default.createElement("span", null, n)
+        h.default.createElement("span", null, n),
       );
     },
     xa = () =>
@@ -26511,56 +26537,56 @@ var mt = {};
               { viewBox: "0 0 20 20", id: "unlocked" },
               h.default.createElement("path", {
                 d: "M15.8 8H14V5.6C14 2.703 12.665 1 10 1 7.334 1 6 2.703 6 5.6V6h2v-.801C8 3.754 8.797 3 10 3c1.203 0 2 .754 2 2.199V8H4c-.553 0-1 .646-1 1.199V17c0 .549.428 1.139.951 1.307l1.197.387C5.672 18.861 6.55 19 7.1 19h5.8c.549 0 1.428-.139 1.951-.307l1.196-.387c.524-.167.953-.757.953-1.306V9.199C17 8.646 16.352 8 15.8 8z",
-              })
+              }),
             ),
             h.default.createElement(
               "symbol",
               { viewBox: "0 0 20 20", id: "locked" },
               h.default.createElement("path", {
                 d: "M15.8 8H14V5.6C14 2.703 12.665 1 10 1 7.334 1 6 2.703 6 5.6V8H4c-.553 0-1 .646-1 1.199V17c0 .549.428 1.139.951 1.307l1.197.387C5.672 18.861 6.55 19 7.1 19h5.8c.549 0 1.428-.139 1.951-.307l1.196-.387c.524-.167.953-.757.953-1.306V9.199C17 8.646 16.352 8 15.8 8zM12 8H8V5.199C8 3.754 8.797 3 10 3c1.203 0 2 .754 2 2.199V8z",
-              })
+              }),
             ),
             h.default.createElement(
               "symbol",
               { viewBox: "0 0 20 20", id: "close" },
               h.default.createElement("path", {
                 d: "M14.348 14.849c-.469.469-1.229.469-1.697 0L10 11.819l-2.651 3.029c-.469.469-1.229.469-1.697 0-.469-.469-.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-.469-.469-.469-1.228 0-1.697.469-.469 1.228-.469 1.697 0L10 8.183l2.651-3.031c.469-.469 1.228-.469 1.697 0 .469.469.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c.469.469.469 1.229 0 1.698z",
-              })
+              }),
             ),
             h.default.createElement(
               "symbol",
               { viewBox: "0 0 20 20", id: "large-arrow" },
               h.default.createElement("path", {
                 d: "M13.25 10L6.109 2.58c-.268-.27-.268-.707 0-.979.268-.27.701-.27.969 0l7.83 7.908c.268.271.268.709 0 .979l-7.83 7.908c-.268.271-.701.27-.969 0-.268-.269-.268-.707 0-.979L13.25 10z",
-              })
+              }),
             ),
             h.default.createElement(
               "symbol",
               { viewBox: "0 0 20 20", id: "large-arrow-down" },
               h.default.createElement("path", {
                 d: "M17.418 6.109c.272-.268.709-.268.979 0s.271.701 0 .969l-7.908 7.83c-.27.268-.707.268-.979 0l-7.908-7.83c-.27-.268-.27-.701 0-.969.271-.268.709-.268.979 0L10 13.25l7.418-7.141z",
-              })
+              }),
             ),
             h.default.createElement(
               "symbol",
               { viewBox: "0 0 20 20", id: "large-arrow-up" },
               h.default.createElement("path", {
                 d: "M 17.418 14.908 C 17.69 15.176 18.127 15.176 18.397 14.908 C 18.667 14.64 18.668 14.207 18.397 13.939 L 10.489 6.109 C 10.219 5.841 9.782 5.841 9.51 6.109 L 1.602 13.939 C 1.332 14.207 1.332 14.64 1.602 14.908 C 1.873 15.176 2.311 15.176 2.581 14.908 L 10 7.767 L 17.418 14.908 Z",
-              })
+              }),
             ),
             h.default.createElement(
               "symbol",
               { viewBox: "0 0 24 24", id: "jump-to" },
               h.default.createElement("path", {
                 d: "M19 7v4H5.83l3.58-3.59L8 6l-6 6 6 6 1.41-1.41L5.83 13H21V7z",
-              })
+              }),
             ),
             h.default.createElement(
               "symbol",
               { viewBox: "0 0 24 24", id: "expand" },
               h.default.createElement("path", {
                 d: "M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z",
-              })
+              }),
             ),
             h.default.createElement(
               "symbol",
@@ -26572,11 +26598,11 @@ var mt = {};
                   fill: "#ffffff",
                   fillRule: "evenodd",
                   d: "M2 13h4v1H2v-1zm5-6H2v1h5V7zm2 3V8l-3 3 3 3v-2h5v-2H9zM4.5 9H2v1h2.5V9zM2 12h2.5v-1H2v1zm9 1h1v2c-.02.28-.11.52-.3.7-.19.18-.42.28-.7.3H1c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h3c0-1.11.89-2 2-2 1.11 0 2 .89 2 2h3c.55 0 1 .45 1 1v5h-1V6H1v9h10v-2zM2 5h8c0-.55-.45-1-1-1H8c-.55 0-1-.45-1-1s-.45-1-1-1-1 .45-1 1-.45 1-1 1H3c-.55 0-1 .45-1 1z",
-                })
-              )
-            )
-          )
-        )
+                }),
+              ),
+            ),
+          ),
+        ),
       );
   var _a = pt(5466);
   class Ca extends h.default.Component {
@@ -26609,8 +26635,8 @@ var mt = {};
             h.default.createElement(
               "div",
               { className: "loading-container" },
-              h.default.createElement("div", { className: "loading" })
-            )
+              h.default.createElement("div", { className: "loading" }),
+            ),
           )),
         "failed" === w &&
           (b = h.default.createElement(
@@ -26622,10 +26648,10 @@ var mt = {};
               h.default.createElement(
                 "h4",
                 { className: "title" },
-                "Failed to load API definition."
+                "Failed to load API definition.",
               ),
-              h.default.createElement(d, null)
-            )
+              h.default.createElement(d, null),
+            ),
           )),
         "failedConfig" === w)
       ) {
@@ -26640,10 +26666,10 @@ var mt = {};
             h.default.createElement(
               "h4",
               { className: "title" },
-              "Failed to load remote configuration."
+              "Failed to load remote configuration.",
             ),
-            h.default.createElement("p", null, a)
-          )
+            h.default.createElement("p", null, a),
+          ),
         );
       }
       if (
@@ -26652,14 +26678,14 @@ var mt = {};
           (b = h.default.createElement(
             "h4",
             null,
-            "No API definition provided."
+            "No API definition provided.",
           )),
         b)
       )
         return h.default.createElement(
           "div",
           { className: "swagger-ui" },
-          h.default.createElement("div", { className: "loading-container" }, b)
+          h.default.createElement("div", { className: "loading-container" }, b),
         );
       const x = t.servers(),
         _ = t.schemes(),
@@ -26684,8 +26710,8 @@ var mt = {};
             h.default.createElement(
               u,
               { mobile: 12 },
-              h.default.createElement(r, null)
-            )
+              h.default.createElement(r, null),
+            ),
           ),
           C || j || N
             ? h.default.createElement(
@@ -26696,8 +26722,8 @@ var mt = {};
                   { className: "schemes wrapper", mobile: 12 },
                   C ? h.default.createElement(p, null) : null,
                   j ? h.default.createElement(m, null) : null,
-                  N ? h.default.createElement(f, null) : null
-                )
+                  N ? h.default.createElement(f, null) : null,
+                ),
               )
             : null,
           h.default.createElement(g, null),
@@ -26707,8 +26733,8 @@ var mt = {};
             h.default.createElement(
               u,
               { mobile: 12, desktop: 12 },
-              h.default.createElement(o, null)
-            )
+              h.default.createElement(o, null),
+            ),
           ),
           E &&
             h.default.createElement(
@@ -26717,8 +26743,8 @@ var mt = {};
               h.default.createElement(
                 u,
                 { mobile: 12, desktop: 12 },
-                h.default.createElement(i, null)
-              )
+                h.default.createElement(i, null),
+              ),
             ),
           h.default.createElement(
             c,
@@ -26726,10 +26752,10 @@ var mt = {};
             h.default.createElement(
               u,
               { mobile: 12, desktop: 12 },
-              h.default.createElement(l, null)
-            )
-          )
-        )
+              h.default.createElement(l, null),
+            ),
+          ),
+        ),
       );
     }
   }
@@ -26778,7 +26804,7 @@ var mt = {};
             onChange: n,
             schema: e,
             disabled: o,
-          })
+          }),
         )
       );
     }
@@ -26872,10 +26898,10 @@ var mt = {};
               value: t.push(
                 e.getSampleSchema(this.state.schema.get("items"), !1, {
                   includeWriteOnly: !0,
-                })
+                }),
               ),
             }),
-            this.onChange
+            this.onChange,
           );
         }),
         (0, W.default)(this, "onEnumChange", (e) => {
@@ -26901,7 +26927,7 @@ var mt = {};
       s = s.toJS ? s.toJS() : (0, d.default)(s) ? s : [];
       const i = (0, n.default)(s).call(s, (e) => "string" == typeof e),
         c = (0, m.default)(
-          (e = (0, n.default)(s).call(s, (e) => void 0 !== e.needRemove))
+          (e = (0, n.default)(s).call(s, (e) => void 0 !== e.needRemove)),
         ).call(e, (e) => e.error),
         u = this.state.value,
         p = !!(u && u.count && u.count() > 0),
@@ -26941,7 +26967,7 @@ var mt = {};
               var r;
               const i = (0, y.fromJS)([
                 ...(0, m.default)(
-                  (r = (0, n.default)(s).call(s, (e) => e.index === a))
+                  (r = (0, n.default)(s).call(s, (e) => e.index === a)),
                 ).call(r, (e) => e.error),
               ]);
               return h.default.createElement(
@@ -26972,7 +26998,7 @@ var mt = {};
                         schema: E,
                         getComponent: t,
                         fn: o,
-                      })
+                      }),
                     ),
                 l
                   ? null
@@ -26985,8 +27011,8 @@ var mt = {};
                         title: c.length ? c : "",
                         onClick: () => this.removeItem(a),
                       },
-                      " - "
-                    )
+                      " - ",
+                    ),
               );
             })
           : null,
@@ -27003,8 +27029,8 @@ var mt = {};
               },
               "Add ",
               g ? `${g} ` : "",
-              "item"
-            )
+              "item",
+            ),
       );
     }
   }
@@ -27131,7 +27157,7 @@ var mt = {};
             value: (0, x.Pz)(t),
             disabled: n,
             onChange: this.handleOnChange,
-          })
+          }),
         )
       );
     }
@@ -27288,7 +27314,7 @@ var mt = {};
         window.location.host
       }${window.location.pathname.substring(
         0,
-        (0, a.default)((t = window.location.pathname)).call(t, "/")
+        (0, a.default)((t = window.location.pathname)).call(t, "/"),
       )}/oauth2-redirect.html`,
       persistAuthorization: !1,
       configs: {},
@@ -27349,7 +27375,7 @@ var mt = {};
             spec: { spec: "", url: u.url },
             requestSnippets: u.requestSnippets,
           },
-          u.initialState
+          u.initialState,
         ),
       };
     if (u.initialState)
@@ -27394,7 +27420,7 @@ var mt = {};
           null === a.dom_id ||
             null === a.domNode ||
             console.error(
-              "Skipped rendering: no `dom_id` or `domNode` was specified"
+              "Skipped rendering: no `dom_id` or `domNode` was specified",
             );
         return f;
       },
@@ -27407,7 +27433,7 @@ var mt = {};
             requestInterceptor: u.requestInterceptor,
             responseInterceptor: u.responseInterceptor,
           },
-          h
+          h,
         ),
         f)
       : h();
