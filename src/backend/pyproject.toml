@@ -34,7 +34,6 @@ dependencies = [
     "SQLAlchemy-Utils==0.41.1",
     "psycopg2==2.9.7",
     "geoalchemy2==0.14.1",
-    "alembic>=1.12.0",
     "geojson==3.0.1",
     "shapely==2.0.1",
     "pyxform==1.12.1",
@@ -44,9 +43,8 @@ dependencies = [
     "sentry-sdk==1.30.0",
     "py-cpuinfo==9.0.0",
     "loguru>=0.7.0",
-    "osm-login-python @ git+https://github.com/hotosm/osm-login-python",
+    "osm-login-python>=1.0.1",
     "osm-fieldwork==0.3.6rc1",
-    "osm-rawdata==0.1.2rc0",
 ]
 requires-python = ">=3.10,<3.12"
 readme = "../../README.md"
