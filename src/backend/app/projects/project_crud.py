@@ -41,6 +41,7 @@ from geoalchemy2.shape import from_shape
 from geojson import dump
 from loguru import logger as log
 from osm_fieldwork import basemapper
+from osm_fieldwork.data_models import data_models_path
 from osm_fieldwork.filter_data import FilterData
 from osm_fieldwork.json2osm import json2osm
 from osm_fieldwork.OdkCentral import OdkAppUser
@@ -1475,10 +1476,6 @@ def generate_appuser_files(
                 upload_custom_data_extracts(db, project_id, extracts_contents)
 
             else:
-                import osm_fieldwork as of
-
-                rootdir = of.__path__[0]
-
                 project = (
                     db.query(db_models.DbProject)
                     .filter(db_models.DbProject.id == project_id)
@@ -1493,7 +1490,7 @@ def generate_appuser_files(
                     with open(config_path, "w", encoding="utf-8") as config_file_handle:
                         config_file_handle.write(config_file_contents.decode("utf-8"))
                 else:
-                    config_path = f"{rootdir}/data_models/{category}.yaml"
+                    config_path = f"{data_models_path}/{category}.yaml"
 
                 # # OSM Extracts for whole project
                 pg = PostgresClient("underpass", config_path)
