@@ -179,11 +179,13 @@ async def task_features_count(
         result = db.execute(feature_count_query)
         feature_count = result.fetchone()
 
-        data.append({
-            'task_id': x['xmlFormId'],
-            'submission_count': x['submissions'],
-            'last_submission': x['lastSubmission'],
-            'feature_count': feature_count['count']
-        })
+        data.append(
+            {
+                "task_id": x["xmlFormId"],
+                "submission_count": x["submissions"],
+                "last_submission": x["lastSubmission"],
+                "feature_count": feature_count["count"],
+            }
+        )
 
     return data
