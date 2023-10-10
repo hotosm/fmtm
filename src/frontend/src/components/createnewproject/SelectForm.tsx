@@ -12,17 +12,21 @@ import FileInputComponent from '../common/FileInputComponent';
 import SelectFormValidation from './validation/SelectFormValidation';
 import { FormCategoryService } from '../../api/CreateProjectService';
 import environment from '../../environment';
+import NewDefineAreaMap from '../../views/NewDefineAreaMap';
 
 const osmFeatureTypeOptions = [
   { name: 'form_ways', value: 'existing_form', label: 'Use Existing Form' },
   { name: 'form_ways', value: 'custom_form', label: 'Upload a Custom Form' },
 ];
-const SelectForm = ({ flag }) => {
+// @ts-ignore
+const DefineAreaMap = React.lazy(() => import('../../views/DefineAreaMap'));
+
+const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [customFormFile, setCustomFormFile] = useState(null);
 
   const projectDetails: any = useAppSelector((state) => state.createproject.projectDetails);
+  const drawnGeojson = useAppSelector((state) => state.createproject.drawnGeojson);
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
@@ -83,7 +87,7 @@ const SelectForm = ({ flag }) => {
                 placeholder="Select form category"
                 data={formCategoryList}
                 dataKey="id"
-                valueKey="id"
+                valueKey="title"
                 label="title"
                 value={formValues.formCategorySelection}
                 onValueChange={(value) => {
@@ -130,7 +134,9 @@ const SelectForm = ({ flag }) => {
               />
             </div>
           </form>
-          <div className="fmtm-w-full lg:fmtm-w-[60%] fmtm-flex fmtm-flex-col fmtm-gap-6 fmtm-bg-gray-300 fmtm-h-[60vh] lg:fmtm-h-full"></div>
+          <div className="fmtm-w-full lg:fmtm-w-[60%] fmtm-flex fmtm-flex-col fmtm-gap-6 fmtm-bg-gray-300 fmtm-h-[60vh] lg:fmtm-h-full">
+            <NewDefineAreaMap uploadedOrDrawnGeojsonFile={drawnGeojson} />
+          </div>
         </div>
       </div>
     </div>

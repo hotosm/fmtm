@@ -18,6 +18,7 @@ const CreateNewProject = () => {
   const [geojsonFile, setGeojsonFile] = useState(null);
   const [customLineUpload, setCustomLineUpload] = useState(null);
   const [customPolygonUpload, setCustomPolygonUpload] = useState(null);
+  const [customFormFile, setCustomFormFile] = useState(null);
 
   useEffect(() => {
     switch (location.pathname) {
@@ -49,7 +50,14 @@ const CreateNewProject = () => {
       case '/new-upload-area':
         return <UploadArea flag="create_project" geojsonFile={geojsonFile} setGeojsonFile={setGeojsonFile} />;
       case '/new-select-form':
-        return <SelectForm flag="create_project" />;
+        return (
+          <SelectForm
+            flag="create_project"
+            geojsonFile={geojsonFile}
+            customFormFile={customFormFile}
+            setCustomFormFile={setCustomFormFile}
+          />
+        );
       case '/new-data-extract':
         return (
           <DataExtract
@@ -61,7 +69,16 @@ const CreateNewProject = () => {
           />
         );
       case '/new-define-tasks':
-        return <SplitTasks flag="create_project" geojsonFile={geojsonFile} setGeojsonFile={setGeojsonFile} />;
+        return (
+          <SplitTasks
+            flag="create_project"
+            geojsonFile={geojsonFile}
+            setGeojsonFile={setGeojsonFile}
+            customLineUpload={customLineUpload}
+            customPolygonUpload={customPolygonUpload}
+            customFormFile={customFormFile}
+          />
+        );
       default:
         return <ProjectDetailsForm flag="create_project" />;
     }

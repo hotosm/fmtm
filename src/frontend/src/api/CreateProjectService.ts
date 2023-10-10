@@ -27,11 +27,11 @@ const CreateProjectService: Function = (
         const resp: ProjectDetailsModel = postNewProjectDetails.data;
         await dispatch(CreateProjectActions.PostProjectDetails(resp));
 
-        if (payload.splitting_algorithm === 'Choose Area as Tasks') {
+        if (payload.splitting_algorithm === 'choose_area_as_task') {
           await dispatch(
             UploadAreaService(`${enviroment.baseApiUrl}/projects/${resp.id}/upload_multi_polygon`, fileUpload),
           );
-        } else if (payload.splitting_algorithm === 'Use natural Boundary') {
+        } else if (payload.splitting_algorithm === 'task_splitting_algorithm') {
           await dispatch(UploadAreaService(`${enviroment.baseApiUrl}/projects/task_split/${resp.id}/`, fileUpload));
         } else {
           await dispatch(
@@ -280,7 +280,7 @@ const GetDividedTaskFromGeojson: Function = (url: string, payload: any) => {
         dividedTaskFormData.append('dimension', payload.dimension);
         const getGetDividedTaskFromGeojsonResponse = await axios.post(url, dividedTaskFormData);
         const resp: OrganisationListModel = getGetDividedTaskFromGeojsonResponse.data;
-        dispatch(CreateProjectActions.SetDividedTaskGeojson(resp));
+        dispatch(CreateProjectActions.SetDrawnGeojson(resp));
         dispatch(CreateProjectActions.SetDividedTaskFromGeojsonLoading(false));
       } catch (error) {
         dispatch(CreateProjectActions.SetDividedTaskFromGeojsonLoading(false));

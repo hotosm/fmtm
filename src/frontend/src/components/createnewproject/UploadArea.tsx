@@ -11,6 +11,7 @@ import useForm from '../../hooks/useForm';
 import { useAppSelector } from '../../types/reduxTypes';
 import UploadAreaValidation from './validation/UploadAreaValidation';
 import FileInputComponent from '../common/FileInputComponent';
+import NewDefineAreaMap from '../../views/NewDefineAreaMap';
 // @ts-ignore
 const DefineAreaMap = React.lazy(() => import('../../views/DefineAreaMap'));
 
@@ -69,11 +70,33 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
     dispatch(CreateProjectActions.SetDrawnGeojson(null));
     dispatch(CreateProjectActions.SetTotalAreaSelection(null));
   }, [uploadAreaSelection]);
-
+  const convertFileToGeojson = async (file) => {
+    if (!file) return;
+    const fileReader = new FileReader();
+    const fileLoaded = await new Promise((resolve) => {
+      fileReader.onload = (e) => resolve(e.target.result);
+      fileReader.readAsText(file, 'UTF-8');
+    });
+    const parsedJSON = JSON.parse(fileLoaded);
+    let geojsonConversion;
+    if (parsedJSON.type === 'FeatureCollection') {
+      geojsonConversion = parsedJSON;
+    } else {
+      geojsonConversion = {
+        type: 'FeatureCollection',
+        features: [{ type: 'Feature', properties: null, geometry: parsedJSON }],
+      };
+    }
+    addGeojsonToState(geojsonConversion);
+  };
+  const addGeojsonToState = (geojson) => {
+    dispatch(CreateProjectActions.SetDrawnGeojson(geojson));
+  };
   const changeFileHandler = (event) => {
     const { files } = event.target;
     handleCustomChange('uploadedAreaFile', files[0].name);
     setGeojsonFile(files[0]);
+    convertFileToGeojson(files[0]);
   };
 
   const resetFile = () => {
@@ -189,8 +212,9 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
             </div>
           </form>
           <div className="fmtm-w-full lg:fmtm-w-[60%] fmtm-flex fmtm-flex-col fmtm-gap-6 fmtm-bg-gray-300 fmtm-h-[60vh] lg:fmtm-h-full">
-            <DefineAreaMap
-              uploadedGeojson={geojsonFile}
+            <NewDefineAreaMap
+              drawToggle={drawToggle}
+              uploadedOrDrawnGeojsonFile={drawnGeojson}
               onDraw={(geojson, area) => {
                 handleCustomChange('drawnGeojson', geojson);
                 dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));

@@ -88,7 +88,7 @@ const DefineTasks: React.FC<any> = ({ geojsonFile, setGeojsonFile, dataExtractFi
           `${enviroment.baseApiUrl}/projects/task_split`,
           drawnGeojsonFile,
           formValues?.no_of_buildings,
-          dataExtractFile ? true : false,
+          dataExtractFile ? false : false,
         ),
       );
     } else {
@@ -97,7 +97,7 @@ const DefineTasks: React.FC<any> = ({ geojsonFile, setGeojsonFile, dataExtractFi
           `${enviroment.baseApiUrl}/projects/task_split`,
           geojsonFile,
           formValues?.no_of_buildings,
-          dataExtractFile ? true : false,
+          dataExtractFile ? false : false,
         ),
       );
     }

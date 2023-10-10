@@ -1,4 +1,4 @@
-import { CreateProjectStateTypes } from 'store/types/ICreateProject';
+import { CreateProjectStateTypes } from '../types/ICreateProject';
 import { createSlice } from '@reduxjs/toolkit';
 
 export const initialState: CreateProjectStateTypes = {
@@ -43,6 +43,9 @@ export const initialState: CreateProjectStateTypes = {
   uploadAreaSelection: null,
   totalAreaSelection: null,
   splitTasksSelection: null,
+  buildingGeojson: null,
+  lineGeojson: null,
+  createProjectValidations: {},
 };
 
 const CreateProject = createSlice({
@@ -143,6 +146,7 @@ const CreateProject = createSlice({
     },
     GetTaskSplittingPreview(state, action) {
       state.dividedTaskGeojson = action.payload;
+      state.drawnGeojson = action.payload;
       state.taskSplittingGeojson = action.payload;
     },
     SetEditProjectBoundaryServiceLoading(state, action) {
@@ -165,6 +169,18 @@ const CreateProject = createSlice({
     },
     SetSplitTasksSelection(state, action) {
       state.splitTasksSelection = action.payload;
+    },
+    SetBuildingGeojson(state, action) {
+      state.buildingGeojson = action.payload;
+    },
+    SetLineGeojson(state, action) {
+      state.lineGeojson = action.payload;
+    },
+    SetCreateProjectValidations(state, action) {
+      state.createProjectValidations = {
+        ...state.createProjectValidations,
+        [action.payload.key]: action.payload.value,
+      };
     },
   },
 });

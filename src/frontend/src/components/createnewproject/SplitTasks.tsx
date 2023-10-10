@@ -9,6 +9,14 @@ import { CreateProjectActions } from '../../store/slices/CreateProjectSlice';
 import CoreModules from '../../shared/CoreModules';
 import useForm from '../../hooks/useForm';
 import DefineTaskValidation from '../../components/createproject/validation/DefineTaskValidation';
+import NewDefineAreaMap from '../../views/NewDefineAreaMap';
+import { useAppSelector } from '../../types/reduxTypes';
+import {
+  CreateProjectService,
+  GetDividedTaskFromGeojson,
+  TaskSplittingPreviewService,
+} from '../../api/CreateProjectService';
+import environment from '../../environment';
 
 const alogrithmList = [
   { name: 'define_tasks', value: 'divide_on_square', label: 'Divide on square' },
@@ -16,13 +24,16 @@ const alogrithmList = [
   { name: 'define_tasks', value: 'task_splitting_algorithm', label: 'Task Splitting Algorithm' },
 ];
 
-const SplitTasks = ({ flag, geojsonFile, setGeojsonFile }) => {
+const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, customPolygonUpload, customFormFile }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const splitTasksSelection = CoreModules.useAppSelector((state) => state.createproject.splitTasksSelection);
   const drawnGeojson = CoreModules.useAppSelector((state) => state.createproject.drawnGeojson);
   const projectDetails = CoreModules.useAppSelector((state) => state.createproject.projectDetails);
+  const buildingGeojson = useAppSelector((state) => state.createproject.buildingGeojson);
+  const lineGeojson = useAppSelector((state) => state.createproject.lineGeojson);
+  const userDetails: any = CoreModules.useAppSelector((state) => state.login.loginToken);
 
   const toggleStep = (step, url) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
@@ -30,7 +41,54 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile }) => {
   };
 
   const submission = () => {
+    const blob = new Blob([JSON.stringify(drawnGeojson)], { type: 'application/json' });
+
+    // Create a file object from the Blob
+    const drawnGeojsonFile = new File([blob], 'data.json', { type: 'application/json' });
+    // const a = document.createElement('a');
+    // a.href = URL.createObjectURL(blob);
+    // a.download = 'test.json';
+    // a.click();
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
+    const hashtags = projectDetails.hashtags;
+    const arrayHashtag = hashtags
+      .split('#')
+      .map((item) => item.trim())
+      .filter(Boolean);
+    dispatch(
+      CreateProjectService(
+        `${environment.baseApiUrl}/projects/create_project`,
+        {
+          project_info: {
+            name: projectDetails.name,
+            short_description: projectDetails.short_description,
+            description: projectDetails.description,
+          },
+          author: {
+            username: userDetails.username,
+            id: userDetails.id,
+          },
+          odk_central: {
+            odk_central_url: projectDetails.odk_central_url,
+            odk_central_user: projectDetails.odk_central_user,
+            odk_central_password: projectDetails.odk_central_password,
+          },
+          // dont send xform_title if upload custom form is selected
+          xform_title: projectDetails.form_ways === 'Upload a Form' ? null : projectDetails.formCategorySelection,
+          dimension: projectDetails.dimension,
+          splitting_algorithm: splitTasksSelection,
+          form_ways: projectDetails.form_ways,
+          // "uploaded_form": projectDetails.uploaded_form,
+          data_extractWays: projectDetails.data_extractWays,
+          hashtags: arrayHashtag,
+          organisation_id: projectDetails.organisation_id,
+        },
+        drawnGeojsonFile,
+        customFormFile,
+        customPolygonUpload,
+        customLineUpload,
+      ),
+    );
     // if (formValues.splitting_algorithm === 'Divide on Square') {
     //   generateTasksOnMap();
     // }
@@ -46,6 +104,34 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile }) => {
     errors,
   }: any = useForm(projectDetails, submission, DefineTaskValidation);
 
+  const generateTaskBasedOnSelection = () => {
+    const blob = new Blob([JSON.stringify(drawnGeojson)], { type: 'application/json' });
+
+    // Create a file object from the Blob
+    const drawnGeojsonFile = new File([blob], 'data.json', { type: 'application/json' });
+    if (splitTasksSelection === 'divide_on_square') {
+      dispatch(
+        GetDividedTaskFromGeojson(`${environment.baseApiUrl}/projects/preview_tasks/`, {
+          geojson: drawnGeojsonFile,
+          dimension: formValues?.dimension,
+        }),
+      );
+    } else if (splitTasksSelection === 'task_splitting_algorithm') {
+      // const a = document.createElement('a');
+      // a.href = URL.createObjectURL(drawnGeojsonFile);
+      // a.download = 'test.json';
+      // a.click();
+      dispatch(
+        TaskSplittingPreviewService(
+          `${environment.baseApiUrl}/projects/task_split`,
+          drawnGeojsonFile,
+          formValues?.average_buildings_per_task,
+          false,
+          // dataExtractFile ? true : false,
+        ),
+      );
+    }
+  };
   return (
     <form onSubmit={handleSubmit}>
       <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
@@ -113,7 +199,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile }) => {
                         btnText="Click to generate task"
                         btnType="primary"
                         type="button"
-                        onClick={() => console.log('gen task')}
+                        onClick={generateTaskBasedOnSelection}
                         className=""
                         icon={<AssetModules.SettingsIcon className="fmtm-text-white" />}
                       />
@@ -151,7 +237,13 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile }) => {
                 />
               </div>
             </div>
-            <div className="fmtm-w-full lg:fmtm-w-[60%] fmtm-flex fmtm-flex-col fmtm-gap-6 fmtm-bg-gray-300 fmtm-h-[60vh] lg:fmtm-h-full"></div>
+            <div className="fmtm-w-full lg:fmtm-w-[60%] fmtm-flex fmtm-flex-col fmtm-gap-6 fmtm-bg-gray-300 fmtm-h-[60vh] lg:fmtm-h-full">
+              <NewDefineAreaMap
+                uploadedOrDrawnGeojsonFile={drawnGeojson}
+                buildingExtractedGeojson={buildingGeojson}
+                lineExtractedGeojson={lineGeojson}
+              />
+            </div>
           </div>
         </div>
       </div>

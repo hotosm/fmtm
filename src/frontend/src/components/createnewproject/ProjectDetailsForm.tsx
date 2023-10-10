@@ -23,6 +23,7 @@ const ProjectDetailsForm = ({ flag }) => {
   const organizationListData: any = useAppSelector((state) => state.createproject.organizationList);
 
   const organizationList = organizationListData.map((item) => ({ label: item.name, value: item.id }));
+  const currentStep = useAppSelector((state) => state.common.currentStepFormStep[flag]);
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(values));
@@ -30,7 +31,7 @@ const ProjectDetailsForm = ({ flag }) => {
     navigate('/new-upload-area');
   };
 
-  const { handleSubmit, handleCustomChange, values, errors }: any = useForm(
+  const { handleSubmit, handleCustomChange, values, errors, checkValidationOnly }: any = useForm(
     projectDetails,
     submission,
     CreateProjectValidation,
@@ -39,12 +40,16 @@ const ProjectDetailsForm = ({ flag }) => {
   const onFocus = () => {
     dispatch(OrganisationService(`${environment.baseApiUrl}/organization/`));
   };
+
   useEffect(() => {
     window.addEventListener('focus', onFocus);
     onFocus();
     // Calls onFocus when the window first loads
     return () => {
       window.removeEventListener('focus', onFocus);
+      // dispatch(
+      //   CreateProjectActions.SetCreateProjectValidations({ key: 'projectDetails', value: checkValidationOnly() }),
+      // );
     };
   }, []);
 

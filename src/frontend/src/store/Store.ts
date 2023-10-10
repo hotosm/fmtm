@@ -29,7 +29,7 @@ const rootReducer = combineReducers({
   //you can persist your auth reducer here similar to project reducer
   home: HomeSlice.reducer,
   theme: ThemeSlice.reducer,
-  createproject: CreateProjectReducer,
+  createproject: persist('createproject', ['projectDetails', 'projectInfo'], CreateProjectReducer),
   organization: OrganizationSlice.reducer,
   // added common slice in order to handle all the common things like snackbar etc
   common: CommonSlice.reducer,
