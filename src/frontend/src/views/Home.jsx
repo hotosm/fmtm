@@ -34,7 +34,7 @@ const Home = () => {
 
   const theme = CoreModules.useAppSelector((state) => state.theme.hotTheme);
   useEffect(() => {
-    dispatch(HomeSummaryService(`${enviroment.baseApiUrl}/projects/summaries?skip=0&limit=100`));
+    dispatch(HomeSummaryService(`${import.meta.env.VITE_API_URL}/projects/summaries?skip=0&limit=100`));
     //creating a manual thunk that will make an API call then autamatically perform state mutation whenever we navigate to home page
   }, []);
 

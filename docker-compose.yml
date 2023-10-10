@@ -64,6 +64,7 @@ services:
       # - ../osm-fieldwork/osm_fieldwork:/home/appuser/.local/lib/python3.10/site-packages/osm_fieldwork
     depends_on:
       - fmtm-db
+      - migrations
       - central-proxy
     env_file:
       - .env
@@ -78,13 +79,12 @@ services:
     image: "ghcr.io/hotosm/fmtm/backend:debug"
     container_name: fmtm_migrations
     depends_on:
-      - api
+      - fmtm-db
     env_file:
       - .env
     networks:
       - fmtm-dev
     entrypoint: ["/migrate-entrypoint.sh"]
-    command: ["alembic", "upgrade", "head"]
     restart: "on-failure:3"
 
   ui:
@@ -93,8 +93,7 @@ services:
       context: src/frontend
       dockerfile: debug.dockerfile
       args:
-        API_URL: ${URL_SCHEME}://${API_URL}
-        FRONTEND_MAIN_URL: ${URL_SCHEME}://${FRONTEND_MAIN_URL}
+        VITE_API_URL: ${URL_SCHEME}://${API_URL}
     container_name: fmtm
     depends_on:
       - api
@@ -102,11 +101,10 @@ services:
       - ./src/frontend:/app
       - /app/node_modules/
     environment:
-      - API_URL=${URL_SCHEME}://${API_URL}
-      - FRONTEND_MAIN_URL=${URL_SCHEME}://${FRONTEND_MAIN_URL}
-      - ODK_CENTRAL_URL=${ODK_CENTRAL_URL}
-      - ODK_CENTRAL_USER=${ODK_CENTRAL_USER}
-      - ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}
+      - VITE_API_URL=${URL_SCHEME}://${API_URL}
+      - VITE_ODK_CENTRAL_URL=${ODK_CENTRAL_URL}
+      - VITE_ODK_CENTRAL_USER=${ODK_CENTRAL_USER}
+      - VITE_ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}
     ports:
       - "8080:8080"
     networks:
