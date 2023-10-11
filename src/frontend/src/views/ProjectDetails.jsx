@@ -34,6 +34,7 @@ import MapLegends from '../components/MapLegends';
 import TaskSectionPopup from '../components/ProjectDetails/TaskSectionPopup';
 import DialogTaskActions from '../components/DialogTaskActions';
 import QrcodeComponent from '../components/QrcodeComponent';
+import MobileFooter from '../components/ProjectDetails/MobileFooter';
 
 const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -515,21 +516,24 @@ const Home = () => {
 
         {/* <ProjectMap /> */}
         {params?.id && (
-          <OpenLayersMap
-            key={params.id}
-            defaultTheme={defaultTheme}
-            stateDialog={stateDialog}
-            params={params}
-            state={state}
-            taskId={taskId}
-            top={top}
-            featuresLayer={featuresLayer}
-            map={map}
-            mainView={mainView}
-            mapElement={mapElement}
-            environment={environment}
-            windowType={type}
-          />
+          <div className="fmtm-relative sm:fmtm-static">
+            <OpenLayersMap
+              key={params.id}
+              defaultTheme={defaultTheme}
+              stateDialog={stateDialog}
+              params={params}
+              state={state}
+              taskId={taskId}
+              top={top}
+              featuresLayer={featuresLayer}
+              map={map}
+              mainView={mainView}
+              mapElement={mapElement}
+              environment={environment}
+              windowType={type}
+            />
+            <MobileFooter />
+          </div>
         )}
       </CoreModules.Stack>
 
