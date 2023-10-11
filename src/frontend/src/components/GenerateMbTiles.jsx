@@ -4,7 +4,7 @@ import AssetModules from '../shared/AssetModules';
 import environment from '../environment';
 import { DownloadTile, GenerateProjectTiles, GetTilesList } from '../api/Project';
 
-const GenerateMbTiles = ({ setToggleGenerateModal, toggleGenerateModal, projectInfo }) => {
+const GenerateBasemap = ({ setToggleGenerateModal, toggleGenerateModal, projectInfo }) => {
   const dispatch = CoreModules.useAppDispatch();
   const params = CoreModules.useParams();
   const encodedId = params.id;
@@ -178,6 +178,6 @@ const GenerateMbTiles = ({ setToggleGenerateModal, toggleGenerateModal, projectI
   );
 };
 
-GenerateMbTiles.propTypes = {};
+GenerateBasemap.propTypes = {};
 
-export default GenerateMbTiles;
+export default GenerateBasemap;
