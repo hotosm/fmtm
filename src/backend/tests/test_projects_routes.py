@@ -134,12 +134,12 @@ def test_generate_app_user(db, get_ids):
     custom_form = "/opt/app/test_data/buildings.xls"
     with open(custom_form, "rb") as file:
         contents = file.read()
-    
+
     data_extracts = "/opt/app/test_data/building_footprint.zip"
-    with zipfile.ZipFile(data_extracts, 'r') as zip_archive:
+    with zipfile.ZipFile(data_extracts, "r") as zip_archive:
         extract_contents = zip_archive.read("building_foot_jnk.geojson")
     json.loads(extract_contents)
-    
+
     odk_credentials = {
         "odk_central_url": odk_central_url,
         "odk_central_user": odk_central_user,
