@@ -2301,13 +2301,21 @@ def get_project_tiles(
     db: Session,
     project_id: int,
     source: str,
+    output_format: str = "mbtiles"
     background_task_id: uuid.UUID,
 ):
-    """Get the tiles for a project."""
+    """
+    Get the tiles for a project.
+
+    Args:
+        project_id (int): ID of project to create tiles for.
+        source (str): Tile source ("esri", "bing", "topo", "google", "oam").
+        output_format (str, optional): Default "mbtiles". Other options: "pmtiles", "sqlite3".
+    """
     zooms = "12-19"
     tiles_path_id = uuid.uuid4()
     tiles_dir = f"{TILESDIR}/{tiles_path_id}"
-    outfile = f"{tiles_dir}/{project_id}_{source}tiles.mbtiles"
+    outfile = f"{tiles_dir}/{project_id}_{source}tiles.{output_format}"
 
     tile_path_instance = db_models.DbTilesPath(
         project_id=project_id,
