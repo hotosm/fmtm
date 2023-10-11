@@ -18,6 +18,7 @@
 import json
 import os
 import uuid
+from pathlib import Path
 from typing import List, Optional
 
 from fastapi import (
@@ -1018,14 +1019,24 @@ async def tiles_list(project_id: int, db: Session = Depends(database.get_db)):
 
 @router.get("/download_tiles/")
 async def download_tiles(tile_id: int, db: Session = Depends(database.get_db)):
+    log.debug("Getting tile archive path from DB")
     tiles_path = (
         db.query(db_models.DbTilesPath)
         .filter(db_models.DbTilesPath.id == str(tile_id))
         .first()
     )
+    log.info(f"User requested download for tiles: {tiles_path.path}")
+
+    project_id = tiles_path.project_id
+    project_name = project_crud.get_project(db, project_id).project_name_prefix
+    filename = Path(tiles_path.path).name.replace(
+        f"{project_id}_", f"{project_name.replace(' ', '_')}_"
+    )
+    log.debug(f"Sending tile archive to user: {filename}")
+
     return FileResponse(
         tiles_path.path,
-        headers={"Content-Disposition": "attachment; filename=tiles.mbtiles"},
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 
