@@ -13,10 +13,12 @@ const GenerateBasemap = ({ setToggleGenerateModal, toggleGenerateModal, projectI
   const generateProjectTilesLoading = CoreModules.useAppSelector((state) => state.project.generateProjectTilesLoading);
   const tilesList = CoreModules.useAppSelector((state) => state.project.tilesList);
   const [selectedTileSource, setSelectedTileSource] = useState(null);
+  const [selectedOutputFormat, setSelectedOutputFormat] = useState(null);
+  const [tmsUrl, setTmsUrl] = useState('');
 
   const modalStyle = (theme) => ({
-    // width: "30%",
-    // height: "24%",
+    width: '90vw', // Responsive modal width using vw
+    height: '95vh',
     bgcolor: theme.palette.mode === 'dark' ? '#0A1929' : 'white',
     border: '1px solid ',
     padding: '16px 32px 24px 32px',
@@ -24,156 +26,220 @@ const GenerateBasemap = ({ setToggleGenerateModal, toggleGenerateModal, projectI
   const downloadMbTiles = (tileId) => {
     dispatch(DownloadTile(`${import.meta.env.VITE_API_URL}/projects/download_tiles/?tile_id=${tileId}`, projectInfo));
   };
+
   const getTilesList = () => {
     dispatch(GetTilesList(`${import.meta.env.VITE_API_URL}/projects/tiles_list/${decodedId}/`));
   };
+
   useEffect(() => {
-    //Only fetch tiles list when modal is open
+    // Only fetch tiles list when the modal is open
     if (toggleGenerateModal) {
       getTilesList();
     }
   }, [toggleGenerateModal]);
+
+  const handleTileSourceChange = (e) => {
+    setSelectedTileSource(e.target.value);
+    // If 'tms' is selected, clear the TMS URL
+    if (e.target.value !== 'tms') {
+      setTmsUrl('');
+    }
+  };
+
+  const handleTmsUrlChange = (e) => {
+    setTmsUrl(e.target.value);
+  };
+
   return (
     <CoreModules.CustomizedModal
       isOpen={!!toggleGenerateModal}
       style={modalStyle}
       toggleOpen={() => setToggleGenerateModal(!toggleGenerateModal)}
     >
-      <>
-        <CoreModules.IconButton
-          aria-label="close"
-          onClick={() => setToggleGenerateModal(!toggleGenerateModal)}
-          sx={{ width: '50px', float: 'right', display: 'block' }}
-        >
-          <AssetModules.CloseIcon />
-        </CoreModules.IconButton>
-        <CoreModules.FormControl sx={{ mb: 3, width: '100%' }}>
-          <CoreModules.InputLabel
-            id="form-category"
-            sx={{
-              '&.Mui-focused': {
-                color: defaultTheme.palette.black,
-              },
-            }}
+      <CoreModules.Grid container spacing={2}>
+        {/* Close Button */}
+        <CoreModules.Grid item xs={12}>
+          <CoreModules.IconButton
+            aria-label="close"
+            onClick={() => setToggleGenerateModal(!toggleGenerateModal)}
+            sx={{ width: '50px', float: 'right', display: 'block' }}
           >
-            Select Tiles Source
-          </CoreModules.InputLabel>
-          <CoreModules.Select
-            labelId="form_ways-label"
-            id="form_ways"
-            value={selectedTileSource}
-            label="Form Selection"
-            sx={{
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                border: '2px solid black',
-              },
-            }}
-            onChange={(e) => {
-              setSelectedTileSource(e.target.value);
-              // handleCustomChange("form_ways", e.target.value);
-            }}
-            // onChange={(e) => dispatch(CreateProjectActions.SetProjectDetails({ key: 'form_ways', value: e.target.value }))}
-          >
-            {environment.selectFormWays?.map((form) => (
-              <CoreModules.MenuItem key={form.value} value={form.value}>
-                {form.label}
-              </CoreModules.MenuItem>
-            ))}
-          </CoreModules.Select>
-          {/* {errors.form_ways && (
-              <CoreModules.FormLabel
-                component="h3"
-                sx={{ color: defaultTheme.palette.error.main }}
-              >
-                {errors.form_ways}
-              </CoreModules.FormLabel>
-            )} */}
-        </CoreModules.FormControl>
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <AssetModules.CloseIcon />
+          </CoreModules.IconButton>
+        </CoreModules.Grid>
+
+        {/* Output Format Dropdown */}
+        <CoreModules.Grid item xs={12} sm={6}>
+          <CoreModules.FormControl fullWidth>
+            <CoreModules.InputLabel
+              id="output-format"
+              sx={{
+                '&.Mui-focused': {
+                  color: defaultTheme.palette.black,
+                },
+              }}
+            >
+              Select Output Format
+            </CoreModules.InputLabel>
+            <CoreModules.Select
+              labelId="output-format"
+              id="output_format"
+              value={selectedOutputFormat}
+              label="Form Selection"
+              fullWidth
+              sx={{
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  border: '2px solid black',
+                },
+              }}
+              onChange={(e) => {
+                setSelectedOutputFormat(e.target.value);
+              }}
+            >
+              {environment.tileOutputFormats?.map((form) => (
+                <CoreModules.MenuItem key={form.value} value={form.value}>
+                  {form.label}
+                </CoreModules.MenuItem>
+              ))}
+            </CoreModules.Select>
+          </CoreModules.FormControl>
+        </CoreModules.Grid>
+
+        {/* Tile Source Dropdown or TMS URL Input */}
+        <CoreModules.Grid item xs={12} sm={6}>
+          <CoreModules.FormControl fullWidth>
+            <CoreModules.InputLabel
+              id="tile-source"
+              sx={{
+                '&.Mui-focused': {
+                  color: defaultTheme.palette.black,
+                },
+              }}
+            >
+              Select Tile Source
+            </CoreModules.InputLabel>
+            <CoreModules.Select
+              labelId="tile-source"
+              id="tile_source"
+              value={selectedTileSource}
+              label="Form Selection"
+              fullWidth
+              sx={{
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  border: '2px solid black',
+                },
+              }}
+              onChange={handleTileSourceChange}
+            >
+              {environment.baseMapProviders?.map((form) => (
+                <CoreModules.MenuItem key={form.value} value={form.value}>
+                  {form.label}
+                </CoreModules.MenuItem>
+              ))}
+            </CoreModules.Select>
+            {selectedTileSource === 'tms' && (
+              <CoreModules.FormControl>
+                <CoreModules.TextField
+                  labelId="tms_url-label"
+                  id="tms_url"
+                  value={tmsUrl}
+                  label="Enter Tile Source"
+                  fullWidth
+                  sx={{
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      border: '2px solid black',
+                    },
+                  }}
+                  onChange={handleTmsUrlChange}
+                />
+              </CoreModules.FormControl>
+            )}
+          </CoreModules.FormControl>
+        </CoreModules.Grid>
+
+        {/* Generate Button */}
+        <CoreModules.Grid item xs={12} sm={6}>
           <CoreModules.LoadingButton
             variant="contained"
             loading={generateProjectTilesLoading}
             color="error"
-            sx={{
-              width: '20%',
-              height: '10%',
-              p: 1,
-              display: 'flex !important',
-            }}
+            fullWidth
             onClick={() => {
-              // setToggleGenerateModal(false);
+              // Check if 'tms' is selected and tmsUrl is not empty
+              if (selectedTileSource === 'tms' && !tmsUrl) {
+                // Handle error, TMS URL is required
+                console.log('TMS URL is required');
+                return;
+              }
+
               dispatch(
                 GenerateProjectTiles(
-                  `${import.meta.env.VITE_API_URL}/projects/tiles/${decodedId}?source=${selectedTileSource}`,
+                  `${
+                    import.meta.env.VITE_API_URL
+                  }/projects/tiles/${decodedId}?source=${selectedTileSource}&format=${selectedOutputFormat}&tms_url=${tmsUrl}`,
                   decodedId,
                 ),
               );
-              // dispatch(CoreModules.TaskActions.SetJosmEditorError(null));
             }}
           >
             Generate
           </CoreModules.LoadingButton>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        </CoreModules.Grid>
+
+        {/* Refresh Button */}
+        <CoreModules.Grid item xs={12} sm={6}>
           <CoreModules.LoadingButton
             variant="outlined"
             loading={generateProjectTilesLoading}
             color="error"
-            sx={{
-              width: '15%',
-              height: '5%',
-              p: 1,
-              display: 'flex !important',
-            }}
+            fullWidth
             onClick={() => {
               getTilesList();
             }}
           >
             Refresh
           </CoreModules.LoadingButton>
-        </div>
-        <CoreModules.TableContainer component={CoreModules.Paper} sx={{ height: '400px', overflowY: 'scroll' }}>
-          <CoreModules.Table sx={{ minWidth: 650 }} aria-label="simple table">
-            <CoreModules.TableHead>
-              <CoreModules.TableRow>
-                <CoreModules.TableCell>Id</CoreModules.TableCell>
-                <CoreModules.TableCell align="right">Source</CoreModules.TableCell>
-                <CoreModules.TableCell align="right">Status</CoreModules.TableCell>
-                <CoreModules.TableCell align="right"></CoreModules.TableCell>
-              </CoreModules.TableRow>
-            </CoreModules.TableHead>
-            <CoreModules.TableBody>
-              {tilesList.map((list) => (
-                <CoreModules.TableRow key={list.name} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                  <CoreModules.TableCell component="th" scope="row">
-                    {list.id}
-                  </CoreModules.TableCell>
-                  <CoreModules.TableCell align="right">{list.tile_source}</CoreModules.TableCell>
-                  <CoreModules.TableCell
-                    align="right"
-                    sx={{
-                      color: environment.statusColors[list.status],
-                    }}
-                  >
-                    {/* Changed Success Display to Completed */}
-                    {list.status === 'SUCCESS' ? 'COMPLETED' : list.status}
-                  </CoreModules.TableCell>
-                  <CoreModules.TableCell align="right">
-                    {list.status === 'SUCCESS' ? (
-                      <AssetModules.FileDownloadIcon
-                        sx={{ cursor: 'pointer' }}
-                        onClick={() => downloadMbTiles(list.id)}
-                      ></AssetModules.FileDownloadIcon>
-                    ) : (
-                      <></>
-                    )}
-                  </CoreModules.TableCell>
+        </CoreModules.Grid>
+
+        {/* Table Content */}
+        <CoreModules.Grid item xs={12}>
+          <CoreModules.TableContainer component={CoreModules.Paper} sx={{ maxHeight: '50vh', overflowY: 'auto' }}>
+            <CoreModules.Table sx={{ minWidth: 650 }} aria-label="simple table">
+              <CoreModules.TableHead>
+                <CoreModules.TableRow>
+                  <CoreModules.TableCell>Id</CoreModules.TableCell>
+                  <CoreModules.TableCell align="right">Source</CoreModules.TableCell>
+                  <CoreModules.TableCell align="right">Status</CoreModules.TableCell>
+                  <CoreModules.TableCell align="right"></CoreModules.TableCell>
                 </CoreModules.TableRow>
-              ))}
-            </CoreModules.TableBody>
-          </CoreModules.Table>
-        </CoreModules.TableContainer>
-      </>
+              </CoreModules.TableHead>
+              <CoreModules.TableBody>
+                {tilesList.map((list) => (
+                  <CoreModules.TableRow key={list.name}>
+                    <CoreModules.TableCell component="th" scope="row">
+                      {list.id}
+                    </CoreModules.TableCell>
+                    <CoreModules.TableCell align="right">{list.tile_source}</CoreModules.TableCell>
+                    <CoreModules.TableCell align="right" sx={{ color: environment.statusColors[list.status] }}>
+                      {list.status === 'SUCCESS' ? 'COMPLETED' : list.status}
+                    </CoreModules.TableCell>
+                    <CoreModules.TableCell align="right">
+                      {list.status === 'SUCCESS' ? (
+                        <AssetModules.FileDownloadIcon
+                          sx={{ cursor: 'pointer' }}
+                          onClick={() => downloadMbTiles(list.id)}
+                        ></AssetModules.FileDownloadIcon>
+                      ) : (
+                        <></>
+                      )}
+                    </CoreModules.TableCell>
+                  </CoreModules.TableRow>
+                ))}
+              </CoreModules.TableBody>
+            </CoreModules.Table>
+          </CoreModules.TableContainer>
+        </CoreModules.Grid>
+      </CoreModules.Grid>
     </CoreModules.CustomizedModal>
   );
 };
