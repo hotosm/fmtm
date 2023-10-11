@@ -2300,17 +2300,20 @@ async def get_extracted_data_from_db(db: Session, project_id: int, outfile: str)
 def get_project_tiles(
     db: Session,
     project_id: int,
-    source: str,
-    output_format: str = "mbtiles"
     background_task_id: uuid.UUID,
+    source: str,
+    output_format: str = "mbtiles",
+    tms: str = None,
 ):
-    """
-    Get the tiles for a project.
+    """Get the tiles for a project.
 
     Args:
         project_id (int): ID of project to create tiles for.
+        background_task_id (uuid.UUID): UUID of background task to track.
         source (str): Tile source ("esri", "bing", "topo", "google", "oam").
-        output_format (str, optional): Default "mbtiles". Other options: "pmtiles", "sqlite3".
+        output_format (str, optional): Default "mbtiles".
+            Other options: "pmtiles", "sqlite3".
+        tms (str, optional): Default None. Custom TMS provider URL.
     """
     zooms = "12-19"
     tiles_path_id = uuid.uuid4()
@@ -2356,7 +2359,8 @@ def get_project_tiles(
             f"zooms={zooms} | "
             f"outdir={tiles_dir} | "
             f"source={source} | "
-            f"xy={False}"
+            f"xy={False} | "
+            f"tms={tms}"
         )
         create_basemap_file(
             boundary=f"{min_lon},{min_lat},{max_lon},{max_lat}",
@@ -2365,6 +2369,7 @@ def get_project_tiles(
             outdir=tiles_dir,
             source=source,
             xy=False,
+            tms=tms,
         )
         log.info(f"Basemap created for project ID {project_id}: {outfile}")
 
