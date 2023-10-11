@@ -298,209 +298,220 @@ const Home = () => {
   return (
     <CoreModules.Stack spacing={2}>
       {/* Customized Modal For Generate Tiles */}
-      <GenerateMbTiles
-        toggleGenerateModal={toggleGenerateModal}
-        setToggleGenerateModal={setToggleGenerateModal}
-        projectInfo={state.projectInfo}
-      />
+      {windowSize.width >= 640 && (
+        <div>
+          <GenerateMbTiles
+            toggleGenerateModal={toggleGenerateModal}
+            setToggleGenerateModal={setToggleGenerateModal}
+            projectInfo={state.projectInfo}
+          />
 
-      {/* Home snackbar */}
-      <CustomizedSnackbar
-        duration={stateSnackBar.duration}
-        open={stateSnackBar.open}
-        variant={stateSnackBar.variant}
-        message={stateSnackBar.message}
-        handleClose={handleClose}
-      />
+          {/* Home snackbar */}
+          <CustomizedSnackbar
+            duration={stateSnackBar.duration}
+            open={stateSnackBar.open}
+            variant={stateSnackBar.variant}
+            message={stateSnackBar.message}
+            handleClose={handleClose}
+          />
+        </div>
+      )}
 
       {/* Top project details heading medium dimension*/}
-      <CoreModules.Stack
-        sx={{ display: { md: 'flex', xs: 'none' } }}
-        direction="column"
-        justifyContent="center"
-        spacing={5}
-        alignItems={'center'}
-      >
-        <CoreModules.Stack
-          direction={'row'}
-          p={2}
-          spacing={2}
-          divider={
-            <CoreModules.Divider
-              sx={{ backgroundColor: defaultTheme.palette.grey['main'] }}
-              orientation="vertical"
-              flexItem
-            />
-          }
-        >
-          <CoreModules.Stack direction={'row'} justifyContent={'center'}>
-            <AssetModules.LocationOn color="error" style={{ fontSize: 22 }} />
-            <CoreModules.Typography variant="h1">{state.projectInfo.title}</CoreModules.Typography>
-          </CoreModules.Stack>
-
-          <CoreModules.Stack>
-            <CoreModules.Typography variant="h4" fontSize={defaultTheme.typography.fontSize}>
-              {`#${state.projectInfo.id}`}
-            </CoreModules.Typography>
-          </CoreModules.Stack>
-
-          <CoreModules.Stack mt={'5%'}>
-            <CoreModules.Typography
-              variant="h4"
-              fontSize={defaultTheme.typography.fontSize}
-              color={defaultTheme.palette.warning['main']}
-            >
-              {state.projectInfo.priority_str}
-            </CoreModules.Typography>
-          </CoreModules.Stack>
-        </CoreModules.Stack>
-      </CoreModules.Stack>
-
-      {/* project Details Title */}
-      <CoreModules.Stack sx={{ display: { xs: 'flex', md: 'none' } }} spacing={2}>
-        <CoreModules.Stack direction={'row'} justifyContent={'center'}>
-          <AssetModules.LocationOn color="error" style={{ marginTop: '1.5%', fontSize: 22 }} />
-          <CoreModules.Typography variant="caption">{state.projectInfo.title}</CoreModules.Typography>
-        </CoreModules.Stack>
-
-        <CoreModules.Stack direction={'row'} justifyContent={'center'}>
-          <CoreModules.Typography variant="h1" fontSize={defaultTheme.typography.fontSize}>
-            {`#${state.projectInfo.id}`}
-          </CoreModules.Typography>
-        </CoreModules.Stack>
-
-        <CoreModules.Stack direction={'row'} justifyContent={'center'}>
-          <CoreModules.Typography
-            variant="h1"
-            fontSize={defaultTheme.typography.fontSize}
-            color={defaultTheme.palette.warning['main']}
+      {windowSize.width >= 640 && (
+        <div>
+          <CoreModules.Stack
+            sx={{ display: { md: 'flex', xs: 'none' } }}
+            direction="column"
+            justifyContent="center"
+            spacing={5}
+            alignItems={'center'}
           >
-            {state.projectInfo.priority_str}
-          </CoreModules.Typography>
-        </CoreModules.Stack>
-      </CoreModules.Stack>
+            <CoreModules.Stack
+              direction={'row'}
+              p={2}
+              spacing={2}
+              divider={
+                <CoreModules.Divider
+                  sx={{ backgroundColor: defaultTheme.palette.grey['main'] }}
+                  orientation="vertical"
+                  flexItem
+                />
+              }
+            >
+              <CoreModules.Stack direction={'row'} justifyContent={'center'}>
+                <AssetModules.LocationOn color="error" style={{ fontSize: 22 }} />
+                <CoreModules.Typography variant="h1">{state.projectInfo.title}</CoreModules.Typography>
+              </CoreModules.Stack>
+
+              <CoreModules.Stack>
+                <CoreModules.Typography variant="h4" fontSize={defaultTheme.typography.fontSize}>
+                  {`#${state.projectInfo.id}`}
+                </CoreModules.Typography>
+              </CoreModules.Stack>
+
+              <CoreModules.Stack mt={'5%'}>
+                <CoreModules.Typography
+                  variant="h4"
+                  fontSize={defaultTheme.typography.fontSize}
+                  color={defaultTheme.palette.warning['main']}
+                >
+                  {state.projectInfo.priority_str}
+                </CoreModules.Typography>
+              </CoreModules.Stack>
+            </CoreModules.Stack>
+          </CoreModules.Stack>
+          {/* project Details Title */}
+          <CoreModules.Stack sx={{ display: { xs: 'flex', md: 'none' } }} spacing={2}>
+            <CoreModules.Stack direction={'row'} justifyContent={'center'}>
+              <AssetModules.LocationOn color="error" style={{ marginTop: '1.5%', fontSize: 22 }} />
+              <CoreModules.Typography variant="caption">{state.projectInfo.title}</CoreModules.Typography>
+            </CoreModules.Stack>
+
+            <CoreModules.Stack direction={'row'} justifyContent={'center'}>
+              <CoreModules.Typography variant="h1" fontSize={defaultTheme.typography.fontSize}>
+                {`#${state.projectInfo.id}`}
+              </CoreModules.Typography>
+            </CoreModules.Stack>
+
+            <CoreModules.Stack direction={'row'} justifyContent={'center'}>
+              <CoreModules.Typography
+                variant="h1"
+                fontSize={defaultTheme.typography.fontSize}
+                color={defaultTheme.palette.warning['main']}
+              >
+                {state.projectInfo.priority_str}
+              </CoreModules.Typography>
+            </CoreModules.Stack>
+          </CoreModules.Stack>
+        </div>
+      )}
 
       {/* Center description and map */}
       <CoreModules.Stack direction={'column'} spacing={1}>
-        <MapDescriptionComponents defaultTheme={defaultTheme} state={state} type={type} />
-        <div>
-          <div
-            className={`fmtm-flex fmtm-gap-5 fmtm-py-4 sm:fmtm-hidden fmtm-justify-between  fmtm-items-center fmtm-mx-7 fmtm-mb-2 ${
-              toggleAction ? 'fmtm-border-b-[#929DB3] fmtm-border-b-[1px]' : ''
-            }`}
-          >
-            <p className="fmtm-text-xl fmtm-italic">Project Options</p>
+        {windowSize.width >= 640 && (
+          <div>
+            <MapDescriptionComponents defaultTheme={defaultTheme} state={state} type={type} />
+            <div>
+              <div
+                className={`fmtm-flex fmtm-gap-5 fmtm-py-4 sm:fmtm-hidden fmtm-justify-between  fmtm-items-center fmtm-mx-7 fmtm-mb-2 ${
+                  toggleAction ? 'fmtm-border-b-[#929DB3] fmtm-border-b-[1px]' : ''
+                }`}
+              >
+                <p className="fmtm-text-xl fmtm-italic">Project Options</p>
+                <div
+                  className={
+                    'fmtm-rounded-full fmtm-shadow-gray-400 fmtm-w-8 fmtm-h-8 fmtm-flex fmtm-justify-center fmtm-items-center fmtm-shadow-lg fmtm-cursor-pointer'
+                  }
+                  onClick={() => setToggleAction(!toggleAction)}
+                >
+                  <AssetModules.ArrowRightIcon
+                    color=""
+                    style={{ fontSize: 32 }}
+                    className={`${toggleAction ? 'fmtm-rotate-90' : ''}`}
+                  />
+                </div>
+              </div>
+            </div>
             <div
-              className={
-                'fmtm-rounded-full fmtm-shadow-gray-400 fmtm-w-8 fmtm-h-8 fmtm-flex fmtm-justify-center fmtm-items-center fmtm-shadow-lg fmtm-cursor-pointer'
-              }
-              onClick={() => setToggleAction(!toggleAction)}
+              className={`fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-6 lg:fmtm-gap-0 fmtm-px-3 sm:fmtm-px-0 ${
+                toggleAction ? '' : 'fmtm-hidden sm:fmtm-flex'
+              }`}
             >
-              <AssetModules.ArrowRightIcon
-                color=""
-                style={{ fontSize: 32 }}
-                className={`${toggleAction ? 'fmtm-rotate-90' : ''}`}
-              />
+              <div className="fmtm-w-full fmtm-flex fmtm-flex-col fmtm-items-start sm:fmtm-flex-row  sm:fmtm-justify-center lg:fmtm-justify-start sm:fmtm-items-center fmtm-gap-6 fmtm-ml-4">
+                <CoreModules.LoadingButton
+                  onClick={() => handleDownload('form')}
+                  sx={{ width: 'unset' }}
+                  loading={downloadProjectFormLoading.type === 'form' && downloadProjectFormLoading.loading}
+                  loadingPosition="end"
+                  endIcon={<AssetModules.FileDownloadIcon />}
+                  variant="contained"
+                  color="error"
+                >
+                  Form
+                </CoreModules.LoadingButton>
+                <CoreModules.LoadingButton
+                  onClick={() => handleDownload('geojson')}
+                  sx={{ width: 'unset' }}
+                  loading={downloadProjectFormLoading.type === 'geojson' && downloadProjectFormLoading.loading}
+                  loadingPosition="end"
+                  endIcon={<AssetModules.FileDownloadIcon />}
+                  variant="contained"
+                  color="error"
+                >
+                  Tasks
+                </CoreModules.LoadingButton>
+                <CoreModules.LoadingButton
+                  onClick={() => onDataExtractDownload()}
+                  sx={{ width: 'unset' }}
+                  loading={downloadDataExtractLoading}
+                  loadingPosition="end"
+                  endIcon={<AssetModules.FileDownloadIcon />}
+                  variant="contained"
+                  color="error"
+                  className="fmtm-truncate"
+                >
+                  Data Extract
+                </CoreModules.LoadingButton>
+              </div>
+              <div className="fmtm-flex fmtm-flex-col sm:fmtm-flex-row sm:fmtm-justify-center lg:fmtm-justify-end fmtm-w-full fmtm-ml-4 fmtm-gap-6">
+                <CoreModules.Link
+                  to={`/projectInfo/${encodedId}`}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    alignItems: 'flex-end',
+                    textDecoration: 'none',
+                    marginRight: '15px',
+                  }}
+                  className="fmtm-w-fit"
+                >
+                  <CoreModules.Button variant="contained" color="error">
+                    ProjectInfo
+                  </CoreModules.Button>
+                </CoreModules.Link>
+                <CoreModules.Button
+                  onClick={() => setToggleGenerateModal(true)}
+                  variant="contained"
+                  color="error"
+                  sx={{ width: '200px', mr: '15px' }}
+                  endIcon={<AssetModules.BoltIcon />}
+                  className="fmtm-truncate"
+                >
+                  Generate MbTiles
+                </CoreModules.Button>
+                <CoreModules.Link
+                  to={`/edit-project/project-details/${encodedId}`}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    alignItems: 'flex-end',
+                    textDecoration: 'none',
+                    marginRight: '15px',
+                  }}
+                  className="fmtm-w-fit"
+                >
+                  <CoreModules.Button variant="outlined" color="error" className="fmtm-truncate">
+                    Edit Project
+                  </CoreModules.Button>
+                </CoreModules.Link>
+              </div>
+              <div className="fmtm-px-1 sm:fmtm-hidden">
+                <Accordion
+                  collapsed={true}
+                  disableHeaderClickToggle
+                  onToggle={() => {}}
+                  header={<div className="fmtm-text-[#2C3038] fmtm-font-bold fmtm-text-xl">Map Legends</div>}
+                  body={
+                    <div className="fmtm-mt-4">
+                      <MapLegends defaultTheme={defaultTheme} />
+                    </div>
+                  }
+                />
+              </div>
             </div>
           </div>
-        </div>
-        <div
-          className={`fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-6 lg:fmtm-gap-0 fmtm-px-3 sm:fmtm-px-0 ${
-            toggleAction ? '' : 'fmtm-hidden sm:fmtm-flex'
-          }`}
-        >
-          <div className="fmtm-w-full fmtm-flex fmtm-flex-col fmtm-items-start sm:fmtm-flex-row  sm:fmtm-justify-center lg:fmtm-justify-start sm:fmtm-items-center fmtm-gap-6 fmtm-ml-4">
-            <CoreModules.LoadingButton
-              onClick={() => handleDownload('form')}
-              sx={{ width: 'unset' }}
-              loading={downloadProjectFormLoading.type === 'form' && downloadProjectFormLoading.loading}
-              loadingPosition="end"
-              endIcon={<AssetModules.FileDownloadIcon />}
-              variant="contained"
-              color="error"
-            >
-              Form
-            </CoreModules.LoadingButton>
-            <CoreModules.LoadingButton
-              onClick={() => handleDownload('geojson')}
-              sx={{ width: 'unset' }}
-              loading={downloadProjectFormLoading.type === 'geojson' && downloadProjectFormLoading.loading}
-              loadingPosition="end"
-              endIcon={<AssetModules.FileDownloadIcon />}
-              variant="contained"
-              color="error"
-            >
-              Tasks
-            </CoreModules.LoadingButton>
-            <CoreModules.LoadingButton
-              onClick={() => onDataExtractDownload()}
-              sx={{ width: 'unset' }}
-              loading={downloadDataExtractLoading}
-              loadingPosition="end"
-              endIcon={<AssetModules.FileDownloadIcon />}
-              variant="contained"
-              color="error"
-              className="fmtm-truncate"
-            >
-              Data Extract
-            </CoreModules.LoadingButton>
-          </div>
-          <div className="fmtm-flex fmtm-flex-col sm:fmtm-flex-row sm:fmtm-justify-center lg:fmtm-justify-end fmtm-w-full fmtm-ml-4 fmtm-gap-6">
-            <CoreModules.Link
-              to={`/projectInfo/${encodedId}`}
-              style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                alignItems: 'flex-end',
-                textDecoration: 'none',
-                marginRight: '15px',
-              }}
-              className="fmtm-w-fit"
-            >
-              <CoreModules.Button variant="contained" color="error">
-                ProjectInfo
-              </CoreModules.Button>
-            </CoreModules.Link>
-            <CoreModules.Button
-              onClick={() => setToggleGenerateModal(true)}
-              variant="contained"
-              color="error"
-              sx={{ width: '200px', mr: '15px' }}
-              endIcon={<AssetModules.BoltIcon />}
-              className="fmtm-truncate"
-            >
-              Generate MbTiles
-            </CoreModules.Button>
-            <CoreModules.Link
-              to={`/edit-project/project-details/${encodedId}`}
-              style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                alignItems: 'flex-end',
-                textDecoration: 'none',
-                marginRight: '15px',
-              }}
-              className="fmtm-w-fit"
-            >
-              <CoreModules.Button variant="outlined" color="error" className="fmtm-truncate">
-                Edit Project
-              </CoreModules.Button>
-            </CoreModules.Link>
-          </div>
-          <div className="fmtm-px-1 sm:fmtm-hidden">
-            <Accordion
-              collapsed={true}
-              disableHeaderClickToggle
-              onToggle={() => {}}
-              header={<div className="fmtm-text-[#2C3038] fmtm-font-bold fmtm-text-xl">Map Legends</div>}
-              body={
-                <div className="fmtm-mt-4">
-                  <MapLegends defaultTheme={defaultTheme} />
-                </div>
-              }
-            />
-          </div>
-        </div>
+        )}
 
         {/* <ProjectMap /> */}
         {params?.id && (
@@ -522,19 +533,23 @@ const Home = () => {
         )}
       </CoreModules.Stack>
 
-      {/* project Details Tabs */}
-      <CoreModules.Stack sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
-        {/* <BasicTabs listOfData={panelData} /> */}
-        <ActivitiesPanel
-          params={params}
-          state={state.projectTaskBoundries}
-          defaultTheme={defaultTheme}
-          map={map}
-          view={mainView}
-          mapDivPostion={y}
-          states={state}
-        />
-      </CoreModules.Stack>
+      {windowSize.width >= 640 && (
+        <div>
+          {/* project Details Tabs */}
+          <CoreModules.Stack sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
+            {/* <BasicTabs listOfData={panelData} /> */}
+            <ActivitiesPanel
+              params={params}
+              state={state.projectTaskBoundries}
+              defaultTheme={defaultTheme}
+              map={map}
+              view={mainView}
+              mapDivPostion={y}
+              states={state}
+            />
+          </CoreModules.Stack>
+        </div>
+      )}
       {featuresLayer != undefined && (
         <TaskSectionPopup
           body={
