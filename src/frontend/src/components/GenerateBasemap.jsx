@@ -176,7 +176,7 @@ const GenerateBasemap = ({ setToggleGenerateModal, toggleGenerateModal, projectI
                 GenerateProjectTiles(
                   `${
                     import.meta.env.VITE_API_URL
-                  }/projects/tiles/${decodedId}?source=${selectedTileSource}&format=${selectedOutputFormat}&tms_url=${tmsUrl}`,
+                  }/projects/tiles/${decodedId}?source=${selectedTileSource}&format=${selectedOutputFormat}&tms=${tmsUrl}`,
                   decodedId,
                 ),
               );
