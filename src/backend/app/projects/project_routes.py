@@ -40,7 +40,7 @@ from sqlalchemy.orm import Session
 
 from ..central import central_crud
 from ..db import database, db_models
-from ..models.enums import TILES_SOURCE, TILES_FORMATS
+from ..models.enums import TILES_FORMATS, TILES_SOURCE
 from ..tasks import tasks_crud
 from . import project_crud, project_schemas, utils
 from .project_crud import check_crs
