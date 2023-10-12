@@ -19,7 +19,7 @@ const ProjectSlice = createSlice({
     downloadTilesLoading: false,
     downloadDataExtractLoading: false,
     taskModalStatus: false,
-    mobileFooterSelection: 'projectInfo',
+    mobileFooterSelection: 'explore',
   },
   reducers: {
     SetProjectTaskBoundries(state, action) {

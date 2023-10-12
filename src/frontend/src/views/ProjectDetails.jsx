@@ -35,6 +35,9 @@ import TaskSectionPopup from '../components/ProjectDetails/TaskSectionPopup';
 import DialogTaskActions from '../components/DialogTaskActions';
 import QrcodeComponent from '../components/QrcodeComponent';
 import MobileFooter from '../components/ProjectDetails/MobileFooter';
+import MobileActivitiesContents from '../components/ProjectDetails/MobileActivitiesContents';
+import BottomSheet from '../components/common/BottomSheet';
+import MobileProjectInfoContent from '../components/ProjectDetails/MobileProjectInfoContent';
 
 const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -61,6 +64,7 @@ const Home = () => {
   const downloadProjectFormLoading = CoreModules.useAppSelector((state) => state.project.downloadProjectFormLoading);
   const downloadDataExtractLoading = CoreModules.useAppSelector((state) => state.project.downloadDataExtractLoading);
   const projectBuildingGeojson = CoreModules.useAppSelector((state) => state.project.projectBuildingGeojson);
+  const mobileFooterSelection = CoreModules.useAppSelector((state) => state.project.mobileFooterSelection);
   const [toggleAction, setToggleAction] = useState(false);
 
   //snackbar handle close funtion
@@ -532,6 +536,18 @@ const Home = () => {
               environment={environment}
               windowType={type}
             />
+            {mobileFooterSelection === 'projectInfo' && (
+              <BottomSheet
+                body={<MobileProjectInfoContent projectInfo={state.projectInfo} />}
+                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection('explore'))}
+              />
+            )}
+            {mobileFooterSelection === 'activities' && (
+              <BottomSheet
+                body={<MobileActivitiesContents map={map} view={mainView} mapDivPostion={y} />}
+                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection('explore'))}
+              />
+            )}
             <MobileFooter />
           </div>
         )}
