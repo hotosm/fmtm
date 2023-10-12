@@ -66,7 +66,7 @@ const BottomSheet = ({ body, onClose }) => {
   }, [currSheetHeight]);
 
   return (
-    <div className="fmtm-absolute fmtm-bottom-[400px] fmtm-bg-white ">
+    <div className="fmtm-absolute fmtm-bottom-[400px] fmtm-bg-white sm:fmtm-hidden">
       <div className="bottom-sheet" ref={bottomSheetRef}>
         <div ref={sheetContentRef} className="content fmtm-shadow-[30px_-10px_40px_25px_rgba(0,0,0,0.2)]">
           <div className="header">
