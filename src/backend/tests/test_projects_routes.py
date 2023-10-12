@@ -16,6 +16,7 @@ from app.projects import project_crud, project_schemas
 from app.projects.project_schemas import BETAProjectUpload, ODKCentral, ProjectInfo
 from app.tasks import tasks_crud
 from app.users.user_schemas import User
+from tests.test_data import test_data_path
 
 load_dotenv()
 
@@ -131,11 +132,11 @@ def test_create_project_with_project_info(db, organization, user):
 
 
 def test_generate_appuser_files(db, get_ids):
-    custom_form = "/opt/tests/test_data/buildings.xls"
+    custom_form = f"{test_data_path}/buildings.xls"
     with open(custom_form, "rb") as file:
         contents = file.read()
 
-    data_extracts = "/opt/tests/test_data/building_footprint.zip"
+    data_extracts = f"{test_data_path}/building_footprint.zip"
     with zipfile.ZipFile(data_extracts, "r") as zip_archive:
         extract_contents = zip_archive.read("building_foot_jnk.geojson")
     json.loads(extract_contents)
