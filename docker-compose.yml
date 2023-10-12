@@ -194,7 +194,7 @@ services:
     volumes:
       - fmtm_data:/mnt/data
     ports:
-      - 9000:9000                 
+      - 9000:9000
       - 9090:9090
     networks:
       - fmtm-dev
