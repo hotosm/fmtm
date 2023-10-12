@@ -16,6 +16,7 @@
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
+import logging
 from typing import Any, Generator
 
 import pytest
@@ -31,9 +32,16 @@ from app.db.database import Base, get_db
 from app.db.db_models import DbOrganisation, DbProject, DbUser
 from app.main import api, get_application
 
-engine = create_engine(settings.FMTM_DB_URL)
+engine = create_engine(settings.FMTM_DB_URL.unicode_string())
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base.metadata.create_all(bind=engine)
+
+
+def pytest_configure(config):
+    """Configure pytest runs."""
+    # Stop sqlalchemy logs
+    sqlalchemy_log = logging.getLogger("sqlalchemy")
+    sqlalchemy_log.propagate = False
 
 
 @pytest.fixture(autouse=True)
@@ -44,7 +52,7 @@ def app() -> Generator[FastAPI, Any, None]:
 
 @pytest.fixture(scope="session")
 def db_engine():
-    engine = create_engine(settings.FMTM_DB_URL)
+    engine = create_engine(settings.FMTM_DB_URL.unicode_string())
     if not database_exists:
         create_database(engine.url)
 
