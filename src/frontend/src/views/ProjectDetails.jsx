@@ -6,7 +6,7 @@ import MapDescriptionComponents from '../components/MapDescriptionComponents';
 import ActivitiesPanel from '../components/ActivitiesPanel';
 import OpenLayersMap from '../components/OpenLayersMap';
 import environment from '../environment';
-import { DownloadDataExtract, DownloadProjectForm, ProjectById } from '../api/Project';
+import { ProjectById } from '../api/Project';
 import { ProjectActions } from '../store/slices/ProjectSlice';
 import CustomizedSnackbar from '../utilities/CustomizedSnackbar';
 import { defaults } from 'ol/control/defaults';
@@ -29,8 +29,6 @@ import GenerateMbTiles from '../components/GenerateMbTiles';
 import { ProjectBuildingGeojsonService } from '../api/SubmissionService';
 import { get } from 'ol/proj';
 import { buildingStyle, basicGeojsonTemplate } from '../utilities/mapUtils';
-import Button from '../../src/components/common/Button';
-import Accordion from '../../src/components/common/Accordion';
 import MapLegends from '../components/MapLegends';
 import TaskSectionPopup from '../components/ProjectDetails/TaskSectionPopup';
 import DialogTaskActions from '../components/DialogTaskActions';
@@ -40,6 +38,7 @@ import MobileActivitiesContents from '../components/ProjectDetails/MobileActivit
 import BottomSheet from '../components/common/BottomSheet';
 import MobileProjectInfoContent from '../components/ProjectDetails/MobileProjectInfoContent';
 import { useNavigate } from 'react-router-dom';
+import ProjectOptions from '../components/ProjectDetails/ProjectOptions';
 
 const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -64,8 +63,6 @@ const Home = () => {
   const decodedId = environment.decode(encodedId);
   const { windowSize, type } = WindowDimension();
   const { y } = OnScroll(map, windowSize.width);
-  const downloadProjectFormLoading = CoreModules.useAppSelector((state) => state.project.downloadProjectFormLoading);
-  const downloadDataExtractLoading = CoreModules.useAppSelector((state) => state.project.downloadDataExtractLoading);
   const projectBuildingGeojson = CoreModules.useAppSelector((state) => state.project.projectBuildingGeojson);
   const mobileFooterSelection = CoreModules.useAppSelector((state) => state.project.mobileFooterSelection);
   const [toggleAction, setToggleAction] = useState(false);
@@ -286,44 +283,25 @@ const Home = () => {
 
   TasksLayer(map, mainView, featuresLayer);
 
-  const handleDownload = (downloadType) => {
-    if (downloadType === 'form') {
-      dispatch(
-        DownloadProjectForm(`${import.meta.env.VITE_API_URL}/projects/download_form/${decodedId}/`, downloadType),
-      );
-    } else if (downloadType === 'geojson') {
-      dispatch(
-        DownloadProjectForm(`${import.meta.env.VITE_API_URL}/projects/${decodedId}/download_tasks`, downloadType),
-      );
-    }
-  };
-  const onDataExtractDownload = () => {
-    dispatch(
-      DownloadDataExtract(`${import.meta.env.VITE_API_URL}/projects/features/download/?project_id=${decodedId}`),
-    );
-  };
-
   return (
-    <CoreModules.Stack spacing={2}>
+    <div>
       {/* Customized Modal For Generate Tiles */}
-      {windowSize.width >= 640 && (
-        <div>
-          <GenerateMbTiles
-            toggleGenerateModal={toggleGenerateModal}
-            setToggleGenerateModal={setToggleGenerateModal}
-            projectInfo={state.projectInfo}
-          />
+      <div>
+        <GenerateMbTiles
+          toggleGenerateModal={toggleGenerateModal}
+          setToggleGenerateModal={setToggleGenerateModal}
+          projectInfo={state.projectInfo}
+        />
 
-          {/* Home snackbar */}
-          <CustomizedSnackbar
-            duration={stateSnackBar.duration}
-            open={stateSnackBar.open}
-            variant={stateSnackBar.variant}
-            message={stateSnackBar.message}
-            handleClose={handleClose}
-          />
-        </div>
-      )}
+        {/* Home snackbar */}
+        <CustomizedSnackbar
+          duration={stateSnackBar.duration}
+          open={stateSnackBar.open}
+          variant={stateSnackBar.variant}
+          message={stateSnackBar.message}
+          handleClose={handleClose}
+        />
+      </div>
 
       {/* Top project details heading medium dimension*/}
       {windowSize.width >= 640 && (
@@ -400,124 +378,7 @@ const Home = () => {
         {windowSize.width >= 640 && (
           <div>
             <MapDescriptionComponents defaultTheme={defaultTheme} state={state} type={type} />
-            <div>
-              <div
-                className={`fmtm-flex fmtm-gap-5 fmtm-py-4 sm:fmtm-hidden fmtm-justify-between  fmtm-items-center fmtm-mx-7 fmtm-mb-2 ${
-                  toggleAction ? 'fmtm-border-b-[#929DB3] fmtm-border-b-[1px]' : ''
-                }`}
-              >
-                <p className="fmtm-text-xl fmtm-italic">Project Options</p>
-                <div
-                  className={
-                    'fmtm-rounded-full fmtm-shadow-gray-400 fmtm-w-8 fmtm-h-8 fmtm-flex fmtm-justify-center fmtm-items-center fmtm-shadow-lg fmtm-cursor-pointer'
-                  }
-                  onClick={() => setToggleAction(!toggleAction)}
-                >
-                  <AssetModules.ArrowRightIcon
-                    color=""
-                    style={{ fontSize: 32 }}
-                    className={`${toggleAction ? 'fmtm-rotate-90' : ''}`}
-                  />
-                </div>
-              </div>
-            </div>
-            <div
-              className={`fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-6 lg:fmtm-gap-0 fmtm-px-3 sm:fmtm-px-0 ${
-                toggleAction ? '' : 'fmtm-hidden sm:fmtm-flex'
-              }`}
-            >
-              <div className="fmtm-w-full fmtm-flex fmtm-flex-col fmtm-items-start sm:fmtm-flex-row  sm:fmtm-justify-center lg:fmtm-justify-start sm:fmtm-items-center fmtm-gap-6 fmtm-ml-4">
-                <CoreModules.LoadingButton
-                  onClick={() => handleDownload('form')}
-                  sx={{ width: 'unset' }}
-                  loading={downloadProjectFormLoading.type === 'form' && downloadProjectFormLoading.loading}
-                  loadingPosition="end"
-                  endIcon={<AssetModules.FileDownloadIcon />}
-                  variant="contained"
-                  color="error"
-                >
-                  Form
-                </CoreModules.LoadingButton>
-                <CoreModules.LoadingButton
-                  onClick={() => handleDownload('geojson')}
-                  sx={{ width: 'unset' }}
-                  loading={downloadProjectFormLoading.type === 'geojson' && downloadProjectFormLoading.loading}
-                  loadingPosition="end"
-                  endIcon={<AssetModules.FileDownloadIcon />}
-                  variant="contained"
-                  color="error"
-                >
-                  Tasks
-                </CoreModules.LoadingButton>
-                <CoreModules.LoadingButton
-                  onClick={() => onDataExtractDownload()}
-                  sx={{ width: 'unset' }}
-                  loading={downloadDataExtractLoading}
-                  loadingPosition="end"
-                  endIcon={<AssetModules.FileDownloadIcon />}
-                  variant="contained"
-                  color="error"
-                  className="fmtm-truncate"
-                >
-                  Data Extract
-                </CoreModules.LoadingButton>
-              </div>
-              <div className="fmtm-flex fmtm-flex-col sm:fmtm-flex-row sm:fmtm-justify-center lg:fmtm-justify-end fmtm-w-full fmtm-ml-4 fmtm-gap-6">
-                <CoreModules.Link
-                  to={`/projectInfo/${encodedId}`}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    alignItems: 'flex-end',
-                    textDecoration: 'none',
-                    marginRight: '15px',
-                  }}
-                  className="fmtm-w-fit"
-                >
-                  <CoreModules.Button variant="contained" color="error">
-                    ProjectInfo
-                  </CoreModules.Button>
-                </CoreModules.Link>
-                <CoreModules.Button
-                  onClick={() => setToggleGenerateModal(true)}
-                  variant="contained"
-                  color="error"
-                  sx={{ width: '200px', mr: '15px' }}
-                  endIcon={<AssetModules.BoltIcon />}
-                  className="fmtm-truncate"
-                >
-                  Generate MbTiles
-                </CoreModules.Button>
-                <CoreModules.Link
-                  to={`/edit-project/project-details/${encodedId}`}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    alignItems: 'flex-end',
-                    textDecoration: 'none',
-                    marginRight: '15px',
-                  }}
-                  className="fmtm-w-fit"
-                >
-                  <CoreModules.Button variant="outlined" color="error" className="fmtm-truncate">
-                    Edit Project
-                  </CoreModules.Button>
-                </CoreModules.Link>
-              </div>
-              <div className="fmtm-px-1 sm:fmtm-hidden">
-                <Accordion
-                  collapsed={true}
-                  disableHeaderClickToggle
-                  onToggle={() => {}}
-                  header={<div className="fmtm-text-[#2C3038] fmtm-font-bold fmtm-text-xl">Map Legends</div>}
-                  body={
-                    <div className="fmtm-mt-4">
-                      <MapLegends defaultTheme={defaultTheme} />
-                    </div>
-                  }
-                />
-              </div>
-            </div>
+            <ProjectOptions setToggleGenerateModal={setToggleGenerateModal} />
           </div>
         )}
 
@@ -562,6 +423,16 @@ const Home = () => {
                 <img src={FmtmLogo} alt="Hot Fmtm Logo" className="fmtm-ml-2 fmtm-z-10 fmtm-w-[5.2rem]" />
               </div>
             )}
+            {mobileFooterSelection === 'others' && (
+              <BottomSheet
+                body={
+                  <div className="fmtm-mb-[10vh]">
+                    <ProjectOptions setToggleGenerateModal={setToggleGenerateModal} />
+                  </div>
+                }
+                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection('explore'))}
+              />
+            )}
 
             <MobileFooter />
           </div>
@@ -595,7 +466,7 @@ const Home = () => {
           }
         />
       )}
-    </CoreModules.Stack>
+    </div>
   );
 };
 
