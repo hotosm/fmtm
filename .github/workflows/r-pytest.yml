@@ -34,6 +34,7 @@ jobs:
         OSM_CLIENT_SECRET: ${{ env.OSM_CLIENT_SECRET }}
         OSM_SECRET_KEY: ${{ env.OSM_SECRET_KEY }}
         FRONTEND_MAIN_URL: ${{ vars.FRONTEND_MAIN_URL }}
+      options: --add-host central-proxy:127.0.0.1
 
     services:
       # Start backend database
@@ -73,6 +74,8 @@ jobs:
       # Start proxy to access ODK Central
       central-proxy:
         image: "ghcr.io/hotosm/fmtm/odkcentral-proxy:latest"
+        ports:
+          - 80:80
 
     steps:
       - uses: actions/checkout@v4
