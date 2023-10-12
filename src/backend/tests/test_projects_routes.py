@@ -37,9 +37,9 @@ class MockSession:
         pass
 
 
-def test_create_project(client, db):
+def test_create_project(client, organization, user):
     project_data = {
-        "author": {"username": "test_user", "id": 1},
+        "author": {"username": user.username, "id": user.id},
         "project_info": {
             "name": "test project",
             "short_description": "test",
@@ -52,7 +52,7 @@ def test_create_project(client, db):
             "odk_central_password": odk_central_password,
         },
         "hashtags": ["hot-fmtm"],
-        "organisation_id": 1,
+        "organisation_id": organization.id,
     }
 
     response = client.post("/projects/create_project", json=project_data)
@@ -104,9 +104,9 @@ def test_convert_to_app_project():
     assert isinstance(result.project_tasks, list)
 
 
-def test_create_project_with_project_info(db):
+def test_create_project_with_project_info(db, organization, user):
     project_metadata = BETAProjectUpload(
-        author=User(username="test_user", id=1),
+        author=User(username=user.username, id=user.id),
         project_info=ProjectInfo(
             name="test project",
             short_description="test",
@@ -119,7 +119,7 @@ def test_create_project_with_project_info(db):
             odk_central_password=odk_central_password,
         ),
         hashtags=["hot-fmtm"],
-        organisation_id=1,
+        organisation_id=organization.id,
     )
     try:
         result = project_crud.create_project_with_project_info(
@@ -130,7 +130,7 @@ def test_create_project_with_project_info(db):
         pytest.fail(f"Test failed with exception: {str(e)}")
 
 
-def test_generate_app_user(db, get_ids):
+def test_generate_appuser_files(db, get_ids):
     custom_form = "/opt/app/test_data/buildings.xls"
     with open(custom_form, "rb") as file:
         contents = file.read()

@@ -77,6 +77,28 @@ def db(db_engine):
 
 
 @pytest.fixture(scope="function")
+def user(db):
+    db_user = DbUser(id=100, username="test_user")
+    db.add(db_user)
+    db.commit()
+    return db_user
+
+
+@pytest.fixture(scope="function")
+def organization(db):
+    db_org = DbOrganisation(
+        name="test_org_qwerty",
+        slug="test_qwerty",
+        description="test org",
+        url="https://test.org",
+        logo="none",
+    )
+    db.add(db_org)
+    db.commit()
+    return db_org
+
+
+@pytest.fixture(scope="function")
 def get_ids(db):
     user_id_query = text(f"SELECT id FROM {DbUser.__table__.name} LIMIT 1")
     organization_id_query = text(
