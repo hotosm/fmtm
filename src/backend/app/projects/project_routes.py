@@ -381,10 +381,11 @@ async def upload_multi_project_boundary(
     # Get the number of tasks in a project
     task_count = await tasks_crud.get_task_count_in_project(db, project_id)
 
-    return {"message": "Project Boundary Uploaded", 
-            "project_id": f"{project_id}",
-            "task_count": task_count
-            }
+    return {
+        "message": "Project Boundary Uploaded",
+        "project_id": f"{project_id}",
+        "task_count": task_count,
+    }
 
 
 @router.post("/task_split")
