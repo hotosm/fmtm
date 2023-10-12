@@ -17,7 +17,9 @@ const SubmissionDetails = () => {
   useEffect(() => {
     dispatch(
       SubmissionService(
-        `${environment.baseApiUrl}/central/submission?project_id=${decodedProjectId}&xmlFormId=${decodedTaskId}&submission_id=${paramsInstanceId}`,
+        `${
+          import.meta.env.VITE_API_URL
+        }/central/submission?project_id=${decodedProjectId}&xmlFormId=${decodedTaskId}&submission_id=${paramsInstanceId}`,
       ),
     );
   }, []);

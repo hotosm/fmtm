@@ -12,22 +12,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: 18
+          cache: "pnpm"
+          cache-dependency-path: "src/frontend/pnpm-lock.yaml"
 
-      - name: Cache Node Modules
-        uses: actions/cache@v3
-        with:
-          path: |
-            src/frontend/node_modules
-          keys: node-modules-${{ env.cache_id }}
-          restore-keys: |
-            node-modules-
+      - name: Install dependencies
+        working-directory: src/frontend
+        run: pnpm install
 
       - name: Test Frontend
-        run: |
-          cd src/frontend
-          npm ci --only-dev
-          npm run test
+        working-directory: src/frontend
+        run: pnpm run test

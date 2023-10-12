@@ -54,8 +54,7 @@ jobs:
         "ghcr.io/hotosm/fmtm/frontend:latest"
       build_args: |
         APP_VERSION=${{ needs.extract-vars.outputs.frontend_main_version }}
-        API_URL=${{ needs.extract-vars.outputs.api_url }}
-        FRONTEND_MAIN_URL=${{ needs.extract-vars.outputs.frontend_main_url }}
+        VITE_API_URL=${{ needs.extract-vars.outputs.api_url }}
 
   smoke-test-backend:
     runs-on: ubuntu-latest
@@ -99,7 +98,6 @@ jobs:
           # docker run --rm -d \
           #   --network=fmtm \
           #   -p 8080:8080 \
-          #   -e FRONTEND_MAIN_URL="http://test.com" \
           #   -e OSM_CLIENT_ID="test" \
           #   -e OSM_CLIENT_SECRET="test" \
           #   -e OSM_SECRET_KEY="test" \
