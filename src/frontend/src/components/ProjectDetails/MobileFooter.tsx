@@ -57,9 +57,8 @@ const MobileFooter = () => {
   ];
 
   return (
-    <div className="fmtm-absolute fmtm-bottom-0 sm:fmtm-hidden fmtm-w-full">
-      {/* <div className="fmtm-w-full fmtm-flex fmtm-justify-between fmtm-px-5 fmtm-bg-white fmtm-pb-4 fmtm-pt-2"> */}
-      <div className={`fmtm-w-full fmtm-grid fmtm-grid-cols-4 fmtm-bg-white fmtm-pb-4 fmtm-pt-2 fmtm-gap-5 fmtm-px-2`}>
+    <div className="fmtm-absolute fmtm-bottom-0 sm:fmtm-hidden fmtm-w-full fmtm-border-t-[1px]">
+      <div className="fmtm-w-full fmtm-grid fmtm-grid-cols-4 fmtm-bg-white  fmtm-pb-4 fmtm-pt-2 fmtm-gap-5 fmtm-px-2">
         {footerItem.map((item) => (
           <div
             key={item.id}
