@@ -37,8 +37,8 @@ wait_for_s3() {
 }
 
 create_s3_buckets() {
-    echo "Running init_s3_buckets.py script"
-    python /opt/app/init_s3_buckets.py
+    echo "Running init_s3_buckets.py script main function"
+    python /opt/app/s3.py
 }
 
 # Start wait in background with tmp log files
