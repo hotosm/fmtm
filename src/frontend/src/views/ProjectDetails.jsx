@@ -22,6 +22,7 @@ import { HomeActions } from '../store/slices/HomeSlice';
 import CoreModules from '../shared/CoreModules';
 import AssetModules from '../shared/AssetModules';
 import GeoJSON from 'ol/format/GeoJSON';
+import FmtmLogo from '../assets/images/hotLog.png';
 
 import Overlay from 'ol/Overlay';
 import GenerateMbTiles from '../components/GenerateMbTiles';
@@ -38,10 +39,12 @@ import MobileFooter from '../components/ProjectDetails/MobileFooter';
 import MobileActivitiesContents from '../components/ProjectDetails/MobileActivitiesContents';
 import BottomSheet from '../components/common/BottomSheet';
 import MobileProjectInfoContent from '../components/ProjectDetails/MobileProjectInfoContent';
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
   const params = CoreModules.useParams();
+  const navigate = useNavigate();
 
   const defaultTheme = CoreModules.useAppSelector((state) => state.theme.hotTheme);
   const state = CoreModules.useAppSelector((state) => state.project);
@@ -536,6 +539,12 @@ const Home = () => {
               environment={environment}
               windowType={type}
             />
+            <div
+              className="fmtm-absolute fmtm-top-4 fmtm-left-4 fmtm-bg-white fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-red-50 fmtm-duration-300 fmtm-border-[1px] sm:fmtm-hidden fmtm-cursor-pointer"
+              onClick={() => navigate('/')}
+            >
+              <AssetModules.ArrowBackIcon className="fmtm-text-grey-800" />
+            </div>
             {mobileFooterSelection === 'projectInfo' && (
               <BottomSheet
                 body={<MobileProjectInfoContent projectInfo={state.projectInfo} />}
@@ -548,6 +557,12 @@ const Home = () => {
                 onClose={() => dispatch(ProjectActions.SetMobileFooterSelection('explore'))}
               />
             )}
+            {mobileFooterSelection === 'explore' && (
+              <div className="fmtm-absolute fmtm-bottom-[5.8rem] sm:fmtm-hidden">
+                <img src={FmtmLogo} alt="Hot Fmtm Logo" className="fmtm-ml-2 fmtm-z-10 fmtm-w-[5.2rem]" />
+              </div>
+            )}
+
             <MobileFooter />
           </div>
         )}
