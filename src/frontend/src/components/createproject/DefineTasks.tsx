@@ -60,14 +60,14 @@ const DefineTasks: React.FC<any> = ({ geojsonFile, setGeojsonFile, dataExtractFi
       // Create a file object from the Blob
       const drawnGeojsonFile = new File([blob], 'data.json', { type: 'application/json' });
       dispatch(
-        GetDividedTaskFromGeojson(`${enviroment.baseApiUrl}/projects/preview_tasks/`, {
+        GetDividedTaskFromGeojson(`${import.meta.env.VITE_API_URL}/projects/preview_tasks/`, {
           geojson: drawnGeojsonFile,
           dimension: formValues?.dimension,
         }),
       );
     } else {
       dispatch(
-        GetDividedTaskFromGeojson(`${enviroment.baseApiUrl}/projects/preview_tasks/`, {
+        GetDividedTaskFromGeojson(`${import.meta.env.VITE_API_URL}/projects/preview_tasks/`, {
           geojson: geojsonFile,
           dimension: formValues?.dimension,
         }),
@@ -85,7 +85,7 @@ const DefineTasks: React.FC<any> = ({ geojsonFile, setGeojsonFile, dataExtractFi
       const drawnGeojsonFile = new File([blob], 'data.json', { type: 'application/json' });
       dispatch(
         TaskSplittingPreviewService(
-          `${enviroment.baseApiUrl}/projects/task_split`,
+          `${import.meta.env.VITE_API_URL}/projects/task_split`,
           drawnGeojsonFile,
           formValues?.no_of_buildings,
           dataExtractFile ? false : false,
@@ -94,7 +94,7 @@ const DefineTasks: React.FC<any> = ({ geojsonFile, setGeojsonFile, dataExtractFi
     } else {
       dispatch(
         TaskSplittingPreviewService(
-          `${enviroment.baseApiUrl}/projects/task_split`,
+          `${import.meta.env.VITE_API_URL}/projects/task_split`,
           geojsonFile,
           formValues?.no_of_buildings,
           dataExtractFile ? false : false,
@@ -114,8 +114,7 @@ const DefineTasks: React.FC<any> = ({ geojsonFile, setGeojsonFile, dataExtractFi
     };
   };
   const dividedTaskGeojson = CoreModules.useAppSelector((state) => state.createproject.dividedTaskGeojson);
-  const parsedTaskGeojsonCount =
-    dividedTaskGeojson?.features?.length || JSON?.parse(dividedTaskGeojson)?.features?.length;
+  const parsedTaskGeojsonCount = dividedTaskGeojson?.features?.length || 1;
   // // passing payloads for creating project from form whenever user clicks submit on upload area passing previous project details form aswell
   const algorithmListData = alogrithmList;
   const dividedTaskLoading = CoreModules.useAppSelector((state) => state.createproject.dividedTaskLoading);

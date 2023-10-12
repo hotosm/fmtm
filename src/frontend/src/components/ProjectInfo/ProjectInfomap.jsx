@@ -197,7 +197,9 @@ const ProjectInfomap = () => {
     });
 
     dispatch(
-      ProjectBuildingGeojsonService(`${environment.baseApiUrl}/projects/${decodedId}/features?task_id=${selectedTask}`),
+      ProjectBuildingGeojsonService(
+        `${import.meta.env.VITE_API_URL}/projects/${decodedId}/features?task_id=${selectedTask}`,
+      ),
     );
   }, [selectedTask]);
 
@@ -239,13 +241,13 @@ const ProjectInfomap = () => {
         flexDirection: 'column',
         width: '100%',
         gap: 2,
-        height: '70vh',
       }}
+      className="fmtm-h-[35vh] md:fmtm-h-[70vh]"
     >
       <MapComponent
         ref={mapRef}
         mapInstance={map}
-        className="map naxatw-relative naxatw-min-h-full naxatw-w-full"
+        className="map"
         style={{
           height: '100%',
           width: '100%',

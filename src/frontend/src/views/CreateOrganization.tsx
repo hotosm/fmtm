@@ -17,7 +17,7 @@ const CreateOrganizationForm = () => {
   const organizationFormData: any = CoreModules.useAppSelector((state) => state.organization.organizationFormData);
 
   const submission = () => {
-    dispatch(PostOrganizationDataService(`${environment.baseApiUrl}/organization/`, values));
+    dispatch(PostOrganizationDataService(`${import.meta.env.VITE_API_URL}/organization/`, values));
   };
   const { handleSubmit, handleCustomChange, values, errors }: any = useForm(
     organizationFormData,

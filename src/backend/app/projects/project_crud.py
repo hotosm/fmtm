@@ -41,10 +41,12 @@ from geoalchemy2.shape import from_shape
 from geojson import dump
 from loguru import logger as log
 from osm_fieldwork import basemapper
+from osm_fieldwork.data_models import data_models_path
+from osm_fieldwork.filter_data import FilterData
 from osm_fieldwork.json2osm import json2osm
-from osm_fieldwork.make_data_extract import PostgresClient
 from osm_fieldwork.OdkCentral import OdkAppUser
 from osm_fieldwork.xlsforms import xlsforms_path
+from osm_rawdata.postgres import PostgresClient
 from shapely import wkt
 from shapely.geometry import (
     LineString,
@@ -646,44 +648,63 @@ async def split_into_tasks(
     all_results = []
     boundary_data = []
     result = []
+
     if outline["type"] == "FeatureCollection":
+        log.debug("Project boundary GeoJSON = FeatureCollection")
         boundary_data.extend(feature["geometry"] for feature in outline["features"])
         result.extend(
-            process_polygon(db, project_id, data, no_of_buildings, has_data_extracts)
+            split_polygon_into_tasks(
+                db, project_id, data, no_of_buildings, has_data_extracts
+            )
             for data in boundary_data
         )
+
         for inner_list in result:
-            all_results.extend(iter(inner_list))
+            if inner_list:
+                all_results.extend(iter(inner_list))
 
     elif outline["type"] == "GeometryCollection":
+        log.debug("Project boundary GeoJSON = GeometryCollection")
         geometries = outline["geometries"]
         boundary_data.extend(iter(geometries))
         result.extend(
-            process_polygon(db, project_id, data, no_of_buildings, has_data_extracts)
+            split_polygon_into_tasks(
+                db, project_id, data, no_of_buildings, has_data_extracts
+            )
             for data in boundary_data
         )
         for inner_list in result:
-            all_results.extend(iter(inner_list))
+            if inner_list:
+                all_results.extend(iter(inner_list))
 
     elif outline["type"] == "Feature":
+        log.debug("Project boundary GeoJSON = Feature")
         boundary_data = outline["geometry"]
-        result = process_polygon(
+        result = split_polygon_into_tasks(
             db, project_id, boundary_data, no_of_buildings, has_data_extracts
         )
         all_results.extend(iter(result))
-    else:
+
+    elif outline["type"] == "Polygon":
+        log.debug("Project boundary GeoJSON = Polygon")
         boundary_data = outline
-        result = process_polygon(
+        result = split_polygon_into_tasks(
             db, project_id, boundary_data, no_of_buildings, has_data_extracts
         )
         all_results.extend(result)
+
+    else:
+        log.error(
+            "Project boundary not one of: Polygon, Feature, GeometryCollection,"
+            " FeatureCollection. Task splitting failed."
+        )
     return {
         "type": "FeatureCollection",
         "features": all_results,
     }
 
 
-def process_polygon(
+def split_polygon_into_tasks(
     db: Session,
     project_id: uuid.UUID,
     boundary_data: str,
@@ -727,16 +748,30 @@ def process_polygon(
         )
         result = db.execute(query)
         db.commit()
+
+    # TODO replace with fmtm_splitter algo
     with open("app/db/split_algorithm.sql", "r") as sql_file:
         query = sql_file.read()
+    log.debug(f"STARTED project {project_id} task splitting")
     result = db.execute(text(query), params={"num_buildings": no_of_buildings})
     result = result.fetchall()
     db.query(db_models.DbBuildings).delete()
     db.query(db_models.DbOsmLines).delete()
     db.query(db_models.DbProjectAOI).delete()
     db.commit()
+    log.debug(f"COMPLETE project {project_id} task splitting")
 
-    return result[0][0]["features"]
+    features = result[0][0]["features"]
+    if not features:
+        log.warning(
+            f"Project {project_id}: no tasks returned from splitting algorithm. "
+            f"Params: 'num_buildings': {no_of_buildings}"
+        )
+        return []
+
+    features = json.loads(features)
+    log.debug(f"Project {project_id} split into {len(features)} tasks")
+    return features
 
 
 # def update_project_boundary(
@@ -1415,8 +1450,6 @@ def generate_appuser_files(
         one = result.first()
 
         if one:
-            prefix = one.project_name_prefix
-
             # Get odk credentials from project.
             odk_credentials = {
                 "odk_central_url": one.odk_central_url,
@@ -1428,15 +1461,14 @@ def generate_appuser_files(
 
             xform_title = one.xform_title if one.xform_title else None
 
+            category = xform_title
             if upload:
-                xlsform = f"/tmp/custom_form.{form_type}"
+                xlsform = f"/tmp/{category}.{form_type}"
                 contents = upload
                 with open(xlsform, "wb") as f:
                     f.write(contents)
             else:
                 xlsform = f"{xlsforms_path}/{xform_title}.xls"
-
-            category = xform_title
 
             # Data Extracts
             if extracts_contents is not None:
@@ -1444,28 +1476,36 @@ def generate_appuser_files(
                 upload_custom_data_extracts(db, project_id, extracts_contents)
 
             else:
+                project = (
+                    db.query(db_models.DbProject)
+                    .filter(db_models.DbProject.id == project_id)
+                    .first()
+                )
+                config_file_contents = project.form_config_file
+
                 project_log.info("Extracting Data from OSM")
 
-                # OSM Extracts for whole project
-                pg = PostgresClient(settings.UNDERPASS_API_URL, "underpass")
-                # This file will store osm extracts
-                outfile = f"/tmp/{prefix}_{xform_title}.geojson"
+                config_path = "/tmp/config.yaml"
+                if config_file_contents:
+                    with open(config_path, "w", encoding="utf-8") as config_file_handle:
+                        config_file_handle.write(config_file_contents.decode("utf-8"))
+                else:
+                    config_path = f"{data_models_path}/{category}.yaml"
 
+                # # OSM Extracts for whole project
+                pg = PostgresClient("underpass", config_path)
                 outline = json.loads(one.outline)
-                outline_geojson = pg.getFeatures(
-                    boundary=outline,
-                    filespec=outfile,
-                    polygon=extract_polygon,
-                    xlsfile=f"{category}.xls",
-                    category=category,
-                )
+                boundary = {"type": "Feature", "properties": {}, "geometry": outline}
+                data_extract = pg.execQuery(boundary)
+                filter = FilterData(xlsform)
+                filtered_data_extract = filter.cleanData(data_extract)
 
-                updated_outline_geojson = {"type": "FeatureCollection", "features": []}
+                updated_data_extract = {"type": "FeatureCollection", "features": []}
 
                 # Collect feature mappings for bulk insert
                 feature_mappings = []
 
-                for feature in outline_geojson["features"]:
+                for feature in filtered_data_extract["features"]:
                     # If the osm extracts contents do not have a title, provide an empty text for that.
                     feature["properties"]["title"] = ""
 
@@ -1484,9 +1524,8 @@ def generate_appuser_files(
                         "geometry": wkb_element,
                         "properties": feature["properties"],
                     }
-                    updated_outline_geojson["features"].append(feature)
+                    updated_data_extract["features"].append(feature)
                     feature_mappings.append(feature_mapping)
-
                 # Bulk insert the osm extracts into the db.
                 db.bulk_insert_mappings(db_models.DbFeatures, feature_mappings)
 

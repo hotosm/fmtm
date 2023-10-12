@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Button from '../../components/common/Button';
 import { useDispatch } from 'react-redux';
 import { CommonActions } from '../../store/slices/CommonSlice';
@@ -7,8 +7,9 @@ import { useNavigate } from 'react-router-dom';
 import { CreateProjectActions } from '../../store/slices/CreateProjectSlice';
 import useForm from '../../hooks/useForm';
 import { useAppSelector } from '../../types/reduxTypes';
-import DataExtractValidation from './validation/DataExtractValidation';
+import { FormCategoryService } from '../../api/CreateProjectService';
 import FileInputComponent from '../../components/common/FileInputComponent';
+import DataExtractValidation from './validation/DataExtractValidation';
 import NewDefineAreaMap from '../../views/NewDefineAreaMap';
 
 const dataExtractOptions = [
@@ -79,6 +80,15 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
       dispatch(CreateProjectActions.SetLineGeojson(geojsonConversion));
     }
   };
+
+  useEffect(() => {
+    dispatch(FormCategoryService(`${import.meta.env.VITE_API_URL}/central/list-forms`));
+  }, []);
+
+  useEffect(() => {
+    dispatch(FormCategoryService(`${import.meta.env.VITE_API_URL}/central/list-forms`));
+  }, []);
+
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
       <div className="fmtm-bg-white lg:fmtm-w-[20%] xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6">

@@ -58,7 +58,7 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
   };
 
   useEffect(() => {
-    dispatch(FormCategoryService(`${environment.baseApiUrl}/central/list-forms`));
+    dispatch(FormCategoryService(`${import.meta.env.VITE_API_URL}/central/list-forms`));
   }, []);
 
   const toggleStep = (step, url) => {

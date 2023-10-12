@@ -58,6 +58,7 @@ services:
       - ./src/backend/app:/opt/app
     depends_on:
       - fmtm-db
+      - migrations
     env_file:
       - .env
     ports:
@@ -71,32 +72,32 @@ services:
     image: "ghcr.io/hotosm/fmtm/backend:${API_VERSION}-${GIT_BRANCH}"
     container_name: fmtm_migrations
     depends_on:
-      - api
+      - fmtm-db
     env_file:
       - .env
     networks:
       - fmtm-net
-    command: ["alembic", "upgrade", "head"]
-    restart: "no"
+    entrypoint: ["/migrate-entrypoint.sh"]
+    restart: "on-failure:3"
 
-  ui-main:
+  ui:
     image: "ghcr.io/hotosm/fmtm/frontend:debug"
     build:
       context: src/frontend
       dockerfile: debug.dockerfile
       args:
-        APP_VERSION: ${FRONTEND_MAIN_VERSION}
-        API_URL: ${URL_SCHEME}://${API_URL}
-        FRONTEND_MAIN_URL: ${URL_SCHEME}://${FRONTEND_MAIN_URL}
-    container_name: fmtm_main
+        VITE_API_URL: ${URL_SCHEME}://${API_URL}
+    container_name: fmtm
     depends_on:
       - api
     volumes:
       - ./src/frontend:/app
       - /app/node_modules/
     environment:
-      - API_URL=${URL_SCHEME}://${API_URL}
-      - FRONTEND_MAIN_URL=${URL_SCHEME}://${FRONTEND_MAIN_URL}
+      - VITE_API_URL=${URL_SCHEME}://${API_URL}
+      - VITE_ODK_CENTRAL_URL=${ODK_CENTRAL_URL}
+      - VITE_ODK_CENTRAL_USER=${ODK_CENTRAL_USER}
+      - VITE_ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}
     ports:
       - "8081:8081"
     networks:

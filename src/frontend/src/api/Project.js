@@ -8,7 +8,7 @@ export const ProjectById = (url, existingProjectList, projectId) => {
       try {
         const project = await CoreModules.axios.get(url);
         const taskBbox = await CoreModules.axios.get(
-          `${environment.baseApiUrl}/tasks/point_on_surface?project_id=${projectId}`,
+          `${import.meta.env.VITE_API_URL}/tasks/point_on_surface?project_id=${projectId}`,
         );
         const resp = project.data;
         const persistingValues = resp.project_tasks.map((data) => {
@@ -43,7 +43,7 @@ export const ProjectById = (url, existingProjectList, projectId) => {
             priority_str: resp.priority_str || 'MEDIUM',
             title: resp.project_info?.[0]?.name,
             location_str: resp.location_str,
-            description: resp.description,
+            description: resp.project_info[0]?.description,
             num_contributors: resp.num_contributors,
             total_tasks: resp.total_tasks,
             tasks_mapped: resp.tasks_mapped,
@@ -140,7 +140,7 @@ export const GenerateProjectTiles = (url, payload) => {
     const generateProjectTiles = async (url, payload) => {
       try {
         const response = await CoreModules.axios.get(url);
-        dispatch(GetTilesList(`${environment.baseApiUrl}/projects/tiles_list/${payload}/`));
+        dispatch(GetTilesList(`${import.meta.env.VITE_API_URL}/projects/tiles_list/${payload}/`));
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));
       } catch (error) {
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));

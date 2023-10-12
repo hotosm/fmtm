@@ -18,7 +18,7 @@
     "noEmit": true,
     // "jsx": "react-jsx",
     "jsx": "react",
-    "baseUrl": "/src",
+    "baseUrl": "./src",
     "noImplicitAny": false, //FIXME: Change This "true" to "false" To Integrate Types Instead Of "Any" Types.
     "strictNullChecks": true,
     "strictFunctionTypes": true,
@@ -27,7 +27,8 @@
     "noImplicitReturns": true,
     "strictPropertyInitialization": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "types": ["@testing-library/jest-dom"]
   },
   "include": [
     // ".eslintrc.cjs",

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Button from '../../components/common/Button';
 import RadioButton from '../../components/common/RadioButton';
 import AssetModules from '../../shared/AssetModules.js';
@@ -13,21 +13,25 @@ import NewDefineAreaMap from '../../views/NewDefineAreaMap';
 import { useAppSelector } from '../../types/reduxTypes';
 import {
   CreateProjectService,
+  GenerateProjectLog,
   GetDividedTaskFromGeojson,
   TaskSplittingPreviewService,
 } from '../../api/CreateProjectService';
 import environment from '../../environment';
+import LoadingBar from '../../components/createproject/LoadingBar';
 
 const alogrithmList = [
   { name: 'define_tasks', value: 'divide_on_square', label: 'Divide on square' },
   { name: 'define_tasks', value: 'choose_area_as_task', label: 'Choose area as task' },
   { name: 'define_tasks', value: 'task_splitting_algorithm', label: 'Task Splitting Algorithm' },
 ];
+let generateProjectLogIntervalCb: any = null;
 
 const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, customPolygonUpload, customFormFile }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const divRef = useRef(null);
   const splitTasksSelection = CoreModules.useAppSelector((state) => state.createproject.splitTasksSelection);
   const drawnGeojson = CoreModules.useAppSelector((state) => state.createproject.drawnGeojson);
   const projectDetails = CoreModules.useAppSelector((state) => state.createproject.projectDetails);
@@ -35,20 +39,23 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
   const lineGeojson = useAppSelector((state) => state.createproject.lineGeojson);
   const userDetails: any = CoreModules.useAppSelector((state) => state.login.loginToken);
 
+  const generateQrSuccess: any = CoreModules.useAppSelector((state) => state.createproject.generateQrSuccess);
+  const projectDetailsResponse = CoreModules.useAppSelector((state) => state.createproject.projectDetailsResponse);
+  const generateProjectLog: any = CoreModules.useAppSelector((state) => state.createproject.generateProjectLog);
+
   const toggleStep = (step, url) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
     navigate(url);
   };
 
   const submission = () => {
+    console.log('submission triggered');
+
     const blob = new Blob([JSON.stringify(drawnGeojson)], { type: 'application/json' });
 
     // Create a file object from the Blob
     const drawnGeojsonFile = new File([blob], 'data.json', { type: 'application/json' });
-    // const a = document.createElement('a');
-    // a.href = URL.createObjectURL(blob);
-    // a.download = 'test.json';
-    // a.click();
+
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
     const hashtags = projectDetails.hashtags;
     const arrayHashtag = hashtags
@@ -57,7 +64,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
       .filter(Boolean);
     dispatch(
       CreateProjectService(
-        `${environment.baseApiUrl}/projects/create_project`,
+        `${import.meta.env.VITE_API_URL}/projects/create_project`,
         {
           project_info: {
             name: projectDetails.name,
@@ -104,26 +111,28 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
     errors,
   }: any = useForm(projectDetails, submission, DefineTaskValidation);
 
-  const generateTaskBasedOnSelection = () => {
+  const generateTaskBasedOnSelection = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     const blob = new Blob([JSON.stringify(drawnGeojson)], { type: 'application/json' });
 
     // Create a file object from the Blob
     const drawnGeojsonFile = new File([blob], 'data.json', { type: 'application/json' });
     if (splitTasksSelection === 'divide_on_square') {
       dispatch(
-        GetDividedTaskFromGeojson(`${environment.baseApiUrl}/projects/preview_tasks/`, {
+        GetDividedTaskFromGeojson(`${import.meta.env.VITE_API_URL}/projects/preview_tasks/`, {
           geojson: drawnGeojsonFile,
           dimension: formValues?.dimension,
         }),
       );
     } else if (splitTasksSelection === 'task_splitting_algorithm') {
-      // const a = document.createElement('a');
-      // a.href = URL.createObjectURL(drawnGeojsonFile);
-      // a.download = 'test.json';
-      // a.click();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(drawnGeojsonFile);
+      a.download = 'test.json';
+      a.click();
       dispatch(
         TaskSplittingPreviewService(
-          `${environment.baseApiUrl}/projects/task_split`,
+          `${import.meta.env.VITE_API_URL}/projects/task_split`,
           drawnGeojsonFile,
           formValues?.average_buildings_per_task,
           false,
@@ -132,6 +141,87 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
       );
     }
   };
+  //Log Functions
+  useEffect(() => {
+    if (generateQrSuccess) {
+      if (generateProjectLogIntervalCb === null) {
+        dispatch(
+          GenerateProjectLog(`${import.meta.env.VITE_API_URL}/projects/generate-log/`, {
+            project_id: projectDetailsResponse?.id,
+            uuid: generateQrSuccess.task_id,
+          }),
+        );
+      }
+    }
+  }, [generateQrSuccess]);
+  useEffect(() => {
+    if (generateQrSuccess && generateProjectLog?.status === 'FAILED') {
+      clearInterval(generateProjectLogIntervalCb);
+      dispatch(
+        CommonActions.SetSnackBar({
+          open: true,
+          message: `QR Generation Failed. ${generateProjectLog?.message}`,
+          variant: 'error',
+          duration: 10000,
+        }),
+      );
+    } else if (generateQrSuccess && generateProjectLog?.status === 'SUCCESS') {
+      clearInterval(generateProjectLogIntervalCb);
+      const encodedProjectId = environment.encode(projectDetailsResponse?.id);
+      navigate(`/project_details/${encodedProjectId}`);
+      dispatch(
+        CommonActions.SetSnackBar({
+          open: true,
+          message: 'QR Generation Completed.',
+          variant: 'success',
+          duration: 2000,
+        }),
+      );
+      dispatch(CreateProjectActions.SetGenerateProjectLog(null));
+    }
+    if (generateQrSuccess && generateProjectLog?.status === 'PENDING') {
+      if (generateProjectLogIntervalCb === null) {
+        generateProjectLogIntervalCb = setInterval(() => {
+          dispatch(
+            GenerateProjectLog(`${import.meta.env.VITE_API_URL}/projects/generate-log/`, {
+              project_id: projectDetailsResponse?.id,
+              uuid: generateQrSuccess.task_id,
+            }),
+          );
+        }, 2000);
+      }
+    }
+  }, [generateQrSuccess, generateProjectLog]);
+
+  useEffect(() => {
+    return () => {
+      clearInterval(generateProjectLogIntervalCb);
+      generateProjectLogIntervalCb = null;
+      dispatch(CreateProjectActions.SetGenerateProjectLog(null));
+    };
+  }, []);
+
+  // END
+  const renderTraceback = (errorText: string) => {
+    if (!errorText) {
+      return null;
+    }
+
+    return errorText.split('\n').map((line, index) => (
+      <div key={index} style={{ display: 'flex' }}>
+        <span style={{ color: 'gray', marginRight: '1em' }}>{index + 1}.</span>
+        <span>{line}</span>
+      </div>
+    ));
+  };
+  const dividedTaskGeojson = CoreModules.useAppSelector((state) => state.createproject.dividedTaskGeojson);
+
+  const parsedTaskGeojsonCount =
+    dividedTaskGeojson?.features?.length ||
+    JSON?.parse(dividedTaskGeojson)?.features?.length ||
+    projectDetails?.areaGeojson?.features?.length;
+  const totalSteps = dividedTaskGeojson?.features ? dividedTaskGeojson?.features?.length : parsedTaskGeojsonCount;
+
   return (
     <form onSubmit={handleSubmit}>
       <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
@@ -227,14 +317,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
                   onClick={() => toggleStep(3, '/new-data-extract')}
                   className="fmtm-font-bold"
                 />
-                <Button
-                  btnText="SUBMIT"
-                  btnType="primary"
-                  // type="button"
-                  // onClick={() => toggleStep(5, '/new-select-form')}
-                  type="submit"
-                  className="fmtm-font-bold"
-                />
+                <Button btnText="SUBMIT" btnType="primary" type="submit" className="fmtm-font-bold" />
               </div>
             </div>
             <div className="fmtm-w-full lg:fmtm-w-[60%] fmtm-flex fmtm-flex-col fmtm-gap-6 fmtm-bg-gray-300 fmtm-h-[60vh] lg:fmtm-h-full">
@@ -243,6 +326,49 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
                 buildingExtractedGeojson={buildingGeojson}
                 lineExtractedGeojson={lineGeojson}
               />
+            </div>
+            <div className="fmtm-w-full lg:fmtm-w-[60%] fmtm-flex fmtm-flex-col fmtm-gap-6 fmtm-bg-gray-300 fmtm-h-[60vh] lg:fmtm-h-full">
+              <CoreModules.Stack>
+                {generateProjectLog ? (
+                  <CoreModules.Stack
+                    sx={{ display: 'flex', flexDirection: 'col', gap: 2, width: { xs: '100%', md: '60%' }, pb: '2rem' }}
+                  >
+                    <CoreModules.Stack sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                      <CoreModules.Typography component="h4">Status: </CoreModules.Typography>
+                      <CoreModules.Typography
+                        component="h4"
+                        sx={{ ml: 2, fontWeight: 'bold', borderRadius: '20px', border: '1px solid gray', p: 1 }}
+                      >
+                        {generateProjectLog.status}
+                      </CoreModules.Typography>
+                    </CoreModules.Stack>
+                    <LoadingBar
+                      title={'Task Progress'}
+                      activeStep={generateProjectLog.progress}
+                      totalSteps={totalSteps}
+                    />
+                  </CoreModules.Stack>
+                ) : null}
+                {generateProjectLog ? (
+                  <CoreModules.Stack sx={{ width: '90%', height: '48vh' }}>
+                    <div
+                      ref={divRef}
+                      style={{
+                        backgroundColor: 'black',
+                        color: 'white',
+                        padding: '10px',
+                        fontSize: '12px',
+                        whiteSpace: 'pre-wrap',
+                        fontFamily: 'monospace',
+                        overflow: 'auto',
+                        height: '100%',
+                      }}
+                    >
+                      {renderTraceback(generateProjectLog?.logs)}
+                    </div>
+                  </CoreModules.Stack>
+                ) : null}
+              </CoreModules.Stack>
             </div>
           </div>
         </div>

@@ -1,6 +1,4 @@
 export default {
-  nodeEnv: process.env.NODE_ENV,
-  baseApiUrl: process.env.API_URL,
   decode: (id: any) => {
     const decodeFromBase = window.atob(id);
     const binary = decodeFromBase;

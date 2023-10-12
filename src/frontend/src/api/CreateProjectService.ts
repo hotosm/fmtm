@@ -5,7 +5,6 @@ import {
   FormCategoryListModel,
   OrganisationListModel,
 } from '../models/createproject/createProjectModel';
-import enviroment from '../environment';
 import { CommonActions } from '../store/slices/CommonSlice';
 import { ValidateCustomFormResponse } from 'store/types/ICreateProject';
 
@@ -29,15 +28,17 @@ const CreateProjectService: Function = (
 
         if (payload.splitting_algorithm === 'choose_area_as_task') {
           await dispatch(
-            UploadAreaService(`${enviroment.baseApiUrl}/projects/${resp.id}/upload_multi_polygon`, fileUpload),
+            UploadAreaService(`${import.meta.env.VITE_API_URL}/projects/${resp.id}/upload_multi_polygon`, fileUpload),
           );
-        } else if (payload.splitting_algorithm === 'task_splitting_algorithm') {
-          await dispatch(UploadAreaService(`${enviroment.baseApiUrl}/projects/task_split/${resp.id}/`, fileUpload));
+        } else if (payload.splitting_algorithm === 'Use natural Boundary') {
+          await dispatch(
+            UploadAreaService(`${import.meta.env.VITE_API_URL}/projects/task_split/${resp.id}/`, fileUpload),
+          );
         } else {
           await dispatch(
-            UploadAreaService(`${enviroment.baseApiUrl}/projects/${resp.id}/upload_multi_polygon`, fileUpload),
+            UploadAreaService(`${import.meta.env.VITE_API_URL}/projects/${resp.id}/upload_multi_polygon`, fileUpload),
           );
-          // await dispatch(UploadAreaService(`${enviroment.baseApiUrl}/projects/${resp.id}/upload`, fileUpload, { dimension: payload.dimension }));
+          // await dispatch(UploadAreaService(`${import.meta.env.VITE_API_URL}/projects/${resp.id}/upload`, fileUpload, { dimension: payload.dimension }));
         }
         dispatch(
           CommonActions.SetSnackBar({
@@ -51,7 +52,7 @@ const CreateProjectService: Function = (
           const dataExtractFormData = new FormData();
           dataExtractFormData.append('upload', dataExtractFile);
           const postDataExtract = await axios.post(
-            `${enviroment.baseApiUrl}/projects/add_features/?project_id=${resp.id}&feature_type=buildings`,
+            `${import.meta.env.VITE_API_URL}/projects/add_features/?project_id=${resp.id}&feature_type=buildings`,
             dataExtractFormData,
           );
         }
@@ -59,13 +60,13 @@ const CreateProjectService: Function = (
           const lineExtractFormData = new FormData();
           lineExtractFormData.append('upload', lineExtractFile);
           const postLineExtract = await axios.post(
-            `${enviroment.baseApiUrl}/projects/add_features/?project_id=${resp.id}&feature_type=lines`,
+            `${import.meta.env.VITE_API_URL}/projects/add_features/?project_id=${resp.id}&feature_type=lines`,
             lineExtractFormData,
           );
         }
         await dispatch(
           GenerateProjectQRService(
-            `${enviroment.baseApiUrl}/projects/${resp.id}/generate`,
+            `${import.meta.env.VITE_API_URL}/projects/${resp.id}/generate`,
             payload,
             formUpload,
             dataExtractFile,
@@ -341,8 +342,12 @@ const TaskSplittingPreviewService: Function = (
 
         const getTaskSplittingResponse = await axios.post(url, taskSplittingFileFormData);
         const resp: OrganisationListModel = getTaskSplittingResponse.data;
+        if (resp?.features && resp?.features.length < 1) {
+          // Don't update geometry if splitting failed
+          // TODO display error to user, perhaps there is not osm data here?
+          return;
+        }
         dispatch(CreateProjectActions.GetTaskSplittingPreview(resp));
-        dispatch(CreateProjectActions.GetTaskSplittingPreviewLoading(false));
       } catch (error) {
         dispatch(CreateProjectActions.GetTaskSplittingPreviewLoading(false));
       } finally {
