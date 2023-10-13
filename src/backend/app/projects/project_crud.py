@@ -15,6 +15,8 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
+import os
+import csv
 import base64
 import io
 import json
@@ -68,6 +70,9 @@ from ..db.postgis_utils import geometry_to_geojson, timestamp
 from ..tasks import tasks_crud
 from ..users import user_crud
 from . import project_schemas
+from zipfile import ZipFile as zf
+from io import BytesIO, StringIO
+
 
 QR_CODES_DIR = "QR_codes/"
 TASK_GEOJSON_DIR = "geojson/"
@@ -2657,3 +2662,110 @@ def generate_appuser_files_for_janakpur(
         update_background_task_status_in_database(
             db, background_task_id, 4
         )  # 4 is COMPLETED
+
+def expand_geopoints(csv, geopoint_column_name):
+    """Accepts a list representing a set of CSV ODK submissions and expands
+    a geopoint column to include lon, lat, ele, acc columns for easy
+    import into QGIS or direct conversion to GeoJSON or similar.
+    """
+    newcsv = []
+    try:
+        header_row = csv[0]
+        column_num = header_row.index(geopoint_column_name)
+        print(f"I found {geopoint_column_name} at index {column_num}")
+        newheaderrow = header_row[: column_num + 1]
+        newheaderrow.extend(["lat", "lon", "ele", "acc"])
+        newheaderrow.extend(header_row[column_num + 1 :])
+        newcsv.append(newheaderrow)
+        for row in csv[1:]:
+            split_geopoint = row[column_num].split()
+            print(split_geopoint)
+            if len(split_geopoint) == 4:
+                newrow = row[: column_num + 1]
+                newrow.extend(split_geopoint)
+                newrow.extend(row[column_num + 1 :])
+            newcsv.append(newrow)
+
+    except Exception as e:
+        print("Is that the right geopoint column name?")
+        print(e)
+
+    return newcsv
+
+def project_submissions_unzipped(
+    pid, formsl, outdir, collate, expand_geopoint, odk_central_credentials
+):
+    """Downloads and unzips all of the submissions from a given ODK project."""
+    if collate:
+
+        collated_outfilepath = os.path.join(outdir, f'project_{pid}_submissions'
+                                            '_collated.csv')
+        c_outfile = open(collated_outfilepath, 'w')
+        cw = csv.writer(c_outfile)
+
+        # create a single file to dump all repeat data lines
+        # TODO multiple collated files for multiple repeats
+        c_repeatfilepath = os.path.join(outdir, f'project_{pid}_repeats'
+                                        '_collated.csv')
+        c_repeatfile = open(c_repeatfilepath, 'w')
+        cr = csv.writer(c_repeatfile)
+
+    for fidx, form in enumerate(formsl):
+        form_id = form['xmlFormId']
+        print(f'Checking submissions from {form_id}.')
+        # subs_zip = csv_submissions(url, aut, pid, form_id)
+
+        subs_zip = central_crud.download_submissions_media(pid, form_id, odk_central_credentials)
+
+        subs_bytes = BytesIO(subs_zip.content)
+        subs_bytes.seek(0)
+        subs_unzipped = zf(subs_bytes)
+        sub_namelist = subs_unzipped.namelist()
+
+        subcount = len(sub_namelist)
+        print(f'There are {subcount} files in submissions from {form_id}:')
+        print(sub_namelist)
+
+        # Now save the rest of the files
+        for idx, sub_name in enumerate(sub_namelist):
+            subs_bytes = subs_unzipped.read(sub_name)
+            outfilename = os.path.join(outdir, sub_name)
+
+            # Some attachments need a subdirectory
+            suboutdir = os.path.split(outfilename)[0]
+            if not os.path.exists(suboutdir):
+                os.makedirs(suboutdir)
+
+            # If it is a csv, open it and see if it is more than one line
+            # This might go wrong if something is encoded in other than UTF-8
+
+            if os.path.splitext(sub_name)[1] == '.csv':
+                subs_stringio = StringIO(subs_bytes.decode())
+                subs_list = list(csv.reader(subs_stringio))
+                # Check if there are CSV lines after the headers
+                subs_len = len(subs_list)
+                print(f'{sub_name} has {subs_len - 1} submissions')
+                if subs_len > 1:
+                    subs_to_write = subs_list
+                    if expand_geopoint:
+                        subs_to_write = expand_geopoints(subs_list, expand_geopoint)
+                    with open(outfilename, "w") as outfile:
+                        w = csv.writer(outfile)
+                        w.writerows(subs_to_write)
+                    if collate:
+                        if not idx:                            
+                            if not fidx:
+                                # First form. Include header
+                                cw.writerows(subs_to_write)
+                            else:
+                                # Not first form. Skip first row (header)
+                                cw.writerows(subs_to_write[1:])
+                        else:
+                            # Include header because it's a repeat
+                            # TODO actually create a separate collated
+                            # CSV output for each repeat in the survey
+                            cr.writerows(subs_to_write)
+    
+            else:
+                with open(outfilename, "wb") as outfile:
+                    outfile.write(subs_bytes)
