@@ -367,6 +367,17 @@ def download_submissions(
     return fixed.splitlines()
 
 
+def download_submissions_media(
+    project_id: int,
+    xform_id: str,
+    odk_central: project_schemas.ODKCentral = None,
+):
+    """Download submissions from a remote ODK server."""
+    xform = get_odk_form(odk_central)
+    data = xform.getSubmissionMedia(project_id, xform_id)
+    return data
+
+
 async def test_form_validity(xform_content: str, form_type: str):
     """Validate an XForm.
     Parameters:
