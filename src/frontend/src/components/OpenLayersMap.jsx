@@ -181,7 +181,9 @@ const OpenLayersMap = ({
         btnDiv.className = 'ol-unselectable ol-control';
         index == 0
           ? (btnDiv.style.top = `${(btnsPosition = btnsPosition + 2)}%`)
-          : (btnDiv.style.top = `${(btnsPosition = btnsPosition + 9)}%`);
+          : windowSize.width >= 640
+          ? (btnDiv.style.top = `${(btnsPosition = btnsPosition + 9)}%`)
+          : (btnDiv.style.top = `${(btnsPosition = btnsPosition + 6)}%`);
         btnDiv.appendChild(btn);
         var control = new Control({
           element: btnDiv,
