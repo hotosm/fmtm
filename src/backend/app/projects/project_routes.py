@@ -18,6 +18,7 @@
 import json
 import os
 import uuid
+import shutil
 from typing import List, Optional
 
 from fastapi import (
@@ -37,7 +38,7 @@ from osm_fieldwork.make_data_extract import getChoices
 from osm_fieldwork.xlsforms import xlsforms_path
 from sqlalchemy.orm import Session
 
-from ..central import central_crud
+from ..central import central_crud, central_schemas
 from ..db import database, db_models
 from ..models.enums import TILES_SOURCE
 from ..tasks import tasks_crud
@@ -1152,3 +1153,46 @@ async def generate_files_janakpur(
     )
 
     return {"Message": f"{project_id}", "task_id": f"{background_task_id}"}
+
+
+@router.get("/{project_id}/download_csv/")
+def download_forms(
+    project_id: int,
+    db: Session = Depends(database.get_db)
+) -> FileResponse:
+    """
+    Download the submissions for a given project in CSV format.
+
+    Parameters:
+        - project_id (int): The ID of the project.
+
+    Returns:
+        - FileResponse: The response object containing the downloaded CSV file.
+    """
+
+    project = project_crud.get_project(db, project_id)
+    odkid = project.odkid
+
+    odk_credentials = project_schemas.ODKCentral(
+        odk_central_url=project.odk_central_url,
+        odk_central_user=project.odk_central_user,
+        odk_central_password=project.odk_central_password,
+    )
+
+    forms = central_crud.list_odk_xforms(odkid, odk_credentials)
+
+    output_dir = f"/tmp/{project_id}_submissions/"
+
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+    os.makedirs(output_dir)
+
+    project_crud.project_submissions_unzipped(odkid, forms, output_dir, True, False, odk_credentials)
+
+    temp_zip_file = "/tmp/submissions"
+    shutil.make_archive(temp_zip_file, 'zip', output_dir)
+
+    headers = {
+        "Content-Disposition": f'attachment; filename="{os.path.basename(temp_zip_file)}.zip"'
+    }
+    return FileResponse(f"{temp_zip_file}.zip", headers=headers)
