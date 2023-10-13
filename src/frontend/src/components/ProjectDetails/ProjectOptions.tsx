@@ -38,7 +38,7 @@ const ProjectOptions = ({ setToggleGenerateModal }) => {
     <div className="fmtm-mt-4">
       <div>
         <div
-          className={`fmtm-flex fmtm-gap-5 fmtm-py-4 sm:fmtm-hidden fmtm-justify-between  fmtm-items-center fmtm-mx-7 fmtm-mb-2 ${
+          className={`fmtm-flex fmtm-gap-5 fmtm-py-4 sm:fmtm-hidden fmtm-justify-between  fmtm-items-center fmtm-mx-4 sm:fmtm-mx-7 fmtm-mb-2 ${
             toggleAction ? 'fmtm-border-b-[#929DB3] fmtm-border-b-[1px]' : ''
           }`}
         >
@@ -62,7 +62,7 @@ const ProjectOptions = ({ setToggleGenerateModal }) => {
           toggleAction ? '' : 'fmtm-hidden sm:fmtm-flex'
         }`}
       >
-        <div className="fmtm-w-full fmtm-flex fmtm-flex-col fmtm-items-start sm:fmtm-flex-row  sm:fmtm-justify-center lg:fmtm-justify-start sm:fmtm-items-center fmtm-gap-6 fmtm-ml-4">
+        <div className="fmtm-w-full fmtm-flex fmtm-flex-col fmtm-items-start sm:fmtm-flex-row  sm:fmtm-justify-center lg:fmtm-justify-start sm:fmtm-items-center fmtm-gap-6 fmtm-ml-2 sm:fmtm-ml-4">
           <CoreModules.LoadingButton
             onClick={() => handleDownload('form')}
             sx={{ width: 'unset' }}
@@ -98,7 +98,7 @@ const ProjectOptions = ({ setToggleGenerateModal }) => {
             Data Extract
           </CoreModules.LoadingButton>
         </div>
-        <div className="fmtm-flex fmtm-flex-col sm:fmtm-flex-row sm:fmtm-justify-center lg:fmtm-justify-end fmtm-w-full fmtm-ml-4 fmtm-gap-6">
+        <div className="fmtm-flex fmtm-flex-col sm:fmtm-flex-row sm:fmtm-justify-center lg:fmtm-justify-end fmtm-w-full fmtm-ml-2 sm:fmtm-ml-4 fmtm-gap-6">
           <CoreModules.Link
             to={`/projectInfo/${encodedId}`}
             style={{
