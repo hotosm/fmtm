@@ -6,9 +6,12 @@ const BottomSheet = ({ body, onClose }) => {
   const [startY, setStartY] = useState(0);
   const [startHeight, setStartHeight] = useState(0);
   const [currSheetHeight, setCurrSheetHeight] = useState(0);
+  const [show, setShow] = useState(true);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   useEffect(() => {
-    bottomSheetRef.current.classList.add('show');
+    setShow(true);
     document.body.style.overflowY = 'hidden';
     bottomSheetRef.current.style.height = `51vh`;
     updateSheetHeight(50);
@@ -18,13 +21,16 @@ const BottomSheet = ({ body, onClose }) => {
     if (sheetContentRef.current) {
       sheetContentRef.current.style.height = `${height}vh`;
     }
-    bottomSheetRef.current.classList.toggle('fullscreen', height === 100);
+    if (height === 100) {
+      setIsFullScreen(true);
+    } else {
+      setIsFullScreen(false);
+    }
   };
 
   const hideBottomSheet = () => {
-    if (bottomSheetRef.current) {
-      bottomSheetRef.current.classList.remove('show');
-    }
+    setShow(false);
+
     onClose();
     document.body.style.overflowY = 'auto';
   };
@@ -32,12 +38,9 @@ const BottomSheet = ({ body, onClose }) => {
   const dragStart = (e) => {
     const pagesY = e.pageY || e.changedTouches[0].screenY;
     setStartY(pagesY);
-    if (sheetContentRef.current) {
-      setStartHeight(parseInt(sheetContentRef.current.style.height));
-    }
-    if (bottomSheetRef.current) {
-      bottomSheetRef.current.classList.add('dragging');
-    }
+    setStartHeight(parseInt(sheetContentRef.current.style.height));
+
+    setIsDragging(true);
   };
 
   const dragging = (e) => {
@@ -51,13 +54,10 @@ const BottomSheet = ({ body, onClose }) => {
     let sheetHeight;
     bottomSheetRef.current.style.height = `${currSheetHeight + 1}vh`;
 
-    if (bottomSheetRef.current) {
-      bottomSheetRef.current.classList.remove('dragging');
-    }
-    if (sheetContentRef.current) {
-      sheetHeight = parseInt(sheetContentRef.current.style.height);
-      setCurrSheetHeight(sheetHeight);
-    }
+    setIsDragging(false);
+    sheetHeight = parseInt(sheetContentRef.current.style.height);
+    setCurrSheetHeight(sheetHeight);
+
     sheetHeight < 25 ? hideBottomSheet() : sheetHeight > 75 ? updateSheetHeight(100) : updateSheetHeight(50);
   };
 
@@ -67,11 +67,21 @@ const BottomSheet = ({ body, onClose }) => {
 
   return (
     <div className="fmtm-absolute fmtm-bottom-[400px] fmtm-bg-white sm:fmtm-hidden">
-      <div className="bottom-sheet" ref={bottomSheetRef}>
-        <div ref={sheetContentRef} className="content fmtm-shadow-[30px_-10px_40px_25px_rgba(0,0,0,0.2)]">
-          <div className="header">
+      <div
+        className={`bottom-sheet fmtm-fixed fmtm-w-full fmtm-left-0 fmtm-bottom-0 fmtm-flex fmtm-items-center fmtm-flex-col fmtm-justify-end fmtm-duration-100 fmtm-ease-linear ${
+          !show ? 'fmtm-opacity-0 fmtm-pointer-events-none' : 'fmtm-opacity-100 fmtm-pointer-events-auto'
+        }`}
+        ref={bottomSheetRef}
+      >
+        <div
+          ref={sheetContentRef}
+          className={`bottom-sheet-content fmtm-shadow-[30px_-10px_40px_25px_rgba(0,0,0,0.2)] fmtm-w-full fmtm-relative fmtm-bg-white fmtm-max-h-[100vh] fmtm-h-[50vh] fmtm-max-w-[1150px] fmtm-py-6 fmtm-px-4 fmtm-duration-300 fmtm-ease-in-out fmtm-overflow-hidden ${
+            !show ? 'fmtm-translate-y-[100%]' : 'fmtm-translate-y-[0%]'
+          } ${isDragging ? 'fmtm-transition-none' : ''} ${isFullScreen ? 'fmtm-rounded-none' : 'fmtm-rounded-t-2xl'}`}
+        >
+          <div className="header fmtm-flex fmtm-justify-center">
             <div
-              className="drag-icon"
+              className="drag-icon fmtm-cursor-grab fmtm-select-none fmtm-p-4 -fmtm-mt-4 fmtm-z-[9999]"
               onMouseDown={dragStart}
               onTouchStart={dragStart}
               onMouseMove={dragging}
@@ -79,10 +89,10 @@ const BottomSheet = ({ body, onClose }) => {
               onMouseUp={dragStop}
               onTouchEnd={dragStop}
             >
-              <span></span>
+              <span className="fmtm-h-1 fmtm-w-[2.5rem] fmtm-block fmtm-bg-[#c7d0e1] fmtm-rounded-full"></span>
             </div>
           </div>
-          <div className="body fmtm-overflow-y-scroll scrollbar">{body}</div>
+          <div className="body fmtm-overflow-y-scroll scrollbar fmtm-h-full fmtm-p-[1px]">{body}</div>
         </div>
       </div>
     </div>
