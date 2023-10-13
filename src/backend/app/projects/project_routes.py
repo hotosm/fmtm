@@ -17,8 +17,8 @@
 #
 import json
 import os
-import uuid
 import shutil
+import uuid
 from typing import List, Optional
 
 from fastapi import (
@@ -38,7 +38,7 @@ from osm_fieldwork.make_data_extract import getChoices
 from osm_fieldwork.xlsforms import xlsforms_path
 from sqlalchemy.orm import Session
 
-from ..central import central_crud, central_schemas
+from ..central import central_crud
 from ..db import database, db_models
 from ..models.enums import TILES_SOURCE
 from ..tasks import tasks_crud
@@ -382,10 +382,11 @@ async def upload_multi_project_boundary(
     # Get the number of tasks in a project
     task_count = await tasks_crud.get_task_count_in_project(db, project_id)
 
-    return {"message": "Project Boundary Uploaded", 
-            "project_id": f"{project_id}",
-            "task_count": task_count
-            }
+    return {
+        "message": "Project Boundary Uploaded",
+        "project_id": f"{project_id}",
+        "task_count": task_count,
+    }
 
 
 @router.post("/task_split")
@@ -1157,11 +1158,9 @@ async def generate_files_janakpur(
 
 @router.get("/{project_id}/download_csv/")
 def download_forms(
-    project_id: int,
-    db: Session = Depends(database.get_db)
+    project_id: int, db: Session = Depends(database.get_db)
 ) -> FileResponse:
-    """
-    Download the submissions for a given project in CSV format.
+    """Download the submissions for a given project in CSV format.
 
     Parameters:
         - project_id (int): The ID of the project.
@@ -1169,7 +1168,6 @@ def download_forms(
     Returns:
         - FileResponse: The response object containing the downloaded CSV file.
     """
-
     project = project_crud.get_project(db, project_id)
     odkid = project.odkid
 
@@ -1187,10 +1185,12 @@ def download_forms(
         shutil.rmtree(output_dir)
     os.makedirs(output_dir)
 
-    project_crud.project_submissions_unzipped(odkid, forms, output_dir, True, False, odk_credentials)
+    project_crud.project_submissions_unzipped(
+        odkid, forms, output_dir, True, False, odk_credentials
+    )
 
     temp_zip_file = "/tmp/submissions"
-    shutil.make_archive(temp_zip_file, 'zip', output_dir)
+    shutil.make_archive(temp_zip_file, "zip", output_dir)
 
     headers = {
         "Content-Disposition": f'attachment; filename="{os.path.basename(temp_zip_file)}.zip"'
