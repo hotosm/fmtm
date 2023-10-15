@@ -23,6 +23,8 @@ jobs:
 
       - name: Environment to .env
         env:
+          DEBUG: True
+          LOG_LEVEL: DEBUG
           API_TAG_OVERRIDE: ${{ inputs.image_tag }}
           ODK_CENTRAL_URL: ${{ vars.ODK_CENTRAL_URL }}
           ODK_CENTRAL_USER: ${{ vars.ODK_CENTRAL_USER }}
@@ -30,7 +32,10 @@ jobs:
           OSM_CLIENT_ID: ${{ secrets.OSM_CLIENT_ID }}
           OSM_CLIENT_SECRET: ${{ secrets.OSM_CLIENT_SECRET }}
           OSM_SECRET_KEY: ${{ secrets.OSM_SECRET_KEY }}
+
         run: |
+          echo "DEBUG=${DEBUG}" >> .env
+          echo "LOG_LEVEL=${LOG_LEVEL}" >> .env
           echo "API_TAG_OVERRIDE=${API_TAG_OVERRIDE}" >> .env
           echo "ODK_CENTRAL_URL=${ODK_CENTRAL_URL}" >> .env
           echo "ODK_CENTRAL_USER=${ODK_CENTRAL_USER}" >> .env
