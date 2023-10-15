@@ -90,6 +90,7 @@ RUN set -ex \
     -y --no-install-recommends \
         "nano" \
         "curl" \
+        "wait-for-it" \
         "libpcre3" \
         "mime-support" \
         "postgresql-client" \
