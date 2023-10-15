@@ -14,26 +14,16 @@ permissions:
   contents: read
 
 jobs:
-  extract-vars:
-    uses: ./.github/workflows/r-extract_vars.yml
-    with:
-      environment: ${{ inputs.environment || 'test' }}
-
   run-pytest:
     runs-on: ubuntu-latest
-    needs: [extract-vars]
+    environment: ${{ inputs.environment || 'test' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Environment to .env
         env:
-          API_VERSION: ${{ needs.extract-vars.outputs.api_version }}
           API_TAG_OVERRIDE: ${{ inputs.image_tag }}
-          FRONTEND_MAIN_VERSION: ${{ needs.extract-vars.outputs.frontend_main_version }}
-          FRONTEND_MAIN_URL: ${{ vars.FRONTEND_MAIN_URL }}
-          URL_SCHEME: http
-          API_URL: http://api:8000
           ODK_CENTRAL_URL: ${{ vars.ODK_CENTRAL_URL }}
           ODK_CENTRAL_USER: ${{ vars.ODK_CENTRAL_USER }}
           ODK_CENTRAL_PASSWD: ${{ secrets.ODK_CENTRAL_PASSWD }}
@@ -41,12 +31,7 @@ jobs:
           OSM_CLIENT_SECRET: ${{ secrets.OSM_CLIENT_SECRET }}
           OSM_SECRET_KEY: ${{ secrets.OSM_SECRET_KEY }}
         run: |
-          echo "APP_VERSION=${API_VERSION}" >> .env
           echo "API_TAG_OVERRIDE=${API_TAG_OVERRIDE}" >> .env
-          echo "FRONTEND_MAIN_VERSION=${FRONTEND_MAIN_VERSION}" >> .env
-          echo "FRONTEND_MAIN_URL=${FRONTEND_MAIN_URL}" >> .env
-          echo "URL_SCHEME=${URL_SCHEME}" >> .env
-          echo "API_URL=${API_URL}" >> .env
           echo "ODK_CENTRAL_URL=${ODK_CENTRAL_URL}" >> .env
           echo "ODK_CENTRAL_USER=${ODK_CENTRAL_USER}" >> .env
           echo "ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}" >> .env
