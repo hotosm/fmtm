@@ -29,7 +29,7 @@ class Settings(BaseSettings):
 
     APP_NAME: str = "FMTM"
     DEBUG: bool = False
-    LOG_LEVEL: str = "DEBUG"
+    LOG_LEVEL: str = "INFO"
 
     URL_SCHEME: Optional[str] = "http"
     FRONTEND_MAIN_URL: Optional[str]
