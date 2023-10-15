@@ -46,10 +46,7 @@ jobs:
           echo "OSM_CLIENT_SECRET=${OSM_CLIENT_SECRET}" >> .env
           echo "OSM_SECRET_KEY=${OSM_SECRET_KEY}" >> .env
 
-      - name: Start Services
+      - name: Run PyTest
         run: |
           cd src/backend
-          docker compose up api --detach
-
-      - name: Run pytest
-        run: docker exec fmtm_api pytest
+          docker compose run api pytest

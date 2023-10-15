@@ -169,8 +169,7 @@ RUN mv /home/appuser/.local/bin/* /usr/local/bin/ \
     && python -c "import compileall; compileall.compile_path(maxlevels=10, quiet=1)"
 # Override entrypoint, as not possible in Github action
 ENTRYPOINT [""]
-# Default cmd for running pytest compose stack
-CMD ["sleep", "infinity"]
+CMD [""]
 
 
 
