@@ -1177,11 +1177,14 @@ def upload_custom_data_extracts(
         bool: True if the upload is successful.
     """
     project = get_project(db, project_id)
+    log.debug(f"Uploading custom data extract for project: {project}")
 
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    json.loads(db.query(func.ST_AsGeoJSON(project.outline)).scalar())
+    project_geojson = db.query(func.ST_AsGeoJSON(project.outline)).scalar()
+    log.debug(f"Generated project geojson: {project_geojson}")
+    json.loads(project_geojson)
 
     features_data = json.loads(contents)
 

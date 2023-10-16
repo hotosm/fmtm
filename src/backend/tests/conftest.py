@@ -17,20 +17,24 @@
 #
 
 import logging
+import os
 from typing import Any, Generator
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from loguru import logger as log
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.sql import text
 from sqlalchemy_utils import create_database, database_exists
 
 from app.config import settings
 from app.db.database import Base, get_db
-from app.db.db_models import DbOrganisation, DbProject, DbUser
+from app.db.db_models import DbOrganisation, DbUser
 from app.main import api, get_application
+from app.projects import project_crud
+from app.projects.project_schemas import BETAProjectUpload, ODKCentral, ProjectInfo
+from app.users.user_schemas import User
 
 engine = create_engine(settings.FMTM_DB_URL.unicode_string())
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -99,22 +103,58 @@ def organization(db):
 
 
 @pytest.fixture(scope="function")
-def get_ids(db):
-    user_id_query = text(f"SELECT id FROM {DbUser.__table__.name} LIMIT 1")
-    organization_id_query = text(
-        f"SELECT id FROM {DbOrganisation.__table__.name} LIMIT 1"
+def project(db, user, organization):
+    odk_central_url = os.getenv("ODK_CENTRAL_URL")
+    odk_central_user = os.getenv("ODK_CENTRAL_USER")
+    odk_central_password = os.getenv("ODK_CENTRAL_PASSWD")
+
+    project_metadata = BETAProjectUpload(
+        author=User(username=user.username, id=user.id),
+        project_info=ProjectInfo(
+            name="test project",
+            short_description="test",
+            description="test",
+        ),
+        xform_title="buildings",
+        odk_central=ODKCentral(
+            odk_central_url=odk_central_url,
+            odk_central_user=odk_central_user,
+            odk_central_password=odk_central_password,
+        ),
+        hashtags=["hot-fmtm"],
+        organisation_id=organization.id,
     )
-    project_id_query = text(f"SELECT id FROM {DbProject.__table__.name} LIMIT 1")
+    try:
+        new_project = project_crud.create_project_with_project_info(
+            db, project_metadata, project_id=123
+        )
+        log.debug(f"Project returned: {new_project.__dict__}")
+        assert new_project is not None
+    except Exception as e:
+        pytest.fail(f"Test failed with exception: {str(e)}")
 
-    user_id = db.execute(user_id_query).scalar()
-    organization_id = db.execute(organization_id_query).scalar()
-    project_id = db.execute(project_id_query).scalar()
+    return new_project
 
-    return {
-        "user_id": user_id,
-        "organization_id": organization_id,
-        "project_id": project_id,
-    }
+
+# @pytest.fixture(scope="function")
+# def get_ids(db, project):
+#     user_id_query = text(f"SELECT id FROM {DbUser.__table__.name} LIMIT 1")
+#     organization_id_query = text(
+#         f"SELECT id FROM {DbOrganisation.__table__.name} LIMIT 1"
+#     )
+#     project_id_query = text(f"SELECT id FROM {DbProject.__table__.name} LIMIT 1")
+
+#     user_id = db.execute(user_id_query).scalar()
+#     organization_id = db.execute(organization_id_query).scalar()
+#     project_id = db.execute(project_id_query).scalar()
+
+#     data = {
+#         "user_id": user_id,
+#         "organization_id": organization_id,
+#         "project_id": project_id,
+#     }
+#     log.debug(f"get_ids return: {data}")
+#     return data
 
 
 @pytest.fixture(scope="function")

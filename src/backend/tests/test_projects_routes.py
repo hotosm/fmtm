@@ -5,20 +5,16 @@ import zipfile
 from unittest.mock import Mock, patch
 
 import pytest
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from geoalchemy2.elements import WKBElement
+from loguru import logger as log
 from shapely import Polygon
 
 from app.central.central_crud import create_odk_project
 from app.db import db_models
 from app.projects import project_crud, project_schemas
-from app.projects.project_schemas import BETAProjectUpload, ODKCentral, ProjectInfo
 from app.tasks import tasks_crud
-from app.users.user_schemas import User
 from tests.test_data import test_data_path
-
-load_dotenv()
 
 odk_central_url = os.getenv("ODK_CENTRAL_URL")
 odk_central_user = os.getenv("ODK_CENTRAL_USER")
@@ -105,33 +101,12 @@ def test_convert_to_app_project():
     assert isinstance(result.project_tasks, list)
 
 
-def test_create_project_with_project_info(db, organization, user):
-    project_metadata = BETAProjectUpload(
-        author=User(username=user.username, id=user.id),
-        project_info=ProjectInfo(
-            name="test project",
-            short_description="test",
-            description="test",
-        ),
-        xform_title="buildings",
-        odk_central=ODKCentral(
-            odk_central_url=odk_central_url,
-            odk_central_user=odk_central_user,
-            odk_central_password=odk_central_password,
-        ),
-        hashtags=["hot-fmtm"],
-        organisation_id=organization.id,
-    )
-    try:
-        result = project_crud.create_project_with_project_info(
-            db, project_metadata, project_id=123
-        )
-        assert result is not None
-    except Exception as e:
-        pytest.fail(f"Test failed with exception: {str(e)}")
+def test_create_project_with_project_info(db, project):
+    assert isinstance(project.id, int)
+    assert isinstance(project.project_name_prefix, str)
 
 
-def test_generate_appuser_files(db, get_ids):
+def test_generate_appuser_files(db, project):
     custom_form = f"{test_data_path}/buildings.xls"
     with open(custom_form, "rb") as file:
         contents = file.read()
@@ -147,7 +122,46 @@ def test_generate_appuser_files(db, get_ids):
         "odk_central_password": odk_central_password,
     }
     odk_credentials = project_schemas.ODKCentral(**odk_credentials)
-    project_id = get_ids["project_id"]
+
+    project_id = project.id
+    log.debug(f"Testing project ID: {project_id}")
+
+    boundary_geojson = json.loads(
+        json.dumps(
+            {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [8.539551723844, 47.3765788922656],
+                        [8.539551723844, 47.37303247378486],
+                        [8.547135285454686, 47.37303247378486],
+                        [8.547135285454686, 47.3765788922656],
+                        [8.539551723844, 47.3765788922656],
+                    ]
+                ],
+            }
+        )
+    )
+    log.debug(f"Creating project boundary: {boundary_geojson}")
+    boundary_created = project_crud.update_project_boundary(
+        db, project_id, boundary_geojson, 500
+    )
+    assert boundary_created is True
+
+    data_extract_uploaded = project_crud.upload_custom_data_extracts(
+        db, project_id, extract_contents
+    )
+    assert data_extract_uploaded is True
+
+    task_list = tasks_crud.get_task_lists(db, project_id)
+    assert isinstance(task_list, list)
+
+    for task in task_list:
+        task_list = project_crud.generate_task_files(
+            db, project_id, task, custom_form, "xls", odk_credentials
+        )
+    assert task_list is True
+
     test_data = {
         "db": db,
         "project_id": project_id,
@@ -158,18 +172,6 @@ def test_generate_appuser_files(db, get_ids):
         "form_type": "example_form_type",
         "background_task_id": uuid.uuid4(),
     }
-    result1 = project_crud.upload_custom_data_extracts(db, project_id, extract_contents)
-    assert result1 is True
-
-    result2 = tasks_crud.get_task_lists(db, project_id)
-    assert isinstance(result2, list)
-
-    for task in result2:
-        result3 = project_crud.generate_task_files(
-            db, project_id, task, custom_form, "xls", odk_credentials
-        )
-    assert result3 is True
-
     result = project_crud.generate_appuser_files(**test_data)
     assert result is None
 
