@@ -155,7 +155,6 @@ const VectorLayer = ({
       // Perform an action if a feature is found
       if (feature) {
         // Do something with the feature
-        console.log('Clicked feature:', feature.getProperties());
         // dispatch()
         mapOnClick(feature.getProperties());
       }
