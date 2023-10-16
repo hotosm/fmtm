@@ -34,7 +34,6 @@ import requests
 import segno
 import shapely.wkb as wkblib
 import sqlalchemy
-import requests
 from fastapi import File, HTTPException, UploadFile
 from geoalchemy2.shape import from_shape
 from geojson import dump
@@ -2694,6 +2693,7 @@ def generate_appuser_files_for_janakpur(
             db, background_task_id, 4
         )  # 4 is COMPLETED
 
+
 def get_address_from_lat_lon(latitude, longitude):
     base_url = "https://nominatim.openstreetmap.org/reverse"
 
@@ -2703,9 +2703,7 @@ def get_address_from_lat_lon(latitude, longitude):
         "lon": longitude,
         "zoom": 18,
     }
-    headers = {
-        "Accept-Language": "en"  # Set the language to English
-    }
+    headers = {"Accept-Language": "en"}  # Set the language to English
 
     response = requests.get(base_url, params=params, headers=headers)
     data = response.json()
