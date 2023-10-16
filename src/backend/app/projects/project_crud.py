@@ -34,6 +34,7 @@ import requests
 import segno
 import shapely.wkb as wkblib
 import sqlalchemy
+import requests
 from fastapi import File, HTTPException, UploadFile
 from geoalchemy2.shape import from_shape
 from geojson import dump
@@ -454,7 +455,15 @@ def update_multi_polygon_project_boundary(
         data = result.fetchone()
 
         db_project.outline = data[0]
-        db_project.centroid = (wkt.loads(data[0])).centroid.wkt
+        centroid = (wkt.loads(data[0])).centroid.wkt
+        db_project.centroid = centroid
+        geometry = wkt.loads(centroid)
+        longitude, latitude = geometry.x, geometry.y
+        address = get_address_from_lat_lon(latitude, longitude)
+        if address is None:
+            address = ""
+        db_project.location_str = address
+
         db.commit()
         db.refresh(db_project)
         log.debug("COMPLETE: creating project boundary, based on task boundaries")
@@ -899,7 +908,14 @@ def update_project_boundary(
         outline = shape(features[0]["geometry"])
 
     db_project.outline = outline.wkt
-    db_project.centroid = outline.centroid.wkt
+    centroid = outline.centroid.wkt
+    db_project.centroid = centroid
+    geometry = wkt.loads(centroid)
+    longitude, latitude = geometry.x, geometry.y
+    address = get_address_from_lat_lon(latitude, longitude)
+    if address is None:
+        address = ""
+    db_project.location_str = address
 
     db.commit()
     db.refresh(db_project)
@@ -1012,7 +1028,14 @@ def update_project_with_zip(
             zip, outline_filename, f"Could not generate Shape from {outline_filename}"
         )
         db_project.outline = outline_shape.wkt
-        db_project.centroid = outline_shape.centroid.wkt
+        centroid = outline_shape.centroid.wkt
+        db_project.centroid = centroid
+        geometry = wkt.loads(centroid)
+        longitude, latitude = geometry.x, geometry.y
+        address = get_address_from_lat_lon(latitude, longitude)
+        if address is None:
+            address = ""
+        db_project.location_str = address
 
         # get all task outlines from file
         project_tasks_feature_collection = get_json_from_zip(
@@ -1894,6 +1917,7 @@ def convert_to_project_summary(db_project: db_models.DbProject):
                 None,
             )
             # default_project_info = project_schemas.ProjectInfo
+            summary.location_str = db_project.location_str
             summary.title = default_project_info.name
             summary.description = default_project_info.short_description
 
@@ -2669,3 +2693,28 @@ def generate_appuser_files_for_janakpur(
         update_background_task_status_in_database(
             db, background_task_id, 4
         )  # 4 is COMPLETED
+
+def get_address_from_lat_lon(latitude, longitude):
+    base_url = "https://nominatim.openstreetmap.org/reverse"
+
+    params = {
+        "format": "json",
+        "lat": latitude,
+        "lon": longitude,
+        "zoom": 18,
+    }
+    headers = {
+        "Accept-Language": "en"  # Set the language to English
+    }
+
+    response = requests.get(base_url, params=params, headers=headers)
+    data = response.json()
+    address = data["address"]["country"]
+
+    if response.status_code == 200:
+        if "city" in data["address"]:
+            city = data["address"]["city"]
+            address = f"{city}" + "," + address
+        return address
+    else:
+        return "Address not found."
