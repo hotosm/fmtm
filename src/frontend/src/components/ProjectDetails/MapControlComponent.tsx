@@ -98,7 +98,7 @@ const MapControlComponent = ({ map }) => {
   };
 
   return (
-    <div className="fmtm-absolute fmtm-top-5 fmtm-right-5 fmtm-z-[999] fmtm-flex fmtm-flex-col fmtm-gap-4">
+    <div className="fmtm-absolute fmtm-top-[20px] fmtm-right-5 fmtm-z-[99] fmtm-flex fmtm-flex-col fmtm-gap-4">
       {btnList.map((btn) => (
         <div key={btn.id}>
           <div className="fmtm-bg-white fmtm-rounded-full fmtm-p-2" onClick={() => handleOnClick(btn.id)}>
