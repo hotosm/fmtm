@@ -41,6 +41,7 @@ from ..central import central_crud
 from ..db import database, db_models
 from ..models.enums import TILES_SOURCE
 from ..tasks import tasks_crud
+from .project_crud import convert_geojson_to_epsg4326
 from . import project_crud, project_schemas, utils
 
 router = APIRouter(
@@ -446,7 +447,10 @@ async def upload_project_boundary(
     await upload.seek(0)
     content = await upload.read()
     boundary = json.loads(content)
-
+    try:
+        boundary = convert_geojson_to_epsg4326(boundary)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Unsupported coordinate system , Error converting GeoJSON to EPSG 4326 ")from e
     # update project boundary and dimension
     result = project_crud.update_project_boundary(db, project_id, boundary, dimension)
     if not result:

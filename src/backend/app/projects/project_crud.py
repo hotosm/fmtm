@@ -25,7 +25,8 @@ from io import BytesIO
 from json import dumps, loads
 from typing import List
 from zipfile import ZipFile
-
+import pyproj
+from shapely.ops import transform
 import geoalchemy2
 import geojson
 import numpy as np
@@ -2711,3 +2712,28 @@ def update_project_location_info(
     longitude, latitude = geometry.x, geometry.y
     address = get_address_from_lat_lon(latitude, longitude)
     db_project.location_str = address if address is not None else ""
+
+
+def convert_geojson_to_epsg4326(input_geojson):
+    source_crs = pyproj.CRS(input_geojson.get("crs", {}).get("properties", {}).get("name", "EPSG:4326"))
+    transformer = pyproj.Transformer.from_crs(source_crs, "EPSG:4326", always_xy=True)
+
+    # Convert the coordinates to EPSG:4326
+    transformed_features = []
+    for feature in input_geojson.get("features", []):
+        geom = shape(feature.get("geometry", {}))
+        transformed_geom = transform(transformer.transform, geom)
+        transformed_feature = {
+            "type": "Feature",
+            "geometry": transformed_geom.__geo_interface__,
+            "properties": feature.get("properties", {})
+        }
+        transformed_features.append(transformed_feature)
+
+    # Create a new GeoJSON with EPSG:4326
+    output_geojson = {
+        "type": "FeatureCollection",
+        "features": transformed_features
+    }
+
+    return output_geojson
