@@ -33,6 +33,7 @@ import LayerSwitcherControl from '../components/MapComponent/OpenLayersComponent
 import MapControlComponent from '../components/ProjectDetails/MapControlComponent';
 import { VectorLayer } from '../components/MapComponent/OpenLayersComponent/Layers';
 import { geojsonObjectModel } from '../constants/geojsonObjectModal';
+import { buildingStyle, basicGeojsonTemplate } from '../utilities/mapUtils';
 
 const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -56,6 +57,7 @@ const Home = () => {
   const projectBuildingGeojson = CoreModules.useAppSelector((state) => state.project.projectBuildingGeojson);
   const mobileFooterSelection = CoreModules.useAppSelector((state) => state.project.mobileFooterSelection);
   const [taskBuildingGeojson, setTaskBuildingGeojson] = useState(null);
+  const [initialFeaturesLayer, setInitialFeaturesLayer] = useState(null);
   //snackbar handle close funtion
   const handleClose = (event, reason) => {
     if (reason === 'clickaway') {
@@ -118,7 +120,7 @@ const Home = () => {
 
   useEffect(() => {
     if (!map) return;
-    if (!projectBuildingGeojson) return;
+    // if (!projectBuildingGeojson) return;
 
     const features = state.projectTaskBoundries[0]?.taskBoundries?.map((feature) => ({
       type: 'Feature',
@@ -131,8 +133,26 @@ const Home = () => {
       ...geojsonObjectModel,
       features: features,
     };
-    setTaskBuildingGeojson(taskBuildingGeojsonFeatureCollection);
+    setInitialFeaturesLayer(taskBuildingGeojsonFeatureCollection);
   }, [state.projectTaskBoundries[0]?.taskBoundries]);
+
+  useEffect(() => {
+    if (!map) return;
+    if (!projectBuildingGeojson) return;
+
+    const taskBuildingGeojsonFeatureCollection = {
+      ...basicGeojsonTemplate,
+      features: [
+        ...projectBuildingGeojson?.map((feature) => ({
+          ...feature.geometry,
+          id: feature.id,
+        })),
+      ],
+    };
+
+    setTaskBuildingGeojson(taskBuildingGeojsonFeatureCollection);
+  }, [map, projectBuildingGeojson]);
+
   TasksLayer(map, mainView, featuresLayer);
 
   const projectClickOnMap = (properties) => {
@@ -273,9 +293,9 @@ const Home = () => {
             >
               <LayerSwitcherControl visible={'outdoors'} />
 
-              {taskBuildingGeojson && taskBuildingGeojson?.features?.length > 0 && (
+              {initialFeaturesLayer && initialFeaturesLayer?.features?.length > 0 && (
                 <VectorLayer
-                  geojson={taskBuildingGeojson}
+                  geojson={initialFeaturesLayer}
                   // style={projectGeojsonLayerStyle}
                   viewProperties={{
                     size: map?.getSize(),
@@ -284,6 +304,20 @@ const Home = () => {
                     duration: 2000,
                   }}
                   mapOnClick={projectClickOnMap}
+                  zoomToLayer
+                  zIndex={5}
+                />
+              )}
+              {taskBuildingGeojson && taskBuildingGeojson?.features?.length > 0 && (
+                <VectorLayer
+                  geojson={taskBuildingGeojson}
+                  style={buildingStyle}
+                  viewProperties={{
+                    size: map?.getSize(),
+                    padding: [50, 50, 50, 50],
+                    constrainResolution: true,
+                    duration: 2000,
+                  }}
                   zoomToLayer
                   zIndex={5}
                 />
