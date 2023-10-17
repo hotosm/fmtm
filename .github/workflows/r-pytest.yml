@@ -35,9 +35,9 @@ jobs:
           echo "OSM_SECRET_KEY=${{ secrets.OSM_SECRET_KEY }}" >> .env
           cat .env
 
-      - uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
-        with:
-          image_name: postgis/postgis:14-3.3-alpine
+      # - uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
+      #   with:
+      #     image_name: postgis/postgis:14-3.3-alpine
 
       - name: Run PyTest
         run: |
