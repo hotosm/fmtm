@@ -16,24 +16,36 @@ permissions:
 jobs:
   run-pytest:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment || 'test' }}
+    environment:
+      name: ${{ inputs.environment || 'test' }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Environment to .env
+        env:
+          DEBUG: True
+          LOG_LEVEL: DEBUG
+          API_TAG_OVERRIDE: "${{ inputs.image_tag }}"
+          FRONTEND_MAIN_URL: "${{ vars.FRONTEND_MAIN_URL }}"
+          ODK_CENTRAL_URL: "${{ vars.ODK_CENTRAL_URL }}"
+          ODK_CENTRAL_USER: "${{ vars.ODK_CENTRAL_USER }}"
+          ODK_CENTRAL_PASSWD: "${{ secrets.ODK_CENTRAL_PASSWD }}"
+          OSM_CLIENT_ID: "${{ secrets.OSM_CLIENT_ID }}"
+          OSM_CLIENT_SECRET: "${{ secrets.OSM_CLIENT_SECRET }}"
+          OSM_SECRET_KEY: "${{ secrets.OSM_SECRET_KEY }}"
         run: |
-          echo "DEBUG=True" >> .env
-          echo "LOG_LEVEL=DEBUG" >> .env
-          echo "API_TAG_OVERRIDE=${{ inputs.image_tag }}" >> .env
-          echo "FRONTEND_MAIN_URL=${{ vars.FRONTEND_MAIN_URL }}" >> .env
-          echo "ODK_CENTRAL_URL=${{ vars.ODK_CENTRAL_URL }}" >> .env
-          echo "ODK_CENTRAL_USER=${{ vars.ODK_CENTRAL_USER }}" >> .env
-          echo "ODK_CENTRAL_PASSWD=${{ secrets.ODK_CENTRAL_PASSWD }}" >> .env
-          echo "OSM_CLIENT_ID=${{ secrets.OSM_CLIENT_ID }}" >> .env
-          echo "OSM_CLIENT_SECRET=${{ secrets.OSM_CLIENT_SECRET }}" >> .env
-          echo "OSM_SECRET_KEY=${{ secrets.OSM_SECRET_KEY }}" >> .env
-          cat .env
+          echo "DEBUG=${DEBUG}" >> .env
+          echo "LOG_LEVEL=${LOG_LEVEL}" >> .env
+          echo "API_TAG_OVERRIDE=${API_TAG_OVERRIDE}" >> .env
+          echo "FRONTEND_MAIN_URL=${FRONTEND_MAIN_URL}" >> .env
+          echo "ODK_CENTRAL_URL=${ODK_CENTRAL_URL}" >> .env
+          echo "ODK_CENTRAL_USER=${ODK_CENTRAL_USER}" >> .env
+          echo "ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}" >> .env
+          echo "OSM_CLIENT_ID=${OSM_CLIENT_ID}" >> .env
+          echo "OSM_CLIENT_SECRET=${OSM_CLIENT_SECRET}" >> .env
+          echo "OSM_SECRET_KEY=${OSM_SECRET_KEY}" >> .env
 
       # - uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
       #   with:
