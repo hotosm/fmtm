@@ -85,10 +85,6 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
     dispatch(FormCategoryService(`${import.meta.env.VITE_API_URL}/central/list-forms`));
   }, []);
 
-  useEffect(() => {
-    dispatch(FormCategoryService(`${import.meta.env.VITE_API_URL}/central/list-forms`));
-  }, []);
-
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
       <div className="fmtm-bg-white lg:fmtm-w-[20%] xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6">
@@ -164,7 +160,7 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
                     btnText="Upload a Line"
                     accept=".geojson,.json"
                     fileDescription="*The supported file formats are .geojson, .json"
-                    errorMsg={errors.customFormUpload}
+                    errorMsg={errors.setCustomLineUpload}
                   />
                 </>
               )}
