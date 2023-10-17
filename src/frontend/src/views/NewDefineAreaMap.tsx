@@ -28,10 +28,6 @@ const NewDefineAreaMap = ({
     maxZoom: 25,
   });
   const isDrawOrGeojsonFile = drawToggle || uploadedOrDrawnGeojsonFile;
-  console.log(drawToggle, 'drawToggle');
-  console.log(uploadedOrDrawnGeojsonFile, 'uploadedOrDrawnGeojsonFile');
-  console.log(isDrawOrGeojsonFile, 'isDrawOrGeojsonFile');
-  console.log(buildingExtractedGeojson, 'buildingExtractedGeojson');
 
   return (
     <div className="map-container" style={{ height: '600px', width: '100%' }}>
