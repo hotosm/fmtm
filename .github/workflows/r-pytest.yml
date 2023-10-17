@@ -33,6 +33,10 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.environment || 'test' }}
+    needs:
+      - postgis-cache
+      - odk-cache
+      - odk-proxy-cache
 
     steps:
       - name: Checkout repository
