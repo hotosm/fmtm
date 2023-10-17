@@ -28,6 +28,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists
 
+from app.central import central_crud
 from app.config import settings
 from app.db.database import Base, get_db
 from app.db.db_models import DbOrganisation, DbUser
@@ -104,10 +105,6 @@ def organization(db):
 
 @pytest.fixture(scope="function")
 def project(db, user, organization):
-    odk_central_url = os.getenv("ODK_CENTRAL_URL")
-    odk_central_user = os.getenv("ODK_CENTRAL_USER")
-    odk_central_password = os.getenv("ODK_CENTRAL_PASSWD")
-
     project_metadata = BETAProjectUpload(
         author=User(username=user.username, id=user.id),
         project_info=ProjectInfo(
@@ -117,16 +114,35 @@ def project(db, user, organization):
         ),
         xform_title="buildings",
         odk_central=ODKCentral(
-            odk_central_url=odk_central_url,
-            odk_central_user=odk_central_user,
-            odk_central_password=odk_central_password,
+            odk_central_url=os.getenv("ODK_CENTRAL_URL"),
+            odk_central_user=os.getenv("ODK_CENTRAL_USER"),
+            odk_central_password=os.getenv("ODK_CENTRAL_PASSWD"),
         ),
         hashtags=["hot-fmtm"],
         organisation_id=organization.id,
     )
+
+    # Create ODK Central Project
+    if project_metadata.odk_central.odk_central_url.endswith("/"):
+        # Remove trailing slash
+        project_metadata.odk_central.odk_central_url = (
+            project_metadata.odk_central.odk_central_url[:-1]
+        )
+
+    try:
+        odkproject = central_crud.create_odk_project(
+            project_metadata.project_info.name, project_metadata.odk_central
+        )
+        log.debug(f"ODK project returned: {odkproject}")
+        assert odkproject is not None
+    except Exception as e:
+        log.error(e)
+        pytest.fail(f"Test failed with exception: {str(e)}")
+
+    # Create FMTM Project
     try:
         new_project = project_crud.create_project_with_project_info(
-            db, project_metadata, project_id=123
+            db, project_metadata, project_id=odkproject["id"]
         )
         log.debug(f"Project returned: {new_project.__dict__}")
         assert new_project is not None

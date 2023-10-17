@@ -107,15 +107,6 @@ def test_create_project_with_project_info(db, project):
 
 
 def test_generate_appuser_files(db, project):
-    custom_form = f"{test_data_path}/buildings.xls"
-    with open(custom_form, "rb") as file:
-        contents = file.read()
-
-    data_extracts = f"{test_data_path}/building_footprint.zip"
-    with zipfile.ZipFile(data_extracts, "r") as zip_archive:
-        extract_contents = zip_archive.read("building_foot_jnk.geojson")
-    json.loads(extract_contents)
-
     odk_credentials = {
         "odk_central_url": odk_central_url,
         "odk_central_user": odk_central_user,
@@ -126,6 +117,7 @@ def test_generate_appuser_files(db, project):
     project_id = project.id
     log.debug(f"Testing project ID: {project_id}")
 
+    # Set project boundary
     boundary_geojson = json.loads(
         json.dumps(
             {
@@ -148,26 +140,41 @@ def test_generate_appuser_files(db, project):
     )
     assert boundary_created is True
 
+    # Load data extracts
+    data_extracts_file = f"{test_data_path}/building_footprint.zip"
+    with zipfile.ZipFile(data_extracts_file, "r") as zip_archive:
+        data_extracts = zip_archive.read("building_foot_jnk.geojson")
+
+    # Upload data extracts
+    log.debug(f"Uploading custom data extracts: {str(data_extracts)[:100]}...")
     data_extract_uploaded = project_crud.upload_custom_data_extracts(
-        db, project_id, extract_contents
+        db, project_id, data_extracts
     )
     assert data_extract_uploaded is True
 
+    # Get project tasks list
     task_list = tasks_crud.get_task_lists(db, project_id)
     assert isinstance(task_list, list)
 
+    # Load custom form & extracts
+    xlsform_file = f"{test_data_path}/buildings.xls"
+    with open(xlsform_file, "rb") as file:
+        custom_form = file.read()
+
+    # Generate project task files
     for task in task_list:
         task_list = project_crud.generate_task_files(
             db, project_id, task, custom_form, "xls", odk_credentials
         )
     assert task_list is True
 
+    # Generate appuser files
     test_data = {
         "db": db,
         "project_id": project_id,
         "extract_polygon": True,
-        "upload": contents,
-        "extracts_contents": extract_contents,
+        "upload": custom_form,
+        "extracts_contents": data_extracts,
         "category": "buildings",
         "form_type": "example_form_type",
         "background_task_id": uuid.uuid4(),

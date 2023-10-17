@@ -1268,7 +1268,7 @@ def generate_task_files(
     name = f"{project_name}_{category}_{task_id}"
 
     # Create an app user for the task
-    project_log.info(f"Creating app user for task {task_id}")
+    project_log.info(f"Creating odkcentral app user for task {task_id}")
     appuser = central_crud.create_appuser(odk_id, name, odk_credentials)
 
     # If app user could not be created, raise an exception.

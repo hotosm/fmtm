@@ -162,6 +162,7 @@ def create_appuser(
     project_id: int, name: str, odk_credentials: project_schemas.ODKCentral = None
 ):
     """Create an app-user on a remote ODK Server.
+
     If odk credentials of the project are provided, use them to create an app user.
     """
     if odk_credentials:
@@ -177,8 +178,13 @@ def create_appuser(
         pw = settings.ODK_CENTRAL_PASSWD
 
     app_user = OdkAppUser(url, user, pw)
+
+    log.debug(
+        "ODKCentral: attempting user creation: name: " f"{name} | project: {project_id}"
+    )
     result = app_user.create(project_id, name)
-    log.info(f"Created app user: {result.json()}")
+
+    log.debug(f"ODKCentral response: {result.json()}")
     return result
 
 
