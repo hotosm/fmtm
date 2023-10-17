@@ -90,10 +90,10 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
             odk_central_password: projectDetails.odk_central_password,
           },
           // dont send xform_title if upload custom form is selected
-          xform_title: projectDetails.form_ways === 'Upload a Form' ? null : projectDetails.formCategorySelection,
+          xform_title: projectDetails.formWays === 'custom_form' ? null : projectDetails.formCategorySelection,
           dimension: projectDetails.dimension,
           splitting_algorithm: splitTasksSelection,
-          form_ways: projectDetails.form_ways,
+          form_ways: projectDetails.formWays,
           // "uploaded_form": projectDetails.uploaded_form,
           data_extractWays: projectDetails.data_extractWays,
           hashtags: arrayHashtag,
@@ -179,7 +179,6 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
     } else if (generateQrSuccess && generateProjectLog?.status === 'SUCCESS') {
       clearInterval(generateProjectLogIntervalCb);
       const encodedProjectId = environment.encode(projectDetailsResponse?.id);
-      navigate(`/project_details/${encodedProjectId}`);
       dispatch(
         CommonActions.SetSnackBar({
           open: true,
@@ -189,6 +188,9 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
         }),
       );
       dispatch(CreateProjectActions.SetGenerateProjectLog(null));
+      dispatch(CreateProjectActions.SetGenerateProjectQRSuccess(null));
+      navigate(`/project_details/${encodedProjectId}`);
+      dispatch(CreateProjectActions.ClearCreateProjectFormData());
     }
     if (generateQrSuccess && generateProjectLog?.status === 'PENDING') {
       if (generateProjectLogIntervalCb === null) {
