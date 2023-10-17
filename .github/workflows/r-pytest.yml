@@ -51,5 +51,5 @@ jobs:
           cd src/backend
           docker compose run api \
             wait-for-it fmtm-db:5432 \
-            wait-for-it central:8383 \
+            -- wait-for-it central:8383 \
             -- pytest
