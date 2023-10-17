@@ -42,6 +42,15 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
   const generateQrSuccess: any = CoreModules.useAppSelector((state) => state.createproject.generateQrSuccess);
   const projectDetailsResponse = CoreModules.useAppSelector((state) => state.createproject.projectDetailsResponse);
   const generateProjectLog: any = CoreModules.useAppSelector((state) => state.createproject.generateProjectLog);
+  const dividedTaskGeojson = CoreModules.useAppSelector((state) => state.createproject.dividedTaskGeojson);
+  const projectDetailsLoading = CoreModules.useAppSelector((state) => state.createproject.projectDetailsLoading);
+  const generateProjectLogLoading = CoreModules.useAppSelector(
+    (state) => state.createproject.generateProjectLogLoading,
+  );
+  const dividedTaskLoading = CoreModules.useAppSelector((state) => state.createproject.dividedTaskLoading);
+  const taskSplittingGeojsonLoading = CoreModules.useAppSelector(
+    (state) => state.createproject.taskSplittingGeojsonLoading,
+  );
 
   const toggleStep = (step, url) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
@@ -51,7 +60,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
   const submission = () => {
     console.log('submission triggered');
 
-    const blob = new Blob([JSON.stringify(drawnGeojson)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(dividedTaskGeojson || drawnGeojson)], { type: 'application/json' });
 
     // Create a file object from the Blob
     const drawnGeojsonFile = new File([blob], 'data.json', { type: 'application/json' });
@@ -99,7 +108,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
     // if (formValues.splitting_algorithm === 'Divide on Square') {
     //   generateTasksOnMap();
     // }
-    // dispatch(CreateProjectActions.SetIndividualProjectDetailsData({ ...projectDetails, ...formValues }));
+    dispatch(CreateProjectActions.SetIndividualProjectDetailsData({ ...projectDetails, ...formValues }));
     // navigate('/select-form');
     // toggleStep(5, '/new-select-form');
   };
@@ -112,6 +121,8 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
   }: any = useForm(projectDetails, submission, DefineTaskValidation);
 
   const generateTaskBasedOnSelection = (e) => {
+    dispatch(CreateProjectActions.SetIndividualProjectDetailsData({ ...projectDetails, ...formValues }));
+
     e.preventDefault();
     e.stopPropagation();
     const blob = new Blob([JSON.stringify(drawnGeojson)], { type: 'application/json' });
@@ -214,12 +225,8 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
       </div>
     ));
   };
-  const dividedTaskGeojson = CoreModules.useAppSelector((state) => state.createproject.dividedTaskGeojson);
 
-  const parsedTaskGeojsonCount =
-    dividedTaskGeojson?.features?.length ||
-    JSON?.parse(dividedTaskGeojson)?.features?.length ||
-    projectDetails?.areaGeojson?.features?.length;
+  const parsedTaskGeojsonCount = dividedTaskGeojson?.features?.length || drawnGeojson?.features?.length;
   const totalSteps = dividedTaskGeojson?.features ? dividedTaskGeojson?.features?.length : parsedTaskGeojsonCount;
 
   return (
@@ -289,23 +296,24 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
                         btnText="Click to generate task"
                         btnType="primary"
                         type="button"
+                        isLoading={dividedTaskLoading || taskSplittingGeojsonLoading}
                         onClick={generateTaskBasedOnSelection}
                         className=""
                         icon={<AssetModules.SettingsIcon className="fmtm-text-white" />}
                       />
-                      <Button
+                      {/* <Button
                         btnText="Stop generating"
                         btnType="secondary"
                         type="button"
                         onClick={() => console.log('stop gen')}
                         className=""
-                      />
+                      /> */}
                     </div>
                   </div>
                 )}
                 {splitTasksSelection && (
                   <p className="fmtm-text-gray-500 fmtm-mt-5">
-                    Total number of task: <span className="fmtm-font-bold">10</span>
+                    Total number of task: <span className="fmtm-font-bold">{totalSteps}</span>
                   </p>
                 )}
               </div>
@@ -317,11 +325,18 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
                   onClick={() => toggleStep(3, '/new-data-extract')}
                   className="fmtm-font-bold"
                 />
-                <Button btnText="SUBMIT" btnType="primary" type="submit" className="fmtm-font-bold" />
+                <Button
+                  isLoading={projectDetailsLoading || generateProjectLogLoading}
+                  btnText="SUBMIT"
+                  btnType="primary"
+                  type="submit"
+                  className="fmtm-font-bold"
+                />
               </div>
             </div>
             <div className="fmtm-w-full lg:fmtm-w-[60%] fmtm-flex fmtm-flex-col fmtm-gap-6 fmtm-bg-gray-300 fmtm-h-[60vh] lg:fmtm-h-full">
               <NewDefineAreaMap
+                splittedGeojson={dividedTaskGeojson}
                 uploadedOrDrawnGeojsonFile={drawnGeojson}
                 buildingExtractedGeojson={buildingGeojson}
                 lineExtractedGeojson={lineGeojson}
