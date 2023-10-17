@@ -49,7 +49,7 @@ jobs:
       - name: Run PyTest
         run: |
           cd src/backend
-          docker compose run api \
+          docker compose run --use-aliases api \
             wait-for-it fmtm-db:5432 --strict \
-            -- wait-for-it central:8383 --strict --timeout=120 \
+            -- wait-for-it central:8383 --strict --timeout=60 \
             -- pytest
