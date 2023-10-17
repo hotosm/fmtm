@@ -67,7 +67,6 @@ services:
     depends_on:
       - fmtm-db
       - migrations
-      - central
       - central-proxy
     env_file:
       - .env
@@ -144,7 +143,7 @@ services:
       - SYSADMIN_EMAIL=${ODK_CENTRAL_USER}
       - SYSADMIN_PASSWD=${ODK_CENTRAL_PASSWD}
       - HTTPS_PORT=${HTTPS_PORT:-443}
-      - DB_HOST=${CENTRAL_DB_HOST:-postgres14}
+      - DB_HOST=${CENTRAL_DB_HOST:-central-db}
       - DB_USER=${CENTRAL_DB_USER:-odk}
       - DB_PASSWORD=${CENTRAL_DB_PASSWORD:-odk}
       - DB_NAME=${CENTRAL_DB_NAME:-odk}
