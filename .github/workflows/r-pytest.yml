@@ -14,36 +14,68 @@ permissions:
   contents: read
 
 jobs:
-  postgis-cache:
-    uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
-    with:
-      registry_prefix: docker.io/postgis
-      image_name: postgis:14-3.3-alpine
-
-  odk-cache:
-    uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
-    with:
-      registry_prefix: ghcr.io/hotosm/fmtm
-      image_name: odkcentral:v2023.2.1
-
-  odk-proxy-cache:
-    uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
-    with:
-      registry_prefix: ghcr.io/hotosm/fmtm
-      image_name: odkcentral-proxy:latest
-
   run-pytest:
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.environment || 'test' }}
-    needs:
-      - postgis-cache
-      - odk-cache
-      - odk-proxy-cache
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # PostGIS Img Cache
+      - name: Restore PostGIS Img Cache
+        id: cache-img-postgis
+        uses: actions/cache@v3
+        with:
+          path: ci/cache/images/postgis:14-3.3-alpine.tar
+          key: cache-img-postgis:14-3.3-alpine
+      - name: Update PostGIS Img Cache
+        if: steps.cache-img-postgis.outputs.cache-hit != 'true'
+        run: |
+          docker pull postgis/postgis:14-3.3-alpine
+          mkdir -p ci/cache/images
+          docker image save postgis/postgis:14-3.3-alpine \
+            --output ./ci/cache/images/postgis:14-3.3-alpine.tar
+      - name: Use PostGIS Img Cache
+        if: steps.cache-img-postgis.outputs.cache-hit == 'true'
+        run: docker image load --input ./ci/cache/images/postgis:14-3.3-alpine.tar
+
+      # ODK Central Img Cache
+      - name: Restore ODK Img Cache
+        id: cache-img-odk
+        uses: actions/cache@v3
+        with:
+          path: ci/cache/images/odkcentral:v2023.2.1.tar
+          key: cache-img-odk:14-3.3-alpine
+      - name: Update ODK Img Cache
+        if: steps.cache-img-odk.outputs.cache-hit != 'true'
+        run: |
+          docker pull ghcr.io/hotosm/fmtm/odkcentral:v2023.2.1
+          mkdir -p ci/cache/images
+          docker image save ghcr.io/hotosm/fmtm/odkcentral:v2023.2.1 \
+            --output ./ci/cache/images/odkcentral:v2023.2.1.tar
+      - name: Use ODK Img Cache
+        if: steps.cache-img-odk.outputs.cache-hit == 'true'
+        run: docker image load --input ./ci/cache/images/odkcentral:v2023.2.1.tar
+
+      # ODK Central Proxy Img Cache
+      - name: Restore ODK Proxy Img Cache
+        id: cache-img-odk-proxy
+        uses: actions/cache@v3
+        with:
+          path: ci/cache/images/odkcentral-proxy:latest.tar
+          key: cache-img-odk-proxy:14-3.3-alpine
+      - name: Update ODK Proxy Img Cache
+        if: steps.cache-img-odk-proxy.outputs.cache-hit != 'true'
+        run: |
+          docker pull ghcr.io/hotosm/fmtm/odkcentral-proxy:latest
+          mkdir -p ci/cache/images
+          docker image save ghcr.io/hotosm/fmtm/odkcentral-proxy:latest \
+            --output ./ci/cache/images/odkcentral-proxy:latest.tar
+      - name: Use ODK Proxy Img Cache
+        if: steps.cache-img-odk-proxy.outputs.cache-hit == 'true'
+        run: docker image load --input ./ci/cache/images/odkcentral-proxy:latest.tar
 
       - name: Environment to .env
         env:
