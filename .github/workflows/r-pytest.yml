@@ -37,9 +37,9 @@ jobs:
     environment:
       name: ${{ inputs.environment || 'test' }}
     needs:
-      - postgis-img-cache
-      - odk-img-cache
-      - odk-proxy-img-cache
+      - cache-img-postgis
+      - cache-img-odk
+      - cache-img-odk-proxy
 
     steps:
       - name: Checkout repository
@@ -50,20 +50,20 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ${{ needs.postgis-img-cache.outputs.cache_path }}
-            ${{ needs.odk-img-cache.outputs.cache_path }}
-            ${{ needs.odk-proxy-img-cache.outputs.cache_path }}
+            ${{ needs.cache-img-postgis.outputs.cache_path }}
+            ${{ needs.cache-img-odk.outputs.cache_path }}
+            ${{ needs.cache-img-odk-proxy-cache.outputs.cache_path }}
           key: |
-            ${{ needs.postgis-img-cache.outputs.cache_key }}
-            ${{ needs.odk-img-cache.outputs.cache_key }}
-            ${{ needs.odk-proxy-img-cache.outputs.cache_key }}
+            ${{ needs.cache-img-postgis.outputs.cache_key }}
+            ${{ needs.cache-img-odk.outputs.cache_key }}
+            ${{ needs.cache-img-odk-proxy-cache.outputs.cache_key }}
 
       - name: Load Cached Imgs
         if: steps.restore-imgs.outputs.cache-hit == 'true'
         run: |
-          docker image load --input ${{ needs.postgis-img-cache.outputs.cache_path }} || true
-          docker image load --input ${{ needs.odk-img-cache.outputs.cache_path }} || true
-          docker image load --input ${{ needs.odk-proxy-img-cache.outputs.cache_path }} || true
+          docker image load --input ${{ needs.cache-img-postgis.outputs.cache_path }} || true
+          docker image load --input ${{ needs.cache-img-odk.outputs.cache_path }} || true
+          docker image load --input ${{ needs.cache-img-odk-proxy-cache.outputs.cache_path }} || true
 
       - name: Environment to .env
         env:
