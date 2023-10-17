@@ -147,7 +147,7 @@ USER appuser
 
 
 
-FROM runtime as ci
+FROM debug-with-odk as ci
 # Run all ci as root
 USER root
 ARG PYTHON_IMG_TAG
