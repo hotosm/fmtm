@@ -138,8 +138,8 @@ CMD ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", \
 
 
 FROM debug-no-odk as debug-with-odk
-# Add the SSL cert for debug odkcentral
 USER root
+# Add the SSL cert for debug odkcentral
 COPY --from=ghcr.io/hotosm/fmtm/odkcentral-proxy:latest \
     /etc/nginx/central-fullchain.crt /usr/local/share/ca-certificates/
 RUN update-ca-certificates
@@ -153,6 +153,7 @@ USER root
 ARG PYTHON_IMG_TAG
 COPY --from=extract-deps \
     /opt/python/requirements-ci.txt /opt/python/
+# Copy packages from user to root dirs (run ci as root)
 RUN mv /home/appuser/.local/bin/* /usr/local/bin/ \
     && mv /home/appuser/.local/lib/python${PYTHON_IMG_TAG}/site-packages/* \
     /usr/local/lib/python${PYTHON_IMG_TAG}/site-packages/ \
