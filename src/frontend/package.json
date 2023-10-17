@@ -50,6 +50,7 @@
     "@mui/material": "^5.14.12",
     "@mui/system": "^5.14.12",
     "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-progress": "^1.0.3",
     "@radix-ui/react-select": "^1.2.2",
     "@radix-ui/react-switch": "^1.0.3",
     "@reduxjs/toolkit": "^1.9.1",
