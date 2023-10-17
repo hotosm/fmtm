@@ -13,7 +13,6 @@ import AssetModules from '../../shared/AssetModules.js';
 import { createPopup } from '../../utilfunctions/createPopup';
 import { CustomSelect } from '../../components/common/Select';
 import { OrganisationService } from '../../api/CreateProjectService';
-import environment from '../../environment';
 
 const ProjectDetailsForm = ({ flag }) => {
   const dispatch = useDispatch();
@@ -23,12 +22,11 @@ const ProjectDetailsForm = ({ flag }) => {
   const organizationListData: any = useAppSelector((state) => state.createproject.organizationList);
 
   const organizationList = organizationListData.map((item) => ({ label: item.name, value: item.id }));
-  const currentStep = useAppSelector((state) => state.common.currentStepFormStep[flag]);
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(values));
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 2 }));
-    navigate('/new-upload-area');
+    navigate('/upload-area');
   };
 
   const { handleSubmit, handleCustomChange, values, errors, checkValidationOnly }: any = useForm(

@@ -44,7 +44,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 3 }));
-    navigate('/new-select-form');
+    navigate('/select-form');
   };
   const {
     handleSubmit,
@@ -205,7 +205,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
                 btnText="PREVIOUS"
                 btnType="secondary"
                 type="button"
-                onClick={() => toggleStep(1, '/new-create-project')}
+                onClick={() => toggleStep(1, '/create-project')}
                 className="fmtm-font-bold"
               />
               <Button btnText="NEXT" btnType="primary" type="submit" className="fmtm-font-bold" />

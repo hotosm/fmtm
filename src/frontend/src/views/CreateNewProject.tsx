@@ -22,19 +22,19 @@ const CreateNewProject = () => {
 
   useEffect(() => {
     switch (location.pathname) {
-      case '/new-create-project':
+      case '/create-project':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 1 }));
         break;
-      case '/new-upload-area':
+      case '/upload-area':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 2 }));
         break;
-      case '/new-select-form':
+      case '/select-form':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 3 }));
         break;
-      case '/new-data-extract':
+      case '/data-extract':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 4 }));
         break;
-      case '/new-define-tasks':
+      case '/split-tasks':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 5 }));
         break;
       default:
@@ -45,11 +45,11 @@ const CreateNewProject = () => {
 
   const getCreateProjectContent = (): JSX.Element => {
     switch (location.pathname) {
-      case '/new-create-project':
+      case '/create-project':
         return <ProjectDetailsForm flag="create_project" />;
-      case '/new-upload-area':
+      case '/upload-area':
         return <UploadArea flag="create_project" geojsonFile={geojsonFile} setGeojsonFile={setGeojsonFile} />;
-      case '/new-select-form':
+      case '/select-form':
         return (
           <SelectForm
             flag="create_project"
@@ -58,7 +58,7 @@ const CreateNewProject = () => {
             setCustomFormFile={setCustomFormFile}
           />
         );
-      case '/new-data-extract':
+      case '/data-extract':
         return (
           <DataExtract
             flag="create_project"
@@ -68,7 +68,7 @@ const CreateNewProject = () => {
             setCustomPolygonUpload={setCustomPolygonUpload}
           />
         );
-      case '/new-define-tasks':
+      case '/split-tasks':
         return (
           <SplitTasks
             flag="create_project"

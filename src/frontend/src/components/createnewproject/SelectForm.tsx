@@ -10,8 +10,7 @@ import useForm from '../../hooks/useForm';
 import { useAppSelector } from '../../types/reduxTypes';
 import FileInputComponent from '../common/FileInputComponent';
 import SelectFormValidation from './validation/SelectFormValidation';
-import { FormCategoryService } from '../../api/CreateProjectService';
-import environment from '../../environment';
+import { FormCategoryService, ValidateCustomForm } from '../../api/CreateProjectService';
 import NewDefineAreaMap from '../../views/NewDefineAreaMap';
 
 const osmFeatureTypeOptions = [
@@ -31,7 +30,7 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 4 }));
-    navigate('/new-data-extract');
+    navigate('/data-extract');
   };
   const {
     handleSubmit,
@@ -65,6 +64,11 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
     navigate(url);
   };
+  useEffect(() => {
+    if (customFormFile) {
+      dispatch(ValidateCustomForm(`${import.meta.env.VITE_API_URL}/projects/validate_form`, customFormFile));
+    }
+  }, [customFormFile]);
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
       <div className="fmtm-bg-white lg:fmtm-w-[20%] xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6">
@@ -122,7 +126,7 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
                 btnText="PREVIOUS"
                 btnType="secondary"
                 type="button"
-                onClick={() => toggleStep(2, '/new-upload-area')}
+                onClick={() => toggleStep(2, '/upload-area')}
                 className="fmtm-font-bold"
               />
               <Button

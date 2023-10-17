@@ -322,7 +322,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
                   btnText="PREVIOUS"
                   btnType="secondary"
                   type="button"
-                  onClick={() => toggleStep(3, '/new-data-extract')}
+                  onClick={() => toggleStep(3, '/data-extract')}
                   className="fmtm-font-bold"
                 />
                 <Button
