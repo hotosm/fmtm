@@ -77,6 +77,7 @@ services:
     networks:
       - fmtm-dev
     restart: "unless-stopped"
+    entrypoint: sleep infinity
 
   migrations:
     image: "ghcr.io/hotosm/fmtm/backend:${API_TAG_OVERRIDE:-debug}"
