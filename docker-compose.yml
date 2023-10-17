@@ -67,6 +67,7 @@ services:
     depends_on:
       - fmtm-db
       - migrations
+      - central
       - central-proxy
     env_file:
       - .env
