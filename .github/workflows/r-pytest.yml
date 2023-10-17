@@ -19,12 +19,12 @@ jobs:
     with:
       image_name: postgis/postgis:14-3.3-alpine
 
-  odkcentral-cache:
+  odk-cache:
     uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
     with:
       image_name: ghcr.io/hotosm/fmtm/odkcentral:v2023.2.1
 
-  odkcentral-proxy-cache:
+  odk-proxy-cache:
     uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
     with:
       image_name: ghcr.io/hotosm/fmtm/odkcentral-proxy:latest
