@@ -4,7 +4,7 @@ import React from 'react';
 interface IButton {
   btnText: string;
   btnType: 'primary' | 'secondary' | 'other' | 'disabled';
-  type: 'submit' | 'button';
+  type?: 'submit' | 'button';
   onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   className?: string;
   count?: number;
@@ -33,7 +33,7 @@ const btnStyle = (btnType, className) => {
 const Button = ({ btnText, btnType, type, onClick, disabled, className, count, dataTip, icon, isLoading }: IButton) => (
   <div className="fmtm-w-fit">
     <button
-      type={type ? 'submit' : 'button'}
+      type={type === 'submit' ? 'submit' : 'button'}
       onClick={onClick}
       className={`fmtm-text-lg fmtm-group fmtm-flex fmtm-items-center fmtm-gap-2 ${btnStyle(
         isLoading ? 'disabled' : btnType,
