@@ -17,17 +17,20 @@ jobs:
   postgis-cache:
     uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
     with:
-      image_name: postgis/postgis:14-3.3-alpine
+      registry_prefix: docker.io/postgis
+      image_name: postgis:14-3.3-alpine
 
   odk-cache:
     uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
     with:
-      image_name: ghcr.io/hotosm/fmtm/odkcentral:v2023.2.1
+      registry_prefix: ghcr.io/hotosm/fmtm
+      image_name: odkcentral:v2023.2.1
 
   odk-proxy-cache:
     uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
     with:
-      image_name: ghcr.io/hotosm/fmtm/odkcentral-proxy:latest
+      registry_prefix: ghcr.io/hotosm/fmtm
+      image_name: odkcentral-proxy:latest
 
   run-pytest:
     runs-on: ubuntu-latest
