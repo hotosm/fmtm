@@ -63,8 +63,27 @@ const CreateProject = createSlice({
     },
     ClearCreateProjectFormData(state) {
       // state.projectDetailsResponse = null
-      state.projectDetails = { dimension: 10, no_of_buildings: 5, hashtags: 'hotosm-fmtm ' };
+      state.projectDetails = {
+        dimension: 10,
+        no_of_buildings: 5,
+        hashtags: '#FMTM ',
+        name: '',
+        short_description: '',
+        odk_central_url: '',
+        odk_central_user: '',
+        odk_central_password: '',
+        description: '',
+        organisation_id: null,
+      };
       state.projectArea = null;
+      state.totalAreaSelection = null;
+      state.splitTasksSelection = null;
+      state.buildingGeojson = null;
+      state.lineGeojson = null;
+      state.taskSplittingGeojson = null;
+      state.drawnGeojson = null;
+      state.generateProjectLog = null;
+      state.generateProjectLogLoading = false;
     },
     UploadAreaLoading(state, action) {
       state.projectAreaLoading = action.payload;
