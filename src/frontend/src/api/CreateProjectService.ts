@@ -162,7 +162,7 @@ const GenerateProjectQRService: Function = (url: string, payload: any, formUploa
       try {
         const isPolygon = payload.data_extractWays === 'Polygon';
         const generateApiFormData = new FormData();
-        if (payload.form_ways === 'Upload a Custom Form') {
+        if (payload.form_ways === 'custom_form') {
           generateApiFormData.append('extract_polygon', isPolygon.toString());
           generateApiFormData.append('upload', formUpload);
           if (dataExtractFile) {
@@ -170,7 +170,6 @@ const GenerateProjectQRService: Function = (url: string, payload: any, formUploa
           }
         } else {
           generateApiFormData.append('extract_polygon', isPolygon.toString());
-          generateApiFormData.append('upload', '');
           if (dataExtractFile) {
             generateApiFormData.append('data_extracts', dataExtractFile);
           }
@@ -183,7 +182,6 @@ const GenerateProjectQRService: Function = (url: string, payload: any, formUploa
         const resp: string = postNewProjectDetails.data;
         await dispatch(CreateProjectActions.GenerateProjectQRLoading(false));
         dispatch(CommonActions.SetLoading(false));
-        await dispatch(CreateProjectActions.ClearCreateProjectFormData());
         await dispatch(CreateProjectActions.GenerateProjectQRSuccess(resp));
       } catch (error: any) {
         dispatch(CommonActions.SetLoading(false));
