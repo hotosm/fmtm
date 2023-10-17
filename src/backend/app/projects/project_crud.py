@@ -25,12 +25,12 @@ from io import BytesIO
 from json import dumps, loads
 from typing import List
 from zipfile import ZipFile
-import pyproj
-from shapely.ops import transform
+
 import geoalchemy2
 import geojson
 import numpy as np
 import pkg_resources
+import pyproj
 import requests
 import segno
 import shapely.wkb as wkblib
@@ -55,6 +55,7 @@ from shapely.geometry import (
     mapping,
     shape,
 )
+from shapely.ops import transform
 from sqlalchemy import and_, column, func, inspect, select, table, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
@@ -2715,7 +2716,9 @@ def update_project_location_info(
 
 
 def convert_geojson_to_epsg4326(input_geojson):
-    source_crs = pyproj.CRS(input_geojson.get("crs", {}).get("properties", {}).get("name", "EPSG:4326"))
+    source_crs = pyproj.CRS(
+        input_geojson.get("crs", {}).get("properties", {}).get("name", "EPSG:4326")
+    )
     transformer = pyproj.Transformer.from_crs(source_crs, "EPSG:4326", always_xy=True)
 
     # Convert the coordinates to EPSG:4326
@@ -2726,14 +2729,11 @@ def convert_geojson_to_epsg4326(input_geojson):
         transformed_feature = {
             "type": "Feature",
             "geometry": transformed_geom.__geo_interface__,
-            "properties": feature.get("properties", {})
+            "properties": feature.get("properties", {}),
         }
         transformed_features.append(transformed_feature)
 
     # Create a new GeoJSON with EPSG:4326
-    output_geojson = {
-        "type": "FeatureCollection",
-        "features": transformed_features
-    }
+    output_geojson = {"type": "FeatureCollection", "features": transformed_features}
 
     return output_geojson
