@@ -281,7 +281,7 @@ const GetDividedTaskFromGeojson: Function = (url: string, payload: any) => {
         dividedTaskFormData.append('dimension', payload.dimension);
         const getGetDividedTaskFromGeojsonResponse = await axios.post(url, dividedTaskFormData);
         const resp: OrganisationListModel = getGetDividedTaskFromGeojsonResponse.data;
-        dispatch(CreateProjectActions.SetDrawnGeojson(resp));
+        dispatch(CreateProjectActions.SetDividedTaskGeojson(resp));
         dispatch(CreateProjectActions.SetDividedTaskFromGeojsonLoading(false));
       } catch (error) {
         dispatch(CreateProjectActions.SetDividedTaskFromGeojsonLoading(false));
