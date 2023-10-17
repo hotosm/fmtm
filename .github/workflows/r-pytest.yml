@@ -48,12 +48,6 @@ jobs:
 
       - name: Run PyTest
         run: |
-          cd src/backend
-          docker compose up -d api
-          cat ../../docker-compose.yml
-          sleep 20
-          docker ps -a
-          docker logs central_api
           docker compose run api \
             wait-for-it fmtm-db:5432 --strict \
             -- wait-for-it central:8383 --strict \
