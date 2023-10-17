@@ -35,7 +35,7 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 5 }));
-    navigate('/new-define-tasks');
+    navigate('/split-tasks');
   };
   const {
     handleSubmit,
@@ -145,6 +145,7 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
                   <FileInputComponent
                     onChange={(e) => {
                       changeFileHandler(e, setCustomPolygonUpload, 'building');
+                      handleCustomChange('customPolygonUpload', e.target.files[0]);
                     }}
                     onResetFile={() => resetFile(setCustomPolygonUpload)}
                     customFile={customPolygonUpload}
@@ -154,7 +155,10 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
                     errorMsg={errors.customPolygonUpload}
                   />
                   <FileInputComponent
-                    onChange={(e) => changeFileHandler(e, setCustomLineUpload, 'line')}
+                    onChange={(e) => {
+                      changeFileHandler(e, setCustomLineUpload, 'line');
+                      handleCustomChange('customLineUpload', e.target.files[0]);
+                    }}
                     onResetFile={() => resetFile(setCustomLineUpload)}
                     customFile={customLineUpload}
                     btnText="Upload a Line"
@@ -170,7 +174,7 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
                 btnText="PREVIOUS"
                 btnType="secondary"
                 type="button"
-                onClick={() => toggleStep(2, '/new-upload-area')}
+                onClick={() => toggleStep(2, '/upload-area')}
                 className="fmtm-font-bold"
               />
               <Button btnText="NEXT" btnType="primary" type="submit" className="fmtm-font-bold" />
