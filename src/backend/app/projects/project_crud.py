@@ -15,14 +15,12 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
-import base64
 import io
 import json
 import os
 import time
 import uuid
 import zipfile
-from base64 import b64encode
 from io import BytesIO
 from json import dumps, loads
 from typing import List
@@ -1573,21 +1571,27 @@ def generate_appuser_files(
 
 def create_qrcode(
     db: Session,
-    project_id: int,
+    odk_id: int,
     token: str,
     project_name: str,
     odk_central_url: str = None,
 ):
     # Make QR code for an app_user.
-    qrcode = central_crud.create_qrcode(
-        project_id, token, project_name, odk_central_url
+    log.debug(f"Generating base64 encoded QR settings for token: {token}")
+    qrcode_data = central_crud.create_qrcode(
+        odk_id, token, project_name, odk_central_url
     )
-    qrcode = segno.make(qrcode, micro=False)
-    image_name = f"/tmp/{project_name}_qr.png"
-    with open(image_name, "rb") as f:
-        base64_data = b64encode(f.read()).decode()
-    qr_code_text = base64.b64decode(base64_data)
-    qrdb = db_models.DbQrCode(image=qr_code_text, filename=image_name)
+
+    log.debug("Generating QR code from base64 settings")
+    qrcode = segno.make(qrcode_data, micro=False)
+
+    log.debug("Saving to buffer and decoding")
+    buffer = io.BytesIO()
+    qrcode.save(buffer, kind="png", scale=5)
+    qrcode_binary = buffer.getvalue()
+
+    log.debug(f"Writing QR code to database for token {token}")
+    qrdb = db_models.DbQrCode(image=qrcode_binary)
     db.add(qrdb)
     db.commit()
     codes = table("qr_code", column("id"))

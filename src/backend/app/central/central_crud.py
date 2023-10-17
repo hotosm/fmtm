@@ -559,10 +559,6 @@ def create_qrcode(project_id: int, token: str, name: str, odk_central_url: str =
     qr_data = base64.b64encode(
         zlib.compress(json.dumps(qr_code_setting).encode("utf-8"))
     )
-
-    # Generate qr code using segno
-    qrcode = segno.make(qr_data, micro=False)
-    qrcode.save(f"/tmp/{name}_qr.png", scale=5)
     return qr_data
 
 
