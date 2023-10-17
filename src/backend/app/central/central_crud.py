@@ -23,7 +23,6 @@ import zlib
 
 # import osm_fieldwork
 # Qr code imports
-import segno
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from loguru import logger as log
@@ -428,6 +427,8 @@ def generate_updated_xform(
     """Update the version in an XForm so it's unique."""
     name = os.path.basename(xform).replace(".xml", "")
     outfile = xform
+
+    log.debug(f"Reading xlsform: {xlsform}")
     if form_type != "xml":
         try:
             xls2xform_convert(xlsform_path=xlsform, xform_path=outfile, validate=False)
@@ -691,7 +692,7 @@ def generate_updated_xform_for_janakpur(
     """Update the version in an XForm so it's unique."""
     name = os.path.basename(xform).replace(".xml", "")
 
-    print("Name in form = ", name)
+    log.debug(f"Name in form = {name}")
 
     outfile = xform
     if form_type != "xml":

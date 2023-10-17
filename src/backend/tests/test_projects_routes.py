@@ -156,15 +156,13 @@ def test_generate_appuser_files(db, project):
     task_list = tasks_crud.get_task_lists(db, project_id)
     assert isinstance(task_list, list)
 
-    # Load custom form & extracts
+    # Provide custom xlsform file path
     xlsform_file = f"{test_data_path}/buildings.xls"
-    with open(xlsform_file, "rb") as file:
-        custom_form = file.read()
 
     # Generate project task files
     for task in task_list:
         task_list = project_crud.generate_task_files(
-            db, project_id, task, custom_form, "xls", odk_credentials
+            db, project_id, task, xlsform_file, "xls", odk_credentials
         )
     assert task_list is True
 
@@ -173,7 +171,7 @@ def test_generate_appuser_files(db, project):
         "db": db,
         "project_id": project_id,
         "extract_polygon": True,
-        "upload": custom_form,
+        "upload": xlsform_file,
         "extracts_contents": data_extracts,
         "category": "buildings",
         "form_type": "example_form_type",

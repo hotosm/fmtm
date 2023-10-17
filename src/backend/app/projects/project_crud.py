@@ -1343,7 +1343,10 @@ def generate_task_files(
         jsonfile.truncate(0)  # clear the contents of the file
         dump(features, jsonfile)
 
-    project_log.info(f"Generating xform for task {task_id}")
+    project_log.info(
+        f"Generating xform for task: {task_id} "
+        f"using xform: {xform} | form_type: {form_type}"
+    )
     outfile = central_crud.generate_updated_xform(xlsform, xform, form_type)
 
     # Create an odk xform
