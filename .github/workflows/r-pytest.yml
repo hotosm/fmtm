@@ -14,6 +14,24 @@ permissions:
   contents: read
 
 jobs:
+  get-img-caches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cache Postgis Image
+        uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
+        with:
+          image_name: postgis/postgis:14-3.3-alpine
+
+      - name: Cache ODK Central Image
+        uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
+        with:
+          image_name: ghcr.io/hotosm/fmtm/odkcentral:v2023.2.1
+
+      - name: Cache ODK Central Proxy Image
+        uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
+        with:
+          image_name: ghcr.io/hotosm/fmtm/odkcentral-proxy:latest
+
   run-pytest:
     runs-on: ubuntu-latest
     environment:
@@ -46,21 +64,6 @@ jobs:
           echo "OSM_CLIENT_ID=${OSM_CLIENT_ID}" >> .env
           echo "OSM_CLIENT_SECRET=${OSM_CLIENT_SECRET}" >> .env
           echo "OSM_SECRET_KEY=${OSM_SECRET_KEY}" >> .env
-
-      - name: Cache Postgis Image
-        uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
-        with:
-          image_name: postgis/postgis:14-3.3-alpine
-
-      - name: Cache ODK Central Image
-        uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
-        with:
-          image_name: ghcr.io/hotosm/fmtm/odkcentral:v2023.2.1
-
-      - name: Cache ODK Central Proxy Image
-        uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
-        with:
-          image_name: ghcr.io/hotosm/fmtm/odkcentral-proxy:latest
 
       - name: Run PyTest
         run: |
