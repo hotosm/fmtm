@@ -146,7 +146,7 @@ const CreateProject = createSlice({
     },
     GetTaskSplittingPreview(state, action) {
       state.dividedTaskGeojson = action.payload;
-      state.drawnGeojson = action.payload;
+      // state.drawnGeojson = action.payload;
       state.taskSplittingGeojson = action.payload;
     },
     SetEditProjectBoundaryServiceLoading(state, action) {
