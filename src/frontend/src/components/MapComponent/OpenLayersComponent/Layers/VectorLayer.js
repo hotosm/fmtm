@@ -156,7 +156,7 @@ const VectorLayer = ({
       if (feature) {
         // Do something with the feature
         // dispatch()
-        mapOnClick(feature.getProperties());
+        mapOnClick(feature.getProperties(), feature);
       }
     });
     setVectorLayer(vectorLyr);
