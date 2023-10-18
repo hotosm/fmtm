@@ -453,15 +453,7 @@ def update_multi_polygon_project_boundary(
         result = db.execute(query)
         data = result.fetchone()
 
-        db_project.outline = data[0]
-        centroid = (wkt.loads(data[0])).centroid.wkt
-        db_project.centroid = centroid
-        geometry = wkt.loads(centroid)
-        longitude, latitude = geometry.x, geometry.y
-        address = get_address_from_lat_lon(latitude, longitude)
-        if address is None:
-            address = ""
-        db_project.location_str = address
+        update_project_location_info(db_project, data[0])
 
         db.commit()
         db.refresh(db_project)
@@ -906,15 +898,7 @@ def update_project_boundary(
     else:
         outline = shape(features[0]["geometry"])
 
-    db_project.outline = outline.wkt
-    centroid = outline.centroid.wkt
-    db_project.centroid = centroid
-    geometry = wkt.loads(centroid)
-    longitude, latitude = geometry.x, geometry.y
-    address = get_address_from_lat_lon(latitude, longitude)
-    if address is None:
-        address = ""
-    db_project.location_str = address
+    update_project_location_info(db_project, outline.wkt)
 
     db.commit()
     db.refresh(db_project)
@@ -1026,15 +1010,7 @@ def update_project_with_zip(
         outline_shape = get_outline_from_geojson_file_in_zip(
             zip, outline_filename, f"Could not generate Shape from {outline_filename}"
         )
-        db_project.outline = outline_shape.wkt
-        centroid = outline_shape.centroid.wkt
-        db_project.centroid = centroid
-        geometry = wkt.loads(centroid)
-        longitude, latitude = geometry.x, geometry.y
-        address = get_address_from_lat_lon(latitude, longitude)
-        if address is None:
-            address = ""
-        db_project.location_str = address
+        update_project_location_info(db_project, outline_shape.wkt)
 
         # get all task outlines from file
         project_tasks_feature_collection = get_json_from_zip(
@@ -2695,6 +2671,7 @@ def generate_appuser_files_for_janakpur(
 
 
 def get_address_from_lat_lon(latitude, longitude):
+    """Get address using Nominatim, using lat,lon."""
     base_url = "https://nominatim.openstreetmap.org/reverse"
 
     params = {
@@ -2716,3 +2693,21 @@ def get_address_from_lat_lon(latitude, longitude):
         return address
     else:
         return "Address not found."
+
+
+def update_project_location_info(
+    db_project: sqlalchemy.orm.declarative_base, project_boundary: str
+):
+    """Update project boundary, centroid, address.
+
+    Args:
+        db_project(sqlalchemy.orm.declarative_base): The project database record.
+        project_boundary(str): WKT string geometry.
+    """
+    db_project.outline = project_boundary
+    centroid = (wkt.loads(project_boundary)).centroid.wkt
+    db_project.centroid = centroid
+    geometry = wkt.loads(centroid)
+    longitude, latitude = geometry.x, geometry.y
+    address = get_address_from_lat_lon(latitude, longitude)
+    db_project.location_str = address if address is not None else ""
