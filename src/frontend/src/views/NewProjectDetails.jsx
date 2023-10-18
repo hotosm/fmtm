@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import '../../node_modules/ol/ol.css';
 import '../styles/home.scss';
 import WindowDimension from '../hooks/WindowDimension';
@@ -34,6 +34,8 @@ import MapControlComponent from '../components/ProjectDetails/MapControlComponen
 import { VectorLayer } from '../components/MapComponent/OpenLayersComponent/Layers';
 import { geojsonObjectModel } from '../constants/geojsonObjectModal';
 import { buildingStyle, basicGeojsonTemplate } from '../utilities/mapUtils';
+import { getStyles } from '../components/MapComponent/OpenLayersComponent/helpers/styleUtils';
+import MapStyles from '../hooks/MapStyles';
 
 const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -58,6 +60,8 @@ const Home = () => {
   const mobileFooterSelection = CoreModules.useAppSelector((state) => state.project.mobileFooterSelection);
   const [taskBuildingGeojson, setTaskBuildingGeojson] = useState(null);
   const [initialFeaturesLayer, setInitialFeaturesLayer] = useState(null);
+  const mapTheme = CoreModules.useAppSelector((state) => state.theme.hotTheme);
+
   //snackbar handle close funtion
   const handleClose = (event, reason) => {
     if (reason === 'clickaway') {
@@ -184,6 +188,89 @@ const Home = () => {
     }
   };
 
+  const defaultStyles = {
+    lineColor: '#000000',
+    lineOpacity: 70,
+    fillColor: '#1a2fa2',
+    fillOpacity: 50,
+    lineThickness: 1,
+    circleRadius: 5,
+    dashline: 0,
+    showLabel: false,
+    customLabelText: null,
+    labelField: '',
+    labelFont: 'Calibri',
+    labelFontSize: 14,
+    labelColor: '#000000',
+    labelOpacity: 100,
+    labelOutlineWidth: 3,
+    labelOutlineColor: '#ffffff',
+    labelOffsetX: 0,
+    labelOffsetY: 0,
+    labelText: 'normal',
+    labelMaxResolution: 400,
+    labelAlign: 'center',
+    labelBaseline: 'middle',
+    labelRotationDegree: 0,
+    labelFontWeight: 'normal',
+    labelPlacement: 'point',
+    labelMaxAngleDegree: 45.0,
+    labelOverflow: false,
+    labelLineHeight: 1,
+    visibleOnMap: true,
+    icon: {},
+    showSublayer: false,
+    sublayerColumnName: '',
+    sublayer: {},
+  };
+
+  const municipalStyles = {
+    ...defaultStyles,
+    fillOpacity: 0,
+    // lineColor: '#008099',
+    // dashline: 5,
+    width: 10,
+  };
+
+  const setChoropleth = useCallback(
+    (style, feature, resolution) => {
+      let id = feature.getId().toString().replace('_', ',');
+      const status = id.split(',')[1];
+      let choroplethColor;
+      if (status === 'READY') {
+        choroplethColor = '#ffffff';
+      } else if (status === 'LOCKED_FOR_MAPPING') {
+        choroplethColor = '#008099';
+      } else if (status === 'MAPPED') {
+        choroplethColor = '#ade6ef';
+      } else if (status === 'LOCKED_FOR_VALIDATION') {
+        choroplethColor = '#fceca4';
+      } else if (status === 'VALIDATED') {
+        choroplethColor = '#40ac8c';
+      } else if (status === 'INVALIDATED') {
+        choroplethColor = '#d73f3e';
+      } else if (status === 'BAD') {
+        choroplethColor = '#d8dae4';
+      } else if (status === 'SPLIT') {
+        choroplethColor = '#704343';
+      }
+      console.log(status, 'status');
+      console.log(feature, 'feat');
+      const stylex = { ...style };
+      stylex.fillOpacity = 30;
+      stylex.labelMaxResolution = 1000;
+      stylex.showLabel = true;
+      // const choroplethColor = '#FF4538';
+      stylex.fillColor = choroplethColor;
+      return getStyles({
+        style: stylex,
+        feature,
+        resolution,
+      });
+    },
+    [initialFeaturesLayer],
+  );
+
   return (
     <div>
       {/* Customized Modal For Generate Tiles */}
@@ -300,6 +387,9 @@ const Home = () => {
               {initialFeaturesLayer && initialFeaturesLayer?.features?.length > 0 && (
                 <VectorLayer
                   geojson={initialFeaturesLayer}
+                  setStyle={(feature, resolution) =>
+                    setChoropleth({ ...municipalStyles, lineThickness: 3 }, feature, resolution)
+                  }
                   // style={projectGeojsonLayerStyle}
                   viewProperties={{
                     size: map?.getSize(),
@@ -307,11 +397,31 @@ const Home = () => {
                     constrainResolution: true,
                     duration: 2000,
                   }}
+                  properties={{ name: 'project-area' }}
                   mapOnClick={projectClickOnMap}
                   zoomToLayer
                   zIndex={5}
                 />
               )}
+              {/* {initialFeaturesLayer &&
+                initialFeaturesLayer?.features?.length > 0 &&
+                initialFeaturesLayer?.features?.map((feature, i) => (
+                  <VectorLayer
+                    key={i}
+                    geojson={feature}
+                    // style={projectGeojsonLayerStyle}
+                    viewProperties={{
+                      size: map?.getSize(),
+                      padding: [50, 50, 50, 200],
+                      constrainResolution: true,
+                      duration: 2000,
+                    }}
+                    properties={{ name: 'project-area' }}
+                    mapOnClick={projectClickOnMap}
+                    zoomToLayer
+                    zIndex={5}
+                  />
+                ))} */}
               {taskBuildingGeojson && taskBuildingGeojson?.features?.length > 0 && (
                 <VectorLayer
                   geojson={taskBuildingGeojson}
