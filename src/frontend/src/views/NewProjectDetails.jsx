@@ -34,8 +34,8 @@ import MapControlComponent from '../components/ProjectDetails/MapControlComponen
 import { VectorLayer } from '../components/MapComponent/OpenLayersComponent/Layers';
 import { geojsonObjectModel } from '../constants/geojsonObjectModal';
 import { buildingStyle, basicGeojsonTemplate } from '../utilities/mapUtils';
-import { getStyles } from '../components/MapComponent/OpenLayersComponent/helpers/styleUtils';
-import MapStyles from '../hooks/MapStyles';
+import MarkerIcon from '../assets/images/red_marker.png';
+import { defaultStyles, getStyles } from '../components/MapComponent/OpenLayersComponent/helpers/styleUtils';
 
 const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -188,48 +188,11 @@ const Home = () => {
     }
   };
 
-  const defaultStyles = {
-    lineColor: '#000000',
-    lineOpacity: 70,
-    fillColor: '#1a2fa2',
-    fillOpacity: 50,
-    lineThickness: 1,
-    circleRadius: 5,
-    dashline: 0,
-    showLabel: false,
-    customLabelText: null,
-    labelField: '',
-    labelFont: 'Calibri',
-    labelFontSize: 14,
-    labelColor: '#000000',
-    labelOpacity: 100,
-    labelOutlineWidth: 3,
-    labelOutlineColor: '#ffffff',
-    labelOffsetX: 0,
-    labelOffsetY: 0,
-    labelText: 'normal',
-    labelMaxResolution: 400,
-    labelAlign: 'center',
-    labelBaseline: 'middle',
-    labelRotationDegree: 0,
-    labelFontWeight: 'normal',
-    labelPlacement: 'point',
-    labelMaxAngleDegree: 45.0,
-    labelOverflow: false,
-    labelLineHeight: 1,
-    visibleOnMap: true,
-    icon: {},
-    showSublayer: false,
-    sublayerColumnName: '',
-    sublayer: {},
-  };
-
-  const municipalStyles = {
+  const taskLayerStyle = {
     ...defaultStyles,
     fillOpacity: 0,
-    // lineColor: '#008099',
-    // dashline: 5,
     width: 10,
+    icon: { scale: [0.09, 0.09], url: MarkerIcon },
   };
 
   const setChoropleth = useCallback(
@@ -237,6 +200,7 @@ const Home = () => {
       let id = feature.getId().toString().replace('_', ',');
       const status = id.split(',')[1];
       let choroplethColor;
+      let stylex = { ...style };
       if (status === 'READY') {
         choroplethColor = '#ffffff';
       } else if (status === 'LOCKED_FOR_MAPPING') {
@@ -256,11 +220,10 @@ const Home = () => {
       }
       console.log(status, 'status');
       console.log(feature, 'feat');
-      const stylex = { ...style };
       stylex.fillOpacity = 30;
       stylex.labelMaxResolution = 1000;
       stylex.showLabel = true;
-      // const choroplethColor = '#FF4538';
+      // stylex.iconStyle = createIconStyle(AssetModules.LockPng);
       stylex.fillColor = choroplethColor;
       return getStyles({
         style: stylex,
@@ -388,7 +351,7 @@ const Home = () => {
                 <VectorLayer
                   geojson={initialFeaturesLayer}
                   setStyle={(feature, resolution) =>
-                    setChoropleth({ ...municipalStyles, lineThickness: 3 }, feature, resolution)
+                    setChoropleth({ ...taskLayerStyle, lineThickness: 3 }, feature, resolution)
                   }
                   // style={projectGeojsonLayerStyle}
                   viewProperties={{
