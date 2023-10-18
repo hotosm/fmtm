@@ -64,7 +64,7 @@ If you're reporting a problem, please include the following details:
 - What happened instead
 - Relevant information about your platform and environment
 - Include shell commands, log files, error messages, etc.
-- Please open a separate issue for each problem, question or comment.This keeps issues small   and manageable.
+- Please open a separate issue for each problem, question or comment.This keeps issues small and manageable.
 
 - Please open a separate issue for each problem, question, or comment you have. Do not re-use existing issues for other topics, even if they are similar. This keeps issues small and manageable and makes it much easier to follow through and make sure each problem is taken care of.
 
