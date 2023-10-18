@@ -120,14 +120,16 @@ const Home = () => {
 
   useEffect(() => {
     if (!map) return;
-    // if (!projectBuildingGeojson) return;
 
+    // console.log(state.projectTaskBoundries[0]?.taskBoundries);
     const features = state.projectTaskBoundries[0]?.taskBoundries?.map((feature) => ({
       type: 'Feature',
       geometry: { ...feature.outline_geojson.geometry },
       properties: {
-        id: feature.id,
+        ...feature.outline_geojson.properties,
+        centroid: feature.bbox,
       },
+      id: `${feature.project_task_name}_${feature.task_status_str}`,
     }));
     const taskBuildingGeojsonFeatureCollection = {
       ...geojsonObjectModel,
@@ -135,6 +137,9 @@ const Home = () => {
     };
     setInitialFeaturesLayer(taskBuildingGeojsonFeatureCollection);
   }, [state.projectTaskBoundries[0]?.taskBoundries]);
+
+  // console.log(initialFeaturesLayer, 'initialFeaturesLayer');
+  // console.log(featuresLayer, 'featuresLayer');
 
   useEffect(() => {
     if (!map) return;
@@ -153,21 +158,20 @@ const Home = () => {
     setTaskBuildingGeojson(taskBuildingGeojsonFeatureCollection);
   }, [map, projectBuildingGeojson]);
 
-  TasksLayer(map, mainView, featuresLayer);
-
-  const projectClickOnMap = (properties) => {
+  // TasksLayer(map, mainView, featuresLayer);
+  const projectClickOnMap = (properties, feature) => {
+    setFeaturesLayer(feature, 'feature');
     let extent = properties.geometry.getExtent();
     dispatch(
       ProjectBuildingGeojsonService(
-        `${import.meta.env.VITE_API_URL}/projects/${decodedId}/features?task_id=${properties.id}`,
+        `${import.meta.env.VITE_API_URL}/projects/${decodedId}/features?task_id=${properties.uid}`,
       ),
     );
     mapRef.current?.scrollIntoView({
       block: 'center',
       behavior: 'smooth',
     });
-    setTaskId(properties.id);
-    setFeaturesLayer(properties);
+    setTaskId(properties.uid);
     dispatch(ProjectActions.ToggleTaskModalStatus(true));
     if (windowSize.width < 768) {
       map.getView().fit(extent, {
