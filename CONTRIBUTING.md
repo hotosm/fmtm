@@ -1,22 +1,20 @@
 ## 🤗 Welcome
 
-:+1::tada: First off, We are really glad you're reading this, because we need volunteer developers to help improve the Field Mapping Tasking Manager (FMTM)! :tada::+1:
-
-We welcome and encourage contributors of all skill levels, and we are committed to making sure your participation is inclusive, enjoyable, and rewarding. If you have never contributed to an open source project before, we are a good place to start, and we will make sure you are supported every step of the way. If you have **any** questions, please ask!
+👍🎉 First off, We are really glad you're reading this, because we need volunteer developers to help improve the Field Mapping Tasking Manager (FMTM)! Welcome to Field Mapping Tasking Manager (FMTM)! We're excited to have you join our community of contributors. Whether you're new to open source or an experienced developer, we value your contributions and are here to support you every step of the way. If you have any questions or need assistance, please don't hesitate to ask. 🎉👍
 
 You can see an overview of the project and the process we have gone through in developing FMTM so far in these [slides](https://docs.google.com/presentation/d/1UrBG1X4MXwVd8Ps498FDlAYvesIailjjPPJfR_B4SUs/edit#slide=id.g15c1f409958_0_0) .
 
-Furthermore, there are many ways to contribute to the **Field Mapping Tasking Manager (FMTM)**, which includes:
+How to Contribute
+
+There are several ways to contribute to the Field Mapping Tasking Manager:
 
 ## Testing
 
-Right now, we are in the process of building the prototype. We warmly welcome your input in testing and sharing your feedback. If you are also interested in coordinating a field testing session, please reach out!
+We're currently building the prototype, and your input is invaluable. Please help us by testing and providing feedback. If you're interested in coordinating field testing sessions, please reach out.
 
 ## Code contributions
 
-Create pull requests (PRs) for changes that you think are needed. We would really appreciate your help!
-
-Skills with the following would be beneficial:
+Create pull requests (PRs) to propose changes or new features. Your code contributions are highly appreciated. Skills in the following technologies are beneficial:
 
 - Python
 - FastAPI
@@ -25,7 +23,7 @@ Skills with the following would be beneficial:
 - Docker
 - CI/CD workflows
 
-Our latest task board can be found [here](https://github.com/orgs/hotosm/projects/22).
+Our latest task board is available [here](https://github.com/orgs/hotosm/projects/22).
 
 ## Report bugs and suggest improvements
 
@@ -33,50 +31,48 @@ The [issue queue](https://github.com/hotosm/fmtm/issues) is the best way to get 
 
 ## :handshake: Thank you
 
-Thank you very much in advance for your contributions!! Please ensure you refer to our **Code of Conduct**.
-If you've read the guidelines, but are still not sure how to contribute on Github, please reach out to us via our Slack **#geospatial-tech-and-innovation**.
+We're grateful for your contributions. Please review our **Code of Conduct**.
+If you have any questions about contributing on GitHub, don't hesitate to reach out to us via our Slack channel, **#geospatial-tech-and-innovation**.
 
 # Code Contribution guidelines
 
 ## Workflow
 
-We operate the "Fork & Pull" model explained at [About Pull
-Requests](https://help.github.com/articles/about-pull-requests/)
+We follow the "Fork & Pull" model for contributions it is explained at [About Pull Requests](https://help.github.com/articles/about-pull-requests/). Here's how it works:
 
-You should fork the project into your own repo, create a topic branch
-there and then make one or more pull requests back to the repository.
-Your pull requests will then be reviewed and discussed by other
-developers. Don't submit a Pull Request while still developing the
-code, wait till the feature is complete and ready for review. A
-preliminary review by other developers can be requested via the
-comments for the issue on github, or via slack or email.
+Fork the Project: Fork the project into your own repository.
 
-It is prefered that all patches contain any documentation
-updates made, and for any new features, a test case is preferred when
-possible. Keep patches focused on a single feature to avoid merging
-complications with other developers. The old free software joke is
-"patches are better than bug reports" is how we contribute to the
-community of people involved with this project.
+Create a Topic Branch: Create a topic branch in your repository to work on your contribution.
 
-# If you are reporting a problem
+Make Pull Requests: Create one or more pull requests back to the main repository.
 
-- Describe exactly what you were trying to achieve, what you did, what you
-  expected to happen and what did happen instead. Include relevant information
-  about the platform, OS version etc. you are using. Include shell commands you
-  typed in, log files, errors messages etc.
+Review and Discussion: Your pull requests will be reviewed and discussed by other developers.
 
-- Please open a separate issue for each problem, question, or comment you have.
-  Do not re-use existing issues for other topics, even if they are similar. This
-  keeps issues small and manageable and makes it much easier to follow through
-  and make sure each problem is taken care of.
+Documentation and Testing: Ensure that patches contain documentation updates and, for new features, include test cases when possible.
+
+Focused Patches: Keep patches focused on a single feature to avoid merging complications with other developers.
+
+# Reporting Problems
+
+If you're reporting a problem, please include the following details:
+
+- If you're reporting a problem, please include the following details:
+
+- What you were trying to achieve
+- What you did
+- What you expected to happen
+- What happened instead
+- Relevant information about your platform and environment
+- Include shell commands, log files, error messages, etc.
+- Please open a separate issue for each problem, question or comment.This keeps issues small   and manageable.
+
+- Please open a separate issue for each problem, question, or comment you have. Do not re-use existing issues for other topics, even if they are similar. This keeps issues small and manageable and makes it much easier to follow through and make sure each problem is taken care of.
 
 ## Documentation
 
 Project documentation should be in [Markdown
 format](https://www.markdownguide.org/), and in a _docs_
-subdirectory. While it is possible to use HTML in Markdown documents
-for tables and images, it is prefered to use the Markdown style as
-it's much easier to read.
+subdirectory.We prefer using Markdown over HTML in Markdown documents for better readability.
 
 ## Coding Style
 
