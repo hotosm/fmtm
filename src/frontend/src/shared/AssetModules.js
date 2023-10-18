@@ -47,6 +47,7 @@ import {
   MoreVert as MoreVertIcon,
   LocationOn as LocationOnIcon,
   CropFree as CropFreeIcon,
+  LegendToggle as LegendToggleIcon,
 } from '@mui/icons-material';
 import LockPng from '../assets/images/lock.png';
 import RedLockPng from '../assets/images/red-lock.png';
@@ -104,4 +105,5 @@ export default {
   MoreVertIcon,
   LocationOnIcon,
   CropFreeIcon,
+  LegendToggleIcon,
 };

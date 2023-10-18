@@ -15,14 +15,12 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
-import base64
 import io
 import json
 import os
 import time
 import uuid
 import zipfile
-from base64 import b64encode
 from io import BytesIO
 from json import dumps, loads
 from typing import List
@@ -455,8 +453,8 @@ def update_multi_polygon_project_boundary(
         result = db.execute(query)
         data = result.fetchone()
 
-        db_project.outline = data[0]
-        db_project.centroid = (wkt.loads(data[0])).centroid.wkt
+        update_project_location_info(db_project, data[0])
+
         db.commit()
         db.refresh(db_project)
         log.debug("COMPLETE: creating project boundary, based on task boundaries")
@@ -900,8 +898,7 @@ def update_project_boundary(
     else:
         outline = shape(features[0]["geometry"])
 
-    db_project.outline = outline.wkt
-    db_project.centroid = outline.centroid.wkt
+    update_project_location_info(db_project, outline.wkt)
 
     db.commit()
     db.refresh(db_project)
@@ -1013,8 +1010,7 @@ def update_project_with_zip(
         outline_shape = get_outline_from_geojson_file_in_zip(
             zip, outline_filename, f"Could not generate Shape from {outline_filename}"
         )
-        db_project.outline = outline_shape.wkt
-        db_project.centroid = outline_shape.centroid.wkt
+        update_project_location_info(db_project, outline_shape.wkt)
 
         # get all task outlines from file
         project_tasks_feature_collection = get_json_from_zip(
@@ -1179,11 +1175,14 @@ def upload_custom_data_extracts(
         bool: True if the upload is successful.
     """
     project = get_project(db, project_id)
+    log.debug(f"Uploading custom data extract for project: {project}")
 
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    json.loads(db.query(func.ST_AsGeoJSON(project.outline)).scalar())
+    project_geojson = db.query(func.ST_AsGeoJSON(project.outline)).scalar()
+    log.debug(f"Generated project geojson: {project_geojson}")
+    json.loads(project_geojson)
 
     features_data = json.loads(contents)
 
@@ -1267,7 +1266,7 @@ def generate_task_files(
     name = f"{project_name}_{category}_{task_id}"
 
     # Create an app user for the task
-    project_log.info(f"Creating app user for task {task_id}")
+    project_log.info(f"Creating odkcentral app user for task {task_id}")
     appuser = central_crud.create_appuser(odk_id, name, odk_credentials)
 
     # If app user could not be created, raise an exception.
@@ -1344,7 +1343,10 @@ def generate_task_files(
         jsonfile.truncate(0)  # clear the contents of the file
         dump(features, jsonfile)
 
-    project_log.info(f"Generating xform for task {task_id}")
+    project_log.info(
+        f"Generating xform for task: {task_id} "
+        f"using xform: {xform} | form_type: {form_type}"
+    )
     outfile = central_crud.generate_updated_xform(xlsform, xform, form_type)
 
     # Create an odk xform
@@ -1572,21 +1574,27 @@ def generate_appuser_files(
 
 def create_qrcode(
     db: Session,
-    project_id: int,
+    odk_id: int,
     token: str,
     project_name: str,
     odk_central_url: str = None,
 ):
     # Make QR code for an app_user.
-    qrcode = central_crud.create_qrcode(
-        project_id, token, project_name, odk_central_url
+    log.debug(f"Generating base64 encoded QR settings for token: {token}")
+    qrcode_data = central_crud.create_qrcode(
+        odk_id, token, project_name, odk_central_url
     )
-    qrcode = segno.make(qrcode, micro=False)
-    image_name = f"/tmp/{project_name}_qr.png"
-    with open(image_name, "rb") as f:
-        base64_data = b64encode(f.read()).decode()
-    qr_code_text = base64.b64decode(base64_data)
-    qrdb = db_models.DbQrCode(image=qr_code_text, filename=image_name)
+
+    log.debug("Generating QR code from base64 settings")
+    qrcode = segno.make(qrcode_data, micro=False)
+
+    log.debug("Saving to buffer and decoding")
+    buffer = io.BytesIO()
+    qrcode.save(buffer, kind="png", scale=5)
+    qrcode_binary = buffer.getvalue()
+
+    log.debug(f"Writing QR code to database for token {token}")
+    qrdb = db_models.DbQrCode(image=qrcode_binary)
     db.add(qrdb)
     db.commit()
     codes = table("qr_code", column("id"))
@@ -1884,6 +1892,7 @@ def convert_to_project_summary(db_project: db_models.DbProject):
                 None,
             )
             # default_project_info = project_schemas.ProjectInfo
+            summary.location_str = db_project.location_str
             summary.title = default_project_info.name
             summary.description = default_project_info.short_description
 
@@ -2659,3 +2668,46 @@ def generate_appuser_files_for_janakpur(
         update_background_task_status_in_database(
             db, background_task_id, 4
         )  # 4 is COMPLETED
+
+
+def get_address_from_lat_lon(latitude, longitude):
+    """Get address using Nominatim, using lat,lon."""
+    base_url = "https://nominatim.openstreetmap.org/reverse"
+
+    params = {
+        "format": "json",
+        "lat": latitude,
+        "lon": longitude,
+        "zoom": 18,
+    }
+    headers = {"Accept-Language": "en"}  # Set the language to English
+
+    response = requests.get(base_url, params=params, headers=headers)
+    data = response.json()
+    address = data["address"]["country"]
+
+    if response.status_code == 200:
+        if "city" in data["address"]:
+            city = data["address"]["city"]
+            address = f"{city}" + "," + address
+        return address
+    else:
+        return "Address not found."
+
+
+def update_project_location_info(
+    db_project: sqlalchemy.orm.declarative_base, project_boundary: str
+):
+    """Update project boundary, centroid, address.
+
+    Args:
+        db_project(sqlalchemy.orm.declarative_base): The project database record.
+        project_boundary(str): WKT string geometry.
+    """
+    db_project.outline = project_boundary
+    centroid = (wkt.loads(project_boundary)).centroid.wkt
+    db_project.centroid = centroid
+    geometry = wkt.loads(centroid)
+    longitude, latitude = geometry.x, geometry.y
+    address = get_address_from_lat_lon(latitude, longitude)
+    db_project.location_str = address if address is not None else ""

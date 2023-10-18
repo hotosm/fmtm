@@ -145,66 +145,66 @@ const routes = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      {
-        path: '/create-project',
-        element: (
-          <ProtectedRoute>
-            <Suspense fallback={<div>Loading...</div>}>
-              <ErrorBoundary>
-                <CreateProject />
-              </ErrorBoundary>
-            </Suspense>
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/upload-area',
-        element: (
-          <ProtectedRoute>
-            <Suspense fallback={<div>Loading...</div>}>
-              <ErrorBoundary>
-                <CreateProject />
-              </ErrorBoundary>
-            </Suspense>
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/data-extract',
-        element: (
-          <ProtectedRoute>
-            <Suspense fallback={<div>Loading...</div>}>
-              <ErrorBoundary>
-                <CreateProject />
-              </ErrorBoundary>
-            </Suspense>
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/define-tasks',
-        element: (
-          <ProtectedRoute>
-            <Suspense fallback={<div>Loading...</div>}>
-              <ErrorBoundary>
-                <CreateProject />
-              </ErrorBoundary>
-            </Suspense>
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/select-form',
-        element: (
-          <ProtectedRoute>
-            <Suspense fallback={<div>Loading...</div>}>
-              <ErrorBoundary>
-                <CreateProject />
-              </ErrorBoundary>
-            </Suspense>
-          </ProtectedRoute>
-        ),
-      },
+      // {
+      //   path: '/create-project',
+      //   element: (
+      //     <ProtectedRoute>
+      //       <Suspense fallback={<div>Loading...</div>}>
+      //         <ErrorBoundary>
+      //           <CreateProject />
+      //         </ErrorBoundary>
+      //       </Suspense>
+      //     </ProtectedRoute>
+      //   ),
+      // },
+      // {
+      //   path: '/upload-area',
+      //   element: (
+      //     <ProtectedRoute>
+      //       <Suspense fallback={<div>Loading...</div>}>
+      //         <ErrorBoundary>
+      //           <CreateProject />
+      //         </ErrorBoundary>
+      //       </Suspense>
+      //     </ProtectedRoute>
+      //   ),
+      // },
+      // {
+      //   path: '/data-extract',
+      //   element: (
+      //     <ProtectedRoute>
+      //       <Suspense fallback={<div>Loading...</div>}>
+      //         <ErrorBoundary>
+      //           <CreateProject />
+      //         </ErrorBoundary>
+      //       </Suspense>
+      //     </ProtectedRoute>
+      //   ),
+      // },
+      // {
+      //   path: '/define-tasks',
+      //   element: (
+      //     <ProtectedRoute>
+      //       <Suspense fallback={<div>Loading...</div>}>
+      //         <ErrorBoundary>
+      //           <CreateProject />
+      //         </ErrorBoundary>
+      //       </Suspense>
+      //     </ProtectedRoute>
+      //   ),
+      // },
+      // {
+      //   path: '/select-form',
+      //   element: (
+      //     <ProtectedRoute>
+      //       <Suspense fallback={<div>Loading...</div>}>
+      //         <ErrorBoundary>
+      //           <CreateProject />
+      //         </ErrorBoundary>
+      //       </Suspense>
+      //     </ProtectedRoute>
+      //   ),
+      // },
       {
         path: '/basemap-selection',
         element: (
@@ -218,7 +218,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/new-create-project',
+        path: '/create-project',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
@@ -230,7 +230,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/new-upload-area',
+        path: '/upload-area',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
@@ -242,7 +242,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/new-data-extract',
+        path: '/data-extract',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
@@ -254,7 +254,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/new-define-tasks',
+        path: '/split-tasks',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
@@ -266,7 +266,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/new-select-form',
+        path: '/select-form',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
@@ -278,7 +278,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/new-basemap-selection',
+        path: '/basemap-selection',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
@@ -326,7 +326,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: 'edit-project/define-tasks/:projectId',
+        path: 'edit-project/split-tasks/:projectId',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
