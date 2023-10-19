@@ -66,5 +66,7 @@ COPY ./init-user-and-start.sh ./
 RUN chmod +x ./init-user-and-start.sh
 CMD ["./wait-for-it.sh", "central-db:5432", \
     "--", "./init-user-and-start.sh"]
-
 EXPOSE 8383
+# Add Healthcheck
+HEALTHCHECK --start-period=10s --interval=5s --retries=10 \
+    CMD nc -z localhost 8383 || exit 1

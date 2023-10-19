@@ -122,6 +122,9 @@ VOLUME /opt/tiles
 VOLUME /opt/app/images
 # Change to non-root user
 USER appuser
+# Add Healthcheck
+HEALTHCHECK --start-period=10s --interval=5s --retries=8 --timeout=5s \
+    CMD curl --fail http://localhost:8000 || exit 1
 
 
 
