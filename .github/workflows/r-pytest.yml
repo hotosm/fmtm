@@ -23,7 +23,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - id: images
+      - id: download-images
         name: Download image cache
         uses: actions/download-artifact@v3
         with:
@@ -32,7 +32,7 @@ jobs:
         continue-on-error: true
 
       - name: Load Cached Imgs
-        if: images.outputs.download_path == '/tmp/images'
+        if: ${{ steps.download-images.outputs.download_path == '/tmp/images' }}
         run: |
           for image_tar in /tmp/images/*; do
               docker image load --input $image_tar || true
@@ -72,3 +72,13 @@ jobs:
             wait-for-it fmtm-db:5432 --strict \
             -- wait-for-it central:8383 --strict \
             -- pytest
+
+  cache-images:
+    if: ${{ jobs.run-pytest.steps.download-images.outputs.download_path != '/tmp/images' }}
+    uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
+    with:
+      image_names: |
+        postgis/postgis:14-3.3-alpine
+        ghcr.io/hotosm/fmtm/odkcentral:v2023.2.1
+        ghcr.io/hotosm/fmtm/odkcentral-proxy:latest
+      cache_key: image-cache
