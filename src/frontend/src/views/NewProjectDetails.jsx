@@ -305,7 +305,7 @@ const Home = () => {
                     constrainResolution: true,
                     duration: 2000,
                   }}
-                  properties={{ name: 'project-area' }}
+                  layerProperties={{ name: 'project-area' }}
                   mapOnClick={projectClickOnMap}
                   zoomToLayer
                   zIndex={5}

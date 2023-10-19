@@ -48,6 +48,7 @@ const VectorLayer = ({
   onModify,
   onDraw,
   getTaskStatusStyle,
+  layerProperties,
 }) => {
   const [vectorLayer, setVectorLayer] = useState(null);
 
@@ -213,6 +214,11 @@ const VectorLayer = ({
       feat.setProperties(properties);
     });
   }, [vectorLayer, properties]);
+
+  useEffect(() => {
+    if (!map || !vectorLayer || !layerProperties) return;
+    vectorLayer.setProperties(layerProperties);
+  }, [map, vectorLayer, layerProperties]);
 
   // style on hover
   useEffect(() => {
