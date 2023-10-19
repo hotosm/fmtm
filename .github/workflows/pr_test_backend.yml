@@ -1,0 +1,20 @@
+name: PR Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+      - staging
+      - development
+    # Workflow is triggered only if src/backend changes
+    paths:
+      - src/backend/**
+  # Allow manual trigger (workflow_dispatch)
+  workflow_dispatch:
+
+jobs:
+  pytest:
+    uses: ./.github/workflows/r-pytest.yml
+    with:
+      image_tag: ci-${{ github.base_ref }}
+    secrets: inherit
