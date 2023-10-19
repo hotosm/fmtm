@@ -1,3 +1,5 @@
+# Workflow for CI/CD of branches, build and auto-deploy
+
 name: Build and Deploy
 
 on:
@@ -23,44 +25,31 @@ jobs:
   frontend-tests:
     uses: ./.github/workflows/r-frontend_tests.yml
 
-  extract-vars:
-    needs:
-      - pytest
-      - frontend-tests
-    uses: ./.github/workflows/r-extract_vars.yml
-    with:
-      environment: ${{ github.ref_name }}
-
   backend-build:
     uses: hotosm/gh-workflows/.github/workflows/image_build.yml@main
-    needs: [extract-vars]
     with:
       context: src/backend
       build_target: prod
-      image_tags: |
-        "ghcr.io/hotosm/fmtm/backend:${{ needs.extract-vars.outputs.api_version }}-${{ github.ref_name }}"
-        "ghcr.io/hotosm/fmtm/backend:latest"
+      image_name: ghcr.io/${{ github.repository }}/backend
       build_args: |
-        APP_VERSION=${{ needs.extract-vars.outputs.api_version }}
+        APP_VERSION=${{ github.ref_name }}
+        COMMIT_REF=${{ github.sha }}
 
   frontend-main-build:
     uses: hotosm/gh-workflows/.github/workflows/image_build.yml@main
-    needs: [extract-vars]
     with:
       context: src/frontend
       dockerfile: prod.dockerfile
       build_target: prod
-      image_tags: |
-        "ghcr.io/hotosm/fmtm/frontend:${{ needs.extract-vars.outputs.frontend_main_version }}-${{ github.ref_name }}"
-        "ghcr.io/hotosm/fmtm/frontend:latest"
+      image_name: ghcr.io/${{ github.repository }}/frontend
       build_args: |
-        APP_VERSION=${{ needs.extract-vars.outputs.frontend_main_version }}
-        VITE_API_URL=${{ needs.extract-vars.outputs.api_url }}
+        APP_VERSION=${{ github.ref_name }}
+        COMMIT_REF=${{ github.sha }}
+        VITE_API_URL=${{ vars.URL_SCHEME }}://${{ vars.API_URL }}"
 
   smoke-test-backend:
     runs-on: ubuntu-latest
     needs:
-      - extract-vars
       - backend-build
     environment:
       name: ${{ github.ref_name }}
@@ -72,13 +61,9 @@ jobs:
       - name: Environment to .env
         env:
           GIT_BRANCH: ${{ github.ref_name }}
-          API_VERSION: ${{ needs.extract-vars.outputs.api_version }}
-          FRONTEND_MAIN_VERSION: ${{ needs.extract-vars.outputs.frontend_main_version }}
         run: |
           echo "${{ secrets.DOTENV }}" > .env
           echo "GIT_BRANCH=${GIT_BRANCH}" >> .env
-          echo "API_VERSION=${API_VERSION}" >> .env
-          echo "FRONTEND_MAIN_VERSION=${FRONTEND_MAIN_VERSION}" >> .env
 
       - name: Backend smoke test
         run: |
@@ -95,7 +80,7 @@ jobs:
           #   -e POSTGRES_DB=fmtm \
           #   "postgis/postgis:14-3.3-alpine"
 
-          # docker pull "ghcr.io/hotosm/fmtm/backend:${API_VERSION}-${GIT_BRANCH}"
+          # docker pull "ghcr.io/hotosm/fmtm/backend:${GIT_BRANCH}"
           # docker run --rm -d \
           #   --network=fmtm \
           #   -p 8080:8080 \
@@ -104,7 +89,7 @@ jobs:
           #   -e OSM_SECRET_KEY="test" \
           #   -e S3_ACCESS_KEY="fmtm" \
           #   -e S3_SECRET_KEY="somelongpassword" \
-          #   "ghcr.io/hotosm/fmtm/backend:${API_VERSION}-${GIT_BRANCH}"
+          #   "ghcr.io/hotosm/fmtm/backend:${GIT_BRANCH}"
 
           # # First wait 10 seconds for API
           # sleep 10
@@ -117,7 +102,6 @@ jobs:
   smoke-test-frontend:
     runs-on: ubuntu-latest
     needs:
-      - extract-vars
       - frontend-main-build
     environment:
       name: ${{ github.ref_name }}
@@ -132,7 +116,6 @@ jobs:
   deploy-containers:
     runs-on: ubuntu-latest
     needs:
-      - extract-vars
       - smoke-test-backend
       - smoke-test-frontend
     environment:
@@ -145,13 +128,9 @@ jobs:
       - name: Environment to .env
         env:
           GIT_BRANCH: ${{ github.ref_name }}
-          API_VERSION: ${{ needs.extract-vars.outputs.api_version }}
-          FRONTEND_MAIN_VERSION: ${{ needs.extract-vars.outputs.frontend_main_version }}
         run: |
           echo "${{ secrets.DOTENV }}" > .env
           echo "GIT_BRANCH=${GIT_BRANCH}" >> .env
-          echo "API_VERSION=${API_VERSION}" >> .env
-          echo "FRONTEND_MAIN_VERSION=${FRONTEND_MAIN_VERSION}" >> .env
 
       - uses: webfactory/ssh-agent@v0.7.0
         with:
