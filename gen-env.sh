@@ -191,7 +191,7 @@ echo "Generating dotenv file ${DOTENV_NAME}"
 
 echo "### ODK Central ###"
 # FIXME set central version via command line
-echo "ODK_CENTRAL_VERSION=v2023.2.1" >> "${DOTENV_NAME}"
+echo "ODK_CENTRAL_VERSION=v2023.4.0" >> "${DOTENV_NAME}"
 echo "ODK_CENTRAL_URL=${ODK_CENTRAL_URL}" >> "${DOTENV_NAME}"
 echo "ODK_CENTRAL_USER=${ODK_CENTRAL_USER}" >> "${DOTENV_NAME}"
 echo "ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}" >> "${DOTENV_NAME}"

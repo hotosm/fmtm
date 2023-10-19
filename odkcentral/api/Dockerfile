@@ -15,7 +15,7 @@
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
-ARG node_version=16.19.1
+ARG node_version=18
 
 
 
@@ -24,7 +24,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         "jq" \
     && rm -rf /var/lib/apt/lists/*
-ARG ODK_CENTRAL_VERSION=${ODK_CENTRAL_VERSION}
+ARG ODK_CENTRAL_VERSION
 RUN git clone --depth 1 --branch ${ODK_CENTRAL_VERSION} \
     "https://github.com/getodk/central.git" \
     && cd central && git submodule update --init
