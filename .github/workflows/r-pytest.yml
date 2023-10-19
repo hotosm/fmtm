@@ -65,9 +65,9 @@ jobs:
 
       - name: Load Cached Imgs
         run: |
-          docker image load --input ${{ needs.cache-img-postgis.outputs.cache_key }} || true
-          docker image load --input ${{ needs.cache-img-odk.outputs.cache_key }} || true
-          docker image load --input ${{ needs.cache-img-odk-proxy-cache.outputs.cache_key }} || true
+          docker image load --input ${{ needs.cache-img-postgis.outputs.cache_key }}.tar || true
+          docker image load --input ${{ needs.cache-img-odk.outputs.cache_key }}.tar || true
+          docker image load --input ${{ needs.cache-img-odk-proxy.outputs.cache_key.tar }} || true
 
       - name: Environment to .env
         env:
