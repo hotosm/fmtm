@@ -37,6 +37,7 @@ import { basicGeojsonTemplate } from '../utilities/mapUtils';
 import getTaskStatusStyle from '../utilfunctions/getTaskStatusStyle';
 import { defaultStyles } from '../components/MapComponent/OpenLayersComponent/helpers/styleUtils';
 import MapLegends from '../components/MapLegends';
+import Accordion from '../components/common/Accordion';
 
 const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -334,6 +335,19 @@ const Home = () => {
                   zIndex={5}
                 />
               )}
+              <div className="fmtm-hidden sm:fmtm-block fmtm-absolute fmtm-bottom-5 fmtm-left-5 fmtm-z-50 fmtm-rounded-lg">
+                <Accordion
+                  body={<MapLegends defaultTheme={defaultTheme} />}
+                  header={
+                    <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
+                      <AssetModules.LegendToggleIcon className=" fmtm-text-primaryRed" sx={{ fontSize: '30px' }} />
+                      <p className="fmtm-text-lg fmtm-font-normal">Legend</p>
+                    </div>
+                  }
+                  onToggle={() => {}}
+                  className="fmtm-py-0 fmtm-pb-0 fmtm-rounded-lg hover:fmtm-bg-gray-50"
+                />
+              </div>
               <MapControlComponent map={map} />
             </MapComponent>
             <div
