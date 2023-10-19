@@ -1,22 +1,18 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../../node_modules/ol/ol.css';
 import '../styles/home.scss';
 import WindowDimension from '../hooks/WindowDimension';
 import MapDescriptionComponents from '../components/MapDescriptionComponents';
 import ActivitiesPanel from '../components/ActivitiesPanel';
-import OpenLayersMap from '../components/OpenLayersMap';
 import environment from '../environment';
 import { ProjectById } from '../api/Project';
 import { ProjectActions } from '../store/slices/ProjectSlice';
 import CustomizedSnackbar from '../utilities/CustomizedSnackbar';
-import { defaults } from 'ol/control/defaults';
 import OnScroll from '../hooks/OnScroll';
-import TasksLayer from '../components/TasksLayer';
 import { HomeActions } from '../store/slices/HomeSlice';
 import CoreModules from '../shared/CoreModules';
 import AssetModules from '../shared/AssetModules';
 import FmtmLogo from '../assets/images/hotLog.png';
-
 import GenerateMbTiles from '../components/GenerateMbTiles';
 import { ProjectBuildingGeojsonService } from '../api/SubmissionService';
 import TaskSectionPopup from '../components/ProjectDetails/TaskSectionPopup';
@@ -43,25 +39,23 @@ const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
   const params = CoreModules.useParams();
   const navigate = useNavigate();
+  const { windowSize, type } = WindowDimension();
 
-  const defaultTheme = CoreModules.useAppSelector((state) => state.theme.hotTheme);
-  const state = CoreModules.useAppSelector((state) => state.project);
-  const taskModalStatus = CoreModules.useAppSelector((state) => state.project.taskModalStatus);
-
-  const projectInfo = CoreModules.useAppSelector((state) => state.home.selectedProject);
-  const stateDialog = CoreModules.useAppSelector((state) => state.home.dialogStatus);
-  const stateSnackBar = CoreModules.useAppSelector((state) => state.home.snackbar);
   const [taskId, setTaskId] = useState();
-  const [toggleGenerateModal, setToggleGenerateModal] = useState(false);
   const [mainView, setView] = useState();
   const [featuresLayer, setFeaturesLayer] = useState();
-  const encodedId = params.id;
-  const decodedId = environment.decode(encodedId);
-  const { windowSize, type } = WindowDimension();
-  const projectBuildingGeojson = CoreModules.useAppSelector((state) => state.project.projectBuildingGeojson);
-  const mobileFooterSelection = CoreModules.useAppSelector((state) => state.project.mobileFooterSelection);
+  const [toggleGenerateModal, setToggleGenerateModal] = useState(false);
   const [taskBuildingGeojson, setTaskBuildingGeojson] = useState(null);
   const [initialFeaturesLayer, setInitialFeaturesLayer] = useState(null);
+
+  const encodedId = params.id;
+  const decodedId = environment.decode(encodedId);
+  const defaultTheme = CoreModules.useAppSelector((state) => state.theme.hotTheme);
+  const state = CoreModules.useAppSelector((state) => state.project);
+  const projectInfo = CoreModules.useAppSelector((state) => state.home.selectedProject);
+  const stateSnackBar = CoreModules.useAppSelector((state) => state.home.snackbar);
+  const projectBuildingGeojson = CoreModules.useAppSelector((state) => state.project.projectBuildingGeojson);
+  const mobileFooterSelection = CoreModules.useAppSelector((state) => state.project.mobileFooterSelection);
   const mapTheme = CoreModules.useAppSelector((state) => state.theme.hotTheme);
 
   //snackbar handle close funtion
