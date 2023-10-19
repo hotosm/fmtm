@@ -80,7 +80,7 @@ jobs:
 
   cache-images:
     needs: [run-pytest]
-    if: ${{ needs.run-pytest.outputs.img_cache_loaded }}
+    if: ${{ needs.run-pytest.outputs.img_cache_loaded =! true}}
     uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
     with:
       image_names: |
