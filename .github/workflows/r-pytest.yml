@@ -38,15 +38,6 @@ jobs:
               docker image load --input $image_tar || true
           done
 
-      - if: images.outputs.download_path != '/tmp/images'
-        uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
-        with:
-          image_names: |
-            postgis/postgis:14-3.3-alpine
-            ghcr.io/hotosm/fmtm/odkcentral:v2023.2.1
-            ghcr.io/hotosm/fmtm/odkcentral-proxy:latest
-          cache_key: image-cache
-
       - name: Environment to .env
         env:
           DEBUG: True
