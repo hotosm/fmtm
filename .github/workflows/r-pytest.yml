@@ -19,6 +19,9 @@ jobs:
     environment:
       name: ${{ inputs.environment || 'test' }}
 
+    outputs:
+      img_cache_loaded: ${{ steps.load-cache.outputs.img_cache_loaded }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -32,11 +35,13 @@ jobs:
         continue-on-error: true
 
       - name: Load Cached Imgs
+        id: load-cache
         if: ${{ steps.download-images.outputs.download_path == '/tmp/images' }}
         run: |
           for image_tar in /tmp/images/*; do
               docker image load --input $image_tar || true
           done
+          echo "img_cache_loaded=true" >> $GITHUB_OUTPUT
 
       - name: Environment to .env
         env:
@@ -74,7 +79,8 @@ jobs:
             -- pytest
 
   cache-images:
-    if: ${{ jobs.run-pytest.steps.download-images.outputs.download_path != '/tmp/images' }}
+    needs: [run-pytest]
+    if: ${{ needs.run-pytest.outputs.img_cache_loaded }}
     uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
     with:
       image_names: |
