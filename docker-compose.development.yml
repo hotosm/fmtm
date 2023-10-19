@@ -154,3 +154,9 @@ services:
       - fmtm-net
     command: minio server # --console-address ":9090"
     restart: "unless-stopped"
+    healthcheck:
+      test: curl --fail http://localhost:9000/minio/health/live || exit 1
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 3

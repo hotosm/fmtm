@@ -156,6 +156,7 @@ services:
       - EMAIL_IGNORE_TLS=${EMAIL_IGNORE_TLS:-true}
       - EMAIL_USER=${EMAIL_USER:-''}
       - EMAIL_PASSWORD=${EMAIL_PASSWORD:-''}
+      - OIDC_ENABLED=${OIDC_ENABLED:-false}
       - SENTRY_ORG_SUBDOMAIN=${SENTRY_ORG_SUBDOMAIN:-o130137}
       - SENTRY_KEY=${SENTRY_KEY:-3cf75f54983e473da6bd07daddf0d2ee}
       - SENTRY_PROJECT=${SENTRY_PROJECT:-1298632}
@@ -163,13 +164,6 @@ services:
       - "8383:8383"
     networks:
       - fmtm-dev
-    command:
-      [
-        "./wait-for-it.sh",
-        "${CENTRAL_DB_HOST:-central-db}:5432",
-        "--",
-        "./init-user-and-start.sh",
-      ]
     restart: "unless-stopped"
 
   central-proxy:
@@ -199,3 +193,9 @@ services:
       - fmtm-dev
     command: minio server # --console-address ":9090"
     restart: "unless-stopped"
+    healthcheck:
+      test: curl --fail http://localhost:9000/minio/health/live || exit 1
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 3
