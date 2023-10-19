@@ -1,4 +1,4 @@
-# Workflow for CI/CD of branches, build and auto-deploy
+# Workflow for build and auto-deploy of branches
 
 name: Build and Deploy
 
