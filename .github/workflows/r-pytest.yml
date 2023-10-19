@@ -45,26 +45,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Restore Img Caches
-        id: restore-imgs
-        uses: actions/cache@v3
+      - name: Download Postgis Img
+        uses: actions/download-artifact@v3
         with:
-          path: |
-            ${{ needs.cache-img-postgis.outputs.cache_path }}
-            ${{ needs.cache-img-odk.outputs.cache_path }}
-            ${{ needs.cache-img-odk-proxy-cache.outputs.cache_path }}
-          key: img-
-          restore-keys: |
-            ${{ needs.cache-img-postgis.outputs.cache_key }}
-            ${{ needs.cache-img-odk.outputs.cache_key }}
-            ${{ needs.cache-img-odk-proxy-cache.outputs.cache_key }}
+          name: ${{ needs.cache-img-postgis.outputs.cache_key }}
+          path: /tmp/${{ needs.cache-img-postgis.outputs.cache_key }}.tar
+
+      - name: Download ODK Img
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ needs.cache-img-odk.outputs.cache_key }}
+          path: /tmp/${{ needs.cache-img-odk.outputs.cache_key }}.tar
+
+      - name: Download ODK Proxy Img
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ needs.cache-img-odk-proxy.outputs.cache_key }}
+          path: /tmp/${{ needs.cache-img-odk-proxy.outputs.cache_key }}.tar
 
       - name: Load Cached Imgs
-        if: steps.restore-imgs.outputs.cache-hit == 'true'
         run: |
-          docker image load --input ${{ needs.cache-img-postgis.outputs.cache_path }} || true
-          docker image load --input ${{ needs.cache-img-odk.outputs.cache_path }} || true
-          docker image load --input ${{ needs.cache-img-odk-proxy-cache.outputs.cache_path }} || true
+          docker image load --input ${{ needs.cache-img-postgis.outputs.cache_key }} || true
+          docker image load --input ${{ needs.cache-img-odk.outputs.cache_key }} || true
+          docker image load --input ${{ needs.cache-img-odk-proxy-cache.outputs.cache_key }} || true
 
       - name: Environment to .env
         env:

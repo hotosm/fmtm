@@ -1,4 +1,4 @@
-name: PR Tests
+name: PR Test Backend
 
 on:
   pull_request:
