@@ -369,7 +369,7 @@ async def upload_multi_project_boundary(
     content = await upload.read()
     boundary = json.loads(content)
 
-    #Validatiing Coordinate Reference System
+    # Validatiing Coordinate Reference System
     check_crs(boundary)
 
     log.debug("Creating tasks for each polygon in project")
@@ -415,7 +415,7 @@ async def task_split(
     content = await upload.read()
     boundary = json.loads(content)
 
-    #Validatiing Coordinate Reference System
+    # Validatiing Coordinate Reference System
     check_crs(boundary)
 
     result = await project_crud.split_into_tasks(
@@ -455,7 +455,7 @@ async def upload_project_boundary(
     content = await upload.read()
     boundary = json.loads(content)
 
-    #Validatiing Coordinate Reference System
+    # Validatiing Coordinate Reference System
     check_crs(boundary)
 
     # update project boundary and dimension
@@ -494,7 +494,7 @@ async def edit_project_boundary(
     content = await upload.read()
     boundary = json.loads(content)
 
-    #Validatiing Coordinate Reference System
+    # Validatiing Coordinate Reference System
     check_crs(boundary)
 
     result = project_crud.update_project_boundary(db, project_id, boundary, dimension)
@@ -774,7 +774,7 @@ async def preview_tasks(upload: UploadFile = File(...), dimension: int = Form(50
     content = await upload.read()
     boundary = json.loads(content)
 
-    #Validatiing Coordinate Reference System
+    # Validatiing Coordinate Reference System
     check_crs(boundary)
 
     result = await project_crud.preview_tasks(boundary, dimension)
@@ -810,7 +810,7 @@ async def add_features(
     content = await upload.read()
     features = json.loads(content)
 
-    #Validatiing Coordinate Reference System
+    # Validatiing Coordinate Reference System
     check_crs(features)
 
     # generate a unique task ID using uuid
