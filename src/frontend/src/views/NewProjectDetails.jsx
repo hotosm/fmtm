@@ -33,8 +33,9 @@ import LayerSwitcherControl from '../components/MapComponent/OpenLayersComponent
 import MapControlComponent from '../components/ProjectDetails/MapControlComponent';
 import { VectorLayer } from '../components/MapComponent/OpenLayersComponent/Layers';
 import { geojsonObjectModel } from '../constants/geojsonObjectModal';
-import { buildingStyle, basicGeojsonTemplate } from '../utilities/mapUtils';
+import { basicGeojsonTemplate } from '../utilities/mapUtils';
 import getTaskStatusStyle from '../utilfunctions/getTaskStatusStyle';
+import { defaultStyles } from '../components/MapComponent/OpenLayersComponent/helpers/styleUtils';
 
 const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -181,6 +182,12 @@ const Home = () => {
         padding: [20, 350, 50, 10],
       });
     }
+  };
+
+  const buildingStyle = {
+    ...defaultStyles,
+    lineColor: '#FF0000',
+    fillOpacity: '0',
   };
 
   return (
