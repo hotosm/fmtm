@@ -36,6 +36,7 @@ import { geojsonObjectModel } from '../constants/geojsonObjectModal';
 import { basicGeojsonTemplate } from '../utilities/mapUtils';
 import getTaskStatusStyle from '../utilfunctions/getTaskStatusStyle';
 import { defaultStyles } from '../components/MapComponent/OpenLayersComponent/helpers/styleUtils';
+import MapLegends from '../components/MapLegends';
 
 const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -357,6 +358,16 @@ const Home = () => {
               <div className="fmtm-absolute fmtm-bottom-[5.8rem] sm:fmtm-hidden">
                 <img src={FmtmLogo} alt="Hot Fmtm Logo" className="fmtm-ml-2 fmtm-z-10 fmtm-w-[5.2rem]" />
               </div>
+            )}
+            {mobileFooterSelection === 'mapLegend' && (
+              <BottomSheet
+                body={
+                  <div className="fmtm-mb-[12vh]">
+                    <MapLegends defaultTheme={defaultTheme} />
+                  </div>
+                }
+                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection('explore'))}
+              />
             )}
             {mobileFooterSelection === 'others' && (
               <BottomSheet
