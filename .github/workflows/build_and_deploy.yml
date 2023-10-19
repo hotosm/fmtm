@@ -67,37 +67,7 @@ jobs:
 
       - name: Backend smoke test
         run: |
-          echo "Not implemented" 
-          # source .env
-          # docker network create fmtm
-
-          # docker pull "postgis/postgis:14-3.3-alpine"
-          # docker run --rm -d \
-          #   --name=fmtm-db \
-          #   --network=fmtm \
-          #   -e POSTGRES_USER=fmtm \
-          #   -e POSTGRES_PASSWORD=fmtm \
-          #   -e POSTGRES_DB=fmtm \
-          #   "postgis/postgis:14-3.3-alpine"
-
-          # docker pull "ghcr.io/hotosm/fmtm/backend:${GIT_BRANCH}"
-          # docker run --rm -d \
-          #   --network=fmtm \
-          #   -p 8080:8080 \
-          #   -e OSM_CLIENT_ID="test" \
-          #   -e OSM_CLIENT_SECRET="test" \
-          #   -e OSM_SECRET_KEY="test" \
-          #   -e S3_ACCESS_KEY="fmtm" \
-          #   -e S3_SECRET_KEY="somelongpassword" \
-          #   "ghcr.io/hotosm/fmtm/backend:${GIT_BRANCH}"
-
-          # # First wait 10 seconds for API
-          # sleep 10
-          # # Check the exit status of curl and exit the job if it fails
-          # if ! curl -f http://localhost:8080/docs; then
-          #   echo "curl failed to access http://localhost:8080/docs"
-          #   exit 1
-          # fi
+          docker compose up -d api --wait --wait-timeout 60
 
   smoke-test-frontend:
     runs-on: ubuntu-latest
