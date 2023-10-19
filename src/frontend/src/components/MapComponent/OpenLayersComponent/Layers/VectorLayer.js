@@ -47,6 +47,7 @@ const VectorLayer = ({
   setStyle,
   onModify,
   onDraw,
+  getTaskStatusStyle,
 }) => {
   const [vectorLayer, setVectorLayer] = useState(null);
 
@@ -181,6 +182,11 @@ const VectorLayer = ({
     if (!map || !vectorLayer || !visibleOnMap || !setStyle) return;
     vectorLayer.setStyle(setStyle);
   }, [map, setStyle, vectorLayer, visibleOnMap]);
+
+  useEffect(() => {
+    if (!map || !vectorLayer || !getTaskStatusStyle) return;
+    vectorLayer.setStyle((feature) => getTaskStatusStyle(feature));
+  }, [map, vectorLayer, getTaskStatusStyle]);
 
   useEffect(() => {
     if (!vectorLayer || !style.visibleOnMap) return;
