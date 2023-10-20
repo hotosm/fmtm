@@ -63,7 +63,7 @@ services:
       - "traefik.http.routers.http_catchall.middlewares=https_redirect"
 
   fmtm-db:
-    image: "postgis/postgis:14-3.3-alpine"
+    image: "postgis/postgis:${POSTGIS_TAG:-14-3.3-alpine}"
     container_name: fmtm_db
     volumes:
       - fmtm_db_data:/var/lib/postgresql/data/
