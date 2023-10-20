@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -eo pipefail
 
 # Wait for database to be available
