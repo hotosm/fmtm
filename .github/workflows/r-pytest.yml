@@ -25,6 +25,8 @@ jobs:
     if: ${{ inputs.build_test_img }}
     environment:
       name: ${{ inputs.environment }}
+    outputs:
+      cache-hit: ${{ steps.image-cache.cache-hit }}
     steps:
       - id: image-cache
         uses: actions/cache@v3
