@@ -339,7 +339,8 @@ const Home = () => {
                     </div>
                   }
                   onToggle={() => {}}
-                  className="fmtm-py-0 fmtm-pb-0 fmtm-rounded-lg hover:fmtm-bg-gray-50"
+                  className="fmtm-py-0 !fmtm-pb-0 fmtm-rounded-lg hover:fmtm-bg-gray-50"
+                  collapsed={true}
                 />
               </div>
               <MapControlComponent map={map} />
