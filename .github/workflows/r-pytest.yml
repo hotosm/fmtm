@@ -102,7 +102,7 @@ jobs:
           done
 
           # Cache backend build
-          image=${{ needs.backend-test-build.outputs.image_name || inputs.image_tag }}
+          image=${{ needs.backend-test-build.outputs.image_tag || inputs.image_tag }}
           pull_and_package_image "$image"
 
       - name: Load Cached Imgs
@@ -114,7 +114,7 @@ jobs:
 
       - name: Vars and Secrets to Env
         env:
-          API_TAG_OVERRIDE: ${{ needs.backend-test-build.outputs.image_name || inputs.image_tag }}
+          API_TAG_OVERRIDE: ${{ needs.backend-test-build.outputs.image_tag || inputs.image_tag }}
           GIT_BRANCH: ${{ github.ref_name }}
           VARS_CONTEXT: ${{ toJson(vars) }}
           SECRETS_CONTEXT: ${{ toJson(secrets) }}
