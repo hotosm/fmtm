@@ -102,9 +102,10 @@ jobs:
           done
 
           # Cache backend build
-          image=${{ needs.backend-test-build.outputs.image_tag || inputs.image_tag }}
+          image_tag=${{ needs.backend-test-build.outputs.image_tag || inputs.image_tag }}
+          image="ghcr.io/${{ github.repository }}/backend:${image_tag}"
           pull_and_package_image "$image"
-          echo "BACKEND_IMG_TAG=${image}" >> $GITHUB_ENV
+          echo "API_TAG_OVERRIDE=${image_tag}" >> $GITHUB_ENV
 
       - name: Load Cached Imgs
         if: ${{ steps.image-cache.outputs.cache-hit == 'true' }}
@@ -113,15 +114,16 @@ jobs:
               docker image load --input $image_tar || true
           done
 
-          # Set BACKEND_IMG_TAG if not set
+          # Set API_TAG_OVERRIDE if not set
+          echo "Getting backend image tag via docker"
           image=$(docker image ls | grep backend)
           image_tag="${image##*:}"
           echo "Image Tag: $image_tag"
-          echo "BACKEND_IMG_TAG=${image_tag}" >> $GITHUB_ENV
+          echo "API_TAG_OVERRIDE=${image_tag}" >> $GITHUB_ENV
 
       - name: Vars and Secrets to Env
         env:
-          API_TAG_OVERRIDE: ${BACKEND_IMG_TAG}
+          API_TAG_OVERRIDE: ${{ env.API_TAG_OVERRIDE }}
           GIT_BRANCH: ${{ github.ref_name }}
           VARS_CONTEXT: ${{ toJson(vars) }}
           SECRETS_CONTEXT: ${{ toJson(secrets) }}
