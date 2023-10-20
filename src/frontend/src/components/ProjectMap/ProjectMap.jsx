@@ -22,6 +22,7 @@ const ProjectMap = ({}) => {
 
   const [projectBoundaries, setProjectBoundaries] = useState(null);
   const [buildingBoundaries, setBuildingBoundaries] = useState(null);
+  console.log(buildingBoundaries)
 
   if (projectTaskBoundries?.length > 0 && projectBoundaries === null) {
     const taskGeojsonFeatureCollection = {
