@@ -16,5 +16,5 @@ jobs:
   pytest:
     uses: ./.github/workflows/r-pytest.yml
     with:
-      image_tag: ci-${{ github.base_ref }}
+      build_test_img: true
     secrets: inherit

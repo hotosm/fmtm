@@ -4,20 +4,43 @@ on:
   workflow_call:
     inputs:
       image_tag:
-        required: true
-        type: string
-      environment:
+        description: "Optional image tag override."
         required: false
         type: string
+        default: ci-development
+      build_test_img:
+        description: "Build an image prior to test, e.g. if new deps added."
+        required: false
+        type: boolean
+        default: false
+      environment:
+        description: "The environment to use for testing."
+        required: false
+        type: string
+        default: "test"
 
 permissions:
   contents: read
 
 jobs:
+  backend-test-build:
+    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@main
+    if: ${{ inputs.build_test_img }}
+    with:
+      context: src/backend
+      build_target: ci
+      image_name: ghcr.io/${{ github.repository }}/backend
+      build_args: |
+        APP_VERSION=${{ github.ref_name }}
+        COMMIT_REF=${{ github.sha }}
+
   run-pytest:
     runs-on: ubuntu-latest
+    needs: [backend-test-build]
+    # Ensure it runs, even if build_test_img=false
+    if: always()
     environment:
-      name: ${{ inputs.environment || 'test' }}
+      name: ${{ inputs.environment}}
 
     steps:
       - name: Checkout repository
@@ -32,29 +55,39 @@ jobs:
       - name: Save Local Images
         if: steps.image-cache.outputs.cache-hit != 'true'
         run: |
+          # Function to pull and package Docker image
+          function pull_and_package_image() {
+            local image=$1
+            echo "Processing image ${image}"
+            docker pull "${image}"
+
+            if [ $? -eq 0 ]; then
+              img_underscores=${image//[:\/.]/_}
+              echo "Packaging image to /tmp/images/${img_underscores}.tar"
+              docker image save "${image}" --output "/tmp/images/${img_underscores}.tar"
+            else
+              echo "Failed to pull the image: ${image}"
+            fi
+          }
+
           # Make artifact dir
           mkdir -p /tmp/images
 
-          images_array=()
-          images_array+=("docker.io/postgis/postgis:${{ vars.POSTGIS_TAG }}")
-          images_array+=("ghcr.io/hotosm/fmtm/odkcentral:${{ vars.ODK_CENTRAL_TAG }}")
-          images_array+=("ghcr.io/hotosm/fmtm/odkcentral-proxy:${{ vars.ODK_CENTRAL_TAG }}")
-          images_array+=("docker.io/minio/minio:${{ vars.MINIO_TAG }}")
+          images_array=(
+            "docker.io/postgis/postgis:${{ vars.POSTGIS_TAG }}"
+            "ghcr.io/hotosm/fmtm/odkcentral:${{ vars.ODK_CENTRAL_TAG }}"
+            "ghcr.io/hotosm/fmtm/odkcentral-proxy:${{ vars.ODK_CENTRAL_TAG }}"
+            "docker.io/minio/minio:${{ vars.MINIO_TAG }}"
+          )
 
-          # Iterate images
+          # Iterate through dependency images
           for image in "${images_array[@]}"; do
-              echo "Processing image ${image}"
-              docker pull "${image}"
-
-              if [ $? -eq 0 ]; then
-                  img_underscores=${image//[:\/.]/_}
-                  echo "Packaging image to /tmp/images/${img_underscores}.tar"
-                  docker image save "${image}" \
-                      --output /tmp/images/${img_underscores}.tar
-              else
-                  echo "Failed to pull the image: ${image}"
-              fi
+            pull_and_package_image "$image"
           done
+
+          # Cache backend build
+          image=${{ needs.backend-test-build.outputs.image_name || inputs.image_tag }}
+          pull_and_package_image "$image"
 
       - name: Load Cached Imgs
         if: steps.image-cache.outputs.cache-hit == 'true'
@@ -65,7 +98,7 @@ jobs:
 
       - name: Vars and Secrets to Env
         env:
-          API_TAG_OVERRIDE: ${{ inputs.image_tag }}
+          API_TAG_OVERRIDE: ${{ needs.backend-test-build.outputs.image_name || inputs.image_tag }}
           GIT_BRANCH: ${{ github.ref_name }}
           VARS_CONTEXT: ${{ toJson(vars) }}
           SECRETS_CONTEXT: ${{ toJson(secrets) }}
