@@ -84,7 +84,8 @@ jobs:
     uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
     with:
       image_names: |
-        postgis/postgis:14-3.3-alpine
-        ghcr.io/hotosm/fmtm/odkcentral:v2023.2.1
-        ghcr.io/hotosm/fmtm/odkcentral-proxy:latest
+        docker.io/postgis/postgis:${{ vars.POSTGIS_TAG }}-alpine
+        ghcr.io/hotosm/fmtm/odkcentral:${{ vars.ODK_CENTRAL_TAG }}
+        ghcr.io/hotosm/fmtm/odkcentral-proxy:${{ vars.ODK_CENTRAL_TAG }}
+        docker.io/minio/minio:${{ vars.MINIO_TAG }}
       cache_key: image-cache
