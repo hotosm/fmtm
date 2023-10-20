@@ -14,20 +14,14 @@ jobs:
   build_doxygen:
     uses: hotosm/gh-workflows/.github/workflows/doxygen_build.yml@main
     with:
-      cache_paths: |
-        docs/apidocs
-        docs/openapi.json
-      cache_key: docs-build
+      output_path: docs/apidocs
 
   build_openapi_json:
     uses: hotosm/gh-workflows/.github/workflows/openapi_build.yml@main
     with:
       image: ghcr.io/hotosm/fmtm/backend:ci-${{ github.ref_name }}
       example_env_file_path: ".env.example"
-      cache_paths: |
-        docs/apidocs
-        docs/openapi.json
-      cache_key: docs-build
+      output_path: docs/openapi.json
 
   publish_docs:
     uses: hotosm/gh-workflows/.github/workflows/mkdocs_build.yml@main
@@ -36,7 +30,5 @@ jobs:
       - build_openapi_json
     with:
       image: ghcr.io/hotosm/fmtm/backend:ci-${{ github.ref_name }}
-      cache_paths: |
-        docs/apidocs
-        docs/openapi.json
-      cache_key: docs-build
+      doxygen: true
+      openapi: true
