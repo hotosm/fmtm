@@ -75,7 +75,7 @@ jobs:
         run: |
           docker compose run api \
             wait-for-it fmtm-db:5432 --strict \
-            -- wait-for-it central:8383 --strict --timeout 30 \
+            -- wait-for-it central:8383 --strict --timeout=30 \
             -- pytest
 
   cache-images:
