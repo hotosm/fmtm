@@ -21,9 +21,6 @@ on:
 
 jobs:
   backend-test-build:
-    # Write permissions required for build
-    permissions:
-      contents: write
     uses: hotosm/gh-workflows/.github/workflows/image_build.yml@main
     if: ${{ inputs.build_test_img }}
     with:
