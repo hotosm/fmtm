@@ -135,7 +135,7 @@ const Home = () => {
       features: features,
     };
     setInitialFeaturesLayer(taskBuildingGeojsonFeatureCollection);
-  }, [state.projectTaskBoundries[0]?.taskBoundries]);
+  }, [state.projectTaskBoundries[0]?.taskBoundries?.length]);
 
   useEffect(() => {
     if (!map) return;
