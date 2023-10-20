@@ -43,33 +43,23 @@ jobs:
           done
           echo "img_cache_loaded=true" >> $GITHUB_OUTPUT
 
-      - name: Environment to .env
+      - name: Vars and Secrets to Env
         env:
-          DEBUG: True
-          LOG_LEVEL: DEBUG
-          API_TAG_OVERRIDE: "${{ inputs.image_tag }}"
-          FRONTEND_MAIN_URL: "${{ vars.FRONTEND_MAIN_URL }}"
-          ODK_CENTRAL_URL: "${{ vars.ODK_CENTRAL_URL }}"
-          ODK_CENTRAL_USER: "${{ vars.ODK_CENTRAL_USER }}"
-          ODK_CENTRAL_PASSWD: "${{ secrets.ODK_CENTRAL_PASSWD }}"
-          OSM_CLIENT_ID: "${{ secrets.OSM_CLIENT_ID }}"
-          OSM_CLIENT_SECRET: "${{ secrets.OSM_CLIENT_SECRET }}"
-          OSM_SECRET_KEY: "${{ secrets.OSM_SECRET_KEY }}"
-          S3_ACCESS_KEY: "fmtm"
-          S3_SECRET_KEY: "somelongpassword"
+          API_TAG_OVERRIDE: ${{ inputs.image_tag }}
+          GIT_BRANCH: ${{ github.ref_name }}
+          VARS_CONTEXT: ${{ toJson(vars) }}
+          SECRETS_CONTEXT: ${{ toJson(secrets) }}
         run: |
-          echo "DEBUG=${DEBUG}" >> .env
-          echo "LOG_LEVEL=${LOG_LEVEL}" >> .env
-          echo "API_TAG_OVERRIDE=${API_TAG_OVERRIDE}" >> .env
-          echo "FRONTEND_MAIN_URL=${FRONTEND_MAIN_URL}" >> .env
-          echo "ODK_CENTRAL_URL=${ODK_CENTRAL_URL}" >> .env
-          echo "ODK_CENTRAL_USER=${ODK_CENTRAL_USER}" >> .env
-          echo "ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}" >> .env
-          echo "OSM_CLIENT_ID=${OSM_CLIENT_ID}" >> .env
-          echo "OSM_CLIENT_SECRET=${OSM_CLIENT_SECRET}" >> .env
-          echo "OSM_SECRET_KEY=${OSM_SECRET_KEY}" >> .env
-          echo "S3_ACCESS_KEY=${S3_ACCESS_KEY}" >> .env
-          echo "S3_SECRET_KEY=${S3_SECRET_KEY}" >> .env
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          to_envs() { jq -r "to_entries[] | \"\(.key)<<$EOF\n\(.value)\n$EOF\n\""; }
+
+          echo "API_TAG_OVERRIDE=${API_TAG_OVERRIDE}" >> $GITHUB_ENV
+          echo "GIT_BRANCH=${GIT_BRANCH}" >> $GITHUB_ENV
+          echo "${{ env.VARS_CONTEXT }}" | to_envs >> $GITHUB_ENV
+          echo "${{ env.SECRETS_CONTEXT }}" | to_envs >> $GITHUB_ENV
+
+      - name: Create .env file
+        run: env > .env
 
       - name: Run PyTest
         run: |

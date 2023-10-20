@@ -40,7 +40,7 @@ COPY --from=repo central/files/service/scripts/ ./
 COPY --from=repo central/files/service/config.json.template /usr/share/odk/
 COPY --from=repo central/files/service/odk-cmd /usr/bin/
 # Add entrypoint script to init user
-COPY ./init-user-and-start.sh ./
+COPY init-user-and-start.sh /
 # package.json must be added and installed prior to final COPY
 COPY --from=repo central/server/package*.json ./
 
@@ -59,12 +59,12 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ $(grep -oP 'VERSION_CODEN
     && echo '1' > sentry-versions/central \
     && echo '1' > sentry-versions/client \
     # Set entrypoint executable
-    && chmod +x ./init-user-and-start.sh
+    && chmod +x /init-user-and-start.sh
 
 # Add remaining files after deps installed
 COPY --from=repo central/server/ ./
 
-ENTRYPOINT ["./init-user-and-start.sh"]
+ENTRYPOINT ["/init-user-and-start.sh"]
 EXPOSE 8383
 
 # Add Healthcheck
