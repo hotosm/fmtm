@@ -19,11 +19,11 @@ on:
         type: string
         default: "test"
 
-permissions:
-  contents: read
-
 jobs:
   backend-test-build:
+    # Write permissions required for build
+    permissions:
+      contents: write
     uses: hotosm/gh-workflows/.github/workflows/image_build.yml@main
     if: ${{ inputs.build_test_img }}
     with:
@@ -37,6 +37,7 @@ jobs:
       push: false
       cache: false
       multi_arch: false
+      scan: false
 
   run-pytest:
     runs-on: ubuntu-latest
