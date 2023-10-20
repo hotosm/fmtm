@@ -24,8 +24,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         "jq" \
     && rm -rf /var/lib/apt/lists/*
-ARG ODK_CENTRAL_VERSION
-RUN git clone --depth 1 --branch ${ODK_CENTRAL_VERSION} \
+ARG ODK_CENTRAL_TAG
+RUN git clone --depth 1 --branch ${ODK_CENTRAL_TAG} \
     "https://github.com/getodk/central.git" \
     && cd central && git submodule update --init
 
