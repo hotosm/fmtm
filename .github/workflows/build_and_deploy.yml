@@ -67,8 +67,8 @@ jobs:
           to_envs() { jq -r "to_entries[] | \"\(.key)=\(.value)\""; }
 
           echo "GIT_BRANCH=${GIT_BRANCH}" >> $GITHUB_ENV
-          echo "${{ env.VARS_CONTEXT }}" | to_envs >> $GITHUB_ENV
-          echo "${{ env.SECRETS_CONTEXT }}" | to_envs >> $GITHUB_ENV
+          echo "${VARS_CONTEXT}" | to_envs >> $GITHUB_ENV
+          echo "${SECRETS_CONTEXT}" | to_envs >> $GITHUB_ENV
 
       - name: Create .env file
         run: env > .env
