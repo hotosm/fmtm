@@ -15,7 +15,7 @@ echo "The server will not start on this run"
 ./init-odk-db.sh
 
 ### Create admin user ###
-echo "Creating test user ${SYSADMIN_EMAIL} with password ${SYSADMIN_PASSWD}"
+echo "Creating test user ${SYSADMIN_EMAIL} with password ***${SYSADMIN_PASSWD: -3}"
 echo "${SYSADMIN_PASSWD}" | odk-cmd --email "${SYSADMIN_EMAIL}" user-create || true
 
 echo "Elevating user to admin"
