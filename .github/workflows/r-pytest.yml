@@ -26,7 +26,7 @@ jobs:
       - id: image-cache
         uses: actions/cache@v3
         with:
-          path: /tmp/image
+          path: /tmp/images
           key: image-cache-${{ runner.os }}
 
       - name: Save Local Images
