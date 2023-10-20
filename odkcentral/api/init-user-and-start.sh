@@ -21,15 +21,7 @@ echo "${SYSADMIN_PASSWD}" | odk-cmd --email "${SYSADMIN_EMAIL}" user-create || t
 echo "Elevating user to admin"
 odk-cmd --email "${SYSADMIN_EMAIL}" user-promote || true
 
-### Run server (copied from start-odk.sh) ###
-MEMTOT=$(vmstat -s | grep 'total memory' | awk '{ print $1 }')
-if [ "$MEMTOT" -gt "1100000" ]
-then
-  export WORKER_COUNT=4
-else
-  export WORKER_COUNT=1
-fi
-echo "using $WORKER_COUNT worker(s) based on available memory ($MEMTOT).."
-
+### Run server (hardcode WORKER_COUNT=1 for dev) ###
+export WORKER_COUNT=1
 echo "Starting server."
 exec npx pm2-runtime ./pm2.config.js
