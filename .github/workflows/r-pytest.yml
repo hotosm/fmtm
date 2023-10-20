@@ -19,29 +19,49 @@ jobs:
     environment:
       name: ${{ inputs.environment || 'test' }}
 
-    outputs:
-      img_cache_loaded: ${{ steps.load-cache.outputs.img_cache_loaded }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download Image Cache
-        id: download-images
-        uses: actions/download-artifact@v3
+      - id: image-cache
+        uses: actions/cache@v3
         with:
-          name: image-cache
-          path: /tmp/images
-        continue-on-error: true
+          path: /tmp/image
+          key: image-cache-${{ runner.os }}
+
+      - name: Save Local Images
+        if: steps.image-cache.outputs.cache-hit != 'true'
+        run: |
+          # Make artifact dir
+          mkdir -p /tmp/images
+
+          images_array=()
+          images_array+=("docker.io/postgis/postgis:${{ vars.POSTGIS_TAG }}")
+          images_array+=("ghcr.io/hotosm/fmtm/odkcentral:${{ vars.ODK_CENTRAL_TAG }}")
+          images_array+=("ghcr.io/hotosm/fmtm/odkcentral-proxy:${{ vars.ODK_CENTRAL_TAG }}")
+          images_array+=("docker.io/minio/minio:${{ vars.MINIO_TAG }}")
+
+          # Iterate images
+          for image in "${images_array[@]}"; do
+              echo "Processing image ${image}"
+              docker pull "${image}"
+
+              if [ $? -eq 0 ]; then
+                  img_underscores=${image//[:\/.]/_}
+                  echo "Packaging image to /tmp/images/${img_underscores}.tar"
+                  docker image save "${image}" \
+                      --output /tmp/images/${img_underscores}.tar
+              else
+                  echo "Failed to pull the image: ${image}"
+              fi
+          done
 
       - name: Load Cached Imgs
-        id: load-cache
-        if: ${{ steps.download-images.outputs.download_path == '/tmp/images' }}
+        if: steps.image-cache.outputs.cache-hit == 'true'
         run: |
           for image_tar in /tmp/images/*; do
               docker image load --input $image_tar || true
           done
-          echo "img_cache_loaded=true" >> $GITHUB_OUTPUT
 
       - name: Vars and Secrets to Env
         env:
@@ -66,16 +86,3 @@ jobs:
             wait-for-it fmtm-db:5432 --strict \
             -- wait-for-it central:8383 --strict --timeout=30 \
             -- pytest
-
-  # This stage only runs if the images were not found in the cache
-  upload-img-cache:
-    needs: [run-pytest]
-    if: ${{ needs.run-pytest.outputs.img_cache_loaded != true}}
-    uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
-    with:
-      image_names: >
-        docker.io/postgis/postgis:${{ vars.POSTGIS_TAG }}
-        ghcr.io/hotosm/fmtm/odkcentral:${{ vars.ODK_CENTRAL_TAG }}
-        ghcr.io/hotosm/fmtm/odkcentral-proxy:${{ vars.ODK_CENTRAL_TAG }}
-        docker.io/minio/minio:${{ vars.MINIO_TAG }}
-      artifact_name: image-cache
