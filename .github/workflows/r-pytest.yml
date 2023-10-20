@@ -26,8 +26,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - id: download-images
-        name: Download image cache
+      - name: Download Image Cache
+        id: download-images
         uses: actions/download-artifact@v3
         with:
           name: image-cache
@@ -67,12 +67,13 @@ jobs:
             -- wait-for-it central:8383 --strict --timeout=30 \
             -- pytest
 
-  cache-images:
+  # This stage only runs if the images were not found in the cache
+  upload-img-cache:
     needs: [run-pytest]
     if: ${{ needs.run-pytest.outputs.img_cache_loaded != true}}
     uses: hotosm/gh-workflows/.github/workflows/image_cache.yml@main
     with:
-      image_names: |
+      image_names: >
         docker.io/postgis/postgis:${{ vars.POSTGIS_TAG }}
         ghcr.io/hotosm/fmtm/odkcentral:${{ vars.ODK_CENTRAL_TAG }}
         ghcr.io/hotosm/fmtm/odkcentral-proxy:${{ vars.ODK_CENTRAL_TAG }}
