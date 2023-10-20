@@ -20,9 +20,22 @@ on:
         default: "test"
 
 jobs:
+  check-img-cache:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.build_test_img }}
+    environment:
+      name: ${{ inputs.environment }}
+    steps:
+      - id: image-cache
+        uses: actions/cache@v3
+        with:
+          path: /tmp/images
+          key: image-cache-${{ runner.os }}
+
   backend-test-build:
     uses: hotosm/gh-workflows/.github/workflows/image_build.yml@main
-    if: ${{ inputs.build_test_img }}
+    needs: [check-img-cache]
+    if: ${{ needs.check-img-cache.outputs.cache-hit != 'true' }}
     with:
       context: src/backend
       build_target: ci
@@ -30,11 +43,10 @@ jobs:
       build_args: |
         APP_VERSION=${{ github.ref_name }}
         COMMIT_REF=${{ github.sha }}
-      # Build temp (workflow) cached image for PR, not in registry
-      push: false
-      cache: false
+      # Build temp image for PR, no multi-arch or scan required
       multi_arch: false
       scan: false
+      cache: false
 
   run-pytest:
     runs-on: ubuntu-latest
@@ -42,7 +54,7 @@ jobs:
     # Ensure it runs, even if build_test_img=false
     if: always()
     environment:
-      name: ${{ inputs.environment}}
+      name: ${{ inputs.environment }}
 
     steps:
       - name: Checkout repository
