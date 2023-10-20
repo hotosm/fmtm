@@ -121,20 +121,20 @@ const routes = createBrowserRouter([
         ),
       },
 
+      // {
+      //   path: '/project_details/:id',
+      //   element: (
+      //     <ProtectedRoute>
+      //       <Suspense fallback={<div>Loading...</div>}>
+      //         <ErrorBoundary>
+      //           <ProjectDetails />
+      //         </ErrorBoundary>
+      //       </Suspense>
+      //     </ProtectedRoute>
+      //   ),
+      // },
       {
         path: '/project_details/:id',
-        element: (
-          <ProtectedRoute>
-            <Suspense fallback={<div>Loading...</div>}>
-              <ErrorBoundary>
-                <ProjectDetails />
-              </ErrorBoundary>
-            </Suspense>
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/newproject_details/:id',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>

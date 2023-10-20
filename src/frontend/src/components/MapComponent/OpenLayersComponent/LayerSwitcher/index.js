@@ -148,7 +148,7 @@ const LayerSwitcherControl = ({ map, visible = 'osm' }) => {
   }, [map, visible]);
 
   const location = useLocation();
-  if (location.pathname.includes('newproject_details')) {
+  if (location.pathname.includes('project_details')) {
     const olZoom = document.querySelector('.ol-zoom');
     const layerSwitcher = document.querySelector('.layer-switcher');
 
