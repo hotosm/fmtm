@@ -33,6 +33,10 @@ jobs:
       build_args: |
         APP_VERSION=${{ github.ref_name }}
         COMMIT_REF=${{ github.sha }}
+      # Build temp (workflow) cached image for PR, not in registry
+      push: false
+      cache: false
+      multi_arch: false
 
   run-pytest:
     runs-on: ubuntu-latest
