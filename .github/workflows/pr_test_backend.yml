@@ -17,7 +17,6 @@ jobs:
     uses: ./.github/workflows/r-pytest.yml
     with:
       docker_compose_service: api
-      build_test_img: true
       # cache_imgs: |
       #   "docker.io/postgis/postgis:${{ vars.POSTGIS_TAG }}"
       #   "docker.io/minio/minio:${{ vars.MINIO_TAG }}"

@@ -7,12 +7,6 @@ on:
         description: "Optional image tag override."
         required: false
         type: string
-        default: ci-development
-      build_test_img:
-        description: "Build an image prior to test, e.g. if new deps added."
-        required: false
-        type: boolean
-        default: false
       cache_imgs:
         description: "Space separated list of images to cache on each run."
         required: false
@@ -50,7 +44,7 @@ jobs:
   backend-test-build:
     uses: hotosm/gh-workflows/.github/workflows/image_build.yml@main
     needs: [check-img-cache]
-    if: ${{ inputs.build_test_img && needs.check-img-cache.outputs.cache-hit != 'true' }}
+    if: ${{ inputs.image_tag == "" && needs.check-img-cache.outputs.cache-hit != 'true' }}
     with:
       context: src/backend
       build_target: ci
@@ -66,7 +60,7 @@ jobs:
   run-pytest:
     runs-on: ubuntu-latest
     needs: [backend-test-build]
-    # Ensure it runs, even if build_test_img=false
+    # Ensure it runs, even if backend-test-build does not run
     if: always()
     environment:
       name: ${{ inputs.environment }}
@@ -110,8 +104,8 @@ jobs:
             pull_and_package_image "$image"
           done
 
-          # Cache backend build
-          image_tag=${{ needs.backend-test-build.outputs.image_tag || inputs.image_tag }}
+          # Cache backend build (fallback to ci-development tag)
+          image_tag=${{ needs.backend-test-build.outputs.image_tag || ci-development }}
           image="ghcr.io/${{ github.repository }}/backend:${image_tag}"
           pull_and_package_image "$image"
           echo "API_TAG_OVERRIDE=${image_tag}" >> $GITHUB_ENV
