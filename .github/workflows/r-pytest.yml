@@ -44,11 +44,12 @@ jobs:
   backend-test-build:
     uses: hotosm/gh-workflows/.github/workflows/image_build.yml@main
     needs: [check-img-cache]
-    if: ${{ inputs.image_tag == '' && needs.check-img-cache.outputs.cache-hit != 'true' }}
+    if: ${{ needs.check-img-cache.outputs.cache-hit != 'true' }}
     with:
       context: src/backend
       build_target: ci
       image_name: ghcr.io/${{ github.repository }}/backend
+      image_tags: ${{ inputs.image_tag && format('ghcr.io/{0}/backend:{1}', github.repository, inputs.image_tag) || '' }}
       build_args: |
         APP_VERSION=${{ github.ref_name }}
         COMMIT_REF=${{ github.sha }}
