@@ -37,7 +37,7 @@ jobs:
   backend-test-build:
     uses: hotosm/gh-workflows/.github/workflows/image_build.yml@main
     needs: [check-img-cache]
-    if: ${{ needs.check-img-cache.outputs.cache-hit == 'false' }}
+    if: ${{ needs.check-img-cache.outputs.cache-hit != 'true' }}
     with:
       context: src/backend
       build_target: ci
@@ -69,7 +69,7 @@ jobs:
           key: image-cache-${{ runner.os }}
 
       - name: Save Local Images
-        if: ${{ steps.image-cache.outputs.cache-hit == 'false' }}
+        if: ${{ steps.image-cache.outputs.cache-hit != 'true' }}
         run: |
           # Function to pull and package Docker image
           function pull_and_package_image() {
@@ -94,8 +94,8 @@ jobs:
             "docker.io/minio/minio:${{ vars.MINIO_TAG }}"
           )
           # For caching odk central images, add:
-          # "ghcr.io/hotosm/fmtm/odkcentral:${{ vars.ODK_CENTRAL_TAG }}"
-          # "ghcr.io/hotosm/fmtm/odkcentral-proxy:${{ vars.ODK_CENTRAL_TAG }}"
+          # "ghcr.io/${{ github.repository }}/odkcentral:${{ vars.ODK_CENTRAL_TAG }}"
+          # "ghcr.io/${{ github.repository }}/odkcentral-proxy:${{ vars.ODK_CENTRAL_TAG }}"
 
           # Iterate through dependency images
           for image in "${images_array[@]}"; do
@@ -117,7 +117,11 @@ jobs:
 
           # Set API_TAG_OVERRIDE if not set
           echo "Getting backend image tag via docker"
-          image=$(docker image ls --filter=reference='ghcr.io/hotosm/fmtm/backend' --format='{{.Tag}}')
+          image=$(\
+            docker image ls \
+            --filter=reference='ghcr.io/${{ github.repository }}/backend' \
+            --format='{{.Tag}}'\
+          )
           image_tag="${image##*:}"
           echo "Image Tag: $image_tag"
           echo "API_TAG_OVERRIDE=${image_tag}" >> $GITHUB_ENV
