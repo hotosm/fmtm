@@ -17,8 +17,8 @@ jobs:
     with:
       context: odkcentral/api
       image_tags: |
-        "ghcr.io/hotosm/fmtm/odkcentral:${{ vars.ODK_CENTRAL_TAG }}"
-        "ghcr.io/hotosm/fmtm/odkcentral:latest"
+        "ghcr.io/${{ github.repository }}/odkcentral:${{ vars.ODK_CENTRAL_TAG }}"
+        "ghcr.io/${{ github.repository }}/odkcentral:latest"
       build_args: |
         ODK_CENTRAL_TAG=${{ vars.ODK_CENTRAL_TAG }}
 
@@ -27,5 +27,5 @@ jobs:
     with:
       context: odkcentral/proxy
       image_tags: |
-        "ghcr.io/hotosm/fmtm/odkcentral-proxy:${{ vars.ODK_CENTRAL_TAG }}"
-        "ghcr.io/hotosm/fmtm/odkcentral-proxy:latest"
+        "ghcr.io/${{ github.repository }}/odkcentral-proxy:${{ vars.ODK_CENTRAL_TAG }}"
+        "ghcr.io/${{ github.repository }}/odkcentral-proxy:latest"

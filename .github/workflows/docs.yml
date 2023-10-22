@@ -19,7 +19,7 @@ jobs:
   build_openapi_json:
     uses: hotosm/gh-workflows/.github/workflows/openapi_build.yml@main
     with:
-      image: ghcr.io/hotosm/fmtm/backend:ci-${{ github.ref_name }}
+      image: ghcr.io/${{ github.repository }}/backend:ci-${{ github.ref_name }}
       example_env_file_path: ".env.example"
       output_path: docs/openapi.json
 
@@ -29,6 +29,6 @@ jobs:
       - build_doxygen
       - build_openapi_json
     with:
-      image: ghcr.io/hotosm/fmtm/backend:ci-${{ github.ref_name }}
+      image: ghcr.io/${{ github.repository }}/backend:ci-${{ github.ref_name }}
       doxygen: true
       openapi: true
