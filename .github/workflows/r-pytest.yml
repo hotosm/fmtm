@@ -116,7 +116,7 @@ jobs:
 
           # Set API_TAG_OVERRIDE if not set
           echo "Getting backend image tag via docker"
-          image=$(docker image ls | grep backend)
+          image=$(docker image ls --filter=reference='ghcr.io/hotosm/fmtm/backend' --format='{{.Tag}}')
           image_tag="${image##*:}"
           echo "Image Tag: $image_tag"
           echo "API_TAG_OVERRIDE=${image_tag}" >> $GITHUB_ENV
