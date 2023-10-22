@@ -19,8 +19,13 @@ jobs:
   pytest:
     uses: hotosm/gh-workflows/.github/workflows/test_pytest_compose.yml@main
     with:
-      image_tag: ci-${{ github.ref_name }}
+      image_name: ghcr.io/${{ github.repository }}/backend
+      build_context: src/backend
+      build_args: |
+        APP_VERSION=${{ github.ref_name }}
+        COMMIT_REF=${{ github.sha }}
       docker_compose_service: api
+      tag_override: ci-${{ github.ref_name }}
     secrets: inherit
 
   frontend-tests:
