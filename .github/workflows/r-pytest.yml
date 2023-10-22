@@ -8,7 +8,7 @@ on:
         required: false
         type: string
       cache_imgs:
-        description: "Space separated list of images to cache on each run."
+        description: "Space separated list of images to cache on each run (e.g. to avoid rate limiting)."
         required: false
         type: string
       docker_compose_file:
@@ -105,7 +105,7 @@ jobs:
           done
 
           # Cache backend build (fallback to ci-development tag)
-          image_tag=${{ needs.backend-test-build.outputs.image_tag || 'ci-development' }}
+          image_tag=${{ needs.backend-test-build.outputs.image_tag }}
           image="ghcr.io/${{ github.repository }}/backend:${image_tag}"
           pull_and_package_image "$image"
           echo "API_TAG_OVERRIDE=${image_tag}" >> $GITHUB_ENV
@@ -130,7 +130,7 @@ jobs:
 
       - name: Vars and Secrets to Env
         env:
-          API_TAG_OVERRIDE: ${{ env.API_TAG_OVERRIDE }}
+          API_TAG_OVERRIDE: ${{ env.API_TAG_OVERRIDE || 'ci-development' }}
           GIT_BRANCH: ${{ github.ref_name }}
           VARS_CONTEXT: ${{ toJson(vars) }}
           SECRETS_CONTEXT: ${{ toJson(secrets) }}
