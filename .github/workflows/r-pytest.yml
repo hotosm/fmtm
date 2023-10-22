@@ -97,7 +97,8 @@ jobs:
           # Make artifact dir
           mkdir -p /tmp/images
 
-          images_array=${{ inputs.cache_imgs }}
+          images_array=(${{ inputs.cache_imgs }})
+          echo "Images to cache: ${images_array}"
 
           # Iterate through dependency images
           for image in "${images_array[@]}"; do
