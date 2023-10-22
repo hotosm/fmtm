@@ -37,7 +37,7 @@ jobs:
   backend-test-build:
     uses: hotosm/gh-workflows/.github/workflows/image_build.yml@main
     needs: [check-img-cache]
-    if: ${{ needs.check-img-cache.outputs.cache-hit != 'true' }}
+    if: ${{ needs.check-img-cache.outputs.cache-hit == 'false' }}
     with:
       context: src/backend
       build_target: ci
@@ -69,7 +69,7 @@ jobs:
           key: image-cache-${{ runner.os }}
 
       - name: Save Local Images
-        if: steps.image-cache.outputs.cache-hit != 'true'
+        if: ${{ steps.image-cache.outputs.cache-hit == 'false' }}
         run: |
           # Function to pull and package Docker image
           function pull_and_package_image() {
@@ -91,10 +91,11 @@ jobs:
 
           images_array=(
             "docker.io/postgis/postgis:${{ vars.POSTGIS_TAG }}"
-            "ghcr.io/hotosm/fmtm/odkcentral:${{ vars.ODK_CENTRAL_TAG }}"
-            "ghcr.io/hotosm/fmtm/odkcentral-proxy:${{ vars.ODK_CENTRAL_TAG }}"
             "docker.io/minio/minio:${{ vars.MINIO_TAG }}"
           )
+          # For caching odk central images, add:
+          # "ghcr.io/hotosm/fmtm/odkcentral:${{ vars.ODK_CENTRAL_TAG }}"
+          # "ghcr.io/hotosm/fmtm/odkcentral-proxy:${{ vars.ODK_CENTRAL_TAG }}"
 
           # Iterate through dependency images
           for image in "${images_array[@]}"; do
