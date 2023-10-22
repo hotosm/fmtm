@@ -14,7 +14,7 @@ on:
 
 jobs:
   pytest:
-    uses: ./.github/workflows/r-pytest.yml
+    uses: hotosm/gh-workflows/.github/workflows/test_pytest_compose.yml@main
     with:
       docker_compose_service: api
       cache_imgs: |

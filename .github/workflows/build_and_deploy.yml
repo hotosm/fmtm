@@ -17,16 +17,16 @@ on:
 
 jobs:
   pytest:
-    uses: ./.github/workflows/r-pytest.yml
+    uses: hotosm/gh-workflows/.github/workflows/test_pytest_compose.yml@main
     with:
-      # TODO update to build image prior to test, like r-pytest.yml?
-      # Would prevent failures if the CI image does not contain new deps yet
       image_tag: ci-${{ github.ref_name }}
       docker_compose_service: api
     secrets: inherit
 
   frontend-tests:
-    uses: ./.github/workflows/r-frontend_tests.yml
+    uses: hotosm/gh-workflows/.github/workflows/test_pnpm.yml@main
+    with:
+      working_dir: src/frontend
 
   backend-build:
     uses: hotosm/gh-workflows/.github/workflows/image_build.yml@main
