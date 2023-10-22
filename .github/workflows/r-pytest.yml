@@ -13,6 +13,19 @@ on:
         required: false
         type: boolean
         default: false
+      cache_imgs:
+        description: "Space separated list of images to cache on each run."
+        required: false
+        type: string
+      docker_compose_file:
+        description: "The docker compose file used to run the test."
+        required: false
+        type: string
+        default: docker-compose.yml
+      docker_compose_service:
+        description: "The docker compose service to run the test against."
+        required: true
+        type: string
       environment:
         description: "The environment to use for testing."
         required: false
@@ -22,7 +35,7 @@ on:
 jobs:
   check-img-cache:
     runs-on: ubuntu-latest
-    if: ${{ inputs.build_test_img }}
+    if: ${{ inputs.cache_imgs }}
     environment:
       name: ${{ inputs.environment }}
     outputs:
@@ -37,7 +50,7 @@ jobs:
   backend-test-build:
     uses: hotosm/gh-workflows/.github/workflows/image_build.yml@main
     needs: [check-img-cache]
-    if: ${{ needs.check-img-cache.outputs.cache-hit != 'true' }}
+    if: ${{ inputs.build_test_img && needs.check-img-cache.outputs.cache-hit != 'true' }}
     with:
       context: src/backend
       build_target: ci
@@ -63,13 +76,14 @@ jobs:
         uses: actions/checkout@v4
 
       - id: image-cache
+        if: ${{ inputs.cache_imgs }}
         uses: actions/cache@v3
         with:
           path: /tmp/images
           key: image-cache-${{ runner.os }}
 
       - name: Save Local Images
-        if: ${{ steps.image-cache.outputs.cache-hit != 'true' }}
+        if: ${{ inputs.cache_imgs && steps.image-cache.outputs.cache-hit != 'true' }}
         run: |
           # Function to pull and package Docker image
           function pull_and_package_image() {
@@ -89,13 +103,7 @@ jobs:
           # Make artifact dir
           mkdir -p /tmp/images
 
-          images_array=(
-            "docker.io/postgis/postgis:${{ vars.POSTGIS_TAG }}"
-            "docker.io/minio/minio:${{ vars.MINIO_TAG }}"
-          )
-          # For caching odk central images, add:
-          # "ghcr.io/${{ github.repository }}/odkcentral:${{ vars.ODK_CENTRAL_TAG }}"
-          # "ghcr.io/${{ github.repository }}/odkcentral-proxy:${{ vars.ODK_CENTRAL_TAG }}"
+          images_array=${{ inputs.cache_imgs }}
 
           # Iterate through dependency images
           for image in "${images_array[@]}"; do
@@ -109,7 +117,7 @@ jobs:
           echo "API_TAG_OVERRIDE=${image_tag}" >> $GITHUB_ENV
 
       - name: Load Cached Imgs
-        if: ${{ steps.image-cache.outputs.cache-hit == 'true' }}
+        if: ${{ inputs.cache_imgs && steps.image-cache.outputs.cache-hit == 'true' }}
         run: |
           for image_tar in /tmp/images/*; do
               docker image load --input $image_tar || true
@@ -145,7 +153,8 @@ jobs:
 
       - name: Run PyTest
         run: |
-          docker compose run api \
+          docker compose --file ${{ inputs.docker_compose_file }} \
+            run ${{ inputs.docker_compose_service }} \
             wait-for-it fmtm-db:5432 --strict \
             -- wait-for-it central:8383 --strict --timeout=30 \
             -- pytest

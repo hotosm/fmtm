@@ -22,6 +22,7 @@ jobs:
       # TODO update to build image prior to test, like r-pytest.yml?
       # Would prevent failures if the CI image does not contain new deps yet
       image_tag: ci-${{ github.ref_name }}
+      docker_compose_service: api
     secrets: inherit
 
   frontend-tests:
