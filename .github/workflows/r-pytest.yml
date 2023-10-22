@@ -105,7 +105,7 @@ jobs:
           done
 
           # Cache backend build (fallback to ci-development tag)
-          image_tag=${{ needs.backend-test-build.outputs.image_tag || ci-development }}
+          image_tag=${{ needs.backend-test-build.outputs.image_tag || 'ci-development' }}
           image="ghcr.io/${{ github.repository }}/backend:${image_tag}"
           pull_and_package_image "$image"
           echo "API_TAG_OVERRIDE=${image_tag}" >> $GITHUB_ENV
