@@ -44,7 +44,7 @@ jobs:
   backend-test-build:
     uses: hotosm/gh-workflows/.github/workflows/image_build.yml@main
     needs: [check-img-cache]
-    if: ${{ inputs.image_tag == "" && needs.check-img-cache.outputs.cache-hit != 'true' }}
+    if: ${{ inputs.image_tag == '' && needs.check-img-cache.outputs.cache-hit != 'true' }}
     with:
       context: src/backend
       build_target: ci
