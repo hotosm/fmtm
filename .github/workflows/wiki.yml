@@ -1,15 +1,15 @@
-name: Publish Docs to Wiki
+name: 🕮 Publish Docs to Wiki
 
 on:
   push:
     paths:
       - docs/**
-    branches: [main]
+    branches: [development]
   # Allow manual trigger (workflow_dispatch)
   workflow_dispatch:
 
 jobs:
   publish-docs-to-wiki:
-    uses: hotosm/gh-workflows/.github/workflows/wiki.yml@main
+    uses: hotosm/gh-workflows/.github/workflows/wiki.yml@1.0.0
     with:
       homepage_path: "index.md"

@@ -1,4 +1,4 @@
-name: Build ODK Images
+name: 🔧 Build ODK Images
 
 on:
   # Push includes PR merge
@@ -13,21 +13,19 @@ on:
 
 jobs:
   build-odkcentral:
-    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@main
+    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@1.0.0
     with:
       context: odkcentral/api
-      dockerfile: odkcentral/api/Dockerfile
       image_tags: |
-        "ghcr.io/hotosm/fmtm/odkcentral:${{ vars.ODK_CENTRAL_VERSION }}"
-        "ghcr.io/hotosm/fmtm/odkcentral:latest"
+        "ghcr.io/${{ github.repository }}/odkcentral:${{ vars.ODK_CENTRAL_TAG }}"
+        "ghcr.io/${{ github.repository }}/odkcentral:latest"
       build_args: |
-        ODK_CENTRAL_VERSION=${{ vars.ODK_CENTRAL_VERSION }}
+        ODK_CENTRAL_TAG=${{ vars.ODK_CENTRAL_TAG }}
 
   build-proxy:
-    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@main
+    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@1.0.0
     with:
       context: odkcentral/proxy
-      dockerfile: odkcentral/proxy/Dockerfile
       image_tags: |
-        "ghcr.io/hotosm/fmtm/odkcentral-proxy:${{ vars.ODK_CENTRAL_VERSION }}"
-        "ghcr.io/hotosm/fmtm/odkcentral-proxy:latest"
+        "ghcr.io/${{ github.repository }}/odkcentral-proxy:${{ vars.ODK_CENTRAL_TAG }}"
+        "ghcr.io/${{ github.repository }}/odkcentral-proxy:latest"

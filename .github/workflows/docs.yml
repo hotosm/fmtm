@@ -1,4 +1,4 @@
-name: Publish Docs
+name: 🕮 Publish Docs
 
 on:
   push:
@@ -6,47 +6,29 @@ on:
       - docs/**
       - src/**
       - mkdocs.yml
-    branches: [main]
+    branches: [development]
   # Allow manual trigger (workflow_dispatch)
   workflow_dispatch:
 
 jobs:
-  get_cache_key:
-    runs-on: ubuntu-latest
-    outputs:
-      cache_key: ${{ steps.set_cache_key.outputs.cache_key }}
-    steps:
-      - name: Set cache key
-        id: set_cache_key
-        run: echo "cache_key=docs-build-$(date --utc '+%V')" >> $GITHUB_OUTPUT
-
   build_doxygen:
-    uses: hotosm/gh-workflows/.github/workflows/doxygen_build.yml@main
-    needs: [get_cache_key]
+    uses: hotosm/gh-workflows/.github/workflows/doxygen_build.yml@1.0.0
     with:
-      cache_paths: |
-        docs/apidocs
-      cache_key: ${{ needs.get_cache_key.outputs.cache_key }}
+      output_path: docs/apidocs
 
   build_openapi_json:
-    uses: hotosm/gh-workflows/.github/workflows/openapi_build.yml@main
-    needs: [get_cache_key]
+    uses: hotosm/gh-workflows/.github/workflows/openapi_build.yml@1.0.0
     with:
-      image: ghcr.io/hotosm/fmtm/backend:ci-${{ github.ref_name }}
+      image: ghcr.io/${{ github.repository }}/backend:ci-${{ github.ref_name }}
       example_env_file_path: ".env.example"
-      cache_paths: |
-        docs/openapi.json
-      cache_key: ${{ needs.get_cache_key.outputs.cache_key }}
+      output_path: docs/openapi.json
 
   publish_docs:
-    uses: hotosm/gh-workflows/.github/workflows/mkdocs_build.yml@main
+    uses: hotosm/gh-workflows/.github/workflows/mkdocs_build.yml@1.0.0
     needs:
-      - get_cache_key
       - build_doxygen
       - build_openapi_json
     with:
-      image: ghcr.io/hotosm/fmtm/backend:ci-${{ github.ref_name }}
-      cache_paths: |
-        docs/apidocs
-        docs/openapi.json
-      cache_key: ${{ needs.get_cache_key.outputs.cache_key }}
+      image: ghcr.io/${{ github.repository }}/backend:ci-${{ github.ref_name }}
+      doxygen: true
+      openapi: true

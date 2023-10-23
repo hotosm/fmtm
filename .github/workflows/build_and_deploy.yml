@@ -1,4 +1,6 @@
-name: Build and Deploy
+# Workflow for build and auto-deploy of branches
+
+name: 🔧 Build and Deploy
 
 on:
   # Push includes PR merge
@@ -15,54 +17,39 @@ on:
 
 jobs:
   pytest:
-    uses: ./.github/workflows/r-pytest.yml
+    uses: hotosm/gh-workflows/.github/workflows/test_pytest_compose.yml@1.0.0
     with:
-      image_tag: ci-${{ github.ref_name }}
+      image_name: ghcr.io/${{ github.repository }}/backend
+      build_context: src/backend
+      docker_compose_service: api
+      tag_override: ci-${{ github.ref_name }}
+    secrets: inherit
 
   frontend-tests:
-    uses: ./.github/workflows/r-frontend_tests.yml
-
-  extract-vars:
-    needs:
-      - pytest
-      - frontend-tests
-    uses: ./.github/workflows/r-extract_vars.yml
+    uses: hotosm/gh-workflows/.github/workflows/test_pnpm.yml@1.0.0
     with:
-      environment: ${{ github.ref_name }}
+      working_dir: src/frontend
 
   backend-build:
-    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@main
-    needs: [extract-vars]
+    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@1.0.0
+    needs: [pytest]
     with:
       context: src/backend
-      dockerfile: src/backend/Dockerfile
       build_target: prod
-      image_tags: |
-        "ghcr.io/hotosm/fmtm/backend:${{ needs.extract-vars.outputs.api_version }}-${{ github.ref_name }}"
-        "ghcr.io/hotosm/fmtm/backend:latest"
-      build_args: |
-        APP_VERSION=${{ needs.extract-vars.outputs.api_version }}
+      image_name: ghcr.io/${{ github.repository }}/backend
 
-  frontend-main-build:
-    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@main
-    needs: [extract-vars]
+  frontend-build:
+    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@1.0.0
+    needs: [frontend-tests]
     with:
       context: src/frontend
-      dockerfile: src/frontend/prod.dockerfile
+      dockerfile: prod.dockerfile
       build_target: prod
-      image_tags: |
-        "ghcr.io/hotosm/fmtm/frontend:${{ needs.extract-vars.outputs.frontend_main_version }}-${{ github.ref_name }}"
-        "ghcr.io/hotosm/fmtm/frontend:latest"
-      build_args: |
-        APP_VERSION=${{ needs.extract-vars.outputs.frontend_main_version }}
-        API_URL=${{ needs.extract-vars.outputs.api_url }}
-        FRONTEND_MAIN_URL=${{ needs.extract-vars.outputs.frontend_main_url }}
+      image_name: ghcr.io/${{ github.repository }}/frontend
 
   smoke-test-backend:
     runs-on: ubuntu-latest
-    needs:
-      - extract-vars
-      - backend-build
+    needs: [backend-build]
     environment:
       name: ${{ github.ref_name }}
 
@@ -70,55 +57,50 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Environment to .env
+      - name: Vars and Secrets to Env
         env:
           GIT_BRANCH: ${{ github.ref_name }}
-          API_VERSION: ${{ needs.extract-vars.outputs.api_version }}
-          FRONTEND_MAIN_VERSION: ${{ needs.extract-vars.outputs.frontend_main_version }}
+          TAG_OVERRIDE: ${{ needs.backend-build.outputs.image_tag }}
+          VARS_CONTEXT: ${{ toJson(vars) }}
+          SECRETS_CONTEXT: ${{ toJson(secrets) }}
         run: |
-          echo "${{ secrets.DOTENV }}" > .env
+          # Random delimeter string for security
+          delim=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+
+          # Parse JSON with multiline strings, using delimeter (Github specific)
+          to_envs() { jq -r "to_entries[] | \"\(.key)<<$delim\n\(.value)\n$delim\n\""; }
+
+          # Set all vars
+          echo "GIT_BRANCH=${GIT_BRANCH}" >> $GITHUB_ENV
+          echo "TAG_OVERRIDE=${TAG_OVERRIDE}" >> $GITHUB_ENV
+          echo "${VARS_CONTEXT}" | to_envs >> $GITHUB_ENV
+          echo "${SECRETS_CONTEXT}" | to_envs >> $GITHUB_ENV
+
+      - name: Create .env file
+        run: |
+          # Get a8m/envsubst (required for default vals syntax ${VAR:-default})
+          echo "Downloading envsubst"
+          curl -L https://github.com/a8m/envsubst/releases/download/v1.2.0/envsubst-`uname -s`-`uname -m` -o envsubst
+          chmod +x envsubst
+
+          echo "Substituing variables from .env.example --> .env"
+          ./envsubst < .env.example > .env
           echo "GIT_BRANCH=${GIT_BRANCH}" >> .env
-          echo "API_VERSION=${API_VERSION}" >> .env
-          echo "FRONTEND_MAIN_VERSION=${FRONTEND_MAIN_VERSION}" >> .env
+          echo "TAG_OVERRIDE=${TAG_OVERRIDE}" >> .env
 
       - name: Backend smoke test
         run: |
-          echo "Not implemented" 
-          # source .env
-          # docker network create fmtm
+          # Migrate db first, so api works
+          docker compose up migrations --exit-code-from migrations
 
-          # docker pull "postgis/postgis:14-3.3-alpine"
-          # docker run --rm -d \
-          #   --name=fmtm-db \
-          #   --network=fmtm \
-          #   -e POSTGRES_USER=fmtm \
-          #   -e POSTGRES_PASSWORD=fmtm \
-          #   -e POSTGRES_DB=fmtm \
-          #   "postgis/postgis:14-3.3-alpine"
-
-          # docker pull "ghcr.io/hotosm/fmtm/backend:${API_VERSION}-${GIT_BRANCH}"
-          # docker run --rm -d \
-          #   --network=fmtm \
-          #   -p 8080:8080 \
-          #   -e FRONTEND_MAIN_URL="http://test.com" \
-          #   -e OSM_CLIENT_ID="test" \
-          #   -e OSM_CLIENT_SECRET="test" \
-          #   -e OSM_SECRET_KEY="test" \
-          #   "ghcr.io/hotosm/fmtm/backend:${API_VERSION}-${GIT_BRANCH}"
-
-          # # First wait 10 seconds for API
-          # sleep 10
-          # # Check the exit status of curl and exit the job if it fails
-          # if ! curl -f http://localhost:8080/docs; then
-          #   echo "curl failed to access http://localhost:8080/docs"
-          #   exit 1
-          # fi
+          # Run without migrations (give exit code 0)
+          docker compose up -d \
+            --no-deps --wait --wait-timeout 60 \
+            central-db central central-proxy s3 api
 
   smoke-test-frontend:
     runs-on: ubuntu-latest
-    needs:
-      - extract-vars
-      - frontend-main-build
+    needs: [frontend-build]
     environment:
       name: ${{ github.ref_name }}
 
@@ -130,40 +112,11 @@ jobs:
         run: echo "Not implemented"
 
   deploy-containers:
-    runs-on: ubuntu-latest
     needs:
-      - extract-vars
       - smoke-test-backend
       - smoke-test-frontend
-    environment:
-      name: ${{ github.ref_name }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Environment to .env
-        env:
-          GIT_BRANCH: ${{ github.ref_name }}
-          API_VERSION: ${{ needs.extract-vars.outputs.api_version }}
-          FRONTEND_MAIN_VERSION: ${{ needs.extract-vars.outputs.frontend_main_version }}
-        run: |
-          echo "${{ secrets.DOTENV }}" > .env
-          echo "GIT_BRANCH=${GIT_BRANCH}" >> .env
-          echo "API_VERSION=${API_VERSION}" >> .env
-          echo "FRONTEND_MAIN_VERSION=${FRONTEND_MAIN_VERSION}" >> .env
-
-      - uses: webfactory/ssh-agent@v0.7.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Disable Host key verification
-        # Hack to prevent "Host key verification failed". Should be replaced with a ssh-keyscan based solution
-        run: echo "StrictHostKeyChecking no" >> ~/.ssh/config
-
-      - name: Deploy
-        run: |
-          docker compose --file docker-compose.deploy.yml pull
-          docker compose --file docker-compose.deploy.yml up --detach
-        env:
-          DOCKER_HOST: ${{ vars.DOCKER_HOST }}
+    uses: hotosm/gh-workflows/.github/workflows/remote_deploy.yml@1.0.0
+    with:
+      environment: ${{ github.ref_name }}
+      docker_compose_file: "docker-compose.${{ github.ref_name }}.yml"
+    secrets: inherit
