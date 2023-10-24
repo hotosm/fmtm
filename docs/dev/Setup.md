@@ -260,7 +260,7 @@ Your env should look like this:
 
 ```dotenv
 ### ODK Central ###
-ODK_CENTRAL_URL=https://central-proxy
+ODK_CENTRAL_URL=https://proxy
 ODK_CENTRAL_USER=`<any_valid_email_address>`
 ODK_CENTRAL_PASSWD=`<password_of_central_user>`
 

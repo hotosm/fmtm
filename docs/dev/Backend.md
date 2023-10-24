@@ -148,7 +148,7 @@ Example launch.json config for vscode:
 
 - During project creation a Central ODK URL must be provided.
 - If you set up FMTM with docker and have ODK Central running in a container, you can use the URL:
-  `https://central-proxy`
+  `https://proxy`
 - The credentials should be present in your `.env` file.
 
 ## Debugging osm-fieldwork
