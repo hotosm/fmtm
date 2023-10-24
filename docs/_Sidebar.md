@@ -20,10 +20,8 @@
 
 [4. Database Tips](https://github.com/hotosm/fmtm/wiki/dev/Database-Tips)
 
-[5. Docker Tips](https://github.com/hotosm/fmtm/wiki/dev/Docker-Tips)
+[5. Production Deployment](https://github.com/hotosm/fmtm/wiki/dev/Production)
 
-[6. Production Deployment](https://github.com/hotosm/fmtm/wiki/dev/Production)
+[6. Deployment Flow](https://github.com/hotosm/fmtm/wiki/dev/Deployment-Flow)
 
-[7. Deployment Flow](https://github.com/hotosm/fmtm/wiki/dev/Deployment-Flow)
-
-[8. Troubleshooting](https://github.com/hotosm/fmtm/wiki/dev/Troubleshooting)
+[7. Troubleshooting](https://github.com/hotosm/fmtm/wiki/dev/Troubleshooting)
