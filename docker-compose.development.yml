@@ -45,6 +45,9 @@ services:
       - fmtm-net
     restart: "unless-stopped"
 
+  certbot:
+    image: test
+
   api:
     image: "ghcr.io/hotosm/fmtm/backend:${GIT_BRANCH}"
     container_name: fmtm-api-${GIT_BRANCH}

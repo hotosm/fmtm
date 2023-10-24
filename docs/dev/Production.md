@@ -86,9 +86,9 @@ that file to contain the needful (it should look like this):
 > Note: You must have an existing version of ODKCentral running, to provide the URL and credentials here.
 
 Run the production docker-compose config:
-`docker compose -f docker-compose.prod.yml up -d`
+`docker compose -f docker-compose.main.yml up -d`
 
-> Note: The images should be built already on Quay. If they don't exist, use the `--build` flag during run.
+> Note: The images should be built already on Github.
 
 With any luck, this will launch the docker container where the project
 runs, and you can access the working website from the domain name!
