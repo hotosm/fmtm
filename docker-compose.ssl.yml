@@ -24,106 +24,59 @@ volumes:
   fmtm_images:
   fmtm_tiles:
   central_db_data:
+  certs:
 
 networks:
   fmtm-net:
-    name: fmtm-local
+    name: fmtm-${GIT_BRANCH}
 
 services:
   proxy:
-    image: "ghcr.io/hotosm/fmtm/proxy:debug"
-    build:
-      context: nginx
-      target: debug
-      args:
-        NGINX_TAG: "${NGINX_TAG:-1.25.2}"
-    container_name: fmtm
+    image: "ghcr.io/hotosm/fmtm/proxy:${GIT_BRANCH}"
+    container_name: fmtm-${GIT_BRANCH}
     depends_on:
       - api
-      - ui
       - central
       - s3
     ports:
-      - ${FMTM_PORT:-7050}:80
+      - 80:80
+      - 443:443
     networks:
       - fmtm-net
     restart: "unless-stopped"
 
   api:
-    image: "ghcr.io/hotosm/fmtm/backend:${TAG_OVERRIDE:-debug}"
-    build:
-      context: src/backend
-      target: debug-with-odk
-      args:
-        APP_VERSION: "debug"
-    container_name: fmtm-api
-    # Uncomment these to debug with a terminal debugger like pdb
-    # Then `docker attach fmtm_api` to debug
-    # stdin_open: true
-    # tty: true
+    image: "ghcr.io/hotosm/fmtm/backend:${GIT_BRANCH}"
+    container_name: fmtm-api-${GIT_BRANCH}
     volumes:
       - fmtm_logs:/opt/logs
       - fmtm_images:/opt/app/images
       - fmtm_tiles:/opt/tiles
-      - ./src/backend/pyproject.toml:/opt/pyproject.toml
-      - ./src/backend/app:/opt/app
-      - ./src/backend/tests:/opt/tests
-      # - ../osm-fieldwork/osm_fieldwork:/home/appuser/.local/lib/python3.10/site-packages/osm_fieldwork
     depends_on:
       - fmtm-db
       - migrations
       - s3
     env_file:
       - .env
-    # ports:
-    #   - "7052:8000"
-    #   - "5678:5678" # Debugger port
-    networks:
-      - fmtm-net
-    restart: "unless-stopped"
-
-  ui:
-    image: "ghcr.io/hotosm/fmtm/frontend:debug"
-    build:
-      context: src/frontend
-      dockerfile: debug.dockerfile
-    container_name: fmtm-ui
-    depends_on:
-      - api
-    volumes:
-      - ./src/frontend:/app
-      - /app/node_modules/
-    environment:
-      - VITE_API_URL=http://api.${FMTM_DOMAIN}:7050
-      - VITE_ODK_CENTRAL_URL=${ODK_CENTRAL_URL}
-      - VITE_ODK_CENTRAL_USER=${ODK_CENTRAL_USER}
-      - VITE_ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}
-    ports:
-      - "7051:7051"
     networks:
       - fmtm-net
     restart: "unless-stopped"
 
   central:
-    profiles: [""]
     image: "ghcr.io/hotosm/fmtm/odkcentral:${ODK_CENTRAL_TAG:-v2023.4.0}"
-    build:
-      context: odkcentral/api
-      args:
-        ODK_CENTRAL_TAG: v2023.4.0
-    container_name: fmtm-central
+    container_name: fmtm-api-${GIT_BRANCH}
     depends_on:
       - central-db
     environment:
       - DOMAIN=local
       - SYSADMIN_EMAIL=${ODK_CENTRAL_USER}
       - SYSADMIN_PASSWD=${ODK_CENTRAL_PASSWD}
-      - HTTPS_PORT=${HTTPS_PORT:-443}
-      - DB_HOST=${CENTRAL_DB_HOST:-central-db}
-      - DB_USER=${CENTRAL_DB_USER:-odk}
-      - DB_PASSWORD=${CENTRAL_DB_PASSWORD:-odk}
-      - DB_NAME=${CENTRAL_DB_NAME:-odk}
-      - DB_SSL=${DB_SSL:-null}
+      - HTTPS_PORT=443
+      - DB_HOST=central-db
+      - DB_USER=${CENTRAL_DB_USER}
+      - DB_PASSWORD=${CENTRAL_DB_PASSWORD}
+      - DB_NAME=${CENTRAL_DB_NAME}
+      - DB_SSL=null
       - EMAIL_FROM=${ODK_CENTRAL_USER}
       - EMAIL_HOST=${EMAIL_HOST:-mail}
       - EMAIL_PORT=${EMAIL_PORT:-25}
@@ -135,24 +88,20 @@ services:
       - SENTRY_ORG_SUBDOMAIN=${SENTRY_ORG_SUBDOMAIN:-o130137}
       - SENTRY_KEY=${SENTRY_KEY:-3cf75f54983e473da6bd07daddf0d2ee}
       - SENTRY_PROJECT=${SENTRY_PROJECT:-1298632}
-    # ports:
-    #   - "8383:8383"
     networks:
       - fmtm-net
     restart: "unless-stopped"
 
   s3:
     image: "docker.io/minio/minio:${MINIO_TAG:-RELEASE.2023-10-07T15-07-38Z}"
-    container_name: fmtm-s3
+    container_name: fmtm-s3-${GIT_BRANCH}
     environment:
-      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-fmtm}
-      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-somelongpassword}
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
       MINIO_VOLUMES: "/mnt/data"
       MINIO_BROWSER: "off"
     volumes:
       - fmtm_data:/mnt/data
-    # ports:
-    #   - 9000:9000
     networks:
       - fmtm-net
     command: minio server # --console-address ":9090"
@@ -166,50 +115,49 @@ services:
 
   fmtm-db:
     image: "postgis/postgis:${POSTGIS_TAG:-14-3.4-alpine}"
-    container_name: fmtm-db
+    container_name: fmtm-db-${GIT_BRANCH}
     volumes:
       - fmtm_db_data:/var/lib/postgresql/data/
     environment:
-      - POSTGRES_USER=${FMTM_DB_USER:-fmtm}
-      - POSTGRES_PASSWORD=${FMTM_DB_PASSWORD:-fmtm}
-      - POSTGRES_DB=${FMTM_DB_NAME:-fmtm}
+      - POSTGRES_USER=${FMTM_DB_USER}
+      - POSTGRES_PASSWORD=${FMTM_DB_PASSWORD}
+      - POSTGRES_DB=${FMTM_DB_NAME}
     ports:
-      - "5438:5432"
+      - "5433:5432"
     networks:
       - fmtm-net
     restart: "unless-stopped"
     healthcheck:
-      test: pg_isready -U ${FMTM_DB_USER:-fmtm} -d ${FMTM_DB_NAME:-fmtm}
+      test: pg_isready -U ${FMTM_DB_USER} -d ${FMTM_DB_NAME}
       start_period: 5s
       interval: 10s
       timeout: 5s
       retries: 3
 
   central-db:
-    profiles: [""]
     image: "postgis/postgis:${POSTGIS_TAG:-14-3.4-alpine}"
-    container_name: fmtm-central-db
+    container_name: fmtm-central-db-${GIT_BRANCH}
     volumes:
       - central_db_data:/var/lib/postgresql/data/
     environment:
-      - POSTGRES_USER=${CENTRAL_DB_USER:-odk}
-      - POSTGRES_PASSWORD=${CENTRAL_DB_PASSWORD:-odk}
-      - POSTGRES_DB=${CENTRAL_DB_NAME:-odk}
+      - POSTGRES_USER=${CENTRAL_DB_USER}
+      - POSTGRES_PASSWORD=${CENTRAL_DB_PASSWORD}
+      - POSTGRES_DB=${CENTRAL_DB_NAME}
     ports:
       - "5434:5432"
     networks:
       - fmtm-net
     restart: "on-failure:3"
     healthcheck:
-      test: pg_isready -U ${CENTRAL_DB_USER:-odk} -d ${CENTRAL_DB_NAME:-odk}
+      test: pg_isready -U ${CENTRAL_DB_USER} -d ${CENTRAL_DB_NAME}
       start_period: 5s
       interval: 10s
       timeout: 5s
       retries: 3
 
   migrations:
-    image: "ghcr.io/hotosm/fmtm/backend:${TAG_OVERRIDE:-debug}"
-    container_name: fmtm-migrations
+    image: "ghcr.io/hotosm/fmtm/backend:${GIT_BRANCH}"
+    container_name: fmtm-migrations-${GIT_BRANCH}
     depends_on:
       - fmtm-db
     env_file:
@@ -218,5 +166,3 @@ services:
       - fmtm-net
     entrypoint: ["/migrate-entrypoint.sh"]
     restart: "on-failure:3"
-    healthcheck:
-      test: [] # Set the health check test to an empty value to disable it
