@@ -107,60 +107,23 @@ then
 fi
 
 echo
-echo "Do you want access FMTM securely over https?"
-echo "**If yes, you need to provide valid domain names with certificates later.**"
+echo "Enter the domain name you wish to use for FMTM."
 while true
 do
-    read -e -p "Enter y for https, anything else for http: " https
+    read -e -p "Enter d for default fmtm.localhost, else a domain you own: " fmtm_domain
     
-    if [ "$https" = "y" ]
+    if [ "$fmtm_domain" != "d" ]
     then
-        echo "Using https."
-        URL_SCHEME="https"
-    fi
-    break
-done
-
-# API
-echo
-echo "Enter the FMTM API URL."
-echo "If you have a valid domain name, enter it here."
-while true
-do
-    read -e -p "Enter d for default 127.0.0.1:8000, else your IP/domain: " api_url
-    
-    if [ "$api_url" != "d" ]
-    then
-        echo "Using $API_URL"
+        echo "Using $fmtm_domain"
+        FMTM_DOMAIN="${fmtm_domain}"
+        # Manually set api subdomain
         break
-    elif [ "$api_url" = "" ]
+    elif [ "$fmtm_domain" = "" ]
     then
         echo "Invalid input!"
     else 
-        echo "Using $api_url"
-        API_URL="api_url"
-        break
-    fi
-done
-
-# FRONTEND
-echo
-echo "Enter the FMTM Frontend URL."
-echo "If you have a valid domain name, enter it here."
-while true
-do
-    read -e -p "Enter d for default 127.0.0.1:8080, else your IP/domain: " frontend_url
-    
-    if [ "$frontend_url" != "d" ]
-    then
-        echo "Using $FRONTEND_MAIN_URL"
-        break
-    elif [ "$api_url" = "" ]
-    then
-        echo "Invalid input!"
-    else 
-        echo "Using $FRONTEND_MAIN_URL"
-        FRONTEND_MAIN_URL="frontend_url"
+        echo "Using fmtm.localhost"
+        FMTM_DOMAIN="fmtm.localhost"
         break
     fi
 done
@@ -170,7 +133,7 @@ echo "Please enter your OSM authentication details"
 read -e -p "Client ID: " OSM_CLIENT_ID
 read -e -p "Client Secret: " OSM_CLIENT_SECRET
 read -e -p "Secret Key: " OSM_SECRET_KEY
-echo "Login redirect URI (default http://127.0.0.1:8080/osmauth/): "
+echo "Login redirect URI (default http://127.0.0.1:7051/osmauth/): "
 while true
 do
     read -e -p "Enter a URI, or nothing for default: " auth_redirect_uri
@@ -199,9 +162,8 @@ echo "DEBUG=${DEBUG}" >> "${DOTENV_NAME}"
 echo "LOG_LEVEL=${LOG_LEVEL}" >> "${DOTENV_NAME}"
 
 echo "### FMTM ###"
-echo "URL_SCHEME=${URL_SCHEME}" >> "${DOTENV_NAME}"
-echo "API_URL=${API_URL}" >> "${DOTENV_NAME}"
-echo "FRONTEND_MAIN_URL=${FRONTEND_MAIN_URL}" >> "${DOTENV_NAME}"
+echo "FMTM_DOMAIN=${FMTM_DOMAIN}" >> "${DOTENV_NAME}"
+# TODO set VITE_API_URL
 
 echo "### OSM ###"
 echo "OSM_CLIENT_ID=${OSM_CLIENT_ID}" >> "${DOTENV_NAME}"

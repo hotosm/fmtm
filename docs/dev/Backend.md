@@ -18,7 +18,7 @@ The easiest way to get up and running is by using the FMTM Docker deployment. Do
    This will pull the latest container builds from **main** branch.
 4. Make sure you have a `.env` file with all required variables, see [Getting Started](https://github.com/hotosm/fmtm/blob/main/docs/DEV-1.-Getting-Started.md).
 5. Once everything is pulled, from the command line run: `docker compose up -d api`
-6. If everything goes well you should now be able to **navigate to the project in your browser:** `http://127.0.0.1:8000/docs`
+6. If everything goes well you should now be able to **navigate to the project in your browser:** `http://api.fmtm.localhost:7050/docs`
 
 > Note: If that link doesn't work, check the logs with `docker log fmtm_api`.
 
@@ -35,7 +35,7 @@ The easiest way to get up and running is by using the FMTM Docker deployment. Do
 Some test data is available to get started quickly.
 
 1. Navigate to the `import-test-data` endpoint in the API docs page:
-   <http://127.0.0.1:8000/docs#/debug/import_test_data_debug_import_test_data_get>
+   <http://api.fmtm.localhost:7050/docs#/debug/import_test_data_debug_import_test_data_get>
 2. Click `Try it out`, then `execute`.
 
 ## 2. Start the API without Docker
@@ -72,7 +72,7 @@ After starting the database, from the command line:
 3. Install backend dependencies with PDM: `pdm install`
 4. Run the Fast API backend with: `pdm run uvicorn app.main:api --host 0.0.0.0 --port 8000`
 
-The API should now be accessible at: <http://127.0.0.1:8000/docs>
+The API should now be accessible at: <http://api.fmtm.localhost:7050/docs>
 
 ## 3. Hybrid Docker/Local
 

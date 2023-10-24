@@ -145,7 +145,7 @@ CMD ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", \
 FROM debug-no-odk as debug-with-odk
 USER root
 # Add the SSL cert for debug odkcentral
-COPY --from=ghcr.io/hotosm/fmtm/odkcentral-proxy:latest \
+COPY --from=ghcr.io/hotosm/fmtm/proxy:debug \
     /etc/nginx/central-fullchain.crt /usr/local/share/ca-certificates/
 RUN update-ca-certificates
 USER appuser

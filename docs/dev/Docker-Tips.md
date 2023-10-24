@@ -30,8 +30,6 @@ set up the environment and dependencies for each container.
         build:
         context: .
         dockerfile: Dockerfile
-        environment:
-        API_URL: http://api:8000
         ports:
         - "3000:3000"
 

@@ -240,7 +240,7 @@ The FMTM uses OAUTH2 with OSM to authenticate users. To properly configure your 
 
 1. [Login to OSM](https://www.openstreetmap.org/login) (_If you do not have an account yet, click the signup button at the top navigation bar to create one_). Click the drop down arrow on the extreme right of the navigation bar and select My Settings.
 
-2. Register your FMTM instance to OAuth 2 applications. Put your login redirect url as `http://127.0.0.1:8080/osmauth/`, For Production replace the URL as production API Url
+2. Register your FMTM instance to OAuth 2 applications. Put your login redirect url as `http://127.0.0.1:7051/osmauth/`, For Production replace the URL as production API Url
 
 > Note: `127.0.0.1` is required instead of `localhost` due to OSM restrictions.
 
@@ -267,17 +267,14 @@ ODK_CENTRAL_PASSWD=`<password_of_central_user>`
 ### FMTM ###
 # DEBUG=True
 # LOG_LEVEL=DEBUG
-URL_SCHEME=http
-API_URL=127.0.0.1:8000
-FRONTEND_MAIN_URL=localhost:8080
-# API_PREFIX=/api
+FMTM_DOMAIN=fmtm.localhost
 
 ### OSM ###
 OSM_CLIENT_ID=`<OSM_CLIENT_ID_FROM_ABOVE>`
 OSM_CLIENT_SECRET=`<OSM_CLIENT_SECRET_FROM_ABOVE>`
 OSM_URL=https://www.openstreetmap.org
 OSM_SCOPE=read_prefs
-OSM_LOGIN_REDIRECT_URI=http://127.0.0.1:8080/osmauth/
+OSM_LOGIN_REDIRECT_URI=http://127.0.0.1:7051/osmauth/
 OSM_SECRET_KEY=<random_key_for_development>
 
 ### S3 File Storage ###
@@ -297,7 +294,7 @@ FMTM_DB_PASSWORD=fmtm
 FMTM_DB_NAME=fmtm'
 ```
 
-> Note: If extra cors origins are required for testing, the variable `EXTRA_CORS_ORIGINS` is a set of comma separated strings, e.g. <http://localhost:7050,http://localhost:7051>
+> Note: If extra cors origins are required for testing, the variable `EXTRA_CORS_ORIGINS` is a set of comma separated strings, e.g. <http://fmtm.localhost:7050,http://some.other.domain>
 
 ## Verify Setup
 
@@ -309,7 +306,7 @@ For details on how to run this project locally for development, please look at: 
 
 Once you have deployed, you will need to check that you can properly authenticate.
 
-1. Navigate to `http://127.0.0.1:8000/docs`
+1. Navigate to `http://api.fmtm.localhost:7050/docs`
 
     Three endpoints are responsible for oauth
     <img width="698" alt="image" src="../images/endpoints_responsible_for_auth_screenshot-2023-03-26-092756.png">
@@ -336,3 +333,11 @@ Don't forget to review [Contribution](https://github.com/hotosm/fmtm/wiki/Contri
 Happy coding!
 
 The FMTM Developer Team
+
+## Note
+
+To run the local development setup without ODK Central (use external server):
+
+```bash
+dc --profile no-odk up -d
+```

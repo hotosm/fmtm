@@ -43,6 +43,8 @@ services:
       - ui
       - central
       - s3
+    environment:
+      FMTM_PORT: ${FMTM_PORT:-7050}
     ports:
       - ${FMTM_PORT:-7050}:80
     networks:

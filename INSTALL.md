@@ -60,7 +60,7 @@ The FMTM uses OAUTH2 with OSM to authenticate users. To properly configure your 
 
 1. [Login to OSM](https://www.openstreetmap.org/login) (_If you do not have an account yet, click the signup button at the top navigation bar to create one_). Click the drop down arrow on the extreme right of the navigation bar and select My Settings.
 
-2. Register your FMTM instance to OAuth 2 applications. Put your login redirect url as `http://127.0.0.1:8080/osmauth/`, For Production replace the URL as production API Url
+2. Register your FMTM instance to OAuth 2 applications. Put your login redirect url as `http://127.0.0.1:7051/osmauth/`, For Production replace the URL as production API Url
 
 > Note: `127.0.0.1` is required instead of `localhost` due to OSM restrictions.
 
@@ -87,17 +87,14 @@ ODK_CENTRAL_PASSWD=`<password_of_central_user>`
 ### FMTM ###
 # DEBUG=True
 # LOG_LEVEL=DEBUG
-URL_SCHEME=http
-API_URL=127.0.0.1:8000
-FRONTEND_MAIN_URL=localhost:8080
-# API_PREFIX=/api
+FMTM_DOMAIN=fmtm.localhost
 
 ### OSM ###
 OSM_CLIENT_ID=`<OSM_CLIENT_ID_FROM_ABOVE>`
 OSM_CLIENT_SECRET=`<OSM_CLIENT_SECRET_FROM_ABOVE>`
 OSM_URL=https://www.openstreetmap.org
 OSM_SCOPE=read_prefs
-OSM_LOGIN_REDIRECT_URI=http://127.0.0.1:8080/osmauth/
+OSM_LOGIN_REDIRECT_URI=http://127.0.0.1:7051/osmauth/
 OSM_SECRET_KEY=<random_key_for_development>
 
 ### S3 File Storage ###
@@ -128,7 +125,7 @@ The easiest way to get up and running is by using the FMTM Docker deployment. Do
 3. From the command line run: `docker compose pull`.
    This will pull the latest container builds from **main** branch.
 4. Once everything is pulled, from the command line run: `docker compose up -d api`
-5. If everything goes well you should now be able to **navigate to the project in your browser:** `http://127.0.0.1:8000/docs`
+5. If everything goes well you should now be able to **navigate to the project in your browser:** `http://api.fmtm.localhost:7050/docs`
 
 > Note: If those link doesn't work, check the logs with `docker logs fmtm_api`.
 
@@ -152,14 +149,14 @@ docker-compose exec central odk-cmd --email YOUREMAIL@ADDRESSHERE.com user-promo
 Some test data is available to get started quickly.
 
 - Navigate to the `import-test-data` endpoint in the API docs page:
-  <http://127.0.0.1:8000/docs#/debug/import_test_data_debug_import_test_data_get>
+  <http://api.fmtm.localhost:7050/docs#/debug/import_test_data_debug_import_test_data_get>
 - Click `Try it out`, then `execute`.
 
 ## Check Authentication
 
 Once you have deployed, you will need to check that you can properly authenticate.
 
-1. Navigate to `{URL_SCHEME}://{API_URL}/docs`
+1. Navigate to `http://api.fmtm.localhost/docs`
 
     Three endpoints are responsible for oauth
     <img width="698" alt="image" src="./images/endpoints_responsible_for_auth_screenshot-2023-03-26-092756.png">
@@ -203,6 +200,6 @@ Make sure to replace `<your-username>` with your GitHub username.
    This is essential, as the development container for the frontend is different to production.
 4. Once everything is built, from the command line run: `docker compose up -d ui`
 
-5. If everything goes well you should now be able to **navigate to the project in your browser:** <http://127.0.0.1:8080>
+5. If everything goes well you should now be able to **navigate to the project in your browser:** <http://fmtm.localhost:7051>
 
 That's it, you have successfully set up the frontend!!

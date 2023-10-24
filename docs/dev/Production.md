@@ -58,9 +58,8 @@ that file to contain the needful (it should look like this):
     ODK_CENTRAL_PASSWD=`<CHANGEME>`
 
     # FMTM
-    API_URL=https://fmtm-api.hotosm.org
-    FRONTEND_MAIN_URL=https://fmtm.hotosm.org
-    # API_PREFIX=/api
+    VITE_API_URL=https://api.fmtm.hotosm.org
+    FMTM_DOMAIN=https://fmtm.hotosm.org
 
     # OSM
     OSM_CLIENT_ID=`<CHANGEME>`
@@ -80,7 +79,9 @@ that file to contain the needful (it should look like this):
     FMTM_DB_PASSWORD=`<CHANGEME>`
     FMTM_DB_NAME=fmtm
 
-> Note: It is also possible to use the API_PREFIX variable if the api is served under, e.g. /api on the domain.
+> Note: It is also possible to use the API_PREFIX variable if the api
+> is served under, e.g. /api on the domain.
+> However, this isn't the recommended approach, and testing is minimal.
 
 > Note: You must have an existing version of ODKCentral running, to provide the URL and credentials here.
 
