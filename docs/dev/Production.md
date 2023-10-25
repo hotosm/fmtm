@@ -97,12 +97,34 @@ frontend build:
 
 `VITE_API_URL=some.other.domain.org`
 
+> Note: this is only used for the **frontend** build.
+
 #### ODK\_ Variables
 
 These can point to an externally hosted instance of ODK Central.
 
 Or ODK Central can be started as part of the FMTM docker compose
 stack, and variables should be set accordingly.
+
+#### Other Domains
+
+If you run FMTM with ODK and Minio (S3) included, then the
+domains will default to:
+
+```
+${FMTM_DOMAIN} --> Frontend
+api.${FMTM_DOMAIN} --> Backend
+odk.${FMTM_DOMAIN} --> ODK Central
+s3.${FMTM_DOMAIN} --> S3 / Minio
+```
+
+These defaults can be overriden with respective environment variables:
+
+```
+FMTM_API_DOMAIN (defaults to the value of VITE_API_URL if provided)
+FMTM_ODK_DOMAIN
+FMTM_S3_DOMAIN
+```
 
 ### Start the Compose Stack
 

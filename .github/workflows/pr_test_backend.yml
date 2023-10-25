@@ -23,7 +23,8 @@ jobs:
       cache_extra_imgs: |
         "docker.io/postgis/postgis:${{ vars.POSTGIS_TAG }}"
         "docker.io/minio/minio:${{ vars.MINIO_TAG }}"
-      # For caching odk central images, add:
+      # For caching odk central image & proxy image, add:
       # "ghcr.io/${{ github.repository }}/odkcentral:${{ vars.ODK_CENTRAL_TAG }}"
-      # "ghcr.io/${{ github.repository }}/odkcentral-proxy:${{ vars.ODK_CENTRAL_TAG }}"
+      # "ghcr.io/${{ github.repository }}/proxy:${{ github.head_ref }}"
+      # ${{ github.head_ref }} --> target branch in PR
     secrets: inherit
