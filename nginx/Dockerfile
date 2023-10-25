@@ -50,6 +50,12 @@ RUN CONFARGS=$(nginx -V 2>&1 | sed -n -e 's/^.*arguments: //p') \
 
 
 FROM docker.io/nginx:${NGINX_TAG}-bookworm as base
+ARG NGINX_TAG
+ARG GIT_COMMIT
+LABEL org.hotosm.fmtm.app-name="proxy" \
+      org.hotosm.fmtm.app-version="${NGINX_TAG}" \
+      org.hotosm.fmtm.git-commit-ref="${COMMIT_REF:-none}" \
+      org.hotosm.fmtm.maintainer="sysadmin@hotosm.org"
 # Add modules
 COPY --from=brotli-module \
      /ngx_http_brotli_filter_module.so \
@@ -61,7 +67,7 @@ RUN rm -rf ./* /etc/nginx/conf.d/default.conf /etc/nginx/nginx.conf
 COPY nginx.conf /etc/nginx/nginx.conf
 # Add Healthcheck
 HEALTHCHECK --start-period=5s --interval=5s --retries=8 \
-    CMD nc -z localhost 443 || exit 1
+    CMD nc -z localhost 80 || exit 1
 
 
 
@@ -83,18 +89,16 @@ COPY --from=ghcr.io/hotosm/fmtm/frontend:development \
 
 
 
-FROM dist as with-odk
+FROM dist as api-only
 COPY --from=dist \
      templates/fmtm.conf.template \
      templates/api.conf.template \
-     templates/odk.conf.template \
-     templates/minio.conf.template \
      /etc/nginx/templates/
 
 
 
-FROM dist as without-odk
+FROM api-only as all
 COPY --from=dist \
-     templates/fmtm.conf.template \
-     templates/api.conf.template \
+     templates/odk.conf.template \
+     templates/minio.conf.template \
      /etc/nginx/templates/
