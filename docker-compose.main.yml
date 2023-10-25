@@ -23,6 +23,7 @@ volumes:
   fmtm_images:
   fmtm_tiles:
   certs:
+  certbot:
 
 networks:
   fmtm-net:
@@ -33,16 +34,22 @@ services:
     image: "ghcr.io/hotosm/fmtm/proxy:${GIT_BRANCH}"
     container_name: fmtm-${GIT_BRANCH}
     depends_on:
-      - api
+      api:
+        condition: service_started
+      certbot:
+        condition: service_completed_successfully
+    volumes:
+      - certs:/etc/letsencrypt
+      - certbot:/var/www/certbot
+    environment:
+      FMTM_DOMAIN: ${FMTM_DOMAIN}
+      FMTM_API_DOMAIN: ${VITE_API_URL:-api.${FMTM_DOMAIN}}
     ports:
       - 80:80
       - 443:443
     networks:
       - fmtm-net
     restart: "unless-stopped"
-
-  certbot:
-    image: test
 
   api:
     image: "ghcr.io/hotosm/fmtm/backend:${GIT_BRANCH}"
@@ -52,8 +59,10 @@ services:
       - fmtm_images:/opt/app/images
       - fmtm_tiles:/opt/tiles
     depends_on:
-      - fmtm-db
-      - migrations
+      fmtm-db:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
     env_file:
       - .env
     networks:
@@ -85,10 +94,28 @@ services:
     image: "ghcr.io/hotosm/fmtm/backend:${GIT_BRANCH}"
     container_name: fmtm-migrations-${GIT_BRANCH}
     depends_on:
-      - fmtm-db
+      fmtm-db:
+        condition: service_healthy
     env_file:
       - .env
     networks:
       - fmtm-net
     entrypoint: ["/migrate-entrypoint.sh"]
     restart: "on-failure:3"
+
+  certbot:
+    image: "ghcr.io/hotosm/fmtm/certs-init:latest"
+    container_name: fmtm-cert-renew-${GIT_BRANCH}
+    volumes:
+      - certs:/etc/letsencrypt
+      - certbot:/var/www/certbot
+    environment:
+      FMTM_DOMAIN: ${FMTM_DOMAIN}
+      FMTM_API_DOMAIN: ${FMTM_API_DOMAIN:-${VITE_API_URL:-api.${FMTM_DOMAIN}}}
+      CERT_EMAIL: ${CERT_EMAIL}
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - fmtm-net
+    restart: "on-failure:2"
