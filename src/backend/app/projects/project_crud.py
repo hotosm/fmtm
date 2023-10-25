@@ -721,6 +721,10 @@ def split_polygon_into_tasks(
     db.add(db_task)
     db.commit()
 
+    # Get the data extract from raw-data-api
+    # Input into DbBuildings and DbOsmLines
+    # TODO update to use flatgeobuf file directly
+    # No need to store in our database
     if not has_data_extracts:
         data = get_osm_extracts(json.dumps(boundary_data))
         if not data:
@@ -1655,7 +1659,7 @@ def get_task_geometry(db: Session, project_id: int):
 
 
 async def get_project_features_geojson(db: Session, project_id: int):
-    # Get the geojson of those features for this task.
+    """Get a geojson of all features for a task."""
     query = text(
         f"""SELECT jsonb_build_object(
                 'type', 'FeatureCollection',
@@ -1676,6 +1680,25 @@ async def get_project_features_geojson(db: Session, project_id: int):
 
     result = db.execute(query)
     features = result.fetchone()[0]
+    # Simplify the geojson to send (strip project_id & task_id to reduce size)
+    # TODO coordinate with frontend to remove the first level geometry key
+    # Only return geojson with properties:
+    # {'type': 'feature', 'geometry': {...}, 'properties': {...}}
+    features = [
+        {
+            "id": feature["id"],
+            "geometry": {
+                "id": feature["geometry"]["id"],
+                "type": feature["geometry"]["type"],
+                "geometry": feature["geometry"]["geometry"],
+                "properties": {
+                    "id": feature["geometry"]["properties"]["id"],
+                    "building": feature["geometry"]["properties"]["building"],
+                },
+            },
+        }
+        for feature in features
+    ]
     return features
 
 
