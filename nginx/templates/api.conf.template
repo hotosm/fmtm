@@ -24,8 +24,12 @@ upstream backend {
 server {
     # Default handler for port 80
     listen 80 default_server;
-    server_name api.${FMTM_DOMAIN};
+    server_name ${FMTM_API_DOMAIN};
     
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
     location / {
         return 301 https://$host$request_uri;
     }
@@ -34,7 +38,7 @@ server {
 server {
     # Default handler for port 443
     listen 443 ssl default_server reuseport;
-    server_name api.${FMTM_DOMAIN};
+    server_name ${FMTM_API_DOMAIN};
 
     # Max upload size 1GB
     client_max_body_size 1G;

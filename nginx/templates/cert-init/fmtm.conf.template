@@ -23,31 +23,4 @@ server {
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
-
-    location / {
-        return 301 https://$host$request_uri;
-    }
-}
-
-server {
-    listen 443 ssl;
-    server_name ${FMTM_DOMAIN};
-
-    # Max upload size 1GB
-    client_max_body_size 1G;
-
-    # Response headers
-    add_header 'Content-Security-Policy' 'upgrade-insecure-requests';
-    # For opentelemetry
-    add_header 'Access-Control-Allow-Headers' 'traceparent,tracestate';
-
-    location / {
-        # Serve FMTM frontend under /usr/share/nginx/html
-        try_files $uri $uri/ /index.html;
-    }
-
-    error_page   500 502 503 504  /50x.html;
-    location = /50x.html {
-        root   /usr/share/nginx/html;
-    }
 }
