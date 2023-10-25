@@ -56,6 +56,15 @@ LABEL org.hotosm.fmtm.app-name="proxy" \
       org.hotosm.fmtm.app-version="${NGINX_TAG}" \
       org.hotosm.fmtm.git-commit-ref="${COMMIT_REF:-none}" \
       org.hotosm.fmtm.maintainer="sysadmin@hotosm.org"
+# Install certbot, netcat
+RUN set -ex \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install \
+    -y --no-install-recommends \
+          "netcat-traditional" \
+          "certbot" \
+    && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/*
 # Add modules
 COPY --from=brotli-module \
      /ngx_http_brotli_filter_module.so \
@@ -83,22 +92,38 @@ COPY templates/dev/fmtm.conf.template \
 
 
 
+FROM base as api-only-cert-init
+# Replace /docker-entrypoint.sh
+COPY 100-renew-certs.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+COPY templates/cert-init/fmtm.conf.template \
+     templates/cert-init/api.conf.template \
+     /etc/nginx/templates/
+
+
+
+FROM api-only-cert-init as all-cert-init
+COPY templates/cert-init/odk.conf.template \
+     templates/cert-init/minio.conf.template \
+     /etc/nginx/templates/
+
+
+
 FROM base as dist
 COPY --from=ghcr.io/hotosm/fmtm/frontend:development \
-     --chown=appuser:appuser /app/dist/ /usr/share/nginx/html/
+     --chown=nginx:nginx \
+     /app/dist/ /usr/share/nginx/html/
 
 
 
 FROM dist as api-only
-COPY --from=dist \
-     templates/fmtm.conf.template \
+COPY templates/fmtm.conf.template \
      templates/api.conf.template \
      /etc/nginx/templates/
 
 
 
 FROM api-only as all
-COPY --from=dist \
-     templates/odk.conf.template \
+COPY templates/odk.conf.template \
      templates/minio.conf.template \
      /etc/nginx/templates/
