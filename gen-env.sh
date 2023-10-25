@@ -163,7 +163,6 @@ echo "LOG_LEVEL=${LOG_LEVEL}" >> "${DOTENV_NAME}"
 
 echo "### FMTM ###"
 echo "FMTM_DOMAIN=${FMTM_DOMAIN}" >> "${DOTENV_NAME}"
-# TODO set VITE_API_URL
 
 echo "### OSM ###"
 echo "OSM_CLIENT_ID=${OSM_CLIENT_ID}" >> "${DOTENV_NAME}"

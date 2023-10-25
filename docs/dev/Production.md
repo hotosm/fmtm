@@ -58,8 +58,8 @@ that file to contain the needful (it should look like this):
     ODK_CENTRAL_PASSWD=`<CHANGEME>`
 
     # FMTM
-    VITE_API_URL=https://api.fmtm.hotosm.org
     FMTM_DOMAIN=https://fmtm.hotosm.org
+    CERT_EMAIL=`<EMAIL_ADDRESS_TO_GENERATE_CERT_FOR>`
 
     # OSM
     OSM_CLIENT_ID=`<CHANGEME>`
@@ -79,11 +79,32 @@ that file to contain the needful (it should look like this):
     FMTM_DB_PASSWORD=`<CHANGEME>`
     FMTM_DB_NAME=fmtm
 
-> Note: It is also possible to use the API_PREFIX variable if the api
-> is served under, e.g. /api on the domain.
-> However, this isn't the recommended approach, and testing is minimal.
+#### API_PREFIX
 
-> Note: You must have an existing version of ODKCentral running, to provide the URL and credentials here.
+It is also possible to use the API_PREFIX variable if the api
+is served under, e.g. /api on the domain.
+However, this isn't the recommended approach, and testing is minimal.
+
+#### VITE_API_URL
+
+By default, the API URL for the frontend to use is:
+
+`api.${FMTM_DOMAIN}`
+
+If you wish to change this and use another domain,
+then add the environment variable during the
+frontend build:
+
+`VITE_API_URL=some.other.domain.org`
+
+#### ODK\_ Variables
+
+These can point to an externally hosted instance of ODK Central.
+
+Or ODK Central can be started as part of the FMTM docker compose
+stack, and variables should be set accordingly.
+
+### Start the Compose Stack
 
 Run the production docker-compose config:
 `docker compose -f docker-compose.main.yml up -d`
@@ -93,7 +114,7 @@ Run the production docker-compose config:
 With any luck, this will launch the docker container where the project
 runs, and you can access the working website from the domain name!
 
-## Connecting to a remote database
+### Connecting to a remote database
 
 - A database may be located on a headless Linux server in the cloud.
 - To access the database via GUI tool such as PGAdmin, it is possible using port tunneling.
