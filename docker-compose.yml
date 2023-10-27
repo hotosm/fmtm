@@ -45,6 +45,7 @@ services:
         condition: service_started
       central:
         condition: service_started
+        required: false
       s3:
         condition: service_started
 
@@ -79,6 +80,9 @@ services:
     depends_on:
       fmtm-db:
         condition: service_healthy
+      central:
+        condition: service_started
+        required: false
       migrations:
         condition: service_completed_successfully
       s3:
