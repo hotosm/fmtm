@@ -25,10 +25,6 @@ server {
     # Default handler for port 80
     listen 80 default_server;
     server_name ${FMTM_ODK_DOMAIN};
-    
-    location /.well-known/acme-challenge/ {
-        root /var/www/certbot;
-    }
 
     location / {
         return 301 https://$host$request_uri;
@@ -38,6 +34,12 @@ server {
 server {
     listen 443 ssl;
     server_name ${FMTM_ODK_DOMAIN};
+
+    ssl_certificate /etc/letsencrypt/live/${FMTM_API_DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${FMTM_API_DOMAIN}/privkey.pem;
+
+    include /etc/nginx/options-ssl-nginx.conf;
+    ssl_dhparam /etc/nginx/ssl-dhparams.pem;
 
     # Max upload size 1GB
     client_max_body_size 1G;
