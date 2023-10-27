@@ -19,7 +19,10 @@ jobs:
       image_name: ghcr.io/${{ github.repository }}/backend
       build_context: src/backend
       compose_service: api
-      compose_command: wait-for-it fmtm-db:5432 --strict -- wait-for-it central:8383 --strict --timeout=30 -- pytest
+      compose_command: |
+        wait-for-it fmtm-db:5432 --strict
+        -- wait-for-it central:8383 --strict
+        --timeout=30 -- pytest
       cache_extra_imgs: |
         "docker.io/postgis/postgis:${{ vars.POSTGIS_TAG }}"
         "docker.io/minio/minio:${{ vars.MINIO_TAG }}"
