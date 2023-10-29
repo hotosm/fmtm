@@ -158,7 +158,7 @@ services:
     restart: "unless-stopped"
 
   s3:
-    image: "docker.io/minio/minio:${MINIO_TAG:-RELEASE.2023-10-07T15-07-38Z}"
+    image: "docker.io/minio/minio:${MINIO_TAG:-RELEASE.2023-10-25T06-33-25Z}"
     container_name: fmtm-s3
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY:-fmtm}
@@ -228,6 +228,8 @@ services:
     container_name: fmtm-migrations
     depends_on:
       fmtm-db:
+        condition: service_healthy
+      s3:
         condition: service_healthy
     env_file:
       - .env

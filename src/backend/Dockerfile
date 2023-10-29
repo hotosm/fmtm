@@ -15,6 +15,10 @@
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 ARG PYTHON_IMG_TAG=3.10
+ARG MINIO_TAG=${MINIO_TAG:-RELEASE.2023-10-25T06-33-25Z}
+FROM docker.io/minio/minio:${MINIO_TAG} as minio
+
+
 
 FROM docker.io/python:${PYTHON_IMG_TAG}-slim-bookworm as base
 ARG APP_VERSION
@@ -101,6 +105,8 @@ RUN set -ex \
         "libproj25" \
         "libgeos-c1v5" \
     && rm -rf /var/lib/apt/lists/*
+# Copy minio mc client
+COPY --from=minio /opt/bin/mc /usr/local/bin/
 COPY *-entrypoint.sh /
 ENTRYPOINT ["/app-entrypoint.sh"]
 # Copy Python deps from build to runtime
