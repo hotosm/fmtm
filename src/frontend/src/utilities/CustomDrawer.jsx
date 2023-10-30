@@ -3,9 +3,13 @@ import SwipeableDrawer from '@mui/material/SwipeableDrawer';
 import CoreModules from '../shared/CoreModules';
 import AssetModules from '../shared/AssetModules';
 import { NavLink } from 'react-router-dom';
+import { createLoginWindow } from '../utilfunctions/login';
+import { LoginActions } from '../store/slices/LoginSlice';
+import { ProjectActions } from '../store/slices/ProjectSlice';
 
-export default function CustomDrawer({ open, placement, size, type, onClose, onSignOut }) {
+export default function CustomDrawer({ open, placement, size, type, onClose, onSignOut, setOpen }) {
   const defaultTheme = CoreModules.useAppSelector((state) => state.theme.hotTheme);
+  const dispatch = CoreModules.useAppDispatch();
 
   const onMouseEnter = (event) => {
     const element = document.getElementById(`text${event.target.id}`);
@@ -80,6 +84,12 @@ export default function CustomDrawer({ open, placement, size, type, onClose, onS
       isActive: true,
     },
   ];
+
+  const handleOnSignOut = () => {
+    setOpen(false);
+    dispatch(LoginActions.signOut(null));
+    dispatch(ProjectActions.clearProjects([]));
+  };
 
   return (
     <div>
@@ -164,6 +174,23 @@ export default function CustomDrawer({ open, placement, size, type, onClose, onS
                   </NavLink>
                 ),
               )}
+              <div className="fmtm-mt-2">
+                {token != null ? (
+                  <div
+                    className="fmtm-ml-4 fmtm-text-[#d73e3e] hover:fmtm-text-[#d73e3e] fmtm-cursor-pointer"
+                    onClick={handleOnSignOut}
+                  >
+                    Sign Out
+                  </div>
+                ) : (
+                  <div
+                    className="fmtm-ml-4 fmtm-text-[#44546a] hover:fmtm-text-[#d73e3e] fmtm-cursor-pointer"
+                    onClick={() => createLoginWindow('/')}
+                  >
+                    Sign In
+                  </div>
+                )}
+              </div>
             </CoreModules.List>
           </CoreModules.Stack>
         </SwipeableDrawer>
