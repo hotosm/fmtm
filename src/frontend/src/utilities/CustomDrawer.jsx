@@ -154,14 +154,11 @@ export default function CustomDrawer({ open, placement, size, type, onClose, onS
                   <NavLink
                     key={index}
                     to={menuDetails.ref}
-                    style={{
-                      textDecoration: 'inherit',
-                      color: 'inherit',
-                      fontFamily: 'inherit',
-                      fontSize: '1.01587rem',
-                      background: '#000000',
-                      opacity: 0.8,
-                    }}
+                    className={`fmtm-no-underline fmtm-text-inherit fmtm-opacity-80 ${
+                      menuDetails.name === 'Explore Projects' || menuDetails.name === 'Manage Organizations'
+                        ? 'lg:fmtm-hidden'
+                        : ''
+                    }`}
                   >
                     <CoreModules.ListItem
                       id={index.toString()}
@@ -174,17 +171,17 @@ export default function CustomDrawer({ open, placement, size, type, onClose, onS
                   </NavLink>
                 ),
               )}
-              <div className="fmtm-mt-2">
+              <div className="fmtm-ml-4 fmtm-mt-2 lg:fmtm-hidden">
                 {token != null ? (
                   <div
-                    className="fmtm-ml-4 fmtm-text-[#d73e3e] hover:fmtm-text-[#d73e3e] fmtm-cursor-pointer"
+                    className="fmtm-text-[#d73e3e] hover:fmtm-text-[#d73e3e] fmtm-cursor-pointer fmtm-opacity-80"
                     onClick={handleOnSignOut}
                   >
                     Sign Out
                   </div>
                 ) : (
                   <div
-                    className="fmtm-ml-4 fmtm-text-[#44546a] hover:fmtm-text-[#d73e3e] fmtm-cursor-pointer"
+                    className="fmtm-text-[#44546a] hover:fmtm-text-[#d73e3e] fmtm-cursor-pointer fmtm-opacity-80"
                     onClick={() => createLoginWindow('/')}
                   >
                     Sign In
