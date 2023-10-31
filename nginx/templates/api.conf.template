@@ -38,9 +38,7 @@ server {
     
     ssl_certificate /etc/letsencrypt/live/${FMTM_API_DOMAIN}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/${FMTM_API_DOMAIN}/privkey.pem;
-
     include /etc/nginx/options-ssl-nginx.conf;
-    ssl_dhparam /etc/nginx/ssl-dhparams.pem;
 
     # Max upload size 1GB
     client_max_body_size 1G;
