@@ -17,8 +17,7 @@
 #
 
 server {
-    # Default handler for port 80
-    listen 80 default_server;
+    listen 80;
     server_name ${FMTM_ODK_DOMAIN};
     
     location /.well-known/acme-challenge/ {
