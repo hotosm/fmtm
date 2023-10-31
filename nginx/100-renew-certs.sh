@@ -33,7 +33,7 @@ fi
 
 # Renew certs
 certbot_args=("--webroot" "--webroot-path=/var/www/certbot" \
-    "--email" "${CERT_EMAIL}" "--agree-tos" "--no-eff-email" --staging)
+    "--email" "${CERT_EMAIL}" "--non-interactive", "--agree-tos" "--no-eff-email")
 
 # Check if FMTM_DOMAIN is set
 if [ -n "${FMTM_DOMAIN}" ]; then
