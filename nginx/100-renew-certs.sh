@@ -32,8 +32,8 @@ if [ $timeout -eq 0 ]; then
 fi
 
 # Renew certs
-certbot_args=("--webroot" "--webroot-path=/var/www/certbot" \
-    "--email" "${CERT_EMAIL}" "--non-interactive", "--agree-tos" "--no-eff-email")
+certbot_args=("-n", "--webroot" "--webroot-path=/var/www/certbot" \
+    "--email" "${CERT_EMAIL}", "--agree-tos" "--no-eff-email")
 
 # Check if FMTM_DOMAIN is set
 if [ -n "${FMTM_DOMAIN}" ]; then
