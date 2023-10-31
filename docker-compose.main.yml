@@ -103,6 +103,21 @@ services:
     entrypoint: ["/migrate-entrypoint.sh"]
     restart: "on-failure:3"
 
+  backups:
+    image: "ghcr.io/hotosm/fmtm/backend:${GIT_BRANCH}"
+    container_name: fmtm-backups-${GIT_BRANCH}
+    depends_on:
+      fmtm-db:
+        condition: service_healthy
+    env_file:
+      - .env
+    networks:
+      - fmtm-net
+    entrypoint: ["/backup-entrypoint.sh"]
+    restart: "on-failure:3"
+    healthcheck:
+      test: [] # Set the health check test to an empty value to disable it
+
   certbot:
     image: "ghcr.io/hotosm/fmtm/certs-init:latest"
     container_name: fmtm-cert-renew-${GIT_BRANCH}
