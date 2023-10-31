@@ -22,8 +22,7 @@ upstream minio {
 }
 
 server {
-    # Default handler for port 80
-    listen 80 default_server;
+    listen 80;
     server_name ${FMTM_S3_DOMAIN};
 
     location / {
