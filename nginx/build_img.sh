@@ -2,7 +2,7 @@
 
 docker build nginx \
     --tag "ghcr.io/hotosm/fmtm/certs-init:latest" \
-    --target api-only-cert-init \
+    --target certs-init \
     --build-arg NGINX_TAG="${NGINX_TAG:-1.25.2}"
 
 if [[ -n "$PUSH_IMGS" ]]; then
@@ -11,7 +11,7 @@ fi
 
 docker build nginx \
     --tag "ghcr.io/hotosm/fmtm/certs-init-all:latest" \
-    --target all-cert-init \
+    --target certs-init-all \
     --build-arg NGINX_TAG="${NGINX_TAG:-1.25.2}"
 
 if [[ -n "$PUSH_IMGS" ]]; then

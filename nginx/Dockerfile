@@ -92,7 +92,7 @@ COPY templates/dev/fmtm.conf.template \
 
 
 
-FROM base as api-only-cert-init
+FROM base as certs-init
 # Replace /docker-entrypoint.sh
 COPY 100-renew-certs.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
@@ -102,7 +102,7 @@ COPY templates/cert-init/fmtm.conf.template \
 
 
 
-FROM api-only-cert-init as all-cert-init
+FROM certs-init as certs-init-all
 COPY templates/cert-init/odk.conf.template \
      templates/cert-init/minio.conf.template \
      /etc/nginx/templates/
