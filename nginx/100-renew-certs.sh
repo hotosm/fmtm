@@ -32,8 +32,8 @@ if [ $timeout -eq 0 ]; then
 fi
 
 # Renew certs
-certbot_args=("-n", "--webroot" "--webroot-path=/var/www/certbot" \
-    "--email" "${CERT_EMAIL}", "--agree-tos" "--no-eff-email")
+certbot_args=("--webroot" "--webroot-path=/var/www/certbot" \
+    "--email" "${CERT_EMAIL}" "--agree-tos" "--no-eff-email")
 
 # Check if FMTM_DOMAIN is set
 if [ -n "${FMTM_DOMAIN}" ]; then
@@ -56,7 +56,7 @@ if [ -n "${FMTM_S3_DOMAIN}" ]; then
 fi
 
 # Run certbot with the constructed arguments
-certbot certonly "${certbot_args[@]}"
+certbot --non-interactive certonly "${certbot_args[@]}"
 
 # Successful exit (stop container)
 exit 0
