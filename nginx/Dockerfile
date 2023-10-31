@@ -112,7 +112,7 @@ COPY templates/cert-init/odk.conf.template \
 FROM base as dist
 COPY --from=ghcr.io/hotosm/fmtm/frontend:development \
      --chown=nginx:nginx \
-     /app/dist/ /usr/share/nginx/html/
+     /app/ /usr/share/nginx/html/
 
 
 
