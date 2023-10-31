@@ -112,7 +112,8 @@ backup_db() {
 ### Script START ###
 ####################
 
-sleep 600 # 5 mins, allow migrations to complete on first start
+echo "Waiting 5 minutes (for migrations) before first backup."
+sleep 600
 
 while true; do
     pretty_echo "### Backup FMTM $(date +%Y-%m-%d_%H:%M:%S) ###"
@@ -132,7 +133,8 @@ while true; do
         pretty_echo "### Backup ODK Central Complete ###"
     fi
 
-    sleep 86400 # 1 day
+    echo "Waiting 24hrs until next backup."
+    sleep 86400
 done
 
 ####################
