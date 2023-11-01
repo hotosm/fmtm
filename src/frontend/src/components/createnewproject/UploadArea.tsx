@@ -167,7 +167,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
                   onChange={changeFileHandler}
                   onResetFile={resetFile}
                   accept=".geojson, .json"
-                  fileDescription="*The supported file formats are zipped shapefile, geojson or kml files."
+                  fileDescription="*The supported file format is geojson file."
                   btnText="Upload a Geojson"
                   errorMsg={errors.uploadedAreaFile}
                 />
