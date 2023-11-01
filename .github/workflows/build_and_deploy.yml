@@ -124,7 +124,7 @@ jobs:
     needs:
       - smoke-test-backend
       - smoke-test-frontend
-    uses: hotosm/gh-workflows/.github/workflows/remote_deploy.yml@1.1.2
+    uses: hotosm/gh-workflows/.github/workflows/remote_deploy.yml@1.1.3
     with:
       environment: ${{ github.ref_name }}
       docker_compose_file: "docker-compose.${{ github.ref_name }}.yml"
