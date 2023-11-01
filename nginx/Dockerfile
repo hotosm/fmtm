@@ -73,7 +73,10 @@ COPY --from=brotli-module \
 WORKDIR /usr/share/nginx/html
 # Remove default Nginx static assets
 RUN rm -rf ./* /etc/nginx/conf.d/default.conf /etc/nginx/nginx.conf
-COPY nginx.conf options-ssl-nginx.conf ssl-dhparams.pem /etc/nginx/
+COPY nginx.conf \
+     options-ssl-nginx.conf \
+     certs/ssl-dhparams.pem \
+     /etc/nginx/
 # Add Healthcheck
 HEALTHCHECK --start-period=5s --interval=5s --retries=8 \
     CMD nc -z localhost 80 || exit 1
