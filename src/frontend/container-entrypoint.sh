@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 
-set -eo pipefail
+set -e
 
 # Copy frontend to attached volume
 rclone sync /app /frontend
