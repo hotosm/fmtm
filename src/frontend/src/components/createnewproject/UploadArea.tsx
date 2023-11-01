@@ -65,11 +65,11 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
   //   }
   // };
 
-  useEffect(() => {
-    setGeojsonFile(null);
-    dispatch(CreateProjectActions.SetDrawnGeojson(null));
-    dispatch(CreateProjectActions.SetTotalAreaSelection(null));
-  }, [uploadAreaSelection]);
+  // useEffect(() => {
+  //   setGeojsonFile(null);
+  //   dispatch(CreateProjectActions.SetDrawnGeojson(null));
+  //   dispatch(CreateProjectActions.SetTotalAreaSelection(null));
+  // }, [uploadAreaSelection]);
   const convertFileToGeojson = async (file) => {
     if (!file) return;
     const fileReader = new FileReader();
@@ -97,10 +97,14 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
     handleCustomChange('uploadedAreaFile', files[0].name);
     setGeojsonFile(files[0]);
     convertFileToGeojson(files[0]);
+    handleCustomChange('drawnGeojson', null);
+    dispatch(CreateProjectActions.SetTotalAreaSelection(null));
   };
 
   const resetFile = () => {
     setGeojsonFile(null);
+    handleCustomChange('uploadedAreaFile', null);
+    handleCustomChange('drawnGeojson', null);
     dispatch(CreateProjectActions.SetDrawnGeojson(null));
     dispatch(CreateProjectActions.SetTotalAreaSelection(null));
   };
@@ -147,7 +151,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
                     type="button"
                     onClick={() => resetFile()}
                     className=""
-                    disabled={drawnGeojson ? false : true}
+                    disabled={drawnGeojson && !geojsonFile ? false : true}
                   />
                   <p className="fmtm-text-gray-700 fmtm-mt-5">
                     Total Area: <span className="fmtm-font-bold">{totalAreaSelection}</span>
@@ -220,6 +224,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
                 handleCustomChange('drawnGeojson', geojson);
                 dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
                 dispatch(CreateProjectActions.SetTotalAreaSelection(area));
+                setGeojsonFile(null);
               }}
             />
           </div>
