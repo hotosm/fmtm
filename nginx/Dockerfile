@@ -107,7 +107,7 @@ COPY templates/cert-init/fmtm.conf.template \
 
 
 
-FROM dist as api-only
+FROM base as api-only
 COPY templates/fmtm.conf.template \
      templates/api.conf.template \
      /etc/nginx/templates/
