@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -eo pipefail
+
+# Copy frontend to attached volume
+rclone sync /app /frontend
+
+# Successful exit (stop container)
+exit 0

@@ -95,10 +95,9 @@ services:
         VITE_API_URL: ${VITE_API_URL:-https://api.${FMTM_DOMAIN}}
     container_name: fmtm-ui-${GIT_BRANCH}
     volumes:
-      - fmtm_frontend:/app
+      - fmtm_frontend:/frontend
     network_mode: none
     restart: "on-failure:2"
-    entrypoint: ["sh", "-c", "exit 0"]
 
   central:
     image: "ghcr.io/hotosm/fmtm/odkcentral:${ODK_CENTRAL_TAG:-v2023.4.0}"

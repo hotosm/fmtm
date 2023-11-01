@@ -85,10 +85,9 @@ services:
         VITE_API_URL: ${VITE_API_URL:-https://api.${FMTM_DOMAIN}}
     container_name: fmtm-ui-${GIT_BRANCH}
     volumes:
-      - fmtm_frontend:/app
+      - fmtm_frontend:/frontend
     network_mode: none
     restart: "on-failure:2"
-    entrypoint: ["sh", "-c", "exit 0"]
 
   fmtm-db:
     image: "postgis/postgis:${POSTGIS_TAG:-14-3.4-alpine}"
