@@ -25,6 +25,7 @@ LABEL org.hotosm.fmtm.app-name="frontend" \
       org.hotosm.fmtm.git-commit-ref="${COMMIT_REF:-none}" \
       org.hotosm.fmtm.maintainer="sysadmin@hotosm.org" \
       org.hotosm.fmtm.api-url="${VITE_API_URL}"
+VOLUME /frontend
 COPY container-entrypoint.sh /
 RUN chmod +x /container-entrypoint.sh
 ENTRYPOINT ["/container-entrypoint.sh"]
