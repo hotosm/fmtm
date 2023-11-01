@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Certs init image
-docker build nginx --no-cache \
+docker build nginx \
     --tag "ghcr.io/hotosm/fmtm/certs-init:latest" \
     --target certs-init \
     --build-arg NGINX_TAG="${NGINX_TAG:-1.25.2}"
@@ -11,7 +11,7 @@ if [[ -n "$PUSH_IMGS" ]]; then
 fi
 
 # Development proxy
-docker build nginx --no-cache \
+docker build nginx \
     --tag "ghcr.io/hotosm/fmtm/proxy:development" \
     --target all \
     --build-arg NGINX_TAG="${NGINX_TAG:-1.25.2}"
