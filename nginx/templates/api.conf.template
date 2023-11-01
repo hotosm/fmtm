@@ -25,10 +25,7 @@ server {
     # Default handler for port 80
     listen 80 default_server;
     server_name ${FMTM_API_DOMAIN};
-
-    location / {
-        return 301 https://$host$request_uri;
-    }
+    return 301 https://$host$request_uri;
 }
 
 server {
