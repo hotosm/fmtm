@@ -1,4 +1,4 @@
-FROM docker.io/node:18
+FROM docker.io/node:18-slim
 WORKDIR /app
 COPY ./package.json ./pnpm-lock.yaml ./
 ENV PNPM_HOME="/pnpm"
