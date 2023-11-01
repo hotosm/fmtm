@@ -36,8 +36,8 @@ server {
     listen 443 ssl default_server reuseport;
     server_name ${FMTM_API_DOMAIN};
     
-    ssl_certificate /etc/letsencrypt/live/${FMTM_API_DOMAIN}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/${FMTM_API_DOMAIN}/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/${FMTM_DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${FMTM_DOMAIN}/privkey.pem;
     include /etc/nginx/options-ssl-nginx.conf;
 
     # Max upload size 1GB
