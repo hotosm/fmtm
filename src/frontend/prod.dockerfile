@@ -26,6 +26,7 @@ LABEL org.hotosm.fmtm.app-name="frontend" \
       org.hotosm.fmtm.maintainer="sysadmin@hotosm.org" \
       org.hotosm.fmtm.api-url="${VITE_API_URL}"
 COPY container-entrypoint.sh /
+ENTRYPOINT ["/container-entrypoint.sh"]
 WORKDIR /app
 # Add non-root user, permissions
 RUN adduser -D -u 900 -h /home/appuser appuser \
