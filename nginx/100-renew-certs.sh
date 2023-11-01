@@ -51,7 +51,7 @@ certbot_args=(
 )
 
 # Run certbot with the constructed arguments
-echo "Running certbot with args: ${certbot_args[@]} $@"
+echo "Running command: certbot --non-interactive certonly ${certbot_args[@]} $@"
 certbot --non-interactive certonly "${certbot_args[@]} $@"
 echo "Certificates generated under: /etc/letsencrypt/live/${FMTM_DOMAIN}/"
 

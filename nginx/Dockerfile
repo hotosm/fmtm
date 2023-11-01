@@ -107,13 +107,6 @@ COPY templates/cert-init/fmtm.conf.template \
 
 
 
-FROM base as dist
-COPY --from=ghcr.io/hotosm/fmtm/frontend:development \
-     --chown=nginx:nginx \
-     /app/ /usr/share/nginx/html/
-
-
-
 FROM dist as api-only
 COPY templates/fmtm.conf.template \
      templates/api.conf.template \

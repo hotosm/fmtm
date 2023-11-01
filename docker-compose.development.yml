@@ -18,6 +18,7 @@
 version: "3"
 
 volumes:
+  fmtm_frontend:
   fmtm_data:
   fmtm_db_data:
   fmtm_logs:
@@ -25,7 +26,7 @@ volumes:
   fmtm_tiles:
   central_db_data:
   certs:
-  certbot:
+  certbot_data:
 
 networks:
   fmtm-net:
@@ -44,9 +45,12 @@ services:
         condition: service_started
       certbot:
         condition: service_completed_successfully
+      ui-build:
+        condition: service_completed_successfully
     volumes:
+      - fmtm_frontend:/usr/share/nginx/html/
       - certs:/etc/letsencrypt
-      - certbot:/var/www/certbot
+      - certbot_data:/var/www/certbot
     environment:
       FMTM_DOMAIN: ${FMTM_DOMAIN}
       FMTM_API_DOMAIN: ${FMTM_API_DOMAIN:-${VITE_API_URL:-api.${FMTM_DOMAIN}}}
@@ -78,6 +82,23 @@ services:
     networks:
       - fmtm-net
     restart: "unless-stopped"
+
+  ui-build:
+    image: "ghcr.io/hotosm/fmtm/frontend:${GIT_BRANCH}"
+    build:
+      context: src/frontend
+      dockerfile: prod.dockerfile
+    container_name: fmtm-ui-build-${GIT_BRANCH}
+    volumes:
+      - fmtm_frontend:/app/dist/
+    environment:
+      - VITE_API_URL=http://api.${FMTM_DOMAIN}:${FMTM_PORT:-7050}
+      - VITE_ODK_CENTRAL_URL=${ODK_CENTRAL_URL}
+      - VITE_ODK_CENTRAL_USER=${ODK_CENTRAL_USER}
+      - VITE_ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}
+    network_mode: none
+    restart: "on-failure:2"
+    command: exit 0
 
   central:
     image: "ghcr.io/hotosm/fmtm/odkcentral:${ODK_CENTRAL_TAG:-v2023.4.0}"
@@ -216,7 +237,7 @@ services:
     container_name: fmtm-cert-renew-${GIT_BRANCH}
     volumes:
       - certs:/etc/letsencrypt
-      - certbot:/var/www/certbot
+      - certbot_data:/var/www/certbot
     environment:
       FMTM_DOMAIN: ${FMTM_DOMAIN}
       FMTM_API_DOMAIN: ${FMTM_API_DOMAIN:-${VITE_API_URL:-api.${FMTM_DOMAIN}}}
