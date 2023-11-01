@@ -31,13 +31,6 @@ if [ $timeout -eq 0 ]; then
   exit 1
 fi
 
-# Renew certs
-certbot_args=(
-    "--webroot" "--webroot-path=/var/www/certbot" \
-    "--email" "${CERT_EMAIL}" "--agree-tos" "--no-eff-email" \
-    "-d" "${FMTM_DOMAIN}" \
-)
-
 # Check if FMTM_DOMAIN is set
 if [ -z "${FMTM_DOMAIN}" ]; then
     echo "${FMTM_DOMAIN} variable is not set. Exiting."
@@ -45,26 +38,21 @@ if [ -z "${FMTM_DOMAIN}" ]; then
 fi
 
 # Check if FMTM_API_DOMAIN is set
-if [ -n "${FMTM_API_DOMAIN}" ]; then
-    echo "Adding ${FMTM_API_DOMAIN} to certificate for domain ${FMTM_DOMAIN}."
-    certbot_args+=("-d" "${FMTM_API_DOMAIN}")
+if [ -z "${FMTM_API_DOMAIN}" ]; then
+    echo "${FMTM_API_DOMAIN} variable is not set. Exiting."
+    exit 1
 fi
 
-# Check if FMTM_ODK_DOMAIN is set
-if [ -n "${FMTM_ODK_DOMAIN}" ]; then
-    echo "Adding ${FMTM_ODK_DOMAIN} to certificate for domain ${FMTM_DOMAIN}."
-    certbot_args+=("-d" "${FMTM_ODK_DOMAIN}")
-fi
-
-# Check if FMTM_S3_DOMAIN is set
-if [ -n "${FMTM_S3_DOMAIN}" ]; then
-    echo "Adding ${FMTM_S3_DOMAIN} to certificate for domain ${FMTM_DOMAIN}."
-    certbot_args+=("-d" "${FMTM_S3_DOMAIN}")
-fi
+# Renew certs (default api & frontend)
+certbot_args=(
+    "--webroot" "--webroot-path=/var/www/certbot" \
+    "--email" "${CERT_EMAIL}" "--agree-tos" "--no-eff-email" \
+    "-d" "${FMTM_DOMAIN}" "-d" "${FMTM_API_DOMAIN}" \
+)
 
 # Run certbot with the constructed arguments
-echo "Running certbot with args: ${certbot_args[@]}"
-certbot --non-interactive certonly "${certbot_args[@]}"
+echo "Running certbot with args: ${certbot_args[@]} $@"
+certbot --non-interactive certonly "${certbot_args[@]} $@"
 echo "Certificates generated under: /etc/letsencrypt/live/${FMTM_DOMAIN}/"
 
 # Successful exit (stop container)

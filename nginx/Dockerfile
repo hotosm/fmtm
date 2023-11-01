@@ -101,12 +101,7 @@ COPY 100-renew-certs.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 COPY templates/cert-init/fmtm.conf.template \
      templates/cert-init/api.conf.template \
-     /etc/nginx/templates/
-
-
-
-FROM certs-init as certs-init-all
-COPY templates/cert-init/odk.conf.template \
+     templates/cert-init/odk.conf.template \
      templates/cert-init/minio.conf.template \
      /etc/nginx/templates/
 

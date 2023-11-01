@@ -212,7 +212,7 @@ services:
       retries: 3
 
   certbot:
-    image: "ghcr.io/hotosm/fmtm/certs-init-all:latest"
+    image: "ghcr.io/hotosm/fmtm/certs-init:latest"
     container_name: fmtm-cert-renew-${GIT_BRANCH}
     volumes:
       - certs:/etc/letsencrypt
@@ -228,4 +228,11 @@ services:
       - 443:443
     networks:
       - fmtm-net
+    command: [
+        "-d",
+        "${FMTM_ODK_DOMAIN:-odk.${FMTM_DOMAIN}}",
+        \
+        "-d",
+        "${FMTM_S3_DOMAIN:-s3.${FMTM_DOMAIN}}",
+      ]
     restart: "on-failure:2"
