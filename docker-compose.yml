@@ -117,7 +117,7 @@ services:
     restart: "unless-stopped"
 
   central:
-    profiles: [""]
+    profiles: ["", "central"]
     image: "ghcr.io/hotosm/fmtm/odkcentral:${ODK_CENTRAL_TAG:-v2023.4.0}"
     build:
       context: odkcentral/api
@@ -199,7 +199,7 @@ services:
       retries: 3
 
   central-db:
-    profiles: [""]
+    profiles: ["", "central"]
     image: "postgis/postgis:${POSTGIS_TAG:-14-3.4-alpine}"
     container_name: fmtm-central-db
     volumes:
@@ -236,3 +236,25 @@ services:
     restart: "on-failure:3"
     healthcheck:
       test: [] # Set the health check test to an empty value to disable it
+
+  central-ui:
+    profiles: ["central"]
+    image: "ghcr.io/hotosm/fmtm/odkcentral-ui:${ODK_CENTRAL_TAG:-v2023.4.0}"
+    build:
+      context: odkcentral/ui
+      args:
+        ODK_CENTRAL_TAG: v2023.4.0
+        ENKETO_TAG: 6.2.2
+    container_name: fmtm-central-ui
+    depends_on:
+      central:
+        condition: service_started
+      central-db:
+        condition: service_started
+    environment:
+      - DOMAIN=${ODK_CENTRAL_URL}
+      - SUPPORT_EMAIL=${ODK_CENTRAL_USER}
+      - HTTPS_PORT=443
+    networks:
+      - fmtm-net
+    restart: "unless-stopped"
