@@ -39,7 +39,7 @@ services:
         condition: service_started
       certbot:
         condition: service_completed_successfully
-      ui-build:
+      ui:
         condition: service_completed_successfully
     volumes:
       - fmtm_frontend:/usr/share/nginx/html/
@@ -73,12 +73,12 @@ services:
       - fmtm-net
     restart: "unless-stopped"
 
-  ui-build:
+  ui:
     image: "ghcr.io/hotosm/fmtm/frontend:${GIT_BRANCH}"
     build:
       context: src/frontend
       dockerfile: prod.dockerfile
-    container_name: fmtm-ui-build-${GIT_BRANCH}
+    container_name: fmtm-ui-${GIT_BRANCH}
     volumes:
       - fmtm_frontend:/app/dist/
     environment:
