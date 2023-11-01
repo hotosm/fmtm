@@ -91,8 +91,8 @@ services:
       context: src/frontend
       dockerfile: prod.dockerfile
       args:
-        FMTM_DOMAIN: ${FMTM_DOMAIN}
-        VITE_API_URL: ${VITE_API_URL}
+        APP_VERSION: ${GIT_BRANCH}
+        VITE_API_URL: ${VITE_API_URL:-https://api.${FMTM_DOMAIN}}
     container_name: fmtm-ui-${GIT_BRANCH}
     volumes:
       - fmtm_frontend:/app

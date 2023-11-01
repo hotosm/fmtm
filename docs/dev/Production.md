@@ -95,7 +95,7 @@ If you wish to change this and use another domain,
 then add the environment variable during the
 frontend build:
 
-`VITE_API_URL=https://some.other.domain.org`
+`VITE_API_URL=some.other.domain.org`
 
 > Note: this is only used for the **frontend** build.
 
