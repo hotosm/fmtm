@@ -88,7 +88,7 @@ services:
       - VITE_ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}
     network_mode: none
     restart: "on-failure:2"
-    command: exit 0
+    entrypoint: ["sh", "-c", "exit 0"]
 
   fmtm-db:
     image: "postgis/postgis:${POSTGIS_TAG:-14-3.4-alpine}"

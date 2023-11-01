@@ -250,10 +250,8 @@ services:
     networks:
       - fmtm-net
     command:
-      [
-        "-d",
-        "${FMTM_ODK_DOMAIN:-odk.${FMTM_DOMAIN}}",
-        "-d",
-        "${FMTM_S3_DOMAIN:-s3.${FMTM_DOMAIN}}",
-      ]
+      - "-d"
+      - "${FMTM_ODK_DOMAIN:-odk.${FMTM_DOMAIN}}"
+      - "-d"
+      - "${FMTM_S3_DOMAIN:-s3.${FMTM_DOMAIN}}"
     restart: "on-failure:2"
