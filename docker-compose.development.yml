@@ -98,7 +98,7 @@ services:
       - VITE_ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}
     network_mode: none
     restart: "on-failure:2"
-    command: exit 0
+    entrypoint: ["sh", "-c", "exit 0"]
 
   central:
     image: "ghcr.io/hotosm/fmtm/odkcentral:${ODK_CENTRAL_TAG:-v2023.4.0}"

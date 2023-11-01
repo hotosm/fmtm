@@ -16,7 +16,7 @@ COPY . .
 RUN pnpm run build
 
 
-FROM docker.io/devforth/spa-to-http:1.0.3 as prod
+FROM docker.io/devforth/spa-to-http:1.0.6 as prod
 ARG APP_VERSION
 ARG COMMIT_REF
 ARG FMTM_DOMAIN
