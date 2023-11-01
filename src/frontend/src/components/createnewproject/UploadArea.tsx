@@ -140,15 +140,16 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
               />
               {uploadAreaSelection === 'draw' && (
                 <div>
-                  <p className="fmtm-text-gray-700 fmtm-pt-5 fmtm-pb-3">Draw a polygon on the map to plot the area</p>
+                  <p className="fmtm-text-gray-700 fmtm-pt-5 fmtm-pb-5">Draw a polygon on the map to plot the area</p>
                   <Button
                     btnText="Click to Reset"
                     btnType="primary"
                     type="button"
                     onClick={() => resetFile()}
                     className=""
+                    disabled={drawnGeojson ? false : true}
                   />
-                  <p className="fmtm-text-gray-700 fmtm-pt-8">
+                  <p className="fmtm-text-gray-700 fmtm-mt-5">
                     Total Area: <span className="fmtm-font-bold">{totalAreaSelection}</span>
                   </p>
                   {errors.drawnGeojson && (
