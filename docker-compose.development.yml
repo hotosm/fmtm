@@ -86,18 +86,16 @@ services:
   ui:
     # This service simply builds the frontend to a volume
     # accessible to the proxy, then shuts down
-    image: "ghcr.io/hotosm/fmtm/frontend:${GIT_BRANCH}"
+    image: "ghcr.io/hotosm/fmtm/frontend:${GIT_BRANCH:-development}"
     build:
       context: src/frontend
       dockerfile: prod.dockerfile
+      args:
+        FMTM_DOMAIN: ${FMTM_DOMAIN}
+        VITE_API_URL: ${VITE_API_URL}
     container_name: fmtm-ui-${GIT_BRANCH}
     volumes:
       - fmtm_frontend:/app
-    environment:
-      - VITE_API_URL=http://api.${FMTM_DOMAIN}:${FMTM_PORT:-7050}
-      - VITE_ODK_CENTRAL_URL=${ODK_CENTRAL_URL}
-      - VITE_ODK_CENTRAL_USER=${ODK_CENTRAL_USER}
-      - VITE_ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}
     network_mode: none
     restart: "on-failure:2"
     entrypoint: ["sh", "-c", "exit 0"]

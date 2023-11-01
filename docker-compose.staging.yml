@@ -35,14 +35,15 @@ services:
     extends:
       file: docker-compose.development.yml
       service: proxy
-  certbot:
-    extends:
-      file: docker-compose.development.yml
-      service: certbot
   api:
     extends:
       file: docker-compose.development.yml
       service: api
+  ui:
+    extends:
+      file: docker-compose.development.yml
+      service: ui
+    image: "ghcr.io/hotosm/fmtm/frontend:${GIT_BRANCH:-staging}"
   central:
     extends:
       file: docker-compose.development.yml
@@ -63,3 +64,11 @@ services:
     extends:
       file: docker-compose.development.yml
       service: migrations
+  backups:
+    extends:
+      file: docker-compose.development.yml
+      service: backups
+  certbot:
+    extends:
+      file: docker-compose.development.yml
+      service: certbot
