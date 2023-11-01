@@ -90,7 +90,7 @@ services:
       dockerfile: prod.dockerfile
     container_name: fmtm-ui-build-${GIT_BRANCH}
     volumes:
-      - fmtm_frontend:/app/dist/
+      - fmtm_frontend:/app
     environment:
       - VITE_API_URL=http://api.${FMTM_DOMAIN}:${FMTM_PORT:-7050}
       - VITE_ODK_CENTRAL_URL=${ODK_CENTRAL_URL}
