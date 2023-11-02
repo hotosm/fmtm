@@ -84,7 +84,7 @@ services:
       fmtm-db:
         condition: service_healthy
       central:
-        condition: service_started
+        condition: service_healthy
         required: false
       migrations:
         condition: service_completed_successfully
