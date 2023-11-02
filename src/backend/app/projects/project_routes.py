@@ -616,8 +616,10 @@ async def generate_files(
         try:
             extracts_contents = await data_extracts.read()
             json.loads(extracts_contents)
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="Provide a valid geojson file")
+        except json.JSONDecodeError as e:
+            raise HTTPException(
+                status_code=400, detail="Provide a valid geojson file"
+            ) from e
 
     # generate a unique task ID using uuid
     background_task_id = uuid.uuid4()
@@ -645,6 +647,39 @@ async def generate_files(
     )
 
     return {"Message": f"{project_id}", "task_id": f"{background_task_id}"}
+
+
+from osm_fieldwork.data_models import data_models_path
+from osm_fieldwork.filter_data import FilterData
+from osm_rawdata.postgres import PostgresClient
+
+
+@router.post("/view_data_extracts/")
+async def get_data_extracts(
+    aoi: UploadFile,
+    category: Optional[str] = Form(...),
+):
+    # read entire file
+    await aoi.seek(0)
+    aoi_content = await aoi.read()
+    boundary = json.loads(aoi_content)
+
+    # Validatiing Coordinate Reference System
+    check_crs(boundary)
+    xlsform = f"{xlsforms_path}/{category}.xls"
+
+    config_path = f"{data_models_path}/{category}.yaml"
+
+    # # OSM Extracts using raw data api
+    pg = PostgresClient("underpass", config_path)
+    data_extract = pg.execQuery(boundary)
+    filter = FilterData(xlsform)
+
+    updated_data_extract = {"type": "FeatureCollection", "features": []}
+    filtered_data_extract = (
+        filter.cleanData(data_extract) if data_extract else updated_data_extract
+    )
+    return filtered_data_extract
 
 
 @router.post("/update-form/{project_id}")
