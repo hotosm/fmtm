@@ -174,7 +174,7 @@ install_docker() {
 install_envsubst_if_missing() {
     if ! command -v curl &> /dev/null; then
         sudo apt-get update
-        sudo apt-get install -y curl
+        sudo apt-get install -y curl --no-install-recommends
     fi
 
     echo
@@ -495,6 +495,7 @@ prompt_user_for_dotenv() {
     fi
 
     install_envsubst_if_missing
+    check_debug
 
     if [ $IS_DEBUG != true ]; then
         set_deploy_env
@@ -523,34 +524,23 @@ prompt_user_for_dotenv() {
     pretty_echo "Completed dotenv file generation"
 }
 
-get_repo_or_mkdir() {
-    if [ $IS_DEBUG == true ]; then
-        if [ "$(basename "$PWD")" != "fmtm" ]; then
-            pretty_echo "Cloning Repo"
-            git clone https://github.com/hotosm/fmtm.git
-            cd fmtm
-        fi
-    else
-        mkdir -p fmtm
+get_repo() {
+    if ! command -v git &> /dev/null; then
+        pretty_echo "Downloading GIT."
+        sudo apt-get update
+        sudo apt-get install -y git --no-install-recommends
+    fi
+
+    if [ "$(basename "$PWD")" != "fmtm" ]; then
+        pretty_echo "Cloning Repo"
+        git clone https://github.com/hotosm/fmtm.git
         cd fmtm
     fi
 }
 
-download_compose_file() {
-    pretty_echo "Download Docker Compose Config"
-    curl -LO "https://raw.githubusercontent.com/hotosm/fmtm/${BRANCH_NAME}/${COMPOSE_FILE}"
-}
-
 run_compose_stack() {
-    if [ $IS_DEBUG == true ]; then
-        pretty_echo "Building Required Images"
-        docker compose -f ${COMPOSE_FILE} build
-    else
-        download_compose_file
-
-        pretty_echo "Pulling Required Images"
-        docker compose -f ${COMPOSE_FILE} pull
-    fi
+    pretty_echo "Building Required Images"
+    docker compose -f ${COMPOSE_FILE} build
 
     pretty_echo "Starting FMTM"
     docker compose -f ${COMPOSE_FILE} up \
@@ -559,7 +549,6 @@ run_compose_stack() {
 
 
 install_docker
-check_debug
-get_repo_or_mkdir
+get_repo
 prompt_user_for_dotenv
 run_compose_stack
