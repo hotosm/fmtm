@@ -113,7 +113,7 @@ add_to_apt() {
     echo "Done"
 }
 
-install_docker() {
+apt_install_docker() {
     pretty_echo "Installing Docker"
     sudo apt-get update
     sudo apt-get install -y \
@@ -158,13 +158,13 @@ install_docker() {
 
     read -rp "Do you want to install Docker? (y/n): " install_docker
 
-    if [["$install_docker" == "y" ||  "$install_docker" == "yes"]]; then
+    if [[ "$install_docker" == "y" ||  "$install_docker" == "yes" ]]; then
         check_os
         remove_old_docker_installs
         install_dependencies
         add_gpg_key
         add_to_apt
-        install_docker
+        apt_install_docker
         update_to_rootless
         update_docker_ps_format
         add_vars_to_bashrc
@@ -200,17 +200,18 @@ check_existing_dotenv() {
             read -e -p "Do you want to overwrite it? y/n " conf
             if [ "$conf" = "y" ]
             then
-                conf=""
-                break
+                return 1
             elif [ "$conf" = "n" ]
             then
-                echo "Aborting."
-                exit 0
+                echo "Continuing with existing .env file."
+                return 0
             else 
                 echo "Invalid input!"
             fi
         done
     fi
+
+    return 1
 }
 
 check_debug() {
@@ -488,9 +489,12 @@ generate_dotenv() {
 
 prompt_user_for_dotenv() {
     pretty_echo "Generate dotenv config for FMTM"
-    check_existing_dotenv
+
+    if check_existing_dotenv; then
+        return # Exit the function
+    fi
+
     install_envsubst_if_missing
-    check_debug
 
     if [ $IS_DEBUG != true ]; then
         set_deploy_env
@@ -555,6 +559,7 @@ run_compose_stack() {
 
 
 install_docker
+check_debug
 get_repo_or_mkdir
 prompt_user_for_dotenv
 run_compose_stack

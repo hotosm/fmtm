@@ -92,7 +92,7 @@ add_to_apt() {
     echo "Done"
 }
 
-install_docker() {
+apt_install_docker() {
     pretty_echo "Installing Docker"
     sudo apt-get update
     sudo apt-get install -y \
@@ -138,7 +138,7 @@ install_docker() {
     install_dependencies
     add_gpg_key
     add_to_apt
-    install_docker
+    apt_install_docker
     update_to_rootless
     update_docker_ps_format
     add_vars_to_bashrc
