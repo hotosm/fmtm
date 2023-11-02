@@ -34,6 +34,7 @@ server {
     ssl_certificate /etc/letsencrypt/live/${FMTM_DOMAIN}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/${FMTM_DOMAIN}/privkey.pem;
     include /etc/nginx/options-ssl-nginx.conf;
+    include /etc/nginx/options-security.conf;
 
     # Allow special characters in headers (Minio)
     ignore_invalid_headers off;

@@ -29,6 +29,7 @@ server {
     ssl_certificate /etc/letsencrypt/live/${FMTM_DOMAIN}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/${FMTM_DOMAIN}/privkey.pem;
     include /etc/nginx/options-ssl-nginx.conf;
+    include /etc/nginx/options-security.conf;
 
     # Max upload size 1GB
     client_max_body_size 1G;
@@ -40,7 +41,7 @@ server {
 
     location / {
         # Serve FMTM frontend under /usr/share/nginx/html
-        root /usr/share/nginx/html;
+        root /usr/share/nginx/html/fmtm;
         try_files $uri $uri/ /index.html;
     }
 

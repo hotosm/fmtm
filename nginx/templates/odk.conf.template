@@ -34,18 +34,34 @@ server {
     ssl_certificate /etc/letsencrypt/live/${FMTM_DOMAIN}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/${FMTM_DOMAIN}/privkey.pem;
     include /etc/nginx/options-ssl-nginx.conf;
+    include /etc/nginx/options-security.conf;
 
     # Max upload size 1GB
-    client_max_body_size 1G;
+    client_max_body_size 100m;
 
     # Response headers (Access-Control-Allow-Origin set by FastAPI, not required)
     add_header 'Content-Security-Policy' 'upgrade-insecure-requests';
     # For opentelemetry
     add_header 'Access-Control-Allow-Headers' 'traceparent,tracestate';
 
+    # The frontend
     location / {
-        proxy_read_timeout 40s;
-        proxy_connect_timeout 20s;
+        root /usr/share/nginx/html/central;
+
+        location /index.html {
+            include /etc/nginx/options-security.conf;
+            add_header Cache-Control no-cache;
+        }
+    }
+
+    # The API
+    location ~ ^/v\d {
+        proxy_redirect off;
+        # buffer requests, but not responses, so streaming out works.
+        proxy_request_buffering on;
+        proxy_buffering off;
+        proxy_read_timeout 2m;
+        proxy_connect_timeout 1m;
 
         # Requests headers
         proxy_set_header Host                $http_host;
@@ -65,7 +81,7 @@ server {
         proxy_pass http://centralapi;
     }
 
-    # Redirect
+    # Required redirect
     error_page 497 https://$host:$server_port$request_uri;
 
     error_page   500 502 503 504  /50x.html;
