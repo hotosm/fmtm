@@ -24,6 +24,7 @@ volumes:
   fmtm_images:
   fmtm_tiles:
   central_db_data:
+  central_frontend:
 
 networks:
   fmtm-net:
@@ -46,8 +47,13 @@ services:
       central:
         condition: service_started
         required: false
+      central-ui:
+        condition: service_completed_successfully
+        required: false
       s3:
         condition: service_started
+    volumes:
+      - central_frontend:/usr/share/nginx/html/central
     ports:
       - ${FMTM_PORT:-7050}:80
     networks:
@@ -122,7 +128,7 @@ services:
     build:
       context: odkcentral/api
       args:
-        ODK_CENTRAL_TAG: v2023.4.0
+        ODK_CENTRAL_TAG: ${ODK_CENTRAL_TAG:-v2023.4.0}
     container_name: fmtm-central
     depends_on:
       central-db:
@@ -153,6 +159,21 @@ services:
     networks:
       - fmtm-net
     restart: "unless-stopped"
+
+  central-ui:
+    # This service simply builds the frontend to a volume
+    # accessible to the proxy, then shuts down
+    profiles: ["central"]
+    image: "ghcr.io/hotosm/fmtm/odkcentral-ui:${ODK_CENTRAL_TAG:-v2023.4.0}"
+    build:
+      context: odkcentral/ui
+      args:
+        ODK_CENTRAL_TAG: ${ODK_CENTRAL_TAG:-v2023.4.0}
+    container_name: fmtm-central-ui
+    volumes:
+      - central_frontend:/frontend
+    network_mode: none
+    restart: "on-failure:2"
 
   s3:
     image: "docker.io/minio/minio:${MINIO_TAG:-RELEASE.2023-10-25T06-33-25Z}"
@@ -236,25 +257,3 @@ services:
     restart: "on-failure:3"
     healthcheck:
       test: [] # Set the health check test to an empty value to disable it
-
-  central-ui:
-    profiles: ["central"]
-    image: "ghcr.io/hotosm/fmtm/odkcentral-ui:${ODK_CENTRAL_TAG:-v2023.4.0}"
-    build:
-      context: odkcentral/ui
-      args:
-        ODK_CENTRAL_TAG: v2023.4.0
-        ENKETO_TAG: 6.2.2
-    container_name: fmtm-central-ui
-    depends_on:
-      central:
-        condition: service_started
-      central-db:
-        condition: service_started
-    environment:
-      - DOMAIN=${ODK_CENTRAL_URL}
-      - SUPPORT_EMAIL=${ODK_CENTRAL_USER}
-      - HTTPS_PORT=443
-    networks:
-      - fmtm-net
-    restart: "unless-stopped"

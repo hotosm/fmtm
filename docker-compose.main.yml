@@ -42,7 +42,7 @@ services:
       ui:
         condition: service_completed_successfully
     volumes:
-      - fmtm_frontend:/usr/share/nginx/html/
+      - fmtm_frontend:/usr/share/nginx/html/fmtm/
       - certs:/etc/letsencrypt
       - certbot_data:/var/www/certbot
     environment:

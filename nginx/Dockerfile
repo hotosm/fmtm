@@ -75,6 +75,7 @@ WORKDIR /usr/share/nginx/html
 RUN rm -rf ./* /etc/nginx/conf.d/default.conf /etc/nginx/nginx.conf
 COPY nginx.conf \
      options-ssl-nginx.conf \
+     options-security.conf \
      certs/ssl-dhparams.pem \
      /etc/nginx/
 # Add Healthcheck

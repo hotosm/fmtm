@@ -24,22 +24,28 @@ upstream centralapi {
 server {
     listen 80;
     server_name odk.fmtm.localhost;
-    return 301 https://$host$request_uri;
-}
 
-server {
-    listen 443 ssl;
-    server_name odk.localhost;
+    # Max upload size 100MB
+    client_max_body_size 100m;
 
-    ssl_certificate /etc/nginx/central-fullchain.crt;
-    ssl_certificate_key /etc/nginx/central.key;
-
-    # Max upload size 1GB
-    client_max_body_size 1G;
-
+    # The frontend
     location / {
-        proxy_read_timeout 40s;
-        proxy_connect_timeout 20s;
+        root /usr/share/nginx/html/central;
+
+        #location /index.html {
+        #    include /usr/share/odk/nginx/common-headers.conf;
+        #    add_header Cache-Control no-cache;
+        #}
+    }
+
+    # The API
+    location ~ ^/v\d {
+        proxy_redirect off;
+        # buffer requests, but not responses, so streaming out works.
+        proxy_request_buffering on;
+        proxy_buffering off;
+        proxy_read_timeout 2m;
+        proxy_connect_timeout 1m;
 
         # Requests headers
         proxy_set_header Host                $http_host;
@@ -59,7 +65,50 @@ server {
         proxy_pass http://centralapi;
     }
 
-    # Required
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name odk.fmtm.localhost;
+
+    ssl_certificate /etc/nginx/central-fullchain.crt;
+    ssl_certificate_key /etc/nginx/central.key;
+
+    # Max upload size 100MB
+    client_max_body_size 100m;
+
+    # The API
+    location ~ ^/v\d {
+        proxy_redirect off;
+        # buffer requests, but not responses, so streaming out works.
+        proxy_request_buffering on;
+        proxy_buffering off;
+        proxy_read_timeout 2m;
+        proxy_connect_timeout 1m;
+
+        # Requests headers
+        proxy_set_header Host                $http_host;
+        proxy_set_header X-Real-IP           $remote_addr;
+        proxy_set_header X-Forwarded-Proto   $scheme;
+        proxy_set_header X-Forwarded-For     $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Host    $http_host;
+        proxy_set_header X-Forwarded-Server  $http_host;
+        proxy_set_header X-Forwarded-Port    $server_port;
+
+        # Disable buffer to temp files, tweak buffer for memory
+        proxy_max_temp_file_size 0;
+        proxy_buffer_size 64k;
+        proxy_buffers 8 64k;
+        proxy_busy_buffers_size 64k;
+
+        proxy_pass http://centralapi;
+    }
+
+    # Required redirect
     error_page 497 https://$host:$server_port$request_uri;
 
     error_page   500 502 503 504  /50x.html;
