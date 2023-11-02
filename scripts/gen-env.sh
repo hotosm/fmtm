@@ -301,7 +301,8 @@ set_osm_credentials() {
         
         if [ "$auth_redirect_uri" == "" ]
         then
-            echo "Using $OSM_LOGIN_REDIRECT_URI"
+            echo "Using http://127.0.0.1:7051/osmauth/"
+            echo "WARNING: this is a development-only default."
             break
         else 
             echo "Using $auth_redirect_uri"
@@ -314,6 +315,24 @@ set_osm_credentials() {
     export OSM_CLIENT_SECRET=${OSM_CLIENT_SECRET}
     export OSM_SECRET_KEY=${OSM_SECRET_KEY}
     export OSM_LOGIN_REDIRECT_URI=${OSM_LOGIN_REDIRECT_URI}
+}
+
+check_change_port() {
+    echo "The default port for local development is 7050."
+    while true
+    do
+        read -e -p "Enter a different port if required, or nothing for default: " fmtm_port
+        
+        if [ "$fmtm_port" == "" ]
+        then
+            echo "Using port 7050 for FMTM."
+            break
+        else 
+            echo "Using $fmtm_port"
+            export FMTM_PORT="$fmtm_port"
+            break
+        fi
+    done
 }
 
 generate_dotenv() {
@@ -359,6 +378,7 @@ prompt_user_for_dotenv() {
 
     else
         set_odk_user_creds
+        check_change_port
     fi
 
     set_osm_credentials

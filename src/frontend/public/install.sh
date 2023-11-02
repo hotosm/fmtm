@@ -469,6 +469,24 @@ set_osm_credentials() {
     export OSM_LOGIN_REDIRECT_URI=${OSM_LOGIN_REDIRECT_URI}
 }
 
+check_change_port() {
+    echo "The default port for local development is 7050."
+    while true
+    do
+        read -e -p "Enter a different port if required, or nothing for default: " fmtm_port
+        
+        if [ "$fmtm_port" == "" ]
+        then
+            echo "Using port 7050 for FMTM."
+            break
+        else 
+            echo "Using $fmtm_port"
+            export FMTM_PORT="$fmtm_port"
+            break
+        fi
+    done
+}
+
 generate_dotenv() {
     pretty_echo "Generating Dotenv File"
 
@@ -516,6 +534,7 @@ prompt_user_for_dotenv() {
 
     else
         set_odk_user_creds
+        check_change_port
     fi
 
     set_osm_credentials
@@ -552,3 +571,9 @@ install_docker
 get_repo
 prompt_user_for_dotenv
 run_compose_stack
+
+pretty_echo "FMTM Setup Complete"
+echo
+echo "To access services, go to:"
+echo
+echo "Froontend: http://fmtm.localhost:7050"
