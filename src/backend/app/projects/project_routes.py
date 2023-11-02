@@ -132,7 +132,9 @@ async def read_project_summaries(
     total_pages = (total_projects + results_per_page - 1) // results_per_page
 
     projects = project_crud.get_project_summaries(db, user_id, skip, limit, hashtags)
-    project_summaries = [project_schemas.ProjectSummary.from_db_project(project) for project in projects]
+    project_summaries = [
+        project_schemas.ProjectSummary.from_db_project(project) for project in projects
+    ]
 
     response = project_schemas.PaginatedProjectSummaries(
         results=project_summaries,

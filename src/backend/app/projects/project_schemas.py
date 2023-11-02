@@ -21,10 +21,10 @@ from typing import List, Optional, Union
 from geojson_pydantic import Feature as GeojsonFeature
 from pydantic import BaseModel
 
+from ..db import db_models
 from ..models.enums import ProjectPriority, ProjectStatus
 from ..tasks import tasks_schemas
 from ..users.user_schemas import User
-from ..db import db_models
 
 
 class ODKCentral(BaseModel):
@@ -78,11 +78,14 @@ class ProjectSummary(BaseModel):
     organisation_logo: Optional[str] = None
 
     @classmethod
-    def from_db_project(cls, project: db_models.DbProject,) -> "ProjectSummary":
+    def from_db_project(
+        cls,
+        project: db_models.DbProject,
+    ) -> "ProjectSummary":
         priority = project.priority
         return cls(
             id=project.id,
-            priority= priority,
+            priority=priority,
             priority_str=priority.name,
             title=project.title,
             location_str=project.location_str,
@@ -97,6 +100,7 @@ class ProjectSummary(BaseModel):
             organisation_logo=project.organisation_logo,
         )
 
+
 class PaginationInfo(BaseModel):
     hasNext: bool
     hasPrev: bool
@@ -107,9 +111,11 @@ class PaginationInfo(BaseModel):
     perPage: int
     total: int
 
+
 class PaginatedProjectSummaries(BaseModel):
     results: List[ProjectSummary]
     pagination: PaginationInfo
+
 
 class ProjectBase(BaseModel):
     id: int
