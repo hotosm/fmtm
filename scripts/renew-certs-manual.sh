@@ -2,6 +2,15 @@
 
 set -euo pipefail
 
+cleanup_and_exit() {
+    echo
+    echo "CTRL+C received, exiting..."
+    exit 1
+}
+
+# Capture CTRL+C
+trap cleanup_and_exit INT
+
 # Prompt the user for input and set the BRANCH_NAME variable
 read -p "Enter the environment (dev/staging/prod): " ENVIRONMENT
 

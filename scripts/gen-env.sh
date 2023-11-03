@@ -20,6 +20,13 @@ pretty_echo() {
     echo ""
 }
 
+cleanup_and_exit() {
+    echo
+    echo "CTRL+C received, exiting..."
+    # Add extra cleanup actions here
+    exit 1
+}
+
 install_envsubst_if_missing() {
     if ! command -v curl &> /dev/null; then
         sudo apt-get update
@@ -44,46 +51,51 @@ check_existing_dotenv() {
     then
         echo "WARNING: ${DOTENV_PATH} file already exists."
         echo "This script will overwrite the content of this file."
-        until [ "$conf" = "y" -o "$conf" = "n" ]
+        echo
+        echo "Do you want to overwrite "${DOTENV_PATH}"? y/n"
+        until [ "$overwrite" = "y" -o "$overwrite" = "n" ]
         do
-            read -e -p "Do you want to overwrite it? y/n " conf
-            if [ "$conf" = "y" ]
+            read -e -p "Enter 'y' to overwrite, anything else to continue: " overwrite
+
+            if [ "$overwrite" = "y" ]
             then
-                conf=""
-                break
-            elif [ "$conf" = "n" ]
+                return 1
+            elif [ "$overwrite" = "n" ]
             then
-                echo "Aborting."
-                exit 0
+                echo "Continuing with existing .env file."
+                return 0
             else 
                 echo "Invalid input!"
             fi
         done
     fi
+
+    return 1
 }
 
-check_debug() {
-    pretty_echo "Local Deployment?"
+check_existing_dotenv() {
+    if [ -f "${DOTENV_PATH}" ]
+    then
+        echo "WARNING: ${DOTENV_PATH} file already exists."
+        echo "This script will overwrite the content of this file."
+        echo
+        echo "Do you want to overwrite file '"${DOTENV_PATH}"'? y/n"
+        echo
+        while true
+        do
+            read -e -p "Enter 'y' to overwrite, anything else to continue: " overwrite
 
-    echo "Is this a local test deployment?"
-    while true
-    do
-        read -e -p "Enter y if yes, anything else to continue: " debug
+            if [[ "$overwrite" = "y" || "$overwrite" = "yes" ]]
+            then
+                return 1
+            else 
+                echo "Continuing with existing .env file."
+                return 0
+            fi
+        done
+    fi
 
-        if [[ "$debug" = "y" || "$debug" = "yes" ]]
-        then
-            IS_DEBUG=true
-            export DEBUG=True
-            export LOG_LEVEL="DEBUG"
-            echo "Using debug configuration."
-        else
-            IS_DEBUG=false
-            export DEBUG=False
-            export LOG_LEVEL="INFO"
-            break
-        fi
-        break
-    done
+    return 1
 }
 
 set_deploy_env() {
@@ -292,8 +304,6 @@ set_osm_credentials() {
     echo
     read -e -p "Client Secret: " OSM_CLIENT_SECRET
     echo
-    read -e -p "Secret Key: " OSM_SECRET_KEY
-    echo
     echo "Login redirect URI (default http://127.0.0.1:7051/osmauth/): "
     while true
     do
@@ -313,7 +323,8 @@ set_osm_credentials() {
 
     export OSM_CLIENT_ID=${OSM_CLIENT_ID}
     export OSM_CLIENT_SECRET=${OSM_CLIENT_SECRET}
-    export OSM_SECRET_KEY=${OSM_SECRET_KEY}
+    secret_key=$(tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 50)
+    export OSM_SECRET_KEY=${secret_key}
     export OSM_LOGIN_REDIRECT_URI=${OSM_LOGIN_REDIRECT_URI}
 }
 
@@ -340,20 +351,23 @@ generate_dotenv() {
 
     if [ -f ./.env.example ]; then
         echo ".env.example already exists. Continuing."
+
+        echo "substituting variables from .env.example --> ${DOTENV_PATH}"
+        ./envsubst < .env.example > ${DOTENV_PATH}
     else
         echo "Downloading .env.example from repo."
         echo
         curl -LO "https://raw.githubusercontent.com/hotosm/fmtm/${BRANCH_NAME:-development}/.env.example"
+
+        echo "substituting variables from .env.example --> ${DOTENV_PATH}"
+        ./envsubst < .env.example > ${DOTENV_PATH}
+
+        echo "Deleting .env.example"
+        rm .env.example
     fi
-
-    echo "substituting variables from .env.example --> ${DOTENV_PATH}"
-    ./envsubst < .env.example > ${DOTENV_PATH}
-
-    echo "Deleting .env.example"
-    rm .env.example
 }
 
-prompt_user_for_dotenv() {
+prompt_user_gen_dotenv() {
     pretty_echo "Generate dotenv config for FMTM"
     check_existing_dotenv
     install_envsubst_if_missing
@@ -387,4 +401,5 @@ prompt_user_for_dotenv() {
     pretty_echo "Completed dotenv file generation"
 }
 
-prompt_user_for_dotenv
+trap cleanup_and_exit INT
+prompt_user_gen_dotenv

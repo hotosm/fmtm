@@ -1,8 +1,10 @@
 #!/bin/bash
 
 # Tested for Debian 11 Bookworm & Ubuntu 22.04 LTS
+# Note: this script must be run as a non-root user
+# Note: The user must be logged in directly (not via su)
 
-IS_DEBIAN=false
+OS_NAME="debian"
 
 pretty_echo() {
     local message="$1"
@@ -20,6 +22,13 @@ pretty_echo() {
     echo ""
 }
 
+cleanup_and_exit() {
+    echo
+    echo "CTRL+C received, exiting..."
+    # Add extra cleanup actions here
+    exit 1
+}
+
 check_os() {
     pretty_echo "Checking Current OS"
 
@@ -27,10 +36,11 @@ check_os() {
         source /etc/os-release
         case "$ID" in
         debian)
-            IS_DEBIAN=true
+            export OS_NAME=${ID}
             echo "Current OS is ${PRETTY_NAME}."
             ;;
         ubuntu)
+            export OS_NAME=${ID}
             echo "Current OS is ${PRETTY_NAME}."
             ;;
         *)
@@ -70,7 +80,7 @@ install_dependencies() {
         dbus-user-session \
         slirp4netns
 
-    if [ "$IS_DEBIAN" = true ]; then
+    if [ "$OS_NAME" = "debian" ]; then
         sudo apt-get install -y fuse-overlayfs
     fi
 }
@@ -78,7 +88,7 @@ install_dependencies() {
 add_gpg_key() {
     pretty_echo "Adding docker gpg key"
     sudo install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/${id}/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    curl -fsSL https://download.docker.com/linux/${ID}/gpg | sudo gpg --yes --dearmor -o /etc/apt/keyrings/docker.gpg
     sudo chmod a+r /etc/apt/keyrings/docker.gpg
     echo "Done"
 }
@@ -100,7 +110,25 @@ apt_install_docker() {
         docker-ce-cli \
         containerd.io \
         docker-buildx-plugin \
-        docker-compose-plugin
+        docker-compose-plugin \
+        docker-ce-rootless-extras
+}
+
+check_user_not_root() {
+    pretty_echo "Use non-root user"
+
+    if [ "$(id -u)" -eq 0 ]; then
+        if id "fmtm" &>/dev/null; then
+            echo "Current user is root. Switching to existing non-privileged user 'fmtm'."
+        else
+            echo "Current user is root. Creating a non-privileged user 'fmtm'."
+            useradd -m -s /bin/bash fmtm
+        fi
+
+        echo "Rerunning this script as user 'fmtm'."
+        sudo -u fmtm bash -c "$0 $*"
+        exit 0
+    fi
 }
 
 update_to_rootless() {
@@ -121,14 +149,29 @@ EOF
 }
 
 add_vars_to_bashrc() {
-    pretty_echo "Adding rootless DOCKER_HOST to bashrc"
-    user_id=$(id -u)
-    export DOCKER_HOST="unix:///run/user/$user_id//docker.sock"
-    echo "export DOCKER_HOST=unix:///run/user/$user_id//docker.sock" >> ~/.bashrc
-    echo "Done"
+    heading_echo "Adding rootless DOCKER_HOST to bashrc"
 
-    pretty_echo "Adding dc='docker compose' alias"
-    echo "alias dc='docker compose'" >> ~/.bashrc
+    user_id=$(id -u)
+    docker_host_var="export DOCKER_HOST=unix:///run/user/$user_id//docker.sock"
+    dc_alias_cmd="alias dc='docker compose'"
+
+    # Check if DOCKER_HOST is already defined
+    if ! grep -q "$docker_host_var" ~/.bashrc; then
+        echo "Adding rootless DOCKER_HOST var to ~/.bashrc."
+        echo "$docker_host_var" >> ~/.bashrc
+    fi
+
+    echo "Done"
+    echo
+
+    heading_echo "Adding dc='docker compose' alias"
+
+    # Check if the alias already exists
+    if ! grep -q "$dc_alias_cmd" ~/.bashrc; then
+        echo "Adding 'dc' alias to ~/.bashrc."
+        echo "$dc_alias_cmd" >> ~/.bashrc
+    fi
+
     echo "Done"
 }
 
@@ -144,4 +187,6 @@ install_docker() {
     add_vars_to_bashrc
 }
 
+check_user_not_root
+trap cleanup_and_exit INT
 install_docker
