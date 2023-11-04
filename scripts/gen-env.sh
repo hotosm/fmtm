@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DOTENV_PATH=.env
-IS_DEBUG=false
+IS_TEST=false
 BRANCH_NAME=
 
 pretty_echo() {
@@ -44,6 +44,31 @@ install_envsubst_if_missing() {
         curl -L https://github.com/a8m/envsubst/releases/download/v1.2.0/envsubst-`uname -s`-`uname -m` -o envsubst
         chmod +x envsubst
     fi
+}
+
+check_if_test() {
+    heading_echo "Test Deployment?"
+
+    echo "Is this a test deployment?"
+    echo
+    while true
+    do
+        read -e -p "Enter 'y' if yes, anything else to continue: " test
+
+        if [[ "$test" = "y" || "$test" = "yes" ]]
+        then
+            IS_TEST=true
+            export DEBUG=True
+            export LOG_LEVEL="DEBUG"
+            echo "Using debug configuration."
+        else
+            IS_TEST=false
+            export DEBUG=False
+            export LOG_LEVEL="INFO"
+            break
+        fi
+        break
+    done
 }
 
 check_existing_dotenv() {
@@ -296,7 +321,14 @@ set_domains() {
 }
 
 set_osm_credentials() {
-    pretty_echo "OSM OAuth2 Credentials"
+    heading_echo "OSM OAuth2 Credentials"
+
+    yellow_echo "App credentials are generated from your OSM user profile."
+    echo
+    yellow_echo "If you need to generate new OAuth2 App credentials, visit:"
+    echo
+    yellow_echo ">   https://www.openstreetmap.org/oauth2/applications"
+    echo
 
     echo "Please enter your OSM authentication details"
     echo
@@ -308,7 +340,7 @@ set_osm_credentials() {
     while true
     do
         read -e -p "Enter a URI, or nothing for default: " auth_redirect_uri
-        
+
         if [ "$auth_redirect_uri" == "" ]
         then
             echo "Using http://127.0.0.1:7051/osmauth/"
@@ -329,7 +361,9 @@ set_osm_credentials() {
 }
 
 check_change_port() {
+    pretty_echo "Set Default Port"
     echo "The default port for local development is 7050."
+    echo
     while true
     do
         read -e -p "Enter a different port if required, or nothing for default: " fmtm_port
@@ -371,9 +405,9 @@ prompt_user_gen_dotenv() {
     pretty_echo "Generate dotenv config for FMTM"
     check_existing_dotenv
     install_envsubst_if_missing
-    check_debug
+    check_if_test
 
-    if [ $IS_DEBUG != true ]; then
+    if [ $IS_TEST != true ]; then
         set_deploy_env
 
         if [ "$BRANCH_NAME" == "main" ]
@@ -391,7 +425,6 @@ prompt_user_gen_dotenv() {
         set_domains
 
     else
-        set_odk_user_creds
         check_change_port
     fi
 

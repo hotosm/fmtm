@@ -1,12 +1,14 @@
 #!/bin/bash
 
+set -o pipefail
+
 # Tested for Debian 11 Bookworm & Ubuntu 22.04 LTS
 
 # Global Vars
-RUN_AS_ROOT=false
+RANDOM_DIR="${RANDOM}${RANDOM}"
 DOTENV_PATH=.env
 OS_NAME="debian"
-IS_DEBUG=false
+IS_TEST=false
 BRANCH_NAME=development
 COMPOSE_FILE=docker-compose.yml
 
@@ -17,7 +19,7 @@ heading_echo() {
     local sep_length=${#separator}
     local pad_length=$(( (sep_length - ${#message}) / 2 ))
     local pad=""
-    
+
     case "$color" in
         "black") color_code="\e[0;30m" ;;
         "red") color_code="\e[0;31m" ;;
@@ -67,19 +69,20 @@ display_logo() {
 cleanup_and_exit() {
     echo
     echo "CTRL+C received, exiting..."
-    # Add extra cleanup actions here
+
+    # Cleanup files
+    rm -rf "/tmp/${RANDOM_DIR}"
+
     exit 1
 }
 
 check_user_not_root() {
     if [ "$(id -u)" -eq 0 ]; then
-        RUN_AS_ROOT=true
-
         heading_echo "WARNING" "yellow"
 
         yellow_echo "Current user is root."
         yellow_echo "This script must run as a non-privileged user account."
-        yellow_echo
+        echo
 
         if id "svcfmtm" &>/dev/null; then
             yellow_echo "User 'svcfmtm' found."
@@ -88,6 +91,11 @@ check_user_not_root() {
             useradd -m -s /bin/bash svcfmtm 2>/dev/null
         fi
 
+        echo
+        yellow_echo "Enable login linger for user svcfmtm (docker if logged out)"
+        sudo loginctl enable-linger svcfmtm
+
+        echo
         yellow_echo "Temporarily adding to sudoers list."
         echo "svcfmtm ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/fmtm-sudoers >/dev/null
 
@@ -95,8 +103,9 @@ check_user_not_root() {
         yellow_echo "Rerunning this script as user 'svcfmtm'."
         echo
 
-        if ! command -v machinectl &> /dev/null; then
+        if ! command -v machinectl &>/dev/null; then
             yellow_echo "Downloading machinectl requirement."
+            echo
             sudo apt-get update
             sudo apt-get install -y systemd-container --no-install-recommends
         fi
@@ -109,10 +118,14 @@ check_user_not_root() {
             user_script_path="/home/svcfmtm/$(basename "$0")"
             cp "$root_script_path" "$user_script_path"
             chmod +x "$user_script_path"
-            machinectl --quiet shell svcfmtm@ /bin/bash -c "$user_script_path $*"
+            machinectl --quiet shell \
+                --setenv=RUN_AS_ROOT=true \
+                svcfmtm@ /bin/bash -c "$user_script_path $*"
         else
             # User called script remotely
-            machinectl --quiet shell svcfmtm@ /bin/bash -c "$0 $*"
+            machinectl --quiet shell \
+                --setenv=RUN_AS_ROOT=true \
+                svcfmtm@ /bin/bash -c "$0 $*"
         fi
 
         exit 0
@@ -216,20 +229,26 @@ update_docker_ps_format() {
     heading_echo "Updating docker ps Formatting"
 
     # Root user
-    if [ "$RUN_AS_ROOT" = true ]; then
-        sudo tee /root/.docker/config.json <<EOF
-        {
-            "psFormat": "table {{.ID}}\\t{{.Image}}\\t{{.Status}}\\t{{.Names}}"
-        }
+    if [ "$RUN_AS_ROOT" == true ]; then
+        sudo mkdir -p /root/.docker
+        sudo touch /root/.docker/config.json
+        sudo tee /root/.docker/config.json <<EOF > /dev/null 2>&1
+{
+    "psFormat": "table {{.ID}}\\t{{.Image}}\\t{{.Status}}\\t{{.Names}}"
+}
 EOF
     fi
 
     # svcfmtm user
-    tee ~/.docker/config.json <<EOF
-    {
-        "psFormat": "table {{.ID}}\\t{{.Image}}\\t{{.Status}}\\t{{.Names}}"
-    }
+    mkdir -p ~/.docker
+    touch ~/.docker/config.json
+    tee ~/.docker/config.json <<EOF > /dev/null 2>&1
+{
+    "psFormat": "table {{.ID}}\\t{{.Image}}\\t{{.Status}}\\t{{.Names}}"
+}
 EOF
+
+echo "Done"
 }
 
 
@@ -237,20 +256,22 @@ add_vars_to_bashrc() {
     heading_echo "Adding DOCKER_HOST and 'dc' alias to bashrc"
 
     user_id=$(id -u)
-    docker_host_var="export DOCKER_HOST=unix:///run/user/$user_id//docker.sock"
+    docker_host_var="export DOCKER_HOST=unix:///run/user/$user_id/docker.sock"
     dc_alias_cmd="alias dc='docker compose'"
 
-    if [ "$RUN_AS_ROOT" = true ]; then
+    if [ "$RUN_AS_ROOT" == true ]; then
         # Check if DOCKER_HOST is already defined in /root/.bashrc
         if ! sudo grep -q "$docker_host_var" /root/.bashrc; then
             echo "Adding DOCKER_HOST var to /root/.bashrc."
             echo "$docker_host_var" | sudo tee -a /root/.bashrc > /dev/null
+            echo
         fi
 
         # Check if the 'dc' alias already exists in /root/.bashrc
         if ! sudo grep -q "$dc_alias_cmd" /root/.bashrc; then
             echo "Adding 'dc' alias to /root/.bashrc."
             echo "$dc_alias_cmd" | sudo tee -a /root/.bashrc > /dev/null
+            echo
         fi
     fi
 
@@ -258,14 +279,20 @@ add_vars_to_bashrc() {
     if ! grep -q "$docker_host_var" ~/.bashrc; then
         echo "Adding DOCKER_HOST var to ~/.bashrc."
         echo "$docker_host_var" >> ~/.bashrc
+        echo
     fi
 
     # Check if the 'dc' alias already exists in ~/.bashrc
     if ! grep -q "$dc_alias_cmd" ~/.bashrc; then
         echo "Adding 'dc' alias to ~/.bashrc."
         echo "$dc_alias_cmd" >> ~/.bashrc
+        echo
     fi
 
+    echo "Setting DOCKER_HOST for the current session."
+    export DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock
+
+    echo
     echo "Done"
 }
 
@@ -333,29 +360,57 @@ check_existing_dotenv() {
     return 1
 }
 
-check_if_debug() {
-    heading_echo "Local Deployment?"
+check_if_test() {
+    heading_echo "Test Deployment?"
 
-    echo "Is this a local test deployment?"
+    echo "Is this a test deployment?"
     echo
     while true
     do
-        read -e -p "Enter 'y' if yes, anything else to continue: " debug
+        read -e -p "Enter 'y' if yes, anything else to continue: " test
 
-        if [[ "$debug" = "y" || "$debug" = "yes" ]]
+        if [[ "$test" = "y" || "$test" = "yes" ]]
         then
-            IS_DEBUG=true
+            IS_TEST=true
             export DEBUG=True
             export LOG_LEVEL="DEBUG"
             echo "Using debug configuration."
         else
-            IS_DEBUG=false
+            IS_TEST=false
             export DEBUG=False
             export LOG_LEVEL="INFO"
             break
         fi
         break
     done
+}
+
+get_files() {
+    heading_echo "Getting Necessary Files"
+
+    if ! command -v git &>/dev/null; then
+        echo "Downloading GIT."
+        echo
+        sudo apt-get update
+        sudo apt-get install -y git --no-install-recommends
+    fi
+
+    # Files in random temp dir
+    mkdir -p "/tmp/${RANDOM_DIR}"
+    cd "/tmp/${RANDOM_DIR}"
+
+    if [ $IS_TEST == true ]; then
+        mkdir fmtm
+        cd fmtm
+        echo "Getting docker-compose.yml file."
+        echo
+        curl -LO https://raw.githubusercontent.com/hotosm/fmtm/development/docker-compose.yml
+    else
+        echo "Cloning repo https://github.com/hotosm/fmtm.git to dir: /tmp/${RANDOM_DIR}"
+        echo
+        git clone https://github.com/hotosm/fmtm.git
+        git checkout "${BRANCH_NAME}"
+    fi
 }
 
 set_deploy_env() {
@@ -514,7 +569,7 @@ set_domains() {
         if [ "$fmtm_domain" = "" ]
         then
             echo "Invalid input!"
-        else 
+        else
             export FMTM_DOMAIN="${fmtm_domain}"
             break
         fi
@@ -553,7 +608,7 @@ set_domains() {
         if [ "$cert_email" = "" ]
         then
             echo "Invalid input!"
-        else 
+        else
             export CERT_EMAIL="${cert_email}"
             break
         fi
@@ -562,6 +617,13 @@ set_domains() {
 
 set_osm_credentials() {
     heading_echo "OSM OAuth2 Credentials"
+
+    yellow_echo "App credentials are generated from your OSM user profile."
+    echo
+    yellow_echo "If you need to generate new OAuth2 App credentials, visit:"
+    echo
+    yellow_echo ">   https://www.openstreetmap.org/oauth2/applications"
+    echo
 
     echo "Please enter your OSM authentication details"
     echo
@@ -573,7 +635,7 @@ set_osm_credentials() {
     while true
     do
         read -e -p "Enter a URI, or nothing for default: " auth_redirect_uri
-        
+
         if [ "$auth_redirect_uri" == "" ]
         then
             echo "Using http://127.0.0.1:7051/osmauth/"
@@ -594,16 +656,18 @@ set_osm_credentials() {
 }
 
 check_change_port() {
+    heading_echo "Set Default Port"
     echo "The default port for local development is 7050."
+    echo
     while true
     do
         read -e -p "Enter a different port if required, or nothing for default: " fmtm_port
-        
+
         if [ "$fmtm_port" == "" ]
         then
             echo "Using port 7050 for FMTM."
             break
-        else 
+        else
             echo "Using $fmtm_port"
             export FMTM_PORT="$fmtm_port"
             break
@@ -617,6 +681,7 @@ generate_dotenv() {
     if [ -f ./.env.example ]; then
         echo ".env.example already exists. Continuing."
 
+        echo
         echo "substituting variables from .env.example --> ${DOTENV_PATH}"
         ./envsubst < .env.example > ${DOTENV_PATH}
     else
@@ -624,9 +689,11 @@ generate_dotenv() {
         echo
         curl -LO "https://raw.githubusercontent.com/hotosm/fmtm/${BRANCH_NAME:-development}/.env.example"
 
+        echo
         echo "substituting variables from .env.example --> ${DOTENV_PATH}"
         ./envsubst < .env.example > ${DOTENV_PATH}
 
+        echo
         echo "Deleting .env.example"
         rm .env.example
     fi
@@ -642,7 +709,7 @@ prompt_user_gen_dotenv() {
 
     install_envsubst_if_missing
 
-    if [ $IS_DEBUG != true ]; then
+    if [ $IS_TEST != true ]; then
         if [ "$BRANCH_NAME" == "main" ]; then
             set_external_odk
             check_external_database
@@ -657,7 +724,6 @@ prompt_user_gen_dotenv() {
         set_domains
 
     else
-        set_odk_user_creds
         check_change_port
     fi
 
@@ -667,38 +733,15 @@ prompt_user_gen_dotenv() {
     heading_echo "Completed dotenv file generation"
 }
 
-get_repo() {
-    if ! command -v git &> /dev/null; then
-        heading_echo "Downloading GIT."
-        sudo apt-get update
-        sudo apt-get install -y git --no-install-recommends
-    fi
-
-    # Check if not already in 'fmtm' dir
-    if [ "$(basename "$PWD")" != "fmtm" ]; then
-        heading_echo "Configure FMTM Repo"
-
-        echo "Current dir: $PWD"
-
-        # Check if the 'fmtm' directory already exists
-        if [ -d "fmtm" ]; then
-            echo "The 'fmtm' directory already exists. Skipping clone."
-        else
-            echo "Cloning repo https://github.com/hotosm/fmtm.git"
-            git clone https://github.com/hotosm/fmtm.git
-        fi
-    fi
-}
-
 run_compose_stack() {
-    if [ $IS_DEBUG != true ]; then
+    if [ $IS_TEST != true ]; then
         heading_echo "Pulling Required Images"
         docker compose -f ${COMPOSE_FILE} pull
         heading_echo "Building Frontend Image"
         docker compose -f ${COMPOSE_FILE} build ui
     else
-        heading_echo "Building All Images"
-        docker compose -f ${COMPOSE_FILE} build
+        heading_echo "Pulling Required Images"
+        docker compose -f ${COMPOSE_FILE} pull
     fi
 
     heading_echo "Starting FMTM"
@@ -711,27 +754,35 @@ final_output() {
     . .env
 
     proto="http"
-    if [ "$IS_DEBUG" != true ]; then
-        proto="https"
-    fi
-
     suffix=""
-    if [ -n "$FMTM_PORT" ]; then
-        suffix=":${FMTM_PORT}"
+
+    if [ "$IS_TEST" != true ]; then
+        proto="https"
+    else
+        suffix=":${FMTM_PORT:-9050}"
     fi
 
     heading_echo "FMTM Setup Complete"
-    echo
-    echo "To access services, go to:"
-    echo
+    heading_echo "Services" "green"
     echo "Frontend:     ${proto}://${FMTM_DOMAIN}${suffix}"
     echo "API:          ${proto}://api.${FMTM_DOMAIN}${suffix}"
     echo "S3 Buckets:   ${proto}://s3.${FMTM_DOMAIN}${suffix}"
     echo "ODK Central:  ${proto}://odk.${FMTM_DOMAIN}${suffix}"
-    echo
+    heading_echo "Inspect Containers" "green"
     echo "To login as svcfmtm and inspect the containers, run:"
     echo
-    echo "machinectl shell svcfmtm@"
+    echo "$ machinectl shell svcfmtm@"
+    echo "$ docker ps"
+    echo
+    echo "Alternatively, to run as the current user:"
+    echo
+    echo "$ export DOCKER_HOST=unix:///run/user/$(id -u svcfmtm)/docker.sock"
+    echo "$ docker ps"
+    echo
+    heading_echo "ODK Central Credentials" "green"
+    echo "URL:          ${ODK_CENTRAL_URL}"
+    echo "Email:        ${ODK_CENTRAL_USER}"
+    echo "Password:     ${ODK_CENTRAL_PASSWD}"
     echo
 }
 
@@ -742,18 +793,12 @@ install_fmtm() {
     trap cleanup_and_exit INT
     install_docker
 
-    get_repo
-    # Set the working directory to 'fmtm' if it exists
-    if [ -d "fmtm" ]; then
-        cd fmtm
-    else
-        echo "The 'fmtm' repo does not exist. Did it clone successfully?"
-        echo "Exiting script."
-        exit 1
-    fi
+    check_if_test
+    get_files
+    # Work in generated temp dir
+    cd "/tmp/${RANDOM_DIR}/fmtm"
 
-    check_if_debug
-    if [ $IS_DEBUG != true ]; then
+    if [ $IS_TEST != true ]; then
         set_deploy_env
     fi
 
@@ -765,6 +810,9 @@ install_fmtm() {
         # Remove from sudoers
         sudo rm /etc/sudoers.d/fmtm-sudoers
     fi
+
+    # Cleanup files
+    rm -rf "/tmp/${RANDOM_DIR:-tmp}"
 }
 
 install_fmtm
