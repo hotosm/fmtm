@@ -1,4 +1,25 @@
-> NOTE: This is an installation guide to quickly get the fmtm app up and running. For a detailed guide on how to install the fmtm app using different methods and contributing, checkout the [dev docs](https://hotosm.github.io/fmtm/dev/Setup/)
+# Installation
+
+## Easy Way
+
+Use the provided bash script:
+
+```bash
+curl -fsSL https://get.fmtm.dev | bash
+
+# OR
+
+curl -fsSL https://fmtm.hotosm.org/install.sh | bash
+
+# Then follow the prompts
+```
+
+## Manual Way
+
+> NOTE: This is an installation guide to quickly get the fmtm app up and running.
+> For a detailed guide on how to install the fmtm app using different
+> methods and contributing, checkout the
+> [dev docs](https://hotosm.github.io/fmtm/dev/Setup/)
 
 # Table of Contents
 
@@ -20,9 +41,11 @@
 
 # 1. Software Requirements <a name="software-requirements"></a>
 
-Before you can install and use this application, you will need to have the following software installed and configured on your system
+Before you can install and use this application,
+you will need to have the following software 
+installed and configured on your system:
 
-- [Git(or any other Terminal)](https://git-scm.com/)
+- [Git](https://git-scm.com/)
 - [Docker](https://docs.docker.com/)
 
 To install Git, please follow the instructions on the official Git website:
