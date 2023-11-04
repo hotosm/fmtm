@@ -120,11 +120,13 @@ check_user_not_root() {
             chmod +x "$user_script_path"
             machinectl --quiet shell \
                 --setenv=RUN_AS_ROOT=true \
+                --setenv=DOCKER_HOST=${DOCKER_HOST} \
                 svcfmtm@ /bin/bash -c "$user_script_path $*"
         else
             # User called script remotely
             machinectl --quiet shell \
                 --setenv=RUN_AS_ROOT=true \
+                --setenv=DOCKER_HOST=${DOCKER_HOST} \
                 svcfmtm@ /bin/bash -c "$0 $*"
         fi
 
@@ -223,6 +225,15 @@ update_to_rootless() {
 
     heading_echo "Install Rootless Docker"
     dockerd-rootless-setuptool.sh install
+}
+
+restart_docker_rootless() {
+    heading_echo "Restarting Docker Service"
+    echo "This is required as sometimes docker doesn't init correctly."
+    systemctl --user daemon-reload
+    systemctl --user restart docker
+    echo
+    echo "Done."
 }
 
 update_docker_ps_format() {
@@ -759,7 +770,7 @@ final_output() {
     if [ "$IS_TEST" != true ]; then
         proto="https"
     else
-        suffix=":${FMTM_PORT:-9050}"
+        suffix=":${FMTM_PORT:-7050}"
     fi
 
     heading_echo "FMTM Setup Complete"
