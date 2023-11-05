@@ -68,7 +68,7 @@ certbot --non-interactive certonly "${certbot_args[@]}"
 echo "Certificate generated under: /etc/letsencrypt/live/${FMTM_DOMAIN}/"
 
 # Add FMTM_SCRIPT_DOMAIN if present
-if [ -n "${FMTM_SCRIPT_DOMAIN}" ]; then
+if [ -n "${FMTM_SCRIPT_DOMAIN}" ] && [ "${FMTM_SCRIPT_DOMAIN}" != "_" ]; then
     echo
     echo "FMTM_SCRIPT_DOMAIN variable set. Generating separate certificate."
     certbot --non-interactive certonly \
