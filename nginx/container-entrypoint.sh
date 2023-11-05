@@ -73,7 +73,7 @@ if [ -n "${FMTM_SCRIPT_DOMAIN}" ]; then
     echo "FMTM_SCRIPT_DOMAIN variable set. Generating separate certificate."
     certbot --non-interactive certonly \
         --webroot --webroot-path=/var/www/certbot \
-        --email "${CERT_EMAIL}" --agress-tos --no-eff-email \
+        --email "${CERT_EMAIL}" --agree-tos --no-eff-email \
         -d "${FMTM_SCRIPT_DOMAIN}"
 fi
 
