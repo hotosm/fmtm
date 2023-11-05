@@ -42,7 +42,7 @@ curl -fsSL https://fmtm.hotosm.org/install.sh | bash
 # 1. Software Requirements <a name="software-requirements"></a>
 
 Before you can install and use this application,
-you will need to have the following software 
+you will need to have the following software
 installed and configured on your system:
 
 - [Git](https://git-scm.com/)

@@ -323,11 +323,18 @@ set_domains() {
 set_osm_credentials() {
     heading_echo "OSM OAuth2 Credentials"
 
+    redirect_uri="http://127.0.0.1:7051/osmauth/"
+    if [ $IS_TEST != true ]; then
+        redirect_uri="https://${FMTM_DOMAIN}/osmauth/"
+    fi
+
     yellow_echo "App credentials are generated from your OSM user profile."
     echo
     yellow_echo "If you need to generate new OAuth2 App credentials, visit:"
     echo
     yellow_echo ">   https://www.openstreetmap.org/oauth2/applications"
+    echo
+    yellow_echo "Set the redirect URI to: ${redirect_uri}"
     echo
 
     echo "Please enter your OSM authentication details"
@@ -335,29 +342,12 @@ set_osm_credentials() {
     read -e -p "Client ID: " OSM_CLIENT_ID
     echo
     read -e -p "Client Secret: " OSM_CLIENT_SECRET
-    echo
-    echo "Login redirect URI (default http://127.0.0.1:7051/osmauth/): "
-    while true
-    do
-        read -e -p "Enter a URI, or nothing for default: " auth_redirect_uri
-
-        if [ "$auth_redirect_uri" == "" ]
-        then
-            echo "Using http://127.0.0.1:7051/osmauth/"
-            echo "WARNING: this is a development-only default."
-            break
-        else 
-            echo "Using $auth_redirect_uri"
-            OSM_LOGIN_REDIRECT_URI="$auth_redirect_uri"
-            break
-        fi
-    done
 
     export OSM_CLIENT_ID=${OSM_CLIENT_ID}
     export OSM_CLIENT_SECRET=${OSM_CLIENT_SECRET}
     secret_key=$(tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 50)
     export OSM_SECRET_KEY=${secret_key}
-    export OSM_LOGIN_REDIRECT_URI=${OSM_LOGIN_REDIRECT_URI}
+    export OSM_LOGIN_REDIRECT_URI=${redirect_uri}
 }
 
 check_change_port() {

@@ -48,6 +48,26 @@ yellow_echo() {
     echo -e "\e[0;33m${text}\e[0m"
 }
 
+install_progress() {
+    local pid=$1
+    local delay=0.5
+    local spin[0]="-"
+    local spin[1]="\\"
+    local spin[2]="|"
+    local spin[3]="/"
+
+    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
+        local temp=${spin[0]}
+        spin[0]=${spin[1]}
+        spin[1]=${spin[2]}
+        spin[2]=${spin[3]}
+        spin[3]=$temp
+        echo -ne "${spin[0]} Installing machinectl requirement...\r"
+        sleep $delay
+    done
+    yellow_echo "${spin[0]} Installing machinectl requirement... Done"
+}
+
 display_logo() {
     echo 
     echo " ███████████ ██████   ██████ ███████████ ██████   ██████"
@@ -92,22 +112,23 @@ check_user_not_root() {
         fi
 
         echo
-        yellow_echo "Enable login linger for user svcfmtm (docker if logged out)"
-        sudo loginctl enable-linger svcfmtm
+        yellow_echo "Enable login linger for user svcfmtm (docker if logged out)."
+        loginctl enable-linger svcfmtm
 
         echo
         yellow_echo "Temporarily adding to sudoers list."
-        echo "svcfmtm ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/fmtm-sudoers >/dev/null
+        echo "svcfmtm ALL=(ALL) NOPASSWD:ALL" | tee /etc/sudoers.d/fmtm-sudoers >/dev/null
 
         echo
         yellow_echo "Rerunning this script as user 'svcfmtm'."
         echo
 
         if ! command -v machinectl &>/dev/null; then
-            yellow_echo "Downloading machinectl requirement."
+            # Start the installation process in the background with spinner
+            ( apt-get update > /dev/null \
+            & apt-get install -y systemd-container --no-install-recommends > /dev/null ) &
+            install_progress $!
             echo
-            sudo apt-get update
-            sudo apt-get install -y systemd-container --no-install-recommends
         fi
 
         # Check if input is direct bash script call (i.e. ends in .sh)
@@ -310,6 +331,12 @@ add_vars_to_bashrc() {
 install_docker() {
     heading_echo "Docker Install"
 
+    if command -v docker &> /dev/null; then
+        echo "Docker already installed: $(which docker)"
+        echo "Skipping."
+        return 0
+    fi
+
     echo "Do you want to install Docker? (y/n)"
     echo
     read -rp "Enter 'y' to install, anything else to continue: " install_docker
@@ -396,7 +423,7 @@ check_if_test() {
     done
 }
 
-get_files() {
+get_repo() {
     heading_echo "Getting Necessary Files"
 
     if ! command -v git &>/dev/null; then
@@ -404,24 +431,16 @@ get_files() {
         echo
         sudo apt-get update
         sudo apt-get install -y git --no-install-recommends
+        echo
     fi
 
     # Files in random temp dir
     mkdir -p "/tmp/${RANDOM_DIR}"
     cd "/tmp/${RANDOM_DIR}"
 
-    if [ $IS_TEST == true ]; then
-        mkdir fmtm
-        cd fmtm
-        echo "Getting docker-compose.yml file."
-        echo
-        curl -LO https://raw.githubusercontent.com/hotosm/fmtm/development/docker-compose.yml
-    else
-        echo "Cloning repo https://github.com/hotosm/fmtm.git to dir: /tmp/${RANDOM_DIR}"
-        echo
-        git clone https://github.com/hotosm/fmtm.git
-        git checkout "${BRANCH_NAME}"
-    fi
+    echo "Cloning repo https://github.com/hotosm/fmtm.git to dir: /tmp/${RANDOM_DIR}"
+    echo
+    git clone --branch "${BRANCH_NAME}" --depth 1 https://github.com/hotosm/fmtm.git
 }
 
 set_deploy_env() {
@@ -592,15 +611,15 @@ set_domains() {
     echo
     echo "Using $fmtm_domain as your main domain for FMTM."
     echo
-    echo "Please ensure the following DNS entries are set:"
+    yellow_echo "Please ensure the following DNS entries are set:"
     echo
-    echo "$fmtm_domain --> $current_ip"
-    echo "api.$fmtm_domain --> $current_ip"
+    yellow_echo "$fmtm_domain --> $current_ip"
+    yellow_echo "api.$fmtm_domain --> $current_ip"
 
     if [ "$BRANCH_NAME" != "main" ]
     then
-        echo "s3.$fmtm_domain --> $current_ip"
-        echo "odk.$fmtm_domain --> $current_ip"
+        yellow_echo "s3.$fmtm_domain --> $current_ip"
+        yellow_echo "odk.$fmtm_domain --> $current_ip"
     fi
 
     echo
@@ -629,11 +648,18 @@ set_domains() {
 set_osm_credentials() {
     heading_echo "OSM OAuth2 Credentials"
 
+    redirect_uri="http://127.0.0.1:7051/osmauth/"
+    if [ $IS_TEST != true ]; then
+        redirect_uri="https://${FMTM_DOMAIN}/osmauth/"
+    fi
+
     yellow_echo "App credentials are generated from your OSM user profile."
     echo
     yellow_echo "If you need to generate new OAuth2 App credentials, visit:"
     echo
     yellow_echo ">   https://www.openstreetmap.org/oauth2/applications"
+    echo
+    yellow_echo "Set the redirect URI to: ${redirect_uri}"
     echo
 
     echo "Please enter your OSM authentication details"
@@ -641,29 +667,12 @@ set_osm_credentials() {
     read -e -p "Client ID: " OSM_CLIENT_ID
     echo
     read -e -p "Client Secret: " OSM_CLIENT_SECRET
-    echo
-    echo "Login redirect URI (default http://127.0.0.1:7051/osmauth/): "
-    while true
-    do
-        read -e -p "Enter a URI, or nothing for default: " auth_redirect_uri
-
-        if [ "$auth_redirect_uri" == "" ]
-        then
-            echo "Using http://127.0.0.1:7051/osmauth/"
-            echo "WARNING: this is a development-only default."
-            break
-        else 
-            echo "Using $auth_redirect_uri"
-            OSM_LOGIN_REDIRECT_URI="$auth_redirect_uri"
-            break
-        fi
-    done
 
     export OSM_CLIENT_ID=${OSM_CLIENT_ID}
     export OSM_CLIENT_SECRET=${OSM_CLIENT_SECRET}
     secret_key=$(tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 50)
     export OSM_SECRET_KEY=${secret_key}
-    export OSM_LOGIN_REDIRECT_URI=${OSM_LOGIN_REDIRECT_URI}
+    export OSM_LOGIN_REDIRECT_URI=${redirect_uri}
 }
 
 check_change_port() {
@@ -708,6 +717,9 @@ generate_dotenv() {
         echo "Deleting .env.example"
         rm .env.example
     fi
+
+    echo
+    yellow_echo "Completed dotenv file generation."
 }
 
 prompt_user_gen_dotenv() {
@@ -740,20 +752,13 @@ prompt_user_gen_dotenv() {
 
     set_osm_credentials
     generate_dotenv
-
-    heading_echo "Completed dotenv file generation"
 }
 
 run_compose_stack() {
-    if [ $IS_TEST != true ]; then
-        heading_echo "Pulling Required Images"
-        docker compose -f ${COMPOSE_FILE} pull
-        heading_echo "Building Frontend Image"
-        docker compose -f ${COMPOSE_FILE} build ui
-    else
-        heading_echo "Pulling Required Images"
-        docker compose -f ${COMPOSE_FILE} pull
-    fi
+    heading_echo "Pulling Required Images"
+    docker compose -f ${COMPOSE_FILE} pull
+    heading_echo "Building Frontend Image"
+    docker compose -f ${COMPOSE_FILE} build ui
 
     heading_echo "Starting FMTM"
     docker compose -f ${COMPOSE_FILE} up \
@@ -805,7 +810,7 @@ install_fmtm() {
     install_docker
 
     check_if_test
-    get_files
+    get_repo
     # Work in generated temp dir
     cd "/tmp/${RANDOM_DIR}/fmtm"
 
@@ -823,7 +828,9 @@ install_fmtm() {
     fi
 
     # Cleanup files
-    rm -rf "/tmp/${RANDOM_DIR:-tmp}"
+    if [ $IS_TEST != true ]; then
+        rm -rf "/tmp/${RANDOM_DIR:-tmp}"
+    fi
 }
 
 install_fmtm
