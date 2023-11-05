@@ -139,6 +139,15 @@ update_to_rootless() {
     dockerd-rootless-setuptool.sh install
 }
 
+restart_docker_rootless() {
+    heading_echo "Restarting Docker Service"
+    echo "This is required as sometimes docker doesn't init correctly."
+    systemctl --user daemon-reload
+    systemctl --user restart docker
+    echo
+    echo "Done."
+}
+
 allow_priv_port_access() {
     pretty_echo "Allowing Privileged Port Usage"
     sudo tee -a /etc/sysctl.conf <<EOF
@@ -193,6 +202,7 @@ install_docker() {
     apt_install_docker
     update_to_rootless
     allow_priv_port_access
+    restart_docker_rootless
     update_docker_ps_format
     add_vars_to_bashrc
 }

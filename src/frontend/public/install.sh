@@ -6,7 +6,7 @@ set -o pipefail
 
 # Global Vars
 RANDOM_DIR="${RANDOM}${RANDOM}"
-DOTENV_PATH=.env
+DOTENV_NAME=.env
 OS_NAME="debian"
 IS_TEST=false
 BRANCH_NAME=development
@@ -362,6 +362,7 @@ install_docker() {
         apt_install_docker
         update_to_rootless
         allow_priv_port_access
+        restart_docker_rootless
         update_docker_ps_format
         add_vars_to_bashrc
     else
@@ -390,12 +391,12 @@ install_envsubst_if_missing() {
 }
 
 check_existing_dotenv() {
-    if [ -f "${DOTENV_PATH}" ]
+    if [ -f "${DOTENV_NAME}" ]
     then
-        echo "WARNING: ${DOTENV_PATH} file already exists."
+        echo "WARNING: ${DOTENV_NAME} file already exists."
         echo "This script will overwrite the content of this file."
         echo
-        echo "Do you want to overwrite file '"${DOTENV_PATH}"'? y/n"
+        echo "Do you want to overwrite file '"${DOTENV_NAME}"'? y/n"
         echo
         while true
         do
@@ -443,20 +444,37 @@ get_repo() {
     heading_echo "Getting Necessary Files"
 
     if ! command -v git &>/dev/null; then
-        echo "Downloading GIT."
+        yellow_echo "Downloading GIT."
         echo
         sudo apt-get update
         sudo apt-get install -y git --no-install-recommends
         echo
     fi
 
-    # Files in random temp dir
+    # Files in a random temp dir
     mkdir -p "/tmp/${RANDOM_DIR}"
     cd "/tmp/${RANDOM_DIR}"
 
-    echo "Cloning repo https://github.com/hotosm/fmtm.git to dir: /tmp/${RANDOM_DIR}"
+    repo_url="https://github.com/hotosm/fmtm.git"
+
+    echo "Cloning repo $repo_url to dir: /tmp/${RANDOM_DIR}"
     echo
-    git clone --branch "${BRANCH_NAME}" --depth 1 https://github.com/hotosm/fmtm.git
+    git clone --branch "${BRANCH_NAME}" --depth 1 "$repo_url"
+
+    existing_dotenv=""
+    if [ -n "${RUN_AS_ROOT}" ] && [ -f "/root/fmtm/${DOTENV_NAME}" ]; then
+        existing_dotenv="/root/fmtm/${DOTENV_NAME}"
+    elif [ -f "${PWD}/${DOTENV_NAME}" ]; then
+        existing_dotenv="${PWD}/${DOTENV_NAME}"
+    fi
+
+    if [ -n "$existing_dotenv" ]; then
+        echo
+        echo "Found existing dotenv file."
+        echo
+        echo "Copying $existing_dotenv --> /tmp/${RANDOM_DIR}/fmtm/${DOTENV_NAME}"
+        sudo cp "$existing_dotenv" "/tmp/${RANDOM_DIR}/fmtm/"
+    fi
 }
 
 set_deploy_env() {
@@ -525,22 +543,20 @@ set_odk_user_creds() {
     echo
     export ODK_CENTRAL_USER=${ODK_CENTRAL_USER}
 
+    echo "Please enter the ODKCentral Password."
+    echo
+    yellow_echo "Note: this must be >10 characters long."
     while true; do
-        echo "Please enter the ODKCentral Password."
-        echo
-        yellow_echo "Note: this must be >10 characters long."
         echo
         read -e -p "ODKCentral Password: " ODK_CENTRAL_PASSWD
         echo
 
         # Check the length of the entered password
         if [ ${#ODK_CENTRAL_PASSWD} -ge 10 ]; then
-            echo "Password is at least 10 characters long. Proceeding..."
             export ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}
-            break  # Exit the loop if a valid password is entered
+            break
         else
             yellow_echo "Password is too short. It must be at least 10 characters long."
-            echo
         fi
     done
 }
@@ -727,24 +743,27 @@ generate_dotenv() {
         echo ".env.example already exists. Continuing."
 
         echo
-        echo "substituting variables from .env.example --> ${DOTENV_PATH}"
-        ./envsubst < .env.example > ${DOTENV_PATH}
+        echo "substituting variables from .env.example --> ${DOTENV_NAME}"
+        ./envsubst < .env.example > ${DOTENV_NAME}
     else
         echo "Downloading .env.example from repo."
         echo
         curl -LO "https://raw.githubusercontent.com/hotosm/fmtm/${BRANCH_NAME:-development}/.env.example"
 
         echo
-        echo "substituting variables from .env.example --> ${DOTENV_PATH}"
-        ./envsubst < .env.example > ${DOTENV_PATH}
+        echo "substituting variables from .env.example --> ${DOTENV_NAME}"
+        ./envsubst < .env.example > ${DOTENV_NAME}
 
         echo
         echo "Deleting .env.example"
         rm .env.example
     fi
 
+    heading_echo "Completed Dotenv File Generation." "green"
+    echo "File ${DOTENV_NAME} content:"
     echo
-    yellow_echo "Completed dotenv file generation."
+    cat ${DOTENV_NAME}
+    echo
 }
 
 prompt_user_gen_dotenv() {
@@ -840,15 +859,22 @@ install_fmtm() {
     install_docker
 
     check_if_test
-    get_repo
-    # Work in generated temp dir
-    cd "/tmp/${RANDOM_DIR}/fmtm"
-
     if [ $IS_TEST != true ]; then
         set_deploy_env
     fi
 
-    prompt_user_gen_dotenv
+    get_repo
+    # Work in generated temp dir
+    local repo_dir="/tmp/${RANDOM_DIR}/fmtm"
+    cd "${repo_dir}"
+
+    if [ -f "${repo_dir}/${DOTENV_NAME}" ]; then
+        heading_echo "Skip Dotenv Generation"
+        echo "Using existing dotenv file."
+    else
+        prompt_user_gen_dotenv
+    fi
+    
     run_compose_stack
     final_output
 
