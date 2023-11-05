@@ -98,7 +98,7 @@ COPY templates/dev/fmtm.conf.template \
 
 FROM base as certs-init-main
 # Replace existing /docker-entrypoint.sh
-COPY 100-renew-certs.sh /docker-entrypoint.sh
+COPY container-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 COPY templates/cert-init/fmtm.conf.template \
      templates/cert-init/api.conf.template \
@@ -107,13 +107,8 @@ COPY templates/cert-init/fmtm.conf.template \
 
 
 
-FROM base as certs-init-development
-# Replace existing /docker-entrypoint.sh
-COPY container-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
-COPY templates/cert-init/fmtm.conf.template \
-     templates/cert-init/api.conf.template \
-     templates/cert-init/odk.conf.template \
+FROM certs-init-main as certs-init-development
+COPY templates/cert-init/odk.conf.template \
      templates/cert-init/minio.conf.template \
      /etc/nginx/templates/
 
