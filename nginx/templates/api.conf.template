@@ -23,14 +23,14 @@ upstream backend {
 
 server {
     # Default handler for port 80
-    listen 80 default_server;
+    listen 80;
     server_name ${FMTM_API_DOMAIN};
     return 301 https://$host$request_uri;
 }
 
 server {
     # Default handler for port 443
-    listen 443 ssl default_server reuseport;
+    listen 443 ssl reuseport;
     server_name ${FMTM_API_DOMAIN};
     
     ssl_certificate /etc/letsencrypt/live/${FMTM_DOMAIN}/fullchain.pem;

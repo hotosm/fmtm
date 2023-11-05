@@ -17,13 +17,13 @@
 #
 
 server {
-    listen 80;
+    listen 80 default_server;
     server_name ${FMTM_DOMAIN};
     return 301 https://$host$request_uri;
 }
 
 server {
-    listen 443 ssl;
+    listen 443 ssl default_server;
     server_name ${FMTM_DOMAIN};
 
     ssl_certificate /etc/letsencrypt/live/${FMTM_DOMAIN}/fullchain.pem;

@@ -17,7 +17,7 @@
 #
 
 server {
-    listen 80;
+    listen 80 default_server;
     server_name ${FMTM_DOMAIN};
     
     location /.well-known/acme-challenge/ {

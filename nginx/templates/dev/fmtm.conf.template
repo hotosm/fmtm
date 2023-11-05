@@ -24,7 +24,7 @@ upstream frontend {
 }
 
 server {
-    listen 80;
+    listen 80 default_server;
     server_name fmtm.localhost;
 
     # Max upload size 1GB

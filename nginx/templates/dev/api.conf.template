@@ -23,7 +23,7 @@ upstream backend {
 
 server {
     # Default handler for port 80
-    listen 80 default_server reuseport;
+    listen 80 reuseport;
     server_name api.fmtm.localhost;
 
     # Max upload size 1GB
