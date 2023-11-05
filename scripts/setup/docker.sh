@@ -139,6 +139,15 @@ update_to_rootless() {
     dockerd-rootless-setuptool.sh install
 }
 
+allow_priv_port_access() {
+    pretty_echo "Allowing Privileged Port Usage"
+    sudo tee -a /etc/sysctl.conf <<EOF
+net.ipv4.ip_unprivileged_port_start=0
+EOF
+    sudo sysctl -p
+    echo "Done"
+}
+
 update_docker_ps_format() {
     pretty_echo "Updating docker ps formatting"
     tee ~/.docker/config.json <<EOF
@@ -183,6 +192,7 @@ install_docker() {
     add_to_apt
     apt_install_docker
     update_to_rootless
+    allow_priv_port_access
     update_docker_ps_format
     add_vars_to_bashrc
 }

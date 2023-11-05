@@ -125,8 +125,9 @@ check_user_not_root() {
 
         if ! command -v machinectl &>/dev/null; then
             # Start the installation process in the background with spinner
-            ( apt-get update > /dev/null \
-            & apt-get install -y systemd-container --no-install-recommends > /dev/null ) &
+            ( apt-get update > /dev/null
+            wait  # Wait for 'apt-get update' to complete
+            apt-get install -y systemd-container --no-install-recommends > /dev/null ) &
             install_progress $!
             echo
         fi
@@ -257,6 +258,15 @@ restart_docker_rootless() {
     echo "Done."
 }
 
+allow_priv_port_access() {
+    heading_echo "Allowing Privileged Port Usage"
+    sudo tee -a /etc/sysctl.conf <<EOF > /dev/null 2>&1
+net.ipv4.ip_unprivileged_port_start=0
+EOF
+    sudo sysctl -p
+    echo "Done"
+}
+
 update_docker_ps_format() {
     heading_echo "Updating docker ps Formatting"
 
@@ -337,6 +347,8 @@ install_docker() {
         return 0
     fi
 
+    yellow_echo "Docker is required for FMTM to run."
+    echo
     echo "Do you want to install Docker? (y/n)"
     echo
     read -rp "Enter 'y' to install, anything else to continue: " install_docker
@@ -349,8 +361,12 @@ install_docker() {
         add_to_apt
         apt_install_docker
         update_to_rootless
+        allow_priv_port_access
         update_docker_ps_format
         add_vars_to_bashrc
+    else
+        header_echo "Docker is Required. Aborting." "red"
+        exit 1
     fi
 }
 
@@ -755,6 +771,11 @@ prompt_user_gen_dotenv() {
 }
 
 run_compose_stack() {
+    # Workaround if DOCKER_HOST is missed (i.e. docker just installed)
+    if [ -z "$DOCKER_HOST" ]; then
+        export DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock
+    fi
+
     heading_echo "Pulling Required Images"
     docker compose -f ${COMPOSE_FILE} pull
     heading_echo "Building Frontend Image"
