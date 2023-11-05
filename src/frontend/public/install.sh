@@ -461,8 +461,9 @@ get_repo() {
     echo
     git clone --branch "${BRANCH_NAME}" --depth 1 "$repo_url"
 
+    # Check for existing .env files
     existing_dotenv=""
-    if [ -n "${RUN_AS_ROOT}" ] && [ -f "/root/fmtm/${DOTENV_NAME}" ]; then
+    if [ ${RUN_AS_ROOT} == true ] && sudo test -f "/root/fmtm/${DOTENV_NAME}"; then
         existing_dotenv="/root/fmtm/${DOTENV_NAME}"
     elif [ -f "${PWD}/${DOTENV_NAME}" ]; then
         existing_dotenv="${PWD}/${DOTENV_NAME}"
@@ -473,7 +474,11 @@ get_repo() {
         echo "Found existing dotenv file."
         echo
         echo "Copying $existing_dotenv --> /tmp/${RANDOM_DIR}/fmtm/${DOTENV_NAME}"
-        sudo cp "$existing_dotenv" "/tmp/${RANDOM_DIR}/fmtm/"
+        if [ ${RUN_AS_ROOT} == true ]; then
+            sudo cp "$existing_dotenv" "/tmp/${RANDOM_DIR}/fmtm/"
+        else
+            cp "$existing_dotenv" "/tmp/${RANDOM_DIR}/fmtm/"
+        fi
     fi
 }
 
@@ -878,7 +883,7 @@ install_fmtm() {
     run_compose_stack
     final_output
 
-    if [ $RUN_AS_ROOT != true ]; then
+    if [ $RUN_AS_ROOT == true ]; then
         # Remove from sudoers
         sudo rm /etc/sudoers.d/fmtm-sudoers
     fi
