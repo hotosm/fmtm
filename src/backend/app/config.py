@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
 
     FMTM_DOMAIN: Optional[str]
-    FMTM_PORT: Optional[str] = "7050"
+    FMTM_DEV_PORT: Optional[str] = "7050"
 
     EXTRA_CORS_ORIGINS: Optional[Union[str, list[str]]] = []
 
@@ -53,7 +53,7 @@ class Settings(BaseSettings):
         # Build default origins from env vars
         url_scheme = "http" if info.data.get("DEBUG") else "https"
         local_server_port = (
-            f":{info.data.get('FMTM_PORT')}" if info.data.get("DEBUG") else ""
+            f":{info.data.get('FMTM_DEV_PORT')}" if info.data.get("DEBUG") else ""
         )
         if frontend_domain := info.data.get("FMTM_DOMAIN"):
             default_origins = [

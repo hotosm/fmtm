@@ -365,23 +365,17 @@ set_osm_credentials() {
 }
 
 check_change_port() {
-    pretty_echo "Set Default Port"
+    heading_echo "Set Default Port"
     echo "The default port for local development is 7050."
     echo
-    while true
-    do
-        read -e -p "Enter a different port if required, or nothing for default: " fmtm_port
-        
-        if [ "$fmtm_port" == "" ]
-        then
-            echo "Using port 7050 for FMTM."
-            break
-        else 
-            echo "Using $fmtm_port"
-            export FMTM_PORT="$fmtm_port"
-            break
-        fi
-    done
+    read -e -p "Enter a different port if required, or nothing for default: " fmtm_port
+
+    if [ -n "$fmtm_port" ]; then
+        echo "Using $fmtm_port"
+        export FMTM_DEV_PORT="$fmtm_port"
+    else
+        echo "Using port 7050 for FMTM."
+    fi
 }
 
 generate_dotenv() {

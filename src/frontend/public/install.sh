@@ -735,7 +735,7 @@ check_change_port() {
 
     if [ -n "$fmtm_port" ]; then
         echo "Using $fmtm_port"
-        export FMTM_PORT="$fmtm_port"
+        export FMTM_DEV_PORT="$fmtm_port"
     else
         echo "Using port 7050 for FMTM."
     fi
@@ -829,7 +829,7 @@ final_output() {
     if [ "$IS_TEST" != true ]; then
         proto="https"
     else
-        suffix=":${FMTM_PORT:-7050}"
+        suffix=":${FMTM_DEV_PORT:-7050}"
     fi
 
     heading_echo "FMTM Setup Complete"
