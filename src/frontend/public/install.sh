@@ -443,6 +443,8 @@ check_if_test() {
 get_repo() {
     heading_echo "Getting Necessary Files"
 
+    current_dir="${PWD}"
+
     if ! command -v git &>/dev/null; then
         yellow_echo "Downloading GIT."
         echo
@@ -459,14 +461,14 @@ get_repo() {
 
     echo "Cloning repo $repo_url to dir: /tmp/${RANDOM_DIR}"
     echo
-    git clone --branch "${BRANCH_NAME}" --depth 1 "$repo_url"
+    git clone --branch "build/nginx-certbot" --depth 1 "$repo_url"
 
     # Check for existing .env files
     existing_dotenv=""
-    if [ ${RUN_AS_ROOT} == true ] && sudo test -f "/root/fmtm/${DOTENV_NAME}"; then
+    if [ "${RUN_AS_ROOT}" == true ] && sudo test -f "/root/fmtm/${DOTENV_NAME}"; then
         existing_dotenv="/root/fmtm/${DOTENV_NAME}"
-    elif [ -f "${PWD}/${DOTENV_NAME}" ]; then
-        existing_dotenv="${PWD}/${DOTENV_NAME}"
+    elif [ -f "${current_dir}/${DOTENV_NAME}" ]; then
+        existing_dotenv="${current_dir}/${DOTENV_NAME}"
     fi
 
     if [ -n "$existing_dotenv" ]; then
@@ -474,7 +476,7 @@ get_repo() {
         echo "Found existing dotenv file."
         echo
         echo "Copying $existing_dotenv --> /tmp/${RANDOM_DIR}/fmtm/${DOTENV_NAME}"
-        if [ ${RUN_AS_ROOT} == true ]; then
+        if [ "${RUN_AS_ROOT}" == true ]; then
             sudo cp "$existing_dotenv" "/tmp/${RANDOM_DIR}/fmtm/"
         else
             cp "$existing_dotenv" "/tmp/${RANDOM_DIR}/fmtm/"
