@@ -19,15 +19,23 @@ version: "3"
 
 volumes:
   fmtm_frontend:
-  fmtm_data:
+    name: fmtm-frontend-${GIT_BRANCH}
   fmtm_db_data:
+    name: fmtm-db-data-${GIT_BRANCH}
   fmtm_logs:
+    name: fmtm-logs-${GIT_BRANCH}
   fmtm_images:
+    name: fmtm-images-${GIT_BRANCH}
   fmtm_tiles:
-  central_db_data:
-  central_frontend:
+    name: fmtm-tiles-${GIT_BRANCH}
   certs:
+    name: fmtm-certs-${GIT_BRANCH}
   certbot_data:
+    name: fmtm-certbot-data-${GIT_BRANCH}
+  central_db_data:
+    name: fmtm-central-db-data-${GIT_BRANCH}
+  central_frontend:
+    name: fmtm-central-frontend-${GIT_BRANCH}
 
 networks:
   fmtm-net:
