@@ -246,7 +246,7 @@ services:
       retries: 3
 
   certbot:
-    image: "ghcr.io/hotosm/fmtm/certs-init:latest"
+    image: "ghcr.io/hotosm/fmtm/proxy:certs-init"
     container_name: fmtm-cert-renew-${GIT_BRANCH}
     volumes:
       - certs:/etc/letsencrypt

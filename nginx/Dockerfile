@@ -104,18 +104,22 @@ COPY templates/cert-init/fmtm.conf.template \
      templates/cert-init/api.conf.template \
      templates/cert-init/odk.conf.template \
      templates/cert-init/minio.conf.template \
+     templates/cert-init/script.conf.template \
      /etc/nginx/templates/
 
 
 
-FROM base as api-only
+FROM base as main
+# API & Frontend only
 COPY templates/fmtm.conf.template \
      templates/api.conf.template \
+     templates/script.conf.template \
      /etc/nginx/templates/
 
 
 
-FROM api-only as all
+FROM main as development
+# API, Frontend, ODK, S3
 COPY templates/odk.conf.template \
      templates/minio.conf.template \
      /etc/nginx/templates/
