@@ -48,7 +48,7 @@ services:
     environment:
       FMTM_DOMAIN: ${FMTM_DOMAIN}
       FMTM_API_DOMAIN: ${VITE_API_URL:-api.${FMTM_DOMAIN}}
-      FMTM_SCRIPT_DOMAIN: ${FMTM_SCRIPT_DOMAIN}
+      FMTM_SCRIPT_DOMAIN: ${FMTM_SCRIPT_DOMAIN:-localhost}
     ports:
       - 80:80
       - 443:443
