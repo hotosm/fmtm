@@ -109,7 +109,7 @@ COPY templates/cert-init/fmtm.conf.template \
 
 FROM base as certs-init-development
 # Replace existing /docker-entrypoint.sh
-COPY 100-renew-certs.sh /docker-entrypoint.sh
+COPY container-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 COPY templates/cert-init/fmtm.conf.template \
      templates/cert-init/api.conf.template \
