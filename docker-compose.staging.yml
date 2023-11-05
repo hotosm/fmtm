@@ -72,3 +72,4 @@ services:
     extends:
       file: docker-compose.development.yml
       service: certbot
+    image: "ghcr.io/hotosm/fmtm/proxy:certs-init-staging"
