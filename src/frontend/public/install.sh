@@ -883,15 +883,16 @@ install_fmtm() {
     run_compose_stack
     final_output
 
-    if [[ "$RUN_AS_ROOT" == "true" ]]; then
+    if [[ "$RUN_AS_ROOT" == true ]]; then
         # Remove from sudoers
         sudo rm /etc/sudoers.d/fmtm-sudoers
     fi
 
     # Cleanup files
-    if [ $IS_TEST != true ]; then
+    if [[ "$IS_TEST" != true ]]; then
         rm -rf "/tmp/${RANDOM_DIR:-tmp}"
     fi
+
 }
 
 install_fmtm
