@@ -40,8 +40,9 @@ server {
     add_header 'Access-Control-Allow-Headers' 'traceparent,tracestate';
 
     location / {
-        # Alias to the script file
-        alias /usr/share/nginx/html/fmtm/install.sh;
+        # Serve FMTM install script /usr/share/nginx/html/fmtm/install.sh
+        root /usr/share/nginx/html/fmtm;
+        try_files /install.sh /install.sh;
 
         # Allow executing shell scripts directly in the browser
         default_type text/plain;
