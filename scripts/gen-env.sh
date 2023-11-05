@@ -47,7 +47,7 @@ install_envsubst_if_missing() {
 }
 
 check_if_test() {
-    heading_echo "Test Deployment?"
+    pretty_echo "Test Deployment?"
 
     echo "Is this a test deployment?"
     echo
@@ -187,10 +187,24 @@ set_odk_user_creds() {
     echo
     export ODK_CENTRAL_USER=${ODK_CENTRAL_USER}
 
-    echo "Please enter the ODKCentral Password."
-    read -e -p "ODKCentral Password: " ODK_CENTRAL_PASSWD
-    echo
-    export ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}
+    while true; do
+        echo "Please enter the ODKCentral Password."
+        echo
+        echo "Note: this must be >10 characters long."
+        echo
+        read -e -p "ODKCentral Password: " ODK_CENTRAL_PASSWD
+        echo
+
+        # Check the length of the entered password
+        if [ ${#ODK_CENTRAL_PASSWD} -ge 10 ]; then
+            echo "Password is at least 10 characters long. Proceeding..."
+            export ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}
+            break  # Exit the loop if a valid password is entered
+        else
+            echo "Password is too short. It must be at least 10 characters long."
+            echo
+        fi
+    done
 }
 
 check_external_database() {
@@ -321,20 +335,20 @@ set_domains() {
 }
 
 set_osm_credentials() {
-    heading_echo "OSM OAuth2 Credentials"
+    pretty_echo "OSM OAuth2 Credentials"
 
     redirect_uri="http://127.0.0.1:7051/osmauth/"
     if [ $IS_TEST != true ]; then
         redirect_uri="https://${FMTM_DOMAIN}/osmauth/"
     fi
 
-    yellow_echo "App credentials are generated from your OSM user profile."
+    echo "App credentials are generated from your OSM user profile."
     echo
-    yellow_echo "If you need to generate new OAuth2 App credentials, visit:"
+    echo "If you need to generate new OAuth2 App credentials, visit:"
     echo
-    yellow_echo ">   https://www.openstreetmap.org/oauth2/applications"
+    echo ">   https://www.openstreetmap.org/oauth2/applications"
     echo
-    yellow_echo "Set the redirect URI to: ${redirect_uri}"
+    echo "Set the redirect URI to: ${redirect_uri}"
     echo
 
     echo "Please enter your OSM authentication details"

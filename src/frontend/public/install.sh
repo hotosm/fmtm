@@ -347,7 +347,7 @@ install_docker() {
         return 0
     fi
 
-    yellow_echo "Docker is required for FMTM to run."
+    echo "Docker is required for FMTM to run."
     echo
     echo "Do you want to install Docker? (y/n)"
     echo
@@ -525,16 +525,31 @@ set_odk_user_creds() {
     echo
     export ODK_CENTRAL_USER=${ODK_CENTRAL_USER}
 
-    echo "Please enter the ODKCentral Password."
-    read -e -p "ODKCentral Password: " ODK_CENTRAL_PASSWD
-    echo
-    export ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}
+    while true; do
+        echo "Please enter the ODKCentral Password."
+        echo
+        yellow_echo "Note: this must be >10 characters long."
+        echo
+        read -e -p "ODKCentral Password: " ODK_CENTRAL_PASSWD
+        echo
+
+        # Check the length of the entered password
+        if [ ${#ODK_CENTRAL_PASSWD} -ge 10 ]; then
+            echo "Password is at least 10 characters long. Proceeding..."
+            export ODK_CENTRAL_PASSWD=${ODK_CENTRAL_PASSWD}
+            break  # Exit the loop if a valid password is entered
+        else
+            yellow_echo "Password is too short. It must be at least 10 characters long."
+            echo
+        fi
+    done
 }
 
 check_external_database() {
     heading_echo "External Database"
 
     echo "Do you want to use an external database instead of local?"
+    echo
     while true
     do
         read -e -p "Enter y for external, anything else to continue: " externaldb
@@ -695,20 +710,14 @@ check_change_port() {
     heading_echo "Set Default Port"
     echo "The default port for local development is 7050."
     echo
-    while true
-    do
-        read -e -p "Enter a different port if required, or nothing for default: " fmtm_port
+    read -e -p "Enter a different port if required, or nothing for default: " fmtm_port
 
-        if [ "$fmtm_port" == "" ]
-        then
-            echo "Using port 7050 for FMTM."
-            break
-        else
-            echo "Using $fmtm_port"
-            export FMTM_PORT="$fmtm_port"
-            break
-        fi
-    done
+    if [ -n "$fmtm_port" ]; then
+        echo "Using $fmtm_port"
+        export FMTM_PORT="$fmtm_port"
+    else
+        echo "Using port 7050 for FMTM."
+    fi
 }
 
 generate_dotenv() {
