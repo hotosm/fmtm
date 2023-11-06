@@ -112,6 +112,12 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData({ ...projectDetails, ...formValues }));
   };
 
+  useEffect(() => {
+    if (splitTasksSelection === 'choose_area_as_task') {
+      dispatch(CreateProjectActions.SetDividedTaskGeojson(null));
+    }
+  }, [splitTasksSelection]);
+
   const {
     handleSubmit,
     handleCustomChange,
@@ -228,7 +234,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
     ));
   };
 
-  const parsedTaskGeojsonCount = dividedTaskGeojson?.features?.length || drawnGeojson?.features?.length;
+  const parsedTaskGeojsonCount = dividedTaskGeojson?.features?.length || drawnGeojson?.features?.length || 1;
   const totalSteps = dividedTaskGeojson?.features ? dividedTaskGeojson?.features?.length : parsedTaskGeojsonCount;
   return (
     <>
@@ -249,7 +255,11 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
             </p>
             <div className="fmtm-flex fmtm-justify-center fmtm-gap-6 fmtm-pt-5  ">
               {/* <Button btnText="CANCEL" btnType="secondary"></Button> */}
-              <Button btnText="PROCEED" onClick={() => setToggleStatus(false)} btnType="primary"></Button>
+              <Button
+                btnText="PROCEED"
+                onClick={() => navigate(`/project_details/${environment.encode(projectDetailsResponse?.id)}`)}
+                btnType="primary"
+              ></Button>
             </div>
           </div>
         }
@@ -263,9 +273,13 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
           <div className="fmtm-bg-white lg:fmtm-w-[20%] xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6">
             <h6 className="fmtm-text-xl fmtm-font-[600] fmtm-pb-2 lg:fmtm-pb-6">Split Tasks</h6>
             <p className="fmtm-text-gray-500 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3">
-              <span>Fill in your project basic information such as name, description, hashtag, etc. </span>
-              <span>To complete the first step, you will need the account credentials of ODK central server.</span>{' '}
-              <span>Here are the instructions for setting up a Central ODK Server on Digital Ocean.</span>
+              <span>You may choose how to divide an area into tasks for field mapping</span>
+              <span>Divide area on squares split the AOI into squares based on user’s input in dimensions</span>
+              <span>Choose area as task creates the number of tasks based on number of polygons in AOI</span>
+              <span>
+                Task splitting algorithm splits an entire AOI into smallers tasks based on linear networks (road, river)
+                followed by taking into account the input of number of average buildings per task
+              </span>
             </p>
           </div>
           <div className="lg:fmtm-w-[80%] xl:fmtm-w-[83%] lg:fmtm-h-[60vh] xl:fmtm-h-[58vh] fmtm-bg-white fmtm-px-5 lg:fmtm-px-11 fmtm-py-6 lg:fmtm-overflow-y-scroll lg:scrollbar">
@@ -299,7 +313,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
                       )}
                     </>
                   )}
-                  {formValues.splitTaskOption === 'task_splitting_algorithm' && (
+                  {splitTasksSelection === 'task_splitting_algorithm' && (
                     <>
                       <div className="fmtm-mt-6 fmtm-flex fmtm-items-center fmtm-gap-4">
                         <p className="fmtm-text-gray-500">Average number of buildings per task: </p>
