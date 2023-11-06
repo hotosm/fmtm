@@ -47,6 +47,9 @@ server {
         # Allow executing shell scripts directly in the browser
         default_type text/plain;
 
+        # Prevent caching
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+
         # Prevent directory listing
         autoindex off;
     }
