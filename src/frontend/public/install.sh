@@ -4,6 +4,9 @@ set -o pipefail
 
 # Tested for Debian 11 Bookworm & Ubuntu 22.04 LTS
 
+# Auto accept all apt prompts
+export DEBIAN_FRONTEND=noninteractive
+
 # Global Vars
 RANDOM_DIR="${RANDOM}${RANDOM}"
 DOTENV_NAME=.env
@@ -461,7 +464,7 @@ get_repo() {
 
     echo "Cloning repo $repo_url to dir: /tmp/${RANDOM_DIR}"
     echo
-    git clone --branch "build/nginx-certbot" --depth 1 "$repo_url"
+    git clone --branch "${BRANCH_NAME}" --depth 1 "$repo_url"
 
     # Check for existing .env files
     existing_dotenv=""
