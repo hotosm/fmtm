@@ -38,7 +38,7 @@ router = APIRouter(
 )
 
 
-@router.get("/task-list", response_model=List[tasks_schemas.TaskOut])
+@router.get("/task-list", response_model=List[tasks_schemas.Task])
 async def read_task_list(
     project_id: int,
     limit: int = 1000,
