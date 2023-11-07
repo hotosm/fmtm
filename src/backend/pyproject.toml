@@ -48,6 +48,7 @@ dependencies = [
     "osm-rawdata==0.1.4",
     "minio>=7.1.17",
     "pyproj>=3.6.1",
+    "APScheduler==3.10.4"
 ]
 requires-python = ">=3.10,<3.12"
 readme = "../../README.md"
