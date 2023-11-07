@@ -1673,7 +1673,7 @@ def get_task_geometry(db: Session, project_id: int):
     Returns:
         str: A geojson of the task boundaries
     """
-    db_tasks =tasks_crud.get_tasks(db, project_id, None)
+    db_tasks = tasks_crud.get_tasks(db, project_id, None)
     features = []
     for task in db_tasks:
         geom = to_shape(task.outline)
@@ -1682,7 +1682,7 @@ def get_task_geometry(db: Session, project_id: int):
         properties = {
             "task_id": task.id,
         }
-        feature = {"type": "Feature", "geometry": geometry, "properties" :properties}
+        feature = {"type": "Feature", "geometry": geometry, "properties": properties}
         features.append(feature)
 
     feature_collection = {"type": "FeatureCollection", "features": features}
@@ -1691,10 +1691,10 @@ def get_task_geometry(db: Session, project_id: int):
 
 async def get_project_features_geojson(db: Session, project_id: int):
     db_tasks = (
-            db.query(db_models.DbFeatures)
-            .filter(db_models.DbFeatures.project_id == project_id)
-            .all()
-        )
+        db.query(db_models.DbFeatures)
+        .filter(db_models.DbFeatures.project_id == project_id)
+        .all()
+    )
 
     """Get a geojson of all features for a task."""
     query = text(
@@ -1720,7 +1720,7 @@ async def get_project_features_geojson(db: Session, project_id: int):
     for feature in features["features"]:
         for task in db_tasks:
             if task.id == feature["id"]:
-                feature["properties"]["task_id"]=task.task_id
+                feature["properties"]["task_id"] = task.task_id
 
     return features
 
