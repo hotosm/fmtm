@@ -631,20 +631,50 @@ async def generate_files(
         db, task_id=background_task_id, project_id=project_id
     )
 
-    log.debug(f"Submitting {background_task_id} to background tasks stack")
-    background_tasks.add_task(
+    from datetime import datetime
+
+    from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+    sched = AsyncIOScheduler()
+    sched.start()
+
+    job = sched.add_job(
         project_crud.generate_appuser_files,
-        db,
-        project_id,
-        extract_polygon,
-        contents,
-        extracts_contents if data_extracts else None,
-        xform_title,
-        file_ext[1:] if upload else "xls",
-        background_task_id,
+        "date",
+        run_date=datetime.now(),
+        args=[
+            db,
+            project_id,
+            extract_polygon,
+            contents,
+            extracts_contents if data_extracts else None,
+            xform_title,
+            file_ext[1:] if upload else "xls",
+            background_task_id,
+        ],
+        id="unique_id",
     )
 
-    return {"Message": f"{project_id}", "task_id": f"{background_task_id}"}
+    print("Job = ", job)
+
+    # log.debug(f"Submitting {background_task_id} to background tasks stack")
+    # background_tasks.add_task(
+    #     project_crud.generate_appuser_files,
+    #     db,
+    #     project_id,
+    #     extract_polygon,
+    #     contents,
+    #     extracts_contents if data_extracts else None,
+    #     xform_title,
+    #     file_ext[1:] if upload else "xls",
+    #     background_task_id,
+    # )
+
+    return {
+        "Message": f"{project_id}",
+        "task_id": f"{background_task_id}",
+        # "job":job
+    }
 
 
 @router.post("/update-form/{project_id}")
