@@ -35,7 +35,6 @@ from fastapi import (
 from fastapi.responses import FileResponse
 from loguru import logger as log
 from osm_fieldwork.data_models import data_models_path
-from osm_fieldwork.filter_data import FilterData
 from osm_fieldwork.make_data_extract import getChoices
 from osm_fieldwork.xlsforms import xlsforms_path
 from osm_rawdata.postgres import PostgresClient
@@ -692,14 +691,7 @@ async def get_data_extracts(
         # # OSM Extracts using raw data api
         pg = PostgresClient("underpass", config_path)
         data_extract = pg.execQuery(boundary)
-        log.info("Data extracts process completed")
-        filter = FilterData(xlsform)
-
-        updated_data_extract = {"type": "FeatureCollection", "features": []}
-        filtered_data_extract = (
-            filter.cleanData(data_extract) if data_extract else updated_data_extract
-        )
-        return filtered_data_extract
+        return data_extract
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
