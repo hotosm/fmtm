@@ -659,43 +659,49 @@ async def get_data_extracts(
     aoi: UploadFile,
     category: Optional[str] = Form(...),
 ):
-    # read entire file
-    await aoi.seek(0)
-    aoi_content = await aoi.read()
-    boundary = json.loads(aoi_content)
+    try:
+        # read entire file
+        await aoi.seek(0)
+        aoi_content = await aoi.read()
+        boundary = json.loads(aoi_content)
 
-    # Validatiing Coordinate Reference System
-    check_crs(boundary)
-    xlsform = f"{xlsforms_path}/{category}.xls"
-    config_path = f"{data_models_path}/{category}.yaml"
+        # Validatiing Coordinate Reference System
+        check_crs(boundary)
+        xlsform = f"{xlsforms_path}/{category}.xls"
+        config_path = f"{data_models_path}/{category}.yaml"
 
-    # Convert each feature into a Shapely geometry
-    geometries = [shape(feature["geometry"]) for feature in boundary["features"]]
+        if boundary["type"] == "FeatureCollection":
+            # Convert each feature into a Shapely geometry
+            geometries = [
+                shape(feature["geometry"]) for feature in boundary["features"]
+            ]
+            updated_geometry = unary_union(geometries)
+        else:
+            updated_geometry = shape(boundary["geometry"])
 
-    # Merge the geometries into a single geometry (as a MultiPolygon)
-    merged_geometry = unary_union(geometries)
+        # Convert the merged MultiPolygon to a single Polygon using convex hull
+        merged_polygon = updated_geometry.convex_hull
 
-    # Convert the merged MultiPolygon to a single Polygon using convex hull
-    merged_polygon = merged_geometry.convex_hull
+        # Convert the merged polygon back to a GeoJSON-like dictionary
+        boundary = {
+            "type": "Feature",
+            "geometry": mapping(merged_polygon),
+            "properties": {},
+        }
 
-    # Convert the merged polygon back to a GeoJSON-like dictionary
-    boundary = {
-        "type": "Feature",
-        "geometry": mapping(merged_polygon),
-        "properties": {},
-    }
+        # # OSM Extracts using raw data api
+        pg = PostgresClient("underpass", config_path)
+        data_extract = pg.execQuery(boundary)
+        log.info("Data extracts process completed")
+        filter = FilterData(xlsform)
 
-    # # OSM Extracts using raw data api
-    pg = PostgresClient("underpass", config_path)
-    data_extract = pg.execQuery(boundary)
-    log.info("Data extracts process completed")
-    filter = FilterData(xlsform)
-
-    updated_data_extract = {"type": "FeatureCollection", "features": []}
-    filtered_data_extract = (
-        filter.cleanData(data_extract) if data_extract else updated_data_extract
-    )
-    return filtered_data_extract
+        updated_data_extract = {"type": "FeatureCollection", "features": []}
+        filtered_data_extract = (
+            filter.cleanData(data_extract) if data_extract else updated_data_extract
+        )
+        return filtered_data_extract
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/update-form/{project_id}")
