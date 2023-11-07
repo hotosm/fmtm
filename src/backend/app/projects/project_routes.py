@@ -162,7 +162,9 @@ async def read_project_summaries(
 @router.get("/{project_id}", response_model=project_schemas.ProjectOut)
 async def read_project(project_id: int, db: Session = Depends(database.get_db)):
     project = project_crud.get_project_by_id(db, project_id)
+    project_uuid = uuid.uuid4()
     if project:
+        project.project_uuid = project_uuid
         return project
     else:
         raise HTTPException(status_code=404, detail="Project not found")
