@@ -34,8 +34,11 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse
 from loguru import logger as log
+from osm_fieldwork.data_models import data_models_path
+from osm_fieldwork.filter_data import FilterData
 from osm_fieldwork.make_data_extract import getChoices
 from osm_fieldwork.xlsforms import xlsforms_path
+from osm_rawdata.postgres import PostgresClient
 from sqlalchemy.orm import Session
 
 from ..central import central_crud
@@ -647,11 +650,6 @@ async def generate_files(
     )
 
     return {"Message": f"{project_id}", "task_id": f"{background_task_id}"}
-
-
-from osm_fieldwork.data_models import data_models_path
-from osm_fieldwork.filter_data import FilterData
-from osm_rawdata.postgres import PostgresClient
 
 
 @router.post("/view_data_extracts/")
