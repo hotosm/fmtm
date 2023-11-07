@@ -18,9 +18,11 @@
 import json
 import os
 import uuid
+from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -631,10 +633,6 @@ async def generate_files(
         db, task_id=background_task_id, project_id=project_id
     )
 
-    from datetime import datetime
-
-    from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
     sched = AsyncIOScheduler()
     sched.start()
 
@@ -652,10 +650,8 @@ async def generate_files(
             file_ext[1:] if upload else "xls",
             background_task_id,
         ],
-        id="unique_id",
+        id=str(background_task_id),
     )
-
-    print("Job = ", job)
 
     # log.debug(f"Submitting {background_task_id} to background tasks stack")
     # background_tasks.add_task(
