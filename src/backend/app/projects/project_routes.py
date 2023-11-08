@@ -1049,6 +1049,7 @@ async def download_features(project_id: int, db: Session = Depends(database.get_
 async def generate_project_tiles(
     background_tasks: BackgroundTasks,
     project_id: int,
+    task_id: int = None,
     source: str = Query(
         ..., description="Select a source for tiles", enum=TILES_SOURCE
     ),
@@ -1087,6 +1088,7 @@ async def generate_project_tiles(
         background_task_id,
         source,
         format,
+        task_id,
         tms,
     )
 

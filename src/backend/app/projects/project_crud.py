@@ -2328,6 +2328,7 @@ def get_project_tiles(
     background_task_id: uuid.UUID,
     source: str,
     output_format: str = "mbtiles",
+    task_id: int = None,
     tms: str = None,
 ):
     """Get the tiles for a project.
@@ -2356,24 +2357,27 @@ def get_project_tiles(
     try:
         db.add(tile_path_instance)
         db.commit()
-
-        # Project Outline
-        log.debug(f"Getting bbox for project: {project_id}")
+        
+        get_id = task_id or project_id
+        entity = "tasks" if task_id else "projects"
+        
+        # Project/task Outline
+        log.debug(f"Getting bbox : {get_id}")
         query = text(
             f"""SELECT ST_XMin(ST_Envelope(outline)) AS min_lon,
                         ST_YMin(ST_Envelope(outline)) AS min_lat,
                         ST_XMax(ST_Envelope(outline)) AS max_lon,
                         ST_YMax(ST_Envelope(outline)) AS max_lat
-                FROM projects
-                WHERE id = {project_id};"""
+                FROM {entity}
+                WHERE id = {get_id};"""
         )
 
         result = db.execute(query)
-        project_bbox = result.fetchone()
-        log.debug(f"Extracted project bbox: {project_bbox}")
+        bbox = result.fetchone()
+        log.debug(f"Extracted bbox: {bbox}")
 
-        if project_bbox:
-            min_lon, min_lat, max_lon, max_lat = project_bbox
+        if bbox:
+            min_lon, min_lat, max_lon, max_lat = bbox
         else:
             log.error(f"Failed to get bbox from project: {project_id}")
 
