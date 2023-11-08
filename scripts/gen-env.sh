@@ -252,7 +252,7 @@ check_external_database() {
 }
 
 set_external_s3() {
-    pretty_echo "S3 Credentials"
+    heading_echo "S3 Credentials"
 
     echo "Please enter the S3 host endpoint."
     read -e -p "S3 Endpoint: " S3_ENDPOINT
@@ -269,7 +269,16 @@ set_external_s3() {
     echo
     export S3_SECRET_KEY=${S3_SECRET_KEY}
 
-    # TODO update S3_BUCKET_NAME_BASEMAPS & S3_BUCKET_NAME_OVERLAYS
+    if [ "$BRANCH_NAME" == "main" ] then;
+        yellow_echo "Production deployments require a preconfigured S3 bucket."
+        echo
+        yellow_echo "The bucket should be public."
+        echo
+        echo "Please enter the bucket name."
+        read -e -p "S3 Bucket Name: " S3_BUCKET_NAME_BASEMAPS
+        echo
+        export S3_BUCKET_NAME_BASEMAPS=${S3_BUCKET_NAME_BASEMAPS}
+    fi
 }
 
 set_minio_s3_creds() {
