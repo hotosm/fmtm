@@ -18,6 +18,7 @@
 import json
 import os
 import uuid
+from pathlib import Path
 from typing import List, Optional
 
 from fastapi import (
@@ -33,15 +34,20 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse
 from loguru import logger as log
+from osm_fieldwork.data_models import data_models_path
 from osm_fieldwork.make_data_extract import getChoices
 from osm_fieldwork.xlsforms import xlsforms_path
+from osm_rawdata.postgres import PostgresClient
+from shapely.geometry import mapping, shape
+from shapely.ops import unary_union
 from sqlalchemy.orm import Session
 
 from ..central import central_crud
 from ..db import database, db_models
-from ..models.enums import TILES_SOURCE
+from ..models.enums import TILES_FORMATS, TILES_SOURCE
 from ..tasks import tasks_crud
 from . import project_crud, project_schemas, utils
+from .project_crud import check_crs
 
 router = APIRouter(
     prefix="/projects",
@@ -128,12 +134,12 @@ def get_task(lat: float, long: float, user_id: int = None):
     return "Coming..."
 
 
-@router.get("/summaries", response_model=List[project_schemas.ProjectSummary])
+@router.get("/summaries", response_model=project_schemas.PaginatedProjectSummaries)
 async def read_project_summaries(
     user_id: int = None,
     hashtags: str = None,
-    skip: int = 0,
-    limit: int = 100,
+    page: int = Query(1, ge=1),  # Default to page 1, must be greater than or equal to 1
+    results_per_page: int = Query(13, le=100),
     db: Session = Depends(database.get_db),
 ):
     """Get a list of project summaries.
@@ -154,8 +160,33 @@ async def read_project_summaries(
             filter(lambda hashtag: hashtag.startswith("#"), hashtags)
         )  # filter hashtags that do start with #
 
+    skip = (page - 1) * results_per_page
+    limit = results_per_page
+
+    total_projects = db.query(db_models.DbProject).count()
+    hasNext = (page * results_per_page) < total_projects
+    hasPrev = page > 1
+    total_pages = (total_projects + results_per_page - 1) // results_per_page
+
     projects = project_crud.get_project_summaries(db, user_id, skip, limit, hashtags)
-    return projects
+    project_summaries = [
+        project_schemas.ProjectSummary.from_db_project(project) for project in projects
+    ]
+
+    response = project_schemas.PaginatedProjectSummaries(
+        results=project_summaries,
+        pagination=project_schemas.PaginationInfo(
+            hasNext=hasNext,
+            hasPrev=hasPrev,
+            nextNum=page + 1 if hasNext else None,
+            page=page,
+            pages=total_pages,
+            prevNum=page - 1 if hasPrev else None,
+            perPage=results_per_page,
+            total=total_projects,
+        ),
+    )
+    return response
 
 
 @router.get("/{project_id}", response_model=project_schemas.ProjectOut)
@@ -450,6 +481,9 @@ async def upload_multi_project_boundary(
     content = await upload.read()
     boundary = json.loads(content)
 
+    # Validatiing Coordinate Reference System
+    check_crs(boundary)
+
     log.debug("Creating tasks for each polygon in project")
     result = project_crud.update_multi_polygon_project_boundary(
         db, project_id, boundary
@@ -460,7 +494,14 @@ async def upload_multi_project_boundary(
             status_code=428, detail=f"Project with id {project_id} does not exist"
         )
 
-    return {"message": "Project Boundary Uploaded", "project_id": f"{project_id}"}
+    # Get the number of tasks in a project
+    task_count = await tasks_crud.get_task_count_in_project(db, project_id)
+
+    return {
+        "message": "Project Boundary Uploaded",
+        "project_id": f"{project_id}",
+        "task_count": task_count,
+    }
 
 
 @router.post("/task_split")
@@ -484,9 +525,13 @@ async def task_split(
     # read entire file
     await upload.seek(0)
     content = await upload.read()
+    boundary = json.loads(content)
+
+    # Validatiing Coordinate Reference System
+    check_crs(boundary)
 
     result = await project_crud.split_into_tasks(
-        db, content, no_of_buildings, has_data_extracts
+        db, boundary, no_of_buildings, has_data_extracts
     )
 
     return result
@@ -526,6 +571,9 @@ async def upload_project_boundary(
     content = await upload.read()
     boundary = json.loads(content)
 
+    # Validatiing Coordinate Reference System
+    check_crs(boundary)
+
     # update project boundary and dimension
     result = project_crud.update_project_boundary(db, project_id, boundary, dimension)
     if not result:
@@ -561,6 +609,9 @@ async def edit_project_boundary(
     await upload.seek(0)
     content = await upload.read()
     boundary = json.loads(content)
+
+    # Validatiing Coordinate Reference System
+    check_crs(boundary)
 
     result = project_crud.update_project_boundary(db, project_id, boundary, dimension)
     if not result:
@@ -676,8 +727,10 @@ async def generate_files(
         try:
             extracts_contents = await data_extracts.read()
             json.loads(extracts_contents)
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="Provide a valid geojson file")
+        except json.JSONDecodeError as e:
+            raise HTTPException(
+                status_code=400, detail="Provide a valid geojson file"
+            ) from e
 
     # generate a unique task ID using uuid
     background_task_id = uuid.uuid4()
@@ -707,6 +760,49 @@ async def generate_files(
     return {"Message": f"{project_id}", "task_id": f"{background_task_id}"}
 
 
+@router.post("/view_data_extracts/")
+async def get_data_extracts(
+    aoi: UploadFile,
+    category: Optional[str] = Form(...),
+):
+    try:
+        # read entire file
+        await aoi.seek(0)
+        aoi_content = await aoi.read()
+        boundary = json.loads(aoi_content)
+
+        # Validatiing Coordinate Reference System
+        check_crs(boundary)
+        xlsform = f"{xlsforms_path}/{category}.xls"
+        config_path = f"{data_models_path}/{category}.yaml"
+
+        if boundary["type"] == "FeatureCollection":
+            # Convert each feature into a Shapely geometry
+            geometries = [
+                shape(feature["geometry"]) for feature in boundary["features"]
+            ]
+            updated_geometry = unary_union(geometries)
+        else:
+            updated_geometry = shape(boundary["geometry"])
+
+        # Convert the merged MultiPolygon to a single Polygon using convex hull
+        merged_polygon = updated_geometry.convex_hull
+
+        # Convert the merged polygon back to a GeoJSON-like dictionary
+        boundary = {
+            "type": "Feature",
+            "geometry": mapping(merged_polygon),
+            "properties": {},
+        }
+
+        # # OSM Extracts using raw data api
+        pg = PostgresClient("underpass", config_path)
+        data_extract = pg.execQuery(boundary)
+        return data_extract
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.post("/update-form/{project_id}")
 async def update_project_form(
     project_id: int,
@@ -733,15 +829,16 @@ def get_project_features(
     task_id: int = None,
     db: Session = Depends(database.get_db),
 ):
-    """Get all the features of a project.
+    """Fetch all the features for a project.
+
+    The features are generated from raw-data-api.
 
     Args:
-        project_id (int): The project's ID.
-        task_id (int, optional): The task ID. Defaults to None.
-        db (Session, optional): The database session. Defaults to Depends(database.get_db).
+        project_id (int): The project id.
+        task_id (int): The task id.
 
     Returns:
-        List[project_schemas.Feature]: A list of project features.
+        feature(json): JSON object containing a list of features
     """
     features = project_crud.get_project_features(db, project_id, task_id)
     return features
@@ -844,6 +941,9 @@ async def preview_tasks(upload: UploadFile = File(...), dimension: int = Form(50
     content = await upload.read()
     boundary = json.loads(content)
 
+    # Validatiing Coordinate Reference System
+    check_crs(boundary)
+
     result = await project_crud.preview_tasks(boundary, dimension)
     return result
 
@@ -878,6 +978,9 @@ async def add_features(
     # read entire file
     content = await upload.read()
     features = json.loads(content)
+
+    # Validatiing Coordinate Reference System
+    check_crs(features)
 
     # generate a unique task ID using uuid
     background_task_id = uuid.uuid4()
@@ -1052,16 +1155,25 @@ async def generate_project_tiles(
     source: str = Query(
         ..., description="Select a source for tiles", enum=TILES_SOURCE
     ),
+    format: str = Query(
+        "mbtiles", description="Select an output format", enum=TILES_FORMATS
+    ),
+    tms: str = Query(
+        None,
+        description="Provide a custom TMS URL, optional",
+    ),
     db: Session = Depends(database.get_db),
 ):
-    """Returns the tiles for a project.
+    """Returns basemap tiles for a project.
 
     Args:
-        project_id (int): The id of the project.
-        source (str): The selected source.
+        project_id (int): ID of project to create tiles for.
+        source (str): Tile source ("esri", "bing", "topo", "google", "oam").
+        format (str, optional): Default "mbtiles". Other options: "pmtiles", "sqlite3".
+        tms (str, optional): Default None. Custom TMS provider URL.
 
     Returns:
-        Response: The File response object containing the tiles.
+        str: Success message that tile generation started.
     """
     # generate a unique task ID using uuid
     background_task_id = uuid.uuid4()
@@ -1072,7 +1184,13 @@ async def generate_project_tiles(
     )
 
     background_tasks.add_task(
-        project_crud.get_project_tiles, db, project_id, source, background_task_id
+        project_crud.get_project_tiles,
+        db,
+        project_id,
+        background_task_id,
+        source,
+        format,
+        tms,
     )
 
     return {"Message": "Tile generation started"}
@@ -1093,14 +1211,24 @@ async def tiles_list(project_id: int, db: Session = Depends(database.get_db)):
 
 @router.get("/download_tiles/")
 async def download_tiles(tile_id: int, db: Session = Depends(database.get_db)):
+    log.debug("Getting tile archive path from DB")
     tiles_path = (
         db.query(db_models.DbTilesPath)
         .filter(db_models.DbTilesPath.id == str(tile_id))
         .first()
     )
+    log.info(f"User requested download for tiles: {tiles_path.path}")
+
+    project_id = tiles_path.project_id
+    project_name = project_crud.get_project(db, project_id).project_name_prefix
+    filename = Path(tiles_path.path).name.replace(
+        f"{project_id}_", f"{project_name.replace(' ', '_')}_"
+    )
+    log.debug(f"Sending tile archive to user: {filename}")
+
     return FileResponse(
         tiles_path.path,
-        headers={"Content-Disposition": "attachment; filename=tiles.mbtiles"},
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 
@@ -1158,3 +1286,93 @@ async def project_centroid(
     result = db.execute(query)
     result_dict_list = [{"id": row[0], "centroid": row[1]} for row in result.fetchall()]
     return result_dict_list
+
+
+@router.post("/{project_id}/generate_files_for_janakpur")
+async def generate_files_janakpur(
+    background_tasks: BackgroundTasks,
+    project_id: int,
+    buildings_file: UploadFile,
+    roads_file: UploadFile,
+    form: UploadFile,
+    db: Session = Depends(database.get_db),
+):
+    """Generate required media files tasks in the project based on the provided params."""
+    log.debug(f"Generating media files tasks for project: {project_id}")
+    xform_title = None
+
+    project = project_crud.get_project(db, project_id)
+    if not project:
+        raise HTTPException(
+            status_code=428, detail=f"Project with id {project_id} does not exist"
+        )
+
+    project.data_extract_type = "polygon"
+    db.commit()
+
+    if form:
+        log.debug("Validating uploaded XLS file")
+        # Validating for .XLS File.
+        file_name = os.path.splitext(form.filename)
+        file_ext = file_name[1]
+        allowed_extensions = [".xls", ".xlsx", ".xml"]
+        if file_ext not in allowed_extensions:
+            raise HTTPException(status_code=400, detail="Provide a valid .xls file")
+        xform_title = file_name[0]
+        await form.seek(0)
+        contents = await form.read()
+        project.form_xls = contents
+        db.commit()
+
+    if buildings_file:
+        log.debug("Validating uploaded buildings geojson file")
+        # Validating for .geojson File.
+        data_extracts_file_name = os.path.splitext(buildings_file.filename)
+        extracts_file_ext = data_extracts_file_name[1]
+        if extracts_file_ext != ".geojson":
+            raise HTTPException(status_code=400, detail="Provide a valid geojson file")
+        try:
+            buildings_extracts_contents = await buildings_file.read()
+            json.loads(buildings_extracts_contents)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="Provide a valid geojson file")
+
+    if roads_file:
+        log.debug("Validating uploaded roads geojson file")
+        # Validating for .geojson File.
+        road_extracts_file_name = os.path.splitext(roads_file.filename)
+        road_extracts_file_ext = road_extracts_file_name[1]
+        if road_extracts_file_ext != ".geojson":
+            raise HTTPException(status_code=400, detail="Provide a valid geojson file")
+        try:
+            road_extracts_contents = await roads_file.read()
+            json.loads(road_extracts_contents)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="Provide a valid geojson file")
+
+    # generate a unique task ID using uuid
+    background_task_id = uuid.uuid4()
+
+    # insert task and task ID into database
+    log.debug(
+        f"Creating background task ID {background_task_id} "
+        f"for project ID: {project_id}"
+    )
+    await project_crud.insert_background_task_into_database(
+        db, task_id=background_task_id, project_id=project_id
+    )
+
+    log.debug(f"Submitting {background_task_id} to background tasks stack")
+    background_tasks.add_task(
+        project_crud.generate_appuser_files_for_janakpur,
+        db,
+        project_id,
+        contents,
+        buildings_extracts_contents if buildings_file else None,
+        road_extracts_contents if roads_file else None,
+        xform_title,
+        file_ext[1:] if form else "xls",
+        background_task_id,
+    )
+
+    return {"Message": f"{project_id}", "task_id": f"{background_task_id}"}

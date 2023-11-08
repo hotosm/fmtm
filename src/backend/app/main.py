@@ -33,7 +33,7 @@ from .__version__ import __version__
 from .auth import auth_routes
 from .central import central_routes
 from .config import settings
-from .db.database import Base, engine, get_db
+from .db.database import get_db
 from .organization import organization_routes
 from .projects import project_routes
 from .projects.project_crud import read_xlsforms
@@ -59,6 +59,7 @@ def get_application() -> FastAPI:
             "url": "https://raw.githubusercontent.com/hotosm/fmtm/main/LICENSE",
         },
         debug=settings.DEBUG,
+        root_path=settings.API_PREFIX,
     )
 
     # Set custom logger
@@ -70,6 +71,7 @@ def get_application() -> FastAPI:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["Content-Disposition"],
     )
 
     _app.include_router(user_routes.router)
@@ -172,10 +174,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 async def startup_event():
     """Commands to run on server startup."""
     log.debug("Starting up FastAPI server.")
-    log.debug("Connecting to DB with SQLAlchemy")
-    Base.metadata.create_all(bind=engine)
-
-    # Read in XLSForms
+    log.debug("Reading XLSForms from DB.")
     read_xlsforms(next(get_db()), xlsforms_path)
 
 

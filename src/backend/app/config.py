@@ -20,7 +20,7 @@
 from functools import lru_cache
 from typing import Any, Optional, Union
 
-from pydantic import Extra, FieldValidationInfo, PostgresDsn, field_validator
+from pydantic import PostgresDsn, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -29,7 +29,7 @@ class Settings(BaseSettings):
 
     APP_NAME: str = "FMTM"
     DEBUG: bool = False
-    LOG_LEVEL: str = "DEBUG"
+    LOG_LEVEL: str = "INFO"
 
     URL_SCHEME: Optional[str] = "http"
     FRONTEND_MAIN_URL: Optional[str]
@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     def assemble_cors_origins(
         cls,
         val: Union[str, list[str]],
-        info: FieldValidationInfo,
+        info: ValidationInfo,
     ) -> Union[list[str], str]:
         """Build and validate CORS origins list.
 
@@ -82,7 +82,7 @@ class Settings(BaseSettings):
 
     @field_validator("FMTM_DB_URL", mode="after")
     @classmethod
-    def assemble_db_connection(cls, v: Optional[str], info: FieldValidationInfo) -> Any:
+    def assemble_db_connection(cls, v: Optional[str], info: ValidationInfo) -> Any:
         """Build Postgres connection from environment variables."""
         if isinstance(v, str):
             return v
@@ -94,7 +94,7 @@ class Settings(BaseSettings):
             path=info.data.get("FMTM_DB_NAME", ""),
         )
         # Convert Url type to string
-        return str(pg_url)
+        return pg_url
 
     ODK_CENTRAL_URL: Optional[str] = ""
     ODK_CENTRAL_USER: Optional[str] = ""
@@ -107,11 +107,17 @@ class Settings(BaseSettings):
     OSM_SCOPE: str = "read_prefs"
     OSM_LOGIN_REDIRECT_URI: str = "http://127.0.0.1:8080/osmauth/"
 
+    S3_ENDPOINT: str = "http://s3:9000"
+    S3_ACCESS_KEY: str
+    S3_SECRET_KEY: str
+    S3_BUCKET_NAME_BASEMAPS: str = "basemaps"
+    S3_BUCKET_NAME_OVERLAYS: str = "overlays"
+
     UNDERPASS_API_URL: str = "https://raw-data-api0.hotosm.org/v1"
     SENTRY_DSN: Optional[str] = None
 
     model_config = SettingsConfigDict(
-        case_sensitive=True, env_file=".env", extra=Extra.allow
+        case_sensitive=True, env_file=".env", extra="allow"
     )
 
 
@@ -120,7 +126,7 @@ def get_settings():
     """Cache settings when accessed throughout app."""
     _settings = Settings()
     if _settings.DEBUG:
-        print(f"Loaded settings: {_settings.dict()}")
+        print(f"Loaded settings: {_settings.model_dump()}")
     return _settings
 
 

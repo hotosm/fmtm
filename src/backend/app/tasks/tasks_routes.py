@@ -44,19 +44,6 @@ async def read_task_list(
     limit: int = 1000,
     db: Session = Depends(database.get_db),
 ):
-    """Get a list of tasks for a project.
-
-    Args:
-        project_id (int): Project ID.
-        limit (int, optional): Maximum number of tasks to return. Defaults to 1000.
-        db (Session, optional): Database session. Defaults to Depends(database.get_db).
-
-    Raises:
-        HTTPException: If no tasks are found.
-
-    Returns:
-        List[TaskOut]: List of TaskOut objects.
-    """
     tasks = tasks_crud.get_tasks(db, project_id, limit)
     if tasks:
         return tasks
@@ -216,16 +203,6 @@ async def edit_task_boundary(
     boundary: UploadFile = File(...),
     db: Session = Depends(database.get_db),
 ):
-    """Edit the boundary of a task.
-
-    Args:
-        task_id (int): Task ID.
-        boundary (UploadFile, optional): New boundary for the task. Defaults to File(...).
-        db (Session, optional): Database session. Defaults to Depends(database.get_db).
-
-    Returns:
-        bool or dict or list or str or NoneType or Response or JSONResponse or HTMLResponse or RedirectResponse or StreamingResponse or FileResponse or UJSONResponse or ORJSONResponse or MsgpackResponse: Result of the boundary edit.
-    """
     # read entire file
     content = await boundary.read()
     boundary_json = json.loads(content)
@@ -240,15 +217,6 @@ async def task_features_count(
     project_id: int,
     db: Session = Depends(database.get_db),
 ):
-    """Get the feature count for tasks in a project.
-
-    Args:
-        project_id (int): Project ID.
-        db (Session, optional): Database session. Defaults to Depends(database.get_db).
-
-    Returns:
-        dict or list or str or NoneType or Response or JSONResponse or HTMLResponse or RedirectResponse or StreamingResponse or FileResponse or UJSONResponse or ORJSONResponse or MsgpackResponse: Feature count for tasks in the project.
-    """
     # Get the project object.
     project = project_crud.get_project(db, project_id)
 

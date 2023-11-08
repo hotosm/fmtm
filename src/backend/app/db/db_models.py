@@ -15,6 +15,7 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
+"""SQLAlchemy database models for interacting with Postgresql."""
 
 from geoalchemy2 import Geometry
 from sqlalchemy import (
@@ -41,7 +42,7 @@ from sqlalchemy.orm import (  # , declarative_base  # , declarative_base
     relationship,
 )
 
-from ..models.enums import (
+from app.models.enums import (
     BackgroundTaskStatus,
     MappingLevel,
     MappingPermission,
@@ -55,6 +56,7 @@ from ..models.enums import (
     UserRole,
     ValidationPermission,
 )
+
 from .database import Base, FmtmMetadata
 from .postgis_utils import timestamp
 
@@ -86,7 +88,7 @@ class DbUser(Base):
 
     id = Column(BigInteger, primary_key=True, index=True)
     username = Column(String, unique=True)
-    role = Column(Enum(UserRole), default=UserRole.MAPPER, nullable=False)
+    role = Column(Enum(UserRole), default=UserRole.MAPPER)
 
     name = Column(String)
     city = Column(String)
@@ -96,11 +98,12 @@ class DbUser(Base):
     is_expert = Column(Boolean, default=False)
 
     mapping_level = Column(
-        Enum(MappingLevel), default=MappingLevel.BEGINNER, nullable=False
+        Enum(MappingLevel),
+        default=MappingLevel.BEGINNER,
     )
-    tasks_mapped = Column(Integer, default=0, nullable=False)
-    tasks_validated = Column(Integer, default=0, nullable=False)
-    tasks_invalidated = Column(Integer, default=0, nullable=False)
+    tasks_mapped = Column(Integer, default=0)
+    tasks_validated = Column(Integer, default=0)
+    tasks_invalidated = Column(Integer, default=0)
     projects_mapped = Column(ARRAY(Integer))
 
     # mentions_notifications = Column(Boolean, default=True, nullable=False)
@@ -117,9 +120,6 @@ class DbUser(Base):
     date_registered = Column(DateTime, default=timestamp)
     # Represents the date the user last had one of their tasks validated
     last_validation_date = Column(DateTime, default=timestamp)
-
-    # TODO: This changes to use Oath
-    password = Column(String)
 
 
 # Secondary table defining many-to-many relationship between organisations and managers
@@ -196,7 +196,8 @@ class DbTeam(Base):
     organisation = relationship(DbOrganisation, backref="teams")
 
 
-# Secondary table defining many-to-many join for private projects that only defined users can map on
+# Secondary table defining many-to-many join for
+# private projects that only defined users can map on
 project_allowed_users = Table(
     "project_allowed_users",
     FmtmMetadata,
@@ -206,15 +207,7 @@ project_allowed_users = Table(
 
 
 class DbProjectTeams(Base):
-    """A SQLAlchemy model representing the relationship between a project and its teams.
-
-    Attributes:
-        team_id (Integer): The ID of the team.
-        project_id (Integer): The ID of the project.
-        role (Integer): The role of the team in the project.
-        project (relationship): A relationship to the project that this team is associated with.
-        team (relationship): A relationship to the team that is associated with this project.
-    """
+    """Link table between teams and projects."""
 
     __tablename__ = "project_teams"
     team_id = Column(Integer, ForeignKey("teams.id"), primary_key=True)
@@ -307,19 +300,9 @@ class DbXForm(Base):
 
 
 class DbTaskInvalidationHistory(Base):
-    """A SQLAlchemy model representing the most recent history of task invalidation and subsequent validation.
+    """Information on task invalidation.
 
-    Attributes:
-        id (Integer): The ID of this invalidation history record.
-        project_id (Integer): The ID of the project that this invalidation history record is associated with.
-        task_id (Integer): The ID of the task that this invalidation history record is associated with.
-        is_closed (Boolean): Whether this invalidation history record is closed or not.
-        mapper_id (BigInteger): The ID of the user who mapped this task.
-        mapped_date (DateTime): The date and time when this task was mapped by the mapper user.
-        invalidator_id (BigInteger): The ID of the user who invalidated this task.
-        invalidated_date (DateTime): The date and time when this task was invalidated by the invalidator user.
-        invalidation_history_id (Integer): The ID of a previous invalidation history record for this task, if any.
-        validator_id (BigInteger): The ID of the user who validated this task after it was invalidated, if any.
+    Describes the most recent history of task invalidation and subsequent validation.
     """
 
     __tablename__ = "task_invalidation_history"
@@ -354,14 +337,10 @@ class DbTaskInvalidationHistory(Base):
 
 
 class DbTaskMappingIssue(Base):
-    """A SQLAlchemy model representing an issue with a task mapping that contributed to invalidation of the task.
+    """Describes mapping issues.
 
-    Attributes:
-        id (Integer): The ID of the task mapping issue.
-        task_history_id (Integer): The ID of the task history record that this issue is associated with.
-        issue (String): A description of the issue.
-        mapping_issue_category_id (Integer): The ID of the category that this issue belongs to.
-        count (Integer): The number of occurrences of this issue.
+    An issue (along with an occurrence count) with a
+    task mapping that contributed to invalidation of the task.
     """
 
     __tablename__ = "task_mapping_issues"
@@ -510,7 +489,8 @@ class DbTask(Base):
     # y = Column(Integer)
     # zoom = Column(Integer)
     # extra_properties = Column(Unicode)
-    # # Tasks need to be split differently if created from an arbitrary grid or were clipped to the edge of the AOI
+    # # Tasks need to be split differently if created from an arbitrary grid
+    # or were clipped to the edge of the AOI
     # is_square = Column(Boolean, default=False)
 
 
@@ -525,7 +505,10 @@ class DbProject(Base):
 
     # PROJECT CREATION
     author_id = Column(
-        BigInteger, ForeignKey("users.id", name="fk_users"), nullable=False
+        BigInteger,
+        ForeignKey("users.id", name="fk_users"),
+        nullable=False,
+        server_default="20386219",
     )
     author = relationship(DbUser)
     created = Column(DateTime, default=timestamp, nullable=False)
@@ -564,6 +547,7 @@ class DbProject(Base):
 
     @property
     def tasks_mapped(self):
+        """Get the number of tasks mapped for a project."""
         return (
             object_session(self)
             .query(DbTask)
@@ -574,6 +558,7 @@ class DbProject(Base):
 
     @property
     def tasks_validated(self):
+        """Get the number of tasks validated for a project."""
         return (
             object_session(self)
             .query(DbTask)
@@ -584,6 +569,7 @@ class DbProject(Base):
 
     @property
     def tasks_bad(self):
+        """Get the number of tasks marked bad for a project."""
         return (
             object_session(self)
             .query(DbTask)
@@ -715,14 +701,7 @@ class DbFeatures(Base):
 
 
 class BackgroundTasks(Base):
-    """A SQLAlchemy model representing a background task.
-
-    Attributes:
-        id (String): The ID of the background task.
-        name (String): The name of the background task.
-        status (Enum): The status of the background task.
-        message (String): A message associated with the background task.
-    """
+    """Table managing long running background tasks."""
 
     __tablename__ = "background_tasks"
 
@@ -734,17 +713,7 @@ class BackgroundTasks(Base):
 
 
 class DbUserRoles(Base):
-    """A SQLAlchemy model representing the roles of a user in various contexts.
-
-    Attributes:
-        user_id (BigInteger): The ID of the user.
-        user (relationship): A relationship to the user that this role is associated with.
-        organization_id (Integer): The ID of the organization that this role is associated with, if any.
-        organization (relationship): A relationship to the organization that this role is associated with, if any.
-        project_id (Integer): The ID of the project that this role is associated with, if any.
-        project (relationship): A relationship to the project that this role is associated with, if any.
-        role (Enum): The role of the user in the specified context.
-    """
+    """Fine grained user control for projects, described by roles."""
 
     __tablename__ = "user_roles"
 
@@ -758,14 +727,7 @@ class DbUserRoles(Base):
 
 
 class DbProjectAOI(Base):
-    """A SQLAlchemy model representing an Area of Interest for a project.
-
-    Attributes:
-        id (Integer): The ID of the Area of Interest.
-        project_id (String): The ID of the project that this Area of Interest is associated with.
-        geom (Geometry(geometry_type="GEOMETRY", srid=4326)): The geometry of this Area of Interest in WGS84 coordinates.
-        tags (JSONB): A JSON object containing tags for this Area of Interest.
-    """
+    """The AOI geometry for a project."""
 
     __tablename__ = "project_aoi"
 
@@ -776,14 +738,7 @@ class DbProjectAOI(Base):
 
 
 class DbOsmLines(Base):
-    """A SQLAlchemy model representing OSM lines for a project.
-
-    Attributes:
-        id (Integer): The ID of the OSM line.
-        project_id (String): The ID of the project that this OSM line is associated with.
-        geom (Geometry(geometry_type="GEOMETRY", srid=4326)): The geometry of this OSM line in WGS84 coordinates.
-        tags (JSONB): A JSON object containing tags for this OSM line.
-    """
+    """Associated OSM ways for a project."""
 
     __tablename__ = "ways_line"
 
@@ -794,14 +749,7 @@ class DbOsmLines(Base):
 
 
 class DbBuildings(Base):
-    """A SQLAlchemy model representing buildings for a project.
-
-    Attributes:
-        id (Integer): The ID of the building.
-        project_id (String): The ID of the project that this building is associated with.
-        osm_id (String): The OSM ID of this building, if any.
-        geom (Geometry(geometry_type="GEOMETRY", srid=4326)): The geometry of this building in WGS84 coordinates.
-    """
+    """Associated OSM buildings for a project."""
 
     __tablename__ = "ways_poly"
 
@@ -813,17 +761,7 @@ class DbBuildings(Base):
 
 
 class DbTilesPath(Base):
-    """A SQLAlchemy model representing the path to an MBTiles file for a project.
-
-    Attributes:
-        id (Integer): The ID of the MBTiles path.
-        project_id (Integer): The ID of the project that this MBTiles path is associated with.
-        status (Enum): The status of the background task associated with this MBTiles path.
-        path (String): The path to the MBTiles file.
-        tile_source (String): The source of the tiles used to generate the MBTiles file.
-        background_task_id (String): The ID of the background task associated with this MBTiles path.
-        created_at (DateTime): The date and time when this MBTiles path was created.
-    """
+    """Keeping track of mbtile basemaps for a project."""
 
     __tablename__ = "mbtiles_path"
 

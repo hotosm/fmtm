@@ -12,27 +12,32 @@ For details on how to run the API first, please see: [DEV 2. Backend](https://gi
 
 1. You will need to [Install Docker](https://docs.docker.com/engine/install/) and ensure that it is running on your local machine.
 2. From the command line: navigate to the top level directory of the FMTM project.
-3. From the command line run: `docker compose build ui-main`
+3. From the command line run: `docker compose build ui`
    This is essential, as the development container for the frontend is different to production.
-4. Once everything is built, from the command line run: `docker compose up -d ui-main`
+4. Once everything is built, from the command line run: `docker compose up -d ui`
 
 5. If everything goes well you should now be able to **navigate to the project in your browser:** <http://127.0.0.1:8080>
+
+> Note: during development, if you rebuild the frontend, then
+> run 'docker compose up -d', the node_modules directory may
+> not be updated. To solve this, use the flag:
+> --renew-anon-volumes on docker compose up.
 
 ## 2. Start the Frontend locally
 
 ### 2A: Navigate to the frontend subdirectory
 
-This should like be `src/frontend/main`.
+`cd src/frontend`
 
 ### 2B: Install dependencies
 
-Install the dependencies by running the following command: `npm install`
+`npm install`
 
 ### 2C. Run the project
 
 Run the frontend with hot-reloading: `npm run start:live`
 
-The frontend should now be accessible at: <<<<<<<<http://127.0.0.1:<PORT_NUMBER>>>>>>>>>.
+The frontend should now be accessible at: `http://127.0.0.1:<PORT_NUMBER>`
 
 ## Frontend Tips
 

@@ -120,17 +120,6 @@ async def update_organization(
 async def delete_organisations(
     organization_id: int, db: Session = Depends(database.get_db)
 ):
-    """Upload an image file.
-
-    This function saves an uploaded image file to the specified directory and returns the filename.
-
-    Args:
-        db (Session): SQLAlchemy database session.
-        file (UploadFile): The uploaded image file.
-
-    Returns:
-        str: The filename of the uploaded image.
-    """
     organization = await organization_crud.get_organisation_by_id(db, organization_id)
 
     if not organization:

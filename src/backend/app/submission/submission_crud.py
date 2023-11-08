@@ -201,14 +201,6 @@ def create_zip_file(files, output_file_path):
 
 
 async def convert_json_to_osm_xml(file_path):
-    """Converts a JSON file to an OSM XML file.
-
-    Args:
-        file_path (str): The path to the JSON file to be converted.
-
-    Returns:
-        str: The path to the created OSM XML file.
-    """
     # TODO refactor to simply use json2osm(file_path)
     jsonin = JsonDump()
     infile = Path(file_path)
@@ -253,14 +245,6 @@ async def convert_json_to_osm_xml(file_path):
 
 
 async def convert_json_to_osm(file_path):
-    """Converts a JSON file to an OSM XML file and a GeoJSON file.
-
-    Args:
-        file_path (str): The path to the JSON file to be converted.
-
-    Returns:
-        Tuple[str, str]: A tuple containing the paths to the created OSM XML and GeoJSON files.
-    """
     # TODO refactor to simply use json2osm(file_path)
     jsonin = JsonDump()
     infile = Path(file_path)
@@ -304,16 +288,6 @@ async def convert_json_to_osm(file_path):
 
 
 async def convert_to_osm_for_task(odk_id: int, form_id: int, xform: any):
-    """Converts submission data from ODK Central to OSM XML and GeoJSON files.
-
-    Args:
-        odk_id (int): The ID of the ODK project.
-        form_id (int): The ID of the ODK form.
-        xform (any): An instance of an ODK form object.
-
-    Returns:
-        Tuple[str, str]: A tuple containing the paths to the created OSM XML and GeoJSON files.
-    """
     # This file stores the submission data.
     file_path = f"/tmp/{odk_id}_{form_id}.json"
 
@@ -331,16 +305,6 @@ async def convert_to_osm_for_task(odk_id: int, form_id: int, xform: any):
 
 
 async def convert_to_osm(db: Session, project_id: int, task_id: int):
-    """Converts submission data from a project to OSM XML and GeoJSON files and returns a ZIP file containing the converted files.
-
-    Args:
-        db (Session): A database session.
-        project_id (int): The ID of the project.
-        task_id (int): The ID of the task.
-
-    Returns:
-        FileResponse: A FileResponse object containing the ZIP file with the converted OSM XML and GeoJSON files.
-    """
     project_info = project_crud.get_project(db, project_id)
 
     # Return exception if project is not found
@@ -415,15 +379,6 @@ async def convert_to_osm(db: Session, project_id: int, task_id: int):
 
 
 def download_submission_for_project(db, project_id):
-    """Downloads submission data for a project.
-
-    Args:
-        db (Session): A database session.
-        project_id (int): The ID of the project.
-
-    Returns:
-        None
-    """
     print("Download submission for a project")
 
     project_info = project_crud.get_project(db, project_id)
@@ -582,17 +537,6 @@ def get_project_submission(db: Session, project_id: int):
 
 
 def download_submission(db: Session, project_id: int, task_id: int, export_json: bool):
-    """Downloads submission data for a project.
-
-    Args:
-        db (Session): A database session.
-        project_id (int): The ID of the project.
-        task_id (int): The ID of the task. If not provided, submission data for all tasks in the project are downloaded.
-        export_json (bool): If True, the submission data is exported as a JSON file. If False, the submission data is exported as a ZIP file.
-
-    Returns:
-        Union[FileResponse, Response]: A FileResponse object containing the downloaded submission data as a ZIP or JSON file.
-    """
     project_info = project_crud.get_project(db, project_id)
 
     # Return empty list if project is not found
@@ -770,15 +714,6 @@ def get_submission_points(db: Session, project_id: int, task_id: int = None):
 
 
 async def get_submission_count_of_a_project(db: Session, project_id: int):
-    """Gets the submission count for a project.
-
-    Args:
-        db (Session): A database session.
-        project_id (int): The ID of the project.
-
-    Returns:
-        int: The submission count for the specified project.
-    """
     project_info = project_crud.get_project(db, project_id)
 
     # Return empty list if project is not found

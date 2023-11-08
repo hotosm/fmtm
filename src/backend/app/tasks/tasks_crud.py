@@ -22,7 +22,7 @@ from fastapi import HTTPException
 from geoalchemy2.shape import from_shape
 from geojson import dump
 from loguru import logger as log
-from osm_fieldwork.make_data_extract import PostgresClient
+from osm_rawdata.postgres import PostgresClient
 from shapely.geometry import shape
 from sqlalchemy import column, select, table
 from sqlalchemy.orm import Session
@@ -32,7 +32,7 @@ from app.config import settings
 
 from ..central import central_crud
 from ..db import db_models
-from ..db.postgis_utils import geometry_to_geojson, get_centroid
+from ..db.postgis_utils import geometry_to_geojson
 from ..models.enums import (
     TaskStatus,
     get_action_for_status_change,
@@ -303,7 +303,6 @@ def convert_to_app_task(db_task: db_models.DbTask):
             f"Project ID {db_task.project_id} | Task ID "
             f"{db_task.id} | Converting DB Task to App Task"
         )
-        log.debug("")
 
         app_task: tasks_schemas.Task = db_task
         app_task.task_status_str = tasks_schemas.TaskStatusOption[
@@ -320,7 +319,7 @@ def convert_to_app_task(db_task: db_models.DbTask):
             app_task.outline_geojson = geometry_to_geojson(
                 db_task.outline, properties, db_task.id
             )
-            app_task.outline_centroid = get_centroid(db_task.outline)
+            # app_task.outline_centroid = get_centroid(db_task.outline)
 
         if db_task.lock_holder:
             app_task.locked_by_uid = db_task.lock_holder.id
@@ -407,7 +406,7 @@ async def update_task_files(
     task_polygons = f"/tmp/{project_name}_{category}_{task_id}.geojson"
 
     # Update data extracts in the odk central
-    pg = PostgresClient(settings.UNDERPASS_API_URL, "underpass")
+    pg = PostgresClient("underpass")
 
     category = "buildings"
 

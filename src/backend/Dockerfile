@@ -18,9 +18,11 @@ ARG PYTHON_IMG_TAG=3.10
 
 FROM docker.io/python:${PYTHON_IMG_TAG}-slim-bookworm as base
 ARG APP_VERSION
+ARG COMMIT_REF
 ARG PYTHON_IMG_TAG
 ARG MAINTAINER=admin@hotosm.org
 LABEL org.hotosm.fmtm.app-version="${APP_VERSION}" \
+      org.hotosm.fmtm.git-commit-ref="${COMMIT_REF:-none}" \
       org.hotosm.fmtm.python-img-tag="${PYTHON_IMG_TAG}" \
       org.hotosm.fmtm.maintainer="${MAINTAINER}" \
       org.hotosm.fmtm.api-port="8000"
@@ -90,6 +92,7 @@ RUN set -ex \
     -y --no-install-recommends \
         "nano" \
         "curl" \
+        "wait-for-it" \
         "libpcre3" \
         "mime-support" \
         "postgresql-client" \
@@ -98,8 +101,8 @@ RUN set -ex \
         "libproj25" \
         "libgeos-c1v5" \
     && rm -rf /var/lib/apt/lists/*
-COPY container-entrypoint.sh /
-ENTRYPOINT ["/container-entrypoint.sh"]
+COPY *-entrypoint.sh /
+ENTRYPOINT ["/app-entrypoint.sh"]
 # Copy Python deps from build to runtime
 COPY --from=build \
     /root/.local \
@@ -107,22 +110,25 @@ COPY --from=build \
 WORKDIR /opt
 # Add app code
 COPY app/ /opt/app/
+COPY migrations/ /opt/migrations/
 # Add non-root user, permissions
 RUN useradd -r -u 1001 -m -c "hotosm account" -d /home/appuser -s /bin/false appuser \
     && mkdir -p /opt/logs /opt/tiles \
     && chown -R appuser:appuser /opt /home/appuser \
-    && chmod +x /container-entrypoint.sh
+    && chmod +x /app-entrypoint.sh /migrate-entrypoint.sh
 # Add volumes for persistence
 VOLUME /opt/logs
 VOLUME /opt/tiles
 VOLUME /opt/app/images
 # Change to non-root user
 USER appuser
+# Add Healthcheck
+HEALTHCHECK --start-period=10s --interval=5s --retries=8 --timeout=5s \
+    CMD curl --fail http://localhost:8000 || exit 1
 
 
 
 FROM runtime as debug-no-odk
-USER appuser
 COPY --from=extract-deps --chown=appuser \
     /opt/python/requirements-debug.txt /opt/python/
 RUN pip install --user --upgrade --no-warn-script-location \
@@ -137,8 +143,8 @@ CMD ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", \
 
 
 FROM debug-no-odk as debug-with-odk
-# Add the SSL cert for debug odkcentral
 USER root
+# Add the SSL cert for debug odkcentral
 COPY --from=ghcr.io/hotosm/fmtm/odkcentral-proxy:latest \
     /etc/nginx/central-fullchain.crt /usr/local/share/ca-certificates/
 RUN update-ca-certificates
@@ -146,26 +152,28 @@ USER appuser
 
 
 
-FROM debug-no-odk as ci
+FROM debug-with-odk as ci
 # Run all ci as root
 USER root
-ENV PATH="/root/.local/bin:$PATH"
-RUN set -ex \
+ARG PYTHON_IMG_TAG
+COPY --from=extract-deps \
+    /opt/python/requirements-ci.txt /opt/python/
+# Copy packages from user to root dirs (run ci as root)
+RUN mv /home/appuser/.local/bin/* /usr/local/bin/ \
+    && mv /home/appuser/.local/lib/python${PYTHON_IMG_TAG}/site-packages/* \
+    /usr/local/lib/python${PYTHON_IMG_TAG}/site-packages/ \
+    && set -ex \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install \
     -y --no-install-recommends \
-        "gosu" \
         "git" \
-    && rm -rf /var/lib/apt/lists/*
-RUN mv /home/appuser/.local /root/.local
-COPY --from=extract-deps \
-    /opt/python/requirements-ci.txt /opt/python/
-RUN pip install --user --upgrade --no-warn-script-location \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --upgrade --no-warn-script-location \
     --no-cache-dir -r \
     /opt/python/requirements-ci.txt \
-    && rm -r /opt/python
-# Pre-compile packages to .pyc (init speed gains)
-RUN python -c "import compileall; compileall.compile_path(maxlevels=10, quiet=1)"
+    && rm -r /opt/python \
+    # Pre-compile packages to .pyc (init speed gains)
+    && python -c "import compileall; compileall.compile_path(maxlevels=10, quiet=1)"
 # Override entrypoint, as not possible in Github action
 ENTRYPOINT [""]
 CMD [""]

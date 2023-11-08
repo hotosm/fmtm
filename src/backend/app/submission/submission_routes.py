@@ -139,7 +139,12 @@ async def convert_to_osm(
     task_id: int = None,
     db: Session = Depends(database.get_db),
 ):
-    """Converts submission data to OSM format.
+    """This api converts the submission to osm format.
+    It takes two parameter: project_id and task_id.
+
+    task_id is optional.
+    If task_id is provided, this endpoint converts the submission of this task.
+    If task_id is not provided, this endpoint converts the submission of the whole project.
 
     Args:
         project_id (int): The ID of the project. This endpoint converts submission data for this project.
@@ -157,15 +162,6 @@ async def get_submission_count(
     project_id: int,
     db: Session = Depends(database.get_db),
 ):
-    """Returns the submission count for a project.
-
-    Args:
-        project_id (int): The ID of the project. This endpoint returns the submission count for this project.
-        db (Session, optional): A database session. Defaults to Depends(database.get_db).
-
-    Returns:
-        int: The submission count for the specified project.
-    """
     return await submission_crud.get_submission_count_of_a_project(db, project_id)
 
 
@@ -174,15 +170,6 @@ async def conflate_osm_date(
     project_id: int,
     db: Session = Depends(database.get_db),
 ):
-    """Conflates OSM data for a project.
-
-    Args:
-        project_id (int): The ID of the project. This endpoint conflates OSM data for this project.
-        db (Session, optional): A database session. Defaults to Depends(database.get_db).
-
-    Returns:
-        Any: The conflated OSM data for the specified project.
-    """
     # Submission JSON
     submission = submission_crud.get_all_submissions(db, project_id)
 

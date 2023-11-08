@@ -28,7 +28,7 @@ The FMTM web app is a Python/Flask/Leaflet app that serves as a frontend for the
 The FMTM codebase consists of:
 
 - An API backend in FastAPI (code in: `src/backend`)
-- A frontend website (soon to be a PWA) in react (code in: `src/frontend`)
+- A frontend website in React (code in: `src/frontend`)
 
 ### Manager Web Interface (with PC browser-friendlymap view)
 
@@ -279,6 +279,11 @@ OSM_URL=https://www.openstreetmap.org
 OSM_SCOPE=read_prefs
 OSM_LOGIN_REDIRECT_URI=http://127.0.0.1:8080/osmauth/
 OSM_SECRET_KEY=<random_key_for_development>
+
+### S3 File Storage ###
+S3_ENDPOINT="http://s3:9000"
+S3_ACCESS_KEY=`<a_long_access_key>`
+S3_SECRET_KEY=`<a_long_secret_key>`
 
 ### Database (optional) ###
 CENTRAL_DB_HOST=central-db

@@ -1,10 +1,11 @@
 FROM docker.io/node:18
-ARG API_URL
-ENV API_URL="${API_URL}"
-ARG FRONTEND_MAIN_URL
-ENV FRONTEND_MAIN_URL="${FRONTEND_MAIN_URL}"
+ARG VITE_API_URL
+ENV VITE_API_URL="${VITE_API_URL}"
 WORKDIR /app
-COPY main/package*.json ./
-RUN npm install
+COPY ./package.json ./pnpm-lock.yaml ./
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+RUN pnpm install
 ENV NODE_ENV development
 ENTRYPOINT ["npm", "run", "start:live"]
