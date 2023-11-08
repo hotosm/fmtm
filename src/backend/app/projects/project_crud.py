@@ -2357,10 +2357,10 @@ def get_project_tiles(
     try:
         db.add(tile_path_instance)
         db.commit()
-        
+
         get_id = task_id or project_id
         entity = "tasks" if task_id else "projects"
-        
+
         # Project/task Outline
         log.debug(f"Getting bbox : {get_id}")
         query = text(
