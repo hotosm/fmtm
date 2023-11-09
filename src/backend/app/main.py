@@ -37,6 +37,7 @@ from .db.database import get_db
 from .organization import organization_routes
 from .projects import project_routes
 from .projects.project_crud import read_xlsforms
+from .scheduler import scheduler
 from .submission import submission_routes
 from .tasks import tasks_routes
 from .users import user_routes
@@ -148,6 +149,8 @@ def get_logger():
 
 
 api = get_application()
+
+scheduler.start()
 
 
 @api.exception_handler(RequestValidationError)
