@@ -22,7 +22,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -39,6 +38,8 @@ from loguru import logger as log
 from osm_fieldwork.make_data_extract import getChoices
 from osm_fieldwork.xlsforms import xlsforms_path
 from sqlalchemy.orm import Session
+
+from app.scheduler import scheduler
 
 from ..central import central_crud
 from ..db import database, db_models
@@ -633,15 +634,11 @@ async def generate_files(
         db, task_id=background_task_id, project_id=project_id
     )
 
-    sched = AsyncIOScheduler()
-    sched.start()
-
-    job = sched.add_job(
+    job = scheduler.add_job(
         project_crud.generate_appuser_files,
         "date",
         run_date=datetime.now(),
         args=[
-            db,
             project_id,
             extract_polygon,
             contents,
@@ -653,23 +650,9 @@ async def generate_files(
         id=str(background_task_id),
     )
 
-    # log.debug(f"Submitting {background_task_id} to background tasks stack")
-    # background_tasks.add_task(
-    #     project_crud.generate_appuser_files,
-    #     db,
-    #     project_id,
-    #     extract_polygon,
-    #     contents,
-    #     extracts_contents if data_extracts else None,
-    #     xform_title,
-    #     file_ext[1:] if upload else "xls",
-    #     background_task_id,
-    # )
-
     return {
         "Message": f"{project_id}",
         "task_id": f"{background_task_id}",
-        # "job":job
     }
 
 
