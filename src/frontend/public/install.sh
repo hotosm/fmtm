@@ -111,7 +111,7 @@ check_user_not_root() {
             yellow_echo "User 'svcfmtm' found."
         else
             yellow_echo "Creating user 'svcfmtm'."
-            useradd -m -s /bin/bash svcfmtm 2>/dev/null
+            useradd -m -d /home/svcfmtm -s /bin/bash svcfmtm 2>/dev/null
         fi
 
         echo
@@ -465,7 +465,7 @@ get_repo() {
 
     echo "Cloning repo $repo_url to dir: /tmp/${RANDOM_DIR}"
     echo
-    git clone --branch "build/nginx-certbot" --depth 1 "$repo_url"
+    git clone --branch "${BRANCH_NAME}" --depth 1 "$repo_url"
 
     # Check for existing .env files
     existing_dotenv=""
