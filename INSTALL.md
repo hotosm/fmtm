@@ -5,13 +5,13 @@
 Use the provided bash script:
 
 ```bash
-# Download the script
-curl -L https://get.fmtm.dev -o install.sh
-# OR (alternative URL)
-curl -L https://fmtm.hotosm.org/install.sh
+# Option A) If you already cloned the repo
+bash src/frontend/public/install.sh
 
-# Run the script
+# Option B) Download the script & run
+curl -L https://get.fmtm.dev -o install.sh
 bash install.sh
+# Alternative URL: https://fmtm.hotosm.org/install.sh
 
 # Then follow the prompts
 ```
