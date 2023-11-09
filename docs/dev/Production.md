@@ -142,7 +142,19 @@ runs, and you can access the working website from the domain name!
 - To access the database via GUI tool such as PGAdmin, it is possible using port tunneling.
 
 ```bash
-ssh username@server.domain -N -f -L 5430:localhost:5432
+ssh username@server.domain -N -f -L {local_port}:localhost:{remote_port}
+
+# Example
+ssh root@fmtm.hotosm.org -N -f -L 5430:localhost:5433
 ```
 
 This will map port 5432 on the remote machine to port 5430 on your local machine.
+
+## Manual Database Backups
+
+```bash
+backup_filename="fmtm-db-backup-$(date +'%Y-%m-%d').sql.gz"
+echo $backup_filename
+
+docker exec -i -e PGPASSWORD=PASSWORD_HERE fmtm_db pg_dump --verbose --format c -U fmtm fmtm | gzip -9 > "$backup_filename"
+```

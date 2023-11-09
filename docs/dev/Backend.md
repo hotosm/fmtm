@@ -20,7 +20,7 @@ The easiest way to get up and running is by using the FMTM Docker deployment. Do
 5. Once everything is pulled, from the command line run: `docker compose up -d api`
 6. If everything goes well you should now be able to **navigate to the project in your browser:** `http://api.fmtm.localhost:7050/docs`
 
-> Note: If that link doesn't work, check the logs with `docker log fmtm_api`.
+> Note: If that link doesn't work, check the logs with `docker log fmtm-api`.
 
 > Note: the database host `fmtm-db` is automatically resolved by docker compose to the database container IP.
 
