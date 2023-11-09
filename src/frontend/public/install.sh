@@ -137,22 +137,23 @@ check_user_not_root() {
 
         # Check if input is direct bash script call (i.e. ends in .sh)
         ext="$(basename "$0")"
-        if [ "${ext: -3}" == ".sh" ]; then
-            # User called script directly
+        if [ "${ext: -3}" = ".sh" ]; then
+            # User called script directly, copy to /home/svcfmtm/install.sh
             root_script_path="$(readlink -f "$0")"
             user_script_path="/home/svcfmtm/$(basename "$0")"
             cp "$root_script_path" "$user_script_path"
             chmod +x "$user_script_path"
+
             machinectl --quiet shell \
                 --setenv=RUN_AS_ROOT=true \
                 --setenv=DOCKER_HOST=${DOCKER_HOST} \
-                svcfmtm@ /bin/bash -c "$user_script_path $*"
+                svcfmtm@ /bin/bash -c "$user_script_path"
         else
-            # User called script remotely
+            # User called script remotely, so do the same
             machinectl --quiet shell \
                 --setenv=RUN_AS_ROOT=true \
                 --setenv=DOCKER_HOST=${DOCKER_HOST} \
-                svcfmtm@ /bin/bash -c "$0 $*"
+                svcfmtm@ /bin/bash -c "curl -fsSL https://get.fmtm.dev | bash"
         fi
 
         exit 0
@@ -274,7 +275,7 @@ update_docker_ps_format() {
     heading_echo "Updating docker ps Formatting"
 
     # Root user
-    if [ "$RUN_AS_ROOT" == true ]; then
+    if [ "$RUN_AS_ROOT" = true ]; then
         sudo mkdir -p /root/.docker
         sudo touch /root/.docker/config.json
         sudo tee /root/.docker/config.json <<EOF > /dev/null 2>&1
@@ -304,7 +305,7 @@ add_vars_to_bashrc() {
     docker_host_var="export DOCKER_HOST=unix:///run/user/$user_id/docker.sock"
     dc_alias_cmd="alias dc='docker compose'"
 
-    if [ "$RUN_AS_ROOT" == true ]; then
+    if [ "$RUN_AS_ROOT" = true ]; then
         # Check if DOCKER_HOST is already defined in /root/.bashrc
         if ! sudo grep -q "$docker_host_var" /root/.bashrc; then
             echo "Adding DOCKER_HOST var to /root/.bashrc."
@@ -356,7 +357,7 @@ install_docker() {
     echo
     read -rp "Enter 'y' to install, anything else to continue: " install_docker
 
-    if [[ "$install_docker" == "y" ||  "$install_docker" == "yes" ]]; then
+    if [[ "$install_docker" = "y" ||  "$install_docker" = "yes" ]]; then
         check_os
         remove_old_docker_installs
         install_dependencies
@@ -369,7 +370,7 @@ install_docker() {
         update_docker_ps_format
         add_vars_to_bashrc
     else
-        header_echo "Docker is Required. Aborting." "red"
+        heading_echo "Docker is Required. Aborting." "red"
         exit 1
     fi
 }
@@ -430,12 +431,12 @@ check_if_test() {
         if [[ "$test" = "y" || "$test" = "yes" ]]
         then
             IS_TEST=true
-            export DEBUG=True
+            export DEBUG="True"
             export LOG_LEVEL="DEBUG"
             echo "Using debug configuration."
         else
             IS_TEST=false
-            export DEBUG=False
+            export DEBUG="False"
             export LOG_LEVEL="INFO"
             break
         fi
@@ -464,11 +465,11 @@ get_repo() {
 
     echo "Cloning repo $repo_url to dir: /tmp/${RANDOM_DIR}"
     echo
-    git clone --branch "${BRANCH_NAME}" --depth 1 "$repo_url"
+    git clone --branch "build/nginx-certbot" --depth 1 "$repo_url"
 
     # Check for existing .env files
     existing_dotenv=""
-    if [ "${RUN_AS_ROOT}" == true ] && sudo test -f "/root/fmtm/${DOTENV_NAME}"; then
+    if [ "${RUN_AS_ROOT}" = true ] && sudo test -f "/root/fmtm/${DOTENV_NAME}"; then
         existing_dotenv="/root/fmtm/${DOTENV_NAME}"
     elif [ -f "${current_dir}/${DOTENV_NAME}" ]; then
         existing_dotenv="${current_dir}/${DOTENV_NAME}"
@@ -479,7 +480,7 @@ get_repo() {
         echo "Found existing dotenv file."
         echo
         echo "Copying $existing_dotenv --> /tmp/${RANDOM_DIR}/fmtm/${DOTENV_NAME}"
-        if [ "${RUN_AS_ROOT}" == true ]; then
+        if [ "${RUN_AS_ROOT}" = true ]; then
             sudo cp "$existing_dotenv" "/tmp/${RANDOM_DIR}/fmtm/"
         else
             cp "$existing_dotenv" "/tmp/${RANDOM_DIR}/fmtm/"
@@ -634,7 +635,7 @@ set_external_s3() {
     echo
     export S3_SECRET_KEY=${S3_SECRET_KEY}
 
-    if [ "$BRANCH_NAME" == "main" ] then;
+    if [ "$BRANCH_NAME" = "main" ]; then
         yellow_echo "Production deployments require a preconfigured S3 bucket."
         echo
         yellow_echo "The bucket should be public."
@@ -783,6 +784,13 @@ generate_dotenv() {
     echo
     cat ${DOTENV_NAME}
     echo
+    if [ "${RUN_AS_ROOT}" = true ] && sudo test ! -f "/root/fmtm/${DOTENV_NAME}"; then
+        echo "Copying generated dotenv to /root/fmtm/${DOTENV_NAME}"
+        cp "${DOTENV_NAME}" "/root/fmtm/${DOTENV_NAME}" || true
+    elif [ ! -f "/home/svcfmtm/${DOTENV_NAME}" ]; then
+        echo "Copying generated dotenv to /home/svcfmtm/fmtm/${DOTENV_NAME}"
+        cp "${DOTENV_NAME}" "/home/svcfmtm/fmtm/${DOTENV_NAME}" || true
+    fi
 }
 
 prompt_user_gen_dotenv() {
@@ -796,7 +804,7 @@ prompt_user_gen_dotenv() {
     install_envsubst_if_missing
 
     if [ $IS_TEST != true ]; then
-        if [ "$BRANCH_NAME" == "main" ]; then
+        if [ "$BRANCH_NAME" = "main" ]; then
             set_external_odk
             check_external_database
             set_external_s3
@@ -897,7 +905,7 @@ install_fmtm() {
     run_compose_stack
     final_output
 
-    if [[ "$RUN_AS_ROOT" == true ]]; then
+    if [[ "$RUN_AS_ROOT" = true ]]; then
         # Remove from sudoers
         sudo rm /etc/sudoers.d/fmtm-sudoers
     fi
