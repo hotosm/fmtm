@@ -17,6 +17,7 @@ bash install.sh
 ```
 
 > Note: it is best to run this script as a user other than root.
+>
 > However, if you run as root, a user svcfmtm will be created for you.
 
 ## Manual Way
@@ -123,14 +124,14 @@ This is the easiest way to get started with FMTM.
 Docker runs each service inside **containers**, fully isolated from your
 host operating system.
 
-##### Prerequisite
+#### Prerequisite
 
 You will need to [Install Docker](https://docs.docker.com/engine/install/)
 and ensure that it is running on your local machine.
 
 Then from the command line, navigate to the top level directory of the FMTM project.
 
-##### Select the install type
+#### Select the install type
 
 Determine the what type of FMTM install you would like:
 
@@ -159,7 +160,7 @@ export GIT_BRANCH={your_selection}
 export GIT_BRANCH=development
 ```
 
-##### Pull the Images
+#### Pull the Images
 
 ```bash
 docker compose -f "docker-compose.${GIT_BRANCH}.yml" pull
@@ -167,7 +168,7 @@ docker compose -f "docker-compose.${GIT_BRANCH}.yml" pull
 
 > This will pull the latest containers for the branch you selected.
 
-##### Build the Frontend
+#### Build the Frontend
 
 Before we can run, you need to build your version of the frontend.
 
@@ -177,7 +178,7 @@ This is because the frontend contains variable specific to your deployment.
 docker compose -f "docker-compose.${GIT_BRANCH}.yml" build ui
 ```
 
-##### Start the Containers
+#### Start the Containers
 
 ```bash
 docker compose -f "docker-compose.${GIT_BRANCH}.yml" up -d
@@ -195,6 +196,7 @@ http://fmtm.localhost:7050
 ```
 
 > Note: If those link doesn't work, check the logs with `docker logs fmtm-api`.
+>
 > Note: Use `docker ps` to view all container names.
 
 ### Setup ODK Central User (Optional)
@@ -218,7 +220,9 @@ docker-compose exec central odk-cmd --email YOUREMAIL@ADDRESSHERE.com user-promo
 If running a local test version, test data is available to get started quickly.
 
 - Navigate to the `import-test-data` endpoint in the API docs page:
-  <http://api.fmtm.localhost:7050/docs#/debug/import_test_data_debug_import_test_data_get>
+
+<http://api.fmtm.localhost:7050/docs#/debug/import_test_data_debug_import_test_data_get>
+
 - Click `Try it out`, then `execute`.
 
 ### Check Authentication (Optional)
