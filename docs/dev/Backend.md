@@ -52,7 +52,9 @@ Running the database in Docker means postgres does not need to be installed on y
 2. Start an instance of Postgres (with Postgis):
 
 ```bash
-docker run -d --name fmtm_db -e POSTGRES_PASSWORD=xxxx -p 5432:5432 postgis/postgis:15-3.3
+GIT_BRANCH=development
+
+docker run -d --name fmtm-db-${GIT_BRANCH} -e POSTGRES_PASSWORD=xxxx -p 5432:5432 postgis/postgis:15-3.3
 ```
 
 The database should be accessible at localhost:5432.

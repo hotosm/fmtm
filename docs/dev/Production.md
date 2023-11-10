@@ -155,8 +155,19 @@ This will map port 5432 on the remote machine to port 5430 on your local machine
 ## Manual Database Backups
 
 ```bash
+GIT_BRANCH=development
 backup_filename="fmtm-db-backup-$(date +'%Y-%m-%d').sql.gz"
 echo $backup_filename
 
-docker exec -i -e PGPASSWORD=PASSWORD_HERE fmtm_db pg_dump --verbose --format c -U fmtm fmtm | gzip -9 > "$backup_filename"
+docker exec -i -e PGPASSWORD=PASSWORD_HERE fmtm-db-${GIT_BRANCH} pg_dump --verbose --format c -U fmtm fmtm | gzip -9 > "$backup_filename"
+```
+
+## Manual Database Restores
+
+```bash
+# On a different machine (else change the container name)
+GIT_BRANCH=development
+backup_filename=fmtm-db-backup-XXXX-XX-XX-sql.gz
+
+cat "$backup_filename" | gunzip | docker exec -i -e PGPASSWORD=NEW_PASSWORD_HERE fmtm-db-${GIT_BRANCH} pg_restore --verbose -U fmtm -d fmtm
 ```
