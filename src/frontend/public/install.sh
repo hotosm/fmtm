@@ -715,10 +715,7 @@ set_domains() {
 set_osm_credentials() {
     heading_echo "OSM OAuth2 Credentials"
 
-    redirect_uri="http://127.0.0.1:7051/osmauth/"
-    if [ $IS_TEST != true ]; then
-        redirect_uri="https://${FMTM_DOMAIN}/osmauth/"
-    fi
+    redirect_uri="http${FMTM_DOMAIN:+s}://${FMTM_DOMAIN:-127.0.0.1:7051}/osmauth/"
 
     yellow_echo "App credentials are generated from your OSM user profile."
     echo
@@ -739,7 +736,6 @@ set_osm_credentials() {
     export OSM_CLIENT_SECRET=${OSM_CLIENT_SECRET}
     secret_key=$(tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 50)
     export OSM_SECRET_KEY=${secret_key}
-    export OSM_LOGIN_REDIRECT_URI=${redirect_uri}
 }
 
 check_change_port() {

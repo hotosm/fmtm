@@ -252,7 +252,7 @@ check_external_database() {
 }
 
 set_external_s3() {
-    heading_echo "S3 Credentials"
+    pretty_echo "S3 Credentials"
 
     echo "Please enter the S3 host endpoint."
     read -e -p "S3 Endpoint: " S3_ENDPOINT
@@ -269,10 +269,10 @@ set_external_s3() {
     echo
     export S3_SECRET_KEY=${S3_SECRET_KEY}
 
-    if [ "$BRANCH_NAME" == "main" ] then;
-        yellow_echo "Production deployments require a preconfigured S3 bucket."
+    if [ "$BRANCH_NAME" == "main" ]; then
+        echo "Production deployments require a preconfigured S3 bucket."
         echo
-        yellow_echo "The bucket should be public."
+        echo "The bucket should be public."
         echo
         echo "Please enter the bucket name."
         read -e -p "S3 Bucket Name: " S3_BUCKET_NAME_BASEMAPS
@@ -300,7 +300,7 @@ set_domains() {
         if [ "$fmtm_domain" = "" ]
         then
             echo "Invalid input!"
-        else 
+        else
             export FMTM_DOMAIN="${fmtm_domain}"
             break
         fi
@@ -346,10 +346,7 @@ set_domains() {
 set_osm_credentials() {
     pretty_echo "OSM OAuth2 Credentials"
 
-    redirect_uri="http://127.0.0.1:7051/osmauth/"
-    if [ $IS_TEST != true ]; then
-        redirect_uri="https://${FMTM_DOMAIN}/osmauth/"
-    fi
+    redirect_uri="http${FMTM_DOMAIN:+s}://${FMTM_DOMAIN:-127.0.0.1:7051}/osmauth/"
 
     echo "App credentials are generated from your OSM user profile."
     echo
@@ -370,11 +367,10 @@ set_osm_credentials() {
     export OSM_CLIENT_SECRET=${OSM_CLIENT_SECRET}
     secret_key=$(tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 50)
     export OSM_SECRET_KEY=${secret_key}
-    export OSM_LOGIN_REDIRECT_URI=${redirect_uri}
 }
 
 check_change_port() {
-    heading_echo "Set Default Port"
+    pretty_echo "Set Default Port"
     echo "The default port for local development is 7050."
     echo
     read -e -p "Enter a different port if required, or nothing for default: " fmtm_port
