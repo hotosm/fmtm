@@ -117,6 +117,10 @@ This can be created interactively by running:
 bash scripts/gen-env.sh
 ```
 
+> Note: If extra cors origins are required for testing, the variable
+> `EXTRA_CORS_ORIGINS` is a set of comma separated strings, e.g.:
+> <http://fmtm.localhost:7050,http://some.other.domain>
+
 ### Start the API with Docker
 
 This is the easiest way to get started with FMTM.

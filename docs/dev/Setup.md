@@ -250,51 +250,21 @@ The FMTM uses OAUTH2 with OSM to authenticate users. To properly configure your 
 
 4. Now Copy your Client ID and Client Secret. Put them in the `OSM_CLIENT_ID` and `OSM_CLIENT_SECRET` field of your `.env` file
 
-### 2. Create an `.env` File
+#### 2. Create an `.env` File
 
-Environmental variables are used throughout this project. To get started, create `.env` file in the top level dir, Sample is `.env.example`
+Environmental variables are used throughout this project.
+To get started, create `.env` file in the top level dir,
+a sample is located at `.env.example`.
 
-    cp .env.example .env
+This can be created interactively by running:
 
-Your env should look like this:
-
-```dotenv
-### ODK Central ###
-ODK_CENTRAL_URL=https://proxy
-ODK_CENTRAL_USER=`<any_valid_email_address>`
-ODK_CENTRAL_PASSWD=`<password_of_central_user>`
-
-### FMTM ###
-# DEBUG=True
-# LOG_LEVEL=DEBUG
-FMTM_DOMAIN=fmtm.localhost
-
-### OSM ###
-OSM_CLIENT_ID=`<OSM_CLIENT_ID_FROM_ABOVE>`
-OSM_CLIENT_SECRET=`<OSM_CLIENT_SECRET_FROM_ABOVE>`
-OSM_URL=https://www.openstreetmap.org
-OSM_SCOPE=read_prefs
-OSM_LOGIN_REDIRECT_URI=http://127.0.0.1:7051/osmauth/
-OSM_SECRET_KEY=<random_key_for_development>
-
-### S3 File Storage ###
-S3_ENDPOINT="http://s3:9000"
-S3_ACCESS_KEY=`<a_long_access_key>`
-S3_SECRET_KEY=`<a_long_secret_key>`
-
-### Database (optional) ###
-CENTRAL_DB_HOST=central-db
-CENTRAL_DB_USER=odk
-CENTRAL_DB_PASSWORD=odk
-CENTRAL_DB_NAME=odk
-
-FMTM_DB_HOST=fmtm-db
-FMTM_DB_USER=fmtm
-FMTM_DB_PASSWORD=fmtm
-FMTM_DB_NAME=fmtm'
+```bash
+bash scripts/gen-env.sh
 ```
 
-> Note: If extra cors origins are required for testing, the variable `EXTRA_CORS_ORIGINS` is a set of comma separated strings, e.g. <http://fmtm.localhost:7050,http://some.other.domain>
+> Note: If extra cors origins are required for testing, the variable
+> `EXTRA_CORS_ORIGINS` is a set of comma separated strings, e.g.:
+> <http://fmtm.localhost:7050,http://some.other.domain>
 
 ## Verify Setup
 

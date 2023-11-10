@@ -49,35 +49,37 @@ with `cd fmtm`.
 
 ### Set up the environment and utilities to launch
 
-Create the env file from the example with `cp .env.example .env`. Edit
-that file to contain the needful (it should look like this):
+Create the env file interactively with:
 
-    # ODK Central
-    ODK_CENTRAL_URL=https://proxy
-    ODK_CENTRAL_USER=`<CHANGEME>`
-    ODK_CENTRAL_PASSWD=`<CHANGEME>`
+```bash
+bash scripts/gen-env.sh
+```
 
-    # FMTM
-    FMTM_DOMAIN=https://fmtm.hotosm.org
-    CERT_EMAIL=`<EMAIL_ADDRESS_TO_GENERATE_CERT_FOR>`
+OR
 
-    # OSM
-    OSM_CLIENT_ID=`<CHANGEME>`
-    OSM_CLIENT_SECRET=`<CHANGEME>`
-    OSM_URL=https://www.openstreetmap.org
-    OSM_SCOPE=read_prefs
-    OSM_LOGIN_REDIRECT_URI=`<FRONTEND_URL>`/osmauth/
-    OSM_SECRET_KEY=`<CHANGEME>`
+```bash
+cp .env.example .env
 
-    ### S3 File Storage ###
-    S3_ENDPOINT="http://s3:9000"
-    S3_ACCESS_KEY=`<CHANGEME>`
-    S3_SECRET_KEY=`<CHANGEME>`
+# Then edit values manually
+```
 
-    FMTM_DB_HOST=fmtm-db
-    FMTM_DB_USER=fmtm
-    FMTM_DB_PASSWORD=`<CHANGEME>`
-    FMTM_DB_NAME=fmtm
+Main variables of note to update:
+
+```dotenv
+ODK_CENTRAL_USER=`<CHANGEME>`
+ODK_CENTRAL_PASSWD=`<CHANGEME>`
+
+CERT_EMAIL=`<EMAIL_ADDRESS_TO_GENERATE_CERT_FOR>`
+OSM_CLIENT_ID=`<CHANGEME>`
+OSM_CLIENT_SECRET=`<CHANGEME>`
+
+S3_ACCESS_KEY=`<CHANGEME>`
+S3_SECRET_KEY=`<CHANGEME>`
+```
+
+> Note: If extra cors origins are required for testing, the variable
+> `EXTRA_CORS_ORIGINS` is a set of comma separated strings, e.g.:
+> <http://fmtm.localhost:7050,http://some.other.domain>
 
 #### API_PREFIX
 
