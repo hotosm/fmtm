@@ -158,7 +158,7 @@ export default function PrimaryAppBar() {
             {token != null ? (
               <CoreModules.Link style={{ textDecoration: 'none' }} to={'/'}>
                 <CoreModules.Button
-                  className="btnLogin"
+                  className="btnLogin fmtm-truncate"
                   style={appBarInnerStyles.btnLogin}
                   color="error"
                   onClick={handleOnSignOut}
@@ -168,12 +168,12 @@ export default function PrimaryAppBar() {
               </CoreModules.Link>
             ) : (
               <CoreModules.Button
-                className="btnLogin"
+                className="btnLogin fmtm-truncate"
                 style={appBarInnerStyles.btnLogin}
                 color="info"
                 onClick={() => createLoginWindow('/')}
               >
-                OSM Sign in
+                Sign in
               </CoreModules.Button>
             )}
           </CoreModules.Stack>
