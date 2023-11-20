@@ -285,6 +285,7 @@ def create_project_with_project_info(
     odk_credentials = project_metadata.odk_central
     hashtags = project_metadata.hashtags
     organisation_id = project_metadata.organisation_id
+    task_split_type = project_metadata.task_split_type
 
     # verify data coming in
     if not project_user:
@@ -344,6 +345,7 @@ def create_project_with_project_info(
         odk_central_password=pw,
         hashtags=hashtags,
         organisation_id=organisation_id,
+        task_split_type=task_split_type,
         # country=[project_metadata.country],
         # location_str=f"{project_metadata.city}, {project_metadata.country}",
     )

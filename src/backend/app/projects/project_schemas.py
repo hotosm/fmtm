@@ -22,7 +22,7 @@ from geojson_pydantic import Feature as GeojsonFeature
 from pydantic import BaseModel
 
 from ..db import db_models
-from ..models.enums import ProjectPriority, ProjectStatus
+from ..models.enums import ProjectPriority, ProjectStatus, TaskSplitType
 from ..tasks import tasks_schemas
 from ..users.user_schemas import User
 
@@ -52,6 +52,7 @@ class BETAProjectUpload(BaseModel):
     odk_central: ODKCentral
     hashtags: Optional[List[str]] = None
     organisation_id: Optional[int] = None
+    task_split_type: TaskSplitType
     # city: str
     # country: str
 
