@@ -34,6 +34,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   // const [uploadAreaFile, setUploadAreaFile] = useState(null);
+  const [isGeojsonWGS84, setIsGeojsonWG84] = useState(true);
 
   const projectDetails: any = useAppSelector((state) => state.createproject.projectDetails);
   const drawnGeojson = useAppSelector((state) => state.createproject.drawnGeojson);
@@ -101,6 +102,56 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
     dispatch(CreateProjectActions.SetTotalAreaSelection(null));
   };
 
+  useEffect(() => {
+    function isWGS84GeoJSONBasedOnCoordinates(geojson) {
+      try {
+        for (const feature of geojson.features) {
+          const coordinates = feature.geometry.coordinates;
+          for (const coord of coordinates[0]) {
+            const [longitude, latitude] = coord;
+            if (
+              isNaN(latitude) ||
+              isNaN(longitude) ||
+              latitude < -90 ||
+              latitude > 90 ||
+              longitude < -180 ||
+              longitude > 180
+            ) {
+              setIsGeojsonWG84(false);
+              return false; // Coordinates are out of WGS 84 range
+            }
+          }
+        }
+        setIsGeojsonWG84(true);
+        return true; // All coordinates are within WGS 84 range
+      } catch (error) {
+        setIsGeojsonWG84(false);
+        return false;
+      }
+    }
+    const isWGS84 = () => {
+      if (uploadAreaSelection === 'upload_file') {
+        return isWGS84GeoJSONBasedOnCoordinates(drawnGeojson);
+      }
+      return true;
+    };
+    if (!isWGS84() && drawnGeojson) {
+      showSpatialError();
+    }
+    return () => {};
+  }, [drawnGeojson]);
+  console.log(drawnGeojson, 'drawnGeojson');
+  const showSpatialError = () => {
+    dispatch(
+      CommonActions.SetSnackBar({
+        open: true,
+        message: 'Invalid spatial reference system. Please only import WGS84 (EPSG: 4326).',
+        variant: 'error',
+        duration: 6000,
+      }),
+    );
+  };
+
   const resetFile = () => {
     setGeojsonFile(null);
     handleCustomChange('uploadedAreaFile', null);
@@ -126,7 +177,14 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
       <div className="lg:fmtm-w-[80%] xl:fmtm-w-[83%] lg:fmtm-h-[60vh] xl:fmtm-h-[58vh] fmtm-bg-white fmtm-px-5 lg:fmtm-px-11 fmtm-py-6 lg:fmtm-overflow-y-scroll lg:scrollbar">
         <div className="fmtm-w-full fmtm-flex fmtm-gap-6 md:fmtm-gap-14 fmtm-flex-col md:fmtm-flex-row fmtm-h-full">
           <form
-            onSubmit={handleSubmit}
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!isGeojsonWGS84 && drawnGeojson) {
+                showSpatialError();
+              } else {
+                handleSubmit(e);
+              }
+            }}
             className="fmtm-flex fmtm-flex-col fmtm-gap-6 lg:fmtm-w-[40%] fmtm-justify-between"
           >
             <div>
