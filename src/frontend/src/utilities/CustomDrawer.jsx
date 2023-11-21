@@ -118,7 +118,7 @@ export default function CustomDrawer({ open, placement, size, type, onClose, onS
               >
                 {token['picture'] !== 'null' && token['picture'] ? (
                   <CoreModules.Stack
-                    className="fmtm-w-8 fmtm-h-8 fmtm-flex fmtm-items-center fmtm-justify-center fmtm-overflow-hidden fmtm-rounded-full fmtm-border-[1px]"
+                    className="fmtm-w-7 fmtm-h-7 fmtm-flex fmtm-items-center fmtm-justify-center fmtm-overflow-hidden fmtm-rounded-full fmtm-border-[1px]"
                     sx={{ display: { xs: 'block', md: 'none' }, mt: '3%' }}
                   >
                     <img src={token['picture']} alt="Profile Picture" />

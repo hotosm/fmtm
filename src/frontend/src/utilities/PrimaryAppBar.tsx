@@ -130,7 +130,7 @@ export default function PrimaryAppBar() {
             <CoreModules.Stack direction={'row'} spacing={1} justifyContent="center" alignItems="center">
               {token['picture'] !== 'null' && token['picture'] ? (
                 <CoreModules.Stack
-                  className="fmtm-w-8 fmtm-h-8 fmtm-flex fmtm-items-center fmtm-justify-center fmtm-overflow-hidden fmtm-rounded-full fmtm-border-[1px]"
+                  className="fmtm-w-7 fmtm-h-7 fmtm-flex fmtm-items-center fmtm-justify-center fmtm-overflow-hidden fmtm-rounded-full fmtm-border-[1px]"
                   sx={{ display: { xs: 'none', md: 'block' }, mt: '3%' }}
                 >
                   <img src={token['picture']} alt="Profile Picture" />
