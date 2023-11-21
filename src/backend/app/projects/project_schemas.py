@@ -17,10 +17,10 @@
 #
 
 import uuid
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from geojson_pydantic import Feature as GeojsonFeature
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.db import db_models
 from app.models.enums import ProjectPriority, ProjectStatus, TaskSplitType
