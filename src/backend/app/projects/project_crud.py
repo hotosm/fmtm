@@ -286,6 +286,8 @@ def create_project_with_project_info(
     hashtags = project_metadata.hashtags
     organisation_id = project_metadata.organisation_id
     task_split_type = project_metadata.task_split_type
+    task_split_dimension = project_metadata.task_split_dimension
+    task_num_buildings = project_metadata.task_num_buildings
 
     # verify data coming in
     if not project_user:
@@ -346,6 +348,8 @@ def create_project_with_project_info(
         hashtags=hashtags,
         organisation_id=organisation_id,
         task_split_type=task_split_type,
+        task_split_dimension=task_split_dimension,
+        task_num_buildings=task_num_buildings,
         # country=[project_metadata.country],
         # location_str=f"{project_metadata.city}, {project_metadata.country}",
     )
