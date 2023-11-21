@@ -131,12 +131,12 @@ async def read_project_summaries(
     skip = (page - 1) * results_per_page
     limit = results_per_page
 
-    total_projects = db.query(db_models.DbProject).count()
+    projects = project_crud.get_project_summaries(db, user_id, skip, limit, hashtags, search)
+
+    total_projects = len(projects)
     hasNext = (page * results_per_page) < total_projects
     hasPrev = page > 1
     total_pages = (total_projects + results_per_page - 1) // results_per_page
-
-    projects = project_crud.get_project_summaries(db, user_id, skip, limit, hashtags, search)
     project_summaries = [
         project_schemas.ProjectSummary.from_db_project(project) for project in projects
     ]
