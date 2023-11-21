@@ -185,7 +185,7 @@ const GenerateBasemap = ({ setToggleGenerateModal, toggleGenerateModal, projectI
                   id="tms_url"
                   variant="outlined"
                   value={tmsUrl}
-                  label="Enter Tile Source"
+                  label="Enter TMS URL"
                   fullWidth
                   color="black"
                   sx={{
@@ -201,7 +201,7 @@ const GenerateBasemap = ({ setToggleGenerateModal, toggleGenerateModal, projectI
                   onChange={handleTmsUrlChange}
                 />
               </CoreModules.FormControl>
-              {error.includes('tmsUrl') && <p className="fmtm-text-sm fmtm-text-red-500">Tile Source is Required.</p>}
+              {error.includes('tmsUrl') && <p className="fmtm-text-sm fmtm-text-red-500">TMS URL is Required.</p>}
             </CoreModules.Grid>
           )}
           <CoreModules.Grid item xs={12} sm={12} md={selectedTileSource === 'tms' ? 12 : 4}>
