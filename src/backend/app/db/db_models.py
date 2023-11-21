@@ -542,7 +542,7 @@ class DbProject(Base):
     form_config_file = Column(LargeBinary)  # Yaml config file if custom xls is uploaded
 
     data_extract_type = Column(String)  # Type of data extract (Polygon or Centroid)
-    task_split_type = Column(String)  # Type of split (Grid or Feature)
+    task_split_type = Column(Integer)  # Type of split (Grid or Feature)
     hashtags = Column(ARRAY(String))  # Project hashtag
 
 
