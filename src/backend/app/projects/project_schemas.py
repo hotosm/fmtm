@@ -52,7 +52,7 @@ class BETAProjectUpload(BaseModel):
     odk_central: ODKCentral
     hashtags: Optional[List[str]] = None
     organisation_id: Optional[int] = None
-    task_split_type: TaskSplitType
+    task_split_type: Optional[TaskSplitType] = None
     task_split_dimension: Optional[int] = None
     task_num_buildings: Optional[int] = None
 
