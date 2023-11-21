@@ -1723,7 +1723,7 @@ async def get_project_features_geojson(db: Session, project_id: int):
 
     for feature in features["features"]:
         if (feat_id := feature["id"]) in task_feature_mapping:
-            feature["properties"]["task_id"] = task_id_mapping[feat_id]
+            feature["properties"]["task_id"] = task_feature_mapping[feat_id]
 
     return features
 
