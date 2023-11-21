@@ -17,7 +17,6 @@
 #
 from enum import Enum
 
-from loguru import logger as log
 from pydantic import BaseModel
 
 
@@ -41,3 +40,28 @@ class CentralFileType(BaseModel):
 
 class CentralDetails(CentralBase):
     pass
+
+
+class CentralFormReviewStates(BaseModel):
+    received: int
+    hasIssues: int
+    edited: int
+
+
+class CentralForm(BaseModel):
+    projectId: int
+    xmlFormId: int
+    state: str
+    name: str
+    reviewStates: CentralFormReviewStates
+    userId: int
+
+
+class CentralSubmission(BaseModel):
+    pass
+
+
+class CentralProjectDetails(BaseModel):
+    id: int
+    name: str
+    forms: list[CentralForm]

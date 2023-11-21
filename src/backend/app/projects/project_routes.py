@@ -42,6 +42,16 @@ from shapely.geometry import mapping, shape
 from shapely.ops import unary_union
 from sqlalchemy.orm import Session
 
+from app.auth.osm import AuthUser, login_required
+from app.config import settings
+from app.projects.project_export import (
+    export_project_by_id,
+    export_project_by_id_with_odk,
+    import_fmtm_project,
+    import_fmtm_project_with_odk,
+    load_zip_in_memory,
+)
+
 from ..central import central_crud
 from ..db import database, db_models
 from ..models.enums import TILES_FORMATS, TILES_SOURCE
@@ -547,8 +557,7 @@ async def generate_files(
     data_extracts: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
 ):
-    """
-    Generate additional content for the project to function.
+    """Generate additional content for the project to function.
 
     QR codes,
 
@@ -1245,6 +1254,7 @@ async def generate_files_janakpur(
 
 @router.get("/task-status/{uuid}", response_model=project_schemas.BackgroundTaskStatus)
 async def get_task_status(
+    uuid: str,
     background_tasks: BackgroundTasks,
     db: Session = Depends(database.get_db),
 ):
@@ -1253,6 +1263,134 @@ async def get_task_status(
     task_status, task_message = await project_crud.get_background_task_status(uuid, db)
     return project_schemas.BackgroundTaskStatus(
         status=task_status.name,
-        message=task_message or None,
+        message=task_message or "",
         # progress=some_func_to_get_progress,
     )
+
+
+@router.get("/{project_id}/export")
+async def export_project(
+    project_id: int,
+    background_tasks: BackgroundTasks,
+    task_id: Optional[str] = None,
+    with_odk: bool = False,
+    db: Session = Depends(database.get_db),
+):
+    """Export a project to a zip, for import into FMTM.
+
+    Args:
+        task_id(str): Query the background task to see if complete.
+        with_odk(bool): Export the ODK associated ODK Central project.
+    """
+    # Return existing export if complete
+    if task_id:
+        # Get the backgrund task status
+        task_status, task_message = await project_crud.get_background_task_status(
+            task_id, db
+        )
+
+        if task_status != 4:
+            return project_schemas.BackgroundTaskStatus(
+                status=task_status.name,
+                message=task_message or "",
+                # progress=some_func_to_get_progress,
+            )
+
+        bucket_root = f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}"
+        return RedirectResponse(f"{bucket_root}/{project_id}/export.zip")
+
+    # Create new export task if not present
+    log.debug(f"Creating export background task for project ID: {project_id}")
+    background_task_id = await project_crud.insert_background_task_into_database(
+        db, project_id=project_id
+    )
+
+    log.debug(f"Submitting {background_task_id} to background tasks stack")
+    if with_odk:
+        background_tasks.add_task(
+            export_project_by_id_with_odk,
+            db,
+            project_id,
+            background_task_id,
+        )
+    else:
+        background_tasks.add_task(
+            export_project_by_id,
+            db,
+            project_id,
+            background_task_id,
+        )
+
+    # Return task id
+    return JSONResponse(status_code=200, content={"task_id": str(background_task_id)})
+
+
+@router.post("/import")
+async def import_project(
+    background_tasks: BackgroundTasks,
+    org_id: Optional[str],
+    task_id: Optional[str] = None,
+    zip_url: Optional[str] = None,
+    with_odk: Optional[bool] = None,
+    zip_upload: Optional[UploadFile] = File(None),
+    user_data: AuthUser = Depends(login_required),
+    db: Session = Depends(database.get_db),
+):
+    """Import a project from a zip, for import into FMTM.
+
+    - The zip can be passed from an online source, or uploaded.
+    - Select the organization you wish to import into.
+
+    Args:
+        task_id(str): Query the background task to see if complete.
+        with_odk(bool): Import the ODK associated ODK Central project.
+            Only use this is you exported the project `with_odk`.
+        zip_url(str): The URL of the zip to import.
+        zip_upload(UploadFile): The zip file to upload and import.
+    """
+    log.warning(user_data)
+    # Return existing export if complete
+    if task_id:
+        # Get the backgrund task status
+        task_status, task_message = await project_crud.get_background_task_status(
+            task_id, db
+        )
+
+        return project_schemas.BackgroundTaskStatus(
+            status=task_status.name,
+            message=task_message or "",
+            # progress=some_func_to_get_progress,
+        )
+
+    # Get zip as BytesIO object
+    zip_obj = await load_zip_in_memory(
+        url=zip_url,
+        file=zip_upload,
+    )
+
+    # Create new import task if not present
+    log.debug(f"Creating import background task for organisation id: {org_id}")
+    background_task_id = await project_crud.insert_background_task_into_database(
+        db, name="import_project"
+    )
+
+    log.debug(f"Submitting {background_task_id} to background tasks stack")
+    if with_odk:
+        background_tasks.add_task(
+            import_fmtm_project_with_odk,
+            db,
+            org_id,
+            user_data,
+            zip_obj,
+        )
+    else:
+        background_tasks.add_task(
+            import_fmtm_project,
+            db,
+            org_id,
+            user_data,
+            zip_obj,
+        )
+
+    # Return task id
+    return JSONResponse(status_code=200, content={"task_id": str(background_task_id)})
