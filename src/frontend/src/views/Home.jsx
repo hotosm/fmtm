@@ -12,6 +12,8 @@ import ProjectListMap from '../components/home/ProjectListMap';
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [paginationPage, setPaginationPage] = useState(1);
 
   const defaultTheme = CoreModules.useAppSelector((state) => state.theme.hotTheme);
   const showMapStatus = CoreModules.useAppSelector((state) => state.home.showMapStatus);
@@ -27,6 +29,7 @@ const Home = () => {
 
   const stateHome = CoreModules.useAppSelector((state) => state.home);
   //we use use selector from redux to get all state of home from home slice
+  const filteredProjectCards = stateHome.homeProjectSummary;
 
   let cardsPerRow = new Array(
     type == 'xl' ? 7 : type == 'lg' ? 5 : type == 'md' ? 4 : type == 'sm' ? 3 : type == 's' ? 2 : 1,
@@ -44,9 +47,22 @@ const Home = () => {
     setSearchQuery(query);
   };
 
-  const filteredProjectCards = stateHome.homeProjectSummary.filter((value) =>
-    value.title.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, 500]);
+
+  useEffect(() => {
+    dispatch(
+      HomeSummaryService(
+        `${
+          import.meta.env.VITE_API_URL
+        }/projects/summaries?page=${paginationPage}&results_per_page=12&search=${debouncedSearch}`,
+      ),
+    );
+  }, [debouncedSearch, paginationPage]);
 
   return (
     <div
@@ -90,11 +106,7 @@ const Home = () => {
                         },
                       }}
                       onChange={(e, page) => {
-                        dispatch(
-                          HomeSummaryService(
-                            `${import.meta.env.VITE_API_URL}/projects/summaries?page=${page}&results_per_page=12`,
-                          ),
-                        );
+                        setPaginationPage(page);
                       }}
                     />
                   </div>
