@@ -131,7 +131,9 @@ async def read_project_summaries(
     skip = (page - 1) * results_per_page
     limit = results_per_page
 
-    projects = project_crud.get_project_summaries(db, user_id, skip, limit, hashtags, search)
+    projects = project_crud.get_project_summaries(
+        db, user_id, skip, limit, hashtags, search
+    )
 
     total_projects = len(projects)
     hasNext = (page * results_per_page) < total_projects
