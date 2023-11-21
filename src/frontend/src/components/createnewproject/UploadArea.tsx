@@ -236,7 +236,6 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
                 dispatch(CreateProjectActions.SetTotalAreaSelection(area));
                 setGeojsonFile(null);
               }}
-              
             />
           </div>
         </div>
