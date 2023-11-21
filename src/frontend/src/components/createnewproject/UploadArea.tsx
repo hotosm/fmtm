@@ -12,6 +12,7 @@ import { useAppSelector } from '../../types/reduxTypes';
 import UploadAreaValidation from './validation/UploadAreaValidation';
 import FileInputComponent from '../common/FileInputComponent';
 import NewDefineAreaMap from '../../views/NewDefineAreaMap';
+import { checkWGS84Projection } from '../../utilfunctions/checkWGS84Projection.js';
 // @ts-ignore
 const DefineAreaMap = React.lazy(() => import('../../views/DefineAreaMap'));
 
@@ -66,11 +67,6 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
   //   }
   // };
 
-  // useEffect(() => {
-  //   setGeojsonFile(null);
-  //   dispatch(CreateProjectActions.SetDrawnGeojson(null));
-  //   dispatch(CreateProjectActions.SetTotalAreaSelection(null));
-  // }, [uploadAreaSelection]);
   const convertFileToGeojson = async (file) => {
     if (!file) return;
     const fileReader = new FileReader();
@@ -103,36 +99,13 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
   };
 
   useEffect(() => {
-    function isWGS84GeoJSONBasedOnCoordinates(geojson) {
-      try {
-        for (const feature of geojson.features) {
-          const coordinates = feature.geometry.coordinates;
-          for (const coord of coordinates[0]) {
-            const [longitude, latitude] = coord;
-            if (
-              isNaN(latitude) ||
-              isNaN(longitude) ||
-              latitude < -90 ||
-              latitude > 90 ||
-              longitude < -180 ||
-              longitude > 180
-            ) {
-              setIsGeojsonWG84(false);
-              return false; // Coordinates are out of WGS 84 range
-            }
-          }
-        }
-        setIsGeojsonWG84(true);
-        return true; // All coordinates are within WGS 84 range
-      } catch (error) {
-        setIsGeojsonWG84(false);
-        return false;
-      }
-    }
     const isWGS84 = () => {
       if (uploadAreaSelection === 'upload_file') {
-        return isWGS84GeoJSONBasedOnCoordinates(drawnGeojson);
+        const isWGS84Projection = checkWGS84Projection(drawnGeojson);
+        setIsGeojsonWG84(isWGS84Projection);
+        return isWGS84Projection;
       }
+      setIsGeojsonWG84(true);
       return true;
     };
     if (!isWGS84() && drawnGeojson) {
@@ -140,7 +113,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
     }
     return () => {};
   }, [drawnGeojson]);
-  console.log(drawnGeojson, 'drawnGeojson');
+
   const showSpatialError = () => {
     dispatch(
       CommonActions.SetSnackBar({
@@ -173,7 +146,6 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
           <span>The total area of the AOI is also calculated and displayed on the screen.</span>
         </p>
       </div>
-
       <div className="lg:fmtm-w-[80%] xl:fmtm-w-[83%] lg:fmtm-h-[60vh] xl:fmtm-h-[58vh] fmtm-bg-white fmtm-px-5 lg:fmtm-px-11 fmtm-py-6 lg:fmtm-overflow-y-scroll lg:scrollbar">
         <div className="fmtm-w-full fmtm-flex fmtm-gap-6 md:fmtm-gap-14 fmtm-flex-col md:fmtm-flex-row fmtm-h-full">
           <form
