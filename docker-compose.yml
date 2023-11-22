@@ -64,7 +64,7 @@ services:
     image: "ghcr.io/hotosm/fmtm/backend:${TAG_OVERRIDE:-debug}"
     build:
       context: src/backend
-      target: debug-with-odk
+      target: debug
       args:
         APP_VERSION: "${TAG_OVERRIDE:-debug}"
     container_name: fmtm-api
@@ -92,8 +92,8 @@ services:
         condition: service_started
     env_file:
       - .env
-    # ports:
-    #   - "7052:8000"
+    ports:
+      - "7052:8000"
     #   - "5678:5678" # Debugger port
     networks:
       - fmtm-net
