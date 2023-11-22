@@ -37,11 +37,6 @@ const Home = () => {
   //calculating number of cards to to display per row in order to fit our window dimension respectively and then convert it into dummy array
 
   const theme = CoreModules.useAppSelector((state) => state.theme.hotTheme);
-  useEffect(() => {
-    // dispatch(HomeSummaryService(`${import.meta.env.VITE_API_URL}/projects/summaries?skip=0&limit=100`));
-    dispatch(HomeSummaryService(`${import.meta.env.VITE_API_URL}/projects/summaries?page=1&results_per_page=12`));
-    //creating a manual thunk that will make an API call then autamatically perform state mutation whenever we navigate to home page
-  }, []);
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -55,14 +50,30 @@ const Home = () => {
   }, [searchQuery, 500]);
 
   useEffect(() => {
-    dispatch(
-      HomeSummaryService(
-        `${
-          import.meta.env.VITE_API_URL
-        }/projects/summaries?page=${paginationPage}&results_per_page=12&search=${debouncedSearch}`,
-      ),
-    );
+    if (debouncedSearch) {
+      dispatch(
+        HomeSummaryService(
+          `${
+            import.meta.env.VITE_API_URL
+          }/projects/search_projects?page=${paginationPage}&results_per_page=12&search=${debouncedSearch}`,
+        ),
+      );
+    }
   }, [debouncedSearch, paginationPage]);
+
+  useEffect(() => {
+    setPaginationPage(1);
+  }, [debouncedSearch]);
+
+  useEffect(() => {
+    if (!debouncedSearch) {
+      dispatch(
+        HomeSummaryService(
+          `${import.meta.env.VITE_API_URL}/projects/summaries?page=${paginationPage}&results_per_page=12`,
+        ),
+      );
+    }
+  }, [paginationPage, debouncedSearch]);
 
   return (
     <div
