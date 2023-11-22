@@ -80,35 +80,41 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
       .split('#')
       .map((item) => item.trim())
       .filter(Boolean);
+
+    let projectData = {
+      project_info: {
+        name: projectDetails.name,
+        short_description: projectDetails.short_description,
+        description: projectDetails.description,
+      },
+      author: {
+        username: userDetails.username,
+        id: userDetails.id,
+      },
+      odk_central: {
+        odk_central_url: projectDetails.odk_central_url,
+        odk_central_user: projectDetails.odk_central_user,
+        odk_central_password: projectDetails.odk_central_password,
+      },
+      // dont send xform_title if upload custom form is selected
+      xform_title: projectDetails.formCategorySelection,
+      task_split_type: splitTasksSelection,
+      form_ways: projectDetails.formWays,
+      // "uploaded_form": projectDetails.uploaded_form,
+      data_extractWays: projectDetails.data_extractWays,
+      hashtags: arrayHashtag,
+      organisation_id: projectDetails.organisation_id,
+    };
+    if (splitTasksSelection === task_split_type['task_splitting_algorithm']) {
+      projectData = { ...projectData, task_num_buildings: projectDetails.average_buildings_per_task };
+    } else {
+      projectData = { ...projectData, task_split_dimension: projectDetails.dimension };
+    }
+    console.log(projectData, 'projectData');
     dispatch(
       CreateProjectService(
         `${import.meta.env.VITE_API_URL}/projects/create_project`,
-        {
-          project_info: {
-            name: projectDetails.name,
-            short_description: projectDetails.short_description,
-            description: projectDetails.description,
-          },
-          author: {
-            username: userDetails.username,
-            id: userDetails.id,
-          },
-          odk_central: {
-            odk_central_url: projectDetails.odk_central_url,
-            odk_central_user: projectDetails.odk_central_user,
-            odk_central_password: projectDetails.odk_central_password,
-          },
-          // dont send xform_title if upload custom form is selected
-          xform_title: projectDetails.formCategorySelection,
-          task_split_dimension: projectDetails.dimension,
-          task_num_buildings: projectDetails.average_buildings_per_task,
-          task_split_type: splitTasksSelection,
-          form_ways: projectDetails.formWays,
-          // "uploaded_form": projectDetails.uploaded_form,
-          data_extractWays: projectDetails.data_extractWays,
-          hashtags: arrayHashtag,
-          organisation_id: projectDetails.organisation_id,
-        },
+        projectData,
         drawnGeojsonFile,
         customFormFile,
         customPolygonUpload,
