@@ -24,7 +24,9 @@ from fastapi import HTTPException, UploadFile
 from loguru import logger as log
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-
+from app.s3 import add_obj_to_bucket
+from app.config import settings
+from io import BytesIO
 from ..db import db_models
 
 IMAGEDIR = "app/images/"
@@ -95,16 +97,23 @@ async def create_organization(
     Returns:
         bool: True if organization was created successfully
     """
-    # create new organization
     try:
-        logo_name = await upload_image(db, logo) if logo else None
+        file_bytes = await logo.read()
+        file_obj = BytesIO(file_bytes)
 
+        # Upload image in s3
+        add_obj_to_bucket(settings.S3_BUCKET_NAME_OVERLAYS, 
+                          file_obj, 
+                          f"/organisation_logo/{logo.filename}",
+                          content_type=logo.content_type)
+
+        # create new organization object
         db_organization = db_models.DbOrganisation(
             name=name,
             slug=generate_slug(name),
             description=description,
             url=url,
-            logo=logo_name,
+            logo=logo.filename,
         )
 
         db.add(db_organization)
