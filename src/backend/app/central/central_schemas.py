@@ -17,7 +17,6 @@
 #
 from enum import Enum
 
-from loguru import logger as log
 from pydantic import BaseModel
 
 
@@ -31,13 +30,13 @@ class Central(CentralBase):
 
 
 class CentralOut(CentralBase):
-    log.debug("Hello World!")
+    pass
 
 
 class CentralFileType(BaseModel):
     filetype: Enum("FileType", ["xform", "extract", "zip", "xlsform", "all"])
-    log.debug("Hello World!")
+    pass
 
 
 class CentralDetails(CentralBase):
-    log.debug("Hello World!")
+    pass

@@ -30,6 +30,7 @@ from sqlalchemy import (
     Index,
     Integer,
     LargeBinary,
+    SmallInteger,
     String,
     Table,
     UniqueConstraint,
@@ -51,6 +52,7 @@ from app.models.enums import (
     ProjectStatus,
     TaskAction,
     TaskCreationMode,
+    TaskSplitType,
     TaskStatus,
     TeamVisibility,
     UserRole,
@@ -408,7 +410,7 @@ class DbProject(Base):
         nullable=False,
         server_default="20386219",
     )
-    author = relationship(DbUser)
+    author = relationship(DbUser, uselist=False, backref="user")
     created = Column(DateTime, default=timestamp, nullable=False)
     task_creation_mode = Column(
         Enum(TaskCreationMode), default=TaskCreationMode.UPLOAD, nullable=False
@@ -422,13 +424,17 @@ class DbProject(Base):
     project_name_prefix = Column(String)
     task_type_prefix = Column(String)
     project_info = relationship(
-        DbProjectInfo, cascade="all, delete, delete-orphan", backref="project"
+        DbProjectInfo,
+        cascade="all, delete, delete-orphan",
+        uselist=False,
+        backref="project",
     )
     location_str = Column(String)
 
     # GEOMETRY
     outline = Column(Geometry("POLYGON", srid=4326))
     # geometry = Column(Geometry("POLYGON", srid=4326, from_text='ST_GeomFromWkt'))
+    # TODO add outline_geojson as computed @property
 
     # PROJECT STATUS
     last_updated = Column(DateTime, default=timestamp)
@@ -477,7 +483,9 @@ class DbProject(Base):
         )
 
     # XFORM DETAILS
-    odk_central_src = Column(String, default="")  # TODO Add HOTs as default
+    # TODO This field was probably replaced by odk_central_url
+    # TODO remove in a migration
+    odk_central_src = Column(String, default="")
     xform_title = Column(String, ForeignKey("xlsforms.title", name="fk_xform"))
     xform = relationship(DbXForm)
 
@@ -542,7 +550,11 @@ class DbProject(Base):
     form_config_file = Column(LargeBinary)  # Yaml config file if custom xls is uploaded
 
     data_extract_type = Column(String)  # Type of data extract (Polygon or Centroid)
-    task_split_type = Column(String)  # Type of split (Grid or Feature)
+    # Options: divide on square, manual upload, task splitting algo
+    task_split_type = Column(Enum(TaskSplitType), nullable=True)
+    task_split_dimension = Column(SmallInteger, nullable=True)
+    task_num_buildings = Column(SmallInteger, nullable=True)
+
     hashtags = Column(ARRAY(String))  # Project hashtag
 
 

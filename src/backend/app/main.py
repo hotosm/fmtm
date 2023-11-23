@@ -19,7 +19,8 @@
 
 import logging
 import sys
-from typing import Union
+from contextlib import asynccontextmanager
+from typing import Optional
 
 import sentry_sdk
 from fastapi import FastAPI, Request
@@ -48,6 +49,19 @@ if not settings.DEBUG:
     )
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup events
+    log.debug("Starting up FastAPI server.")
+    log.debug("Reading XLSForms from DB.")
+    read_xlsforms(next(get_db()), xlsforms_path)
+
+    yield
+
+    # Shutdown events
+    log.debug("Shutting down FastAPI server.")
+
+
 def get_application() -> FastAPI:
     """Get the FastAPI app instance, with settings."""
     _app = FastAPI(
@@ -59,6 +73,7 @@ def get_application() -> FastAPI:
             "url": "https://raw.githubusercontent.com/hotosm/fmtm/main/LICENSE",
         },
         debug=settings.DEBUG,
+        lifespan=lifespan,
         root_path=settings.API_PREFIX,
     )
 
@@ -136,15 +151,15 @@ def get_logger():
             # format=log_json_format, # JSON format func
         )
 
-        log.add(
-            "/opt/logs/create_project.json",
-            level=settings.LOG_LEVEL,
-            enqueue=True,
-            serialize=True,
-            rotation="00:00",
-            retention="10 days",
-            filter=lambda record: record["extra"].get("task") == "create_project",
-        )
+    log.add(
+        "/opt/logs/create_project.json",
+        level=settings.LOG_LEVEL,
+        enqueue=True,
+        serialize=True,
+        rotation="00:00",
+        retention="10 days",
+        filter=lambda record: record["extra"].get("task") == "create_project",
+    )
 
 
 api = get_application()
@@ -170,34 +185,20 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(status_code=status_code, content={"errors": errors})
 
 
-@api.on_event("startup")
-async def startup_event():
-    """Commands to run on server startup."""
-    log.debug("Starting up FastAPI server.")
-    log.debug("Reading XLSForms from DB.")
-    read_xlsforms(next(get_db()), xlsforms_path)
-
-
-@api.on_event("shutdown")
-async def shutdown_event():
-    """Commands to run on server shutdown."""
-    log.debug("Shutting down FastAPI server.")
-
-
 @api.get("/")
-def home():
+async def home():
     """Redirect home to docs."""
     return RedirectResponse("/docs")
 
 
 @api.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
+async def read_item(item_id: int, q: Optional[str] = None):
     """Get item IDs."""
     return {"item_id": item_id, "q": q}
 
 
 @api.get("/images/{image_filename}")
-def get_images(image_filename: str):
+async def get_images(image_filename: str):
     """Download image files."""
     path = f"./app/images/{image_filename}"
     return FileResponse(path)

@@ -23,7 +23,7 @@ import uuid
 import zipfile
 from io import BytesIO
 from json import dumps, loads
-from typing import List
+from typing import List, Optional
 from zipfile import ZipFile
 
 import geoalchemy2
@@ -36,7 +36,7 @@ import segno
 import shapely.wkb as wkblib
 import sqlalchemy
 from fastapi import File, HTTPException, UploadFile
-from geoalchemy2.shape import from_shape
+from geoalchemy2.shape import from_shape, to_shape
 from geojson import dump
 from loguru import logger as log
 from osm_fieldwork.basemapper import create_basemap_file
@@ -143,16 +143,6 @@ def get_project_summaries(
     return convert_to_project_summaries(db_projects)
 
 
-def get_project_by_id_w_all_tasks(db: Session, project_id: int):
-    db_project = (
-        db.query(db_models.DbProject)
-        .filter(db_models.DbProject.id == project_id)
-        .first()
-    )
-
-    return convert_to_app_project(db_project)
-
-
 def get_project(db: Session, project_id: int):
     db_project = (
         db.query(db_models.DbProject)
@@ -230,15 +220,15 @@ def partial_update_project_info(
 
 
 def update_project_info(
-    db: Session, project_metadata: project_schemas.BETAProjectUpload, project_id
+    db: Session, project_metadata: project_schemas.ProjectUpload, project_id
 ):
     user = project_metadata.author
-    project_info_1 = project_metadata.project_info
+    project_info = project_metadata.project_info
 
     # verify data coming in
     if not user:
         raise HTTPException("No user passed in")
-    if not project_info_1:
+    if not project_info:
         raise HTTPException("No project info passed in")
 
     # get db user
@@ -256,19 +246,19 @@ def update_project_info(
         )
 
     # Project meta informations
-    project_info_1 = project_metadata.project_info
+    project_info = project_metadata.project_info
 
     # Update author of the project
     db_project.author = db_user
-    db_project.project_name_prefix = project_info_1.name
+    db_project.project_name_prefix = project_info.name
 
     # get project info
     db_project_info = get_project_info_by_id(db, project_id)
 
     # Update projects meta informations (name, descriptions)
-    db_project_info.name = project_info_1.name
-    db_project_info.short_description = project_info_1.short_description
-    db_project_info.description = project_info_1.description
+    db_project_info.name = project_info.name
+    db_project_info.short_description = project_info.short_description
+    db_project_info.description = project_info.description
 
     db.commit()
     db.refresh(db_project)
@@ -277,25 +267,30 @@ def update_project_info(
 
 
 def create_project_with_project_info(
-    db: Session, project_metadata: project_schemas.BETAProjectUpload, project_id
+    db: Session, project_metadata: project_schemas.ProjectUpload, odk_project_id: int
 ):
     project_user = project_metadata.author
-    project_info_1 = project_metadata.project_info
+    project_info = project_metadata.project_info
     xform_title = project_metadata.xform_title
     odk_credentials = project_metadata.odk_central
     hashtags = project_metadata.hashtags
     organisation_id = project_metadata.organisation_id
+    task_split_type = project_metadata.task_split_type
+    task_split_dimension = project_metadata.task_split_dimension
+    task_num_buildings = project_metadata.task_num_buildings
 
     # verify data coming in
     if not project_user:
-        raise HTTPException("No user passed in")
-    if not project_info_1:
-        raise HTTPException("No project info passed in")
+        raise HTTPException("User details are missing")
+    if not project_info:
+        raise HTTPException("Project info is missing")
+    if not odk_project_id:
+        raise HTTPException("ODK Central project id is missing")
 
     log.debug(
         "Creating project in FMTM database with vars: "
         f"project_user: {project_user} | "
-        f"project_info_1: {project_info_1} | "
+        f"project_info: {project_info} | "
         f"xform_title: {xform_title} | "
         f"hashtags: {hashtags}| "
         f"organisation_id: {organisation_id}"
@@ -336,14 +331,17 @@ def create_project_with_project_info(
     # create new project
     db_project = db_models.DbProject(
         author=db_user,
-        odkid=project_id,
-        project_name_prefix=project_info_1.name,
+        odkid=odk_project_id,
+        project_name_prefix=project_info.name,
         xform_title=xform_title,
         odk_central_url=url,
         odk_central_user=user,
         odk_central_password=pw,
         hashtags=hashtags,
         organisation_id=organisation_id,
+        task_split_type=task_split_type,
+        task_split_dimension=task_split_dimension,
+        task_num_buildings=task_num_buildings,
         # country=[project_metadata.country],
         # location_str=f"{project_metadata.city}, {project_metadata.country}",
     )
@@ -352,9 +350,9 @@ def create_project_with_project_info(
     # add project info (project id needed to create project info)
     db_project_info = db_models.DbProjectInfo(
         project=db_project,
-        name=project_info_1.name,
-        short_description=project_info_1.short_description,
-        description=project_info_1.description,
+        name=project_info.name,
+        short_description=project_info.short_description,
+        description=project_info.description,
     )
     db.add(db_project_info)
 
@@ -476,7 +474,7 @@ def update_multi_polygon_project_boundary(
         raise HTTPException(e) from e
 
 
-async def preview_tasks(boundary: str, dimension: int):
+def preview_tasks(boundary: str, dimension: int):
     """Preview tasks by returning a list of task objects."""
     """Use a lambda function to remove the "z" dimension from each coordinate in the feature's geometry """
 
@@ -659,7 +657,7 @@ def get_osm_extracts(boundary: str):
     return data
 
 
-async def split_into_tasks(
+def split_into_tasks(
     db: Session, outline: str, no_of_buildings: int, has_data_extracts: bool
 ):
     """Splits a project into tasks.
@@ -1427,11 +1425,11 @@ def generate_appuser_files(
     db: Session,
     project_id: int,
     extract_polygon: bool,
-    upload: str,
+    custom_xls_form: str,
     extracts_contents: str,
     category: str,
     form_type: str,
-    background_task_id: uuid.UUID,
+    background_task_id: Optional[uuid.UUID] = None,
 ):
     """Generate the files for each appuser.
     QR code, new XForm, and the OSM data extract.
@@ -1440,7 +1438,7 @@ def generate_appuser_files(
         - db: the database session
         - project_id: Project ID
         - extract_polygon: boolean to determine if we should extract the polygon
-        - upload: the xls file to upload if we have a custom form
+        - custom_xls_form: the xls file to upload if we have a custom form
         - category: the category of the project
         - form_type: weather the form is xls, xlsx or xml
         - background_task_id: the task_id of the background task running this function.
@@ -1497,9 +1495,9 @@ def generate_appuser_files(
             xform_title = one.xform_title if one.xform_title else None
 
             category = xform_title
-            if upload:
+            if custom_xls_form:
                 xlsform = f"/tmp/{category}.{form_type}"
-                contents = upload
+                contents = custom_xls_form
                 with open(xlsform, "wb") as f:
                     f.write(contents)
             else:
@@ -1593,18 +1591,25 @@ def generate_appuser_files(
                 except Exception as e:
                     log.warning(str(e))
                     continue
-        # # Update background task status to COMPLETED
-        update_background_task_status_in_database(
-            db, background_task_id, 4
-        )  # 4 is COMPLETED
+
+        # Update background task status to COMPLETED
+        if background_task_id:
+            update_background_task_status_in_database(
+                db, background_task_id, 4
+            )  # 4 is COMPLETED
 
     except Exception as e:
         log.warning(str(e))
 
         # Update background task status to FAILED
-        update_background_task_status_in_database(
-            db, background_task_id, 2, str(e)
-        )  # 2 is FAILED
+        if background_task_id:
+            update_background_task_status_in_database(
+                db, background_task_id, 2, str(e)
+            )  # 2 is FAILED
+
+        else:
+            # Raise original error if not running in background
+            raise e
 
 
 def create_qrcode(
@@ -1673,15 +1678,16 @@ def get_task_geometry(db: Session, project_id: int):
     Returns:
         str: A geojson of the task boundaries
     """
-    tasks = table("tasks", column("outline"), column("project_id"), column("id"))
-    where = f"project_id={project_id}"
-    sql = select(geoalchemy2.functions.ST_AsGeoJSON(tasks.c.outline)).where(text(where))
-    result = db.execute(sql)
-
+    db_tasks = tasks_crud.get_tasks(db, project_id, None)
     features = []
-    for row in result:
-        geometry = json.loads(row[0])
-        feature = {"type": "Feature", "geometry": geometry, "properties": {}}
+    for task in db_tasks:
+        geom = to_shape(task.outline)
+        # Convert the shapely geometry object to GeoJSON
+        geometry = geom.__geo_interface__
+        properties = {
+            "task_id": task.id,
+        }
+        feature = {"type": "Feature", "geometry": geometry, "properties": properties}
         features.append(feature)
 
     feature_collection = {"type": "FeatureCollection", "features": features}
@@ -1689,6 +1695,12 @@ def get_task_geometry(db: Session, project_id: int):
 
 
 async def get_project_features_geojson(db: Session, project_id: int):
+    db_features = (
+        db.query(db_models.DbFeatures)
+        .filter(db_models.DbFeatures.project_id == project_id)
+        .all()
+    )
+
     """Get a geojson of all features for a task."""
     query = text(
         f"""SELECT jsonb_build_object(
@@ -1710,6 +1722,14 @@ async def get_project_features_geojson(db: Session, project_id: int):
 
     result = db.execute(query)
     features = result.fetchone()[0]
+
+    # Create mapping feat_id:task_id
+    task_feature_mapping = {feat.id: feat.task_id for feat in db_features}
+
+    for feature in features["features"]:
+        if (feat_id := feature["id"]) in task_feature_mapping:
+            feature["properties"]["task_id"] = task_feature_mapping[feat_id]
+
     return features
 
 
@@ -1922,15 +1942,10 @@ def convert_to_project_summary(db_project: db_models.DbProject):
     if db_project:
         summary: project_schemas.ProjectSummary = db_project
 
-        if db_project.project_info and len(db_project.project_info) > 0:
-            default_project_info = next(
-                (x for x in db_project.project_info),
-                None,
-            )
-            # default_project_info = project_schemas.ProjectInfo
+        if db_project.project_info:
             summary.location_str = db_project.location_str
-            summary.title = default_project_info.name
-            summary.description = default_project_info.short_description
+            summary.title = db_project.project_info.name
+            summary.description = db_project.project_info.short_description
 
         summary.num_contributors = (
             db_project.tasks_mapped + db_project.tasks_validated
@@ -2016,18 +2031,26 @@ async def get_background_task_status(task_id: uuid.UUID, db: Session):
         .filter(db_models.BackgroundTasks.id == str(task_id))
         .first()
     )
+    if not task:
+        log.warning(f"No background task with found with UUID: {task_id}")
+        raise HTTPException(status_code=404, detail="Task not found")
     return task.status, task.message
 
 
 async def insert_background_task_into_database(
-    db: Session, task_id: uuid.UUID, name: str = None, project_id=None
-):
+    db: Session, name: str = None, project_id=None
+) -> uuid.uuid4:
     """Inserts a new task into the database
     Params:
         db: database session
-        task_id: uuid of the task
         name: name of the task.
+        project_id: associated project id
+
+    Return:
+        task_id(uuid.uuid4): The background task uuid for tracking.
     """
+    task_id = uuid.uuid4()
+
     task = db_models.BackgroundTasks(
         id=str(task_id), name=name, status=1, project_id=project_id
     )  # 1 = running
@@ -2036,7 +2059,7 @@ async def insert_background_task_into_database(
     db.commit()
     db.refresh(task)
 
-    return True
+    return task_id
 
 
 def update_background_task_status_in_database(
@@ -2289,7 +2312,7 @@ async def update_project_form(
 
 
 async def update_odk_credentials(
-    project_instance: project_schemas.BETAProjectUpload,
+    project_instance: project_schemas.ProjectUpload,
     odk_central_cred: project_schemas.ODKCentral,
     odkid: int,
     db: Session,
@@ -2821,3 +2844,13 @@ def check_crs(input_geojson: dict):
     if not is_valid_coordinate(first_coordinate):
         log.error(error_message)
         raise HTTPException(status_code=400, detail=error_message)
+
+
+def get_tasks_count(db: Session, project_id: int):
+    db_task = (
+        db.query(db_models.DbProject)
+        .filter(db_models.DbProject.id == project_id)
+        .first()
+    )
+    task_count = len(db_task.tasks)
+    return task_count
