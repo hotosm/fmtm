@@ -10,8 +10,6 @@ import { Text, Circle, Icon } from 'ol/style';
 import VectorSource from 'ol/source/Vector';
 import { hexToRgba } from '../../../MapComponent/OpenLayersComponent/helpers/styleUtils';
 import SelectCluster from 'ol-ext/interaction/SelectCluster';
-import { asArray as asColorArray } from 'ol/color';
-import CircleStyle from 'ol/style/Circle';
 import MarkerIcon from '../../../../assets/images/red_marker.png';
 
 function setAsyncStyle(style, feature, getIndividualStyle) {
