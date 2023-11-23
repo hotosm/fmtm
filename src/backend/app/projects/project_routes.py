@@ -41,7 +41,6 @@ from osm_rawdata.postgres import PostgresClient
 from shapely.geometry import mapping, shape
 from shapely.ops import unary_union
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
 
 from ..central import central_crud
 from ..db import database, db_models
@@ -135,21 +134,27 @@ async def read_project_summaries(
     skip = (page - 1) * results_per_page
     limit = results_per_page
 
-    project_count, projects = project_crud.get_project_summaries(db, user_id, skip, limit, hashtags, None)
+    project_count, projects = project_crud.get_project_summaries(
+        db, user_id, skip, limit, hashtags, None
+    )
 
-    pagination = project_crud.get_pagintaion(page, project_count, results_per_page, total_projects)
+    pagination = project_crud.get_pagintaion(
+        page, project_count, results_per_page, total_projects
+    )
     project_summaries = [
         project_schemas.ProjectSummary.from_db_project(project) for project in projects
     ]
 
     response = project_schemas.PaginatedProjectSummaries(
         results=project_summaries,
-        pagination= pagination,
+        pagination=pagination,
     )
     return response
 
 
-@router.get("/search_projects", response_model=project_schemas.PaginatedProjectSummaries)
+@router.get(
+    "/search_projects", response_model=project_schemas.PaginatedProjectSummaries
+)
 async def search_project(
     search: str,
     user_id: int = None,
@@ -168,16 +173,20 @@ async def search_project(
     skip = (page - 1) * results_per_page
     limit = results_per_page
 
-    project_count, projects = project_crud.get_project_summaries(db, user_id, skip, limit, hashtags, search)
+    project_count, projects = project_crud.get_project_summaries(
+        db, user_id, skip, limit, hashtags, search
+    )
 
-    pagination = project_crud.get_pagintaion(page, project_count, results_per_page, total_projects)
+    pagination = project_crud.get_pagintaion(
+        page, project_count, results_per_page, total_projects
+    )
     project_summaries = [
         project_schemas.ProjectSummary.from_db_project(project) for project in projects
     ]
 
     response = project_schemas.PaginatedProjectSummaries(
         results=project_summaries,
-        pagination= pagination,
+        pagination=pagination,
     )
     return response
 

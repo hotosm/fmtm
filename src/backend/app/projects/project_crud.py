@@ -141,7 +141,9 @@ def get_project_summaries(
     #         .filter(
     #         db_models.DbProject.author_id == user_id).offset(skip).limit(limit).all()
 
-    project_count, db_projects = get_projects(db, user_id, skip, limit, True, hashtags, search)
+    project_count, db_projects = get_projects(
+        db, user_id, skip, limit, True, hashtags, search
+    )
     return project_count, convert_to_project_summaries(db_projects)
 
 
@@ -2858,22 +2860,22 @@ def get_tasks_count(db: Session, project_id: int):
     return task_count
 
 
-def get_pagintaion(page:int, count: int, results_per_page: int, total: int):
+def get_pagintaion(page: int, count: int, results_per_page: int, total: int):
     total_pages = (count + results_per_page - 1) // results_per_page
     if total_pages > 0 and page > total_pages:
         page = 1
     hasNext = (page * results_per_page) < count
     hasPrev = page > 1
 
-    pagination=project_schemas.PaginationInfo(
-            hasNext=hasNext,
-            hasPrev=hasPrev,
-            nextNum=page + 1 if hasNext else None,
-            page=page,
-            pages=total_pages,
-            prevNum=page - 1 if hasPrev else None,
-            perPage=results_per_page,
-            total=total,
-        )
-    
+    pagination = project_schemas.PaginationInfo(
+        hasNext=hasNext,
+        hasPrev=hasPrev,
+        nextNum=page + 1 if hasNext else None,
+        page=page,
+        pages=total_pages,
+        prevNum=page - 1 if hasPrev else None,
+        perPage=results_per_page,
+        total=total,
+    )
+
     return pagination
