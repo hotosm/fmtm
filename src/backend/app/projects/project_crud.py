@@ -2862,8 +2862,6 @@ def get_tasks_count(db: Session, project_id: int):
 
 def get_pagintaion(page: int, count: int, results_per_page: int, total: int):
     total_pages = (count + results_per_page - 1) // results_per_page
-    if total_pages > 0 and page > total_pages:
-        page = 1
     hasNext = (page * results_per_page) < count
     hasPrev = page > 1
 
