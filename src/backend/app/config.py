@@ -113,8 +113,6 @@ class Settings(BaseSettings):
     S3_ACCESS_KEY: Optional[str] = ""
     S3_SECRET_KEY: Optional[str] = ""
     S3_BUCKET_NAME: str = "fmtm-data"
-    S3_BUCKET_NAME_BASEMAPS: str = "basemaps"
-    S3_BUCKET_NAME_OVERLAYS: str = "overlays"
     S3_DOWNLOAD_ROOT: Optional[str] = None
 
     @field_validator("S3_DOWNLOAD_ROOT", mode="before")
