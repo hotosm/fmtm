@@ -19,14 +19,16 @@ import os
 import random
 import re
 import string
+from io import BytesIO
 
 from fastapi import HTTPException, UploadFile
 from loguru import logger as log
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from app.s3 import add_obj_to_bucket
+
 from app.config import settings
-from io import BytesIO
+from app.s3 import add_obj_to_bucket
+
 from ..db import db_models
 
 IMAGEDIR = "app/images/"
@@ -102,10 +104,12 @@ async def create_organization(
         file_obj = BytesIO(file_bytes)
 
         # Upload image in s3
-        add_obj_to_bucket(settings.S3_BUCKET_NAME, 
-                          file_obj, 
-                          f"/organisation_logo/{logo.filename}",
-                          content_type=logo.content_type)
+        add_obj_to_bucket(
+            settings.S3_BUCKET_NAME,
+            file_obj,
+            f"/organisation_logo/{logo.filename}",
+            content_type=logo.content_type,
+        )
 
         # create new organization object
         db_organization = db_models.DbOrganisation(
