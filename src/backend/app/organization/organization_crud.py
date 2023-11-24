@@ -102,7 +102,7 @@ async def create_organization(
         file_obj = BytesIO(file_bytes)
 
         # Upload image in s3
-        add_obj_to_bucket(settings.S3_BUCKET_NAME_OVERLAYS, 
+        add_obj_to_bucket(settings.S3_BUCKET_NAME, 
                           file_obj, 
                           f"/organisation_logo/{logo.filename}",
                           content_type=logo.content_type)
@@ -113,7 +113,7 @@ async def create_organization(
             slug=generate_slug(name),
             description=description,
             url=url,
-            logo=logo.filename,
+            logo=f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}/organisation_logo/{logo.filename}",
         )
 
         db.add(db_organization)
