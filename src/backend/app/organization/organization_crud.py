@@ -15,10 +15,9 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
-import os
-import random
+"""Logic for organization management."""
+
 import re
-import string
 from io import BytesIO
 
 from fastapi import HTTPException, UploadFile
@@ -27,21 +26,20 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.db import db_models
 from app.s3 import add_obj_to_bucket
-
-from ..db import db_models
-
-IMAGEDIR = "app/images/"
 
 
 def get_organisations(
     db: Session,
 ):
+    """Get all orgs."""
     db_organisation = db.query(db_models.DbOrganisation).all()
     return db_organisation
 
 
 def generate_slug(text: str) -> str:
+    """Sanitise the organization name for use in a URL."""
     # Remove special characters and replace spaces with hyphens
     slug = re.sub(r"[^\w\s-]", "", text).strip().lower().replace(" ", "-")
     # Remove consecutive hyphens
@@ -50,6 +48,10 @@ def generate_slug(text: str) -> str:
 
 
 async def get_organisation_by_name(db: Session, name: str):
+    """Get org by name.
+
+    This function is used to check if a org exists with the same name.
+    """
     # Use SQLAlchemy's query-building capabilities
     db_organisation = (
         db.query(db_models.DbOrganisation)
@@ -59,16 +61,17 @@ async def get_organisation_by_name(db: Session, name: str):
     return db_organisation
 
 
-async def upload_logo_to_s3(db_org: db_models.DbOrganisation, logo_file: UploadFile(None)) -> str:
-    """"
-    Upload logo using standardised /{org_id}/logo.png format.
-    
+async def upload_logo_to_s3(
+    db_org: db_models.DbOrganisation, logo_file: UploadFile(None)
+) -> str:
+    """Upload logo using standardised /{org_id}/logo.png format.
+
     Browsers treat image mimetypes the same, regardless of extension,
     so it should not matter if a .jpg is renamed .png.
 
     Args:
         db_org(db_models.DbOrganisation): The organization database object.
-        file(UploadFile): The logo image uploaded to FastAPI.
+        logo_file(UploadFile): The logo image uploaded to FastAPI.
 
     Returns:
         logo_path(str): The file path in S3.
@@ -92,7 +95,8 @@ async def create_organization(
     db: Session, name: str, description: str, url: str, logo: UploadFile(None)
 ):
     """Creates a new organization with the given name, description, url, type, and logo.
-    Saves the logo file to the app/images folder.
+
+    Saves the logo file S3 bucket under /{org_id}/logo.png.
 
     Args:
         db (Session): database session
@@ -100,7 +104,8 @@ async def create_organization(
         description (str): description of the organization
         url (str): url of the organization
         type (int): type of the organization
-        logo (UploadFile, optional): logo file of the organization. Defaults to File(...).
+        logo (UploadFile, optional): logo file of the organization.
+            Defaults to File(...).
 
     Returns:
         bool: True if organization was created successfully
@@ -170,6 +175,7 @@ async def update_organization_info(
     url: str,
     logo: UploadFile,
 ):
+    """Update an existing organisation database entry."""
     organization = await get_organisation_by_id(db, organization_id)
     if not organization:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -181,7 +187,7 @@ async def update_organization_info(
     if url:
         organization.url = url
     if logo:
-        organization.logo = await upload_image(db, logo) if logo else None
+        organization.logo = await upload_logo_to_s3(organization, logo)
 
     db.commit()
     db.refresh(organization)
