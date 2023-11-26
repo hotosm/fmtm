@@ -126,8 +126,17 @@ async def create_organization(
             f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}{logo_path}"
         )
         db.commit()
+
     except Exception as e:
-        log.error(e)
+        log.exception(e)
+        log.debug("Rolling back changes to db organization")
+        # Rollback any changes
+        db.rollback()
+        # Delete the failed organization entry
+        if db_organization:
+            log.debug(f"Deleting created organisation ID {db_organization.id}")
+            db.delete(db_organization)
+            db.commit()
         raise HTTPException(
             status_code=400, detail=f"Error creating organization: {e}"
         ) from e
