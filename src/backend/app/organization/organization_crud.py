@@ -59,27 +59,33 @@ async def get_organisation_by_name(db: Session, name: str):
     return db_organisation
 
 
-async def upload_image(db: Session, file: UploadFile(None)):
-    # Check if file with the same name exists
-    filename = file.filename
-    file_path = f"{IMAGEDIR}{filename}"
-    while os.path.exists(file_path):
-        # Generate a random character
-        random_char = "".join(random.choices(string.ascii_letters + string.digits, k=3))
+async def upload_logo_to_s3(db_org: db_models.DbOrganisation, logo_file: UploadFile(None)) -> str:
+    """"
+    Upload logo using standardised /{org_id}/logo.png format.
+    
+    Browsers treat image mimetypes the same, regardless of extension,
+    so it should not matter if a .jpg is renamed .png.
 
-        # Add the random character to the filename
-        logo_name, extension = os.path.splitext(filename)
-        filename = f"{logo_name}_{random_char}{extension}"
-        file_path = f"{IMAGEDIR}{filename}"
+    Args:
+        db_org(db_models.DbOrganisation): The organization database object.
+        file(UploadFile): The logo image uploaded to FastAPI.
 
-    # Read the file contents
-    contents = await file.read()
+    Returns:
+        logo_path(str): The file path in S3.
+    """
+    logo_path = f"/{db_org.id}/logo.png"
 
-    # Save the file
-    with open(file_path, "wb") as f:
-        f.write(contents)
+    file_bytes = await logo_file.read()
+    file_obj = BytesIO(file_bytes)
 
-    return filename
+    add_obj_to_bucket(
+        settings.S3_BUCKET_NAME,
+        file_obj,
+        logo_path,
+        content_type=logo_file.content_type,
+    )
+
+    return logo_path
 
 
 async def create_organization(
@@ -100,29 +106,26 @@ async def create_organization(
         bool: True if organization was created successfully
     """
     try:
-        file_bytes = await logo.read()
-        file_obj = BytesIO(file_bytes)
-
-        # Upload image in s3
-        add_obj_to_bucket(
-            settings.S3_BUCKET_NAME,
-            file_obj,
-            f"/organisation_logo/{logo.filename}",
-            content_type=logo.content_type,
-        )
-
-        # create new organization object
+        # Create new organization without logo set
         db_organization = db_models.DbOrganisation(
             name=name,
             slug=generate_slug(name),
             description=description,
             url=url,
-            logo=f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}/organisation_logo/{logo.filename}",
         )
 
         db.add(db_organization)
         db.commit()
+        # Refresh to get the assigned org id
         db.refresh(db_organization)
+
+        logo_path = await upload_logo_to_s3(db_organization, logo)
+
+        # Update the logo field in the database with the correct path
+        db_organization.logo = (
+            f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}{logo_path}"
+        )
+        db.commit()
     except Exception as e:
         log.error(e)
         raise HTTPException(
