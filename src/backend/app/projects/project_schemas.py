@@ -17,10 +17,10 @@
 #
 
 import uuid
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from geojson_pydantic import Feature as GeojsonFeature
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.db import db_models
 from app.models.enums import ProjectPriority, ProjectStatus, TaskSplitType
@@ -59,6 +59,38 @@ class ProjectUpload(BaseModel):
 
     # city: str
     # country: str
+
+
+# ORM Based Models (from_attributes, required for ProjectExport)
+# Allow for e.g. DbProjectInfo to be passed instead of ProjectInfo
+class ProjectInfoORM(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    name: str
+    short_description: str
+    description: str
+
+
+class ProjectExport(ProjectUpload):
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
+
+    # Essential for project creation
+    project_info: ProjectInfoORM
+    odk_central: ODKCentral
+    # Original author should be removed
+    author: Union[db_models.DbUser, User] = Field(exclude=True, title="author")
+
+    # Used for upload_multi_polygon & updating location info
+    outline_geojson: Optional[GeojsonFeature] = None
+
+    # Extra FMTM params for import
+    odkid: int
+    status: ProjectStatus
+    private: bool
+    priority: int
+    # TODO pass through task_split_type to determine on import
+    # task_split_type: str
+    # project_tasks: Optional[List[TaskORM]]
 
 
 class Feature(BaseModel):

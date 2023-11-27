@@ -6,7 +6,7 @@ groups = ["default", "debug", "dev", "docs", "test"]
 cross_platform = true
 static_urls = false
 lock_version = "4.3"
-content_hash = "sha256:bd5a15380dcce6d93f53afd8689cce70f4c04616a367d34ac7370e2caa830b2d"
+content_hash = "sha256:5622fdcae215c99070419ad9513da6ba8a0da8c1bbc5ba584be0c40d751f4429"
 
 [[package]]
 name = "annotated-types"
@@ -1768,6 +1768,16 @@ summary = "Sniff out which async library your code is running under"
 files = [
     {file = "sniffio-1.3.0-py3-none-any.whl", hash = "sha256:eecefdce1e5bbfb7ad2eeaabf7c1eeb404d7757c379bd1f7e5cce9d8bf425384"},
     {file = "sniffio-1.3.0.tar.gz", hash = "sha256:e60305c5e5d314f5389259b7f22aaa33d8f7dee49763119234af3755c55b9101"},
+]
+
+[[package]]
+name = "sozipfile"
+version = "0.2.0"
+requires_python = ">=3.8"
+summary = "Fork of Python zipfile module, adding generation of sozip optimization"
+files = [
+    {file = "sozipfile-0.2.0-py3-none-any.whl", hash = "sha256:c6e30d88175773fb62883ee1078fb132eadd9aa1b417ec8e5d3f38bc969ca2c9"},
+    {file = "sozipfile-0.2.0.tar.gz", hash = "sha256:efa65a1a2872c03858a0df8a6694b1862803f99e09c4a4fe7f9284b2f6685623"},
 ]
 
 [[package]]
