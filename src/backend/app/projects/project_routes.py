@@ -41,7 +41,10 @@ from osm_rawdata.postgres import PostgresClient
 from shapely.geometry import mapping, shape
 from shapely.ops import unary_union
 from sqlalchemy.orm import Session
+from io import BytesIO
 
+from ..config import settings
+from ..s3 import add_obj_to_bucket
 from ..central import central_crud
 from ..db import database, db_models
 from ..models.enums import TILES_FORMATS, TILES_SOURCE
@@ -1273,3 +1276,35 @@ async def get_task_status(
         message=task_message or None,
         # progress=some_func_to_get_progress,
     )
+
+
+@router.post("/upload_templates")
+async def upload_template_file_to_s3(file_type: str = Query(..., enum=["data_extracts","form"], description="Choose file type") ,file: UploadFile = File(...)):
+    """
+        Uploads a file to S3.
+
+        Args: file (UploadFile): The file to be uploaded.
+
+        returns: The path of uploaded file in s3.
+    """
+
+    file_type_paths = {
+    "data_extracts": "templates/data_extracts.geojson",
+    "form": "templates/form.xls",
+}
+    file_path = file_type_paths.get(file_type)
+
+    file_bytes = await file.read()
+    file_obj = BytesIO(file_bytes)
+
+    # Upload the file to S3
+    try:
+        add_obj_to_bucket(
+            settings.S3_BUCKET_NAME,
+            file_obj,
+            file_path,
+            content_type=file.content_type,
+        )
+        return {"status": "success", "message": "File uploaded successfully"}
+    except Exception as e:
+        return {"status": "failed", "message": f"File upload failed: {str(e)}"}
