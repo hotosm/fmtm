@@ -18,6 +18,7 @@
 import json
 import os
 import uuid
+from io import BytesIO
 from pathlib import Path
 from typing import List, Optional
 
@@ -41,13 +42,12 @@ from osm_rawdata.postgres import PostgresClient
 from shapely.geometry import mapping, shape
 from shapely.ops import unary_union
 from sqlalchemy.orm import Session
-from io import BytesIO
 
-from ..config import settings
-from ..s3 import add_obj_to_bucket
 from ..central import central_crud
+from ..config import settings
 from ..db import database, db_models
 from ..models.enums import TILES_FORMATS, TILES_SOURCE
+from ..s3 import add_obj_to_bucket
 from ..tasks import tasks_crud
 from . import project_crud, project_schemas, utils
 from .project_crud import check_crs
@@ -1279,19 +1279,22 @@ async def get_task_status(
 
 
 @router.post("/upload_templates")
-async def upload_template_file_to_s3(file_type: str = Query(..., enum=["data_extracts","form"], description="Choose file type") ,file: UploadFile = File(...)):
+async def upload_template_file_to_s3(
+    file_type: str = Query(
+        ..., enum=["data_extracts", "form"], description="Choose file type"
+    ),
+    file: UploadFile = File(...),
+):
+    """Uploads a file to S3.
+
+    Args: file (UploadFile): The file to be uploaded.
+
+    returns: The path of uploaded file in s3.
     """
-        Uploads a file to S3.
-
-        Args: file (UploadFile): The file to be uploaded.
-
-        returns: The path of uploaded file in s3.
-    """
-
     file_type_paths = {
-    "data_extracts": "templates/data_extracts.geojson",
-    "form": "templates/form.xls",
-}
+        "data_extracts": "templates/data_extracts.geojson",
+        "form": "templates/form.xls",
+    }
     file_path = file_type_paths.get(file_type)
 
     file_bytes = await file.read()
