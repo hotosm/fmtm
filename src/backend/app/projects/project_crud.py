@@ -128,7 +128,7 @@ async def get_project_summaries(
     search: str = None,
 ):
     project_count, db_projects = await get_projects(
-        db, user_id, skip, limit, True, hashtags, search
+        db, user_id, skip, limit, hashtags, search
     )
     return project_count, await convert_to_project_summaries(db_projects)
 
