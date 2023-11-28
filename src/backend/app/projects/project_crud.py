@@ -22,6 +22,7 @@ import time
 import uuid
 import zipfile
 from asyncio import gather
+from concurrent.futures import ThreadPoolExecutor, wait
 from io import BytesIO
 from json import dumps, loads
 from typing import List, Optional
@@ -1269,7 +1270,8 @@ def flatten_dict(d, parent_key="", sep="_"):
     return items
 
 
-async def generate_task_files(
+# NOTE defined as non-async to run in separate thread
+def generate_task_files(
     db: Session,
     project_id: int,
     task_id: int,
@@ -1280,7 +1282,10 @@ async def generate_task_files(
     project_log = log.bind(task="create_project", project_id=project_id)
 
     project_log.info(f"Generating files for task {task_id}")
-    project = await get_project(db, project_id)
+
+    get_project_sync = async_to_sync(get_project)
+    project = get_project_sync(db, project_id)
+
     odk_id = project.odkid
     project_name = project.project_name_prefix
     category = project.xform_title
@@ -1297,7 +1302,8 @@ async def generate_task_files(
 
     # prefix should be sent instead of name
     project_log.info(f"Creating qr code for task {task_id}")
-    create_qr = await create_qrcode(
+    create_qr_sync = async_to_sync(create_qrcode)
+    qr_code = create_qr_sync(
         db,
         odk_id,
         appuser.json()["token"],
@@ -1305,8 +1311,9 @@ async def generate_task_files(
         odk_credentials.odk_central_url,
     )
 
-    task = await tasks_crud.get_task(db, task_id)
-    task.qr_code_id = create_qr["qr_code_id"]
+    get_task_sync = async_to_sync(tasks_crud.get_task)
+    task = get_task_sync(db, task_id)
+    task.qr_code_id = qr_code["qr_code_id"]
     db.commit()
     db.refresh(task)
 
@@ -1495,7 +1502,8 @@ def generate_appuser_files(
             # Data Extracts
             if extracts_contents is not None:
                 project_log.info("Uploading data extracts")
-                await upload_custom_data_extracts(db, project_id, extracts_contents)
+                upload_extract_sync = async_to_sync(upload_custom_data_extracts)
+                upload_extract_sync(db, project_id, extracts_contents)
 
             else:
                 project = (
@@ -1557,12 +1565,14 @@ def generate_appuser_files(
 
             # Generating QR Code, XForm and uploading OSM Extracts to the form.
             # Creating app users and updating the role of that user.
-            tasks_list = await tasks_crud.get_task_lists(db, project_id)
+            get_task_lists_sync = async_to_sync(tasks_crud.get_task_lists)
+            tasks_list = get_task_lists_sync(db, project_id)
 
-            # Run with asyncio.gather efficiently
-            async def wrap_generate_task_files(task):
+            # Run with expensive task via threadpool
+            def wrap_generate_task_files(task):
+                """Func to wrap and return errors from thread."""
                 try:
-                    await generate_task_files(
+                    generate_task_files(
                         db,
                         project_id,
                         task,
@@ -1573,23 +1583,32 @@ def generate_appuser_files(
                 except Exception as e:
                     log.exception(str(e))
 
-            await gather(*[wrap_generate_task_files(task) for task in tasks_list])
+            # Use a ThreadPoolExecutor to run the synchronous code in threads
+            with ThreadPoolExecutor() as executor:
+                # Submit tasks to the thread pool
+                futures = [
+                    executor.submit(wrap_generate_task_files, task)
+                    for task in tasks_list
+                ]
+                # Wait for all tasks to complete
+                wait(futures)
 
-        # Update background task status to COMPLETED
         if background_task_id:
-            await update_background_task_status_in_database(
-                db, background_task_id, 4
-            )  # 4 is COMPLETED
+            # Update background task status to COMPLETED
+            update_bg_task_sync = async_to_sync(
+                update_background_task_status_in_database
+            )
+            update_bg_task_sync(db, background_task_id, 4)  # 4 is COMPLETED
 
     except Exception as e:
         log.warning(str(e))
 
-        # Update background task status to FAILED
         if background_task_id:
-            await update_background_task_status_in_database(
-                db, background_task_id, 2, str(e)
-            )  # 2 is FAILED
-
+            # Update background task status to FAILED
+            update_bg_task_sync = async_to_sync(
+                update_background_task_status_in_database
+            )
+            update_bg_task_sync(db, background_task_id, 2, str(e))  # 2 is FAILED
         else:
             # Raise original error if not running in background
             raise e
@@ -2118,9 +2137,10 @@ def add_custom_extract_to_db(
                     failure += 1
                     continue
 
-            await update_background_task_status_in_database(
-                db, background_task_id, 4
-            )  # 4 is COMPLETED
+            update_bg_task_sync = async_to_sync(
+                update_background_task_status_in_database
+            )
+            update_bg_task_sync(db, background_task_id, 4)  # 4 is COMPLETED
 
         elif feature_type == "lines":
             for feature in features["features"]:
@@ -2144,18 +2164,17 @@ def add_custom_extract_to_db(
                     failure += 1
                     continue
 
-            await update_background_task_status_in_database(
-                db, background_task_id, 4
-            )  # 4 is COMPLETED
+            update_bg_task_sync = async_to_sync(
+                update_background_task_status_in_database
+            )
+            update_bg_task_sync(db, background_task_id, 4)  # 4 is COMPLETED
 
         return True
     except Exception as e:
         log.warning(str(e))
 
-        # Update background task status to FAILED
-        await update_background_task_status_in_database(
-            db, background_task_id, 2, str(e)
-        )  # 2 is FAILED
+        update_bg_task_sync = async_to_sync(update_background_task_status_in_database)
+        update_bg_task_sync(db, background_task_id, 2, str(e))  # 2 is FAILED
 
 
 async def update_project_form(
