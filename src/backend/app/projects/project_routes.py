@@ -18,6 +18,7 @@
 import json
 import os
 import uuid
+from io import BytesIO
 from pathlib import Path
 from typing import List, Optional
 
@@ -41,13 +42,12 @@ from osm_rawdata.postgres import PostgresClient
 from shapely.geometry import mapping, shape
 from shapely.ops import unary_union
 from sqlalchemy.orm import Session
-from io import BytesIO
 
-from ..config import settings
-from ..s3 import add_obj_to_bucket
 from ..central import central_crud
+from ..config import settings
 from ..db import database, db_models
 from ..models.enums import TILES_FORMATS, TILES_SOURCE
+from ..s3 import add_obj_to_bucket
 from ..tasks import tasks_crud
 from . import project_crud, project_schemas, utils
 from .project_crud import check_crs
@@ -1287,7 +1287,6 @@ async def get_template_file(file_type: str = Query(..., enum=["data_extracts","f
 
         returns: Requested file as a FileResponse.
     """
-
     file_type_paths = {
     "data_extracts": f"{data_path}/template/template.geojson",
     "form": f"{data_path}/template/template.xls",
