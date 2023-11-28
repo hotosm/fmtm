@@ -1905,6 +1905,7 @@ async def get_dbqrcode_from_file(zip, qr_filename: str, error_detail: str):
 
 
 async def convert_to_app_project(db_project: db_models.DbProject):
+    # TODO refactor login to Pydantic models
     if not db_project:
         log.debug("convert_to_app_project called, but no project provided")
         return None
@@ -1918,12 +1919,11 @@ async def convert_to_app_project(db_project: db_models.DbProject):
             db_project.outline, {"id": db_project.id}, db_project.id
         )
 
-    app_project.project_tasks = await tasks_crud.convert_to_app_tasks(db_project.tasks)
-
     return app_project
 
 
 async def convert_to_app_project_info(db_project_info: db_models.DbProjectInfo):
+    # TODO refactor login to Pydantic models
     if db_project_info:
         app_project_info: project_schemas.ProjectInfo = db_project_info
         return app_project_info
@@ -1934,6 +1934,7 @@ async def convert_to_app_project_info(db_project_info: db_models.DbProjectInfo):
 async def convert_to_app_projects(
     db_projects: List[db_models.DbProject],
 ) -> List[project_schemas.ProjectOut]:
+    # TODO refactor login to Pydantic models
     if db_projects and len(db_projects) > 0:
 
         async def convert_project(project):
@@ -1948,6 +1949,7 @@ async def convert_to_app_projects(
 
 
 async def convert_to_project_summary(db_project: db_models.DbProject):
+    # TODO refactor login to Pydantic models
     if db_project:
         summary: project_schemas.ProjectSummary = db_project
 
@@ -1971,6 +1973,7 @@ async def convert_to_project_summary(db_project: db_models.DbProject):
 async def convert_to_project_summaries(
     db_projects: List[db_models.DbProject],
 ) -> List[project_schemas.ProjectSummary]:
+    # TODO refactor login to Pydantic models
     if db_projects and len(db_projects) > 0:
 
         async def convert_summary(project):
@@ -1985,6 +1988,7 @@ async def convert_to_project_summaries(
 
 
 async def convert_to_project_feature(db_project_feature: db_models.DbFeatures):
+    # TODO refactor login to Pydantic models
     if db_project_feature:
         app_project_feature: project_schemas.Feature = db_project_feature
 
@@ -2003,6 +2007,7 @@ async def convert_to_project_feature(db_project_feature: db_models.DbFeatures):
 async def convert_to_project_features(
     db_project_features: List[db_models.DbFeatures],
 ) -> List[project_schemas.Feature]:
+    # TODO refactor login to Pydantic models
     if db_project_features and len(db_project_features) > 0:
 
         async def convert_feature(project_feature):
