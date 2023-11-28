@@ -64,13 +64,14 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
-from ..central import central_crud
-from ..config import settings
-from ..db import db_models
-from ..db.postgis_utils import geometry_to_geojson, timestamp
-from ..tasks import tasks_crud
-from ..users import user_crud
-from . import project_schemas
+from app.central import central_crud
+from app.config import settings
+from app.db import db_models
+from app.db.database import get_db
+from app.db.postgis_utils import geometry_to_geojson, timestamp
+from app.projects import project_schemas
+from app.tasks import tasks_crud
+from app.users import user_crud
 
 QR_CODES_DIR = "QR_codes/"
 TASK_GEOJSON_DIR = "geojson/"
@@ -1570,10 +1571,15 @@ def generate_appuser_files(
 
             # Run with expensive task via threadpool
             def wrap_generate_task_files(task):
-                """Func to wrap and return errors from thread."""
+                """Func to wrap and return errors from thread.
+
+                Also passes it's own database session for thread safety.
+                If we pass a single db session to multiple threads,
+                there may be inconsistencies or errors.
+                """
                 try:
                     generate_task_files(
-                        db,
+                        next(get_db()),
                         project_id,
                         task,
                         xlsform,
