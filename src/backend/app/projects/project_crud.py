@@ -1191,7 +1191,7 @@ def get_odk_id_for_project(db: Session, project_id: int):
     return project_info.odkid
 
 
-def upload_custom_data_extracts(
+async def upload_custom_data_extracts(
     db: Session,
     project_id: int,
     contents: str,
