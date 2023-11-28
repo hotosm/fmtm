@@ -18,7 +18,6 @@
 import json
 import os
 import uuid
-from io import BytesIO
 from pathlib import Path
 from typing import List, Optional
 
@@ -44,10 +43,8 @@ from shapely.ops import unary_union
 from sqlalchemy.orm import Session
 
 from ..central import central_crud
-from ..config import settings
 from ..db import database, db_models
 from ..models.enums import TILES_FORMATS, TILES_SOURCE
-from ..s3 import add_obj_to_bucket
 from ..tasks import tasks_crud
 from . import project_crud, project_schemas, utils
 from .project_crud import check_crs
@@ -1277,20 +1274,28 @@ async def get_task_status(
         # progress=some_func_to_get_progress,
     )
 
+
 from ..static import data_path
+
+
 @router.post("/templates")
-async def get_template_file(file_type: str = Query(..., enum=["data_extracts","form"], description="Choose file type")):
-    """
-        Get template file.
+async def get_template_file(
+    file_type: str = Query(
+        ..., enum=["data_extracts", "form"], description="Choose file type"
+    )
+):
+    """Get template file.
 
-        Args: file_type: Type of template file.
+    Args: file_type: Type of template file.
 
-        returns: Requested file as a FileResponse.
+    returns: Requested file as a FileResponse.
     """
     file_type_paths = {
-    "data_extracts": f"{data_path}/template/template.geojson",
-    "form": f"{data_path}/template/template.xls",
-}
+        "data_extracts": f"{data_path}/template/template.geojson",
+        "form": f"{data_path}/template/template.xls",
+    }
     file_path = file_type_paths.get(file_type)
     filename = file_path.split("/")[-1]
-    return FileResponse(file_path, media_type='application/octet-stream', filename=filename)
+    return FileResponse(
+        file_path, media_type="application/octet-stream", filename=filename
+    )
