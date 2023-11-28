@@ -36,7 +36,6 @@ from ..db import db_models
 from ..projects import project_schemas
 
 
-# Async not implemented
 def get_odk_project(odk_central: project_schemas.ODKCentral = None):
     """Helper function to get the OdkProject with credentials."""
     if odk_central:
