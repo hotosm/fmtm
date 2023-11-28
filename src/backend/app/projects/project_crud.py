@@ -83,7 +83,6 @@ async def get_projects(
     user_id: int,
     skip: int = 0,
     limit: int = 100,
-    db_objects: bool = False,
     hashtags: List[str] = None,
     search: str = None,
 ):
@@ -117,8 +116,6 @@ async def get_projects(
             .all()
         )
         project_count = db.query(db_models.DbProject).count()
-    if db_objects:
-        return project_count, db_projects
     return project_count, await convert_to_app_projects(db_projects)
 
 
