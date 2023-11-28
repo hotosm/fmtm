@@ -263,8 +263,7 @@ async def update_odk_credentials(
     project_id: int,
     db: Session = Depends(database.get_db),
 ):
-    """Update odk credential of a project.
-    """
+    """Update odk credential of a project."""
     if odk_central_cred.odk_central_url.endswith("/"):
         odk_central_cred.odk_central_url = odk_central_cred.odk_central_url[:-1]
 
