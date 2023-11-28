@@ -1128,7 +1128,7 @@ def update_project_with_zip(
 # ---------------------------
 
 
-def read_xlsforms(
+async def read_xlsforms(
     db: Session,
     directory: str,
 ):
