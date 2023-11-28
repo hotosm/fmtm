@@ -58,8 +58,7 @@ async def create_appuser(
 ):
     """Create an appuser in Central."""
     appuser = central_crud.create_appuser(project_id, name=name)
-    # tasks = tasks_crud.update_qrcode(db, task_id, qrcode['id'])
-    return project_crud.create_qrcode(db, project_id, appuser.get("token"), name)
+    return await project_crud.create_qrcode(db, project_id, appuser.get("token"), name)
 
 
 # @router.get("/list_submissions")

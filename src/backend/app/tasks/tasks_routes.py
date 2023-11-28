@@ -44,7 +44,7 @@ async def read_task_list(
     limit: int = 1000,
     db: Session = Depends(database.get_db),
 ):
-    tasks = tasks_crud.get_tasks(db, project_id, limit)
+    tasks = await tasks_crud.get_tasks(db, project_id, limit)
     if tasks:
         return tasks
     else:
@@ -65,7 +65,7 @@ async def read_tasks(
             detail="Please provide either user_id OR task_id, not both.",
         )
 
-    tasks = tasks_crud.get_tasks(db, project_id, user_id, skip, limit)
+    tasks = await tasks_crud.get_tasks(db, project_id, user_id, skip, limit)
     if tasks:
         return tasks
     else:
@@ -96,14 +96,16 @@ async def get_point_on_surface(project_id: int, db: Session = Depends(database.g
 
 
 @router.post("/near_me", response_model=tasks_schemas.TaskOut)
-def get_task(lat: float, long: float, project_id: int = None, user_id: int = None):
+async def get_tasks_near_me(
+    lat: float, long: float, project_id: int = None, user_id: int = None
+):
     """Get tasks near the requesting user."""
     return "Coming..."
 
 
 @router.get("/{task_id}", response_model=tasks_schemas.TaskOut)
 async def read_tasks(task_id: int, db: Session = Depends(database.get_db)):
-    task = tasks_crud.get_task(db, task_id)
+    task = await tasks_crud.get_task(db, task_id)
     if task:
         return task
     else:
@@ -120,7 +122,7 @@ async def update_task_status(
     # TODO verify logged in user
     user_id = user.id
 
-    task = tasks_crud.update_task_status(
+    task = await tasks_crud.update_task_status(
         db, user_id, task_id, TaskStatus[new_status.name]
     )
     if task:
@@ -134,7 +136,7 @@ async def get_qr_code_list(
     task_id: int,
     db: Session = Depends(database.get_db),
 ):
-    return tasks_crud.get_qr_codes_for_task(db=db, task_id=task_id)
+    return await tasks_crud.get_qr_codes_for_task(db=db, task_id=task_id)
 
 
 @router.post("/edit-task-boundary")
@@ -158,7 +160,7 @@ async def task_features_count(
     db: Session = Depends(database.get_db),
 ):
     # Get the project object.
-    project = project_crud.get_project(db, project_id)
+    project = await project_crud.get_project(db, project_id)
 
     # ODK Credentials
     odk_credentials = project_schemas.ODKCentral(

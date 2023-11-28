@@ -16,6 +16,7 @@
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 import base64
+from asyncio import gather
 from typing import List
 
 from fastapi import HTTPException
@@ -24,7 +25,6 @@ from geojson import dump
 from loguru import logger as log
 from osm_rawdata.postgres import PostgresClient
 from shapely.geometry import shape
-from sqlalchemy import column, select, table
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
@@ -47,7 +47,7 @@ async def get_task_count_in_project(db: Session, project_id: int):
     return result.fetchone()[0]
 
 
-def get_task_lists(db: Session, project_id: int):
+async def get_task_lists(db: Session, project_id: int):
     """Get a list of tasks for a project."""
     query = text(
         """
@@ -65,7 +65,7 @@ def get_task_lists(db: Session, project_id: int):
     return task_ids
 
 
-def get_tasks(
+async def get_tasks(
     db: Session, project_id: int, user_id: int, skip: int = 0, limit: int = 1000
 ):
     if project_id:
@@ -86,17 +86,19 @@ def get_tasks(
         )
     else:
         db_tasks = db.query(db_models.DbTask).offset(skip).limit(limit).all()
-    return convert_to_app_tasks(db_tasks)
+    return await convert_to_app_tasks(db_tasks)
 
 
-def get_task(db: Session, task_id: int, db_obj: bool = False):
+async def get_task(db: Session, task_id: int, db_obj: bool = False):
     db_task = db.query(db_models.DbTask).filter(db_models.DbTask.id == task_id).first()
     if db_obj:
         return db_task
-    return convert_to_app_task(db_task)
+    return await convert_to_app_task(db_task)
 
 
-def update_task_status(db: Session, user_id: int, task_id: int, new_status: TaskStatus):
+async def update_task_status(
+    db: Session, user_id: int, task_id: int, new_status: TaskStatus
+):
     if not user_id:
         raise HTTPException(status_code=400, detail="User id required.")
 
@@ -106,7 +108,7 @@ def update_task_status(db: Session, user_id: int, task_id: int, new_status: Task
             status_code=400, detail=f"User with id {user_id} does not exist."
         )
 
-    db_task = get_task(db, task_id, db_obj=True)
+    db_task = await get_task(db, task_id, db_obj=True)
 
     if db_task:
         if db_task.task_status in [
@@ -121,7 +123,7 @@ def update_task_status(db: Session, user_id: int, task_id: int, new_status: Task
 
         if verify_valid_status_update(db_task.task_status, new_status):
             # update history prior to updating task
-            update_history = create_task_history_for_status_change(
+            update_history = await create_task_history_for_status_change(
                 db_task, new_status, db_user
             )
             db.add(update_history)
@@ -146,7 +148,7 @@ def update_task_status(db: Session, user_id: int, task_id: int, new_status: Task
             db.commit()
             db.refresh(db_task)
 
-            return convert_to_app_task(db_task)
+            return await convert_to_app_task(db_task)
 
     else:
         raise HTTPException(
@@ -160,31 +162,7 @@ def update_task_status(db: Session, user_id: int, task_id: int, new_status: Task
 # ---------------------------
 
 
-def update_qrcode(
-    db: Session,
-    task_id: int,
-    qr_id: int,
-    project_id: int,
-):
-    task = table("tasks", column("qr_code_id"), column("id"))
-    where = f"task.c.id={task_id}"
-    value = {"qr_code_id": qr_id}
-    sql = select(
-        geoalchemy2.functions.update(task.c.qr_code_id)
-        .where(text(where))
-        .values(text(value))
-    )
-    log.info(str(sql))
-    result = db.execute(sql)
-    # There should only be one match
-    if result.rowcount != 1:
-        log.warning(str(sql))
-        return False
-
-    log.info("/tasks/update_qr is partially implemented!")
-
-
-def create_task_history_for_status_change(
+async def create_task_history_for_status_change(
     db_task: db_models.DbTask, new_status: TaskStatus, db_user: db_models.DbUser
 ):
     new_task_history = db_models.DbTaskHistory(
@@ -216,7 +194,7 @@ def create_task_history_for_status_change(
 # TODO: write tests for these
 
 
-def convert_to_app_history(db_histories: List[db_models.DbTaskHistory]):
+async def convert_to_app_history(db_histories: List[db_models.DbTaskHistory]):
     if db_histories:
         log.debug("Converting DB Histories to App Histories")
         app_histories: List[tasks_schemas.TaskHistoryBase] = []
@@ -231,7 +209,7 @@ def convert_to_app_history(db_histories: List[db_models.DbTaskHistory]):
     return []
 
 
-def convert_to_app_task(db_task: db_models.DbTask):
+async def convert_to_app_task(db_task: db_models.DbTask):
     if db_task:
         log.debug("")
         log.debug(
@@ -276,28 +254,30 @@ def convert_to_app_task(db_task: db_models.DbTask):
         return None
 
 
-def convert_to_app_tasks(db_tasks: List[db_models.DbTask]):
+async def convert_to_app_tasks(
+    db_tasks: List[db_models.DbTask],
+) -> List[tasks_schemas.Task]:
     num_tasks = len(db_tasks)
     log.debug(f"Number of tasks in project: {num_tasks}")
 
     if db_tasks and num_tasks > 0:
         log.debug("Converting DB Tasks to App Tasks")
-        app_tasks = []
-        for task in db_tasks:
-            if task:
-                app_tasks.append(convert_to_app_task(task))
-        app_tasks_without_nones = [i for i in app_tasks if i is not None]
-        return app_tasks_without_nones
+
+        async def convert_task(task):
+            return await convert_to_app_task(task)
+
+        app_tasks = await gather(*[convert_task(task) for task in db_tasks])
+        return [task for task in app_tasks if task is not None]
     else:
         log.debug("No tasks found, skipping DB -> App conversion")
         return []
 
 
-def get_qr_codes_for_task(
+async def get_qr_codes_for_task(
     db: Session,
     task_id: int,
 ):
-    task = get_task(db=db, task_id=task_id)
+    task = await get_task(db=db, task_id=task_id)
     if task:
         if task.qr_code:
             log.debug(f"QR code found for task ID {task.id}. Converting to base64")
@@ -382,9 +362,8 @@ async def update_task_files(
 
 
 async def edit_task_boundary(db: Session, task_id: int, boundary: str):
-    geometry = boundary["features"][0]["geometry"]
-
     """Update the boundary polyon on the database."""
+    geometry = boundary["features"][0]["geometry"]
     outline = shape(geometry)
 
     task = await get_task_by_id(db, task_id)
@@ -396,7 +375,7 @@ async def edit_task_boundary(db: Session, task_id: int, boundary: str):
 
     # Get category, project_name
     project_id = task.project_id
-    project = project_crud.get_project(db, project_id)
+    project = await project_crud.get_project(db, project_id)
     category = project.xform_title
     project_name = project.project_name_prefix
     odk_id = project.odkid
