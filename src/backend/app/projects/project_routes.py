@@ -1277,34 +1277,21 @@ async def get_task_status(
         # progress=some_func_to_get_progress,
     )
 
-
-@router.post("/upload_templates")
-async def upload_template_file_to_s3(file_type: str = Query(..., enum=["data_extracts","form"], description="Choose file type") ,file: UploadFile = File(...)):
+from ..static import data_path
+@router.post("/templates")
+async def get_template_file(file_type: str = Query(..., enum=["data_extracts","form"], description="Choose file type")):
     """
-        Uploads a file to S3.
+        Get template file.
 
-        Args: file (UploadFile): The file to be uploaded.
+        Args: file_type: Type of template file.
 
-        returns: The path of uploaded file in s3.
+        returns: Requested file as a FileResponse.
     """
 
     file_type_paths = {
-    "data_extracts": "templates/data_extracts.geojson",
-    "form": "templates/form.xls",
+    "data_extracts": f"{data_path}/template/template.geojson",
+    "form": f"{data_path}/template/template.xls",
 }
     file_path = file_type_paths.get(file_type)
-
-    file_bytes = await file.read()
-    file_obj = BytesIO(file_bytes)
-
-    # Upload the file to S3
-    try:
-        add_obj_to_bucket(
-            settings.S3_BUCKET_NAME,
-            file_obj,
-            file_path,
-            content_type=file.content_type,
-        )
-        return {"status": "success", "message": "File uploaded successfully"}
-    except Exception as e:
-        return {"status": "failed", "message": f"File upload failed: {str(e)}"}
+    filename = file_path.split("/")[-1]
+    return FileResponse(file_path, media_type='application/octet-stream', filename=filename)
