@@ -15,6 +15,8 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
+"""Logic for FMTM project routes."""
+
 import io
 import json
 import os
@@ -1918,6 +1920,8 @@ async def convert_to_app_project(db_project: db_models.DbProject):
         app_project.outline_geojson = geometry_to_geojson(
             db_project.outline, {"id": db_project.id}, db_project.id
         )
+
+    app_project.project_tasks = db_project.tasks
 
     return app_project
 
