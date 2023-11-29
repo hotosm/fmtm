@@ -280,6 +280,8 @@ const GetDividedTaskFromGeojson: Function = (url: string, payload: any) => {
         dividedTaskFormData.append('dimension', payload.dimension);
         const getGetDividedTaskFromGeojsonResponse = await axios.post(url, dividedTaskFormData);
         const resp: OrganisationListModel = getGetDividedTaskFromGeojsonResponse.data;
+        dispatch(CreateProjectActions.SetIsTasksGenerated({ key: 'divide_on_square', value: true }));
+        dispatch(CreateProjectActions.SetIsTasksGenerated({ key: 'task_splitting_algorithm', value: false }));
         dispatch(CreateProjectActions.SetDividedTaskGeojson(resp));
         dispatch(CreateProjectActions.SetDividedTaskFromGeojsonLoading(false));
       } catch (error) {
@@ -346,6 +348,8 @@ const TaskSplittingPreviewService: Function = (
           // TODO display error to user, perhaps there is not osm data here?
           return;
         }
+        dispatch(CreateProjectActions.SetIsTasksGenerated({ key: 'divide_on_square', value: false }));
+        dispatch(CreateProjectActions.SetIsTasksGenerated({ key: 'task_splitting_algorithm', value: true }));
         dispatch(CreateProjectActions.GetTaskSplittingPreview(resp));
       } catch (error) {
         dispatch(CreateProjectActions.GetTaskSplittingPreviewLoading(false));
