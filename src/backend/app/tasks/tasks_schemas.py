@@ -15,6 +15,7 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
+"""Pydantic schemas for FMTM task areas."""
 
 
 import base64
@@ -26,32 +27,27 @@ from loguru import logger as log
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo
 from pydantic.functional_validators import field_validator
 
-from app.db.postgis_utils import geometry_to_geojson
+from app.db.postgis_utils import geometry_to_geojson, get_centroid
 from app.models.enums import TaskStatus
 
 
 class TaskHistoryBase(BaseModel):
+    """Task mapping history."""
+
     id: int
     action_text: str
     action_date: datetime
-    obj: Optional[Any] = None
 
 
 class TaskHistoryOut(TaskHistoryBase):
+    """Task mapping history display."""
+
     pass
 
 
-class TaskBasicInfo(BaseModel):
-    id: int
-    project_id: int
-    project_task_index: int
-    task_status: TaskStatus
-    locked_by_uid: int = None
-    locked_by_username: str = None
-    task_history: List[TaskHistoryBase]
-
-
 class TaskBase(BaseModel):
+    """Core fields for a Task."""
+
     model_config = ConfigDict(
         use_enum_values=True,
         validate_default=True,
@@ -59,6 +55,7 @@ class TaskBase(BaseModel):
 
     # Excluded
     lock_holder: Any = Field(exclude=True)
+    outline: Any = Field(exclude=True)
     qr_code: Any = Field(exclude=True)
 
     id: int
@@ -66,8 +63,8 @@ class TaskBase(BaseModel):
     project_task_index: int
     project_task_name: str
     outline_geojson: Optional[Feature] = None
-    # outline_centroid: Feature
-    # initial_feature_count: int
+    outline_centroid: Optional[Feature] = None
+    initial_feature_count: Optional[int] = None
     task_status: TaskStatus
     locked_by_uid: Optional[int] = None
     locked_by_username: Optional[str] = None
@@ -85,6 +82,20 @@ class TaskBase(BaseModel):
             }
             log.debug("Converting task outline to geojson")
             return geometry_to_geojson(outline, properties, info.data.get("id"))
+        return None
+
+    @field_validator("outline_centroid", mode="before")
+    @classmethod
+    def get_centroid_from_outline(cls, v: Any, info: ValidationInfo) -> str:
+        """Get outline_centroid from Shapely geom."""
+        if outline := info.data.get("outline"):
+            properties = {
+                "fid": info.data.get("project_task_index"),
+                "uid": info.data.get("id"),
+                "name": info.data.get("project_task_name"),
+            }
+            log.debug("Converting task outline to geojson")
+            return get_centroid(outline, properties, info.data.get("id"))
         return None
 
     @field_validator("locked_by_uid", mode="before")
@@ -105,6 +116,8 @@ class TaskBase(BaseModel):
 
 
 class Task(TaskBase):
+    """Task details plus base64 QR codes."""
+
     qr_code_base64: Optional[str] = None
 
     @field_validator("qr_code_base64", mode="before")
@@ -118,9 +131,5 @@ class Task(TaskBase):
             )
             return base64.b64encode(qr_code.image)
         else:
-            log.warning(f"No QR code found for task ID {db_task.id}")
+            log.warning(f"No QR code found for task ID {info.data.get('id')}")
             return ""
-
-
-class TaskDetails(TaskBase):
-    pass
