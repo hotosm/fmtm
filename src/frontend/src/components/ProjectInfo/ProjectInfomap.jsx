@@ -278,7 +278,9 @@ const ProjectInfomap = () => {
           <Accordion
             body={<ProjectInfoMapLegend defaultTheme={defaultTheme} />}
             header={
-              <p className="fmtm-text-lg fmtm-font-normal fmtm-my-auto fmtm-mb-[0.35rem] fmtm-ml-2">Range Index</p>
+              <p className="fmtm-text-lg fmtm-font-normal fmtm-my-auto fmtm-mb-[0.35rem] fmtm-ml-2">
+                No. of Submissions
+              </p>
             }
             onToggle={() => {}}
             className="fmtm-py-0 !fmtm-pb-0 fmtm-rounded-lg hover:fmtm-bg-gray-50"
