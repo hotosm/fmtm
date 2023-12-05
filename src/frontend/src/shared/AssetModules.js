@@ -49,6 +49,9 @@ import {
   CropFree as CropFreeIcon,
   LegendToggle as LegendToggleIcon,
   Delete as DeleteIcon,
+  Launch as LaunchIcon,
+  Edit as EditIcon,
+  FmdGood as FmdGoodIcon,
 } from '@mui/icons-material';
 import LockPng from '../assets/images/lock.png';
 import RedLockPng from '../assets/images/red-lock.png';
@@ -108,4 +111,7 @@ export default {
   CropFreeIcon,
   LegendToggleIcon,
   DeleteIcon,
+  LaunchIcon,
+  EditIcon,
+  FmdGoodIcon,
 };
