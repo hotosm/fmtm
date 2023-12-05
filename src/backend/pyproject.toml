@@ -45,11 +45,9 @@ dependencies = [
     "pyproj==3.6.1",
     "asgiref==3.7.2",
     "osm-login-python==1.0.1",
-    "osm-fieldwork==0.3.7",
-    "osm-rawdata==0.1.5",
-    "minio>=7.1.17",
-    "pyproj>=3.6.1",
-    "asgiref>=3.7.2",
+    "osm-fieldwork==0.4.0",
+    "osm-rawdata==0.1.7",
+    "fmtm-splitter==0.2.1",
 ]
 requires-python = ">=3.10"
 readme = "../../README.md"
