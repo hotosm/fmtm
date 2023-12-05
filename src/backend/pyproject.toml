@@ -56,7 +56,7 @@ readme = "../../README.md"
 license = {text = "GPL-3.0-only"}
 
 [build-system]
-requires = ["pdm-pep517>=1.0.0"]
+requires = ["pdm-pep517==1.1.4"]
 build-backend = "pdm.pep517.api"
 
 [tool.pdm]
