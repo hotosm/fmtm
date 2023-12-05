@@ -288,7 +288,10 @@ const Home = () => {
         <div className="fmtm-w-[17rem] fmtm-h-full sm:fmtm-block fmtm-hidden">
           <div className="fmtm-flex fmtm-justify-between fmtm-items-center fmtm-mb-4">
             <p className="fmtm-text-lg fmtm-font-archivo">{`#${state.projectInfo.id}`}</p>
-            <p className="fmtm-text-sm fmtm-text-primaryRed hover:fmtm-cursor-pointer hover:fmtm-text-red-700">
+            <p
+              className="fmtm-text-sm fmtm-text-primaryRed hover:fmtm-cursor-pointer hover:fmtm-text-red-700"
+              onClick={() => navigate(`/projectInfo/${encodedId}`)}
+            >
               View Submissions <AssetModules.LaunchIcon style={{ fontSize: '14px' }} />
             </p>
           </div>
@@ -297,10 +300,13 @@ const Home = () => {
               <p className="fmtm-text-xl fmtm-font-archivo fmtm-line-clamp-3 fmtm-mr-4" title={state.projectInfo.title}>
                 {state.projectInfo.title}
               </p>
-              <AssetModules.EditIcon
-                className="fmtm-absolute fmtm-bottom-2 fmtm-right-0 fmtm-text-primaryRed hover:fmtm-cursor-pointer hover:fmtm-text-red-700"
-                style={{ fontSize: '18px' }}
-              />
+              <div title="Edit Project">
+                <AssetModules.EditIcon
+                  className="fmtm-absolute fmtm-bottom-2 fmtm-right-0 fmtm-text-primaryRed hover:fmtm-cursor-pointer hover:fmtm-text-red-700"
+                  style={{ fontSize: '18px' }}
+                  onClick={() => navigate(`/edit-project/project-details/${encodedId}`)}
+                />
+              </div>
             </div>
             <div className="fmtm-w-full fmtm-h-1 fmtm-bg-white"></div>
             <div className="fmtm-flex">
