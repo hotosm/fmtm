@@ -62,9 +62,9 @@ source-includes = ["../../CHANGELOG.md", "../../LICENSE", "../../README.md"]
 version = {from = "app/__version__.py"}
 [tool.pdm.dev-dependencies]
 dev = [
-    "pre-commit>=3.3.3",
-    "black>=23.7.0",
-    "commitizen>=3.6.0",
+    "pre-commit>=3.5.0",
+    "black>=23.11.0",
+    "commitizen>=3.13.0",
 ]
 test = [
     "pytest==7.4.3",
@@ -74,7 +74,7 @@ test = [
 ]
 debug = [
     "ipdb>=0.13.13",
-    "debugpy>=1.6.7.post1",
+    "debugpy>=1.8.0",
 ]
 docs = [
     "mkdocs==1.5.3",
