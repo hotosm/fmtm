@@ -6,7 +6,7 @@ groups = ["default", "debug", "dev", "docs", "test"]
 cross_platform = true
 static_urls = false
 lock_version = "4.3"
-content_hash = "sha256:1e66224db6c8ea45f8e99ca38545e6e0fbbf8f13cb136f86a82ecd61dc97a22e"
+content_hash = "sha256:b91bf6c0e826aa32f587abd038c98d68197fe8aca1071d1850dc95a156046e0f"
 
 [[package]]
 name = "annotated-types"
@@ -516,7 +516,7 @@ files = [
 
 [[package]]
 name = "fmtm-splitter"
-version = "0.2.1"
+version = "0.2.3"
 requires_python = ">=3.10"
 summary = "A program for splitting a large AOI into smaller tasks."
 dependencies = [
@@ -529,8 +529,8 @@ dependencies = [
     "sqlalchemy>=2.0.0",
 ]
 files = [
-    {file = "fmtm-splitter-0.2.1.tar.gz", hash = "sha256:e322efbf459fd0a1054b18ed0ba5bce080693e61031edc5c0806af998915b743"},
-    {file = "fmtm_splitter-0.2.1-py3-none-any.whl", hash = "sha256:1a81ae2546578e892421fef91c6571b8df44b77a32937afb67d6ffb768d69b43"},
+    {file = "fmtm-splitter-0.2.3.tar.gz", hash = "sha256:bca061bb4f776bc21f2ea66e813910bd45714bcde1506323b1ca930adfb5f17d"},
+    {file = "fmtm_splitter-0.2.3-py3-none-any.whl", hash = "sha256:9238e1ded22b7558df802cb8b1be3fdd811cd7997998720bbd8640ff217982e3"},
 ]
 
 [[package]]
