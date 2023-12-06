@@ -76,7 +76,9 @@ class TaskBase(BaseModel):
             try:
                 return TaskStatus(value).name
             except ValueError as e:
-                raise ValueError(f"Invalid integer value for task_status: {value}") from e
+                raise ValueError(
+                    f"Invalid integer value for task_status: {value}"
+                ) from e
         return value
 
     @field_validator("outline_geojson", mode="before")
