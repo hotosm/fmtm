@@ -285,7 +285,7 @@ const Home = () => {
       </div>
 
       <div className="fmtm-flex fmtm-h-full sm:fmtm-p-6 fmtm-gap-6">
-        <div className="fmtm-w-[17rem] fmtm-h-full sm:fmtm-block fmtm-hidden">
+        <div className="fmtm-w-[18.5rem] fmtm-h-full sm:fmtm-block fmtm-hidden">
           <div className="fmtm-flex fmtm-justify-between fmtm-items-center fmtm-mb-4">
             <p className="fmtm-text-lg fmtm-font-archivo">{`#${state.projectInfo.id}`}</p>
             <p
@@ -309,19 +309,27 @@ const Home = () => {
               </div>
             </div>
             <div className="fmtm-w-full fmtm-h-1 fmtm-bg-white"></div>
-            <div className="fmtm-flex">
-              <Button
-                btnText="Project Info"
-                btnType={`${viewState === 'project_info' ? 'primary' : 'secondary'}`}
-                className="fmtm-rounded-none fmtm-border-none fmtm-text-lg"
+            <div className="fmtm-flex fmtm-w-full">
+              <button
+                className={`fmtm-rounded-none fmtm-border-none fmtm-text-base ${
+                  viewState === 'project_info'
+                    ? 'fmtm-bg-primaryRed fmtm-text-white hover:fmtm-bg-red-700'
+                    : 'fmtm-bg-white fmtm-text-[#706E6E] hover:fmtm-bg-grey-50'
+                } fmtm-py-1`}
                 onClick={() => setViewState('project_info')}
-              />
-              <Button
-                btnText="Task Activity"
-                btnType={`${viewState !== 'project_info' ? 'primary' : 'secondary'}`}
-                className="fmtm-rounded-none fmtm-border-none"
+              >
+                Project Info
+              </button>
+              <button
+                className={`fmtm-rounded-none fmtm-border-none fmtm-text-base ${
+                  viewState !== 'project_info'
+                    ? 'fmtm-bg-primaryRed fmtm-text-white hover:fmtm-bg-red-700'
+                    : 'fmtm-bg-white fmtm-text-[#706E6E] hover:fmtm-bg-grey-50'
+                } fmtm-py-1`}
                 onClick={() => setViewState('task_activity')}
-              />
+              >
+                Task Activity
+              </button>
             </div>
             {viewState === 'project_info' ? (
               <ProjectInfo />

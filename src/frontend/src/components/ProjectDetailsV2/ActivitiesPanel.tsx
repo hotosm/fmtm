@@ -114,26 +114,27 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
 
   return (
     <CoreModules.Stack width={'100%'} spacing={2} className="">
-      <div className="fmtm-flex fmtm-items-center fmtm-bg-red-50">
-        <InputTextField
-          fieldType="text"
-          label=""
+      <div className="fmtm-flex fmtm-items-center fmtm-w-full fmtm-gap-2">
+        <input
+          type="text"
           onChange={handleOnchange}
           value={searchText}
           placeholder="Search by task id or username"
-          classNames="fmtm-rounded-none"
+          className="fmtm-w-[67%] fmtm-text-sm fmtm-px-1 fmtm-py-[0.35rem] fmtm-outline-none fmtm-border-[1px] fmtm-border-[#E7E2E2]"
         />
-        <CustomSelect
-          //   title="Organization Name"
-          placeholder="Filters"
-          //   data={organizationList}
-          //   dataKey="value"
-          //   value={values.organisation_id?.toString()}
-          //   valueKey="value"
-          //   label="label"
-          //   onValueChange={(value) => handleCustomChange('organisation_id', value && +value)}
-          className="fmtm-bg-white fmtm-overflow-hidden !fmtm-w-[6rem]"
-        />
+        <div className="fmtm-w-[33%]">
+          <CustomSelect
+            //   title="Organization Name"
+            placeholder="Filters"
+            //   data={organizationList}
+            //   dataKey="value"
+            //   value={values.organisation_id?.toString()}
+            //   valueKey="value"
+            //   label="label"
+            //   onValueChange={(value) => handleCustomChange('organisation_id', value && +value)}
+            className="fmtm-bg-white fmtm-overflow-hidden"
+          />
+        </div>
       </div>
 
       <CoreModules.Grid container item columns={{ xs: 2, sm: 3, md: 7 }}>
