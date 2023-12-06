@@ -133,10 +133,10 @@ export const CustomSelect = ({
   className,
 }: ICustomSelect) => {
   return (
-    <div className={`fmtm-w-full ${className}`}>
+    <div className={`fmtm-w-full`}>
       <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold ">{title}</p>
       <div className="fmtm-flex fmtm-items-end ">
-        <div className="fmtm-w-full">
+        <div className={`fmtm-w-full ${className}`}>
           <Select value={value} onValueChange={(value) => onValueChange(value)}>
             <SelectTrigger className="">
               <SelectValue placeholder={placeholder} />
