@@ -114,7 +114,7 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
 
   return (
     <CoreModules.Stack width={'100%'} spacing={2} className="">
-      <div className="fmtm-flex">
+      <div className="fmtm-flex fmtm-items-center fmtm-bg-red-50">
         <InputTextField
           fieldType="text"
           label=""
