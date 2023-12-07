@@ -34,7 +34,15 @@ const alogrithmList = [
 ];
 let generateProjectLogIntervalCb: any = null;
 
-const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, customPolygonUpload, customFormFile }) => {
+const SplitTasks = ({
+  flag,
+  geojsonFile,
+  setGeojsonFile,
+  customLineUpload,
+  customPolygonUpload,
+  customFormFile,
+  dataExtractFile,
+}) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -183,8 +191,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
           `${import.meta.env.VITE_API_URL}/projects/task_split`,
           drawnGeojsonFile,
           formValues?.average_buildings_per_task,
-          false,
-          // dataExtractFile ? true : false,
+          dataExtractFile,
         ),
       );
     }
