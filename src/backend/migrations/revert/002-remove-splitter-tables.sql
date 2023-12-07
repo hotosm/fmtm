@@ -22,6 +22,7 @@ ALTER SEQUENCE public.project_aoi_id_seq OWNED BY public.project_aoi.id;
 CREATE TABLE IF NOT EXISTS public.ways_line (
     id integer NOT NULL,
     project_id character varying,
+    osm_id character varying,
     geom public.geometry(Geometry,4326),
     tags jsonb
 );
