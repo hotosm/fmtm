@@ -2583,7 +2583,7 @@ def convert_geojson_to_epsg4326(input_geojson):
     return output_geojson
 
 
-def check_crs(input_geojson: dict):
+def check_crs(input_geojson: Union[dict, FeatureCollection]):
     log.debug("validating coordinate reference system")
 
     def is_valid_crs(crs_name):
@@ -2599,7 +2599,7 @@ def check_crs(input_geojson: dict):
 
     error_message = "ERROR: Unsupported coordinate system, it is recommended to use a GeoJSON file in WGS84(EPSG 4326) standard."
     if "crs" in input_geojson:
-        crs = input_geojson["crs"]["properties"]["name"]
+        crs = input_geojson.get("crs", {}).get("properties", {}).get("name")
         if not is_valid_crs(crs):
             log.error(error_message)
             raise HTTPException(status_code=400, detail=error_message)
