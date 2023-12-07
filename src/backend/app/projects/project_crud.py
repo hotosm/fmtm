@@ -23,6 +23,7 @@ import os
 import time
 import uuid
 import zipfile
+import geojson
 from asyncio import gather
 from concurrent.futures import ThreadPoolExecutor, wait
 from io import BytesIO
@@ -1369,7 +1370,7 @@ def generate_task_files(
     # Update outfile containing osm extracts with the new geojson contents containing title in the properties.
     with open(extracts, "w") as jsonfile:
         jsonfile.truncate(0)  # clear the contents of the file
-        dump(features, jsonfile)
+        geojson.dump(features, jsonfile)
 
     project_log.info(
         f"Generating xform for task: {task_id} "
@@ -1812,7 +1813,7 @@ async def create_task_grid(db: Session, project_id: int, delta: int):
 
         collection = geojson.FeatureCollection(grid)
         # jsonout = open("tmp.geojson", 'w')
-        # out = dump(collection, jsonout)
+        # out = geojson.dump(collection, jsonout)
         out = dumps(collection)
 
         # If project outline cannot be divided into multiple tasks,
@@ -2111,7 +2112,8 @@ async def update_background_task_status_in_database(
     return True
 
 
-# NOTE defined as non-async to run in separate thread
+# TODO update to store extracts in S3 instead, not db
+# TODO convert geojson to fgb and upload
 def add_custom_extract_to_db(
     db: Session,
     features: dict,
@@ -2328,7 +2330,7 @@ async def update_project_form(
         # Update outfile containing osm extracts with the new geojson contents containing title in the properties.
         with open(extracts, "w") as jsonfile:
             jsonfile.truncate(0)  # clear the contents of the file
-            dump(features, jsonfile)
+            geojson.dump(features, jsonfile)
 
         outfile = central_crud.generate_updated_xform(xlsform, xform, form_type)
 
@@ -2380,7 +2382,7 @@ async def get_extracted_data_from_db(db: Session, project_id: int, outfile: str)
     # Update outfile containing osm extracts with the new geojson contents containing title in the properties.
     with open(outfile, "w") as jsonfile:
         jsonfile.truncate(0)
-        dump(features, jsonfile)
+        geojson.dump(features, jsonfile)
 
 
 # NOTE defined as non-async to run in separate thread
