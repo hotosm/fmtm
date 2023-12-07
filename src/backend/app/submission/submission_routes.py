@@ -239,6 +239,16 @@ async def update_submission_cache(
         content={"Message": f"Submission update process initiated"},
     )
 
+@router.post("/download_submission_from_cache")
+async def download_submissions_from_cache(
+    project_id: int,
+    db: Session = Depends(database.get_db)
+    ):
+
+    project = await project_crud.get_project(db, project_id)
+    s3_path = f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}/{project.organisation_id}/{project_id}/submission.json"
+    return s3_path
+
 
 @router.get("/get_osm_xml/{project_id}")
 async def get_osm_xml(
