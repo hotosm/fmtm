@@ -22,6 +22,7 @@ import json
 import os
 import threading
 import zipfile
+import uuid
 from asyncio import gather
 from pathlib import Path
 
@@ -31,10 +32,14 @@ from fastapi.responses import FileResponse
 from loguru import logger as log
 from osm_fieldwork.json2osm import JsonDump
 from sqlalchemy.orm import Session
+from asgiref.sync import async_to_sync
+from app.config import settings
+from io import BytesIO
+from app.s3 import add_obj_to_bucket
 
 from ..central.central_crud import get_odk_form, get_odk_project
 from ..projects import project_crud, project_schemas
-
+from ..tasks import tasks_crud
 
 def get_submission_of_project(db: Session, project_id: int, task_id: int = None):
     """Gets the submission of project.
@@ -436,6 +441,43 @@ def download_submission_for_project(db, project_id):
     return final_zip_file_path
 
 
+def update_submission_in_s3(db: Session,
+                                project_id: int,
+                                background_task_id: uuid.UUID
+                                ):
+
+    try:
+        # Get Project
+        get_project_sync = async_to_sync(project_crud.get_project)
+        project = get_project_sync(db, project_id)
+
+        # Upload submission in s3
+        submission = get_all_submissions(db, project_id)
+        submission_path = f"/{project.organisation_id}/{project_id}/submission.json"
+        file_obj = BytesIO(json.dumps(submission).encode())
+
+        add_obj_to_bucket(
+            settings.S3_BUCKET_NAME,
+            file_obj,
+            submission_path,
+        )
+
+        # Update background task status to COMPLETED
+        update_bg_task_sync = async_to_sync(
+            project_crud.update_background_task_status_in_database
+        )
+        update_bg_task_sync(db, background_task_id, 4)  # 4 is COMPLETED
+
+        return True
+
+    except Exception as e:
+        # Update background task status to FAILED
+        update_bg_task_sync = async_to_sync(
+            project_crud.update_background_task_status_in_database
+        )
+        update_bg_task_sync(db, background_task_id, 2, str(e))  # 2 is FAILED
+
+
 def get_all_submissions(db: Session, project_id):
     get_project_sync = async_to_sync(project_crud.get_project)
     project_info = get_project_sync(db, project_id)
@@ -449,9 +491,9 @@ def get_all_submissions(db: Session, project_id):
 
     project = get_odk_project(odk_credentials)
 
-    get_task_id_list_sync = async_to_sync(get_task_id_list)
-    task_lists = get_task_id_list_sync(db, project_id)
-    submissions = project.getAllSubmissions(project_info.odkid, task_lists)
+    get_task_id_list_sync = async_to_sync(tasks_crud.get_task_id_list)
+    task_list = get_task_id_list_sync(db, project_id)
+    submissions = project.getAllSubmissions(project_info.odkid, task_list)
     return submissions
 
 
