@@ -1,11 +1,10 @@
+/* eslint-disable react/jsx-key */
 import React, { useEffect, useState } from 'react';
-import BasicCard from '../../utilities/BasicCard';
-import Activities from '../../components/Activities';
 import environment from '../../environment';
 import CoreModules from '../../shared/CoreModules';
 import AssetModules from '../../shared/AssetModules';
-import InputTextField from '../../components/common/InputTextField';
 import { CustomSelect } from '../../components/common/Select';
+import profilePic from '../../assets/images/project_icon.png';
 
 const Search = AssetModules.styled('div')(({ theme }) => ({
   position: 'relative',
@@ -112,15 +111,45 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
     }
   }, [taskDisplay, state, searchText]);
 
+  const ActivitiesCard = () => {
+    return (
+      <div className="fmtm-flex fmtm-gap-2 fmtm-items-center fmtm-justify-between fmtm-px-1 fmtm-border-b-[2px] fmtm-border-white fmtm-py-3">
+        <div className="fmtm-flex fmtm-items-center">
+          <div className="fmtm-w-[2.81rem] fmtm-h-[2.81rem] fmtm-rounded-full fmtm-overflow-hidden fmtm-mr-4">
+            <img src={profilePic} alt="Profile Picture" />
+          </div>
+          <div className="fmtm-text-base">
+            <span className="fmtm-text-[#555555] fmtm-font-medium fmtm-font-archivo">Shushi_Maps </span>
+            <span className="fmtm-text-[#7A7676] fmtm-font-extralight fmtm-italic fmtm-font-archivo">
+              updated status to{' '}
+            </span>
+            <p className="fmtm-font-archivo">Locked For Mapping</p>
+            <div className="fmtm-flex fmtm-items-center fmtm-justify-between">
+              <p className="fmtm-font-archivo fmtm-text-sm">#12346</p>
+              <div className="fmtm-flex fmtm-items-center fmtm-mb-1">
+                <AssetModules.AccessTimeIcon className="fmtm-text-primaryRed" style={{ fontSize: '20px' }} />
+              </div>
+              <p className="fmtm-font-archivo fmtm-text-sm">2023 - 02- 23 : 14:00</p>
+            </div>
+          </div>
+        </div>
+        <AssetModules.MapIcon
+          className="fmtm-text-[#9B9999] hover:fmtm-text-[#555555] fmtm-cursor-pointer"
+          style={{ fontSize: '20px' }}
+        />
+      </div>
+    );
+  };
+
   return (
-    <CoreModules.Stack width={'100%'} spacing={2} className="">
+    <div className="">
       <div className="fmtm-flex fmtm-items-center fmtm-w-full fmtm-gap-2">
         <input
           type="text"
           onChange={handleOnchange}
           value={searchText}
           placeholder="Search by task id or username"
-          className="fmtm-w-[67%] fmtm-text-sm fmtm-px-1 fmtm-py-[0.35rem] fmtm-outline-none fmtm-border-[1px] fmtm-border-[#E7E2E2]"
+          className="fmtm-w-[67%] fmtm-text-md fmtm-px-1 fmtm-py-[0.18rem] fmtm-outline-none fmtm-border-[1px] fmtm-border-[#E7E2E2]"
         />
         <div className="fmtm-w-[33%]">
           <CustomSelect
@@ -136,48 +165,13 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
           />
         </div>
       </div>
-
-      <CoreModules.Grid container item columns={{ xs: 2, sm: 3, md: 7 }}>
-        {allActivities === 0 && (
-          <CoreModules.Typography
-            variant="h1"
-            fontSize={defaultTheme.typography.htmlFontSize}
-            color={defaultTheme.palette.info['main']}
-          >
-            No Results found.
-          </CoreModules.Typography>
-        )}
-        <CoreModules.Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 1, sm: 3, md: 4, lg: 6, xl: 7 }}>
-          {taskHistories.map((history, index) => (
-            <CoreModules.Grid item xs={1} sm={1} md={1} lg={1} xl={1} key={index}>
-              <BasicCard
-                key={index}
-                title={{}}
-                subtitle={{}}
-                contentProps={{}}
-                variant={'elevation'}
-                headerStatus={false}
-                content={
-                  <Activities
-                    defaultTheme={defaultTheme}
-                    history={history}
-                    map={map}
-                    view={view}
-                    mapDivPostion={mapDivPostion}
-                    state={states}
-                    params={params}
-                  />
-                }
-              />
-            </CoreModules.Grid>
-          ))}
-        </CoreModules.Grid>
-      </CoreModules.Grid>
-
-      <CoreModules.Stack sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', marginTop: '1%' }}>
-        <CoreModules.Pagination onChange={handleChange} color="standard" count={paginationSize} variant="outlined" />
-      </CoreModules.Stack>
-    </CoreModules.Stack>
+      <p className="fmtm-text-[#A8A6A6] fmtm-text-base fmtm-my-1">showing 6 of 10 activities</p>
+      <div className="fmtm-h-[52vh] fmtm-overflow-y-scroll scrollbar">
+        {Array.from({ length: 10 }, (_, index) => (
+          <ActivitiesCard />
+        ))}
+      </div>
+    </div>
   );
 };
 
