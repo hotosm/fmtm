@@ -21,9 +21,10 @@ import io
 import json
 import os
 import threading
-import zipfile
 import uuid
+import zipfile
 from asyncio import gather
+from io import BytesIO
 from pathlib import Path
 
 from asgiref.sync import async_to_sync
@@ -32,14 +33,14 @@ from fastapi.responses import FileResponse
 from loguru import logger as log
 from osm_fieldwork.json2osm import JsonDump
 from sqlalchemy.orm import Session
-from asgiref.sync import async_to_sync
+
 from app.config import settings
-from io import BytesIO
 from app.s3 import add_obj_to_bucket
 
 from ..central.central_crud import get_odk_form, get_odk_project
 from ..projects import project_crud, project_schemas
 from ..tasks import tasks_crud
+
 
 def get_submission_of_project(db: Session, project_id: int, task_id: int = None):
     """Gets the submission of project.
@@ -441,11 +442,9 @@ def download_submission_for_project(db, project_id):
     return final_zip_file_path
 
 
-def update_submission_in_s3(db: Session,
-                                project_id: int,
-                                background_task_id: uuid.UUID
-                                ):
-
+def update_submission_in_s3(
+    db: Session, project_id: int, background_task_id: uuid.UUID
+):
     try:
         # Get Project
         get_project_sync = async_to_sync(project_crud.get_project)

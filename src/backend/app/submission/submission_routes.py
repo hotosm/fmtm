@@ -18,18 +18,18 @@
 import json
 import os
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse
 from osm_fieldwork.odk_merge import OdkMerge
 from osm_fieldwork.osmfile import OsmFile
 from sqlalchemy.orm import Session
 
+from app.config import settings
+
 from ..db import database
 from ..projects import project_crud
 from . import submission_crud
-from fastapi import BackgroundTasks
-from app.config import settings
 
 router = APIRouter(
     prefix="/submission",
@@ -221,30 +221,24 @@ async def update_submission_cache(
     background_tasks: BackgroundTasks,
     project_id: int,
     db: Session = Depends(database.get_db),
-    ):
-
+):
     # Create task in db and return uuid
     background_task_id = await project_crud.insert_background_task_into_database(
-        db,'sync_submission',project_id
+        db, "sync_submission", project_id
     )
 
     background_tasks.add_task(
-        submission_crud.update_submission_in_s3,
-        db, 
-        project_id, 
-        background_task_id
+        submission_crud.update_submission_in_s3, db, project_id, background_task_id
     )
     return JSONResponse(
         status_code=200,
-        content={"Message": f"Submission update process initiated"},
+        content={"Message": "Submission update process initiated"},
     )
 
 @router.get("/download_submission_from_cache")
 async def download_submissions_from_cache(
-    project_id: int,
-    db: Session = Depends(database.get_db)
-    ):
-
+    project_id: int, db: Session = Depends(database.get_db)
+):
     project = await project_crud.get_project(db, project_id)
     s3_path = f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}/{project.organisation_id}/{project_id}/submission.json"
     return s3_path
