@@ -52,6 +52,8 @@ import {
   Launch as LaunchIcon,
   Edit as EditIcon,
   FmdGood as FmdGoodIcon,
+  Map as MapIcon,
+  AccessTime as AccessTimeIcon,
 } from '@mui/icons-material';
 import LockPng from '../assets/images/lock.png';
 import RedLockPng from '../assets/images/red-lock.png';
@@ -114,4 +116,6 @@ export default {
   LaunchIcon,
   EditIcon,
   FmdGoodIcon,
+  MapIcon,
+  AccessTimeIcon,
 };
