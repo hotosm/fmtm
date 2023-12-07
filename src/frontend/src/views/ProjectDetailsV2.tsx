@@ -285,7 +285,7 @@ const Home = () => {
       </div>
 
       <div className="fmtm-flex fmtm-h-full sm:fmtm-p-6 fmtm-gap-6">
-        <div className="fmtm-w-[18.5rem] fmtm-h-full sm:fmtm-block fmtm-hidden">
+        <div className="fmtm-w-[22rem] fmtm-h-full sm:fmtm-block fmtm-hidden">
           <div className="fmtm-flex fmtm-justify-between fmtm-items-center fmtm-mb-4">
             <p className="fmtm-text-lg fmtm-font-archivo">{`#${state.projectInfo.id}`}</p>
             <p

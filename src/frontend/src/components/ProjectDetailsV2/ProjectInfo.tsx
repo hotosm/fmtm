@@ -18,7 +18,7 @@ const ProjectInfo = () => {
   }, [projectInfo, paraRef.current]);
 
   return (
-    <div className="fmtm-flex fmtm-flex-col fmtm-gap-5 fmtm-mt-3 fmtm-h-[57.5vh] fmtm-overflow-y-scroll scrollbar fmtm-pr-1">
+    <div className="fmtm-flex fmtm-flex-col fmtm-gap-5 fmtm-mt-3 fmtm-h-[56vh] fmtm-overflow-y-scroll scrollbar fmtm-pr-1">
       <p className="fmtm-font-bold">Description</p>
       <div>
         <p className={`${!seeMore ? 'fmtm-line-clamp-[10]' : ''} fmtm-text-[#706E6E]`} ref={paraRef}>
