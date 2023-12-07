@@ -168,7 +168,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
     const drawnGeojsonFile = new File([blob], 'data.json', { type: 'application/json' });
     if (splitTasksSelection === task_split_type['divide_on_square']) {
       dispatch(
-        GetDividedTaskFromGeojson(`${import.meta.env.VITE_API_URL}/projects/preview_tasks/`, {
+        GetDividedTaskFromGeojson(`${import.meta.env.VITE_API_URL}/projects/preview_split_by_square/`, {
           geojson: drawnGeojsonFile,
           dimension: formValues?.dimension,
         }),

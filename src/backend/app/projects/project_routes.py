@@ -23,6 +23,7 @@ import uuid
 from pathlib import Path
 from typing import Optional
 
+import geojson
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -799,20 +800,13 @@ async def get_categories():
     return categories
 
 
-@router.post("/preview_tasks/")
-async def preview_tasks(
-    project_geojson: UploadFile = File(...), dimension: int = Form(500)
+@router.post("/preview_split_by_square/")
+async def preview_split_by_square(
+    project_geojson: UploadFile = File(...), dimension: int = Form(100)
 ):
-    """Preview tasks for a project.
+    """Preview splitting by square.
 
-    This endpoint allows you to preview tasks for a project.
-
-    ## Request Body
-    - `project_id` (int): the project's id. Required.
-
-    ## Response
-    - Returns a JSON object containing a list of tasks.
-
+    TODO update to use a response_model
     """
     # Validating for .geojson File.
     file_name = os.path.splitext(project_geojson.filename)
@@ -823,12 +817,12 @@ async def preview_tasks(
 
     # read entire file
     content = await project_geojson.read()
-    boundary = json.loads(content)
+    boundary = geojson.loads(content)
 
     # Validatiing Coordinate Reference System
     check_crs(boundary)
 
-    result = await project_crud.preview_tasks(boundary, dimension)
+    result = await project_crud.preview_split_by_square(boundary, dimension)
     return result
 
 

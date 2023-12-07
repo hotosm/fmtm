@@ -60,14 +60,14 @@ const DefineTasks: React.FC<any> = ({ geojsonFile, setGeojsonFile, dataExtractFi
       // Create a file object from the Blob
       const drawnGeojsonFile = new File([blob], 'data.json', { type: 'application/json' });
       dispatch(
-        GetDividedTaskFromGeojson(`${import.meta.env.VITE_API_URL}/projects/preview_tasks/`, {
+        GetDividedTaskFromGeojson(`${import.meta.env.VITE_API_URL}/projects/preview_split_by_square/`, {
           geojson: drawnGeojsonFile,
           dimension: formValues?.dimension,
         }),
       );
     } else {
       dispatch(
-        GetDividedTaskFromGeojson(`${import.meta.env.VITE_API_URL}/projects/preview_tasks/`, {
+        GetDividedTaskFromGeojson(`${import.meta.env.VITE_API_URL}/projects/preview_split_by_square/`, {
           geojson: geojsonFile,
           dimension: formValues?.dimension,
         }),

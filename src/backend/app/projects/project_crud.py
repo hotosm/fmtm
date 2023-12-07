@@ -42,8 +42,10 @@ import shapely.wkb as wkblib
 import sqlalchemy
 from asgiref.sync import async_to_sync
 from fastapi import File, HTTPException, UploadFile
+from fastapi.concurrency import run_in_threadpool
+from fmtm_splitter.splitter import split_by_sql, split_by_square
 from geoalchemy2.shape import from_shape, to_shape
-from geojson import dump
+from geojson import FeatureCollection
 from loguru import logger as log
 from osm_fieldwork.basemapper import create_basemap_file
 from osm_fieldwork.data_models import data_models_path
@@ -468,11 +470,14 @@ async def update_multi_polygon_project_boundary(
         raise HTTPException(e) from e
 
 
-async def preview_tasks(boundary: str, dimension: int):
-    """Preview tasks by returning a list of task objects."""
-    """Use a lambda function to remove the "z" dimension from each coordinate in the feature's geometry """
-
+async def preview_split_by_square(boundary: str, meters: int):
+    """Preview split by square for a project boundary.
+    
+    Use a lambda function to remove the "z" dimension from each 
+    coordinate in the feature's geometry.
+    """
     def remove_z_dimension(coord):
+        """Remove z dimension from geojson."""
         return coord.pop() if len(coord) == 3 else None
 
     """ Check if the boundary is a Feature or a FeatureCollection """
@@ -500,83 +505,17 @@ async def preview_tasks(boundary: str, dimension: int):
         if feature["geometry"]["type"] == "MultiPolygon":
             multi_polygons.append(Polygon(feature["geometry"]["coordinates"][0][0]))
 
-    """Update the boundary polyon on the database."""
+    # Merge multiple geometries into single polygon
     if multi_polygons:
         boundary = multi_polygons[0]
         for geom in multi_polygons[1:]:
             boundary = boundary.union(geom)
-    else:
-        boundary = shape(features[0]["geometry"])
 
-    minx, miny, maxx, maxy = boundary.bounds
+    return await run_in_threadpool(lambda: split_by_square(
+        boundary,
+        meters=meters,
+    ))
 
-    # 1 degree = 111139 m
-    value = dimension / 111139
-
-    nx = int((maxx - minx) / value)
-    ny = int((maxy - miny) / value)
-    # gx, gy = np.linspace(minx, maxx, nx), np.linspace(miny, maxy, ny)
-
-    xdiff = abs(maxx - minx)
-    ydiff = abs(maxy - miny)
-    if xdiff > ydiff:
-        gx, gy = np.linspace(minx, maxx, ny), np.linspace(miny, miny + xdiff, ny)
-    else:
-        gx, gy = np.linspace(minx, minx + ydiff, nx), np.linspace(miny, maxy, nx)
-    grid = list()
-
-    id = 0
-    for i in range(len(gx) - 1):
-        for j in range(len(gy) - 1):
-            poly = Polygon(
-                [
-                    [gx[i], gy[j]],
-                    [gx[i], gy[j + 1]],
-                    [gx[i + 1], gy[j + 1]],
-                    [gx[i + 1], gy[j]],
-                    [gx[i], gy[j]],
-                ]
-            )
-
-            if boundary.intersection(poly):
-                feature = geojson.Feature(
-                    geometry=boundary.intersection(poly), properties={"id": str(id)}
-                )
-                id += 1
-
-                geom = shape(feature["geometry"])
-                # Check if the geometry is a MultiPolygon
-                if geom.geom_type == "MultiPolygon":
-                    # Get the constituent Polygon objects from the MultiPolygon
-                    polygons = geom.geoms
-
-                    for x in range(len(polygons)):
-                        # Convert the two polygons to GeoJSON format
-                        feature1 = {
-                            "type": "Feature",
-                            "properties": {},
-                            "geometry": mapping(polygons[x]),
-                        }
-                        grid.append(feature1)
-                else:
-                    grid.append(feature)
-
-    collection = geojson.FeatureCollection(grid)
-
-    # If project outline cannot be divided into multiple tasks,
-    #   whole boundary is made into a single task.
-    if len(collection["features"]) == 0:
-        boundary = mapping(boundary)
-        out = {
-            "type": "FeatureCollection",
-            "features": [{"type": "Feature", "geometry": boundary, "properties": {}}],
-        }
-        return out
-
-    return collection
-
-
-async def get_osm_extracts(boundary: str):
     """Request an extract from raw-data-api and extract the file contents.
 
     - The query is posted to raw-data-api and job initiated for fetching the extract.
@@ -927,19 +866,10 @@ async def update_project_boundary(
     db.refresh(db_project)
     log.debug("Added project boundary!")
 
-    result = await create_task_grid(db, project_id=project_id, delta=dimension)
-
-    # Delete features from the project
-    db.query(db_models.DbFeatures).filter(
-        db_models.DbFeatures.project_id == project_id
-    ).delete()
-
-    # Delete all tasks of the project if there are some
-    db.query(db_models.DbTask).filter(
-        db_models.DbTask.project_id == project_id
-    ).delete()
-
-    tasks = eval(result)
+    tasks = split_by_square(
+        boundary,
+        meters=meters,
+    )
     for poly in tasks["features"]:
         log.debug(poly)
         task_name = str(poly["properties"]["id"])
