@@ -6,7 +6,7 @@ groups = ["default", "debug", "dev", "docs", "test"]
 cross_platform = true
 static_urls = false
 lock_version = "4.3"
-content_hash = "sha256:b91bf6c0e826aa32f587abd038c98d68197fe8aca1071d1850dc95a156046e0f"
+content_hash = "sha256:2025602908bcd27e4e1952cb194dcd3f2d55c631e2af0a0b40382fd23bd6fa5c"
 
 [[package]]
 name = "annotated-types"
@@ -516,7 +516,7 @@ files = [
 
 [[package]]
 name = "fmtm-splitter"
-version = "0.2.3"
+version = "0.2.4"
 requires_python = ">=3.10"
 summary = "A program for splitting a large AOI into smaller tasks."
 dependencies = [
@@ -529,8 +529,8 @@ dependencies = [
     "sqlalchemy>=2.0.0",
 ]
 files = [
-    {file = "fmtm-splitter-0.2.3.tar.gz", hash = "sha256:bca061bb4f776bc21f2ea66e813910bd45714bcde1506323b1ca930adfb5f17d"},
-    {file = "fmtm_splitter-0.2.3-py3-none-any.whl", hash = "sha256:9238e1ded22b7558df802cb8b1be3fdd811cd7997998720bbd8640ff217982e3"},
+    {file = "fmtm-splitter-0.2.4.tar.gz", hash = "sha256:e23edaabbc2ab1982a82aea0187bb10820844ea4130522d941f2dc04ddf66d7e"},
+    {file = "fmtm_splitter-0.2.4-py3-none-any.whl", hash = "sha256:6ba37e16d291ac09e2a2b31dfe6eb9f122ecae521fec202ef137f7467fb74211"},
 ]
 
 [[package]]
@@ -637,15 +637,15 @@ files = [
 
 [[package]]
 name = "griffe"
-version = "0.38.0"
+version = "0.38.1"
 requires_python = ">=3.8"
 summary = "Signatures for entire Python programs. Extract the structure, the frame, the skeleton of your project, to generate API documentation or find breaking changes in your API."
 dependencies = [
     "colorama>=0.4",
 ]
 files = [
-    {file = "griffe-0.38.0-py3-none-any.whl", hash = "sha256:6a5bc457320e8e199006aa5fbb03e162f5e21abe31aa6221f7a5c37ea0724c71"},
-    {file = "griffe-0.38.0.tar.gz", hash = "sha256:9b97487b583042b543d1e28196caee638ecd766c8c4c98135071806cb5333ac2"},
+    {file = "griffe-0.38.1-py3-none-any.whl", hash = "sha256:334c79d3b5964ade65c05dfcaf53518c576dedd387aaba5c9fd71212f34f1483"},
+    {file = "griffe-0.38.1.tar.gz", hash = "sha256:bd68d7da7f3d87bc57eb9962b250db123efd9bbcc06c11c1a91b6e583b2a9361"},
 ]
 
 [[package]]
@@ -701,12 +701,12 @@ files = [
 
 [[package]]
 name = "identify"
-version = "2.5.32"
+version = "2.5.33"
 requires_python = ">=3.8"
 summary = "File identification library for Python"
 files = [
-    {file = "identify-2.5.32-py2.py3-none-any.whl", hash = "sha256:0b7656ef6cba81664b783352c73f8c24b39cf82f926f78f4550eda928e5e0545"},
-    {file = "identify-2.5.32.tar.gz", hash = "sha256:5d9979348ec1a21c768ae07e0a652924538e8bce67313a73cb0f681cf08ba407"},
+    {file = "identify-2.5.33-py2.py3-none-any.whl", hash = "sha256:d40ce5fcd762817627670da8a7d8d8e65f24342d14539c59488dc603bf662e34"},
+    {file = "identify-2.5.33.tar.gz", hash = "sha256:161558f9fe4559e1557e1bff323e8631f6a0e4837f7497767c1782832f16b62d"},
 ]
 
 [[package]]
