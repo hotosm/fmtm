@@ -5,60 +5,15 @@ import CoreModules from '../../shared/CoreModules';
 import AssetModules from '../../shared/AssetModules';
 import { CustomSelect } from '../../components/common/Select';
 import profilePic from '../../assets/images/project_icon.png';
-
-const Search = AssetModules.styled('div')(({ theme }) => ({
-  position: 'relative',
-  borderRadius: theme.shape.borderRadius,
-  backgroundColor: AssetModules.alpha(theme.palette.common.white, 0.15),
-  '&:hover': {
-    backgroundColor: AssetModules.alpha(theme.palette.common.white, 0.25),
-  },
-  marginRight: theme.spacing(2),
-  marginLeft: 0,
-  opacity: 0.8,
-  border: `1px solid ${theme.palette.warning['main']}`,
-  width: '100%',
-  [theme.breakpoints.up('sm')]: {
-    marginLeft: theme.spacing(3),
-    width: 'auto',
-  },
-}));
-
-const SearchIconWrapper = AssetModules.styled('div')(({ theme }) => ({
-  padding: theme.spacing(0, 2),
-  height: '100%',
-  position: 'absolute',
-  pointerEvents: 'none',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-}));
-
-const StyledInputBase = AssetModules.styled(CoreModules.InputBase)(({ theme }) => ({
-  color: 'primary',
-  '& .MuiInputBase-input': {
-    padding: theme.spacing(1, 1, 1, 0),
-    fontFamily: theme.typography.h3.fontFamily,
-    // vertical padding + font size from searchIcon
-    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-    transition: theme.transitions.create('width'),
-    width: '100%',
-  },
-}));
+import { Feature } from 'ol';
+import { Polygon } from 'ol/geom';
 
 const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion, states }) => {
   const displayLimit = 10;
   const [searchText, setSearchText] = useState('');
   const [taskHistories, setTaskHistories] = useState([]);
-  const [paginationSize, setPaginationSize] = useState(0);
   const [taskDisplay, setTaskDisplay] = React.useState(displayLimit);
   const [allActivities, setAllActivities] = useState(0);
-  const [prev, setPrv] = React.useState(0);
-
-  const handleChange = (event, value) => {
-    setPrv(value * displayLimit - displayLimit);
-    setTaskDisplay(value * displayLimit);
-  };
 
   const handleOnchange = (event) => {
     setSearchText(event.target.value);
@@ -72,11 +27,12 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
       state[index].taskBoundries.forEach((task) => {
         taskHistories = taskHistories.concat(
           task.task_history.map((history) => {
-            return { ...history, taskId: task.id, status: task.task_status };
+            return { ...history, taskId: task.id, status: task.task_status, outlineGeojson: task.outline_geojson };
           }),
         );
       });
     }
+    setAllActivities(taskHistories.length);
 
     let finalTaskHistory = taskHistories.filter((task) => {
       return (
@@ -86,32 +42,34 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
     });
 
     if (searchText != '') {
-      setAllActivities(finalTaskHistory.length);
-      const tasksToDisplay = finalTaskHistory.filter((task, index) => {
-        return index <= taskDisplay - 1 && index >= prev;
-      });
-      setTaskHistories(tasksToDisplay);
-      const paginationSize =
-        finalTaskHistory.length % displayLimit == 0
-          ? Math.floor(finalTaskHistory.length / displayLimit)
-          : Math.floor(finalTaskHistory.length / displayLimit) + 1;
-      setPaginationSize(paginationSize);
+      // setAllActivities(finalTaskHistory.length);
+      setTaskHistories(finalTaskHistory);
     } else {
-      setAllActivities(taskHistories.length);
-      const tasksToDisplay = taskHistories.filter((task, index) => {
-        return index <= taskDisplay - 1 && index >= prev;
-      });
-
-      setTaskHistories(tasksToDisplay);
-      const paginationSize =
-        taskHistories.length % displayLimit == 0
-          ? Math.floor(taskHistories.length / displayLimit)
-          : Math.floor(taskHistories.length / displayLimit) + 1;
-      setPaginationSize(paginationSize);
+      // setAllActivities(taskHistories.length);
+      setTaskHistories(taskHistories);
     }
   }, [taskDisplay, state, searchText]);
 
-  const ActivitiesCard = () => {
+  const zoomToTask = (taskId) => {
+    const geojson = taskHistories
+      .filter((history) => history.taskId === taskId)
+      .map((history) => history.outlineGeojson)[0];
+
+    const olFeature = new Feature({
+      geometry: new Polygon(geojson.geometry.coordinates).transform('EPSG:4326', 'EPSG:3857'),
+    });
+    // Get the extent of the OpenLayers feature
+    const extent = olFeature.getGeometry().getExtent();
+    map.getView().fit(extent, {
+      padding: [0, 0, 0, 0],
+    });
+  };
+
+  const ActivitiesCard = ({ taskHistory }) => {
+    const actionDate = taskHistory?.action_date?.split('T')[0];
+    const actionTime = `${taskHistory?.action_date?.split('T')[1].split(':')[0]}:${taskHistory?.action_date
+      ?.split('T')[1]
+      .split(':')[1]}`;
     return (
       <div className="fmtm-flex fmtm-gap-2 fmtm-items-center fmtm-justify-between fmtm-px-1 fmtm-border-b-[2px] fmtm-border-white fmtm-py-3">
         <div className="fmtm-flex fmtm-items-center">
@@ -125,18 +83,23 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
             </span>
             <p className="fmtm-font-archivo">Locked For Mapping</p>
             <div className="fmtm-flex fmtm-items-center fmtm-justify-between">
-              <p className="fmtm-font-archivo fmtm-text-sm">#12346</p>
+              <p className="fmtm-font-archivo fmtm-text-sm fmtm-text-[#7A7676]">#{taskHistory.taskId}</p>
               <div className="fmtm-flex fmtm-items-center fmtm-mb-1">
                 <AssetModules.AccessTimeIcon className="fmtm-text-primaryRed" style={{ fontSize: '20px' }} />
               </div>
-              <p className="fmtm-font-archivo fmtm-text-sm">2023 - 02- 23 : 14:00</p>
+              <p className="fmtm-font-archivo fmtm-text-sm fmtm-text-[#7A7676]">
+                <span>{actionDate} </span>
+                <span>{actionTime}</span>
+              </p>
             </div>
           </div>
         </div>
-        <AssetModules.MapIcon
-          className="fmtm-text-[#9B9999] hover:fmtm-text-[#555555] fmtm-cursor-pointer"
-          style={{ fontSize: '20px' }}
-        />
+        <div title="Zoom to Task" onClick={() => zoomToTask(taskHistory.taskId)}>
+          <AssetModules.MapIcon
+            className="fmtm-text-[#9B9999] hover:fmtm-text-[#555555] fmtm-cursor-pointer"
+            style={{ fontSize: '20px' }}
+          />
+        </div>
       </div>
     );
   };
@@ -165,11 +128,11 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
           />
         </div>
       </div>
-      <p className="fmtm-text-[#A8A6A6] fmtm-text-base fmtm-my-1">showing 6 of 10 activities</p>
+      <p className="fmtm-text-[#A8A6A6] fmtm-text-base fmtm-my-1">
+        showing {taskHistories?.length} of {allActivities} activities
+      </p>
       <div className="fmtm-h-[52vh] fmtm-overflow-y-scroll scrollbar">
-        {Array.from({ length: 10 }, (_, index) => (
-          <ActivitiesCard />
-        ))}
+        {taskHistories?.map((taskHistory) => <ActivitiesCard taskHistory={taskHistory} />)}
       </div>
     </div>
   );
