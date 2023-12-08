@@ -51,6 +51,8 @@ import {
   Delete as DeleteIcon,
   ListAlt as ListAltIcon,
   Map as MapIcon,
+  FilterAltOutlined as FilterAltOutlinedIcon,
+  ArrowBackIos as ArrowBackIosIcon,
 } from '@mui/icons-material';
 import LockPng from '../assets/images/lock.png';
 import RedLockPng from '../assets/images/red-lock.png';
@@ -112,4 +114,6 @@ export default {
   DeleteIcon,
   ListAltIcon,
   MapIcon,
+  FilterAltOutlinedIcon,
+  ArrowBackIosIcon,
 };
