@@ -90,7 +90,9 @@ def geojson_to_flatgeobuf(db: Session, geojson: FeatureCollection):
         SELECT ST_AsFlatGeobuf(thegeom.*)
         FROM thegeom;
     """
+    # Run the SQL
     result = db.execute(text(sql))
+    # Get a memoryview object, then extract to Bytes
     flatgeobuf = result.fetchone()[0].tobytes()
     # Cleanup table
     db.execute(text("DROP TABLE IF EXISTS public.temp_features CASCADE;"))
