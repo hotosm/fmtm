@@ -7,7 +7,7 @@ const ProjectInfo = () => {
     { title: 'Submissions', count: 30 },
   ];
   return (
-    <div className="fmtm-w-full sm:fmtm-ml-2 fmtm-border-b-[1px] fmtm-border-black fmtm-pb-10">
+    <div className="fmtm-w-full sm:fmtm-ml-2 fmtm-border-b-[1px] fmtm-border-gray-300 fmtm-pb-10">
       <div className="fmtm-pb-4">
         <p className="fmtm-text-[#706E6E] fmtm-font-archivo fmtm-text-sm">
           <span>Projects </span>
@@ -15,7 +15,7 @@ const ProjectInfo = () => {
           <span>Dashboard</span>
         </p>
       </div>
-      <div className=" fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-w-full sm:fmtm-items-center fmtm-gap-10">
+      <div className=" fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-w-full sm:fmtm-items-center fmtm-gap-10 fmtm-mt-3">
         <div className="fmtm-w-full fmtm-min-w-0 sm:fmtm-max-w-[37rem] fmtm-bg-primary-100 fmtm-rounded-2xl fmtm-p-5 fmtm-flex fmtm-flex-col fmtm-gap-5">
           <h2 className="fmtm-text-xl fmtm-font-archivo">
             Cameroon Road Assessment for Sustainable Development in Rural Communities in Africa

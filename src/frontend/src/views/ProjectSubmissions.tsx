@@ -7,9 +7,9 @@ import SubmissionsTable from '../components/ProjectSubmissions/SubmissionsTable.
 const ProjectSubmissions = () => {
   const [viewBy, setViewBy] = useState<'infographics' | 'table'>('infographics');
   return (
-    <div className="fmtm-bg-[#F5F5F5] fmtm-px-5 sm:fmtm-px-0 sm:fmtm-pr-10 2xl:fmtm-pr-20">
+    <div className="fmtm-bg-[#F5F5F5] fmtm-px-5 sm:fmtm-px-5 fmtm-pb-5">
       <div className="fmtm-flex fmtm-flex-col sm:fmtm-flex-row fmtm-my-4 fmtm-w-full">
-        <div className="sm:fmtm-bg-white fmtm-flex sm:fmtm-flex-col fmtm-gap-4 sm:fmtm-mx-6 sm:fmtm-p-2 fmtm-justify-end sm:fmtm-justify-start">
+        <div className="sm:fmtm-bg-white fmtm-flex sm:fmtm-flex-col fmtm-gap-4 sm:fmtm-mr-6 sm:fmtm-p-2 fmtm-justify-end sm:fmtm-justify-start">
           <AssetModules.GridViewIcon
             style={{ fontSize: '30px' }}
             className={`${
@@ -29,7 +29,9 @@ const ProjectSubmissions = () => {
           <ProjectInfo />
         </div>
       </div>
-      <div className="fmtm-w-ful">{viewBy === 'infographics' ? <SubmissionsInfographics /> : <SubmissionsTable />}</div>
+      <div className="fmtm-w-full">
+        {viewBy === 'infographics' ? <SubmissionsInfographics /> : <SubmissionsTable />}
+      </div>
     </div>
   );
 };
