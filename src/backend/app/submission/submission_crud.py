@@ -453,8 +453,14 @@ def update_submission_in_s3(db: Session,
 
         # Upload submission in s3
         submission = get_all_submissions(db, project_id)
-        submission_path = f"/{project.organisation_id}/{project_id}/submission.json"
+        submission_path = f"/{project.organisation_id}/{project_id}/submission.zip"
         file_obj = BytesIO(json.dumps(submission).encode())
+
+        import sozipfile.sozipfile as zipfile
+        with zipfile.ZipFile(file_obj, 'w', 
+                            compression=zipfile.ZIP_DEFLATED,
+                            chunk_size=zipfile.SOZIP_DEFAULT_CHUNK_SIZE) as myzip:
+            myzip.writestr('submission.json', json.dumps(submission))
 
         add_obj_to_bucket(
             settings.S3_BUCKET_NAME,
