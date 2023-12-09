@@ -235,6 +235,7 @@ async def update_submission_cache(
         content={"Message": "Submission update process initiated"},
     )
 
+
 @router.get("/download_submission_from_cache")
 async def download_submissions_from_cache(
     project_id: int, db: Session = Depends(database.get_db)
