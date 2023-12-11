@@ -64,7 +64,7 @@ const SentryInit = () => {
 // Matomo Tracking Component
 const MatomoTrackingInit = () => {
   useEffect(() => {
-    if (import.meta.env.MODE !== 'development' && import.meta.env.BASE_URL === 'fmtm.hotosm.org') {
+    if (import.meta.env.MODE === 'development' || import.meta.env.BASE_URL !== 'fmtm.hotosm.org') {
       return;
     }
     // Set matomo tracking id
