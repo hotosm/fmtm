@@ -6,6 +6,7 @@ import { Provider } from 'react-redux';
 import routes from './routes';
 import { PersistGate } from 'redux-persist/integration/react';
 import './index.css';
+import 'ol/ol.css';
 import 'react-loading-skeleton/dist/skeleton.css';
 import * as Sentry from '@sentry/react';
 import environment from './environment';
