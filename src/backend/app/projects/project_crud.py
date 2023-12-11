@@ -1371,8 +1371,8 @@ def generate_appuser_files(
 
             # Generating QR Code, XForm and uploading OSM Extracts to the form.
             # Creating app users and updating the role of that user.
-            get_task_lists_sync = async_to_sync(tasks_crud.get_task_lists)
-            task_list = get_task_lists_sync(db, project_id)
+            get_task_id_list_sync = async_to_sync(tasks_crud.get_task_id_list)
+            task_list = get_task_id_list_sync(db, project_id)
 
             # Run with expensive task via threadpool
             def wrap_generate_task_files(task):
@@ -2024,7 +2024,7 @@ async def update_project_form(
         db.add(db_feature)
         db.commit()
 
-    tasks_list = await tasks_crud.get_task_lists(db, project_id)
+    tasks_list = await tasks_crud.get_task_id_list(db, project_id)
 
     for task in tasks_list:
         task_obj = await tasks_crud.get_task(db, task)
