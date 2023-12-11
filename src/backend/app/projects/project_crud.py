@@ -713,18 +713,19 @@ async def update_project_boundary(
 
     db.commit()
     db.refresh(db_project)
-    log.debug("Added project boundary!")
+    log.debug("Finished updating project boundary")
 
+    log.debug("Splitting tasks")
     tasks = split_by_square(
         boundary,
         meters=meters,
     )
     for poly in tasks["features"]:
         log.debug(poly)
-        task_name = str(poly["properties"]["id"])
+        task_id = str(poly.get("properties", {}).get("id") or poly.get("id"))
         db_task = db_models.DbTask(
             project_id=project_id,
-            project_task_name=task_name,
+            project_task_name=task_id,
             outline=wkblib.dumps(shape(poly["geometry"]), hex=True),
             # qr_code=db_qr,
             # qr_code_id=db_qr.id,
@@ -1371,7 +1372,7 @@ def generate_appuser_files(
             # Generating QR Code, XForm and uploading OSM Extracts to the form.
             # Creating app users and updating the role of that user.
             get_task_lists_sync = async_to_sync(tasks_crud.get_task_lists)
-            tasks_list = get_task_lists_sync(db, project_id)
+            task_list = get_task_lists_sync(db, project_id)
 
             # Run with expensive task via threadpool
             def wrap_generate_task_files(task):
@@ -1398,7 +1399,7 @@ def generate_appuser_files(
                 # Submit tasks to the thread pool
                 futures = [
                     executor.submit(wrap_generate_task_files, task)
-                    for task in tasks_list
+                    for task in task_list
                 ]
                 # Wait for all tasks to complete
                 wait(futures)
