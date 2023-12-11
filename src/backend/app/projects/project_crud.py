@@ -689,10 +689,6 @@ async def update_project_boundary(
             }
         ]
     else:
-        # Delete the created Project
-        db.delete(db_project)
-        db.commit()
-
         # Raise an exception
         raise HTTPException(
             status_code=400, detail=f"Invalid GeoJSON type: {boundary['type']}"
@@ -705,7 +701,7 @@ async def update_project_boundary(
         if feature["geometry"]["type"] == "MultiPolygon":
             multi_polygons.append(Polygon(feature["geometry"]["coordinates"][0][0]))
 
-    """Update the boundary polyon on the database."""
+    """Update the boundary polygon on the database."""
     if multi_polygons:
         outline = multi_polygons[0]
         for geom in multi_polygons[1:]:
