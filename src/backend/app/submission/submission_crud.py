@@ -22,11 +22,11 @@ import json
 import os
 import threading
 import uuid
-import zipfile
 from asyncio import gather
 from io import BytesIO
 from pathlib import Path
 
+import sozipfile.sozipfile as zipfile
 from asgiref.sync import async_to_sync
 from fastapi import HTTPException, Response
 from fastapi.responses import FileResponse
@@ -454,8 +454,6 @@ def update_submission_in_s3(
         submission = get_all_submissions(db, project_id)
         submission_path = f"/{project.organisation_id}/{project_id}/submission.zip"
         file_obj = BytesIO(json.dumps(submission).encode())
-
-        import sozipfile.sozipfile as zipfile
 
         with zipfile.ZipFile(
             file_obj,
