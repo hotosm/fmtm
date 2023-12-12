@@ -53,6 +53,8 @@ import {
   Map as MapIcon,
   FilterAltOutlined as FilterAltOutlinedIcon,
   ArrowBackIos as ArrowBackIosIcon,
+  VisibilityOutlined as VisibilityOutlinedIcon,
+  CheckOutlined as CheckOutlinedIcon,
 } from '@mui/icons-material';
 import LockPng from '../assets/images/lock.png';
 import RedLockPng from '../assets/images/red-lock.png';
@@ -116,4 +118,6 @@ export default {
   MapIcon,
   FilterAltOutlinedIcon,
   ArrowBackIosIcon,
+  VisibilityOutlinedIcon,
+  CheckOutlinedIcon,
 };
