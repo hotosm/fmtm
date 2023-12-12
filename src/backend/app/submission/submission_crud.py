@@ -17,13 +17,13 @@
 #
 import concurrent.futures
 import csv
-import datetime
 import io
 import json
 import os
 import threading
 import uuid
 from asyncio import gather
+from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 
@@ -35,12 +35,11 @@ from loguru import logger as log
 from osm_fieldwork.json2osm import JsonDump
 from sqlalchemy.orm import Session
 
+from app.central.central_crud import get_odk_form, get_odk_project, list_odk_xforms
 from app.config import settings
+from app.projects import project_crud, project_schemas
 from app.s3 import add_obj_to_bucket
-
-from ..central.central_crud import get_odk_form, get_odk_project
-from ..projects import project_crud, project_schemas
-from ..tasks import tasks_crud
+from app.tasks import tasks_crud
 
 
 def get_submission_of_project(db: Session, project_id: int, task_id: int = None):
@@ -351,7 +350,7 @@ def convert_to_osm(db: Session, project_id: int, task_id: int):
 
 def gather_all_submission_csvs(db, project_id):
     """Gather all of the submission CSVs for a project.
-    
+
     Generate a single zip with all submissions.
     """
     log.info(f"Downloading all CSV submissions for project {project_id}")
@@ -455,73 +454,46 @@ def update_submission_in_s3(
         get_project_sync = async_to_sync(project_crud.get_project)
         project = get_project_sync(db, project_id)
 
-        # Upload submission in s3
-        submission = get_all_submissions(db, project_id)
-        submission_path = f"/{project.organisation_id}/{project_id}/submission.zip"
-        file_obj = BytesIO(json.dumps(submission).encode())
+        # Get submissions from ODK Central
+        submissions = get_all_submissions_json(db, project_id)
 
-        # Metadata
-        # ODK Credentials
+        # Gather metadata
         odk_credentials = project_schemas.ODKCentral(
             odk_central_url=project.odk_central_url,
             odk_central_user=project.odk_central_user,
             odk_central_password=project.odk_central_password,
         )
-        from sqlalchemy.sql import text
+        odk_forms = list_odk_xforms(project.odkid, odk_credentials, True)
 
-        from ..central import central_crud
-
-        odk_details = central_crud.list_odk_xforms(project.odkid, odk_credentials, True)
-
-        # Assemble the final data list
-        task_wise_submission_info = []
-        valid_date_entries = []
-        for detail in odk_details:
-            feature_count_query = text(
-                f"""
-                select count(*) from features where project_id = {project_id} and task_id = {detail['xmlFormId']}
-            """
-            )
-            result = db.execute(feature_count_query)
-            feature_count = result.fetchone()
-
-            task_wise_submission_info.append(
-                {
-                    "task_id": detail["xmlFormId"],
-                    "submission_count": detail["submissions"],
-                    "last_submission": detail["lastSubmission"],
-                    "feature_count": feature_count[0],
-                }
-            )
-            if detail["lastSubmission"] is not None:
-                valid_date_entries.append(detail["lastSubmission"])
-
-        # maximum timestamp
-        latest_time = max(
-            valid_date_entries,
-            key=lambda x: datetime.datetime.strptime(x, "%Y-%m-%dT%H:%M:%S.%fZ"),
+        # Get latest submission date
+        valid_datetimes = [
+            form["lastSubmission"]
+            for form in odk_forms
+            if form["lastSubmission"] is not None
+        ]
+        last_submission = max(
+            valid_datetimes, key=lambda x: datetime.strptime(x, "%Y-%m-%dT%H:%M:%S.%fZ")
         )
         metadata = {
-            "submission_count": "100",
-            "last_submission": latest_time,
-            "tasks": task_wise_submission_info,
+            "last_submission": last_submission,
         }
 
+        submissions_zip = BytesIO()
         # Create a sozipfile with metadata and submissions
         with zipfile.ZipFile(
-            file_obj,
+            submissions_zip,
             "w",
             compression=zipfile.ZIP_DEFLATED,
             chunk_size=zipfile.SOZIP_DEFAULT_CHUNK_SIZE,
         ) as myzip:
-            myzip.writestr("submission.json", json.dumps(submission))
+            myzip.writestr("submissions.json", json.dumps(submissions))
             myzip.writestr("metadata.json", json.dumps(metadata))
 
-        # Add zipfile to the s3 bucket.
+        # Add zipfile to the s3 bucket
         add_obj_to_bucket(
             settings.S3_BUCKET_NAME,
-            file_obj,
-            submission_path,
+            submissions_zip,
+            f"/{project.organisation_id}/{project_id}/submission.zip",
         )
 
         # Update background task status to COMPLETED
