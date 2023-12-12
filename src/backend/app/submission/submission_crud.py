@@ -454,9 +454,6 @@ def update_submission_in_s3(
         get_project_sync = async_to_sync(project_crud.get_project)
         project = get_project_sync(db, project_id)
 
-        # Get submissions from ODK Central
-        submissions = get_all_submissions_json(db, project_id)
-
         # Gather metadata
         odk_credentials = project_schemas.ODKCentral(
             odk_central_url=project.odk_central_url,
@@ -474,9 +471,21 @@ def update_submission_in_s3(
         last_submission = max(
             valid_datetimes, key=lambda x: datetime.strptime(x, "%Y-%m-%dT%H:%M:%S.%fZ")
         )
+        zip_file_last_submission = datetime()
+        # TODO query if a file exists already
+        # If it does, then query the metadata and get the zip_file_last_submission
+        if last_submission <= zip_file_last_submission:
+            # The zip file is up to date, redirect
+            pass
+            # return RedirectResponse(...)
+
+        # Zip file is outdated, regenerate
         metadata = {
             "last_submission": last_submission,
         }
+
+        # Get submissions from ODK Central
+        submissions = get_all_submissions_json(db, project_id)
 
         submissions_zip = BytesIO()
         # Create a sozipfile with metadata and submissions
