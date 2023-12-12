@@ -55,6 +55,7 @@ import {
   ArrowBackIos as ArrowBackIosIcon,
   VisibilityOutlined as VisibilityOutlinedIcon,
   CheckOutlined as CheckOutlinedIcon,
+  FileDownloadOutlined as FileDownloadOutlinedIcon,
 } from '@mui/icons-material';
 import LockPng from '../assets/images/lock.png';
 import RedLockPng from '../assets/images/red-lock.png';
@@ -120,4 +121,5 @@ export default {
   ArrowBackIosIcon,
   VisibilityOutlinedIcon,
   CheckOutlinedIcon,
+  FileDownloadOutlinedIcon,
 };
