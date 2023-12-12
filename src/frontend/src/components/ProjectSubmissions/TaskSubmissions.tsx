@@ -19,7 +19,7 @@ const TaskSubmissions = () => {
             <p>27</p>
           </div>
         </div>
-        <div className="fmtm-flex fmtm-justify-between fmtm-items-center">
+        <div className="fmtm-flex fmtm-flex-wrap fmtm-flex-row md:fmtm-flex-col lg:fmtm-flex-row fmtm-justify-between lg:fmtm-items-center fmtm-gap-2">
           <Button btnText="View Submissions" btnType="primary" onClick={() => {}} />
           <button className="fmtm-border-primaryRed fmtm-border-[2px] fmtm-flex fmtm-w-fit fmtm-px-2 fmtm-py-1 fmtm-rounded-md fmtm-items-center fmtm-gap-2 fmtm-bg-white hover:fmtm-bg-gray-100 fmtm-duration-150">
             <AssetModules.MapIcon style={{ fontSize: '18px' }} /> <p className="fmtm-truncate">Zoom to Task</p>
@@ -30,8 +30,8 @@ const TaskSubmissions = () => {
   );
 
   return (
-    <div className="fmtm-h-[70vh] fmtm-flex fmtm-gap-10">
-      <div className="fmtm-w-[39rem] fmtm-bg-white fmtm-rounded-xl fmtm-p-5">
+    <div className="md:fmtm-h-[70vh] fmtm-flex fmtm-gap-10 fmtm-flex-col md:fmtm-flex-row">
+      <div className="fmtm-w-full md:fmtm-w-[39rem] fmtm-bg-white fmtm-rounded-xl fmtm-p-5">
         <InputTextField fieldType="string" label="" onChange={() => {}} value="" placeholder="Search by task id" />
         <div className="fmtm-mt-5 fmtm-flex fmtm-flex-col fmtm-gap-4 fmtm-h-[58vh] fmtm-overflow-y-scroll scrollbar">
           {Array.from({ length: 10 }, (_, index) => (
@@ -39,7 +39,7 @@ const TaskSubmissions = () => {
           ))}
         </div>
       </div>
-      <div className="fmtm-h-full fmtm-w-full fmtm-rounded-xl fmtm-overflow-hidden">
+      <div className="fmtm-h-[60vh] md:fmtm-h-full fmtm-w-full fmtm-rounded-xl fmtm-overflow-hidden">
         <TaskSubmissionsMap />
       </div>
     </div>
