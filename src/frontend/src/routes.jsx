@@ -19,12 +19,12 @@ import ProjectDetails from './views/ProjectDetails';
 import UnderConstruction from './views/UnderConstruction';
 import ErrorBoundary from './views/ErrorBoundary';
 import NewProjectDetails from './views/NewProjectDetails';
+import ProjectSubmissions from './views/ProjectSubmissions';
 
 // const ProjectDetails = React.lazy(() => import('./views/ProjectDetails'));
 const Submissions = React.lazy(() => import('./views/Submissions'));
 const Tasks = React.lazy(() => import('./views/Tasks'));
 const ProjectInfo = React.lazy(() => import('./views/ProjectInfo'));
-const ProjectSubmissions = React.lazy(() => import('./views/ProjectSubmissions'));
 
 const routes = createBrowserRouter([
   {
