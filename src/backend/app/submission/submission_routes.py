@@ -106,7 +106,7 @@ async def download_submission(
 
     """
     if not (task_id or export_json):
-        file = submission_crud.download_submission_for_project(db, project_id)
+        file = submission_crud.gather_all_submission_csvs(db, project_id)
         return FileResponse(file)
 
     return await submission_crud.download_submission(
@@ -166,7 +166,7 @@ async def conflate_osm_data(
     # All Submissions JSON
     # NOTE runs in separate thread using run_in_threadpool
     submission = await run_in_threadpool(
-        lambda: submission_crud.get_all_submissions(db, project_id)
+        lambda: submission_crud.get_all_submissions_json(db, project_id)
     )
 
     # Data extracta file
@@ -260,7 +260,7 @@ async def get_osm_xml(
     # All Submissions JSON
     # NOTE runs in separate thread using run_in_threadpool
     submission = await run_in_threadpool(
-        lambda: submission_crud.get_all_submissions(db, project_id)
+        lambda: submission_crud.get_all_submissions_json(db, project_id)
     )
 
     # Write the submission to a file

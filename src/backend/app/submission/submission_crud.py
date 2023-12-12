@@ -307,7 +307,7 @@ def convert_to_osm(db: Session, project_id: int, task_id: int):
         submission = xform.getSubmissions(odkid, task_id, None, False, True)
         submission = (json.loads(submission))["value"]
     else:
-        submission = get_all_submissions(db, project_id)
+        submission = get_all_submissions_json(db, project_id)
 
     if not submission:
         raise HTTPException(status_code=404, detail="Submission not found")
@@ -349,8 +349,12 @@ def convert_to_osm(db: Session, project_id: int, task_id: int):
     return FileResponse(final_zip_file_path)
 
 
-def download_submission_for_project(db, project_id):
-    log.info(f"Downloading all submissions for a project {project_id}")
+def gather_all_submission_csvs(db, project_id):
+    """Gather all of the submission CSVs for a project.
+    
+    Generate a single zip with all submissions.
+    """
+    log.info(f"Downloading all CSV submissions for project {project_id}")
 
     get_project_sync = async_to_sync(project_crud.get_project)
     project_info = get_project_sync(db, project_id)
@@ -536,7 +540,8 @@ def update_submission_in_s3(
         update_bg_task_sync(db, background_task_id, 2, str(e))  # 2 is FAILED
 
 
-def get_all_submissions(db: Session, project_id):
+def get_all_submissions_json(db: Session, project_id):
+    """Get all submissions for a project in JSON format."""
     get_project_sync = async_to_sync(project_crud.get_project)
     project_info = get_project_sync(db, project_id)
 
