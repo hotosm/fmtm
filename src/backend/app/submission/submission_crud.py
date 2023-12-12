@@ -17,12 +17,12 @@
 #
 import concurrent.futures
 import csv
+import datetime
 import io
 import json
 import os
 import threading
 import uuid
-import datetime
 from asyncio import gather
 from io import BytesIO
 from pathlib import Path
@@ -456,7 +456,6 @@ def update_submission_in_s3(
         submission_path = f"/{project.organisation_id}/{project_id}/submission.zip"
         file_obj = BytesIO(json.dumps(submission).encode())
 
-
         # Metadata
         # ODK Credentials
         odk_credentials = project_schemas.ODKCentral(
@@ -464,8 +463,9 @@ def update_submission_in_s3(
             odk_central_user=project.odk_central_user,
             odk_central_password=project.odk_central_password,
         )
-        from ..central import central_crud
         from sqlalchemy.sql import text
+
+        from ..central import central_crud
 
         odk_details = central_crud.list_odk_xforms(project.odkid, odk_credentials, True)
 
@@ -489,23 +489,29 @@ def update_submission_in_s3(
                     "feature_count": feature_count[0],
                 }
             )
-            if detail['lastSubmission'] is not None:
-                valid_date_entries.append(detail['lastSubmission'])
+            if detail["lastSubmission"] is not None:
+                valid_date_entries.append(detail["lastSubmission"])
 
         # maximum timestamp
-        latest_time = max(valid_date_entries, key=lambda x: datetime.datetime.strptime(x, "%Y-%m-%dT%H:%M:%S.%fZ"))
-        metadata={
-            'submission_count':"100",
-            'last_submission':latest_time,
-            'tasks':task_wise_submission_info
+        latest_time = max(
+            valid_date_entries,
+            key=lambda x: datetime.datetime.strptime(x, "%Y-%m-%dT%H:%M:%S.%fZ"),
+        )
+        metadata = {
+            "submission_count": "100",
+            "last_submission": latest_time,
+            "tasks": task_wise_submission_info,
         }
 
         # Create a sozipfile with metadata and submissions
-        with zipfile.ZipFile(file_obj, 'w',
-                            compression=zipfile.ZIP_DEFLATED,
-                            chunk_size=zipfile.SOZIP_DEFAULT_CHUNK_SIZE) as myzip:
-            myzip.writestr('submission.json', json.dumps(submission))
-            myzip.writestr('metadata.json', json.dumps(metadata))
+        with zipfile.ZipFile(
+            file_obj,
+            "w",
+            compression=zipfile.ZIP_DEFLATED,
+            chunk_size=zipfile.SOZIP_DEFAULT_CHUNK_SIZE,
+        ) as myzip:
+            myzip.writestr("submission.json", json.dumps(submission))
+            myzip.writestr("metadata.json", json.dumps(metadata))
 
         # Add zipfile to the s3 bucket.
         add_obj_to_bucket(
