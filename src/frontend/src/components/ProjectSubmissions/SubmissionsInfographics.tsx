@@ -62,6 +62,11 @@ const items = [
   { name: 'haha' },
 ];
 
+const pieData = [
+  { names: 'Group A', value: 400 },
+  { names: 'Group D', value: 200 },
+];
+
 const SubmissionsInfographics = () => {
   const formSubmissionRef = useRef(null);
   const projectProgressRef = useRef(null);
@@ -123,7 +128,11 @@ const SubmissionsInfographics = () => {
           />
         </div>
         <div className="fmtm-w-[35%]">
-          <InfographicsCard cardRef={projectProgressRef} header="Project Progress" body={<CustomPieChart />} />
+          <InfographicsCard
+            cardRef={projectProgressRef}
+            header="Project Progress"
+            body={<CustomPieChart data={pieData} dataKey="value" nameKey="names" />}
+          />
         </div>
       </div>
       <div className="fmtm-flex fmtm-gap-10">
@@ -171,7 +180,10 @@ const SubmissionsInfographics = () => {
           />
         </div>
         <div className="fmtm-w-[35%]">
-          <InfographicsCard header={`Total Contributors: 25`} body={<CustomPieChart />} />
+          <InfographicsCard
+            header={`Total Contributors: 25`}
+            body={<CustomPieChart data={pieData} dataKey="value" nameKey="names" />}
+          />
         </div>
       </div>
       <div className="fmtm-w-[100%]">

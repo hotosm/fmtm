@@ -1,11 +1,6 @@
 import React from 'react';
 import { PieChart, Pie, Sector, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
-const data = [
-  { name: 'Group A', value: 400 },
-  { name: 'Group D', value: 200 },
-];
-
 const RADIAN = Math.PI / 180;
 const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
   const radius = innerRadius + (outerRadius - innerRadius) * 0.2;
@@ -19,7 +14,7 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
   );
 };
 
-const CustomPieChart = () => {
+const CustomPieChart = ({ data, dataKey, nameKey }) => {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <PieChart width={800} height={400}>
@@ -31,9 +26,10 @@ const CustomPieChart = () => {
           outerRadius={100}
           fill="#8884d8"
           paddingAngle={2}
-          dataKey="value"
+          dataKey={dataKey}
           labelLine={false}
           label={renderCustomizedLabel}
+          nameKey={nameKey}
         >
           {data.map((entry, index) => (
             <Cell key={`cell-${index}`} fill="#FA6E40" />
