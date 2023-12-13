@@ -1,52 +1,7 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-const data = [
-  {
-    name: 'Page A',
-    uv: 4000,
-    pv: 2400,
-    amt: 2400,
-  },
-  {
-    name: 'Page B',
-    uv: 3000,
-    pv: 1398,
-    amt: 2210,
-  },
-  {
-    name: 'Page C',
-    uv: 2000,
-    pv: 9800,
-    amt: 2290,
-  },
-  {
-    name: 'Page D',
-    uv: 2780,
-    pv: 3908,
-    amt: 2000,
-  },
-  {
-    name: 'Page E',
-    uv: 1890,
-    pv: 4800,
-    amt: 2181,
-  },
-  {
-    name: 'Page F',
-    uv: 2390,
-    pv: 3800,
-    amt: 2500,
-  },
-  {
-    name: 'Page G',
-    uv: 3490,
-    pv: 4300,
-    amt: 2100,
-  },
-];
-
-const CustomBarChart = () => {
+const CustomBarChart = ({ data, xLabel, yLabel, dataKey }) => {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart
@@ -64,7 +19,7 @@ const CustomBarChart = () => {
           dataKey="name"
           style={{ fontSize: '12px' }}
           label={{
-            value: 'Submission Count',
+            value: `${xLabel}`,
             position: 'insideBottom',
             fontSize: '14px',
             offset: '-2',
@@ -73,7 +28,7 @@ const CustomBarChart = () => {
         <YAxis
           style={{ fontSize: '12px' }}
           label={{
-            value: 'Submission Count',
+            value: `${yLabel}`,
             angle: -90,
             fontSize: '14px',
             position: 'insideLeft',
@@ -82,7 +37,7 @@ const CustomBarChart = () => {
           }}
         />
         <Tooltip cursor={{ fill: '#fff3ed' }} />
-        <Bar dataKey="pv" fill="#FA6E40" radius={[5, 5, 0, 0]} />
+        <Bar dataKey={dataKey} fill="#FA6E40" radius={[5, 5, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

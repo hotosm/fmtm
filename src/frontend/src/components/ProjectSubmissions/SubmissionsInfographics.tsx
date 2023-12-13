@@ -14,6 +14,54 @@ type InfographicsCardType = {
   cardRef?: React.MutableRefObject<null> | undefined;
 };
 
+const data = [
+  {
+    name: 'Page A',
+    uv: 4000,
+    pv: 2400,
+  },
+  {
+    name: 'Page B',
+    uv: 3000,
+    pv: 1398,
+  },
+  {
+    name: 'Page C',
+    uv: 2000,
+    pv: 9800,
+  },
+  {
+    name: 'Page D',
+    uv: 2780,
+    pv: 3908,
+  },
+  {
+    name: 'Page E',
+    uv: 1890,
+    pv: 4800,
+  },
+  {
+    name: 'Page F',
+    uv: 2390,
+    pv: 3800,
+  },
+  {
+    name: 'Page G',
+    uv: 3490,
+    pv: 4300,
+  },
+];
+
+const items = [
+  { name: 'haha' },
+  { name: 'haha' },
+  { name: 'haha' },
+  { name: 'haha' },
+  { name: 'haha' },
+  { name: 'haha' },
+  { name: 'haha' },
+];
+
 const SubmissionsInfographics = () => {
   const formSubmissionRef = useRef(null);
   const projectProgressRef = useRef(null);
@@ -21,15 +69,6 @@ const SubmissionsInfographics = () => {
   const plannedVsActualRef = useRef(null);
 
   const [submissionProjection, setSubmissionProjection] = useState(10);
-  const items = [
-    { name: 'haha' },
-    { name: 'haha' },
-    { name: 'haha' },
-    { name: 'haha' },
-    { name: 'haha' },
-    { name: 'haha' },
-    { name: 'haha' },
-  ];
 
   const FormSubmissionSubHeader = () => (
     <div className="fmtm-text-sm fmtm-flex fmtm-gap-5 fmtm-mb-2">
@@ -80,7 +119,7 @@ const SubmissionsInfographics = () => {
             cardRef={formSubmissionRef}
             header="Form Submissions"
             subHeader={<FormSubmissionSubHeader />}
-            body={<CustomBarChart />}
+            body={<CustomBarChart data={data} xLabel="Submission Data" yLabel="Submission Count" dataKey="uv" />}
           />
         </div>
         <div className="fmtm-w-[35%]">
