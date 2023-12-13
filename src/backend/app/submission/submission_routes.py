@@ -222,7 +222,7 @@ async def conflate_osm_data(
 async def update_submission_cache(
     background_tasks: BackgroundTasks,
     project_id: int,
-    task_id: Optional[str] = None,
+    background_task_id: Optional[str] = None,
     db: Session = Depends(database.get_db),
 ):
 
@@ -230,10 +230,10 @@ async def update_submission_cache(
     project = await project_crud.get_project(db, project_id)
 
     # Return existing export if complete
-    if task_id:
+    if background_task_id:
         # Get the backgrund task status
         task_status, task_message = await project_crud.get_background_task_status(
-            task_id, db
+            background_task_id, db
         )
 
         if task_status != 4:
