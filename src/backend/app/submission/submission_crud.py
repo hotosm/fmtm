@@ -38,7 +38,7 @@ from sqlalchemy.orm import Session
 from app.central.central_crud import get_odk_form, get_odk_project, list_odk_xforms
 from app.config import settings
 from app.projects import project_crud, project_schemas
-from app.s3 import add_obj_to_bucket
+from app.s3 import add_obj_to_bucket, get_obj_from_bucket
 from app.tasks import tasks_crud
 
 
@@ -471,13 +471,26 @@ def update_submission_in_s3(
         last_submission = max(
             valid_datetimes, key=lambda x: datetime.strptime(x, "%Y-%m-%dT%H:%M:%S.%fZ")
         )
-        zip_file_last_submission = datetime()
-        # TODO query if a file exists already
-        # If it does, then query the metadata and get the zip_file_last_submission
-        if last_submission <= zip_file_last_submission:
-            # The zip file is up to date, redirect
-            pass
-            # return RedirectResponse(...)
+
+        # Check if the file already exists in s3
+        s3_path = f"/{project.organisation_id}/{project_id}/submission1.zip"
+        try:
+            file = get_obj_from_bucket(settings.S3_BUCKET_NAME,s3_path)
+
+            # Open the zip file
+            with zipfile.ZipFile(file, 'r') as zip_ref:
+                # Read the contents of the specific file from the zip archive
+                with zip_ref.open("metadata.json") as file_in_zip:
+                    content = file_in_zip.read()
+
+            # Get the last submission date from the metadata
+            zip_file_last_submission = (json.loads(content))['last_submission']
+
+            if last_submission <= zip_file_last_submission:
+                return True
+
+        except Exception as e:
+            return True
 
         # Zip file is outdated, regenerate
         metadata = {
@@ -514,6 +527,7 @@ def update_submission_in_s3(
         return True
 
     except Exception as e:
+        print("Error = ", str(e))
         # Update background task status to FAILED
         update_bg_task_sync = async_to_sync(
             project_crud.update_background_task_status_in_database
