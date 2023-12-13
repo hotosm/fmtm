@@ -487,10 +487,15 @@ def update_submission_in_s3(
             zip_file_last_submission = (json.loads(content))["last_submission"]
 
             if last_submission <= zip_file_last_submission:
-                return True
+                # Update background task status to COMPLETED
+                update_bg_task_sync = async_to_sync(
+                    project_crud.update_background_task_status_in_database
+                )
+                update_bg_task_sync(db, background_task_id, 4)  # 4 is COMPLETED
+                return
 
         except Exception:
-            return True
+            pass
 
         # Zip file is outdated, regenerate
         metadata = {
