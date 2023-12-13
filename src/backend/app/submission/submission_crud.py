@@ -475,21 +475,21 @@ def update_submission_in_s3(
         # Check if the file already exists in s3
         s3_path = f"/{project.organisation_id}/{project_id}/submission1.zip"
         try:
-            file = get_obj_from_bucket(settings.S3_BUCKET_NAME,s3_path)
+            file = get_obj_from_bucket(settings.S3_BUCKET_NAME, s3_path)
 
             # Open the zip file
-            with zipfile.ZipFile(file, 'r') as zip_ref:
+            with zipfile.ZipFile(file, "r") as zip_ref:
                 # Read the contents of the specific file from the zip archive
                 with zip_ref.open("metadata.json") as file_in_zip:
                     content = file_in_zip.read()
 
             # Get the last submission date from the metadata
-            zip_file_last_submission = (json.loads(content))['last_submission']
+            zip_file_last_submission = (json.loads(content))["last_submission"]
 
             if last_submission <= zip_file_last_submission:
                 return True
 
-        except Exception as e:
+        except Exception:
             return True
 
         # Zip file is outdated, regenerate
