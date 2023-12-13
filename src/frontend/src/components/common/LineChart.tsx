@@ -1,7 +1,7 @@
-import React, { PureComponent } from 'react';
+import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const CustomLineChart = ({ data, xAxisDataKey, lineOneKey, lineTwoKey }) => {
+const CustomLineChart = ({ data, xAxisDataKey, lineOneKey, lineTwoKey, xLabel, yLabel }) => {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart
@@ -14,8 +14,27 @@ const CustomLineChart = ({ data, xAxisDataKey, lineOneKey, lineTwoKey }) => {
         }}
       >
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey={xAxisDataKey} />
-        <YAxis />
+        <XAxis
+          style={{ fontSize: '12px' }}
+          dataKey={xAxisDataKey}
+          label={{
+            value: `${xLabel}`,
+            position: 'insideBottom',
+            fontSize: '14px',
+            offset: '1',
+          }}
+        />
+        <YAxis
+          style={{ fontSize: '12px' }}
+          label={{
+            value: `${yLabel}`,
+            angle: -90,
+            fontSize: '14px',
+            position: 'insideLeft',
+            offset: '8',
+            dy: 55,
+          }}
+        />
         <Tooltip />
         <Legend iconSize={10} iconType="circle" align="left" verticalAlign="top" height={45} />
         <Line type="linear" dataKey={lineOneKey} stroke="#31356E" activeDot={{ r: 6 }} strokeWidth={1.5} />

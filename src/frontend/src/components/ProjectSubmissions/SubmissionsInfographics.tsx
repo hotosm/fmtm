@@ -267,7 +267,16 @@ const SubmissionsInfographics = () => {
         <InfographicsCard
           cardRef={plannedVsActualRef}
           header="Planned vs Actual"
-          body={<CustomLineChart data={lineKeyData} xAxisDataKey="name" lineOneKey="Planned" lineTwoKey="Actual" />}
+          body={
+            <CustomLineChart
+              data={lineKeyData}
+              xAxisDataKey="name"
+              lineOneKey="Planned"
+              lineTwoKey="Actual"
+              xLabel="Submission Date"
+              yLabel="Submission Count"
+            />
+          }
         />
       </div>
 
