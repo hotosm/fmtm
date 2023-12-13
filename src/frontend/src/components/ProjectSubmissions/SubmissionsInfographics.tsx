@@ -1,18 +1,25 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import TaskSubmissions from './TaskSubmissions';
 import CustomBarChart from '../../components/common/BarChart';
 import AssetModules from '../../shared/AssetModules.js';
 import CustomPieChart from '../../components/common/PieChart';
 import Table, { TableHeader } from '../../components/common/CustomTable';
 import CustomLineChart from '../../components/common/LineChart';
+import handleDownload from '../../utilfunctions/downloadChart';
 
 type InfographicsCardType = {
   header: string;
   subHeader?: React.ReactElement;
   body: React.ReactElement;
+  cardRef?: React.MutableRefObject<null> | undefined;
 };
 
 const SubmissionsInfographics = () => {
+  const formSubmissionRef = useRef(null);
+  const projectProgressRef = useRef(null);
+  const totalContributorsRef = useRef(null);
+  const plannedVsActualRef = useRef(null);
+
   const [submissionProjection, setSubmissionProjection] = useState(10);
   const items = [
     { name: 'haha' },
@@ -45,14 +52,23 @@ const SubmissionsInfographics = () => {
     </div>
   );
 
-  const InfographicsCard = ({ header, subHeader, body }: InfographicsCardType) => (
-    <div className="fmtm-w-full fmtm-h-[24rem] fmtm-bg-white fmtm-flex fmtm-flex-col fmtm-gap-5 fmtm-p-5 fmtm-rounded-xl">
+  const InfographicsCard = ({ header, subHeader, body, cardRef }: InfographicsCardType) => (
+    <div
+      ref={cardRef}
+      className="fmtm-w-full fmtm-h-[24rem] fmtm-bg-white fmtm-flex fmtm-flex-col fmtm-gap-5 fmtm-p-5 fmtm-rounded-xl"
+    >
       <div className="fmtm-flex fmtm-items-end fmtm-justify-between">
         <h5 className="fmtm-text-lg">{header}</h5>
-        <AssetModules.FileDownloadOutlinedIcon />
+        <div
+          data-html2canvas-ignore="true"
+          onClick={() => handleDownload(cardRef, header)}
+          className="group fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-gray-200 fmtm-cursor-pointer fmtm-duration-150 fmtm-h-9 fmtm-w-9 fmtm-flex fmtm-items-center fmtm-justify-center"
+        >
+          <AssetModules.FileDownloadOutlinedIcon />
+        </div>
       </div>
       {subHeader && subHeader}
-      <div className="fmtm-h-[80%] ">{body}</div>
+      <div className="fmtm-h-[80%]">{body}</div>
     </div>
   );
 
@@ -61,18 +77,20 @@ const SubmissionsInfographics = () => {
       <div className="fmtm-flex fmtm-gap-10">
         <div className="fmtm-w-[65%]">
           <InfographicsCard
+            cardRef={formSubmissionRef}
             header="Form Submissions"
             subHeader={<FormSubmissionSubHeader />}
             body={<CustomBarChart />}
           />
         </div>
         <div className="fmtm-w-[35%]">
-          <InfographicsCard header="Project Progress" body={<CustomPieChart />} />
+          <InfographicsCard cardRef={projectProgressRef} header="Project Progress" body={<CustomPieChart />} />
         </div>
       </div>
       <div className="fmtm-flex fmtm-gap-10">
         <div className="fmtm-w-[65%]">
           <InfographicsCard
+            cardRef={totalContributorsRef}
             header={`Total Contributors: 25`}
             body={
               <Table data={items} flag="dashboard" onRowClick={() => {}} style={{ height: '100%' }}>
@@ -118,7 +136,7 @@ const SubmissionsInfographics = () => {
         </div>
       </div>
       <div className="fmtm-w-[100%]">
-        <InfographicsCard header="Planned vs Actual" body={<CustomLineChart />} />
+        <InfographicsCard cardRef={plannedVsActualRef} header="Planned vs Actual" body={<CustomLineChart />} />
       </div>
 
       <div>
