@@ -67,6 +67,75 @@ const pieData = [
   { names: 'Group D', value: 200 },
 ];
 
+const lineKeyData = [
+  {
+    name: '11/25',
+    Actual: 4000,
+    Planned: 2400,
+    amt: 2400,
+  },
+  {
+    name: '11/26',
+    Actual: 3000,
+    Planned: 1398,
+    amt: 2210,
+  },
+  {
+    name: '11/27',
+    Actual: 2000,
+    Planned: 9800,
+    amt: 2290,
+  },
+  {
+    name: '11/28',
+    Actual: 2780,
+    Planned: 3908,
+    amt: 2000,
+  },
+  {
+    name: '11/29',
+    Actual: 1890,
+    Planned: 4800,
+    amt: 2181,
+  },
+  {
+    name: '11/30',
+    Actual: 2390,
+    Planned: 3800,
+    amt: 2500,
+  },
+  {
+    name: '12/01',
+    Actual: 3490,
+    Planned: 4300,
+    amt: 2100,
+  },
+  {
+    name: '12/02',
+    Actual: 2780,
+    Planned: 3908,
+    amt: 2000,
+  },
+  {
+    name: '12/03',
+    Actual: 1890,
+    Planned: 4800,
+    amt: 2181,
+  },
+  {
+    name: '12/04',
+    Actual: 2390,
+    Planned: 3800,
+    amt: 2500,
+  },
+  {
+    name: '12/05',
+    Actual: 3490,
+    Planned: 4300,
+    amt: 2100,
+  },
+];
+
 const SubmissionsInfographics = () => {
   const formSubmissionRef = useRef(null);
   const projectProgressRef = useRef(null);
@@ -126,11 +195,11 @@ const SubmissionsInfographics = () => {
             subHeader={<FormSubmissionSubHeader />}
             body={
               <CustomBarChart
-                data={data}
+                data={lineKeyData}
                 xLabel="Submission Data"
                 yLabel="Submission Count"
-                dataKey="uv"
-                nameKey="date"
+                dataKey="Actual"
+                nameKey="name"
               />
             }
           />
@@ -195,7 +264,11 @@ const SubmissionsInfographics = () => {
         </div>
       </div>
       <div className="fmtm-w-[100%]">
-        <InfographicsCard cardRef={plannedVsActualRef} header="Planned vs Actual" body={<CustomLineChart />} />
+        <InfographicsCard
+          cardRef={plannedVsActualRef}
+          header="Planned vs Actual"
+          body={<CustomLineChart data={lineKeyData} xAxisDataKey="name" lineOneKey="Planned" lineTwoKey="Actual" />}
+        />
       </div>
 
       <div>
