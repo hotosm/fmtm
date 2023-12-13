@@ -105,7 +105,7 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
   };
 
   return (
-    <div className="">
+    <div className="fmtm-w-full fmtm-px-2 sm:fmtm-px-0">
       <div className="fmtm-flex fmtm-items-center fmtm-w-full fmtm-gap-2">
         <input
           type="text"
