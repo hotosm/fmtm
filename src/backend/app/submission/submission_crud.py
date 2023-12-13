@@ -473,7 +473,9 @@ def update_submission_in_s3(
         )
 
         # Check if the file already exists in s3
-        metadata_s3_path = f"/{project.organisation_id}/{project_id}/submissions.meta.json"
+        metadata_s3_path = (
+            f"/{project.organisation_id}/{project_id}/submissions.meta.json"
+        )
         try:
             # Get the last submission date from the metadata
             file = get_obj_from_bucket(settings.S3_BUCKET_NAME, metadata_s3_path)
