@@ -1,7 +1,7 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-const CustomBarChart = ({ data, xLabel, yLabel, dataKey }) => {
+const CustomBarChart = ({ data, xLabel, yLabel, dataKey, nameKey }) => {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart
@@ -16,7 +16,7 @@ const CustomBarChart = ({ data, xLabel, yLabel, dataKey }) => {
         }}
       >
         <XAxis
-          dataKey="name"
+          dataKey={nameKey}
           style={{ fontSize: '12px' }}
           label={{
             value: `${xLabel}`,
