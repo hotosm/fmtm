@@ -473,18 +473,11 @@ def update_submission_in_s3(
         )
 
         # Check if the file already exists in s3
-        s3_path = f"/{project.organisation_id}/{project_id}/submission.zip"
+        metadata_s3_path = f"/{project.organisation_id}/{project_id}/submissions.meta.json"
         try:
-            file = get_obj_from_bucket(settings.S3_BUCKET_NAME, s3_path)
-
-            with zipfile.ZipFile(file, "r") as myzip:
-                metadata_index = myzip.getinfo("metadata.json")
-                with myzip.open(metadata_index) as file:
-                    metadata_json = file.read()
-
             # Get the last submission date from the metadata
-            zip_file_last_submission = (json.loads(metadata_json))["last_submission"]
-
+            file = get_obj_from_bucket(settings.S3_BUCKET_NAME, metadata_s3_path)
+            zip_file_last_submission = (json.loads(file.getvalue()))["last_submission"]
             if last_submission <= zip_file_last_submission:
                 # Update background task status to COMPLETED
                 update_bg_task_sync = async_to_sync(
@@ -514,13 +507,20 @@ def update_submission_in_s3(
             chunk_size=zipfile.SOZIP_DEFAULT_CHUNK_SIZE,
         ) as myzip:
             myzip.writestr("submissions.json", json.dumps(submissions))
-            myzip.writestr("metadata.json", json.dumps(metadata))
 
         # Add zipfile to the s3 bucket
         add_obj_to_bucket(
             settings.S3_BUCKET_NAME,
             submissions_zip,
             f"/{project.organisation_id}/{project_id}/submission.zip",
+        )
+
+        # Upload metadata to s3
+        metadata_obj = BytesIO(json.dumps(metadata).encode())
+        add_obj_to_bucket(
+            settings.S3_BUCKET_NAME,
+            metadata_obj,
+            f"/{project.organisation_id}/{project_id}/submissions.meta.json",
         )
 
         # Update background task status to COMPLETED
