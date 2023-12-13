@@ -1,6 +1,8 @@
 import React from 'react';
 import { PieChart, Pie, Sector, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
+const COLORS = ['#2D8BBA', '#32A886', '#A83273', '#fcef5d'];
+
 const RADIAN = Math.PI / 180;
 const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
   const radius = innerRadius + (outerRadius - innerRadius) * 0.2;
@@ -32,7 +34,7 @@ const CustomPieChart = ({ data, dataKey, nameKey }) => {
           nameKey={nameKey}
         >
           {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill="#FA6E40" />
+            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
         <Tooltip />
