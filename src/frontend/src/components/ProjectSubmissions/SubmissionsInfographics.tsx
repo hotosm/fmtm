@@ -93,7 +93,7 @@ const SubmissionsInfographics = () => {
             cardRef={totalContributorsRef}
             header={`Total Contributors: 25`}
             body={
-              <Table data={items} flag="dashboard" onRowClick={() => {}} style={{ height: '100%' }}>
+              <Table data={items} onRowClick={() => {}} style={{ height: '100%' }}>
                 <TableHeader
                   dataField="SN"
                   headerClassName="snHeader"

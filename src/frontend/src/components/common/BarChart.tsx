@@ -81,7 +81,7 @@ const CustomBarChart = () => {
             dy: 55,
           }}
         />
-        <Tooltip />
+        <Tooltip cursor={{ fill: '#fff3ed' }} />
         <Bar dataKey="pv" fill="#FA6E40" radius={[5, 5, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
