@@ -477,14 +477,13 @@ def update_submission_in_s3(
         try:
             file = get_obj_from_bucket(settings.S3_BUCKET_NAME, s3_path)
 
-            # Open the zip file
-            with zipfile.ZipFile(file, "r") as zip_ref:
-                # Read the contents of the specific file from the zip archive
-                with zip_ref.open("metadata.json") as file_in_zip:
-                    content = file_in_zip.read()
+            with zipfile.ZipFile(file, "r") as myzip:
+                metadata_index = myzip.getinfo("metadata.json")
+                with myzip.open(metadata_index) as file:
+                    metadata_json = file.read()
 
             # Get the last submission date from the metadata
-            zip_file_last_submission = (json.loads(content))["last_submission"]
+            zip_file_last_submission = (json.loads(metadata_json))["last_submission"]
 
             if last_submission <= zip_file_last_submission:
                 # Update background task status to COMPLETED
@@ -494,7 +493,8 @@ def update_submission_in_s3(
                 update_bg_task_sync(db, background_task_id, 4)  # 4 is COMPLETED
                 return
 
-        except Exception:
+        except Exception as e:
+            log.warning(str(e))
             pass
 
         # Zip file is outdated, regenerate
@@ -532,7 +532,7 @@ def update_submission_in_s3(
         return True
 
     except Exception as e:
-        print("Error = ", str(e))
+        log.warning(str(e))
         # Update background task status to FAILED
         update_bg_task_sync = async_to_sync(
             project_crud.update_background_task_status_in_database
