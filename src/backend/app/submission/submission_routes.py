@@ -218,8 +218,8 @@ async def conflate_osm_data(
     return []
 
 
-@router.post("/update_submission_cache")
-async def update_submission_cache(
+@router.post("/download-submission")
+async def download_submission_json(
     background_tasks: BackgroundTasks,
     project_id: int,
     background_task_id: Optional[str] = None,
