@@ -19,20 +19,21 @@ const ProjectInfo = () => {
 
   return (
     <div className="fmtm-flex fmtm-flex-col fmtm-gap-5 fmtm-mt-3 fmtm-h-[56vh] fmtm-overflow-y-scroll scrollbar fmtm-pr-1">
-      <p className="fmtm-font-bold">Description</p>
       <div>
-        <p className={`${!seeMore ? 'fmtm-line-clamp-[10]' : ''} fmtm-text-[#706E6E]`} ref={paraRef}>
-          {projectInfo?.description}
-        </p>
-        {console.log(descLines, 'descLines')}
-        {descLines >= 10 && (
-          <p
-            className="fmtm-text-primaryRed hover:fmtm-text-red-700 hover:fmtm-cursor-pointer"
-            onClick={() => setSeeMore(!seeMore)}
-          >
-            ... {!seeMore ? 'See More' : 'See Less'}
+        <p className="fmtm-font-bold">Description</p>
+        <div>
+          <p className={`${!seeMore ? 'fmtm-line-clamp-[10]' : ''} fmtm-text-[#706E6E]`} ref={paraRef}>
+            {projectInfo?.description}
           </p>
-        )}
+          {descLines >= 10 && (
+            <p
+              className="fmtm-text-primaryRed hover:fmtm-text-red-700 hover:fmtm-cursor-pointer"
+              onClick={() => setSeeMore(!seeMore)}
+            >
+              ... {!seeMore ? 'See More' : 'See Less'}
+            </p>
+          )}
+        </div>
       </div>
       <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
         <AssetModules.FmdGoodIcon className="fmtm-text-primaryRed" />
