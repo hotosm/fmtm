@@ -473,7 +473,7 @@ def update_submission_in_s3(
         )
 
         # Check if the file already exists in s3
-        s3_path = f"/{project.organisation_id}/{project_id}/submission1.zip"
+        s3_path = f"/{project.organisation_id}/{project_id}/submission.zip"
         try:
             file = get_obj_from_bucket(settings.S3_BUCKET_NAME,s3_path)
 
