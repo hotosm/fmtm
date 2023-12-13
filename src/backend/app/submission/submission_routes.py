@@ -17,6 +17,7 @@
 #
 import json
 import os
+from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Response
 from fastapi.concurrency import run_in_threadpool
@@ -24,13 +25,11 @@ from fastapi.responses import FileResponse, JSONResponse
 from osm_fieldwork.odk_merge import OdkMerge
 from osm_fieldwork.osmfile import OsmFile
 from sqlalchemy.orm import Session
-from typing import Optional
-from app.projects import project_schemas
 
 from app.config import settings
-
 from app.db import database
-from app.projects import project_crud
+from app.projects import project_crud, project_schemas
+
 from . import submission_crud
 
 router = APIRouter(
@@ -225,7 +224,6 @@ async def download_submission_json(
     background_task_id: Optional[str] = None,
     db: Session = Depends(database.get_db),
 ):
-
     # Get Project
     project = await project_crud.get_project(db, project_id)
 
@@ -238,14 +236,14 @@ async def download_submission_json(
 
         if task_status != 4:
             return project_schemas.BackgroundTaskStatus(
-                status=task_status.name,
-                message=task_message or ""
+                status=task_status.name, message=task_message or ""
             )
 
         bucket_root = f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}"
-        return JSONResponse(status_code=200,
-                            content=f"{bucket_root}/{project.organisation_id}/{project_id}/submission.zip")
-
+        return JSONResponse(
+            status_code=200,
+            content=f"{bucket_root}/{project.organisation_id}/{project_id}/submission.zip",
+        )
 
     # Create task in db and return uuid
     background_task_id = await project_crud.insert_background_task_into_database(
@@ -258,9 +256,9 @@ async def download_submission_json(
     return JSONResponse(
         status_code=200,
         content={
-                "Message": "Submission update process initiated",
-                "task_id": str(background_task_id)
-                },
+            "Message": "Submission update process initiated",
+            "task_id": str(background_task_id),
+        },
     )
 
 
