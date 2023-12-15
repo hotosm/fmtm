@@ -172,8 +172,8 @@ async def test_generate_appuser_files(db, project):
 
     # Upload data extracts
     log.debug(f"Uploading custom data extracts: {str(data_extracts)[:100]}...")
-    data_extract_uploaded = await project_crud.upload_custom_data_extracts(
-        db, project_id, data_extracts
+    data_extract_uploaded = await project_crud.upload_custom_data_extract(
+        db, project_id, data_extracts,
     )
     assert data_extract_uploaded is True
 

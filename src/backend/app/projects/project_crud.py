@@ -40,7 +40,7 @@ from fastapi import File, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fmtm_splitter.splitter import split_by_sql, split_by_square
 from geoalchemy2.shape import from_shape, to_shape
-from geojson import Feature, FeatureCollection
+from geojson.feature import Feature, FeatureCollection
 from loguru import logger as log
 from osm_fieldwork.basemapper import create_basemap_file
 from osm_fieldwork.data_models import data_models_path
@@ -981,23 +981,20 @@ async def get_odk_id_for_project(db: Session, project_id: int):
     return project_info.odkid
 
 
-async def upload_custom_data_extracts(
+async def upload_custom_data_extract(
     db: Session,
     project_id: int,
-    contents: str,
-    category: str = "buildings",
-):
-    """Uploads custom data extracts to the database.
+    geojson_str: str,
+) -> str:
+    """Uploads custom data extracts to S3.
 
     Args:
-        db (Session): The database session object.
+        db (Session): SQLAlchemy database session.
         project_id (int): The ID of the project.
-        contents (str): The custom data extracts contents.
-        category (str, optional): The category assigned to the custom data extract.
-            Defaults to 'buildings'.
+        geojson_str (str): The custom data extracts contents.
 
     Returns:
-        bool: True if the upload is successful.
+        str: URL to fgb file in S3.
     """
     project = await get_project(db, project_id)
     log.debug(f"Uploading custom data extract for project: {project}")
@@ -1005,13 +1002,22 @@ async def upload_custom_data_extracts(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    project_geojson = db.query(func.ST_AsGeoJSON(project.outline)).scalar()
-    log.debug(f"Generated project geojson: {project_geojson}")
-    json.loads(project_geojson)
+    log.debug("Parsing geojson file")
+    geojson_parsed = geojson.loads(geojson_str)
+    if isinstance(geojson_parsed, FeatureCollection):
+        log.debug("Already in FeatureCollection format, skipping reparse")
+        featcol = geojson_parsed
+    elif isinstance(geojson_parsed, Feature):
+        log.debug("Converting Feature to FeatureCollection")
+        featcol = FeatureCollection(geojson_parsed)
+    else:
+        log.debug("Converting geometry to FeatureCollection")
+        featcol = FeatureCollection[Feature(geometry=geojson_parsed)]
 
-    features_data = json.loads(contents)
+    # Validating Coordinate Reference System
+    check_crs(featcol)
 
-    # # Data Cleaning
+    # FIXME use osm-fieldwork filter/clean data
     # cleaned = FilterData()
     # models = xlsforms_path.replace("xlsforms", "data_models")
     # xlsfile = f"{category}.xls"  # FIXME: for custom form
@@ -1022,35 +1028,43 @@ async def upload_custom_data_extracts(
     #     title, extract = cleaned.parse(f"{file}x")
     # # Remove anything in the data extract not in the choices sheet.
     # cleaned_data = cleaned.cleanData(features_data)
-
-    for feature in features_data["features"]:
-        feature_shape = shape(feature["geometry"])
-        if isinstance(feature_shape, MultiPolygon):
-            wkb_element = from_shape(
-                Polygon(feature["geometry"]["coordinates"][0][0]), srid=4326
-            )
-        elif isinstance(feature_shape, MultiLineString):
-            wkb_element = from_shape(
-                LineString(feature["geometry"]["coordinates"][0]), srid=4326
-            )
-        else:
-            wkb_element = from_shape(feature_shape, srid=4326)
-
-        # If the osm extracts contents do not have a title,
-        # provide an empty text for that.
-        feature["properties"]["title"] = ""
-        properties = flatten_dict(feature["properties"])
-
-        db_feature = db_models.DbFeatures(
-            project_id=project_id,
-            geometry=wkb_element,
-            properties=properties,
-            category_title=category,
+    feature_type = featcol.get("features", [])[-1].get("geometry", {}).get("type")
+    if feature_type not in ["Polygon", "Polyline"]:
+        msg = (
+            "Extract does not contain valid geometry types, from 'Polygon' "
+            "and 'Polyline'"
         )
-        db.add(db_feature)
+        log.error(msg)
+        raise HTTPException(status_code=404, detail=msg)
+    features_filtered = [
+        feature for feature in featcol.get("features", [])
+        if feature.get("geometry", {}).get("type", "") == feature_type
+    ]
+    featcol_filtered = FeatureCollection(features_filtered)
+
+    log.warning(featcol_filtered)
+    log.debug(
+        "Generating fgb object from geojson with "
+        f"{len(featcol_filtered.get('features', []))} features"
+    )
+    fgb_obj = BytesIO(await geojson_to_flatgeobuf(db, featcol_filtered))
+    s3_fgb_path = f"/{project.organisation_id}/{project_id}/custom_extract.fgb"
+
+    log.debug(f"Uploading fgb to S3 path: {s3_fgb_path}")
+    add_obj_to_bucket(
+        settings.S3_BUCKET_NAME,
+        fgb_obj,
+        s3_fgb_path,
+        content_type="application/octet-stream",
+    )
+
+    # Add url to database
+    s3_fgb_url = f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}{s3_fgb_path}"
+    log.debug(f"Commiting extract S3 path to database: {s3_fgb_url}")
+    project.data_extract_type = s3_fgb_url
     db.commit()
 
-    return True
+    return s3_fgb_url
 
 
 def flatten_dict(d, parent_key="", sep="_"):
@@ -1241,6 +1255,7 @@ def generate_appuser_files(
         - project_id: Project ID
         - extract_polygon: boolean to determine if we should extract the polygon
         - custom_xls_form: the xls file to upload if we have a custom form
+        - extracts_contents: the custom data extract
         - category: the category of the project
         - form_type: weather the form is xls, xlsx or xml
         - background_task_id: the task_id of the background task running this function.
@@ -1308,7 +1323,7 @@ def generate_appuser_files(
             # Data Extracts
             if extracts_contents is not None:
                 project_log.info("Uploading data extracts")
-                upload_extract_sync = async_to_sync(upload_custom_data_extracts)
+                upload_extract_sync = async_to_sync(upload_custom_data_extract)
                 upload_extract_sync(db, project_id, extracts_contents)
 
             else:
@@ -1571,7 +1586,7 @@ async def get_outline_from_geojson_file_in_zip(
             data = file.read()
             json_dump = json.loads(data)
             check_crs(json_dump)  # Validatiing Coordinate Reference System
-            feature_collection = geojson.FeatureCollection(json_dump)
+            feature_collection = FeatureCollection(json_dump)
             feature = feature_collection["features"][feature_index]
             geom = feature["geometry"]
             shape_from_geom = shape(geom)
@@ -1847,86 +1862,6 @@ async def update_background_task_status_in_database(
     db.commit()
 
     return True
-
-
-# TODO update to store extracts in S3 instead, not db
-# TODO convert geojson to fgb and upload
-def add_custom_extract_to_db(
-    db: Session,
-    features: dict,
-    background_task_id: uuid.UUID,
-    feature_type: str,
-):
-    """Insert geojson features into db for a project.
-
-    Args:
-        db: database session.
-        features: features to be added.
-        background_task_id (uuid.UUID): Task ID for database.
-        feature_type (str): feature type category in OSM.
-    """
-    try:
-        success = 0
-        failure = 0
-        project_id = uuid.uuid4()
-        if feature_type == "buildings":
-            for feature in features["features"]:
-                try:
-                    feature_geometry = feature["geometry"]
-                    feature_shape = shape(feature_geometry)
-
-                    wkb_element = from_shape(feature_shape, srid=4326)
-                    building_obj = db_models.DbBuildings(
-                        project_id=project_id,
-                        geom=wkb_element,
-                        tags=feature["properties"],
-                    )
-                    db.add(building_obj)
-                    db.commit()
-
-                    success += 1
-                except Exception:
-                    failure += 1
-                    continue
-
-            update_bg_task_sync = async_to_sync(
-                update_background_task_status_in_database
-            )
-            update_bg_task_sync(db, background_task_id, 4)  # 4 is COMPLETED
-
-        elif feature_type == "lines":
-            for feature in features["features"]:
-                try:
-                    feature_geometry = feature["geometry"]
-                    feature_shape = shape(feature_geometry)
-                    feature["properties"]["highway"] = "yes"
-
-                    wkb_element = from_shape(feature_shape, srid=4326)
-                    db_feature = db_models.DbOsmLines(
-                        project_id=project_id,
-                        geom=wkb_element,
-                        tags=feature["properties"],
-                    )
-
-                    db.add(db_feature)
-                    db.commit()
-
-                    success += 1
-                except Exception:
-                    failure += 1
-                    continue
-
-            update_bg_task_sync = async_to_sync(
-                update_background_task_status_in_database
-            )
-            update_bg_task_sync(db, background_task_id, 4)  # 4 is COMPLETED
-
-        return True
-    except Exception as e:
-        log.warning(str(e))
-
-        update_bg_task_sync = async_to_sync(update_background_task_status_in_database)
-        update_bg_task_sync(db, background_task_id, 2, str(e))  # 2 is FAILED
 
 
 async def update_project_form(

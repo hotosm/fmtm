@@ -284,7 +284,7 @@ async def update_odk_credentials(
         project, odk_central_cred, odkproject["id"], db
     )
 
-    return JSONResponse(status_code=200, message={"success": True})
+    return JSONResponse(status_code=200, content={"success": True})
 
 
 @router.put("/{id}", response_model=project_schemas.ProjectOut)
@@ -846,53 +846,31 @@ async def preview_split_by_square(
 @router.post("/upload_custom_extract/")
 async def upload_custom_extract(
     background_tasks: BackgroundTasks,
-    geojson: UploadFile = File(...),
-    feature_type: str = Query(
-        ..., description="Select feature type ", enum=["buildings", "lines"]
-    ),
+    custom_extract_file: UploadFile = File(...),
+    project_id: int = Query(..., description="Project ID"),
     db: Session = Depends(database.get_db),
 ):
-    """Upload a custom data extract for a project.
-
-    FIXME
-    Should this endpoint use upload_custom_data_extract
-    instead of a new function upload_custom_extract?
-    Are we duplicating code?
-    FIXME
-
-    Add osm data extract features to a project.
+    """Upload a custom data extract for a project as fgb in S3.
 
     Request Body
-    - 'project_id' (int): the project's id. Required.
-    - 'geojson' (file): Geojson files with the features. Required.
+    - 'custom_extract_file' (file): Geojson files with the features. Required.
 
+    Query Params:
+    - 'project_id' (int): the project's id. Required.
     """
     # Validating for .geojson File.
-    file_name = os.path.splitext(geojson.filename)
+    file_name = os.path.splitext(custom_extract_file.filename)
     file_ext = file_name[1]
     allowed_extensions = [".geojson", ".json"]
     if file_ext not in allowed_extensions:
         raise HTTPException(status_code=400, detail="Provide a valid .geojson file")
 
     # read entire file
-    content = await geojson.read()
-    features = json.loads(content)
+    geojson_str = await custom_extract_file.read()
 
-    # Validatiing Coordinate Reference System
-    check_crs(features)
-
-    # Create task in db and return uuid
     log.debug("Creating upload_custom_extract background task")
-    background_task_id = await project_crud.insert_background_task_into_database(db)
-
-    background_tasks.add_task(
-        project_crud.add_custom_extract_to_db,
-        db,
-        features,
-        background_task_id,
-        feature_type,
-    )
-    return True
+    fgb_url = await project_crud.upload_custom_data_extract(db, project_id, geojson_str)
+    return JSONResponse(status_code=200, content={"url": fgb_url})
 
 
 @router.get("/download_form/{project_id}/")
@@ -957,7 +935,7 @@ async def update_project_category(
         db, project_id, file_ext[1:] if upload else "xls", upload  # Form
     )
 
-    return True
+    return JSONResponse(status_code=200, content={"success": True})
 
 
 @router.get("/download_template/")
