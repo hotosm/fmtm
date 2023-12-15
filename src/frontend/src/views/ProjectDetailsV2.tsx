@@ -69,6 +69,7 @@ const Home = () => {
   const mobileFooterSelection = CoreModules.useAppSelector((state) => state.project.mobileFooterSelection);
   const mapTheme = CoreModules.useAppSelector((state) => state.theme.hotTheme);
   const geolocationStatus = CoreModules.useAppSelector((state) => state.project.geolocationStatus);
+  const projectDetailsLoading = CoreModules.useAppSelector((state) => state?.project?.projectDetailsLoading);
 
   //snackbar handle close funtion
   const handleClose = (event, reason) => {
@@ -287,7 +288,14 @@ const Home = () => {
       <div className="fmtm-flex fmtm-h-full sm:fmtm-p-6 fmtm-gap-6">
         <div className="fmtm-w-[22rem] fmtm-h-full sm:fmtm-block fmtm-hidden">
           <div className="fmtm-flex fmtm-justify-between fmtm-items-center fmtm-mb-4">
-            <p className="fmtm-text-lg fmtm-font-archivo">{`#${state.projectInfo.id}`}</p>
+            {projectDetailsLoading ? (
+              <div className="fmtm-flex fmtm-gap-1 fmtm-items-center">
+                <p>#</p>
+                <CoreModules.Skeleton className="!fmtm-w-[50px] fmtm-h-[20px]" />
+              </div>
+            ) : (
+              <p className="fmtm-text-lg fmtm-font-archivo">{`#${state.projectInfo.id}`}</p>
+            )}
             <p
               className="fmtm-text-sm fmtm-text-primaryRed hover:fmtm-cursor-pointer hover:fmtm-text-red-700"
               onClick={() => navigate(`/projectInfo/${encodedId}`)}
@@ -296,18 +304,26 @@ const Home = () => {
             </p>
           </div>
           <div className="fmtm-flex fmtm-flex-col fmtm-gap-4">
-            <div className="fmtm-relative">
-              <p className="fmtm-text-xl fmtm-font-archivo fmtm-line-clamp-3 fmtm-mr-4" title={state.projectInfo.title}>
-                {state.projectInfo.title}
-              </p>
-              <div title="Edit Project">
-                <AssetModules.EditIcon
-                  className="fmtm-absolute fmtm-bottom-2 fmtm-right-0 fmtm-text-primaryRed hover:fmtm-cursor-pointer hover:fmtm-text-red-700"
-                  style={{ fontSize: '18px' }}
-                  onClick={() => navigate(`/edit-project/project-details/${encodedId}`)}
-                />
+            {projectDetailsLoading ? (
+              <CoreModules.Skeleton className="!fmtm-w-[250px] fmtm-h-[25px]" />
+            ) : (
+              <div className="fmtm-relative">
+                <p
+                  className="fmtm-text-xl fmtm-font-archivo fmtm-line-clamp-3 fmtm-mr-4"
+                  title={state.projectInfo.title}
+                >
+                  {state.projectInfo.title}
+                </p>
+
+                <div title="Edit Project">
+                  <AssetModules.EditIcon
+                    className="fmtm-absolute fmtm-bottom-2 fmtm-right-0 fmtm-text-primaryRed hover:fmtm-cursor-pointer hover:fmtm-text-red-700"
+                    style={{ fontSize: '18px' }}
+                    onClick={() => navigate(`/edit-project/project-details/${encodedId}`)}
+                  />
+                </div>
               </div>
-            </div>
+            )}
             <div className="fmtm-w-full fmtm-h-1 fmtm-bg-white"></div>
             <div className="fmtm-flex fmtm-w-full">
               <button

@@ -7,6 +7,7 @@ import { CustomSelect } from '../../components/common/Select';
 import profilePic from '../../assets/images/project_icon.png';
 import { Feature } from 'ol';
 import { Polygon } from 'ol/geom';
+import { ActivitiesCardSkeletonLoader, ShowingCountSkeletonLoader } from './SkeletonLoader';
 
 const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion, states }) => {
   const displayLimit = 10;
@@ -14,6 +15,7 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
   const [taskHistories, setTaskHistories] = useState([]);
   const [taskDisplay, setTaskDisplay] = React.useState(displayLimit);
   const [allActivities, setAllActivities] = useState(0);
+  const projectDetailsLoading = CoreModules.useAppSelector((state) => state?.project?.projectDetailsLoading);
 
   const handleOnchange = (event) => {
     setSearchText(event.target.value);
@@ -128,11 +130,23 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
           />
         </div>
       </div>
-      <p className="fmtm-text-[#A8A6A6] fmtm-text-base fmtm-my-1">
-        showing {taskHistories?.length} of {allActivities} activities
-      </p>
+      {projectDetailsLoading ? (
+        <ShowingCountSkeletonLoader />
+      ) : (
+        <p className="fmtm-text-[#A8A6A6] fmtm-text-base fmtm-my-1">
+          showing {taskHistories?.length} of {allActivities} activities
+        </p>
+      )}
       <div className="fmtm-h-[52vh] fmtm-overflow-y-scroll scrollbar">
-        {taskHistories?.map((taskHistory) => <ActivitiesCard taskHistory={taskHistory} />)}
+        {projectDetailsLoading ? (
+          <div>
+            {Array.from({ length: 10 }).map((i) => (
+              <ActivitiesCardSkeletonLoader key={i} />
+            ))}
+          </div>
+        ) : (
+          <div>{taskHistories?.map((taskHistory) => <ActivitiesCard taskHistory={taskHistory} />)}</div>
+        )}
       </div>
     </div>
   );

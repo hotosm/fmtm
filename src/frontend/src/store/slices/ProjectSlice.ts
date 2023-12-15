@@ -21,6 +21,7 @@ const ProjectSlice = createSlice({
     taskModalStatus: false,
     mobileFooterSelection: 'explore',
     geolocationStatus: false,
+    projectDetailsLoading: true,
   },
   reducers: {
     SetProjectTaskBoundries(state, action) {
@@ -77,6 +78,9 @@ const ProjectSlice = createSlice({
     },
     ToggleGeolocationStatus(state, action) {
       state.geolocationStatus = action.payload;
+    },
+    SetProjectDetialsLoading(state, action) {
+      state.projectDetailsLoading = action.payload;
     },
   },
 });

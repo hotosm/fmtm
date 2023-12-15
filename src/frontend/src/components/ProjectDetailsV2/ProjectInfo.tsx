@@ -8,6 +8,7 @@ const ProjectInfo = () => {
   const [seeMore, setSeeMore] = useState(false);
   const [descLines, setDescLines] = useState(1);
   const projectInfo = CoreModules.useAppSelector((state) => state?.project?.projectInfo);
+  const projectDetailsLoading = CoreModules.useAppSelector((state) => state?.project?.projectDetailsLoading);
 
   useEffect(() => {
     if (paraRef.current) {
@@ -21,42 +22,66 @@ const ProjectInfo = () => {
     <div className="fmtm-flex fmtm-flex-col fmtm-gap-5 fmtm-mt-3 fmtm-h-[56vh] fmtm-overflow-y-scroll scrollbar fmtm-pr-1">
       <div>
         <p className="fmtm-font-bold">Description</p>
-        <div>
-          <p className={`${!seeMore ? 'fmtm-line-clamp-[10]' : ''} fmtm-text-[#706E6E]`} ref={paraRef}>
-            {projectInfo?.description}
-          </p>
-          {descLines >= 10 && (
-            <p
-              className="fmtm-text-primaryRed hover:fmtm-text-red-700 hover:fmtm-cursor-pointer"
-              onClick={() => setSeeMore(!seeMore)}
-            >
-              ... {!seeMore ? 'See More' : 'See Less'}
+        {projectDetailsLoading ? (
+          <div>
+            {Array.from({ length: 10 }).map((i) => (
+              <CoreModules.Skeleton key={i} />
+            ))}
+            <CoreModules.Skeleton className="!fmtm-w-[80px]" />
+          </div>
+        ) : (
+          <div>
+            <p className={`${!seeMore ? 'fmtm-line-clamp-[10]' : ''} fmtm-text-[#706E6E]`} ref={paraRef}>
+              {projectInfo?.description}
             </p>
-          )}
-        </div>
+            {descLines >= 10 && (
+              <p
+                className="fmtm-text-primaryRed hover:fmtm-text-red-700 hover:fmtm-cursor-pointer"
+                onClick={() => setSeeMore(!seeMore)}
+              >
+                ... {!seeMore ? 'See More' : 'See Less'}
+              </p>
+            )}
+          </div>
+        )}
       </div>
       <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
         <AssetModules.FmdGoodIcon className="fmtm-text-primaryRed" />
-        <p>Cameroon, Africa</p>
+        {projectDetailsLoading ? <CoreModules.Skeleton className="!fmtm-w-[160px]" /> : <p>Cameroon, Africa</p>}
       </div>
       <div className="fmtm-flex fmtm-justify-between fmtm-w-full">
         <div>
           <p className="fmtm-font-bold">Contributors</p>
-          <p className="fmtm-text-center fmtm-text-[#706E6E]">210</p>
+          {projectDetailsLoading ? (
+            <CoreModules.Skeleton className="!fmtm-w-[60px] fmtm-ml-[15%]" />
+          ) : (
+            <p className="fmtm-text-center fmtm-text-[#706E6E]">210</p>
+          )}
         </div>
         <div>
           <p className="fmtm-font-bold">Last Contribution</p>
-          <p className="fmtm-text-center fmtm-text-[#706E6E]">3 hours ago</p>
+          {projectDetailsLoading ? (
+            <CoreModules.Skeleton className="!fmtm-w-[70px] fmtm-ml-[20%]" />
+          ) : (
+            <p className="fmtm-text-center fmtm-text-[#706E6E]">3 hours ago</p>
+          )}
         </div>
       </div>
       <div>
         <p className="fmtm-font-bold fmtm-mb-1">Organized By:</p>
-        <div className="fmtm-flex fmtm-items-center fmtm-gap-4">
-          <div className="fmtm-w-10 fmtm-h-10 fmtm-overflow-hidden">
-            <img src={ProjectIcon} alt="Organizer Photo" />
+        {projectDetailsLoading ? (
+          <div className="fmtm-flex fmtm-items-center fmtm-gap-5">
+            <CoreModules.Skeleton className="!fmtm-w-[2.81rem] fmtm-h-[2.81rem] !fmtm-rounded-full fmtm-overflow-hidden" />
+            <CoreModules.Skeleton className="!fmtm-w-[180px]" />
           </div>
-          <p className="fmtm-text-center fmtm-text-[#706E6E]">OpenStreet Map</p>
-        </div>
+        ) : (
+          <div className="fmtm-flex fmtm-items-center fmtm-gap-4">
+            <div className="fmtm-w-10 fmtm-h-10 fmtm-overflow-hidden">
+              <img src={ProjectIcon} alt="Organizer Photo" />
+            </div>
+            <p className="fmtm-text-center fmtm-text-[#706E6E]">OpenStreet Map</p>
+          </div>
+        )}
       </div>
     </div>
   );
