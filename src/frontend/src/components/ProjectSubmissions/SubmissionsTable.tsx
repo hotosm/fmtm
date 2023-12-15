@@ -125,7 +125,7 @@ const SubmissionsTable = () => {
   return (
     <div className="fmtm-font-archivo">
       <TableFilter />
-      <Table data={items} flag="dashboard" onRowClick={() => {}}>
+      <Table data={items} flag="dashboard" onRowClick={() => {}} isLoading={false}>
         <TableHeader
           dataField="SN"
           headerClassName="snHeader"

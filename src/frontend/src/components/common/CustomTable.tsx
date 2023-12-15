@@ -8,6 +8,7 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import React, { Component, Children } from 'react';
 import PropTypes from 'prop-types';
+import CoreModules from '../../shared/CoreModules';
 
 type TableHeaderType = {
   dataField: string;
@@ -162,7 +163,7 @@ export default class Table extends Component {
 
   renderRow = () => {
     const {
-      props: { data, uniqueKey, onRowClick, trClassName, flag, loading },
+      props: { data, uniqueKey, onRowClick, trClassName, flag, loading, isLoading },
     } = this;
     const { fields, containSubHeaderCollection, rowClassName } = this.getFields();
 
@@ -173,33 +174,56 @@ export default class Table extends Component {
         </tr>
       );
     }
-
-    return data?.map((row, index) => (
-      <tr
-        key={`tr_${row.id}`}
-        {...(onRowClick && {
-          onClick: () => onRowClick(row),
-          style: { cursor: 'pointer' },
-        })}
-        className={`${trClassName && trClassName(row)} ${
-          flag.toLowerCase() === 'dashboard' ? '' : 'hover:fmtm-bg-active_bg'
-        } fmtm-cursor-pointer fmtm-ease-in fmtm-duration-100 fmtm-h-[50px] 
-        fmtm-items-baseline fmtm-relative fmtm-bg-white`}
-      >
-        {fields.map(
-          (field, ind) =>
-            !containSubHeaderCollection[ind] && (
-              <td
-                // eslint-disable-next-line
-                key={`${field}_${row[field] || ind}_${row[uniqueKey] || ind}`.replace(/ /g, '_')}
-                className={`${rowClassName[ind]} fmtm-text-slate-900 fmtm-font-normal fmtm-text-body-md fmtm-px-5 fmtm-relative fmtm-border-[1px] fmtm-border-[#B9B9B9]`}
-              >
-                {this.getBodyCellData(row, field, index)}
-              </td>
-            ),
-        )}
-      </tr>
-    ));
+    if (isLoading) {
+      return Array.from({ length: 5 }).map((i) => (
+        <tr
+          key={i}
+          className={` ${
+            flag.toLowerCase() === 'dashboard' ? '' : 'hover:fmtm-bg-active_bg'
+          } fmtm-cursor-pointer fmtm-ease-in fmtm-duration-100 fmtm-h-[50px] 
+      fmtm-items-baseline fmtm-relative fmtm-bg-white`}
+        >
+          {fields.map(
+            (field, ind) =>
+              !containSubHeaderCollection[ind] && (
+                <td
+                  key={ind}
+                  className={`${rowClassName[ind]} fmtm-text-slate-900 fmtm-font-normal fmtm-text-body-md fmtm-px-5 fmtm-relative fmtm-border-[1px] fmtm-border-[#B9B9B9]`}
+                >
+                  <CoreModules.Skeleton className="!fmtm-w-full" />
+                </td>
+              ),
+          )}
+        </tr>
+      ));
+    } else {
+      return data?.map((row, index) => (
+        <tr
+          key={`tr_${row.id}`}
+          {...(onRowClick && {
+            onClick: () => onRowClick(row),
+            style: { cursor: 'pointer' },
+          })}
+          className={`${trClassName && trClassName(row)} ${
+            flag.toLowerCase() === 'dashboard' ? '' : 'hover:fmtm-bg-active_bg'
+          } fmtm-cursor-pointer fmtm-ease-in fmtm-duration-100 fmtm-h-[50px] 
+      fmtm-items-baseline fmtm-relative fmtm-bg-white`}
+        >
+          {fields.map(
+            (field, ind) =>
+              !containSubHeaderCollection[ind] && (
+                <td
+                  // eslint-disable-next-line
+                  key={`${field}_${row[field] || ind}_${row[uniqueKey] || ind}`.replace(/ /g, '_')}
+                  className={`${rowClassName[ind]} fmtm-text-slate-900 fmtm-font-normal fmtm-text-body-md fmtm-px-5 fmtm-relative fmtm-border-[1px] fmtm-border-[#B9B9B9]`}
+                >
+                  {this.getBodyCellData(row, field, index)}
+                </td>
+              ),
+          )}
+        </tr>
+      ));
+    }
   };
 
   render() {

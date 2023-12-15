@@ -6,6 +6,7 @@ import CustomPieChart from '../../components/common/PieChart';
 import Table, { TableHeader } from '../../components/common/CustomTable';
 import CustomLineChart from '../../components/common/LineChart';
 import handleDownload from '../../utilfunctions/downloadChart';
+import CoreModules from '../../shared/CoreModules';
 
 type InfographicsCardType = {
   header: string;
@@ -194,13 +195,17 @@ const SubmissionsInfographics = () => {
             header="Form Submissions"
             subHeader={<FormSubmissionSubHeader />}
             body={
-              <CustomBarChart
-                data={lineKeyData}
-                xLabel="Submission Data"
-                yLabel="Submission Count"
-                dataKey="Actual"
-                nameKey="name"
-              />
+              false ? (
+                <CoreModules.Skeleton className="!fmtm-w-full fmtm-h-full" />
+              ) : (
+                <CustomBarChart
+                  data={lineKeyData}
+                  xLabel="Submission Data"
+                  yLabel="Submission Count"
+                  dataKey="Actual"
+                  nameKey="name"
+                />
+              )
             }
           />
         </div>
@@ -208,7 +213,13 @@ const SubmissionsInfographics = () => {
           <InfographicsCard
             cardRef={projectProgressRef}
             header="Project Progress"
-            body={<CustomPieChart data={pieData} dataKey="value" nameKey="names" />}
+            body={
+              false ? (
+                <CoreModules.Skeleton className="!fmtm-w-full fmtm-h-full" />
+              ) : (
+                <CustomPieChart data={pieData} dataKey="value" nameKey="names" />
+              )
+            }
           />
         </div>
       </div>
@@ -218,7 +229,7 @@ const SubmissionsInfographics = () => {
             cardRef={totalContributorsRef}
             header={`Total Contributors: 25`}
             body={
-              <Table data={items} onRowClick={() => {}} style={{ height: '100%' }}>
+              <Table data={items} onRowClick={() => {}} style={{ height: '100%' }} isLoading={false}>
                 <TableHeader
                   dataField="SN"
                   headerClassName="snHeader"
@@ -259,7 +270,13 @@ const SubmissionsInfographics = () => {
         <div className="fmtm-w-[35%]">
           <InfographicsCard
             header={`Total Contributors: 25`}
-            body={<CustomPieChart data={pieData} dataKey="value" nameKey="names" />}
+            body={
+              false ? (
+                <CoreModules.Skeleton className="!fmtm-w-full fmtm-h-full" />
+              ) : (
+                <CustomPieChart data={pieData} dataKey="value" nameKey="names" />
+              )
+            }
           />
         </div>
       </div>
@@ -268,14 +285,18 @@ const SubmissionsInfographics = () => {
           cardRef={plannedVsActualRef}
           header="Planned vs Actual"
           body={
-            <CustomLineChart
-              data={lineKeyData}
-              xAxisDataKey="name"
-              lineOneKey="Planned"
-              lineTwoKey="Actual"
-              xLabel="Submission Date"
-              yLabel="Submission Count"
-            />
+            false ? (
+              <CoreModules.Skeleton className="!fmtm-w-full fmtm-h-full" />
+            ) : (
+              <CustomLineChart
+                data={lineKeyData}
+                xAxisDataKey="name"
+                lineOneKey="Planned"
+                lineTwoKey="Actual"
+                xLabel="Submission Date"
+                yLabel="Submission Count"
+              />
+            )
           }
         />
       </div>
