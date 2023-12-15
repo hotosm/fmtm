@@ -15,7 +15,7 @@ const SubmissionsTable = () => {
       <div
         className={`fmtm-bg-white ${
           windowSize.width < 2000 ? 'fmtm-w-full md:fmtm-w-fit' : 'fmtm-w-fit'
-        } fmtm-flex xl:fmtm-items-end fmtm-gap-2 xl:fmtm-gap-8 fmtm-px-4 fmtm-rounded-xl fmtm-relative fmtm-pr-6 fmtm-flex-col xl:fmtm-flex-row fmtm-py-2 fmtm-pt-3 xl:fmtm-py-1 fmtm-my-2`}
+        } fmtm-flex xl:fmtm-items-end fmtm-gap-2 xl:fmtm-gap-8 fmtm-px-4 fmtm-rounded-xl fmtm-relative fmtm-pr-6 fmtm-flex-col xl:fmtm-flex-row fmtm-py-2 fmtm-pt-3 xl:fmtm-py-2  fmtm-my-2`}
       >
         <div className="fmtm-flex fmtm-justify-between fmtm-items-center fmtm-gap-8">
           <div className="fmtm-flex fmtm-items-center fmtm-gap-2 fmtm-mb-1 fmtm-relative fmtm-w-fit">
@@ -103,7 +103,7 @@ const SubmissionsTable = () => {
         <div
           className={`fmtm-group fmtm-absolute -fmtm-right-3 ${
             showFilter
-              ? 'fmtm-top-[45%] sm:fmtm-top-20 lg:fmtm-top-9 xl:fmtm-top-4'
+              ? 'fmtm-top-[45%] sm:fmtm-top-20 lg:fmtm-top-9 xl:fmtm-top-5'
               : 'fmtm-top-2 xl:fmtm-top-1 fmtm-rotate-180'
           } fmtm-rounded-full  fmtm-w-7 fmtm-h-7 fmtm-bg-white fmtm-border-[1px] fmtm-border-gray-300 fmtm-flex fmtm-justify-center fmtm-items-center fmtm-pl-2 hover:fmtm-border-primaryRed fmtm-duration-150`}
           onClick={() => setShowFilter(!showFilter)}
