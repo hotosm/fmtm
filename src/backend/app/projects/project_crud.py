@@ -2259,6 +2259,8 @@ def check_crs(input_geojson: Union[dict, FeatureCollection]):
         return crs_name in valid_crs_list
 
     def is_valid_coordinate(coord):
+        if coord is None:
+            return False
         return -180 <= coord[0] <= 180 and -90 <= coord[1] <= 90
 
     error_message = (
@@ -2272,22 +2274,21 @@ def check_crs(input_geojson: Union[dict, FeatureCollection]):
             raise HTTPException(status_code=400, detail=error_message)
         return
 
-    if input_geojson["type"] == "FeatureCollection":
-        coordinates = input_geojson["features"][0]["geometry"]["coordinates"]
-    elif input_geojson["type"] == "Feature":
-        coordinates = input_geojson["geometry"]["coordinates"]
-    geometry_type = (
-        input_geojson["features"][0]["geometry"]["type"]
-        if input_geojson["type"] == "FeatureCollection"
-        else input_geojson["geometry"]["type"]
-    )
+    if input_geojson_type := input_geojson.get("type") == "FeatureCollection":
+        features = input_geojson.get("features", [])
+        coordinates = features[-1].get("geometry", {}).get("coordinates", []) if features else []
+    elif input_geojson_type == "Feature":
+        coordinates = input_geojson.get("geometry", {}).get("coordinates", [])
 
+    geometry_type = (
+        features[0].get("geometry", {}).get("type")
+        if input_geojson_type == "FeatureCollection" and features
+        else input_geojson.get("geometry", {}).get("type", "")
+    )
     if geometry_type == "MultiPolygon":
-        first_coordinate = coordinates[0][0][
-            0
-        ]  # Get the first coordinate from the first point
+        first_coordinate = coordinates[0][0][0] if coordinates and coordinates[0] else None
     else:
-        first_coordinate = coordinates[0][0]
+        first_coordinate = coordinates[0][0] if coordinates else None
 
     if not is_valid_coordinate(first_coordinate):
         log.error(error_message)
