@@ -3,6 +3,7 @@ import TaskSubmissionsMap from './TaskSubmissionsMap';
 import InputTextField from '../../components/common/InputTextField';
 import Button from '../../components/common/Button';
 import AssetModules from '../../shared/AssetModules.js';
+import { TaskCardSkeletonLoader } from './ProjectSubmissionsSkeletonLoader';
 
 const TaskSubmissions = () => {
   const TaskCard = () => (
@@ -33,10 +34,20 @@ const TaskSubmissions = () => {
     <div className="md:fmtm-h-[70vh] fmtm-flex fmtm-gap-10 fmtm-flex-col md:fmtm-flex-row">
       <div className="fmtm-w-full md:fmtm-w-[39rem] fmtm-bg-white fmtm-rounded-xl fmtm-p-5">
         <InputTextField fieldType="string" label="" onChange={() => {}} value="" placeholder="Search by task id" />
-        <div className="fmtm-mt-5 fmtm-flex fmtm-flex-col fmtm-gap-4 fmtm-h-[58vh] fmtm-overflow-y-scroll scrollbar">
-          {Array.from({ length: 10 }, (_, index) => (
-            <TaskCard />
-          ))}
+        <div className="fmtm-mt-5 fmtm-h-[58vh] fmtm-overflow-y-scroll scrollbar">
+          {false ? (
+            <div className="fmtm-flex fmtm-flex-col fmtm-gap-4">
+              {Array.from({ length: 10 }).map((i) => (
+                <TaskCardSkeletonLoader key={i} />
+              ))}
+            </div>
+          ) : (
+            <div className="fmtm-flex fmtm-flex-col fmtm-gap-4">
+              {Array.from({ length: 10 }).map((i) => (
+                <TaskCard key={i} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
       <div className="fmtm-h-[60vh] md:fmtm-h-full fmtm-w-full fmtm-rounded-xl fmtm-overflow-hidden">
