@@ -1,3 +1,4 @@
+import { geojson as fgbGeojson } from 'flatgeobuf';
 import React, { useEffect } from 'react';
 import Button from '../../components/common/Button';
 import { useDispatch } from 'react-redux';
@@ -32,10 +33,46 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
   const buildingGeojson = useAppSelector((state) => state.createproject.buildingGeojson);
   const lineGeojson = useAppSelector((state) => state.createproject.lineGeojson);
 
-  const submission = () => {
+  const submission = async () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 5 }));
+
+    // First go to next page, to not block UX
     navigate('/split-tasks');
+
+    // Get OSM data extract if required
+    if (formValues.dataExtractWays === 'osm_data_extract') {
+      // Create a file object from the project area Blob
+      const projectAreaBlob = new Blob([JSON.stringify(drawnGeojson)], { type: 'application/json' });
+      const drawnGeojsonFile = new File([projectAreaBlob], 'outline.json', { type: 'application/json' });
+
+      // Create form and POST endpoint
+      const dataExtractRequestFormData = new FormData();
+      dataExtractRequestFormData.append('geojson_file', drawnGeojsonFile);
+      try {
+        const response = await axios.post(
+          `${import.meta.env.VITE_API_URL}/projects/get_data_extract/`,
+          dataExtractRequestFormData,
+        );
+
+        const fgbUrl = response.data.url;
+        // Append url to project data
+        dispatch(
+          CreateProjectActions.SetIndividualProjectDetailsData({ ...projectDetails, data_extract_type: fgbUrl }),
+        );
+
+        // Extract fgb and set geojson to map
+        const fgbFile = await fetch(fgbUrl);
+        const binaryData = await fgbFile.arrayBuffer();
+        const uint8ArrayData = new Uint8Array(binaryData);
+        // Deserialize the binary data
+        const geojsonExtract = await fgbGeojson.deserialize(uint8ArrayData);
+        dispatch(CreateProjectActions.setDataExtractGeojson(geojsonExtract));
+      } catch (error) {
+        // TODO add error message for user
+        console.error('Error getting data extract:', error);
+      }
+    }
   };
   const {
     handleSubmit,
