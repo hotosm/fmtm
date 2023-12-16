@@ -1092,7 +1092,6 @@ async def upload_custom_data_extract(
     ]
     featcol_filtered = FeatureCollection(features_filtered)
 
-    log.warning(featcol_filtered)
     log.debug(
         "Generating fgb object from geojson with "
         f"{len(featcol_filtered.get('features', []))} features"
