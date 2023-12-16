@@ -33,6 +33,9 @@ import pkg_resources
 import requests
 import segno
 import shapely.wkb as wkblib
+from shapely import to_geojson
+from shapely.geometry import shape
+from shapely.ops import unary_union
 import sozipfile.sozipfile as zipfile
 import sqlalchemy
 from asgiref.sync import async_to_sync
@@ -51,13 +54,10 @@ from osm_fieldwork.xlsforms import xlsforms_path
 from osm_rawdata.postgres import PostgresClient
 from shapely import wkt
 from shapely.geometry import (
-    LineString,
-    MultiLineString,
-    MultiPolygon,
     Polygon,
     shape,
 )
-from sqlalchemy import and_, column, func, inspect, select, table, text
+from sqlalchemy import and_, column, inspect, select, table, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -65,7 +65,7 @@ from app.central import central_crud
 from app.config import settings
 from app.db import db_models
 from app.db.database import get_db
-from app.db.postgis_utils import geometry_to_geojson, timestamp
+from app.db.postgis_utils import geometry_to_geojson, timestamp, geojson_to_flatgeobuf
 from app.projects import project_schemas
 from app.tasks import tasks_crud
 from app.users import user_crud
@@ -533,18 +533,78 @@ async def preview_split_by_square(boundary: str, meters: int):
     )
 
 
-async def get_osm_extracts(boundary: str) -> dict:
+async def get_data_extract_from_osm_rawdata(
+    aoi: UploadFile,
+    category: str,
+):
+    """Get data extract using OSM RawData module.
+    
+    Filters by a specific category."""
+    try:
+        # read entire file
+        aoi_content = await aoi.read()
+        boundary = json.loads(aoi_content)
+
+        # Validatiing Coordinate Reference System
+        check_crs(boundary)
+
+        # Get pre-configured filter for category
+        config_path = f"{data_models_path}/{category}.yaml"
+
+        if boundary["type"] == "FeatureCollection":
+            # Convert each feature into a Shapely geometry
+            geometries = [
+                shape(feature["geometry"]) for feature in boundary["features"]
+            ]
+            updated_geometry = unary_union(geometries)
+        else:
+            updated_geometry = shape(boundary["geometry"])
+
+        # Convert the merged MultiPolygon to a single Polygon using convex hull
+        merged_polygon = updated_geometry.convex_hull
+
+        # Convert the merged polygon back to a GeoJSON-like dictionary
+        boundary = {
+            "type": "Feature",
+            "geometry": to_geojson(merged_polygon),
+            "properties": {},
+        }
+
+        # # OSM Extracts using raw data api
+        pg = PostgresClient("underpass", config_path)
+        data_extract = pg.execQuery(boundary)
+        return data_extract
+    except Exception as e:
+        log.error(e)
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+async def get_data_extract_url(db: Session, aoi: Union[FeatureCollection, Feature, dict], project_id: Optional[int] = None) -> str:
     """Request an extract from raw-data-api and extract the file contents.
 
     - The query is posted to raw-data-api and job initiated for fetching the extract.
     - The status of the job is polled every few seconds, until 'SUCCESS' is returned.
-    - The resulting zip file is downloaded, extracted, and data returned.
-    """
-    # TODO update to use flatgeobuf file directly
-    # bind zip off
-    # fmtm-dev-project-xxx-extract
-    # FMTM/dev/xxx/fmtm-project-xxx-extract.flatgeobuf
+    - The resulting flatgeobuf file is streamed in the frontend.
 
+    Returns:
+        str: the URL for the flatgeobuf data extract.
+    """
+    if project_id:
+        db_project = await get_project_by_id(db, project_id)
+        if not db_project:
+            log.error(f"Project {project_id} doesn't exist!")
+            return False
+
+        # TODO update db field data_extract_type --> data_extract_url 
+        fgb_url = db_project.data_extract_type
+
+        # If extract already exists, return url to it
+        if fgb_url:
+            return fgb_url
+
+    # FIXME replace below with get_data_extract_from_osm_rawdata
+
+    # Data extract does not exist, continue to create
     # Filters for osm extracts
     query = {
         "filters": {
@@ -556,22 +616,28 @@ async def get_osm_extracts(boundary: str) -> dict:
         }
     }
 
-    # Boundary to extract data for
-    aoi = geojson.loads(boundary)
-    # Get first geom only from a FeatureCollection
-    # TODO perhaps add extra code for merging multiple geoms into one?
-    if isinstance(aoi, FeatureCollection):
-        aoi = aoi.get("features")[0]
-    if isinstance(aoi, Feature):
-        aoi = aoi.get("geometry")
-    query["geometry"] = aoi
+    if geom_type := aoi.get("type") == "FeatureCollection":
+        # Convert each feature into a Shapely geometry
+        geometries = [
+            shape(feature.get("geometry")) for feature in aoi.get("features", [])
+        ]
+        merged_geom = unary_union(geometries)
+    elif geom_type == "Feature":
+        merged_geom = shape(aoi.get("geometry"))
+    else:
+        merged_geom = shape(aoi)
+    # Convert the merged geoms to a single Polygon GeoJSON using convex hull
+    query["geometry"] = json.loads(to_geojson(merged_geom.convex_hull))
 
     # Filename to generate
-    query["fileName"] = "extract"
-    # File format to generate
-    query["outputType"] = "geojson"
-    extract_filename = f'{query["fileName"]}.{query["outputType"]}'
-    log.debug(f"Setting data extract file name to: {extract_filename}")
+    # query["fileName"] = f"fmtm-project-{project_id}-extract"
+    query["fileName"] = f"fmtm-extract"
+    # Output to flatgeobuf format
+    query["outputType"] = "fgb"
+    # Generate without zipping
+    query["bind_zip"] = False
+    # Optional authentication
+    # headers["access-token"] = settings.OSM_SVC_ACCOUNT_TOKEN
 
     log.debug(f"Query for raw data api: {query}")
     base_url = settings.UNDERPASS_API_URL
@@ -600,55 +666,30 @@ async def get_osm_extracts(boundary: str) -> dict:
         elif result.json()["status"] == "SUCCESS":
             break
 
-    # TODO update code to generate fgb file format
-    # then input the download_url directly into our database
-    # (no need to download the file and extract)
-    zip_url = result.json()["result"]["download_url"]
-    result = requests.get(zip_url, headers=headers)
-    # result.content
-    fp = BytesIO(result.content)
-    zfp = zipfile.ZipFile(fp, "r")
-    zfp.extract(extract_filename, "/tmp/")
-    data = geojson.loads(zfp.read(extract_filename))
-    return data
+    fgb_url = result.json()["result"]["download_url"]
+    return fgb_url
 
 
 async def split_geojson_into_tasks(
     db: Session,
     project_geojson: Union[dict, FeatureCollection],
+    extract_geojson: Union[dict, FeatureCollection],
     no_of_buildings: int,
-    custom_data_extract: Optional[str] = None,
 ):
     """Splits a project into tasks.
 
     Args:
         db (Session): A database session.
-        project_geojson (str): A GeoJSON string representing the boundary of
-            the project to split into tasks.
+        project_geojson (Union[dict, FeatureCollection]): A GeoJSON of the project
+            boundary.
+        extract_geojson (Union[dict, FeatureCollection]): A GeoJSON of the project
+            boundary osm data extract (features).
         no_of_buildings (int): The number of buildings to include in each task.
-        custom_data_extract (str, optional): A GeoJSON string containing a
-            custom data extract.
 
     Returns:
         Any: A GeoJSON object containing the tasks for the specified project.
     """
-    # NOTE this is a temp id used interally for task splitting
-    # NOTE it's not the FMTM project id
-    aoi_id = uuid.uuid4()
-
-    if custom_data_extract:
-        # TODO upload to s3 and get url
-        extract_geojson = await {}
-    else:
-        # Generate a new data extract in raw-data-api
-        extract_geojson = await get_osm_extracts(json.dumps(project_geojson))
-        if status_code := extract_geojson.get("status_code", None):
-            raise HTTPException(
-                status_code=status_code,
-                detail=(f"Failed to get data extract for reason: {extract_geojson}"),
-            )
-
-    log.debug(f"STARTED task splitting with id: {aoi_id}")
+    log.debug(f"STARTED task splitting using provided boundary and data extract")
     features = await run_in_threadpool(
         lambda: split_by_sql(
             project_geojson,
@@ -657,7 +698,7 @@ async def split_geojson_into_tasks(
             osm_extract=extract_geojson,
         )
     )
-    log.debug(f"COMPLETE task splitting with id: {aoi_id}")
+    log.debug(f"COMPLETE task splitting")
     return features
 
 
@@ -1037,7 +1078,8 @@ async def upload_custom_data_extract(
         log.error(msg)
         raise HTTPException(status_code=404, detail=msg)
     features_filtered = [
-        feature for feature in featcol.get("features", [])
+        feature
+        for feature in featcol.get("features", [])
         if feature.get("geometry", {}).get("type", "") == feature_type
     ]
     featcol_filtered = FeatureCollection(features_filtered)

@@ -41,8 +41,7 @@ from osm_fieldwork.data_models import data_models_path
 from osm_fieldwork.make_data_extract import getChoices
 from osm_fieldwork.xlsforms import xlsforms_path
 from osm_rawdata.postgres import PostgresClient
-from shapely.geometry import mapping, shape
-from shapely.ops import unary_union
+
 from sqlalchemy.orm import Session
 
 from app.auth.osm import AuthUser, login_required
@@ -666,49 +665,6 @@ async def generate_files(
     )
 
 
-@router.post("/view_data_extracts/")
-async def get_data_extracts(
-    aoi: UploadFile,
-    category: Optional[str] = Form(...),
-):
-    try:
-        # read entire file
-        aoi_content = await aoi.read()
-        boundary = json.loads(aoi_content)
-
-        # Validatiing Coordinate Reference System
-        check_crs(boundary)
-        xlsform = f"{xlsforms_path}/{category}.xls"
-        config_path = f"{data_models_path}/{category}.yaml"
-
-        if boundary["type"] == "FeatureCollection":
-            # Convert each feature into a Shapely geometry
-            geometries = [
-                shape(feature["geometry"]) for feature in boundary["features"]
-            ]
-            updated_geometry = unary_union(geometries)
-        else:
-            updated_geometry = shape(boundary["geometry"])
-
-        # Convert the merged MultiPolygon to a single Polygon using convex hull
-        merged_polygon = updated_geometry.convex_hull
-
-        # Convert the merged polygon back to a GeoJSON-like dictionary
-        boundary = {
-            "type": "Feature",
-            "geometry": mapping(merged_polygon),
-            "properties": {},
-        }
-
-        # # OSM Extracts using raw data api
-        pg = PostgresClient("underpass", config_path)
-        data_extract = pg.execQuery(boundary)
-        return data_extract
-    except Exception as e:
-        log.error(e)
-        raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.post("/update-form/{project_id}")
 async def update_project_form(
     project_id: int,
@@ -810,6 +766,7 @@ async def get_categories():
     - Returns a JSON object containing a list of categories and their respoective forms.
 
     """
+    # FIXME update to use osm-rawdata
     categories = (
         getChoices()
     )  # categories are fetched from osm_fieldwork.make_data_extracts.getChoices()
@@ -841,6 +798,28 @@ async def preview_split_by_square(
     result = await project_crud.preview_split_by_square(boundary, dimension)
     return result
 
+
+@router.post("/get_data_extract/")
+async def get_data_extract(
+    geojson_file: UploadFile = File(...),
+    project_id: int = Query(None, description="Project ID"),
+    db: Session = Depends(database.get_db),
+):
+    """
+    Get the data extract for a given project AOI.
+    
+    Use for both generating a new data extract and for getting
+    and existing extract.
+    """
+    boundary_geojson = json.loads(await geojson_file.read())
+
+    fgb_url = await project_crud.get_data_extract_url(
+        db,
+        boundary_geojson,
+        project_id,
+    )
+    return JSONResponse(status_code=200, content={"url": fgb_url})
+    
 
 @router.post("/upload_custom_extract/")
 async def upload_custom_extract(
