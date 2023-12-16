@@ -412,14 +412,16 @@ async def upload_multi_project_boundary(
 @router.post("/task_split")
 async def task_split(
     project_geojson: UploadFile = File(...),
+    extract_geojson: UploadFile = File(...),
     no_of_buildings: int = Form(50),
-    custom_data_extract: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
 ):
     """Split a task into subtasks.
 
     Args:
         project_geojson (UploadFile): The geojson to split.
+            Should be a FeatureCollection.
+        extract_geojson (UploadFile): Data extract geojson containing osm features.
             Should be a FeatureCollection.
         no_of_buildings (int, optional): The number of buildings per subtask.
             Defaults to 50.
@@ -430,23 +432,20 @@ async def task_split(
 
     """
     # read project boundary
-    boundary = geojson.loads(await project_geojson.read())
-    # Validatiing Coordinate Reference System
-    check_crs(boundary)
+    parsed_boundary = geojson.loads(await project_geojson.read())
+    # Validatiing Coordinate Reference Systems
+    check_crs(parsed_boundary)
 
-    # read custom data extract
-    if custom_data_extract:
-        custom_data_extract = geojson.loads(await custom_data_extract.read())
-        check_crs(custom_data_extract)
+    # read data extract
+    parsed_extract = geojson.loads(await extract_geojson.read())
+    check_crs(parsed_extract)
 
-    result = await project_crud.split_geojson_into_tasks(
+    return await project_crud.split_geojson_into_tasks(
         db,
-        boundary,
+        parsed_boundary,
+        parsed_extract,
         no_of_buildings,
-        custom_data_extract,
     )
-
-    return result
 
 
 @router.post("/{project_id}/upload")
