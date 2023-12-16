@@ -33,9 +33,6 @@ import pkg_resources
 import requests
 import segno
 import shapely.wkb as wkblib
-from shapely import to_geojson
-from shapely.geometry import shape
-from shapely.ops import unary_union
 import sozipfile.sozipfile as zipfile
 import sqlalchemy
 from asgiref.sync import async_to_sync
@@ -52,11 +49,12 @@ from osm_fieldwork.json2osm import json2osm
 from osm_fieldwork.OdkCentral import OdkAppUser
 from osm_fieldwork.xlsforms import xlsforms_path
 from osm_rawdata.postgres import PostgresClient
-from shapely import wkt
+from shapely import to_geojson, wkt
 from shapely.geometry import (
     Polygon,
     shape,
 )
+from shapely.ops import unary_union
 from sqlalchemy import and_, column, inspect, select, table, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
@@ -65,8 +63,9 @@ from app.central import central_crud
 from app.config import settings
 from app.db import db_models
 from app.db.database import get_db
-from app.db.postgis_utils import geometry_to_geojson, timestamp, geojson_to_flatgeobuf
+from app.db.postgis_utils import geojson_to_flatgeobuf, geometry_to_geojson, timestamp
 from app.projects import project_schemas
+from app.s3 import add_obj_to_bucket
 from app.tasks import tasks_crud
 from app.users import user_crud
 from app.submission import submission_crud
@@ -268,6 +267,8 @@ async def create_project_with_project_info(
     db: Session, project_metadata: project_schemas.ProjectUpload, odk_project_id: int
 ):
     """Create a new project, including all associated info."""
+    # FIXME the ProjectUpload model should be converted to the db model directly
+    # FIXME we don't need to extract each variable and pass manually
     project_user = project_metadata.author
     project_info = project_metadata.project_info
     xform_title = project_metadata.xform_title
@@ -277,6 +278,7 @@ async def create_project_with_project_info(
     task_split_type = project_metadata.task_split_type
     task_split_dimension = project_metadata.task_split_dimension
     task_num_buildings = project_metadata.task_num_buildings
+    data_extract_type = project_metadata.task_num_buildings
 
     # verify data coming in
     if not project_user:
@@ -341,6 +343,7 @@ async def create_project_with_project_info(
         task_split_type=task_split_type,
         task_split_dimension=task_split_dimension,
         task_num_buildings=task_num_buildings,
+        data_extract_type=data_extract_type,
         # country=[project_metadata.country],
         # location_str=f"{project_metadata.city}, {project_metadata.country}",
     )
@@ -538,8 +541,9 @@ async def get_data_extract_from_osm_rawdata(
     category: str,
 ):
     """Get data extract using OSM RawData module.
-    
-    Filters by a specific category."""
+
+    Filters by a specific category.
+    """
     try:
         # read entire file
         aoi_content = await aoi.read()
@@ -579,7 +583,11 @@ async def get_data_extract_from_osm_rawdata(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-async def get_data_extract_url(db: Session, aoi: Union[FeatureCollection, Feature, dict], project_id: Optional[int] = None) -> str:
+async def get_data_extract_url(
+    db: Session,
+    aoi: Union[FeatureCollection, Feature, dict],
+    project_id: Optional[int] = None,
+) -> str:
     """Request an extract from raw-data-api and extract the file contents.
 
     - The query is posted to raw-data-api and job initiated for fetching the extract.
@@ -595,7 +603,7 @@ async def get_data_extract_url(db: Session, aoi: Union[FeatureCollection, Featur
             log.error(f"Project {project_id} doesn't exist!")
             return False
 
-        # TODO update db field data_extract_type --> data_extract_url 
+        # TODO update db field data_extract_type --> data_extract_url
         fgb_url = db_project.data_extract_type
 
         # If extract already exists, return url to it
@@ -631,7 +639,7 @@ async def get_data_extract_url(db: Session, aoi: Union[FeatureCollection, Featur
 
     # Filename to generate
     # query["fileName"] = f"fmtm-project-{project_id}-extract"
-    query["fileName"] = f"fmtm-extract"
+    query["fileName"] = "fmtm-extract"
     # Output to flatgeobuf format
     query["outputType"] = "fgb"
     # Generate without zipping
@@ -689,7 +697,7 @@ async def split_geojson_into_tasks(
     Returns:
         Any: A GeoJSON object containing the tasks for the specified project.
     """
-    log.debug(f"STARTED task splitting using provided boundary and data extract")
+    log.debug("STARTED task splitting using provided boundary and data extract")
     features = await run_in_threadpool(
         lambda: split_by_sql(
             project_geojson,
@@ -698,7 +706,7 @@ async def split_geojson_into_tasks(
             osm_extract=extract_geojson,
         )
     )
-    log.debug(f"COMPLETE task splitting")
+    log.debug("COMPLETE task splitting")
     return features
 
 
@@ -2318,7 +2326,9 @@ def check_crs(input_geojson: Union[dict, FeatureCollection]):
 
     if input_geojson_type := input_geojson.get("type") == "FeatureCollection":
         features = input_geojson.get("features", [])
-        coordinates = features[-1].get("geometry", {}).get("coordinates", []) if features else []
+        coordinates = (
+            features[-1].get("geometry", {}).get("coordinates", []) if features else []
+        )
     elif input_geojson_type == "Feature":
         coordinates = input_geojson.get("geometry", {}).get("coordinates", [])
 
@@ -2328,7 +2338,9 @@ def check_crs(input_geojson: Union[dict, FeatureCollection]):
         else input_geojson.get("geometry", {}).get("type", "")
     )
     if geometry_type == "MultiPolygon":
-        first_coordinate = coordinates[0][0][0] if coordinates and coordinates[0] else None
+        first_coordinate = (
+            coordinates[0][0][0] if coordinates and coordinates[0] else None
+        )
     else:
         first_coordinate = coordinates[0][0] if coordinates else None
 

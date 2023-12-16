@@ -37,11 +37,8 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse, JSONResponse
 from loguru import logger as log
-from osm_fieldwork.data_models import data_models_path
 from osm_fieldwork.make_data_extract import getChoices
 from osm_fieldwork.xlsforms import xlsforms_path
-from osm_rawdata.postgres import PostgresClient
-
 from sqlalchemy.orm import Session
 
 from app.auth.osm import AuthUser, login_required
@@ -805,9 +802,8 @@ async def get_data_extract(
     project_id: int = Query(None, description="Project ID"),
     db: Session = Depends(database.get_db),
 ):
-    """
-    Get the data extract for a given project AOI.
-    
+    """Get the data extract for a given project AOI.
+
     Use for both generating a new data extract and for getting
     and existing extract.
     """
@@ -819,7 +815,7 @@ async def get_data_extract(
         project_id,
     )
     return JSONResponse(status_code=200, content={"url": fgb_url})
-    
+
 
 @router.post("/upload_custom_extract/")
 async def upload_custom_extract(
