@@ -2328,7 +2328,7 @@ def check_crs(input_geojson: Union[dict, FeatureCollection]):
         coordinates = (
             features[-1].get("geometry", {}).get("coordinates", []) if features else []
         )
-    elif input_geojson_type == "Feature":
+    elif input_geojson_type := input_geojson.get("type") == "Feature":
         coordinates = input_geojson.get("geometry", {}).get("coordinates", [])
 
     geometry_type = (
