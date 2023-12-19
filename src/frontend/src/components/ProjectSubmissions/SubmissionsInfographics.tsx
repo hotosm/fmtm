@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import TaskSubmissions from './TaskSubmissions';
 import CustomBarChart from '../../components/common/BarChart';
 import CustomPieChart from '../../components/common/PieChart';
@@ -6,6 +6,8 @@ import Table, { TableHeader } from '../../components/common/CustomTable';
 import CustomLineChart from '../../components/common/LineChart';
 import CoreModules from '../../shared/CoreModules';
 import InfographicsCard from './InfographicsCard';
+import { ProjectSubmissionInfographicsService } from '../../api/SubmissionService';
+import environment from '../../environment';
 
 const data = [
   {
@@ -134,8 +136,23 @@ const SubmissionsInfographics = () => {
   const projectProgressRef = useRef(null);
   const totalContributorsRef = useRef(null);
   const plannedVsActualRef = useRef(null);
+  const dispatch = CoreModules.useAppDispatch();
 
+  const params = CoreModules.useParams();
+  const encodedId = params.projectId;
+  const decodedId = environment.decode(encodedId);
+
+  const submissionInfographics = CoreModules.useAppSelector((state) => state.submission.submissionInfographics);
+  console.log(submissionInfographics, 'submissionInfographics');
   const [submissionProjection, setSubmissionProjection] = useState(10);
+
+  useEffect(() => {
+    dispatch(
+      ProjectSubmissionInfographicsService(
+        `${import.meta.env.VITE_API_URL}/submission/submission_page/${decodedId}?days=${submissionProjection}`,
+      ),
+    );
+  }, [submissionProjection]);
 
   const FormSubmissionSubHeader = () => (
     <div className="fmtm-text-sm fmtm-flex fmtm-gap-5 fmtm-mb-2">

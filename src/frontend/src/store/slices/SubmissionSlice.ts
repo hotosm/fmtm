@@ -5,6 +5,7 @@ const SubmissionSlice = createSlice({
   initialState: {
     submissionDetailsLoading: true,
     submissionDetails: [],
+    submissionInfographics: [],
   },
   reducers: {
     SetSubmissionDetailsLoading(state, action) {
@@ -12,6 +13,9 @@ const SubmissionSlice = createSlice({
     },
     SetSubmissionDetails(state, action) {
       state.submissionDetails = action.payload;
+    },
+    SetSubmissionInfographics(state, action) {
+      state.submissionInfographics = action.payload;
     },
   },
 });
