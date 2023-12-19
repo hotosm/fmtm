@@ -1,19 +1,11 @@
 import React, { useRef, useState } from 'react';
 import TaskSubmissions from './TaskSubmissions';
 import CustomBarChart from '../../components/common/BarChart';
-import AssetModules from '../../shared/AssetModules.js';
 import CustomPieChart from '../../components/common/PieChart';
 import Table, { TableHeader } from '../../components/common/CustomTable';
 import CustomLineChart from '../../components/common/LineChart';
-import handleDownload from '../../utilfunctions/downloadChart';
 import CoreModules from '../../shared/CoreModules';
-
-type InfographicsCardType = {
-  header: string;
-  subHeader?: React.ReactElement;
-  body: React.ReactElement;
-  cardRef?: React.MutableRefObject<null> | undefined;
-};
+import InfographicsCard from './InfographicsCard';
 
 const data = [
   {
@@ -163,26 +155,6 @@ const SubmissionsInfographics = () => {
       >
         <p>Last 30 days</p>
       </div>
-    </div>
-  );
-
-  const InfographicsCard = ({ header, subHeader, body, cardRef }: InfographicsCardType) => (
-    <div
-      ref={cardRef}
-      className="fmtm-w-full fmtm-h-[24rem] fmtm-bg-white fmtm-flex fmtm-flex-col fmtm-gap-5 fmtm-p-5 fmtm-rounded-xl"
-    >
-      <div className="fmtm-flex fmtm-items-end fmtm-justify-between">
-        <h5 className="fmtm-text-lg">{header}</h5>
-        <div
-          data-html2canvas-ignore="true"
-          onClick={() => handleDownload(cardRef, header)}
-          className="group fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-gray-200 fmtm-cursor-pointer fmtm-duration-150 fmtm-h-9 fmtm-w-9 fmtm-flex fmtm-items-center fmtm-justify-center"
-        >
-          <AssetModules.FileDownloadOutlinedIcon />
-        </div>
-      </div>
-      {subHeader && subHeader}
-      <div className="fmtm-h-[80%]">{body}</div>
     </div>
   );
 
