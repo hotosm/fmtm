@@ -31,6 +31,7 @@ from app.db import database
 from app.projects import project_crud, project_schemas
 
 from . import submission_crud
+from .submission_crud import *
 
 router = APIRouter(
     prefix="/submission",
@@ -305,3 +306,14 @@ async def get_osm_xml(
     # Create a plain XML response
     response = Response(content=processed_xml_string, media_type="application/xml")
     return response
+
+
+@router.get("/submission_page/{project_id}")
+async def get_submission_page(project_id: int, days: int, db: Session = Depends(database.get_db)):
+    """
+    This api returns the submission page of a project.
+    It takes one parameter: project_id.
+    project_id: The ID of the project. This endpoint returns the submission page of this project.
+    """
+    
+    return await get_submissions_by_date(db, project_id, days)
