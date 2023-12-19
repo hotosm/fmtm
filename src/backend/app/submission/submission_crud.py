@@ -853,12 +853,14 @@ async def get_submissions_by_date(db:Session, project_id:int, days:int):
             content = file_in_zip.read()
 
     content = json.loads(content)
-    end_dates = [entry["end"] for entry in content if entry.get("end")]
-    dates = [datetime.fromisoformat(date.split('+')[0]) for date in end_dates]
-    end_dates = [date for date in dates if datetime.now() - date <= timedelta(days=days)]
+    end_dates = [datetime.fromisoformat(date.split('+')[0]) for date in (entry["end"] for entry in content if entry.get("end"))]
+    dates = [date.strftime('%m/%d') for date in end_dates if datetime.now() - date <= timedelta(days=days)]
 
-    dates = [date.strftime('%Y-%m-%d') for date in end_dates]
+    submission_counts = Counter(sorted(dates))
+    response = [
+        {"date": key, "count": value} 
+        for key, value in submission_counts.items()
+        ]
 
-    submission_counts = Counter(dates)
-    return dict(submission_counts)
+    return response
 
