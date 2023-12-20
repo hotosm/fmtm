@@ -2,22 +2,26 @@ import React from 'react';
 import CoreModules from '../../shared/CoreModules';
 
 const ProjectInfo = () => {
+  const projectInfo = CoreModules.useAppSelector((state) => state.project.projectInfo);
+  const taskData = CoreModules.useAppSelector((state) => state.task.taskData);
+  const isTaskLoading = CoreModules.useAppSelector((state) => state.task.taskLoading);
+
   const dataCard = [
-    { title: 'Tasks', count: 207 },
+    { title: 'Tasks', count: taskData.task_count },
     { title: 'Contributors', count: 20 },
-    { title: 'Submissions', count: 30 },
+    { title: 'Submissions', count: taskData.submission_count },
   ];
 
   const ProjectDataCard = ({ data }) => (
     <div className="fmtm-border-[1px] fmtm-border-primaryRed fmtm-bg-white fmtm-rounded-2xl fmtm-min-w-[7.5rem] fmtm-w-[7.5rem] sm:fmtm-w-[8.5rem] 2xl:fmtm-w-[10rem] fmtm-flex fmtm-flex-col fmtm-items-center fmtm-p-2 md:fmtm-p-4 fmtm-gap-2 fmtm-shadow-md fmtm-shadow-red-300">
-      {false ? (
+      {isTaskLoading ? (
         <CoreModules.Skeleton className="!fmtm-w-[100px] fmtm-h-[30px]" />
       ) : (
         <h2 className="fmtm-font-archivo fmtm-text-xl sm:fmtm-text-2xl md:fmtm-text-[1.7rem] 2xl:fmtm-text-[2rem] fmtm-font-bold fmtm-text-primaryRed">
           {data.count}
         </h2>
       )}
-      {false ? (
+      {isTaskLoading ? (
         <CoreModules.Skeleton className="!fmtm-w-[100px] fmtm-h-[20px]" />
       ) : (
         <h4 className="fmtm-font-archivo fmtm-text-lg sm:fmtm-text-xl md::fmtm-text-[1.2rem] 2xl:fmtm-text-[1.5rem] fmtm-text-[#7A7676]">
@@ -43,9 +47,7 @@ const ProjectInfo = () => {
               <CoreModules.Skeleton className="!fmtm-w-[200px]" />
             </div>
           ) : (
-            <h2 className="fmtm-text-xl fmtm-font-archivo">
-              Cameroon Road Assessment for Sustainable Development in Rural Communities in Africa
-            </h2>
+            <h2 className="fmtm-text-xl fmtm-font-archivo">{projectInfo?.title}</h2>
           )}
           <div>
             <p className="fmtm-text-sm fmtm-text-[#706E6E] fmtm-font-archivo">
