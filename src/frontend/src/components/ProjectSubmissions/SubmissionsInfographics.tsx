@@ -9,44 +9,6 @@ import InfographicsCard from './InfographicsCard';
 import { ProjectSubmissionInfographicsService } from '../../api/SubmissionService';
 import environment from '../../environment';
 
-const data = [
-  {
-    date: 'Page A',
-    uv: 4000,
-    pv: 2400,
-  },
-  {
-    date: 'Page B',
-    uv: 3000,
-    pv: 1398,
-  },
-  {
-    date: 'Page C',
-    uv: 2000,
-    pv: 9800,
-  },
-  {
-    date: 'Page D',
-    uv: 2780,
-    pv: 3908,
-  },
-  {
-    date: 'Page E',
-    uv: 1890,
-    pv: 4800,
-  },
-  {
-    date: 'Page F',
-    uv: 2390,
-    pv: 3800,
-  },
-  {
-    date: 'Page G',
-    uv: 3490,
-    pv: 4300,
-  },
-];
-
 const items = [
   { name: 'haha' },
   { name: 'haha' },
@@ -142,8 +104,7 @@ const SubmissionsInfographics = () => {
   const encodedId = params.projectId;
   const decodedId = environment.decode(encodedId);
 
-  const submissionInfographics = CoreModules.useAppSelector((state) => state.submission.submissionInfographics);
-  console.log(submissionInfographics, 'submissionInfographics');
+  const submissionInfographicsData = CoreModules.useAppSelector((state) => state.submission.submissionInfographics);
   const [submissionProjection, setSubmissionProjection] = useState(10);
 
   useEffect(() => {
@@ -188,11 +149,11 @@ const SubmissionsInfographics = () => {
                 <CoreModules.Skeleton className="!fmtm-w-full fmtm-h-full" />
               ) : (
                 <CustomBarChart
-                  data={lineKeyData}
+                  data={submissionInfographicsData}
                   xLabel="Submission Data"
                   yLabel="Submission Count"
-                  dataKey="Actual"
-                  nameKey="name"
+                  dataKey="count"
+                  nameKey="date"
                 />
               )
             }
