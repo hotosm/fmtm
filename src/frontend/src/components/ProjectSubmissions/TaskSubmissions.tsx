@@ -7,7 +7,12 @@ import CoreModules from '../../shared/CoreModules.js';
 import { TaskCardSkeletonLoader } from './ProjectSubmissionsSkeletonLoader';
 
 const TaskSubmissions = () => {
+  const dispatch = CoreModules.useAppDispatch();
   const taskInfo = CoreModules.useAppSelector((state) => state.task.taskInfo);
+
+  const zoomToTask = (taskId) => {
+    dispatch(CoreModules.TaskActions.SetSelectedTask(+taskId));
+  };
 
   const TaskCard = ({ task }) => (
     <div className="fmtm-bg-red-50 fmtm-px-5 fmtm-pb-5 fmtm-pt-2 fmtm-rounded-lg">
@@ -25,7 +30,10 @@ const TaskSubmissions = () => {
         </div>
         <div className="fmtm-flex fmtm-flex-wrap fmtm-flex-row md:fmtm-flex-col lg:fmtm-flex-row fmtm-justify-between lg:fmtm-items-center fmtm-gap-2">
           <Button btnText="View Submissions" btnType="primary" onClick={() => {}} />
-          <button className="fmtm-border-primaryRed fmtm-border-[2px] fmtm-flex fmtm-w-fit fmtm-px-2 fmtm-py-1 fmtm-rounded-md fmtm-items-center fmtm-gap-2 fmtm-bg-white hover:fmtm-bg-gray-100 fmtm-duration-150">
+          <button
+            className="fmtm-border-primaryRed fmtm-border-[2px] fmtm-flex fmtm-w-fit fmtm-px-2 fmtm-py-1 fmtm-rounded-md fmtm-items-center fmtm-gap-2 fmtm-bg-white hover:fmtm-bg-gray-100 fmtm-duration-150"
+            onClick={() => zoomToTask(task?.task_id)}
+          >
             <AssetModules.MapIcon style={{ fontSize: '18px' }} /> <p className="fmtm-truncate">Zoom to Task</p>
           </button>
         </div>
