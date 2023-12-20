@@ -14,6 +14,7 @@ const CustomBarChart = ({ data, xLabel, yLabel, dataKey, nameKey }) => {
           left: 20,
           bottom: 5,
         }}
+        maxBarSize={50}
       >
         <XAxis
           dataKey={nameKey}
