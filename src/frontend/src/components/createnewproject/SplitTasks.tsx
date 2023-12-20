@@ -34,7 +34,15 @@ const alogrithmList = [
 ];
 let generateProjectLogIntervalCb: any = null;
 
-const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, customPolygonUpload, customFormFile }) => {
+const SplitTasks = ({
+  flag,
+  geojsonFile,
+  setGeojsonFile,
+  customLineUpload,
+  customPolygonUpload,
+  customFormFile,
+  dataExtractFile,
+}) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -168,7 +176,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
     const drawnGeojsonFile = new File([blob], 'data.json', { type: 'application/json' });
     if (splitTasksSelection === task_split_type['divide_on_square']) {
       dispatch(
-        GetDividedTaskFromGeojson(`${import.meta.env.VITE_API_URL}/projects/preview_tasks/`, {
+        GetDividedTaskFromGeojson(`${import.meta.env.VITE_API_URL}/projects/preview_split_by_square/`, {
           geojson: drawnGeojsonFile,
           dimension: formValues?.dimension,
         }),
@@ -183,8 +191,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
           `${import.meta.env.VITE_API_URL}/projects/task_split`,
           drawnGeojsonFile,
           formValues?.average_buildings_per_task,
-          false,
-          // dataExtractFile ? true : false,
+          dataExtractFile,
         ),
       );
     }
@@ -374,7 +381,12 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
                           onClick={generateTaskBasedOnSelection}
                           className=""
                           icon={<AssetModules.SettingsIcon className="fmtm-text-white" />}
-                          disabled={formValues?.average_buildings_per_task ? false : true}
+                          disabled={
+                            splitTasksSelection === task_split_type['task_splitting_algorithm'] &&
+                            !formValues?.average_buildings_per_task
+                              ? true
+                              : false
+                          }
                         />
                         {/* <Button
                         btnText="Stop generating"
