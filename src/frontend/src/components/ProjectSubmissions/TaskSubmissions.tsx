@@ -3,21 +3,24 @@ import TaskSubmissionsMap from './TaskSubmissionsMap';
 import InputTextField from '../../components/common/InputTextField';
 import Button from '../../components/common/Button';
 import AssetModules from '../../shared/AssetModules.js';
+import CoreModules from '../../shared/CoreModules.js';
 import { TaskCardSkeletonLoader } from './ProjectSubmissionsSkeletonLoader';
 
 const TaskSubmissions = () => {
-  const TaskCard = () => (
+  const taskInfo = CoreModules.useAppSelector((state) => state.task.taskInfo);
+
+  const TaskCard = ({ task }) => (
     <div className="fmtm-bg-red-50 fmtm-px-5 fmtm-pb-5 fmtm-pt-2 fmtm-rounded-lg">
       <div className="fmtm-flex fmtm-flex-col fmtm-gap-4">
         <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
-          <p>#12346</p>
+          <p>#{task?.task_id}</p>
           <div className="fmtm-flex fmtm-justify-between">
             <p>Expected Count</p>
             <p>25</p>
           </div>
           <div className="fmtm-flex fmtm-justify-between">
             <p>Submission Count</p>
-            <p>27</p>
+            <p>{task.submission_count}</p>
           </div>
         </div>
         <div className="fmtm-flex fmtm-flex-wrap fmtm-flex-row md:fmtm-flex-col lg:fmtm-flex-row fmtm-justify-between lg:fmtm-items-center fmtm-gap-2">
@@ -43,9 +46,7 @@ const TaskSubmissions = () => {
             </div>
           ) : (
             <div className="fmtm-flex fmtm-flex-col fmtm-gap-4">
-              {Array.from({ length: 10 }).map((i) => (
-                <TaskCard key={i} />
-              ))}
+              {taskInfo?.map((task) => <TaskCard key={task.task_id} task={task} />)}
             </div>
           )}
         </div>
