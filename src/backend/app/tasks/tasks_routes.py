@@ -23,11 +23,11 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
-from ..central import central_crud
-from ..db import database
-from ..models.enums import TaskStatus
-from ..projects import project_crud, project_schemas
-from ..users import user_schemas
+from app.central import central_crud
+from app.db import database
+from app.models.enums import TaskStatus
+from app.projects import project_crud, project_schemas
+from app.users import user_schemas
 from . import tasks_crud, tasks_schemas
 
 router = APIRouter(
@@ -37,17 +37,17 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-
-@router.get("/task-list", response_model=List[tasks_schemas.Task])
+@router.get("/task-list", response_model=List[tasks_schemas.ReadTask])
 async def read_task_list(
     project_id: int,
     limit: int = 1000,
     db: Session = Depends(database.get_db),
 ):
     tasks = await tasks_crud.get_tasks(db, project_id, limit)
+    updated_tasks = await tasks_crud.update_task_history(tasks, db)
     if not tasks:
         raise HTTPException(status_code=404, detail="Tasks not found")
-    return tasks
+    return updated_tasks
 
 
 @router.get("/", response_model=List[tasks_schemas.Task])
