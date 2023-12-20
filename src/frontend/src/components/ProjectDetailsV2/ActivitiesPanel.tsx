@@ -75,15 +75,26 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
     return (
       <div className="fmtm-flex fmtm-gap-2 fmtm-items-center fmtm-justify-between fmtm-px-1 fmtm-border-b-[2px] fmtm-border-white fmtm-py-3">
         <div className="fmtm-flex fmtm-items-center">
-          <div className="fmtm-w-[2.81rem] fmtm-h-[2.81rem] fmtm-rounded-full fmtm-overflow-hidden fmtm-mr-4">
-            <img src={profilePic} alt="Profile Picture" />
+          <div className="fmtm-w-[2.81rem] fmtm-h-[2.81rem] fmtm-border fmtm-rounded-full fmtm-overflow-hidden fmtm-mr-4">
+            {taskHistory?.profile_img ? (
+              <img src={taskHistory?.profile_img} alt="Profile Picture" />
+            ) : (
+              <div className="fmtm-w-full fmtm-h-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-bg-white">
+                <AssetModules.PersonIcon color="success" sx={{ fontSize: '30px' }} />
+              </div>
+            )}
           </div>
           <div className="fmtm-text-base">
-            <span className="fmtm-text-[#555555] fmtm-font-medium fmtm-font-archivo">Shushi_Maps </span>
+            <span className="fmtm-text-[#555555] fmtm-font-medium fmtm-font-archivo">{taskHistory?.username} </span>
             <span className="fmtm-text-[#7A7676] fmtm-font-extralight fmtm-italic fmtm-font-archivo">
               updated status to{' '}
             </span>
-            <p className="fmtm-font-archivo">Locked For Mapping</p>
+            <p
+              style={{ color: defaultTheme.palette.mapFeatureColors[taskHistory?.status.toLowerCase()] }}
+              className="fmtm-font-archivo"
+            >
+              {taskHistory?.status}
+            </p>
             <div className="fmtm-flex fmtm-items-center fmtm-justify-between">
               <p className="fmtm-font-archivo fmtm-text-sm fmtm-text-[#7A7676]">#{taskHistory.taskId}</p>
               <div className="fmtm-flex fmtm-items-center fmtm-mb-1">
