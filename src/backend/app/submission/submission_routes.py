@@ -30,8 +30,7 @@ from app.config import settings
 from app.db import database
 from app.projects import project_crud, project_schemas
 
-from . import submission_crud
-from .submission_crud import *
+from app.submission import submission_crud
 
 router = APIRouter(
     prefix="/submission",
@@ -316,4 +315,4 @@ async def get_submission_page(project_id: int, days: int, db: Session = Depends(
     project_id: The ID of the project. This endpoint returns the submission page of this project.
     """
     
-    return await get_submissions_by_date(db, project_id, days)
+    return await submission_crud.get_submissions_by_date(db, project_id, days)
