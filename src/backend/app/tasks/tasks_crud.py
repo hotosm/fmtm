@@ -322,15 +322,20 @@ async def edit_task_boundary(db: Session, task_id: int, boundary: str):
 
 
 async def update_task_history(tasks: List[tasks_schemas.TaskBase], db: Session = Depends(database.get_db)):
-    for task in tasks:
-        task_history = task.task_history   
+    def process_history_entry(history_entry):
+        status = history_entry.action_text.split()
+        history_entry.status = status[5]
+
+        if history_entry.user_id:
+            user = db.query(db_models.DbUser).filter_by(id=history_entry.user_id).first()
+            if user:
+                history_entry.username = user.username
+                history_entry.profile_img = user.profile_img
+
+    for task in tasks if isinstance(tasks, list) else [tasks]:
+        task_history = task.task_history
         if isinstance(task_history, list):
             for history_entry in task_history:
-                status = history_entry.action_text.split()
-                history_entry.status = status[5]
-                if history_entry.user_id:
-                    user = db.query(db_models.DbUser).filter_by(id=history_entry.user_id).first()
-                    if user:
-                        history_entry.username = user.username
-                        history_entry.profile_img = user.profile_img
+                process_history_entry(history_entry)
+
     return tasks
