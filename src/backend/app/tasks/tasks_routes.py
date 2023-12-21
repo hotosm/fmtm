@@ -109,7 +109,7 @@ async def read_tasks(task_id: int, db: Session = Depends(database.get_db)):
     return task
 
 
-@router.post("/{task_id}/new_status/{new_status}", response_model=tasks_schemas.Task)
+@router.post("/{task_id}/new_status/{new_status}", response_model=tasks_schemas.ReadTask)
 async def update_task_status(
     user: user_schemas.User,
     task_id: int,
@@ -120,9 +120,10 @@ async def update_task_status(
     user_id = user.id
 
     task = await tasks_crud.update_task_status(db, user_id, task_id, new_status)
+    updated_task = await tasks_crud.update_task_history(task, db)
     if not task:
         raise HTTPException(status_code=404, detail="Task status could not be updated.")
-    return task
+    return updated_task
 
 
 @router.post("/task-qr-code/{task_id}")
