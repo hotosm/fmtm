@@ -91,7 +91,6 @@ const Home = () => {
     if (state.projectTaskBoundries.findIndex((project) => project.id == environment.decode(encodedId)) == -1) {
       dispatch(ProjectActions.SetProjectTaskBoundries([]));
       dispatch(ProjectById(state.projectTaskBoundries, environment.decode(encodedId)));
-      // dispatch(ProjectBuildingGeojsonService(`${import.meta.env.VITE_API_URL}/projects/${environment.decode(encodedId)}/features`))
     } else {
       dispatch(ProjectActions.SetProjectTaskBoundries([]));
       dispatch(ProjectById(state.projectTaskBoundries, environment.decode(encodedId)));
@@ -111,7 +110,6 @@ const Home = () => {
   const { mapRef, map } = useOLMap({
     center: [0, 0],
     zoom: 4,
-    // maxZoom: 17,
   });
 
   const { y } = OnScroll(map, windowSize.width);

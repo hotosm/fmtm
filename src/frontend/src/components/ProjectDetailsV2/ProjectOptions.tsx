@@ -42,32 +42,6 @@ const ProjectOptions = ({ setToggleGenerateModal }) => {
   };
   return (
     <div className="sm:fmtm-mt-4">
-      {/* <div>
-        <div
-          className={`fmtm-flex fmtm-gap-5 fmtm-py-4 sm:fmtm-hidden fmtm-justify-between  fmtm-items-center fmtm-mx-4 sm:fmtm-mx-7 fmtm-mb-2 ${
-            toggleAction ? 'fmtm-border-b-[#929DB3] fmtm-border-b-[1px]' : ''
-          }`}
-        >
-          <p className="fmtm-text-xl fmtm-italic">Project Options</p>
-          <div
-            className={
-              'fmtm-rounded-full fmtm-shadow-gray-400 fmtm-w-8 fmtm-h-8 fmtm-flex fmtm-justify-center fmtm-items-center fmtm-shadow-lg fmtm-cursor-pointer'
-            }
-            onClick={() => setToggleAction(!toggleAction)}
-          >
-            <AssetModules.ArrowRightIcon
-              color=""
-              style={{ fontSize: 32 }}
-              className={`${toggleAction ? 'fmtm-rotate-90' : ''}`}
-            />
-          </div>
-        </div>
-      </div> */}
-      {/* <div
-        className={`fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-6 lg:fmtm-gap-0 fmtm-px-3 sm:fmtm-px-0 ${
-          toggleAction ? '' : 'fmtm-hidden sm:fmtm-flex'
-        }`}
-      > */}
       <div className="fmtm-flex fmtm-gap-3 fmtm-border-b-[1px] fmtm-pb-2 fmtm-mb-4 sm:fmtm-hidden">
         <AssetModules.ListViewIcon className=" fmtm-text-primaryRed" sx={{ fontSize: '35px' }} />
         <p className="fmtm-text-2xl">Project Options</p>

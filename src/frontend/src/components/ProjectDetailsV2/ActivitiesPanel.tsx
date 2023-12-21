@@ -50,10 +50,8 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
     });
 
     if (searchText != '') {
-      // setAllActivities(finalTaskHistory.length);
       setTaskHistories(finalTaskHistory);
     } else {
-      // setAllActivities(taskHistories.length);
       setTaskHistories(taskHistories);
     }
   }, [taskDisplay, state, searchText]);
