@@ -71,6 +71,7 @@ from app.tasks import tasks_crud
 from app.users import user_crud
 from app.submission import submission_crud
 from app.s3 import get_obj_from_bucket
+from app.organization import organization_crud
 
 QR_CODES_DIR = "QR_codes/"
 TASK_GEOJSON_DIR = "geojson/"
@@ -2393,6 +2394,7 @@ async def get_dashboard_detail(project_id: int, db: Session):
     """Get project details for project dashboard."""
 
     project = await get_project(db, project_id)
+    db_organization = await organization_crud.get_organisation_by_id(db, project.organisation_id)
 
     s3_project_path = f"/{project.organisation_id}/{project_id}"
     s3_submission_path = f"/{s3_project_path}/submissions.meta.json"
@@ -2406,6 +2408,8 @@ async def get_dashboard_detail(project_id: int, db: Session):
     contributors = db.query(db_models.DbTaskHistory).filter(db_models.DbTaskHistory.project_id==project_id).all()
     unique_user_ids = {user.user_id for user in contributors if user.user_id is not None}
 
+    project.organization = db_organization.name
+    project.organization_logo = db_organization.logo
     project.total_contributors = len(unique_user_ids)
     project.total_submission = await submission_crud.get_submission_count_of_a_project(db, project_id)
     project.total_tasks = await tasks_crud.get_task_count_in_project(db, project_id)

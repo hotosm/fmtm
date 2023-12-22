@@ -148,6 +148,8 @@ class BackgroundTaskStatus(BaseModel):
 
 class ProjectDashboard(BaseModel):
     project_name_prefix: str
+    organization: str
+    organization_logo: Optional[str] = None
     total_tasks: int
     total_submission: int
     total_contributors: int
