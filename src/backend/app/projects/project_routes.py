@@ -1234,3 +1234,30 @@ async def project_dashboard(
     """
 
     return await project_crud.get_dashboard_detail(project_id, db)
+
+
+@router.post("/check_crs")
+async def check_coordinate_system(boundary: UploadFile = File(...)):
+    """Check coordinate system of uploaded file.
+
+    Args:
+        boundary (UploadFile): File containing the boundary.
+
+    Returns:
+        dict: Dictionary containing the result of the check.
+    """
+
+    boundary_type = boundary.content_type.split("/")
+    if len(boundary_type) != 2 or boundary_type[0] != "application" or boundary_type[1] != "geo+json":
+        raise HTTPException(
+            status_code=400, detail="Invalid boundary file. Must be GeoJSON."
+        )
+    content = await boundary.read()
+    boundary = json.loads(content)
+
+    # Validating Coordinate Reference System
+    if check_crs(boundary):
+        return {"message": "Valid boundary file"}
+    else:
+        return {"message":"Unsupported coordinate system, it is recommended to use a "
+        "GeoJSON file in WGS84(EPSG 4326) standard."}
