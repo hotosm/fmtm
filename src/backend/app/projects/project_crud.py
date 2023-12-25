@@ -66,12 +66,12 @@ from app.config import settings
 from app.db import db_models
 from app.db.database import get_db
 from app.db.postgis_utils import geometry_to_geojson, timestamp
+from app.organization import organization_crud
 from app.projects import project_schemas
+from app.s3 import get_obj_from_bucket
+from app.submission import submission_crud
 from app.tasks import tasks_crud
 from app.users import user_crud
-from app.submission import submission_crud
-from app.s3 import get_obj_from_bucket
-from app.organization import organization_crud
 
 QR_CODES_DIR = "QR_codes/"
 TASK_GEOJSON_DIR = "geojson/"
@@ -2392,23 +2392,32 @@ async def get_pagination(page: int, count: int, results_per_page: int, total: in
 
 async def get_dashboard_detail(project_id: int, db: Session):
     """Get project details for project dashboard."""
-
     project = await get_project(db, project_id)
-    db_organization = await organization_crud.get_organisation_by_id(db, project.organisation_id)
+    db_organization = await organization_crud.get_organisation_by_id(
+        db, project.organisation_id
+    )
 
     s3_project_path = f"/{project.organisation_id}/{project_id}"
     s3_submission_path = f"/{s3_project_path}/submissions.meta.json"
-    
+
     file = get_obj_from_bucket(settings.S3_BUCKET_NAME, s3_submission_path)
     project.last_active = (json.loads(file.getvalue()))["last_submission"]
 
-    contributors = db.query(db_models.DbTaskHistory).filter(db_models.DbTaskHistory.project_id==project_id).all()
-    unique_user_ids = {user.user_id for user in contributors if user.user_id is not None}
+    contributors = (
+        db.query(db_models.DbTaskHistory)
+        .filter(db_models.DbTaskHistory.project_id == project_id)
+        .all()
+    )
+    unique_user_ids = {
+        user.user_id for user in contributors if user.user_id is not None
+    }
 
     project.organization = db_organization.name
     project.organization_logo = db_organization.logo
     project.total_contributors = len(unique_user_ids)
-    project.total_submission = await submission_crud.get_submission_count_of_a_project(db, project_id)
+    project.total_submission = await submission_crud.get_submission_count_of_a_project(
+        db, project_id
+    )
     project.total_tasks = await tasks_crud.get_task_count_in_project(db, project_id)
 
     return project

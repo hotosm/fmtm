@@ -23,10 +23,10 @@ from fastapi.responses import JSONResponse
 from loguru import logger as log
 from sqlalchemy.orm import Session
 
+from app.auth.osm import AuthUser, init_osm_auth, login_required
 from app.db import database
 from app.db.db_models import DbUser
 from app.users import user_crud
-from app.auth.osm import AuthUser, init_osm_auth, login_required
 
 router = APIRouter(
     prefix="/auth",
@@ -108,9 +108,13 @@ async def my_data(
                     "Please contact the administrator."
                 ),
             )
-        
+
         # Add user to database
-        db_user = DbUser(id=user_data["id"], username=user_data["username"], profile_img = user_data["img_url"])
+        db_user = DbUser(
+            id=user_data["id"],
+            username=user_data["username"],
+            profile_img=user_data["img_url"],
+        )
         db.add(db_user)
         db.commit()
     else:

@@ -1218,12 +1218,11 @@ async def get_template_file(
     )
 
 
-@router.get("/project_dashboard/{project_id}", response_model=project_schemas.ProjectDashboard)
-async def project_dashboard(
-    project_id: int, db: Session = Depends(database.get_db)
-):
-    """
-    Get the project dashboard details.
+@router.get(
+    "/project_dashboard/{project_id}", response_model=project_schemas.ProjectDashboard
+)
+async def project_dashboard(project_id: int, db: Session = Depends(database.get_db)):
+    """Get the project dashboard details.
 
     Args:
         project_id (int): The ID of the project.
@@ -1232,5 +1231,4 @@ async def project_dashboard(
     Returns:
         ProjectDashboard: The project dashboard details.
     """
-
     return await project_crud.get_dashboard_detail(project_id, db)

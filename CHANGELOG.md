@@ -21,7 +21,7 @@
 - added alchemy text on centroid api
 - map Component added to main
 - add script to generate openapi.json
--  Added a new function to perform the conversion of task_boundary from GeoJSON to .osm format.
+- Added a new function to perform the conversion of task_boundary from GeoJSON to .osm format.
 - download button for data extract on project details fix Add option to download the data extract fix #779
 - api for download data extract
 - added download data extract loading
@@ -30,7 +30,7 @@
 - use loguru stdout + json file logging
 - form validation added on custom form
 - added organisation_id on create project frontend
-- organisation Id  on create project api
+- organisation Id on create project api
 - added api to centroid logo
 - added projectId on projectbyid
 - Tailwindcss integrated
@@ -220,7 +220,7 @@
 - minimum 5 of splitting algorithm
 - Project name should accept other characters too. #754
 - organization_id none case handled
-- task  splitted is not shown in map, although the number of tasks are determined and generated  #750
+- task splitted is not shown in map, although the number of tasks are determined and generated #750
 - previous button wrong route issue
 - project_id added in the tile_instance
 - set tile_path_instance outside try, ref before assign
@@ -261,7 +261,7 @@
 - pwa fixes for icon
 - merge conflicts
 - data Cleaning fix
--  removed api listing static content
+- removed api listing static content
 - projects can be filter based on user_id and hashtags present in the project
 - filtering by hashtags check if project hashtags overlap with requested hashtags
 - task spliting for geojson with polygons instead of features
@@ -322,7 +322,7 @@
 - osm-fieldwork import
 - osm-fieldwork imports
 - Fixes Create Project Section : The input file name has design issues. #452
-- Create Project Section - Upload Area subsection : Alignment of the map elements need to be maintained.  #451
+- Create Project Section - Upload Area subsection : Alignment of the map elements need to be maintained. #451
 - handle click outside issue
 - organization post
 - adjusted map page of home
@@ -435,7 +435,7 @@
 - move app backend server files to app dir
 - move backend code out of app dir for rebase
 - add additional logging to odkcentral connection
-- update __version__.py path in pyproject.toml
+- update **version**.py path in pyproject.toml
 - remove FMTM_TEST_DB_NAME, DB_URL --> FMTM_DB_URL
 - ignore osm-fieldwork local dir
 - remove tests dir in root (under src dirs)
