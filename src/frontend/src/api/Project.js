@@ -186,3 +186,21 @@ export const DownloadTile = (url, payload) => {
     await getDownloadTile(url, payload);
   };
 };
+
+export const GetProjectDashboard = (url) => {
+  return async (dispatch) => {
+    const getProjectDashboard = async (url) => {
+      try {
+        dispatch(ProjectActions.SetProjectDashboardLoading(true));
+        const response = await CoreModules.axios.get(url);
+        dispatch(ProjectActions.SetProjectDashboardDetail(response.data));
+        dispatch(ProjectActions.SetProjectDashboardLoading(false));
+      } catch (error) {
+        dispatch(ProjectActions.SetProjectDashboardLoading(false));
+      } finally {
+        dispatch(ProjectActions.SetProjectDashboardLoading(false));
+      }
+    };
+    await getProjectDashboard(url);
+  };
+};

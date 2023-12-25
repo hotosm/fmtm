@@ -5,7 +5,7 @@ import WindowDimension from '../hooks/WindowDimension';
 import MapDescriptionComponents from '../components/MapDescriptionComponents';
 import ActivitiesPanel from '../components/ProjectDetailsV2/ActivitiesPanel';
 import environment from '../environment';
-import { ProjectById } from '../api/Project';
+import { ProjectById, GetProjectDashboard } from '../api/Project';
 import { ProjectActions } from '../store/slices/ProjectSlice';
 import CustomizedSnackbar from '../utilities/CustomizedSnackbar';
 import OnScroll from '../hooks/OnScroll';
@@ -149,6 +149,10 @@ const Home = () => {
 
     setTaskBuildingGeojson(taskBuildingGeojsonFeatureCollection);
   }, [map, projectBuildingGeojson]);
+
+  useEffect(() => {
+    dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${decodedId}`));
+  }, []);
 
   // TasksLayer(map, mainView, featuresLayer);
   const projectClickOnMap = (properties, feature) => {

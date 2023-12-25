@@ -9,6 +9,8 @@ const ProjectInfo = () => {
   const [descLines, setDescLines] = useState(1);
   const projectInfo = CoreModules.useAppSelector((state) => state?.project?.projectInfo);
   const projectDetailsLoading = CoreModules.useAppSelector((state) => state?.project?.projectDetailsLoading);
+  const projectDashboardDetail = CoreModules.useAppSelector((state) => state?.project?.projectDashboardDetail);
+  const projectDashboardLoading = CoreModules.useAppSelector((state) => state?.project?.projectDashboardLoading);
 
   useEffect(() => {
     if (paraRef.current) {
@@ -52,24 +54,26 @@ const ProjectInfo = () => {
       <div className="fmtm-flex fmtm-justify-between fmtm-w-full">
         <div>
           <p className="fmtm-font-bold">Contributors</p>
-          {projectDetailsLoading ? (
+          {projectDashboardLoading ? (
             <CoreModules.Skeleton className="!fmtm-w-[60px] fmtm-ml-[15%]" />
           ) : (
-            <p className="fmtm-text-center fmtm-text-[#706E6E]">210</p>
+            <p className="fmtm-text-center fmtm-text-[#706E6E]">{projectDashboardDetail?.total_contributors}</p>
           )}
         </div>
         <div>
           <p className="fmtm-font-bold">Last Contribution</p>
-          {projectDetailsLoading ? (
+          {projectDashboardLoading ? (
             <CoreModules.Skeleton className="!fmtm-w-[70px] fmtm-ml-[20%]" />
           ) : (
-            <p className="fmtm-text-center fmtm-text-[#706E6E]">3 hours ago</p>
+            <p className="fmtm-text-center fmtm-text-[#706E6E] fmtm-capitalize">
+              {projectDashboardDetail?.last_active}
+            </p>
           )}
         </div>
       </div>
       <div>
         <p className="fmtm-font-bold fmtm-mb-1">Organized By:</p>
-        {projectDetailsLoading ? (
+        {projectDashboardLoading ? (
           <div className="fmtm-flex fmtm-items-center fmtm-gap-5">
             <CoreModules.Skeleton className="!fmtm-w-[2.81rem] fmtm-h-[2.81rem] !fmtm-rounded-full fmtm-overflow-hidden" />
             <CoreModules.Skeleton className="!fmtm-w-[180px]" />
@@ -77,9 +81,14 @@ const ProjectInfo = () => {
         ) : (
           <div className="fmtm-flex fmtm-items-center fmtm-gap-4">
             <div className="fmtm-w-10 fmtm-h-10 fmtm-overflow-hidden">
-              <img src={ProjectIcon} alt="Organizer Photo" />
+              <img
+                src={
+                  projectDashboardDetail?.organization_logo ? ProjectIcon : projectDashboardDetail?.organisation_logo
+                }
+                alt="Organizer Photo"
+              />
             </div>
-            <p className="fmtm-text-center fmtm-text-[#706E6E]">OpenStreet Map</p>
+            <p className="fmtm-text-center fmtm-text-[#706E6E]">{projectDashboardDetail?.organization}</p>
           </div>
         )}
       </div>

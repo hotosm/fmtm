@@ -22,6 +22,8 @@ const ProjectSlice = createSlice({
     mobileFooterSelection: 'explore',
     geolocationStatus: false,
     projectDetailsLoading: true,
+    projectDashboardDetail: {},
+    projectDashboardLoading: false,
   },
   reducers: {
     SetProjectTaskBoundries(state, action) {
@@ -81,6 +83,12 @@ const ProjectSlice = createSlice({
     },
     SetProjectDetialsLoading(state, action) {
       state.projectDetailsLoading = action.payload;
+    },
+    SetProjectDashboardDetail(state, action) {
+      state.projectDashboardDetail = action.payload;
+    },
+    SetProjectDashboardLoading(state, action) {
+      state.projectDashboardLoading = action.payload;
     },
   },
 });
