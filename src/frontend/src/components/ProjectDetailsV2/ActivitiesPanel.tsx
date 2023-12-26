@@ -93,7 +93,10 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
             <span className="fmtm-text-[#7A7676] fmtm-font-extralight fmtm-italic fmtm-font-archivo">
               updated status to{' '}
             </span>
-            <p style={{ color: defaultTheme[taskHistory?.changedToStatus] }} className="fmtm-font-archivo">
+            <p
+              style={{ color: defaultTheme.statusTextTheme[taskHistory?.changedToStatus] }}
+              className="fmtm-font-archivo"
+            >
               {taskHistory?.changedToStatus}
             </p>
             <div className="fmtm-flex fmtm-items-center fmtm-justify-between">
