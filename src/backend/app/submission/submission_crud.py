@@ -844,9 +844,10 @@ async def get_submissions_by_date(db: Session, project_id: int, days: int, plann
     s3_project_path = f"/{project.organisation_id}/{project_id}"
     s3_submission_path = f"/{s3_project_path}/submission.zip"
 
-    if s3_submission_path is None:
-        return Response("Submissions not found, please upload it first")
-    file = get_obj_from_bucket(settings.S3_BUCKET_NAME, s3_submission_path)
+    try:
+        file = get_obj_from_bucket(settings.S3_BUCKET_NAME, s3_submission_path)
+    except ValueError as e:
+        return []
 
     with zipfile.ZipFile(file, "r") as zip_ref:
         with zip_ref.open("submissions.json") as file_in_zip:
@@ -860,7 +861,7 @@ async def get_submissions_by_date(db: Session, project_id: int, days: int, plann
     submission_counts = Counter(sorted(dates))
 
     response = [
-        {"date": key, "count": value, "planned": planned_task} 
+        {"date": key, "count": value} 
         for key, value in submission_counts.items()
         ]
     if planned_task:
