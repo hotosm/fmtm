@@ -17,10 +17,12 @@
 #
 
 import uuid
+from datetime import datetime
+from dateutil import parser
 from typing import List, Optional
 
 from geojson_pydantic import Feature as GeojsonFeature
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 from app.db import db_models
 from app.models.enums import ProjectPriority, ProjectStatus, TaskSplitType
@@ -143,3 +145,40 @@ class ProjectOut(ProjectBase):
 class BackgroundTaskStatus(BaseModel):
     status: str
     message: Optional[str] = None
+
+
+class ProjectDashboard(BaseModel):
+    project_name_prefix: str
+    organization: str
+    organization_logo: Optional[str] = None
+    total_tasks: int
+    total_submission: int
+    total_contributors: int
+    created: datetime
+    last_active: Optional[str] = None
+
+    @validator("created", pre=False, always=True)
+    def get_created(cls, value, values):
+        date = value.strftime("%d %b %Y")
+        return date
+    
+    @validator("last_active", pre=False, always=True)
+    def get_last_active(cls, value, values):
+        if value is None:
+            return None
+
+        last_active = parser.parse(value).replace(tzinfo=None)
+        current_date = datetime.now()
+
+        time_difference = current_date - last_active
+
+        days_difference = time_difference.days
+
+        if days_difference == 0:
+            return 'today'
+        elif days_difference == 1:
+            return 'yesterday'
+        elif days_difference < 7:
+            return f'{days_difference} day{"s" if days_difference > 1 else ""} ago'
+        else:
+            return last_active.strftime("%d %b %Y")
