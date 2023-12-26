@@ -9,12 +9,21 @@ import { Feature } from 'ol';
 import { Polygon } from 'ol/geom';
 import { ActivitiesCardSkeletonLoader, ShowingCountSkeletonLoader } from './SkeletonLoader';
 
+const sortByList = [
+  { id: 'activities', name: 'Activities' },
+  { id: 'date', name: 'Date' },
+  { id: 'users', name: 'Users' },
+  { id: 'taskid', name: 'Task ID' },
+];
+
 const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion, states }) => {
   const displayLimit = 10;
   const [searchText, setSearchText] = useState('');
   const [taskHistories, setTaskHistories] = useState([]);
   const [taskDisplay, setTaskDisplay] = React.useState(displayLimit);
   const [allActivities, setAllActivities] = useState(0);
+  const [sortBy, setSortBy] = useState(null);
+  const [showShortBy, setShowSortBy] = useState(false);
   const projectDetailsLoading = CoreModules.useAppSelector((state) => state?.project?.projectDetailsLoading);
 
   const handleOnchange = (event) => {
@@ -123,7 +132,7 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
 
   return (
     <div className="fmtm-w-full fmtm-px-2 sm:fmtm-px-0">
-      <div className="fmtm-flex fmtm-items-center fmtm-w-full fmtm-gap-2">
+      <div className="fmtm-flex fmtm-items-center fmtm-w-full fmtm-justify-between">
         <input
           type="text"
           onChange={handleOnchange}
@@ -131,18 +140,42 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
           placeholder="Search by task id or username"
           className="fmtm-w-[67%] fmtm-text-md fmtm-px-1 fmtm-py-[0.18rem] fmtm-outline-none fmtm-border-[1px] fmtm-border-[#E7E2E2]"
         />
-        <div className="fmtm-w-[33%]">
-          <CustomSelect
-            //   title="Organization Name"
-            placeholder="Filters"
-            //   data={organizationList}
-            //   dataKey="value"
-            //   value={values.organisation_id?.toString()}
-            //   valueKey="value"
-            //   label="label"
-            //   onValueChange={(value) => handleCustomChange('organisation_id', value && +value)}
-            className="fmtm-bg-white fmtm-overflow-hidden"
-          />
+        <div>
+          <div className="fmtm-relative">
+            <div
+              className="fmtm-flex fmtm-items-center fmtm-gap-1 fmtm-justify-end fmtm-cursor-pointer"
+              onClick={() => setShowSortBy(!showShortBy)}
+            >
+              <AssetModules.ImportExportIcon className={`${sortBy ? 'fmtm-text-primaryRed' : 'fmtm-text-gray-500'}`} />
+              <p className="fmtm-text-gray-500">Sort</p>
+            </div>
+            {showShortBy && (
+              <div className="fmtm-w-[10rem] fmtm-absolute fmtm-top-6 fmtm-bg-white fmtm-z-[999] fmtm-rounded-sm fmtm-overflow-hidden">
+                {/* <p className="fmtm-border-b-[1px] fmtm-px-2 fmtm-py-1">Sort By:</p> */}
+                {sortByList.map((item, i) => (
+                  <div
+                    className={`fmtm-flex fmtm-items-center fmtm-gap-4 fmtm-px-2 fmtm-py-1 hover:fmtm-bg-red-50 hover:fmtm-cursor-pointer fmtm-duration-150 ${
+                      sortByList.length - 1 > i && 'fmtm-border-b-[1px] fmtm-border-gray-100'
+                    }`}
+                    onClick={() => {
+                      if (item.name === sortBy) {
+                        setSortBy(null);
+                      } else {
+                        setSortBy(item.name);
+                      }
+                      setShowSortBy(false);
+                    }}
+                  >
+                    {/* {sortBy === item.name &&} */}
+                    <AssetModules.CheckIcon
+                      className={`${sortBy === item.name ? 'fmtm-visible' : 'fmtm-invisible'} fmtm-text-primaryRed`}
+                    />
+                    <div>{item.name}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
       {projectDetailsLoading ? (

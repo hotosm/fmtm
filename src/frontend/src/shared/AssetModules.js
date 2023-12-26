@@ -54,6 +54,8 @@ import {
   FmdGood as FmdGoodIcon,
   Map as MapIcon,
   AccessTime as AccessTimeIcon,
+  ImportExport as ImportExportIcon,
+  Check as CheckIcon,
 } from '@mui/icons-material';
 import LockPng from '../assets/images/lock.png';
 import RedLockPng from '../assets/images/red-lock.png';
@@ -118,4 +120,6 @@ export default {
   FmdGoodIcon,
   MapIcon,
   AccessTimeIcon,
+  ImportExportIcon,
+  CheckIcon,
 };
