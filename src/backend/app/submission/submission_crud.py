@@ -821,7 +821,7 @@ async def get_submission_count_of_a_project(db: Session, project_id: int):
     return len(files)
 
 
-async def get_submissions_by_date(db:Session, project_id:int, days:int):
+async def get_submissions_by_date(db: Session, project_id: int, days: int, planned_task: int):
     """
     Get submissions by date.
 
@@ -853,13 +853,25 @@ async def get_submissions_by_date(db:Session, project_id:int, days:int):
             content = file_in_zip.read()
 
     content = json.loads(content)
-    end_dates = [datetime.fromisoformat(date.split('+')[0]) for date in (entry["end"] for entry in content if entry.get("end"))]
+    end_dates = [datetime.fromisoformat(entry["end"].split('+')[0]) for entry in content if entry.get("end")]
+
     dates = [date.strftime('%m/%d') for date in end_dates if datetime.now() - date <= timedelta(days=days)]
 
     submission_counts = Counter(sorted(dates))
+
     response = [
-        {"date": key, "count": value} 
+        {"date": key, "count": value, "planned": planned_task} 
         for key, value in submission_counts.items()
+        ]
+    if planned_task:
+        count_dict = {}
+        cummulative_count = 0
+        for date, count in submission_counts.items():
+            cummulative_count += count
+            count_dict[date] = cummulative_count
+        response = [
+            {"date": key, "count": count_dict[key], "planned": planned_task}
+            for key, value in submission_counts.items()
         ]
 
     return response
