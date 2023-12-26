@@ -1256,8 +1256,9 @@ async def check_coordinate_system(boundary: UploadFile = File(...)):
     boundary = json.loads(content)
 
     # Validating Coordinate Reference System
-    if check_crs(boundary):
+    try:
+        check_crs(boundary)
         return {"message": "Valid boundary file"}
-    else:
+    except Exception as e:
         return {"message":"Unsupported coordinate system, it is recommended to use a "
         "GeoJSON file in WGS84(EPSG 4326) standard."}
