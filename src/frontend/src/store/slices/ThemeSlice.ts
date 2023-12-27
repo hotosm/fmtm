@@ -74,9 +74,9 @@ const ThemeSlice = CoreModules.createSlice({
       statusTextTheme: {
         READY: '#a3a2a2',
         LOCKED_FOR_MAPPING: '#097085',
-        MAPPED: '#48d3e8',
+        MAPPED: '#64cfe3',
         LOCKED_FOR_VALIDATION: '#C5BD0A',
-        VALIDATED: '#074DFF',
+        VALIDATED: '#44c9a2',
         INVALIDATED: '#D73F37',
       },
       READY: '#fff',
