@@ -135,3 +135,24 @@ class ReadTask(Task):
     """Task details plus updated task history."""
 
     task_history: Optional[List[TaskHistoryOut]] = None
+
+
+class TaskHistory(BaseModel):
+    """Task history details."""
+    task_id: int
+    action_text: str
+    action_date: datetime
+    status: str
+    username: str
+    profile_img: Optional[str]
+
+    @classmethod
+    def map_entry_to_model(cls, task_id, history_entry, user):
+        return cls(
+            task_id=task_id,
+            action_text=history_entry.action_text,
+            action_date=history_entry.action_date,
+            status=history_entry.action_text.split()[5],
+            username=user.username if user else None,
+            profile_img=user.profile_img if user else None
+        )

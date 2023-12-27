@@ -216,9 +216,27 @@ async def task_activity(
 
     """
     end_date = datetime.now() - timedelta(days=days)
-    task_history = tasks_crud.get_task_history(project_id, end_date, db)
+    task_history = tasks_crud.get_project_task_history(project_id, end_date, db)
 
     return await tasks_crud.count_validated_and_mapped_tasks(
         task_history,
         end_date,
     )
+
+
+@router.get("/task_history/", response_model = List[tasks_schemas.TaskHistory])
+async def task_history(project_id: int, days: int = 10, db: Session = Depends(database.get_db)):
+    """
+    Get the detailed task history for a project.
+
+    Args:
+        project_id (int): The ID of the project.
+        db (Session): The database session. (default: Depends(database.get_db))
+
+    Returns:
+        List[TaskHistory]: A list of task history.
+    """
+    end_date = datetime.now() - timedelta(days=days)
+    task_history = tasks_crud.get_project_task_history(project_id, end_date, db)
+
+    return await tasks_crud.get_task_history(tasks, db)
