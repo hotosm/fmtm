@@ -284,7 +284,7 @@ const Home = () => {
 
       {/* Top project details heading medium dimension*/}
       {windowSize.width >= 640 && (
-        <div>
+        <div className="fmtm-relative">
           <CoreModules.Stack
             sx={{ display: { md: 'flex', xs: 'none' } }}
             direction="column"
@@ -349,6 +349,12 @@ const Home = () => {
               </CoreModules.Typography>
             </CoreModules.Stack>
           </CoreModules.Stack>
+          <button
+            className="fmtm-absolute fmtm-right-0 fmtm-top-0 fmtm-w-fit fmtm-bg-yellow-500 fmtm-text-white fmtm-px-2 fmtm-py-1 fmtm-text-sm hover:fmtm-bg-yellow-600"
+            onClick={() => navigate(`/newproject_details/${params?.id}`)}
+          >
+            New UI
+          </button>
         </div>
       )}
 
