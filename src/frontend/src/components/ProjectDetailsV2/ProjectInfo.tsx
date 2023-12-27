@@ -49,7 +49,11 @@ const ProjectInfo = () => {
       </div>
       <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
         <AssetModules.FmdGoodIcon className="fmtm-text-primaryRed" />
-        {projectDetailsLoading ? <CoreModules.Skeleton className="!fmtm-w-[160px]" /> : <p>Cameroon, Africa</p>}
+        {projectDetailsLoading ? (
+          <CoreModules.Skeleton className="!fmtm-w-[160px]" />
+        ) : (
+          <p>{projectInfo?.location_str ? projectInfo?.location_str : '-'}</p>
+        )}
       </div>
       <div className="fmtm-flex fmtm-justify-between fmtm-w-full">
         <div>
