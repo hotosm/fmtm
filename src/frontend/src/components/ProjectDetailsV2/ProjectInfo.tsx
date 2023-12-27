@@ -66,7 +66,7 @@ const ProjectInfo = () => {
             <CoreModules.Skeleton className="!fmtm-w-[70px] fmtm-ml-[20%]" />
           ) : (
             <p className="fmtm-text-center fmtm-text-[#706E6E] fmtm-capitalize">
-              {projectDashboardDetail?.last_active}
+              {projectDashboardDetail?.last_active ? projectDashboardDetail?.last_active : '-'}
             </p>
           )}
         </div>

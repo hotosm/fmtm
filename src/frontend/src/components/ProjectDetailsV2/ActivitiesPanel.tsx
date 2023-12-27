@@ -131,61 +131,66 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
   };
 
   return (
-    <div className="fmtm-w-full fmtm-px-2 sm:fmtm-px-0">
-      <div className="fmtm-flex fmtm-items-center fmtm-w-full fmtm-justify-between">
-        <input
-          type="text"
-          onChange={handleOnchange}
-          value={searchText}
-          placeholder="Search by task id or username"
-          className="fmtm-w-[67%] fmtm-text-md fmtm-px-1 fmtm-py-[0.18rem] fmtm-outline-none fmtm-border-[1px] fmtm-border-[#E7E2E2]"
-        />
-        <div>
-          <div className="fmtm-relative">
-            <div
-              className="fmtm-flex fmtm-items-center fmtm-gap-1 fmtm-justify-end fmtm-cursor-pointer"
-              onClick={() => setShowSortBy(!showShortBy)}
-            >
-              <AssetModules.ImportExportIcon className={`${sortBy ? 'fmtm-text-primaryRed' : 'fmtm-text-gray-500'}`} />
-              <p className="fmtm-text-gray-500">Sort</p>
-            </div>
-            {showShortBy && (
-              <div className="fmtm-w-[10rem] fmtm-absolute fmtm-top-6 fmtm-bg-white fmtm-z-[999] fmtm-rounded-sm fmtm-overflow-hidden">
-                {/* <p className="fmtm-border-b-[1px] fmtm-px-2 fmtm-py-1">Sort By:</p> */}
-                {sortByList.map((item, i) => (
-                  <div
-                    className={`fmtm-flex fmtm-items-center fmtm-gap-4 fmtm-px-2 fmtm-py-1 hover:fmtm-bg-red-50 hover:fmtm-cursor-pointer fmtm-duration-150 ${
-                      sortByList.length - 1 > i && 'fmtm-border-b-[1px] fmtm-border-gray-100'
-                    }`}
-                    onClick={() => {
-                      if (item.name === sortBy) {
-                        setSortBy(null);
-                      } else {
-                        setSortBy(item.name);
-                      }
-                      setShowSortBy(false);
-                    }}
-                  >
-                    {/* {sortBy === item.name &&} */}
-                    <AssetModules.CheckIcon
-                      className={`${sortBy === item.name ? 'fmtm-visible' : 'fmtm-invisible'} fmtm-text-primaryRed`}
-                    />
-                    <div>{item.name}</div>
-                  </div>
-                ))}
+    <div className="fmtm-w-full fmtm-px-2 sm:fmtm-px-0 fmtm-relative">
+      <div className="fmtm-sticky sm:fmtm-relative -fmtm-top-[1px] fmtm-bg-white sm:fmtm-bg-[#F5F5F5]">
+        <div className="fmtm-flex fmtm-items-center fmtm-w-full fmtm-justify-between">
+          <input
+            type="text"
+            onChange={handleOnchange}
+            value={searchText}
+            placeholder="Search by task id or username"
+            className="fmtm-min-w-[14.3rem] fmtm-w-[67%] fmtm-text-md fmtm-px-1 fmtm-py-[0.18rem] fmtm-outline-none fmtm-border-[1px] fmtm-border-[#E7E2E2]"
+          />
+          <div>
+            <div className="fmtm-relative">
+              <div
+                className="fmtm-flex fmtm-items-center fmtm-gap-1 fmtm-justify-end fmtm-cursor-pointer"
+                onClick={() => setShowSortBy(!showShortBy)}
+              >
+                <AssetModules.ImportExportIcon
+                  className={`${sortBy ? 'fmtm-text-primaryRed' : 'fmtm-text-gray-500'}`}
+                />
+                <p className="fmtm-text-gray-500">Sort</p>
               </div>
-            )}
+              {showShortBy && (
+                <div className="fmtm-w-[10rem] fmtm-absolute fmtm-top-6 fmtm-right-0 sm:fmtm-left-0 fmtm-bg-[#fafafa] sm:fmtm-bg-white fmtm-z-[999] fmtm-rounded-sm fmtm-overflow-hidden">
+                  {/* <p className="fmtm-border-b-[1px] fmtm-px-2 fmtm-py-1">Sort By:</p> */}
+                  {sortByList.map((item, i) => (
+                    <div
+                      className={`fmtm-flex fmtm-items-center fmtm-gap-4 fmtm-px-2 fmtm-py-1 hover:fmtm-bg-red-50 hover:fmtm-cursor-pointer fmtm-duration-150 ${
+                        sortByList.length - 1 > i &&
+                        'fmtm-border-b-[1px] fmtm-border-b-slate-200 sm:fmtm-border-gray-100'
+                      }`}
+                      onClick={() => {
+                        if (item.name === sortBy) {
+                          setSortBy(null);
+                        } else {
+                          setSortBy(item.name);
+                        }
+                        setShowSortBy(false);
+                      }}
+                    >
+                      {/* {sortBy === item.name &&} */}
+                      <AssetModules.CheckIcon
+                        className={`${sortBy === item.name ? 'fmtm-visible' : 'fmtm-invisible'} fmtm-text-primaryRed`}
+                      />
+                      <div>{item.name}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
+        {projectDetailsLoading ? (
+          <ShowingCountSkeletonLoader />
+        ) : (
+          <p className="fmtm-text-[#A8A6A6] fmtm-text-base fmtm-my-1">
+            showing {taskHistories?.length} of {allActivities} activities
+          </p>
+        )}
       </div>
-      {projectDetailsLoading ? (
-        <ShowingCountSkeletonLoader />
-      ) : (
-        <p className="fmtm-text-[#A8A6A6] fmtm-text-base fmtm-my-1">
-          showing {taskHistories?.length} of {allActivities} activities
-        </p>
-      )}
-      <div className="fmtm-h-[52vh] fmtm-overflow-y-scroll scrollbar">
+      <div className="sm:fmtm-h-[52vh] fmtm-overflow-y-scroll scrollbar">
         {projectDetailsLoading ? (
           <div>
             {Array.from({ length: 10 }).map((i) => (
