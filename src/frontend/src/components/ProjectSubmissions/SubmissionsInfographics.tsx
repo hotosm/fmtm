@@ -137,7 +137,7 @@ const SubmissionsInfographics = () => {
   return (
     <div className="fmtm-flex fmtm-flex-col fmtm-gap-5">
       <div className="fmtm-flex fmtm-gap-10">
-        <div className="fmtm-w-[65%]">
+        <div className="fmtm-w-[70%]">
           <InfographicsCard
             cardRef={formSubmissionRef}
             header="Form Submissions"
@@ -157,7 +157,7 @@ const SubmissionsInfographics = () => {
             }
           />
         </div>
-        <div className="fmtm-w-[35%]">
+        <div className="fmtm-w-[30%]">
           <InfographicsCard
             cardRef={projectProgressRef}
             header="Project Progress"
@@ -172,7 +172,27 @@ const SubmissionsInfographics = () => {
         </div>
       </div>
       <div className="fmtm-flex fmtm-gap-10">
-        <div className="fmtm-w-[65%]">
+        <div className="fmtm-w-[70%]">
+          <InfographicsCard
+            cardRef={plannedVsActualRef}
+            header="Planned vs Actual"
+            body={
+              false ? (
+                <CoreModules.Skeleton className="!fmtm-w-full fmtm-h-full" />
+              ) : (
+                <CustomLineChart
+                  data={lineKeyData}
+                  xAxisDataKey="name"
+                  lineOneKey="Planned"
+                  lineTwoKey="Actual"
+                  xLabel="Submission Date"
+                  yLabel="Submission Count"
+                />
+              )
+            }
+          />
+        </div>
+        <div className="fmtm-w-[30%]">
           <InfographicsCard
             cardRef={totalContributorsRef}
             header={`Total Contributors: ${submissionContributorsData.length}`}
@@ -220,38 +240,6 @@ const SubmissionsInfographics = () => {
             }
           />
         </div>
-        <div className="fmtm-w-[35%]">
-          <InfographicsCard
-            header={`Total Contributors: 25`}
-            body={
-              false ? (
-                <CoreModules.Skeleton className="!fmtm-w-full fmtm-h-full" />
-              ) : (
-                <CustomPieChart data={pieData} dataKey="value" nameKey="names" />
-              )
-            }
-          />
-        </div>
-      </div>
-      <div className="fmtm-w-[100%]">
-        <InfographicsCard
-          cardRef={plannedVsActualRef}
-          header="Planned vs Actual"
-          body={
-            false ? (
-              <CoreModules.Skeleton className="!fmtm-w-full fmtm-h-full" />
-            ) : (
-              <CustomLineChart
-                data={lineKeyData}
-                xAxisDataKey="name"
-                lineOneKey="Planned"
-                lineTwoKey="Actual"
-                xLabel="Submission Date"
-                yLabel="Submission Count"
-              />
-            )
-          }
-        />
       </div>
 
       <div>
