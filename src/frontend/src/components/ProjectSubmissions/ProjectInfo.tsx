@@ -3,25 +3,25 @@ import CoreModules from '../../shared/CoreModules';
 
 const ProjectInfo = () => {
   const projectInfo = CoreModules.useAppSelector((state) => state.project.projectInfo);
-  const taskData = CoreModules.useAppSelector((state) => state.task.taskData);
-  const isTaskLoading = CoreModules.useAppSelector((state) => state.task.taskLoading);
+  const projectDashboardDetail = CoreModules.useAppSelector((state) => state.project.projectDashboardDetail);
+  const projectDashboardLoading = CoreModules.useAppSelector((state) => state.project.projectDashboardLoading);
 
   const dataCard = [
-    { title: 'Tasks', count: taskData.task_count },
-    { title: 'Contributors', count: 20 },
-    { title: 'Submissions', count: taskData.submission_count },
+    { title: 'Tasks', count: projectDashboardDetail?.total_tasks },
+    { title: 'Contributors', count: projectDashboardDetail?.total_contributors },
+    { title: 'Submissions', count: projectDashboardDetail?.total_submission },
   ];
 
   const ProjectDataCard = ({ data }) => (
     <div className="fmtm-border-[1px] fmtm-border-primaryRed fmtm-bg-white fmtm-rounded-2xl fmtm-min-w-[7.5rem] fmtm-w-[7.5rem] sm:fmtm-w-[8.5rem] 2xl:fmtm-w-[10rem] fmtm-flex fmtm-flex-col fmtm-items-center fmtm-p-2 md:fmtm-p-4 fmtm-gap-2 fmtm-shadow-md fmtm-shadow-red-300">
-      {isTaskLoading ? (
+      {projectDashboardLoading ? (
         <CoreModules.Skeleton className="!fmtm-w-[100px] fmtm-h-[30px]" />
       ) : (
         <h2 className="fmtm-font-archivo fmtm-text-xl sm:fmtm-text-2xl md:fmtm-text-[1.7rem] 2xl:fmtm-text-[2rem] fmtm-font-bold fmtm-text-primaryRed">
           {data.count}
         </h2>
       )}
-      {isTaskLoading ? (
+      {projectDashboardLoading ? (
         <CoreModules.Skeleton className="!fmtm-w-[100px] fmtm-h-[20px]" />
       ) : (
         <h4 className="fmtm-font-archivo fmtm-text-lg sm:fmtm-text-xl md::fmtm-text-[1.2rem] 2xl:fmtm-text-[1.5rem] fmtm-text-[#7A7676]">
@@ -51,10 +51,20 @@ const ProjectInfo = () => {
           )}
           <div>
             <p className="fmtm-text-sm fmtm-text-[#706E6E] fmtm-font-archivo">
-              Created On: {false ? <CoreModules.Skeleton className="!fmtm-w-[100px]" /> : <span>14 Sept 2023</span>}
+              Created On:{' '}
+              {projectDashboardLoading ? (
+                <CoreModules.Skeleton className="!fmtm-w-[100px]" />
+              ) : (
+                <span>{projectDashboardDetail?.created}</span>
+              )}
             </p>
             <p className="fmtm-text-sm fmtm-text-[#706E6E] fmtm-font-archivo">
-              Last active: {false ? <CoreModules.Skeleton className="!fmtm-w-[100px]" /> : <span>4 days ago</span>}
+              Last active:{' '}
+              {projectDashboardLoading ? (
+                <CoreModules.Skeleton className="!fmtm-w-[100px]" />
+              ) : (
+                <span>{projectDashboardDetail?.last_active ? projectDashboardDetail?.last_active : '-'}</span>
+              )}
             </p>
           </div>
         </div>

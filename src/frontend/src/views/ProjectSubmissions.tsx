@@ -8,6 +8,7 @@ import { ProjectActions } from '../store/slices/ProjectSlice';
 import { ProjectById } from '../api/Project';
 import environment from '../environment';
 import { fetchInfoTask } from '../api/task';
+import { GetProjectDashboard } from '../api/Project';
 
 const ProjectSubmissions = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -44,6 +45,10 @@ const ProjectSubmissions = () => {
       dispatch(fetchInfoTask(`${import.meta.env.VITE_API_URL}/tasks/tasks-features/?project_id=${decodedId}`));
     };
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${decodedId}`));
   }, []);
 
   return (
