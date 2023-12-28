@@ -20,6 +20,7 @@ import UnderConstruction from './views/UnderConstruction';
 import ErrorBoundary from './views/ErrorBoundary';
 import NewProjectDetails from './views/NewProjectDetails';
 import ProjectSubmissions from './views/ProjectSubmissions';
+import ProjectDetailsV2 from './views/ProjectDetailsV2';
 
 // const ProjectDetails = React.lazy(() => import('./views/ProjectDetails'));
 const Submissions = React.lazy(() => import('./views/Submissions'));
@@ -154,6 +155,18 @@ const routes = createBrowserRouter([
             <Suspense fallback={<div>Loading...</div>}>
               <ErrorBoundary>
                 <NewProjectDetails />
+              </ErrorBoundary>
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/newproject_details/:id',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <ErrorBoundary>
+                <ProjectDetailsV2 />
               </ErrorBoundary>
             </Suspense>
           </ProtectedRoute>
