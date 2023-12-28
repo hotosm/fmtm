@@ -6,6 +6,8 @@ const SubmissionSlice = createSlice({
     submissionDetailsLoading: true,
     submissionDetails: [],
     submissionInfographics: [],
+    submissionContributors: [],
+    submissionContributorsLoading: true,
   },
   reducers: {
     SetSubmissionDetailsLoading(state, action) {
@@ -16,6 +18,12 @@ const SubmissionSlice = createSlice({
     },
     SetSubmissionInfographics(state, action) {
       state.submissionInfographics = action.payload;
+    },
+    SetSubmissionContributors(state, action) {
+      state.submissionContributors = action.payload;
+    },
+    SetSubmissionContributorsLoading(state, action) {
+      state.submissionContributorsLoading = action.payload;
     },
   },
 });

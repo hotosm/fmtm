@@ -53,3 +53,19 @@ export const ProjectSubmissionInfographicsService: Function = (url: string) => {
     await fetchProjectSubmission(url);
   };
 };
+
+export const ProjectContributorsService: Function = (url: string) => {
+  return async (dispatch) => {
+    const fetchProjectContributor = async (url: string) => {
+      try {
+        dispatch(SubmissionActions.SetSubmissionContributorsLoading(true));
+        const fetchContributorsData = await CoreModules.axios.get(url);
+        const resp: any = fetchContributorsData.data;
+        dispatch(SubmissionActions.SetSubmissionContributors(resp));
+        dispatch(SubmissionActions.SetSubmissionContributorsLoading(false));
+      } catch (error) {}
+    };
+
+    await fetchProjectContributor(url);
+  };
+};

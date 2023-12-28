@@ -166,11 +166,12 @@ export default class Table extends Component {
       props: { data, uniqueKey, onRowClick, trClassName, flag, loading, isLoading },
     } = this;
     const { fields, containSubHeaderCollection, rowClassName } = this.getFields();
-
-    if (loading === false && fields.length > 0 && data.length === 0) {
+    if (isLoading === false && fields.length > 0 && data.length === 0) {
       return (
         <tr>
-          <td colSpan={fields.length}>No data available.</td>
+          <td colSpan={fields.length} className="fmtm-text-center fmtm-py-4 fmtm-text-gray-500">
+            No data available.
+          </td>
         </tr>
       );
     }

@@ -6,18 +6,8 @@ import Table, { TableHeader } from '../../components/common/CustomTable';
 import CustomLineChart from '../../components/common/LineChart';
 import CoreModules from '../../shared/CoreModules';
 import InfographicsCard from './InfographicsCard';
-import { ProjectSubmissionInfographicsService } from '../../api/SubmissionService';
+import { ProjectContributorsService, ProjectSubmissionInfographicsService } from '../../api/SubmissionService';
 import environment from '../../environment';
-
-const items = [
-  { name: 'haha' },
-  { name: 'haha' },
-  { name: 'haha' },
-  { name: 'haha' },
-  { name: 'haha' },
-  { name: 'haha' },
-  { name: 'haha' },
-];
 
 const pieData = [
   { names: 'Group A', value: 400 },
@@ -105,6 +95,10 @@ const SubmissionsInfographics = () => {
   const decodedId = environment.decode(encodedId);
 
   const submissionInfographicsData = CoreModules.useAppSelector((state) => state.submission.submissionInfographics);
+  const submissionContributorsData = CoreModules.useAppSelector((state) => state.submission.submissionContributors);
+  const submissionContributorsLoading = CoreModules.useAppSelector(
+    (state) => state.submission.submissionContributorsLoading,
+  );
   const [submissionProjection, setSubmissionProjection] = useState(10);
 
   useEffect(() => {
@@ -114,6 +108,10 @@ const SubmissionsInfographics = () => {
       ),
     );
   }, [submissionProjection]);
+
+  useEffect(() => {
+    dispatch(ProjectContributorsService(`${import.meta.env.VITE_API_URL}/projects/contributors/${decodedId}`));
+  }, []);
 
   const FormSubmissionSubHeader = () => (
     <div className="fmtm-text-sm fmtm-flex fmtm-gap-5 fmtm-mb-2">
@@ -177,9 +175,14 @@ const SubmissionsInfographics = () => {
         <div className="fmtm-w-[65%]">
           <InfographicsCard
             cardRef={totalContributorsRef}
-            header={`Total Contributors: 25`}
+            header={`Total Contributors: ${submissionContributorsData.length}`}
             body={
-              <Table data={items} onRowClick={() => {}} style={{ height: '100%' }} isLoading={false}>
+              <Table
+                data={submissionContributorsData}
+                onRowClick={() => {}}
+                style={{ height: '100%' }}
+                isLoading={submissionContributorsLoading}
+              >
                 <TableHeader
                   dataField="SN"
                   headerClassName="snHeader"
@@ -194,9 +197,9 @@ const SubmissionsInfographics = () => {
                   dataFormat={(row) => (
                     <div
                       className="fmtm-w-[7rem] fmtm-max-w-[7rem]fmtm-overflow-hidden fmtm-truncate"
-                      title={row?.name}
+                      title={row?.user}
                     >
-                      <span className="fmtm-text-[15px]">{row?.name}</span>
+                      <span className="fmtm-text-[15px]">{row?.user}</span>
                     </div>
                   )}
                 />
@@ -207,9 +210,9 @@ const SubmissionsInfographics = () => {
                   dataFormat={(row) => (
                     <div
                       className="fmtm-w-[7rem] fmtm-max-w-[7rem] fmtm-overflow-hidden fmtm-truncate"
-                      title={row?.name}
+                      title={row?.contributions}
                     >
-                      <span className="fmtm-text-[15px]">{row?.name}</span>
+                      <span className="fmtm-text-[15px]">{row?.contributions}</span>
                     </div>
                   )}
                 />
