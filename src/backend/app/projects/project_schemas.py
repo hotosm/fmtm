@@ -158,7 +158,7 @@ class ProjectDashboard(BaseModel):
     total_tasks: int
     total_submission: int
     total_contributors: int
-    created: datetime
+    created: str
     last_active: Optional[str] = None
 
     @field_validator("created", mode="before")
