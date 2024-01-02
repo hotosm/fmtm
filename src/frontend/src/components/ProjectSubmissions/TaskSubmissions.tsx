@@ -9,6 +9,7 @@ import { TaskCardSkeletonLoader } from './ProjectSubmissionsSkeletonLoader';
 const TaskSubmissions = () => {
   const dispatch = CoreModules.useAppDispatch();
   const taskInfo = CoreModules.useAppSelector((state) => state.task.taskInfo);
+  const taskLoading = CoreModules.useAppSelector((state) => state.task.taskLoading);
 
   const zoomToTask = (taskId) => {
     dispatch(CoreModules.TaskActions.SetSelectedTask(+taskId));
@@ -21,7 +22,7 @@ const TaskSubmissions = () => {
           <p>#{task?.task_id}</p>
           <div className="fmtm-flex fmtm-justify-between">
             <p>Expected Count</p>
-            <p>25</p>
+            <p>{task?.feature_count}</p>
           </div>
           <div className="fmtm-flex fmtm-justify-between">
             <p>Submission Count</p>
@@ -46,7 +47,7 @@ const TaskSubmissions = () => {
       <div className="fmtm-w-full md:fmtm-w-[39rem] fmtm-bg-white fmtm-rounded-xl fmtm-p-5">
         <InputTextField fieldType="string" label="" onChange={() => {}} value="" placeholder="Search by task id" />
         <div className="fmtm-mt-5 fmtm-h-[58vh] fmtm-overflow-y-scroll scrollbar">
-          {false ? (
+          {taskLoading ? (
             <div className="fmtm-flex fmtm-flex-col fmtm-gap-4">
               {Array.from({ length: 10 }).map((i) => (
                 <TaskCardSkeletonLoader key={i} />
