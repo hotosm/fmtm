@@ -15,7 +15,7 @@ const SubmissionsTable = () => {
       <div
         className={`fmtm-bg-white ${
           windowSize.width < 2000 ? 'fmtm-w-full md:fmtm-w-fit' : 'fmtm-w-fit'
-        } fmtm-flex xl:fmtm-items-end fmtm-gap-2 xl:fmtm-gap-8 fmtm-px-4 fmtm-rounded-xl fmtm-relative fmtm-pr-6 fmtm-flex-col xl:fmtm-flex-row fmtm-py-2 fmtm-pt-3 xl:fmtm-py-2  fmtm-my-2`}
+        } fmtm-flex xl:fmtm-items-end fmtm-gap-2 xl:fmtm-gap-8 fmtm-px-4 fmtm-rounded-lg fmtm-relative fmtm-pr-6 fmtm-flex-col xl:fmtm-flex-row fmtm-py-2 fmtm-pt-3 xl:fmtm-py-2  fmtm-my-2`}
       >
         <div className="fmtm-flex fmtm-justify-between fmtm-items-center fmtm-gap-8">
           <div className="fmtm-flex fmtm-items-center fmtm-gap-2 fmtm-mb-1 fmtm-relative fmtm-w-fit">
