@@ -9,11 +9,6 @@ import InfographicsCard from './InfographicsCard';
 import { ProjectContributorsService, ProjectSubmissionInfographicsService } from '../../api/SubmissionService';
 import environment from '../../environment';
 
-const pieData = [
-  { names: 'Group A', value: 400 },
-  { names: 'Group D', value: 200 },
-];
-
 const lineKeyData = [
   {
     name: '11/25',
@@ -99,6 +94,9 @@ const SubmissionsInfographics = () => {
   const submissionContributorsLoading = CoreModules.useAppSelector(
     (state) => state.submission.submissionContributorsLoading,
   );
+  const projectDashboardDetail = CoreModules.useAppSelector((state) => state.project.projectDashboardDetail);
+  const projectDashboardLoading = CoreModules.useAppSelector((state) => state.project.projectDashboardLoading);
+  const taskData = CoreModules.useAppSelector((state) => state.task.taskData);
   const [submissionProjection, setSubmissionProjection] = useState(10);
 
   useEffect(() => {
@@ -134,6 +132,16 @@ const SubmissionsInfographics = () => {
     </div>
   );
 
+  // Test data for project progress
+  const featCount = 500;
+  const current = 450;
+  const remaining = featCount - current;
+
+  const pieData = [
+    { names: 'Current Progress', value: current },
+    { names: 'Remaining', value: remaining },
+  ];
+
   return (
     <div className="fmtm-flex fmtm-flex-col fmtm-gap-5">
       <div className="fmtm-flex fmtm-gap-10">
@@ -145,7 +153,7 @@ const SubmissionsInfographics = () => {
             body={
               false ? (
                 <CoreModules.Skeleton className="!fmtm-w-full fmtm-h-full" />
-              ) : (
+              ) : submissionInfographicsData.length > 0 ? (
                 <CustomBarChart
                   data={submissionInfographicsData}
                   xLabel="Submission Data"
@@ -153,6 +161,10 @@ const SubmissionsInfographics = () => {
                   dataKey="count"
                   nameKey="date"
                 />
+              ) : (
+                <div className="fmtm-w-full fmtm-h-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-text-3xl fmtm-text-gray-400">
+                  No data available!
+                </div>
               )
             }
           />
@@ -164,8 +176,12 @@ const SubmissionsInfographics = () => {
             body={
               false ? (
                 <CoreModules.Skeleton className="!fmtm-w-full fmtm-h-full" />
-              ) : (
+              ) : pieData.length > 0 ? (
                 <CustomPieChart data={pieData} dataKey="value" nameKey="names" />
+              ) : (
+                <div className="fmtm-w-full fmtm-h-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-text-3xl fmtm-text-gray-400">
+                  No data available!
+                </div>
               )
             }
           />
@@ -179,7 +195,7 @@ const SubmissionsInfographics = () => {
             body={
               false ? (
                 <CoreModules.Skeleton className="!fmtm-w-full fmtm-h-full" />
-              ) : (
+              ) : lineKeyData.length > 0 ? (
                 <CustomLineChart
                   data={lineKeyData}
                   xAxisDataKey="name"
@@ -188,6 +204,10 @@ const SubmissionsInfographics = () => {
                   xLabel="Submission Date"
                   yLabel="Submission Count"
                 />
+              ) : (
+                <div className="fmtm-w-full fmtm-h-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-text-3xl fmtm-text-gray-400">
+                  No data available!
+                </div>
               )
             }
           />
