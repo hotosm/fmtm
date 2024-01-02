@@ -66,7 +66,7 @@ class TaskBase(BaseModel):
     outline_geojson: Optional[Feature] = None
     outline_centroid: Optional[Feature] = None
     initial_feature_count: Optional[int] = None
-    task_status: TaskStatus
+    task_status: str
     locked_by_uid: Optional[int] = None
     locked_by_username: Optional[str] = None
     task_history: Optional[List[TaskHistoryBase]] = None
