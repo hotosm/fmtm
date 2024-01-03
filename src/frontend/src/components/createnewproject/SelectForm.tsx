@@ -78,7 +78,11 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
           <span>
             {' '}
             You may learn more about XLSforms{' '}
-            <a href="https://hotosm.github.io/osm-fieldwork/about/xlsforms/" target="_">
+            <a
+              href="https://hotosm.github.io/osm-fieldwork/about/xlsforms/"
+              target="_"
+              className="fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-underline"
+            >
               here
             </a>
             .
