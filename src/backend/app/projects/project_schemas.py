@@ -161,7 +161,7 @@ class ProjectDashboard(BaseModel):
     total_contributors: Optional[int] = None
     last_active: Optional[str] = None
 
-    @field_validator("created", mode="before")
+    @field_validator("created", mode="after")
     def get_created(cls, value, values):
         date = value.strftime("%d %b %Y")
         return date

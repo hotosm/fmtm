@@ -66,12 +66,12 @@ class TaskBase(BaseModel):
     outline_geojson: Optional[Feature] = None
     outline_centroid: Optional[Feature] = None
     initial_feature_count: Optional[int] = None
-    task_status: str
+    task_status: TaskStatus
     locked_by_uid: Optional[int] = None
     locked_by_username: Optional[str] = None
     task_history: Optional[List[TaskHistoryBase]] = None
 
-    @field_validator("task_status", mode="before")
+    @field_validator("task_status", mode="after")
     def get_enum_name(cls, value, values):
         if isinstance(value, int):
             try:
@@ -80,8 +80,10 @@ class TaskBase(BaseModel):
                 raise ValueError(
                     f"Invalid integer value for task_status: {value}"
                 ) from e
-        return value
-
+        elif isinstance(value, TaskStatus):
+            return TaskStatus(value).name
+        else:
+            return value
     @field_validator("outline_geojson", mode="before")
     @classmethod
     def get_geojson_from_outline(cls, v: Any, info: ValidationInfo) -> str:
