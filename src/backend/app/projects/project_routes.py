@@ -1023,8 +1023,9 @@ async def generate_project_tiles(
         f"for project ID: {project_id}"
     )
     background_task_id = await project_crud.insert_background_task_into_database(
-        db, project_id=project_id
+        db, name="generate tiles", project_id=project_id
     )
+
 
     background_tasks.add_task(
         project_crud.get_project_tiles,
@@ -1065,7 +1066,8 @@ async def download_tiles(tile_id: int, db: Session = Depends(database.get_db)):
     log.info(f"User requested download for tiles: {tiles_path.path}")
 
     project_id = tiles_path.project_id
-    project_name = await project_crud.get_project(db, project_id).project_name_prefix
+    project = await project_crud.get_project(db, project_id)
+    project_name = project.project_name_prefix
     filename = Path(tiles_path.path).name.replace(
         f"{project_id}_", f"{project_name.replace(' ', '_')}_"
     )
