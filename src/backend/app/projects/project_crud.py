@@ -2171,6 +2171,7 @@ def get_project_tiles(
         )
         log.info(f"Basemap created for project ID {project_id}: {outfile}")
 
+
         get_project_sync = async_to_sync(get_project)
         project = get_project_sync(db, project_id)
 
@@ -2180,6 +2181,57 @@ def get_project_tiles(
             f"/{project.organisation_id}/{project_id}/basemap.mbtiles",
             outfile
         )
+
+        # Generate mbtiles for each task
+        get_tasks_async = async_to_sync(tasks_crud.get_task_id_list)
+        task_list = get_tasks_async(db, project_id)
+
+        for task_id in task_list:
+            try:
+                log.debug(f"Getting bbox for task: {task_id}")
+                query = text(
+                    f"""SELECT ST_XMin(ST_Envelope(outline)) AS min_lon,
+                                ST_YMin(ST_Envelope(outline)) AS min_lat,
+                                ST_XMax(ST_Envelope(outline)) AS max_lon,
+                                ST_YMax(ST_Envelope(outline)) AS max_lat
+                        FROM tasks
+                        WHERE id = {task_id};"""
+                )
+
+                result = db.execute(query)
+                task_bbox = result.fetchone()
+                log.debug(f"Extracted task bbox: {task_bbox}")
+
+                if task_bbox:
+                    min_lon, min_lat, max_lon, max_lat = task_bbox
+                else:
+                    log.error(f"Failed to get bbox from task: {project_id}")
+
+                task_basemap_outfile = f"{tiles_dir}/{task_id}_{source}tiles.{output_format}"
+
+                log.debug(
+                    "Creating basemap with params: "
+                    f"boundary={min_lon},{min_lat},{max_lon},{max_lat} | "
+                    f"outfile={task_basemap_outfile} | "
+                    f"zooms={zooms} | "
+                    f"outdir={tiles_dir} | "
+                    f"source={source} | "
+                    f"xy={False} | "
+                    f"tms={tms}"
+                )
+                create_basemap_file(
+                    boundary=f"{min_lon},{min_lat},{max_lon},{max_lat}",
+                    outfile=task_basemap_outfile,
+                    zooms=zooms,
+                    outdir=tiles_dir,
+                    source=source,
+                    xy=False,
+                    tms=tms,
+                )
+                log.info(f"Basemap created for task ID {task_id}: {task_basemap_outfile}")
+            except Exception as e:
+                log.error(str(e))
+                continue
 
         tile_path_instance.status = 4
         db.commit()
