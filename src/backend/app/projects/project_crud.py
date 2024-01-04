@@ -24,12 +24,12 @@ import time
 import uuid
 from asyncio import gather
 from concurrent.futures import ThreadPoolExecutor, wait
+from importlib.resources import files as pkg_files
 from io import BytesIO
 from typing import List, Optional, Union
 
 import geoalchemy2
 import geojson
-import pkg_resources
 import requests
 import segno
 import shapely.wkb as wkblib
@@ -64,13 +64,11 @@ from app.config import settings
 from app.db import db_models
 from app.db.database import get_db
 from app.db.postgis_utils import geojson_to_flatgeobuf, geometry_to_geojson, timestamp
+from app.organization import organization_crud
 from app.projects import project_schemas
-from app.s3 import add_obj_to_bucket
+from app.s3 import add_obj_to_bucket, get_obj_from_bucket
 from app.tasks import tasks_crud
 from app.users import user_crud
-from app.submission import submission_crud
-from app.s3 import get_obj_from_bucket
-from app.organization import organization_crud
 
 QR_CODES_DIR = "QR_codes/"
 TASK_GEOJSON_DIR = "geojson/"
@@ -974,11 +972,12 @@ async def read_xlsforms(
     """Read the list of XLSForms from the disk."""
     xlsforms = list()
     package_name = "osm_fieldwork"
+    package_files = pkg_files(package_name)
     for xls in os.listdir(directory):
         if xls.endswith(".xls") or xls.endswith(".xlsx"):
             file_name = xls.split(".")[0]
             yaml_file_name = f"data_models/{file_name}.yaml"
-            if pkg_resources.resource_exists(package_name, yaml_file_name):
+            if package_files.joinpath(yaml_file_name).is_file():
                 xlsforms.append(xls)
             else:
                 continue
@@ -2381,9 +2380,10 @@ async def get_pagination(page: int, count: int, results_per_page: int, total: in
 
 async def get_dashboard_detail(project_id: int, db: Session):
     """Get project details for project dashboard."""
-
     project = await get_project(db, project_id)
-    db_organization = await organization_crud.get_organisation_by_id(db, project.organisation_id)
+    db_organization = await organization_crud.get_organisation_by_id(
+        db, project.organisation_id
+    )
 
     s3_project_path = f"/{project.organisation_id}/{project_id}"
     s3_submission_path = f"/{s3_project_path}/submission.zip"
@@ -2396,28 +2396,38 @@ async def get_dashboard_detail(project_id: int, db: Session):
                 content = file_in_zip.read()
         content = json.loads(content)
         project.total_submission = len(content)
-        submission_meta = get_obj_from_bucket(settings.S3_BUCKET_NAME, s3_submission_meta_path)
-        project.last_active = (json.loads(submission_meta.getvalue()))["last_submission"]
+        submission_meta = get_obj_from_bucket(
+            settings.S3_BUCKET_NAME, s3_submission_meta_path
+        )
+        project.last_active = (json.loads(submission_meta.getvalue()))[
+            "last_submission"
+        ]
     except ValueError:
         project.total_submission = 0
         pass
 
-    contributors = db.query(
-        db_models.DbTaskHistory.user_id
-        ).filter(
-        db_models.DbTaskHistory.project_id == project_id,
-        db_models.DbTaskHistory.user_id.isnot(None)
-        ).distinct().count()
+    contributors = (
+        db.query(db_models.DbTaskHistory.user_id)
+        .filter(
+            db_models.DbTaskHistory.project_id == project_id,
+            db_models.DbTaskHistory.user_id.isnot(None),
+        )
+        .distinct()
+        .count()
+    )
 
     project.total_tasks = await tasks_crud.get_task_count_in_project(db, project_id)
-    project.organization, project.organization_logo = db_organization.name, db_organization.logo
+    project.organization, project.organization_logo = (
+        db_organization.name,
+        db_organization.logo,
+    )
     project.total_contributors = contributors
 
     return project
 
-async def get_project_users(db:Session, project_id:int):
-    """
-    Get the users and their contributions for a project.
+
+async def get_project_users(db: Session, project_id: int):
+    """Get the users and their contributions for a project.
 
     Args:
         db (Session): The database session.
@@ -2426,22 +2436,27 @@ async def get_project_users(db:Session, project_id:int):
     Returns:
         List[Dict[str, Union[str, int]]]: A list of dictionaries containing the username and the number of contributions made by each user for the specified project.
     """
-
-    contributors = db.query(db_models.DbTaskHistory).filter(db_models.DbTaskHistory.project_id==project_id).all()
-    unique_user_ids = {user.user_id for user in contributors if user.user_id is not None}
+    contributors = (
+        db.query(db_models.DbTaskHistory)
+        .filter(db_models.DbTaskHistory.project_id == project_id)
+        .all()
+    )
+    unique_user_ids = {
+        user.user_id for user in contributors if user.user_id is not None
+    }
     response = []
 
     for user_id in unique_user_ids:
         contributions = count_user_contributions(db, user_id, project_id)
         db_user = await user_crud.get_user(db, user_id)
-        response.append({"user":db_user.username, "contributions":contributions})
-    
+        response.append({"user": db_user.username, "contributions": contributions})
+
     response = sorted(response, key=lambda x: x["contributions"], reverse=True)
     return response
 
+
 def count_user_contributions(db: Session, user_id: int, project_id: int) -> int:
-    """
-    Count contributions for a specific user.
+    """Count contributions for a specific user.
 
     Args:
         db (Session): The database session.
@@ -2451,12 +2466,11 @@ def count_user_contributions(db: Session, user_id: int, project_id: int) -> int:
     Returns:
         int: The number of contributions made by the user for the specified project.
     """
-
     contributions_count = (
         db.query(func.count(db_models.DbTaskHistory.user_id))
         .filter(
             db_models.DbTaskHistory.user_id == user_id,
-            db_models.DbTaskHistory.project_id == project_id
+            db_models.DbTaskHistory.project_id == project_id,
         )
         .scalar()
     )
