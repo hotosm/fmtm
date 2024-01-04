@@ -22,8 +22,7 @@ from typing import List, Optional
 
 from dateutil import parser
 from geojson_pydantic import Feature as GeojsonFeature
-from pydantic import BaseModel, ValidationInfo
-from pydantic.functional_serializers import field_serializer
+from pydantic import BaseModel
 
 from app.db import db_models
 from app.models.enums import ProjectPriority, ProjectStatus, TaskSplitType
@@ -163,13 +162,8 @@ class ProjectDashboard(BaseModel):
     total_contributors: Optional[int] = None
     last_active: Optional[str] = None
 
-    @field_serializer("created")
-    def get_created(self, value: datetime, info: ValidationInfo):
-        date = value.strftime("%d %b %Y")
-        return date
-
-    @field_serializer("last_active")
-    def get_last_active(self, value: datetime, info: ValidationInfo):
+    @field_validator("last_active", mode="before")
+    def get_last_active(cls, value, values):
         if value is None:
             return None
 
