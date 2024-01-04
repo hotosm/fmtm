@@ -2171,6 +2171,16 @@ def get_project_tiles(
         )
         log.info(f"Basemap created for project ID {project_id}: {outfile}")
 
+        get_project_sync = async_to_sync(get_project)
+        project = get_project_sync(db, project_id)
+
+        from app.s3 import add_file_to_bucket
+        add_file_to_bucket(
+            settings.S3_BUCKET_NAME,
+            f"/{project.organisation_id}/{project_id}/basemap.mbtiles",
+            outfile
+        )
+
         tile_path_instance.status = 4
         db.commit()
 
