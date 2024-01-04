@@ -2233,6 +2233,14 @@ def get_project_tiles(
                 log.error(str(e))
                 continue
 
+            # Upload task mbtile to s3
+            add_file_to_bucket(
+                settings.S3_BUCKET_NAME,
+                f"/{project.organisation_id}/{project_id}/basemap/{task_id}.mbtiles",
+                task_basemap_outfile
+            )
+
+
         tile_path_instance.status = 4
         db.commit()
 
