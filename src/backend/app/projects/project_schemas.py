@@ -22,7 +22,7 @@ from dateutil import parser
 from typing import List, Optional
 
 from geojson_pydantic import Feature as GeojsonFeature
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 from app.db import db_models
 from app.models.enums import ProjectPriority, ProjectStatus, TaskSplitType
@@ -154,19 +154,19 @@ class BackgroundTaskStatus(BaseModel):
 class ProjectDashboard(BaseModel):
     project_name_prefix: str
     organization: str
-    organization_logo: Optional[str] = None
     total_tasks: int
-    total_submission: int
-    total_contributors: int
     created: datetime
+    organization_logo: Optional[str] = None
+    total_submission: Optional[int] = None
+    total_contributors: Optional[int] = None
     last_active: Optional[str] = None
 
-    @validator("created", pre=False, always=True)
+    @field_validator("created", mode="before")
     def get_created(cls, value, values):
         date = value.strftime("%d %b %Y")
         return date
     
-    @validator("last_active", pre=False, always=True)
+    @field_validator("last_active", mode="before")
     def get_last_active(cls, value, values):
         if value is None:
             return None
