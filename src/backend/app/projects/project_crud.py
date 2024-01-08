@@ -66,13 +66,17 @@ from app.db.database import get_db
 from app.db.postgis_utils import geojson_to_flatgeobuf, geometry_to_geojson, timestamp
 from app.organization import organization_crud
 from app.projects import project_schemas
-from app.s3 import add_obj_to_bucket, get_obj_from_bucket
+from app.s3 import (
+    add_file_to_bucket,
+    add_obj_to_bucket,
+    get_bucket_path,
+    get_obj_from_bucket,
+)
 from app.tasks import tasks_crud
 from app.users import user_crud
 
 QR_CODES_DIR = "QR_codes/"
 TASK_GEOJSON_DIR = "geojson/"
-TILESDIR = "/opt/tiles"
 
 
 async def get_projects(
@@ -2099,10 +2103,19 @@ def get_project_tiles(
     project_id: int,
     background_task_id: uuid.UUID,
     source: str,
+
+# NOTE defined as non-async to run in separate thread
+def generate_basemap_for_bbox(
+    db: Session,
+    project_id: int,
+    bbox: tuple,
+    background_task_id: uuid.UUID,
+    source: str,
     output_format: str = "mbtiles",
     tms: str = None,
+    task_id: int = None,
 ):
-    """Get the tiles for a project.
+    """Get basemap tiles for a project.
 
     Args:
         db (Session): SQLAlchemy db session.
@@ -2112,11 +2125,11 @@ def get_project_tiles(
         output_format (str, optional): Default "mbtiles".
             Other options: "pmtiles", "sqlite3".
         tms (str, optional): Default None. Custom TMS provider URL.
+        task_id (bool): If set, create for a task boundary only.
     """
     zooms = "12-19"
-    tiles_path_id = uuid.uuid4()
-    tiles_dir = f"{TILESDIR}/{tiles_path_id}"
-    outfile = f"{tiles_dir}/{project_id}_{source}tiles.{output_format}"
+    tiles_dir = "opt/tiles"
+    outfile = f"/tmp/{project_id}_{uuid.uuid4()}.{output_format}"
 
     tile_path_instance = db_models.DbTilesPath(
         project_id=project_id,
@@ -2130,36 +2143,9 @@ def get_project_tiles(
         db.add(tile_path_instance)
         db.commit()
 
-        # Project Outline
-        log.debug(f"Getting bbox for project: {project_id}")
-        query = text(
-            f"""SELECT ST_XMin(ST_Envelope(outline)) AS min_lon,
-                        ST_YMin(ST_Envelope(outline)) AS min_lat,
-                        ST_XMax(ST_Envelope(outline)) AS max_lon,
-                        ST_YMax(ST_Envelope(outline)) AS max_lat
-                FROM projects
-                WHERE id = {project_id};"""
-        )
+        # Get coords from bbox
+        min_lon, min_lat, max_lon, max_lat = bbox
 
-        result = db.execute(query)
-        project_bbox = result.fetchone()
-        log.debug(f"Extracted project bbox: {project_bbox}")
-
-        if project_bbox:
-            min_lon, min_lat, max_lon, max_lat = project_bbox
-        else:
-            log.error(f"Failed to get bbox from project: {project_id}")
-
-        log.debug(
-            "Creating basemap with params: "
-            f"boundary={min_lon},{min_lat},{max_lon},{max_lat} | "
-            f"outfile={outfile} | "
-            f"zooms={zooms} | "
-            f"outdir={tiles_dir} | "
-            f"source={source} | "
-            f"xy={False} | "
-            f"tms={tms}"
-        )
         create_basemap_file(
             boundary=f"{min_lon},{min_lat},{max_lon},{max_lat}",
             outfile=outfile,
@@ -2171,77 +2157,24 @@ def get_project_tiles(
         )
         log.info(f"Basemap created for project ID {project_id}: {outfile}")
 
+        get_bucket_path_sync = async_to_sync(get_bucket_path)
+        project_s3_path = get_bucket_path_sync(db, project_id)
 
-        get_project_sync = async_to_sync(get_project)
-        project = get_project_sync(db, project_id)
+        if task_id:
+            s3_tile_path = f"{project_s3_path}/basemaps/{task_id}.{output_format}"
+        else:
+            s3_tile_path = f"{project_s3_path}/basemap.{output_format}"
 
-        from app.s3 import add_file_to_bucket
         add_file_to_bucket(
             settings.S3_BUCKET_NAME,
-            f"/{project.organisation_id}/{project_id}/basemap.mbtiles",
-            outfile
+            s3_tile_path,
+            outfile,
         )
 
-        # Generate mbtiles for each task
-        get_tasks_async = async_to_sync(tasks_crud.get_task_id_list)
-        task_list = get_tasks_async(db, project_id)
-
-        for task_id in task_list:
-            try:
-                log.debug(f"Getting bbox for task: {task_id}")
-                query = text(
-                    f"""SELECT ST_XMin(ST_Envelope(outline)) AS min_lon,
-                                ST_YMin(ST_Envelope(outline)) AS min_lat,
-                                ST_XMax(ST_Envelope(outline)) AS max_lon,
-                                ST_YMax(ST_Envelope(outline)) AS max_lat
-                        FROM tasks
-                        WHERE id = {task_id};"""
-                )
-
-                result = db.execute(query)
-                task_bbox = result.fetchone()
-                log.debug(f"Extracted task bbox: {task_bbox}")
-
-                if task_bbox:
-                    min_lon, min_lat, max_lon, max_lat = task_bbox
-                else:
-                    log.error(f"Failed to get bbox from task: {project_id}")
-
-                task_basemap_outfile = f"{tiles_dir}/{task_id}_{source}tiles.{output_format}"
-
-                log.debug(
-                    "Creating basemap with params: "
-                    f"boundary={min_lon},{min_lat},{max_lon},{max_lat} | "
-                    f"outfile={task_basemap_outfile} | "
-                    f"zooms={zooms} | "
-                    f"outdir={tiles_dir} | "
-                    f"source={source} | "
-                    f"xy={False} | "
-                    f"tms={tms}"
-                )
-                create_basemap_file(
-                    boundary=f"{min_lon},{min_lat},{max_lon},{max_lat}",
-                    outfile=task_basemap_outfile,
-                    zooms=zooms,
-                    outdir=tiles_dir,
-                    source=source,
-                    xy=False,
-                    tms=tms,
-                )
-                log.info(f"Basemap created for task ID {task_id}: {task_basemap_outfile}")
-            except Exception as e:
-                log.error(str(e))
-                continue
-
-            # Upload task mbtile to s3
-            add_file_to_bucket(
-                settings.S3_BUCKET_NAME,
-                f"/{project.organisation_id}/{project_id}/basemap/{task_id}.mbtiles",
-                task_basemap_outfile
-            )
-
-
         tile_path_instance.status = 4
+        tile_path_instance.path = (
+            f"{settings.S3_DOWNLOAD_ROOT}/" f"{settings.S3_BUCKET_NAME}{s3_tile_path}"
+        )
         db.commit()
 
         # Update background task status to COMPLETED
@@ -2255,6 +2188,7 @@ def get_project_tiles(
         log.error(f"Tiles generation process failed for project id {project_id}")
 
         tile_path_instance.status = 2
+        tile_path_instance.path = ""
         db.commit()
 
         # Update background task status to FAILED

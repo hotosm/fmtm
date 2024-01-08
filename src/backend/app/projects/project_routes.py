@@ -20,7 +20,6 @@
 import json
 import os
 import uuid
-from pathlib import Path
 from typing import Optional
 
 import geojson
@@ -35,7 +34,7 @@ from fastapi import (
     Response,
     UploadFile,
 )
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from loguru import logger as log
 from osm_fieldwork.make_data_extract import getChoices
 from osm_fieldwork.xlsforms import xlsforms_path
@@ -992,6 +991,10 @@ async def download_features(project_id: int, db: Session = Depends(database.get_
 async def generate_project_tiles(
     background_tasks: BackgroundTasks,
     project_id: int,
+    task_id: str = Query(
+        None,
+        description="Optional task id to generate for",
+    ),
     source: str = Query(
         ..., description="Select a source for tiles", enum=TILES_SOURCE
     ),
@@ -1009,13 +1012,14 @@ async def generate_project_tiles(
     Args:
         background_tasks (BackgroundTasks): FastAPI bg tasks, provided automatically.
         project_id (int): ID of project to create tiles for.
+        task_id (int): Optional task ID (task area) to generate for.
         source (str): Tile source ("esri", "bing", "topo", "google", "oam").
         format (str, optional): Default "mbtiles". Other options: "pmtiles", "sqlite3".
         tms (str, optional): Default None. Custom TMS provider URL.
         db (Session): The database session, provided automatically.
 
     Returns:
-        str: Success message that tile generation started.
+        dict: Success message that tile generation started.
     """
     # Create task in db and return uuid
     log.debug(
@@ -1026,18 +1030,19 @@ async def generate_project_tiles(
         db, name="generate tiles", project_id=project_id
     )
 
-
     background_tasks.add_task(
-        project_crud.get_project_tiles,
+        project_crud.generate_project_or_task_basemap,
         db,
         project_id,
         background_task_id,
         source,
         format,
         tms,
+        task_id,
     )
 
-    return {"Message": "Tile generation started"}
+    return JSONResponse(status_code=200, content={"success": True})
+
 
 
 @router.get("/tiles_list/{project_id}/")
