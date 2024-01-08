@@ -2103,6 +2103,51 @@ def get_project_tiles(
     project_id: int,
     background_task_id: uuid.UUID,
     source: str,
+# NOTE defined as non-async to run in separate thread
+def generate_project_or_task_basemap(
+    db: Session,
+    project_id: int,
+    background_task_id: uuid.UUID,
+    source: str,
+    output_format: str = "pmtiles",
+    tms: str = None,
+    task_id: int = None,
+):
+    """For a given project or task area, generate a basemap."""
+    if not task_id:
+        # Project Outline
+        log.debug(f"Getting bbox for project: {project_id}")
+    else:
+        # Task Outline
+        log.debug(f"Getting bbox for task: {task_id}")
+
+    query = text(
+        f"""SELECT ST_XMin(ST_Envelope(outline)) AS min_lon,
+                    ST_YMin(ST_Envelope(outline)) AS min_lat,
+                    ST_XMax(ST_Envelope(outline)) AS max_lon,
+                    ST_YMax(ST_Envelope(outline)) AS max_lat
+            FROM {'tasks' if task_id else 'projects'}
+            WHERE id = {task_id if task_id else project_id};"""
+    )
+
+    result = db.execute(query)
+    db_bbox = result.fetchone()
+    if db_bbox:
+        log.debug(f"Extracted bbox: {db_bbox}")
+    else:
+        log.error(f"Failed to get bbox from project: {project_id}")
+
+    generate_basemap_for_bbox(
+        db,
+        project_id,
+        db_bbox,
+        background_task_id,
+        source,
+        output_format,
+        tms,
+        task_id,
+    )
+
 
 # NOTE defined as non-async to run in separate thread
 def generate_basemap_for_bbox(
