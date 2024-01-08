@@ -103,13 +103,15 @@ class TaskBase(BaseModel):
 
     @field_serializer("locked_by_uid")
     def get_locked_by_uid(self, value: str) -> str:
-        if lock_holder := self.lock_holder:
+        """Get lock uid from lock_holder details."""
+        if self.lock_holder:
             return self.lock_holder.id
         return None
 
     @field_serializer("locked_by_username")
     def get_locked_by_username(self, value: str) -> str:
-        if lock_holder := self.lock_holder:
+        """Get lock username from lock_holder details."""
+        if self.lock_holder:
             return self.lock_holder.username
         return None
 
