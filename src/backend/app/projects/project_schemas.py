@@ -18,11 +18,11 @@
 
 import uuid
 from datetime import datetime
-from dateutil import parser
 from typing import List, Optional
 
+from dateutil import parser
 from geojson_pydantic import Feature as GeojsonFeature
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 
 from app.db import db_models
 from app.models.enums import ProjectPriority, ProjectStatus, TaskSplitType
@@ -58,6 +58,7 @@ class ProjectUpload(BaseModel):
     task_split_type: Optional[TaskSplitType] = None
     task_split_dimension: Optional[int] = None
     task_num_buildings: Optional[int] = None
+    data_extract_type: Optional[str] = None
 
     # city: str
     # country: str
@@ -141,6 +142,7 @@ class ProjectBase(BaseModel):
 class ProjectOut(ProjectBase):
     project_uuid: uuid.UUID = uuid.uuid4()
 
+
 class ReadProject(ProjectBase):
     project_uuid: uuid.UUID = uuid.uuid4()
     location_str: str
@@ -161,11 +163,6 @@ class ProjectDashboard(BaseModel):
     total_contributors: Optional[int] = None
     last_active: Optional[str] = None
 
-    @field_validator("created", mode="before")
-    def get_created(cls, value, values):
-        date = value.strftime("%d %b %Y")
-        return date
-    
     @field_validator("last_active", mode="before")
     def get_last_active(cls, value, values):
         if value is None:
@@ -179,9 +176,9 @@ class ProjectDashboard(BaseModel):
         days_difference = time_difference.days
 
         if days_difference == 0:
-            return 'today'
+            return "today"
         elif days_difference == 1:
-            return 'yesterday'
+            return "yesterday"
         elif days_difference < 7:
             return f'{days_difference} day{"s" if days_difference > 1 else ""} ago'
         else:
