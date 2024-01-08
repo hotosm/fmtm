@@ -16,6 +16,7 @@ const CreateProjectService: Function = (
   formUpload: any,
   dataExtractFile: any,
   lineExtractFile: any,
+  basemapSelection: string,
 ) => {
   return async (dispatch) => {
     dispatch(CreateProjectActions.CreateProjectLoading(true));
@@ -73,6 +74,14 @@ const CreateProjectService: Function = (
             dataExtractFile,
           ),
         );
+        if (basemapSelection !== '') {
+          await dispatch(
+            GenerateBasemapsService(
+              `${import.meta.env.VITE_API_URL}/tiles/${resp.id}/init?source=${basemapSelection}`,
+              payload,
+            ),
+          );
+        }
 
         dispatch(CommonActions.SetLoading(false));
         dispatch(CreateProjectActions.CreateProjectLoading(true));
@@ -199,6 +208,26 @@ const GenerateProjectQRService: Function = (url: string, payload: any, formUploa
     };
 
     await postUploadArea(url, payload, formUpload);
+  };
+};
+const GenerateBasemapsService: Function = (url: string, payload: any) => {
+  return async (dispatch) => {
+    const triggerBasemapDownloads = async (url, payload) => {
+      try {
+        await axios.post(url);
+      } catch (error: any) {
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: JSON.stringify(error?.response?.data?.detail),
+            variant: 'error',
+            duration: 2000,
+          }),
+        );
+      }
+    };
+
+    await triggerBasemapDownloads(url, payload);
   };
 };
 
@@ -524,6 +553,7 @@ export {
   CreateProjectService,
   FormCategoryService,
   GenerateProjectQRService,
+  GenerateBasemapsService,
   OrganisationService,
   UploadCustomXLSFormService,
   GenerateProjectLog,

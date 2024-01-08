@@ -42,6 +42,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomLineUpload, se
   const uploadAreaSelection = useAppSelector((state) => state.createproject.uploadAreaSelection);
   const drawToggle = useAppSelector((state) => state.createproject.drawToggle);
   const totalAreaSelection = useAppSelector((state) => state.createproject.totalAreaSelection);
+  const basemapSelection = useAppSelector((state) => state.createproject.basemapSelection);
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
@@ -205,39 +206,23 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomLineUpload, se
                   btnText="Upload a Geojson"
                   errorMsg={errors.uploadedAreaFile}
                 />
-                // <div className="fmtm-mt-5 fmtm-pb-3">
-                //   <div className="fmtm-flex fmtm-items-center fmtm-gap-4">
-                //     <label
-                //       id="file-input"
-                //       className="fmtm-bg-primaryRed fmtm-text-white fmtm-px-4 fmtm-py-1 fmtm-rounded-md fmtm-cursor-pointer"
-                //     >
-                //       <p>Select a file</p>
-                //       <input
-                //         id="upload-area-geojson-file"
-                //         ref={geojsonFileRef}
-                //         type="file"
-                //         className="fmtm-hidden"
-                //         onChange={changeFileHandler}
-                //         accept=".geojson, .json"
-                //       />
-                //     </label>
-                //     <div className="fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-slate-100 fmtm-duration-300 fmtm-cursor-pointer">
-                //       <AssetModules.ReplayIcon className="fmtm-text-gray-600" onClick={() => resetFile()} />
-                //     </div>
-                //   </div>
-                //   {geojsonFile && (
-                //     <div className="fmtm-mt-2">
-                //       <p>{geojsonFile?.name}</p>
-                //     </div>
-                //   )}
-                //   <p className="fmtm-text-gray-700 fmtm-mt-3">
-                //     *The supported file formats are zipped shapefile, geojson or kml files.
-                //   </p>
-                //   <p className="fmtm-text-gray-700 fmtm-pt-8">
-                //     Total Area: <span className="fmtm-font-bold">234 sq.km</span>
-                //   </p>
-                // </div>
               )}
+            </div>
+            <div>
+              <p className="fmtm-text-gray-700 fmtm-pt-5 fmtm-pb-5 fmtm-font-bold">
+                Optional: generate basemaps for tasks
+              </p>
+              <select
+                value={basemapSelection}
+                onChange={(e) => handleCustomChange('basemapSelection', e.target.value)}
+                className="fmtm-mr-2"
+              >
+                <option value="">No</option>
+                <option value="esri">ESRI</option>
+                <option value="bing">Bing</option>
+                <option value="google">Google</option>
+                <option value="topo">Topographic</option>
+              </select>
             </div>
             <div className="fmtm-flex fmtm-gap-5 fmtm-mx-auto fmtm-mt-10 fmtm-my-5">
               <Button
