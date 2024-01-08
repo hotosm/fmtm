@@ -1069,19 +1069,7 @@ async def download_tiles(tile_id: int, db: Session = Depends(database.get_db)):
         .first()
     )
     log.info(f"User requested download for tiles: {tiles_path.path}")
-
-    project_id = tiles_path.project_id
-    project = await project_crud.get_project(db, project_id)
-    project_name = project.project_name_prefix
-    filename = Path(tiles_path.path).name.replace(
-        f"{project_id}_", f"{project_name.replace(' ', '_')}_"
-    )
-    log.debug(f"Sending tile archive to user: {filename}")
-
-    return FileResponse(
-        tiles_path.path,
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+    return RedirectResponse(tiles_path.path)
 
 
 @router.get("/boundary_in_osm/{project_id}/")
