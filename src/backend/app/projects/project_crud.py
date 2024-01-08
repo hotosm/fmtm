@@ -2101,22 +2101,79 @@ async def get_extracted_data_from_db(db: Session, project_id: int, outfile: str)
 
 
 # NOTE defined as non-async to run in separate thread
-def get_project_tiles(
+def init_project_basemaps(
     db: Session,
     project_id: int,
     background_task_id: uuid.UUID,
     source: str,
+) -> None:
+    """Init basemaps for the project and task areas.
+
+    A PMTiles archive is created for the entire project, plus
+    individual mbtile archives for each task area.
+
+    Args:
+        db (Session): SQLAlchemy db session.
+        project_id (int): Associated project ID.
+        background_task_id (uuid.UUID): Pre-generated background task ID.
+        source (str): Source to use for basemap tiles.
+
+    Returns:
+        None
+    """
+    # Generate PMTiles for project area
+    generate_project_or_task_basemap(
+        db,
+        project_id,
+        background_task_id,
+        source,
+        output_format="pmtiles",
+    )
+
+    # Generate MBTiles for each task
+    get_tasks_async = async_to_sync(tasks_crud.get_task_id_list)
+    task_list = get_tasks_async(db, project_id)
+
+    # TODO optimise to run with threadpool
+    for task_id in task_list:
+        generate_project_or_task_basemap(
+            db,
+            project_id,
+            background_task_id,
+            source,
+            output_format="mbtiles",
+            task_id=task_id,
+        )
+
+
 # NOTE defined as non-async to run in separate thread
 def generate_project_or_task_basemap(
     db: Session,
     project_id: int,
     background_task_id: uuid.UUID,
-    source: str,
+    source: str = "esri",
     output_format: str = "pmtiles",
     tms: str = None,
     task_id: int = None,
-):
-    """For a given project or task area, generate a basemap."""
+) -> None:
+    """For a given project or task area, generate a basemap.
+
+    Wrapper that extracts the project or task bbox prior to calling
+    generate_basemap_for_bbox function.
+
+    Args:
+        db (Session): SQLAlchemy db session.
+        project_id (int): ID of project to create tiles for.
+        background_task_id (uuid.UUID): UUID of background task to track.
+        source (str): Tile source ("esri", "bing", "topo", "google", "oam").
+        output_format (str, optional): Default "mbtiles".
+            Other options: "pmtiles", "sqlite3".
+        tms (str, optional): Default None. Custom TMS provider URL.
+        task_id (bool): If set, create for a task boundary only.
+
+    Returns:
+        None
+    """
     if not task_id:
         # Project Outline
         log.debug(f"Getting bbox for project: {project_id}")
@@ -2163,11 +2220,12 @@ def generate_basemap_for_bbox(
     tms: str = None,
     task_id: int = None,
 ):
-    """Get basemap tiles for a project.
+    """Get basemap tiles for a given bounding box.
 
     Args:
         db (Session): SQLAlchemy db session.
         project_id (int): ID of project to create tiles for.
+        bbox (tuple): the bounding box for generate for.
         background_task_id (uuid.UUID): UUID of background task to track.
         source (str): Tile source ("esri", "bing", "topo", "google", "oam").
         output_format (str, optional): Default "mbtiles".

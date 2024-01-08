@@ -1044,6 +1044,42 @@ async def generate_project_tiles(
     return JSONResponse(status_code=200, content={"success": True})
 
 
+@router.get("/tiles/{project_id}/init")
+async def init_project_tiles(
+    background_tasks: BackgroundTasks,
+    project_id: int,
+    source: str = Query(
+        ..., description="Select a source for tiles", enum=TILES_SOURCE
+    ),
+    db: Session = Depends(database.get_db),
+):
+    """Init all basemaps for a project, optional on project creation.
+
+    Args:
+        project_id (int): ID of project to create tiles for.
+        source (str): Tile source ("esri", "bing", "topo", "google", "oam").
+
+    Returns:
+        dict: Success message that tile generation started.
+    """
+    # Create task in db and return uuid
+    log.debug(
+        f"Creating init_project_tiles background task for project ID: {project_id}"
+    )
+    background_task_id = await project_crud.insert_background_task_into_database(
+        db, name="init tiles", project_id=project_id
+    )
+
+    background_tasks.add_task(
+        project_crud.init_project_basemaps,
+        db,
+        project_id,
+        background_task_id,
+        source,
+    )
+
+    return JSONResponse(status_code=200, content={"success": True})
+
 
 @router.get("/tiles_list/{project_id}/")
 async def tiles_list(project_id: int, db: Session = Depends(database.get_db)):
