@@ -426,6 +426,11 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
                   splittedGeojson={dividedTaskGeojson}
                   uploadedOrDrawnGeojsonFile={drawnGeojson}
                   buildingExtractedGeojson={dataExtractGeojson}
+                  onModify={(geojson) => {
+                    handleCustomChange('drawnGeojson', geojson);
+                    dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
+                    setGeojsonFile(null);
+                  }}
                 />
               </div>
               {generateProjectLog ? (
