@@ -130,7 +130,6 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
     } else {
       projectData = { ...projectData, task_split_dimension: projectDetails.dimension };
     }
-    console.log(projectData, 'projectData');
     dispatch(
       CreateProjectService(
         `${import.meta.env.VITE_API_URL}/projects/create_project`,
@@ -428,7 +427,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
                   buildingExtractedGeojson={dataExtractGeojson}
                   onModify={(geojson) => {
                     handleCustomChange('drawnGeojson', geojson);
-                    dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
+                    dispatch(CreateProjectActions.SetDividedTaskGeojson(JSON.parse(geojson)));
                     setGeojsonFile(null);
                   }}
                 />
