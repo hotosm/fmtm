@@ -53,3 +53,14 @@ export const createLoginWindow = (redirectTo) => {
       window.addEventListener('message', handleLoginPopup);
     });
 };
+
+export const revokeCookie = async () => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/logout/`, { credentials: 'include' });
+    if (!response.ok) {
+      console.error('/auth/logout endpoint did not return 200 response');
+    }
+  } catch (error) {
+    throw error;
+  }
+};
