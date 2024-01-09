@@ -116,8 +116,8 @@ interface ICustomSelect {
   valueKey: string;
   label: string;
   onValueChange: (value: string | null | number) => void;
-  errorMsg: string;
-  className: string;
+  errorMsg?: string;
+  className?: string;
 }
 
 export const CustomSelect = ({
@@ -138,7 +138,7 @@ export const CustomSelect = ({
       <div className="fmtm-flex fmtm-items-end ">
         <div className={`fmtm-w-full ${className}`}>
           <Select value={value} onValueChange={(value) => onValueChange(value)}>
-            <SelectTrigger className="">
+            <SelectTrigger className="fmtm-h-[2.35rem]">
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
             <SelectContent>
