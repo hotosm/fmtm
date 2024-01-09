@@ -57,6 +57,7 @@ import {
   ImportExport as ImportExportIcon,
   Check as CheckIcon,
   ArrowBackIos as ArrowBackIosIcon,
+  CloudUploadOutlined as CloudUploadOutlinedIcon,
 } from '@mui/icons-material';
 import LockPng from '../assets/images/lock.png';
 import RedLockPng from '../assets/images/red-lock.png';
@@ -124,4 +125,5 @@ export default {
   ImportExportIcon,
   CheckIcon,
   ArrowBackIosIcon,
+  CloudUploadOutlinedIcon,
 };
