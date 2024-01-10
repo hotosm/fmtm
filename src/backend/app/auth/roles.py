@@ -51,7 +51,7 @@ async def super_admin(
 
     if not match:
         log.error(f"User ID {user_id} requested an admin endpoint, but is not admin")
-        raise HTTPException(status_code=401, detail="User must be an administrator")
+        raise HTTPException(status_code=403, detail="User must be an administrator")
 
     return user_data
 
@@ -69,7 +69,7 @@ async def validator(
 
     if not match:
         log.error(f"User ID {user_id} has no access to project ID {project_id}")
-        raise HTTPException(status_code=401, detail="User has no access to project")
+        raise HTTPException(status_code=403, detail="User has no access to project")
 
     if match.role.value < ProjectRole.VALIDATOR.value:
         log.error(
@@ -77,7 +77,7 @@ async def validator(
             f"for project ID {project_id}"
         )
         raise HTTPException(
-            status_code=401, detail="User is not a validator for this project"
+            status_code=403, detail="User is not a validator for this project"
         )
 
     return user_data
