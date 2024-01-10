@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import ProjectDescriptionTab from './ProjectDescriptionTab';
 import FormUpdateTab from './FormUpdateTab';
 
-const tabList = ['Project Description', 'Form Update'];
+const tabList: ['Project Description', 'Form Update'] = ['Project Description', 'Form Update'];
 
 const EditTab = () => {
-  const [tabView, setTabView] = useState<'Project Description' | 'Form Update' | string>('Project Details');
+  const [tabView, setTabView] = useState<'Project Description' | 'Form Update'>('Project Description');
 
   return (
     <div>

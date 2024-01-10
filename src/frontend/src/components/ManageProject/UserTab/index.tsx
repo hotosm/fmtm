@@ -4,7 +4,7 @@ import InviteTab from './InviteTab';
 import Table, { TableHeader } from '../../common/CustomTable';
 import AssetModules from '../../../shared/AssetModules.js';
 
-const tabList = ['Assign', 'Invite'];
+const tabList: ['Assign', 'Invite'] = ['Assign', 'Invite'];
 const data = [
   {
     username: 'Adarsha Kumar Sharma',
@@ -39,11 +39,11 @@ const data = [
 ];
 
 const UserTab = () => {
-  const [tabView, setTabView] = useState<'Assign' | 'Invite' | string>('Assign');
+  const [tabView, setTabView] = useState<'Assign' | 'Invite'>('Assign');
 
   return (
-    <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-10 fmtm-w-full">
-      <div className=" fmtm-w-[23%] fmtm-min-w-[14rem]">
+    <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5 lg:fmtm-gap-10 fmtm-w-full">
+      <div className="fmtm-max-w-[18rem] lg:fmtm-w-[23%] lg:fmtm-min-w-[14rem]">
         <div className="fmtm-flex fmtm-gap-3 fmtm-mb-5">
           {tabList.map((tab) => (
             <div

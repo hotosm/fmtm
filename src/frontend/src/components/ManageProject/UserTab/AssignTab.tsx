@@ -15,7 +15,7 @@ const AssignTab = () => {
   const [assignUser, setAssignUser] = useState<string[]>([]);
   const [assignedRole, setAssignedRole] = useState<string>('');
   return (
-    <div className="fmtm-flex fmtm-flex-col fmtm-gap-10">
+    <div className="fmtm-flex fmtm-flex-col fmtm-gap-5 lg:fmtm-gap-10">
       <div>
         <div className="fmtm-flex fmtm-gap-2">
           <div className="fmtm-flex-grow">
