@@ -13,7 +13,6 @@ CREATE TYPE public.projectrole as ENUM (
     'PROJECT_MANAGER',
     'ORGANIZATION_ADMIN'
 );
-ALTER TYPE public.projectrole OWNER TO fmtm;
 ALTER TABLE public.user_roles ALTER COLUMN "role" TYPE public.projectrole;
 
 -- Commit the transaction
