@@ -10,13 +10,13 @@ const tabList = [
 const ManageProject = () => {
   const [tabView, setTabView] = useState<'users' | 'edit' | string>('users');
   return (
-    <div className="fmtm-flex fmtm-bg-[#F5F5F5] fmtm-p-5 fmtm-gap-8 fmtm-min-h-full">
-      <div>
+    <div className="fmtm-flex fmtm-bg-[#F5F5F5] fmtm-p-5 fmtm-gap-8 lg:fmtm-min-h-full">
+      <div className="fmtm-w-[15%] fmtm-min-w-[7.3rem]">
         <div className="fmtm-flex fmtm-items-center fmtm-mb-8">
           <AssetModules.ArrowBackIosIcon style={{ fontSize: '20px' }} />
           <p className="fmtm-text-base">BACK</p>
         </div>
-        <div className="fmtm-w-[15rem]">
+        <div className="">
           {tabList.map((tab) => (
             <div
               key={tab.id}
@@ -31,7 +31,7 @@ const ManageProject = () => {
           ))}
         </div>
       </div>
-      <div>
+      <div className="fmtm-w-[calc(100%-140px)] lg:fmtm-w-[85%]">
         <h2 className="fmtm-font-archivo fmtm-text-xl fmtm-font-semibold fmtm-text-[#484848] fmtm-tracking-wider fmtm-mb-8">
           Cameroon Road Assessment for Sustainable Development in Rural Communities in Africa
         </h2>
