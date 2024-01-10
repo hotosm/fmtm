@@ -34,12 +34,15 @@ if settings.DEBUG:
 
 
 class AuthUser(BaseModel):
+    """The user model returned from OSM OAuth2."""
+
     id: int
     username: str
     img_url: Optional[str]
 
 
-def init_osm_auth():
+async def init_osm_auth():
+    """Initialise Auth object from osm-login-python."""
     return Auth(
         osm_url=settings.OSM_URL,
         client_id=settings.OSM_CLIENT_ID,
@@ -50,8 +53,11 @@ def init_osm_auth():
     )
 
 
-def login_required(request: Request, access_token: str = Header(None)):
-    osm_auth = init_osm_auth()
+async def login_required(
+    request: Request, access_token: str = Header(None)
+) -> AuthUser:
+    """Dependency to inject into endpoints requiring login."""
+    osm_auth = await init_osm_auth()
 
     # Attempt extract from cookie if access token not passed
     if not access_token:
