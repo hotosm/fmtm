@@ -62,7 +62,6 @@ import {
   AccessTime as AccessTimeIcon,
   ImportExport as ImportExportIcon,
   Check as CheckIcon,
-  ArrowBackIos as ArrowBackIosIcon,
   CloudUploadOutlined as CloudUploadOutlinedIcon,
 } from '@mui/icons-material';
 import LockPng from '../assets/images/lock.png';
@@ -136,6 +135,5 @@ export default {
   AccessTimeIcon,
   ImportExportIcon,
   CheckIcon,
-  ArrowBackIosIcon,
   CloudUploadOutlinedIcon,
 };
