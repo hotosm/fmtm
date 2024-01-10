@@ -3,34 +3,40 @@ import AssignTab from './AssignTab';
 import InviteTab from './InviteTab';
 import Table, { TableHeader } from '../../common/CustomTable';
 import AssetModules from '../../../shared/AssetModules.js';
+import KebabMenu from '../../common/KebabMenu';
 
 const tabList: ['Assign', 'Invite'] = ['Assign', 'Invite'];
 const data = [
   {
+    id: 1,
     username: 'Adarsha Kumar Sharma',
     role: 'Municipal Admin',
     user_status: 'Active',
     last_contribution: '1/5/2024',
   },
   {
+    id: 2,
     username: 'Adarsha Kumar Sharma',
     role: 'Municipal Admin',
     user_status: 'Active',
     last_contribution: '1/5/2024',
   },
   {
+    id: 3,
     username: 'Adarsha Kumar Sharma',
     role: 'Municipal Admin',
     user_status: 'Active',
     last_contribution: '1/5/2024',
   },
   {
+    id: 4,
     username: 'Adarsha Kumar Sharma',
     role: 'Municipal Admin',
     user_status: 'Active',
     last_contribution: '1/5/2024',
   },
   {
+    id: 5,
     username: 'Adarsha Kumar Sharma',
     role: 'Municipal Admin',
     user_status: 'Active',
@@ -40,10 +46,15 @@ const data = [
 
 const UserTab = () => {
   const [tabView, setTabView] = useState<'Assign' | 'Invite'>('Assign');
+  const [openedModalId, setOpenedModalId] = useState('');
+
+  const handleEdit = () => {};
+  const handleDelete = () => {};
+  const handleResendInvitation = () => {};
 
   return (
     <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5 lg:fmtm-gap-10 fmtm-w-full">
-      <div className="fmtm-max-w-[18rem] lg:fmtm-w-[23%] lg:fmtm-min-w-[14rem]">
+      <div className="fmtm-max-w-[18rem] lg:fmtm-w-[23%] lg:fmtm-min-w-[18rem]">
         <div className="fmtm-flex fmtm-gap-3 fmtm-mb-5">
           {tabList.map((tab) => (
             <div
@@ -59,8 +70,13 @@ const UserTab = () => {
         </div>
         <div>{tabView === 'Assign' ? <AssignTab /> : <InviteTab />}</div>
       </div>
-      {/* <div className="fmtm-h-full fmtm-bg-red-400 fmtm-w-full"> */}
-      <Table style={{ 'max-height': '60vh' }} data={data} onRowClick={() => {}} isLoading={false}>
+      <Table
+        flag="primarytable"
+        style={{ 'max-height': '60vh', width: '100%' }}
+        data={data}
+        onRowClick={() => {}}
+        isLoading={false}
+      >
         <TableHeader
           dataField="SN"
           headerClassName="snHeader"
@@ -113,13 +129,36 @@ const UserTab = () => {
           headerClassName="codeHeader"
           rowClassName="codeRow"
           dataFormat={(row) => (
-            <div className="fmtm-w-[1.5rem] fmtm-overflow-hidden fmtm-truncate" title={row?.last_contribution}>
-              <AssetModules.MoreVertIcon />
+            <div className="fmtm-truncate fmtm-w-[1.5rem]" title={row?.last_contribution}>
+              <div className="fmtm-absolute fmtm-top-[20%] fmtm-left-[15%]">
+                <KebabMenu
+                  stopPropagation
+                  options={[
+                    {
+                      id: 1,
+                      icon: <AssetModules.EditOutlinedIcon className="fmtm-text-[#757575]" />,
+                      label: 'Edit',
+                      onClick: handleEdit,
+                    },
+                    {
+                      id: 2,
+                      icon: <AssetModules.AutorenewIcon />,
+                      label: 'Resend Invitation',
+                      onClick: handleResendInvitation,
+                    },
+                    { id: 3, icon: <AssetModules.DeleteOutlinedIcon />, label: 'Remove', onClick: handleDelete },
+                  ]}
+                  pid={row.id}
+                  openedModalId={openedModalId}
+                  onDropdownOpen={() => {
+                    setOpenedModalId(row.id);
+                  }}
+                />
+              </div>
             </div>
           )}
         />
       </Table>
-      {/* </div> */}
     </div>
   );
 };
