@@ -1,6 +1,17 @@
 import React, { useState, useRef, useLayoutEffect, useEffect, useCallback } from 'react';
-import PropTypes from 'prop-types';
 import AssetModules from '../../shared/AssetModules.js';
+
+type optionType = { id: number | string; icon: React.ReactNode; label: string; onClick: any };
+
+type kebabMenuType = {
+  options: optionType[];
+  stopPropagation: boolean;
+  direction?: 'left-top' | 'left-bottom' | 'right-bottom' | 'right-top' | 'top-left' | 'top-right';
+  data: {};
+  pid: string | number;
+  openedModalId: string | number;
+  onDropdownOpen: () => void;
+};
 
 function getPosition(direction) {
   switch (direction) {
@@ -21,7 +32,15 @@ function getPosition(direction) {
   }
 }
 
-function KebabMenu({ options, stopPropagation, direction, data, pid, openedModalId, onDropdownOpen }) {
+function KebabMenu({
+  options,
+  stopPropagation,
+  direction = 'left-bottom',
+  data,
+  pid,
+  openedModalId,
+  onDropdownOpen,
+}: kebabMenuType) {
   const [toggle, handleToggle] = useState(false);
   const toggleRef = useRef(null);
   const nodeRef = useRef<HTMLInputElement>(null);
@@ -31,7 +50,7 @@ function KebabMenu({ options, stopPropagation, direction, data, pid, openedModal
   useLayoutEffect(() => {
     if (!toggle || !dropdownRef?.current) return;
     const { bottom } = dropdownRef?.current?.getBoundingClientRect();
-    const { height } = nodeRef?.current?.getBoundingClientRect();
+    const { height } = nodeRef?.current?.getBoundingClientRect() || { height: 0 };
     const windowHeight = window.innerHeight;
     if (bottom + height > windowHeight) {
       setPosition('top-left');
@@ -93,7 +112,7 @@ function KebabMenu({ options, stopPropagation, direction, data, pid, openedModal
           className="fmtm-py-0 fmtm-text-sm fmtm-text-grey-700 pm-dropdown_menu mt-2"
           aria-labelledby="dropdownMenuIconButton"
         >
-          {options.map(({ id, label, onClick, icon }) => (
+          {options.map(({ id, label, onClick, icon }: optionType) => (
             <li
               role="presentation"
               key={id}
@@ -113,19 +132,5 @@ function KebabMenu({ options, stopPropagation, direction, data, pid, openedModal
     </div>
   );
 }
-
-KebabMenu.defaultProps = {
-  options: [],
-  direction: 'left-top',
-  stopPropagation: true,
-  data: {},
-};
-
-KebabMenu.propTypes = {
-  options: PropTypes.array,
-  direction: PropTypes.string,
-  stopPropagation: true,
-  data: PropTypes.any,
-};
 
 export default KebabMenu;

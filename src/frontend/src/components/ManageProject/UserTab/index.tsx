@@ -149,6 +149,7 @@ const UserTab = () => {
                     { id: 3, icon: <AssetModules.DeleteOutlinedIcon />, label: 'Remove', onClick: handleDelete },
                   ]}
                   pid={row.id}
+                  data={row}
                   openedModalId={openedModalId}
                   onDropdownOpen={() => {
                     setOpenedModalId(row.id);
