@@ -13,7 +13,8 @@ CREATE TYPE public.projectrole as ENUM (
     'PROJECT_MANAGER',
     'ORGANIZATION_ADMIN'
 );
-ALTER TABLE public.user_roles ALTER COLUMN "role" TYPE public.projectrole;
+ALTER TABLE public.user_roles ALTER COLUMN "role" TYPE VARCHAR(24);
+ALTER TABLE public.user_roles ALTER COLUMN "role" TYPE public.projectrole USING role::public.projectrole;
 
 -- Commit the transaction
 COMMIT;
