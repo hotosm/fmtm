@@ -63,6 +63,9 @@ import {
   ImportExport as ImportExportIcon,
   Check as CheckIcon,
   CloudUploadOutlined as CloudUploadOutlinedIcon,
+  Autorenew as AutorenewIcon,
+  EditOutlined as EditOutlinedIcon,
+  DeleteOutlined as DeleteOutlinedIcon,
 } from '@mui/icons-material';
 import LockPng from '../assets/images/lock.png';
 import RedLockPng from '../assets/images/red-lock.png';
@@ -136,4 +139,7 @@ export default {
   ImportExportIcon,
   CheckIcon,
   CloudUploadOutlinedIcon,
+  AutorenewIcon,
+  EditOutlinedIcon,
+  DeleteOutlinedIcon,
 };
