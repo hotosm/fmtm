@@ -207,8 +207,8 @@ export default class Table extends Component {
           })}
           className={`${trClassName && trClassName(row)} ${
             flag.toLowerCase() === 'dashboard' ? '' : 'hover:fmtm-bg-active_bg'
-          } fmtm-cursor-pointer fmtm-ease-in fmtm-duration-100 fmtm-h-[50px] 
-      fmtm-items-baseline fmtm-relative fmtm-bg-white`}
+          } fmtm-cursor-pointer fmtm-ease-in fmtm-duration-100 fmtm-h-[50px]
+          fmtm-items-baseline fmtm-relative fmtm-bg-white`}
         >
           {fields.map(
             (field, ind) =>
@@ -232,7 +232,7 @@ export default class Table extends Component {
     return (
       <div
         ref={parentloadMoreRef}
-        className={`fmtm-block fmtm-pb-1 fmtm-relative fmtm-z-[2] fmtm-overflow-x-auto fmtm-mt-3 scrollbar ${tableClassName}`}
+        className={`fmtm-block fmtm-pb-1 fmtm-overflow-x-auto fmtm-mt-3 scrollbar ${tableClassName}`}
         style={style}
       >
         <table
