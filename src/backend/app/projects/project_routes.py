@@ -434,6 +434,16 @@ async def task_split(
 
     # read data extract
     parsed_extract = geojson.loads(await extract_geojson.read())
+
+    # Tags received are stringified
+    # Check if 'tags' is a string before attempting to load it and load to json if required.
+    for feature in parsed_extract.get('features', []):
+        properties = feature.get('properties', {})
+        tags_value = properties.get('tags', None)
+        
+        if isinstance(tags_value, str):
+            properties['tags'] = json.loads(tags_value)
+
     check_crs(parsed_extract)
 
     return await project_crud.split_geojson_into_tasks(
