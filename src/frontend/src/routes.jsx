@@ -19,6 +19,7 @@ import ProjectDetails from './views/ProjectDetails';
 import UnderConstruction from './views/UnderConstruction';
 import ErrorBoundary from './views/ErrorBoundary';
 import NewProjectDetails from './views/NewProjectDetails';
+import ProjectSubmissions from './views/ProjectSubmissions';
 import ProjectDetailsV2 from './views/ProjectDetailsV2';
 import ManageProject from './views/ManageProject';
 
@@ -75,6 +76,19 @@ const routes = createBrowserRouter([
             <Suspense fallback={<div></div>}>
               <ErrorBoundary>
                 <ProjectInfo />
+              </ErrorBoundary>
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+
+      {
+        path: '/project-submissions/:projectId',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div></div>}>
+              <ErrorBoundary>
+                <ProjectSubmissions />
               </ErrorBoundary>
             </Suspense>
           </ProtectedRoute>
