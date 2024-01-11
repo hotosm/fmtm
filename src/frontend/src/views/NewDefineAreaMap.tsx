@@ -4,6 +4,8 @@ import { MapContainer as MapComponent } from '../components/MapComponent/OpenLay
 import LayerSwitcherControl from '../components/MapComponent/OpenLayersComponent/LayerSwitcher/index.js';
 import { VectorLayer } from '../components/MapComponent/OpenLayersComponent/Layers';
 import { GeoJSONFeatureTypes } from '../store/types/ICreateProject';
+import CoreModules from '../shared/CoreModules.js';
+import { Loader2 } from 'lucide-react';
 
 type NewDefineAreaMapProps = {
   drawToggle?: boolean;
@@ -30,6 +32,7 @@ const NewDefineAreaMap = ({
     maxZoom: 25,
   });
   const isDrawOrGeojsonFile = drawToggle || uploadedOrDrawnGeojsonFile;
+  const isFgbFetching = CoreModules.useAppSelector((state) => state.createproject.isFgbFetching);
 
   return (
     <div className="map-container" style={{ height: '600px', width: '100%' }}>
@@ -115,6 +118,12 @@ const NewDefineAreaMap = ({
             }}
             zoomToLayer
           />
+        )}
+        {isFgbFetching && (
+          <div className="fmtm-absolute fmtm-top-0 fmtm-left-0 fmtm-z-50 fmtm-flex fmtm-items-center fmtm-justify-center fmtm-w-full fmtm-pt-2">
+            <Loader2 className="fmtm-mr-2 fmtm-h-6 fmtm-w-6 fmtm-animate-spin fmtm-text-red-600" />
+            <p className="fmtm-text-red-600">Data extraction is currently in progress. </p>
+          </div>
         )}
       </MapComponent>
     </div>
