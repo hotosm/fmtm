@@ -219,6 +219,11 @@ const CreateProject = createSlice({
     SetFgbFetchingStatus(state, action) {
       state.isFgbFetching = action.payload;
     },
+    ClearProjectStepState(state) {
+      state.dividedTaskGeojson = null;
+      state.splitTasksSelection = null;
+      state.dataExtractGeojson = null;
+    },
   },
 });
 
