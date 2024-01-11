@@ -379,8 +379,8 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
                           className=""
                           icon={<AssetModules.SettingsIcon className="fmtm-text-white" />}
                           disabled={
-                            splitTasksSelection === task_split_type['task_splitting_algorithm'] &&
-                            !formValues?.average_buildings_per_task &&
+                            (splitTasksSelection === task_split_type['task_splitting_algorithm'] &&
+                              !formValues?.average_buildings_per_task) ||
                             isFgbFetching
                               ? true
                               : false
