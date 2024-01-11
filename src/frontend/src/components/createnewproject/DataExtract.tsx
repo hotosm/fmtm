@@ -46,6 +46,7 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
       const projectAreaBlob = new Blob([JSON.stringify(drawnGeojson)], { type: 'application/json' });
       const drawnGeojsonFile = new File([projectAreaBlob], 'outline.json', { type: 'application/json' });
 
+      dispatch(CreateProjectActions.SetFgbFetchingStatus(true));
       // Create form and POST endpoint
       const dataExtractRequestFormData = new FormData();
       dataExtractRequestFormData.append('geojson_file', drawnGeojsonFile);
@@ -67,8 +68,18 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
         const uint8ArrayData = new Uint8Array(binaryData);
         // Deserialize the binary data
         const geojsonExtract = await fgbGeojson.deserialize(uint8ArrayData);
+        dispatch(CreateProjectActions.SetFgbFetchingStatus(false));
         await dispatch(CreateProjectActions.setDataExtractGeojson(geojsonExtract));
       } catch (error) {
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: 'Error to generate FGB file.',
+            variant: 'error',
+            duration: 2000,
+          }),
+        );
+        dispatch(CreateProjectActions.SetFgbFetchingStatus(false));
         // TODO add error message for user
         console.error('Error getting data extract:', error);
       }

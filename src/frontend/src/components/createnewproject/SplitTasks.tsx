@@ -61,6 +61,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
     (state) => state.createproject.taskSplittingGeojsonLoading,
   );
   const isTasksGenerated = CoreModules.useAppSelector((state) => state.createproject.isTasksGenerated);
+  const isFgbFetching = CoreModules.useAppSelector((state) => state.createproject.isFgbFetching);
 
   const toggleStep = (step, url) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
@@ -379,7 +380,8 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
                           icon={<AssetModules.SettingsIcon className="fmtm-text-white" />}
                           disabled={
                             splitTasksSelection === task_split_type['task_splitting_algorithm'] &&
-                            !formValues?.average_buildings_per_task
+                            !formValues?.average_buildings_per_task &&
+                            isFgbFetching
                               ? true
                               : false
                           }
