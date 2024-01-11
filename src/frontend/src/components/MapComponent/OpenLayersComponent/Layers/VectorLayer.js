@@ -74,8 +74,10 @@ const VectorLayer = ({
         dataProjection: 'EPSG:4326',
         featureProjection: 'EPSG:3857',
       });
+      const geometry = vectorLayer.getSource().getFeatures()?.[0].getGeometry();
+      const area = formatArea(geometry);
 
-      onModify(geoJSONString);
+      onModify(geoJSONString, area);
     });
     map.addInteraction(modify);
     map.addInteraction(select);
