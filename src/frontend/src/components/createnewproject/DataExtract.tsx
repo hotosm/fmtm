@@ -142,6 +142,15 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
   }, [formValues?.dataExtractWays, formValues?.dataExtractFeatureType]);
 
   const toggleStep = (step, url) => {
+    if (url === '/select-form') {
+      dispatch(
+        CreateProjectActions.SetIndividualProjectDetailsData({
+          ...formValues,
+          dataExtractWays: extractWays,
+          dataExtractFeatureType: null,
+        }),
+      );
+    }
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
     navigate(url);
   };
@@ -232,7 +241,7 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
                 topic="You may choose to use OSM data or upload your own data extract"
                 options={dataExtractOptions}
                 direction="column"
-                value={extractWays}
+                value={formValues.dataExtractWays}
                 onChangeData={(value) => {
                   handleCustomChange('dataExtractWays', value);
                   setExtractWays(value);

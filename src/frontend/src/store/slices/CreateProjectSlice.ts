@@ -223,6 +223,7 @@ const CreateProject = createSlice({
       state.dividedTaskGeojson = null;
       state.splitTasksSelection = null;
       state.dataExtractGeojson = null;
+      state.projectDetails = { ...state.projectDetails, customLineUpload: null, customPolygonUpload: null };
     },
   },
 });
