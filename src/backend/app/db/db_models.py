@@ -64,6 +64,22 @@ from .database import Base, FmtmMetadata
 from .postgis_utils import timestamp
 
 
+class DbUserRoles(Base):
+    """Fine grained user access for projects, described by roles."""
+
+    __tablename__ = "user_roles"
+
+    # Table has composite PK on (user_id and project_id)
+    user_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
+    project_id = Column(
+        Integer,
+        ForeignKey("projects.id"),
+        index=True,
+        primary_key=True,
+    )
+    role = Column(Enum(ProjectRole), default=UserRole.MAPPER)
+
+
 class DbUser(Base):
     """Describes the history associated with a task."""
 
@@ -73,6 +89,9 @@ class DbUser(Base):
     username = Column(String, unique=True)
     profile_img = Column(String)
     role = Column(Enum(UserRole), default=UserRole.MAPPER)
+    project_roles = relationship(
+        DbUserRoles, backref="user_roles_link", cascade="all, delete, delete-orphan"
+    )
 
     name = Column(String)
     city = Column(String)
@@ -429,7 +448,7 @@ class DbProject(Base):
         DbProjectInfo,
         cascade="all, delete, delete-orphan",
         uselist=False,
-        backref="project",
+        backref="projects",
     )
     location_str = Column(String)
 
@@ -445,6 +464,11 @@ class DbProject(Base):
     # tasks_mapped = Column(Integer, default=0, nullable=False)
     # tasks_validated = Column(Integer, default=0, nullable=False)
     # tasks_bad_imagery = Column(Integer, default=0, nullable=False)
+
+    # Roles
+    roles = relationship(
+        DbUserRoles, backref="project_roles_link", cascade="all, delete, delete-orphan"
+    )
 
     # TASKS
     tasks = relationship(
@@ -622,21 +646,6 @@ class BackgroundTasks(Base):
     project_id = Column(Integer, nullable=True)
     status = Column(Enum(BackgroundTaskStatus), nullable=False)
     message = Column(String)
-
-
-class DbUserRoles(Base):
-    """Fine grained user access for projects, described by roles."""
-
-    __tablename__ = "user_roles"
-
-    # Table has composite PK on (user_id and project_id)
-    user_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
-    user = relationship(DbUser, backref="user_roles")
-    project_id = Column(
-        Integer, ForeignKey("projects.id"), index=True, primary_key=True
-    )
-    project = relationship(DbProject, backref="user_roles")
-    role = Column(Enum(ProjectRole), default=UserRole.MAPPER)
 
 
 class DbTilesPath(Base):
