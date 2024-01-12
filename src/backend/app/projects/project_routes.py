@@ -203,34 +203,24 @@ async def read_project(project_id: int, db: Session = Depends(database.get_db)):
     return project
 
 
-@router.delete("/delete/{project_id}")
+@router.delete("/{project_id}")
 async def delete_project(
-    project_id: int,
+    project: int = Depends(project_deps.get_project_by_id),
     db: Session = Depends(database.get_db),
     user_data: AuthUser = Depends(login_required),
 ):
-    """Delete a project from ODK Central and the local database."""
-    # FIXME: should check for error
-
-    project = await project_crud.get_project(db, project_id)
-
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-
+    """Delete a project from both ODK Central and the local database."""
     # Odk crendentials
     odk_credentials = project_schemas.ODKCentral(
         odk_central_url=project.odk_central_url,
         odk_central_user=project.odk_central_user,
         odk_central_password=project.odk_central_password,
     )
-
+    # Delete ODK Central project
     await central_crud.delete_odk_project(project.odkid, odk_credentials)
-
-    deleted_project = await project_crud.delete_project_by_id(db, project_id)
-    if deleted_project:
-        return deleted_project
-    else:
-        raise HTTPException(status_code=404, detail="Project not found")
+    # Delete FMTM project
+    await project_crud.delete_one_project(db, project)
+    return Response(status_code=HTTPStatus.NO_CONTENT)
 
 
 @router.post("/create_project", response_model=project_schemas.ProjectOut)

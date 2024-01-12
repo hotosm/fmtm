@@ -163,22 +163,16 @@ async def get_project_info_by_id(db: Session, project_id: int):
     return await convert_to_app_project_info(db_project_info)
 
 
-async def delete_project_by_id(db: Session, project_id: int):
+async def delete_one_project(db: Session, db_project: db_models.DbProject) -> None:
     """Delete a project by id."""
     try:
-        db_project = (
-            db.query(db_models.DbProject)
-            .filter(db_models.DbProject.id == project_id)
-            .order_by(db_models.DbProject.id)
-            .first()
-        )
-        if db_project:
-            db.delete(db_project)
-            db.commit()
+        project_id = db_project.id
+        db.delete(db_project)
+        db.commit()
+        log.info(f"Deleted project with ID: {project_id}")
     except Exception as e:
         log.exception(e)
         raise HTTPException(e) from e
-    return f"Project {project_id} deleted"
 
 
 async def partial_update_project_info(
