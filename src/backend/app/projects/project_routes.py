@@ -348,25 +348,25 @@ async def upload_custom_xls(
     return {"xform_title": f"{category}"}
 
 
-@router.post("/{project_id}/upload_multi_polygon")
-async def upload_multi_project_boundary(
+@router.post("/{project_id}/custom_task_boundaries")
+async def upload_custom_task_boundaries(
     project_id: int,
     project_geojson: UploadFile = File(...),
     db: Session = Depends(database.get_db),
 ):
-    """This API allows for the uploading of a multi-polygon project boundary
-        in JSON format for a specified project ID. Each polygon in the uploaded geojson are made a single task.
+    """Set project task boundaries manually using multi-polygon GeoJSON.
+
+    Each polygon in the uploaded geojson are made a single task.
 
     Required Parameters:
-    project_id: ID of the project to which the boundary is being uploaded.
-    project_geojson: a file upload containing the multi-polygon boundary in geojson format.
+        project_id (id): ID for associated project.
+        project_geojson (UploadFile): Multi-polygon GeoJSON file.
 
     Returns:
-    A success message indicating that the boundary was successfully uploaded.
-    If the project ID does not exist in the database, an HTTP 428 error is raised.
+        dict: JSON containing success message, project ID, and number of tasks.
     """
     log.debug(
-        "Uploading project boundary multipolygon for " f"project ID: {project_id}"
+        f"Uploading project boundary multipolygon for project ID: {project_id}"
     )
     # read entire file
     content = await project_geojson.read()
