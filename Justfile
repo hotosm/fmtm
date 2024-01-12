@@ -40,6 +40,12 @@ run-with-josm:
     -f josm/docker-compose.yml \
     up -d
 
+stop:
+  docker compose down
+
+clean-db:
+  docker compose down -v
+
 # Tests
 
 test-backend:
