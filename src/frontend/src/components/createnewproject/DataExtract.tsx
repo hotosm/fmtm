@@ -43,7 +43,7 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
   const isFgbFetching = useAppSelector((state) => state.createproject.isFgbFetching);
 
   const submission = () => {
-    if (featureType !== formValues?.dataExtractFeatureType) {
+    if (featureType !== formValues?.dataExtractFeatureType && formValues.dataExtractWays === 'osm_data_extract') {
       dispatch(
         CommonActions.SetSnackBar({
           open: true,
@@ -61,6 +61,11 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
     // First go to next page, to not block UX
     navigate('/split-tasks');
   };
+
+  const resetFile = (setDataExtractToState) => {
+    setDataExtractToState(null);
+  };
+
   const {
     handleSubmit,
     handleCustomChange,
@@ -70,6 +75,12 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
 
   // Generate OSM data extract
   const generateDataExtract = async () => {
+    // Remove custom extract file if available in state
+    resetFile(setCustomPolygonUpload);
+    resetFile(setCustomLineUpload);
+    handleCustomChange('customLineUpload', null);
+    handleCustomChange('customPolygonUpload', null);
+
     // Get OSM data extract if required
     if (extractWays === 'osm_data_extract') {
       // Create a file object from the project area Blob
@@ -186,10 +197,6 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
     await dispatch(CreateProjectActions.setDataExtractGeojson(extractFeatCol));
   };
 
-  const resetFile = (setDataExtractToState) => {
-    setDataExtractToState(null);
-  };
-
   useEffect(() => {
     dispatch(FormCategoryService(`${import.meta.env.VITE_API_URL}/central/list-forms`));
   }, []);
@@ -227,6 +234,7 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
                 direction="column"
                 value={extractWays}
                 onChangeData={(value) => {
+                  handleCustomChange('dataExtractWays', value);
                   setExtractWays(value);
                 }}
                 errorMsg={errors.dataExtractWays}
@@ -262,8 +270,13 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
                     onChange={(e) => {
                       changeFileHandler(e, setCustomPolygonUpload);
                       handleCustomChange('customPolygonUpload', e.target.files[0]);
+                      handleCustomChange('dataExtractFeatureType', '');
+                      setFeatureType('');
                     }}
-                    onResetFile={() => resetFile(setCustomPolygonUpload)}
+                    onResetFile={() => {
+                      resetFile(setCustomPolygonUpload);
+                      handleCustomChange('customPolygonUpload', null);
+                    }}
                     customFile={customPolygonUpload}
                     btnText="Upload Polygons"
                     accept=".geojson,.json,.fgb"
@@ -275,7 +288,10 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
                       changeFileHandler(e, setCustomLineUpload);
                       handleCustomChange('customLineUpload', e.target.files[0]);
                     }}
-                    onResetFile={() => resetFile(setCustomLineUpload)}
+                    onResetFile={() => {
+                      resetFile(setCustomLineUpload);
+                      handleCustomChange('customLineUpload', null);
+                    }}
                     customFile={customLineUpload}
                     btnText="Upload Lines"
                     accept=".geojson,.json,.fgb"
@@ -299,7 +315,11 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
                 type="submit"
                 className="fmtm-font-bold"
                 dataTip={`${!dataExtractGeojson ? 'Please Generate Data Extract First.' : ''}`}
-                disabled={!dataExtractGeojson ? true : false}
+                disabled={
+                  !dataExtractGeojson || (extractWays === 'osm_data_extract' && !formValues?.dataExtractFeatureType)
+                    ? true
+                    : false
+                }
               />
             </div>
           </form>
