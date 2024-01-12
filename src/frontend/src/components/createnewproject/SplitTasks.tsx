@@ -64,7 +64,6 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
   const isFgbFetching = CoreModules.useAppSelector((state) => state.createproject.isFgbFetching);
 
   const toggleStep = (step, url) => {
-    dispatch(CreateProjectActions.ClearProjectStepState());
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
     navigate(url);
   };
