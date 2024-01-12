@@ -68,3 +68,34 @@ bump:
     && git config --global user.email fmtm@hotosm.org \
     && cd src/backend \
     && cz bump --check-consistency'
+
+# Docs
+
+docs-rebuild: docs-clean docs-doxygen docs-uml
+
+docs-clean:
+	@rm -rf docs/{apidocs,html,docbook,man} docs/packages.png docs/classes.png
+
+docs-doxygen:
+	cd docs && doxygen
+
+docs-uml:
+	cd docs && pyreverse -o png ../src/backend/app
+
+docs-pdf:
+  # Strip any unicode out of the markdown file before converting to PDF
+  # FIXME
+  MDS := \
+    docs/dev/Backend.md \
+    docs/dev/Database-Tips.md \
+    docs/dev/Deployment-Flow.md \
+    docs/dev/Frontend.md \
+    docs/dev/Production.md \
+    docs/dev/Version-Control.md \
+    docs/dev/Setup.md \
+    docs/dev/Troubleshooting.md \
+  PDFS := $(MDS:.md=.pdf)
+	@echo "Converting $PDFS to a PDF"
+	@new=$(notdir $(basename $PDFS)); \
+	iconv -f utf-8 -t US $PDFS -c | \
+	pandoc $PDFS -f markdown -t pdf -s -o /tmp/$$new.pdf
