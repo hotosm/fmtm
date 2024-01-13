@@ -33,6 +33,7 @@ repos:
             --no-error-on-unmatched-pattern,
             "!chart/**",
             "!CHANGELOG.md",
+            "!CONTRIBUTING.md",
             "!src/frontend/pnpm-lock.yaml",
           ]
 
