@@ -248,7 +248,7 @@ Its functions include:
       This is pretty straightforward using [OpenPyXL](https://openpyxl.readthedocs.io/en/stable/),
       though we have to be careful to keep the location within the spreadsheet
       of these two items consistent.
-  - GeoJSON feature collections for each form (the buildings/amenities or whatever)
+  - GeoJSON feature collections for each form (the buildings/amenities etc)
   - An App User for each form, which in turn corresponds to a single task.
     When the ODK Collect app on a user's phone is configured to function as
     that App User, they have access to
