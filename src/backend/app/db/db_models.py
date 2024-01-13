@@ -43,6 +43,8 @@ from sqlalchemy.orm import (  # , declarative_base  # , declarative_base
     relationship,
 )
 
+from app.db.database import Base, FmtmMetadata
+from app.db.postgis_utils import timestamp
 from app.models.enums import (
     BackgroundTaskStatus,
     MappingLevel,
@@ -59,9 +61,6 @@ from app.models.enums import (
     UserRole,
     ValidationPermission,
 )
-
-from .database import Base, FmtmMetadata
-from .postgis_utils import timestamp
 
 
 class DbUserRoles(Base):
@@ -448,7 +447,7 @@ class DbProject(Base):
         DbProjectInfo,
         cascade="all, delete, delete-orphan",
         uselist=False,
-        backref="projects",
+        backref="project",
     )
     location_str = Column(String)
 
