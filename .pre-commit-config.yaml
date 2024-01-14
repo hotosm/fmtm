@@ -8,7 +8,7 @@ repos:
 
   # Autoformat: Python code
   - repo: https://github.com/psf/black
-    rev: 23.11.0
+    rev: 23.12.1
     hooks:
       - id: black
         files: ^src/backend/(?:.*/)*.*$
@@ -16,7 +16,7 @@ repos:
 
   # Lint / autoformat: Python code
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.1.6"
+    rev: "v0.1.13"
     hooks:
       - id: ruff
         files: ^src/backend/(?:.*/)*.*$
@@ -38,9 +38,37 @@ repos:
             "!src/frontend/pnpm-lock.yaml",
           ]
 
+  # Lint: Dockerfile
+  - repo: https://github.com/hadolint/hadolint.git
+    rev: v2.12.1-beta
+    hooks:
+      - id: hadolint-docker
+        entry: hadolint/hadolint:v2.8.0 hadolint
+        args:
+          [
+            "--ignore=DL3008",
+            "--ignore=DL3013",
+            "--ignore=DL3018",
+            "--ignore=DL3059",
+          ]
+
+  # Lint: Bash scripts
+  - repo: https://github.com/openstack-dev/bashate.git
+    rev: 2.1.1
+    hooks:
+      - id: bashate
+        args: ["--ignore=E006"]
+
+  # Lint: Shell scripts
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.6
+    hooks:
+      - id: shellcheck
+        args: ["-x", "--exclude=SC1091"]
+
   # Lint: Markdown
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.37.0
+    rev: v0.38.0
     hooks:
       - id: markdownlint
         args:
