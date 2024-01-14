@@ -48,9 +48,9 @@ repos:
             --disable,
             MD033,
             --ignore,
-            LICENSE.md,
+            "LICENSE.md",
             --ignore,
-            CHANGELOG.md,
+            "CHANGELOG.md",
             --ignore,
-            .github,
+            ".github",
           ]
