@@ -25,11 +25,13 @@ steps, including:
 - **_Coordination:_** The field mapping manager must coordinate the activities
   of the field mappers, ensuring that they are working together
   effectively and efficiently.
+
   <img
-    align="left"
-    width="500px"
-    src="https://user-images.githubusercontent.com/107098623/194864145-598d6212-9e0b-4c9d-ba90-92e5cd3fa488.png"
-  />
+      align="left"
+      width="500px"
+      src="https://user-images.githubusercontent.com/107098623/194864145-598d6212-9e0b-4c9d-ba90-92e5cd3fa488.png"
+      alt="coordination"
+    />
 
 ## The field mapper (collecting data)
 
@@ -132,6 +134,7 @@ Here's a sneak-peek:
   width="1000px"
   height="600px"
   src="https://user-images.githubusercontent.com/107098623/194867381-53813f19-71b1-4342-866f-10c963b7460b.png"
+  alt="fmtm-workflow"
 />
 
 ## The Validator (The person who checks the quality of data collected)

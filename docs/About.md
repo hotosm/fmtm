@@ -10,10 +10,12 @@ volunteers interested in the project.
 
 HOT uses ODK heavily, but most of the data never makes it into OSM because all
 the data processing is manual and slow, so it doesn't get done.
+
 <img
   align="right"
   width="300px"
   src="https://github.com/hotosm/osm-fieldwork/assets/97789856/afc791c7-6cc9-4496-aa93-ab02733f30b8"
+  alt="fmtm-splash"
 />
 
 Ivan Gayton(Senior Humanitarian Advisor at Humanitarian OpenStreetMap Team)
@@ -97,6 +99,7 @@ to go out and collect data. They need to:
   align="right"
   width="400px"
   src="https://github.com/hotosm/fmtm/assets/97789856/9343a4bc-462c-44af-af93-8a67907837b3"
+  alt="campaign-managers"
 />
 
 - Select an AOI polygon by creating a GeoJSON or by tracing a polygon
