@@ -34,6 +34,7 @@ repos:
             "!chart/**",
             "!CHANGELOG.md",
             "!CONTRIBUTING.md",
+            "!LICENSE.md",
             "!src/frontend/pnpm-lock.yaml",
           ]
 
@@ -48,9 +49,9 @@ repos:
             --disable,
             MD033,
             --ignore,
-            "LICENSE.md",
+            LICENSE.md,
             --ignore,
-            "CHANGELOG.md",
+            CHANGELOG.md,
             --ignore,
-            ".github",
+            .github,
           ]
