@@ -43,4 +43,14 @@ repos:
     hooks:
       - id: markdownlint
         args:
-          [--fix, --disable, MD033, --ignore, CHANGELOG.md, --ignore, .github]
+          [
+            --fix,
+            --disable,
+            MD033,
+            --ignore,
+            LICENSE.md,
+            --ignore,
+            CHANGELOG.md,
+            --ignore,
+            .github,
+          ]
