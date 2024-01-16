@@ -57,7 +57,6 @@ repos:
     hooks:
       - id: bashate
         files: ^(?!.*(?:^|/)contrib(?:/|$)).*$
-        args: ["--ignore=E006"]
 
   # Lint: Shell scripts
   - repo: https://github.com/shellcheck-py/shellcheck-py
@@ -65,7 +64,7 @@ repos:
     hooks:
       - id: shellcheck
         files: ^(?!.*(?:^|/)contrib(?:/|$)).*$
-        args: ["-x", "--exclude=SC1091"]
+        args: ["-x", "--exclude=SC2317,SC2188,SC2143"]
 
   # Lint: Markdown
   - repo: https://github.com/igorshubovych/markdownlint-cli
