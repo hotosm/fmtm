@@ -75,14 +75,11 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
 
   // Generate OSM data extract
   const generateDataExtract = async () => {
-    // Remove custom extract file if available in state
-    resetFile(setCustomPolygonUpload);
-    resetFile(setCustomLineUpload);
-    handleCustomChange('customLineUpload', null);
-    handleCustomChange('customPolygonUpload', null);
-
     // Get OSM data extract if required
     if (extractWays === 'osm_data_extract') {
+      // Remove current data extract
+      dispatch(CreateProjectActions.setDataExtractGeojson(null));
+
       // Create a file object from the project area Blob
       const projectAreaBlob = new Blob([JSON.stringify(drawnGeojson)], { type: 'application/json' });
       const drawnGeojsonFile = new File([projectAreaBlob], 'outline.json', { type: 'application/json' });
@@ -98,13 +95,15 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
         );
 
         const fgbUrl = response.data.url;
-        // Append url to project data
+        // Append url to project data & remove custom files
         dispatch(
           CreateProjectActions.SetIndividualProjectDetailsData({
             ...formValues,
             data_extract_type: fgbUrl,
             dataExtractWays: extractWays,
             dataExtractFeatureType: featureType,
+            customLineUpload: null,
+            customPolygonUpload: null,
           }),
         );
 
@@ -147,7 +146,7 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
         CreateProjectActions.SetIndividualProjectDetailsData({
           ...formValues,
           dataExtractWays: extractWays,
-          dataExtractFeatureType: null,
+          dataExtractFeatureType: featureType,
         }),
       );
     }
@@ -266,11 +265,22 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
                 <Button
                   btnText="Generate Data Extract"
                   btnType="primary"
-                  onClick={generateDataExtract}
+                  onClick={() => {
+                    resetFile(setCustomPolygonUpload);
+                    resetFile(setCustomLineUpload);
+                    generateDataExtract();
+                  }}
                   className="fmtm-mt-6"
                   isLoading={isFgbFetching}
                   loadingText="Data extracting..."
-                  disabled={featureType === formValues?.dataExtractFeatureType && dataExtractGeojson ? true : false}
+                  disabled={
+                    featureType === formValues?.dataExtractFeatureType &&
+                    dataExtractGeojson &&
+                    !customPolygonUpload &&
+                    !customLineUpload
+                      ? true
+                      : false
+                  }
                 />
               )}
               {extractWays === 'custom_data_extract' && (
@@ -296,6 +306,7 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
                     onChange={(e) => {
                       changeFileHandler(e, setCustomLineUpload);
                       handleCustomChange('customLineUpload', e.target.files[0]);
+                      handleCustomChange('dataExtractFeatureType', null);
                     }}
                     onResetFile={() => {
                       resetFile(setCustomLineUpload);
@@ -325,7 +336,9 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
                 className="fmtm-font-bold"
                 dataTip={`${!dataExtractGeojson ? 'Please Generate Data Extract First.' : ''}`}
                 disabled={
-                  !dataExtractGeojson || (extractWays === 'osm_data_extract' && !formValues?.dataExtractFeatureType)
+                  !dataExtractGeojson ||
+                  (extractWays === 'osm_data_extract' && !formValues?.dataExtractFeatureType) ||
+                  isFgbFetching
                     ? true
                     : false
                 }
