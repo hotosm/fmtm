@@ -29,7 +29,6 @@ from pydantic import BaseModel, ConfigDict
 from app.config import settings
 from app.models.enums import UserRole
 
-
 if settings.DEBUG:
     # Required as callback url is http during dev
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
@@ -37,6 +36,7 @@ if settings.DEBUG:
 
 class AuthUser(BaseModel):
     """The user model returned from OSM OAuth2."""
+
     model_config = ConfigDict(use_enum_values=True)
 
     id: int
