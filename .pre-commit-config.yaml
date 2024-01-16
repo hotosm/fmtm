@@ -64,6 +64,7 @@ repos:
     rev: v0.9.0.6
     hooks:
       - id: shellcheck
+        files: ^(?!.*(?:^|/)contrib(?:/|$)).*$
         args: ["-x", "--exclude=SC1091"]
 
   # Lint: Markdown
