@@ -24,9 +24,11 @@ from typing import Optional
 from fastapi import Header, HTTPException, Request
 from loguru import logger as log
 from osm_login_python.core import Auth
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.config import settings
+from app.models.enums import UserRole
+
 
 if settings.DEBUG:
     # Required as callback url is http during dev
@@ -35,10 +37,12 @@ if settings.DEBUG:
 
 class AuthUser(BaseModel):
     """The user model returned from OSM OAuth2."""
+    model_config = ConfigDict(use_enum_values=True)
 
     id: int
     username: str
     img_url: Optional[str]
+    role: Optional[UserRole]
 
 
 async def init_osm_auth():
