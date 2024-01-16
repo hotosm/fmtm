@@ -62,7 +62,7 @@ async def get_organisation_by_id(db: Session, org_id: int) -> DbOrganisation:
 
 
 async def org_exists(
-    org_id: Union[str],
+    org_id: Union[str, int],
     db: Session = Depends(get_db),
 ) -> DbOrganisation:
     """Check if organization name exists, else error.
