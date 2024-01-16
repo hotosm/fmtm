@@ -29,6 +29,7 @@ class IntEnum(int, Enum):
 
 class HTTPStatus(IntEnum):
     """All HTTP status codes used in endpoints."""
+
     # Success
     OK = 200
     CREATED = 201
