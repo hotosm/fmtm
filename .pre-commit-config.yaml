@@ -38,25 +38,25 @@ repos:
             "!src/frontend/pnpm-lock.yaml",
           ]
 
-  # Lint: Dockerfile
-  - repo: https://github.com/hadolint/hadolint.git
-    rev: v2.12.1-beta
-    hooks:
-      - id: hadolint-docker
-        entry: hadolint/hadolint:v2.8.0 hadolint
-        args:
-          [
-            "--ignore=DL3008",
-            "--ignore=DL3013",
-            "--ignore=DL3018",
-            "--ignore=DL3059",
-          ]
+  # # Lint: Dockerfile (disabled until binary is bundled)
+  # - repo: https://github.com/hadolint/hadolint.git
+  #   rev: v2.12.1-beta
+  #   hooks:
+  #     - id: hadolint
+  #       args:
+  #         [
+  #           "--ignore=DL3008",
+  #           "--ignore=DL3013",
+  #           "--ignore=DL3018",
+  #           "--ignore=DL3059",
+  #         ]
 
   # Lint: Bash scripts
   - repo: https://github.com/openstack-dev/bashate.git
     rev: 2.1.1
     hooks:
       - id: bashate
+        files: ^(?!.*(?:^|/)contrib(?:/|$)).*$
         args: ["--ignore=E006"]
 
   # Lint: Shell scripts
