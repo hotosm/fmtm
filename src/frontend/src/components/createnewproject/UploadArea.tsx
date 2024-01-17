@@ -99,17 +99,19 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
   };
 
   useEffect(() => {
-    const isWGS84 = () => {
-      if (uploadAreaSelection === 'upload_file') {
-        const isWGS84Projection = checkWGS84Projection(drawnGeojson);
-        setIsGeojsonWG84(isWGS84Projection);
-        return isWGS84Projection;
+    if (drawnGeojson) {
+      const isWGS84 = () => {
+        if (uploadAreaSelection === 'upload_file') {
+          const isWGS84Projection = checkWGS84Projection(drawnGeojson);
+          setIsGeojsonWG84(isWGS84Projection);
+          return isWGS84Projection;
+        }
+        setIsGeojsonWG84(true);
+        return true;
+      };
+      if (!isWGS84() && drawnGeojson) {
+        showSpatialError();
       }
-      setIsGeojsonWG84(true);
-      return true;
-    };
-    if (!isWGS84() && drawnGeojson) {
-      showSpatialError();
     }
     return () => {};
   }, [drawnGeojson]);
