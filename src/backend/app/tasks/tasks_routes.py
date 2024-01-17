@@ -29,6 +29,7 @@ from ..models.enums import TaskStatus
 from ..projects import project_crud, project_schemas
 from ..users import user_schemas
 from . import tasks_crud, tasks_schemas
+from ..auth.osm import AuthUser,login_required
 
 router = APIRouter(
     prefix="/tasks",
@@ -187,3 +188,52 @@ async def task_features_count(
         )
 
     return data
+
+@router.get("/task-comments/", response_model=list[tasks_schemas.TaskCommentResponse])
+async def task_comments(
+    project_id: int,
+    task_id: int,
+    db: Session = Depends(database.get_db),
+):
+    task_comment_list = await tasks_crud.get_task_comments(db,project_id,task_id)
+
+
+    return task_comment_list
+
+
+@router.post("/task-comments/",response_model=tasks_schemas.TaskCommentResponse)
+async def task_comments(
+    comment: tasks_schemas.TaskCommentRequest,
+    db: Session = Depends(database.get_db),
+    user_data: AuthUser = Depends(login_required),
+
+):
+    """
+    Create a new task comment.
+
+    Parameters:
+        comment (TaskCommentRequest): The task comment to be created.
+        db (Session): The database session.
+        user_data (AuthUser): The authenticated user.
+
+    Returns:
+        TaskCommentResponse: The created task comment.
+    """
+    task_comment_list = await tasks_crud.add_task_comments(db,comment,user_data)
+    return task_comment_list
+
+
+@router.delete("/task-comments/{task_comment_id}")
+async def delete_task_comments(
+    task_comment_id: int,
+    user_data: AuthUser = Depends(login_required),
+    db: Session = Depends(database.get_db),
+):
+    task_comment = await tasks_crud.get_task_comment_info_by_id(db, task_comment_id)
+
+    if not task_comment:
+        raise HTTPException(status_code=404, detail="Task Comment not found")
+    else:
+        deleted_project = await tasks_crud.delete_task_comment_by_id(db, task_comment_id,user_data)
+    
+    return deleted_project
