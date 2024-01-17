@@ -24,6 +24,7 @@ import uuid
 from unittest.mock import Mock, patch
 
 import pytest
+import requests
 import sozipfile.sozipfile as zipfile
 from fastapi.concurrency import run_in_threadpool
 from geoalchemy2.elements import WKBElement
@@ -32,6 +33,7 @@ from shapely import Polygon, wkb
 from shapely.geometry import shape
 
 from app.central.central_crud import create_odk_project
+from app.config import settings
 from app.db import db_models
 from app.projects import project_crud, project_schemas
 from app.tasks import tasks_crud
@@ -172,10 +174,19 @@ async def test_generate_appuser_files(db, project):
 
     # Upload data extracts
     log.debug(f"Uploading custom data extracts: {str(data_extracts)[:100]}...")
-    data_extract_uploaded = await project_crud.upload_custom_data_extracts(
-        db, project_id, data_extracts
+    data_extract_s3_path = await project_crud.upload_custom_data_extract(
+        db,
+        project_id,
+        data_extracts,
     )
-    assert data_extract_uploaded is True
+    assert data_extract_s3_path is not None
+    # Test url, but first sub localhost url with docker network for backend connection
+    internal_file_path = (
+        f"{settings.S3_ENDPOINT}"
+        f"{data_extract_s3_path.split(settings.FMTM_DEV_PORT)[1]}"
+    )
+    response = requests.head(internal_file_path, allow_redirects=True)
+    assert response.status_code < 400
 
     # Get project tasks list
     task_ids = await tasks_crud.get_task_id_list(db, project_id)

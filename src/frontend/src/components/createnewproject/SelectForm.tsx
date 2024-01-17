@@ -14,7 +14,7 @@ import { FormCategoryService, ValidateCustomForm } from '../../api/CreateProject
 import NewDefineAreaMap from '../../views/NewDefineAreaMap';
 
 const osmFeatureTypeOptions = [
-  { name: 'form_ways', value: 'existing_form', label: 'Use Existing Category' },
+  { name: 'form_ways', value: 'existing_form', label: 'Use Existing Form' },
   { name: 'form_ways', value: 'custom_form', label: 'Upload a Custom Form' },
 ];
 // @ts-ignore
@@ -39,6 +39,7 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
     errors,
   }: any = useForm(projectDetails, submission, SelectFormValidation);
   const formCategoryList = useAppSelector((state) => state.createproject.formCategoryList);
+  const sortedFormCategoryList = formCategoryList.slice().sort((a, b) => a.title.localeCompare(b.title));
 
   /**
    * Function to handle the change event of a file input.
@@ -78,7 +79,11 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
           <span>
             {' '}
             You may learn more about XLSforms{' '}
-            <a href="https://hotosm.github.io/osm-fieldwork/about/xlsforms/" target="_">
+            <a
+              href="https://hotosm.github.io/osm-fieldwork/about/xlsforms/"
+              target="_"
+              className="fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-underline"
+            >
               here
             </a>
             .
@@ -89,11 +94,11 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
         <div className="fmtm-w-full fmtm-flex fmtm-gap-6 md:fmtm-gap-14 fmtm-flex-col md:fmtm-flex-row fmtm-h-full">
           <form onSubmit={handleSubmit} className="fmtm-flex fmtm-flex-col lg:fmtm-w-[40%] fmtm-justify-between">
             <div className="fmtm-flex fmtm-flex-col  fmtm-gap-6">
-              <div className="fmtm-w-[13.35rem]">
+              <div className="">
                 <CustomSelect
                   title="Select form category"
                   placeholder="Select form category"
-                  data={formCategoryList}
+                  data={sortedFormCategoryList}
                   dataKey="id"
                   valueKey="title"
                   label="title"
@@ -102,7 +107,19 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
                     handleCustomChange('formCategorySelection', value);
                   }}
                   errorMsg={errors.formCategorySelection}
+                  className="fmtm-max-w-[13.5rem]"
                 />
+                <p className="fmtm-text-base fmtm-mt-2">
+                  You will view the OSM data extracts of{' '}
+                  <a
+                    href="https://wiki.openstreetmap.org/wiki/Tags"
+                    target="_"
+                    className="fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-underline"
+                  >
+                    tags
+                  </a>{' '}
+                  that match the selected category in OSM database, if you don't choose to upload custom data extract.
+                </p>
               </div>
               <RadioButton
                 topic="You may choose to use existing category or upload your own xlsx form"

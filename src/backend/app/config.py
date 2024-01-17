@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"
 
-    FMTM_DOMAIN: Optional[str]
+    FMTM_DOMAIN: str
     FMTM_DEV_PORT: Optional[str] = "7050"
 
     EXTRA_CORS_ORIGINS: Optional[Union[str, list[str]]] = []
@@ -95,7 +95,6 @@ class Settings(BaseSettings):
             host=info.data.get("FMTM_DB_HOST"),
             path=info.data.get("FMTM_DB_NAME", ""),
         )
-        # Convert Url type to string
         return pg_url
 
     ODK_CENTRAL_URL: Optional[str] = ""

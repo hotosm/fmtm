@@ -24,7 +24,8 @@ from typing import Any, List, Optional
 
 from geojson_pydantic import Feature
 from loguru import logger as log
-from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo
+from pydantic.functional_serializers import field_serializer
 from pydantic.functional_validators import field_validator
 
 from app.db.postgis_utils import geometry_to_geojson, get_centroid
@@ -44,7 +45,9 @@ class TaskHistoryBase(BaseModel):
 class TaskHistoryOut(TaskHistoryBase):
     """Task mapping history display."""
 
-    pass
+    status: str
+    username: str
+    profile_img: Optional[str]
 
 
 class TaskBase(BaseModel):
@@ -72,20 +75,9 @@ class TaskBase(BaseModel):
     locked_by_username: Optional[str] = None
     task_history: Optional[List[TaskHistoryBase]] = None
 
-    @validator("task_status", pre=False, always=True)
-    def get_enum_name(cls, value, values):
-        if isinstance(value, int):
-            try:
-                return TaskStatus(value).name
-            except ValueError as e:
-                raise ValueError(
-                    f"Invalid integer value for task_status: {value}"
-                ) from e
-        return value
-
     @field_validator("outline_geojson", mode="before")
     @classmethod
-    def get_geojson_from_outline(cls, v: Any, info: ValidationInfo) -> str:
+    def get_geojson_from_outline(cls, value: Any, info: ValidationInfo) -> str:
         """Get outline_geojson from Shapely geom."""
         if outline := info.data.get("outline"):
             properties = {
@@ -99,7 +91,7 @@ class TaskBase(BaseModel):
 
     @field_validator("outline_centroid", mode="before")
     @classmethod
-    def get_centroid_from_outline(cls, v: Any, info: ValidationInfo) -> str:
+    def get_centroid_from_outline(cls, value: Any, info: ValidationInfo) -> str:
         """Get outline_centroid from Shapely geom."""
         if outline := info.data.get("outline"):
             properties = {
@@ -111,20 +103,18 @@ class TaskBase(BaseModel):
             return get_centroid(outline, properties, info.data.get("id"))
         return None
 
-    @field_validator("locked_by_uid", mode="before")
-    @classmethod
-    def get_lock_uid(cls, v: int, info: ValidationInfo) -> str:
+    @field_serializer("locked_by_uid")
+    def get_locked_by_uid(self, value: str) -> str:
         """Get lock uid from lock_holder details."""
-        if lock_holder := info.data.get("lock_holder"):
-            return lock_holder.id
+        if self.lock_holder:
+            return self.lock_holder.id
         return None
 
-    @field_validator("locked_by_username", mode="before")
-    @classmethod
-    def get_lock_username(cls, v: str, info: ValidationInfo) -> str:
+    @field_serializer("locked_by_username")
+    def get_locked_by_username(self, value: str) -> str:
         """Get lock username from lock_holder details."""
-        if lock_holder := info.data.get("lock_holder"):
-            return lock_holder.username
+        if self.lock_holder:
+            return self.lock_holder.username
         return None
 
 
@@ -135,7 +125,7 @@ class Task(TaskBase):
 
     @field_validator("qr_code_base64", mode="before")
     @classmethod
-    def get_qrcode_base64(cls, v: Any, info: ValidationInfo) -> str:
+    def get_qrcode_base64(cls, value: Any, info: ValidationInfo) -> str:
         """Get base64 encoded qrcode."""
         if qr_code := info.data.get("qr_code"):
             log.debug(
@@ -166,3 +156,9 @@ class TaskCommentResponse(BaseModel):
     commented_by: str
     comment:str
     created_at: datetime
+
+
+class ReadTask(Task):
+    """Task details plus updated task history."""
+
+    task_history: Optional[List[TaskHistoryOut]] = None

@@ -16,8 +16,9 @@
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 import base64
+from typing import List
 
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException
 from geoalchemy2.shape import from_shape
 from geojson import dump
 from loguru import logger as log
@@ -26,17 +27,17 @@ from shapely.geometry import shape
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
-from ..central import central_crud
-from ..db import db_models
-from ..models.enums import (
+from app.central import central_crud
+from app.db import database, db_models
+from app.models.enums import (
     TaskStatus,
     get_action_for_status_change,
     verify_valid_status_update,
 )
-from ..projects import project_crud
-from ..users import user_crud
-from . import tasks_schemas
-from ..auth.osm import AuthUser
+from app.auth.osm import AuthUser
+from app.projects import project_crud
+from app.tasks import tasks_schemas
+from app.users import user_crud
 
 
 async def get_task_count_in_project(db: Session, project_id: int):
@@ -425,3 +426,25 @@ async def delete_task_comment_by_id(db: Session, task_comment_id: int, user_data
     # Return the details of the added comment as a dictionary
     return f"Task Comment {task_comment_id} deleted"
 
+async def update_task_history(
+    tasks: List[tasks_schemas.TaskBase], db: Session = Depends(database.get_db)
+):
+    def process_history_entry(history_entry):
+        status = history_entry.action_text.split()
+        history_entry.status = status[5]
+
+        if history_entry.user_id:
+            user = (
+                db.query(db_models.DbUser).filter_by(id=history_entry.user_id).first()
+            )
+            if user:
+                history_entry.username = user.username
+                history_entry.profile_img = user.profile_img
+
+    for task in tasks if isinstance(tasks, list) else [tasks]:
+        task_history = task.task_history
+        if isinstance(task_history, list):
+            for history_entry in task_history:
+                process_history_entry(history_entry)
+
+    return tasks

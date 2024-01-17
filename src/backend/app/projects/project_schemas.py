@@ -17,10 +17,13 @@
 #
 
 import uuid
-from typing import List, Optional
+from datetime import datetime
+from typing import List, Optional, Union
 
+from dateutil import parser
 from geojson_pydantic import Feature as GeojsonFeature
 from pydantic import BaseModel
+from pydantic.functional_serializers import field_serializer
 
 from app.db import db_models
 from app.models.enums import ProjectPriority, ProjectStatus, TaskSplitType
@@ -56,6 +59,7 @@ class ProjectUpload(BaseModel):
     task_split_type: Optional[TaskSplitType] = None
     task_split_dimension: Optional[int] = None
     task_num_buildings: Optional[int] = None
+    data_extract_type: Optional[str] = None
 
     # city: str
     # country: str
@@ -140,6 +144,43 @@ class ProjectOut(ProjectBase):
     project_uuid: uuid.UUID = uuid.uuid4()
 
 
+class ReadProject(ProjectBase):
+    project_uuid: uuid.UUID = uuid.uuid4()
+    location_str: Optional[str] = None
+
+
 class BackgroundTaskStatus(BaseModel):
     status: str
     message: Optional[str] = None
+
+
+class ProjectDashboard(BaseModel):
+    project_name_prefix: str
+    organization: str
+    total_tasks: int
+    created: datetime
+    organization_logo: Optional[str] = None
+    total_submission: Optional[int] = None
+    total_contributors: Optional[int] = None
+    last_active: Optional[Union[str, datetime]] = None
+
+    @field_serializer("last_active")
+    def get_last_active(self, value, values):
+        if value is None:
+            return None
+
+        last_active = parser.parse(value).replace(tzinfo=None)
+        current_date = datetime.now()
+
+        time_difference = current_date - last_active
+
+        days_difference = time_difference.days
+
+        if days_difference == 0:
+            return "today"
+        elif days_difference == 1:
+            return "yesterday"
+        elif days_difference < 7:
+            return f'{days_difference} day{"s" if days_difference > 1 else ""} ago'
+        else:
+            return last_active.strftime("%d %b %Y")
