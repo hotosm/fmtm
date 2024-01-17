@@ -334,6 +334,30 @@ class DbTaskHistory(Base):
         {},
     )
 
+class TaskComment(Base):
+    """Represents a comment associated with a task."""
+
+    __tablename__ = "task_comment"
+
+    comment_id = Column(Integer, primary_key=True)
+    task_id = Column(Integer, nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id"), index=True)
+    comment_text = Column(String)
+    commented_by = Column(
+        BigInteger,
+        ForeignKey("users.id", name="fk_users"),
+        index=True,
+        nullable=False,
+    )
+    created_at = Column(DateTime, nullable=False, default=timestamp)
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            [task_id, project_id], ["tasks.id", "tasks.project_id"], name="fk_tasks"
+        ),
+        Index("idx_task_history_composite", "task_id", "project_id"),
+        {},
+    )
 
 class DbQrCode(Base):
     """QR Code."""
