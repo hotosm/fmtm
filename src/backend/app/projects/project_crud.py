@@ -651,14 +651,14 @@ async def get_data_extract_url(
     try:
         result = requests.post(query_url, data=json.dumps(query), headers=headers)
         result.raise_for_status()
-    except requests.exceptions.HTTPError:
+    except requests.exceptions.HTTPError as e:
         error_dict = result.json()
         error_dict["status_code"] = result.status_code
         log.error(f"Failed to get extract from raw data api: {error_dict}")
         raise HTTPException(
             status_code=error_dict.get("status_code"),
             detail=error_dict.get("detail"),
-        )
+        ) from e
 
     task_id = result.json()["task_id"]
 
