@@ -12,8 +12,7 @@ If you have **any** questions, please ask!
 
 You can see an overview of the project and the process we have gone through in
 developing FMTM so far in these
-[slides](<https://docs.google.com/presentation/d/>
-1UrBG1X4MXwVd8Ps498FDlAYvesIailjjPPJfR_B4SUs/edit#slide=id.g15c1f409958_0_0)
+[slides](https://docs.google.com/presentation/d/1UrBG1X4MXwVd8Ps498FDlAYvesIailjjPPJfR_B4SUs/edit#slide=id.g15c1f409958_0_0)
 
 Furthermore, there are many ways to contribute to the
 **Field Mapping Tasking Manager (FMTM)**, which includes:
@@ -47,7 +46,7 @@ The [issue queue](https://github.com/hotosm/fmtm/issues) is the best way to get
 started. There are issue templates for BUGs and FEATURES that you can use, you
 could also create your own. Once you have submitted an issue, it will be
 assigned one label from the following
-[label categories](<<https://github.com/hotosm/fmtm/labels>).
+[label categories](https://github.com/hotosm/fmtm/labels).
 If you are wondering where to start, you can filter by the
 **good first issue label**.
 
@@ -62,8 +61,7 @@ Github, please reach out to us via our Slack **#geospatial-tech-and-innovation**
 
 ### Workflow
 
-We operate the "Fork & Pull" model explained at [About Pull
-Requests](https://help.github.com/articles/about-pull-requests/)
+We operate the "Fork & Pull" model explained at [About Pull Requests](https://help.github.com/articles/about-pull-requests/)
 
 You should fork the project into your own repo, create a topic branch
 there and then make one or more pull requests back to the repository.
@@ -94,8 +92,7 @@ community of people involved with this project.
 
 ### Documentation
 
-Project documentation should be in [Markdown
-format](https://www.markdownguide.org/), and in a _docs_
+Project documentation should be in [Markdown format](https://www.markdownguide.org/), and in a _docs_
 subdirectory. While it is possible to use HTML in Markdown documents
 for tables and images, it is prefered to use the Markdown style as
 it's much easier to read.
