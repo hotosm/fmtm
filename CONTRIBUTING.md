@@ -125,7 +125,6 @@ obvious, but avoid over commenting as well. Code should be able to be
 read like a book, with descriptive names used, no fancy tricks unless
 required. Always be concious of performance and security.
 
-
 [1]: https://docs.google.com/presentation/d/1UrBG1X4MXwVd8Ps498FDlAYvesIailjjPPJfR_B4SUs/edit#slide=id.g15c1f409958_0_0 "slides"
 [2]: https://github.com/orgs/hotosm/projects/22 "Our latest task board"
 [3]: https://github.com/hotosm/fmtm/issues "issue queue"

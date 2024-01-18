@@ -260,15 +260,6 @@ Happy mapping!
 
 The FMTM Team
 
-
-[1]: #introduction "Introduction"
-[2]: #an-overview-of-fmtm-in-relations-with-hot-osm-and-odk "An Overview Of FMTM In Relations With HOT, OSM and ODK."
-[3]: #prerequisites "Prerequisites"
-[4]: #video-tutorial "Video Tutorial"
-[5]: #steps-to-create-a-project-in-fmtm "Steps to create a project in FMTM"
-[6]: #steps-to-start-access-your-project-and-start-mapping-or-a-mapping-campaign "Steps to start access your project and Start mapping"
-[7]: #help-and-support "Help and Support"
-[8]: #thank-you "Thank you note"
 [9]: https://tasks.hotosm.org/learn/map "If you are new to mapping"
 [10]: https://docs.getodk.org/central-install-digital-ocean/ "Account on ODK Central Server"
 [11]: https://fmtm.hotosm.org/ "fmtm"
