@@ -1,6 +1,6 @@
 import re
 
-this_file_in_docs = "test copy.md"
+this_file_in_docs = "CONTRIBUTING.md"
 
 
 def reformat_links_as_refs(file_name: str) -> None:
@@ -54,3 +54,7 @@ def reformat_links_as_refs(file_name: str) -> None:
     with open(f"./docs/{this_file_in_docs}", "a") as file:
         file.write("\n\n")
         file.write("\n".join(footnotes))
+
+
+if __name__ == "__main__":
+    reformat_links_as_refs(this_file_in_docs)
