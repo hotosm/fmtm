@@ -55,7 +55,7 @@ from shapely.geometry import (
     shape,
 )
 from shapely.ops import unary_union
-from sqlalchemy import and_, column, inspect, select, table, text
+from sqlalchemy import and_, column, func, inspect, select, table, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -147,7 +147,6 @@ async def get_project_by_id(db: Session, project_id: int):
     db_project = (
         db.query(db_models.DbProject)
         .filter(db_models.DbProject.id == project_id)
-        .order_by(db_models.DbProject.id)
         .first()
     )
     return await convert_to_app_project(db_project)
@@ -164,22 +163,16 @@ async def get_project_info_by_id(db: Session, project_id: int):
     return await convert_to_app_project_info(db_project_info)
 
 
-async def delete_project_by_id(db: Session, project_id: int):
+async def delete_one_project(db: Session, db_project: db_models.DbProject) -> None:
     """Delete a project by id."""
     try:
-        db_project = (
-            db.query(db_models.DbProject)
-            .filter(db_models.DbProject.id == project_id)
-            .order_by(db_models.DbProject.id)
-            .first()
-        )
-        if db_project:
-            db.delete(db_project)
-            db.commit()
+        project_id = db_project.id
+        db.delete(db_project)
+        db.commit()
+        log.info(f"Deleted project with ID: {project_id}")
     except Exception as e:
         log.exception(e)
         raise HTTPException(e) from e
-    return f"Project {project_id} deleted"
 
 
 async def partial_update_project_info(
@@ -578,7 +571,7 @@ async def get_data_extract_from_osm_rawdata(
         return data_extract
     except Exception as e:
         log.error(e)
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 async def get_data_extract_url(
@@ -628,7 +621,7 @@ async def get_data_extract_url(
             shape(feature.get("geometry")) for feature in aoi.get("features", [])
         ]
         merged_geom = unary_union(geometries)
-    elif geom_type := aoi.get("type") == "Feature":
+    elif geom_type == aoi.get("type") == "Feature":
         merged_geom = shape(aoi.get("geometry"))
     else:
         merged_geom = shape(aoi)
@@ -2071,22 +2064,6 @@ async def update_project_form(
     return True
 
 
-async def update_odk_credentials_in_db(
-    project_instance: project_schemas.ProjectUpload,
-    odk_central_cred: project_schemas.ODKCentral,
-    odkid: int,
-    db: Session,
-):
-    """Update odk credentials for a project."""
-    project_instance.odkid = odkid
-    project_instance.odk_central_url = odk_central_cred.odk_central_url
-    project_instance.odk_central_user = odk_central_cred.odk_central_user
-    project_instance.odk_central_password = odk_central_cred.odk_central_password
-
-    db.commit()
-    db.refresh(project_instance)
-
-
 async def get_extracted_data_from_db(db: Session, project_id: int, outfile: str):
     """Get the geojson of those features for this project."""
     query = text(
@@ -2365,17 +2342,17 @@ async def get_tasks_count(db: Session, project_id: int):
 async def get_pagination(page: int, count: int, results_per_page: int, total: int):
     """Pagination result for splash page."""
     total_pages = (count + results_per_page - 1) // results_per_page
-    hasNext = (page * results_per_page) < count  # noqa: N806
-    hasPrev = page > 1  # noqa: N806
+    has_next = (page * results_per_page) < count  # noqa: N806
+    has_prev = page > 1  # noqa: N806
 
     pagination = project_schemas.PaginationInfo(
-        hasNext=hasNext,
-        hasPrev=hasPrev,
-        nextNum=page + 1 if hasNext else None,
+        has_next=has_next,
+        has_prev=has_prev,
+        next_num=page + 1 if has_next else None,
         page=page,
         pages=total_pages,
-        prevNum=page - 1 if hasPrev else None,
-        perPage=results_per_page,
+        prev_num=page - 1 if has_prev else None,
+        per_page=results_per_page,
         total=total,
     )
 
@@ -2438,7 +2415,9 @@ async def get_project_users(db: Session, project_id: int):
         project_id (int): The ID of the project.
 
     Returns:
-        List[Dict[str, Union[str, int]]]: A list of dictionaries containing the username and the number of contributions made by each user for the specified project.
+        List[Dict[str, Union[str, int]]]: A list of dictionaries containing
+            the username and the number of contributions made by each user
+            for the specified project.
     """
     contributors = (
         db.query(db_models.DbTaskHistory)
@@ -2468,7 +2447,8 @@ def count_user_contributions(db: Session, user_id: int, project_id: int) -> int:
         project_id (int): The ID of the project.
 
     Returns:
-        int: The number of contributions made by the user for the specified project.
+        int: The number of contributions made by the user for the specified
+            project.
     """
     contributions_count = (
         db.query(func.count(db_models.DbTaskHistory.user_id))
