@@ -17,3 +17,22 @@
 #
 
 """Pydantic models for data submissions."""
+
+from typing import List, Optional, Union
+from pydantic import BaseModel
+
+class PaginationInfo(BaseModel):
+    """Pagination JSON return."""
+    has_next: bool
+    has_prev: bool
+    next_num: Optional[int]
+    page: int
+    pages: int
+    prev_num: Optional[int]
+    per_page: int
+    total: int
+
+
+class PaginatedSubmissions(BaseModel):
+    results: List
+    pagination: PaginationInfo
