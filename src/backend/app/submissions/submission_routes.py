@@ -34,8 +34,6 @@ from app.db import database
 from app.projects import project_crud, project_schemas
 from app.submission import submission_crud, submission_schemas
 from app.tasks import tasks_crud
-from app.submission import submission_crud
-
 
 router = APIRouter(
     prefix="/submission",
