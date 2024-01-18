@@ -21,7 +21,7 @@ import json
 import os
 from typing import Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Response, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse
 from osm_fieldwork.odk_merge import OdkMerge
@@ -360,23 +360,25 @@ async def get_submission_form_fields(
     response = odk_form.form_fields(project.odkid, str(task_list[0]))
     return response
 
+
 @router.get("/submission_table/{project_id}")
 async def submission_table(
     background_tasks: BackgroundTasks,
     project_id: int,
-    page: int = Query(1, ge=1), 
-    results_per_page: int = Query(13, le=100), 
-    db: Session = Depends(database.get_db)
-    ):
-    """
-    This api returns the submission table of a project.
+    page: int = Query(1, ge=1),
+    results_per_page: int = Query(13, le=100),
+    db: Session = Depends(database.get_db),
+):
+    """This api returns the submission table of a project.
     It takes two parameter: project_id and task_id.
     project_id: The ID of the project. This endpoint returns the submission table of this project.
     task_id: The ID of the task. This endpoint returns the submission table of this task.
     """
     skip = (page - 1) * results_per_page
     limit = results_per_page
-    count, data = await submission_crud.get_submission_by_project(project_id, skip, limit, db)
+    count, data = await submission_crud.get_submission_by_project(
+        project_id, skip, limit, db
+    )
     background_task_id = await project_crud.insert_background_task_into_database(
         db, "sync_submission", project_id
     )
@@ -384,9 +386,7 @@ async def submission_table(
     background_tasks.add_task(
         submission_crud.update_submission_in_s3, db, project_id, background_task_id
     )
-    pagination = await project_crud.get_pagination(
-        page, count, results_per_page, count
-    )
+    pagination = await project_crud.get_pagination(page, count, results_per_page, count)
     response = submission_schemas.PaginatedSubmissions(
         results=data,
         pagination=submission_schemas.PaginationInfo(**pagination.dict()),

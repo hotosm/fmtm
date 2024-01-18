@@ -764,14 +764,14 @@ async def get_submissions_by_date(
     return response
 
 
-async def get_submission_by_project(project_id:int, skip:0, limit:100, db:Session):
+async def get_submission_by_project(project_id: int, skip: 0, limit: 100, db: Session):
     project = await project_crud.get_project(db, project_id)
     s3_project_path = f"/{project.organisation_id}/{project_id}"
     s3_submission_path = f"/{s3_project_path}/submission.zip"
 
     try:
         file = get_obj_from_bucket(settings.S3_BUCKET_NAME, s3_submission_path)
-    except ValueError as e:
+    except ValueError:
         return 0, []
 
     with zipfile.ZipFile(file, "r") as zip_ref:
