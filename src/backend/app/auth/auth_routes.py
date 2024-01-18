@@ -133,6 +133,7 @@ async def my_data(
     """Read access token and get user details from OSM.
 
     Args:
+        request: The HTTP request (automatically included variable).
         db: The db session.
         user_data: User data provided by osm-login-python Auth.
 
@@ -162,9 +163,13 @@ async def my_data(
         )
         db.add(db_user)
         db.commit()
+        # Append role
+        user_data["role"] = db_user.role
     else:
         if user_data.get("img_url"):
             user.profile_img = user_data["img_url"]
             db.commit()
+        # Append role
+        user_data["role"] = user.role
 
     return JSONResponse(content={"user_data": user_data}, status_code=200)

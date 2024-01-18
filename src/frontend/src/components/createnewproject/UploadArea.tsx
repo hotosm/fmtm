@@ -31,7 +31,7 @@ const uploadAreaOptions = [
   },
 ];
 
-const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
+const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomLineUpload, setCustomPolygonUpload }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   // const [uploadAreaFile, setUploadAreaFile] = useState(null);
@@ -266,6 +266,9 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
                 handleCustomChange('drawnGeojson', geojson);
                 dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
                 dispatch(CreateProjectActions.SetTotalAreaSelection(area));
+                dispatch(CreateProjectActions.ClearProjectStepState());
+                setCustomLineUpload(null);
+                setCustomPolygonUpload(null);
                 setGeojsonFile(null);
               }}
             />
