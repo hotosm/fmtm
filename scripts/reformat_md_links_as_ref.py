@@ -1,6 +1,6 @@
 import re
 
-this_file_in_docs = "CONTRIBUTING.md"
+this_file_in_docs = "INSTALL.md"
 
 
 def reformat_links_as_refs(file_name: str) -> None:
