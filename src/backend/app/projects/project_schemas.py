@@ -180,6 +180,7 @@ class ReadProject(BaseModel):
     hashtags: Optional[List[str]] = None
     organisation_id: Optional[int] = None
 
+
 class BackgroundTaskStatus(BaseModel):
     """Background task status for project related tasks."""
 
