@@ -160,34 +160,6 @@ export const GenerateProjectTiles = (url, payload) => {
   };
 };
 
-export const DownloadTile = (url, payload) => {
-  return async (dispatch) => {
-    dispatch(ProjectActions.SetDownloadTileLoading({ type: payload, loading: true }));
-
-    const getDownloadTile = async (url, payload) => {
-      try {
-        const response = await CoreModules.axios.get(url, {
-          responseType: 'blob',
-        });
-
-        // Get filename from content-disposition header
-        const filename = response.headers['content-disposition'].split('filename=')[1];
-
-        var a = document.createElement('a');
-        a.href = window.URL.createObjectURL(response.data);
-        a.download = filename;
-        a.click();
-        dispatch(ProjectActions.SetDownloadTileLoading({ type: payload, loading: false }));
-      } catch (error) {
-        dispatch(ProjectActions.SetDownloadTileLoading({ type: payload, loading: false }));
-      } finally {
-        dispatch(ProjectActions.SetDownloadTileLoading({ type: payload, loading: false }));
-      }
-    };
-    await getDownloadTile(url, payload);
-  };
-};
-
 export const GetProjectDashboard = (url) => {
   return async (dispatch) => {
     const getProjectDashboard = async (url) => {

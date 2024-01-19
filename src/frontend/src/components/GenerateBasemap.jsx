@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import CoreModules from '../shared/CoreModules';
 import AssetModules from '../shared/AssetModules';
 import environment from '../environment';
-import { DownloadTile, GenerateProjectTiles, GetTilesList } from '../api/Project';
+import { GenerateProjectTiles, GetTilesList } from '../api/Project';
 
 const GenerateBasemap = ({ setToggleGenerateModal, toggleGenerateModal, projectInfo }) => {
   const dispatch = CoreModules.useAppDispatch();
@@ -25,8 +25,8 @@ const GenerateBasemap = ({ setToggleGenerateModal, toggleGenerateModal, projectI
     padding: '16px 32px 24px 32px',
     maxWidth: '1000px',
   });
-  const downloadBasemap = (tileId) => {
-    dispatch(DownloadTile(`${import.meta.env.VITE_API_URL}/projects/download_tiles/?tile_id=${tileId}`, projectInfo));
+  const downloadBasemap = async (tileId) => {
+    window.open(`${import.meta.env.VITE_API_URL}/projects/download_tiles/?tile_id=${tileId}`, '_blank');
   };
 
   const getTilesList = () => {

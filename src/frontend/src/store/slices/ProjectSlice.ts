@@ -16,7 +16,6 @@ const ProjectSlice = createSlice({
     generateProjectTilesLoading: false,
     tilesList: [],
     tilesListLoading: false,
-    downloadTilesLoading: false,
     downloadDataExtractLoading: false,
     taskModalStatus: false,
     mobileFooterSelection: 'explore',
@@ -65,9 +64,6 @@ const ProjectSlice = createSlice({
     },
     SetTilesListLoading(state, action) {
       state.tilesListLoading = action.payload;
-    },
-    SetDownloadTileLoading(state, action) {
-      state.downloadTilesLoading = action.payload;
     },
     SetDownloadDataExtractLoading(state, action) {
       state.downloadDataExtractLoading = action.payload;

@@ -49,6 +49,7 @@ export const initialState: CreateProjectStateTypes = {
   canSwitchCreateProjectSteps: false,
   isTasksGenerated: { divide_on_square: false, task_splitting_algorithm: false },
   isFgbFetching: false,
+  basemapSelection: '',
 };
 
 const CreateProject = createSlice({
@@ -90,6 +91,7 @@ const CreateProject = createSlice({
       state.uploadAreaSelection = null;
       state.dividedTaskGeojson = null;
       state.dividedTaskLoading = false;
+      state.basemapSelection = '';
     },
     UploadAreaLoading(state, action) {
       state.projectAreaLoading = action.payload;

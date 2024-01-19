@@ -8,6 +8,8 @@ from typing import Any
 from loguru import logger as log
 from minio import Minio
 from minio.commonconfig import CopySource
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from app.config import settings
 
@@ -157,6 +159,16 @@ def copy_obj_bucket_to_bucket(
         return False
 
     return True
+
+
+async def get_bucket_path(db: Session, project_id: int) -> str:
+    """For a given project id, return the S3 bucket path."""
+    log.debug(f"Getting org id for project: {project_id}")
+    query = text(f"SELECT organisation_id FROM projects WHERE id = {project_id};")
+    result = db.execute(query)
+    org_id = result.fetchone()[0]
+    log.debug(f"Extracted org id: {org_id}")
+    return f"/{org_id}/{project_id}"
 
 
 def create_bucket_if_not_exists(client: Minio, bucket_name: str, is_public: bool):

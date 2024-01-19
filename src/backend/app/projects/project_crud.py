@@ -66,13 +66,17 @@ from app.db.database import get_db
 from app.db.postgis_utils import geojson_to_flatgeobuf, geometry_to_geojson, timestamp
 from app.organisations import organisation_crud
 from app.projects import project_schemas
-from app.s3 import add_obj_to_bucket, get_obj_from_bucket
+from app.s3 import (
+    add_file_to_bucket,
+    add_obj_to_bucket,
+    get_bucket_path,
+    get_obj_from_bucket,
+)
 from app.tasks import tasks_crud
 from app.users import user_crud
 
 QR_CODES_DIR = "QR_codes/"
 TASK_GEOJSON_DIR = "geojson/"
-TILESDIR = "/opt/tiles"
 
 
 async def get_projects(
@@ -647,11 +651,14 @@ async def get_data_extract_url(
     try:
         result = requests.post(query_url, data=json.dumps(query), headers=headers)
         result.raise_for_status()
-    except requests.exceptions.HTTPError:
+    except requests.exceptions.HTTPError as e:
         error_dict = result.json()
         error_dict["status_code"] = result.status_code
         log.error(f"Failed to get extract from raw data api: {error_dict}")
-        return error_dict
+        raise HTTPException(
+            status_code=error_dict.get("status_code"),
+            detail=error_dict.get("detail"),
+        ) from e
 
     task_id = result.json()["task_id"]
 
@@ -2094,15 +2101,65 @@ async def get_extracted_data_from_db(db: Session, project_id: int, outfile: str)
 
 
 # NOTE defined as non-async to run in separate thread
-def get_project_tiles(
+def init_project_basemaps(
     db: Session,
     project_id: int,
     background_task_id: uuid.UUID,
     source: str,
-    output_format: str = "mbtiles",
+) -> None:
+    """Init basemaps for the project and task areas.
+
+    A PMTiles archive is created for the entire project, plus
+    individual mbtile archives for each task area.
+
+    Args:
+        db (Session): SQLAlchemy db session.
+        project_id (int): Associated project ID.
+        background_task_id (uuid.UUID): Pre-generated background task ID.
+        source (str): Source to use for basemap tiles.
+
+    Returns:
+        None
+    """
+    # Generate PMTiles for project area
+    generate_project_or_task_basemap(
+        db,
+        project_id,
+        background_task_id,
+        source,
+        output_format="pmtiles",
+    )
+
+    # Generate MBTiles for each task
+    get_tasks_async = async_to_sync(tasks_crud.get_task_id_list)
+    task_list = get_tasks_async(db, project_id)
+
+    # TODO optimise to run with threadpool
+    for task_id in task_list:
+        generate_project_or_task_basemap(
+            db,
+            project_id,
+            background_task_id,
+            source,
+            output_format="mbtiles",
+            task_id=task_id,
+        )
+
+
+# NOTE defined as non-async to run in separate thread
+def generate_project_or_task_basemap(
+    db: Session,
+    project_id: int,
+    background_task_id: uuid.UUID,
+    source: str = "esri",
+    output_format: str = "pmtiles",
     tms: str = None,
-):
-    """Get the tiles for a project.
+    task_id: int = None,
+) -> None:
+    """For a given project or task area, generate a basemap.
+
+    Wrapper that extracts the project or task bbox prior to calling
+    generate_basemap_for_bbox function.
 
     Args:
         db (Session): SQLAlchemy db session.
@@ -2112,11 +2169,73 @@ def get_project_tiles(
         output_format (str, optional): Default "mbtiles".
             Other options: "pmtiles", "sqlite3".
         tms (str, optional): Default None. Custom TMS provider URL.
+        task_id (bool): If set, create for a task boundary only.
+
+    Returns:
+        None
+    """
+    if not task_id:
+        # Project Outline
+        log.debug(f"Getting bbox for project: {project_id}")
+    else:
+        # Task Outline
+        log.debug(f"Getting bbox for task: {task_id}")
+
+    query = text(
+        f"""SELECT ST_XMin(ST_Envelope(outline)) AS min_lon,
+                    ST_YMin(ST_Envelope(outline)) AS min_lat,
+                    ST_XMax(ST_Envelope(outline)) AS max_lon,
+                    ST_YMax(ST_Envelope(outline)) AS max_lat
+            FROM {'tasks' if task_id else 'projects'}
+            WHERE id = {task_id if task_id else project_id};"""
+    )
+
+    result = db.execute(query)
+    db_bbox = result.fetchone()
+    if db_bbox:
+        log.debug(f"Extracted bbox: {db_bbox}")
+    else:
+        log.error(f"Failed to get bbox from project: {project_id}")
+
+    generate_basemap_for_bbox(
+        db,
+        project_id,
+        db_bbox,
+        background_task_id,
+        source,
+        output_format,
+        tms,
+        task_id,
+    )
+
+
+# NOTE defined as non-async to run in separate thread
+def generate_basemap_for_bbox(
+    db: Session,
+    project_id: int,
+    bbox: tuple,
+    background_task_id: uuid.UUID,
+    source: str,
+    output_format: str = "mbtiles",
+    tms: str = None,
+    task_id: int = None,
+):
+    """Get basemap tiles for a given bounding box.
+
+    Args:
+        db (Session): SQLAlchemy db session.
+        project_id (int): ID of project to create tiles for.
+        bbox (tuple): the bounding box for generate for.
+        background_task_id (uuid.UUID): UUID of background task to track.
+        source (str): Tile source ("esri", "bing", "topo", "google", "oam").
+        output_format (str, optional): Default "mbtiles".
+            Other options: "pmtiles", "sqlite3".
+        tms (str, optional): Default None. Custom TMS provider URL.
+        task_id (bool): If set, create for a task boundary only.
     """
     zooms = "12-19"
-    tiles_path_id = uuid.uuid4()
-    tiles_dir = f"{TILESDIR}/{tiles_path_id}"
-    outfile = f"{tiles_dir}/{project_id}_{source}tiles.{output_format}"
+    tiles_dir = "opt/tiles"
+    outfile = f"/tmp/{project_id}_{uuid.uuid4()}.{output_format}"
 
     tile_path_instance = db_models.DbTilesPath(
         project_id=project_id,
@@ -2130,36 +2249,9 @@ def get_project_tiles(
         db.add(tile_path_instance)
         db.commit()
 
-        # Project Outline
-        log.debug(f"Getting bbox for project: {project_id}")
-        query = text(
-            f"""SELECT ST_XMin(ST_Envelope(outline)) AS min_lon,
-                        ST_YMin(ST_Envelope(outline)) AS min_lat,
-                        ST_XMax(ST_Envelope(outline)) AS max_lon,
-                        ST_YMax(ST_Envelope(outline)) AS max_lat
-                FROM projects
-                WHERE id = {project_id};"""
-        )
+        # Get coords from bbox
+        min_lon, min_lat, max_lon, max_lat = bbox
 
-        result = db.execute(query)
-        project_bbox = result.fetchone()
-        log.debug(f"Extracted project bbox: {project_bbox}")
-
-        if project_bbox:
-            min_lon, min_lat, max_lon, max_lat = project_bbox
-        else:
-            log.error(f"Failed to get bbox from project: {project_id}")
-
-        log.debug(
-            "Creating basemap with params: "
-            f"boundary={min_lon},{min_lat},{max_lon},{max_lat} | "
-            f"outfile={outfile} | "
-            f"zooms={zooms} | "
-            f"outdir={tiles_dir} | "
-            f"source={source} | "
-            f"xy={False} | "
-            f"tms={tms}"
-        )
         create_basemap_file(
             boundary=f"{min_lon},{min_lat},{max_lon},{max_lat}",
             outfile=outfile,
@@ -2171,7 +2263,24 @@ def get_project_tiles(
         )
         log.info(f"Basemap created for project ID {project_id}: {outfile}")
 
+        get_bucket_path_sync = async_to_sync(get_bucket_path)
+        project_s3_path = get_bucket_path_sync(db, project_id)
+
+        if task_id:
+            s3_tile_path = f"{project_s3_path}/basemaps/{task_id}.{output_format}"
+        else:
+            s3_tile_path = f"{project_s3_path}/basemap.{output_format}"
+
+        add_file_to_bucket(
+            settings.S3_BUCKET_NAME,
+            s3_tile_path,
+            outfile,
+        )
+
         tile_path_instance.status = 4
+        tile_path_instance.path = (
+            f"{settings.S3_DOWNLOAD_ROOT}/" f"{settings.S3_BUCKET_NAME}{s3_tile_path}"
+        )
         db.commit()
 
         # Update background task status to COMPLETED
@@ -2185,6 +2294,7 @@ def get_project_tiles(
         log.error(f"Tiles generation process failed for project id {project_id}")
 
         tile_path_instance.status = 2
+        tile_path_instance.path = ""
         db.commit()
 
         # Update background task status to FAILED

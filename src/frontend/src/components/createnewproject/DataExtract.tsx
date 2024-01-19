@@ -116,17 +116,18 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
         dispatch(CreateProjectActions.SetFgbFetchingStatus(false));
         await dispatch(CreateProjectActions.setDataExtractGeojson(geojsonExtract));
       } catch (error) {
+        let errorMsg = JSON.stringify(error?.response?.data?.detail[0]?.msg);
+        if (errorMsg && errorMsg.includes('higher than Threshold')) {
+          errorMsg = 'Project area too large for data extract generation. Please reduce size or use custom extract.';
+        }
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
-            message: 'Error to generate FGB file.',
+            message: errorMsg || 'Error getting data extract.',
             variant: 'error',
-            duration: 2000,
+            duration: 10000,
           }),
         );
-        dispatch(CreateProjectActions.SetFgbFetchingStatus(false));
-        // TODO add error message for user
-        console.error('Error getting data extract:', error);
       }
     }
   };
