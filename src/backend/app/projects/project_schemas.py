@@ -166,12 +166,19 @@ class ProjectOut(ProjectBase):
     project_uuid: uuid.UUID = uuid.uuid4()
 
 
-class ReadProject(ProjectBase):
+class ReadProject(BaseModel):
     """Redundant model for refactor."""
 
     project_uuid: uuid.UUID = uuid.uuid4()
     location_str: Optional[str] = None
-
+    id: int
+    odkid: int
+    author: User
+    project_info: ProjectInfo
+    status: ProjectStatus
+    xform_title: Optional[str] = None
+    hashtags: Optional[List[str]] = None
+    organisation_id: Optional[int] = None
 
 class BackgroundTaskStatus(BaseModel):
     """Background task status for project related tasks."""
