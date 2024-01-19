@@ -615,7 +615,7 @@ async def get_data_extract_url(
         }
     }
 
-    if geom_type := aoi.get("type") == "FeatureCollection":
+    if aoi.get("type") == "FeatureCollection":
         # Convert each feature into a Shapely geometry
         geometries = [
             shape(feature.get("geometry")) for feature in aoi.get("features", [])
