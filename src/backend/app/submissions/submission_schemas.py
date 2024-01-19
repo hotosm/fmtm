@@ -37,5 +37,7 @@ class PaginationInfo(BaseModel):
 
 
 class PaginatedSubmissions(BaseModel):
+    """Paginated Submissions."""
+
     results: List
     pagination: PaginationInfo

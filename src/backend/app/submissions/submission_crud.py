@@ -765,6 +765,24 @@ async def get_submissions_by_date(
 
 
 async def get_submission_by_project(project_id: int, skip: 0, limit: 100, db: Session):
+    """Get submission by project.
+
+    Retrieves a paginated list of submissions for a given project.
+
+    Args:
+        project_id (int): The ID of the project.
+        skip (int): The number of submissions to skip.
+        limit (int): The maximum number of submissions to retrieve.
+        db (Session): The database session.
+
+    Returns:
+        Tuple[int, List]: A tuple containing the total number of submissions and
+        the paginated list of submissions.
+
+    Raises:
+        ValueError: If the submission file cannot be found.
+
+    """
     project = await project_crud.get_project(db, project_id)
     s3_project_path = f"/{project.organisation_id}/{project_id}"
     s3_submission_path = f"/{s3_project_path}/submission.zip"
