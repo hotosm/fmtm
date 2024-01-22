@@ -1,3 +1,24 @@
+# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+#
+# This file is part of FMTM.
+#
+#     FMTM is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     FMTM is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#
+
+"""User dependencies for use in Depends."""
+
+
 from typing import Union
 
 from fastapi import Depends
@@ -15,14 +36,25 @@ async def user_exists(
     user_id: Union[str, int],
     db: Session = Depends(get_db),
 ) -> DbUser:
-    """Check if user exists, else error."""
+    """Check if a user exists, else Error.
+
+    Args:
+        user_id (Union[str, int]): The user ID (integer) or username (string) to check.
+        db (Session, optional): The SQLAlchemy database session.
+
+    Returns:
+        DbUser: The user if found.
+
+    Raises:
+        HTTPException: Raised with a 404 status code if the user is not found.
+    """
     try:
         user_id = int(user_id)
     except ValueError:
         pass
 
     if isinstance(user_id, int):
-        log.debug(f"Getting user by id: {user_id}")
+        log.debug(f"Getting user by ID: {user_id}")
         db_user = await get_user(db, user_id)
 
     if isinstance(user_id, str):
