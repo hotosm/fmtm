@@ -32,7 +32,6 @@ from app.organisations.organisation_deps import (
 )
 from app.organisations.organisation_schemas import OrganisationEdit, OrganisationIn
 from app.s3 import add_obj_to_bucket
-from app.db import db_models
 from app.users import user_crud
 from app.auth.osm import AuthUser
 from app.models.enums import UserRole
@@ -197,11 +196,9 @@ async def delete_organisation(
     return Response(status_code=HTTPStatus.NO_CONTENT)
 
 
-async def add_organisation_admin(db: Session, 
-                                user_id:int, 
-                                organization: db_models.DbOrganisation
-                                ):
-
+async def add_organisation_admin(
+    db: Session, user_id: int, organization: db_models.DbOrganisation
+):
     # get the user model instance
     user_model_instance = await user_crud.get_user(db, user_id)
 

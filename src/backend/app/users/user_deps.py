@@ -1,22 +1,22 @@
+from typing import Union
+
 from fastapi import Depends
+from fastapi.exceptions import HTTPException
+from loguru import logger as log
 from sqlalchemy.orm import Session
+
 from app.db.database import get_db
 from app.db.db_models import DbUser
-from loguru import logger as log
-from app.users.user_crud import get_user, get_user_by_username
 from app.models.enums import HTTPStatus
-from fastapi.exceptions import HTTPException
-from typing import Union
+from app.users.user_crud import get_user, get_user_by_username
 
 
 async def user_exists(
     user_id: Union[str, int],
     db: Session = Depends(get_db),
 ) -> DbUser:
+    """Check if user exists, else error.
     """
-        Check if user exists, else error.
-    """
-
     try:
         user_id = int(user_id)
     except ValueError:

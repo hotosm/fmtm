@@ -25,14 +25,13 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 
+from app.auth.osm import AuthUser, login_required
+from app.auth.roles import org_admin, super_admin
 from app.db import database
 from app.db.db_models import DbOrganisation
 from app.organisations import organisation_crud, organisation_schemas
 from app.organisations.organisation_deps import org_exists
-from app.auth.osm import AuthUser, login_required
 from app.users.user_deps import user_exists
-from app.auth.roles import org_admin, super_admin
-
 
 router = APIRouter(
     prefix="/organisation",
@@ -114,4 +113,4 @@ async def add_new_organisation_admin(
     # check if the current_user is the organisation admin
     org_admin(db, organisation.id, current_user)
 
-    return await organisation_crud.add_organisation_admin(db, user, organisation)
+    return await organisation_crud.add_organisation_admin(db, user, organization)
