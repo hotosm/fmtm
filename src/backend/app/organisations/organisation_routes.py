@@ -29,6 +29,10 @@ from app.db import database
 from app.db.db_models import DbOrganisation
 from app.organisations import organisation_crud, organisation_schemas
 from app.organisations.organisation_deps import org_exists
+from app.auth.osm import AuthUser, login_required
+from app.users.user_deps import user_exists
+from app.auth.roles import org_admin
+
 
 router = APIRouter(
     prefix="/organisation",
@@ -85,3 +89,16 @@ async def delete_organisations(
 ):
     """Delete an organisation."""
     return await organisation_crud.delete_organisation(db, organisation)
+
+
+@router.post("/add_organisation_admin/")
+async def add_new_organisation_admin(
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
+    user: AuthUser = Depends(user_exists),
+    organization: DbOrganisation = Depends(org_exists),
+):
+    # check if the current_user is the organisation admin
+    org_admin(db, organization.id, current_user)
+
+    return await organization_crud.add_organisation_admin(db, user, organization)
