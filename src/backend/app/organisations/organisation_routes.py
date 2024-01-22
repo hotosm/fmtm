@@ -121,4 +121,4 @@ async def add_new_organisation_admin(
     # check if the current_user is the organisation admin
     org_admin(db, organisation.id, current_user)
 
-    return await organisation_crud.add_organisation_admin(db, user, organization)
+    return await organisation_crud.add_organisation_admin(db, user, organisation)

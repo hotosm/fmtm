@@ -196,14 +196,14 @@ async def delete_organisation(
 
 
 async def add_organisation_admin(
-    db: Session, user_id: int, organization: db_models.DbOrganisation
+    db: Session, user_id: int, organisation: db_models.DbOrganisation
 ):
     """Adds a user as an admin to the specified organisation.
 
     Args:
         db (Session): The database session.
         user_id (int): The ID of the user to be added as an admin.
-        organization (DbOrganisation): The organisation model instance.
+        organisation (DbOrganisation): The organisation model instance.
 
     Returns:
         Response: The HTTP response with status code 200.
@@ -212,7 +212,7 @@ async def add_organisation_admin(
     user_model_instance = await user_crud.get_user(db, user_id)
 
     # add data to the managers field in organisation model
-    organization.managers.append(user_model_instance)
+    organisation.managers.append(user_model_instance)
     db.commit()
 
     return Response(status_code=HTTPStatus.OK)
