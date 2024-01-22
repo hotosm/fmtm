@@ -24,29 +24,36 @@ from loguru import logger as log
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
+from app.auth.osm import AuthUser
 from app.config import settings
 from app.db import db_models
-from app.models.enums import HTTPStatus
+from app.models.enums import HTTPStatus, UserRole
 from app.organisations.organisation_deps import (
     get_organisation_by_name,
 )
 from app.organisations.organisation_schemas import OrganisationEdit, OrganisationIn
 from app.s3 import add_obj_to_bucket
 from app.users import user_crud
-from app.auth.osm import AuthUser
-from app.models.enums import UserRole
 
 
-def get_organisations(
-    db: Session,
-    current_user: AuthUser,
-    approved: bool
-):
+def get_organisations(db: Session, current_user: AuthUser, approved: bool):
     """Get all orgs."""
-    if db.query(db_models.DbUser).filter_by(id=current_user['id'], role=UserRole.ADMIN).first():
-        return db.query(db_models.DbOrganisation).filter(db_models.DbOrganisation.approved==approved).all()
+    if (
+        db.query(db_models.DbUser)
+        .filter_by(id=current_user["id"], role=UserRole.ADMIN)
+        .first()
+    ):
+        return (
+            db.query(db_models.DbOrganisation)
+            .filter(db_models.DbOrganisation.approved == approved)
+            .all()
+        )
 
-    return db.query(db_models.DbOrganisation).filter(db_models.DbOrganisation.approved==True).all()
+    return (
+        db.query(db_models.DbOrganisation)
+        .filter(db_models.DbOrganisation.approved == True)
+        .all()
+    )
 
 
 async def upload_logo_to_s3(
@@ -199,6 +206,16 @@ async def delete_organisation(
 async def add_organisation_admin(
     db: Session, user_id: int, organization: db_models.DbOrganisation
 ):
+    """Adds a user as an admin to the specified organisation.
+
+    Args:
+        db (Session): The database session.
+        user_id (int): The ID of the user to be added as an admin.
+        organization (DbOrganisation): The organisation model instance.
+
+    Returns:
+        Response: The HTTP response with status code 200.
+    """
     # get the user model instance
     user_model_instance = await user_crud.get_user(db, user_id)
 
@@ -210,8 +227,20 @@ async def add_organisation_admin(
 
 
 async def approve_organisation(db, organisation_id):
+    """Approves an oranisation request made by the user .
 
-    db_org = db.query(db_models.DbOrganisation).filter(db_models.DbOrganisation.id == organisation_id).first()
+    Args:
+        db: The database session.
+        organisation_id: The ID of the organisation to be approved.
+
+    Returns:
+        Response: An HTTP response with the status code 200.
+    """
+    db_org = (
+        db.query(db_models.DbOrganisation)
+        .filter(db_models.DbOrganisation.id == organisation_id)
+        .first()
+    )
     db_org.approved = True
     db.commit()
     return Response(status_code=HTTPStatus.OK)

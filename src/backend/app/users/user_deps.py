@@ -15,8 +15,7 @@ async def user_exists(
     user_id: Union[str, int],
     db: Session = Depends(get_db),
 ) -> DbUser:
-    """Check if user exists, else error.
-    """
+    """Check if user exists, else error."""
     try:
         user_id = int(user_id)
     except ValueError:

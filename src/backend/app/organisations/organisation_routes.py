@@ -45,7 +45,7 @@ router = APIRouter(
 def get_organisations(
     db: Session = Depends(database.get_db),
     current_user: AuthUser = Depends(login_required),
-    approved: bool = True
+    approved: bool = True,
 ) -> list[organisation_schemas.OrganisationOut]:
     """Get a list of all organisations."""
     return organisation_crud.get_organisations(db, current_user, approved)
@@ -98,6 +98,10 @@ async def approve_organisation(
     db: Session = Depends(database.get_db),
     current_user: AuthUser = Depends(login_required),
 ):
+    """Approve the organisation request made by the user.
+
+    The logged in user must be super admin to perform this action .
+    """
     # check if the current_user is the super admin
     super_admin(db, current_user)
     return await organisation_crud.approve_organisation(db, organisation_id)
@@ -110,6 +114,10 @@ async def add_new_organisation_admin(
     user: AuthUser = Depends(user_exists),
     organisation: DbOrganisation = Depends(org_exists),
 ):
+    """Add a new organisation admin.
+
+    The logged in user must be either the owner of the organisation or a super admin.
+    """
     # check if the current_user is the organisation admin
     org_admin(db, organisation.id, current_user)
 
