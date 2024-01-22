@@ -367,23 +367,13 @@ async def submission_table(
     results_per_page: int = Query(13, le=100),
     db: Session = Depends(database.get_db),
 ):
-    """This API returns the submission table of a project.
+    """This api returns the submission table of a project.
 
-    Args:
-        background_tasks (BackgroundTasks): The background tasks manager.
+    It takes two parameter: project_id and task_id.
 
-        project_id (int): The ID of the project.
+    project_id: The ID of the project.
 
-        page (int, optional): The page number for pagination. Defaults to 1.
-
-        results_per_page (int, optional): The number of results per page for pagination.
-        Defaults to 13.
-
-        db (Session, optional): The database session.
-
-    Returns:
-        PaginatedSubmissions: The paginated submission table of the project.
-
+    task_id: The ID of the task.
     """
     skip = (page - 1) * results_per_page
     limit = results_per_page
