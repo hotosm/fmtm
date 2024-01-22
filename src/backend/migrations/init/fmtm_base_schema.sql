@@ -277,6 +277,7 @@ CREATE TABLE public.organisations (
     description character varying,
     url character varying,
     type public.organisationtype NOT NULL,
+    approved BOOLEAN DEFAULT false,
     odk_central_url character varying,
     odk_central_user character varying,
     odk_central_password character varying
