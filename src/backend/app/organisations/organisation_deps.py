@@ -43,10 +43,8 @@ async def get_organisation_by_name(db: Session, org_name: str) -> DbOrganisation
     """
     return (
         db.query(DbOrganisation)
-        .filter(
-            DbOrganisation.approved == True,
-            func.lower(DbOrganisation.name).like(func.lower(f"%{org_name}%")),
-        )
+        .filter_by(approved=True)
+        .filter(func.lower(DbOrganisation.name).like(func.lower(f"%{org_name}%")))
         .first()
     )
 
@@ -61,11 +59,7 @@ async def get_organisation_by_id(db: Session, org_id: int) -> DbOrganisation:
     Returns:
         DbOrganisation: organisation with the given id
     """
-    return (
-        db.query(DbOrganisation)
-        .filter(DbOrganisation.id == org_id, DbOrganisation.approved == True)
-        .first()
-    )
+    return db.query(DbOrganisation).filter_by(id=org_id, approved=True).first()
 
 
 async def org_exists(

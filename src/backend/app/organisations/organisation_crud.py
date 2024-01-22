@@ -43,17 +43,9 @@ def get_organisations(db: Session, current_user: AuthUser, approved: bool):
         .filter_by(id=current_user["id"], role=UserRole.ADMIN)
         .first()
     ):
-        return (
-            db.query(db_models.DbOrganisation)
-            .filter(db_models.DbOrganisation.approved == approved)
-            .all()
-        )
+        return db.query(db_models.DbOrganisation).filter_by(approved=approved).all()
 
-    return (
-        db.query(db_models.DbOrganisation)
-        .filter(db_models.DbOrganisation.approved == True)
-        .all()
-    )
+    return db.query(db_models.DbOrganisation).filter_by(approved=True).all()
 
 
 async def upload_logo_to_s3(
