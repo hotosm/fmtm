@@ -34,13 +34,20 @@ from app.organisations.organisation_schemas import OrganisationEdit, Organisatio
 from app.s3 import add_obj_to_bucket
 from app.db import db_models
 from app.users import user_crud
+from app.auth.osm import AuthUser
+from app.models.enums import UserRole
 
 
 def get_organisations(
     db: Session,
+    current_user: AuthUser,
+    approved: bool
 ):
     """Get all orgs."""
-    return db.query(db_models.DbOrganisation).all()
+    if db.query(db_models.DbUser).filter_by(id=current_user['id'], role=UserRole.ADMIN).first():
+        return db.query(db_models.DbOrganisation).filter(db_models.DbOrganisation.approved==approved).all()
+
+    return db.query(db_models.DbOrganisation).filter(db_models.DbOrganisation.approved==True).all()
 
 
 async def upload_logo_to_s3(

@@ -31,7 +31,7 @@ from app.organisations import organisation_crud, organisation_schemas
 from app.organisations.organisation_deps import org_exists
 from app.auth.osm import AuthUser, login_required
 from app.users.user_deps import user_exists
-from app.auth.roles import org_admin
+from app.auth.roles import org_admin, super_admin
 
 
 router = APIRouter(
@@ -45,9 +45,11 @@ router = APIRouter(
 @router.get("/", response_model=list[organisation_schemas.OrganisationOut])
 def get_organisations(
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
+    approved: bool = True
 ) -> list[organisation_schemas.OrganisationOut]:
     """Get a list of all organisations."""
-    return organisation_crud.get_organisations(db)
+    return organisation_crud.get_organisations(db, current_user, approved)
 
 
 @router.get("/{org_id}", response_model=organisation_schemas.OrganisationOut)
