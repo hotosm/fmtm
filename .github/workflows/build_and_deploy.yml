@@ -25,6 +25,7 @@ jobs:
       compose_service: api
       compose_command: pytest
       tag_override: ci-${{ github.ref_name }}
+      coverage: true
     secrets: inherit
 
   frontend-tests:
