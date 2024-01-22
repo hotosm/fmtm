@@ -210,3 +210,11 @@ async def add_organisation_admin(db: Session,
     db.commit()
 
     return Response(status_code=HTTPStatus.OK)
+
+
+async def approve_organisation(db, organisation_id):
+
+    db_org = db.query(db_models.DbOrganisation).filter(db_models.DbOrganisation.id == organisation_id).first()
+    db_org.approved = True
+    db.commit()
+    return Response(status_code=HTTPStatus.OK)

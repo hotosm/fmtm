@@ -93,14 +93,25 @@ async def delete_organisations(
     return await organisation_crud.delete_organisation(db, organisation)
 
 
-@router.post("/add_organisation_admin/")
+@router.post("/approve/")
+async def approve_organisation(
+    organisation_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
+):
+    # check if the current_user is the super admin
+    super_admin(db, current_user)
+    return await organisation_crud.approve_organisation(db, organisation_id)
+
+
+@router.post("/add_admin/")
 async def add_new_organisation_admin(
     db: Session = Depends(database.get_db),
     current_user: AuthUser = Depends(login_required),
     user: AuthUser = Depends(user_exists),
-    organization: DbOrganisation = Depends(org_exists),
+    organisation: DbOrganisation = Depends(org_exists),
 ):
     # check if the current_user is the organisation admin
-    org_admin(db, organization.id, current_user)
+    org_admin(db, organisation.id, current_user)
 
-    return await organization_crud.add_organisation_admin(db, user, organization)
+    return await organisation_crud.add_organisation_admin(db, user, organisation)
