@@ -31,7 +31,7 @@ from sqlalchemy.orm import Session
 from app.central import central_crud
 from app.config import settings
 from app.db import database
-from app.projects import project_crud, project_schemas
+from app.projects import project_crud, project_deps, project_schemas
 from app.submissions import submission_crud, submission_schemas
 from app.tasks import tasks_crud
 
@@ -388,6 +388,41 @@ async def submission_table(
         submission_crud.update_submission_in_s3, db, project_id, background_task_id
     )
     pagination = await project_crud.get_pagination(page, count, results_per_page, count)
+    response = submission_schemas.PaginatedSubmissions(
+        results=data,
+        pagination=submission_schemas.PaginationInfo(**pagination.dict()),
+    )
+    return response
+
+
+@router.get("/task_submissions/{project_id}")
+async def task_submissions(
+    task_id: int,
+    project: project_deps.get_project_by_id = Depends(),
+    page: int = Query(1, ge=1),
+    limit: int = Query(13, le=100),
+    db: Session = Depends(database.get_db),
+):
+    """This api returns the submission table of a project.
+
+    It takes two parameter: project_id and task_id.
+
+    project_id: The ID of the project.
+
+    task_id: The ID of the task.
+    """
+    skip = (page - 1) * limit
+    filters = {
+        "$top": limit,
+        "$skip": skip,
+        "$count": True,
+        "$wkt": True,
+    }
+
+    data, count = await submission_crud.get_submission_by_task(
+        project, task_id, filters, db
+    )
+    pagination = await project_crud.get_pagination(page, count, limit, count)
     response = submission_schemas.PaginatedSubmissions(
         results=data,
         pagination=submission_schemas.PaginationInfo(**pagination.dict()),
