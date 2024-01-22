@@ -1179,27 +1179,27 @@ async def get_template_file(
     "/project_dashboard/{project_id}", response_model=project_schemas.ProjectDashboard
 )
 async def project_dashboard(
-    project_id: int,
     background_tasks: BackgroundTasks,
+    project: project_deps.get_project_by_id = Depends(),
     db: Session = Depends(database.get_db),
 ):
     """Get the project dashboard details.
 
     Args:
-        project_id (int): The ID of the project.
         background_tasks (BackgroundTasks): FastAPI bg tasks, provided automatically.
+        project (db_models.DbProject): An instance of the project.
         db (Session): The database session.
 
     Returns:
         ProjectDashboard: The project dashboard details.
     """
-    data = await project_crud.get_dashboard_detail(project_id, db)
+    data = await project_crud.get_dashboard_detail(project, db)
     background_task_id = await project_crud.insert_background_task_into_database(
-        db, "sync_submission", project_id
+        db, "sync_submission", project.id
     )
 
     background_tasks.add_task(
-        submission_crud.update_submission_in_s3, db, project_id, background_task_id
+        submission_crud.update_submission_in_s3, db, project.id, background_task_id
     )
     return data
 
