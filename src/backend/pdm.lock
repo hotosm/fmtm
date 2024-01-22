@@ -5,7 +5,7 @@
 groups = ["default", "debug", "dev", "docs", "test"]
 strategy = ["cross_platform"]
 lock_version = "4.4.1"
-content_hash = "sha256:fc16f7f4dcedd93e3e95dcae5d0d6675a0b224b70be652546c3ab0c3f9d9946f"
+content_hash = "sha256:c9857de32fdacde9692dbf1fd0f90bcd7b3ecde743220437cb3c23f57e4f0bed"
 
 [[package]]
 name = "aiohttp"
@@ -476,6 +476,18 @@ files = [
     {file = "coverage-7.4.0-cp312-cp312-win_amd64.whl", hash = "sha256:cd3c1e4cb2ff0083758f09be0f77402e1bdf704adb7f89108007300a6da587d0"},
     {file = "coverage-7.4.0-pp38.pp39.pp310-none-any.whl", hash = "sha256:c530833afc4707fe48524a44844493f36d8727f04dcce91fb978c414a8556cc6"},
     {file = "coverage-7.4.0.tar.gz", hash = "sha256:707c0f58cb1712b8809ece32b68996ee1e609f71bd14615bd8f87a1293cb610e"},
+]
+
+[[package]]
+name = "coverage-badge"
+version = "1.1.0"
+summary = "Generate coverage badges for Coverage.py."
+dependencies = [
+    "coverage",
+]
+files = [
+    {file = "coverage-badge-1.1.0.tar.gz", hash = "sha256:c824a106503e981c02821e7d32f008fb3984b2338aa8c3800ec9357e33345b78"},
+    {file = "coverage_badge-1.1.0-py2.py3-none-any.whl", hash = "sha256:e365d56e5202e923d1b237f82defd628a02d1d645a147f867ac85c58c81d7997"},
 ]
 
 [[package]]
