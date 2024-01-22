@@ -147,6 +147,7 @@ class DbOrganisation(Base):
     description = Column(String)
     url = Column(String)
     type = Column(Enum(OrganisationType), default=OrganisationType.FREE, nullable=False)
+    approved = Column(Boolean, default=False)
     # subscription_tier = Column(Integer)
 
     managers = relationship(
