@@ -36,7 +36,6 @@ from app.users.user_deps import user_exists
 router = APIRouter(
     prefix="/organisation",
     tags=["organisation"],
-    dependencies=[Depends(database.get_db)],
     responses={404: {"description": "Not found"}},
 )
 
