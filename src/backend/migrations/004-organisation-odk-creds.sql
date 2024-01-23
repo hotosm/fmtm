@@ -17,7 +17,7 @@ ALTER TABLE IF EXISTS public.organisations
 -- Create visibility enum if it doesn't exist
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'visibility') THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'projectvisibility') THEN
     CREATE TYPE public.projectvisibility AS ENUM (
       'PUBLIC',
       'PRIVATE',
