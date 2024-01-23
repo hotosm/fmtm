@@ -337,7 +337,6 @@ CREATE TABLE public.projects (
     odkid integer,
     author_id bigint NOT NULL,
     created timestamp without time zone NOT NULL,
-    task_creation_mode public.taskcreationmode NOT NULL,
     project_name_prefix character varying,
     task_type_prefix character varying,
     location_str character varying,

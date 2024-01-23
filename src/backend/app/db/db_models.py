@@ -54,7 +54,6 @@ from app.models.enums import (
     ProjectRole,
     ProjectStatus,
     TaskAction,
-    TaskCreationMode,
     TaskSplitType,
     TaskStatus,
     TeamVisibility,
@@ -422,9 +421,8 @@ class DbProject(Base):
     )
     author = relationship(DbUser, uselist=False, backref="user")
     created = Column(DateTime, default=timestamp, nullable=False)
-    task_creation_mode = Column(
-        Enum(TaskCreationMode), default=TaskCreationMode.UPLOAD, nullable=False
-    )
+
+    task_split_type = Column(Enum(TaskSplitType), nullable=True)
     # split_strategy = Column(Integer)
     # grid_meters = Column(Integer)
     # task_type = Column(Integer)

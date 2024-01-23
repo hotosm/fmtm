@@ -145,14 +145,6 @@ class ValidationPermission(IntEnum, Enum):
     TEAMS_LEVEL = 3
 
 
-class TaskCreationMode(IntEnum, Enum):
-    """Enum to describe task creation mode."""
-
-    GRID = 0
-    ROADS = 1
-    UPLOAD = 2
-
-
 class TaskStatus(IntEnum, Enum):
     """Enum describing available Task Statuses."""
 
