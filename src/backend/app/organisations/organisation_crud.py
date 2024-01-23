@@ -25,9 +25,10 @@ from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app.auth.osm import AuthUser
+from app.auth.roles import check_super_admin
 from app.config import settings
 from app.db import db_models
-from app.models.enums import HTTPStatus, UserRole
+from app.models.enums import HTTPStatus
 from app.organisations.organisation_deps import (
     get_organisation_by_name,
 )
@@ -36,15 +37,14 @@ from app.s3 import add_obj_to_bucket
 from app.users import user_crud
 
 
-def get_organisations(db: Session, current_user: AuthUser, approved: bool):
+async def get_organisations(db: Session, current_user: AuthUser, is_approved: bool):
     """Get all orgs."""
-    if (
-        db.query(db_models.DbUser)
-        .filter_by(id=current_user["id"], role=UserRole.ADMIN)
-        .first()
-    ):
-        return db.query(db_models.DbOrganisation).filter_by(approved=approved).all()
+    super_admin = await check_super_admin(db, current_user)
+    log.warning(super_admin)
+    if super_admin:
+        return db.query(db_models.DbOrganisation).filter_by(approved=is_approved).all()
 
+    # If user not admin, only show approved orgs
     return db.query(db_models.DbOrganisation).filter_by(approved=True).all()
 
 

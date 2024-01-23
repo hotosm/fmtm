@@ -45,17 +45,27 @@ async def get_uid(user_data: AuthUser) -> int:
         )
 
 
+async def check_super_admin(
+    db: Session,
+    user_data: AuthUser,
+) -> DbUser:
+    """Database check to determine if super admin role."""
+    user_id = await get_uid(user_data)
+    return db.query(DbUser).filter_by(id=user_id, role=UserRole.ADMIN).first()
+
+
 async def super_admin(
-    db: Session = Depends(get_db),
     user_data: AuthUser = Depends(login_required),
+    db: Session = Depends(get_db),
 ) -> AuthUser:
     """Super admin role, with access to all endpoints."""
-    user_id = await get_uid(user_data)
+    super_admin = await check_super_admin(db, user_data)
 
-    match = db.query(DbUser).filter_by(id=user_id, role=UserRole.ADMIN).first()
-
-    if not match:
-        log.error(f"User ID {user_id} requested an admin endpoint, but is not admin")
+    if not super_admin:
+        log.error(
+            f"User {user_data.get('username')} requested an admin endpoint, "
+            "but is not admin"
+        )
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN, detail="User must be an administrator"
         )
