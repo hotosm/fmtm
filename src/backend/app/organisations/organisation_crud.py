@@ -40,7 +40,7 @@ from app.users import user_crud
 async def get_organisations(db: Session, current_user: AuthUser, is_approved: bool):
     """Get all orgs."""
     super_admin = await check_super_admin(db, current_user)
-    log.warning(super_admin)
+
     if super_admin:
         return db.query(db_models.DbOrganisation).filter_by(approved=is_approved).all()
 
