@@ -134,6 +134,36 @@ async def org_admin(
     return user_data
 
 
+async def project_admin(
+        project_id: DbProject = Depends(get_project_by_id),
+        db: Session = Depends(get_db),
+        user_data: AuthUser = Depends(login_required)
+):
+    """Project admin role"""
+    user_id = await get_uid(user_data)
+
+    match = (
+        db.query(DbUserRoles).filter_by(user_id=user_id, project_id=project_id).first()
+    )
+
+    if not match:
+        log.error(f"User ID {user_id} has no access to project ID {project_id}")
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN, detail="User has no access to project"
+        )
+
+    if match.role.value < ProjectRole.ADMIN.value:
+        log.error(
+            f"User ID {user_id} does not have admin permission"
+            f"for project ID {project_id}"
+        )
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail="User is not an admin for this project",
+        )
+    return user_data
+
+
 async def validator(
     project_id: int,
     db: Session = Depends(get_db),
