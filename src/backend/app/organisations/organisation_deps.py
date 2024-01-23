@@ -125,6 +125,7 @@ async def org_exists(
 
 async def org_from_project(
     project: DbProject = Depends(project_deps.get_project_by_id),
+    db: Session = Depends(get_db),
 ) -> DbOrganisation:
     """Get an organisation from a project id."""
-    return await org_exists(project.organisation_id)
+    return await check_org_exists(db, project.organisation_id)
