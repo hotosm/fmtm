@@ -38,18 +38,18 @@ class OrganisationIn(BaseModel):
     description: Optional[str] = Field(
         Form(None, description="Organisation description")
     )
-    url: Optional[HttpUrl] = Field(Form(None, description=("Organisation website URL")))
-    odk_central_url: Optional[str] = Field(
-        Form(None, description="Organisation default ODK URL")
+    url: Optional[HttpUrl] = Field(Form(None, description="Organisation website URL"))
+    odk_central_url: Optional[HttpUrl] = Field(
+        Form(None, description="Default ODK Central URL")
     )
     odk_central_user: Optional[str] = Field(
-        Form(None, description="Organisation default ODK User")
+        Form(None, description="Default ODK Central User")
     )
-    odk_central_password: Optional[SecretStr] = Field(
-        Form(None, description="Organisation default ODK Password")
+    odk_central_password: Optional[str] = Field(
+        Form(None, description="Default ODK Central Password")
     )
 
-    @field_validator("url", mode="after")
+    @field_validator("url", "odk_central_url", mode="after")
     @classmethod
     def convert_url_to_str(cls, value: HttpUrl) -> str:
         """Convert Pydantic Url type to string.
