@@ -102,13 +102,6 @@ CREATE TYPE public.taskaction AS ENUM (
 );
 ALTER TYPE public.taskaction OWNER TO fmtm;
 
-CREATE TYPE public.taskcreationmode AS ENUM (
-    'GRID',
-    'ROADS',
-    'UPLOAD'
-);
-ALTER TYPE public.taskcreationmode OWNER TO fmtm;
-
 CREATE TYPE public.taskstatus AS ENUM (
     'READY',
     'LOCKED_FOR_MAPPING',
@@ -151,6 +144,14 @@ CREATE TYPE public.validationpermission AS ENUM (
     'TEAMS_LEVEL'
 );
 ALTER TYPE public.validationpermission OWNER TO fmtm;
+
+CREATE TYPE public.projectvisibility AS ENUM (
+    'PUBLIC',
+    'PRIVATE',
+    'INVITE_ONLY'
+);
+ALTER TYPE public.projectvisibility OWNER TO fmtm;
+
 
 
 -- Extra
@@ -345,7 +346,7 @@ CREATE TABLE public.projects (
     status public.projectstatus NOT NULL,
     total_tasks integer,
     xform_title character varying,
-    private boolean,
+    visibility public.projectvisibility NOT NULL DEFAULT 'PUBLIC',
     mapper_level public.mappinglevel NOT NULL,
     priority public.projectpriority,
     featured boolean,

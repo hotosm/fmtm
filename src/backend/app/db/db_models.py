@@ -53,6 +53,7 @@ from app.models.enums import (
     ProjectPriority,
     ProjectRole,
     ProjectStatus,
+    ProjectVisibility,
     TaskAction,
     TaskSplitType,
     TaskStatus,
@@ -447,6 +448,9 @@ class DbProject(Base):
     # PROJECT STATUS
     last_updated = Column(DateTime, default=timestamp)
     status = Column(Enum(ProjectStatus), default=ProjectStatus.DRAFT, nullable=False)
+    visibility = Column(
+        Enum(ProjectVisibility), default=ProjectVisibility.PUBLIC, nullable=False
+    )
     total_tasks = Column(Integer)
     # tasks_mapped = Column(Integer, default=0, nullable=False)
     # tasks_validated = Column(Integer, default=0, nullable=False)
@@ -504,10 +508,6 @@ class DbProject(Base):
         {},
     )
 
-    ## ---------------------------------------------- ##
-    # FOR REFERENCE: OTHER ATTRIBUTES IN TASKING MANAGER
-    # PROJECT ACCESS
-    private = Column(Boolean, default=False)  # Only allowed users can validate
     mapper_level = Column(
         Enum(MappingLevel),
         default=MappingLevel.INTERMEDIATE,
