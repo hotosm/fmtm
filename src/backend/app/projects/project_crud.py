@@ -64,7 +64,6 @@ from app.config import settings
 from app.db import db_models
 from app.db.database import get_db
 from app.db.postgis_utils import geojson_to_flatgeobuf, geometry_to_geojson, timestamp
-from app.organisations import organisation_deps
 from app.projects import project_schemas
 from app.s3 import add_obj_to_bucket, get_obj_from_bucket
 from app.tasks import tasks_crud
@@ -2361,11 +2360,10 @@ async def get_pagination(page: int, count: int, results_per_page: int, total: in
     return pagination
 
 
-async def get_dashboard_detail(project: db_models.DbProject, db: Session):
+async def get_dashboard_detail(
+    project: db_models.DbProject, db_organisation: db_models.DbOrganisation, db: Session
+):
     """Get project details for project dashboard."""
-    db_organisation = await organisation_deps.get_organisation_by_id(
-        db, project.organisation_id
-    )
     s3_project_path = f"/{project.organisation_id}/{project.id}"
     s3_submission_path = f"/{s3_project_path}/submission.zip"
     s3_submission_meta_path = f"/{s3_project_path}/submissions.meta.json"
