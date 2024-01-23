@@ -19,28 +19,21 @@
 
 import logging
 import os
+from contextlib import ExitStack
 from typing import Any, Generator
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from loguru import logger as log
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy_utils import create_database, database_exists
 
 from app.central import central_crud
-from app.config import settings
-from app.db.database import Base, get_db
+from app.db.database import get_db, sessionmanager
 from app.db.db_models import DbOrganisation, DbUser
 from app.main import get_application
 from app.projects import project_crud
 from app.projects.project_schemas import ODKCentral, ProjectInfo, ProjectUpload
 from app.users.user_schemas import User
-
-engine = create_engine(settings.FMTM_DB_URL.unicode_string())
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base.metadata.create_all(bind=engine)
 
 
 def pytest_configure(config):
@@ -53,35 +46,47 @@ def pytest_configure(config):
 @pytest.fixture(autouse=True)
 def app() -> Generator[FastAPI, Any, None]:
     """Get the FastAPI test server."""
-    yield get_application()
-
-
-@pytest.fixture(scope="session")
-def db_engine():
-    """The SQLAlchemy database engine to init."""
-    engine = create_engine(settings.FMTM_DB_URL.unicode_string())
-    if not database_exists:
-        create_database(engine.url)
-
-    Base.metadata.create_all(bind=engine)
-    yield engine
+    with ExitStack():
+        # Use ExitStack to correctly close and cleanup resources
+        yield get_application()
 
 
 @pytest.fixture(scope="function")
-def db(db_engine):
-    """Database session using db_engine."""
-    connection = db_engine.connect()
+def client(app, db):
+    """The FastAPI test server."""
+    app.dependency_overrides[get_db] = lambda: db
 
-    # begin a non-ORM transaction
-    connection.begin()
+    with TestClient(app) as c:
+        yield c
 
-    # bind an individual Session to the connection
-    db = TestingSessionLocal(bind=connection)
 
-    yield db
+@pytest.fixture(scope="function", autouse=True)
+async def transactional_session():
+    """Each test function is a clean slate."""
+    async with sessionmanager.session() as session:
+        try:
+            await session.begin()
+            yield session
+        finally:
+            # Roll back the outer transaction
+            await session.rollback()
 
-    db.rollback()
-    connection.close()
+
+@pytest.fixture(scope="function")
+async def db(transactional_session):
+    """SQLAlchemy session init."""
+    yield transactional_session
+
+
+@pytest.fixture(scope="function", autouse=True)
+async def session_override(app, db_session):
+    """Replace get_db with session override."""
+
+    async def get_db_session_override():
+        """Yield the session override."""
+        yield db[0]
+
+    app.dependency_overrides[get_db] = get_db_session_override
 
 
 @pytest.fixture(scope="function")
@@ -178,12 +183,3 @@ async def project(db, user, organisation):
 #     }
 #     log.debug(f"get_ids return: {data}")
 #     return data
-
-
-@pytest.fixture(scope="function")
-def client(app, db):
-    """The FastAPI test server."""
-    app.dependency_overrides[get_db] = lambda: db
-
-    with TestClient(app) as c:
-        yield c

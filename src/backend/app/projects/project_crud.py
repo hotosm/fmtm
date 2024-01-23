@@ -960,11 +960,11 @@ async def update_project_with_zip(
 # ---------------------------
 
 
-async def read_xlsforms(
+async def insert_xlsforms_in_db(
     db: Session,
     directory: str,
 ):
-    """Read the list of XLSForms from the disk."""
+    """Read the list of XLSForms from the disk and insert in database."""
     xlsforms = list()
     package_name = "osm_fieldwork"
     package_files = pkg_files(package_name)
@@ -998,8 +998,8 @@ async def read_xlsforms(
         sql = ins.on_conflict_do_update(
             constraint="xlsforms_title_key", set_=dict(title=name, xls=data)
         )
-        db.execute(sql)
-        db.commit()
+        await db.execute(sql)
+        await db.commit()
 
     return xlsforms
 

@@ -33,10 +33,10 @@ from app.__version__ import __version__
 from app.auth import auth_routes
 from app.central import central_routes
 from app.config import settings
-from app.db.database import get_db
+from app.db.database import get_db, sessionmanager
 from app.organisations import organisation_routes
 from app.projects import project_routes
-from app.projects.project_crud import read_xlsforms
+from app.projects.project_crud import insert_xlsforms_in_db
 from app.submissions import submission_routes
 from app.tasks import tasks_routes
 from app.users import user_routes
@@ -53,13 +53,19 @@ if not settings.DEBUG:
 async def lifespan(app: FastAPI):
     """FastAPI startup/shutdown event."""
     log.debug("Starting up FastAPI server.")
+
     log.debug("Reading XLSForms from DB.")
-    await read_xlsforms(next(get_db()), xlsforms_path)
+    async for db_session in get_db():
+        async with db_session as session:
+            await insert_xlsforms_in_db(session, xlsforms_path)
 
     yield
 
     # Shutdown events
     log.debug("Shutting down FastAPI server.")
+    if sessionmanager._engine is not None:
+        # Close the DB connection
+        await sessionmanager.close()
 
 
 def get_application() -> FastAPI:

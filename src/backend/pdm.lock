@@ -5,7 +5,7 @@
 groups = ["default", "debug", "dev", "docs", "test"]
 strategy = ["cross_platform"]
 lock_version = "4.4.1"
-content_hash = "sha256:d73a7c181c5594d5f391a5c715559194fb5c6c4a923e5a4d15e3c1a57b073e27"
+content_hash = "sha256:1187cacb94c3233a46fe6ecf1907ad08953f3e9e80e64ebf3be6d83132ca2190"
 
 [[package]]
 name = "annotated-types"
@@ -1518,6 +1518,20 @@ dependencies = [
 files = [
     {file = "prompt_toolkit-3.0.36-py3-none-any.whl", hash = "sha256:aa64ad242a462c5ff0363a7b9cfe696c20d55d9fc60c11fd8e632d064804d305"},
     {file = "prompt_toolkit-3.0.36.tar.gz", hash = "sha256:3e163f254bef5a03b146397d7c1963bd3e2812f0964bb9a24e6ec761fd28db63"},
+]
+
+[[package]]
+name = "psycopg"
+version = "3.1.17"
+requires_python = ">=3.7"
+summary = "PostgreSQL database adapter for Python"
+dependencies = [
+    "typing-extensions>=4.1",
+    "tzdata; sys_platform == \"win32\"",
+]
+files = [
+    {file = "psycopg-3.1.17-py3-none-any.whl", hash = "sha256:96b7b13af6d5a514118b759a66b2799a8a4aa78675fa6bb0d3f7d52d67eff002"},
+    {file = "psycopg-3.1.17.tar.gz", hash = "sha256:437e7d7925459f21de570383e2e10542aceb3b9cb972ce957fdd3826ca47edc6"},
 ]
 
 [[package]]
