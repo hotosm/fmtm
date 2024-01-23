@@ -22,6 +22,8 @@ These methods use FastAPI Depends for dependency injection
 and always return an AuthUser object in a standard format.
 """
 
+from typing import Optional
+
 from fastapi import Depends, HTTPException
 from loguru import logger as log
 from sqlalchemy.orm import Session
@@ -30,6 +32,7 @@ from app.auth.osm import AuthUser, login_required
 from app.db.database import get_db
 from app.db.db_models import DbProject, DbUser, DbUserRoles, organisation_managers
 from app.models.enums import HTTPStatus, ProjectRole, UserRole
+from app.organisations.organisation_deps import check_org_exists
 from app.projects.project_deps import get_project_by_id
 
 
@@ -47,10 +50,13 @@ async def get_uid(user_data: AuthUser) -> int:
 
 async def check_super_admin(
     db: Session,
-    user_data: AuthUser,
+    user: [AuthUser, int],
 ) -> DbUser:
     """Database check to determine if super admin role."""
-    user_id = await get_uid(user_data)
+    if isinstance(user, int):
+        user_id = user
+    else:
+        user_id = await get_uid(user)
     return db.query(DbUser).filter_by(id=user_id, role=UserRole.ADMIN).first()
 
 
@@ -73,6 +79,35 @@ async def super_admin(
     return user_data
 
 
+async def check_org_admin(
+    db: Session,
+    user: [AuthUser, int],
+    project: Optional[DbProject],
+    org_id: Optional[int],
+) -> DbUser:
+    """Database check to determine if org admin role."""
+    if isinstance(user, int):
+        user_id = user
+    else:
+        user_id = await get_uid(user)
+
+    if project:
+        org_id = db.query(DbProject).filter_by(id=project.id).first().organisation_id
+
+    # Check org exists
+    await check_org_exists(db, org_id)
+
+    # If user is admin, skip checks
+    if await check_super_admin(db, user):
+        return user
+
+    return (
+        db.query(organisation_managers)
+        .filter_by(organisation_id=org_id, user_id=user_id)
+        .first()
+    )
+
+
 async def org_admin(
     project: DbProject = Depends(get_project_by_id),
     org_id: int = None,
@@ -87,23 +122,10 @@ async def org_admin(
             detail="Both org_id and project_id cannot be passed at the same time",
         )
 
-    # If user is admin, skip checks
-    if await check_super_admin(db, user_data):
-        return user_data
-
-    user_id = await get_uid(user_data)
-
-    if project:
-        org_id = db.query(DbProject).filter_by(id=project.id).first().organisation_id
-
-    org_admin = (
-        db.query(organisation_managers)
-        .filter_by(organisation_id=org_id, user_id=user_id)
-        .first()
-    )
+    org_admin = await check_org_admin(db, user_data, project, org_id)
 
     if not org_admin:
-        log.error(f"User ID {user_id} is not an admin for organisation {org_id}")
+        log.error(f"User {user_data} is not an admin for organisation {org_id}")
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
             detail="User is not organisation admin",

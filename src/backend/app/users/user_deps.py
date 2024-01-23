@@ -32,7 +32,7 @@ from app.models.enums import HTTPStatus
 from app.users.user_crud import get_user, get_user_by_username
 
 
-async def user_exists(
+async def user_exists_in_db(
     user_id: Union[str, int],
     db: Session = Depends(get_db),
 ) -> DbUser:

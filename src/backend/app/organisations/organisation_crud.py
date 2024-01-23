@@ -34,7 +34,6 @@ from app.organisations.organisation_deps import (
 )
 from app.organisations.organisation_schemas import OrganisationEdit, OrganisationIn
 from app.s3 import add_obj_to_bucket
-from app.users import user_crud
 
 
 async def get_organisations(db: Session, current_user: AuthUser, is_approved: bool):
@@ -196,43 +195,37 @@ async def delete_organisation(
 
 
 async def add_organisation_admin(
-    db: Session, user_id: int, organisation: db_models.DbOrganisation
+    db: Session, user: db_models.DbUser, organisation: db_models.DbOrganisation
 ):
     """Adds a user as an admin to the specified organisation.
 
     Args:
         db (Session): The database session.
-        user_id (int): The ID of the user to be added as an admin.
+        user (DbUser): The user model instance.
         organisation (DbOrganisation): The organisation model instance.
 
     Returns:
         Response: The HTTP response with status code 200.
     """
-    # get the user model instance
-    user_model_instance = await user_crud.get_user(db, user_id)
-
+    log.info(f"Adding user ({user.id}) as org ({organisation.id}) admin")
     # add data to the managers field in organisation model
-    organisation.managers.append(user_model_instance)
+    organisation.managers.append(user)
     db.commit()
 
     return Response(status_code=HTTPStatus.OK)
 
 
-async def approve_organisation(db, organisation_id):
+async def approve_organisation(db, organisation):
     """Approves an oranisation request made by the user .
 
     Args:
         db: The database session.
-        organisation_id: The ID of the organisation to be approved.
+        organisation (DbOrganisation): The organisation model instance.
 
     Returns:
         Response: An HTTP response with the status code 200.
     """
-    db_org = (
-        db.query(db_models.DbOrganisation)
-        .filter(db_models.DbOrganisation.id == organisation_id)
-        .first()
-    )
-    db_org.approved = True
+    log.info(f"Approving organisation ID {organisation.id}")
+    organisation.approved = True
     db.commit()
     return Response(status_code=HTTPStatus.OK)

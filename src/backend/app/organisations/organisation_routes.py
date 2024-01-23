@@ -28,10 +28,10 @@ from sqlalchemy.orm import Session
 from app.auth.osm import AuthUser, login_required
 from app.auth.roles import org_admin, super_admin
 from app.db import database
-from app.db.db_models import DbOrganisation
+from app.db.db_models import DbOrganisation, DbUser
 from app.organisations import organisation_crud, organisation_schemas
-from app.organisations.organisation_deps import org_exists
-from app.users.user_deps import user_exists
+from app.organisations.organisation_deps import check_org_exists, org_exists
+from app.users.user_deps import user_exists_in_db
 
 router = APIRouter(
     prefix="/organisation",
@@ -93,31 +93,27 @@ async def delete_organisations(
 
 @router.post("/approve/")
 async def approve_organisation(
-    organisation_id: int,
+    org_id: int,
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(login_required),
+    current_user: AuthUser = Depends(super_admin),
 ):
     """Approve the organisation request made by the user.
 
     The logged in user must be super admin to perform this action .
     """
-    # check if the current_user is the super admin
-    super_admin(db, current_user)
-    return await organisation_crud.approve_organisation(db, organisation_id)
+    org_obj = await check_org_exists(db, org_id, check_approved=False)
+    return await organisation_crud.approve_organisation(db, org_obj)
 
 
 @router.post("/add_admin/")
 async def add_new_organisation_admin(
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(login_required),
-    user: AuthUser = Depends(user_exists),
     organisation: DbOrganisation = Depends(org_exists),
+    user: DbUser = Depends(user_exists_in_db),
+    current_user: AuthUser = Depends(org_admin),
 ):
     """Add a new organisation admin.
 
     The logged in user must be either the owner of the organisation or a super admin.
     """
-    # check if the current_user is the organisation admin
-    org_admin(db, organisation.id, current_user)
-
     return await organisation_crud.add_organisation_admin(db, user, organisation)
