@@ -1181,7 +1181,7 @@ async def get_template_file(
 )
 async def project_dashboard(
     background_tasks: BackgroundTasks,
-    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    db_project: db_models.DbProject = Depends(project_deps.get_project_by_id),
     db_organisation: db_models.DbOrganisation = Depends(
         organisation_deps.org_from_project
     ),
@@ -1191,21 +1191,22 @@ async def project_dashboard(
 
     Args:
         background_tasks (BackgroundTasks): FastAPI bg tasks, provided automatically.
-        project (db_models.DbProject): An instance of the project.
+        db_project (db_models.DbProject): An instance of the project.
         db_organisation (db_models.DbOrganisation): An instance of the organisation.
         db (Session): The database session.
 
     Returns:
         ProjectDashboard: The project dashboard details.
     """
-    data = await project_crud.get_dashboard_detail(project, db_organisation, db)
+    data = await project_crud.get_dashboard_detail(db_project, db_organisation, db)
+
     background_task_id = await project_crud.insert_background_task_into_database(
-        db, "sync_submission", project.id
+        db, "sync_submission", db_project.id
+    )
+    background_tasks.add_task(
+        submission_crud.update_submission_in_s3, db, db_project.id, background_task_id
     )
 
-    background_tasks.add_task(
-        submission_crud.update_submission_in_s3, db, project.id, background_task_id
-    )
     return data
 
 
