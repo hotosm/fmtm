@@ -498,9 +498,6 @@ class DbProject(Base):
         )
 
     # XFORM DETAILS
-    # TODO This field was probably replaced by odk_central_url
-    # TODO remove in a migration
-    odk_central_src = Column(String, default="")
     xform_title = Column(String, ForeignKey("xlsforms.title", name="fk_xform"))
     xform = relationship(DbXForm)
 

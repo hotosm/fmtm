@@ -345,7 +345,6 @@ CREATE TABLE public.projects (
     last_updated timestamp without time zone,
     status public.projectstatus NOT NULL,
     total_tasks integer,
-    odk_central_src character varying,
     xform_title character varying,
     private boolean,
     mapper_level public.mappinglevel NOT NULL,
