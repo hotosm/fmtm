@@ -28,7 +28,7 @@ END $$;
 ALTER TYPE public.projectvisibility OWNER TO fmtm;
 
 -- Add field to projects table
-ALTER TABLE IF EXISTS public.organisations
+ALTER TABLE IF EXISTS public.projects
     DROP COLUMN IF EXISTS private,
     ADD COLUMN IF NOT EXISTS visibility public.projectvisibility
         NOT NULL DEFAULT 'PUBLIC';
