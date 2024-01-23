@@ -69,3 +69,35 @@ export const ProjectContributorsService: Function = (url: string) => {
     await fetchProjectContributor(url);
   };
 };
+
+export const SubmissionFormFieldsService: Function = (url: string) => {
+  return async (dispatch) => {
+    const fetchFormFields = async (url: string) => {
+      try {
+        dispatch(SubmissionActions.SetSubmissionFormFieldsLoading(true));
+        const response = await CoreModules.axios.get(url);
+        const formFields: any = response.data;
+        dispatch(SubmissionActions.SetSubmissionFormFields(formFields));
+        dispatch(SubmissionActions.SetSubmissionFormFieldsLoading(false));
+      } catch (error) {}
+    };
+
+    await fetchFormFields(url);
+  };
+};
+
+export const SubmissionTableService: Function = (url: string) => {
+  return async (dispatch) => {
+    const fetchSubmissionTable = async (url: string) => {
+      try {
+        dispatch(SubmissionActions.SetSubmissionTableLoading(true));
+        const response = await CoreModules.axios.get(url);
+        const submissionTableData: any = response.data;
+        dispatch(SubmissionActions.SetSubmissionTable(submissionTableData));
+        dispatch(SubmissionActions.SetSubmissionTableLoading(false));
+      } catch (error) {}
+    };
+
+    await fetchSubmissionTable(url);
+  };
+};

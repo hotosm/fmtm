@@ -8,6 +8,10 @@ const SubmissionSlice = createSlice({
     submissionInfographics: [],
     submissionContributors: [],
     submissionContributorsLoading: true,
+    submissionFormFields: [],
+    submissionTableData: [],
+    submissionFormFieldsLoading: false,
+    submissionTableDataLoading: false,
   },
   reducers: {
     SetSubmissionDetailsLoading(state, action) {
@@ -24,6 +28,18 @@ const SubmissionSlice = createSlice({
     },
     SetSubmissionContributorsLoading(state, action) {
       state.submissionContributorsLoading = action.payload;
+    },
+    SetSubmissionFormFields(state, action) {
+      state.submissionFormFields = action.payload;
+    },
+    SetSubmissionTable(state, action) {
+      state.submissionTableData = action.payload;
+    },
+    SetSubmissionFormFieldsLoading(state, action) {
+      state.submissionFormFieldsLoading = action.payload;
+    },
+    SetSubmissionTableLoading(state, action) {
+      state.submissionTableDataLoading = action.payload;
     },
   },
 });

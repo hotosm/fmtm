@@ -1,14 +1,36 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AssetModules from '../../shared/AssetModules.js';
 import { CustomSelect } from '../../components/common/Select.js';
 import windowDimention from '../../hooks/WindowDimension';
 import Table, { TableHeader } from '../../components/common/CustomTable';
-import { fontFamily } from '@mui/system';
+import { SubmissionFormFieldsService, SubmissionTableService } from '../../api/SubmissionService';
+import CoreModules from '../../shared/CoreModules.js';
+import environment from '../../environment';
 
 const SubmissionsTable = () => {
   const [showFilter, setShowFilter] = useState(true);
   const { windowSize } = windowDimention();
+  const dispatch = CoreModules.useAppDispatch();
   const items = [{ name: 'haha' }];
+  const params = CoreModules.useParams();
+  const encodedId = params.projectId;
+  const decodedId = environment.decode(encodedId);
+  const submissionFormFields = CoreModules.useAppSelector((state) => state.submission.submissionFormFields);
+  const submissionTableData = CoreModules.useAppSelector((state) => state.submission.submissionTableData);
+  const submissionFormFieldsLoading = CoreModules.useAppSelector(
+    (state) => state.submission.submissionFormFieldsLoading,
+  );
+  const submissionTableDataLoading = CoreModules.useAppSelector((state) => state.submission.submissionTableDataLoading);
+
+  useEffect(() => {
+    dispatch(
+      SubmissionFormFieldsService(`${import.meta.env.VITE_API_URL}/submission/submission_form_fields/${decodedId}`),
+    );
+  }, []);
+
+  useEffect(() => {
+    dispatch(SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}`));
+  }, []);
 
   const TableFilter = () => (
     <div className="fmtm-flex fmtm-items-center fmtm-justify-between fmtm-flex-col sm:fmtm-flex-row fmtm-gap-4">
