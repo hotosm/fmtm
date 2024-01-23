@@ -87,6 +87,10 @@ async def org_admin(
             detail="Both org_id and project_id cannot be passed at the same time",
         )
 
+    # If user is admin, skip checks
+    if await check_super_admin(db, user_data):
+        return user_data
+
     user_id = await get_uid(user_data)
 
     if project:
