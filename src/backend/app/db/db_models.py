@@ -178,16 +178,6 @@ class DbTeam(Base):
     organisation = relationship(DbOrganisation, backref="teams")
 
 
-# Secondary table defining many-to-many join for
-# private projects that only defined users can map on
-project_allowed_users = Table(
-    "project_allowed_users",
-    FmtmMetadata,
-    Column("project_id", Integer, ForeignKey("projects.id")),
-    Column("user_id", BigInteger, ForeignKey("users.id")),
-)
-
-
 class DbProjectTeams(Base):
     """Link table between teams and projects."""
 
@@ -537,7 +527,6 @@ class DbProject(Base):
     validation_permission = Column(
         Enum(ValidationPermission), default=ValidationPermission.LEVEL
     )  # Means only users with validator role can validate
-    allowed_users = relationship(DbUser, secondary=project_allowed_users)
     organisation_id = Column(
         Integer,
         ForeignKey("organisations.id", name="fk_organisations"),

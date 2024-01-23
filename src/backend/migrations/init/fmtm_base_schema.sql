@@ -294,13 +294,6 @@ ALTER TABLE public.organisations_id_seq OWNER TO fmtm;
 ALTER SEQUENCE public.organisations_id_seq OWNED BY public.organisations.id;
 
 
-CREATE TABLE public.project_allowed_users (
-    project_id integer,
-    user_id bigint
-);
-ALTER TABLE public.project_allowed_users OWNER TO fmtm;
-
-
 CREATE TABLE public.project_chat (
     id bigint NOT NULL,
     project_id integer NOT NULL,
@@ -786,12 +779,6 @@ ALTER TABLE ONLY public.organisation_managers
 
 ALTER TABLE ONLY public.organisation_managers
     ADD CONSTRAINT organisation_managers_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
-
-ALTER TABLE ONLY public.project_allowed_users
-    ADD CONSTRAINT project_allowed_users_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id);
-
-ALTER TABLE ONLY public.project_allowed_users
-    ADD CONSTRAINT project_allowed_users_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 ALTER TABLE ONLY public.project_chat
     ADD CONSTRAINT project_chat_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id);
