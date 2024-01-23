@@ -444,7 +444,7 @@ class DbProject(Base):
     # GEOMETRY
     outline = Column(Geometry("POLYGON", srid=4326))
     # geometry = Column(Geometry("POLYGON", srid=4326, from_text='ST_GeomFromWkt'))
-    # TODO add outline_geojson as computed @property
+    centroid = Column(Geometry("POINT", srid=4326))
 
     # PROJECT STATUS
     last_updated = Column(DateTime, default=timestamp)
@@ -530,24 +530,7 @@ class DbProject(Base):
         index=True,
     )
     organisation = relationship(DbOrganisation, backref="projects")
-    # PROJECT DETAILS
-    due_date = Column(DateTime)
     changeset_comment = Column(String)
-    osmcha_filter_id = Column(
-        String
-    )  # Optional custom filter id for filtering on OSMCha
-    imagery = Column(String)
-    osm_preset = Column(String)
-    odk_preset = Column(String)
-    josm_preset = Column(String)
-    id_presets = Column(ARRAY(String))
-    extra_id_params = Column(String)
-    license_id = Column(Integer, ForeignKey("licenses.id", name="fk_licenses"))
-    # GEOMETRY
-    centroid = Column(Geometry("POINT", srid=4326))
-    # country = Column(ARRAY(String), default=[])
-    # FEEDBACK
-    project_chat = relationship(DbProjectChat, lazy="dynamic", cascade="all")
 
     ## Odk central server
     odk_central_url = Column(String)
@@ -567,6 +550,24 @@ class DbProject(Base):
     task_num_buildings = Column(SmallInteger, nullable=True)
 
     hashtags = Column(ARRAY(String))  # Project hashtag
+
+    ## ---------------------------------------------- ##
+    # FOR REFERENCE: OTHER ATTRIBUTES IN TASKING MANAGER
+    imagery = Column(String)
+    osm_preset = Column(String)
+    odk_preset = Column(String)
+    josm_preset = Column(String)
+    id_presets = Column(ARRAY(String))
+    extra_id_params = Column(String)
+    license_id = Column(Integer, ForeignKey("licenses.id", name="fk_licenses"))
+    # GEOMETRY
+    # country = Column(ARRAY(String), default=[])
+    # FEEDBACK
+    project_chat = relationship(DbProjectChat, lazy="dynamic", cascade="all")
+    osmcha_filter_id = Column(
+        String
+    )  # Optional custom filter id for filtering on OSMCha
+    due_date = Column(DateTime)
 
 
 # TODO: Add index on project geometry, tried to add in __table args__
