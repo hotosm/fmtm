@@ -19,7 +19,7 @@ ARG MINIO_TAG=${MINIO_TAG:-RELEASE.2024-01-01T16-36-33Z}
 FROM docker.io/minio/minio:${MINIO_TAG} as minio
 
 
-
+# Includes all labels and timezone info to extend from
 FROM docker.io/python:${PYTHON_IMG_TAG}-slim-bookworm as base
 ARG APP_VERSION
 ARG COMMIT_REF
@@ -44,7 +44,7 @@ ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
 
-
+# Extract dependencies from PDM lock to standard requirements.txt
 FROM base as extract-deps
 WORKDIR /opt/python
 COPY pyproject.toml pdm.lock /opt/python/
@@ -53,11 +53,11 @@ RUN pip install --no-cache-dir --upgrade pip \
 RUN pdm export --prod > requirements.txt \
     && pdm export -G debug --no-default \
     --without-hashes > requirements-debug.txt \
-    && pdm export -G test -G docs --no-default \
+    && pdm export -G test -G docs -G dev --no-default \
     --without-hashes > requirements-ci.txt
 
 
-
+# Build stage will all dependencies required to build Python wheels
 FROM base as build
 RUN set -ex \
     && apt-get update \
@@ -78,7 +78,7 @@ RUN pip install --user --no-warn-script-location \
     --no-cache-dir -r /opt/python/requirements.txt
 
 
-
+# Run stage will minimal dependencies required to run Python libraries
 FROM base as runtime
 ARG PYTHON_IMG_TAG
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -131,18 +131,18 @@ HEALTHCHECK --start-period=10s --interval=5s --retries=20 --timeout=5s \
     CMD curl --fail http://localhost:8000 || exit 1
 
 
-
+# Add certificates to use ODK Central over SSL (HTTPS, required)
 FROM runtime as add-odk-certs
 USER root
 # Add the SSL cert for debug odkcentral
 COPY --from=ghcr.io/hotosm/fmtm/proxy:debug \
     /etc/nginx/central-fullchain.crt /usr/local/share/ca-certificates/
 RUN update-ca-certificates
-USER appuser
 
 
-
+# Stage to use during local development
 FROM add-odk-certs as debug
+USER appuser
 COPY --from=extract-deps --chown=appuser \
     /opt/python/requirements-debug.txt \
     /opt/python/requirements-ci.txt \
@@ -154,14 +154,12 @@ RUN pip install --user --upgrade --no-warn-script-location \
     && rm -r /opt/python
 CMD ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", \
     "-m", "uvicorn", "app.main:api", \
-    "--host", "0.0.0.0", "--port", "8000", \
+    "--host", "0.0.0.0", "--port", "8000", "--workers", "4", \
     "--reload", "--log-level", "critical", "--no-access-log"]
 
 
-
+# Used during CI workflows (as root), with docs/test dependencies pre-installed
 FROM add-odk-certs as ci
-# Run all ci as root
-USER root
 ARG PYTHON_IMG_TAG
 COPY --from=extract-deps \
     /opt/python/requirements-ci.txt /opt/python/
@@ -188,7 +186,7 @@ ENTRYPOINT []
 CMD ["sleep", "infinity"]
 
 
-
+# Final stage used during deployment
 FROM runtime as prod
 # Pre-compile packages to .pyc (init speed gains)
 RUN python -c "import compileall; compileall.compile_path(maxlevels=10, quiet=1)"

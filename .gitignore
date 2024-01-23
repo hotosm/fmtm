@@ -80,6 +80,9 @@ temp_webmaps/Naivasha
 
 # mkdocs
 site
+docs/apidocs
+coverage
+**/**/coverage*
 
 # Bash install script
 envsubst

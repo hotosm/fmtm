@@ -20,8 +20,8 @@
 
 from sqlalchemy.orm import Session
 
-from ..db import db_models
-from . import user_schemas
+from app.db import db_models
+from app.users import user_schemas
 
 # --------------
 # ---- CRUD ----
@@ -62,7 +62,6 @@ async def create_user_roles(user_role: user_schemas.UserRoles, db: Session):
     db_user_role = db_models.DbUserRoles(
         user_id=user_role.user_id,
         role=user_role.role,
-        organization_id=user_role.organization_id,
         project_id=user_role.project_id,
     )
 

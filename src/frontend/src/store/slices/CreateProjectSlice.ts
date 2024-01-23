@@ -24,8 +24,8 @@ export const initialState: CreateProjectStateTypes = {
   formCategoryList: [],
   formCategoryLoading: false,
   generateQrLoading: false,
-  organizationList: [],
-  organizationListLoading: false,
+  organisationList: [],
+  organisationListLoading: false,
   generateQrSuccess: null,
   generateProjectLogLoading: false,
   generateProjectLog: null,
@@ -48,6 +48,7 @@ export const initialState: CreateProjectStateTypes = {
   isUnsavedChanges: false,
   canSwitchCreateProjectSteps: false,
   isTasksGenerated: { divide_on_square: false, task_splitting_algorithm: false },
+  isFgbFetching: false,
 };
 
 const CreateProject = createSlice({
@@ -112,10 +113,10 @@ const CreateProject = createSlice({
       state.generateQrLoading = action.payload;
     },
     GetOrganisationList(state, action) {
-      state.organizationList = action.payload;
+      state.organisationList = action.payload;
     },
     GetOrganisationListLoading(state, action) {
-      state.organizationListLoading = action.payload;
+      state.organisationListLoading = action.payload;
     },
     GenerateProjectQRSuccess(state, action) {
       if (action.payload.status === 'SUCCESS') {
@@ -214,6 +215,15 @@ const CreateProject = createSlice({
         ...state.isTasksGenerated,
         [action.payload.key]: action.payload.value,
       };
+    },
+    SetFgbFetchingStatus(state, action) {
+      state.isFgbFetching = action.payload;
+    },
+    ClearProjectStepState(state, action) {
+      state.dividedTaskGeojson = null;
+      state.splitTasksSelection = null;
+      state.dataExtractGeojson = null;
+      state.projectDetails = { ...action.payload, customLineUpload: null, customPolygonUpload: null };
     },
   },
 });

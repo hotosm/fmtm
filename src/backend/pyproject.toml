@@ -46,9 +46,9 @@ dependencies = [
     "asgiref==3.7.2",
     "sozipfile==0.3.2",
     "osm-login-python==1.0.1",
-    "osm-fieldwork==0.4.0",
+    "osm-fieldwork==0.4.1",
     "osm-rawdata==0.1.7",
-    "fmtm-splitter==0.2.5",
+    "fmtm-splitter==1.0.0rc0",
 ]
 requires-python = ">=3.10"
 readme = "../../README.md"
@@ -72,6 +72,8 @@ test = [
     "httpx==0.25.2",
     "pytest-asyncio==0.23.2",
     "pyinstrument==4.6.1",
+    "coverage>=7.4.0",
+    "coverage-badge>=1.1.0",
 ]
 debug = [
     "ipdb>=0.13.13",
@@ -83,6 +85,7 @@ docs = [
     "mkdocstrings-python==1.7.5",
     "mkdocs-exclude==1.0.2",
     "python-dotenv==1.0.0",
+    "mkdocs-git-revision-date-localized-plugin>=1.2.2",
 ]
 
 [tool.black]
@@ -120,7 +123,7 @@ asyncio_mode="auto"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.1.0"
+version = "2024.0.0"
 version_files = [
     "pyproject.toml:version",
     "app/__version__.py",

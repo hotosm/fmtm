@@ -15,6 +15,8 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
+"""Functions for task submissions."""
+
 import concurrent.futures
 import csv
 import io
@@ -22,21 +24,18 @@ import json
 import os
 import threading
 import uuid
-from asyncio import gather
-from datetime import datetime
+from collections import Counter
+from datetime import datetime, timedelta
+from collections import Counter
+from datetime import datetime, timedelta
 from io import BytesIO
-from pathlib import Path
-from collections import Counter
-from datetime import datetime, timedelta
-from collections import Counter
-from datetime import datetime, timedelta
 
 import sozipfile.sozipfile as zipfile
 from asgiref.sync import async_to_sync
 from fastapi import HTTPException, Response
 from fastapi.responses import FileResponse
 from loguru import logger as log
-from osm_fieldwork.json2osm import JsonDump
+from osm_fieldwork.json2osm import json2osm
 from sqlalchemy.orm import Session
 
 from app.central.central_crud import get_odk_form, get_odk_project, list_odk_xforms
@@ -48,8 +47,9 @@ from app.tasks import tasks_crud
 
 def get_submission_of_project(db: Session, project_id: int, task_id: int = None):
     """Gets the submission of project.
-    This function takes project_id and task_id as a parameter.
-    If task_id is provided, it returns all the submission made to that particular task, else all the submission made in the projects are returned.
+
+    If task_id is provided, it submissions for a specific task,
+    else all the submission made for a project are returned.
     """
     get_project_sync = async_to_sync(project_crud.get_project)
     project_info = get_project_sync(db, project_id)
@@ -109,156 +109,19 @@ def get_submission_of_project(db: Session, project_id: int, task_id: int = None)
         return submission_list
 
 
-async def get_forms_of_project(db: Session, project_id: int):
-    project_info = await project_crud.get_project_by_id(db, project_id)
-
-    # Return empty list if project is not found
-    if not project_info:
-        return []
-
-    odkid = project_info.odkid
-    project = get_odk_project()
-
-    result = project.listForms(odkid)
-    return result
-
-
-async def list_app_users_or_project(db: Session, project_id: int):
-    project_info = await project_crud.get_project_by_id(db, project_id)
-
-    # Return empty list if project is not found
-    if not project_info:
-        return []
-
-    odkid = project_info.odkid
-    project = get_odk_project()
-    result = project.listAppUsers(odkid)
-    return result
-
-
-# async def convert_json_to_osm_xml(file_path):
-
-#     jsonin = JsonDump()
-#     infile = Path(file_path)
-
-#     base = os.path.splitext(infile.name)[0]
-
-#     osmoutfile = f"/tmp/{base}.osm"
-#     jsonin.createOSM(osmoutfile)
-
-#     data = jsonin.parse(infile.as_posix())
-
-#     for entry in data:
-#         feature = jsonin.createEntry(entry)
-#         # Sometimes bad entries, usually from debugging XForm design, sneak in
-#         if len(feature) == 0:
-#             continue
-#         if len(feature) > 0:
-#             if "lat" not in feature["attrs"]:
-#                 if 'geometry' in feature['tags']:
-#                     if type(feature['tags']['geometry']) == str:
-#                         coords = list(feature['tags']['geometry'])
-#                     else:
-#                         coords = feature['tags']['geometry']['coordinates']
-#                     feature['attrs'] = {'lat': coords[1], 'lon': coords[0]}
-#                 else:
-#                     log.warning("Bad record! %r" % feature)
-#                     continue
-#             jsonin.writeOSM(feature)
-
-#     jsonin.finishOSM()
-#     log.info("Wrote OSM XML file: %r" % osmoutfile)
-#     return osmoutfile
-
-
-async def convert_json_to_osm_xml(file_path):
-    # TODO refactor to simply use json2osm(file_path)
-    jsonin = JsonDump()
-    infile = Path(file_path)
-
-    base = os.path.splitext(infile.name)[0]
-
-    osmoutfile = f"/tmp/{base}.osm"
-    jsonin.createOSM(osmoutfile)
-
-    data = jsonin.parse(infile.as_posix())
-
-    async def process_entry_async(entry):
-        feature = jsonin.createEntry(entry)
-        if len(feature) == 0:
-            return None
-        if len(feature) > 0:
-            if "lat" not in feature["attrs"]:
-                if "geometry" in feature["tags"]:
-                    if type(feature["tags"]["geometry"]) == str:
-                        coords = list(feature["tags"]["geometry"])
-                    else:
-                        coords = feature["tags"]["geometry"]["coordinates"]
-                    feature["attrs"] = {"lat": coords[1], "lon": coords[0]}
-                else:
-                    log.warning("Bad record! %r" % feature)
-                    return None
-            return feature
-
-    async def write_osm_async(features):
-        for feature in features:
-            if feature:
-                jsonin.writeOSM(feature)
-        jsonin.finishOSM()
-        log.info("Wrote OSM XML file: %r" % osmoutfile)
-        return osmoutfile
-
-    data_processing_tasks = [process_entry_async(entry) for entry in data]
-    processed_features = await gather(*data_processing_tasks)
-    await write_osm_async(processed_features)
-
-    return osmoutfile
-
-
 async def convert_json_to_osm(file_path):
-    # TODO refactor to simply use json2osm(file_path)
-    jsonin = JsonDump()
-    infile = Path(file_path)
+    """Wrapper for osm-fieldwork json2osm.
 
-    base = os.path.splitext(infile.name)[0]
-
-    osmoutfile = f"/tmp/{base}.osm"
-    jsonin.createOSM(osmoutfile)
-
-    jsonoutfile = f"/tmp/{base}.geojson"
-    jsonin.createGeoJson(jsonoutfile)
-
-    data = jsonin.parse(infile.as_posix())
-
-    for entry in data:
-        feature = jsonin.createEntry(entry)
-        # Sometimes bad entries, usually from debugging XForm design, sneak in
-        if len(feature) == 0:
-            continue
-        if len(feature) > 0:
-            if "lat" not in feature["attrs"]:
-                if "geometry" in feature["tags"]:
-                    if type(feature["tags"]["geometry"]) == str:
-                        coords = list(feature["tags"]["geometry"])
-                        # del feature['tags']['geometry']
-                    else:
-                        coords = feature["tags"]["geometry"]["coordinates"]
-                        # del feature['tags']['geometry']
-                    feature["attrs"] = {"lat": coords[1], "lon": coords[0]}
-                else:
-                    log.warning("Bad record! %r" % feature)
-                    continue
-            jsonin.writeOSM(feature)
-            jsonin.writeGeoJson(feature)
-
-    jsonin.finishOSM()
-    jsonin.finishGeoJson()
-    log.info("Wrote OSM XML file: %r" % osmoutfile)
-    log.info("Wrote GeoJson file: %r" % jsonoutfile)
-    return osmoutfile, jsonoutfile
+    FIXME add json output to osm2json (in addition to default OSM XML output)
+    """
+    # TODO check speed of json2osm
+    # TODO if slow response, use run_in_threadpool
+    osm_xml_path = json2osm(file_path)
+    return osm_xml_path
 
 
 async def convert_to_osm_for_task(odk_id: int, form_id: int, xform: any):
+    """Convert JSON --> OSM XML for a specific XForm/Task."""
     # This file stores the submission data.
     file_path = f"/tmp/{odk_id}_{form_id}.json"
 
@@ -271,12 +134,12 @@ async def convert_to_osm_for_task(odk_id: int, form_id: int, xform: any):
     with open(file_path, "wb") as f:
         f.write(file)
 
-    convert_json_to_osm_sync = async_to_sync(convert_json_to_osm)
-    osmoutfile, jsonoutfile = convert_json_to_osm_sync(file_path)
-    return osmoutfile, jsonoutfile
+    osmoutfile = await convert_json_to_osm(file_path)
+    return osmoutfile
 
 
 def convert_to_osm(db: Session, project_id: int, task_id: int):
+    """Convert submissions to OSM XML format."""
     get_project_sync = async_to_sync(project_crud.get_project)
     project_info = get_project_sync(db, project_id)
 
@@ -324,9 +187,10 @@ def convert_to_osm(db: Session, project_id: int, task_id: int):
 
     # Convert the submission to osm xml format
     convert_json_to_osm_sync = async_to_sync(convert_json_to_osm)
-    osmoutfile, jsonoutfile = convert_json_to_osm_sync(jsoninfile)
+    osmoutfile = convert_json_to_osm_sync(jsoninfile)
 
-    if osmoutfile and jsonoutfile:
+    # if osmoutfile and jsonoutfile:
+    if osmoutfile:
         # FIXME: Need to fix this when generating osm file
 
         # Remove the extra closing </osm> tag from the end of the file
@@ -347,7 +211,7 @@ def convert_to_osm(db: Session, project_id: int, task_id: int):
         # Add the files to the ZIP file
         with zipfile.ZipFile(final_zip_file_path, mode="a") as final_zip_file:
             final_zip_file.write(osmoutfile)
-            final_zip_file.write(jsonoutfile)
+            # final_zip_file.write(jsonoutfile)
 
     return FileResponse(final_zip_file_path)
 
@@ -383,7 +247,8 @@ def gather_all_submission_csvs(db, project_id):
 
     def download_submission_for_task(task_id):
         log.info(
-            f"Thread {threading.current_thread().name} - Downloading submission for Task ID {task_id}"
+            f"Thread {threading.current_thread().name} - "
+            f"Downloading submission for Task ID {task_id}"
         )
         xml_form_id = f"{project_name}_{form_category}_{task_id}".split("_")[2]
         file = xform.getSubmissionMedia(odkid, xml_form_id)
@@ -394,7 +259,8 @@ def gather_all_submission_csvs(db, project_id):
 
     def extract_files(zip_file_path):
         log.info(
-            f"Thread {threading.current_thread().name} - Extracting files from {zip_file_path}"
+            f"Thread {threading.current_thread().name} - "
+            f"Extracting files from {zip_file_path}"
         )
         with zipfile.ZipFile(zip_file_path, "r") as zip_file:
             extract_dir = os.path.splitext(zip_file_path)[0]
@@ -417,11 +283,14 @@ def gather_all_submission_csvs(db, project_id):
                 file_path = future.result()
                 files.append(file_path)
                 log.info(
-                    f"Thread {threading.current_thread().name} - Task {task_id} - Download completed."
+                    f"Thread {threading.current_thread().name} -"
+                    f" Task {task_id} - Download completed."
                 )
             except Exception as e:
                 log.error(
-                    f"Thread {threading.current_thread().name} - Error occurred while downloading submission for task {task_id}: {e}"
+                    f"Thread {threading.current_thread().name} -"
+                    f" Error occurred while downloading submission for task "
+                    f"{task_id}: {e}"
                 )
 
         # Extract files using thread pool
@@ -434,11 +303,13 @@ def gather_all_submission_csvs(db, project_id):
             try:
                 extracted_files.extend(future.result())
                 log.info(
-                    f"Thread {threading.current_thread().name} - Extracted files from {file_path}"
+                    f"Thread {threading.current_thread().name} -"
+                    f" Extracted files from {file_path}"
                 )
             except Exception as e:
                 log.error(
-                    f"Thread {threading.current_thread().name} - Error occurred while extracting files from {file_path}: {e}"
+                    f"Thread {threading.current_thread().name} -"
+                    f" Error occurred while extracting files from {file_path}: {e}"
                 )
 
     # Create a new ZIP file for the extracted files
@@ -453,6 +324,7 @@ def gather_all_submission_csvs(db, project_id):
 def update_submission_in_s3(
     db: Session, project_id: int, background_task_id: uuid.UUID
 ):
+    """Update or create new submission JSON in S3 for a project."""
     try:
         # Get Project
         get_project_sync = async_to_sync(project_crud.get_project)
@@ -570,49 +442,52 @@ def get_all_submissions_json(db: Session, project_id):
     return submissions
 
 
-def get_project_submission(db: Session, project_id: int):
-    get_project_sync = async_to_sync(project_crud.get_project)
-    project_info = get_project_sync(db, project_id)
+# TODO delete me
+# def get_project_submission(db: Session, project_id: int):
+#     """Get."""
+#     get_project_sync = async_to_sync(project_crud.get_project)
+#     project_info = get_project_sync(db, project_id)
 
-    # Return empty list if project is not found
-    if not project_info:
-        raise HTTPException(status_code=404, detail="Project not found")
+#     # Return empty list if project is not found
+#     if not project_info:
+#         raise HTTPException(status_code=404, detail="Project not found")
 
-    odkid = project_info.odkid
-    project_name = project_info.project_name_prefix
-    form_category = project_info.xform_title
-    project_tasks = project_info.tasks
+#     odkid = project_info.odkid
+#     project_name = project_info.project_name_prefix
+#     form_category = project_info.xform_title
+#     project_tasks = project_info.tasks
 
-    # ODK Credentials
-    odk_credentials = project_schemas.ODKCentral(
-        odk_central_url=project_info.odk_central_url,
-        odk_central_user=project_info.odk_central_user,
-        odk_central_password=project_info.odk_central_password,
-    )
+#     # ODK Credentials
+#     odk_credentials = project_schemas.ODKCentral(
+#         odk_central_url=project_info.odk_central_url,
+#         odk_central_user=project_info.odk_central_user,
+#         odk_central_password=project_info.odk_central_password,
+#     )
 
-    # Get ODK Form with odk credentials from the project.
-    xform = get_odk_form(odk_credentials)
+#     # Get ODK Form with odk credentials from the project.
+#     xform = get_odk_form(odk_credentials)
 
-    submissions = []
+#     submissions = []
 
-    task_list = [x.id for x in project_tasks]
-    for id in task_list:
-        xml_form_id = f"{project_name}_{form_category}_{id}".split("_")[2]
-        file = xform.getSubmissions(odkid, xml_form_id, None, False, True)
-        if not file:
-            json_data = None
-        else:
-            json_data = json.loads(file)
-            json_data_value = json_data.get("value")
-            if json_data_value:
-                submissions.extend(json_data_value)
+#     task_list = [x.id for x in project_tasks]
+#     for id in task_list:
+#         xml_form_id = f"{project_name}_{form_category}_{id}".split("_")[2]
+#         file = xform.getSubmissions(odkid, xml_form_id, None, False, True)
+#         if not file:
+#             json_data = None
+#         else:
+#             json_data = json.loads(file)
+#             json_data_value = json_data.get("value")
+#             if json_data_value:
+#                 submissions.extend(json_data_value)
 
-    return submissions
+#     return submissions
 
 
 async def download_submission(
     db: Session, project_id: int, task_id: int, export_json: bool
 ):
+    """Download submission data from ODK Central and aggregate."""
     project_info = await project_crud.get_project(db, project_id)
 
     # Return empty list if project is not found
@@ -642,7 +517,8 @@ async def download_submission(
 
             task_list = [x.id for x in project_tasks]
 
-            # zip_file_path = f"{project_name}_{form_category}_submissions.zip"  # Create a new ZIP file for all submissions
+            # # Create a new ZIP file for all submissions
+            # zip_file_path = f"{project_name}_{form_category}_submissions.zip"
             files = []
 
             for id in task_list:
@@ -656,16 +532,15 @@ async def download_submission(
                 with open(file_path, "wb") as f:
                     f.write(file.content)
 
-                files.append(
-                    file_path
-                )  # Add the output file path to the list of files for the final ZIP file
+                # Add the output file path to the list of files for the final ZIP file
+                files.append(file_path)
 
             extracted_files = []
             for file_path in files:
                 with zipfile.ZipFile(file_path, "r") as zip_file:
-                    zip_file.extractall(
-                        os.path.splitext(file_path)[0]
-                    )  # Extract the contents of the nested ZIP files to a directory with the same name as the ZIP file
+                    # Extract the contents of the nested ZIP files to a directory
+                    # with the same name as the ZIP file
+                    zip_file.extractall(os.path.splitext(file_path)[0])
                     extracted_files += [
                         os.path.join(os.path.splitext(file_path)[0], f)
                         for f in zip_file.namelist()
@@ -720,9 +595,9 @@ async def download_submission(
 
 async def get_submission_points(db: Session, project_id: int, task_id: int = None):
     """Gets the submission points of project.
-    This function takes project_id and task_id as a parameter.
-    If task_id is provided, it returns all the submission points made to that particular task,
-        else all the submission points made in the projects are returned.
+
+    If task_id is provided, it return point specific to a task,
+    else the entire project.
     """
     project_info = await project_crud.get_project_by_id(db, project_id)
 
@@ -763,8 +638,10 @@ async def get_submission_points(db: Session, project_id: int, task_id: int = Non
                     csv_reader = csv.DictReader(io.TextIOWrapper(csv_file))
                     geometry = []
                     for row in csv_reader:
-                        # Check if the row contains the 'warmup-Latitude' and 'warmup-Longitude' columns
-                        # FIXME: fix the column names (they might not be same warmup-Latitude and warmup-Longitude)
+                        # Check if the row contains the 'warmup-Latitude' and
+                        # 'warmup-Longitude' columns
+                        # FIXME: fix the column names (they might not be same
+                        # warmup-Latitude and warmup-Longitude)
                         if "warmup-Latitude" in row and "warmup-Longitude" in row:
                             point = (row["warmup-Latitude"], row["warmup-Longitude"])
 
@@ -785,6 +662,7 @@ async def get_submission_points(db: Session, project_id: int, task_id: int = Non
 
 
 async def get_submission_count_of_a_project(db: Session, project_id: int):
+    """Return the total number of submissions made for a project."""
     project_info = await project_crud.get_project(db, project_id)
 
     # Return empty list if project is not found
@@ -823,9 +701,10 @@ async def get_submission_count_of_a_project(db: Session, project_id: int):
     return len(files)
 
 
-async def get_submissions_by_date(db: Session, project_id: int, days: int, planned_task: int):
-    """
-    Get submissions by date.
+async def get_submissions_by_date(
+    db: Session, project_id: int, days: int, planned_task: int
+):
+    """Get submissions by date.
 
     Fetches the submissions for a given project within a specified number of days.
 
@@ -833,6 +712,7 @@ async def get_submissions_by_date(db: Session, project_id: int, days: int, plann
         db (Session): The database session.
         project_id (int): The ID of the project.
         days (int): The number of days to consider for fetching submissions.
+        planned_task (int): Associated task id.
 
     Returns:
         dict: A dictionary containing the submission counts for each date.
@@ -841,14 +721,13 @@ async def get_submissions_by_date(db: Session, project_id: int, days: int, plann
         # Fetch submissions for project with ID 1 within the last 7 days
         submissions = await get_submissions_by_date(db, 1, 7)
     """
-    
     project = await project_crud.get_project(db, project_id)
     s3_project_path = f"/{project.organisation_id}/{project_id}"
     s3_submission_path = f"/{s3_project_path}/submission.zip"
 
     try:
         file = get_obj_from_bucket(settings.S3_BUCKET_NAME, s3_submission_path)
-    except ValueError as e:
+    except ValueError:
         return []
 
     with zipfile.ZipFile(file, "r") as zip_ref:
@@ -856,16 +735,23 @@ async def get_submissions_by_date(db: Session, project_id: int, days: int, plann
             content = file_in_zip.read()
 
     content = json.loads(content)
-    end_dates = [datetime.fromisoformat(entry["end"].split('+')[0]) for entry in content if entry.get("end")]
+    end_dates = [
+        datetime.fromisoformat(entry["end"].split("+")[0])
+        for entry in content
+        if entry.get("end")
+    ]
 
-    dates = [date.strftime('%m/%d') for date in end_dates if datetime.now() - date <= timedelta(days=days)]
+    dates = [
+        date.strftime("%m/%d")
+        for date in end_dates
+        if datetime.now() - date <= timedelta(days=days)
+    ]
 
     submission_counts = Counter(sorted(dates))
 
     response = [
-        {"date": key, "count": value} 
-        for key, value in submission_counts.items()
-        ]
+        {"date": key, "count": value} for key, value in submission_counts.items()
+    ]
     if planned_task:
         count_dict = {}
         cummulative_count = 0
@@ -879,3 +765,41 @@ async def get_submissions_by_date(db: Session, project_id: int, days: int, plann
 
     return response
 
+
+async def get_submission_by_project(project_id: int, skip: 0, limit: 100, db: Session):
+    """Get submission by project.
+
+    Retrieves a paginated list of submissions for a given project.
+
+    Args:
+        project_id (int): The ID of the project.
+        skip (int): The number of submissions to skip.
+        limit (int): The maximum number of submissions to retrieve.
+        db (Session): The database session.
+
+    Returns:
+        Tuple[int, List]: A tuple containing the total number of submissions and
+        the paginated list of submissions.
+
+    Raises:
+        ValueError: If the submission file cannot be found.
+
+    """
+    project = await project_crud.get_project(db, project_id)
+    s3_project_path = f"/{project.organisation_id}/{project_id}"
+    s3_submission_path = f"/{s3_project_path}/submission.zip"
+
+    try:
+        file = get_obj_from_bucket(settings.S3_BUCKET_NAME, s3_submission_path)
+    except ValueError:
+        return 0, []
+
+    with zipfile.ZipFile(file, "r") as zip_ref:
+        with zip_ref.open("submissions.json") as file_in_zip:
+            content = file_in_zip.read()
+
+    content = json.loads(content)
+    start_index = skip
+    end_index = skip + limit
+    paginated_content = content[start_index:end_index]
+    return len(content), paginated_content

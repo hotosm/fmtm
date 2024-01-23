@@ -29,7 +29,7 @@ const CreateProjectService: Function = (
 
         if (payload.task_split_type === task_split_type['choose_area_as_task']) {
           await dispatch(
-            UploadAreaService(`${import.meta.env.VITE_API_URL}/projects/${resp.id}/upload_multi_polygon`, fileUpload),
+            UploadAreaService(`${import.meta.env.VITE_API_URL}/projects/${resp.id}/custom_task_boundaries`, fileUpload),
           );
         } else if (payload.splitting_algorithm === 'Use natural Boundary') {
           await dispatch(
@@ -37,7 +37,7 @@ const CreateProjectService: Function = (
           );
         } else {
           await dispatch(
-            UploadAreaService(`${import.meta.env.VITE_API_URL}/projects/${resp.id}/upload_multi_polygon`, fileUpload),
+            UploadAreaService(`${import.meta.env.VITE_API_URL}/projects/${resp.id}/custom_task_boundaries`, fileUpload),
           );
           // await dispatch(UploadAreaService(`${import.meta.env.VITE_API_URL}/projects/${resp.id}/upload`, fileUpload, { dimension: payload.dimension }));
         }
@@ -212,7 +212,7 @@ const OrganisationService: Function = (url: string) => {
         const resp: OrganisationListModel = getOrganisationListResponse.data;
         dispatch(CreateProjectActions.GetOrganisationList(resp));
       } catch (error) {
-        dispatch(CreateProjectActions.GetOrganizationListLoading(false));
+        dispatch(CreateProjectActions.GetOrganisationListLoading(false));
       }
     };
 
@@ -352,6 +352,14 @@ const TaskSplittingPreviewService: Function = (
         dispatch(CreateProjectActions.SetIsTasksGenerated({ key: 'task_splitting_algorithm', value: true }));
         dispatch(CreateProjectActions.GetTaskSplittingPreview(resp));
       } catch (error) {
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: 'Task generation failed. Please try again',
+            variant: 'error',
+            duration: 2000,
+          }),
+        );
         dispatch(CreateProjectActions.GetTaskSplittingPreviewLoading(false));
       } finally {
         dispatch(CreateProjectActions.GetTaskSplittingPreviewLoading(false));

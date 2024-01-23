@@ -157,8 +157,20 @@ alembic upgrade head
 To use it:
 
 1. Re-build the docker image `docker compose build api`
-2. Start the docker container `docker compose up -d api`
-3. Connect to the debugger on port **5678**.
+2. Uncomment the debug port in docker-compose.yml:
+
+   ```yml
+   services:
+     ...
+     api:
+       ...
+       ports:
+         - "7052:8000"
+       #   - "5678:5678" # Debugger port
+   ```
+
+3. Start the docker container `docker compose up -d api`
+4. Connect to the debugger on port **5678**.
 
 You can configure your IDE to do this with the build in debugger.
 
@@ -195,6 +207,19 @@ To run the backend tests locally, run:
 ```bash
 docker compose run --rm api pytest
 ```
+
+To assess coverage of tests, run:
+
+```bash
+docker compose run --rm --entrypoint='sh -c' api \
+  'coverage run -m pytest && coverage report -m'
+```
+
+To assess performance of endpoints:
+
+- We can use the pyinstrument profiler.
+- While in debug mode (DEBUG=True), access any endpoint.
+- Add the `?profile=true` arg to the URL to view the execution time.
 
 ## Using the local version of ODK Central
 

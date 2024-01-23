@@ -55,7 +55,7 @@ from shapely.geometry import (
     shape,
 )
 from shapely.ops import unary_union
-from sqlalchemy import and_, column, inspect, select, table, text
+from sqlalchemy import and_, column, func, inspect, select, table, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -64,7 +64,7 @@ from app.config import settings
 from app.db import db_models
 from app.db.database import get_db
 from app.db.postgis_utils import geojson_to_flatgeobuf, geometry_to_geojson, timestamp
-from app.organization import organization_crud
+from app.organisations import organisation_crud
 from app.projects import project_schemas
 from app.s3 import add_obj_to_bucket, get_obj_from_bucket
 from app.tasks import tasks_crud
@@ -147,7 +147,6 @@ async def get_project_by_id(db: Session, project_id: int):
     db_project = (
         db.query(db_models.DbProject)
         .filter(db_models.DbProject.id == project_id)
-        .order_by(db_models.DbProject.id)
         .first()
     )
     return await convert_to_app_project(db_project)
@@ -164,22 +163,16 @@ async def get_project_info_by_id(db: Session, project_id: int):
     return await convert_to_app_project_info(db_project_info)
 
 
-async def delete_project_by_id(db: Session, project_id: int):
+async def delete_one_project(db: Session, db_project: db_models.DbProject) -> None:
     """Delete a project by id."""
     try:
-        db_project = (
-            db.query(db_models.DbProject)
-            .filter(db_models.DbProject.id == project_id)
-            .order_by(db_models.DbProject.id)
-            .first()
-        )
-        if db_project:
-            db.delete(db_project)
-            db.commit()
+        project_id = db_project.id
+        db.delete(db_project)
+        db.commit()
+        log.info(f"Deleted project with ID: {project_id}")
     except Exception as e:
         log.exception(e)
         raise HTTPException(e) from e
-    return f"Project {project_id} deleted"
 
 
 async def partial_update_project_info(
@@ -522,10 +515,12 @@ async def preview_split_by_square(boundary: str, meters: int):
 
     # Merge multiple geometries into single polygon
     if multi_polygons:
-        boundary = multi_polygons[0]
+        geometry = multi_polygons[0]
         for geom in multi_polygons[1:]:
-            boundary = boundary.union(geom)
-
+            geometry = geometry.union(geom)
+        for feature in features:
+            feature["geometry"] = geometry
+        boundary["features"] = features
     return await run_in_threadpool(
         lambda: split_by_square(
             boundary,
@@ -578,7 +573,7 @@ async def get_data_extract_from_osm_rawdata(
         return data_extract
     except Exception as e:
         log.error(e)
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 async def get_data_extract_url(
@@ -622,13 +617,13 @@ async def get_data_extract_url(
         }
     }
 
-    if geom_type := aoi.get("type") == "FeatureCollection":
+    if (geom_type := aoi.get("type")) == "FeatureCollection":
         # Convert each feature into a Shapely geometry
         geometries = [
             shape(feature.get("geometry")) for feature in aoi.get("features", [])
         ]
         merged_geom = unary_union(geometries)
-    elif geom_type := aoi.get("type") == "Feature":
+    elif geom_type == "Feature":
         merged_geom = shape(aoi.get("geometry"))
     else:
         merged_geom = shape(aoi)
@@ -1160,7 +1155,7 @@ def generate_task_files(
 
     # Create an app user for the task
     project_log.info(f"Creating odkcentral app user for task {task_id}")
-    appuser = central_crud.create_appuser(odk_id, name, odk_credentials)
+    appuser = central_crud.create_odk_app_user(odk_id, name, odk_credentials)
 
     # If app user could not be created, raise an exception.
     if not appuser:
@@ -1500,7 +1495,7 @@ async def create_qrcode(
     """Create a QR code for a task."""
     # Make QR code for an app_user.
     log.debug(f"Generating base64 encoded QR settings for token: {token}")
-    qrcode_data = await central_crud.create_qrcode(
+    qrcode_data = await central_crud.encode_qrcode_json(
         odk_id, token, project_name, odk_central_url
     )
 
@@ -2071,22 +2066,6 @@ async def update_project_form(
     return True
 
 
-async def update_odk_credentials_in_db(
-    project_instance: project_schemas.ProjectUpload,
-    odk_central_cred: project_schemas.ODKCentral,
-    odkid: int,
-    db: Session,
-):
-    """Update odk credentials for a project."""
-    project_instance.odkid = odkid
-    project_instance.odk_central_url = odk_central_cred.odk_central_url
-    project_instance.odk_central_user = odk_central_cred.odk_central_user
-    project_instance.odk_central_password = odk_central_cred.odk_central_password
-
-    db.commit()
-    db.refresh(project_instance)
-
-
 async def get_extracted_data_from_db(db: Session, project_id: int, outfile: str):
     """Get the geojson of those features for this project."""
     query = text(
@@ -2336,9 +2315,13 @@ def check_crs(input_geojson: Union[dict, FeatureCollection]):
         else input_geojson.get("geometry", {}).get("type", "")
     )
     if geometry_type == "MultiPolygon":
-        first_coordinate = (
-            coordinates[0][0][0] if coordinates and coordinates[0] else None
-        )
+        first_coordinate = coordinates[0][0] if coordinates and coordinates[0] else None
+    elif geometry_type == "Point":
+        first_coordinate = coordinates if coordinates else None
+
+    elif geometry_type == "LineString":
+        first_coordinate = coordinates[0] if coordinates else None
+
     else:
         first_coordinate = coordinates[0][0] if coordinates else None
 
@@ -2361,17 +2344,17 @@ async def get_tasks_count(db: Session, project_id: int):
 async def get_pagination(page: int, count: int, results_per_page: int, total: int):
     """Pagination result for splash page."""
     total_pages = (count + results_per_page - 1) // results_per_page
-    hasNext = (page * results_per_page) < count  # noqa: N806
-    hasPrev = page > 1  # noqa: N806
+    has_next = (page * results_per_page) < count  # noqa: N806
+    has_prev = page > 1  # noqa: N806
 
     pagination = project_schemas.PaginationInfo(
-        hasNext=hasNext,
-        hasPrev=hasPrev,
-        nextNum=page + 1 if hasNext else None,
+        has_next=has_next,
+        has_prev=has_prev,
+        next_num=page + 1 if has_next else None,
         page=page,
         pages=total_pages,
-        prevNum=page - 1 if hasPrev else None,
-        perPage=results_per_page,
+        prev_num=page - 1 if has_prev else None,
+        per_page=results_per_page,
         total=total,
     )
 
@@ -2381,7 +2364,7 @@ async def get_pagination(page: int, count: int, results_per_page: int, total: in
 async def get_dashboard_detail(project_id: int, db: Session):
     """Get project details for project dashboard."""
     project = await get_project(db, project_id)
-    db_organization = await organization_crud.get_organisation_by_id(
+    db_organisation = await organisation_crud.get_organisation_by_id(
         db, project.organisation_id
     )
 
@@ -2417,9 +2400,9 @@ async def get_dashboard_detail(project_id: int, db: Session):
     )
 
     project.total_tasks = await tasks_crud.get_task_count_in_project(db, project_id)
-    project.organization, project.organization_logo = (
-        db_organization.name,
-        db_organization.logo,
+    project.organisation, project.organisation_logo = (
+        db_organisation.name,
+        db_organisation.logo,
     )
     project.total_contributors = contributors
 
@@ -2434,7 +2417,9 @@ async def get_project_users(db: Session, project_id: int):
         project_id (int): The ID of the project.
 
     Returns:
-        List[Dict[str, Union[str, int]]]: A list of dictionaries containing the username and the number of contributions made by each user for the specified project.
+        List[Dict[str, Union[str, int]]]: A list of dictionaries containing
+            the username and the number of contributions made by each user
+            for the specified project.
     """
     contributors = (
         db.query(db_models.DbTaskHistory)
@@ -2464,7 +2449,8 @@ def count_user_contributions(db: Session, user_id: int, project_id: int) -> int:
         project_id (int): The ID of the project.
 
     Returns:
-        int: The number of contributions made by the user for the specified project.
+        int: The number of contributions made by the user for the specified
+            project.
     """
     contributions_count = (
         db.query(func.count(db_models.DbTaskHistory.user_id))
