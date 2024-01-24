@@ -135,9 +135,9 @@ async def org_admin(
 
 
 async def project_admin(
-        project_id: DbProject = Depends(get_project_by_id),
-        db: Session = Depends(get_db),
-        user_data: AuthUser = Depends(login_required)
+    project_id: DbProject = Depends(get_project_by_id),
+    db: Session = Depends(get_db),
+    user_data: AuthUser = Depends(login_required),
 ):
     """Project admin role"""
     user_id = await get_uid(user_data)
