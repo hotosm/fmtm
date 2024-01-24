@@ -217,8 +217,8 @@ async def read_project(project_id: int, db: Session = Depends(database.get_db)):
 @router.delete("/{project_id}")
 async def delete_project(
     project: db_models.DbProject = Depends(project_deps.get_project_by_id),
-    current_user: AuthUser = Depends(login_required),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(org_admin),
 ):
     """Delete a project from both ODK Central and the local database."""
     log.info(
