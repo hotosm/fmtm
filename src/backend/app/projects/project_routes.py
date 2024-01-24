@@ -218,7 +218,7 @@ async def read_project(project_id: int, db: Session = Depends(database.get_db)):
 async def delete_project(
     project: int = Depends(project_deps.get_project_by_id),
     db: Session = Depends(database.get_db),
-    user_data: AuthUser = Depends(login_required),
+    current_user: AuthUser = Depends(org_admin),
 ):
     """Delete a project from both ODK Central and the local database."""
     # Odk crendentials
