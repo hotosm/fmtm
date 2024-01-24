@@ -432,6 +432,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
                     dispatch(CreateProjectActions.SetDividedTaskGeojson(JSON.parse(geojson)));
                     setGeojsonFile(null);
                   }}
+                  hasEditUndo
                 />
               </div>
               {generateProjectLog ? (
