@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { CommonActions } from '../../store/slices/CommonSlice';
-import Button from '../../components/common/Button';
-import { CustomSelect } from '../../components/common/Select';
+import { CommonActions } from '@/store/slices/CommonSlice';
+import Button from '@/components/common/Button';
+import { CustomSelect } from '@/components/common/Select';
 import { useNavigate } from 'react-router-dom';
-import RadioButton from '../common/RadioButton';
-import { CreateProjectActions } from '../../store/slices/CreateProjectSlice';
-import useForm from '../../hooks/useForm';
-import { useAppSelector } from '../../types/reduxTypes';
-import FileInputComponent from '../common/FileInputComponent';
-import SelectFormValidation from './validation/SelectFormValidation';
-import { FormCategoryService, ValidateCustomForm } from '../../api/CreateProjectService';
-import NewDefineAreaMap from '../../views/NewDefineAreaMap';
+import RadioButton from '@/components/common/RadioButton';
+import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
+import useForm from '@/hooks/useForm';
+import { useAppSelector } from '@/types/reduxTypes';
+import FileInputComponent from '@/components/common/FileInputComponent';
+import SelectFormValidation from '@/components/createproject/validation/SelectFormValidation';
+import { FormCategoryService, ValidateCustomForm } from '@/api/CreateProjectService';
+import NewDefineAreaMap from '@/views/NewDefineAreaMap';
 
 const osmFeatureTypeOptions = [
   { name: 'form_ways', value: 'existing_form', label: 'Use Existing Form' },

@@ -1,6 +1,6 @@
 import React from 'react';
-import pageNoFound from '../assets/images/notFound.png';
-import CoreModules from '../shared/CoreModules';
+import pageNoFound from '@/assets/images/notFound.png';
+import CoreModules from '@/shared/CoreModules';
 const NotFoundPage = () => {
   return (
     <CoreModules.Stack

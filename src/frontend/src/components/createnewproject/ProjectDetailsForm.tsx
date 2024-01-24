@@ -1,18 +1,18 @@
-import TextArea from '../../components/common/TextArea';
-import InputTextField from '../../components/common/InputTextField';
+import TextArea from '@/components/common/TextArea';
+import InputTextField from '@/components/common/InputTextField';
 import React, { useEffect } from 'react';
-import { CreateProjectActions } from '../../store/slices/CreateProjectSlice';
+import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useAppSelector } from '../../types/reduxTypes';
-import useForm from '../../hooks/useForm';
-import CreateProjectValidation from '../../components/createproject/validation/CreateProjectValidation';
-import Button from '../../components/common/Button';
-import { CommonActions } from '../../store/slices/CommonSlice';
-import AssetModules from '../../shared/AssetModules.js';
-import { createPopup } from '../../utilfunctions/createPopup';
-import { CustomSelect } from '../../components/common/Select';
-import { OrganisationService } from '../../api/CreateProjectService';
+import { useAppSelector } from '@/types/reduxTypes';
+import useForm from '@/hooks/useForm';
+import CreateProjectValidation from '@/components/createproject/validation//CreateProjectValidation';
+import Button from '@/components/common/Button';
+import { CommonActions } from '@/store/slices/CommonSlice';
+import AssetModules from '@/shared/AssetModules.js';
+import { createPopup } from '@/utilfunctions/createPopup';
+import { CustomSelect } from '@/components/common/Select';
+import { OrganisationService } from '@/api/CreateProjectService';
 
 const ProjectDetailsForm = ({ flag }) => {
   const dispatch = useDispatch();
