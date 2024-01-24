@@ -35,11 +35,13 @@ const GlobalInit = () => {
       (config) => {
         // Do something before request is sent
 
-        const urlIsExcluded = excludedDomains.some((domain) => config.url.includes(domain));
+        // const excludedDomains = ['xxx', 'xxx'];
+        // const urlIsExcluded = excludedDomains.some((domain) => config.url.includes(domain));
+        // if (!urlIsExcluded) {
+        //   config.withCredentials = true;
+        // }
 
-        if (!urlIsExcluded) {
-          config.withCredentials = true;
-        }
+        config.withCredentials = true;
 
         return config;
       },
@@ -47,9 +49,6 @@ const GlobalInit = () => {
         // Do something with request error
         Promise.reject(error),
     );
-
-    axios.defaults.withCredentials = true;
-
     return () => {};
   }, []);
 
