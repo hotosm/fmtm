@@ -81,7 +81,7 @@ const ProjectDetailsForm = ({ flag }) => {
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
       <div className="fmtm-bg-white xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6">
         <h6 className="fmtm-text-xl fmtm-font-[600] fmtm-pb-2 lg:fmtm-pb-6">Project Details</h6>
-        <p className="fmtm-text-gray-500 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3">
+        <div className="fmtm-text-gray-500 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3">
           <span>
             Fill in your project basic information such as name, description, hashtag, etc. This captures essential
             information about your project.
@@ -99,7 +99,7 @@ const ProjectDetailsForm = ({ flag }) => {
               https://docs.getodk.org/central-install-digital-ocean/
             </a>
           </div>
-        </p>
+        </div>
       </div>
       <form
         className="xl:fmtm-w-[83%] lg:fmtm-h-[60vh] xl:fmtm-h-[58vh] fmtm-bg-white fmtm-px-11 fmtm-py-6 lg:fmtm-overflow-y-scroll lg:scrollbar"

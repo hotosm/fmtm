@@ -18,7 +18,6 @@ import {
   TaskSplittingPreviewService,
 } from '@/api/CreateProjectService';
 import environment from '@/environment';
-import LoadingBar from '@/components/createproject/LoadingBar';
 import { Modal } from '@/components/common/Modal';
 import ProgressBar from '@/components/common/ProgressBar';
 import { task_split_type } from '@/types/enums';

@@ -9,10 +9,11 @@ import { useNavigate } from 'react-router-dom';
 import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
 import useForm from '@/hooks/useForm';
 import { useAppSelector } from '@/types/reduxTypes';
-import UploadAreaValidation from '@/components/createproject/validation/UploadAreaValidation';
+import UploadAreaValidation from '@/components/createnewproject/validation/UploadAreaValidation';
 import FileInputComponent from '@/components/common/FileInputComponent';
 import NewDefineAreaMap from '@/views/NewDefineAreaMap';
 import { checkWGS84Projection } from '@/utilfunctions/checkWGS84Projection.js';
+
 // @ts-ignore
 const DefineAreaMap = React.lazy(() => import('../../views/DefineAreaMap'));
 

@@ -202,8 +202,8 @@ const ClusterLayer = ({
             font: '15px Times New Roman',
           }),
         });
-        return style;
         fillColor = '#96bfff';
+        return style;
       } else {
         return;
       }

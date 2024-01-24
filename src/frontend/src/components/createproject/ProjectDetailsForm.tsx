@@ -6,7 +6,6 @@ import useForm from '@/hooks/useForm';
 import CreateProjectValidation from '@/components/createproject/validation/CreateProjectValidation';
 import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
 import { OrganisationService } from '@/api/CreateProjectService';
-import environment from '@/environment';
 import { MenuItem, Select } from '@mui/material';
 import { createPopup } from '@/utilfunctions/createPopup';
 import { useAppSelector } from '@/types/reduxTypes';
