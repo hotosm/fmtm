@@ -34,7 +34,7 @@ import shapely.wkb as wkblib
 import sozipfile.sozipfile as zipfile
 import sqlalchemy
 from asgiref.sync import async_to_sync
-from fastapi import File, HTTPException, UploadFile
+from fastapi import File, HTTPException, UploadFile, Response
 from fastapi.concurrency import run_in_threadpool
 from fmtm_splitter.splitter import split_by_sql, split_by_square
 from geoalchemy2.shape import from_shape, to_shape
@@ -68,6 +68,7 @@ from app.projects import project_schemas
 from app.s3 import add_obj_to_bucket, get_obj_from_bucket
 from app.tasks import tasks_crud
 from app.users import user_crud
+from app.models.enums import HTTPStatus, ProjectRole
 
 TILESDIR = "/opt/tiles"
 
@@ -2382,3 +2383,29 @@ def count_user_contributions(db: Session, user_id: int, project_id: int) -> int:
     )
 
     return contributions_count
+
+
+async def add_project_admin(
+    db: Session, user: db_models.DbUser, project: db_models.DbProject
+):
+    """Adds a user as an admin to the specified organisation.
+
+    Args:
+        db (Session): The database session.
+        user_id (int): The ID of the user to be added as an admin.
+        organisation (DbOrganisation): The organisation model instance.
+
+    Returns:
+        Response: The HTTP response with status code 200.
+    """
+    new_user_role = db_models.DbUserRoles(
+        user_id=user.id,
+        project_id=project.id,
+        role=ProjectRole.PROJECT_MANAGER,
+    )
+
+    # add data to the managers field in organisation model
+    project.roles.append(new_user_role)
+    db.commit()
+
+    return Response(status_code=HTTPStatus.OK)

@@ -52,6 +52,8 @@ from app.projects.project_crud import check_crs
 from app.static import data_path
 from app.submissions import submission_crud
 from app.tasks import tasks_crud
+from app.users.user_deps import user_exists_in_db
+from app.auth.roles import org_admin
 
 router = APIRouter(
     prefix="/projects",
@@ -1257,3 +1259,17 @@ async def get_contributors(project_id: int, db: Session = Depends(database.get_d
     """
     project_users = await project_crud.get_project_users(db, project_id)
     return project_users
+
+
+@router.post("/add_admin/")
+async def add_new_project_admin(
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(org_admin),
+    user: db_models.DbUser = Depends(user_exists_in_db),
+    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+):
+    """Add a new project manager.
+
+    The logged in user must be either the admin of the organisation or a super admin.
+    """
+    return await project_crud.add_project_admin(db, user, project)
