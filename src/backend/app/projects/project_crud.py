@@ -34,7 +34,7 @@ import shapely.wkb as wkblib
 import sozipfile.sozipfile as zipfile
 import sqlalchemy
 from asgiref.sync import async_to_sync
-from fastapi import File, HTTPException, UploadFile, Response
+from fastapi import File, HTTPException, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fmtm_splitter.splitter import split_by_sql, split_by_square
 from geoalchemy2.shape import from_shape, to_shape
@@ -63,12 +63,11 @@ from app.config import encrypt_value, settings
 from app.db import db_models
 from app.db.database import get_db
 from app.db.postgis_utils import geojson_to_flatgeobuf, geometry_to_geojson
-from app.models.enums import HTTPStatus
+from app.models.enums import HTTPStatus, ProjectRole
 from app.projects import project_schemas
 from app.s3 import add_obj_to_bucket, get_obj_from_bucket
 from app.tasks import tasks_crud
 from app.users import user_crud
-from app.models.enums import HTTPStatus, ProjectRole
 
 TILESDIR = "/opt/tiles"
 

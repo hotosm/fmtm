@@ -43,6 +43,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
 from app.auth.osm import AuthUser, login_required
+from app.auth.roles import org_admin
 from app.central import central_crud
 from app.db import database, db_models
 from app.models.enums import TILES_FORMATS, TILES_SOURCE, HTTPStatus
@@ -53,7 +54,6 @@ from app.static import data_path
 from app.submissions import submission_crud
 from app.tasks import tasks_crud
 from app.users.user_deps import user_exists_in_db
-from app.auth.roles import org_admin
 
 router = APIRouter(
     prefix="/projects",
