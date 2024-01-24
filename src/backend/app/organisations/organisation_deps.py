@@ -27,43 +27,63 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app.db.db_models import DbOrganisation
+from app.db.db_models import DbOrganisation, DbProject
 from app.models.enums import HTTPStatus
+from app.projects import project_deps
 
 
-async def get_organisation_by_name(db: Session, org_name: str) -> DbOrganisation:
+async def get_organisation_by_name(
+    db: Session, org_name: str, check_approved: bool = True
+) -> DbOrganisation:
     """Get an organisation from the db by name.
 
     Args:
         db (Session): database session
         org_name (int): id of the organisation
+        check_approved (bool): first check if the organisation is approved
 
     Returns:
         DbOrganisation: organisation with the given id
     """
-    return (
+    org_obj = (
         db.query(DbOrganisation)
         .filter(func.lower(DbOrganisation.name).like(func.lower(f"%{org_name}%")))
         .first()
     )
+    if org_obj and check_approved and org_obj.approved is False:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=f"Organisation ({org_obj.id}) is not approved yet",
+        )
+    return org_obj
 
 
-async def get_organisation_by_id(db: Session, org_id: int) -> DbOrganisation:
+async def get_organisation_by_id(
+    db: Session, org_id: int, check_approved: bool = True
+) -> DbOrganisation:
     """Get an organisation from the db by id.
 
     Args:
         db (Session): database session
         org_id (int): id of the organisation
+        check_approved (bool): first check if the organisation is approved
 
     Returns:
         DbOrganisation: organisation with the given id
     """
-    return db.query(DbOrganisation).filter(DbOrganisation.id == org_id).first()
+    org_obj = db.query(DbOrganisation).filter_by(id=org_id).first()
+    if org_obj and check_approved and org_obj.approved is False:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=f"Organisation {org_id} is not approved yet",
+        )
+    return org_obj
 
 
-async def org_exists(
+async def check_org_exists(
+    db: Session,
     org_id: Union[str, int],
-    db: Session = Depends(get_db),
+    check_approved: bool = True,
 ) -> DbOrganisation:
     """Check if organisation name exists, else error.
 
@@ -76,11 +96,11 @@ async def org_exists(
 
     if isinstance(org_id, int):
         log.debug(f"Getting organisation by id: {org_id}")
-        db_organisation = await get_organisation_by_id(db, org_id)
+        db_organisation = await get_organisation_by_id(db, org_id, check_approved)
 
     if isinstance(org_id, str):
         log.debug(f"Getting organisation by name: {org_id}")
-        db_organisation = await get_organisation_by_name(db, org_id)
+        db_organisation = await get_organisation_by_name(db, org_id, check_approved)
 
     if not db_organisation:
         raise HTTPException(
@@ -90,3 +110,22 @@ async def org_exists(
 
     log.debug(f"Organisation match: {db_organisation}")
     return db_organisation
+
+
+async def org_exists(
+    org_id: Union[str, int],
+    db: Session = Depends(get_db),
+) -> DbOrganisation:
+    """Wrapper for check_org_exists to be used as a route dependency.
+
+    Requires Depends from a route.
+    """
+    return await check_org_exists(db, org_id)
+
+
+async def org_from_project(
+    project: DbProject = Depends(project_deps.get_project_by_id),
+    db: Session = Depends(get_db),
+) -> DbOrganisation:
+    """Get an organisation from a project id."""
+    return await check_org_exists(db, project.organisation_id)
