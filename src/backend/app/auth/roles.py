@@ -139,7 +139,7 @@ async def project_admin(
     db: Session = Depends(get_db),
     user_data: AuthUser = Depends(login_required),
 ):
-    """Project admin role"""
+    """Project admin role."""
     user_id = await get_uid(user_data)
 
     match = (
