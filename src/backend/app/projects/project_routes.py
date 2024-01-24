@@ -43,7 +43,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
 from app.auth.osm import AuthUser
-from app.auth.roles import org_admin
+from app.auth.roles import org_admin, project_admin
 from app.central import central_crud
 from app.db import database, db_models
 from app.models.enums import TILES_FORMATS, TILES_SOURCE, HTTPStatus
@@ -1264,7 +1264,7 @@ async def get_contributors(project_id: int, db: Session = Depends(database.get_d
 @router.post("/add_admin/")
 async def add_new_project_admin(
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(org_admin),
+    current_user: AuthUser = Depends(project_admin),
     user: db_models.DbUser = Depends(user_exists_in_db),
     project: db_models.DbProject = Depends(project_deps.get_project_by_id),
 ):
