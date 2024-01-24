@@ -27,10 +27,6 @@ const MapControlComponent = ({ map, hasEditUndo }) => {
         />
       ),
     },
-    {
-      id: 'Undo',
-      icon: <AssetModules.UndoIcon style={{ fontSize: '20px' }} className="fmtm-text-[#666666]" />,
-    },
   ];
 
   const handleOnClick = (btnId) => {
@@ -42,7 +38,6 @@ const MapControlComponent = ({ map, hasEditUndo }) => {
       map.getView().setZoom(actualZoom - 1);
     } else if (btnId === 'Edit') {
       dispatch(CreateProjectActions.SetToggleSplittedGeojsonEdit(!toggleSplittedGeojsonEdit));
-    } else if (btnId === 'Undo') {
     }
   };
 
@@ -51,9 +46,7 @@ const MapControlComponent = ({ map, hasEditUndo }) => {
       {btnList.map((btn) => {
         return (
           <div key={btn.id} title={btn.id}>
-            {((btn.id !== 'Edit' && btn.id !== 'Undo') ||
-              (btn.id === 'Edit' && hasEditUndo) ||
-              (btn.id === 'Undo' && hasEditUndo)) && (
+            {((btn.id !== 'Edit' && btn.id !== 'Undo') || (btn.id === 'Edit' && hasEditUndo)) && (
               <div
                 className={` fmtm-p-1 fmtm-rounded-md fmtm-duration-200 fmtm-cursor-pointer ${
                   toggleSplittedGeojsonEdit && btn.id === 'Edit'
