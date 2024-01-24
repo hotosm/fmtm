@@ -2391,8 +2391,8 @@ async def add_project_admin(
 
     Args:
         db (Session): The database session.
-        user_id (int): The ID of the user to be added as an admin.
-        organisation (DbOrganisation): The organisation model instance.
+        user (int): The ID of the user to be added as an admin.
+        project (DbOrganisation): The Project model instance.
 
     Returns:
         Response: The HTTP response with status code 200.
