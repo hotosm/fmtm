@@ -168,7 +168,6 @@ const LayerSwitcherControl = ({ map, visible = 'osm' }) => {
       location.pathname.includes('data-extract') ||
       location.pathname.includes('split-tasks')
     ) {
-      console.log('yesssss');
       const olZoom = document.querySelector('.ol-zoom');
       if (olZoom) {
         olZoom.style.display = 'none';
