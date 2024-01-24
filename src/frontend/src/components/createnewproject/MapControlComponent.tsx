@@ -2,29 +2,36 @@ import React, { useState } from 'react';
 import AssetModules from '../../shared/AssetModules';
 import VectorLayer from 'ol/layer/Vector';
 import CoreModules from '../../shared/CoreModules.js';
-import { ProjectActions } from '../../store/slices/ProjectSlice';
-
-const btnList = [
-  {
-    id: 'Add',
-    icon: <AssetModules.AddIcon style={{ fontSize: '20px' }} className="fmtm-text-[#666666]" />,
-  },
-  {
-    id: 'Minus',
-    icon: <AssetModules.RemoveIcon style={{ fontSize: '20px' }} className="fmtm-text-[#666666]" />,
-  },
-  {
-    id: 'Edit',
-    icon: <AssetModules.TimelineIcon style={{ fontSize: '20px' }} className="fmtm-text-[#666666]" />,
-  },
-  {
-    id: 'Undo',
-    icon: <AssetModules.UndoIcon style={{ fontSize: '20px' }} className="fmtm-text-[#666666]" />,
-  },
-];
+import { CreateProjectActions } from '../../store/slices/CreateProjectSlice';
 
 const MapControlComponent = ({ map, hasEditUndo }) => {
   const dispatch = CoreModules.useAppDispatch();
+  const toggleSplittedGeojsonEdit = CoreModules.useAppSelector(
+    (state) => state.createproject.toggleSplittedGeojsonEdit,
+  );
+  const btnList = [
+    {
+      id: 'Add',
+      icon: <AssetModules.AddIcon style={{ fontSize: '20px' }} className="fmtm-text-[#666666]" />,
+    },
+    {
+      id: 'Minus',
+      icon: <AssetModules.RemoveIcon style={{ fontSize: '20px' }} className="fmtm-text-[#666666]" />,
+    },
+    {
+      id: 'Edit',
+      icon: (
+        <AssetModules.TimelineIcon
+          style={{ fontSize: '20px' }}
+          className={`${toggleSplittedGeojsonEdit ? 'fmtm-text-primaryRed' : 'fmtm-text-[#666666]'}`}
+        />
+      ),
+    },
+    {
+      id: 'Undo',
+      icon: <AssetModules.UndoIcon style={{ fontSize: '20px' }} className="fmtm-text-[#666666]" />,
+    },
+  ];
 
   const handleOnClick = (btnId) => {
     if (btnId === 'Add') {
@@ -34,12 +41,13 @@ const MapControlComponent = ({ map, hasEditUndo }) => {
       const actualZoom = map.getView().getZoom();
       map.getView().setZoom(actualZoom - 1);
     } else if (btnId === 'Edit') {
+      dispatch(CreateProjectActions.SetToggleSplittedGeojsonEdit(!toggleSplittedGeojsonEdit));
     } else if (btnId === 'Undo') {
     }
   };
 
   return (
-    <div className="fmtm-absolute fmtm-top-[20px] fmtm-left-3 fmtm-z-50 fmtm-bg-white fmtm-rounded-md fmtm-p-[2px] fmtm-shadow-xl">
+    <div className="fmtm-absolute fmtm-top-[20px] fmtm-left-3 fmtm-z-50 fmtm-bg-white fmtm-rounded-md fmtm-p-[2px] fmtm-shadow-xl fmtm-flex fmtm-flex-col fmtm-gap-[2px]">
       {btnList.map((btn) => {
         return (
           <div key={btn.id} title={btn.id}>
@@ -47,7 +55,11 @@ const MapControlComponent = ({ map, hasEditUndo }) => {
               (btn.id === 'Edit' && hasEditUndo) ||
               (btn.id === 'Undo' && hasEditUndo)) && (
               <div
-                className="fmtm-bg-white fmtm-p-1 fmtm-rounded-md hover:fmtm-bg-gray-100 fmtm-duration-200"
+                className={` fmtm-p-1 fmtm-rounded-md fmtm-duration-200 fmtm-cursor-pointer ${
+                  toggleSplittedGeojsonEdit && btn.id === 'Edit'
+                    ? 'fmtm-bg-red-50'
+                    : 'fmtm-bg-white hover:fmtm-bg-gray-100'
+                }`}
                 onClick={() => handleOnClick(btn.id)}
               >
                 {btn.icon}
