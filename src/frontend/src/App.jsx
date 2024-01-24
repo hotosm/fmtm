@@ -1,3 +1,4 @@
+import axios from 'axios';
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { RouterProvider } from 'react-router-dom';
@@ -26,6 +27,33 @@ console.error = function filterWarnings(msg, ...args) {
   if (!SUPPRESSED_WARNINGS.some((entry) => msg.includes(entry))) {
     consoleError(msg, ...args);
   }
+};
+
+const GlobalInit = () => {
+  useEffect(() => {
+    axios.interceptors.request.use(
+      (config) => {
+        // Do something before request is sent
+
+        const urlIsExcluded = excludedDomains.some((domain) => config.url.includes(domain));
+
+        if (!urlIsExcluded) {
+          config.withCredentials = true;
+        }
+
+        return config;
+      },
+      (error) =>
+        // Do something with request error
+        Promise.reject(error),
+    );
+
+    axios.defaults.withCredentials = true;
+
+    return () => {};
+  }, []);
+
+  return null; // Renders nothing
 };
 
 const SentryInit = () => {
@@ -107,6 +135,7 @@ ReactDOM.render(
   <Provider store={store}>
     <PersistGate loading={null} persistor={persistor}>
       <RouterProvider router={routes} />
+      <GlobalInit />
       <MatomoTrackingInit />
       <SentryInit />
     </PersistGate>

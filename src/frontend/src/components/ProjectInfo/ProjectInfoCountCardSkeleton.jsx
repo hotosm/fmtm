@@ -11,7 +11,7 @@ const ProjectInfoCountCardSkeleton = () => {
       }}
     >
       {Array.from({ length: 3 }).map((i) => (
-        <div id={i}>
+        <div key={i} id={i}>
           <CoreModules.Skeleton sx={{ bgcolor: 'grey.900' }} variant="rectangular" width={250} height={128} />
         </div>
       ))}

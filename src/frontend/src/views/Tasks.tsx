@@ -235,6 +235,7 @@ const TasksSubmission = () => {
               const formattedDate = date.toLocaleDateString('en-US', dateOptions);
               return (
                 <CoreModules.Link
+                  key={submission.id}
                   style={{ textDecoration: 'auto' }}
                   className="submission-item"
                   to={`/project/${encodedProjectId}/tasks/${encodedTaskId}/submission/${submission.instanceId}`}

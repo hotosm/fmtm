@@ -167,7 +167,11 @@ const OrganisationAddForm = () => {
                 // dispatch(CreateProjectActions.SetProjectDetails({ key: 'organisation', value: e.target.value }))
               }}
             >
-              {organisationDataList?.map((org) => <MenuItem value={org.value}>{org.label}</MenuItem>)}
+              {organisationDataList?.map((org) => (
+                <MenuItem key={org.value} value={org.value}>
+                  {org.label}
+                </MenuItem>
+              ))}
             </Select>
           </CoreModules.Stack>
           {errors.type && (

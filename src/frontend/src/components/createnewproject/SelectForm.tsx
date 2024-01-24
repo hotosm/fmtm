@@ -118,7 +118,7 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
                   >
                     tags
                   </a>{' '}
-                  that match the selected category in OSM database, if you don't choose to upload custom data extract.
+                  {`that match the selected category in OSM database, if you don't choose to upload custom data extract.`}
                 </p>
               </div>
               <RadioButton

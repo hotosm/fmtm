@@ -100,6 +100,7 @@ const Submissions = () => {
               const formattedDate = date.toLocaleDateString('en-US', dateOptions);
               return (
                 <CoreModules.Box
+                  key={submission.id}
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
