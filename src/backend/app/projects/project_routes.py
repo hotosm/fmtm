@@ -214,11 +214,12 @@ async def read_project(project_id: int, db: Session = Depends(database.get_db)):
 
 @router.delete("/{project_id}")
 async def delete_project(
-    project: int = Depends(project_deps.get_project_by_id),
+    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
     db: Session = Depends(database.get_db),
     user_data: AuthUser = Depends(login_required),
 ):
     """Delete a project from both ODK Central and the local database."""
+    log.info(f"User {user_data.username} attempting deletion of project {project.id}")
     # Odk crendentials
     odk_credentials = project_schemas.ODKCentral(
         odk_central_url=project.odk_central_url,
@@ -229,6 +230,8 @@ async def delete_project(
     await central_crud.delete_odk_project(project.odkid, odk_credentials)
     # Delete FMTM project
     await project_crud.delete_one_project(db, project)
+
+    log.info(f"Deletion of project {project.id} successful")
     return Response(status_code=HTTPStatus.NO_CONTENT)
 
 
@@ -666,7 +669,10 @@ async def update_project_form(
     contents = await form.read()
 
     form_updated = await project_crud.update_project_form(
-        db, project_id, contents, file_ext[1:]  # Form Contents  # File type
+        db,
+        project_id,
+        contents,
+        file_ext[1:],  # Form Contents  # File type
     )
 
     return form_updated
@@ -904,7 +910,10 @@ async def update_project_category(
 
     # Update odk forms
     await project_crud.update_project_form(
-        db, project_id, file_ext[1:] if upload else "xls", upload  # Form
+        db,
+        project_id,
+        file_ext[1:] if upload else "xls",
+        upload,  # Form
     )
 
     return JSONResponse(status_code=200, content={"success": True})
@@ -1157,7 +1166,7 @@ async def get_task_status(
 async def get_template_file(
     file_type: str = Query(
         ..., enum=["data_extracts", "form"], description="Choose file type"
-    )
+    ),
 ):
     """Get template file.
 
