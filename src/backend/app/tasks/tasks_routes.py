@@ -204,7 +204,7 @@ async def task_features_count(
     return data
 
 
-@router.get("/task_activity/", response_model=List[tasks_schemas.TaskHistoryCount])
+@router.get("/activity/", response_model=List[tasks_schemas.TaskHistoryCount])
 async def task_activity(
     project_id: int, days: int = 10, db: Session = Depends(database.get_db)
 ):
