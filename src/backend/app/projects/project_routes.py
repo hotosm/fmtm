@@ -20,8 +20,9 @@
 import json
 import os
 import uuid
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import geojson
 from fastapi import (
@@ -1232,3 +1233,30 @@ async def get_contributors(project_id: int, db: Session = Depends(database.get_d
     """
     project_users = await project_crud.get_project_users(db, project_id)
     return project_users
+
+
+@router.get("/task_activity/{project_id}", response_model=List[dict])
+async def task_activity(
+    project_id: int, days: int = 10, db: Session = Depends(database.get_db)
+):
+    """Retrieves the validate and mapped task count for a specific project.
+
+    Args:
+        project_id: The ID of the project.
+        days: The number of days to consider for the
+        task activity (default: 10).
+        db: The database session.
+
+    Returns:
+        A list of dictionaries with following keys:
+        - 'date': The date in the format 'MM/DD'.
+        - 'validated': The cumulative count of validated tasks.
+        - 'mapped': The cumulative count of mapped tasks.
+
+    """
+    end_date = datetime.now() - timedelta(days=days)
+    task_history = tasks_crud.get_task_history(project_id, end_date, db)
+
+    return await project_crud.count_validated_and_mapped_tasks(
+        task_history, end_date, db
+    )

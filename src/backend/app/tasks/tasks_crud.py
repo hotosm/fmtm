@@ -18,7 +18,8 @@
 """Logic for FMTM tasks."""
 
 import base64
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 
 from fastapi import Depends, HTTPException
 from geoalchemy2.shape import from_shape
@@ -357,3 +358,25 @@ async def update_task_history(
                 process_history_entry(history_entry)
 
     return tasks
+
+
+def get_task_history(project_id: int, end_date: Optional[datetime], db: Session):
+    """Retrieves the task history records for a specific project.
+
+    Args:
+        project_id: The ID of the project.
+        end_date: The end date of the task history
+        records to retrieve (optional).
+        db: The database session.
+
+    Returns:
+        A list of task history records for the specified project.
+    """
+    query = db.query(db_models.DbTaskHistory).filter(
+        db_models.DbTaskHistory.project_id == project_id
+    )
+
+    if end_date:
+        query = query.filter(db_models.DbTaskHistory.action_date >= end_date)
+
+    return query.all()
