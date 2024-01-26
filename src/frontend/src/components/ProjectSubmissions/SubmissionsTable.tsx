@@ -24,6 +24,7 @@ const SubmissionsTable = () => {
   );
   const submissionTableDataLoading = CoreModules.useAppSelector((state) => state.submission.submissionTableDataLoading);
   const submissionTableRefreshing = CoreModules.useAppSelector((state) => state.submission.submissionTableRefreshing);
+  const [paginationPage, setPaginationPage] = useState(1);
 
   const updatedSubmissionFormFields = submissionFormFields?.map((formField) => {
     if (formField.type !== 'structure') {
@@ -52,6 +53,13 @@ const SubmissionsTable = () => {
       SubmissionFormFieldsService(`${import.meta.env.VITE_API_URL}/submission/submission_form_fields/${decodedId}`),
     );
     dispatch(SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}`));
+  };
+
+  const handleChangePage = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | React.KeyboardEvent<HTMLInputElement>,
+    newPage: number,
+  ) => {
+    setPaginationPage(newPage);
   };
 
   const TableFilter = () => (
@@ -244,21 +252,45 @@ const SubmissionsTable = () => {
       )}
       <div
         style={{ fontFamily: 'BarlowMedium' }}
-        className="fmtm-flex fmtm-items-center fmtm-text-sm fmtm-gap-4 fmtm-justify-end fmtm-mt-2"
+        className="fmtm-flex fmtm-items-center fmtm-justify-end fmtm-gap-2 sm:fmtm-gap-4"
       >
-        <p>1 - 7 of 20</p>
-        <div className="fmtm-flex fmtm-gap-2 fmtm-mb-1">
-          <div>
-            <AssetModules.ArrowLeftIcon className="fmtm-text-[#545454]" />
-          </div>
-          <div>
-            <AssetModules.ArrowRightIcon className="fmtm-text-[#545454]" />
-          </div>
-        </div>
-        <p>Jump to</p>
+        <CoreModules.TablePagination
+          component="div"
+          count={100}
+          page={paginationPage}
+          onPageChange={handleChangePage}
+          rowsPerPage={10}
+          rowsPerPageOptions={[]}
+          sx={{
+            '&.MuiTablePagination-root': {
+              display: 'flex',
+              justifyContent: 'flex-end',
+            },
+            '& .MuiOutlinedInput-root': {
+              '&.Mui-focused fieldset': {
+                borderColor: 'black',
+              },
+            },
+            '&.Mui-focused .MuiFormLabel-root-MuiInputLabel-root': {
+              color: 'black',
+            },
+            '.MuiTablePagination-spacer': { display: 'none' },
+            '.MuiTablePagination-actions': {
+              display: 'flex',
+              '.MuiIconButton-root': { width: '30px', height: '30px' },
+            },
+          }}
+          onRowsPerPageChange={() => {}}
+        />
+        <p className="fmtm-text-sm">Jump to</p>
         <input
-          type="text"
-          className="fmtm-border-[1px] fmtm-border-[#E7E2E2] fmtm-rounded-sm fmtm-w-11 fmtm-outline-none"
+          type="number"
+          className="fmtm-border-[1px] fmtm-border-[#E7E2E2] fmtm-text-sm fmtm-rounded-sm fmtm-w-11 fmtm-outline-none"
+          onKeyDown={(e) => {
+            if (e.currentTarget.value) {
+              handleChangePage(e, parseInt(e.currentTarget.value));
+            }
+          }}
         />
       </div>
     </div>
