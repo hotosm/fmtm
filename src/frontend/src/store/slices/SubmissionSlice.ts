@@ -12,6 +12,7 @@ const SubmissionSlice = createSlice({
     submissionTableData: [],
     submissionFormFieldsLoading: false,
     submissionTableDataLoading: false,
+    submissionTableRefreshing: false,
   },
   reducers: {
     SetSubmissionDetailsLoading(state, action) {
@@ -40,6 +41,9 @@ const SubmissionSlice = createSlice({
     },
     SetSubmissionTableLoading(state, action) {
       state.submissionTableDataLoading = action.payload;
+    },
+    SetSubmissionTableRefreshing(state, action) {
+      state.submissionTableRefreshing = action.payload;
     },
   },
 });

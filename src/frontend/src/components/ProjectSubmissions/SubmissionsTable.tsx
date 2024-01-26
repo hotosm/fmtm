@@ -7,6 +7,8 @@ import { SubmissionFormFieldsService, SubmissionTableService } from '@/api/Submi
 import CoreModules from '@/shared/CoreModules.js';
 import environment from '@/environment';
 import { SubmissionsTableSkeletonLoader } from '@/components/ProjectSubmissions/ProjectSubmissionsSkeletonLoader.js';
+import { Loader2 } from 'lucide-react';
+import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 
 const SubmissionsTable = () => {
   const [showFilter, setShowFilter] = useState(true);
@@ -21,6 +23,7 @@ const SubmissionsTable = () => {
     (state) => state.submission.submissionFormFieldsLoading,
   );
   const submissionTableDataLoading = CoreModules.useAppSelector((state) => state.submission.submissionTableDataLoading);
+  const submissionTableRefreshing = CoreModules.useAppSelector((state) => state.submission.submissionTableRefreshing);
 
   const updatedSubmissionFormFields = submissionFormFields?.map((formField) => {
     if (formField.type !== 'structure') {
@@ -42,6 +45,14 @@ const SubmissionsTable = () => {
   useEffect(() => {
     dispatch(SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}`));
   }, []);
+
+  const refreshTable = () => {
+    dispatch(SubmissionActions.SetSubmissionTableRefreshing(true));
+    dispatch(
+      SubmissionFormFieldsService(`${import.meta.env.VITE_API_URL}/submission/submission_form_fields/${decodedId}`),
+    );
+    dispatch(SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}`));
+  };
 
   const TableFilter = () => (
     <div className="fmtm-flex fmtm-items-center fmtm-justify-between fmtm-flex-col sm:fmtm-flex-row fmtm-gap-4">
@@ -148,8 +159,20 @@ const SubmissionsTable = () => {
         </div>
       </div>
       <div className="fmtm-w-full fmtm-flex fmtm-justify-end sm:fmtm-w-fit">
-        <button className="fmtm-px-4 fmtm-py-1 fmtm-bg-primaryRed fmtm-flex fmtm-items-center fmtm-w-fit fmtm-rounded-lg fmtm-gap-2 hover:fmtm-bg-red-700 fmtm-duration-150">
-          <AssetModules.ReplayIcon className="fmtm-text-white" style={{ fontSize: '18px' }} />{' '}
+        <button
+          className={`fmtm-px-4 fmtm-py-1 fmtm-flex fmtm-items-center fmtm-w-fit fmtm-rounded-lg fmtm-gap-2 fmtm-duration-150 ${
+            submissionTableDataLoading || submissionFormFieldsLoading
+              ? 'fmtm-bg-gray-400 fmtm-cursor-not-allowed'
+              : 'fmtm-bg-primaryRed hover:fmtm-bg-red-700'
+          }`}
+          onClick={refreshTable}
+          disabled={submissionTableDataLoading || submissionFormFieldsLoading}
+        >
+          {(submissionTableDataLoading || submissionFormFieldsLoading) && submissionTableRefreshing ? (
+            <Loader2 className="fmtm-h-4 fmtm-w-4 fmtm-animate-spin fmtm-text-white" />
+          ) : (
+            <AssetModules.ReplayIcon className="fmtm-text-white" style={{ fontSize: '18px' }} />
+          )}
           <p className="fmtm-text-white fmtm-pt-1">Refresh</p>
         </button>
       </div>

@@ -79,7 +79,10 @@ export const SubmissionFormFieldsService: Function = (url: string) => {
         const formFields: any = response.data;
         dispatch(SubmissionActions.SetSubmissionFormFields(formFields));
         dispatch(SubmissionActions.SetSubmissionFormFieldsLoading(false));
-      } catch (error) {}
+        dispatch(SubmissionActions.SetSubmissionTableRefreshing(false));
+      } catch (error) {
+        dispatch(SubmissionActions.SetSubmissionTableRefreshing(false));
+      }
     };
 
     await fetchFormFields(url);
@@ -95,7 +98,10 @@ export const SubmissionTableService: Function = (url: string) => {
         const submissionTableData: any = response.data;
         dispatch(SubmissionActions.SetSubmissionTable(submissionTableData));
         dispatch(SubmissionActions.SetSubmissionTableLoading(false));
-      } catch (error) {}
+        dispatch(SubmissionActions.SetSubmissionTableRefreshing(false));
+      } catch (error) {
+        dispatch(SubmissionActions.SetSubmissionTableRefreshing(false));
+      }
     };
 
     await fetchSubmissionTable(url);

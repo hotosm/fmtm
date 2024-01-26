@@ -25,7 +25,7 @@ export const TaskCardSkeletonLoader = () => {
 
 export const SubmissionsTableSkeletonLoader = () => {
   return (
-    <div className="fmtm-overflow-x-scroll scrollbar fmtm-bg-white fmtm-px-5">
+    <div className="fmtm-overflow-x-scroll scrollbar fmtm-bg-white fmtm-px-5 fmtm-mt-3">
       {Array.from({ length: 10 }).map((_, i) => (
         <div key={i} className={`fmtm-flex fmtm-gap-10 fmtm-py-[6px]`}>
           <CoreModules.Skeleton baseColor={`${i === 0 ? '#cfcfcf' : ''}`} className={`!fmtm-w-[50px]`} />
