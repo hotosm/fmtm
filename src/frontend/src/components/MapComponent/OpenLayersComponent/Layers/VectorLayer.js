@@ -8,8 +8,8 @@ import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style.js';
 import GeoJSON from 'ol/format/GeoJSON';
 import { Vector as VectorSource } from 'ol/source';
 import OLVectorLayer from 'ol/layer/Vector';
-import { defaultStyles, getStyles } from '../helpers/styleUtils';
-import { isExtentValid } from '../helpers/layerUtils';
+import { defaultStyles, getStyles } from '@/components/MapComponent/OpenLayersComponent/helpers/styleUtils';
+import { isExtentValid } from '@/components/MapComponent/OpenLayersComponent/helpers/layerUtils';
 import { Draw, Modify, Snap, Select, defaults as defaultInteractions } from 'ol/interaction.js';
 import { getArea } from 'ol/sphere';
 import { valid } from 'geojson-validation';
@@ -83,7 +83,9 @@ const VectorLayer = ({
     map.addInteraction(select);
 
     return () => {
-      // map.removeInteraction(defaultInteractions().extend([select, modify]))
+      // map.removeInteraction(defaultInteractions().extend([select, modify]));
+      map.removeInteraction(modify);
+      map.removeInteraction(select);
     };
   }, [map, vectorLayer, onModify]);
 
@@ -213,7 +215,7 @@ const VectorLayer = ({
           ]
         : [getStyles({ style, feature, resolution })];
     });
-  }, [vectorLayer, style, setStyle]);
+  }, [vectorLayer, style, setStyle, onModify]);
 
   useEffect(() => {
     if (!vectorLayer) return;

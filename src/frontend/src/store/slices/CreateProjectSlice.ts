@@ -1,4 +1,4 @@
-import { CreateProjectStateTypes } from '../types/ICreateProject';
+import { CreateProjectStateTypes } from '@/types/ICreateProject';
 import { createSlice } from '@reduxjs/toolkit';
 
 export const initialState: CreateProjectStateTypes = {
@@ -49,6 +49,7 @@ export const initialState: CreateProjectStateTypes = {
   canSwitchCreateProjectSteps: false,
   isTasksGenerated: { divide_on_square: false, task_splitting_algorithm: false },
   isFgbFetching: false,
+  toggleSplittedGeojsonEdit: false,
 };
 
 const CreateProject = createSlice({
@@ -224,6 +225,9 @@ const CreateProject = createSlice({
       state.splitTasksSelection = null;
       state.dataExtractGeojson = null;
       state.projectDetails = { ...action.payload, customLineUpload: null, customPolygonUpload: null };
+    },
+    SetToggleSplittedGeojsonEdit(state, action) {
+      state.toggleSplittedGeojsonEdit = action.payload;
     },
   },
 });
