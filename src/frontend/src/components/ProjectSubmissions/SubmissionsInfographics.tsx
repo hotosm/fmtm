@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import TaskSubmissions from './TaskSubmissions';
-import CustomBarChart from '../../components/common/BarChart';
-import CustomPieChart from '../../components/common/PieChart';
-import Table, { TableHeader } from '../../components/common/CustomTable';
-import CustomLineChart from '../../components/common/LineChart';
-import CoreModules from '../../shared/CoreModules';
-import InfographicsCard from './InfographicsCard';
-import { ProjectContributorsService, ProjectSubmissionInfographicsService } from '../../api/SubmissionService';
-import environment from '../../environment';
+import TaskSubmissions from '@/components/ProjectSubmissions/TaskSubmissions';
+import CustomBarChart from '@/components/common/BarChart';
+import CustomPieChart from '@/components/common/PieChart';
+import Table, { TableHeader } from '@/components/common/CustomTable';
+import CustomLineChart from '@/components/common/LineChart';
+import CoreModules from '@/shared/CoreModules';
+import InfographicsCard from '@/components/ProjectSubmissions/InfographicsCard';
+import { ProjectContributorsService, ProjectSubmissionInfographicsService } from '@/api/SubmissionService';
+import environment from '@/environment';
 
 const lineKeyData = [
   {

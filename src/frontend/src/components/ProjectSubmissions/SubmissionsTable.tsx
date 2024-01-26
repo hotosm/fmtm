@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import AssetModules from '../../shared/AssetModules.js';
-import { CustomSelect } from '../../components/common/Select.js';
-import windowDimention from '../../hooks/WindowDimension';
-import Table, { TableHeader } from '../../components/common/CustomTable';
-import { SubmissionFormFieldsService, SubmissionTableService } from '../../api/SubmissionService';
-import CoreModules from '../../shared/CoreModules.js';
-import environment from '../../environment';
-import { SubmissionsTableSkeletonLoader } from './ProjectSubmissionsSkeletonLoader.js';
+import AssetModules from '@/shared/AssetModules.js';
+import { CustomSelect } from '@/components/common/Select.js';
+import windowDimention from '@/hooks/WindowDimension';
+import Table, { TableHeader } from '@/components/common/CustomTable';
+import { SubmissionFormFieldsService, SubmissionTableService } from '@/api/SubmissionService';
+import CoreModules from '@/shared/CoreModules.js';
+import environment from '@/environment';
+import { SubmissionsTableSkeletonLoader } from '@/components/ProjectSubmissions/ProjectSubmissionsSkeletonLoader.js';
 
 const SubmissionsTable = () => {
   const [showFilter, setShowFilter] = useState(true);

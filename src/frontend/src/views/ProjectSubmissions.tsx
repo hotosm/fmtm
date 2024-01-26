@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import AssetModules from '../shared/AssetModules.js';
-import ProjectInfo from '../components/ProjectSubmissions/ProjectInfo.js';
-import SubmissionsInfographics from '../components/ProjectSubmissions/SubmissionsInfographics.js';
-import SubmissionsTable from '../components/ProjectSubmissions/SubmissionsTable.js';
-import CoreModules from '../shared/CoreModules';
-import { ProjectActions } from '../store/slices/ProjectSlice';
-import { ProjectById } from '../api/Project';
-import environment from '../environment';
-import { fetchInfoTask } from '../api/task';
-import { GetProjectDashboard } from '../api/Project';
+import AssetModules from '@/shared/AssetModules';
+import ProjectInfo from '@/components/ProjectSubmissions/ProjectInfo.js';
+import SubmissionsInfographics from '@/components/ProjectSubmissions/SubmissionsInfographics.js';
+import SubmissionsTable from '@/components/ProjectSubmissions/SubmissionsTable.js';
+import CoreModules from '@/shared/CoreModules';
+import { ProjectActions } from '@/store/slices/ProjectSlice';
+import { ProjectById } from '@/api/Project';
+import environment from '@/environment';
+import { fetchInfoTask } from '@/api/task';
+import { GetProjectDashboard } from '@/api/Project';
 
 const ProjectSubmissions = () => {
   const dispatch = CoreModules.useAppDispatch();

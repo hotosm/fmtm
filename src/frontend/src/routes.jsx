@@ -20,6 +20,7 @@ import UnderConstruction from '@/views/UnderConstruction';
 import ErrorBoundary from '@/views/ErrorBoundary';
 import NewProjectDetails from '@/views/NewProjectDetails';
 import ProjectDetailsV2 from '@/views/ProjectDetailsV2';
+import ProjectSubmissions from '@/views/ProjectSubmissions';
 
 // const ProjectDetails = React.lazy(() => import('./views/ProjectDetails'));
 const Submissions = React.lazy(() => import('./views/Submissions'));
