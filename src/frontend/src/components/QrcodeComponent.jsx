@@ -15,18 +15,15 @@ const TasksComponent = ({ type, task, defaultTheme }) => {
   const currentProjectId = environment.decode(params.id);
   const projectIndex = projectData.findIndex((project) => project.id == currentProjectId);
   const token = CoreModules.useAppSelector((state) => state.login.loginToken);
-  const currentStatus = {
+  const selectedTask = {
     ...projectData?.[projectIndex]?.taskBoundries?.filter((indTask, i) => {
       return indTask.id == task;
     })?.[0],
   };
   const checkIfTaskAssignedOrNot =
-    currentStatus?.locked_by_username === token?.username || currentStatus?.locked_by_username === null;
+    selectedTask?.locked_by_username === token?.username || selectedTask?.locked_by_username === null;
 
-  const { loading, qrcode } = ProjectFilesById(
-    `${import.meta.env.VITE_API_URL}/tasks/task-list?project_id=${environment.decode(params.id)}`,
-    task,
-  );
+  const { qrLoading, qrcode } = ProjectFilesById(selectedTask.qrcode, task);
 
   const socialStyles = {
     copyContainer: {

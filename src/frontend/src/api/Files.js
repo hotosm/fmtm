@@ -1,35 +1,37 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import CoreModules from '@/shared/CoreModules';
 
-export const ProjectFilesById = (url, taskId) => {
+export const ProjectFilesById = (qrcode_base64, taskId) => {
   const [loading, setLoading] = useState(true);
   const [qrcode, setQrcode] = useState('');
-  const source = CoreModules.axios.CancelToken.source();
   useEffect(() => {
-    const fetchProjectFileById = async (url) => {
+    const fetchProjectFileById = async (qrcode_base64) => {
       try {
         setLoading(true);
-        const fileJson = await CoreModules.axios.get(url, {
-          cancelToken: source.token,
-        });
-        const resp = fileJson.data;
-        const taskIndex = resp.findIndex((task) => task.id == taskId);
-        const getQrcodeByIndex = resp[taskIndex].qr_code_base64;
-        setQrcode(getQrcodeByIndex);
+        // TODO code to generate QR code
+
+        // const json = JSON.stringify({
+        //   token: xxx,
+        //   var1: xxx,
+        // });
+        // Note btoa base64 encodes the JSON string
+        // code.addData(btoa(json));
+        // code.make();
+        // Note cellSize=3
+        // return code.createImgTag(3, 0);
+
+        setQrcode(qrcode_base64);
         setLoading(false);
       } catch (error) {
         setLoading(false);
       }
     };
 
-    fetchProjectFileById(url);
+    fetchProjectFileById(qrcode_base64);
 
     const cleanUp = () => {
       setLoading(false);
       setQrcode('');
-      if (source) {
-        source.cancel('component unmounted');
-      }
     };
 
     return cleanUp;
