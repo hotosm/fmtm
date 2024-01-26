@@ -6,12 +6,12 @@ import Table, { TableHeader } from '../../components/common/CustomTable';
 import { SubmissionFormFieldsService, SubmissionTableService } from '../../api/SubmissionService';
 import CoreModules from '../../shared/CoreModules.js';
 import environment from '../../environment';
+import { SubmissionsTableSkeletonLoader } from './ProjectSubmissionsSkeletonLoader.js';
 
 const SubmissionsTable = () => {
   const [showFilter, setShowFilter] = useState(true);
   const { windowSize } = windowDimention();
   const dispatch = CoreModules.useAppDispatch();
-  const items = [{ name: 'haha' }];
   const params = CoreModules.useParams();
   const encodedId = params.projectId;
   const decodedId = environment.decode(encodedId);
@@ -21,6 +21,17 @@ const SubmissionsTable = () => {
     (state) => state.submission.submissionFormFieldsLoading,
   );
   const submissionTableDataLoading = CoreModules.useAppSelector((state) => state.submission.submissionTableDataLoading);
+
+  const updatedSubmissionFormFields = submissionFormFields?.map((formField) => {
+    if (formField.type !== 'structure') {
+      return {
+        ...formField,
+        path: formField?.path.slice(1).replace(/\//g, '.'),
+        name: formField?.name.charAt(0).toUpperCase() + formField?.name.slice(1).replace(/_/g, ' '),
+      };
+    }
+    return null;
+  });
 
   useEffect(() => {
     dispatch(
@@ -144,121 +155,70 @@ const SubmissionsTable = () => {
       </div>
     </div>
   );
+
+  function getValueByPath(obj, path) {
+    let value = obj;
+    path?.split('.')?.map((item) => {
+      if (path === 'start' || path === 'end') {
+        value = `${value[item]?.split('T')[0]} ${value[item]?.split('T')[1]}`;
+      } else if (item === 'point') {
+        value = `${value[item].type} (${value[item].coordinates})`;
+      } else {
+        value = value[item];
+      }
+    });
+    return value ? value : '-';
+  }
+
   return (
     <div className="fmtm-font-archivo">
       <TableFilter />
-      <Table data={items} flag="dashboard" onRowClick={() => {}} isLoading={false}>
-        <TableHeader
-          dataField="SN"
-          headerClassName="snHeader"
-          rowClassName="snRow"
-          dataFormat={(row, _, index) => <span>{index + 1}</span>}
-        />
-        <TableHeader
-          dataField="Submitted By"
-          headerClassName="codeHeader"
-          rowClassName="codeRow"
-          dataFormat={(row) => (
-            <div className="fmtm-w-[7rem] fmtm-overflow-hidden fmtm-truncate" title={row?.name}>
-              <span className="fmtm-text-[15px]">{row?.name}</span>
-            </div>
-          )}
-        />
-        <TableHeader
-          dataField="Name"
-          headerClassName="codeHeader"
-          rowClassName="codeRow"
-          dataFormat={(row) => (
-            <div className="fmtm-w-[7rem] fmtm-overflow-hidden fmtm-truncate" title={row?.name}>
-              <span className="fmtm-text-[15px]">{row?.name}</span>
-            </div>
-          )}
-        />
-        <TableHeader
-          dataField="Age"
-          headerClassName="codeHeader"
-          rowClassName="codeRow"
-          dataFormat={(row) => (
-            <div className="fmtm-w-[7rem] fmtm-overflow-hidden fmtm-truncate" title={row?.name}>
-              <span className="fmtm-text-[15px]">{row?.name}</span>
-            </div>
-          )}
-        />
-        <TableHeader
-          dataField="Building Details"
-          headerClassName="codeHeader"
-          rowClassName="codeRow"
-          dataFormat={(row) => (
-            <div className="fmtm-w-[7rem] fmtm-overflow-hidden fmtm-truncate" title={row?.name}>
-              <span className="fmtm-text-[15px]">{row?.name}</span>
-            </div>
-          )}
-        />
-        <TableHeader
-          dataField="Building GPS Location specific to gate"
-          headerClassName="codeHeader"
-          rowClassName="codeRow"
-          dataFormat={(row) => (
-            <div className="fmtm-w-[7rem] fmtm-max-w-[7rem]fmtm-overflow-hidden fmtm-truncate" title={row?.name}>
-              <span className="fmtm-text-[15px]">{row?.name}</span>
-            </div>
-          )}
-        />
-        <TableHeader
-          dataField="Type"
-          headerClassName="codeHeader"
-          rowClassName="codeRow"
-          dataFormat={(row) => (
-            <div className="fmtm-w-[7rem] fmtm-overflow-hidden fmtm-truncate" title={row?.name}>
-              <span className="fmtm-text-[15px]">{row?.name}</span>
-            </div>
-          )}
-        />
-        <TableHeader
-          dataField="Number of Storey"
-          headerClassName="censusHeader"
-          rowClassName="censusRow"
-          dataFormat={(row) => (
-            <div className="fmtm-w-[7rem] fmtm-overflow-hidden fmtm-truncate" title={row?.name}>
-              <span className="fmtm-text-[15px]">{row?.name}</span>
-            </div>
-          )}
-        />
-        <TableHeader
-          dataField="Building Use"
-          headerClassName="censusHeader"
-          rowClassName="censusRow"
-          dataFormat={(row) => (
-            <div className="fmtm-w-[7rem] fmtm-overflow-hidden fmtm-truncate" title={row?.name}>
-              <span className="fmtm-text-[15px]">{row?.name}</span>
-            </div>
-          )}
-        />
-        <TableHeader
-          dataField="Status"
-          headerClassName="censusHeader"
-          rowClassName="censusRow"
-          dataFormat={(row) => (
-            <div className="fmtm-w-[7rem] fmtm-overflow-hidden fmtm-truncate" title={row?.name}>
-              <span className="fmtm-text-[15px]">{row?.name}</span>
-            </div>
-          )}
-        />
-        <TableHeader
-          dataField="Actions"
-          headerClassName="updatedHeader"
-          rowClassName="updatedRow"
-          dataFormat={(row) => (
-            <div className="fmtm-w-[7rem] fmtm-overflow-hidden fmtm-truncate fmtm-text-center">
-              <AssetModules.VisibilityOutlinedIcon className="fmtm-text-[#545454]" />{' '}
-              <span className="fmtm-text-primaryRed fmtm-border-[1px] fmtm-border-primaryRed fmtm-mx-1"></span>{' '}
-              <AssetModules.CheckOutlinedIcon className="fmtm-text-[#545454]" />{' '}
-              <span className="fmtm-text-primaryRed fmtm-border-[1px] fmtm-border-primaryRed fmtm-mx-1"></span>{' '}
-              <AssetModules.DeleteIcon className="fmtm-text-[#545454]" />
-            </div>
-          )}
-        />
-      </Table>
+      {submissionTableDataLoading || submissionFormFieldsLoading ? (
+        <SubmissionsTableSkeletonLoader />
+      ) : (
+        <Table data={submissionTableData?.results || []} flag="dashboard" onRowClick={() => {}} isLoading={false}>
+          <TableHeader
+            dataField="SN"
+            headerClassName="snHeader"
+            rowClassName="snRow"
+            dataFormat={(row, _, index) => <span>{index + 1}</span>}
+          />
+          {updatedSubmissionFormFields?.map((field) => {
+            if (field) {
+              return (
+                <TableHeader
+                  key={field?.path}
+                  dataField={field?.name}
+                  headerClassName="codeHeader"
+                  rowClassName="codeRow"
+                  dataFormat={(row) => (
+                    <div
+                      className="fmtm-w-[7rem] fmtm-overflow-hidden fmtm-truncate"
+                      title={getValueByPath(row, field?.path)}
+                    >
+                      <span className="fmtm-text-[15px]">{getValueByPath(row, field?.path)}</span>
+                    </div>
+                  )}
+                />
+              );
+            }
+          })}
+          <TableHeader
+            dataField="Actions"
+            headerClassName="updatedHeader"
+            rowClassName="updatedRow"
+            dataFormat={(row) => (
+              <div className="fmtm-w-[7rem] fmtm-overflow-hidden fmtm-truncate fmtm-text-center">
+                <AssetModules.VisibilityOutlinedIcon className="fmtm-text-[#545454]" />{' '}
+                <span className="fmtm-text-primaryRed fmtm-border-[1px] fmtm-border-primaryRed fmtm-mx-1"></span>{' '}
+                <AssetModules.CheckOutlinedIcon className="fmtm-text-[#545454]" />{' '}
+                <span className="fmtm-text-primaryRed fmtm-border-[1px] fmtm-border-primaryRed fmtm-mx-1"></span>{' '}
+                <AssetModules.DeleteIcon className="fmtm-text-[#545454]" />
+              </div>
+            )}
+          />
+        </Table>
+      )}
       <div
         style={{ fontFamily: 'BarlowMedium' }}
         className="fmtm-flex fmtm-items-center fmtm-text-sm fmtm-gap-4 fmtm-justify-end fmtm-mt-2"
