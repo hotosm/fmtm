@@ -1,33 +1,38 @@
 import { useEffect, useState } from 'react';
-import CoreModules from '@/shared/CoreModules';
+import qrcodeGenerator from 'qrcode-generator';
 
-export const ProjectFilesById = (qrcode_base64, taskId) => {
+export const ProjectFilesById = (odkToken, projectName, osmUser, taskId) => {
   const [loading, setLoading] = useState(true);
   const [qrcode, setQrcode] = useState('');
   useEffect(() => {
-    const fetchProjectFileById = async (qrcode_base64) => {
-      try {
-        setLoading(true);
-        // TODO code to generate QR code
+    const fetchProjectFileById = async (odkToken, projectName, osmUser, taskId) => {
+      setLoading(true);
 
-        // const json = JSON.stringify({
-        //   token: xxx,
-        //   var1: xxx,
-        // });
-        // Note btoa base64 encodes the JSON string
-        // code.addData(btoa(json));
-        // code.make();
-        // Note cellSize=3
-        // return code.createImgTag(3, 0);
+      const odkCollectJson = JSON.stringify({
+        general: {
+          server_url: odkToken,
+          form_update_mode: 'manual',
+          basemap_source: 'osm',
+          autosend: 'wifi_and_cellular',
+          metadata_username: osmUser,
+          metadata_email: taskId,
+        },
+        project: { name: projectName },
+        admin: {},
+      });
 
-        setQrcode(qrcode_base64);
-        setLoading(false);
-      } catch (error) {
-        setLoading(false);
-      }
+      // Note: error correction level = "L"
+      const code = qrcodeGenerator(0, 'L');
+      // Note: btoa base64 encodes the JSON string
+      code.addData(btoa(odkCollectJson));
+      code.make();
+
+      // Note: cell size = 3, margin = 5
+      setQrcode(code.createDataURL(3, 5));
+      setLoading(false);
     };
 
-    fetchProjectFileById(qrcode_base64);
+    fetchProjectFileById(odkToken, projectName, osmUser, taskId);
 
     const cleanUp = () => {
       setLoading(false);

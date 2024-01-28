@@ -27,7 +27,7 @@ export const ProjectById = (existingProjectList, projectId) => {
             locked_by_uid: data.locked_by_uid,
             locked_by_username: data.locked_by_username,
             task_history: data.task_history,
-            qrcode: data.qr_code_base64,
+            odk_token: data.odk_token,
           };
         });
         // added centroid from another api to projecttaskboundries
