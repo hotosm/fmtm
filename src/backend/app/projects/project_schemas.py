@@ -48,6 +48,14 @@ class ODKCentral(BaseModel):
             return ""
         return decrypt_value(value)
 
+    @field_validator("odk_central_password", mode="before")
+    @classmethod
+    def encrypt_odk_password(cls, value: str) -> str:
+        """Encrypt the ODK Central password before db insertion."""
+        if not value:
+            return ""
+        return encrypt_value(value)
+
 
 class ProjectInfo(BaseModel):
     """Basic project info."""
@@ -78,14 +86,6 @@ class ProjectUpload(BaseModel):
     task_split_dimension: Optional[int] = None
     task_num_buildings: Optional[int] = None
     data_extract_type: Optional[str] = None
-
-    @field_validator("odk_central_password", mode="before")
-    @classmethod
-    def encrypt_odk_password(cls, value: str) -> str:
-        """Encrypt the ODK Central password before db insertion."""
-        if not value:
-            return ""
-        return encrypt_value(value)
 
     # city: str
     # country: str
