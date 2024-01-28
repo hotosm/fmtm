@@ -149,6 +149,11 @@ class DbOrganisation(Base):
     type = Column(Enum(OrganisationType), default=OrganisationType.FREE, nullable=False)
     approved = Column(Boolean, default=False)
 
+    ## Odk central server
+    odk_central_url = Column(String)
+    odk_central_user = Column(String)
+    odk_central_password = Column(String)
+
     managers = relationship(
         DbUser,
         secondary=organisation_managers,

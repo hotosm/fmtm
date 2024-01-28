@@ -22,8 +22,10 @@ from typing import Optional
 
 from fastapi import Form
 from pydantic import BaseModel, Field, HttpUrl, computed_field
+from pydantic.functional_serializers import field_serializer
 from pydantic.functional_validators import field_validator
 
+from app.config import decrypt_value, encrypt_value
 from app.models.enums import OrganisationType
 
 # class OrganisationBase(BaseModel):
@@ -37,7 +39,16 @@ class OrganisationIn(BaseModel):
     description: Optional[str] = Field(
         Form(None, description="Organisation description")
     )
-    url: Optional[HttpUrl] = Field(Form(None, description="Organisation website URL"))
+    url: Optional[HttpUrl] = Field(Form(None, description=("Organisation website URL")))
+    odk_central_url: Optional[str] = Field(
+        Form(None, description="Organisation default ODK URL")
+    )
+    odk_central_user: Optional[str] = Field(
+        Form(None, description="Organisation default ODK User")
+    )
+    odk_central_password: Optional[str] = Field(
+        Form(None, description="Organisation default ODK Password")
+    )
 
     @field_validator("url", mode="after")
     @classmethod
@@ -61,6 +72,14 @@ class OrganisationIn(BaseModel):
             slug = sub(r"[-\s]+", "-", slug)
             return slug
 
+    @field_validator("odk_central_password", mode="before")
+    @classmethod
+    def encrypt_odk_password(cls, value: str) -> str:
+        """Encrypt the ODK Central password before db insertion."""
+        if not value:
+            return ""
+        return encrypt_value(value)
+
 
 class OrganisationEdit(OrganisationIn):
     """Organisation to edit via user input."""
@@ -79,3 +98,22 @@ class OrganisationOut(BaseModel):
     slug: Optional[str]
     url: Optional[str]
     type: OrganisationType
+
+
+class OrganisationOutWithCreds(BaseModel):
+    """Organisation plus decrypted ODK Central password.
+
+    WARNING Do not display this to the user.
+    WARNING contains decrypted credentials.
+    """
+
+    odk_central_url: Optional[str] = None
+    odk_central_user: Optional[str] = None
+    odk_central_password: Optional[str] = None
+
+    @field_serializer("odk_central_password")
+    def decrypt_password(self, value: str) -> str:
+        """Decrypt the database password value."""
+        if not value:
+            return ""
+        return decrypt_value(value)
