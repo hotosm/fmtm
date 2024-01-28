@@ -25,7 +25,9 @@ from dateutil import parser
 from geojson_pydantic import Feature as GeojsonFeature
 from pydantic import BaseModel
 from pydantic.functional_serializers import field_serializer
+from pydantic.functional_validators import field_validator
 
+from app.config import decrypt_value, encrypt_value
 from app.db import db_models
 from app.models.enums import ProjectPriority, ProjectStatus, TaskSplitType
 from app.tasks import tasks_schemas
@@ -38,6 +40,13 @@ class ODKCentral(BaseModel):
     odk_central_url: str
     odk_central_user: str
     odk_central_password: str
+
+    @field_serializer("odk_central_password")
+    def decrypt_password(self, value: str) -> str:
+        """Decrypt the database password value."""
+        if not value:
+            return ""
+        return decrypt_value(value)
 
 
 class ProjectInfo(BaseModel):
@@ -69,6 +78,14 @@ class ProjectUpload(BaseModel):
     task_split_dimension: Optional[int] = None
     task_num_buildings: Optional[int] = None
     data_extract_type: Optional[str] = None
+
+    @field_validator("odk_central_password", mode="before")
+    @classmethod
+    def encrypt_odk_password(cls, value: str) -> str:
+        """Encrypt the ODK Central password before db insertion."""
+        if not value:
+            return ""
+        return encrypt_value(value)
 
     # city: str
     # country: str
