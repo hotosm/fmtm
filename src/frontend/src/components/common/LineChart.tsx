@@ -14,31 +14,35 @@ const CustomLineChart = ({ data, xAxisDataKey, lineOneKey, lineTwoKey, xLabel, y
         }}
       >
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis
-          style={{ fontSize: '12px' }}
-          dataKey={xAxisDataKey}
-          label={{
-            value: `${xLabel}`,
-            position: 'insideBottom',
-            fontSize: '14px',
-            offset: '1',
-          }}
-        />
-        <YAxis
-          style={{ fontSize: '12px' }}
-          label={{
-            value: `${yLabel}`,
-            angle: -90,
-            fontSize: '14px',
-            position: 'insideLeft',
-            offset: '8',
-            dy: 55,
-          }}
-        />
+        {xLabel && (
+          <XAxis
+            style={{ fontSize: '12px' }}
+            dataKey={xAxisDataKey}
+            label={{
+              value: `${xLabel}`,
+              position: 'insideBottom',
+              fontSize: '14px',
+              offset: '1',
+            }}
+          />
+        )}
+        {yLabel && (
+          <YAxis
+            style={{ fontSize: '12px' }}
+            label={{
+              value: `${yLabel}`,
+              angle: -90,
+              fontSize: '14px',
+              position: 'insideLeft',
+              offset: '8',
+              dy: 55,
+            }}
+          />
+        )}
         <Tooltip />
         <Legend iconSize={10} iconType="circle" align="left" verticalAlign="top" height={45} />
-        <Line type="linear" dataKey={lineOneKey} stroke="#31356E" activeDot={{ r: 6 }} strokeWidth={1.5} />
-        <Line type="linear" dataKey={lineTwoKey} stroke="#32A886" activeDot={{ r: 6 }} strokeWidth={1.5} />
+        <Line type="linear" dataKey={lineOneKey} stroke="#D73F3F" activeDot={{ r: 6 }} strokeWidth={1.5} />
+        <Line type="linear" dataKey={lineTwoKey} stroke="#F19C3C" activeDot={{ r: 6 }} strokeWidth={1.5} />
       </LineChart>
     </ResponsiveContainer>
   );
