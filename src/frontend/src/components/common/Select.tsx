@@ -112,11 +112,11 @@ interface ICustomSelect {
   placeholder: string;
   data: any;
   dataKey: string;
-  value?: string;
+  value?: string | null;
   valueKey: string;
   label: string;
   onValueChange: (value: string | null | number) => void;
-  errorMsg: string;
+  errorMsg?: string;
   className: string;
 }
 
