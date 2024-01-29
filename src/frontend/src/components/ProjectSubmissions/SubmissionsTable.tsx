@@ -10,8 +10,22 @@ import { SubmissionsTableSkeletonLoader } from '@/components/ProjectSubmissions/
 import { Loader2 } from 'lucide-react';
 import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 
+type filterType = {
+  taskId: number | null;
+  submittedBy: string | null;
+  reviewState: string | null;
+  submittedDate: Date | null;
+};
+
 const SubmissionsTable = () => {
+  const initialFilterState = {
+    taskId: null,
+    submittedBy: null,
+    reviewState: null,
+    submittedDate: null,
+  };
   const [showFilter, setShowFilter] = useState<boolean>(true);
+  const [filter, setFilter] = useState<filterType>(initialFilterState);
   const { windowSize } = windowDimention();
   const dispatch = CoreModules.useAppDispatch();
   const params = CoreModules.useParams();
@@ -24,7 +38,20 @@ const SubmissionsTable = () => {
   );
   const submissionTableDataLoading = CoreModules.useAppSelector((state) => state.submission.submissionTableDataLoading);
   const submissionTableRefreshing = CoreModules.useAppSelector((state) => state.submission.submissionTableRefreshing);
+  const taskInfo = CoreModules.useAppSelector((state) => state.task.taskInfo);
+  const [numberOfFilters, setNumberOfFilters] = useState<number>(0);
   const [paginationPage, setPaginationPage] = useState<number>(1);
+
+  useEffect(() => {
+    let count = 0;
+    const filters = Object.keys(filter);
+    filters?.map((fltr) => {
+      if (filter[fltr]) {
+        count = count + 1;
+      }
+    });
+    setNumberOfFilters(count);
+  }, [filter]);
 
   const updatedSubmissionFormFields = submissionFormFields?.map((formField) => {
     if (formField.type !== 'structure') {
@@ -44,19 +71,58 @@ const SubmissionsTable = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(
-      SubmissionTableService(
-        `${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}?page=${paginationPage}`,
-      ),
-    );
+    if (!filter.taskId) {
+      dispatch(
+        SubmissionTableService(
+          `${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}?page=${paginationPage}`,
+        ),
+      );
+    } else {
+      dispatch(
+        SubmissionTableService(
+          `${import.meta.env.VITE_API_URL}/submission/task_submissions/${decodedId}?task_id=${
+            filter.taskId
+          }&page=${paginationPage}`,
+        ),
+      );
+    }
   }, [paginationPage]);
 
+  useEffect(() => {
+    setPaginationPage(1);
+    if (!filter.taskId) {
+      dispatch(
+        SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}?page=1`),
+      );
+    } else {
+      dispatch(
+        SubmissionTableService(
+          `${import.meta.env.VITE_API_URL}/submission/task_submissions/${decodedId}?task_id=${filter.taskId}&page=1`,
+        ),
+      );
+    }
+  }, [filter]);
+
   const refreshTable = () => {
-    dispatch(SubmissionActions.SetSubmissionTableRefreshing(true));
     dispatch(
       SubmissionFormFieldsService(`${import.meta.env.VITE_API_URL}/submission/submission_form_fields/${decodedId}`),
     );
-    dispatch(SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}?page=1`));
+    dispatch(SubmissionActions.SetSubmissionTableRefreshing(true));
+    if (!filter.taskId) {
+      dispatch(
+        SubmissionTableService(
+          `${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}?page=${paginationPage}`,
+        ),
+      );
+    } else {
+      dispatch(
+        SubmissionTableService(
+          `${import.meta.env.VITE_API_URL}/submission/task_submissions/${decodedId}?task_id=${
+            filter.taskId
+          }&page=${paginationPage}`,
+        ),
+      );
+    }
   };
 
   const handleChangePage = (
@@ -68,6 +134,10 @@ const SubmissionsTable = () => {
       return;
     }
     setPaginationPage(newPage + 1);
+  };
+
+  const clearFilters = () => {
+    setFilter(initialFilterState);
   };
 
   const TableFilter = () => (
@@ -84,10 +154,22 @@ const SubmissionsTable = () => {
             </div>
             <p className="fmtm-text-sm fmtm-mt-1 fmtm-text-grey-700 fmtm-font-bold">FILTER</p>
             <div className="fmtm-absolute -fmtm-right-3 -fmtm-top-2 fmtm-w-4 fmtm-h-4 fmtm-rounded-full  fmtm-bg-primaryRed fmtm-flex fmtm-justify-center fmtm-items-center">
-              <p className=" fmtm-text-xs fmtm-text-white">2</p>
+              <p className=" fmtm-text-xs fmtm-text-white">{numberOfFilters}</p>
             </div>
           </div>
-          <button className="fmtm-w-fit fmtm-text-sm fmtm-text-grey-700 fmtm-font-bold   hover:fmtm-text-red-700 fmtm-duration-150 fmtm-truncate fmtm-block xl:fmtm-hidden">
+          <button
+            className={`fmtm-w-fit fmtm-text-sm fmtm-text-grey-700 fmtm-font-bold fmtm-duration-150 fmtm-truncate fmtm-block xl:fmtm-hidden ${
+              !filter.taskId && !filter.reviewState && !filter.submittedBy && !filter.submittedDate
+                ? 'fmtm-hidden'
+                : 'fmtm-block'
+            } ${
+              submissionTableDataLoading || submissionFormFieldsLoading
+                ? 'fmtm-cursor-not-allowed'
+                : 'hover:fmtm-text-red-700'
+            }`}
+            onClick={clearFilters}
+            disabled={submissionTableDataLoading || submissionFormFieldsLoading}
+          >
             CLEAR ALL
           </button>
         </div>
@@ -101,13 +183,12 @@ const SubmissionsTable = () => {
               <CustomSelect
                 title="Task Id"
                 placeholder="Select"
-                data={[]}
+                data={taskInfo}
                 dataKey="value"
-                value={''}
-                valueKey="value"
-                label="label"
-                onValueChange={() => {}}
-                errorMsg=""
+                value={filter?.taskId?.toString()}
+                valueKey="task_id"
+                label="task_id"
+                onValueChange={(value) => value && setFilter((prev) => ({ ...prev, taskId: +value }))}
                 className="fmtm-text-grey-700 fmtm-text-sm !fmtm-mb-0"
               />
             </div>
