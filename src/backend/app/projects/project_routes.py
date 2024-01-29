@@ -34,6 +34,7 @@ from fastapi import (
     Query,
     Response,
     UploadFile,
+    status,
 )
 from fastapi.responses import FileResponse, JSONResponse
 from loguru import logger as log
@@ -42,8 +43,8 @@ from osm_fieldwork.xlsforms import xlsforms_path
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
-from app.auth.osm import AuthUser
-from app.auth.roles import org_admin, project_admin
+from app.auth.osm import AuthUser, login_required
+from app.auth.roles import check_org_admin, org_admin, project_admin
 from app.central import central_crud
 from app.db import database, db_models
 from app.models.enums import TILES_FORMATS, TILES_SOURCE, HTTPStatus
@@ -221,7 +222,9 @@ async def delete_project(
     current_user: AuthUser = Depends(org_admin),
 ):
     """Delete a project from both ODK Central and the local database."""
-    log.info(f"User {user_data.username} attempting deletion of project {project.id}")
+    log.info(
+        f"User {current_user.username} attempting deletion of project {project.id}"
+    )
     # Odk crendentials
     odk_credentials = project_schemas.ODKCentral(
         odk_central_url=project.odk_central_url,
@@ -241,6 +244,7 @@ async def delete_project(
 async def create_project(
     project_info: project_schemas.ProjectUpload,
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
 ):
     """Create a project in ODK Central and the local database.
 
@@ -252,6 +256,13 @@ async def create_project(
     if project_info.odk_central.odk_central_url.endswith("/"):
         project_info.odk_central.odk_central_url = (
             project_info.odk_central.odk_central_url[:-1]
+        )
+
+    user = await check_org_admin(db, current_user, None, project_info.organisation_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission denied. Only organization admins can create projects.",
         )
 
     odkproject = central_crud.create_odk_project(
@@ -351,6 +362,7 @@ async def upload_custom_task_boundaries(
     project_id: int,
     project_geojson: UploadFile = File(...),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(org_admin),
 ):
     """Set project task boundaries manually using multi-polygon GeoJSON.
 
@@ -437,6 +449,7 @@ async def upload_project_boundary(
     boundary_geojson: UploadFile = File(...),
     dimension: int = Form(500),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(org_admin),
 ):
     """Uploads the project boundary. The boundary is uploaded as a geojson file.
 
@@ -445,6 +458,7 @@ async def upload_project_boundary(
         boundary_geojson (UploadFile): The boundary file to upload.
         dimension (int): The new dimension of the project.
         db (Session): The database session to use.
+        current_user (AuthUser): Check if user is org_admin.
 
     Returns:
         dict: JSON with message, project ID, and task count for project.
@@ -551,6 +565,7 @@ async def generate_files(
     xls_form_config_file: Optional[UploadFile] = File(None),
     data_extracts: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(org_admin),
 ):
     """Generate additional content to initialise the project.
 
@@ -574,6 +589,7 @@ async def generate_files(
         xls_form_config_file (UploadFile, optional): The config YAML for the XLS form.
         data_extracts (UploadFile, optional): Custom data extract GeoJSON.
         db (Session): Database session, provided automatically.
+        current_user (AuthUser): Check if user is org_admin or not.
 
     Returns:
         json (JSONResponse): A success message containing the project ID.
@@ -704,7 +720,10 @@ async def get_project_features(
 
 @router.get("/generate-log/")
 async def generate_log(
-    project_id: int, uuid: uuid.UUID, db: Session = Depends(database.get_db)
+    project_id: int,
+    uuid: uuid.UUID,
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(org_admin),
 ):
     r"""Get the contents of a log file in a log format.
 
@@ -824,6 +843,7 @@ async def upload_custom_extract(
     custom_extract_file: UploadFile = File(...),
     project_id: int = Query(..., description="Project ID"),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(org_admin),
 ):
     """Upload a custom data extract for a project as fgb in S3.
 
