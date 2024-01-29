@@ -63,6 +63,10 @@ const SubmissionsTable = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | React.KeyboardEvent<HTMLInputElement>,
     newPage: number,
   ) => {
+    if (newPage + 1 > submissionTableData?.pagination?.pages || newPage + 1 < 1) {
+      setPaginationPage(paginationPage);
+      return;
+    }
     setPaginationPage(newPage + 1);
   };
 
@@ -255,49 +259,62 @@ const SubmissionsTable = () => {
           />
         </Table>
       )}
-      <div
-        style={{ fontFamily: 'BarlowMedium' }}
-        className="fmtm-flex fmtm-items-center fmtm-justify-end fmtm-gap-2 sm:fmtm-gap-4"
-      >
-        <CoreModules.TablePagination
-          component="div"
-          count={submissionTableData?.pagination?.total}
-          page={submissionTableData?.pagination?.page - 1}
-          onPageChange={handleChangePage}
-          rowsPerPage={submissionTableData?.pagination?.per_page}
-          rowsPerPageOptions={[]}
-          sx={{
-            '&.MuiTablePagination-root': {
-              display: 'flex',
-              justifyContent: 'flex-end',
-            },
-            '& .MuiOutlinedInput-root': {
-              '&.Mui-focused fieldset': {
-                borderColor: 'black',
+      {submissionTableData?.pagination && (
+        <div
+          style={{ fontFamily: 'BarlowMedium' }}
+          className="fmtm-flex fmtm-items-center fmtm-justify-end fmtm-gap-2 sm:fmtm-gap-4"
+        >
+          <CoreModules.TablePagination
+            component="div"
+            count={submissionTableData?.pagination?.total}
+            page={submissionTableData?.pagination?.page - 1}
+            onPageChange={handleChangePage}
+            rowsPerPage={submissionTableData?.pagination?.per_page}
+            rowsPerPageOptions={[]}
+            backIconButtonProps={{
+              disabled:
+                submissionTableDataLoading || submissionFormFieldsLoading || !submissionTableData?.pagination?.prev_num,
+            }}
+            nextIconButtonProps={{
+              disabled:
+                submissionTableDataLoading || submissionFormFieldsLoading || !submissionTableData?.pagination?.next_num,
+            }}
+            sx={{
+              '&.MuiTablePagination-root': {
+                display: 'flex',
+                justifyContent: 'flex-end',
               },
-            },
-            '&.Mui-focused .MuiFormLabel-root-MuiInputLabel-root': {
-              color: 'black',
-            },
-            '.MuiTablePagination-spacer': { display: 'none' },
-            '.MuiTablePagination-actions': {
-              display: 'flex',
-              '.MuiIconButton-root': { width: '30px', height: '30px' },
-            },
-          }}
-          onRowsPerPageChange={() => {}}
-        />
-        <p className="fmtm-text-sm">Jump to</p>
-        <input
-          type="number"
-          className="fmtm-border-[1px] fmtm-border-[#E7E2E2] fmtm-text-sm fmtm-rounded-sm fmtm-w-11 fmtm-outline-none"
-          onKeyDown={(e) => {
-            if (e.currentTarget.value) {
-              handleChangePage(e, parseInt(e.currentTarget.value) - 1);
-            }
-          }}
-        />
-      </div>
+              '& .MuiOutlinedInput-root': {
+                '&.Mui-focused fieldset': {
+                  borderColor: 'black',
+                },
+              },
+              '&.Mui-focused .MuiFormLabel-root-MuiInputLabel-root': {
+                color: 'black',
+              },
+              '.MuiTablePagination-spacer': { display: 'none' },
+              '.MuiTablePagination-actions': {
+                display: 'flex',
+                '.MuiIconButton-root': { width: '30px', height: '30px' },
+              },
+            }}
+            onRowsPerPageChange={() => {}}
+          />
+          <p className="fmtm-text-sm">Jump to</p>
+          <input
+            type="number"
+            className={`fmtm-border-[1px] fmtm-border-[#E7E2E2] fmtm-text-sm fmtm-rounded-sm fmtm-w-11 fmtm-outline-none ${
+              submissionTableDataLoading || (submissionFormFieldsLoading && 'fmtm-cursor-not-allowed')
+            }`}
+            onKeyDown={(e) => {
+              if (e.currentTarget.value) {
+                handleChangePage(e, parseInt(e.currentTarget.value) - 1);
+              }
+            }}
+            disabled={submissionTableDataLoading || submissionFormFieldsLoading}
+          />
+        </div>
+      )}
     </div>
   );
 };
