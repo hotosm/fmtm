@@ -6,7 +6,11 @@ import Table, { TableHeader } from '@/components/common/CustomTable';
 import CustomLineChart from '@/components/common/LineChart';
 import CoreModules from '@/shared/CoreModules';
 import InfographicsCard from '@/components/ProjectSubmissions/InfographicsCard';
-import { ProjectContributorsService, ProjectSubmissionInfographicsService } from '@/api/SubmissionService';
+import {
+  ProjectContributorsService,
+  ProjectSubmissionInfographicsService,
+  ValidatedVsMappedInfographicsService,
+} from '@/api/SubmissionService';
 import environment from '@/environment';
 
 const lineKeyData = [
@@ -94,10 +98,11 @@ const SubmissionsInfographics = () => {
   const submissionContributorsLoading = CoreModules.useAppSelector(
     (state) => state.submission.submissionContributorsLoading,
   );
-  const projectDashboardDetail = CoreModules.useAppSelector((state) => state.project.projectDashboardDetail);
-  const projectDashboardLoading = CoreModules.useAppSelector((state) => state.project.projectDashboardLoading);
-  const taskData = CoreModules.useAppSelector((state) => state.task.taskData);
-  const [submissionProjection, setSubmissionProjection] = useState(10);
+  const [submissionProjection, setSubmissionProjection] = useState<10 | 30>(10);
+  const validatedVsMappedInfographics = CoreModules.useAppSelector(
+    (state) => state.submission.validatedVsMappedInfographics,
+  );
+  const validatedVsMappedLoading = CoreModules.useAppSelector((state) => state.submission.validatedVsMappedLoading);
 
   useEffect(() => {
     dispatch(
@@ -106,6 +111,12 @@ const SubmissionsInfographics = () => {
       ),
     );
   }, [submissionProjection]);
+
+  useEffect(() => {
+    dispatch(
+      ValidatedVsMappedInfographicsService(`${import.meta.env.VITE_API_URL}/tasks/activity/?project_id=${decodedId}`),
+    );
+  }, []);
 
   useEffect(() => {
     dispatch(ProjectContributorsService(`${import.meta.env.VITE_API_URL}/projects/contributors/${decodedId}`));
@@ -191,18 +202,18 @@ const SubmissionsInfographics = () => {
         <div className="fmtm-w-[70%]">
           <InfographicsCard
             cardRef={plannedVsActualRef}
-            header="Planned vs Actual"
+            header="Validated vs Mapped Task"
             body={
-              false ? (
+              validatedVsMappedLoading ? (
                 <CoreModules.Skeleton className="!fmtm-w-full fmtm-h-full" />
               ) : lineKeyData.length > 0 ? (
                 <CustomLineChart
-                  data={lineKeyData}
-                  xAxisDataKey="name"
-                  lineOneKey="Planned"
-                  lineTwoKey="Actual"
+                  data={validatedVsMappedInfographics}
+                  xAxisDataKey="date"
+                  lineOneKey="validated"
+                  lineTwoKey="mapped"
                   xLabel="Submission Date"
-                  yLabel="Submission Count"
+                  yLabel="Task Count"
                 />
               ) : (
                 <div className="fmtm-w-full fmtm-h-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-text-3xl fmtm-text-gray-400">
@@ -260,6 +271,30 @@ const SubmissionsInfographics = () => {
             }
           />
         </div>
+      </div>
+      <div>
+        <InfographicsCard
+          cardRef={plannedVsActualRef}
+          header="Planned vs Actual"
+          body={
+            false ? (
+              <CoreModules.Skeleton className="!fmtm-w-full fmtm-h-full" />
+            ) : lineKeyData.length > 0 ? (
+              <CustomLineChart
+                data={lineKeyData}
+                xAxisDataKey="name"
+                lineOneKey="Planned"
+                lineTwoKey="Actual"
+                xLabel="Submission Date"
+                yLabel="Submission Count"
+              />
+            ) : (
+              <div className="fmtm-w-full fmtm-h-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-text-3xl fmtm-text-gray-400">
+                No data available!
+              </div>
+            )
+          }
+        />
       </div>
 
       <div>

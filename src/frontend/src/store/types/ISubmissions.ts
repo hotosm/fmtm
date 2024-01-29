@@ -9,4 +9,6 @@ export type SubmissionStateTypes = {
   submissionFormFieldsLoading: boolean;
   submissionTableDataLoading: boolean;
   submissionTableRefreshing: boolean;
+  validatedVsMappedInfographics: [];
+  validatedVsMappedLoading: boolean;
 };

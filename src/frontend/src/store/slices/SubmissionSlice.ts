@@ -12,6 +12,8 @@ const initialState: SubmissionStateTypes = {
   submissionFormFieldsLoading: false,
   submissionTableDataLoading: false,
   submissionTableRefreshing: false,
+  validatedVsMappedInfographics: [],
+  validatedVsMappedLoading: false,
 };
 
 const SubmissionSlice = createSlice({
@@ -26,6 +28,12 @@ const SubmissionSlice = createSlice({
     },
     SetSubmissionInfographics(state, action) {
       state.submissionInfographics = action.payload;
+    },
+    SetValidatedVsMappedInfographics(state, action) {
+      state.validatedVsMappedInfographics = action.payload;
+    },
+    SetValidatedVsMappedLoading(state, action) {
+      state.validatedVsMappedLoading = action.payload;
     },
     SetSubmissionContributors(state, action) {
       state.submissionContributors = action.payload;

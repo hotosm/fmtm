@@ -54,6 +54,24 @@ export const ProjectSubmissionInfographicsService: Function = (url: string) => {
   };
 };
 
+export const ValidatedVsMappedInfographicsService: Function = (url: string) => {
+  return async (dispatch) => {
+    const fetchProjectSubmission = async (url: string) => {
+      try {
+        dispatch(SubmissionActions.SetValidatedVsMappedLoading(true));
+        const validatedVsMappedData = await CoreModules.axios.get(url);
+        const resp: any = validatedVsMappedData.data;
+        dispatch(SubmissionActions.SetValidatedVsMappedInfographics(resp));
+        dispatch(SubmissionActions.SetValidatedVsMappedLoading(false));
+      } catch (error) {
+        dispatch(SubmissionActions.SetValidatedVsMappedLoading(false));
+      }
+    };
+
+    await fetchProjectSubmission(url);
+  };
+};
+
 export const ProjectContributorsService: Function = (url: string) => {
   return async (dispatch) => {
     const fetchProjectContributor = async (url: string) => {
