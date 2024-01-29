@@ -1,19 +1,22 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { SubmissionStateTypes } from '@/store/types/ISubmissions';
+
+const initialState: SubmissionStateTypes = {
+  submissionDetailsLoading: true,
+  submissionDetails: [],
+  submissionInfographics: [],
+  submissionContributors: [],
+  submissionContributorsLoading: true,
+  submissionFormFields: [],
+  submissionTableData: [],
+  submissionFormFieldsLoading: false,
+  submissionTableDataLoading: false,
+  submissionTableRefreshing: false,
+};
 
 const SubmissionSlice = createSlice({
   name: 'submission',
-  initialState: {
-    submissionDetailsLoading: true,
-    submissionDetails: [],
-    submissionInfographics: [],
-    submissionContributors: [],
-    submissionContributorsLoading: true,
-    submissionFormFields: [],
-    submissionTableData: [],
-    submissionFormFieldsLoading: false,
-    submissionTableDataLoading: false,
-    submissionTableRefreshing: false,
-  },
+  initialState: initialState,
   reducers: {
     SetSubmissionDetailsLoading(state, action) {
       state.submissionDetailsLoading = action.payload;
