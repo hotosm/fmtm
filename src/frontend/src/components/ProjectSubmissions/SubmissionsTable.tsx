@@ -11,7 +11,7 @@ import { Loader2 } from 'lucide-react';
 import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 
 const SubmissionsTable = () => {
-  const [showFilter, setShowFilter] = useState(true);
+  const [showFilter, setShowFilter] = useState<boolean>(true);
   const { windowSize } = windowDimention();
   const dispatch = CoreModules.useAppDispatch();
   const params = CoreModules.useParams();
@@ -24,7 +24,7 @@ const SubmissionsTable = () => {
   );
   const submissionTableDataLoading = CoreModules.useAppSelector((state) => state.submission.submissionTableDataLoading);
   const submissionTableRefreshing = CoreModules.useAppSelector((state) => state.submission.submissionTableRefreshing);
-  const [paginationPage, setPaginationPage] = useState(1);
+  const [paginationPage, setPaginationPage] = useState<number>(1);
 
   const updatedSubmissionFormFields = submissionFormFields?.map((formField) => {
     if (formField.type !== 'structure') {
@@ -44,22 +44,26 @@ const SubmissionsTable = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}`));
-  }, []);
+    dispatch(
+      SubmissionTableService(
+        `${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}?page=${paginationPage}`,
+      ),
+    );
+  }, [paginationPage]);
 
   const refreshTable = () => {
     dispatch(SubmissionActions.SetSubmissionTableRefreshing(true));
     dispatch(
       SubmissionFormFieldsService(`${import.meta.env.VITE_API_URL}/submission/submission_form_fields/${decodedId}`),
     );
-    dispatch(SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}`));
+    dispatch(SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}?page=1`));
   };
 
   const handleChangePage = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | React.KeyboardEvent<HTMLInputElement>,
     newPage: number,
   ) => {
-    setPaginationPage(newPage);
+    setPaginationPage(newPage + 1);
   };
 
   const TableFilter = () => (
@@ -187,7 +191,7 @@ const SubmissionsTable = () => {
     </div>
   );
 
-  function getValueByPath(obj, path) {
+  function getValueByPath(obj: any, path: string) {
     let value = obj;
     path?.split('.')?.map((item) => {
       if (path === 'start' || path === 'end') {
@@ -214,7 +218,7 @@ const SubmissionsTable = () => {
             rowClassName="snRow"
             dataFormat={(row, _, index) => <span>{index + 1}</span>}
           />
-          {updatedSubmissionFormFields?.map((field) => {
+          {updatedSubmissionFormFields?.map((field: any): React.ReactNode | null => {
             if (field) {
               return (
                 <TableHeader
@@ -233,6 +237,7 @@ const SubmissionsTable = () => {
                 />
               );
             }
+            return null;
           })}
           <TableHeader
             dataField="Actions"
@@ -256,10 +261,10 @@ const SubmissionsTable = () => {
       >
         <CoreModules.TablePagination
           component="div"
-          count={100}
-          page={paginationPage}
+          count={submissionTableData?.pagination?.total}
+          page={submissionTableData?.pagination?.page - 1}
           onPageChange={handleChangePage}
-          rowsPerPage={10}
+          rowsPerPage={submissionTableData?.pagination?.per_page}
           rowsPerPageOptions={[]}
           sx={{
             '&.MuiTablePagination-root': {
@@ -288,7 +293,7 @@ const SubmissionsTable = () => {
           className="fmtm-border-[1px] fmtm-border-[#E7E2E2] fmtm-text-sm fmtm-rounded-sm fmtm-w-11 fmtm-outline-none"
           onKeyDown={(e) => {
             if (e.currentTarget.value) {
-              handleChangePage(e, parseInt(e.currentTarget.value));
+              handleChangePage(e, parseInt(e.currentTarget.value) - 1);
             }
           }}
         />
