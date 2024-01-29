@@ -63,7 +63,9 @@ export const ProjectContributorsService: Function = (url: string) => {
         const resp: any = fetchContributorsData.data;
         dispatch(SubmissionActions.SetSubmissionContributors(resp));
         dispatch(SubmissionActions.SetSubmissionContributorsLoading(false));
-      } catch (error) {}
+      } catch (error) {
+        dispatch(SubmissionActions.SetSubmissionContributorsLoading(false));
+      }
     };
 
     await fetchProjectContributor(url);
@@ -81,6 +83,7 @@ export const SubmissionFormFieldsService: Function = (url: string) => {
         dispatch(SubmissionActions.SetSubmissionFormFieldsLoading(false));
         dispatch(SubmissionActions.SetSubmissionTableRefreshing(false));
       } catch (error) {
+        dispatch(SubmissionActions.SetSubmissionFormFieldsLoading(false));
         dispatch(SubmissionActions.SetSubmissionTableRefreshing(false));
       }
     };
@@ -100,6 +103,7 @@ export const SubmissionTableService: Function = (url: string) => {
         dispatch(SubmissionActions.SetSubmissionTableLoading(false));
         dispatch(SubmissionActions.SetSubmissionTableRefreshing(false));
       } catch (error) {
+        dispatch(SubmissionActions.SetSubmissionTableLoading(false));
         dispatch(SubmissionActions.SetSubmissionTableRefreshing(false));
       }
     };
