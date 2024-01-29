@@ -158,7 +158,7 @@ async def project_admin(
             status_code=HTTPStatus.FORBIDDEN, detail="User has no access to project"
         )
 
-    if match.role.value < ProjectRole.ADMIN.value:
+    if match.role.value < ProjectRole.PROJECT_MANAGER.value:
         log.error(
             f"User ID {user_id} does not have admin permission"
             f"for project ID {project.id}"
