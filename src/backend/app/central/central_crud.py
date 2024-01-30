@@ -193,7 +193,7 @@ def upload_xform_media(
             status_code=500, detail={"message": "Connection failed to odk central"}
         ) from e
 
-    result = xform.uploadMedia(project_id, title, filespec)
+    xform.uploadMedia(project_id, title, filespec)
     result = xform.publishForm(project_id, title)
     return result
 
@@ -235,9 +235,7 @@ def create_odk_xform(
     # This modifies an existing published XForm to be in draft mode.
     # An XForm must be in draft mode to upload an attachment.
     if upload_media:
-        result = xform.uploadMedia(
-            project_id, title, data, convert_to_draft_when_publishing
-        )
+        xform.uploadMedia(project_id, title, data, convert_to_draft_when_publishing)
 
     result = xform.publishForm(project_id, title)
     return result
