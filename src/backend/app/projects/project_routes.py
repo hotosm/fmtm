@@ -280,11 +280,12 @@ async def create_project(
     return project
 
 
-@router.put("/{id}", response_model=project_schemas.ProjectOut)
+@router.put("/{project_id}", response_model=project_schemas.ProjectOut)
 async def update_project(
-    id: int,
+    project_id: int,
     project_info: project_schemas.ProjectUpload,
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(project_admin),
 ):
     """Update an existing project by ID.
 
@@ -302,17 +303,18 @@ async def update_project(
     Raises:
     - HTTPException with 404 status code if project not found
     """
-    project = await project_crud.update_project_info(db, project_info, id)
+    project = await project_crud.update_project_info(db, project_info, project_id)
     if not project:
         raise HTTPException(status_code=422, detail="Project could not be updated")
     return project
 
 
-@router.patch("/{id}", response_model=project_schemas.ProjectOut)
+@router.patch("/{project_id}", response_model=project_schemas.ProjectOut)
 async def project_partial_update(
-    id: int,
+    project_id: int,
     project_info: project_schemas.ProjectUpdate,
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(project_admin),
 ):
     """Partial Update an existing project by ID.
 
@@ -329,7 +331,9 @@ async def project_partial_update(
     - HTTPException with 404 status code if project not found
     """
     # Update project informations
-    project = await project_crud.partial_update_project_info(db, project_info, id)
+    project = await project_crud.partial_update_project_info(
+        db, project_info, project_id
+    )
 
     if not project:
         raise HTTPException(status_code=422, detail="Project could not be updated")
@@ -502,6 +506,7 @@ async def edit_project_boundary(
     boundary_geojson: UploadFile = File(...),
     dimension: int = Form(500),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(project_admin),
 ):
     """Edit the existing project boundary."""
     # Validating for .geojson File.
@@ -677,6 +682,7 @@ async def update_project_form(
     project_id: int,
     form: Optional[UploadFile],
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(project_admin),
 ):
     """Update XLSForm for a project."""
     file_name = os.path.splitext(form.filename)
@@ -892,10 +898,11 @@ async def download_form(project_id: int, db: Session = Depends(database.get_db))
 @router.post("/update_category")
 async def update_project_category(
     # background_tasks: BackgroundTasks,
-    project_id: int = Form(...),
+    project_id: int,
     category: str = Form(...),
     upload: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(project_admin),
 ):
     """Update the XLSForm category for a project.
 
