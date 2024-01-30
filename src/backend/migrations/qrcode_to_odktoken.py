@@ -1,28 +1,29 @@
 """Convert a QR Code image in Postgres to a Fernet encrypted odk_token URL."""
 
-from pathlib import Path
-from io import BytesIO
-
 import argparse
 import base64
-import zlib
 import json
-from segno import make as make_qr
-# apt install libzbar-dev 
-from pyzbar.pyzbar import decode as decode_qr
-# pip install pillow
-from PIL import Image
-from sqlalchemy import ForeignKey, Column, Integer, String, LargeBinary
-from sqlalchemy.orm import relationship
-from sqlalchemy.orm.attributes import InstrumentedAttribute
+import zlib
+from io import BytesIO
+from pathlib import Path
 
 from dotenv import load_dotenv
 
+# pip install pillow
+from PIL import Image
+
+# apt install libzbar-dev
+from pyzbar.pyzbar import decode as decode_qr
+from segno import make as make_qr
+from sqlalchemy import Column, ForeignKey, Integer, LargeBinary, String
+from sqlalchemy.orm import relationship
+from sqlalchemy.orm.attributes import InstrumentedAttribute
+
 load_dotenv(Path(__file__).parent.parent / ".env.example")
 
-from app.config import encrypt_value, decrypt_value  # noqa: E402
-from app.db.database import Base, get_db
-from app.db.db_models import DbProject, DbTask
+from app.config import decrypt_value, encrypt_value  # noqa: E402
+from app.db.database import Base, get_db  # noqa: E402
+from app.db.db_models import DbProject, DbTask  # noqa: E402
 
 
 class DbQrCode(Base):
@@ -37,17 +38,15 @@ class DbQrCode(Base):
 
 class TaskPlusQR(DbTask):
     """Task plus QR code foreign key."""
-    qr_code_id = Column(Integer, ForeignKey('qr_code.id'), index=True)
-    qr_code = relationship(
-        DbQrCode, cascade="all", single_parent=True
-    )
+
+    qr_code_id = Column(Integer, ForeignKey("qr_code.id"), index=True)
+    qr_code = relationship(DbQrCode, cascade="all", single_parent=True)
     if not isinstance(DbTask.odk_token, InstrumentedAttribute):
         odk_token = Column(String, nullable=True)
 
 
 def odktoken_to_qr():
     """Extract odk_token field from db and convert to QR codes."""
-
     db = next(get_db())
     projects = db.query(DbProject).all()
 
@@ -89,7 +88,6 @@ def odktoken_to_qr():
 
 def qr_to_odktoken():
     """Extract QR codes from db and convert to odk_token field."""
-
     db = next(get_db())
     tasks = db.query(TaskPlusQR).all()
 
@@ -100,7 +98,11 @@ def qr_to_odktoken():
 
             # Base64/zlib decoded
             decoded_qr = zlib.decompress(base64.b64decode(qr_data))
-            odk_token = json.loads(decoded_qr.decode("utf-8")).get("general", {}).get("server_url")
+            odk_token = (
+                json.loads(decoded_qr.decode("utf-8"))
+                .get("general", {})
+                .get("server_url")
+            )
 
             task.odk_token = encrypt_value(odk_token)
             print(f"Added odk token for task {task.id}")
@@ -109,7 +111,6 @@ def qr_to_odktoken():
 
 def encrypt_odk_creds():
     """Encrypt project odk password in the db."""
-
     db = next(get_db())
     projects = db.query(DbProject).all()
 
@@ -121,7 +122,6 @@ def encrypt_odk_creds():
 
 def decrypt_odk_creds():
     """Decrypt project odk password in the db."""
-
     db = next(get_db())
     projects = db.query(DbProject).all()
 
@@ -132,10 +132,20 @@ def decrypt_odk_creds():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Apply or revert changes to QR codes and odk tokens.")
-    parser.add_argument("--apply", action="store_true", help="Apply changes (convert QR codes to odk tokens).")
-    parser.add_argument("--revert", action="store_true", help="Revert changes (convert odk tokens to QR codes).")
-    
+    parser = argparse.ArgumentParser(
+        description="Apply or revert changes to QR codes and odk tokens."
+    )
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="Apply changes (convert QR codes to odk tokens).",
+    )
+    parser.add_argument(
+        "--revert",
+        action="store_true",
+        help="Revert changes (convert odk tokens to QR codes).",
+    )
+
     args = parser.parse_args()
 
     if args.apply:
