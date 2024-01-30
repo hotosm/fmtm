@@ -40,7 +40,7 @@ def get_odk_project(odk_central: project_schemas.ODKCentral = None):
     if odk_central:
         url = odk_central.odk_central_url
         user = odk_central.odk_central_user
-        pw = odk_central.odk_central_password
+        pw = odk_central.odk_central_password.get_secret_value()
     else:
         log.debug("ODKCentral connection variables not set in function")
         log.debug("Attempting extraction from environment variables")
@@ -65,7 +65,7 @@ def get_odk_form(odk_central: project_schemas.ODKCentral = None):
     if odk_central:
         url = odk_central.odk_central_url
         user = odk_central.odk_central_user
-        pw = odk_central.odk_central_password
+        pw = odk_central.odk_central_password.get_secret_value()
 
     else:
         log.debug("ODKCentral connection variables not set in function")
@@ -91,7 +91,7 @@ def get_odk_app_user(odk_central: project_schemas.ODKCentral = None):
     if odk_central:
         url = odk_central.odk_central_url
         user = odk_central.odk_central_user
-        pw = odk_central.odk_central_password
+        pw = odk_central.odk_central_password.get_secret_value()
     else:
         log.debug("ODKCentral connection variables not set in function")
         log.debug("Attempting extraction from environment variables")

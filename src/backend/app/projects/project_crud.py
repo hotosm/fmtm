@@ -62,6 +62,7 @@ from app.config import encrypt_value, settings
 from app.db import db_models
 from app.db.database import get_db
 from app.db.postgis_utils import geojson_to_flatgeobuf, geometry_to_geojson
+from app.models.enums import HTTPStatus
 from app.projects import project_schemas
 from app.s3 import add_obj_to_bucket, get_obj_from_bucket
 from app.tasks import tasks_crud
@@ -255,6 +256,8 @@ async def create_project_with_project_info(
     """Create a new project, including all associated info."""
     # FIXME the ProjectUpload model should be converted to the db model directly
     # FIXME we don't need to extract each variable and pass manually
+    # project_data = project_metadata.model_dump()
+
     project_user = project_metadata.author
     project_info = project_metadata.project_info
     xform_title = project_metadata.xform_title
@@ -268,11 +271,20 @@ async def create_project_with_project_info(
 
     # verify data coming in
     if not project_user:
-        raise HTTPException("User details are missing")
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail="User details are missing",
+        )
     if not project_info:
-        raise HTTPException("Project info is missing")
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail="Project info is missing",
+        )
     if not odk_project_id:
-        raise HTTPException("ODK Central project id is missing")
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail="ODK Central project id is missing",
+        )
 
     log.debug(
         "Creating project in FMTM database with vars: "
@@ -287,7 +299,7 @@ async def create_project_with_project_info(
     if odk_credentials:
         url = odk_credentials.odk_central_url
         user = odk_credentials.odk_central_user
-        pw = odk_credentials.odk_central_password
+        pw = odk_credentials.odk_central_password.get_secret_value()
 
     else:
         log.debug("ODKCentral connection variables not set in function")
@@ -1182,7 +1194,7 @@ def generate_task_files(
     appuser = OdkAppUser(
         odk_credentials.odk_central_url,
         odk_credentials.odk_central_user,
-        odk_credentials.odk_central_password,
+        odk_credentials.odk_central_password.get_secret_value(),
     )
     appuser_json = appuser.create(odk_id, appuser_name)
 

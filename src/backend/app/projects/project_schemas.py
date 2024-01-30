@@ -23,7 +23,7 @@ from typing import List, Optional, Union
 
 from dateutil import parser
 from geojson_pydantic import Feature as GeojsonFeature
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 from pydantic.functional_serializers import field_serializer
 from pydantic.functional_validators import field_validator
 
@@ -39,20 +39,28 @@ class ODKCentral(BaseModel):
 
     odk_central_url: str
     odk_central_user: str
-    odk_central_password: str
+    odk_central_password: SecretStr
 
     def model_post_init(self, ctx):
         """Run logic after model object instantiated."""
         # Decrypt odk central password from database
-        self.odk_central_password = decrypt_value(self.odk_central_password)
+        self.odk_central_password = SecretStr(
+            decrypt_value(self.odk_central_password.get_secret_value())
+        )
 
     @field_validator("odk_central_password", mode="before")
     @classmethod
-    def encrypt_odk_password(cls, value: str) -> str:
+    def encrypt_odk_password(cls, value: str) -> SecretStr:
         """Encrypt the ODK Central password before db insertion."""
-        if not value:
-            return ""
-        return encrypt_value(value)
+        return SecretStr(encrypt_value(value))
+
+    @field_validator("odk_central_url", mode="before")
+    @classmethod
+    def remove_trailing_slash(cls, value: str) -> str:
+        """Remove trailing slash from ODK Central URL."""
+        if value.endswith("/"):
+            return value[:-1]
+        return value
 
 
 class ProjectInfo(BaseModel):

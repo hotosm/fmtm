@@ -21,7 +21,7 @@ from re import sub
 from typing import Optional
 
 from fastapi import Form
-from pydantic import BaseModel, Field, HttpUrl, computed_field
+from pydantic import BaseModel, Field, HttpUrl, SecretStr, computed_field
 from pydantic.functional_validators import field_validator
 
 from app.config import decrypt_value, encrypt_value
@@ -45,7 +45,7 @@ class OrganisationIn(BaseModel):
     odk_central_user: Optional[str] = Field(
         Form(None, description="Organisation default ODK User")
     )
-    odk_central_password: Optional[str] = Field(
+    odk_central_password: Optional[SecretStr] = Field(
         Form(None, description="Organisation default ODK Password")
     )
 
@@ -64,20 +64,21 @@ class OrganisationIn(BaseModel):
     @property
     def slug(self) -> str:
         """Sanitise the organisation name for use in a URL."""
-        if self.name:
-            # Remove special characters and replace spaces with hyphens
-            slug = sub(r"[^\w\s-]", "", self.name).strip().lower().replace(" ", "-")
-            # Remove consecutive hyphens
-            slug = sub(r"[-\s]+", "-", slug)
-            return slug
+        if not self.name:
+            return ""
+        # Remove special characters and replace spaces with hyphens
+        slug = sub(r"[^\w\s-]", "", self.name).strip().lower().replace(" ", "-")
+        # Remove consecutive hyphens
+        slug = sub(r"[-\s]+", "-", slug)
+        return slug
 
     @field_validator("odk_central_password", mode="before")
     @classmethod
-    def encrypt_odk_password(cls, value: str) -> str:
+    def encrypt_odk_password(cls, value: str) -> Optional[SecretStr]:
         """Encrypt the ODK Central password before db insertion."""
         if not value:
-            return ""
-        return encrypt_value(value)
+            return None
+        return SecretStr(encrypt_value(value))
 
 
 class OrganisationEdit(OrganisationIn):
@@ -101,17 +102,18 @@ class OrganisationOut(BaseModel):
 
 
 class OrganisationOutWithCreds(BaseModel):
-    """Organisation plus decrypted ODK Central password.
+    """Organisation plus ODK Central credentials.
 
-    WARNING this model is for illustration only.
-    WARNING do not display this to the user.
-    WARNING contains decrypted credentials.
+    Note: the password is obsfucated as SecretStr.
     """
 
     odk_central_user: Optional[str] = None
-    odk_central_password: Optional[str] = None
+    odk_central_password: Optional[SecretStr] = None
 
     def model_post_init(self, ctx):
         """Run logic after model object instantiated."""
         # Decrypt odk central password from database
-        self.odk_central_password = decrypt_value(self.odk_central_password)
+        if self.odk_central_password:
+            self.odk_central_password = SecretStr(
+                decrypt_value(self.odk_central_password.get_secret_value())
+            )

@@ -249,17 +249,10 @@ async def create_project(
     """
     log.debug(f"Creating project {project_info.project_info.name}")
 
-    if project_info.odk_central.odk_central_url.endswith("/"):
-        project_info.odk_central.odk_central_url = (
-            project_info.odk_central.odk_central_url[:-1]
-        )
-
     odkproject = central_crud.create_odk_project(
         project_info.project_info.name, project_info.odk_central
     )
 
-    # TODO check token against user or use token instead of passing user
-    # project_info.project_name_prefix = project_info.project_info.name
     project = await project_crud.create_project_with_project_info(
         db, project_info, odkproject["id"]
     )
