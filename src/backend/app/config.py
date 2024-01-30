@@ -89,7 +89,7 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v
         pg_url = PostgresDsn.build(
-            scheme="postgresql",
+            scheme="postgresql+psycopg",
             username=info.data.get("FMTM_DB_USER"),
             password=info.data.get("FMTM_DB_PASSWORD"),
             host=info.data.get("FMTM_DB_HOST"),

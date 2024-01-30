@@ -49,6 +49,7 @@ dependencies = [
     "osm-fieldwork==0.4.1",
     "osm-rawdata==0.1.7",
     "fmtm-splitter==1.0.0rc0",
+    "psycopg>=3.1.17",
 ]
 requires-python = ">=3.10"
 readme = "../../README.md"
