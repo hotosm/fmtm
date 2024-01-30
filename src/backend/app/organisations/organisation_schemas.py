@@ -22,7 +22,6 @@ from typing import Optional
 
 from fastapi import Form
 from pydantic import BaseModel, Field, HttpUrl, computed_field
-from pydantic.functional_serializers import field_serializer
 from pydantic.functional_validators import field_validator
 
 from app.config import decrypt_value, encrypt_value
@@ -98,22 +97,21 @@ class OrganisationOut(BaseModel):
     slug: Optional[str]
     url: Optional[str]
     type: OrganisationType
+    odk_central_url: Optional[str] = None
 
 
 class OrganisationOutWithCreds(BaseModel):
     """Organisation plus decrypted ODK Central password.
 
-    WARNING Do not display this to the user.
+    WARNING this model is for illustration only.
+    WARNING do not display this to the user.
     WARNING contains decrypted credentials.
     """
 
-    odk_central_url: Optional[str] = None
     odk_central_user: Optional[str] = None
     odk_central_password: Optional[str] = None
 
-    @field_serializer("odk_central_password")
-    def decrypt_password(self, value: str) -> str:
-        """Decrypt the database password value."""
-        if not value:
-            return ""
-        return decrypt_value(value)
+    def model_post_init(self, ctx):
+        """Run logic after model object instantiated."""
+        # Decrypt odk central password from database
+        self.odk_central_password = decrypt_value(self.odk_central_password)

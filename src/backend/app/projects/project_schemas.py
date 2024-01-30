@@ -41,12 +41,10 @@ class ODKCentral(BaseModel):
     odk_central_user: str
     odk_central_password: str
 
-    @field_serializer("odk_central_password")
-    def decrypt_password(self, value: str) -> str:
-        """Decrypt the database password value."""
-        if not value:
-            return ""
-        return decrypt_value(value)
+    def model_post_init(self, ctx):
+        """Run logic after model object instantiated."""
+        # Decrypt odk central password from database
+        self.odk_central_password = decrypt_value(self.odk_central_password)
 
     @field_validator("odk_central_password", mode="before")
     @classmethod
