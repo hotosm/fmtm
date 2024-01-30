@@ -54,6 +54,7 @@ async def get_organisations(
 async def get_organisation_detail(
     organisation: DbOrganisation = Depends(org_exists),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
 ):
     """Get a specific organisation by id or name."""
     return organisation
@@ -64,6 +65,7 @@ async def create_organisation(
     org: organisation_schemas.OrganisationIn = Depends(),
     logo: UploadFile = File(None),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(org_admin),
 ) -> organisation_schemas.OrganisationOut:
     """Create an organisation with the given details."""
     return await organisation_crud.create_organisation(db, org, logo)
@@ -75,6 +77,7 @@ async def update_organisation(
     logo: UploadFile = File(None),
     organisation: DbOrganisation = Depends(org_exists),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(org_admin),
 ):
     """Partial update for an existing organisation."""
     return await organisation_crud.update_organisation(
@@ -86,6 +89,7 @@ async def update_organisation(
 async def delete_organisations(
     organisation: DbOrganisation = Depends(org_exists),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(org_admin),
 ):
     """Delete an organisation."""
     return await organisation_crud.delete_organisation(db, organisation)
