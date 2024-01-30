@@ -44,7 +44,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
 from app.auth.osm import AuthUser, login_required
-from app.auth.roles import check_org_admin, org_admin, project_admin
+from app.auth.roles import check_org_admin, org_admin, project_admin, super_admin
 from app.central import central_crud
 from app.db import database, db_models
 from app.models.enums import TILES_FORMATS, TILES_SOURCE, HTTPStatus
@@ -307,6 +307,7 @@ async def update_project(
     Parameters:
     - id: ID of the project to update
     - project_info: Updated project information
+    - current_user (AuthUser): Check if user is project_admin
 
     Returns:
     - Updated project information
@@ -356,6 +357,7 @@ async def upload_custom_xls(
     upload: UploadFile = File(...),
     category: str = Form(...),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(super_admin),
 ):
     """Upload a custom XLSForm to the database.
 
@@ -363,6 +365,7 @@ async def upload_custom_xls(
         upload (UploadFile): the XLSForm file
         category (str): the category of the XLSForm.
         db (Session): the DB session, provided automatically.
+        current_user (AuthUser): Check if user is super_admin
     """
     content = await upload.read()  # read file content
     name = upload.filename.split(".")[0]  # get name of file without extension
@@ -555,6 +558,7 @@ async def edit_project_boundary(
 @router.post("/validate_form")
 async def validate_form(
     form: UploadFile,
+    current_user: AuthUser = Depends(super_admin),
 ):
     """Tests the validity of the xls form uploaded.
 
@@ -793,7 +797,7 @@ async def generate_log(
 
 
 @router.get("/categories/")
-async def get_categories():
+async def get_categories(current_user: AuthUser = Depends(login_required)):
     """Get api for fetching all the categories.
 
     This endpoint fetches all the categories from osm_fieldwork.
@@ -840,6 +844,7 @@ async def get_data_extract(
     geojson_file: UploadFile = File(...),
     project_id: int = Query(None, description="Project ID"),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
 ):
     """Get the data extract for a given project AOI.
 
@@ -888,7 +893,11 @@ async def upload_custom_extract(
 
 
 @router.get("/download_form/{project_id}/")
-async def download_form(project_id: int, db: Session = Depends(database.get_db)):
+async def download_form(
+    project_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
+):
     """Download the XLSForm for a project."""
     project = await project_crud.get_project(db, project_id)
     if not project:
@@ -962,7 +971,11 @@ async def update_project_category(
 
 
 @router.get("/download_template/")
-async def download_template(category: str, db: Session = Depends(database.get_db)):
+async def download_template(
+    category: str,
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
+):
     """Download an XLSForm template to fill out."""
     xlsform_path = f"{xlsforms_path}/{category}.xls"
     if os.path.exists(xlsform_path):
@@ -975,12 +988,14 @@ async def download_template(category: str, db: Session = Depends(database.get_db
 async def download_project_boundary(
     project_id: int,
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
 ):
     """Downloads the boundary of a project as a GeoJSON file.
 
     Args:
         project_id (int): The id of the project.
         db (Session): The database session, provided automatically.
+        current_user (AuthUser): Check if user is logged in.
 
     Returns:
         Response: The HTTP response object containing the downloaded file.
@@ -998,12 +1013,14 @@ async def download_project_boundary(
 async def download_task_boundaries(
     project_id: int,
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
 ):
     """Downloads the boundary of the tasks for a project as a GeoJSON file.
 
     Args:
         project_id (int): The id of the project.
         db (Session): The database session, provided automatically.
+        current_user (AuthUser): Check if user is logged in.
 
     Returns:
         Response: The HTTP response object containing the downloaded file.
@@ -1019,12 +1036,17 @@ async def download_task_boundaries(
 
 
 @router.get("/features/download/")
-async def download_features(project_id: int, db: Session = Depends(database.get_db)):
+async def download_features(
+    project_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
+):
     """Downloads the features of a project as a GeoJSON file.
 
     Args:
         project_id (int): The id of the project.
         db (Session): The database session, provided automatically.
+        current_user (AuthUser): Check if user is logged in.
 
     Returns:
         Response: The HTTP response object containing the downloaded file.
@@ -1054,6 +1076,7 @@ async def generate_project_tiles(
         description="Provide a custom TMS URL, optional",
     ),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
 ):
     """Returns basemap tiles for a project.
 
@@ -1064,6 +1087,7 @@ async def generate_project_tiles(
         format (str, optional): Default "mbtiles". Other options: "pmtiles", "sqlite3".
         tms (str, optional): Default None. Custom TMS provider URL.
         db (Session): The database session, provided automatically.
+        current_user (AuthUser): Check if user is logged in.
 
     Returns:
         str: Success message that tile generation started.
@@ -1091,12 +1115,17 @@ async def generate_project_tiles(
 
 
 @router.get("/tiles_list/{project_id}/")
-async def tiles_list(project_id: int, db: Session = Depends(database.get_db)):
+async def tiles_list(
+    project_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
+):
     """Returns the list of tiles for a project.
 
     Parameters:
         project_id: int
         db (Session): The database session, provided automatically.
+        current_user (AuthUser): Check if user is logged in.
 
     Returns:
         Response: List of generated tiles for a project.
@@ -1105,7 +1134,11 @@ async def tiles_list(project_id: int, db: Session = Depends(database.get_db)):
 
 
 @router.get("/download_tiles/")
-async def download_tiles(tile_id: int, db: Session = Depends(database.get_db)):
+async def download_tiles(
+    tile_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
+):
     """Download the basemap tile archive for a project."""
     log.debug("Getting tile archive path from DB")
     tiles_path = (
@@ -1132,12 +1165,14 @@ async def download_tiles(tile_id: int, db: Session = Depends(database.get_db)):
 async def download_task_boundary_osm(
     project_id: int,
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
 ):
     """Downloads the boundary of a task as a OSM file.
 
     Args:
         project_id (int): The id of the project.
         db (Session): The database session, provided automatically.
+        current_user (AuthUser): Check if user is logged in.
 
     Returns:
         Response: The HTTP response object containing the downloaded file.
@@ -1209,6 +1244,7 @@ async def get_template_file(
     file_type: str = Query(
         ..., enum=["data_extracts", "form"], description="Choose file type"
     ),
+    current_user: AuthUser = Depends(login_required),
 ):
     """Get template file.
 
