@@ -62,7 +62,6 @@ class ODKCentralIn(BaseModel):
     @model_validator(mode="after")
     def all_odk_vars_together(self) -> Self:
         """Ensure if one ODK variable is set, then all are."""
-        log.warning(self.odk_central_url)
         if any(
             [
                 self.odk_central_url,

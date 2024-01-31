@@ -215,8 +215,8 @@ async def read_project(project_id: int, db: Session = Depends(database.get_db)):
 @router.delete("/{project_id}")
 async def delete_project(
     project: db_models.DbProject = Depends(project_deps.get_project_by_id),
-    db: Session = Depends(database.get_db),
     current_user: AuthUser = Depends(login_required),
+    db: Session = Depends(database.get_db),
 ):
     """Delete a project from both ODK Central and the local database."""
     log.info(
@@ -251,7 +251,10 @@ async def create_project(
     # Check if organisation exists
     org = await organisation_deps.check_org_exists(db, project_info.organisation_id)
 
-    log.debug(f"Creating project {project_info.project_info.name}")
+    log.info(
+        f"User {current_user.username} attempting creation of project "
+        f"{project_info.project_info.name}"
+    )
 
     # Must decrypt ODK password & connect to ODK Central before proj created
     if project_info.odk_central_url:
