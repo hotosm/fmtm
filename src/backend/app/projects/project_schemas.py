@@ -19,19 +19,20 @@
 
 import uuid
 from datetime import datetime
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 
 from dateutil import parser
 from fastapi import Form
 from geojson_pydantic import Feature as GeojsonFeature
 from loguru import logger as log
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 from pydantic.functional_serializers import field_serializer
 from pydantic.functional_validators import field_validator, model_validator
 from typing_extensions import Self
 
 from app.config import HttpUrlStr, decrypt_value, encrypt_value
 from app.db import db_models
+from app.db.postgis_utils import geometry_to_geojson
 from app.models.enums import ProjectPriority, ProjectStatus, TaskSplitType
 from app.tasks import tasks_schemas
 from app.users.user_schemas import User
@@ -248,17 +249,26 @@ class PaginatedProjectSummaries(BaseModel):
 class ProjectBase(BaseModel):
     """Base project model."""
 
+    outline: Any = Field(exclude=True)
+
     id: int
     odkid: int
     author: User
     project_info: ProjectInfo
     status: ProjectStatus
     # location_str: str
-    outline_geojson: Optional[GeojsonFeature] = None
     project_tasks: Optional[List[tasks_schemas.Task]]
     xform_title: Optional[str] = None
     hashtags: Optional[List[str]] = None
     organisation_id: Optional[int] = None
+
+    @computed_field
+    @property
+    def outline_geojson(self) -> Optional[GeojsonFeature]:
+        """Sanitise the organisation name for use in a URL."""
+        if not self.outline:
+            return None
+        return geometry_to_geojson(self.outline, {"id": self.id}, self.id)
 
 
 class ProjectOut(ProjectBase):
