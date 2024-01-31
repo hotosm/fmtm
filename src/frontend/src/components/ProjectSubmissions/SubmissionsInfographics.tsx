@@ -94,6 +94,9 @@ const SubmissionsInfographics = () => {
   const decodedId = environment.decode(encodedId);
 
   const submissionInfographicsData = CoreModules.useAppSelector((state) => state.submission.submissionInfographics);
+  const submissionInfographicsLoading = CoreModules.useAppSelector(
+    (state) => state.submission.submissionInfographicsLoading,
+  );
   const submissionContributorsData = CoreModules.useAppSelector((state) => state.submission.submissionContributors);
   const submissionContributorsLoading = CoreModules.useAppSelector(
     (state) => state.submission.submissionContributorsLoading,
@@ -162,7 +165,7 @@ const SubmissionsInfographics = () => {
             header="Form Submissions"
             subHeader={<FormSubmissionSubHeader />}
             body={
-              false ? (
+              submissionInfographicsLoading ? (
                 <CoreModules.Skeleton className="!fmtm-w-full fmtm-h-full" />
               ) : submissionInfographicsData.length > 0 ? (
                 <CustomBarChart
@@ -174,7 +177,7 @@ const SubmissionsInfographics = () => {
                 />
               ) : (
                 <div className="fmtm-w-full fmtm-h-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-text-3xl fmtm-text-gray-400">
-                  No data available!
+                  No form submissions!
                 </div>
               )
             }
@@ -206,7 +209,7 @@ const SubmissionsInfographics = () => {
             body={
               validatedVsMappedLoading ? (
                 <CoreModules.Skeleton className="!fmtm-w-full fmtm-h-full" />
-              ) : lineKeyData.length > 0 ? (
+              ) : validatedVsMappedInfographics.length > 0 ? (
                 <CustomLineChart
                   data={validatedVsMappedInfographics}
                   xAxisDataKey="date"
@@ -217,7 +220,7 @@ const SubmissionsInfographics = () => {
                 />
               ) : (
                 <div className="fmtm-w-full fmtm-h-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-text-3xl fmtm-text-gray-400">
-                  No data available!
+                  No tasks validated or mapped yet!
                 </div>
               )
             }

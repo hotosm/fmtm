@@ -44,8 +44,10 @@ export const ProjectSubmissionInfographicsService: Function = (url: string) => {
   return async (dispatch) => {
     const fetchProjectSubmission = async (url: string) => {
       try {
+        dispatch(SubmissionActions.SetSubmissionInfographicsLoading(true));
         const fetchSubmissionData = await CoreModules.axios.get(url);
         const resp: any = fetchSubmissionData.data;
+        dispatch(SubmissionActions.SetSubmissionInfographicsLoading(false));
         dispatch(SubmissionActions.SetSubmissionInfographics(resp));
       } catch (error) {}
     };
