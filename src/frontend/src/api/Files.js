@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import qrcodeGenerator from 'qrcode-generator';
+import { deflate } from 'pako/lib/deflate.js';
 
 export const ProjectFilesById = (odkToken, projectName, osmUser, taskId) => {
   const [qrcode, setQrcode] = useState('');
@@ -26,7 +27,8 @@ export const ProjectFilesById = (odkToken, projectName, osmUser, taskId) => {
       // Note: error correction level = "L"
       const code = qrcodeGenerator(0, 'L');
       // Note: btoa base64 encodes the JSON string
-      code.addData(btoa(odkCollectJson));
+      // Note: pako.deflate zlib encodes to content
+      code.addData(btoa(deflate(odkCollectJson, { to: 'string' })));
       code.make();
 
       // Note: cell size = 3, margin = 5
