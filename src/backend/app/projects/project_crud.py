@@ -677,6 +677,8 @@ async def get_data_extract_url(
     fgb_url = result.json().get("result", {}).get("download_url", None)
 
     if not fgb_url:
+        log.error("Could not get download URL for data extract. Did the API change?")
+        log.error(f"To debug: {task_url}")
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
             detail="Could not get download URL for data extract. Did the API change?",
