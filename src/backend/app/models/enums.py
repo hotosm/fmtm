@@ -15,16 +15,43 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
+"""Enum definitions to translate values into human enum strings."""
 
 from enum import Enum
 
 
 class StrEnum(str, Enum):
+    """Wrapper for string enums, until Python 3.11 upgrade."""
+
     pass
 
 
 class IntEnum(int, Enum):
+    """Wrapper for string enums, until Python 3.11 upgrade."""
+
     pass
+
+
+class HTTPStatus(IntEnum):
+    """All HTTP status codes used in endpoints."""
+
+    # Success
+    OK = 200
+    CREATED = 201
+    ACCEPTED = 202
+    NO_CONTENT = 204
+
+    # Client Error
+    BAD_REQUEST = 400
+    UNAUTHORIZED = 401
+    FORBIDDEN = 403
+    NOT_FOUND = 404
+    CONFLICT = 409
+    UNPROCESSABLE_ENTITY = 422
+
+    # Server Error
+    INTERNAL_SERVER_ERROR = 500
+    NOT_IMPLEMENTED = 501
 
 
 class TeamVisibility(IntEnum, Enum):
@@ -60,14 +87,35 @@ class ProjectPriority(IntEnum, Enum):
 
 
 class UserRole(IntEnum, Enum):
-    """Describes the role a user can be assigned, app doesn't support multiple roles."""
+    """Available roles assigned to a user site-wide in FMTM.
 
+    Can be used for global user permissions:
+        - READ_ONLY = write access blocked (i.e. banned)
+        - MAPPER = default for all
+        - ADMIN = super admin with access to everything
+    """
+
+    READ_ONLY = -1
     MAPPER = 0
     ADMIN = 1
-    VALIDATOR = 2
-    FIELD_ADMIN = 3
-    ORGANIZATION_ADMIN = 4
-    READ_ONLY = 5
+
+
+class ProjectRole(IntEnum, Enum):
+    """Available roles assigned to a user for a specific project.
+
+    All roles must be assigned by someone higher in the hierarchy:
+        - MAPPER = default for all
+        - VALIDATOR = can validate the mappers output
+        - FIELD_MANAGER = can invite mappers and organise people
+        - ASSOCIATE_PROJECT_MANAGER = helps the project manager, cannot delete project
+        - PROJECT_MANAGER = has all permissions to manage a project, including delete
+    """
+
+    MAPPER = 0
+    VALIDATOR = 1
+    FIELD_MANAGER = 2
+    ASSOCIATE_PROJECT_MANAGER = 3
+    PROJECT_MANAGER = 4
 
 
 class MappingLevel(IntEnum, Enum):
@@ -96,14 +144,6 @@ class ValidationPermission(IntEnum, Enum):
     TEAMS_LEVEL = 3
 
 
-class TaskCreationMode(IntEnum, Enum):
-    """Enum to describe task creation mode."""
-
-    GRID = 0
-    ROADS = 1
-    UPLOAD = 2
-
-
 class TaskStatus(IntEnum, Enum):
     """Enum describing available Task Statuses."""
 
@@ -119,6 +159,7 @@ class TaskStatus(IntEnum, Enum):
 
 
 def verify_valid_status_update(old_status: TaskStatus, new_status: TaskStatus):
+    """Verify the status update is valid, inferred from previous state."""
     if old_status is TaskStatus.READY:
         return new_status in [
             TaskStatus.LOCKED_FOR_MAPPING,
@@ -154,7 +195,7 @@ def verify_valid_status_update(old_status: TaskStatus, new_status: TaskStatus):
 
 
 class TaskAction(IntEnum, Enum):
-    """Describes the possible actions that can happen to to a task, that we'll record history for."""
+    """All possible task actions, recorded in task history."""
 
     RELEASED_FOR_MAPPING = 0
     LOCKED_FOR_MAPPING = 1
@@ -169,6 +210,7 @@ class TaskAction(IntEnum, Enum):
 
 
 def is_status_change_action(task_action):
+    """Check if action is a valid status change type."""
     return task_action in [
         TaskAction.RELEASED_FOR_MAPPING,
         TaskAction.LOCKED_FOR_MAPPING,
@@ -182,6 +224,7 @@ def is_status_change_action(task_action):
 
 
 def get_action_for_status_change(task_status: TaskStatus):
+    """Update task action inferred from previous state."""
     return TaskAction.RELEASED_FOR_MAPPING
     # match task_status:
     #     case TaskStatus.READY:
@@ -201,12 +244,16 @@ def get_action_for_status_change(task_status: TaskStatus):
 
 
 class TaskType(IntEnum, Enum):
+    """Task type."""
+
     BUILDINGS = 0
     AMENITIES = 1
     OTHER = 2
 
 
 class ProjectSplitStrategy(IntEnum, Enum):
+    """Task splitting type."""
+
     GRID = 0
     OSM_VECTORS = 1
     OTHER = 2
@@ -231,3 +278,11 @@ class TaskSplitType(IntEnum, Enum):
     DIVIDE_ON_SQUARE = 0
     CHOOSE_AREA_AS_TASK = 1
     TASK_SPLITTING_ALGORITHM = 2
+
+
+class ProjectVisibility(IntEnum, Enum):
+    """Enum describing task splitting type."""
+
+    PUBLIC = 0
+    PRIVATE = 1
+    INVITE_ONLY = 2

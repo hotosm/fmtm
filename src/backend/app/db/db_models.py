@@ -43,15 +43,18 @@ from sqlalchemy.orm import (  # , declarative_base  # , declarative_base
     relationship,
 )
 
+from app.db.database import Base, FmtmMetadata
+from app.db.postgis_utils import timestamp
 from app.models.enums import (
     BackgroundTaskStatus,
     MappingLevel,
     MappingPermission,
     OrganisationType,
     ProjectPriority,
+    ProjectRole,
     ProjectStatus,
+    ProjectVisibility,
     TaskAction,
-    TaskCreationMode,
     TaskSplitType,
     TaskStatus,
     TeamVisibility,
@@ -59,8 +62,21 @@ from app.models.enums import (
     ValidationPermission,
 )
 
-from .database import Base, FmtmMetadata
-from .postgis_utils import timestamp
+
+class DbUserRoles(Base):
+    """Fine grained user access for projects, described by roles."""
+
+    __tablename__ = "user_roles"
+
+    # Table has composite PK on (user_id and project_id)
+    user_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
+    project_id = Column(
+        Integer,
+        ForeignKey("projects.id"),
+        index=True,
+        primary_key=True,
+    )
+    role = Column(Enum(ProjectRole), default=UserRole.MAPPER)
 
 
 class DbUser(Base):
@@ -72,6 +88,9 @@ class DbUser(Base):
     username = Column(String, unique=True)
     profile_img = Column(String)
     role = Column(Enum(UserRole), default=UserRole.MAPPER)
+    project_roles = relationship(
+        DbUserRoles, backref="user_roles_link", cascade="all, delete, delete-orphan"
+    )
 
     name = Column(String)
     city = Column(String)
@@ -128,7 +147,12 @@ class DbOrganisation(Base):
     description = Column(String)
     url = Column(String)
     type = Column(Enum(OrganisationType), default=OrganisationType.FREE, nullable=False)
-    # subscription_tier = Column(Integer)
+    approved = Column(Boolean, default=False)
+
+    ## Odk central server
+    odk_central_url = Column(String)
+    odk_central_user = Column(String)
+    odk_central_password = Column(String)
 
     managers = relationship(
         DbUser,
@@ -157,16 +181,6 @@ class DbTeam(Base):
         Enum(TeamVisibility), default=TeamVisibility.PUBLIC, nullable=False
     )
     organisation = relationship(DbOrganisation, backref="teams")
-
-
-# Secondary table defining many-to-many join for
-# private projects that only defined users can map on
-project_allowed_users = Table(
-    "project_allowed_users",
-    FmtmMetadata,
-    Column("project_id", Integer, ForeignKey("projects.id")),
-    Column("user_id", BigInteger, ForeignKey("users.id")),
-)
 
 
 class DbProjectTeams(Base):
@@ -336,16 +350,6 @@ class DbTaskHistory(Base):
     )
 
 
-class DbQrCode(Base):
-    """QR Code."""
-
-    __tablename__ = "qr_code"
-
-    id = Column(Integer, primary_key=True)
-    filename = Column(String)
-    image = Column(LargeBinary)
-
-
 class DbTask(Base):
     """Describes an individual mapping Task."""
 
@@ -371,13 +375,9 @@ class DbTask(Base):
     validated_by = Column(
         BigInteger, ForeignKey("users.id", name="fk_users_validator"), index=True
     )
+    odk_token = Column(String, nullable=True)
 
     # Mapped objects
-    qr_code_id = Column(Integer, ForeignKey("qr_code.id"), index=True)
-    qr_code = relationship(
-        DbQrCode, cascade="all, delete, delete-orphan", single_parent=True
-    )
-
     task_history = relationship(
         DbTaskHistory, cascade="all", order_by=desc(DbTaskHistory.action_date)
     )
@@ -413,9 +413,8 @@ class DbProject(Base):
     )
     author = relationship(DbUser, uselist=False, backref="user")
     created = Column(DateTime, default=timestamp, nullable=False)
-    task_creation_mode = Column(
-        Enum(TaskCreationMode), default=TaskCreationMode.UPLOAD, nullable=False
-    )
+
+    task_split_type = Column(Enum(TaskSplitType), nullable=True)
     # split_strategy = Column(Integer)
     # grid_meters = Column(Integer)
     # task_type = Column(Integer)
@@ -435,15 +434,23 @@ class DbProject(Base):
     # GEOMETRY
     outline = Column(Geometry("POLYGON", srid=4326))
     # geometry = Column(Geometry("POLYGON", srid=4326, from_text='ST_GeomFromWkt'))
-    # TODO add outline_geojson as computed @property
+    centroid = Column(Geometry("POINT", srid=4326))
 
     # PROJECT STATUS
     last_updated = Column(DateTime, default=timestamp)
     status = Column(Enum(ProjectStatus), default=ProjectStatus.DRAFT, nullable=False)
+    visibility = Column(
+        Enum(ProjectVisibility), default=ProjectVisibility.PUBLIC, nullable=False
+    )
     total_tasks = Column(Integer)
     # tasks_mapped = Column(Integer, default=0, nullable=False)
     # tasks_validated = Column(Integer, default=0, nullable=False)
     # tasks_bad_imagery = Column(Integer, default=0, nullable=False)
+
+    # Roles
+    roles = relationship(
+        DbUserRoles, backref="project_roles_link", cascade="all, delete, delete-orphan"
+    )
 
     # TASKS
     tasks = relationship(
@@ -484,9 +491,6 @@ class DbProject(Base):
         )
 
     # XFORM DETAILS
-    # TODO This field was probably replaced by odk_central_url
-    # TODO remove in a migration
-    odk_central_src = Column(String, default="")
     xform_title = Column(String, ForeignKey("xlsforms.title", name="fk_xform"))
     xform = relationship(DbXForm)
 
@@ -495,10 +499,6 @@ class DbProject(Base):
         {},
     )
 
-    ## ---------------------------------------------- ##
-    # FOR REFERENCE: OTHER ATTRIBUTES IN TASKING MANAGER
-    # PROJECT ACCESS
-    private = Column(Boolean, default=False)  # Only allowed users can validate
     mapper_level = Column(
         Enum(MappingLevel),
         default=MappingLevel.INTERMEDIATE,
@@ -513,31 +513,13 @@ class DbProject(Base):
     validation_permission = Column(
         Enum(ValidationPermission), default=ValidationPermission.LEVEL
     )  # Means only users with validator role can validate
-    allowed_users = relationship(DbUser, secondary=project_allowed_users)
     organisation_id = Column(
         Integer,
         ForeignKey("organisations.id", name="fk_organisations"),
         index=True,
     )
     organisation = relationship(DbOrganisation, backref="projects")
-    # PROJECT DETAILS
-    due_date = Column(DateTime)
     changeset_comment = Column(String)
-    osmcha_filter_id = Column(
-        String
-    )  # Optional custom filter id for filtering on OSMCha
-    imagery = Column(String)
-    osm_preset = Column(String)
-    odk_preset = Column(String)
-    josm_preset = Column(String)
-    id_presets = Column(ARRAY(String))
-    extra_id_params = Column(String)
-    license_id = Column(Integer, ForeignKey("licenses.id", name="fk_licenses"))
-    # GEOMETRY
-    centroid = Column(Geometry("POINT", srid=4326))
-    # country = Column(ARRAY(String), default=[])
-    # FEEDBACK
-    project_chat = relationship(DbProjectChat, lazy="dynamic", cascade="all")
 
     ## Odk central server
     odk_central_url = Column(String)
@@ -557,6 +539,24 @@ class DbProject(Base):
     task_num_buildings = Column(SmallInteger, nullable=True)
 
     hashtags = Column(ARRAY(String))  # Project hashtag
+
+    ## ---------------------------------------------- ##
+    # FOR REFERENCE: OTHER ATTRIBUTES IN TASKING MANAGER
+    imagery = Column(String)
+    osm_preset = Column(String)
+    odk_preset = Column(String)
+    josm_preset = Column(String)
+    id_presets = Column(ARRAY(String))
+    extra_id_params = Column(String)
+    license_id = Column(Integer, ForeignKey("licenses.id", name="fk_licenses"))
+    # GEOMETRY
+    # country = Column(ARRAY(String), default=[])
+    # FEEDBACK
+    project_chat = relationship(DbProjectChat, lazy="dynamic", cascade="all")
+    osmcha_filter_id = Column(
+        String
+    )  # Optional custom filter id for filtering on OSMCha
+    due_date = Column(DateTime)
 
 
 # TODO: Add index on project geometry, tried to add in __table args__
@@ -621,20 +621,6 @@ class BackgroundTasks(Base):
     project_id = Column(Integer, nullable=True)
     status = Column(Enum(BackgroundTaskStatus), nullable=False)
     message = Column(String)
-
-
-class DbUserRoles(Base):
-    """Fine grained user control for projects, described by roles."""
-
-    __tablename__ = "user_roles"
-
-    user_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
-    user = relationship(DbUser, backref="user_roles")
-    organization_id = Column(Integer, ForeignKey("organisations.id"))
-    organization = relationship(DbOrganisation, backref="user_roles")
-    project_id = Column(Integer, ForeignKey("projects.id"))
-    project = relationship(DbProject, backref="user_roles")
-    role = Column(Enum(UserRole), nullable=False)
 
 
 class DbTilesPath(Base):

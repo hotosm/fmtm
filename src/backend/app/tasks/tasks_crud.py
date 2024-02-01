@@ -15,10 +15,12 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
-import base64
-from typing import List
+"""Logic for FMTM tasks."""
 
-from fastapi import HTTPException, Depends
+from datetime import datetime, timedelta
+from typing import List, Optional
+
+from fastapi import Depends, HTTPException
 from geoalchemy2.shape import from_shape
 from geojson import dump
 from loguru import logger as log
@@ -27,19 +29,20 @@ from shapely.geometry import shape
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
-from app.tasks import tasks_schemas
 from app.central import central_crud
-from app.db import db_models, database
+from app.db import database, db_models
 from app.models.enums import (
     TaskStatus,
     get_action_for_status_change,
     verify_valid_status_update,
 )
 from app.projects import project_crud
+from app.tasks import tasks_schemas
 from app.users import user_crud
 
 
 async def get_task_count_in_project(db: Session, project_id: int):
+    """Get task count for a project."""
     query = text(f"""select count(*) from tasks where project_id = {project_id}""")
     result = db.execute(query)
     return result.fetchone()[0]
@@ -66,6 +69,7 @@ async def get_task_id_list(db: Session, project_id: int) -> list[int]:
 async def get_tasks(
     db: Session, project_id: int, user_id: int, skip: int = 0, limit: int = 1000
 ):
+    """Get task details for a project."""
     if project_id:
         db_tasks = (
             db.query(db_models.DbTask)
@@ -87,13 +91,16 @@ async def get_tasks(
     return db_tasks
 
 
-async def get_task(db: Session, task_id: int):
+async def get_task(db: Session, task_id: int) -> db_models.DbTask:
+    """Get details for a specific task ID."""
+    log.debug(f"Getting task with ID '{task_id}' from database")
     return db.query(db_models.DbTask).filter(db_models.DbTask.id == task_id).first()
 
 
 async def update_task_status(
     db: Session, user_id: int, task_id: int, new_status: TaskStatus
 ):
+    """Update the status of a task."""
     log.debug(f"Updating task ID {task_id} to status {new_status}")
     if not user_id:
         log.error(f"User id is not present: {user_id}")
@@ -121,7 +128,7 @@ async def update_task_status(
                 )
                 log.error(msg)
                 raise HTTPException(
-                    status_code=401,
+                    status_code=403,
                     detail=msg,
                 )
 
@@ -163,7 +170,10 @@ async def update_task_status(
     else:
         raise HTTPException(
             status_code=400,
-            detail=f"Not a valid status update: {db_task.task_status.name} to {new_status.name}",
+            detail=(
+                f"Not a valid status update: "
+                f"{db_task.task_status.name} to {new_status.name}"
+            ),
         )
 
 
@@ -175,7 +185,11 @@ async def update_task_status(
 async def create_task_history_for_status_change(
     db_task: db_models.DbTask, new_status: TaskStatus, db_user: db_models.DbUser
 ):
-    msg = f"Status changed from {db_task.task_status.name} to {new_status.name} by: {db_user.username}"
+    """Append task status change to task history."""
+    msg = (
+        f"Status changed from {db_task.task_status.name} "
+        f"to {new_status.name} by: {db_user.username}"
+    )
     log.info(msg)
 
     new_task_history = db_models.DbTaskHistory(
@@ -207,29 +221,6 @@ async def create_task_history_for_status_change(
 # TODO: write tests for these
 
 
-async def get_qr_codes_for_task(
-    db: Session,
-    task_id: int,
-):
-    task = await get_task(db=db, task_id=task_id)
-    if task:
-        if task.qr_code:
-            log.debug(f"QR code found for task ID {task.id}. Converting to base64")
-            qr_code = base64.b64encode(task.qr_code.image)
-        else:
-            log.debug(f"QR code not found for task ID {task.id}.")
-            qr_code = None
-        return {"id": task_id, "qr_code": qr_code}
-    else:
-        raise HTTPException(status_code=400, detail="Task does not exist")
-
-
-async def get_task_by_id(db: Session, task_id: int):
-    task = db.query(db_models.DbTask).filter(db_models.DbTask.id == task_id).first()
-    print("Task ", task)
-    return task
-
-
 async def update_task_files(
     db: Session,
     project_id: int,
@@ -239,6 +230,7 @@ async def update_task_files(
     category: str,
     task_boundary: str,
 ):
+    """Update associated files for a task."""
     # This file will store osm extracts
     task_polygons = f"/tmp/{project_name}_{category}_{task_id}.geojson"
 
@@ -268,7 +260,8 @@ async def update_task_files(
 
     # Collect feature mappings for bulk insert
     for feature in outline_geojson["features"]:
-        # If the osm extracts contents do not have a title, provide an empty text for that.
+        # If the osm extracts contents do not have a title,
+        # provide an empty text for that
         feature["properties"]["title"] = ""
 
         feature_shape = shape(feature["geometry"])
@@ -284,7 +277,8 @@ async def update_task_files(
         db.add(db_feature)
         db.commit()
 
-    # Update task_polygons file containing osm extracts with the new geojson contents containing title in the properties.
+    # Update task_polygons file containing osm extracts with the new
+    # geojson contents containing title in the properties.
     with open(task_polygons, "w") as jsonfile:
         jsonfile.truncate(0)  # clear the contents of the file
         dump(updated_outline_geojson, jsonfile)
@@ -300,7 +294,7 @@ async def edit_task_boundary(db: Session, task_id: int, boundary: str):
     geometry = boundary["features"][0]["geometry"]
     outline = shape(geometry)
 
-    task = await get_task_by_id(db, task_id)
+    task = await get_task(db, task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
@@ -321,13 +315,19 @@ async def edit_task_boundary(db: Session, task_id: int, boundary: str):
     return True
 
 
-async def update_task_history(tasks: List[tasks_schemas.TaskBase], db: Session = Depends(database.get_db)):
+async def update_task_history(
+    tasks: List[tasks_schemas.Task], db: Session = Depends(database.get_db)
+):
+    """Update task history with username and user profile image."""
+
     def process_history_entry(history_entry):
         status = history_entry.action_text.split()
         history_entry.status = status[5]
 
         if history_entry.user_id:
-            user = db.query(db_models.DbUser).filter_by(id=history_entry.user_id).first()
+            user = (
+                db.query(db_models.DbUser).filter_by(id=history_entry.user_id).first()
+            )
             if user:
                 history_entry.username = user.username
                 history_entry.profile_img = user.profile_img
@@ -339,3 +339,77 @@ async def update_task_history(tasks: List[tasks_schemas.TaskBase], db: Session =
                 process_history_entry(history_entry)
 
     return tasks
+
+
+def get_task_history(
+    project_id: int,
+    end_date: Optional[datetime],
+    db: Session,
+) -> list[db_models.DbTaskHistory]:
+    """Retrieves the task history records for a specific project.
+
+    Args:
+        project_id: The ID of the project.
+        end_date: The end date of the task history
+        records to retrieve (optional).
+        db: The database session.
+
+    Returns:
+        A list of task history records for the specified project.
+    """
+    query = db.query(db_models.DbTaskHistory).filter(
+        db_models.DbTaskHistory.project_id == project_id
+    )
+
+    if end_date:
+        query = query.filter(db_models.DbTaskHistory.action_date >= end_date)
+
+    return query.all()
+
+
+async def count_validated_and_mapped_tasks(
+    task_history: list[db_models.DbTaskHistory], end_date: datetime
+) -> list[tasks_schemas.TaskHistoryCount]:
+    """Counts the number of validated and mapped tasks.
+
+    Args:
+        task_history: The task history records to count.
+        end_date: The end date of the date range.
+
+    Returns:
+        A list of dictionaries with following keys:
+        - 'date': The date in the format 'MM/DD'.
+        - 'validated': The cumulative count of validated tasks.
+        - 'mapped': The cumulative count of mapped tasks.
+    """
+    cumulative_counts = {}
+    results = []
+
+    current_date = end_date
+    while current_date <= datetime.now():
+        date_str = current_date.strftime("%m/%d")
+        cumulative_counts = {"date": date_str, "validated": 0, "mapped": 0}
+        results.append(cumulative_counts)
+        current_date += timedelta(days=1)
+
+    # Populate cumulative_counts with counts from task_history
+    for result in task_history:
+        task_status = result.action_text.split()[5]
+        date_str = result.action_date.strftime("%m/%d")
+        entry = next((entry for entry in results if entry["date"] == date_str), None)
+
+        if entry:
+            if task_status == "VALIDATED":
+                entry["validated"] += 1
+            elif task_status == "MAPPED":
+                entry["mapped"] += 1
+
+    total_validated = 0
+    total_mapped = 0
+
+    for entry in results:
+        total_validated += entry["validated"]
+        total_mapped += entry["mapped"]
+        entry.update({"validated": total_validated, "mapped": total_mapped})
+
+    return results

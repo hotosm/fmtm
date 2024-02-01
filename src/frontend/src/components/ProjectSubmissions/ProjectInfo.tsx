@@ -1,5 +1,5 @@
 import React from 'react';
-import CoreModules from '../../shared/CoreModules';
+import CoreModules from '@/shared/CoreModules';
 
 const ProjectInfo = () => {
   const projectInfo = CoreModules.useAppSelector((state) => state.project.projectInfo);

@@ -1,13 +1,14 @@
 {
   "name": "fmtm",
-  "version": "0.1.0",
+  "version": "2024.0.0",
   "scripts": {
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "build:start": "cd dist && PORT=8080 npx serve",
     "start": "env-cmd -f .env.dev vite dev",
     "start:live": "vite dev",
-    "test": "vitest tests/"
+    "test": "vitest tests/",
+    "lint": "eslint --fix --ext .js,.jsx,.ts,.tsx src"
   },
   "license": "GPL-3.0-only",
   "author": {
@@ -74,6 +75,7 @@
     "lucide-react": "^0.276.0",
     "mini-css-extract-plugin": "^2.7.5",
     "ol-ext": "^4.0.11",
+    "qrcode-generator": "^1.4.4",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-lazy-load-image-component": "^1.5.6",

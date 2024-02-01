@@ -48,6 +48,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -68,10 +69,10 @@ import {
 import { Provider } from 'react-redux';
 import { createSlice, configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
 import { combineReducers } from 'redux';
-import LoadingBar from '../components/createproject/LoadingBar';
-import { TaskActions } from '../store/slices/TaskSlice';
-import { useAppDispatch, useAppSelector } from '../types/reduxTypes';
-import CustomizedModal from '../utilities/CustomizedModal';
+import LoadingBar from '@/components/createproject/LoadingBar';
+import { TaskActions } from '@/store/slices/TaskSlice';
+import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
+import CustomizedModal from '@/utilities/CustomizedModal';
 
 export default {
   Provider,
@@ -151,4 +152,5 @@ export default {
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
 };

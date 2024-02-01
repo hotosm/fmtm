@@ -40,21 +40,22 @@ from loguru import logger as log
 from osm_fieldwork.make_data_extract import getChoices
 from osm_fieldwork.xlsforms import xlsforms_path
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import text
 
 from app.auth.osm import AuthUser, login_required
-from app.submission import submission_crud
-
-from ..central import central_crud
-from ..db import database, db_models
-from ..models.enums import TILES_FORMATS, TILES_SOURCE
-from ..tasks import tasks_crud
-from . import project_crud, project_schemas
-from .project_crud import check_crs
+from app.central import central_crud
+from app.db import database, db_models
+from app.models.enums import TILES_FORMATS, TILES_SOURCE, HTTPStatus
+from app.organisations import organisation_deps
+from app.projects import project_crud, project_deps, project_schemas
+from app.projects.project_crud import check_crs
+from app.static import data_path
+from app.submissions import submission_crud
+from app.tasks import tasks_crud
 
 router = APIRouter(
     prefix="/projects",
     tags=["projects"],
-    dependencies=[Depends(database.get_db)],
     responses={404: {"description": "Not found"}},
 )
 
@@ -66,6 +67,7 @@ async def read_projects(
     limit: int = 100,
     db: Session = Depends(database.get_db),
 ):
+    """Return all projects."""
     project_count, projects = await project_crud.get_projects(db, user_id, skip, limit)
     return projects
 
@@ -117,6 +119,10 @@ async def get_projet_details(project_id: int, db: Session = Depends(database.get
 
 @router.post("/near_me", response_model=list[project_schemas.ProjectSummary])
 async def get_tasks_near_me(lat: float, long: float, user_id: int = None):
+    """Get projects near me.
+
+    TODO to be implemented in future.
+    """
     return [project_schemas.ProjectSummary()]
 
 
@@ -128,6 +134,7 @@ async def read_project_summaries(
     results_per_page: int = Query(13, le=100),
     db: Session = Depends(database.get_db),
 ):
+    """Get a paginated summary of projects."""
     if hashtags:
         hashtags = hashtags.split(",")  # create list of hashtags
         hashtags = list(
@@ -167,6 +174,7 @@ async def search_project(
     results_per_page: int = Query(13, le=100),
     db: Session = Depends(database.get_db),
 ):
+    """Search projects by string, hashtag, or other criteria."""
     if hashtags:
         hashtags = hashtags.split(",")  # create list of hashtags
         hashtags = list(
@@ -197,40 +205,36 @@ async def search_project(
 
 @router.get("/{project_id}", response_model=project_schemas.ReadProject)
 async def read_project(project_id: int, db: Session = Depends(database.get_db)):
+    """Get a specific project by ID."""
     project = await project_crud.get_project_by_id(db, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     return project
 
 
-@router.delete("/delete/{project_id}")
+@router.delete("/{project_id}")
 async def delete_project(
-    project_id: int,
+    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
     db: Session = Depends(database.get_db),
-    user_data: AuthUser = Depends(login_required),
+    current_user: AuthUser = Depends(login_required),
 ):
-    """Delete a project from ODK Central and the local database."""
-    # FIXME: should check for error
-
-    project = await project_crud.get_project(db, project_id)
-
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-
+    """Delete a project from both ODK Central and the local database."""
+    log.info(
+        f"User {current_user.username} attempting deletion of project {project.id}"
+    )
     # Odk crendentials
     odk_credentials = project_schemas.ODKCentral(
         odk_central_url=project.odk_central_url,
         odk_central_user=project.odk_central_user,
         odk_central_password=project.odk_central_password,
     )
-
+    # Delete ODK Central project
     await central_crud.delete_odk_project(project.odkid, odk_credentials)
+    # Delete FMTM project
+    await project_crud.delete_one_project(db, project)
 
-    deleted_project = await project_crud.delete_project_by_id(db, project_id)
-    if deleted_project:
-        return deleted_project
-    else:
-        raise HTTPException(status_code=404, detail="Project not found")
+    log.info(f"Deletion of project {project.id} successful")
+    return Response(status_code=HTTPStatus.NO_CONTENT)
 
 
 @router.post("/create_project", response_model=project_schemas.ProjectOut)
@@ -238,20 +242,17 @@ async def create_project(
     project_info: project_schemas.ProjectUpload,
     db: Session = Depends(database.get_db),
 ):
-    """Create a project in ODK Central and the local database."""
-    log.debug(f"Creating project {project_info.project_info.name}")
+    """Create a project in ODK Central and the local database.
 
-    if project_info.odk_central.odk_central_url.endswith("/"):
-        project_info.odk_central.odk_central_url = (
-            project_info.odk_central.odk_central_url[:-1]
-        )
+    TODO refactor to standard REST POST to /projects
+    TODO but first check doesn't break other endpoints
+    """
+    log.debug(f"Creating project {project_info.project_info.name}")
 
     odkproject = central_crud.create_odk_project(
         project_info.project_info.name, project_info.odk_central
     )
 
-    # TODO check token against user or use token instead of passing user
-    # project_info.project_name_prefix = project_info.project_info.name
     project = await project_crud.create_project_with_project_info(
         db, project_info, odkproject["id"]
     )
@@ -259,28 +260,6 @@ async def create_project(
         raise HTTPException(status_code=404, detail="Project creation failed")
 
     return project
-
-
-@router.post("/update_odk_credentials")
-async def update_odk_credentials(
-    odk_central_cred: project_schemas.ODKCentral,
-    project_id: int,
-    db: Session = Depends(database.get_db),
-):
-    """Update odk credential of a project."""
-    if odk_central_cred.odk_central_url.endswith("/"):
-        odk_central_cred.odk_central_url = odk_central_cred.odk_central_url[:-1]
-
-    project = await project_crud.get_project(db, project_id)
-
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-
-    await project_crud.update_odk_credentials_in_db(
-        project, odk_central_cred, odkproject["id"], db
-    )
-
-    return JSONResponse(status_code=200, content={"success": True})
 
 
 @router.put("/{id}", response_model=project_schemas.ProjectOut)
@@ -346,9 +325,11 @@ async def upload_custom_xls(
     db: Session = Depends(database.get_db),
 ):
     """Upload a custom XLSForm to the database.
-    Parameters:
-    - upload: the XLSForm file
-    - category: the category of the XLSForm.
+
+    Args:
+        upload (UploadFile): the XLSForm file
+        category (str): the category of the XLSForm.
+        db (Session): the DB session, provided automatically.
     """
     content = await upload.read()  # read file content
     name = upload.filename.split(".")[0]  # get name of file without extension
@@ -358,26 +339,24 @@ async def upload_custom_xls(
     return {"xform_title": f"{category}"}
 
 
-@router.post("/{project_id}/upload_multi_polygon")
-async def upload_multi_project_boundary(
+@router.post("/{project_id}/custom_task_boundaries")
+async def upload_custom_task_boundaries(
     project_id: int,
     project_geojson: UploadFile = File(...),
     db: Session = Depends(database.get_db),
 ):
-    """This API allows for the uploading of a multi-polygon project boundary
-        in JSON format for a specified project ID. Each polygon in the uploaded geojson are made a single task.
+    """Set project task boundaries manually using multi-polygon GeoJSON.
+
+    Each polygon in the uploaded geojson are made a single task.
 
     Required Parameters:
-    project_id: ID of the project to which the boundary is being uploaded.
-    project_geojson: a file upload containing the multi-polygon boundary in geojson format.
+        project_id (id): ID for associated project.
+        project_geojson (UploadFile): Multi-polygon GeoJSON file.
 
     Returns:
-    A success message indicating that the boundary was successfully uploaded.
-    If the project ID does not exist in the database, an HTTP 428 error is raised.
+        dict: JSON containing success message, project ID, and number of tasks.
     """
-    log.debug(
-        "Uploading project boundary multipolygon for " f"project ID: {project_id}"
-    )
+    log.debug(f"Uploading project boundary multipolygon for project ID: {project_id}")
     # read entire file
     content = await project_geojson.read()
     boundary = json.loads(content)
@@ -434,6 +413,7 @@ async def task_split(
 
     # read data extract
     parsed_extract = geojson.loads(await extract_geojson.read())
+
     check_crs(parsed_extract)
 
     return await project_crud.split_geojson_into_tasks(
@@ -453,14 +433,14 @@ async def upload_project_boundary(
 ):
     """Uploads the project boundary. The boundary is uploaded as a geojson file.
 
-    Params:
-    - project_id (int): The ID of the project to update.
-    - boundary_geojson (UploadFile): The boundary file to upload.
-    - dimension (int): The new dimension of the project.
-    - db (Session): The database session to use.
+    Args:
+        project_id (int): The ID of the project to update.
+        boundary_geojson (UploadFile): The boundary file to upload.
+        dimension (int): The new dimension of the project.
+        db (Session): The database session to use.
 
     Returns:
-    - Dict: A dictionary with a message, the project ID, and the number of tasks in the project.
+        dict: JSON with message, project ID, and task count for project.
     """
     # Validating for .geojson File.
     file_name = os.path.splitext(boundary_geojson.filename)
@@ -502,6 +482,7 @@ async def edit_project_boundary(
     dimension: int = Form(500),
     db: Session = Depends(database.get_db),
 ):
+    """Edit the existing project boundary."""
     # Validating for .geojson File.
     file_name = os.path.splitext(boundary_geojson.filename)
     file_ext = file_name[1]
@@ -563,23 +544,30 @@ async def generate_files(
     xls_form_config_file: Optional[UploadFile] = File(None),
     data_extracts: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
+    # current_user: AuthUser = Depends(login_required),
 ):
-    """Generate additional content for the project to function.
+    """Generate additional content to initialise the project.
 
-    QR codes,
+    Boundary, ODK Central forms, QR codes, etc.
 
     Accepts a project ID, category, custom form flag, and an uploaded file as inputs.
     The generated files are associated with the project ID and stored in the database.
-    This api generates qr_code, forms. This api also creates an app user for each task and provides the required roles.
-    Some of the other functionality of this api includes converting a xls file provided by the user to the xform,
-    generates osm data extracts and uploads it to the form.
+    This api generates odk appuser tokens, forms. This api also creates an app user for
+    each task and provides the required roles.
+    Some of the other functionality of this api includes converting a xls file
+    provided by the user to the xform, generates osm data extracts and uploads
+    it to the form.
 
     Args:
+        background_tasks (BackgroundTasks): FastAPI bg tasks, provided automatically.
         project_id (int): The ID of the project for which files are being generated.
-        polygon (bool): A boolean flag indicating whether the polygon
+        extract_polygon (bool): A boolean flag indicating whether the polygon
             is extracted or not.
         xls_form_upload (UploadFile, optional): A custom XLSForm to use in the project.
             A file should be provided if user wants to upload a custom xls form.
+        xls_form_config_file (UploadFile, optional): The config YAML for the XLS form.
+        data_extracts (UploadFile, optional): Custom data extract GeoJSON.
+        db (Session): Database session, provided automatically.
 
     Returns:
         json (JSONResponse): A success message containing the project ID.
@@ -668,6 +656,7 @@ async def update_project_form(
     form: Optional[UploadFile],
     db: Session = Depends(database.get_db),
 ):
+    """Update XLSForm for a project."""
     file_name = os.path.splitext(form.filename)
     file_ext = file_name[1]
     allowed_extensions = [".xls"]
@@ -676,7 +665,10 @@ async def update_project_form(
     contents = await form.read()
 
     form_updated = await project_crud.update_project_form(
-        db, project_id, contents, file_ext[1:]  # Form Contents  # File type
+        db,
+        project_id,
+        contents,
+        file_ext[1:],  # Form Contents  # File type
     )
 
     return form_updated
@@ -695,6 +687,7 @@ async def get_project_features(
     Args:
         project_id (int): The project id.
         task_id (int): The task id.
+        db (Session): the DB session, provided automatically.
 
     Returns:
         feature(json): JSON object containing a list of features
@@ -710,9 +703,11 @@ async def generate_log(
     r"""Get the contents of a log file in a log format.
 
     ### Response
-    - **200 OK**: Returns the contents of the log file in a log format. Each line is separated by a newline character "\n".
+    - **200 OK**: Returns the contents of the log file in a log format.
+        Each line is separated by a newline character "\n".
 
-    - **500 Internal Server Error**: Returns an error message if the log file cannot be generated.
+    - **500 Internal Server Error**: Returns an error message if the log file
+        cannot be generated.
 
     ### Return format
     Task Status and Logs are returned in a JSON format.
@@ -728,7 +723,9 @@ async def generate_log(
             .first()
         ).extract_completed_count
 
-        with open("/opt/logs/create_project.json", "r") as log_file:
+        project_log_file = Path("/opt/logs/create_project.json")
+        project_log_file.touch(exist_ok=True)
+        with open(project_log_file, "r") as log_file:
             logs = [json.loads(line) for line in log_file]
 
             filtered_logs = [
@@ -849,6 +846,7 @@ async def upload_custom_extract(
 
 @router.get("/download_form/{project_id}/")
 async def download_form(project_id: int, db: Session = Depends(database.get_db)):
+    """Download the XLSForm for a project."""
     project = await project_crud.get_project(db, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -875,6 +873,10 @@ async def update_project_category(
     upload: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
 ):
+    """Update the XLSForm category for a project.
+
+    Not valid for custom form uploads.
+    """
     contents = None
 
     project = await project_crud.get_project(db, project_id)
@@ -906,7 +908,10 @@ async def update_project_category(
 
     # Update odk forms
     await project_crud.update_project_form(
-        db, project_id, file_ext[1:] if upload else "xls", upload  # Form
+        db,
+        project_id,
+        file_ext[1:] if upload else "xls",
+        upload,  # Form
     )
 
     return JSONResponse(status_code=200, content={"success": True})
@@ -914,6 +919,7 @@ async def update_project_category(
 
 @router.get("/download_template/")
 async def download_template(category: str, db: Session = Depends(database.get_db)):
+    """Download an XLSForm template to fill out."""
     xlsform_path = f"{xlsforms_path}/{category}.xls"
     if os.path.exists(xlsform_path):
         return FileResponse(xlsform_path, filename="form.xls")
@@ -930,6 +936,7 @@ async def download_project_boundary(
 
     Args:
         project_id (int): The id of the project.
+        db (Session): The database session, provided automatically.
 
     Returns:
         Response: The HTTP response object containing the downloaded file.
@@ -952,6 +959,7 @@ async def download_task_boundaries(
 
     Args:
         project_id (int): The id of the project.
+        db (Session): The database session, provided automatically.
 
     Returns:
         Response: The HTTP response object containing the downloaded file.
@@ -972,6 +980,7 @@ async def download_features(project_id: int, db: Session = Depends(database.get_
 
     Args:
         project_id (int): The id of the project.
+        db (Session): The database session, provided automatically.
 
     Returns:
         Response: The HTTP response object containing the downloaded file.
@@ -1005,10 +1014,12 @@ async def generate_project_tiles(
     """Returns basemap tiles for a project.
 
     Args:
+        background_tasks (BackgroundTasks): FastAPI bg tasks, provided automatically.
         project_id (int): ID of project to create tiles for.
         source (str): Tile source ("esri", "bing", "topo", "google", "oam").
         format (str, optional): Default "mbtiles". Other options: "pmtiles", "sqlite3".
         tms (str, optional): Default None. Custom TMS provider URL.
+        db (Session): The database session, provided automatically.
 
     Returns:
         str: Success message that tile generation started.
@@ -1041,6 +1052,7 @@ async def tiles_list(project_id: int, db: Session = Depends(database.get_db)):
 
     Parameters:
         project_id: int
+        db (Session): The database session, provided automatically.
 
     Returns:
         Response: List of generated tiles for a project.
@@ -1050,6 +1062,7 @@ async def tiles_list(project_id: int, db: Session = Depends(database.get_db)):
 
 @router.get("/download_tiles/")
 async def download_tiles(tile_id: int, db: Session = Depends(database.get_db)):
+    """Download the basemap tile archive for a project."""
     log.debug("Getting tile archive path from DB")
     tiles_path = (
         db.query(db_models.DbTilesPath)
@@ -1059,9 +1072,9 @@ async def download_tiles(tile_id: int, db: Session = Depends(database.get_db)):
     log.info(f"User requested download for tiles: {tiles_path.path}")
 
     project_id = tiles_path.project_id
-    project_name = await project_crud.get_project(db, project_id).project_name_prefix
+    project = await project_crud.get_project(db, project_id)
     filename = Path(tiles_path.path).name.replace(
-        f"{project_id}_", f"{project_name.replace(' ', '_')}_"
+        f"{project_id}_", f"{project.project_name_prefix.replace(' ', '_')}_"
     )
     log.debug(f"Sending tile archive to user: {filename}")
 
@@ -1080,6 +1093,7 @@ async def download_task_boundary_osm(
 
     Args:
         project_id (int): The id of the project.
+        db (Session): The database session, provided automatically.
 
     Returns:
         Response: The HTTP response object containing the downloaded file.
@@ -1099,9 +1113,6 @@ async def download_task_boundary_osm(
     return response
 
 
-from sqlalchemy.sql import text
-
-
 @router.get("/centroid/")
 async def project_centroid(
     project_id: int = None,
@@ -1111,12 +1122,16 @@ async def project_centroid(
 
     Parameters:
         project_id (int): The ID of the project.
+        db (Session): The database session, provided automatically.
 
     Returns:
-        list[tuple[int, str]]: A list of tuples containing the task ID and the centroid as a string.
+        list[tuple[int, str]]: A list of tuples containing the task ID and
+            the centroid as a string.
     """
     query = text(
-        f"""SELECT id, ARRAY_AGG(ARRAY[ST_X(ST_Centroid(outline)), ST_Y(ST_Centroid(outline))]) AS centroid
+        f"""SELECT id,
+            ARRAY_AGG(ARRAY[ST_X(ST_Centroid(outline)),
+            ST_Y(ST_Centroid(outline))]) AS centroid
             FROM projects
             WHERE {f"id={project_id}" if project_id else "1=1"}
             GROUP BY id;"""
@@ -1145,14 +1160,11 @@ async def get_task_status(
     )
 
 
-from ..static import data_path
-
-
 @router.get("/templates/")
 async def get_template_file(
     file_type: str = Query(
         ..., enum=["data_extracts", "form"], description="Choose file type"
-    )
+    ),
 ):
     """Get template file.
 
@@ -1171,31 +1183,39 @@ async def get_template_file(
     )
 
 
-@router.get("/project_dashboard/{project_id}", response_model=project_schemas.ProjectDashboard)
+@router.get(
+    "/project_dashboard/{project_id}", response_model=project_schemas.ProjectDashboard
+)
 async def project_dashboard(
-    project_id: int, 
     background_tasks: BackgroundTasks,
-    db: Session = Depends(database.get_db)
+    db_project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    db_organisation: db_models.DbOrganisation = Depends(
+        organisation_deps.org_from_project
+    ),
+    db: Session = Depends(database.get_db),
 ):
-    """
-    Get the project dashboard details.
+    """Get the project dashboard details.
 
     Args:
-        project_id (int): The ID of the project.
+        background_tasks (BackgroundTasks): FastAPI bg tasks, provided automatically.
+        db_project (db_models.DbProject): An instance of the project.
+        db_organisation (db_models.DbOrganisation): An instance of the organisation.
         db (Session): The database session.
 
     Returns:
         ProjectDashboard: The project dashboard details.
     """
-    data = await project_crud.get_dashboard_detail(project_id, db)
+    data = await project_crud.get_dashboard_detail(db_project, db_organisation, db)
+
     background_task_id = await project_crud.insert_background_task_into_database(
-        db, "sync_submission", project_id
+        db, "sync_submission", db_project.id
+    )
+    background_tasks.add_task(
+        submission_crud.update_submission_in_s3, db, db_project.id, background_task_id
     )
 
-    background_tasks.add_task(
-        submission_crud.update_submission_in_s3, db, project_id, background_task_id
-    )
     return data
+
 
 @router.get("/contributors/{project_id}")
 async def get_contributors(project_id: int, db: Session = Depends(database.get_db)):
@@ -1203,6 +1223,7 @@ async def get_contributors(project_id: int, db: Session = Depends(database.get_d
 
     Args:
         project_id (int): ID of project.
+        db (Session): The database session.
 
     Returns:
         list[project_schemas.ProjectUser]: List of project users.

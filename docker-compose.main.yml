@@ -17,6 +17,8 @@
 
 version: "3"
 
+name: fmtm-main
+
 volumes:
   fmtm_frontend:
     name: fmtm-frontend-main
@@ -39,8 +41,7 @@ networks:
 
 services:
   proxy:
-    image: "ghcr.io/hotosm/fmtm/proxy:main${FMTM_SCRIPT_DOMAIN:+-plus-script}"
-    container_name: fmtm-main
+    image: "ghcr.io/hotosm/fmtm/proxy:main"
     depends_on:
       api:
         condition: service_started
@@ -55,7 +56,6 @@ services:
     environment:
       FMTM_DOMAIN: ${FMTM_DOMAIN}
       FMTM_API_DOMAIN: ${FMTM_API_DOMAIN:-api.${FMTM_DOMAIN}}
-      FMTM_SCRIPT_DOMAIN: ${FMTM_SCRIPT_DOMAIN:-_}
     ports:
       - 80:80
       - 443:443
@@ -65,7 +65,6 @@ services:
 
   api:
     image: "ghcr.io/hotosm/fmtm/backend:main"
-    container_name: fmtm-api-main
     volumes:
       - fmtm_logs:/opt/logs
       - fmtm_tiles:/opt/tiles
@@ -79,18 +78,26 @@ services:
     networks:
       - fmtm-net
     restart: "unless-stopped"
+    deploy:
+      replicas: ${API_REPLICAS:-4}
+      resources:
+        limits:
+          cpus: "0.9"
+          memory: 1500M
+        reservations:
+          cpus: "0.1"
+          memory: 100M
 
   ui:
     # This service simply builds the frontend to a volume
     # accessible to the proxy, then shuts down
-    image: "ghcr.io/hotosm/fmtm/frontend:${GIT_BRANCH:-main}"
+    image: "ghcr.io/hotosm/fmtm/frontend:main"
     build:
       context: src/frontend
       dockerfile: prod.dockerfile
       args:
         APP_VERSION: main
         VITE_API_URL: https://${FMTM_API_DOMAIN:-api.${FMTM_DOMAIN}}
-    container_name: fmtm-ui-main
     volumes:
       - fmtm_frontend:/frontend
     network_mode: none
@@ -98,7 +105,6 @@ services:
 
   fmtm-db:
     image: "postgis/postgis:${POSTGIS_TAG:-14-3.4-alpine}"
-    container_name: fmtm-db-main
     volumes:
       - fmtm_db_data:/var/lib/postgresql/data/
     environment:
@@ -119,7 +125,6 @@ services:
 
   migrations:
     image: "ghcr.io/hotosm/fmtm/backend:main"
-    container_name: fmtm-migrations-main
     depends_on:
       fmtm-db:
         condition: service_healthy
@@ -132,7 +137,6 @@ services:
 
   backups:
     image: "ghcr.io/hotosm/fmtm/backend:main"
-    container_name: fmtm-backups-main
     depends_on:
       fmtm-db:
         condition: service_healthy
@@ -151,14 +155,12 @@ services:
 
   certbot:
     image: "ghcr.io/hotosm/fmtm/proxy:certs-init-main"
-    container_name: fmtm-cert-renew-main
     volumes:
       - certs:/etc/letsencrypt
       - certbot_data:/var/www/certbot
     environment:
       FMTM_DOMAIN: ${FMTM_DOMAIN}
       FMTM_API_DOMAIN: ${FMTM_API_DOMAIN:-api.${FMTM_DOMAIN}}
-      FMTM_SCRIPT_DOMAIN: ${FMTM_SCRIPT_DOMAIN:-_}
       CERT_EMAIL: ${CERT_EMAIL}
     ports:
       - 80:80

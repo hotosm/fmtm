@@ -19,7 +19,6 @@ your own cloud server.
 ```bash
 curl -L https://get.fmtm.dev -o install.sh
 bash install.sh
-# Alternative URL: https://fmtm.hotosm.org/install.sh
 
 # Then follow the prompts
 ```
@@ -103,13 +102,13 @@ backup_filename="fmtm-db-${GIT_BRANCH}-$(date +'%Y-%m-%d').sql.gz"
 echo $backup_filename
 
 docker exec -i -e PGPASSWORD=PASSWORD_HERE \
-fmtm-db-${GIT_BRANCH} \
+fmtm-${GIT_BRANCH}-fmtm-db-1 \
 pg_dump --verbose --format c -U fmtm fmtm \
 | gzip -9 > "$backup_filename"
 
 # For ODK
 docker exec -i -e PGPASSWORD=PASSWORD_HERE \
-fmtm-central-db-${GIT_BRANCH} \
+fmtm-${GIT_BRANCH}-central-db-1 \
 pg_dump --verbose --format c -U odk odk | \
 gzip -9 > "$backup_filename"
 ```
@@ -131,13 +130,13 @@ backup_filename=fmtm-db-${GIT_BRANCH}-XXXX-XX-XX-sql.gz
 
 cat "$backup_filename" | gunzip | \
 docker exec -i -e PGPASSWORD=NEW_PASSWORD_HERE \
-fmtm-db-${GIT_BRANCH} \
+fmtm-${GIT_BRANCH}-fmtm-db-1 \
 pg_restore --verbose -U fmtm -d fmtm
 
 # For ODK
 cat "$backup_filename" | gunzip | \
 docker exec -i -e PGPASSWORD=NEW_PASSWORD_HERE \
-fmtm-central-db-${GIT_BRANCH} \
+fmtm-${GIT_BRANCH}-central-db-1 \
 pg_restore --verbose -U odk -d odk
 ```
 
@@ -163,7 +162,7 @@ backup_filename=fmtm-central-db-${GIT_BRANCH}-XXXX-XX-XX-sql.gz
 
 cat "$backup_filename" | gunzip | \
 docker exec -i \
-fmtm-central-db-${GIT_BRANCH} \
+fmtm-${GIT_BRANCH}-central-db-1 \
 pg_restore --verbose -U odk -d odk
 
 # Restore fmtm from the backup
@@ -171,7 +170,7 @@ backup_filename=fmtm-db-${GIT_BRANCH}-XXXX-XX-XX-sql.gz
 
 cat "$backup_filename" | gunzip | \
 docker exec -i \
-fmtm-db-${GIT_BRANCH} \
+fmtm-${GIT_BRANCH}-fmtm-db-1 \
 pg_restore --verbose -U fmtm -d fmtm
 
 # Run the entire docker compose stack

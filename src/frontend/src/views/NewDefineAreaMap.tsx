@@ -1,17 +1,20 @@
 import React from 'react';
-import useOLMap from '../hooks/useOlMap';
-import { MapContainer as MapComponent } from '../components/MapComponent/OpenLayersComponent';
-import LayerSwitcherControl from '../components/MapComponent/OpenLayersComponent/LayerSwitcher/index.js';
-import { VectorLayer } from '../components/MapComponent/OpenLayersComponent/Layers';
-import { GeoJSONFeatureTypes } from '../store/types/ICreateProject';
+import useOLMap from '@/hooks/useOlMap';
+import { MapContainer as MapComponent } from '@/components/MapComponent/OpenLayersComponent';
+import LayerSwitcherControl from '@/components/MapComponent/OpenLayersComponent/LayerSwitcher/index.js';
+import { VectorLayer } from '@/components/MapComponent/OpenLayersComponent/Layers';
+import { GeoJSONFeatureTypes } from '@/store/types/ICreateProject';
+import MapControlComponent from '@/components/createnewproject/MapControlComponent';
 
 type NewDefineAreaMapProps = {
   drawToggle?: boolean;
-  splittedGeojson: GeoJSONFeatureTypes;
+  splittedGeojson: GeoJSONFeatureTypes | null;
   uploadedOrDrawnGeojsonFile: GeoJSONFeatureTypes;
   buildingExtractedGeojson?: GeoJSONFeatureTypes;
   lineExtractedGeojson?: GeoJSONFeatureTypes;
-  onDraw?: () => void;
+  onDraw?: (geojson: any, area: number) => void;
+  onModify?: ((geojson: any, area?: number) => void) | null;
+  hasEditUndo?: boolean;
 };
 const NewDefineAreaMap = ({
   drawToggle,
@@ -21,6 +24,7 @@ const NewDefineAreaMap = ({
   lineExtractedGeojson,
   onDraw,
   onModify,
+  hasEditUndo,
 }: NewDefineAreaMapProps) => {
   const { mapRef, map } = useOLMap({
     // center: fromLonLat([85.3, 27.7]),
@@ -42,6 +46,7 @@ const NewDefineAreaMap = ({
         }}
       >
         <LayerSwitcherControl />
+        <MapControlComponent map={map} hasEditUndo={hasEditUndo} />
         {splittedGeojson && (
           <VectorLayer
             geojson={splittedGeojson}
@@ -51,7 +56,7 @@ const NewDefineAreaMap = ({
               constrainResolution: true,
               duration: 500,
             }}
-            zoomToLayer
+            onModify={onModify}
           />
         )}
         {isDrawOrGeojsonFile && !splittedGeojson && (

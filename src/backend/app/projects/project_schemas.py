@@ -15,6 +15,7 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
+"""Pydantic schemas for Projects."""
 
 import uuid
 from datetime import datetime
@@ -22,35 +23,65 @@ from typing import List, Optional, Union
 
 from dateutil import parser
 from geojson_pydantic import Feature as GeojsonFeature
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 from pydantic.functional_serializers import field_serializer
+from pydantic.functional_validators import field_validator
 
+from app.config import decrypt_value, encrypt_value
 from app.db import db_models
 from app.models.enums import ProjectPriority, ProjectStatus, TaskSplitType
 from app.tasks import tasks_schemas
 from app.users.user_schemas import User
-from pydantic.functional_validators import field_validator
 
 
 class ODKCentral(BaseModel):
+    """ODK Central credentials."""
+
     odk_central_url: str
     odk_central_user: str
-    odk_central_password: str
+    odk_central_password: SecretStr
+
+    def model_post_init(self, ctx):
+        """Run logic after model object instantiated."""
+        # Decrypt odk central password from database
+        self.odk_central_password = SecretStr(
+            decrypt_value(self.odk_central_password.get_secret_value())
+        )
+
+    @field_validator("odk_central_password", mode="before")
+    @classmethod
+    def encrypt_odk_password(cls, value: str) -> SecretStr:
+        """Encrypt the ODK Central password before db insertion."""
+        return SecretStr(encrypt_value(value))
+
+    @field_validator("odk_central_url", mode="before")
+    @classmethod
+    def remove_trailing_slash(cls, value: str) -> str:
+        """Remove trailing slash from ODK Central URL."""
+        if value.endswith("/"):
+            return value[:-1]
+        return value
 
 
 class ProjectInfo(BaseModel):
+    """Basic project info."""
+
     name: str
     short_description: str
     description: str
 
 
 class ProjectUpdate(BaseModel):
+    """Update project."""
+
     name: Optional[str] = None
     short_description: Optional[str] = None
     description: Optional[str] = None
 
 
 class ProjectUpload(BaseModel):
+    """Upload new project."""
+
     author: User
     project_info: ProjectInfo
     xform_title: Optional[str]
@@ -67,11 +98,15 @@ class ProjectUpload(BaseModel):
 
 
 class Feature(BaseModel):
+    """Features used for Task definitions."""
+
     id: int
     geometry: Optional[GeojsonFeature] = None
 
 
 class ProjectSummary(BaseModel):
+    """Project summaries."""
+
     id: int = -1
     priority: ProjectPriority = ProjectPriority.MEDIUM
     priority_str: str = priority.name
@@ -92,6 +127,7 @@ class ProjectSummary(BaseModel):
         cls,
         project: db_models.DbProject,
     ) -> "ProjectSummary":
+        """Generate model from database obj."""
         priority = project.priority
         return cls(
             id=project.id,
@@ -112,22 +148,28 @@ class ProjectSummary(BaseModel):
 
 
 class PaginationInfo(BaseModel):
-    hasNext: bool
-    hasPrev: bool
-    nextNum: Optional[int]
+    """Pagination JSON return."""
+
+    has_next: bool
+    has_prev: bool
+    next_num: Optional[int]
     page: int
     pages: int
-    prevNum: Optional[int]
-    perPage: int
+    prev_num: Optional[int]
+    per_page: int
     total: int
 
 
 class PaginatedProjectSummaries(BaseModel):
+    """Project summaries + Pagination info."""
+
     results: List[ProjectSummary]
     pagination: PaginationInfo
 
 
 class ProjectBase(BaseModel):
+    """Base project model."""
+
     id: int
     odkid: int
     author: User
@@ -142,31 +184,40 @@ class ProjectBase(BaseModel):
 
 
 class ProjectOut(ProjectBase):
+    """Project display to user."""
+
     project_uuid: uuid.UUID = uuid.uuid4()
 
 
 class ReadProject(ProjectBase):
+    """Redundant model for refactor."""
+
     project_uuid: uuid.UUID = uuid.uuid4()
-    location_str: str
+    location_str: Optional[str] = None
 
 
 class BackgroundTaskStatus(BaseModel):
+    """Background task status for project related tasks."""
+
     status: str
     message: Optional[str] = None
 
 
 class ProjectDashboard(BaseModel):
+    """Project details dashboard."""
+
     project_name_prefix: str
-    organization: str
+    organisation_name: str
     total_tasks: int
     created: datetime
-    organization_logo: Optional[str] = None
+    organisation_logo: Optional[str] = None
     total_submission: Optional[int] = None
     total_contributors: Optional[int] = None
     last_active: Optional[Union[str, datetime]] = None
 
     @field_serializer("last_active")
     def get_last_active(self, value, values):
+        """Date of last activity on project."""
         if value is None:
             return None
 

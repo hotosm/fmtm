@@ -34,10 +34,10 @@ from app.auth import auth_routes
 from app.central import central_routes
 from app.config import settings
 from app.db.database import get_db
-from app.organization import organization_routes
+from app.organisations import organisation_routes
 from app.projects import project_routes
 from app.projects.project_crud import read_xlsforms
-from app.submission import submission_routes
+from app.submissions import submission_routes
 from app.tasks import tasks_routes
 from app.users import user_routes
 
@@ -70,7 +70,7 @@ def get_application() -> FastAPI:
         version=__version__,
         license_info={
             "name": "GPL-3.0-only",
-            "url": "https://raw.githubusercontent.com/hotosm/fmtm/main/LICENSE",
+            "url": "https://raw.githubusercontent.com/hotosm/fmtm/main/LICENSE.md",
         },
         debug=settings.DEBUG,
         lifespan=lifespan,
@@ -95,7 +95,7 @@ def get_application() -> FastAPI:
     _app.include_router(central_routes.router)
     _app.include_router(auth_routes.router)
     _app.include_router(submission_routes.router)
-    _app.include_router(organization_routes.router)
+    _app.include_router(organisation_routes.router)
 
     return _app
 

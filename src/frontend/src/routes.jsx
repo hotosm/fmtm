@@ -3,25 +3,25 @@ import {
   createBrowserRouter,
   // Navigate,
 } from 'react-router-dom';
-import Home from './views/Home';
-import Tabbed from './views/Tabbed';
-import MainView from './views/MainView';
-import CreateProject from './views/CreateProject';
-import EditProject from './views/EditProject';
-import ProtectedRoute from './utilities/ProtectedRoute';
-import NotFoundPage from './views/NotFound404';
-import Organization from './views/Organization';
-import CreateOrganization from './views/CreateOrganization';
-import Authorized from './views/Authorized';
-import SubmissionDetails from './views/SubmissionDetails';
-import CreateNewProject from './views/CreateNewProject';
-import ProjectDetails from './views/ProjectDetails';
-import UnderConstruction from './views/UnderConstruction';
-import ErrorBoundary from './views/ErrorBoundary';
-import NewProjectDetails from './views/NewProjectDetails';
-import ProjectSubmissions from './views/ProjectSubmissions';
-import ProjectDetailsV2 from './views/ProjectDetailsV2';
-import ManageProject from './views/ManageProject';
+import Home from '@/views/Home';
+import Tabbed from '@/views/Tabbed';
+import MainView from '@/views/MainView';
+import CreateProject from '@/views/CreateProject';
+import EditProject from '@/views/EditProject';
+import ProtectedRoute from '@/utilities/ProtectedRoute';
+import NotFoundPage from '@/views/NotFound404';
+import Organisation from '@/views/Organisation';
+import CreateOrganisation from '@/views/CreateOrganisation';
+import Authorized from '@/views/Authorized';
+import SubmissionDetails from '@/views/SubmissionDetails';
+import CreateNewProject from '@/views/CreateNewProject';
+import ProjectDetails from '@/views/ProjectDetails';
+import UnderConstruction from '@/views/UnderConstruction';
+import ErrorBoundary from '@/views/ErrorBoundary';
+import NewProjectDetails from '@/views/NewProjectDetails';
+import ProjectDetailsV2 from '@/views/ProjectDetailsV2';
+import ProjectSubmissions from '@/views/ProjectSubmissions';
+import ManageProject from '@/views/ManageProject';
 
 // const ProjectDetails = React.lazy(() => import('./views/ProjectDetails'));
 const Submissions = React.lazy(() => import('./views/Submissions'));
@@ -41,18 +41,18 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/organization',
+        path: '/organisation',
         element: (
           <ErrorBoundary>
-            <Organization />
+            <Organisation />
           </ErrorBoundary>
         ),
       },
       {
-        path: '/createOrganization',
+        path: '/createOrganisation',
         element: (
           <ErrorBoundary>
-            <CreateOrganization />
+            <CreateOrganisation />
           </ErrorBoundary>
         ),
       },

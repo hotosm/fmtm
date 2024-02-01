@@ -183,7 +183,9 @@ export default class Table extends Component {
       return Array.from({ length: 5 }).map((i) => (
         <tr
           key={i}
-          className={`fmtm-cursor-pointer fmtm-ease-in fmtm-duration-100 fmtm-h-[50px] 
+          className={` ${
+            flag.toLowerCase() === 'dashboard' ? '' : 'hover:fmtm-bg-active_bg'
+          } fmtm-cursor-pointer fmtm-ease-in fmtm-duration-100 fmtm-h-[50px] 
       fmtm-items-baseline fmtm-relative fmtm-bg-white`}
         >
           {fields.map(

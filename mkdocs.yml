@@ -20,6 +20,7 @@ theme:
   name: material
   palette:
     primary: custom
+  language: en
 
 extra_css:
   - css/extra.css
@@ -40,6 +41,7 @@ markdown_extensions:
 
 plugins:
   - search
+  - git-revision-date-localized
   - exclude:
       glob:
         - plugins/*
@@ -63,7 +65,7 @@ nav:
       - Installation: INSTALL.md
       - Contribution Guidelines: CONTRIBUTING.md
       - Documentation Contribution: Guide-On-Improving-Documentation.md
-      - Code of Conduct: CODE_OF_CONDUCT.md
+      - Code of Conduct: https://docs.hotosm.org/code-of-conduct
       - FAQ: FAQ.md
   - User Manuals:
       - Project Managers: User-Manual-For-Project-Managers.md
@@ -75,6 +77,8 @@ nav:
       - Deployment Flow: dev/Deployment-Flow.md
       - Database Tips: dev/Database-Tips.md
       - Troubleshooting: dev/Troubleshooting.md
-      - Version Control: dev/Version-Control.md
+      - Pre-Commit: https://docs.hotosm.org/dev-guide/pre-commit/
+      - Versioning: https://docs.hotosm.org/dev-guide/version-control/#creating-releases
   - API: https://hotosm.github.io/swagger/?url=https://hotosm.github.io/fmtm/openapi.json
   - Class Hierarchy: apidocs/html/inherits.html
+  - Code Coverage: coverage.html

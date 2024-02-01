@@ -1,6 +1,6 @@
 import React from 'react';
-import handleDownload from '../../utilfunctions/downloadChart';
-import AssetModules from '../../shared/AssetModules.js';
+import handleDownload from '@/utilfunctions/downloadChart';
+import AssetModules from '@/shared/AssetModules.js';
 
 type InfographicsCardType = {
   header: string;

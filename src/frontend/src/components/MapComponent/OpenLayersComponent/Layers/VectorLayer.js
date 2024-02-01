@@ -8,8 +8,8 @@ import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style.js';
 import GeoJSON from 'ol/format/GeoJSON';
 import { Vector as VectorSource } from 'ol/source';
 import OLVectorLayer from 'ol/layer/Vector';
-import { defaultStyles, getStyles } from '../helpers/styleUtils';
-import { isExtentValid } from '../helpers/layerUtils';
+import { defaultStyles, getStyles } from '@/components/MapComponent/OpenLayersComponent/helpers/styleUtils';
+import { isExtentValid } from '@/components/MapComponent/OpenLayersComponent/helpers/layerUtils';
 import { Draw, Modify, Snap, Select, defaults as defaultInteractions } from 'ol/interaction.js';
 import { getArea } from 'ol/sphere';
 import { valid } from 'geojson-validation';
@@ -74,14 +74,18 @@ const VectorLayer = ({
         dataProjection: 'EPSG:4326',
         featureProjection: 'EPSG:3857',
       });
+      const geometry = vectorLayer.getSource().getFeatures()?.[0].getGeometry();
+      const area = formatArea(geometry);
 
-      onModify(geoJSONString);
+      onModify(geoJSONString, area);
     });
     map.addInteraction(modify);
     map.addInteraction(select);
 
     return () => {
-      // map.removeInteraction(defaultInteractions().extend([select, modify]))
+      // map.removeInteraction(defaultInteractions().extend([select, modify]));
+      map.removeInteraction(modify);
+      map.removeInteraction(select);
     };
   }, [map, vectorLayer, onModify]);
 
@@ -191,23 +195,27 @@ const VectorLayer = ({
 
   useEffect(() => {
     if (!vectorLayer || !style.visibleOnMap || setStyle) return;
-    vectorLayer.setStyle((feature, resolution) => [
-      new Style({
-        image: new CircleStyle({
-          radius: 5,
-          fill: new Fill({
-            color: 'orange',
-          }),
-        }),
-        geometry: function (feature) {
-          // return the coordinates of the first ring of the polygon
-          const coordinates = feature.getGeometry().getCoordinates()[0];
-          return new MultiPoint(coordinates);
-        },
-      }),
-      getStyles({ style, feature, resolution }),
-    ]);
-  }, [vectorLayer, style, setStyle]);
+    vectorLayer.setStyle((feature, resolution) => {
+      return onModify
+        ? [
+            new Style({
+              image: new CircleStyle({
+                radius: 5,
+                fill: new Fill({
+                  color: 'orange',
+                }),
+              }),
+              geometry: function (feature) {
+                // return the coordinates of the first ring of the polygon
+                const coordinates = feature.getGeometry().getCoordinates()[0];
+                return new MultiPoint(coordinates);
+              },
+            }),
+            getStyles({ style, feature, resolution }),
+          ]
+        : [getStyles({ style, feature, resolution })];
+    });
+  }, [vectorLayer, style, setStyle, onModify]);
 
   useEffect(() => {
     if (!vectorLayer) return;
@@ -254,7 +262,6 @@ const VectorLayer = ({
     });
     function pointerMovefn(event) {
       vectorLayer.getFeatures(event.pixel).then((features) => {
-        console.log(selection, 'selection');
         if (!features.length) {
           selection = {};
           hoverEffect(undefined, vectorLayer);

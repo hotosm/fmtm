@@ -15,29 +15,29 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
+"""Routes associated with data submission to and from ODK Central."""
+
 import json
 import os
 from typing import Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse
 from osm_fieldwork.odk_merge import OdkMerge
 from osm_fieldwork.osmfile import OsmFile
 from sqlalchemy.orm import Session
 
-from app.config import settings
-from app.db import database
-from app.projects import project_crud, project_schemas
 from app.central import central_crud
+from app.config import settings
+from app.db import database, db_models
+from app.projects import project_crud, project_deps, project_schemas
+from app.submissions import submission_crud, submission_schemas
 from app.tasks import tasks_crud
-
-from app.submission import submission_crud
 
 router = APIRouter(
     prefix="/submission",
     tags=["submission"],
-    dependencies=[Depends(database.get_db)],
     responses={404: {"description": "Not found"}},
 )
 
@@ -47,50 +47,19 @@ async def read_submissions(
     project_id: int,
     task_id: int = None,
     db: Session = Depends(database.get_db),
-):
-    """This api returns the submission made in the project.
-    It takes two parameters: project_id and task_id.
+) -> list[dict]:
+    """Get all submissions made for a project.
 
+    Args:
+        project_id (int): The ID of the project.
+        task_id (int, optional): The ID of the task.
+            If provided, returns the submissions made for a specific task only.
+        db (Session): The database session, automatically provided.
 
-    project_id: The ID of the project. This endpoint returns the submission made in this project.
-
-    task_id: The ID of the task. This parameter is optional. If task_id is provided, this endpoint returns the submissions made for this task.
-
-    Returns the list of submissions.
+    Returns:
+        list[dict]: The list of submissions.
     """
     return submission_crud.get_submission_of_project(db, project_id, task_id)
-
-
-@router.get("/list-forms")
-async def list_forms(
-    project_id: int,
-    db: Session = Depends(database.get_db),
-):
-    """This api returns the list of forms in the odk central.
-
-    It takes one parameter: project_id.
-
-    project_id: The ID of the project. This endpoint returns the list of forms in this project.
-
-    Returns the list of forms details provided by the central api.
-    """
-    return await submission_crud.get_forms_of_project(db, project_id)
-
-
-@router.get("/list-app-users")
-async def list_app_users(
-    project_id: int,
-    db: Session = Depends(database.get_db),
-):
-    """This api returns the list of forms in the odk central.
-
-    It takes one parameter: project_id.
-
-    project_id: The ID of the project. This endpoint returns the list of forms in this project.
-
-    Returns the list of forms details provided by the central api.
-    """
-    return await submission_crud.list_app_users_or_project(db, project_id)
 
 
 @router.get("/download")
@@ -100,13 +69,19 @@ async def download_submission(
     export_json: bool = True,
     db: Session = Depends(database.get_db),
 ):
-    """This api downloads the the submission made in the project.
-    It takes two parameters: project_id and task_id.
+    """Download the submissions for a given project.
 
-    project_id: The ID of the project. This endpoint returns the submission made in this project.
+    Returned as either a JSONResponse, or a file to download.
 
-    task_id: The ID of the task. This parameter is optional. If task_id is provided, this endpoint returns the submissions made for this task.
+    Args:
+        project_id (int): The ID of the project.
+        task_id (int, optional): The ID of the task.
+            If provided, returns the submissions made for a specific task only.
+        export_json (bool): Export in JSON format, else returns a file.
+        db (Session): The database session, automatically provided.
 
+    Returns:
+        Union[list[dict], File]: JSON of submissions, or submission file.
     """
     if not (task_id or export_json):
         file = submission_crud.gather_all_submission_csvs(db, project_id)
@@ -123,11 +98,16 @@ async def submission_points(
     task_id: int = None,
     db: Session = Depends(database.get_db),
 ):
-    """This api returns the submission points of a project.
-    It takes two parameter: project_id and task_id.
+    """Get submission points for a given project.
 
-    project_id: The ID of the project. This endpoint returns the submission points of this project.
-    task_id: The task_id of the project. This endpoint returns the submission points of this task.
+    Args:
+        project_id (int): The ID of the project.
+        task_id (int, optional): The ID of the task.
+            If provided, returns the submissions made for a specific task only.
+        db (Session): The database session, automatically provided.
+
+    Returns:
+        File: a zip containing submission points.
     """
     return await submission_crud.get_submission_points(db, project_id, task_id)
 
@@ -137,14 +117,17 @@ async def convert_to_osm(
     project_id: int,
     task_id: int = None,
     db: Session = Depends(database.get_db),
-):
-    """This api converts the submission to osm format.
-    It takes two parameter: project_id and task_id.
+) -> str:
+    """Convert JSON submissions to OSM XML for a project.
 
-    task_id is optional.
-    If task_id is provided, this endpoint converts the submission of this task.
-    If task_id is not provided, this endpoint converts the submission of the whole project.
+    Args:
+        project_id (int): The ID of the project.
+        task_id (int, optional): The ID of the task.
+            If provided, returns the submissions made for a specific task only.
+        db (Session): The database session, automatically provided.
 
+    Returns:
+        File: an OSM XML of submissions.
     """
     # NOTE runs in separate thread using run_in_threadpool
     converted = await run_in_threadpool(
@@ -158,6 +141,7 @@ async def get_submission_count(
     project_id: int,
     db: Session = Depends(database.get_db),
 ):
+    """Get the submission count for a project."""
     return await submission_crud.get_submission_count_of_a_project(db, project_id)
 
 
@@ -166,6 +150,7 @@ async def conflate_osm_data(
     project_id: int,
     db: Session = Depends(database.get_db),
 ):
+    """Conflate submission data against existing OSM data."""
     # All Submissions JSON
     # NOTE runs in separate thread using run_in_threadpool
     submission = await run_in_threadpool(
@@ -193,7 +178,7 @@ async def conflate_osm_data(
         f.write(json.dumps(submission))
 
     # Convert the submission to osm xml format
-    osmoutfile, jsonoutfile = await submission_crud.convert_json_to_osm(jsoninfile)
+    osmoutfile = await submission_crud.convert_json_to_osm(jsoninfile)
 
     # Remove the extra closing </osm> tag from the end of the file
     with open(osmoutfile, "r") as f:
@@ -226,6 +211,10 @@ async def download_submission_json(
     background_task_id: Optional[str] = None,
     db: Session = Depends(database.get_db),
 ):
+    """Download submissions for a project in JSON format.
+
+    TODO check for redundancy with submission/download endpoint and refactor.
+    """
     # Get Project
     project = await project_crud.get_project(db, project_id)
 
@@ -269,6 +258,10 @@ async def get_osm_xml(
     project_id: int,
     db: Session = Depends(database.get_db),
 ):
+    """Get the submissions in OSM XML format for a project.
+
+    TODO refactor to put logic in crud for easier testing.
+    """
     # JSON FILE PATH
     jsoninfile = f"/tmp/{project_id}_json_infile.json"
 
@@ -287,7 +280,7 @@ async def get_osm_xml(
         f.write(json.dumps(submission))
 
     # Convert the submission to osm xml format
-    osmoutfile = await submission_crud.convert_json_to_osm_xml(jsoninfile)
+    osmoutfile = await submission_crud.convert_json_to_osm(jsoninfile)
 
     # Remove the extra closing </osm> tag from the end of the file
     with open(osmoutfile, "r") as f:
@@ -317,13 +310,21 @@ async def get_submission_page(
     planned_task: Optional[int] = None,
     db: Session = Depends(database.get_db),
 ):
+    """Summary submissison details for submission page.
+
+    Args:
+        background_tasks (BackgroundTasks): FastAPI bg tasks, provided automatically.
+        db (Session): The database session, automatically generated.
+        project_id (int): The ID of the project.
+        days (int): The number of days to consider for fetching submissions.
+        planned_task (int): Associated task id.
+
+    Returns:
+        dict: A dictionary containing the submission counts for each date.
     """
-    This api returns the submission page of a project.
-    It takes one parameter: project_id.
-    project_id: The ID of the project. This endpoint returns the submission page of this project.
-    """
-    
-    data = await submission_crud.get_submissions_by_date(db, project_id, days, planned_task)
+    data = await submission_crud.get_submissions_by_date(
+        db, project_id, days, planned_task
+    )
 
     # Update submission cache in the background
     background_task_id = await project_crud.insert_background_task_into_database(
@@ -338,20 +339,91 @@ async def get_submission_page(
 
 
 @router.get("/submission_form_fields/{project_id}")
-async def get_submission_form_fields(project_id: int, db: Session = Depends(database.get_db)):
-    """
-    Retrieves the submission form for a specific project.
+async def get_submission_form_fields(
+    project_id: int, db: Session = Depends(database.get_db)
+):
+    """Retrieves the submission form for a specific project.
 
     Args:
         project_id (int): The ID of the project.
-        db (Session, optional): The database session. Defaults to Depends(database.get_db).
+        db (Session): The database session, automatically generated.
 
     Returns:
         Any: The response from the submission form API.
     """
-
     project = await project_crud.get_project(db, project_id)
     task_list = await tasks_crud.get_task_id_list(db, project_id)
     odk_form = central_crud.get_odk_form(project)
     response = odk_form.form_fields(project.odkid, str(task_list[0]))
+    return response
+
+
+@router.get("/submission_table/{project_id}")
+async def submission_table(
+    background_tasks: BackgroundTasks,
+    project_id: int,
+    page: int = Query(1, ge=1),
+    results_per_page: int = Query(13, le=100),
+    db: Session = Depends(database.get_db),
+):
+    """This api returns the submission table of a project.
+
+    It takes two parameter: project_id and task_id.
+
+    project_id: The ID of the project.
+
+    task_id: The ID of the task.
+    """
+    skip = (page - 1) * results_per_page
+    limit = results_per_page
+    count, data = await submission_crud.get_submission_by_project(
+        project_id, skip, limit, db
+    )
+    background_task_id = await project_crud.insert_background_task_into_database(
+        db, "sync_submission", project_id
+    )
+
+    background_tasks.add_task(
+        submission_crud.update_submission_in_s3, db, project_id, background_task_id
+    )
+    pagination = await project_crud.get_pagination(page, count, results_per_page, count)
+    response = submission_schemas.PaginatedSubmissions(
+        results=data,
+        pagination=submission_schemas.PaginationInfo(**pagination.model_dump()),
+    )
+    return response
+
+
+@router.get("/task_submissions/{project_id}")
+async def task_submissions(
+    task_id: int,
+    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    page: int = Query(1, ge=1),
+    limit: int = Query(13, le=100),
+    db: Session = Depends(database.get_db),
+):
+    """This api returns the submission table of a project.
+
+    It takes two parameter: project_id and task_id.
+
+    project_id: The ID of the project.
+
+    task_id: The ID of the task.
+    """
+    skip = (page - 1) * limit
+    filters = {
+        "$top": limit,
+        "$skip": skip,
+        "$count": True,
+        "$wkt": True,
+    }
+
+    data, count = await submission_crud.get_submission_by_task(
+        project, task_id, filters, db
+    )
+    pagination = await project_crud.get_pagination(page, count, limit, count)
+    response = submission_schemas.PaginatedSubmissions(
+        results=data,
+        pagination=submission_schemas.PaginationInfo(**pagination.model_dump()),
+    )
     return response

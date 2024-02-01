@@ -37,8 +37,8 @@ const CustomBarChart = ({ data, xLabel, yLabel, dataKey, nameKey }) => {
             dy: 55,
           }}
         />
-        <Tooltip cursor={{ fill: '#e3f5ff' }} />
-        <Bar dataKey={dataKey} fill="#2D8BBA" radius={[5, 5, 0, 0]} />
+        <Tooltip cursor={{ fill: '#fcecd9' }} />
+        <Bar dataKey={dataKey} fill="#F19C3C" radius={[5, 5, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

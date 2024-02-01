@@ -1,27 +1,27 @@
-import TextArea from '../../components/common/TextArea';
-import InputTextField from '../../components/common/InputTextField';
+import TextArea from '@/components/common/TextArea';
+import InputTextField from '@/components/common/InputTextField';
 import React, { useEffect } from 'react';
-import { CreateProjectActions } from '../../store/slices/CreateProjectSlice';
+import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useAppSelector } from '../../types/reduxTypes';
-import useForm from '../../hooks/useForm';
-import CreateProjectValidation from '../../components/createproject/validation/CreateProjectValidation';
-import Button from '../../components/common/Button';
-import { CommonActions } from '../../store/slices/CommonSlice';
-import AssetModules from '../../shared/AssetModules.js';
-import { createPopup } from '../../utilfunctions/createPopup';
-import { CustomSelect } from '../../components/common/Select';
-import { OrganisationService } from '../../api/CreateProjectService';
+import { useAppSelector } from '@/types/reduxTypes';
+import useForm from '@/hooks/useForm';
+import CreateProjectValidation from '@/components/createnewproject/validation/CreateProjectValidation';
+import Button from '@/components/common/Button';
+import { CommonActions } from '@/store/slices/CommonSlice';
+import AssetModules from '@/shared/AssetModules.js';
+import { createPopup } from '@/utilfunctions/createPopup';
+import { CustomSelect } from '@/components/common/Select';
+import { OrganisationService } from '@/api/CreateProjectService';
 
 const ProjectDetailsForm = ({ flag }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const projectDetails: any = useAppSelector((state) => state.createproject.projectDetails);
-  const organizationListData: any = useAppSelector((state) => state.createproject.organizationList);
+  const organisationListData: any = useAppSelector((state) => state.createproject.organisationList);
 
-  const organizationList = organizationListData.map((item) => ({ label: item.name, value: item.id }));
+  const organisationList = organisationListData.map((item) => ({ label: item.name, value: item.id }));
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(values));
@@ -36,7 +36,7 @@ const ProjectDetailsForm = ({ flag }) => {
   );
 
   const onFocus = () => {
-    dispatch(OrganisationService(`${import.meta.env.VITE_API_URL}/organization/`));
+    dispatch(OrganisationService(`${import.meta.env.VITE_API_URL}/organisation/`));
   };
 
   useEffect(() => {
@@ -81,7 +81,7 @@ const ProjectDetailsForm = ({ flag }) => {
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
       <div className="fmtm-bg-white xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6">
         <h6 className="fmtm-text-xl fmtm-font-[600] fmtm-pb-2 lg:fmtm-pb-6">Project Details</h6>
-        <p className="fmtm-text-gray-500 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3">
+        <div className="fmtm-text-gray-500 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3">
           <span>
             Fill in your project basic information such as name, description, hashtag, etc. This captures essential
             information about your project.
@@ -99,7 +99,7 @@ const ProjectDetailsForm = ({ flag }) => {
               https://docs.getodk.org/central-install-digital-ocean/
             </a>
           </div>
-        </p>
+        </div>
       </div>
       <form
         className="xl:fmtm-w-[83%] lg:fmtm-h-[60vh] xl:fmtm-h-[58vh] fmtm-bg-white fmtm-px-11 fmtm-py-6 lg:fmtm-overflow-y-scroll lg:scrollbar"
@@ -185,7 +185,7 @@ const ProjectDetailsForm = ({ flag }) => {
                 <CustomSelect
                   title="Organization Name"
                   placeholder="Organization Name"
-                  data={organizationList}
+                  data={organisationList}
                   dataKey="value"
                   value={values.organisation_id?.toString()}
                   valueKey="value"
@@ -194,7 +194,7 @@ const ProjectDetailsForm = ({ flag }) => {
                 />
                 <AssetModules.AddIcon
                   className="fmtm-bg-red-600 fmtm-text-white fmtm-rounded-full fmtm-mb-[0.15rem] hover:fmtm-bg-red-700 hover:fmtm-cursor-pointer fmtm-ml-5 fmtm-mt-9"
-                  onClick={() => createPopup('Create Organization', 'createOrganization?popup=true')}
+                  onClick={() => createPopup('Create Organization', 'createOrganisation?popup=true')}
                 />
               </div>
               {errors.organisation_id && (

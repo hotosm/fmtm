@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { Check, ChevronDown } from 'lucide-react';
 
-import { cn } from '../../utilfunctions/shadcn';
+import { cn } from '@/utilfunctions/shadcn';
 
 const Select = SelectPrimitive.Root;
 
@@ -112,7 +112,7 @@ interface ICustomSelect {
   placeholder: string;
   data: any;
   dataKey: string;
-  value?: string;
+  value?: string | null;
   valueKey: string;
   label: string;
   onValueChange: (value: string | null | number) => void;
@@ -134,7 +134,7 @@ export const CustomSelect = ({
 }: ICustomSelect) => {
   return (
     <div className="fmtm-w-full">
-      {title && <p className={`fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold`}>{title}</p>}
+      {title && <p className={`fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold ${className}`}>{title}</p>}
       <div className="fmtm-flex fmtm-items-end ">
         <div className={`fmtm-w-full ${className}`}>
           <Select value={value} onValueChange={(value) => onValueChange(value)}>
