@@ -269,8 +269,6 @@ async def create_project(
         project_info.project_info.name, project_info.odk_central
     )
 
-    # TODO check token against user or use token instead of passing user
-    # project_info.project_name_prefix = project_info.project_info.name
     project = await project_crud.create_project_with_project_info(
         db, project_info, odkproject["id"]
     )
@@ -582,7 +580,7 @@ async def generate_files(
 
     Accepts a project ID, category, custom form flag, and an uploaded file as inputs.
     The generated files are associated with the project ID and stored in the database.
-    This api generates qr_code, forms. This api also creates an app user for
+    This api generates odk appuser tokens, forms. This api also creates an app user for
     each task and provides the required roles.
     Some of the other functionality of this api includes converting a xls file
     provided by the user to the xform, generates osm data extracts and uploads
@@ -758,7 +756,9 @@ async def generate_log(
             .first()
         ).extract_completed_count
 
-        with open("/opt/logs/create_project.json", "r") as log_file:
+        project_log_file = Path("/opt/logs/create_project.json")
+        project_log_file.touch(exist_ok=True)
+        with open(project_log_file, "r") as log_file:
             logs = [json.loads(line) for line in log_file]
 
             filtered_logs = [

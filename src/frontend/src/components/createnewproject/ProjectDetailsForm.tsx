@@ -6,7 +6,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '@/types/reduxTypes';
 import useForm from '@/hooks/useForm';
-import CreateProjectValidation from '@/components/createproject/validation//CreateProjectValidation';
+import CreateProjectValidation from '@/components/createnewproject/validation/CreateProjectValidation';
 import Button from '@/components/common/Button';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import AssetModules from '@/shared/AssetModules.js';
@@ -87,17 +87,17 @@ const ProjectDetailsForm = ({ flag }) => {
             information about your project.
           </span>
           <span>To complete the first step, you will need the login credentials of ODK Central Server.</span>{' '}
-          <div className="fmtm-flex fmtm-flex-col">
-            <span>
-              Here are the instructions for setting up a Central ODK Server on Digital Ocean, if you haven’t already.
-            </span>
+          <div>
             <a
               href="https://docs.getodk.org/central-install-digital-ocean/"
-              className="fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-underline"
+              className="fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-w-fit"
               target="_"
             >
-              https://docs.getodk.org/central-install-digital-ocean/
+              Here{' '}
             </a>
+            <span>
+              are the instructions for setting up a Central ODK Server on Digital Ocean, if you haven’t already.
+            </span>
           </div>
         </div>
       </div>
