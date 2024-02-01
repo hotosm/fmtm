@@ -172,18 +172,6 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/basemap-selection',
-        element: (
-          <ProtectedRoute>
-            <Suspense fallback={<div>Loading...</div>}>
-              <ErrorBoundary>
-                <CreateProject />
-              </ErrorBoundary>
-            </Suspense>
-          </ProtectedRoute>
-        ),
-      },
-      {
         path: '/create-project',
         element: (
           <ProtectedRoute>
