@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import environment from '@/environment';
 import ProjectDescriptionTab from './ProjectDescriptionTab';
 import FormUpdateTab from './FormUpdateTab';
+import { GetIndividualProjectDetails } from '@/api/CreateProjectService';
+import CoreModules from '@/shared/CoreModules';
 
 const tabList: ['Project Description', 'Form Update'] = ['Project Description', 'Form Update'];
 
 const EditTab = () => {
+  const dispatch = CoreModules.useAppDispatch();
+  const params = CoreModules.useParams();
+  const encodedProjectId = params.id;
+  const decodedProjectId = environment.decode(encodedProjectId);
   const [tabView, setTabView] = useState<'Project Description' | 'Form Update'>('Project Description');
+
+  useEffect(() => {
+    dispatch(GetIndividualProjectDetails(`${import.meta.env.VITE_API_URL}/projects/${decodedProjectId}`));
+  }, [decodedProjectId]);
 
   return (
     <div>
