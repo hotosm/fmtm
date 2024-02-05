@@ -1,14 +1,19 @@
-import { createPopup } from './createPopup';
+import { createPopup } from '@/utilfunctions/createPopup';
 
 export const createLoginWindow = (redirectTo) => {
+  // Create popup outside of request (required for Safari security)
+  const popup = createPopup('OSM Auth', '');
+
   fetch(`${import.meta.env.VITE_API_URL}/auth/osm_login/`)
     .then((resp) => resp.json())
     .then((resp) => {
-      const popup = createPopup('OSM auth', resp.login_url);
       if (!popup) {
         console.warn('Popup blocked or unavailable.');
         return;
       }
+
+      // Set URL for popup from response
+      popup.location = resp.login_url;
 
       // Get OAuth2 authorization url, extract state
       const authUrl = new URL(resp.login_url);
@@ -34,10 +39,10 @@ export const createLoginWindow = (redirectTo) => {
                 .then((resp) => resp.json())
                 .then((userRes) => {
                   const params = new URLSearchParams({
-                    username: userRes.user_data.username,
+                    username: userRes.username,
                     osm_oauth_token: res.access_token,
-                    id: userRes.user_data.id,
-                    picture: userRes.user_data.img_url,
+                    id: userRes.id,
+                    picture: userRes.img_url,
                     redirect_to: redirectTo,
                   }).toString();
                   const redirectUrl = `/osmauth?${params}`;

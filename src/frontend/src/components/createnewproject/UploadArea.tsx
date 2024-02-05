@@ -1,18 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { CommonActions } from '../../store/slices/CommonSlice';
-import Button from '../../components/common/Button';
+import { CommonActions } from '@/store/slices/CommonSlice';
+import Button from '@/components/common/Button';
 import { useDispatch } from 'react-redux';
-import RadioButton from '../../components/common/RadioButton';
-import AssetModules from '../../shared/AssetModules.js';
-import DrawSvg from './DrawSvg';
+import RadioButton from '@/components/common/RadioButton';
+import AssetModules from '@/shared/AssetModules.js';
+import DrawSvg from '@/components/createnewproject/DrawSvg';
 import { useNavigate } from 'react-router-dom';
-import { CreateProjectActions } from '../../store/slices/CreateProjectSlice';
-import useForm from '../../hooks/useForm';
-import { useAppSelector } from '../../types/reduxTypes';
-import UploadAreaValidation from './validation/UploadAreaValidation';
-import FileInputComponent from '../common/FileInputComponent';
-import NewDefineAreaMap from '../../views/NewDefineAreaMap';
-import { checkWGS84Projection } from '../../utilfunctions/checkWGS84Projection.js';
+import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
+import useForm from '@/hooks/useForm';
+import { useAppSelector } from '@/types/reduxTypes';
+import UploadAreaValidation from '@/components/createnewproject/validation/UploadAreaValidation';
+import FileInputComponent from '@/components/common/FileInputComponent';
+import NewDefineAreaMap from '@/views/NewDefineAreaMap';
+import { checkWGS84Projection } from '@/utilfunctions/checkWGS84Projection.js';
+
 // @ts-ignore
 const DefineAreaMap = React.lazy(() => import('../../views/DefineAreaMap'));
 
@@ -31,7 +32,7 @@ const uploadAreaOptions = [
   },
 ];
 
-const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
+const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomLineUpload, setCustomPolygonUpload }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   // const [uploadAreaFile, setUploadAreaFile] = useState(null);
@@ -44,9 +45,23 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
   const totalAreaSelection = useAppSelector((state) => state.createproject.totalAreaSelection);
 
   const submission = () => {
+    if (totalAreaSelection) {
+      const totalArea = parseFloat(totalAreaSelection?.split(' ')[0]);
+      if (totalArea > 1000) {
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: 'Cannot create project of project area exceeding 1000 Sq.KM.',
+            variant: 'error',
+            duration: 3000,
+          }),
+        );
+        return;
+      }
+    }
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 3 }));
-    navigate('/select-form');
+    navigate('/select-category');
   };
   const {
     handleSubmit,
@@ -58,14 +73,6 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
     navigate(url);
   };
-
-  // const onCreateProjectSubmission = () => {
-  //   if (!drawnGeojson && !geojsonFile) {
-  //     return;
-  //   } else {
-  //     toggleStep(3, '/new-select-form');
-  //   }
-  // };
 
   const convertFileToGeojson = async (file) => {
     if (!file) return;
@@ -99,17 +106,19 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
   };
 
   useEffect(() => {
-    const isWGS84 = () => {
-      if (uploadAreaSelection === 'upload_file') {
-        const isWGS84Projection = checkWGS84Projection(drawnGeojson);
-        setIsGeojsonWG84(isWGS84Projection);
-        return isWGS84Projection;
+    if (drawnGeojson) {
+      const isWGS84 = () => {
+        if (uploadAreaSelection === 'upload_file') {
+          const isWGS84Projection = checkWGS84Projection(drawnGeojson);
+          setIsGeojsonWG84(isWGS84Projection);
+          return isWGS84Projection;
+        }
+        setIsGeojsonWG84(true);
+        return true;
+      };
+      if (!isWGS84() && drawnGeojson) {
+        showSpatialError();
       }
-      setIsGeojsonWG84(true);
-      return true;
-    };
-    if (!isWGS84() && drawnGeojson) {
-      showSpatialError();
     }
     return () => {};
   }, [drawnGeojson]);
@@ -132,6 +141,32 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
     dispatch(CreateProjectActions.SetDrawnGeojson(null));
     dispatch(CreateProjectActions.SetTotalAreaSelection(null));
   };
+
+  useEffect(() => {
+    if (totalAreaSelection) {
+      const totalArea = parseFloat(totalAreaSelection?.split(' ')[0]);
+      if (totalArea > 100) {
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: 'The project area exceeded over 100 Sq.KM.',
+            variant: 'warning',
+            duration: 3000,
+          }),
+        );
+      }
+      if (totalArea > 1000) {
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: 'The project area exceeded 1000 Sq.KM. and must be less than 1000 Sq.KM.',
+            variant: 'error',
+            duration: 3000,
+          }),
+        );
+      }
+    }
+  }, [totalAreaSelection]);
 
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
@@ -254,17 +289,26 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile }) => {
             <NewDefineAreaMap
               drawToggle={drawToggle}
               uploadedOrDrawnGeojsonFile={drawnGeojson}
-              onDraw={(geojson, area) => {
-                handleCustomChange('drawnGeojson', geojson);
-                dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
-                dispatch(CreateProjectActions.SetTotalAreaSelection(area));
-                setGeojsonFile(null);
-              }}
+              onDraw={
+                drawnGeojson || uploadAreaSelection === 'upload_file'
+                  ? null
+                  : (geojson, area) => {
+                      handleCustomChange('drawnGeojson', geojson);
+                      dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
+                      dispatch(CreateProjectActions.SetTotalAreaSelection(area));
+                      setGeojsonFile(null);
+                    }
+              }
               onModify={(geojson, area) => {
                 handleCustomChange('drawnGeojson', geojson);
                 dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
                 dispatch(CreateProjectActions.SetTotalAreaSelection(area));
-                setGeojsonFile(null);
+                dispatch(CreateProjectActions.ClearProjectStepState(formValues));
+                setCustomLineUpload(null);
+                setCustomPolygonUpload(null);
+              }}
+              getAOIArea={(area) => {
+                dispatch(CreateProjectActions.SetTotalAreaSelection(area));
               }}
             />
           </div>

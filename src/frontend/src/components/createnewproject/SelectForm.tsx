@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { CommonActions } from '../../store/slices/CommonSlice';
-import Button from '../../components/common/Button';
-import { CustomSelect } from '../../components/common/Select';
+import { CommonActions } from '@/store/slices/CommonSlice';
+import Button from '@/components/common/Button';
+import { CustomSelect } from '@/components/common/Select';
 import { useNavigate } from 'react-router-dom';
-import RadioButton from '../common/RadioButton';
-import { CreateProjectActions } from '../../store/slices/CreateProjectSlice';
-import useForm from '../../hooks/useForm';
-import { useAppSelector } from '../../types/reduxTypes';
-import FileInputComponent from '../common/FileInputComponent';
-import SelectFormValidation from './validation/SelectFormValidation';
-import { FormCategoryService, ValidateCustomForm } from '../../api/CreateProjectService';
-import NewDefineAreaMap from '../../views/NewDefineAreaMap';
+import RadioButton from '@/components/common/RadioButton';
+import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
+import useForm from '@/hooks/useForm';
+import { useAppSelector } from '@/types/reduxTypes';
+import FileInputComponent from '@/components/common/FileInputComponent';
+import SelectFormValidation from '@/components/createnewproject/validation/SelectFormValidation';
+import { FormCategoryService, ValidateCustomForm } from '@/api/CreateProjectService';
+import NewDefineAreaMap from '@/views/NewDefineAreaMap';
 
 const osmFeatureTypeOptions = [
   { name: 'form_ways', value: 'existing_form', label: 'Use Existing Form' },
@@ -73,7 +73,7 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
       <div className="fmtm-bg-white lg:fmtm-w-[20%] xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6">
-        <h6 className="fmtm-text-xl fmtm-font-[600] fmtm-pb-2 lg:fmtm-pb-6">Select Form</h6>
+        <h6 className="fmtm-text-xl fmtm-font-[600] fmtm-pb-2 lg:fmtm-pb-6">Select Category</h6>
         <p className="fmtm-text-gray-500 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3">
           <span>You may choose an existing category or upload a custom XLS form.</span>
           <span>
@@ -96,8 +96,8 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
             <div className="fmtm-flex fmtm-flex-col  fmtm-gap-6">
               <div className="">
                 <CustomSelect
-                  title="Select form category"
-                  placeholder="Select form category"
+                  title="Select category"
+                  placeholder="Select category"
                   data={sortedFormCategoryList}
                   dataKey="id"
                   valueKey="title"
@@ -118,7 +118,7 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
                   >
                     tags
                   </a>{' '}
-                  that match the selected category in OSM database, if you don't choose to upload custom data extract.
+                  {`that match the selected category in OSM database, if you don't choose to upload custom data extract.`}
                 </p>
               </div>
               <RadioButton

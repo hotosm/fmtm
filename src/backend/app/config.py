@@ -17,11 +17,18 @@
 #
 """Config file for Pydantic and FastAPI, using environment variables."""
 
+import base64
 from functools import lru_cache
-from typing import Any, Optional, Union
+from typing import Annotated, Any, Optional, Union
 
-from pydantic import PostgresDsn, ValidationInfo, field_validator
+from cryptography.fernet import Fernet
+from pydantic import BeforeValidator, TypeAdapter, ValidationInfo, field_validator
+from pydantic.networks import HttpUrl, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+HttpUrlStr = Annotated[
+    str, BeforeValidator(lambda value: str(TypeAdapter(HttpUrl).validate_python(value)))
+]
 
 
 class Settings(BaseSettings):
@@ -30,6 +37,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "FMTM"
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"
+    ENCRYPTION_KEY: str = ""
 
     FMTM_DOMAIN: str
     FMTM_DEV_PORT: Optional[str] = "7050"
@@ -97,14 +105,14 @@ class Settings(BaseSettings):
         )
         return pg_url
 
-    ODK_CENTRAL_URL: Optional[str] = ""
+    ODK_CENTRAL_URL: Optional[HttpUrlStr] = ""
     ODK_CENTRAL_USER: Optional[str] = ""
     ODK_CENTRAL_PASSWD: Optional[str] = ""
 
     OSM_CLIENT_ID: str
     OSM_CLIENT_SECRET: str
     OSM_SECRET_KEY: str
-    OSM_URL: str = "https://www.openstreetmap.org"
+    OSM_URL: HttpUrlStr = "https://www.openstreetmap.org"
     OSM_SCOPE: str = "read_prefs"
     OSM_LOGIN_REDIRECT_URI: str = "http://127.0.0.1:7051/osmauth/"
 
@@ -144,7 +152,7 @@ class Settings(BaseSettings):
                 return f"http://s3.{fmtm_domain}:{dev_port}"
             return f"https://s3.{fmtm_domain}"
 
-    UNDERPASS_API_URL: str = "https://api-prod.raw-data.hotosm.org/v1/"
+    UNDERPASS_API_URL: HttpUrlStr = "https://api-prod.raw-data.hotosm.org/v1/"
     SENTRY_DSN: Optional[str] = None
 
     model_config = SettingsConfigDict(
@@ -159,6 +167,27 @@ def get_settings():
     if _settings.DEBUG:
         print(f"Loaded settings: {_settings.model_dump()}")
     return _settings
+
+
+@lru_cache
+def get_cipher_suite():
+    """Cache cypher suite."""
+    return Fernet(settings.ENCRYPTION_KEY)
+
+
+def encrypt_value(password: str) -> str:
+    """Encrypt value before going to the DB."""
+    cipher_suite = get_cipher_suite()
+    encrypted_password = cipher_suite.encrypt(password.encode("utf-8"))
+    return base64.b64encode(encrypted_password).decode("utf-8")
+
+
+def decrypt_value(db_password: str) -> str:
+    """Decrypt the database value."""
+    cipher_suite = get_cipher_suite()
+    encrypted_password = base64.b64decode(db_password.encode("utf-8"))
+    decrypted_password = cipher_suite.decrypt(encrypted_password)
+    return decrypted_password.decode("utf-8")
 
 
 settings = get_settings()

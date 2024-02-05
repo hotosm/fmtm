@@ -3,23 +3,23 @@ import {
   createBrowserRouter,
   // Navigate,
 } from 'react-router-dom';
-import Home from './views/Home';
-import Tabbed from './views/Tabbed';
-import MainView from './views/MainView';
-import CreateProject from './views/CreateProject';
-import EditProject from './views/EditProject';
-import ProtectedRoute from './utilities/ProtectedRoute';
-import NotFoundPage from './views/NotFound404';
-import Organization from './views/Organization';
-import CreateOrganization from './views/CreateOrganization';
-import Authorized from './views/Authorized';
-import SubmissionDetails from './views/SubmissionDetails';
-import CreateNewProject from './views/CreateNewProject';
-import ProjectDetails from './views/ProjectDetails';
-import UnderConstruction from './views/UnderConstruction';
-import ErrorBoundary from './views/ErrorBoundary';
-import NewProjectDetails from './views/NewProjectDetails';
-import ProjectDetailsV2 from './views/ProjectDetailsV2';
+import Home from '@/views/Home';
+import Tabbed from '@/views/Tabbed';
+import MainView from '@/views/MainView';
+import EditProject from '@/views/EditProject';
+import ProtectedRoute from '@/utilities/ProtectedRoute';
+import NotFoundPage from '@/views/NotFound404';
+import Organisation from '@/views/Organisation';
+import CreateOrganisation from '@/views/CreateOrganisation';
+import Authorized from '@/views/Authorized';
+import SubmissionDetails from '@/views/SubmissionDetails';
+import CreateNewProject from '@/views/CreateNewProject';
+import ProjectDetails from '@/views/ProjectDetails';
+import UnderConstruction from '@/views/UnderConstruction';
+import ErrorBoundary from '@/views/ErrorBoundary';
+import NewProjectDetails from '@/views/NewProjectDetails';
+import ProjectDetailsV2 from '@/views/ProjectDetailsV2';
+import ProjectSubmissions from '@/views/ProjectSubmissions';
 
 // const ProjectDetails = React.lazy(() => import('./views/ProjectDetails'));
 const Submissions = React.lazy(() => import('./views/Submissions'));
@@ -39,18 +39,18 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/organization',
+        path: '/organisation',
         element: (
           <ErrorBoundary>
-            <Organization />
+            <Organisation />
           </ErrorBoundary>
         ),
       },
       {
-        path: '/createOrganization',
+        path: '/createOrganisation',
         element: (
           <ErrorBoundary>
-            <CreateOrganization />
+            <CreateOrganisation />
           </ErrorBoundary>
         ),
       },
@@ -74,6 +74,19 @@ const routes = createBrowserRouter([
             <Suspense fallback={<div></div>}>
               <ErrorBoundary>
                 <ProjectInfo />
+              </ErrorBoundary>
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+
+      {
+        path: '/project-submissions/:projectId',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div></div>}>
+              <ErrorBoundary>
+                <ProjectSubmissions />
               </ErrorBoundary>
             </Suspense>
           </ProtectedRoute>
@@ -158,78 +171,6 @@ const routes = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      // {
-      //   path: '/create-project',
-      //   element: (
-      //     <ProtectedRoute>
-      //       <Suspense fallback={<div>Loading...</div>}>
-      //         <ErrorBoundary>
-      //           <CreateProject />
-      //         </ErrorBoundary>
-      //       </Suspense>
-      //     </ProtectedRoute>
-      //   ),
-      // },
-      // {
-      //   path: '/upload-area',
-      //   element: (
-      //     <ProtectedRoute>
-      //       <Suspense fallback={<div>Loading...</div>}>
-      //         <ErrorBoundary>
-      //           <CreateProject />
-      //         </ErrorBoundary>
-      //       </Suspense>
-      //     </ProtectedRoute>
-      //   ),
-      // },
-      // {
-      //   path: '/data-extract',
-      //   element: (
-      //     <ProtectedRoute>
-      //       <Suspense fallback={<div>Loading...</div>}>
-      //         <ErrorBoundary>
-      //           <CreateProject />
-      //         </ErrorBoundary>
-      //       </Suspense>
-      //     </ProtectedRoute>
-      //   ),
-      // },
-      // {
-      //   path: '/define-tasks',
-      //   element: (
-      //     <ProtectedRoute>
-      //       <Suspense fallback={<div>Loading...</div>}>
-      //         <ErrorBoundary>
-      //           <CreateProject />
-      //         </ErrorBoundary>
-      //       </Suspense>
-      //     </ProtectedRoute>
-      //   ),
-      // },
-      // {
-      //   path: '/select-form',
-      //   element: (
-      //     <ProtectedRoute>
-      //       <Suspense fallback={<div>Loading...</div>}>
-      //         <ErrorBoundary>
-      //           <CreateProject />
-      //         </ErrorBoundary>
-      //       </Suspense>
-      //     </ProtectedRoute>
-      //   ),
-      // },
-      {
-        path: '/basemap-selection',
-        element: (
-          <ProtectedRoute>
-            <Suspense fallback={<div>Loading...</div>}>
-              <ErrorBoundary>
-                <CreateProject />
-              </ErrorBoundary>
-            </Suspense>
-          </ProtectedRoute>
-        ),
-      },
       {
         path: '/create-project',
         element: (
@@ -279,7 +220,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/select-form',
+        path: '/select-category',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
@@ -351,7 +292,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: 'edit-project/select-form/:projectId',
+        path: 'edit-project/select-category/:projectId',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>

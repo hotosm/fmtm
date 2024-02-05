@@ -49,16 +49,24 @@ import {
   CropFree as CropFreeIcon,
   LegendToggle as LegendToggleIcon,
   Delete as DeleteIcon,
+  ListAlt as ListAltIcon,
+  Map as MapIcon,
+  FilterAltOutlined as FilterAltOutlinedIcon,
+  ArrowBackIos as ArrowBackIosIcon,
+  VisibilityOutlined as VisibilityOutlinedIcon,
+  CheckOutlined as CheckOutlinedIcon,
+  FileDownloadOutlined as FileDownloadOutlinedIcon,
   Launch as LaunchIcon,
   Edit as EditIcon,
   FmdGood as FmdGoodIcon,
-  Map as MapIcon,
   AccessTime as AccessTimeIcon,
   ImportExport as ImportExportIcon,
   Check as CheckIcon,
+  Undo as UndoIcon,
+  Timeline as TimelineIcon,
 } from '@mui/icons-material';
-import LockPng from '../assets/images/lock.png';
-import RedLockPng from '../assets/images/red-lock.png';
+import LockPng from '@/assets/images/lock.png';
+import RedLockPng from '@/assets/images/red-lock.png';
 import { styled, alpha } from '@mui/material/styles';
 export default {
   ExitToAppIcon,
@@ -115,11 +123,19 @@ export default {
   CropFreeIcon,
   LegendToggleIcon,
   DeleteIcon,
+  ListAltIcon,
+  MapIcon,
+  FilterAltOutlinedIcon,
+  ArrowBackIosIcon,
+  VisibilityOutlinedIcon,
+  CheckOutlinedIcon,
+  FileDownloadOutlinedIcon,
   LaunchIcon,
   EditIcon,
   FmdGoodIcon,
-  MapIcon,
   AccessTimeIcon,
   ImportExportIcon,
   CheckIcon,
+  UndoIcon,
+  TimelineIcon,
 };

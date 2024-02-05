@@ -15,6 +15,8 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
+"""Routes to relay requests to ODK Central server."""
+
 import json
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -29,14 +31,13 @@ from sqlalchemy import (
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
-from ..central import central_crud
-from ..db import database
-from ..projects import project_crud, project_schemas
+from app.central import central_crud
+from app.db import database
+from app.projects import project_schemas
 
 router = APIRouter(
     prefix="/central",
     tags=["central"],
-    dependencies=[Depends(database.get_db)],
     responses={404: {"description": "Not found"}},
 )
 
@@ -52,40 +53,25 @@ async def list_projects():
     return JSONResponse(content={"projects": projects})
 
 
-@router.get("/appuser")
-async def create_appuser(
-    project_id: int,
-    name: str,
-    db: Session = Depends(database.get_db),
-):
-    """Create an appuser in Central."""
-    appuser = central_crud.create_appuser(project_id, name=name)
-    return await project_crud.create_qrcode(db, project_id, appuser.get("token"), name)
-
-
-# @router.get("/list_submissions")
-# async def list_submissions(project_id: int):
-#     """List the submissions data from Central"""
-#     submissions = central_crud.list_submissions(project_id)
-#     log.info("/central/list_submissions is Unimplemented!")
-#     return {"data": submissions}
-
-
 @router.get("/list-forms")
 async def get_form_lists(
     db: Session = Depends(database.get_db), skip: int = 0, limit: int = 100
 ):
-    """This function retrieves a list of XForms from a database,
-    with the option to skip a certain number of records and limit the number of records returned.
+    """Get a list of all XForms on ODK Central.
+
+    Option to skip a certain number of records and limit the number of
+    records returned.
 
 
     Parameters:
-    skip:int: the number of records to skip before starting to retrieve records. Defaults to 0 if not provided.
-    limit:int: the maximum number of records to retrieve. Defaults to 10 if not provided.
+    skip (int): the number of records to skip before starting to retrieve records.
+        Defaults to 0 if not provided.
+    limit (int): the maximum number of records to retrieve.
+        Defaults to 10 if not provided.
 
 
     Returns:
-    A list of dictionary containing the id and title of each XForm record retrieved from the database.
+        list[dict]: list of id:title dicts of each XForm record.
     """
     # NOTE runs in separate thread using run_in_threadpool
     forms = await run_in_threadpool(lambda: central_crud.get_form_list(db, skip, limit))
@@ -138,7 +124,8 @@ async def list_submissions(
     project_id: int,
     xml_form_id: str = None,
     db: Session = Depends(database.get_db),
-):
+) -> list[dict]:
+    """Get all submissions JSONs for a project."""
     try:
         project = table(
             "projects",
@@ -188,20 +175,21 @@ async def list_submissions(
 @router.get("/submission")
 async def get_submission(
     project_id: int,
-    xmlFormId: str = None,
+    xml_form_id: str = None,
     submission_id: str = None,
     db: Session = Depends(database.get_db),
-):
-    """This api returns the submission json.
+) -> dict:
+    """Return the submission JSON for a single XForm.
 
     Parameters:
-    project_id:int the id of the project in the database.
-    xml_form_id:str: the xmlFormId of the form in Central.
-    submission_id:str: the submission id of the submission in Central.
+    project_id (int): the id of the project in the database.
+    xml_form_id (str): the xml_form_id of the form in Central.
+    submission_id (str): the submission id of the submission in Central.
 
     If the submission_id is provided, an individual submission is returned.
 
-    Returns: Submission json.
+    Returns:
+        dict: Submission JSON.
     """
     try:
         """Download the submissions data from Central."""
@@ -223,7 +211,7 @@ async def get_submission(
             return {"error": "No such project!"}
 
         # ODK Credentials
-        odk_credentials = project_schemas.ODKCentral(
+        odk_credentials = project_schemas.ODKCentralDecrypted(
             odk_central_url=first.odk_central_url,
             odk_central_user=first.odk_central_user,
             odk_central_password=first.odk_central_password,
@@ -231,9 +219,9 @@ async def get_submission(
 
         submissions = []
 
-        if xmlFormId and submission_id:
+        if xml_form_id and submission_id:
             data = central_crud.download_submissions(
-                first.odkid, xmlFormId, submission_id, True, odk_credentials
+                first.odkid, xml_form_id, submission_id, True, odk_credentials
             )
             if submissions != 0:
                 submissions.append(json.loads(data[0]))
@@ -242,7 +230,7 @@ async def get_submission(
                     submissions.append(json.loads(data[entry]))
 
         else:
-            if not xmlFormId:
+            if not xml_form_id:
                 xforms = central_crud.list_odk_xforms(first.odkid, odk_credentials)
                 for xform in xforms:
                     try:
@@ -262,7 +250,7 @@ async def get_submission(
                             submissions.append(json.loads(data[entry]))
             else:
                 data = central_crud.download_submissions(
-                    first.odkid, xmlFormId, None, True, odk_credentials
+                    first.odkid, xml_form_id, None, True, odk_credentials
                 )
                 submissions.append(json.loads(data[0]))
                 if len(data) >= 2:
@@ -275,27 +263,3 @@ async def get_submission(
     except Exception as e:
         log.error(e)
         raise HTTPException(status_code=500, detail=str(e)) from e
-
-
-# @router.get("/upload")
-# async def upload_project_files(
-#         project_id: int,
-#         filespec: str
-# ):
-#     """Upload the XForm and data files to Central"""
-#     log.warning("/central/upload is Unimplemented!")
-#     return {"message": "Hello World from /central/upload"}
-
-
-# @router.get("/download")
-# async def download_project_files(
-#     project_id: int,
-#     type: central_schemas.CentralFileType
-# ):
-#     """Download the project data files from Central. The filespec is
-#     a string that can contain multiple filenames separated by a comma.
-#     """
-#     # FileResponse("README.md")
-#     # xxx = central_crud.does_central_exist()
-#     log.warning("/central/download is Unimplemented!")
-#     return {"message": "Hello World from /central/download"}

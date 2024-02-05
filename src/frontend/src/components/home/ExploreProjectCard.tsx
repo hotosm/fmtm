@@ -1,11 +1,11 @@
 import * as React from 'react';
-import CustomizedImage from '../../utilities/CustomizedImage';
-import CustomizedProgressBar from '../../utilities/CustomizedProgressBar';
-import environment from '../../environment';
-import { HomeActions } from '../../store/slices/HomeSlice';
-import { HomeProjectCardModel } from '../../models/home/homeModel';
-import CoreModules from '../../shared/CoreModules';
-import AssetModules from '../../shared/AssetModules';
+import CustomizedImage from '@/utilities/CustomizedImage';
+import CustomizedProgressBar from '@/utilities/CustomizedProgressBar';
+import environment from '@/environment';
+import { HomeActions } from '@/store/slices/HomeSlice';
+import { HomeProjectCardModel } from '@/models/home/homeModel';
+import CoreModules from '@/shared/CoreModules';
+import AssetModules from '@/shared/AssetModules';
 
 //Explore Project Card Model to be renderd in home view
 export default function ExploreProjectCard({ data }) {
@@ -73,7 +73,9 @@ export default function ExploreProjectCard({ data }) {
           <div>
             <div className="fmtm-flex fmtm-justify-between">
               {data.organisation_logo ? (
-                <CoreModules.CardMedia component="img" src={data.organisation_logo} sx={{ width: 50, height: 50 }} />
+                <div className="fmtm-h-[50px]">
+                  <CoreModules.CardMedia component="img" src={data.organisation_logo} sx={{ height: 50 }} />
+                </div>
               ) : (
                 <CustomizedImage status={'card'} style={{ width: 50, height: 50 }} />
               )}

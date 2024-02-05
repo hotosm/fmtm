@@ -39,7 +39,7 @@ URLs defined in the docker-compose file and your env file.
    `http://api.fmtm.localhost:7050/docs`
 
 > Note: If that link doesn't work, check the logs with
-> `docker log fmtm-api`.
+> `docker compose logs api`.
 > Note: the database host `fmtm-db` is automatically
 > resolved by docker compose to the database container IP.
 
@@ -133,11 +133,12 @@ fastapi `Depends(login_required)` on endpoints.
 
 #### Creating Migration Files
 
-- Exec into the API container: `docker compose exec api bash`.
-- Run the command to generate migrations: `alembic revision`.
-- The migration file should be generated under
-  `src/backend/migrations/versions`.
-- Commit the file to the repo.
+- Migrations can be written to `src/backend/migrations`.
+- Each file must be an SQL script that is:
+  - Idempotent: can be run multiple times without consequence.
+  - Atomic: Run within a BEGIN/COMMIT transaction.
+- Migrations must also include an equivalent revert migration under:
+  `src/backend/migrations/revert`
 
 #### Applying Migrations
 
@@ -146,7 +147,21 @@ fastapi `Depends(login_required)` on endpoints.
 - To run manually:
 
 ```bash
-alembic upgrade head
+docker compose up -d migrations
+```
+
+### Type Checking
+
+- It is a good idea to have your code 'type checked' to avoid potential
+  future bugs.
+- To do this, install `pyright` (VSCode has an extension).
+- You may need to add the backend dependencies to `extraPaths`. In VSCode
+  your settings.json would include:
+
+```json
+{
+  "python.analysis.extraPaths": ["src/backend/__pypackages__/3.10/lib/"]
+}
 ```
 
 ## Backend Debugging
@@ -157,8 +172,20 @@ alembic upgrade head
 To use it:
 
 1. Re-build the docker image `docker compose build api`
-2. Start the docker container `docker compose up -d api`
-3. Connect to the debugger on port **5678**.
+2. Uncomment the debug port in docker-compose.yml:
+
+   ```yml
+   services:
+     ...
+     api:
+       ...
+       ports:
+         - "7052:8000"
+       #   - "5678:5678" # Debugger port
+   ```
+
+3. Start the docker container `docker compose up -d api`
+4. Connect to the debugger on port **5678**.
 
 You can configure your IDE to do this with the build in debugger.
 
@@ -195,6 +222,19 @@ To run the backend tests locally, run:
 ```bash
 docker compose run --rm api pytest
 ```
+
+To assess coverage of tests, run:
+
+```bash
+docker compose run --rm --entrypoint='sh -c' api \
+  'coverage run -m pytest && coverage report -m'
+```
+
+To assess performance of endpoints:
+
+- We can use the pyinstrument profiler.
+- While in debug mode (DEBUG=True), access any endpoint.
+- Add the `?profile=true` arg to the URL to view the execution time.
 
 ## Using the local version of ODK Central
 

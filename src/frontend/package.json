@@ -7,7 +7,8 @@
     "build:start": "cd dist && PORT=8080 npx serve",
     "start": "env-cmd -f .env.dev vite dev",
     "start:live": "vite dev",
-    "test": "vitest tests/"
+    "test": "vitest tests/",
+    "lint": "eslint --fix --ext .js,.jsx,.ts,.tsx src"
   },
   "license": "GPL-3.0-only",
   "author": {
@@ -69,10 +70,13 @@
     "eslint-plugin-prettier": "^5.0.0",
     "flatgeobuf": "^3.27.1",
     "geojson-validation": "^1.0.2",
+    "html2canvas": "^1.4.1",
     "install": "^0.13.0",
     "lucide-react": "^0.276.0",
     "mini-css-extract-plugin": "^2.7.5",
     "ol-ext": "^4.0.11",
+    "pako": "^2.1.0",
+    "qrcode-generator": "^1.4.4",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-lazy-load-image-component": "^1.5.6",
@@ -80,6 +84,7 @@
     "react-redux": "^8.0.5",
     "react-router-dom": "^6.6.0",
     "react-spinners": "^0.13.8",
+    "recharts": "^2.10.3",
     "redux": "^4.2.0",
     "redux-persist": "^6.0.0",
     "tailwind-merge": "^1.14.0",

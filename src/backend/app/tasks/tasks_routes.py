@@ -15,8 +15,10 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
+"""Routes for FMTM tasks."""
 
 import json
+from datetime import datetime, timedelta
 from typing import List
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -27,6 +29,7 @@ from app.central import central_crud
 from app.db import database
 from app.models.enums import TaskStatus
 from app.projects import project_crud, project_schemas
+from app.tasks import tasks_crud, tasks_schemas
 from app.users import user_schemas
 
 from . import tasks_crud, tasks_schemas
@@ -35,7 +38,6 @@ from ..auth.osm import AuthUser,login_required
 router = APIRouter(
     prefix="/tasks",
     tags=["tasks"],
-    dependencies=[Depends(database.get_db)],
     responses={404: {"description": "Not found"}},
 )
 
@@ -46,6 +48,7 @@ async def read_task_list(
     limit: int = 1000,
     db: Session = Depends(database.get_db),
 ):
+    """Get the task list for a project."""
     tasks = await tasks_crud.get_tasks(db, project_id, limit)
     updated_tasks = await tasks_crud.update_task_history(tasks, db)
     if not tasks:
@@ -61,6 +64,7 @@ async def read_tasks(
     limit: int = 1000,
     db: Session = Depends(database.get_db),
 ):
+    """Get all task details, either for a project or user."""
     if user_id:
         raise HTTPException(
             status_code=300,
@@ -81,11 +85,14 @@ async def get_point_on_surface(project_id: int, db: Session = Depends(database.g
         project_id (int): The ID of the project.
 
     Returns:
-        List[Tuple[int, str]]: A list of tuples containing the task ID and the centroid as a string.
+        List[Tuple[int, str]]: A list of tuples containing the task ID
+            and the centroid as a string.
     """
     query = text(
         f"""
-            SELECT id, ARRAY_AGG(ARRAY[ST_X(ST_PointOnSurface(outline)), ST_Y(ST_PointOnSurface(outline))]) AS point
+            SELECT id,
+            ARRAY_AGG(ARRAY[ST_X(ST_PointOnSurface(outline)),
+            ST_Y(ST_PointOnSurface(outline))]) AS point
             FROM tasks
             WHERE project_id = {project_id}
             GROUP BY id; """
@@ -105,7 +112,8 @@ async def get_tasks_near_me(
 
 
 @router.get("/{task_id}", response_model=tasks_schemas.Task)
-async def read_tasks(task_id: int, db: Session = Depends(database.get_db)):
+async def get_specific_task(task_id: int, db: Session = Depends(database.get_db)):
+    """Get a specific task by it's ID."""
     task = await tasks_crud.get_task(db, task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -121,7 +129,7 @@ async def update_task_status(
     new_status: TaskStatus,
     db: Session = Depends(database.get_db),
 ):
-    # TODO verify logged in user
+    """Update the task status."""
     user_id = user.id
 
     task = await tasks_crud.update_task_status(db, user_id, task_id, new_status)
@@ -131,20 +139,13 @@ async def update_task_status(
     return updated_task
 
 
-@router.post("/task-qr-code/{task_id}")
-async def get_qr_code_list(
-    task_id: int,
-    db: Session = Depends(database.get_db),
-):
-    return await tasks_crud.get_qr_codes_for_task(db=db, task_id=task_id)
-
-
 @router.post("/edit-task-boundary")
 async def edit_task_boundary(
     task_id: int,
     boundary: UploadFile = File(...),
     db: Session = Depends(database.get_db),
 ):
+    """Update the task boundary manually."""
     # read entire file
     content = await boundary.read()
     boundary_json = json.loads(content)
@@ -159,11 +160,12 @@ async def task_features_count(
     project_id: int,
     db: Session = Depends(database.get_db),
 ):
+    """Get all features within a task area."""
     # Get the project object.
     project = await project_crud.get_project(db, project_id)
 
     # ODK Credentials
-    odk_credentials = project_schemas.ODKCentral(
+    odk_credentials = project_schemas.ODKCentralDecrypted(
         odk_central_url=project.odk_central_url,
         odk_central_user=project.odk_central_user,
         odk_central_password=project.odk_central_password,
@@ -176,7 +178,8 @@ async def task_features_count(
     for x in odk_details:
         feature_count_query = text(
             f"""
-            select count(*) from features where project_id = {project_id} and task_id = {x['xmlFormId']}
+            select count(*) from features
+            where project_id = {project_id} and task_id = {x['xmlFormId']}
         """
         )
 
@@ -242,3 +245,27 @@ async def delete_task_comments(
         deleted_project = await tasks_crud.delete_task_comment_by_id(db, task_comment_id,user_data)
     
     return deleted_project
+
+@router.get("/activity/", response_model=List[tasks_schemas.TaskHistoryCount])
+async def task_activity(
+    project_id: int, days: int = 10, db: Session = Depends(database.get_db)
+):
+    """Retrieves the validate and mapped task count for a specific project.
+
+    Args:
+        project_id: The ID of the project.
+        days: The number of days to consider for the
+        task activity (default: 10).
+        db: The database session.
+
+    Returns:
+        list[TaskHistoryCount]: A list of task history counts.
+
+    """
+    end_date = datetime.now() - timedelta(days=days)
+    task_history = tasks_crud.get_task_history(project_id, end_date, db)
+
+    return await tasks_crud.count_validated_and_mapped_tasks(
+        task_history,
+        end_date,
+    )

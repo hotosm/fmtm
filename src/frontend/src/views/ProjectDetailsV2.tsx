@@ -1,52 +1,54 @@
 import React, { useEffect, useState } from 'react';
 import '../../node_modules/ol/ol.css';
 import '../styles/home.scss';
-import WindowDimension from '../hooks/WindowDimension';
-import MapDescriptionComponents from '../components/MapDescriptionComponents';
-import ActivitiesPanel from '../components/ProjectDetailsV2/ActivitiesPanel';
-import environment from '../environment';
-import { ProjectById, GetProjectDashboard } from '../api/Project';
-import { ProjectActions } from '../store/slices/ProjectSlice';
-import CustomizedSnackbar from '../utilities/CustomizedSnackbar';
-import OnScroll from '../hooks/OnScroll';
-import { HomeActions } from '../store/slices/HomeSlice';
-import CoreModules from '../shared/CoreModules';
-import AssetModules from '../shared/AssetModules';
-import FmtmLogo from '../assets/images/hotLog.png';
-import GenerateBasemap from '../components/GenerateBasemap';
-import { ProjectBuildingGeojsonService } from '../api/SubmissionService';
-import TaskSectionPopup from '../components/ProjectDetailsV2/TaskSectionPopup';
-import DialogTaskActions from '../components/DialogTaskActions';
-import QrcodeComponent from '../components/QrcodeComponent';
-import MobileFooter from '../components/ProjectDetailsV2/MobileFooter';
-import MobileActivitiesContents from '../components/ProjectDetailsV2/MobileActivitiesContents';
-import BottomSheet from '../components/common/BottomSheet';
-import MobileProjectInfoContent from '../components/ProjectDetailsV2/MobileProjectInfoContent';
+import WindowDimension from '@/hooks/WindowDimension';
+import MapDescriptionComponents from '@/components/MapDescriptionComponents';
+import ActivitiesPanel from '@/components/ProjectDetailsV2/ActivitiesPanel';
+import environment from '@/environment';
+import { ProjectById, GetProjectDashboard } from '@/api/Project';
+import { ProjectActions } from '@/store/slices/ProjectSlice';
+import CustomizedSnackbar from '@/utilities/CustomizedSnackbar';
+import OnScroll from '@/hooks/OnScroll';
+import { HomeActions } from '@/store/slices/HomeSlice';
+import CoreModules from '@/shared/CoreModules';
+import AssetModules from '@/shared/AssetModules';
+import FmtmLogo from '@/assets/images/hotLog.png';
+import GenerateBasemap from '@/components/GenerateBasemap';
+import { ProjectBuildingGeojsonService } from '@/api/SubmissionService';
+import TaskSectionPopup from '@/components/ProjectDetailsV2/TaskSectionPopup';
+import DialogTaskActions from '@/components/DialogTaskActions';
+import QrcodeComponent from '@/components/QrcodeComponent';
+import MobileFooter from '@/components/ProjectDetailsV2/MobileFooter';
+import MobileActivitiesContents from '@/components/ProjectDetailsV2/MobileActivitiesContents';
+import BottomSheet from '@/components/common/BottomSheet';
+import MobileProjectInfoContent from '@/components/ProjectDetailsV2/MobileProjectInfoContent';
 import { useNavigate } from 'react-router-dom';
-import ProjectOptions from '../components/ProjectDetails/ProjectOptions';
-import { MapContainer as MapComponent, useOLMap } from '../components/MapComponent/OpenLayersComponent';
-import LayerSwitcherControl from '../components/MapComponent/OpenLayersComponent/LayerSwitcher/index';
-import MapControlComponent from '../components/ProjectDetailsV2/MapControlComponent';
-import { VectorLayer } from '../components/MapComponent/OpenLayersComponent/Layers';
-import { geojsonObjectModel } from '../constants/geojsonObjectModal';
-import { basicGeojsonTemplate } from '../utilities/mapUtils';
-import getTaskStatusStyle from '../utilfunctions/getTaskStatusStyle';
-import { defaultStyles } from '../components/MapComponent/OpenLayersComponent/helpers/styleUtils';
-import MapLegends from '../components/MapLegends';
-import Accordion from '../components/common/Accordion';
+import ProjectOptions from '@/components/ProjectDetailsV2/ProjectOptions';
+import { MapContainer as MapComponent, useOLMap } from '@/components/MapComponent/OpenLayersComponent';
+import LayerSwitcherControl from '@/components/MapComponent/OpenLayersComponent/LayerSwitcher/index';
+import MapControlComponent from '@/components/ProjectDetailsV2/MapControlComponent';
+import { VectorLayer } from '@/components/MapComponent/OpenLayersComponent/Layers';
+import { geojsonObjectModel } from '@/constants/geojsonObjectModal';
+import { basicGeojsonTemplate } from '@/utilities/mapUtils';
+import getTaskStatusStyle from '@/utilfunctions/getTaskStatusStyle';
+import { defaultStyles } from '@/components/MapComponent/OpenLayersComponent/helpers/styleUtils';
+import MapLegends from '@/components/MapLegends';
+import Accordion from '@/components/common/Accordion';
 import { Geolocation } from '@capacitor/geolocation';
 import { Icon, Style } from 'ol/style';
 import { Motion } from '@capacitor/motion';
-import locationArc from '../assets/images/locationArc.png';
-import { CommonActions } from '../store/slices/CommonSlice';
-import Button from '../components/common/Button';
-import ProjectInfo from '../components/ProjectDetailsV2/ProjectInfo';
+import locationArc from '@/assets/images/locationArc.png';
+import { CommonActions } from '@/store/slices/CommonSlice';
+import Button from '@/components/common/Button';
+import ProjectInfo from '@/components/ProjectDetailsV2/ProjectInfo';
+import useOutsideClick from '@/hooks/useOutsideClick';
 
 const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
   const params = CoreModules.useParams();
   const navigate = useNavigate();
   const { windowSize, type } = WindowDimension();
+  const [divRef, toggle, handleToggle] = useOutsideClick();
 
   const [taskId, setTaskId] = useState();
   const [mainView, setView] = useState();
@@ -58,7 +60,6 @@ const Home = () => {
   const [positionGeojson, setPositionGeojson] = useState(null);
   const [deviceRotation, setDeviceRotation] = useState(0);
   const [viewState, setViewState] = useState('project_info');
-
   const encodedId = params.id;
   const decodedId = environment.decode(encodedId);
   const defaultTheme = CoreModules.useAppSelector((state) => state.theme.hotTheme);
@@ -292,18 +293,18 @@ const Home = () => {
           <div className="fmtm-flex fmtm-justify-between fmtm-items-center fmtm-mb-4">
             {projectDetailsLoading ? (
               <div className="fmtm-flex fmtm-gap-1 fmtm-items-center">
-                <p>#</p>
+                <p className="fmtm-text-[#9B9999]">#</p>
                 <CoreModules.Skeleton className="!fmtm-w-[50px] fmtm-h-[20px]" />
               </div>
             ) : (
-              <p className="fmtm-text-lg fmtm-font-archivo">{`#${state.projectInfo.id}`}</p>
+              <p className="fmtm-text-lg fmtm-font-archivo fmtm-text-[#9B9999]">{`#${state.projectInfo.id}`}</p>
             )}
-            <p
-              className="fmtm-text-sm fmtm-text-primaryRed hover:fmtm-cursor-pointer hover:fmtm-text-red-700"
-              onClick={() => navigate(`/projectInfo/${encodedId}`)}
-            >
-              View Submissions <AssetModules.LaunchIcon style={{ fontSize: '14px' }} />
-            </p>
+            <Button
+              btnText="MANAGE PROJECT"
+              btnType="other"
+              className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md"
+              icon={<AssetModules.SettingsIcon />}
+            />
           </div>
           <div className="fmtm-flex fmtm-flex-col fmtm-gap-4">
             {projectDetailsLoading ? (
@@ -362,6 +363,30 @@ const Home = () => {
                 states={state}
               />
             )}
+          </div>
+          <div className="fmtm-flex fmtm-gap-4">
+            <Button
+              btnText="VIEW INFOGRAPHICS"
+              btnType="other"
+              className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md fmtm-my-2"
+              onClick={() => navigate(`/project-submissions/${encodedId}`)}
+            />
+            <div className="fmtm-relative" ref={divRef}>
+              <div onClick={() => handleToggle()}>
+                <Button
+                  btnText="DOWNLOAD"
+                  btnType="other"
+                  className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md fmtm-my-2"
+                />
+              </div>
+              <div
+                className={`fmtm-flex fmtm-gap-4 fmtm-absolute fmtm-duration-200 fmtm-z-[1000] fmtm-bg-[#F5F5F5] fmtm-p-2 fmtm-rounded-md fmtm-left-0 fmtm-top-0 ${
+                  toggle ? 'fmtm-left-0 fmtm-top-0' : '-fmtm-left-[60rem] fmtm-top-0'
+                }`}
+              >
+                <ProjectOptions setToggleGenerateModal={false} />
+              </div>
+            </div>
           </div>
         </div>
         {params?.id && (

@@ -17,17 +17,16 @@
 #
 """Pydantic schemas for FMTM task areas."""
 
-
-import base64
 from datetime import datetime
 from typing import Any, List, Optional
 
-from geojson_pydantic import Feature
+from geojson_pydantic import Feature as GeojsonFeature
 from loguru import logger as log
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo
 from pydantic.functional_serializers import field_serializer
 from pydantic.functional_validators import field_validator
 
+from app.config import decrypt_value
 from app.db.postgis_utils import geometry_to_geojson, get_centroid
 from app.models.enums import TaskStatus
 from app.users.user_schemas import User
@@ -50,7 +49,15 @@ class TaskHistoryOut(TaskHistoryBase):
     profile_img: Optional[str]
 
 
-class TaskBase(BaseModel):
+class TaskHistoryCount(BaseModel):
+    """Task mapping history display."""
+
+    date: str
+    validated: int
+    mapped: int
+
+
+class Task(BaseModel):
     """Core fields for a Task."""
 
     model_config = ConfigDict(
@@ -61,19 +68,19 @@ class TaskBase(BaseModel):
     # Excluded
     lock_holder: Any = Field(exclude=True)
     outline: Any = Field(exclude=True)
-    qr_code: Any = Field(exclude=True)
 
     id: int
     project_id: int
     project_task_index: int
     project_task_name: str
-    outline_geojson: Optional[Feature] = None
-    outline_centroid: Optional[Feature] = None
+    outline_geojson: Optional[GeojsonFeature] = None
+    outline_centroid: Optional[GeojsonFeature] = None
     initial_feature_count: Optional[int] = None
     task_status: TaskStatus
     locked_by_uid: Optional[int] = None
     locked_by_username: Optional[str] = None
     task_history: Optional[List[TaskHistoryBase]] = None
+    odk_token: Optional[str] = None
 
     @field_validator("outline_geojson", mode="before")
     @classmethod
@@ -117,24 +124,10 @@ class TaskBase(BaseModel):
             return self.lock_holder.username
         return None
 
-
-class Task(TaskBase):
-    """Task details plus base64 QR codes."""
-
-    qr_code_base64: Optional[str] = None
-
-    @field_validator("qr_code_base64", mode="before")
-    @classmethod
-    def get_qrcode_base64(cls, value: Any, info: ValidationInfo) -> str:
-        """Get base64 encoded qrcode."""
-        if qr_code := info.data.get("qr_code"):
-            log.debug(
-                f"QR code found for task ID {info.data.get('id')}. "
-                "Converting to base64"
-            )
-            return base64.b64encode(qr_code.image)
-        else:
-            log.warning(f"No QR code found for task ID {info.data.get('id')}")
+    @field_serializer("odk_token")
+    def decrypt_password(self, value: str) -> str:
+        """Decrypt the ODK Token extracted from the db."""
+        if not value:
             return ""
         
         
@@ -156,6 +149,8 @@ class TaskCommentResponse(BaseModel):
     commented_by: str
     comment:str
     created_at: datetime
+
+        return decrypt_value(value)
 
 
 class ReadTask(Task):

@@ -1,7 +1,7 @@
 import React from 'react';
-import AssetModules from '../../shared/AssetModules.js';
-import { CommonActions } from '../../store/slices/CommonSlice';
-import CoreModules from '../../shared/CoreModules.js';
+import AssetModules from '@/shared/AssetModules.js';
+import { CommonActions } from '@/store/slices/CommonSlice';
+import CoreModules from '@/shared/CoreModules.js';
 import { useNavigate } from 'react-router-dom';
 
 const StepSwitcher = ({ data, flag, switchSteps }) => {
@@ -36,7 +36,7 @@ const StepSwitcher = ({ data, flag, switchSteps }) => {
                   <div
                     className={`${
                       currentStep.step === index ? 'currentstep-pointer' : ''
-                    } lg:fmtm-w-7 lg:fmtm-h-7 xl:fmtm-w-9 xl:fmtm-h-9 fmtm-rounded-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-border-[0.15rem] fmtm-border-primaryRed hover:fmtm-cursor-pointer  ${
+                    } lg:fmtm-w-7 lg:fmtm-h-7 xl:fmtm-w-9 xl:fmtm-h-9 fmtm-rounded-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-border-[0.15rem] fmtm-border-primaryRed  ${
                       currentStep.step >= index ? 'fmtm-bg-primaryRed' : 'fmtm-bg-transparent'
                     }`}
                     onClick={() => {

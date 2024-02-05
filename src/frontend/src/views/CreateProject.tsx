@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/home.css';
-import CoreModules from '../shared/CoreModules';
-import UploadArea from '../components/createproject/UploadArea';
+import CoreModules from '@/shared/CoreModules';
+import UploadArea from '@/components/createproject/UploadArea';
 import { useLocation, Link } from 'react-router-dom';
-import ProjectDetailsForm from '../components/createproject/ProjectDetailsForm';
-import FormSelection from '../components/createproject/FormSelection';
-import DefineTasks from '../components/createproject/DefineTasks';
-import { CreateProjectActions } from '../store/slices/CreateProjectSlice';
-import DataExtract from '../components/createproject/DataExtract';
+import ProjectDetailsForm from '@/components/createproject/ProjectDetailsForm';
+import FormSelection from '@/components/createproject/FormSelection';
+import DefineTasks from '@/components/createproject/DefineTasks';
+import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
+import DataExtract from '@/components/createproject/DataExtract';
 
 const CreateProject: React.FC = () => {
   const [geojsonFile, setGeojsonFile] = useState(null);
@@ -96,9 +96,9 @@ const CreateProject: React.FC = () => {
           ></CoreModules.Box>
           <CoreModules.Box
             sx={{
-              height: location.pathname !== '/select-form' ? '8px' : '12px',
+              height: location.pathname !== '/select-category' ? '8px' : '12px',
               width: '64px',
-              background: location.pathname !== '/select-form' ? '#68707F' : '#D73F3F',
+              background: location.pathname !== '/select-category' ? '#68707F' : '#D73F3F',
               mx: '16px',
               borderRadius: '10px',
             }}
@@ -175,14 +175,14 @@ const CreateProject: React.FC = () => {
           </Link>
           {/* END */}
           {/* Upload Area SideBar Button for uploading Area page  */}
-          <Link to="/select-form">
+          <Link to="/select-category">
             <CoreModules.Button
               sx={boxSX}
               variant="contained"
               color="error"
-              disabled={location.pathname !== '/select-form'}
+              disabled={location.pathname !== '/select-category'}
             >
-              Select Form
+              Select Category
             </CoreModules.Button>
           </Link>
           {/* END */}
@@ -228,7 +228,7 @@ const CreateProject: React.FC = () => {
             setLineExtractFileValue={setLineExtractFileValue}
           />
         ) : null}
-        {location.pathname === '/select-form' ? (
+        {location.pathname === '/select-category' ? (
           <FormSelection
             geojsonFile={geojsonFile}
             customFormFile={customFormFile}

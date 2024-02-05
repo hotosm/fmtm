@@ -1,27 +1,26 @@
 import React, { useEffect, useRef, useState } from 'react';
-import Button from '../../components/common/Button';
-import RadioButton from '../../components/common/RadioButton';
-import AssetModules from '../../shared/AssetModules.js';
+import Button from '@/components/common/Button';
+import RadioButton from '@/components/common/RadioButton';
+import AssetModules from '@/shared/AssetModules.js';
 import { useDispatch } from 'react-redux';
-import { CommonActions } from '../../store/slices/CommonSlice';
+import { CommonActions } from '@/store/slices/CommonSlice';
 import { useNavigate } from 'react-router-dom';
-import { CreateProjectActions } from '../../store/slices/CreateProjectSlice';
-import CoreModules from '../../shared/CoreModules';
-import useForm from '../../hooks/useForm';
-import DefineTaskValidation from '../../components/createnewproject/validation/DefineTaskValidation';
-import NewDefineAreaMap from '../../views/NewDefineAreaMap';
-import { useAppSelector } from '../../types/reduxTypes';
+import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
+import CoreModules from '@/shared/CoreModules';
+import useForm from '@/hooks/useForm';
+import DefineTaskValidation from '@/components/createnewproject/validation/DefineTaskValidation';
+import NewDefineAreaMap from '@/views/NewDefineAreaMap';
+import { useAppSelector } from '@/types/reduxTypes';
 import {
   CreateProjectService,
   GenerateProjectLog,
   GetDividedTaskFromGeojson,
   TaskSplittingPreviewService,
-} from '../../api/CreateProjectService';
-import environment from '../../environment';
-import LoadingBar from '../../components/createproject/LoadingBar';
-import { Modal } from '../../components/common/Modal';
-import ProgressBar from '../../components/common/ProgressBar';
-import { task_split_type } from '../../types/enums';
+} from '@/api/CreateProjectService';
+import environment from '@/environment';
+import { Modal } from '@/components/common/Modal';
+import ProgressBar from '@/components/common/ProgressBar';
+import { task_split_type } from '@/types/enums';
 
 const alogrithmList = [
   { name: 'define_tasks', value: task_split_type['divide_on_square'].toString(), label: 'Divide on square' },
@@ -46,7 +45,6 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
   const drawnGeojson = CoreModules.useAppSelector((state) => state.createproject.drawnGeojson);
   const projectDetails = CoreModules.useAppSelector((state) => state.createproject.projectDetails);
   const dataExtractGeojson = useAppSelector((state) => state.createproject.dataExtractGeojson);
-  const userDetails: any = CoreModules.useAppSelector((state) => state.login.loginToken);
 
   const generateQrSuccess: any = CoreModules.useAppSelector((state) => state.createproject.generateQrSuccess);
   const projectDetailsResponse = CoreModules.useAppSelector((state) => state.createproject.projectDetailsResponse);
@@ -61,6 +59,10 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
     (state) => state.createproject.taskSplittingGeojsonLoading,
   );
   const isTasksGenerated = CoreModules.useAppSelector((state) => state.createproject.isTasksGenerated);
+  const isFgbFetching = CoreModules.useAppSelector((state) => state.createproject.isFgbFetching);
+  const toggleSplittedGeojsonEdit = CoreModules.useAppSelector(
+    (state) => state.createproject.toggleSplittedGeojsonEdit,
+  );
 
   const toggleStep = (step, url) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
@@ -106,15 +108,9 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
         short_description: projectDetails.short_description,
         description: projectDetails.description,
       },
-      author: {
-        username: userDetails.username,
-        id: userDetails.id,
-      },
-      odk_central: {
-        odk_central_url: projectDetails.odk_central_url,
-        odk_central_user: projectDetails.odk_central_user,
-        odk_central_password: projectDetails.odk_central_password,
-      },
+      odk_central_url: projectDetails.odk_central_url,
+      odk_central_user: projectDetails.odk_central_user,
+      odk_central_password: projectDetails.odk_central_password,
       // dont send xform_title if upload custom form is selected
       xform_title: projectDetails.formCategorySelection,
       task_split_type: splitTasksSelection,
@@ -130,7 +126,6 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
     } else {
       projectData = { ...projectData, task_split_dimension: projectDetails.dimension };
     }
-    console.log(projectData, 'projectData');
     dispatch(
       CreateProjectService(
         `${import.meta.env.VITE_API_URL}/projects/create_project`,
@@ -286,10 +281,6 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
             <div className="fmtm-p-10">
               <ProgressBar totalSteps={totalSteps} currentStep={generateProjectLog?.progress} />
             </div>
-            <p className="fmtm-text-base">
-              Please stay on this page until the process is complete. Your changes might be lost if you cancel the
-              pop-up.
-            </p>
           </div>
         }
         open={toggleStatus}
@@ -379,8 +370,9 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
                           className=""
                           icon={<AssetModules.SettingsIcon className="fmtm-text-white" />}
                           disabled={
-                            splitTasksSelection === task_split_type['task_splitting_algorithm'] &&
-                            !formValues?.average_buildings_per_task
+                            (splitTasksSelection === task_split_type['task_splitting_algorithm'] &&
+                              !formValues?.average_buildings_per_task) ||
+                            isFgbFetching
                               ? true
                               : false
                           }
@@ -426,6 +418,17 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
                   splittedGeojson={dividedTaskGeojson}
                   uploadedOrDrawnGeojsonFile={drawnGeojson}
                   buildingExtractedGeojson={dataExtractGeojson}
+                  onModify={
+                    toggleSplittedGeojsonEdit
+                      ? (geojson) => {
+                          handleCustomChange('drawnGeojson', geojson);
+                          dispatch(CreateProjectActions.SetDividedTaskGeojson(JSON.parse(geojson)));
+                          setGeojsonFile(null);
+                        }
+                      : null
+                  }
+                  // toggleSplittedGeojsonEdit
+                  hasEditUndo
                 />
               </div>
               {generateProjectLog ? (

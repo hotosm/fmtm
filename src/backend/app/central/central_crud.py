@@ -17,10 +17,7 @@
 #
 """Logic for interaction with ODK Central & data."""
 
-import base64
-import json
 import os
-import zlib
 from xml.etree import ElementTree
 
 # import osm_fieldwork
@@ -33,12 +30,12 @@ from osm_fieldwork.OdkCentral import OdkAppUser, OdkForm, OdkProject
 from pyxform.xls2xform import xls2xform_convert
 from sqlalchemy.orm import Session
 
-from ..config import settings
-from ..db import db_models
-from ..projects import project_schemas
+from app.config import settings
+from app.db import db_models
+from app.projects import project_schemas
 
 
-def get_odk_project(odk_central: project_schemas.ODKCentral = None):
+def get_odk_project(odk_central: project_schemas.ODKCentralDecrypted = None):
     """Helper function to get the OdkProject with credentials."""
     if odk_central:
         url = odk_central.odk_central_url
@@ -63,7 +60,7 @@ def get_odk_project(odk_central: project_schemas.ODKCentral = None):
     return project
 
 
-def get_odk_form(odk_central: project_schemas.ODKCentral = None):
+def get_odk_form(odk_central: project_schemas.ODKCentralDecrypted = None):
     """Helper function to get the OdkForm with credentials."""
     if odk_central:
         url = odk_central.odk_central_url
@@ -89,7 +86,7 @@ def get_odk_form(odk_central: project_schemas.ODKCentral = None):
     return form
 
 
-def get_odk_app_user(odk_central: project_schemas.ODKCentral = None):
+def get_odk_app_user(odk_central: project_schemas.ODKCentralDecrypted = None):
     """Helper function to get the OdkAppUser with credentials."""
     if odk_central:
         url = odk_central.odk_central_url
@@ -114,13 +111,15 @@ def get_odk_app_user(odk_central: project_schemas.ODKCentral = None):
     return form
 
 
-def list_odk_projects(odk_central: project_schemas.ODKCentral = None):
+def list_odk_projects(odk_central: project_schemas.ODKCentralDecrypted = None):
     """List all projects on a remote ODK Server."""
     project = get_odk_project(odk_central)
     return project.listProjects()
 
 
-def create_odk_project(name: str, odk_central: project_schemas.ODKCentral = None):
+def create_odk_project(
+    name: str, odk_central: project_schemas.ODKCentralDecrypted = None
+):
     """Create a project on a remote ODK Server."""
     project = get_odk_project(odk_central)
 
@@ -147,7 +146,7 @@ def create_odk_project(name: str, odk_central: project_schemas.ODKCentral = None
 
 
 async def delete_odk_project(
-    project_id: int, odk_central: project_schemas.ODKCentral = None
+    project_id: int, odk_central: project_schemas.ODKCentralDecrypted = None
 ):
     """Delete a project from a remote ODK Server."""
     # FIXME: when a project is deleted from Central, we have to update the
@@ -161,42 +160,12 @@ async def delete_odk_project(
         return "Could not delete project from central odk"
 
 
-def create_appuser(
-    project_id: int, name: str, odk_credentials: project_schemas.ODKCentral = None
-):
-    """Create an app-user on a remote ODK Server.
-
-    If odk credentials of the project are provided, use them to create an app user.
-    """
-    if odk_credentials:
-        url = odk_credentials.odk_central_url
-        user = odk_credentials.odk_central_user
-        pw = odk_credentials.odk_central_password
-
-    else:
-        log.debug("ODKCentral connection variables not set in function")
-        log.debug("Attempting extraction from environment variables")
-        url = settings.ODK_CENTRAL_URL
-        user = settings.ODK_CENTRAL_USER
-        pw = settings.ODK_CENTRAL_PASSWD
-
-    app_user = OdkAppUser(url, user, pw)
-
-    log.debug(
-        "ODKCentral: attempting user creation: name: " f"{name} | project: {project_id}"
-    )
-    result = app_user.create(project_id, name)
-
-    log.debug(f"ODKCentral response: {result.json()}")
-    return result
-
-
-def delete_app_user(
-    project_id: int, name: str, odk_central: project_schemas.ODKCentral = None
+def delete_odk_app_user(
+    project_id: int, name: str, odk_central: project_schemas.ODKCentralDecrypted = None
 ):
     """Delete an app-user from a remote ODK Server."""
-    appuser = get_odk_app_user(odk_central)
-    result = appuser.delete(project_id, name)
+    odk_app_user = get_odk_app_user(odk_central)
+    result = odk_app_user.delete(project_id, name)
     return result
 
 
@@ -226,7 +195,7 @@ def upload_xform_media(
             status_code=500, detail={"message": "Connection failed to odk central"}
         ) from e
 
-    result = xform.uploadMedia(project_id, title, filespec)
+    xform.uploadMedia(project_id, title, filespec)
     result = xform.publishForm(project_id, title)
     return result
 
@@ -235,7 +204,7 @@ def create_odk_xform(
     project_id: int,
     xform_id: str,
     filespec: str,
-    odk_credentials: project_schemas.ODKCentral = None,
+    odk_credentials: project_schemas.ODKCentralDecrypted = None,
     create_draft: bool = False,
     upload_media=True,
     convert_to_draft_when_publishing=True,
@@ -246,7 +215,7 @@ def create_odk_xform(
     # Pass odk credentials of project in xform
 
     if not odk_credentials:
-        odk_credentials = project_schemas.ODKCentral(
+        odk_credentials = project_schemas.ODKCentralDecrypted(
             odk_central_url=settings.ODK_CENTRAL_URL,
             odk_central_user=settings.ODK_CENTRAL_USER,
             odk_central_password=settings.ODK_CENTRAL_PASSWD,
@@ -268,9 +237,7 @@ def create_odk_xform(
     # This modifies an existing published XForm to be in draft mode.
     # An XForm must be in draft mode to upload an attachment.
     if upload_media:
-        result = xform.uploadMedia(
-            project_id, title, data, convert_to_draft_when_publishing
-        )
+        xform.uploadMedia(project_id, title, data, convert_to_draft_when_publishing)
 
     result = xform.publishForm(project_id, title)
     return result
@@ -280,7 +247,7 @@ def delete_odk_xform(
     project_id: int,
     xform_id: str,
     filespec: str,
-    odk_central: project_schemas.ODKCentral = None,
+    odk_central: project_schemas.ODKCentralDecrypted = None,
 ):
     """Delete an XForm from a remote ODK Central server."""
     xform = get_odk_form(odk_central)
@@ -291,7 +258,7 @@ def delete_odk_xform(
 
 def list_odk_xforms(
     project_id: int,
-    odk_central: project_schemas.ODKCentral = None,
+    odk_central: project_schemas.ODKCentralDecrypted = None,
     metadata: bool = False,
 ):
     """List all XForms in an ODK Central project."""
@@ -302,7 +269,7 @@ def list_odk_xforms(
 
 
 def get_form_full_details(
-    odk_project_id: int, form_id: str, odk_central: project_schemas.ODKCentral
+    odk_project_id: int, form_id: str, odk_central: project_schemas.ODKCentralDecrypted
 ):
     """Get additional metadata for ODK Form."""
     form = get_odk_form(odk_central)
@@ -311,7 +278,7 @@ def get_form_full_details(
 
 
 def get_odk_project_full_details(
-    odk_project_id: int, odk_central: project_schemas.ODKCentral
+    odk_project_id: int, odk_central: project_schemas.ODKCentralDecrypted
 ):
     """Get additional metadata for ODK project."""
     project = get_odk_project(odk_central)
@@ -319,7 +286,9 @@ def get_odk_project_full_details(
     return project_details
 
 
-def list_submissions(project_id: int, odk_central: project_schemas.ODKCentral = None):
+def list_submissions(
+    project_id: int, odk_central: project_schemas.ODKCentralDecrypted = None
+):
     """List all submissions for a project, aggregated from associated users."""
     project = get_odk_project(odk_central)
     xform = get_odk_form(odk_central)
@@ -361,7 +330,7 @@ def download_submissions(
     xform_id: str,
     submission_id: str = None,
     get_json: bool = True,
-    odk_central: project_schemas.ODKCentral = None,
+    odk_central: project_schemas.ODKCentralDecrypted = None,
 ):
     """Download all submissions for an XForm."""
     xform = get_odk_form(odk_central)
@@ -537,39 +506,11 @@ def generate_updated_xform(
     return outfile
 
 
-async def create_qrcode(
-    project_id: int, token: str, name: str, odk_central_url: str = None
-):
-    """Create the QR Code for an app-user."""
-    if not odk_central_url:
-        log.debug("ODKCentral connection variables not set in function")
-        log.debug("Attempting extraction from environment variables")
-        odk_central_url = settings.ODK_CENTRAL_URL
-
-    # Qr code text json in the format acceptable by odk collect.
-    qr_code_setting = {
-        "general": {
-            "server_url": f"{odk_central_url}/v1/key/{token}/projects/{project_id}",
-            "form_update_mode": "match_exactly",
-            "basemap_source": "osm",
-            "autosend": "wifi_and_cellular",
-        },
-        "project": {"name": f"{name}"},
-        "admin": {},
-    }
-
-    # Base64 encoded
-    qr_data = base64.b64encode(
-        zlib.compress(json.dumps(qr_code_setting).encode("utf-8"))
-    )
-    return qr_data
-
-
 def upload_media(
     project_id: int,
     xform_id: str,
     filespec: str,
-    odk_central: project_schemas.ODKCentral = None,
+    odk_central: project_schemas.ODKCentralDecrypted = None,
 ):
     """Upload a data file to Central."""
     xform = get_odk_form(odk_central)
@@ -580,7 +521,7 @@ def download_media(
     project_id: int,
     xform_id: str,
     filespec: str,
-    odk_central: project_schemas.ODKCentral = None,
+    odk_central: project_schemas.ODKCentralDecrypted = None,
 ):
     """Upload a data file to Central."""
     xform = get_odk_form(odk_central)
