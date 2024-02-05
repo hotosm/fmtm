@@ -2,8 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { CommonActions } from '../../store/slices/CommonSlice';
 import AssetModules from '../../shared/AssetModules.js';
+import { v4 as uuidv4 } from 'uuid';
 
 type FileType = {
+  id: string;
   name: string;
   url?: File;
   isDeleted: boolean;
@@ -33,9 +35,9 @@ const UploadArea = ({ title, label, acceptedInput, data, onUploadFile, multiple,
     const fileList = Object.values(files).map((item: any) => {
       const { name } = item;
       const file = item;
-      //   const id = uuidv4();
+      const id = uuidv4();
       const isDeleted = false;
-      return { name, [filterKey]: file, isDeleted };
+      return { id, name, [filterKey]: file, isDeleted };
     });
     if (multiple) {
       onUploadFile([...fileList, ...data]);
@@ -43,12 +45,13 @@ const UploadArea = ({ title, label, acceptedInput, data, onUploadFile, multiple,
       onUploadFile(fileList);
     }
   };
-  const handleDeleteFile = (id) => {
-    // const updatedList = data.filter((item) => item.id !== id);
-    // fileInputRef?.current?.value = null;
-    // return onUploadFile(updatedList);
+  const handleDeleteFile = (id: string) => {
+    const updatedList = data.filter((item: FileType) => item.id !== id);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    return onUploadFile(updatedList);
   };
-  console.log(selectedFiles, 'selectedFiles');
 
   return (
     <div>
@@ -71,18 +74,19 @@ const UploadArea = ({ title, label, acceptedInput, data, onUploadFile, multiple,
           if (!isEmpty(e.dataTransfer.files)) {
             const { files } = e.dataTransfer;
             const fileList: FileType[] = [];
-            console.log(fileList, 'fileList');
             Object.values(files).map((item) => {
               const { name } = item;
               const file = item;
-              const fileType = file.type.split('/')?.[1];
+              const fileType = file.name.split('.')?.pop();
               if (acceptedInput === 'all') {
                 const isDeleted = false;
-                return fileList.push({ name, [filterKey]: file, isDeleted });
+                const id = uuidv4();
+                return fileList.push({ id, name, [filterKey]: file, isDeleted });
               }
               if (acceptedInput.includes(fileType)) {
+                const id = uuidv4();
                 const isDeleted = false;
-                return fileList.push({ name, [filterKey]: file, isDeleted });
+                return fileList.push({ id, name, [filterKey]: file, isDeleted });
               }
               dispatch(
                 CommonActions.SetSnackBar({
@@ -123,10 +127,10 @@ const UploadArea = ({ title, label, acceptedInput, data, onUploadFile, multiple,
         </div>
       </div>
       {selectedFiles?.length > 0 && (
-        <div className="fmtm-mb-10 fmtm-overflow-hidden fmtm-overflow-y-scroll scrollbar fmtm-h-fit fmtm-pb-5 ">
+        <div className="fmtm-overflow-hidden fmtm-overflow-y-scroll scrollbar fmtm-h-fit">
           {selectedFiles?.map((item, i) => (
             <div
-              key={i}
+              key={item.id}
               className="fmtm-px-3 fmtm-flex fmtm-items-center fmtm-relative fmtm-border-b-regular fmtm-border-border_color"
             >
               <div className="fmtm-h-10 fmtm-w-10 fmtm-rounded-full fmtm-bg-active_bg fmtm-border-regular fmtm-p-2 fmtm-mr-2 fmtm-border-border_color ">
@@ -140,7 +144,7 @@ const UploadArea = ({ title, label, acceptedInput, data, onUploadFile, multiple,
                   role="button"
                   tabIndex={0}
                   onKeyDown={() => {}}
-                  onClick={() => handleDeleteFile(i)}
+                  onClick={() => handleDeleteFile(item.id)}
                   className="fmtm-h-10 fmtm-w-10 fmtm-p-2"
                 >
                   <i className="material-icons fmtm-text-[#FF4538]">delete</i>
