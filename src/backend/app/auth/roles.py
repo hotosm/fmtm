@@ -53,10 +53,7 @@ async def check_super_admin(
     user: Union[AuthUser, int],
 ) -> DbUser:
     """Database check to determine if super admin role."""
-    if isinstance(user, int):
-        user_id = user
-    else:
-        user_id = await get_uid(user)
+    user_id = user if isinstance(user, int) else await get_uid(user)
     return db.query(DbUser).filter_by(id=user_id, role=UserRole.ADMIN).first()
 
 
@@ -86,35 +83,44 @@ async def check_org_admin(
     org_id: Optional[int],
 ) -> DbUser:
     """Database check to determine if org admin role."""
-    if isinstance(user, int):
-        user_id = user
-    else:
-        user_id = await get_uid(user)
+    # Get user_id from AuthUser or use directly if it's an int
+    user_id = user if isinstance(user, int) else await get_uid(user)
 
     if project:
-        org_id = db.query(DbProject).filter_by(id=project.id).first().organisation_id
+        org_id = project.organisation_id
 
-    # Check org exists
+    # Ensure org_id is provided, raise an exception otherwise
+    if not org_id:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="org_id must be provided to check organization admin role",
+        )
+
     await check_org_exists(db, org_id)
 
-    # If user is admin, skip checks
-    if db_user := await check_super_admin(db, user):
-        return db_user
-
-    return (
-        db.query(organisation_managers)
+    if (
+        org_admin := db.query(organisation_managers)
         .filter_by(organisation_id=org_id, user_id=user_id)
         .first()
-    )
+    ):
+        return org_admin
+
+    return await check_super_admin(db, user_id)
 
 
 async def org_admin(
-    project: DbProject = Depends(get_project_by_id),
-    org_id: int = None,
+    project: Optional[DbProject] = Depends(get_project_by_id),
+    org_id: Optional[int] = None,
     db: Session = Depends(get_db),
     user_data: AuthUser = Depends(login_required),
 ) -> AuthUser:
     """Organisation admin with full permission for projects in an organisation."""
+    if not (project or org_id):
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="Either org_id or project_id must be provided",
+        )
+
     if project and org_id:
         log.error("Both org_id and project_id cannot be passed at the same time")
         raise HTTPException(
@@ -122,16 +128,13 @@ async def org_admin(
             detail="Both org_id and project_id cannot be passed at the same time",
         )
 
-    org_admin = await check_org_admin(db, user_data, project, org_id)
+    if await check_org_admin(db, user_data, project, org_id):
+        return user_data
 
-    if not org_admin:
-        log.error(f"User {user_data} is not an admin for organisation {org_id}")
-        raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN,
-            detail="User is not organisation admin",
-        )
-
-    return user_data
+    raise HTTPException(
+        status_code=HTTPStatus.FORBIDDEN,
+        detail="User is not organisation admin",
+    )
 
 
 async def project_admin(
@@ -141,31 +144,25 @@ async def project_admin(
 ):
     """Project admin role."""
     user_id = await get_uid(user_data)
-
-    if await check_org_admin(
-        db, user_data, project, project.organisation_id
-    ) or await check_super_admin(db, user_data):
-        print("passed super admin check")
-        return user_data
-
-    match = (
+    user_role = (
         db.query(DbUserRoles).filter_by(user_id=user_id, project_id=project.id).first()
     )
 
-    if not match:
+    if not user_role:
+        if await check_org_admin(db, user_data, project, None):
+            return user_data
+
         log.error(f"User ID {user_id} has no access to project ID {project}")
         raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN, detail="User has no access to project"
+            status_code=HTTPStatus.FORBIDDEN,
+            detail="User has no access to project",
         )
 
-    if match.role.value < ProjectRole.PROJECT_MANAGER.value:
-        log.error(
-            f"User ID {user_id} does not have admin permission"
-            f"for project ID {project.id}"
-        )
+    if user_role.role < ProjectRole.PROJECT_MANAGER:
+        log.error(f"User ID {user_id} does not have admin permission")
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
-            detail="User is not an admin for this project",
+            detail="User is not a project admin for this project",
         )
     return user_data
 
@@ -178,17 +175,17 @@ async def validator(
     """A validator for a specific project."""
     user_id = await get_uid(user_data)
 
-    match = (
+    user_role = (
         db.query(DbUserRoles).filter_by(user_id=user_id, project_id=project_id).first()
     )
 
-    if not match:
+    if not user_role:
         log.error(f"User ID {user_id} has no access to project ID {project_id}")
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN, detail="User has no access to project"
         )
 
-    if match.role.value < ProjectRole.VALIDATOR.value:
+    if user_role.role.value < ProjectRole.VALIDATOR.value:
         log.error(
             f"User ID {user_id} does not have validator permission"
             f"for project ID {project_id}"
