@@ -204,25 +204,15 @@ async def partial_update_project_info(
 
 async def update_project_info(
     db: Session,
-    project_metadata: project_schemas.ProjectUpload,
+    project_metadata: project_schemas.ProjectUpdate,
     project_id: int,
+    db_user: db_models.DbUser,
 ):
     """Full project update for PUT."""
-    user = project_metadata.author
     project_info = project_metadata.project_info
 
-    # verify data coming in
-    if not user:
-        raise HTTPException("No user passed in")
     if not project_info:
         raise HTTPException("No project info passed in")
-
-    # get db user
-    db_user = await user_crud.get_user(db, user.id)
-    if not db_user:
-        raise HTTPException(
-            status_code=400, detail=f"User {user.username} does not exist"
-        )
 
     # verify project exists in db
     db_project = await get_project_by_id(db, project_id)
@@ -235,7 +225,7 @@ async def update_project_info(
     project_info = project_metadata.project_info
 
     # Update author of the project
-    db_project.author = db_user
+    db_project.author_id = db_user.id
     db_project.project_name_prefix = project_info.name
 
     # get project info
@@ -259,12 +249,6 @@ async def create_project_with_project_info(
     current_user: db_models.DbUser,
 ):
     """Create a new project, including all associated info."""
-    # FIXME the ProjectUpload model should be converted to the db model directly
-    # FIXME we don't need to extract each variable and pass manually
-    # project_data = project_metadata.model_dump()
-
-    log.warning(project_metadata.model_dump())
-
     if not odk_project_id:
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,

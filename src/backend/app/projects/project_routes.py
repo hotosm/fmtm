@@ -299,9 +299,9 @@ async def create_project(
 @router.put("/{project_id}", response_model=project_schemas.ProjectOut)
 async def update_project(
     project_id: int,
-    project_info: project_schemas.ProjectUpload,
+    project_info: project_schemas.ProjectUpdate,
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(project_admin),
+    current_user: db_models.DbUser = Depends(project_admin),
 ):
     """Update an existing project by ID.
 
@@ -311,7 +311,7 @@ async def update_project(
     Parameters:
     - id: ID of the project to update
     - project_info: Updated project information
-    - current_user (AuthUser): Check if user is project_admin
+    - current_user (DbUser): Check if user is project_admin
 
     Returns:
     - Updated project information
@@ -319,7 +319,9 @@ async def update_project(
     Raises:
     - HTTPException with 404 status code if project not found
     """
-    project = await project_crud.update_project_info(db, project_info, project_id)
+    project = await project_crud.update_project_info(
+        db, project_info, project_id, current_user
+    )
     if not project:
         raise HTTPException(status_code=422, detail="Project could not be updated")
     return project

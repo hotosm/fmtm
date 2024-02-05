@@ -31,7 +31,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.osm import AuthUser, login_required
 from app.db.database import get_db
-from app.db.db_models import DbProject, DbUser, DbUserRoles
+from app.db.db_models import DbProject, DbUser
 from app.models.enums import HTTPStatus, ProjectRole
 from app.organisations.organisation_deps import check_org_exists
 from app.projects.project_deps import get_project_by_id
@@ -218,58 +218,41 @@ async def project_admin(
     project: DbProject = Depends(get_project_by_id),
     db: Session = Depends(get_db),
     user_data: AuthUser = Depends(login_required),
-):
+) -> DbUser:
     """Project admin role."""
-    user_id = await get_uid(user_data)
-    user_role = (
-        db.query(DbUserRoles).filter_by(user_id=user_id, project_id=project.id).first()
+    db_user = await check_access(
+        user_data,
+        db,
+        project_id=project.id,
+        role=ProjectRole.PROJECT_MANAGER,
     )
 
-    if not user_role:
-        if await check_org_admin(db, user_data, project, None):
-            return user_data
+    if db_user:
+        return db_user
 
-        log.error(f"User ID {user_id} has no access to project ID {project}")
-        raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN,
-            detail="User has no access to project",
-        )
-
-    if user_role.role < ProjectRole.PROJECT_MANAGER:
-        log.error(f"User ID {user_id} does not have admin permission")
-        raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN,
-            detail="User is not a project admin for this project",
-        )
-    return user_data
+    raise HTTPException(
+        status_code=HTTPStatus.FORBIDDEN,
+        detail="User is not a project manager",
+    )
 
 
 async def validator(
-    project_id: int,
+    project: DbProject = Depends(get_project_by_id),
     db: Session = Depends(get_db),
     user_data: AuthUser = Depends(login_required),
 ) -> DbUser:
     """A validator for a specific project."""
-    user_id = await get_uid(user_data)
-
-    user_role = (
-        db.query(DbUserRoles).filter_by(user_id=user_id, project_id=project_id).first()
+    db_user = await check_access(
+        user_data,
+        db,
+        project_id=project.id,
+        role=ProjectRole.VALIDATOR,
     )
 
-    if not user_role:
-        log.error(f"User ID {user_id} has no access to project ID {project_id}")
-        raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN, detail="User has no access to project"
-        )
+    if db_user:
+        return db_user
 
-    if user_role.role.value < ProjectRole.VALIDATOR.value:
-        log.error(
-            f"User ID {user_id} does not have validator permission"
-            f"for project ID {project_id}"
-        )
-        raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN,
-            detail="User is not a validator for this project",
-        )
-
-    return user_data
+    raise HTTPException(
+        status_code=HTTPStatus.FORBIDDEN,
+        detail="User does not have validator permission",
+    )
