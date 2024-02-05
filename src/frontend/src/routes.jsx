@@ -6,7 +6,6 @@ import {
 import Home from '@/views/Home';
 import Tabbed from '@/views/Tabbed';
 import MainView from '@/views/MainView';
-import CreateProject from '@/views/CreateProject';
 import EditProject from '@/views/EditProject';
 import ProtectedRoute from '@/utilities/ProtectedRoute';
 import NotFoundPage from '@/views/NotFound404';
@@ -173,78 +172,6 @@ const routes = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      // {
-      //   path: '/create-project',
-      //   element: (
-      //     <ProtectedRoute>
-      //       <Suspense fallback={<div>Loading...</div>}>
-      //         <ErrorBoundary>
-      //           <CreateProject />
-      //         </ErrorBoundary>
-      //       </Suspense>
-      //     </ProtectedRoute>
-      //   ),
-      // },
-      // {
-      //   path: '/upload-area',
-      //   element: (
-      //     <ProtectedRoute>
-      //       <Suspense fallback={<div>Loading...</div>}>
-      //         <ErrorBoundary>
-      //           <CreateProject />
-      //         </ErrorBoundary>
-      //       </Suspense>
-      //     </ProtectedRoute>
-      //   ),
-      // },
-      // {
-      //   path: '/data-extract',
-      //   element: (
-      //     <ProtectedRoute>
-      //       <Suspense fallback={<div>Loading...</div>}>
-      //         <ErrorBoundary>
-      //           <CreateProject />
-      //         </ErrorBoundary>
-      //       </Suspense>
-      //     </ProtectedRoute>
-      //   ),
-      // },
-      // {
-      //   path: '/define-tasks',
-      //   element: (
-      //     <ProtectedRoute>
-      //       <Suspense fallback={<div>Loading...</div>}>
-      //         <ErrorBoundary>
-      //           <CreateProject />
-      //         </ErrorBoundary>
-      //       </Suspense>
-      //     </ProtectedRoute>
-      //   ),
-      // },
-      // {
-      //   path: '/select-form',
-      //   element: (
-      //     <ProtectedRoute>
-      //       <Suspense fallback={<div>Loading...</div>}>
-      //         <ErrorBoundary>
-      //           <CreateProject />
-      //         </ErrorBoundary>
-      //       </Suspense>
-      //     </ProtectedRoute>
-      //   ),
-      // },
-      {
-        path: '/basemap-selection',
-        element: (
-          <ProtectedRoute>
-            <Suspense fallback={<div>Loading...</div>}>
-              <ErrorBoundary>
-                <CreateProject />
-              </ErrorBoundary>
-            </Suspense>
-          </ProtectedRoute>
-        ),
-      },
       {
         path: '/create-project',
         element: (
@@ -294,7 +221,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/select-form',
+        path: '/select-category',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
@@ -366,7 +293,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: 'edit-project/select-form/:projectId',
+        path: 'edit-project/select-category/:projectId',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>

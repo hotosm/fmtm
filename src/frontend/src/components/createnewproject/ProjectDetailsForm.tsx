@@ -51,27 +51,12 @@ const ProjectDetailsForm = ({ flag }) => {
     };
   }, []);
 
-  const hashtagPrefix = '#FMTM ';
-
   // Checks if hashtag value starts with hotosm-fmtm'
   const handleHashtagOnChange = (e) => {
     let enteredText = e.target.value;
-    if (!enteredText.startsWith(hashtagPrefix)) {
-      handleCustomChange('hashtags', hashtagPrefix);
-      return;
-    }
     handleCustomChange('hashtags', enteredText);
   };
 
-  // Doesn't let the user to press 'Backspace' or 'Delete' if input value is 'hotosm-fmtm '
-  const handleHashtagKeyPress = (e) => {
-    if (
-      ((e.key === 'Backspace' || e.key === 'Delete') && values.hashtags === hashtagPrefix) ||
-      (e.ctrlKey && e.key === 'Backspace')
-    ) {
-      e.preventDefault();
-    }
-  };
   const handleInputChanges = (e) => {
     handleChange(e);
     dispatch(CreateProjectActions.SetIsUnsavedChanges(true));
@@ -87,17 +72,17 @@ const ProjectDetailsForm = ({ flag }) => {
             information about your project.
           </span>
           <span>To complete the first step, you will need the login credentials of ODK Central Server.</span>{' '}
-          <div className="fmtm-flex fmtm-flex-col">
-            <span>
-              Here are the instructions for setting up a Central ODK Server on Digital Ocean, if you haven’t already.
-            </span>
+          <div>
             <a
               href="https://docs.getodk.org/central-install-digital-ocean/"
-              className="fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-underline"
+              className="fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-w-fit"
               target="_"
             >
-              https://docs.getodk.org/central-install-digital-ocean/
+              Here{' '}
             </a>
+            <span>
+              are the instructions for setting up a Central ODK Server on Digital Ocean, if you haven’t already.
+            </span>
           </div>
         </div>
       </div>
@@ -164,9 +149,6 @@ const ProjectDetailsForm = ({ flag }) => {
                 value={values?.hashtags}
                 onChange={(e) => {
                   handleHashtagOnChange(e);
-                }}
-                onKeyDown={(e) => {
-                  handleHashtagKeyPress(e);
                 }}
                 fieldType="text"
                 required

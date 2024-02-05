@@ -61,7 +61,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomLineUpload, se
     }
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 3 }));
-    navigate('/select-form');
+    navigate('/select-category');
   };
   const {
     handleSubmit,
@@ -73,14 +73,6 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomLineUpload, se
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
     navigate(url);
   };
-
-  // const onCreateProjectSubmission = () => {
-  //   if (!drawnGeojson && !geojsonFile) {
-  //     return;
-  //   } else {
-  //     toggleStep(3, '/new-select-form');
-  //   }
-  // };
 
   const convertFileToGeojson = async (file) => {
     if (!file) return;
@@ -297,12 +289,16 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomLineUpload, se
             <NewDefineAreaMap
               drawToggle={drawToggle}
               uploadedOrDrawnGeojsonFile={drawnGeojson}
-              onDraw={(geojson, area) => {
-                handleCustomChange('drawnGeojson', geojson);
-                dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
-                dispatch(CreateProjectActions.SetTotalAreaSelection(area));
-                setGeojsonFile(null);
-              }}
+              onDraw={
+                drawnGeojson || uploadAreaSelection === 'upload_file'
+                  ? null
+                  : (geojson, area) => {
+                      handleCustomChange('drawnGeojson', geojson);
+                      dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
+                      dispatch(CreateProjectActions.SetTotalAreaSelection(area));
+                      setGeojsonFile(null);
+                    }
+              }
               onModify={(geojson, area) => {
                 handleCustomChange('drawnGeojson', geojson);
                 dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
@@ -310,7 +306,9 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomLineUpload, se
                 dispatch(CreateProjectActions.ClearProjectStepState(formValues));
                 setCustomLineUpload(null);
                 setCustomPolygonUpload(null);
-                setGeojsonFile(null);
+              }}
+              getAOIArea={(area) => {
+                dispatch(CreateProjectActions.SetTotalAreaSelection(area));
               }}
             />
           </div>
