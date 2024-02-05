@@ -65,7 +65,7 @@ async def create_organisation(
     org: organisation_schemas.OrganisationIn = Depends(),
     logo: UploadFile = File(None),
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(org_admin),
+    org_user_dict: DbUser = Depends(org_admin),
 ) -> organisation_schemas.OrganisationOut:
     """Create an organisation with the given details."""
     return await organisation_crud.create_organisation(db, org, logo)
@@ -77,7 +77,7 @@ async def update_organisation(
     logo: UploadFile = File(None),
     organisation: DbOrganisation = Depends(org_exists),
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(org_admin),
+    org_user_dict: DbUser = Depends(org_admin),
 ):
     """Partial update for an existing organisation."""
     return await organisation_crud.update_organisation(
@@ -89,7 +89,7 @@ async def update_organisation(
 async def delete_organisations(
     organisation: DbOrganisation = Depends(org_exists),
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(org_admin),
+    org_user_dict: DbUser = Depends(org_admin),
 ):
     """Delete an organisation."""
     return await organisation_crud.delete_organisation(db, organisation)
@@ -99,7 +99,7 @@ async def delete_organisations(
 async def approve_organisation(
     org_id: int,
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(super_admin),
+    current_user: DbUser = Depends(super_admin),
 ):
     """Approve the organisation request made by the user.
 
@@ -114,7 +114,7 @@ async def add_new_organisation_admin(
     db: Session = Depends(database.get_db),
     organisation: DbOrganisation = Depends(org_exists),
     user: DbUser = Depends(user_exists_in_db),
-    current_user: AuthUser = Depends(org_admin),
+    org_user_dict: DbUser = Depends(org_admin),
 ):
     """Add a new organisation admin.
 

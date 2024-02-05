@@ -57,7 +57,6 @@ from sqlalchemy import and_, column, func, inspect, select, table, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from app.auth.osm import AuthUser
 from app.central import central_crud
 from app.config import encrypt_value, settings
 from app.db import db_models
@@ -257,7 +256,7 @@ async def create_project_with_project_info(
     db: Session,
     project_metadata: project_schemas.ProjectUpload,
     odk_project_id: int,
-    current_user: AuthUser,
+    current_user: db_models.DbUser,
 ):
     """Create a new project, including all associated info."""
     # FIXME the ProjectUpload model should be converted to the db model directly

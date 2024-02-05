@@ -126,11 +126,15 @@ async def super_admin(
     user_data: AuthUser = Depends(login_required),
     db: Session = Depends(get_db),
 ) -> DbUser:
-    """Super admin role, with access to all endpoints."""
+    """Super admin role, with access to all endpoints.
+
+    Returns:
+        user_data: DbUser SQLAlchemy object.
+    """
     db_user = await check_access(user_data, db)
 
     if db_user:
-        return db_user
+        return user_data
 
     log.error(
         f"User {user_data.username} requested an admin endpoint, " "but is not admin"
@@ -144,9 +148,13 @@ async def check_org_admin(
     db: Session,
     user: Union[AuthUser, int],
     org_id: int,
-) -> DbUser:
-    """Database check to determine if org admin role."""
-    await check_org_exists(db, org_id)
+) -> dict:
+    """Database check to determine if org admin role.
+
+    Returns:
+        dict: in format {'user': DbUser, 'org': DbOrganisation}.
+    """
+    db_org = await check_org_exists(db, org_id)
 
     # Check if org admin, or super admin
     db_user = await check_access(
@@ -156,7 +164,7 @@ async def check_org_admin(
     )
 
     if db_user:
-        return db_user
+        return {"user": db_user, "org": db_org}
 
     raise HTTPException(
         status_code=HTTPStatus.FORBIDDEN,
@@ -169,8 +177,12 @@ async def org_admin(
     org_id: Optional[int] = None,
     db: Session = Depends(get_db),
     user_data: AuthUser = Depends(login_required),
-) -> AuthUser:
-    """Organisation admin with full permission for projects in an organisation."""
+) -> dict:
+    """Organisation admin with full permission for projects in an organisation.
+
+    Returns:
+        dict: in format {'user': DbUser, 'org': DbOrganisation}.
+    """
     if not (project or org_id):
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
@@ -195,18 +207,10 @@ async def org_admin(
             detail="org_id must be provided to check organisation admin role",
         )
 
-    db_user = await check_org_admin(
+    return await check_org_admin(
         db,
         user_data,
         org_id=org_id,
-    )
-
-    if db_user:
-        return db_user
-
-    raise HTTPException(
-        status_code=HTTPStatus.FORBIDDEN,
-        detail="User is not organisation admin",
     )
 
 
@@ -244,7 +248,7 @@ async def validator(
     project_id: int,
     db: Session = Depends(get_db),
     user_data: AuthUser = Depends(login_required),
-) -> AuthUser:
+) -> DbUser:
     """A validator for a specific project."""
     user_id = await get_uid(user_data)
 
