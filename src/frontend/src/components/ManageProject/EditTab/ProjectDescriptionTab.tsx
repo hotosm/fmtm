@@ -7,15 +7,11 @@ import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
 import { PatchProjectDetails } from '@/api/CreateProjectService';
 import { diffObject } from '@/utilfunctions/compareUtils';
 import useForm from '@/hooks/useForm';
-import environment from '@/environment';
 import CoreModules from '@/shared/CoreModules';
 import { CommonActions } from '@/store/slices/CommonSlice';
 
-const ProjectDescriptionTab = () => {
+const ProjectDescriptionTab = ({ projectId }) => {
   const dispatch = CoreModules.useAppDispatch();
-  const params = CoreModules.useParams();
-  const encodedProjectId = params.id;
-  const decodedProjectId = environment.decode(encodedProjectId);
   const editProjectDetails: any = CoreModules.useAppSelector((state) => state.createproject.editProjectDetails);
   const editProjectDetailsLoading: boolean = CoreModules.useAppSelector(
     (state) => state.createproject.editProjectDetailsLoading,
@@ -25,7 +21,7 @@ const ProjectDescriptionTab = () => {
     const changedValues = diffObject(editProjectDetails, values);
     dispatch(CreateProjectActions.SetIndividualProjectDetails(values));
     if (Object.keys(changedValues).length > 0) {
-      dispatch(PatchProjectDetails(`${import.meta.env.VITE_API_URL}/projects/${decodedProjectId}`, changedValues));
+      dispatch(PatchProjectDetails(`${import.meta.env.VITE_API_URL}/projects/${projectId}`, changedValues));
     } else {
       dispatch(
         CommonActions.SetSnackBar({
