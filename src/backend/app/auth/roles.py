@@ -266,21 +266,17 @@ async def mapper(
     """A mapper for a specific project."""
     user_id = await get_uid(user_data)
 
-    if await check_org_admin(
-        db, user_data, project, project.organisation_id
-    ) or await check_super_admin(db, user_data):
-        print("passed super admin check")
-        return user_data
-
     if project.visibility == ProjectVisibility.PUBLIC:
-        print("project is public")
         return user_data
 
-    match = (
+    user_role = (
         db.query(DbUserRoles).filter_by(user_id=user_id, project_id=project.id).first()
     )
 
-    if not match:
+    if not user_role:
+        if await check_org_admin(db, user_data, project, project.organisation_id_):
+            return user_data
+
         log.error(f"User ID {user_id} has no access to project ID {project.id}")
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN, detail="User has no access to project"
