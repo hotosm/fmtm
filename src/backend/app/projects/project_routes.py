@@ -273,7 +273,15 @@ async def create_project(
             "Defaulting to organisation credentials."
         )
         odk_creds_decrypted = await organisation_deps.get_org_odk_creds(org)
-    
+
+    # FIXME this is inefficient
+    user = await check_org_admin(db, current_user, None, project_info.organisation_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission denied. Only organization admins can create projects.",
+        )
+
     odkproject = central_crud.create_odk_project(
         project_info.project_info.name,
         odk_creds_decrypted,
@@ -295,7 +303,6 @@ async def create_project(
 async def update_project(
     project_id: int,
     project_info: project_schemas.ProjectUpload,
-    current_user: AuthUser = Depends(login_required),
     db: Session = Depends(database.get_db),
     current_user: AuthUser = Depends(project_admin),
 ):
