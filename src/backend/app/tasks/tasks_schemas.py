@@ -130,7 +130,8 @@ class Task(BaseModel):
         if not value:
             return ""
         
-        
+        return decrypt_value(value)
+
 class TaskCommentRequest(BaseModel):
     """Task mapping history."""
     comment: str
@@ -150,7 +151,6 @@ class TaskCommentResponse(BaseModel):
     comment:str
     created_at: datetime
 
-        return decrypt_value(value)
 
 
 class ReadTask(Task):

@@ -353,7 +353,7 @@ async def add_task_comments(db: Session, comment: tasks_schemas.TaskCommentBase,
     query = text(
         f"""
         WITH inserted_comment AS ( INSERT INTO task_comment(task_id,project_id,comment_text,commented_by) 
-        VALUES({comment.task_id},{comment.project_id},'{comment.comment}',{user_data["id"]})
+        VALUES({comment.task_id},{comment.project_id},'{comment.comment}',{user_data.id})
         RETURNING task_comment.comment_id, task_comment.comment_text, task_comment.created_at, task_comment.commented_by )
         SELECT comment_id as id,username as commented_by,comment_text,created_at FROM inserted_comment ic
         LEFT JOIN users u ON ic.commented_by = u.id;
@@ -397,10 +397,8 @@ async def delete_task_comment_by_id(db: Session, task_comment_id: int, user_data
     comment = db.execute(get_comment_query, {"task_comment_id": task_comment_id}).fetchone()
     if comment is None:
         raise HTTPException(status_code=404, detail="Task Comment not found")
-    print('comment')
-    print(comment)
     # check for user    
-    if comment.commented_by != user_data['id']:
+    if comment.commented_by != user_data.id:
         raise HTTPException(status_code=404, detail="Cannot delete Task Comment. You are not the owner.")
 
     # Query to delete the comment by its ID and the authenticated user ID
@@ -412,7 +410,7 @@ async def delete_task_comment_by_id(db: Session, task_comment_id: int, user_data
     )
 
     # Execute the query to delete the comment
-    result = db.execute(delete_query, {"task_comment_id": task_comment_id, "user_id": user_data["id"]})
+    result = db.execute(delete_query, {"task_comment_id": task_comment_id, "user_id": user_data.id})
     db.commit()
     print("--------------")
     print(result.__dict__)
