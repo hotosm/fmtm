@@ -7,16 +7,9 @@ import CoreModules from '@/shared/CoreModules';
 
 const tabList: ['Project Description', 'Form Update'] = ['Project Description', 'Form Update'];
 
-const EditTab = () => {
+const EditTab = ({ projectId }) => {
   const dispatch = CoreModules.useAppDispatch();
-  const params = CoreModules.useParams();
-  const encodedProjectId = params.id;
-  const decodedProjectId = environment.decode(encodedProjectId);
   const [tabView, setTabView] = useState<'Project Description' | 'Form Update'>('Project Description');
-
-  useEffect(() => {
-    dispatch(GetIndividualProjectDetails(`${import.meta.env.VITE_API_URL}/projects/${decodedProjectId}`));
-  }, [decodedProjectId]);
 
   useEffect(() => {
     dispatch(FormCategoryService(`${import.meta.env.VITE_API_URL}/central/list-forms`));
@@ -39,9 +32,9 @@ const EditTab = () => {
       </div>
       <div className="fmtm-max-w-[29.5rem]">
         {tabView === 'Project Description' ? (
-          <ProjectDescriptionTab projectId={decodedProjectId} />
+          <ProjectDescriptionTab projectId={projectId} />
         ) : (
-          <FormUpdateTab projectId={decodedProjectId} />
+          <FormUpdateTab projectId={projectId} />
         )}
       </div>
     </div>
