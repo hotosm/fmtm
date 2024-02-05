@@ -62,6 +62,7 @@ async def get_organisation_detail(
 
 @router.post("/", response_model=organisation_schemas.OrganisationOut)
 async def create_organisation(
+    # Depends required below to allow logo upload
     org: organisation_schemas.OrganisationIn = Depends(),
     logo: UploadFile = File(None),
     db: Session = Depends(database.get_db),

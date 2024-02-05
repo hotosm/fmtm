@@ -92,7 +92,7 @@ async def get_projet_details(project_id: int, db: Session = Depends(database.get
         raise HTTPException(status_code=404, details={"Project not found"})
 
     # ODK Credentials
-    odk_credentials = project_schemas.ODKCentral(
+    odk_credentials = project_schemas.ODKCentralDecrypted(
         odk_central_url=project.odk_central_url,
         odk_central_user=project.odk_central_user,
         odk_central_password=project.odk_central_password,
@@ -226,7 +226,7 @@ async def delete_project(
         f"User {current_user.username} attempting deletion of project {project.id}"
     )
     # Odk crendentials
-    odk_credentials = project_schemas.ODKCentral(
+    odk_credentials = project_schemas.ODKCentralDecrypted(
         odk_central_url=project.odk_central_url,
         odk_central_user=project.odk_central_user,
         odk_central_password=project.odk_central_password,
@@ -251,12 +251,28 @@ async def create_project(
     TODO refactor to standard REST POST to /projects
     TODO but first check doesn't break other endpoints
     """
-    log.debug(f"Creating project {project_info.project_info.name}")
+    # Check if organisation exists
+    org = await organisation_deps.check_org_exists(db, project_info.organisation_id)
 
-    if project_info.odk_central.odk_central_url.endswith("/"):
-        project_info.odk_central.odk_central_url = (
-            project_info.odk_central.odk_central_url[:-1]
+    log.info(
+        f"User {current_user.username} attempting creation of project "
+        f"{project_info.project_info.name}"
+    )
+
+    # Must decrypt ODK password & connect to ODK Central before proj created
+    if project_info.odk_central_url:
+        odk_creds_decrypted = project_schemas.ODKCentralDecrypted(
+            odk_central_url=project_info.odk_central_url,
+            odk_central_user=project_info.odk_central_user,
+            odk_central_password=project_info.odk_central_password,
         )
+    else:
+        # Use default org credentials if none passed
+        log.debug(
+            "No odk credentials passed during project creation. "
+            "Defaulting to organisation credentials."
+        )
+        odk_creds_decrypted = await organisation_deps.get_org_odk_creds(org)
 
     user = await check_org_admin(db, current_user, None, project_info.organisation_id)
     if user is None:
@@ -266,11 +282,15 @@ async def create_project(
         )
 
     odkproject = central_crud.create_odk_project(
-        project_info.project_info.name, project_info.odk_central
+        project_info.project_info.name,
+        odk_creds_decrypted,
     )
 
     project = await project_crud.create_project_with_project_info(
-        db, project_info, odkproject["id"]
+        db,
+        project_info,
+        odkproject["id"],
+        current_user,
     )
     if not project:
         raise HTTPException(status_code=404, detail="Project creation failed")
@@ -292,7 +312,6 @@ async def update_project(
 
     Parameters:
     - id: ID of the project to update
-    - author: Author username and id
     - project_info: Updated project information
     - current_user (AuthUser): Check if user is project_admin
 
@@ -596,7 +615,7 @@ async def generate_files(
         xls_form_config_file (UploadFile, optional): The config YAML for the XLS form.
         data_extracts (UploadFile, optional): Custom data extract GeoJSON.
         db (Session): Database session, provided automatically.
-        current_user (AuthUser): Check if user is org_admin or not.
+        current_user (AuthUser): Current logged in user.
 
     Returns:
         json (JSONResponse): A success message containing the project ID.
