@@ -48,7 +48,7 @@ const Organisation = () => {
     >
       <CoreModules.Box className="fmtm-flex fmtm-flex-col sm:fmtm-flex-row sm:fmtm-items-center fmtm-pt-5 fmtm-gap-2 sm:fmtm-gap-4">
         <h1 className="fmtm-text-[1.5rem] lg:fmtm-text-[2.25rem] fmtm-font-bold">MANAGE ORGANIZATIONS</h1>
-        <CoreModules.Link to={'/createOrganisation'}>
+        <CoreModules.Link to={'/create-organization'}>
           <CoreModules.Button
             variant="outlined"
             color="error"
