@@ -61,11 +61,12 @@ async def test_create_project(client, organisation):
         },
         "xform_title": "buildings",
         "hashtags": ["#FMTM"],
-        "organisation_id": organisation.id,
     }
     project_data.update(**odk_credentials.model_dump())
 
-    response = client.post("/projects/create_project", json=project_data)
+    response = client.post(
+        f"/projects/create_project?org_id={organisation.id}", json=project_data
+    )
 
     assert response.status_code == 200
 
