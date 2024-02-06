@@ -42,7 +42,7 @@ class AuthUser(BaseModel):
     id: int
     username: str
     img_url: Optional[str] = None
-    role: Optional[UserRole] = None
+    role: Optional[UserRole] = UserRole.MAPPER
 
 
 async def init_osm_auth():
