@@ -562,10 +562,7 @@ async def edit_project_boundary(
 
 
 @router.post("/validate_form")
-async def validate_form(
-    form: UploadFile,
-    current_user: db_models.DbUser = Depends(super_admin),
-):
+async def validate_form(form: UploadFile):
     """Tests the validity of the xls form uploaded.
 
     Parameters:
