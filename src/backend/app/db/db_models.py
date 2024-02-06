@@ -367,6 +367,7 @@ class DbTaskHistory(Base):
     )
 
     # Define relationships
+    user = relationship(DbUser, uselist=False, backref="task_history_user")
     invalidation_history = relationship(
         DbTaskInvalidationHistory, lazy="dynamic", cascade="all"
     )
@@ -461,8 +462,14 @@ class DbProject(Base):
             server_default="20386219",
         ),
     )
-    author = relationship(DbUser, uselist=False, backref="user")
+    author = relationship(DbUser, uselist=False, backref="project_user")
     created = cast(datetime, Column(DateTime, default=timestamp, nullable=False))
+
+    task_split_type = Column(Enum(TaskSplitType), nullable=True)
+    # split_strategy = Column(Integer)
+    # grid_meters = Column(Integer)
+    # task_type = Column(Integer)
+    # target_number_of_features = Column(Integer)
 
     # PROJECT DETAILS
     project_name_prefix = cast(str, Column(String))
@@ -471,7 +478,7 @@ class DbProject(Base):
         DbProjectInfo,
         cascade="all, delete, delete-orphan",
         uselist=False,
-        backref="project",
+        backref="project_info",
     )
     location_str = cast(str, Column(String))
 
