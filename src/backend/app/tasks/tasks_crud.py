@@ -29,6 +29,7 @@ from shapely.geometry import shape
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
+from app.auth.osm import AuthUser
 from app.central import central_crud
 from app.db import database, db_models
 from app.models.enums import (
@@ -36,7 +37,6 @@ from app.models.enums import (
     get_action_for_status_change,
     verify_valid_status_update,
 )
-from app.auth.osm import AuthUser
 from app.projects import project_crud
 from app.tasks import tasks_schemas
 from app.users import user_crud
@@ -316,12 +316,12 @@ async def edit_task_boundary(db: Session, task_id: int, boundary: str):
     return True
 
 
-async def get_task_comments(db: Session,project_id:int,task_id:int):
+async def get_task_comments(db: Session, project_id: int, task_id: int):
     """Get a list of tasks id for a project."""
     query = text(
         f"""
-        SELECT task_comment.id,users.username,task_comment.comment_text,task_comment.created_at FROM task_comment 
-        LEFT JOIN users ON task_comment.commented_by = users.id 
+        SELECT task_comment.id,users.username,task_comment.comment_text,task_comment.created_at FROM task_comment
+        LEFT JOIN users ON task_comment.commented_by = users.id
         where project_id = {project_id} AND task_id = {task_id}
     """
     )
@@ -329,31 +329,33 @@ async def get_task_comments(db: Session,project_id:int,task_id:int):
     result = db.execute(query)
     print("result----")
     print(result.__dict__)
-    
-    # Convert the result to a list of dictionaries
-    result_dict_list = [{"id": row[0],"commented_by": row[1],"comment": row[2],"created_at": row[3]} for row in result.fetchall()]
 
+    # Convert the result to a list of dictionaries
+    result_dict_list = [
+        {"id": row[0], "commented_by": row[1], "comment": row[2], "created_at": row[3]}
+        for row in result.fetchall()
+    ]
 
     return result_dict_list
 
 
-async def add_task_comments(db: Session, comment: tasks_schemas.TaskCommentBase, user_data: AuthUser):
-    """
-    Add a comment to a task.
-    
+async def add_task_comments(
+    db: Session, comment: tasks_schemas.TaskCommentBase, user_data: AuthUser
+):
+    """Add a comment to a task.
+
     Parameters:
     - db: SQLAlchemy database session
     - comment: TaskCommentBase instance containing the comment details
     - user_data: AuthUser instance containing the user details
-    
+
     Returns:
     - Dictionary with the details of the added comment
     """
-
     # Construct the query to insert the comment and retrieve the details of the inserted comment
     query = text(
         f"""
-        WITH inserted_comment AS ( INSERT INTO task_comment(task_id,project_id,comment_text,commented_by) 
+        WITH inserted_comment AS ( INSERT INTO task_comment(task_id,project_id,comment_text,commented_by)
         VALUES({comment.task_id},{comment.project_id},'{comment.comment}',{user_data.id})
         RETURNING task_comment.id, task_comment.comment_text, task_comment.created_at, task_comment.commented_by )
         SELECT ic.id,username as commented_by,comment_text,created_at FROM inserted_comment ic
@@ -371,7 +373,13 @@ async def add_task_comments(db: Session, comment: tasks_schemas.TaskCommentBase,
     row = result.fetchone()
 
     # Return the details of the added comment as a dictionary
-    return {"id":row[0],"commented_by": row[1],"comment": row[2],"created_at": row[3]}
+    return {
+        "id": row[0],
+        "commented_by": row[1],
+        "comment": row[2],
+        "created_at": row[3],
+    }
+
 
 async def get_task_comment_info_by_id(db: Session, comment_id: int):
     """Get the project info only by id."""
@@ -383,8 +391,10 @@ async def get_task_comment_info_by_id(db: Session, comment_id: int):
     )
     return db_project_info
 
-async def delete_task_comment_by_id(db: Session, task_comment_id: int, user_data: AuthUser):
 
+async def delete_task_comment_by_id(
+    db: Session, task_comment_id: int, user_data: AuthUser
+):
     # Query to get the comment by its ID
     get_comment_query = text(
         """
@@ -395,12 +405,16 @@ async def delete_task_comment_by_id(db: Session, task_comment_id: int, user_data
     )
 
     # Execute the query and commit the transaction
-    comment = db.execute(get_comment_query, {"task_comment_id": task_comment_id}).fetchone()
+    comment = db.execute(
+        get_comment_query, {"task_comment_id": task_comment_id}
+    ).fetchone()
     if comment is None:
         raise HTTPException(status_code=404, detail="Task Comment not found")
-    # check for user    
+    # check for user
     if comment.commented_by != user_data.id:
-        raise HTTPException(status_code=404, detail="Cannot delete Task Comment. You are not the owner.")
+        raise HTTPException(
+            status_code=404, detail="Cannot delete Task Comment. You are not the owner."
+        )
 
     # Query to delete the comment by its ID and the authenticated user ID
     delete_query = text(
@@ -410,11 +424,14 @@ async def delete_task_comment_by_id(db: Session, task_comment_id: int, user_data
         """
     )
     # Execute the query to delete the comment
-    result = db.execute(delete_query, {"task_comment_id": task_comment_id, "user_id": user_data.id})
+    result = db.execute(
+        delete_query, {"task_comment_id": task_comment_id, "user_id": user_data.id}
+    )
     db.commit()
 
     # Return the details of the added comment as a dictionary
     return f"Task Comment {task_comment_id} deleted"
+
 
 async def update_task_history(
     tasks: List[tasks_schemas.Task], db: Session = Depends(database.get_db)

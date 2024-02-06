@@ -349,6 +349,7 @@ class DbTaskHistory(Base):
         {},
     )
 
+
 class TaskComment(Base):
     """Represents a comment associated with a task."""
 
@@ -373,6 +374,7 @@ class TaskComment(Base):
         Index("idx_task_history_composite", "task_id", "project_id"),
         {},
     )
+
 
 class DbTask(Base):
     """Describes an individual mapping Task."""

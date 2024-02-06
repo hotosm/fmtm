@@ -32,8 +32,8 @@ from app.projects import project_crud, project_schemas
 from app.tasks import tasks_crud, tasks_schemas
 from app.users import user_schemas
 
+from ..auth.osm import AuthUser, login_required
 from . import tasks_crud, tasks_schemas
-from ..auth.osm import AuthUser,login_required
 
 router = APIRouter(
     prefix="/tasks",
@@ -197,27 +197,25 @@ async def task_features_count(
 
     return data
 
+
 @router.get("/task-comments/", response_model=list[tasks_schemas.TaskCommentResponse])
 async def task_comments(
     project_id: int,
     task_id: int,
     db: Session = Depends(database.get_db),
 ):
-    task_comment_list = await tasks_crud.get_task_comments(db,project_id,task_id)
-
+    task_comment_list = await tasks_crud.get_task_comments(db, project_id, task_id)
 
     return task_comment_list
 
 
-@router.post("/task-comments/",response_model=tasks_schemas.TaskCommentResponse)
+@router.post("/task-comments/", response_model=tasks_schemas.TaskCommentResponse)
 async def task_comments(
     comment: tasks_schemas.TaskCommentRequest,
     db: Session = Depends(database.get_db),
     user_data: AuthUser = Depends(login_required),
-
 ):
-    """
-    Create a new task comment.
+    """Create a new task comment.
 
     Parameters:
         comment (TaskCommentRequest): The task comment to be created.
@@ -227,7 +225,7 @@ async def task_comments(
     Returns:
         TaskCommentResponse: The created task comment.
     """
-    task_comment_list = await tasks_crud.add_task_comments(db,comment,user_data)
+    task_comment_list = await tasks_crud.add_task_comments(db, comment, user_data)
     return task_comment_list
 
 
@@ -242,9 +240,12 @@ async def delete_task_comments(
     if not task_comment:
         raise HTTPException(status_code=404, detail="Task Comment not found")
     else:
-        deleted_project = await tasks_crud.delete_task_comment_by_id(db, task_comment_id,user_data)
-    
+        deleted_project = await tasks_crud.delete_task_comment_by_id(
+            db, task_comment_id, user_data
+        )
+
     return deleted_project
+
 
 @router.get("/activity/", response_model=List[tasks_schemas.TaskHistoryCount])
 async def task_activity(
