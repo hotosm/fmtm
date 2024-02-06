@@ -44,7 +44,7 @@ odk_central_user = os.getenv("ODK_CENTRAL_USER")
 odk_central_password = encrypt_value(os.getenv("ODK_CENTRAL_PASSWD", ""))
 
 
-async def test_create_project(client, organisation):
+async def test_create_project(client, admin_user, organisation):
     """Test project creation endpoint."""
     odk_credentials = {
         "odk_central_url": odk_central_url,
