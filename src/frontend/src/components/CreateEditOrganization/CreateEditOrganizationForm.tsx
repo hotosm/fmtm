@@ -1,6 +1,6 @@
 import React from 'react';
 
-const CreateEditOrganizationForm = () => {
+const CreateEditOrganizationForm = ({ organizationId }) => {
   return <div>CreateEditOrganizationForm</div>;
 };
 

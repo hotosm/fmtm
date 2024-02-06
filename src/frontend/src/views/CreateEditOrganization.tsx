@@ -9,12 +9,17 @@ const CreateEditOrganization = () => {
   const params = CoreModules.useParams();
   const encodedId = params.id;
   const decodedId = encodedId ? environment.decode(encodedId) : null;
+  const consentApproval: any = CoreModules.useAppSelector((state) => state.organisation.consentApproval);
 
   return (
     <div className="fmtm-bg-[#F5F5F5]">
       <CreateEditOrganizationHeader projectId={decodedId} />
       <div className="fmtm-box-border fmtm-border-[1px] fmtm-border-t-white fmtm-border-t-[0px] fmtm-px-5 fmtm-py-4">
-        {decodedId ? <CreateEditOrganizationForm /> : <ConsentDetailsForm />}
+        {decodedId || (!decodedId && consentApproval) ? (
+          <CreateEditOrganizationForm organizationId={decodedId} />
+        ) : (
+          <ConsentDetailsForm />
+        )}
       </div>
     </div>
   );
