@@ -462,7 +462,7 @@ class DbProject(Base):
             server_default="20386219",
         ),
     )
-    author = relationship(DbUser, uselist=False, backref="project_user")
+    author = relationship(DbUser, uselist=False, backref="user")
     created = cast(datetime, Column(DateTime, default=timestamp, nullable=False))
 
     task_split_type = Column(Enum(TaskSplitType), nullable=True)
@@ -478,7 +478,7 @@ class DbProject(Base):
         DbProjectInfo,
         cascade="all, delete, delete-orphan",
         uselist=False,
-        backref="project_info",
+        backref="project",
     )
     location_str = cast(str, Column(String))
 
