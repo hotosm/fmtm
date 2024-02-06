@@ -341,7 +341,7 @@ async def update_task_history(
     return tasks
 
 
-def get_project_task_history(
+async def get_project_task_history(
     project_id: int,
     end_date: Optional[datetime],
     db: Session,
@@ -413,18 +413,3 @@ async def count_validated_and_mapped_tasks(
         entry.update({"validated": total_validated, "mapped": total_mapped})
 
     return results
-
-
-async def append(tasks:List, db: Session):
-    """Get task history of project."""
-    response = []
-
-    for task in tasks if isinstance(tasks, list) else [tasks]:
-        task_id = task.id
-        task_history = task.task_history
-        if isinstance(task_history, list):
-            for history_entry in task_history:
-                user = db.query(db_models.DbUser).filter_by(id=history_entry.user_id).first()
-                response.append(tasks_schemas.TaskHistory.map_entry_to_model(task_id, history_entry, user))
-
-    return response
