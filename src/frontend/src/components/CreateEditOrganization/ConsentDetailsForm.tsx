@@ -3,10 +3,30 @@ import { consentQuestions } from '@/constants/ConsentQuestions';
 import { CustomCheckbox } from '@/components/common/Checkbox';
 import RadioButton from '@/components/common/RadioButton';
 import Button from '@/components/common/Button';
+import useForm from '@/hooks/useForm';
+import CoreModules from '@/shared/CoreModules';
+import ConsentDetailsValidation from '@/components/CreateEditOrganization/validation/ConsentDetailsValidation';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { OrganisationAction } from '@/store/slices/organisationSlice';
 
 const ConsentDetailsForm = () => {
-  const [checkeditem, setcheckeditem] = useState<any>([]);
-  const [rad, setrad] = useState('');
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const consentDetailsFormData: any = CoreModules.useAppSelector((state) => state.organisation.consentDetailsFormData);
+
+  const submission = () => {
+    dispatch(OrganisationAction.SetConsentApproval(true));
+    dispatch(OrganisationAction.SetConsentDetailsFormData(values));
+  };
+
+  const { handleSubmit, handleCustomChange, values, errors }: any = useForm(
+    consentDetailsFormData,
+    submission,
+    ConsentDetailsValidation,
+  );
+
   return (
     <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5 lg:fmtm-gap-10">
       <div className="lg:fmtm-w-[30%] xl:fmtm-w-[20rem] fmtm-bg-white fmtm-py-5 lg:fmtm-py-10 fmtm-px-5 fmtm-h-fit">
@@ -41,12 +61,12 @@ const ConsentDetailsForm = () => {
                 <RadioButton
                   options={question.options}
                   direction="column"
-                  value={rad}
+                  value={values[question.id]}
                   onChangeData={(value) => {
-                    setrad(value);
+                    handleCustomChange(question.id, value);
                   }}
                   className="fmtm-font-archivo fmtm-text-base fmtm-text-[#7A7676] fmtm-mt-1"
-                  // errorMsg={errors.dataExtractFeatureType}
+                  errorMsg={errors.give_consent}
                 />
               ) : (
                 <div className="fmtm-flex fmtm-flex-col fmtm-gap-2">
@@ -54,14 +74,18 @@ const ConsentDetailsForm = () => {
                     <CustomCheckbox
                       key={option.id}
                       label={option.label}
-                      checked={checkeditem?.includes(option.id)}
+                      checked={values[question.id].includes(option.id)}
                       onCheckedChange={(checked) => {
                         return checked
-                          ? setcheckeditem((prev) => [...prev, option.id])
-                          : setcheckeditem((prev) => prev.filter((value) => value !== option.id));
+                          ? handleCustomChange(question.id, [...values[question.id], option.id])
+                          : handleCustomChange(
+                              question.id,
+                              values[question.id].filter((value) => value !== option.id),
+                            );
                       }}
                     />
                   ))}
+                  {errors[question.id] && <p className="fmtm-text-red-500 fmtm-text-sm">{errors[question.id]}</p>}
                 </div>
               )}
             </div>
@@ -69,8 +93,13 @@ const ConsentDetailsForm = () => {
         </div>
 
         <div className="fmtm-flex fmtm-items-center fmtm-justify-center fmtm-gap-6 fmtm-mt-8 lg:fmtm-mt-16">
-          <Button btnText="Cancel" btnType="other" className="fmtm-font-bold" onClick={() => {}} />
-          <Button btnText="NEXT" btnType="primary" className="fmtm-font-bold" onClick={() => {}} />
+          <Button
+            btnText="Cancel"
+            btnType="other"
+            className="fmtm-font-bold"
+            onClick={() => navigate('/organisation')}
+          />
+          <Button btnText="NEXT" btnType="primary" className="fmtm-font-bold" onClick={handleSubmit} />
         </div>
       </div>
     </div>
