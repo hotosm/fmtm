@@ -320,15 +320,16 @@ async def get_task_comments(db: Session,project_id:int,task_id:int):
     """Get a list of tasks id for a project."""
     query = text(
         f"""
-        SELECT comment_id as id,username as commented_by,comment_text,created_at FROM task_comment 
-        LEFT JOIN users ON commented_by = id 
+        SELECT task_comment.id,users.username,task_comment.comment_text,task_comment.created_at FROM task_comment 
+        LEFT JOIN users ON task_comment.commented_by = users.id 
         where project_id = {project_id} AND task_id = {task_id}
     """
     )
-    # db_task_comment = db.query(db_models.TaskComment).filter(db_models.TaskComment.task_id == task_id).all()
-    # print("task_id", db_task_comment[0].task_id)
     # Then execute the query with the desired parameter
     result = db.execute(query)
+    print("result----")
+    print(result.__dict__)
+    
     # Convert the result to a list of dictionaries
     result_dict_list = [{"id": row[0],"commented_by": row[1],"comment": row[2],"created_at": row[3]} for row in result.fetchall()]
 
@@ -354,8 +355,8 @@ async def add_task_comments(db: Session, comment: tasks_schemas.TaskCommentBase,
         f"""
         WITH inserted_comment AS ( INSERT INTO task_comment(task_id,project_id,comment_text,commented_by) 
         VALUES({comment.task_id},{comment.project_id},'{comment.comment}',{user_data.id})
-        RETURNING task_comment.comment_id, task_comment.comment_text, task_comment.created_at, task_comment.commented_by )
-        SELECT comment_id as id,username as commented_by,comment_text,created_at FROM inserted_comment ic
+        RETURNING task_comment.id, task_comment.comment_text, task_comment.created_at, task_comment.commented_by )
+        SELECT ic.id,username as commented_by,comment_text,created_at FROM inserted_comment ic
         LEFT JOIN users u ON ic.commented_by = u.id;
     """
     )
@@ -376,8 +377,8 @@ async def get_task_comment_info_by_id(db: Session, comment_id: int):
     """Get the project info only by id."""
     db_project_info = (
         db.query(db_models.TaskComment)
-        .filter(db_models.TaskComment.comment_id == comment_id)
-        .order_by(db_models.TaskComment.comment_id)
+        .filter(db_models.TaskComment.id == comment_id)
+        .order_by(db_models.TaskComment.id)
         .first()
     )
     return db_project_info
@@ -387,9 +388,9 @@ async def delete_task_comment_by_id(db: Session, task_comment_id: int, user_data
     # Query to get the comment by its ID
     get_comment_query = text(
         """
-        SELECT comment_id, commented_by
+        SELECT id, commented_by
         FROM task_comment
-        WHERE comment_id = :task_comment_id
+        WHERE id = :task_comment_id
         """
     )
 
@@ -405,15 +406,12 @@ async def delete_task_comment_by_id(db: Session, task_comment_id: int, user_data
     delete_query = text(
         """
         DELETE FROM task_comment
-        WHERE comment_id = :task_comment_id AND commented_by = :user_id
+        WHERE id = :task_comment_id AND commented_by = :user_id
         """
     )
-
     # Execute the query to delete the comment
     result = db.execute(delete_query, {"task_comment_id": task_comment_id, "user_id": user_data.id})
     db.commit()
-    print("--------------")
-    print(result.__dict__)
 
     # Return the details of the added comment as a dictionary
     return f"Task Comment {task_comment_id} deleted"
