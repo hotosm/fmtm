@@ -1,15 +1,10 @@
-type optionsType = {
-  id: string;
-  label: string;
-};
-
 type consentQuestionsType = {
   id: string;
   type: 'radio' | 'checkbox';
   required: boolean;
   question: string;
   description: string | null;
-  options: optionsType[];
+  options: any[];
 };
 
 export const consentQuestions: consentQuestionsType[] = [
@@ -20,15 +15,23 @@ export const consentQuestions: consentQuestionsType[] = [
     question: 'Do you give consent?',
     description: null,
     options: [
-      { id: 'yes', label: 'Yes, I agree to provide consent to collect, store and process information I provide' },
-      { id: 'no', label: 'No, I do not agree to provide consent to collect, store and process information I provide' },
+      {
+        name: 'give_consent',
+        value: 'yes',
+        label: 'Yes, I agree to provide consent to collect, store and process information I provide',
+      },
+      {
+        name: 'give_consent',
+        value: 'no',
+        label: 'No, I do not agree to provide consent to collect, store and process information I provide',
+      },
     ],
   },
   {
     id: 'review_documentation',
     type: 'checkbox',
     required: true,
-    question: 'Please review the following documentation...? *',
+    question: 'Please review the following documentation...?',
     description: 'Check each box after you have reviewed the material',
     options: [
       { id: 'code_of_conduct', label: 'HOT Code of Conduct https://www.hotosm.org/code-of-conduct' },
@@ -57,7 +60,7 @@ export const consentQuestions: consentQuestionsType[] = [
     type: 'checkbox',
     required: true,
     question: 'Have you participated in...?',
-    description: null,
+    description: 'These are not required but helpful in assessing on-boarding pathways.',
     options: [
       { id: 'mapathon', label: 'Participated in a Mapathon (in person or remote)' },
       { id: 'field_survey', label: 'Organized or helped facilitate a Field Survey (in person or remote)' },
