@@ -26,7 +26,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
 from app.auth.osm import AuthUser
-from app.auth.roles import mapper
+from app.auth.roles import mapper, project_admin
 from app.central import central_crud
 from app.db import database
 from app.models.enums import TaskStatus

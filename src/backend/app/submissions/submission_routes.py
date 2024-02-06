@@ -28,7 +28,7 @@ from osm_fieldwork.odk_merge import OdkMerge
 from osm_fieldwork.osmfile import OsmFile
 from sqlalchemy.orm import Session
 
-from app.auth.osm import AuthUser
+from app.auth.osm import AuthUser, login_required
 from app.auth.roles import mapper
 from app.central import central_crud
 from app.config import settings
