@@ -370,7 +370,7 @@ class TaskComment(Base):
         ForeignKeyConstraint(
             [task_id, project_id], ["tasks.id", "tasks.project_id"], name="fk_tasks"
         ),
-        Index("idx_task_history_composite", "task_id", "project_id"),
+        Index("idx_task_comment_composite", "task_id", "project_id"),
         {},
     )
 
