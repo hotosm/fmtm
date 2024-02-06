@@ -32,9 +32,14 @@ Checkbox.displayName = CheckboxPrimitive.Root.displayName;
 
 export const CustomCheckbox = ({ label, checked, onCheckedChange }: CustomCheckboxType) => {
   return (
-    <div className="fmtm-flex fmtm-gap-4">
-      <Checkbox checked={checked} onCheckedChange={onCheckedChange} className="fmtm-mt-1" />
-      <p className="fmtm-text-[#7A7676] fmtm-font-archivo fmtm-text-base">{label}</p>
+    <div className="fmtm-flex fmtm-gap-2 sm:fmtm-gap-4">
+      <Checkbox checked={checked} onCheckedChange={onCheckedChange} className="fmtm-mt-[2px]" />
+      <p
+        style={{ width: 'calc(100% - 32px)' }}
+        className="fmtm-text-[#7A7676] fmtm-font-archivo fmtm-text-base fmtm-break-words"
+      >
+        {label}
+      </p>
     </div>
   );
 };
