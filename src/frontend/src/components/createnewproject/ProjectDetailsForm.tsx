@@ -156,7 +156,7 @@ const ProjectDetailsForm = ({ flag }) => {
             <div>
               <InputTextField
                 id="hashtags"
-                label="Comments & Tags"
+                label="Tags"
                 value={values?.hashtags}
                 onChange={(e) => {
                   handleHashtagOnChange(e);
@@ -165,8 +165,8 @@ const ProjectDetailsForm = ({ flag }) => {
                 errorMsg={errors.hashtag}
               />
               <p className="fmtm-text-sm fmtm-text-gray-500 fmtm-leading-4 fmtm-mt-2">
-                *Users are encouraged to add text describing what they mapped. Hashtags are sometimes used for analysis
-                later, but should be human informative and not overused, #group #event
+                *Hashtags related to what is being mapped. By default #FMTM is included. Hashtags are sometimes used for
+                analysis later, but should be human informative and not overused, #group #event
               </p>
             </div>
           </div>
