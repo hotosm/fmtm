@@ -114,7 +114,7 @@ async def geojson_to_flatgeobuf(
     db.execute(text("DROP TABLE IF EXISTS public.temp_features CASCADE;"))
 
     if flatgeobuf:
-        return flatgeobuf.tobytes()
+        return flatgeobuf[0].tobytes()
 
     # Nothing returned (either no features passed, or failed)
     return None
