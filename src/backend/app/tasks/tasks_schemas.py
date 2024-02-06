@@ -29,8 +29,6 @@ from pydantic.functional_validators import field_validator
 from app.config import decrypt_value
 from app.db.postgis_utils import geometry_to_geojson, get_centroid
 from app.models.enums import TaskStatus
-from app.users.user_schemas import User
-
 
 
 class TaskHistoryBase(BaseModel):
@@ -129,28 +127,33 @@ class Task(BaseModel):
         """Decrypt the ODK Token extracted from the db."""
         if not value:
             return ""
-        
+
         return decrypt_value(value)
+
 
 class TaskCommentRequest(BaseModel):
     """Task mapping history."""
+
     comment: str
     project_id: int
     task_id: int
 
+
 class TaskCommentBase(BaseModel):
     """Task mapping history."""
+
     comment: str
-    commented_by:str
+    commented_by: str
     created_at: datetime
+
 
 class TaskCommentResponse(BaseModel):
     """Task mapping history."""
-    id:int
-    commented_by: str
-    comment:str
-    created_at: datetime
 
+    id: int
+    commented_by: str
+    comment: str
+    created_at: datetime
 
 
 class ReadTask(Task):
