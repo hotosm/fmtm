@@ -354,7 +354,7 @@ class TaskComment(Base):
 
     __tablename__ = "task_comment"
 
-    comment_id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
     task_id = Column(Integer, nullable=False)
     project_id = Column(Integer, ForeignKey("projects.id"), index=True)
     comment_text = Column(String)
