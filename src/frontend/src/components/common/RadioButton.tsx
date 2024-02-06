@@ -15,6 +15,7 @@ interface RadioButtonProps {
   value: string;
   errorMsg?: string;
   className?: string;
+  required?: boolean;
 }
 
 const RadioButton: React.FC<RadioButtonProps> = ({
@@ -25,11 +26,14 @@ const RadioButton: React.FC<RadioButtonProps> = ({
   value,
   errorMsg,
   className,
+  required,
 }) => (
   <div>
     {topic && (
       <div>
-        <p className="fmtm-text-base fmtm-font-[600] fmtm-mb-2">{topic}</p>
+        <p className="fmtm-text-base fmtm-font-[600] fmtm-mb-2">
+          {topic} {required && <span className="fmtm-text-primaryRed">*</span>}
+        </p>
       </div>
     )}
     <div className={`fmtm-flex ${direction === 'column' ? 'fmtm-flex-col' : 'fmtm-flex-wrap fmtm-gap-x-16'}`}>
