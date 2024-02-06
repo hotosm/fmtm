@@ -147,7 +147,7 @@ const CreateOrganisationForm = () => {
                 onChange={(e) => {
                   handleCustomChange('odk_central_password', e.target.value);
                 }}
-                fieldType="text"
+                fieldType="password"
                 errorMsg={errors.odk_central_password}
               />
             </CoreModules.FormControl>
