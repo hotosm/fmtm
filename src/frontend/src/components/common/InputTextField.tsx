@@ -6,7 +6,7 @@ export const blockInvalidChar = (e) => ['e', 'E', '+', '-'].includes(e.key) && e
 interface IInputTextFieldProps {
   id?: string;
   label: string;
-  subLabel?: string;
+  subLabel?: string | React.JSX.Element;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   errorMsg?: string;

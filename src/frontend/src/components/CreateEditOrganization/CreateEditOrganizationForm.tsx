@@ -92,7 +92,20 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
             id="osm_profile"
             name="osm_profile"
             label="Please send a link to your OpenStreetMap Profile?"
-            subLabel="Format: https://www.openstreetmap.org/user/<your OSM username>. Note: they are case sensitive and if there is a mistake we will not be able to grant you the proper role(s). If you don’t have an OSM account please create one now by following steps 1-4 outlined Here"
+            subLabel={
+              <span>
+                Format: https://www.openstreetmap.org/user&lt;your OSM username&gt;. Note: they are case sensitive and
+                if there is a mistake we will not be able to grant you the proper role(s). If you don’t have an OSM
+                account please create one now by following steps 1-4 outlined{' '}
+                <a
+                  href="https://tasks.hotosm.org/learn/quickstart"
+                  className="fmtm-text-primaryRed hover:fmtm-text-red-700 fmtm-cursor-pointer fmtm-w-fit"
+                  target="_"
+                >
+                  Here
+                </a>
+              </span>
+            }
             value={values?.osm_profile}
             onChange={handleChange}
             fieldType="text"
