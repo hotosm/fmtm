@@ -10,7 +10,7 @@ import AssetModules from '@/shared/AssetModules';
 import OrganizationDetailsValidation from '@/components/CreateEditOrganization/validation/OrganizationDetailsValidation';
 import RadioButton from '@/components/common/RadioButton';
 import { useDispatch } from 'react-redux';
-import { PostOrganisationDataService } from '@/api/OrganisationService';
+import { GetIndividualOrganizationService, PostOrganisationDataService } from '@/api/OrganisationService';
 
 type optionsType = {
   name: string;
@@ -70,6 +70,12 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
       }
     }
   }, [postOrganisationData]);
+
+  useEffect(() => {
+    if (organizationId) {
+      dispatch(GetIndividualOrganizationService(`${import.meta.env.VITE_API_URL}/organisation/${organizationId}`));
+    }
+  }, [organizationId]);
 
   return (
     <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5 lg:fmtm-gap-10">
@@ -208,7 +214,7 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
                 }}
                 accept="image/png, image/gif, image/jpeg"
               />
-              {previewSource && (
+              {(previewSource || values.logo) && (
                 <div className="fmtm-relative fmtm-w-fit">
                   <div className="fmtm-absolute -fmtm-top-3 -fmtm-right-3" title="Remove Logo">
                     <AssetModules.DeleteIcon
@@ -221,7 +227,11 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
                       }}
                     />
                   </div>
-                  <img src={previewSource} alt="" className="fmtm-h-[100px] fmtm-rounded-sm fmtm-border-[1px]" />
+                  <img
+                    src={previewSource ? previewSource : values.logo ? values.logo : ''}
+                    alt=""
+                    className="fmtm-h-[100px] fmtm-rounded-sm fmtm-border-[1px]"
+                  />
                 </div>
               )}
             </div>

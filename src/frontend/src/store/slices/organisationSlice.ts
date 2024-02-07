@@ -38,6 +38,9 @@ const OrganisationSlice = CoreModules.createSlice({
     SetConsentApproval(state, action) {
       state.consentApproval = action.payload;
     },
+    SetIndividualOrganization(state, action) {
+      state.organisationFormData = action.payload;
+    },
   },
 });
 

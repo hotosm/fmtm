@@ -99,3 +99,16 @@ export const PostOrganisationDataService: Function = (url: string, payload: any)
     await postOrganisationData(url, payload);
   };
 };
+
+export const GetIndividualOrganizationService: Function = (url: string) => {
+  return async (dispatch) => {
+    const getOrganisationData = async (url) => {
+      try {
+        const getOrganisationDataResponse = await axios.get(url);
+        const response: GetOrganisationDataModel = getOrganisationDataResponse.data;
+        dispatch(OrganisationAction.SetIndividualOrganization(response));
+      } catch (error) {}
+    };
+    await getOrganisationData(url);
+  };
+};
