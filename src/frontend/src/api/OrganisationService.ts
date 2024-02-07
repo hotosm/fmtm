@@ -142,6 +142,7 @@ export const PatchOrganizationDataService: Function = (url: string, payload: any
           }),
         );
       } catch (error: any) {
+        dispatch(OrganisationAction.PostOrganisationDataLoading(false));
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
@@ -150,7 +151,6 @@ export const PatchOrganizationDataService: Function = (url: string, payload: any
             duration: 2000,
           }),
         );
-        dispatch(OrganisationAction.PostOrganisationDataLoading(false));
       }
     };
 
