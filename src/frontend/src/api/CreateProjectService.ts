@@ -16,7 +16,6 @@ const CreateProjectService: Function = (
   fileUpload: any,
   formUpload: any,
   dataExtractFile: any,
-  lineExtractFile: any,
 ) => {
   return async (dispatch) => {
     dispatch(CreateProjectActions.CreateProjectLoading(true));
@@ -56,14 +55,6 @@ const CreateProjectService: Function = (
           await axios.post(
             `${import.meta.env.VITE_API_URL}/projects/upload_custom_extract/?project_id=${resp.id}`,
             dataExtractFormData,
-          );
-        }
-        if (lineExtractFile) {
-          const lineExtractFormData = new FormData();
-          lineExtractFormData.append('custom_extract_file', lineExtractFile);
-          await axios.post(
-            `${import.meta.env.VITE_API_URL}/projects/upload_custom_extract/?project_id=${resp.id}`,
-            lineExtractFormData,
           );
         }
         await dispatch(

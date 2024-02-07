@@ -14,9 +14,6 @@ import FileInputComponent from '@/components/common/FileInputComponent';
 import NewDefineAreaMap from '@/views/NewDefineAreaMap';
 import { checkWGS84Projection } from '@/utilfunctions/checkWGS84Projection.js';
 
-// @ts-ignore
-const DefineAreaMap = React.lazy(() => import('../../views/DefineAreaMap'));
-
 const uploadAreaOptions = [
   {
     name: 'upload_area',

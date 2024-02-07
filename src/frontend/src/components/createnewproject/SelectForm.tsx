@@ -17,8 +17,6 @@ const osmFeatureTypeOptions = [
   { name: 'form_ways', value: 'existing_form', label: 'Use Existing Form' },
   { name: 'form_ways', value: 'custom_form', label: 'Upload a Custom Form' },
 ];
-// @ts-ignore
-const DefineAreaMap = React.lazy(() => import('../../views/DefineAreaMap'));
 
 const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) => {
   const dispatch = useDispatch();
