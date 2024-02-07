@@ -119,6 +119,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
       data_extractWays: projectDetails.data_extractWays,
       hashtags: arrayHashtag,
       data_extract_type: projectDetails.data_extract_type,
+      data_extract_url: projectDetails.data_extract_url,
     };
     if (splitTasksSelection === task_split_type['task_splitting_algorithm']) {
       projectData = { ...projectData, task_num_buildings: projectDetails.average_buildings_per_task };
