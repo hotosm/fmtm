@@ -26,7 +26,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
 from app.auth.osm import AuthUser
-from app.auth.roles import mapper, project_admin
+from app.auth.roles import mapper, project_admin, get_uid
 from app.central import central_crud
 from app.db import database
 from app.models.enums import TaskStatus
@@ -123,15 +123,14 @@ async def get_specific_task(task_id: int, db: Session = Depends(database.get_db)
     "/{task_id}/new_status/{new_status}", response_model=tasks_schemas.ReadTask
 )
 async def update_task_status(
-    user: user_schemas.User,
     task_id: int,
     new_status: TaskStatus,
     db: Session = Depends(database.get_db),
     current_user: AuthUser = Depends(mapper),
 ):
     """Update the task status."""
-    user_id = user.id
 
+    user_id = get_uid(current_user)
     task = await tasks_crud.update_task_status(db, user_id, task_id, new_status)
     updated_task = await tasks_crud.update_task_history(task, db)
     if not task:
