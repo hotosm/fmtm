@@ -34,7 +34,7 @@ import shapely.wkb as wkblib
 import sozipfile.sozipfile as zipfile
 import sqlalchemy
 from asgiref.sync import async_to_sync
-from fastapi import File, HTTPException, UploadFile
+from fastapi import File, HTTPException, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fmtm_splitter.splitter import split_by_sql, split_by_square
 from geoalchemy2.shape import from_shape, to_shape
@@ -57,13 +57,12 @@ from sqlalchemy import and_, column, func, inspect, select, table, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from app.auth.osm import AuthUser
 from app.central import central_crud
 from app.config import encrypt_value, settings
 from app.db import db_models
 from app.db.database import get_db
 from app.db.postgis_utils import geojson_to_flatgeobuf, geometry_to_geojson
-from app.models.enums import HTTPStatus
+from app.models.enums import HTTPStatus, ProjectRole
 from app.projects import project_schemas
 from app.s3 import add_obj_to_bucket, get_obj_from_bucket
 from app.tasks import tasks_crud
@@ -77,8 +76,8 @@ async def get_projects(
     user_id: int,
     skip: int = 0,
     limit: int = 100,
-    hashtags: List[str] = None,
-    search: str = None,
+    hashtags: Optional[List[str]] = None,
+    search: Optional[str] = None,
 ):
     """Get all projects."""
     filters = []
@@ -86,16 +85,20 @@ async def get_projects(
         filters.append(db_models.DbProject.author_id == user_id)
 
     if hashtags:
-        filters.append(db_models.DbProject.hashtags.op("&&")(hashtags))
+        filters.append(db_models.DbProject.hashtags.op("&&")(hashtags))  # type: ignore
 
     if search:
-        filters.append(db_models.DbProject.project_name_prefix.ilike(f"%{search}%"))
+        filters.append(
+            db_models.DbProject.project_name_prefix.ilike(  # type: ignore
+                f"%{search}%"
+            )
+        )
 
     if len(filters) > 0:
         db_projects = (
             db.query(db_models.DbProject)
             .filter(and_(*filters))
-            .order_by(db_models.DbProject.id.desc())
+            .order_by(db_models.DbProject.id.desc())  # type: ignore
             .offset(skip)
             .limit(limit)
             .all()
@@ -105,7 +108,7 @@ async def get_projects(
     else:
         db_projects = (
             db.query(db_models.DbProject)
-            .order_by(db_models.DbProject.id.desc())
+            .order_by(db_models.DbProject.id.desc())  # type: ignore
             .offset(skip)
             .limit(limit)
             .all()
@@ -119,8 +122,8 @@ async def get_project_summaries(
     user_id: int,
     skip: int = 0,
     limit: int = 100,
-    hashtags: str = None,
-    search: str = None,
+    hashtags: Optional[List[str]] = None,
+    search: Optional[str] = None,
 ):
     """Get project summary details for main page."""
     project_count, db_projects = await get_projects(
@@ -189,13 +192,14 @@ async def partial_update_project_info(
     db_project_info = await get_project_info_by_id(db, project_id)
 
     # Update project informations
-    if project_metadata.name:
-        db_project.project_name_prefix = project_metadata.name
-        db_project_info.name = project_metadata.name
-    if project_metadata.description:
-        db_project_info.description = project_metadata.description
-    if project_metadata.short_description:
-        db_project_info.short_description = project_metadata.short_description
+    if db_project and db_project_info:
+        if project_metadata.name:
+            db_project.project_name_prefix = project_metadata.name
+            db_project_info.name = project_metadata.name
+        if project_metadata.description:
+            db_project_info.description = project_metadata.description
+        if project_metadata.short_description:
+            db_project_info.short_description = project_metadata.short_description
 
     db.commit()
     db.refresh(db_project)
@@ -205,24 +209,17 @@ async def partial_update_project_info(
 
 async def update_project_info(
     db: Session,
-    project_metadata: project_schemas.ProjectUpload,
+    project_metadata: project_schemas.ProjectUpdate,
     project_id: int,
+    db_user: db_models.DbUser,
 ):
     """Full project update for PUT."""
-    user = project_metadata.author
     project_info = project_metadata.project_info
 
-    # verify data coming in
-    if not user:
-        raise HTTPException("No user passed in")
     if not project_info:
-        raise HTTPException("No project info passed in")
-
-    # get db user
-    db_user = await user_crud.get_user(db, user.id)
-    if not db_user:
         raise HTTPException(
-            status_code=400, detail=f"User {user.username} does not exist"
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail="No project info passed in",
         )
 
     # verify project exists in db
@@ -236,16 +233,17 @@ async def update_project_info(
     project_info = project_metadata.project_info
 
     # Update author of the project
-    db_project.author = db_user
+    db_project.author_id = db_user.id
     db_project.project_name_prefix = project_info.name
 
     # get project info
     db_project_info = await get_project_info_by_id(db, project_id)
 
     # Update projects meta informations (name, descriptions)
-    db_project_info.name = project_info.name
-    db_project_info.short_description = project_info.short_description
-    db_project_info.description = project_info.description
+    if db_project and db_project_info:
+        db_project_info.name = project_info.name
+        db_project_info.short_description = project_info.short_description
+        db_project_info.description = project_info.description
 
     db.commit()
     db.refresh(db_project)
@@ -257,15 +255,9 @@ async def create_project_with_project_info(
     db: Session,
     project_metadata: project_schemas.ProjectUpload,
     odk_project_id: int,
-    current_user: AuthUser,
+    current_user: db_models.DbUser,
 ):
     """Create a new project, including all associated info."""
-    # FIXME the ProjectUpload model should be converted to the db model directly
-    # FIXME we don't need to extract each variable and pass manually
-    # project_data = project_metadata.model_dump()
-
-    log.warning(project_metadata.model_dump())
-
     if not odk_project_id:
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
@@ -336,7 +328,7 @@ async def upload_xlsform(
         return True
     except Exception as e:
         log.exception(e)
-        raise HTTPException(status=400, detail={"message": str(e)}) from e
+        raise HTTPException(status_code=400, detail={"message": str(e)}) from e
 
 
 async def update_multi_polygon_project_boundary(
@@ -2382,3 +2374,29 @@ def count_user_contributions(db: Session, user_id: int, project_id: int) -> int:
     )
 
     return contributions_count
+
+
+async def add_project_admin(
+    db: Session, user: db_models.DbUser, project: db_models.DbProject
+):
+    """Adds a user as an admin to the specified organisation.
+
+    Args:
+        db (Session): The database session.
+        user (int): The ID of the user to be added as an admin.
+        project (DbOrganisation): The Project model instance.
+
+    Returns:
+        Response: The HTTP response with status code 200.
+    """
+    new_user_role = db_models.DbUserRoles(
+        user_id=user.id,
+        project_id=project.id,
+        role=ProjectRole.PROJECT_MANAGER,
+    )
+
+    # add data to the managers field in organisation model
+    project.roles.append(new_user_role)
+    db.commit()
+
+    return Response(status_code=HTTPStatus.OK)

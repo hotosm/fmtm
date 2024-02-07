@@ -43,6 +43,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
 from app.auth.osm import AuthUser, login_required
+from app.auth.roles import mapper, org_admin, project_admin, super_admin
 from app.central import central_crud
 from app.db import database, db_models
 from app.models.enums import TILES_FORMATS, TILES_SOURCE, HTTPStatus
@@ -52,6 +53,7 @@ from app.projects.project_crud import check_crs
 from app.static import data_path
 from app.submissions import submission_crud
 from app.tasks import tasks_crud
+from app.users.user_deps import user_exists_in_db
 
 router = APIRouter(
     prefix="/projects",
@@ -73,7 +75,11 @@ async def read_projects(
 
 
 @router.get("/details/{project_id}/")
-async def get_projet_details(project_id: int, db: Session = Depends(database.get_db)):
+async def get_projet_details(
+    project_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(mapper),
+):
     """Returns the project details.
 
     Also includes ODK project details, so takes extra time to return.
@@ -215,12 +221,14 @@ async def read_project(project_id: int, db: Session = Depends(database.get_db)):
 @router.delete("/{project_id}")
 async def delete_project(
     project: db_models.DbProject = Depends(project_deps.get_project_by_id),
-    current_user: AuthUser = Depends(login_required),
+    current_user: AuthUser = Depends(org_admin),
     db: Session = Depends(database.get_db),
+    org_user_dict: db_models.DbUser = Depends(org_admin),
 ):
     """Delete a project from both ODK Central and the local database."""
     log.info(
-        f"User {current_user.username} attempting deletion of project {project.id}"
+        f"User {org_user_dict.get('user').username} attempting "
+        f"deletion of project {project.id}"
     )
     # Odk crendentials
     odk_credentials = project_schemas.ODKCentralDecrypted(
@@ -240,20 +248,25 @@ async def delete_project(
 @router.post("/create_project", response_model=project_schemas.ProjectOut)
 async def create_project(
     project_info: project_schemas.ProjectUpload,
-    current_user: AuthUser = Depends(login_required),
+    org_user_dict: db_models.DbUser = Depends(org_admin),
     db: Session = Depends(database.get_db),
 ):
     """Create a project in ODK Central and the local database.
 
+    The org_id and project_id params are inherited from the org_admin permission.
+    Either param can be passed to determine if the user has admin permission
+    to the organisation (or organisation associated with a project).
+
     TODO refactor to standard REST POST to /projects
     TODO but first check doesn't break other endpoints
     """
-    # Check if organisation exists
-    org = await organisation_deps.check_org_exists(db, project_info.organisation_id)
+    db_user = org_user_dict.get("user")
+    db_org = org_user_dict.get("org")
+    project_info.organisation_id = db_org.id
 
     log.info(
-        f"User {current_user.username} attempting creation of project "
-        f"{project_info.project_info.name}"
+        f"User {db_user.username} attempting creation of project "
+        f"{project_info.project_info.name} in organisation ({db_org.id})"
     )
 
     # Must decrypt ODK password & connect to ODK Central before proj created
@@ -269,7 +282,7 @@ async def create_project(
             "No odk credentials passed during project creation. "
             "Defaulting to organisation credentials."
         )
-        odk_creds_decrypted = await organisation_deps.get_org_odk_creds(org)
+        odk_creds_decrypted = await organisation_deps.get_org_odk_creds(db_org)
 
     odkproject = central_crud.create_odk_project(
         project_info.project_info.name,
@@ -280,7 +293,7 @@ async def create_project(
         db,
         project_info,
         odkproject["id"],
-        current_user,
+        db_user,
     )
     if not project:
         raise HTTPException(status_code=404, detail="Project creation failed")
@@ -288,12 +301,12 @@ async def create_project(
     return project
 
 
-@router.put("/{id}", response_model=project_schemas.ProjectOut)
+@router.put("/{project_id}", response_model=project_schemas.ProjectOut)
 async def update_project(
-    id: int,
-    project_info: project_schemas.ProjectUpload,
-    current_user: AuthUser = Depends(login_required),
+    project_id: int,
+    project_info: project_schemas.ProjectUpdate,
     db: Session = Depends(database.get_db),
+    current_user: db_models.DbUser = Depends(project_admin),
 ):
     """Update an existing project by ID.
 
@@ -303,6 +316,7 @@ async def update_project(
     Parameters:
     - id: ID of the project to update
     - project_info: Updated project information
+    - current_user (DbUser): Check if user is project_admin
 
     Returns:
     - Updated project information
@@ -310,17 +324,20 @@ async def update_project(
     Raises:
     - HTTPException with 404 status code if project not found
     """
-    project = await project_crud.update_project_info(db, project_info, id)
+    project = await project_crud.update_project_info(
+        db, project_info, project_id, current_user
+    )
     if not project:
         raise HTTPException(status_code=422, detail="Project could not be updated")
     return project
 
 
-@router.patch("/{id}", response_model=project_schemas.ProjectOut)
+@router.patch("/{project_id}", response_model=project_schemas.ProjectOut)
 async def project_partial_update(
-    id: int,
+    project_id: int,
     project_info: project_schemas.ProjectUpdate,
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(project_admin),
 ):
     """Partial Update an existing project by ID.
 
@@ -337,7 +354,9 @@ async def project_partial_update(
     - HTTPException with 404 status code if project not found
     """
     # Update project informations
-    project = await project_crud.partial_update_project_info(db, project_info, id)
+    project = await project_crud.partial_update_project_info(
+        db, project_info, project_id
+    )
 
     if not project:
         raise HTTPException(status_code=422, detail="Project could not be updated")
@@ -349,6 +368,7 @@ async def upload_custom_xls(
     upload: UploadFile = File(...),
     category: str = Form(...),
     db: Session = Depends(database.get_db),
+    current_user: db_models.DbUser = Depends(super_admin),
 ):
     """Upload a custom XLSForm to the database.
 
@@ -356,6 +376,7 @@ async def upload_custom_xls(
         upload (UploadFile): the XLSForm file
         category (str): the category of the XLSForm.
         db (Session): the DB session, provided automatically.
+        current_user (DbUser): Check if user is super_admin
     """
     content = await upload.read()  # read file content
     name = upload.filename.split(".")[0]  # get name of file without extension
@@ -370,6 +391,7 @@ async def upload_custom_task_boundaries(
     project_id: int,
     project_geojson: UploadFile = File(...),
     db: Session = Depends(database.get_db),
+    org_user_dict: db_models.DbUser = Depends(org_admin),
 ):
     """Set project task boundaries manually using multi-polygon GeoJSON.
 
@@ -456,6 +478,7 @@ async def upload_project_boundary(
     boundary_geojson: UploadFile = File(...),
     dimension: int = Form(500),
     db: Session = Depends(database.get_db),
+    org_user_dict: db_models.DbUser = Depends(org_admin),
 ):
     """Uploads the project boundary. The boundary is uploaded as a geojson file.
 
@@ -464,6 +487,7 @@ async def upload_project_boundary(
         boundary_geojson (UploadFile): The boundary file to upload.
         dimension (int): The new dimension of the project.
         db (Session): The database session to use.
+        org_user_dict (AuthUser): Check if user is org_admin.
 
     Returns:
         dict: JSON with message, project ID, and task count for project.
@@ -507,6 +531,7 @@ async def edit_project_boundary(
     boundary_geojson: UploadFile = File(...),
     dimension: int = Form(500),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(project_admin),
 ):
     """Edit the existing project boundary."""
     # Validating for .geojson File.
@@ -542,9 +567,7 @@ async def edit_project_boundary(
 
 
 @router.post("/validate_form")
-async def validate_form(
-    form: UploadFile,
-):
+async def validate_form(form: UploadFile):
     """Tests the validity of the xls form uploaded.
 
     Parameters:
@@ -570,7 +593,7 @@ async def generate_files(
     xls_form_config_file: Optional[UploadFile] = File(None),
     data_extracts: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(login_required),
+    org_user_dict: db_models.DbUser = Depends(org_admin),
 ):
     """Generate additional content to initialise the project.
 
@@ -594,7 +617,7 @@ async def generate_files(
         xls_form_config_file (UploadFile, optional): The config YAML for the XLS form.
         data_extracts (UploadFile, optional): Custom data extract GeoJSON.
         db (Session): Database session, provided automatically.
-        current_user (AuthUser): Current logged in user.
+        org_user_dict (AuthUser): Current logged in user. Must be org admin.
 
     Returns:
         json (JSONResponse): A success message containing the project ID.
@@ -682,6 +705,7 @@ async def update_project_form(
     project_id: int,
     form: Optional[UploadFile],
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(project_admin),
 ):
     """Update XLSForm for a project."""
     file_name = os.path.splitext(form.filename)
@@ -725,7 +749,10 @@ async def get_project_features(
 
 @router.get("/generate-log/")
 async def generate_log(
-    project_id: int, uuid: uuid.UUID, db: Session = Depends(database.get_db)
+    project_id: int,
+    uuid: uuid.UUID,
+    db: Session = Depends(database.get_db),
+    org_user_dict: db_models.DbUser = Depends(org_admin),
 ):
     r"""Get the contents of a log file in a log format.
 
@@ -778,7 +805,7 @@ async def generate_log(
 
 
 @router.get("/categories/")
-async def get_categories():
+async def get_categories(current_user: AuthUser = Depends(login_required)):
     """Get api for fetching all the categories.
 
     This endpoint fetches all the categories from osm_fieldwork.
@@ -825,6 +852,7 @@ async def get_data_extract(
     geojson_file: UploadFile = File(...),
     project_id: int = Query(None, description="Project ID"),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
 ):
     """Get the data extract for a given project AOI.
 
@@ -843,10 +871,10 @@ async def get_data_extract(
 
 @router.post("/upload_custom_extract/")
 async def upload_custom_extract(
-    background_tasks: BackgroundTasks,
     custom_extract_file: UploadFile = File(...),
     project_id: int = Query(..., description="Project ID"),
     db: Session = Depends(database.get_db),
+    org_user_dict: db_models.DbUser = Depends(org_admin),
 ):
     """Upload a custom data extract for a project as fgb in S3.
 
@@ -866,13 +894,16 @@ async def upload_custom_extract(
     # read entire file
     geojson_str = await custom_extract_file.read()
 
-    log.debug("Creating upload_custom_extract background task")
     fgb_url = await project_crud.upload_custom_data_extract(db, project_id, geojson_str)
     return JSONResponse(status_code=200, content={"url": fgb_url})
 
 
 @router.get("/download_form/{project_id}/")
-async def download_form(project_id: int, db: Session = Depends(database.get_db)):
+async def download_form(
+    project_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
+):
     """Download the XLSForm for a project."""
     project = await project_crud.get_project(db, project_id)
     if not project:
@@ -895,10 +926,11 @@ async def download_form(project_id: int, db: Session = Depends(database.get_db))
 @router.post("/update_category")
 async def update_project_category(
     # background_tasks: BackgroundTasks,
-    project_id: int = Form(...),
+    project_id: int,
     category: str = Form(...),
     upload: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(project_admin),
 ):
     """Update the XLSForm category for a project.
 
@@ -945,7 +977,11 @@ async def update_project_category(
 
 
 @router.get("/download_template/")
-async def download_template(category: str, db: Session = Depends(database.get_db)):
+async def download_template(
+    category: str,
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(mapper),
+):
     """Download an XLSForm template to fill out."""
     xlsform_path = f"{xlsforms_path}/{category}.xls"
     if os.path.exists(xlsform_path):
@@ -958,12 +994,14 @@ async def download_template(category: str, db: Session = Depends(database.get_db
 async def download_project_boundary(
     project_id: int,
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(mapper),
 ):
     """Downloads the boundary of a project as a GeoJSON file.
 
     Args:
         project_id (int): The id of the project.
         db (Session): The database session, provided automatically.
+        current_user (AuthUser): Check if user is mapper.
 
     Returns:
         Response: The HTTP response object containing the downloaded file.
@@ -981,12 +1019,14 @@ async def download_project_boundary(
 async def download_task_boundaries(
     project_id: int,
     db: Session = Depends(database.get_db),
+    current_user: Session = Depends(mapper),
 ):
     """Downloads the boundary of the tasks for a project as a GeoJSON file.
 
     Args:
         project_id (int): The id of the project.
         db (Session): The database session, provided automatically.
+        current_user (AuthUser): Check if user has MAPPER permission.
 
     Returns:
         Response: The HTTP response object containing the downloaded file.
@@ -1002,12 +1042,17 @@ async def download_task_boundaries(
 
 
 @router.get("/features/download/")
-async def download_features(project_id: int, db: Session = Depends(database.get_db)):
+async def download_features(
+    project_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(mapper),
+):
     """Downloads the features of a project as a GeoJSON file.
 
     Args:
         project_id (int): The id of the project.
         db (Session): The database session, provided automatically.
+        current_user (AuthUser): Check if user has MAPPER permission.
 
     Returns:
         Response: The HTTP response object containing the downloaded file.
@@ -1037,6 +1082,7 @@ async def generate_project_tiles(
         description="Provide a custom TMS URL, optional",
     ),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(mapper),
 ):
     """Returns basemap tiles for a project.
 
@@ -1047,6 +1093,7 @@ async def generate_project_tiles(
         format (str, optional): Default "mbtiles". Other options: "pmtiles", "sqlite3".
         tms (str, optional): Default None. Custom TMS provider URL.
         db (Session): The database session, provided automatically.
+        current_user (AuthUser): Check if user has MAPPER permission.
 
     Returns:
         str: Success message that tile generation started.
@@ -1074,12 +1121,17 @@ async def generate_project_tiles(
 
 
 @router.get("/tiles_list/{project_id}/")
-async def tiles_list(project_id: int, db: Session = Depends(database.get_db)):
+async def tiles_list(
+    project_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
+):
     """Returns the list of tiles for a project.
 
     Parameters:
         project_id: int
         db (Session): The database session, provided automatically.
+        current_user (AuthUser): Check if user is logged in.
 
     Returns:
         Response: List of generated tiles for a project.
@@ -1088,7 +1140,11 @@ async def tiles_list(project_id: int, db: Session = Depends(database.get_db)):
 
 
 @router.get("/download_tiles/")
-async def download_tiles(tile_id: int, db: Session = Depends(database.get_db)):
+async def download_tiles(
+    tile_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
+):
     """Download the basemap tile archive for a project."""
     log.debug("Getting tile archive path from DB")
     tiles_path = (
@@ -1115,12 +1171,14 @@ async def download_tiles(tile_id: int, db: Session = Depends(database.get_db)):
 async def download_task_boundary_osm(
     project_id: int,
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(mapper),
 ):
     """Downloads the boundary of a task as a OSM file.
 
     Args:
         project_id (int): The id of the project.
         db (Session): The database session, provided automatically.
+        current_user (AuthUser): Check if user has MAPPER permission.
 
     Returns:
         Response: The HTTP response object containing the downloaded file.
@@ -1192,6 +1250,7 @@ async def get_template_file(
     file_type: str = Query(
         ..., enum=["data_extracts", "form"], description="Choose file type"
     ),
+    current_user: AuthUser = Depends(login_required),
 ):
     """Get template file.
 
@@ -1245,15 +1304,34 @@ async def project_dashboard(
 
 
 @router.get("/contributors/{project_id}")
-async def get_contributors(project_id: int, db: Session = Depends(database.get_db)):
+async def get_contributors(
+    project_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(mapper),
+):
     """Get contributors of a project.
 
     Args:
         project_id (int): ID of project.
         db (Session): The database session.
+        current_user (AuthUser): Check if user is mapper.
 
     Returns:
         list[project_schemas.ProjectUser]: List of project users.
     """
     project_users = await project_crud.get_project_users(db, project_id)
     return project_users
+
+
+@router.post("/add_admin/")
+async def add_new_project_admin(
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(project_admin),
+    user: db_models.DbUser = Depends(user_exists_in_db),
+    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+):
+    """Add a new project manager.
+
+    The logged in user must be either the admin of the organisation or a super admin.
+    """
+    return await project_crud.add_project_admin(db, user, project)

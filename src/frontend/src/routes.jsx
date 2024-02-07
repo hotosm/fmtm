@@ -21,6 +21,7 @@ import ErrorBoundary from '@/views/ErrorBoundary';
 import NewProjectDetails from '@/views/NewProjectDetails';
 import ProjectDetailsV2 from '@/views/ProjectDetailsV2';
 import ProjectSubmissions from '@/views/ProjectSubmissions';
+import ManageProject from '@/views/ManageProject';
 
 // const ProjectDetails = React.lazy(() => import('./views/ProjectDetails'));
 const Submissions = React.lazy(() => import('./views/Submissions'));
@@ -333,6 +334,18 @@ const routes = createBrowserRouter([
         ),
       },
       {
+        path: 'edit-project/delete/:projectId',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <ErrorBoundary>
+                <EditProject />
+              </ErrorBoundary>
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: '/osmauth/',
         element: (
           <Suspense fallback={<div>Loading...</div>}>
@@ -348,6 +361,18 @@ const routes = createBrowserRouter([
           <Suspense fallback={<div>Loading...</div>}>
             <UnderConstruction />
           </Suspense>
+        ),
+      },
+      {
+        path: '/manage-project/:id',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <ErrorBoundary>
+                <ManageProject />
+              </ErrorBoundary>
+            </Suspense>
+          </ProtectedRoute>
         ),
       },
       {
