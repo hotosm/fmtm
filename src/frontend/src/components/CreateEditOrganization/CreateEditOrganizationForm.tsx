@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Button from '@/components/common/Button';
 import InputTextField from '@/components/common/InputTextField';
 import TextArea from '@/components/common/TextArea';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { OrganisationAction } from '@/store/slices/organisationSlice';
 import useForm from '@/hooks/useForm';
 import CoreModules from '@/shared/CoreModules';
@@ -10,8 +10,15 @@ import AssetModules from '@/shared/AssetModules';
 import OrganizationDetailsValidation from '@/components/CreateEditOrganization/validation/OrganizationDetailsValidation';
 import RadioButton from '@/components/common/RadioButton';
 import { useDispatch } from 'react-redux';
+import { PostOrganisationDataService } from '@/api/OrganisationService';
 
-const organizationTypeOptions = [
+type optionsType = {
+  name: string;
+  value: string;
+  label: string;
+};
+
+const organizationTypeOptions: optionsType[] = [
   { name: 'osm_community', value: 'osm_community', label: 'OSM Community' },
   { name: 'company', value: 'company', label: 'Company' },
   { name: 'non_profit', value: 'non_profit', label: 'Non-profit' },
@@ -22,12 +29,17 @@ const organizationTypeOptions = [
 const CreateEditOrganizationForm = ({ organizationId }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [searchParams, setSearchParams] = useSearchParams();
   const inputFileRef = useRef<any>(null);
   const organisationFormData: any = CoreModules.useAppSelector((state) => state.organisation.organisationFormData);
+  const postOrganisationDataLoading: boolean = CoreModules.useAppSelector(
+    (state) => state.organisation.postOrganisationDataLoading,
+  );
+  const postOrganisationData: any = CoreModules.useAppSelector((state) => state.organisation.postOrganisationData);
   const [previewSource, setPreviewSource] = useState<any>('');
 
   const submission = () => {
-    navigate('/organisation');
+    dispatch(PostOrganisationDataService(`${import.meta.env.VITE_API_URL}/organisation/`, values));
   };
 
   const { handleSubmit, handleChange, handleCustomChange, values, errors }: any = useForm(
@@ -36,7 +48,7 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
     OrganizationDetailsValidation,
   );
 
-  const previewFile = (file) => {
+  const previewFile = (file: File) => {
     const reader = new FileReader();
     reader.readAsDataURL(file); //reads file as data url (base64 encoding)
     reader.onload = () => {
@@ -45,6 +57,19 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
       }
     };
   };
+
+  // redirect to manage-org page after post success
+  useEffect(() => {
+    if (postOrganisationData) {
+      dispatch(OrganisationAction.postOrganisationData(null));
+      dispatch(OrganisationAction.SetOrganisationFormData({}));
+      if (searchParams.get('popup') === 'true') {
+        window.close();
+      } else {
+        navigate('/organisation');
+      }
+    }
+  }, [postOrganisationData]);
 
   return (
     <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5 lg:fmtm-gap-10">
@@ -177,7 +202,9 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
                 className="fmtm-max-w-[250px]"
                 onChange={(e) => {
                   handleCustomChange('logo', e.target?.files?.[0]);
-                  previewFile(e.target?.files?.[0]);
+                  if (e.target?.files?.[0]) {
+                    previewFile(e.target?.files?.[0]);
+                  }
                 }}
                 accept="image/png, image/gif, image/jpeg"
               />
@@ -208,7 +235,14 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
             className="fmtm-font-bold"
             onClick={() => dispatch(OrganisationAction.SetConsentApproval(false))}
           />
-          <Button btnText="Submit" btnType="primary" className="fmtm-font-bold" onClick={handleSubmit} />
+          <Button
+            isLoading={postOrganisationDataLoading}
+            loadingText="Submitting"
+            btnText="Submit"
+            btnType="primary"
+            className="fmtm-font-bold"
+            onClick={handleSubmit}
+          />
         </div>
       </div>
     </div>

@@ -78,7 +78,7 @@ export const PostOrganisationDataService: Function = (url: string, payload: any)
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
-            message: 'Organization Successfully Created.',
+            message: 'Organization Request Submitted.',
             variant: 'success',
             duration: 2000,
           }),
