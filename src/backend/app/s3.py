@@ -3,7 +3,7 @@
 import json
 import sys
 from io import BytesIO
-from typing import Any
+from typing import Any, Optional
 
 from loguru import logger as log
 from minio import Minio
@@ -93,7 +93,7 @@ def get_file_from_bucket(bucket_name: str, s3_path: str, file_path: str):
     client.fget_object(bucket_name, s3_path, file_path)
 
 
-def get_obj_from_bucket(bucket_name: str, s3_path: str) -> BytesIO:
+def get_obj_from_bucket(bucket_name: str, s3_path: str) -> Optional[BytesIO]:
     """Download an S3 object from a bucket and return it as a BytesIO object.
 
     Args:
@@ -112,8 +112,8 @@ def get_obj_from_bucket(bucket_name: str, s3_path: str) -> BytesIO:
     try:
         response = client.get_object(bucket_name, s3_path)
         return BytesIO(response.read())
-    except Exception as e:
-        raise ValueError(str(e)) from e
+    except Exception:
+        return None
     finally:
         if response:
             response.close()
