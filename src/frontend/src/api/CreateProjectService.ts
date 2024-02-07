@@ -59,7 +59,7 @@ const CreateProjectService: Function = (
         }
         await dispatch(
           GenerateProjectQRService(
-            `${import.meta.env.VITE_API_URL}/projects/${resp.id}/generate`,
+            `${import.meta.env.VITE_API_URL}/projects/${resp.id}/generate-project-data`,
             payload,
             formUpload,
             dataExtractFile,

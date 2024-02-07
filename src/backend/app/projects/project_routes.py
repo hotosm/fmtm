@@ -584,7 +584,7 @@ async def validate_form(form: UploadFile):
     return await central_crud.test_form_validity(contents, file_ext[1:])
 
 
-@router.post("/{project_id}/generate")
+@router.post("/{project_id}/generate-project-data")
 async def generate_files(
     background_tasks: BackgroundTasks,
     project_id: int,
