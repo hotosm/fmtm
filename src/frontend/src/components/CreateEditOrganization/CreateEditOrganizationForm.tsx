@@ -129,40 +129,44 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
             required
             errorMsg={errors.email}
           />
-          <InputTextField
-            id="osm_profile"
-            name="osm_profile"
-            label="Please send a link to your OpenStreetMap Profile?"
-            subLabel={
-              <span>
-                Format: https://www.openstreetmap.org/user&lt;your OSM username&gt;. Note: they are case sensitive and
-                if there is a mistake we will not be able to grant you the proper role(s). If you don’t have an OSM
-                account please create one now by following steps 1-4 outlined{' '}
-                <a
-                  href="https://tasks.hotosm.org/learn/quickstart"
-                  className="fmtm-text-primaryRed hover:fmtm-text-red-700 fmtm-cursor-pointer fmtm-w-fit"
-                  target="_"
-                >
-                  Here
-                </a>
-              </span>
-            }
-            value={values?.osm_profile}
-            onChange={handleChange}
-            fieldType="text"
-            required
-            errorMsg={errors.osm_profile}
-          />
-          <InputTextField
-            id="url"
-            name="url"
-            label="Website URL"
-            value={values?.url}
-            onChange={handleChange}
-            fieldType="text"
-            required
-            errorMsg={errors.url}
-          />
+          {!organizationId && (
+            <InputTextField
+              id="osm_profile"
+              name="osm_profile"
+              label="Please send a link to your OpenStreetMap Profile?"
+              subLabel={
+                <span>
+                  Format: https://www.openstreetmap.org/user&lt;your OSM username&gt;. Note: they are case sensitive and
+                  if there is a mistake we will not be able to grant you the proper role(s). If you don’t have an OSM
+                  account please create one now by following steps 1-4 outlined{' '}
+                  <a
+                    href="https://tasks.hotosm.org/learn/quickstart"
+                    className="fmtm-text-primaryRed hover:fmtm-text-red-700 fmtm-cursor-pointer fmtm-w-fit"
+                    target="_"
+                  >
+                    Here
+                  </a>
+                </span>
+              }
+              value={values?.osm_profile}
+              onChange={handleChange}
+              fieldType="text"
+              required
+              errorMsg={errors.osm_profile}
+            />
+          )}
+          {!organizationId && (
+            <InputTextField
+              id="url"
+              name="url"
+              label="Website URL"
+              value={values?.url}
+              onChange={handleChange}
+              fieldType="text"
+              required
+              errorMsg={errors.url}
+            />
+          )}
           <TextArea
             id="description"
             name="description"
@@ -197,18 +201,20 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
             onChange={handleChange}
             fieldType="text"
           />
-          <RadioButton
-            topic="What type of community or organization are you applying for? "
-            options={organizationTypeOptions}
-            direction="column"
-            value={values.organization_type}
-            onChangeData={(value) => {
-              handleCustomChange('organization_type', value);
-            }}
-            className="fmtm-text-base fmtm-text-[#7A7676] fmtm-mt-1"
-            errorMsg={errors.organization_type}
-            required
-          />
+          {!organizationId && (
+            <RadioButton
+              topic="What type of community or organization are you applying for? "
+              options={organizationTypeOptions}
+              direction="column"
+              value={values.organization_type}
+              onChangeData={(value) => {
+                handleCustomChange('organization_type', value);
+              }}
+              className="fmtm-text-base fmtm-text-[#7A7676] fmtm-mt-1"
+              errorMsg={errors.organization_type}
+              required
+            />
+          )}
           <div className="flex items-center">
             <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold">Upload Logo</p>
             <div className="fmtm-flex fmtm-flex-col fmtm-gap-5">

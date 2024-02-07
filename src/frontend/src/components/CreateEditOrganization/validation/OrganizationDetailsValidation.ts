@@ -1,4 +1,5 @@
 interface OrganisationValues {
+  id: string;
   logo: string;
   name: string;
   description: string;
@@ -45,10 +46,19 @@ function OrganizationDetailsValidation(values: OrganisationValues) {
     errors.description = 'Description is Required.';
   }
 
-  if (!values?.url) {
-    errors.url = 'Organization Url is Required.';
-  } else if (!isValidUrl(values.url)) {
-    errors.url = 'Invalid URL.';
+  if (!values?.id) {
+    if (!values?.url) {
+      errors.url = 'Organization Url is Required.';
+    } else if (!isValidUrl(values.url)) {
+      errors.url = 'Invalid URL.';
+    }
+    if (!values?.osm_profile) {
+      errors.osm_profile = 'OSM profile is Required.';
+    }
+
+    if (!values?.organization_type) {
+      errors.organization_type = 'Organization type is Required.';
+    }
   }
 
   if (values?.odk_central_url && !isValidUrl(values.odk_central_url)) {
@@ -57,14 +67,6 @@ function OrganizationDetailsValidation(values: OrganisationValues) {
 
   if (!values?.email) {
     errors.email = 'Email is Required.';
-  }
-
-  if (!values?.osm_profile) {
-    errors.osm_profile = 'OSM profile is Required.';
-  }
-
-  if (!values?.organization_type) {
-    errors.organization_type = 'Organization type is Required.';
   }
 
   return errors;
