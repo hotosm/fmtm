@@ -7,16 +7,15 @@ import CreateEditOrganizationForm from '@/components/CreateEditOrganization/Crea
 
 const CreateEditOrganization = () => {
   const params = CoreModules.useParams();
-  const encodedId = params.id;
-  const decodedId = encodedId ? environment.decode(encodedId) : null;
+  const organizationId = params.id;
   const consentApproval: any = CoreModules.useAppSelector((state) => state.organisation.consentApproval);
 
   return (
     <div className="fmtm-bg-[#F5F5F5]">
-      <CreateEditOrganizationHeader projectId={decodedId} />
+      <CreateEditOrganizationHeader organizationId={organizationId} />
       <div className="fmtm-box-border fmtm-border-[1px] fmtm-border-t-white fmtm-border-t-[0px] fmtm-px-5 fmtm-py-4">
-        {decodedId || (!decodedId && consentApproval) ? (
-          <CreateEditOrganizationForm organizationId={decodedId} />
+        {organizationId || (!organizationId && consentApproval) ? (
+          <CreateEditOrganizationForm organizationId={organizationId} />
         ) : (
           <ConsentDetailsForm />
         )}
