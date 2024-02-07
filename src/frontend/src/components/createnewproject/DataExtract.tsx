@@ -20,13 +20,13 @@ const dataExtractOptions = [
 ];
 
 const osmFeatureTypeOptions = [
-  { name: 'osm_feature_type', value: 'point_centroid', label: 'Point/Centroid' },
+  { name: 'osm_feature_type', value: 'centroid', label: 'Point/Centroid' },
   { name: 'osm_feature_type', value: 'line', label: 'Line' },
   { name: 'osm_feature_type', value: 'polygon', label: 'Polygon' },
 ];
 
 enum FeatureTypeName {
-  point_centroid = 'Point/Centroid',
+  centroid = 'Point/Centroid',
   line = 'Line',
   polygon = 'Polygon',
 }
@@ -99,7 +99,7 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
         dispatch(
           CreateProjectActions.SetIndividualProjectDetailsData({
             ...formValues,
-            data_extract_type: fgbUrl,
+            data_extract_type: featureType,
             dataExtractWays: extractWays,
             dataExtractFeatureType: featureType,
             customLineUpload: null,
@@ -285,12 +285,32 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
               )}
               {extractWays === 'custom_data_extract' && (
                 <>
+                  {/* TODO add option for point upload */}
+                  {/* Set dataExtractFeatureType = 'centroid' */}
+                  {/* <FileInputComponent
+                    onChange={(e) => {
+                      changeFileHandler(e, setCustomPolygonUpload);
+                      handleCustomChange('customPolygonUpload', e.target.files[0]);
+                      handleCustomChange('dataExtractFeatureType', 'polygon');
+                      setFeatureType('');
+                    }}
+                    onResetFile={() => {
+                      resetFile(setCustomPolygonUpload);
+                      handleCustomChange('customPolygonUpload', null);
+                    }}
+                    customFile={customPolygonUpload}
+                    btnText="Upload Polygons"
+                    accept=".geojson,.json,.fgb"
+                    fileDescription="*The supported file formats are .geojson, .json, .fgb"
+                    errorMsg={errors.customPolygonUpload}
+                  /> */}
                   <FileInputComponent
                     onChange={(e) => {
                       changeFileHandler(e, setCustomPolygonUpload);
                       handleCustomChange('customPolygonUpload', e.target.files[0]);
-                      handleCustomChange('dataExtractFeatureType', '');
-                      setFeatureType('');
+                      handleCustomChange('dataExtractFeatureType', 'polygon');
+                      handleCustomChange('data_extract_type', 'line');
+                      setFeatureType('polygon');
                     }}
                     onResetFile={() => {
                       resetFile(setCustomPolygonUpload);
@@ -306,7 +326,9 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
                     onChange={(e) => {
                       changeFileHandler(e, setCustomLineUpload);
                       handleCustomChange('customLineUpload', e.target.files[0]);
-                      handleCustomChange('dataExtractFeatureType', null);
+                      handleCustomChange('dataExtractFeatureType', 'line');
+                      handleCustomChange('data_extract_type', 'line');
+                      setFeatureType('line');
                     }}
                     onResetFile={() => {
                       resetFile(setCustomLineUpload);
