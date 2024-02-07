@@ -173,7 +173,7 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
             label="ODK Central Password (Optional)"
             value={values?.odk_central_password}
             onChange={handleChange}
-            fieldType="text"
+            fieldType="password"
           />
           {!organizationId && (
             <RadioButton
