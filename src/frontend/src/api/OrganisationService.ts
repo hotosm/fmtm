@@ -112,3 +112,48 @@ export const GetIndividualOrganizationService: Function = (url: string) => {
     await getOrganisationData(url);
   };
 };
+
+export const PatchOrganizationDataService: Function = (url: string, payload: any) => {
+  return async (dispatch) => {
+    dispatch(OrganisationAction.PostOrganisationDataLoading(true));
+
+    const patchOrganisationData = async (url, payload) => {
+      dispatch(OrganisationAction.SetOrganisationFormData(payload));
+
+      try {
+        const generateApiFormData = new FormData();
+        appendObjectToFormData(generateApiFormData, payload);
+
+        const patchOrganisationData = await axios.patch(url, payload, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        const resp: HomeProjectCardModel = patchOrganisationData.data;
+        dispatch(OrganisationAction.PostOrganisationDataLoading(false));
+        dispatch(OrganisationAction.postOrganisationData(resp));
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: 'Organization Updated Successfully.',
+            variant: 'success',
+            duration: 2000,
+          }),
+        );
+      } catch (error: any) {
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: error.response.data.detail,
+            variant: 'error',
+            duration: 2000,
+          }),
+        );
+        dispatch(OrganisationAction.PostOrganisationDataLoading(false));
+      }
+    };
+
+    await patchOrganisationData(url, payload);
+  };
+};

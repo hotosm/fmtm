@@ -10,7 +10,12 @@ import AssetModules from '@/shared/AssetModules';
 import OrganizationDetailsValidation from '@/components/CreateEditOrganization/validation/OrganizationDetailsValidation';
 import RadioButton from '@/components/common/RadioButton';
 import { useDispatch } from 'react-redux';
-import { GetIndividualOrganizationService, PostOrganisationDataService } from '@/api/OrganisationService';
+import {
+  GetIndividualOrganizationService,
+  PatchOrganizationDataService,
+  PostOrganisationDataService,
+} from '@/api/OrganisationService';
+import { diffObject } from '@/utilfunctions/compareUtils';
 
 type optionsType = {
   name: string;
@@ -39,7 +44,19 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
   const [previewSource, setPreviewSource] = useState<any>('');
 
   const submission = () => {
-    dispatch(PostOrganisationDataService(`${import.meta.env.VITE_API_URL}/organisation/`, values));
+    if (!organizationId) {
+      dispatch(PostOrganisationDataService(`${import.meta.env.VITE_API_URL}/organisation/`, values));
+    } else {
+      const changedValues = diffObject(organisationFormData, values);
+      if (Object.keys(changedValues).length > 0) {
+        dispatch(
+          PatchOrganizationDataService(
+            `${import.meta.env.VITE_API_URL}/organisation/${organizationId}/`,
+            changedValues,
+          ),
+        );
+      }
+    }
   };
 
   const { handleSubmit, handleChange, handleCustomChange, values, errors }: any = useForm(
@@ -239,16 +256,18 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
         </div>
 
         <div className="fmtm-flex fmtm-items-center fmtm-justify-center fmtm-gap-6 fmtm-mt-8 lg:fmtm-mt-16">
-          <Button
-            btnText="Back"
-            btnType="other"
-            className="fmtm-font-bold"
-            onClick={() => dispatch(OrganisationAction.SetConsentApproval(false))}
-          />
+          {!organizationId && (
+            <Button
+              btnText="Back"
+              btnType="other"
+              className="fmtm-font-bold"
+              onClick={() => dispatch(OrganisationAction.SetConsentApproval(false))}
+            />
+          )}
           <Button
             isLoading={postOrganisationDataLoading}
-            loadingText="Submitting"
-            btnText="Submit"
+            loadingText={!organizationId ? 'Submitting' : 'Updating'}
+            btnText={!organizationId ? 'Submit' : 'Update'}
             btnType="primary"
             className="fmtm-font-bold"
             onClick={handleSubmit}
