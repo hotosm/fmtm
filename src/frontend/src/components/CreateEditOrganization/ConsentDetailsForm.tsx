@@ -9,6 +9,7 @@ import ConsentDetailsValidation from '@/components/CreateEditOrganization/valida
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { OrganisationAction } from '@/store/slices/organisationSlice';
+import InstructionsSidebar from '@/components/CreateEditOrganization/InstructionsSidebar';
 
 const ConsentDetailsForm = () => {
   const navigate = useNavigate();
@@ -29,19 +30,7 @@ const ConsentDetailsForm = () => {
 
   return (
     <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5 lg:fmtm-gap-10">
-      <div className="lg:fmtm-w-[30%] xl:fmtm-w-[20rem] fmtm-bg-white fmtm-py-5 lg:fmtm-py-10 fmtm-px-5 fmtm-h-fit">
-        <h5 className="fmtm-text-xl fmtm-font-[600] fmtm-pb-3 lg:fmtm-pb-7">Project Details</h5>
-        <p className="fmtm-text-[#7A7676] fmtm-flex fmtm-flex-col fmtm-gap-3 lg:fmtm-gap-5">
-          <span>
-            Fill in your project basic information such as name, description, hashtag, etc. This captures essential
-            information about your project.
-          </span>
-          <span>To complete the first step, you will need the login credentials of ODK Central Server.</span>
-          <span>
-            Here are the instructions for setting up a Central ODK Server on Digital Ocean, if you haven’t already.
-          </span>
-        </p>
-      </div>
+      <InstructionsSidebar />
       <div className="fmtm-bg-white lg:fmtm-w-[70%] xl:fmtm-w-[55rem] fmtm-py-5 lg:fmtm-py-10 fmtm-px-5 lg:fmtm-px-9">
         <h5 className="fmtm-text-[#484848] fmtm-text-2xl fmtm-font-[600] fmtm-pb-3 lg:fmtm-pb-7 fmtm-font-archivo fmtm-tracking-wide">
           Consent Details
