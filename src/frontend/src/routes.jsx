@@ -12,6 +12,7 @@ import NotFoundPage from '@/views/NotFound404';
 import Organisation from '@/views/Organisation';
 import CreateOrganisation from '@/views/CreateOrganisation';
 import CreateEditOrganization from '@/views/CreateEditOrganization';
+import ApproveOrganization from '@/views/ApproveOrganization';
 import Authorized from '@/views/Authorized';
 import SubmissionDetails from '@/views/SubmissionDetails';
 import CreateNewProject from '@/views/CreateNewProject';
@@ -69,6 +70,14 @@ const routes = createBrowserRouter([
         element: (
           <ErrorBoundary>
             <CreateEditOrganization />
+          </ErrorBoundary>
+        ),
+      },
+      {
+        path: '/approve-organization/:id',
+        element: (
+          <ErrorBoundary>
+            <ApproveOrganization />
           </ErrorBoundary>
         ),
       },
