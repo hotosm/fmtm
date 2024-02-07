@@ -97,7 +97,7 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/projects/get-data-extract`,
+        `${import.meta.env.VITE_API_URL}/projects/osm-data-extract/`,
         dataExtractRequestFormData,
       );
 
