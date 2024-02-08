@@ -21,7 +21,7 @@ import json
 import os
 import uuid
 from pathlib import Path
-from typing import Optional
+from typing import Annotated, Optional, Union
 
 import geojson
 from fastapi import (
@@ -588,10 +588,10 @@ async def validate_form(form: UploadFile):
 async def generate_files(
     background_tasks: BackgroundTasks,
     project_id: int,
-    extract_polygon: bool = Form(False),
+    data_extract_url: Annotated[str, Form()],
+    data_extract_type: Annotated[str, Form()],
     xls_form_upload: Optional[UploadFile] = File(None),
     xls_form_config_file: Optional[UploadFile] = File(None),
-    data_extracts: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
     org_user_dict: db_models.DbUser = Depends(org_admin),
 ):
@@ -610,12 +610,11 @@ async def generate_files(
     Args:
         background_tasks (BackgroundTasks): FastAPI bg tasks, provided automatically.
         project_id (int): The ID of the project for which files are being generated.
-        extract_polygon (bool): A boolean flag indicating whether the polygon
-            is extracted or not.
+        data_extract_url (str): URL of data extract, uploaded or generated.
+        data_extract_type (str): Type of data extract: point,line,polygon.
         xls_form_upload (UploadFile, optional): A custom XLSForm to use in the project.
             A file should be provided if user wants to upload a custom xls form.
         xls_form_config_file (UploadFile, optional): The config YAML for the XLS form.
-        data_extracts (UploadFile, optional): Custom data extract GeoJSON.
         db (Session): Database session, provided automatically.
         org_user_dict (AuthUser): Current logged in user. Must be org admin.
 
@@ -632,7 +631,10 @@ async def generate_files(
             status_code=428, detail=f"Project with id {project_id} does not exist"
         )
 
-    project.data_extract_type = "polygon" if extract_polygon else "centroid"
+    # Set data extract url and type
+    log.debug("Adding data extract type and url to db")
+    project.data_extract_url = data_extract_url
+    project.data_extract_type = data_extract_type
     db.commit()
 
     if xls_form_upload:
@@ -660,21 +662,6 @@ async def generate_files(
 
         db.commit()
 
-    if data_extracts:
-        log.debug("Validating uploaded geojson file")
-        # Validating for .geojson File.
-        data_extracts_file_name = os.path.splitext(data_extracts.filename)
-        extracts_file_ext = data_extracts_file_name[1]
-        if extracts_file_ext != ".geojson":
-            raise HTTPException(status_code=400, detail="Provide a valid geojson file")
-        try:
-            extracts_contents = await data_extracts.read()
-            json.loads(extracts_contents)
-        except json.JSONDecodeError as e:
-            raise HTTPException(
-                status_code=400, detail="Provide a valid geojson file"
-            ) from e
-
     # Create task in db and return uuid
     log.debug(f"Creating export background task for project ID: {project_id}")
     background_task_id = await project_crud.insert_background_task_into_database(
@@ -686,9 +673,7 @@ async def generate_files(
         project_crud.generate_appuser_files,
         db,
         project_id,
-        extract_polygon,
         custom_xls_form,
-        extracts_contents if data_extracts else None,
         xform_title,
         file_ext[1:] if xls_form_upload else "xls",
         background_task_id,

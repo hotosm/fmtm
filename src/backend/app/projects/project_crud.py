@@ -1086,7 +1086,7 @@ async def upload_custom_data_extract(
     # Add url to database
     s3_fgb_url = f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}{s3_fgb_path}"
     log.debug(f"Commiting extract S3 path to database: {s3_fgb_url}")
-    project.data_extract_type = s3_fgb_url
+    project.data_extract_url = s3_fgb_url
     db.commit()
 
     return s3_fgb_url
@@ -1251,11 +1251,9 @@ def generate_task_files(
 def generate_appuser_files(
     db: Session,
     project_id: int,
-    extract_polygon: bool,
-    custom_xls_form: str,
-    extracts_contents: str,
-    category: str,
-    form_type: str,
+    custom_xls_form: Optional[bytes],
+    category: Optional[str],
+    form_type: Optional[str],
     background_task_id: Optional[uuid.UUID] = None,
 ):
     """Generate the files for a project.
@@ -1265,9 +1263,7 @@ def generate_appuser_files(
     Parameters:
         - db: the database session
         - project_id: Project ID
-        - extract_polygon: boolean to determine if we should extract the polygon
         - custom_xls_form: the xls file to upload if we have a custom form
-        - extracts_contents: the custom data extract
         - category: the category of the project
         - form_type: weather the form is xls, xlsx or xml
         - background_task_id: the task_id of the background task running this function.
@@ -1332,71 +1328,61 @@ def generate_appuser_files(
             else:
                 xlsform = f"{xlsforms_path}/{xform_title}.xls"
 
-            # Data Extracts
-            if extracts_contents is not None:
-                project_log.info("Uploading data extracts")
-                upload_extract_sync = async_to_sync(upload_custom_data_extract)
-                upload_extract_sync(db, project_id, extracts_contents)
+        # # TODO refactor to remove section
+        # config_file_contents = project.form_config_file
 
-            else:
-                project = (
-                    db.query(db_models.DbProject)
-                    .filter(db_models.DbProject.id == project_id)
-                    .first()
-                )
-                config_file_contents = project.form_config_file
+        # project_log.info("Extracting Data from OSM")
 
-                project_log.info("Extracting Data from OSM")
+        # config_path = "/tmp/config.yaml"
+        # if config_file_contents:
+        #     with open(config_path, "w", encoding="utf-8") as config_file_handle:
+        #         config_file_handle.write(config_file_contents.decode("utf-8"))
+        # else:
+        #     config_path = f"{data_models_path}/{category}.yaml"
 
-                config_path = "/tmp/config.yaml"
-                if config_file_contents:
-                    with open(config_path, "w", encoding="utf-8") as config_file_handle:
-                        config_file_handle.write(config_file_contents.decode("utf-8"))
-                else:
-                    config_path = f"{data_models_path}/{category}.yaml"
+        # # # OSM Extracts for whole project
+        # pg = PostgresClient("underpass", config_path)
+        # outline = json.loads(project.outline)
+        # boundary = {"type": "Feature", "properties": {}, "geometry": outline}
+        # data_extract = pg.execQuery(boundary, clip_to_aoi=True, extra_params)
+        # filter = FilterData(xlsform)
 
-                # # OSM Extracts for whole project
-                pg = PostgresClient("underpass", config_path)
-                outline = json.loads(one.outline)
-                boundary = {"type": "Feature", "properties": {}, "geometry": outline}
-                data_extract = pg.execQuery(boundary)
-                filter = FilterData(xlsform)
+        # updated_data_extract = {"type": "FeatureCollection", "features": []}
+        # filtered_data_extract = (
+        #     filter.cleanData(data_extract)
+        #     if data_extract
+        #     else updated_data_extract
+        # )
 
-                updated_data_extract = {"type": "FeatureCollection", "features": []}
-                filtered_data_extract = (
-                    filter.cleanData(data_extract)
-                    if data_extract
-                    else updated_data_extract
-                )
+        # # Collect feature mappings for bulk insert
+        # feature_mappings = []
 
-                # Collect feature mappings for bulk insert
-                feature_mappings = []
+        # for feature in filtered_data_extract["features"]:
+        #     # If the osm extracts contents do not have a title,
+        #     # provide an empty text for that.
+        #     feature["properties"]["title"] = ""
 
-                for feature in filtered_data_extract["features"]:
-                    # If the osm extracts contents do not have a title,
-                    # provide an empty text for that.
-                    feature["properties"]["title"] = ""
+        #     feature_shape = shape(feature["geometry"])
 
-                    feature_shape = shape(feature["geometry"])
+        #     # If the centroid of the Polygon is not inside the outline,
+        #     # skip the feature.
+        #     if extract_polygon and (
+        #         not shape(outline).contains(shape(feature_shape.centroid))
+        #     ):
+        #         continue
 
-                    # If the centroid of the Polygon is not inside the outline,
-                    # skip the feature.
-                    if extract_polygon and (
-                        not shape(outline).contains(shape(feature_shape.centroid))
-                    ):
-                        continue
-
-                    wkb_element = from_shape(feature_shape, srid=4326)
-                    feature_mapping = {
-                        "project_id": project_id,
-                        "category_title": category,
-                        "geometry": wkb_element,
-                        "properties": feature["properties"],
-                    }
-                    updated_data_extract["features"].append(feature)
-                    feature_mappings.append(feature_mapping)
-                # Bulk insert the osm extracts into the db.
-                db.bulk_insert_mappings(db_models.DbFeatures, feature_mappings)
+        #     wkb_element = from_shape(feature_shape, srid=4326)
+        #     feature_mapping = {
+        #         "project_id": project_id,
+        #         "category_title": category,
+        #         "geometry": wkb_element,
+        #         "properties": feature["properties"],
+        #     }
+        #     updated_data_extract["features"].append(feature)
+        #     feature_mappings.append(feature_mapping)
+        # # Bulk insert the osm extracts into the db.
+        # db.bulk_insert_mappings(db_models.DbFeatures, feature_mappings)
+        # # TODO end of section to remove
 
             # Generating QR Code, XForm and uploading OSM Extracts to the form.
             # Creating app users and updating the role of that user.
