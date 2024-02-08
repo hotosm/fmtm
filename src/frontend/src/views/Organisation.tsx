@@ -3,6 +3,7 @@ import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
 import environment from '@/environment';
 import { OrganisationDataService } from '@/api/OrganisationService';
+import { user_roles } from '@/types/enums';
 
 const Organisation = () => {
   const cardStyle = {
@@ -18,6 +19,8 @@ const Organisation = () => {
 
   const [searchKeyword, setSearchKeyword] = useState('');
   const [activeTab, setActiveTab] = useState(0);
+  const [verifiedTab, setVerifiedTab] = useState<boolean>(false);
+  const token = CoreModules.useAppSelector((state) => state.login.loginToken);
 
   const handleSearchChange = (event) => {
     setSearchKeyword(event.target.value);
@@ -26,7 +29,6 @@ const Organisation = () => {
   const dispatch = CoreModules.useAppDispatch();
 
   const oraganizationData: any = CoreModules.useAppSelector((state) => state.organisation.oraganizationData);
-  console.log(oraganizationData, 'oraganizationData');
   const filteredCardData = oraganizationData?.filter((data) =>
     data.name.toLowerCase().includes(searchKeyword.toLowerCase()),
   );
@@ -44,54 +46,104 @@ const Organisation = () => {
         flex: 1,
         gap: 2,
       }}
-      className="fmtm-px-[4.5%]"
+      className="fmtm-p-5"
     >
-      <CoreModules.Box className="fmtm-flex fmtm-flex-col sm:fmtm-flex-row sm:fmtm-items-center fmtm-pt-5 fmtm-gap-2 sm:fmtm-gap-4">
-        <h1 className="fmtm-text-[1.5rem] lg:fmtm-text-[2.25rem] fmtm-font-bold">MANAGE ORGANIZATIONS</h1>
-        <CoreModules.Link to={'/create-organization'}>
-          <CoreModules.Button
-            variant="outlined"
-            color="error"
-            startIcon={<AssetModules.AddIcon />}
-            sx={{ minWidth: 'fit-content', width: 'auto', fontWeight: 'bold' }}
-          >
-            New
-          </CoreModules.Button>
-        </CoreModules.Link>
-      </CoreModules.Box>
-      <CoreModules.Box>
-        <CoreModules.Tabs>
-          <CoreModules.Tab
-            label="All"
-            sx={{
-              background: activeTab === 0 ? 'grey' : 'white',
-              color: activeTab === 0 ? 'white' : 'grey',
-              minWidth: 'fit-content',
-              width: 'auto',
-              '&:hover': { backgroundColor: '#fff', color: 'grey' },
-              fontSize: '16px',
-              minHeight: '36px',
-              height: '36px',
-            }}
-            onClick={() => setActiveTab(0)}
-          />
-          <CoreModules.Tab
-            label="My Organizations"
-            sx={{
-              background: activeTab === 1 ? 'grey' : 'white',
-              color: activeTab === 1 ? 'white' : 'grey',
-              marginLeft: '20px',
-              minWidth: 'fit-content',
-              width: 'auto',
-              '&:hover': { backgroundColor: '#fff', color: 'grey' },
-              fontSize: '16px',
-              minHeight: '36px',
-              height: '36px',
-            }}
-            onClick={() => setActiveTab(1)}
-          />
-        </CoreModules.Tabs>
-      </CoreModules.Box>
+      <div className="fmtm-flex fmtm-flex-col md:fmtm-flex-row md:fmtm-justify-between md:fmtm-items-center">
+        <CoreModules.Box>
+          <CoreModules.Tabs>
+            <CoreModules.Tab
+              label="All"
+              sx={{
+                background: activeTab === 0 ? 'grey' : 'white',
+                color: activeTab === 0 ? 'white' : 'grey',
+                minWidth: 'fit-content',
+                width: 'auto',
+                '&:hover': { backgroundColor: '#999797', color: 'white' },
+                fontSize: ['14px', '16px', '16px'],
+                minHeight: ['26px', '36px', '36px'],
+                height: ['30px', '36px', '36px'],
+                px: ['12px', '16px', '16px'],
+              }}
+              className="fmtm-duration-150"
+              onClick={() => setActiveTab(0)}
+            />
+            <CoreModules.Tab
+              label="My Organizations"
+              sx={{
+                background: activeTab === 1 ? 'grey' : 'white',
+                color: activeTab === 1 ? 'white' : 'grey',
+                marginLeft: ['8px', '12px', '12px'],
+                minWidth: 'fit-content',
+                width: 'auto',
+                '&:hover': { backgroundColor: '#999797', color: 'white' },
+                fontSize: ['14px', '16px', '16px'],
+                minHeight: ['26px', '36px', '36px'],
+                height: ['30px', '36px', '36px'],
+                px: ['12px', '16px', '16px'],
+              }}
+              className="fmtm-duration-150"
+              onClick={() => setActiveTab(1)}
+            />
+            <CoreModules.Link to={'/create-organization'}>
+              <CoreModules.Button
+                variant="outlined"
+                color="error"
+                startIcon={<AssetModules.AddIcon />}
+                sx={{
+                  marginLeft: ['8px', '12px', '12px'],
+                  minWidth: 'fit-content',
+                  width: 'auto',
+                  fontWeight: 'bold',
+                  minHeight: ['26px', '36px', '36px'],
+                  height: ['30px', '36px', '36px'],
+                  px: ['12px', '16px', '16px'],
+                }}
+              >
+                New
+              </CoreModules.Button>
+            </CoreModules.Link>
+          </CoreModules.Tabs>
+        </CoreModules.Box>
+        {token !== null && token['role'] && token['role'] === user_roles.ADMIN && (
+          <CoreModules.Box>
+            <CoreModules.Tabs>
+              <CoreModules.Tab
+                label="To be Verified"
+                sx={{
+                  background: !verifiedTab ? 'grey' : 'white',
+                  color: !verifiedTab ? 'white' : 'grey',
+                  minWidth: 'fit-content',
+                  width: 'auto',
+                  '&:hover': { backgroundColor: '#999797', color: 'white' },
+                  fontSize: ['14px', '16px', '16px'],
+                  minHeight: ['26px', '36px', '36px'],
+                  height: ['30px', '36px', '36px'],
+                  px: ['12px', '16px', '16px'],
+                }}
+                className="fmtm-duration-150"
+                onClick={() => setVerifiedTab(false)}
+              />
+              <CoreModules.Tab
+                label="Verified"
+                sx={{
+                  background: verifiedTab ? 'grey' : 'white',
+                  color: verifiedTab ? 'white' : 'grey',
+                  marginLeft: ['8px', '12px', '12px'],
+                  minWidth: 'fit-content',
+                  width: 'auto',
+                  '&:hover': { backgroundColor: '#999797', color: 'white' },
+                  fontSize: ['14px', '16px', '16px'],
+                  minHeight: ['26px', '36px', '36px'],
+                  height: ['30px', '36px', '36px'],
+                  px: ['12px', '16px', '16px'],
+                }}
+                className="fmtm-duration-150"
+                onClick={() => setVerifiedTab(true)}
+              />
+            </CoreModules.Tabs>
+          </CoreModules.Box>
+        )}
+      </div>
       <CoreModules.Box>
         <CoreModules.TextField
           variant="outlined"
@@ -109,6 +161,11 @@ const Organisation = () => {
           className="fmtm-min-w-[14rem] lg:fmtm-w-[20%]"
         />
       </CoreModules.Box>
+      <div>
+        <p className="fmtm-text-[#9B9999]">
+          Showing {filteredCardData?.length} of {oraganizationData?.length} organizations
+        </p>
+      </div>
       <CoreModules.Box className="fmtm-grid fmtm-grid-cols-1 md:fmtm-grid-cols-2 fmtm-gap-5">
         {filteredCardData?.map((data, index) => (
           <CoreModules.Card key={index} sx={cardStyle}>
