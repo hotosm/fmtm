@@ -1,24 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
-import environment from '@/environment';
 import { OrganisationDataService } from '@/api/OrganisationService';
 import { user_roles } from '@/types/enums';
+import CustomizedImage from '@/utilities/CustomizedImage';
+import { GetOrganisationDataModel } from '@/models/organisation/organisationModel';
 
 const Organisation = () => {
   const cardStyle = {
-    padding: 2,
+    padding: '20px',
     display: 'flex',
     flexDirection: 'row',
-    alignItems: 'center',
     cursor: 'pointer',
-    gap: 5,
+    gap: '20px',
+    boxShadow: 'none',
+    borderRadius: '0px',
   };
 
   const url = 'https://fmtm.naxa.com.np/d907cf67fe587072a592.png';
 
-  const [searchKeyword, setSearchKeyword] = useState('');
-  const [activeTab, setActiveTab] = useState(0);
+  const [searchKeyword, setSearchKeyword] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<0 | 1>(0);
   const [verifiedTab, setVerifiedTab] = useState<boolean>(false);
   const token = CoreModules.useAppSelector((state) => state.login.loginToken);
 
@@ -28,8 +30,10 @@ const Organisation = () => {
 
   const dispatch = CoreModules.useAppDispatch();
 
-  const oraganizationData: any = CoreModules.useAppSelector((state) => state.organisation.oraganizationData);
-  const filteredCardData = oraganizationData?.filter((data) =>
+  const oraganizationData: GetOrganisationDataModel[] = CoreModules.useAppSelector(
+    (state) => state.organisation.oraganizationData,
+  );
+  const filteredCardData: GetOrganisationDataModel[] = oraganizationData?.filter((data) =>
     data.name.toLowerCase().includes(searchKeyword.toLowerCase()),
   );
 
@@ -48,9 +52,14 @@ const Organisation = () => {
       }}
       className="fmtm-p-5"
     >
-      <div className="fmtm-flex fmtm-flex-col md:fmtm-flex-row md:fmtm-justify-between md:fmtm-items-center">
+      <div className="md:fmtm-hidden fmtm-border-b-white fmtm-border-b-[1px]">
+        <div className="fmtm-flex fmtm-justify-between fmtm-items-center">
+          <h1 className="fmtm-text-xl sm:fmtm-text-2xl fmtm-mb-1 sm:fmtm-mb-2">MANAGE ORGANIZATIONS</h1>
+        </div>
+      </div>
+      <div className="fmtm-flex fmtm-flex-col md:fmtm-flex-row md:fmtm-justify-between md:fmtm-items-center fmtm-gap-2">
         <CoreModules.Box>
-          <CoreModules.Tabs>
+          <CoreModules.Tabs sx={{ minHeight: 'fit-content' }}>
             <CoreModules.Tab
               label="All"
               sx={{
@@ -106,7 +115,7 @@ const Organisation = () => {
         </CoreModules.Box>
         {token !== null && token['role'] && token['role'] === user_roles.ADMIN && (
           <CoreModules.Box>
-            <CoreModules.Tabs>
+            <CoreModules.Tabs sx={{ minHeight: 'fit-content' }}>
               <CoreModules.Tab
                 label="To be Verified"
                 sx={{
@@ -166,35 +175,32 @@ const Organisation = () => {
           Showing {filteredCardData?.length} of {oraganizationData?.length} organizations
         </p>
       </div>
-      <CoreModules.Box className="fmtm-grid fmtm-grid-cols-1 md:fmtm-grid-cols-2 fmtm-gap-5">
+      <CoreModules.Box className="fmtm-grid fmtm-grid-cols-1 md:fmtm-grid-cols-2 lg:fmtm-grid-cols-3 fmtm-gap-5">
         {filteredCardData?.map((data, index) => (
           <CoreModules.Card key={index} sx={cardStyle}>
-            <CoreModules.CardMedia
-              component="img"
-              src={data.logo ? data.logo : 'http://localhost:7051/d907cf67fe587072a592.png'}
-              sx={{ width: '150px' }}
-            />
-            <CoreModules.Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <CoreModules.Typography
-                variant="subtitle1"
-                sx={{ textTransform: 'uppercase' }}
-                className="fmtm-line-clamp-1"
+            {data.logo ? (
+              <div className="fmtm-min-w-[60px] md:fmtm-min-w-[80px] lg:fmtm-min-w-[120px]">
+                <CoreModules.CardMedia component="img" src={data.logo} sx={{ width: ['60px', '80px', '120px'] }} />
+              </div>
+            ) : (
+              <div className="fmtm-min-w-[60px] fmtm-max-w-[60px] md:fmtm-min-w-[80px] md:fmtm-max-w-[80px] lg:fmtm-min-w-[120px] lg:fmtm-max-w-[120px]">
+                <CustomizedImage status={'card'} style={{ width: '100%' }} />
+              </div>
+            )}
+
+            <CoreModules.Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }} className="fmtm-overflow-hidden">
+              <h2
+                className="fmtm-line-clamp-1 fmtm-text-base sm:fmtm-text-lg fmtm-font-bold fmtm-capitalize"
                 title={data.name}
               >
                 {data.name}
-              </CoreModules.Typography>
-              <CoreModules.Typography
-                variant="subtitle3"
+              </h2>
+              <p
+                className="fmtm-line-clamp-3 fmtm-text-[#7A7676] fmtm-font-archivo fmtm-text-sm sm:fmtm-text-base"
                 title={data.description}
-                className="fmtm-max-h-[4.5em] fmtm-line-clamp-2"
               >
                 {data.description}
-              </CoreModules.Typography>
-              <CoreModules.Link to={data.url} target="_blank" style={{ textDecoration: 'none' }}>
-                <CoreModules.Avatar alt={data.title} src={data.logo} sx={{ height: '25px', width: '25px' }}>
-                  {!data.logo || data.logo === 'string' ? data.name[0] : url}
-                </CoreModules.Avatar>
-              </CoreModules.Link>
+              </p>
             </CoreModules.Box>
           </CoreModules.Card>
         ))}
