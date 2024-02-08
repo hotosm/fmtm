@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import InputTextField from '@/components/common/InputTextField';
 import TextArea from '@/components/common/TextArea';
 import Button from '@/components/common/Button';
-import { GetIndividualOrganizationService } from '@/api/OrganisationService';
+import { ApproveOrganizationService, GetIndividualOrganizationService } from '@/api/OrganisationService';
 import CoreModules from '@/shared/CoreModules';
 
 const OrganizationForm = () => {
@@ -18,6 +18,12 @@ const OrganizationForm = () => {
       dispatch(GetIndividualOrganizationService(`${import.meta.env.VITE_API_URL}/organisation/${organizationId}`));
     }
   }, [organizationId]);
+
+  const approveOrganization = () => {
+    dispatch(
+      ApproveOrganizationService(`${import.meta.env.VITE_API_URL}/organisation/approve`, { org_id: organizationId }),
+    );
+  };
 
   return (
     <div className="fmtm-max-w-[50rem] fmtm-bg-white fmtm-py-5 lg:fmtm-py-10 fmtm-px-5 lg:fmtm-px-9 fmtm-mx-auto">
@@ -92,7 +98,7 @@ const OrganizationForm = () => {
       </div>
       <div className="fmtm-flex fmtm-items-center fmtm-justify-center fmtm-gap-6 fmtm-mt-8 lg:fmtm-mt-16">
         <Button btnText="Reject" btnType="other" className="fmtm-font-bold" onClick={() => {}} />
-        <Button btnText="Verify" btnType="primary" className="fmtm-font-bold" onClick={() => {}} />
+        <Button btnText="Verify" btnType="primary" className="fmtm-font-bold" onClick={approveOrganization} />
       </div>
     </div>
   );

@@ -157,3 +157,31 @@ export const PatchOrganizationDataService: Function = (url: string, payload: any
     await patchOrganisationData(url, payload);
   };
 };
+
+export const ApproveOrganizationService: Function = (url: string, organizationId: string) => {
+  return async (dispatch) => {
+    const approveOrganization = async (url) => {
+      try {
+        await axios.post(url, organizationId);
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: 'Organization approved successfully.',
+            variant: 'success',
+            duration: 2000,
+          }),
+        );
+      } catch (error) {
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: 'Failed to approve organization.',
+            variant: 'error',
+            duration: 2000,
+          }),
+        );
+      }
+    };
+    await approveOrganization(url);
+  };
+};
