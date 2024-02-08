@@ -22,7 +22,7 @@ import os
 import uuid
 from io import BytesIO
 from pathlib import Path
-from typing import Annotated, Optional, Union
+from typing import Annotated, Optional
 
 import geojson
 from fastapi import (
