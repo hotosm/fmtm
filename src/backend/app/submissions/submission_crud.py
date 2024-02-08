@@ -357,22 +357,19 @@ def update_submission_in_s3(
         metadata_s3_path = f"/{s3_project_path}/submissions.meta.json"
         try:
             # Get the last submission date from the metadata
-            file = get_obj_from_bucket(settings.S3_BUCKET_NAME, metadata_s3_path)
-            if file:
-                zip_file_last_submission = (json.loads(file.getvalue()))[
-                    "last_submission"
-                ]
-                if last_submission <= zip_file_last_submission:
-                    # Update background task status to COMPLETED
-                    update_bg_task_sync = async_to_sync(
-                        project_crud.update_background_task_status_in_database
-                    )
-                    update_bg_task_sync(db, background_task_id, 4)  # 4 is COMPLETED
-                    return
+            data = get_obj_from_bucket(settings.S3_BUCKET_NAME, metadata_s3_path)
+
+            zip_file_last_submission = (json.loads(data.getvalue()))["last_submission"]
+            if last_submission <= zip_file_last_submission:
+                # Update background task status to COMPLETED
+                update_bg_task_sync = async_to_sync(
+                    project_crud.update_background_task_status_in_database
+                )
+                update_bg_task_sync(db, background_task_id, 4)  # 4 is COMPLETED
+                return
 
         except Exception as e:
             log.warning(str(e))
-            pass
 
         # Zip file is outdated, regenerate
         metadata = {
