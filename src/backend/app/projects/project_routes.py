@@ -20,6 +20,7 @@
 import json
 import os
 import uuid
+from io import BytesIO
 from pathlib import Path
 from typing import Annotated, Optional, Union
 
@@ -37,6 +38,7 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse, JSONResponse
 from loguru import logger as log
+from osm_fieldwork.data_models import data_models_path
 from osm_fieldwork.make_data_extract import getChoices
 from osm_fieldwork.xlsforms import xlsforms_path
 from sqlalchemy.orm import Session
@@ -832,10 +834,11 @@ async def preview_split_by_square(
     return result
 
 
-@router.post("/get_data_extract/")
+@router.post("/osm-data-extract/")
 async def get_data_extract(
-    geojson_file: UploadFile = File(...),
     project_id: int = Query(None, description="Project ID"),
+    geojson_file: UploadFile = File(...),
+    form_category: Optional[str] = Form(None),
     db: Session = Depends(database.get_db),
     current_user: AuthUser = Depends(login_required),
 ):
@@ -846,15 +849,24 @@ async def get_data_extract(
     """
     boundary_geojson = json.loads(await geojson_file.read())
 
+    # Get extract config file from existing data_models
+    if form_category:
+        data_model = f"{data_models_path}/{form_category}.yaml"
+        with open(data_model, "rb") as data_model_yaml:
+            extract_config = BytesIO(data_model_yaml.read())
+    else:
+        extract_config = None
+
     fgb_url = await project_crud.get_data_extract_url(
         db,
         boundary_geojson,
-        project_id,
+        extract_config,
+        project_id=project_id,
     )
     return JSONResponse(status_code=200, content={"url": fgb_url})
 
 
-@router.post("/upload_custom_extract/")
+@router.post("/upload-custom-extract/")
 async def upload_custom_extract(
     custom_extract_file: UploadFile = File(...),
     project_id: int = Query(..., description="Project ID"),

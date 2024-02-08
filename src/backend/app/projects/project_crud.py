@@ -42,7 +42,6 @@ from geojson.feature import Feature, FeatureCollection
 from loguru import logger as log
 from osm_fieldwork.basemapper import create_basemap_file
 from osm_fieldwork.data_models import data_models_path
-from osm_fieldwork.filter_data import FilterData
 from osm_fieldwork.json2osm import json2osm
 from osm_fieldwork.OdkCentral import OdkAppUser
 from osm_fieldwork.xlsforms import xlsforms_path
@@ -526,6 +525,7 @@ async def get_data_extract_from_osm_rawdata(
 async def get_data_extract_url(
     db: Session,
     aoi: Union[FeatureCollection, Feature, dict],
+    extract_config: Optional[BytesIO] = None,
     project_id: Optional[int] = None,
 ) -> str:
     """Request an extract from raw-data-api and extract the file contents.
@@ -544,7 +544,7 @@ async def get_data_extract_url(
             return False
 
         # TODO update db field data_extract_type --> data_extract_url
-        fgb_url = db_project.data_extract_type
+        fgb_url = db_project.data_extract_url
 
         # If extract already exists, return url to it
         if fgb_url:
@@ -552,76 +552,32 @@ async def get_data_extract_url(
 
     # FIXME replace below with get_data_extract_from_osm_rawdata
 
-    # Data extract does not exist, continue to create
-    # Filters for osm extracts
-    query = {
-        "filters": {
-            "tags": {
-                "all_geometry": {
-                    "join_or": {"building": [], "highway": [], "waterway": []}
-                }
-            }
-        }
-    }
+    if not extract_config:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="To generate a new data extract a form_category must be specified.",
+        )
 
-    if (geom_type := aoi.get("type")) == "FeatureCollection":
-        # Convert each feature into a Shapely geometry
-        geometries = [
-            shape(feature.get("geometry")) for feature in aoi.get("features", [])
-        ]
-        merged_geom = unary_union(geometries)
-    elif geom_type == "Feature":
-        merged_geom = shape(aoi.get("geometry"))
-    else:
-        merged_geom = shape(aoi)
-    # Convert the merged geoms to a single Polygon GeoJSON using convex hull
-    query["geometry"] = json.loads(to_geojson(merged_geom.convex_hull))
-
-    # Filename to generate
-    # query["fileName"] = f"fmtm-project-{project_id}-extract"
-    query["fileName"] = "fmtm-extract"
-    # Output to flatgeobuf format
-    query["outputType"] = "fgb"
-    # Generate without zipping
-    query["bind_zip"] = False
-    # Optional authentication
-    # headers["access-token"] = settings.OSM_SVC_ACCOUNT_TOKEN
-
-    log.debug(f"Query for raw data api: {query}")
-    base_url = settings.UNDERPASS_API_URL
-    query_url = f"{base_url}/snapshot/"
-    headers = {"accept": "application/json", "Content-Type": "application/json"}
-
-    # Send the request to raw data api
-    try:
-        result = requests.post(query_url, data=json.dumps(query), headers=headers)
-        result.raise_for_status()
-    except requests.exceptions.HTTPError:
-        error_dict = result.json()
-        error_dict["status_code"] = result.status_code
-        log.error(f"Failed to get extract from raw data api: {error_dict}")
-        return error_dict
-
-    task_id = result.json().get("task_id")
-
-    # Check status of task (PENDING, or SUCCESS)
-    task_url = f"{base_url}/tasks/status/{task_id}"
-    while True:
-        result = requests.get(task_url, headers=headers)
-        if result.json().get("status") == "PENDING":
-            # Wait 2 seconds before polling again
-            time.sleep(2)
-        elif result.json().get("status") == "SUCCESS":
-            break
-
-    fgb_url = result.json().get("result", {}).get("download_url", None)
+    pg = PostgresClient(
+        "underpass",
+        extract_config,
+        # auth_token=settings.OSM_SVC_ACCOUNT_TOKEN,
+    )
+    fgb_url = pg.execQuery(
+        aoi,
+        extra_params={
+            "fileName": "fmtm_extract",
+            "outputType": "fgb",
+            "bind_zip": False,
+        },
+    )
 
     if not fgb_url:
-        log.error("Could not get download URL for data extract. Did the API change?")
-        log.error(f"To debug: {task_url}")
+        msg = "Could not get download URL for data extract. Did the API change?"
+        log.error(msg)
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail="Could not get download URL for data extract. Did the API change?",
+            detail=msg,
         )
 
     return fgb_url
