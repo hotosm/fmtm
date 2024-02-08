@@ -91,6 +91,7 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
     const dataExtractRequestFormData = new FormData();
     const projectAoiGeojsonFile = getFileFromGeojson(projectAoiGeojson);
     dataExtractRequestFormData.append('geojson_file', projectAoiGeojsonFile);
+    dataExtractRequestFormData.append('form_category', projectDetails.formCategorySelection);
 
     // Set flatgeobuf as loading
     dispatch(CreateProjectActions.SetFgbFetchingStatus(true));
@@ -127,7 +128,7 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
       dispatch(
         CommonActions.SetSnackBar({
           open: true,
-          message: 'Error to generate FGB file.',
+          message: 'Error generating data extract.',
           variant: 'error',
           duration: 2000,
         }),
