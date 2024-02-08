@@ -84,15 +84,15 @@ export const PostOrganisationDataService: Function = (url: string, payload: any)
           }),
         );
       } catch (error: any) {
+        dispatch(OrganisationAction.PostOrganisationDataLoading(false));
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
-            message: error.response.data.detail,
+            message: error.response.data.detail || 'Failed to create organization.',
             variant: 'error',
             duration: 2000,
           }),
         );
-        dispatch(OrganisationAction.PostOrganisationDataLoading(false));
       }
     };
 
@@ -146,7 +146,7 @@ export const PatchOrganizationDataService: Function = (url: string, payload: any
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
-            message: error.response.data.detail,
+            message: error.response.data.detail || 'Failed to update organization.',
             variant: 'error',
             duration: 2000,
           }),

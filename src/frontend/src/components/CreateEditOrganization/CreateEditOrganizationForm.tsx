@@ -81,6 +81,14 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
     if (postOrganisationData) {
       dispatch(OrganisationAction.postOrganisationData(null));
       dispatch(OrganisationAction.SetOrganisationFormData({}));
+      dispatch(
+        OrganisationAction.SetConsentDetailsFormData({
+          give_consent: '',
+          review_documentation: [],
+          log_into: [],
+          participated_in: [],
+        }),
+      );
       if (searchParams.get('popup') === 'true') {
         window.close();
       } else {
