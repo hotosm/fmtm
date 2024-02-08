@@ -52,10 +52,6 @@ function OrganizationDetailsValidation(values: OrganisationValues) {
     } else if (!isValidUrl(values.url)) {
       errors.url = 'Invalid URL.';
     }
-    if (!values?.osm_profile) {
-      errors.osm_profile = 'OSM profile is Required.';
-    }
-
     if (!values?.organization_type) {
       errors.organization_type = 'Organization type is Required.';
     }
