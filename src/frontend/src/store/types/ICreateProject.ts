@@ -109,7 +109,6 @@ export type ProjectDetailsTypes = {
   task_split_type?: number;
   xform_title?: string;
   data_extract_options?: string;
-  data_extractWays?: string;
   form_ways?: string;
   organisation_id?: number | null;
 };

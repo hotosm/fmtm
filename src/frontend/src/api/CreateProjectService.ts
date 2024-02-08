@@ -52,17 +52,18 @@ const CreateProjectService: Function = (
         if (dataExtractFile) {
           const dataExtractFormData = new FormData();
           dataExtractFormData.append('custom_extract_file', dataExtractFile);
-          await axios.post(
-            `${import.meta.env.VITE_API_URL}/projects/upload_custom_extract/?project_id=${resp.id}`,
+          const response = await axios.post(
+            `${import.meta.env.VITE_API_URL}/projects/upload-custom-extract/?project_id=${resp.id}`,
             dataExtractFormData,
           );
+          // Replace data_extract_url with that returned for FMTM bucket
+          payload.data_extract_url = response.data.url;
         }
         await dispatch(
           GenerateProjectQRService(
             `${import.meta.env.VITE_API_URL}/projects/${resp.id}/generate-project-data`,
             payload,
             formUpload,
-            dataExtractFile,
           ),
         );
 
@@ -143,30 +144,19 @@ const UploadAreaService: Function = (url: string, filePayload: any, payload: any
     await postUploadArea(url, filePayload, payload);
   };
 };
-const GenerateProjectQRService: Function = (url: string, payload: any, formUpload: any, dataExtractFile: any) => {
+const GenerateProjectQRService: Function = (url: string, payload: any, formUpload: any) => {
   return async (dispatch) => {
     dispatch(CreateProjectActions.GenerateProjectQRLoading(true));
     dispatch(CommonActions.SetLoading(true));
 
     const postUploadArea = async (url, payload: any, formUpload) => {
-      // debugger;
-      console.log(formUpload, 'formUpload');
-      console.log(payload, 'payload');
       try {
-        const isPolygon = payload.data_extractWays === 'Polygon';
         const generateApiFormData = new FormData();
         if (payload.form_ways === 'custom_form') {
-          generateApiFormData.append('extract_polygon', isPolygon.toString());
           generateApiFormData.append('upload', formUpload);
-          if (dataExtractFile) {
-            generateApiFormData.append('data_extracts', dataExtractFile);
-          }
-        } else {
-          generateApiFormData.append('extract_polygon', isPolygon.toString());
-          if (dataExtractFile) {
-            generateApiFormData.append('data_extracts', dataExtractFile);
-          }
         }
+        generateApiFormData.append('data_extract_type', payload.data_extract_type);
+        generateApiFormData.append('data_extract_url', payload.data_extract_url);
         const postNewProjectDetails = await axios.post(url, generateApiFormData, {
           headers: {
             'Content-Type': 'multipart/form-data',

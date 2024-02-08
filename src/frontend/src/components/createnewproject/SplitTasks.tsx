@@ -116,7 +116,6 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
       task_split_type: splitTasksSelection,
       form_ways: projectDetails.formWays,
       // "uploaded_form": projectDetails.uploaded_form,
-      data_extractWays: projectDetails.data_extractWays,
       hashtags: arrayHashtag,
       data_extract_type: projectDetails.data_extract_type,
       data_extract_url: projectDetails.data_extract_url,
