@@ -5,7 +5,7 @@
 groups = ["default", "debug", "dev", "docs", "test"]
 strategy = ["cross_platform"]
 lock_version = "4.4.1"
-content_hash = "sha256:73bb79db4e82351bb07d7b0faf51b90fc523e0d3f316dca54e14dffee0bc077e"
+content_hash = "sha256:e367ce9b2f0c1f2c30bda1e52b3564a9a9b49f315e3b03cb80c71d7e396adda1"
 
 [[package]]
 name = "annotated-types"
@@ -1386,7 +1386,7 @@ files = [
 
 [[package]]
 name = "osm-rawdata"
-version = "0.1.7"
+version = "0.2.0"
 requires_python = ">=3.10"
 summary = "Make data extracts from OSM data."
 dependencies = [
@@ -1402,8 +1402,8 @@ dependencies = [
     "sqlalchemy>=2.0.0",
 ]
 files = [
-    {file = "osm-rawdata-0.1.7.tar.gz", hash = "sha256:b012a20e15cca925ed4d0494cd65ebf3fd97759323ed64fb94dc8cf46ce67b6f"},
-    {file = "osm_rawdata-0.1.7-py3-none-any.whl", hash = "sha256:9de18ac8ddc5d25058b79506aa940ab688fc9bf096e09c641bc76266678611a8"},
+    {file = "osm-rawdata-0.2.0.tar.gz", hash = "sha256:4e38521c12f699649fedc97a705379a0439c1f4d129e4e2529f5d7d7ef39be60"},
+    {file = "osm_rawdata-0.2.0-py3-none-any.whl", hash = "sha256:aaf4c33fe85776147037125d3223c00e634db2fbd51cb3e43f8fb3c645f6d4e0"},
 ]
 
 [[package]]
