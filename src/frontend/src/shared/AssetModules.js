@@ -68,6 +68,7 @@ import {
   DeleteOutlined as DeleteOutlinedIcon,
   Undo as UndoIcon,
   Timeline as TimelineIcon,
+  DescriptionOutlined as DescriptionOutlinedIcon,
 } from '@mui/icons-material';
 import LockPng from '@/assets/images/lock.png';
 import RedLockPng from '@/assets/images/red-lock.png';
@@ -146,4 +147,5 @@ export default {
   DeleteOutlinedIcon,
   UndoIcon,
   TimelineIcon,
+  DescriptionOutlinedIcon,
 };
