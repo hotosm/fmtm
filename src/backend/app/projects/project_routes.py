@@ -22,7 +22,7 @@ import os
 import uuid
 from io import BytesIO
 from pathlib import Path
-from typing import Annotated, Optional, Union
+from typing import Optional
 
 import geojson
 from fastapi import (
@@ -48,10 +48,10 @@ from app.auth.osm import AuthUser, login_required
 from app.auth.roles import mapper, org_admin, project_admin, super_admin
 from app.central import central_crud
 from app.db import database, db_models
+from app.db.postgis_utils import check_crs
 from app.models.enums import TILES_FORMATS, TILES_SOURCE, HTTPStatus
 from app.organisations import organisation_deps
 from app.projects import project_crud, project_deps, project_schemas
-from app.projects.project_crud import check_crs
 from app.static import data_path
 from app.submissions import submission_crud
 from app.tasks import tasks_crud
@@ -412,7 +412,7 @@ async def upload_custom_task_boundaries(
     boundary = json.loads(content)
 
     # Validatiing Coordinate Reference System
-    check_crs(boundary)
+    await check_crs(boundary)
 
     log.debug("Creating tasks for each polygon in project")
     result = await project_crud.update_multi_polygon_project_boundary(
@@ -459,12 +459,12 @@ async def task_split(
     # read project boundary
     parsed_boundary = geojson.loads(await project_geojson.read())
     # Validatiing Coordinate Reference Systems
-    check_crs(parsed_boundary)
+    await check_crs(parsed_boundary)
 
     # read data extract
     parsed_extract = geojson.loads(await extract_geojson.read())
 
-    check_crs(parsed_extract)
+    await check_crs(parsed_extract)
 
     return await project_crud.split_geojson_into_tasks(
         db,
@@ -506,7 +506,7 @@ async def upload_project_boundary(
     boundary = json.loads(content)
 
     # Validatiing Coordinate Reference System
-    check_crs(boundary)
+    await check_crs(boundary)
 
     # update project boundary and dimension
     result = await project_crud.update_project_boundary(
@@ -548,7 +548,7 @@ async def edit_project_boundary(
     boundary = json.loads(content)
 
     # Validatiing Coordinate Reference System
-    check_crs(boundary)
+    await check_crs(boundary)
 
     result = await project_crud.update_project_boundary(
         db, project_id, boundary, dimension
@@ -590,8 +590,6 @@ async def validate_form(form: UploadFile):
 async def generate_files(
     background_tasks: BackgroundTasks,
     project_id: int,
-    data_extract_url: Annotated[str, Form()],
-    data_extract_type: Annotated[str, Form()],
     xls_form_upload: Optional[UploadFile] = File(None),
     xls_form_config_file: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
@@ -612,8 +610,6 @@ async def generate_files(
     Args:
         background_tasks (BackgroundTasks): FastAPI bg tasks, provided automatically.
         project_id (int): The ID of the project for which files are being generated.
-        data_extract_url (str): URL of data extract, uploaded or generated.
-        data_extract_type (str): Type of data extract: point,line,polygon.
         xls_form_upload (UploadFile, optional): A custom XLSForm to use in the project.
             A file should be provided if user wants to upload a custom xls form.
         xls_form_config_file (UploadFile, optional): The config YAML for the XLS form.
@@ -632,12 +628,6 @@ async def generate_files(
         raise HTTPException(
             status_code=428, detail=f"Project with id {project_id} does not exist"
         )
-
-    # Set data extract url and type
-    log.debug("Adding data extract type and url to db")
-    project.data_extract_url = data_extract_url
-    project.data_extract_type = data_extract_type
-    db.commit()
 
     if xls_form_upload:
         log.debug("Validating uploaded XLS form")
@@ -828,25 +818,19 @@ async def preview_split_by_square(
     boundary = geojson.loads(content)
 
     # Validatiing Coordinate Reference System
-    check_crs(boundary)
+    await check_crs(boundary)
 
     result = await project_crud.preview_split_by_square(boundary, dimension)
     return result
 
 
-@router.post("/osm-data-extract/")
+@router.post("/generate-data-extract/")
 async def get_data_extract(
-    project_id: int = Query(None, description="Project ID"),
     geojson_file: UploadFile = File(...),
     form_category: Optional[str] = Form(None),
-    db: Session = Depends(database.get_db),
     current_user: AuthUser = Depends(login_required),
 ):
-    """Get the data extract for a given project AOI.
-
-    Use for both generating a new data extract and for getting
-    and existing extract.
-    """
+    """Get a new data extract for a given project AOI."""
     boundary_geojson = json.loads(await geojson_file.read())
 
     # Get extract config file from existing data_models
@@ -857,12 +841,30 @@ async def get_data_extract(
     else:
         extract_config = None
 
-    fgb_url = await project_crud.get_data_extract_url(
-        db,
+    fgb_url = await project_crud.generate_data_extract(
         boundary_geojson,
         extract_config,
-        project_id=project_id,
     )
+
+    return JSONResponse(status_code=200, content={"url": fgb_url})
+
+
+@router.post("/data-extract-url/")
+async def get_or_set_data_extract(
+    url: Optional[str] = None,
+    extract_type: Optional[str] = None,
+    project_id: int = Query(..., description="Project ID"),
+    db: Session = Depends(database.get_db),
+    org_user_dict: db_models.DbUser = Depends(project_admin),
+):
+    """Get or set the data extract URL for a project."""
+    fgb_url = await project_crud.get_or_set_data_extract_url(
+        db,
+        project_id,
+        url,
+        extract_type,
+    )
+
     return JSONResponse(status_code=200, content={"url": fgb_url})
 
 
@@ -871,9 +873,9 @@ async def upload_custom_extract(
     custom_extract_file: UploadFile = File(...),
     project_id: int = Query(..., description="Project ID"),
     db: Session = Depends(database.get_db),
-    org_user_dict: db_models.DbUser = Depends(org_admin),
+    org_user_dict: db_models.DbUser = Depends(project_admin),
 ):
-    """Upload a custom data extract for a project as fgb in S3.
+    """Upload a custom data extract geojson for a project.
 
     Request Body
     - 'custom_extract_file' (file): Geojson files with the features. Required.

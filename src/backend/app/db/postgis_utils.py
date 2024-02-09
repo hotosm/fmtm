@@ -18,15 +18,19 @@
 """PostGIS and geometry handling helper funcs."""
 
 import datetime
+import logging
 from typing import Optional, Union
 
+from fastapi import HTTPException
 from geoalchemy2 import WKBElement
 from geoalchemy2.shape import to_shape
-from geojson import FeatureCollection
+from geojson import FeatureCollection, loads
 from geojson_pydantic import Feature
 from shapely.geometry import mapping
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+
+log = logging.getLogger(__name__)
 
 
 def timestamp():
@@ -118,3 +122,101 @@ async def geojson_to_flatgeobuf(
 
     # Nothing returned (either no features passed, or failed)
     return None
+
+
+async def parse_and_filter_geojson(geojson_str: str) -> Optional[FeatureCollection]:
+    """Parse geojson string and filter out incomaptible geometries."""
+    log.debug("Parsing geojson file")
+    geojson_parsed = loads(geojson_str)
+    if isinstance(geojson_parsed, FeatureCollection):
+        log.debug("Already in FeatureCollection format, skipping reparse")
+        featcol = geojson_parsed
+    elif isinstance(geojson_parsed, Feature):
+        log.debug("Converting Feature to FeatureCollection")
+        featcol = FeatureCollection(geojson_parsed)
+    else:
+        log.debug("Converting geometry to FeatureCollection")
+        featcol = FeatureCollection[Feature(geometry=geojson_parsed)]
+
+    # Validating Coordinate Reference System
+    check_crs(featcol)
+
+    geom_type = await get_featcol_main_geom_type(featcol)
+
+    # Filter out geoms not matching main type
+    features_filtered = [
+        feature
+        for feature in featcol.get("features", [])
+        if feature.get("geometry", {}).get("type", "") == geom_type
+    ]
+
+    return FeatureCollection(features_filtered)
+
+
+async def get_featcol_main_geom_type(featcol: FeatureCollection) -> str:
+    """Get the predominant geometry type in a FeatureCollection."""
+    geometry_counts = {"Polygon": 0, "Point": 0, "Polyline": 0}
+
+    for feature in featcol.get("features", []):
+        geometry_type = feature.get("geometry", {}).get("type", "")
+        if geometry_type in geometry_counts:
+            geometry_counts[geometry_type] += 1
+
+    return max(geometry_counts, key=geometry_counts.get)
+
+
+async def check_crs(input_geojson: Union[dict, FeatureCollection]):
+    """Validate CRS is valid for a geojson."""
+    log.debug("validating coordinate reference system")
+
+    def is_valid_crs(crs_name):
+        valid_crs_list = [
+            "urn:ogc:def:crs:OGC:1.3:CRS84",
+            "urn:ogc:def:crs:EPSG::4326",
+            "WGS 84",
+        ]
+        return crs_name in valid_crs_list
+
+    def is_valid_coordinate(coord):
+        if coord is None:
+            return False
+        return -180 <= coord[0] <= 180 and -90 <= coord[1] <= 90
+
+    error_message = (
+        "ERROR: Unsupported coordinate system, it is recommended to use a "
+        "GeoJSON file in WGS84(EPSG 4326) standard."
+    )
+    if "crs" in input_geojson:
+        crs = input_geojson.get("crs", {}).get("properties", {}).get("name")
+        if not is_valid_crs(crs):
+            log.error(error_message)
+            raise HTTPException(status_code=400, detail=error_message)
+        return
+
+    if input_geojson_type := input_geojson.get("type") == "FeatureCollection":
+        features = input_geojson.get("features", [])
+        coordinates = (
+            features[-1].get("geometry", {}).get("coordinates", []) if features else []
+        )
+    elif input_geojson_type := input_geojson.get("type") == "Feature":
+        coordinates = input_geojson.get("geometry", {}).get("coordinates", [])
+
+    geometry_type = (
+        features[0].get("geometry", {}).get("type")
+        if input_geojson_type == "FeatureCollection" and features
+        else input_geojson.get("geometry", {}).get("type", "")
+    )
+    if geometry_type == "MultiPolygon":
+        first_coordinate = coordinates[0][0] if coordinates and coordinates[0] else None
+    elif geometry_type == "Point":
+        first_coordinate = coordinates if coordinates else None
+
+    elif geometry_type == "LineString":
+        first_coordinate = coordinates[0] if coordinates else None
+
+    else:
+        first_coordinate = coordinates[0][0] if coordinates else None
+
+    if not is_valid_coordinate(first_coordinate):
+        log.error(error_message)
+        raise HTTPException(status_code=400, detail=error_message)

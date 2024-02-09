@@ -49,16 +49,27 @@ const CreateProjectService: Function = (
             duration: 2000,
           }),
         );
-        if (dataExtractFile) {
+
+        if (payload.dataExtractWays === 'osm_data_extract') {
+          // Upload data extract generated from raw-data-api
+          const response = await axios.post(
+            `${import.meta.env.VITE_API_URL}/projects/data-extract-url/?project_id=${resp.id}`,
+            {
+              url: payload.data_extract_url,
+              extract_type: payload.data_extract_type,
+            },
+          );
+        } else if (dataExtractFile) {
+          // Upload custom data extract from user
           const dataExtractFormData = new FormData();
           dataExtractFormData.append('custom_extract_file', dataExtractFile);
           const response = await axios.post(
             `${import.meta.env.VITE_API_URL}/projects/upload-custom-extract/?project_id=${resp.id}`,
             dataExtractFormData,
           );
-          // Replace data_extract_url with that returned for FMTM bucket
-          payload.data_extract_url = response.data.url;
         }
+
+        // Generate QR codes
         await dispatch(
           GenerateProjectQRService(
             `${import.meta.env.VITE_API_URL}/projects/${resp.id}/generate-project-data`,
@@ -155,8 +166,6 @@ const GenerateProjectQRService: Function = (url: string, payload: any, formUploa
         if (payload.form_ways === 'custom_form') {
           generateApiFormData.append('upload', formUpload);
         }
-        generateApiFormData.append('data_extract_type', payload.data_extract_type);
-        generateApiFormData.append('data_extract_url', payload.data_extract_url);
         const postNewProjectDetails = await axios.post(url, generateApiFormData, {
           headers: {
             'Content-Type': 'multipart/form-data',
