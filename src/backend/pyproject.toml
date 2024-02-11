@@ -48,7 +48,7 @@ dependencies = [
     "osm-login-python==1.0.1",
     "osm-fieldwork==0.4.2",
     "osm-rawdata==0.2.1",
-    "fmtm-splitter==1.0.0",
+    "fmtm-splitter==1.1.1",
 ]
 requires-python = ">=3.10"
 readme = "../../README.md"
