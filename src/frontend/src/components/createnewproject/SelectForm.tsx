@@ -24,6 +24,7 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
 
   const projectDetails: any = useAppSelector((state) => state.createproject.projectDetails);
   const drawnGeojson = useAppSelector((state) => state.createproject.drawnGeojson);
+  const dataExtractGeojson = useAppSelector((state) => state.createproject.dataExtractGeojson);
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
@@ -103,6 +104,7 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
                   value={formValues.formCategorySelection}
                   onValueChange={(value) => {
                     handleCustomChange('formCategorySelection', value);
+                    dispatch(CreateProjectActions.setDataExtractGeojson(null));
                   }}
                   errorMsg={errors.formCategorySelection}
                   className="fmtm-max-w-[13.5rem]"

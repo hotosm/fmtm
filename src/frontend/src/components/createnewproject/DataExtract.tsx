@@ -256,20 +256,6 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
                 errorMsg={errors.dataExtractWays}
               />
               {extractWays === 'osm_data_extract' && (
-                <div className="fmtm-mt-6">
-                  <RadioButton
-                    topic="Select OSM feature type"
-                    options={osmFeatureTypeOptions}
-                    direction="column"
-                    value={featureType}
-                    onChangeData={(value) => {
-                      setFeatureType(value);
-                    }}
-                    errorMsg={errors.dataExtractFeatureType}
-                  />
-                </div>
-              )}
-              {extractWays === 'osm_data_extract' && featureType && (
                 <Button
                   btnText="Generate Data Extract"
                   btnType="primary"
@@ -281,14 +267,7 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
                   className="fmtm-mt-6"
                   isLoading={isFgbFetching}
                   loadingText="Data extracting..."
-                  disabled={
-                    featureType === formValues?.dataExtractFeatureType &&
-                    dataExtractGeojson &&
-                    !customPolygonUpload &&
-                    !customLineUpload
-                      ? true
-                      : false
-                  }
+                  disabled={dataExtractGeojson && !customPolygonUpload && !customLineUpload ? true : false}
                 />
               )}
               {extractWays === 'custom_data_extract' && (
@@ -366,9 +345,7 @@ const DataExtract = ({ flag, customLineUpload, setCustomLineUpload, customPolygo
                 className="fmtm-font-bold"
                 dataTip={`${!dataExtractGeojson ? 'Please Generate Data Extract First.' : ''}`}
                 disabled={
-                  !dataExtractGeojson ||
-                  (extractWays === 'osm_data_extract' && !formValues?.dataExtractFeatureType) ||
-                  isFgbFetching
+                  !dataExtractGeojson || (extractWays === 'osm_data_extract' && !dataExtractGeojson) || isFgbFetching
                     ? true
                     : false
                 }
