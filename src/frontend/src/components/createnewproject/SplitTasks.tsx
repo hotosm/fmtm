@@ -162,7 +162,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
     const drawnGeojsonFile = new File([projectAreaBlob], 'outline.json', { type: 'application/json' });
 
     // Create a file object from the data extract Blob
-    const dataExtractBlob = new Blob([JSON.stringify(dataExtractGeojson)], { type: 'application/json' });
+    // const dataExtractBlob = new Blob([JSON.stringify(dataExtractGeojson)], { type: 'application/json' });
     // const dataExtractFile = new File([dataExtractBlob], 'extract.json', { type: 'application/json' });
 
     if (splitTasksSelection === task_split_type['divide_on_square']) {
@@ -181,9 +181,9 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
         TaskSplittingPreviewService(
           `${import.meta.env.VITE_API_URL}/projects/task-split`,
           drawnGeojsonFile,
+          formValues?.average_buildings_per_task,
           // TODO include extract file only if custom upload
           // dataExtractFile,
-          formValues?.average_buildings_per_task,
         ),
       );
     }

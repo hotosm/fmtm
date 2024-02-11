@@ -295,8 +295,8 @@ const GetIndividualProjectDetails: Function = (url: string, payload: any) => {
 const TaskSplittingPreviewService: Function = (
   url: string,
   fileUpload: any,
-  dataExtractFile: any,
   no_of_buildings: string,
+  dataExtractFile: any,
 ) => {
   return async (dispatch) => {
     dispatch(CreateProjectActions.GetTaskSplittingPreviewLoading(true));
@@ -305,8 +305,10 @@ const TaskSplittingPreviewService: Function = (
       try {
         const taskSplittingFileFormData = new FormData();
         taskSplittingFileFormData.append('project_geojson', fileUpload);
-        taskSplittingFileFormData.append('extract_geojson', dataExtractFile);
         taskSplittingFileFormData.append('no_of_buildings', no_of_buildings);
+        if (dataExtractFile) {
+          taskSplittingFileFormData.append('extract_geojson', dataExtractFile);
+        }
 
         const getTaskSplittingResponse = await axios.post(url, taskSplittingFileFormData);
         const resp: OrganisationListModel = getTaskSplittingResponse.data;
