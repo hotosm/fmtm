@@ -135,7 +135,7 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
                   onResetFile={resetFile}
                   customFile={customFormFile}
                   btnText="Select a Form"
-                  accept=".xlsx"
+                  accept=".xls,.xlsx"
                   fileDescription="*The supported file formats are .xlsx, .xls"
                   errorMsg={errors.customFormUpload}
                 />
