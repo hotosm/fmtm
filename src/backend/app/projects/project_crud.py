@@ -1201,9 +1201,9 @@ def generate_task_files(
 def generate_appuser_files(
     db: Session,
     project_id: int,
-    custom_xls_form: Optional[bytes],
-    category: Optional[str],
-    form_type: Optional[str],
+    custom_form: Optional[BytesIO],
+    form_category: str,
+    form_format: str,
     background_task_id: Optional[uuid.UUID] = None,
 ):
     """Generate the files for a project.
@@ -1213,9 +1213,9 @@ def generate_appuser_files(
     Parameters:
         - db: the database session
         - project_id: Project ID
-        - custom_xls_form: the xls file to upload if we have a custom form
-        - category: the category of the project
-        - form_type: weather the form is xls, xlsx or xml
+        - custom_form: the xls file to upload if we have a custom form
+        - form_category: the category for the custom XLS form
+        - form_format: weather the form is xls, xlsx or xml
         - background_task_id: the task_id of the background task running this function.
     """
     try:
@@ -1240,36 +1240,22 @@ def generate_appuser_files(
 
         odk_credentials = project_schemas.ODKCentralDecrypted(**odk_credentials)
 
-        xform_title = project.xform_title if project.xform_title else None
+        if custom_form:
+            # TODO uncomment after refactor to use BytesIO
+            # xlsform = custom_form
 
-        category = xform_title
-        if custom_xls_form:
-            xlsform = f"/tmp/{category}.{form_type}"
-            contents = custom_xls_form
+            xlsform = f"/tmp/{form_category}.{form_format}"
             with open(xlsform, "wb") as f:
-                f.write(contents)
+                f.write(custom_form.getvalue())
         else:
-            xlsform = f"{xlsforms_path}/{xform_title}.xls"
+            # TODO uncomment after refactor to use BytesIO
+            # xlsform_path = f"{xlsforms_path}/{form_category}.xls"
+            # with open(xlsform_path, "rb") as f:
+            #     xlsform = BytesIO(f.read())
 
-            # # TODO refactor to remove section
-            # config_file_contents = project.form_config_file
+            xlsform = f"{xlsforms_path}/{form_category}.xls"
 
-            # project_log.info("Extracting Data from OSM")
-
-            # config_path = "/tmp/config.yaml"
-            # if config_file_contents:
-            #     with open(config_path, "w", encoding="utf-8") as config_file_handle:
-            #         config_file_handle.write(config_file_contents.decode("utf-8"))
-            # else:
-            #     config_path = f"{data_models_path}/{category}.yaml"
-
-            # # # OSM Extracts for whole project
-            # pg = PostgresClient("underpass", config_path)
-            # outline = json.loads(project.outline)
-            # boundary = {"type": "Feature", "properties": {}, "geometry": outline}
-            # data_extract = pg.execQuery(boundary, clip_to_aoi=True, extra_params)
             # filter = FilterData(xlsform)
-
             # updated_data_extract = {"type": "FeatureCollection", "features": []}
             # filtered_data_extract = (
             #     filter.cleanData(data_extract)
@@ -1277,35 +1263,30 @@ def generate_appuser_files(
             #     else updated_data_extract
             # )
 
-            # # Collect feature mappings for bulk insert
-            # feature_mappings = []
+            # FIXME do we need these geoms in the db?
+            # FIXME can we remove this section?
+            get_extract_geojson_sync = async_to_sync(get_project_features_geojson)
+            data_extract_geojson = get_extract_geojson_sync(db, project_id)
+            # Collect feature mappings for bulk insert
+            feature_mappings = []
+            for feature in data_extract_geojson["features"]:
+                # If the osm extracts contents do not have a title,
+                # provide an empty text for that.
+                properties = feature.get("properties", {})
+                properties["title"] = ""
 
-            # for feature in filtered_data_extract["features"]:
-            #     # If the osm extracts contents do not have a title,
-            #     # provide an empty text for that.
-            #     feature["properties"]["title"] = ""
+                feature_shape = shape(feature["geometry"])
 
-            #     feature_shape = shape(feature["geometry"])
-
-            #     # If the centroid of the Polygon is not inside the outline,
-            #     # skip the feature.
-            #     if extract_polygon and (
-            #         not shape(outline).contains(shape(feature_shape.centroid))
-            #     ):
-            #         continue
-
-            #     wkb_element = from_shape(feature_shape, srid=4326)
-            #     feature_mapping = {
-            #         "project_id": project_id,
-            #         "category_title": category,
-            #         "geometry": wkb_element,
-            #         "properties": feature["properties"],
-            #     }
-            #     updated_data_extract["features"].append(feature)
-            #     feature_mappings.append(feature_mapping)
-            # # Bulk insert the osm extracts into the db.
-            # db.bulk_insert_mappings(db_models.DbFeatures, feature_mappings)
-            # # TODO end of section to remove
+                wkb_element = from_shape(feature_shape, srid=4326)
+                feature_mapping = {
+                    "project_id": project_id,
+                    "category_title": form_category,
+                    "geometry": wkb_element,
+                    "properties": properties,
+                }
+                feature_mappings.append(feature_mapping)
+            # Bulk insert the osm extracts into the db.
+            db.bulk_insert_mappings(db_models.DbFeatures, feature_mappings)
 
         # Generating QR Code, XForm and uploading OSM Extracts to the form.
         # Creating app users and updating the role of that user.
@@ -1326,7 +1307,7 @@ def generate_appuser_files(
                     project_id,
                     task,
                     xlsform,
-                    form_type,
+                    form_format,
                     odk_credentials,
                 )
             except Exception as e:

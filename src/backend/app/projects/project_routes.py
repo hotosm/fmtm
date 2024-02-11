@@ -446,7 +446,7 @@ async def task_split(
     Args:
         project_geojson (UploadFile): The geojson to split.
             Should be a FeatureCollection.
-        extract_geojson (UploadFile, optional): Custom data extract geojson 
+        extract_geojson (UploadFile, optional): Custom data extract geojson
             containing osm features (should be a FeatureCollection).
             If not included, an extract is generated automatically.
         no_of_buildings (int, optional): The number of buildings per subtask.
@@ -593,7 +593,6 @@ async def generate_files(
     background_tasks: BackgroundTasks,
     project_id: int,
     xls_form_upload: Optional[UploadFile] = File(None),
-    xls_form_config_file: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
     org_user_dict: db_models.DbUser = Depends(org_admin),
 ):
@@ -614,7 +613,6 @@ async def generate_files(
         project_id (int): The ID of the project for which files are being generated.
         xls_form_upload (UploadFile, optional): A custom XLSForm to use in the project.
             A file should be provided if user wants to upload a custom xls form.
-        xls_form_config_file (UploadFile, optional): The config YAML for the XLS form.
         db (Session): Database session, provided automatically.
         org_user_dict (AuthUser): Current logged in user. Must be org admin.
 
@@ -622,8 +620,6 @@ async def generate_files(
         json (JSONResponse): A success message containing the project ID.
     """
     log.debug(f"Generating media files tasks for project: {project_id}")
-    custom_xls_form = None
-    xform_title = None
 
     project = await project_crud.get_project(db, project_id)
     if not project:
@@ -631,29 +627,25 @@ async def generate_files(
             status_code=428, detail=f"Project with id {project_id} does not exist"
         )
 
+    form_category = project.xform_title
+    custom_xls_form = None
     if xls_form_upload:
         log.debug("Validating uploaded XLS form")
-        # Validating for .XLS File.
-        file_name = os.path.splitext(xls_form_upload.filename)
-        file_ext = file_name[1]
-        allowed_extensions = [".xls", ".xlsx", ".xml"]
+
+        file_path = Path(xls_form_upload.filename)
+        file_ext = file_path.suffix.lower()
+        allowed_extensions = {".xls", ".xlsx", ".xml"}
         if file_ext not in allowed_extensions:
-            raise HTTPException(status_code=400, detail="Provide a valid .xls file")
-        xform_title = file_name[0]
+            raise HTTPException(
+                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                detail=f"Invalid file extension, must be {allowed_extensions}",
+            )
+
+        form_category = file_path.stem
         custom_xls_form = await xls_form_upload.read()
 
+        # Write XLS form content to db
         project.form_xls = custom_xls_form
-
-        if xls_form_config_file:
-            config_file_name = os.path.splitext(xls_form_config_file.filename)
-            config_file_ext = config_file_name[1]
-            if not config_file_ext == ".yaml":
-                raise HTTPException(
-                    status_code=400, detail="Provide a valid .yaml config file"
-                )
-            config_file_contents = await xls_form_config_file.read()
-            project.form_config_file = config_file_contents
-
         db.commit()
 
     # Create task in db and return uuid
@@ -667,9 +659,9 @@ async def generate_files(
         project_crud.generate_appuser_files,
         db,
         project_id,
-        custom_xls_form,
-        xform_title,
-        file_ext[1:] if xls_form_upload else "xls",
+        BytesIO(custom_xls_form) if custom_xls_form else None,
+        form_category,
+        file_ext if xls_form_upload else "xls",
         background_task_id,
     )
 
