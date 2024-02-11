@@ -351,11 +351,11 @@ async def add_task_comments(
     Returns:
     - Dictionary with the details of the added comment
     """
-    currentdate= datetime.now()
+    currentdate = datetime.now()
     # Construct the query to insert the comment and retrieve the details of the inserted comment
     query = text(
         f"""
-        WITH inserted_comment AS ( 
+        WITH inserted_comment AS (
         INSERT INTO task_history(project_id,task_id,"action",action_text,action_date,user_id)
         VALUES({comment.project_id},{comment.task_id},'COMMENT','{comment.action_text}','{currentdate}',{user_data.id})
         RETURNING task_history.id, task_history.action_text, task_history.action_date, task_history.user_id )
