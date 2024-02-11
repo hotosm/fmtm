@@ -134,9 +134,18 @@ class Task(BaseModel):
 class TaskCommentRequest(BaseModel):
     """Task mapping history."""
 
-    comment: str
-    project_id: int
+    action_text: Any = Field(exclude=True)
+
     task_id: int
+    project_id: int
+    comment: Optional[str] = None
+
+    @field_serializer("comment")
+    def convert_action_to_comment(self, value: str) -> Optional[str]:
+        """Get the task history comment."""
+        if self.action_text:
+            return self.action_text
+        return None
 
 
 class TaskCommentBase(BaseModel):

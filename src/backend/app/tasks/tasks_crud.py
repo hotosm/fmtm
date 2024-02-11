@@ -320,15 +320,14 @@ async def get_task_comments(db: Session, project_id: int, task_id: int):
     """Get a list of tasks id for a project."""
     query = text(
         f"""
-        SELECT task_comment.id,users.username,task_comment.comment_text,task_comment.created_at FROM task_comment
-        LEFT JOIN users ON task_comment.commented_by = users.id
-        where project_id = {project_id} AND task_id = {task_id}
+        SELECT task_history.id,users.username,task_history.action_text,task_history.action_date FROM task_history
+        LEFT JOIN users ON task_history.user_id = users.id
+        where project_id = {project_id} AND task_id = {task_id} AND action = 'COMMENT'
     """
     )
+
     # Then execute the query with the desired parameter
     result = db.execute(query)
-    print("result----")
-    print(result.__dict__)
 
     # Convert the result to a list of dictionaries
     result_dict_list = [
@@ -352,19 +351,18 @@ async def add_task_comments(
     Returns:
     - Dictionary with the details of the added comment
     """
+    currentdate= datetime.now()
     # Construct the query to insert the comment and retrieve the details of the inserted comment
     query = text(
         f"""
-        WITH inserted_comment AS ( INSERT INTO task_comment(task_id,project_id,comment_text,commented_by)
-        VALUES({comment.task_id},{comment.project_id},'{comment.comment}',{user_data.id})
-        RETURNING task_comment.id, task_comment.comment_text, task_comment.created_at, task_comment.commented_by )
-        SELECT ic.id,username as commented_by,comment_text,created_at FROM inserted_comment ic
-        LEFT JOIN users u ON ic.commented_by = u.id;
+        WITH inserted_comment AS ( 
+        INSERT INTO task_history(project_id,task_id,"action",action_text,action_date,user_id)
+        VALUES({comment.project_id},{comment.task_id},'COMMENT','{comment.action_text}','{currentdate}',{user_data.id})
+        RETURNING task_history.id, task_history.action_text, task_history.action_date, task_history.user_id )
+        SELECT ic.id,username as user_id,action_text,action_date FROM inserted_comment ic
+        LEFT JOIN users u ON ic.user_id = u.id;
     """
     )
-
-    print(query)
-
     # Execute the query and commit the transaction
     result = db.execute(query)
     db.commit()
@@ -379,58 +377,6 @@ async def add_task_comments(
         "comment": row[2],
         "created_at": row[3],
     }
-
-
-async def get_task_comment_info_by_id(db: Session, comment_id: int):
-    """Get the project info only by id."""
-    db_project_info = (
-        db.query(db_models.TaskComment)
-        .filter(db_models.TaskComment.id == comment_id)
-        .order_by(db_models.TaskComment.id)
-        .first()
-    )
-    return db_project_info
-
-
-async def delete_task_comment_by_id(
-    db: Session, task_comment_id: int, user_data: AuthUser
-):
-    # Query to get the comment by its ID
-    get_comment_query = text(
-        """
-        SELECT id, commented_by
-        FROM task_comment
-        WHERE id = :task_comment_id
-        """
-    )
-
-    # Execute the query and commit the transaction
-    comment = db.execute(
-        get_comment_query, {"task_comment_id": task_comment_id}
-    ).fetchone()
-    if comment is None:
-        raise HTTPException(status_code=404, detail="Task Comment not found")
-    # check for user
-    if comment.commented_by != user_data.id:
-        raise HTTPException(
-            status_code=404, detail="Cannot delete Task Comment. You are not the owner."
-        )
-
-    # Query to delete the comment by its ID and the authenticated user ID
-    delete_query = text(
-        """
-        DELETE FROM task_comment
-        WHERE id = :task_comment_id AND commented_by = :user_id
-        """
-    )
-    # Execute the query to delete the comment
-    result = db.execute(
-        delete_query, {"task_comment_id": task_comment_id, "user_id": user_data.id}
-    )
-    db.commit()
-
-    # Return the details of the added comment as a dictionary
-    return f"Task Comment {task_comment_id} deleted"
 
 
 async def update_task_history(
