@@ -434,10 +434,10 @@ async def upload_custom_task_boundaries(
     }
 
 
-@router.post("/task_split")
+@router.post("/task-split")
 async def task_split(
     project_geojson: UploadFile = File(...),
-    extract_geojson: UploadFile = File(...),
+    extract_geojson: Optional[UploadFile] = File(None),
     no_of_buildings: int = Form(50),
     db: Session = Depends(database.get_db),
 ):
@@ -446,8 +446,9 @@ async def task_split(
     Args:
         project_geojson (UploadFile): The geojson to split.
             Should be a FeatureCollection.
-        extract_geojson (UploadFile): Data extract geojson containing osm features.
-            Should be a FeatureCollection.
+        extract_geojson (UploadFile, optional): Custom data extract geojson 
+            containing osm features (should be a FeatureCollection).
+            If not included, an extract is generated automatically.
         no_of_buildings (int, optional): The number of buildings per subtask.
             Defaults to 50.
         db (Session, optional): The database session. Injected by FastAPI.
@@ -462,15 +463,16 @@ async def task_split(
     await check_crs(parsed_boundary)
 
     # read data extract
-    parsed_extract = geojson.loads(await extract_geojson.read())
-
-    await check_crs(parsed_extract)
+    parsed_extract = None
+    if extract_geojson:
+        parsed_extract = geojson.loads(await extract_geojson.read())
+        await check_crs(parsed_extract)
 
     return await project_crud.split_geojson_into_tasks(
         db,
         parsed_boundary,
-        parsed_extract,
         no_of_buildings,
+        parsed_extract,
     )
 
 

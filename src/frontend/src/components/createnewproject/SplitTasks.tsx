@@ -163,7 +163,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
 
     // Create a file object from the data extract Blob
     const dataExtractBlob = new Blob([JSON.stringify(dataExtractGeojson)], { type: 'application/json' });
-    const dataExtractFile = new File([dataExtractBlob], 'extract.json', { type: 'application/json' });
+    // const dataExtractFile = new File([dataExtractBlob], 'extract.json', { type: 'application/json' });
 
     if (splitTasksSelection === task_split_type['divide_on_square']) {
       dispatch(
@@ -179,9 +179,10 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
       // a.click();
       dispatch(
         TaskSplittingPreviewService(
-          `${import.meta.env.VITE_API_URL}/projects/task_split`,
+          `${import.meta.env.VITE_API_URL}/projects/task-split`,
           drawnGeojsonFile,
-          dataExtractFile,
+          // TODO include extract file only if custom upload
+          // dataExtractFile,
           formValues?.average_buildings_per_task,
         ),
       );

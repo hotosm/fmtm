@@ -32,8 +32,9 @@ const CreateProjectService: Function = (
             UploadAreaService(`${import.meta.env.VITE_API_URL}/projects/${resp.id}/custom_task_boundaries`, fileUpload),
           );
         } else if (payload.splitting_algorithm === 'Use natural Boundary') {
+          // TODO this is not longer valid, remove?
           await dispatch(
-            UploadAreaService(`${import.meta.env.VITE_API_URL}/projects/task_split/${resp.id}/`, fileUpload),
+            UploadAreaService(`${import.meta.env.VITE_API_URL}/projects/task-split/${resp.id}/`, fileUpload),
           );
         } else {
           await dispatch(
@@ -162,20 +163,27 @@ const GenerateProjectQRService: Function = (url: string, payload: any, formUploa
 
     const postUploadArea = async (url, payload: any, formUpload) => {
       try {
-        const generateApiFormData = new FormData();
+        let postNewProjectDetails;
+
         if (payload.form_ways === 'custom_form') {
-          generateApiFormData.append('upload', formUpload);
+          // TODO move form upload to a separate service / endpoint?
+          const generateApiFormData = new FormData();
+          generateApiFormData.append('xls_form_upload', formUpload);
+          postNewProjectDetails = await axios.post(url, generateApiFormData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+        } else {
+          postNewProjectDetails = await axios.post(url, {});
         }
-        const postNewProjectDetails = await axios.post(url, generateApiFormData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+
         const resp: string = postNewProjectDetails.data;
         await dispatch(CreateProjectActions.GenerateProjectQRLoading(false));
         dispatch(CommonActions.SetLoading(false));
         await dispatch(CreateProjectActions.GenerateProjectQRSuccess(resp));
       } catch (error: any) {
+        console.log(error);
         dispatch(CommonActions.SetLoading(false));
         dispatch(
           CommonActions.SetSnackBar({
@@ -208,38 +216,6 @@ const OrganisationService: Function = (url: string) => {
     };
 
     await getOrganisationList(url);
-  };
-};
-
-const UploadCustomXLSFormService: Function = (url: string, payload: any) => {
-  return async (dispatch) => {
-    dispatch(CreateProjectActions.UploadCustomXLSFormLoading(true));
-
-    const postUploadCustomXLSForm = async (url, payload) => {
-      try {
-        const customXLSFormData = new FormData();
-        customXLSFormData.append('upload', payload[0]);
-        const postCustomXLSForm = await axios.post(url, customXLSFormData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-        await dispatch(CreateProjectActions.UploadCustomXLSFormLoading(false));
-        await dispatch(CreateProjectActions.UploadCustomXLSFormSuccess(postCustomXLSForm.data));
-      } catch (error: any) {
-        dispatch(
-          CommonActions.SetSnackBar({
-            open: true,
-            message: JSON.stringify(error.response.data.detail) || 'Something Went Wrong',
-            variant: 'error',
-            duration: 2000,
-          }),
-        );
-        dispatch(CreateProjectActions.UploadCustomXLSFormLoading(false));
-      }
-    };
-
-    await postUploadCustomXLSForm(url, payload);
   };
 };
 
@@ -556,7 +532,6 @@ export {
   FormCategoryService,
   GenerateProjectQRService,
   OrganisationService,
-  UploadCustomXLSFormService,
   GenerateProjectLog,
   GetDividedTaskFromGeojson,
   TaskSplittingPreviewService,

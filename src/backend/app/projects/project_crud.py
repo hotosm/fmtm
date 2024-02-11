@@ -535,8 +535,8 @@ async def generate_data_extract(
 async def split_geojson_into_tasks(
     db: Session,
     project_geojson: Union[dict, FeatureCollection],
-    extract_geojson: Union[dict, FeatureCollection],
     no_of_buildings: int,
+    extract_geojson: Optional[Union[dict, FeatureCollection]] = None,
 ):
     """Splits a project into tasks.
 
@@ -546,6 +546,9 @@ async def split_geojson_into_tasks(
             boundary.
         extract_geojson (Union[dict, FeatureCollection]): A GeoJSON of the project
             boundary osm data extract (features).
+        extract_geojson (Union[dict, FeatureCollection]): A GeoJSON of the project
+            boundary osm data extract (features).
+            If not included, an extract is generated automatically.
         no_of_buildings (int): The number of buildings to include in each task.
 
     Returns:
