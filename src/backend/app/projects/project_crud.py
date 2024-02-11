@@ -59,6 +59,7 @@ from app.db import db_models
 from app.db.database import get_db
 from app.db.postgis_utils import (
     check_crs,
+    flatgeobuf_to_geojson,
     geojson_to_flatgeobuf,
     geometry_to_geojson,
     get_featcol_main_geom_type,
@@ -1408,57 +1409,48 @@ async def get_task_geometry(db: Session, project_id: int):
     return json.dumps(feature_collection)
 
 
-async def get_project_features_geojson(db: Session, project_id: int):
+async def get_project_features_geojson(
+    db: Session, project: Union[db_models.DbProject, int]
+) -> FeatureCollection:
     """Get a geojson of all features for a task."""
-    db_features = (
-        db.query(db_models.DbFeatures)
-        .filter(db_models.DbFeatures.project_id == project_id)
-        .all()
+    if isinstance(project, int):
+        db_project = await get_project(db, project)
+    else:
+        db_project = project
+    project_id = db_project.id
+
+    data_extract_url = db_project.data_extract_url
+
+    if not data_extract_url:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=f"No data extract exists for project ({project_id})",
+        )
+
+    # If local debug URL, replace with Docker service name
+    data_extract_url = data_extract_url.replace(
+        settings.S3_DOWNLOAD_ROOT,
+        settings.S3_ENDPOINT,
     )
 
-    query = text(
-        f"""SELECT jsonb_build_object(
-                'type', 'FeatureCollection',
-                'features', jsonb_agg(feature)
-                )
-                FROM (
-                SELECT jsonb_build_object(
-                    'type', 'Feature',
-                    'id', id,
-                    'geometry', ST_AsGeoJSON(geometry)::jsonb,
-                    'properties', properties
-                ) AS feature
-                FROM features
-                WHERE project_id={project_id}
-                ) features;
-            """
-    )
+    with requests.get(data_extract_url) as response:
+        if not response.ok:
+            raise HTTPException(
+                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                detail=f"Download failed for data extract, project ({project_id})",
+            )
+        data_extract_geojson = await flatgeobuf_to_geojson(db, response.content)
 
-    result = db.execute(query)
-    features = result.first()
-
-    if not features:
+    if not data_extract_geojson:
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail="Error extracting features",
+            detail=(
+                "Failed to convert flatgeobuf --> geojson for "
+                f"project ({project_id})"
+            ),
         )
 
-    features = features[0]
-    if features.get("features") is None:
-        log.warning(
-            f"Attempted extraction of project ({project_id}) "
-            "features, but none were returned"
-        )
-        return features
-
-    # Create mapping feat_id:task_id
-    task_feature_mapping = {feat.id: feat.task_id for feat in db_features}
-
-    for feature in features["features"]:
-        if (feat_id := feature["id"]) in task_feature_mapping:
-            feature["properties"]["task_id"] = task_feature_mapping[feat_id]
-
-    return features
+    return data_extract_geojson
 
 
 async def get_json_from_zip(zip, filename: str, error_detail: str):

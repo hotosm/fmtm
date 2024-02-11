@@ -828,9 +828,14 @@ async def preview_split_by_square(
 async def get_data_extract(
     geojson_file: UploadFile = File(...),
     form_category: Optional[str] = Form(None),
+    # config_file: Optional[str] = Form(None),
     current_user: AuthUser = Depends(login_required),
 ):
-    """Get a new data extract for a given project AOI."""
+    """Get a new data extract for a given project AOI.
+
+    TODO allow config file (YAML/JSON) upload for data extract generation
+    TODO alternatively, direct to raw-data-api to generate first, then upload
+    """
     boundary_geojson = json.loads(await geojson_file.read())
 
     # Get extract config file from existing data_models
@@ -958,6 +963,7 @@ async def update_project_category(
         if file_ext not in allowed_extensions:
             raise HTTPException(status_code=400, detail="Provide a valid .xls file")
 
+        # FIXME
         project.form_xls = contents
         db.commit()
 
@@ -1056,14 +1062,14 @@ async def download_features(
     Returns:
         Response: The HTTP response object containing the downloaded file.
     """
-    out = await project_crud.get_project_features_geojson(db, project_id)
+    feature_collection = await project_crud.get_project_features_geojson(db, project_id)
 
     headers = {
         "Content-Disposition": "attachment; filename=project_features.geojson",
         "Content-Type": "application/media",
     }
 
-    return Response(content=json.dumps(out), headers=headers)
+    return Response(content=json.dumps(feature_collection), headers=headers)
 
 
 @router.get("/tiles/{project_id}")
