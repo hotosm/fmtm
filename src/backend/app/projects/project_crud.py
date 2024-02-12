@@ -881,7 +881,6 @@ async def get_or_set_data_extract_url(
     db: Session,
     project_id: int,
     url: Optional[str],
-    extract_type: Optional[str],
 ) -> str:
     """Get or set the data extract URL for a project.
 
@@ -890,8 +889,6 @@ async def get_or_set_data_extract_url(
         project_id (int): The ID of the project.
         url (str): URL to the streamable flatgeobuf data extract.
             If not passed, a new extract is generated.
-        extract_type (str): The type of data extract, required if setting URL
-            in database.
 
     Returns:
         str: URL to fgb file in S3.
@@ -916,10 +913,9 @@ async def get_or_set_data_extract_url(
             raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg)
         return existing_url
 
-    if not extract_type:
-        msg = "The extract_type param is required if URL is set."
-        log.error(msg)
-        raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg)
+    # FIXME Identify data extract type from form type
+    # FIXME use mapping e.g. building=polygon, waterways=line, etc
+    extract_type = "polygon"
 
     await update_data_extract_url_in_db(db, db_project, url, extract_type)
 

@@ -843,10 +843,9 @@ async def get_data_extract(
     return JSONResponse(status_code=200, content={"url": fgb_url})
 
 
-@router.post("/data-extract-url/")
+@router.get("/data-extract-url/")
 async def get_or_set_data_extract(
     url: Optional[str] = None,
-    extract_type: Optional[str] = None,
     project_id: int = Query(..., description="Project ID"),
     db: Session = Depends(database.get_db),
     org_user_dict: db_models.DbUser = Depends(project_admin),
@@ -856,7 +855,6 @@ async def get_or_set_data_extract(
         db,
         project_id,
         url,
-        extract_type,
     )
 
     return JSONResponse(status_code=200, content={"url": fgb_url})
