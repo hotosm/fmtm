@@ -320,7 +320,8 @@ async def get_task_comments(db: Session, project_id: int, task_id: int):
     """Get a list of tasks id for a project."""
     query = text(
         f"""
-        SELECT task_history.id,users.username,task_history.action_text,task_history.action_date FROM task_history
+        SELECT task_history.id,users.username,task_history.action_text,
+        task_history.action_date FROM task_history
         LEFT JOIN users ON task_history.user_id = users.id
         where project_id = {project_id} AND task_id = {task_id} AND action = 'COMMENT'
     """
@@ -351,15 +352,20 @@ async def add_task_comments(
     Returns:
     - Dictionary with the details of the added comment
     """
-    currentdate= datetime.now()
-    # Construct the query to insert the comment and retrieve the details of the inserted comment
+    currentdate = datetime.now()
+    # Construct the query to insert the comment and retrieve inserted comment details
     query = text(
         f"""
-        WITH inserted_comment AS ( 
-        INSERT INTO task_history(project_id,task_id,"action",action_text,action_date,user_id)
-        VALUES({comment.project_id},{comment.task_id},'COMMENT','{comment.action_text}','{currentdate}',{user_data.id})
-        RETURNING task_history.id, task_history.action_text, task_history.action_date, task_history.user_id )
-        SELECT ic.id,username as user_id,action_text,action_date FROM inserted_comment ic
+        WITH inserted_comment AS (
+        INSERT INTO task_history
+        (project_id,task_id,"action",action_text,action_date,user_id)
+        VALUES({comment.project_id},{comment.task_id},'COMMENT',
+        '{comment.action_text}','{currentdate}',{user_data.id})
+        RETURNING
+        task_history.id, task_history.action_text,
+        task_history.action_date,task_history.user_id )
+        SELECT ic.id,username as user_id,action_text,action_date
+        FROM inserted_comment ic
         LEFT JOIN users u ON ic.user_id = u.id;
     """
     )
