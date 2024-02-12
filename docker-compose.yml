@@ -192,9 +192,9 @@ services:
       MINIO_CONSOLE_ADDRESS: ":9090"
     volumes:
       - fmtm_data:/mnt/data
-    ports:
-      # - 9000:9000
-      # - 9090:9090
+    # ports:
+    # - 9000:9000
+    # - 9090:9090
     networks:
       - fmtm-net
     command: minio server
