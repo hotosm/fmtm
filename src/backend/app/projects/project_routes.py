@@ -388,16 +388,16 @@ async def upload_custom_xls(
     return {"xform_title": f"{category}"}
 
 
-@router.post("/{project_id}/custom_task_boundaries")
-async def upload_custom_task_boundaries(
+@router.post("/{project_id}/upload-task-boundaries")
+async def upload_project_task_boundaries(
     project_id: int,
-    project_geojson: UploadFile = File(...),
+    task_geojson: UploadFile = File(...),
     db: Session = Depends(database.get_db),
     org_user_dict: db_models.DbUser = Depends(org_admin),
 ):
-    """Set project task boundaries manually using multi-polygon GeoJSON.
+    """Set project task boundaries using split GeoJSON from frontend.
 
-    Each polygon in the uploaded geojson are made a single task.
+    Each polygon in the uploaded geojson are made into single task.
 
     Required Parameters:
         project_id (id): ID for associated project.
@@ -408,21 +408,14 @@ async def upload_custom_task_boundaries(
     """
     log.debug(f"Uploading project boundary multipolygon for project ID: {project_id}")
     # read entire file
-    content = await project_geojson.read()
-    boundary = json.loads(content)
+    content = await task_geojson.read()
+    task_boundaries = json.loads(content)
 
     # Validatiing Coordinate Reference System
-    await check_crs(boundary)
+    await check_crs(task_boundaries)
 
     log.debug("Creating tasks for each polygon in project")
-    result = await project_crud.update_multi_polygon_project_boundary(
-        db, project_id, boundary
-    )
-
-    if not result:
-        raise HTTPException(
-            status_code=428, detail=f"Project with id {project_id} does not exist"
-        )
+    await project_crud.create_tasks_from_geojson(db, project_id, task_boundaries)
 
     # Get the number of tasks in a project
     task_count = await tasks_crud.get_task_count_in_project(db, project_id)
@@ -696,7 +689,9 @@ async def update_project_form(
     return form_updated
 
 
-@router.get("/{project_id}/features", response_model=list[project_schemas.Feature])
+@router.get(
+    "/{project_id}/features", response_model=list[project_schemas.GeojsonFeature]
+)
 async def get_project_features(
     project_id: int,
     task_id: int = None,
