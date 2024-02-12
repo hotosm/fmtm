@@ -9,20 +9,21 @@ import environment from '@/environment';
 import { SubmissionsTableSkeletonLoader } from '@/components/ProjectSubmissions/ProjectSubmissionsSkeletonLoader.js';
 import { Loader2 } from 'lucide-react';
 import { SubmissionActions } from '@/store/slices/SubmissionSlice';
+import { reviewStateData } from '@/constants/projectSubmissionsConstants';
 
 type filterType = {
-  taskId: number | null;
-  submittedBy: string | null;
-  reviewState: string | null;
-  submittedDate: Date | null;
+  task_id: number | null;
+  submitted_by: string | null;
+  review_state: string | null;
+  submitted_date: Date | null;
 };
 
 const SubmissionsTable = () => {
   const initialFilterState = {
-    taskId: null,
-    submittedBy: null,
-    reviewState: null,
-    submittedDate: null,
+    task_id: null,
+    submitted_by: null,
+    review_state: null,
+    submitted_date: null,
   };
   const [showFilter, setShowFilter] = useState<boolean>(true);
   const [filter, setFilter] = useState<filterType>(initialFilterState);
@@ -71,7 +72,7 @@ const SubmissionsTable = () => {
   }, []);
 
   useEffect(() => {
-    if (!filter.taskId) {
+    if (!filter.task_id) {
       dispatch(
         SubmissionTableService(
           `${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}?page=${paginationPage}`,
@@ -81,7 +82,7 @@ const SubmissionsTable = () => {
       dispatch(
         SubmissionTableService(
           `${import.meta.env.VITE_API_URL}/submission/task_submissions/${decodedId}?task_id=${
-            filter.taskId
+            filter.task_id
           }&page=${paginationPage}`,
         ),
       );
@@ -90,14 +91,14 @@ const SubmissionsTable = () => {
 
   useEffect(() => {
     setPaginationPage(1);
-    if (!filter.taskId) {
+    if (!filter.task_id) {
       dispatch(
         SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}?page=1`),
       );
     } else {
       dispatch(
         SubmissionTableService(
-          `${import.meta.env.VITE_API_URL}/submission/task_submissions/${decodedId}?task_id=${filter.taskId}&page=1`,
+          `${import.meta.env.VITE_API_URL}/submission/task_submissions/${decodedId}?task_id=${filter.task_id}&page=1`,
         ),
       );
     }
@@ -108,7 +109,7 @@ const SubmissionsTable = () => {
       SubmissionFormFieldsService(`${import.meta.env.VITE_API_URL}/submission/submission_form_fields/${decodedId}`),
     );
     dispatch(SubmissionActions.SetSubmissionTableRefreshing(true));
-    if (!filter.taskId) {
+    if (!filter.task_id) {
       dispatch(
         SubmissionTableService(
           `${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}?page=${paginationPage}`,
@@ -118,7 +119,7 @@ const SubmissionsTable = () => {
       dispatch(
         SubmissionTableService(
           `${import.meta.env.VITE_API_URL}/submission/task_submissions/${decodedId}?task_id=${
-            filter.taskId
+            filter.task_id
           }&page=${paginationPage}`,
         ),
       );
@@ -159,7 +160,7 @@ const SubmissionsTable = () => {
           </div>
           <button
             className={`fmtm-w-fit fmtm-text-sm fmtm-text-grey-700 fmtm-font-bold fmtm-duration-150 fmtm-truncate fmtm-block xl:fmtm-hidden ${
-              !filter.taskId && !filter.reviewState && !filter.submittedBy && !filter.submittedDate
+              !filter.task_id && !filter.review_state && !filter.submitted_by && !filter.submitted_date
                 ? 'fmtm-hidden'
                 : 'fmtm-block'
             } ${
@@ -185,10 +186,10 @@ const SubmissionsTable = () => {
                 placeholder="Select"
                 data={taskInfo}
                 dataKey="value"
-                value={filter?.taskId?.toString()}
+                value={filter?.task_id?.toString()}
                 valueKey="task_id"
                 label="task_id"
-                onValueChange={(value) => value && setFilter((prev) => ({ ...prev, taskId: +value }))}
+                onValueChange={(value) => value && setFilter((prev) => ({ ...prev, task_id: +value }))}
                 className="fmtm-text-grey-700 fmtm-text-sm !fmtm-mb-0"
               />
             </div>
@@ -210,12 +211,12 @@ const SubmissionsTable = () => {
               <CustomSelect
                 title="Review State"
                 placeholder="Select"
-                data={[]}
+                data={reviewStateData}
                 dataKey="value"
-                value={''}
+                value={filter?.review_state}
                 valueKey="value"
                 label="label"
-                onValueChange={() => {}}
+                onValueChange={(value) => value && setFilter((prev) => ({ ...prev, review_state: value.toString() }))}
                 errorMsg=""
                 className="fmtm-text-grey-700 fmtm-text-sm !fmtm-mb-0"
               />
