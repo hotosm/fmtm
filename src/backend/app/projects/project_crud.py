@@ -593,17 +593,15 @@ async def update_project_boundary(
         boundary,
         meters=meters,
     )
-    for poly in tasks["features"]:
+    for index, poly in enumerate(tasks["features"]):
         log.debug(poly)
-        task_id = str(poly.get("properties", {}).get("id") or poly.get("id"))
         db_task = db_models.DbTask(
             project_id=project_id,
-            project_task_name=task_id,
             outline=wkblib.dumps(shape(poly["geometry"]), hex=True),
             # qr_code=db_qr,
             # qr_code_id=db_qr.id,
             # project_task_index=feature["properties"]["fid"],
-            project_task_index=1,
+            project_task_index=index,
             # geometry_geojson=geojson.dumps(task_geojson),
             # initial_feature_count=len(task_geojson["features"]),
         )

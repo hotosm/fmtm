@@ -94,7 +94,7 @@ async def get_projet_details(
     """
     project = await project_crud.get_project(db, project_id)
     if not project:
-        raise HTTPException(status_code=404, details={"Project not found"})
+        raise HTTPException(status_code=404, detail={"Project not found"})
 
     # ODK Credentials
     odk_credentials = project_schemas.ODKCentralDecrypted(
