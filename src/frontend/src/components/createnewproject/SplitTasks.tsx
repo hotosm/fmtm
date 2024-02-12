@@ -136,8 +136,8 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
         projectData,
         taskAreaGeojsonFile,
         customFormFile,
-        customPolygonUpload,
-        customLineUpload,
+        customPolygonUpload || customLineUpload,
+        projectDetails.dataExtractWays === 'osm_data_extract',
       ),
     );
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData({ ...projectDetails, ...formValues }));
