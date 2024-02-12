@@ -337,18 +337,18 @@ async def upload_xlsform(
 async def create_tasks_from_geojson(
     db: Session,
     project_id: int,
-    boundary: str,
+    boundaries: str,
 ):
     """Create tasks for a project, from provided task boundaries."""
     try:
-        if isinstance(boundary, str):
-            boundary = json.loads(boundary)
+        if isinstance(boundaries, str):
+            boundaries = json.loads(boundaries)
 
         # Update the boundary polyon on the database.
-        if boundary["type"] == "Feature":
-            polygons = [boundary]
+        if boundaries["type"] == "Feature":
+            polygons = [boundaries]
         else:
-            polygons = boundary["features"]
+            polygons = boundaries["features"]
         log.debug(f"Processing {len(polygons)} task geometries")
         for index, polygon in enumerate(polygons):
             # If the polygon is a MultiPolygon, convert it to a Polygon
@@ -492,7 +492,7 @@ async def split_geojson_into_tasks(
     db: Session,
     project_geojson: Union[dict, FeatureCollection],
     no_of_buildings: int,
-    extract_geojson: Optional[Union[dict, FeatureCollection]] = None,
+    extract_geojson: Optional[FeatureCollection] = None,
 ):
     """Splits a project into tasks.
 
@@ -502,7 +502,7 @@ async def split_geojson_into_tasks(
             boundary.
         extract_geojson (Union[dict, FeatureCollection]): A GeoJSON of the project
             boundary osm data extract (features).
-        extract_geojson (Union[dict, FeatureCollection]): A GeoJSON of the project
+        extract_geojson (FeatureCollection): A GeoJSON of the project
             boundary osm data extract (features).
             If not included, an extract is generated automatically.
         no_of_buildings (int): The number of buildings to include in each task.

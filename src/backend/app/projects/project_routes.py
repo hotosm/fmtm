@@ -401,7 +401,7 @@ async def upload_project_task_boundaries(
 
     Required Parameters:
         project_id (id): ID for associated project.
-        project_geojson (UploadFile): Multi-polygon GeoJSON file.
+        task_geojson (UploadFile): Multi-polygon GeoJSON file.
 
     Returns:
         dict: JSON containing success message, project ID, and number of tasks.
@@ -787,7 +787,7 @@ async def get_categories(current_user: AuthUser = Depends(login_required)):
     return categories
 
 
-@router.post("/preview_split_by_square/")
+@router.post("/preview-split-by-square/")
 async def preview_split_by_square(
     project_geojson: UploadFile = File(...), dimension: int = Form(100)
 ):
