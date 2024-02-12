@@ -34,13 +34,9 @@ from app.projects.project_schemas import ODKCentralIn
 class OrganisationIn(ODKCentralIn):
     """Organisation to create from user input."""
 
-    name: str = Field(Form(..., description="Organisation name"))
-    description: Optional[str] = Field(
-        Form(None, description="Organisation description")
-    )
-    url: Optional[HttpUrlStr] = Field(
-        Form(None, description="Organisation website URL")
-    )
+    name: str
+    description: Optional[str] = None
+    url: Optional[HttpUrlStr] = None
 
     @computed_field
     @property
@@ -59,7 +55,7 @@ class OrganisationEdit(OrganisationIn):
     """Organisation to edit via user input."""
 
     # Override to make name optional
-    name: Optional[str] = Field(Form(None, description="Organisation name"))
+    name: Optional[str] = None
 
 
 class OrganisationOut(BaseModel):

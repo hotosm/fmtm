@@ -41,13 +41,9 @@ from app.users.user_schemas import User
 class ODKCentralIn(BaseModel):
     """ODK Central credentials inserted to database."""
 
-    odk_central_url: Optional[HttpUrlStr] = Field(
-        Form(None, description="ODK Central URL")
-    )
-    odk_central_user: Optional[str] = Field(Form(None, description="ODK Central User"))
-    odk_central_password: Optional[str] = Field(
-        Form(None, description="ODK Central Password")
-    )
+    odk_central_url: Optional[HttpUrlStr] = None
+    odk_central_user: Optional[str] = None
+    odk_central_password: Optional[str] = None
 
     @field_validator("odk_central_url", mode="after")
     @classmethod
