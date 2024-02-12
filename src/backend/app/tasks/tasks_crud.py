@@ -332,7 +332,13 @@ async def get_task_comments(db: Session, project_id: int, task_id: int):
 
     # Convert the result to a list of dictionaries
     result_dict_list = [
-        {"id": row[0], "task_id":row[1],"commented_by": row[2], "comment": row[3], "created_at": row[4]}
+        {
+            "id": row[0],
+            "task_id": row[1],
+            "commented_by": row[2],
+            "comment": row[3],
+            "created_at": row[4],
+        }
         for row in result.fetchall()
     ]
 

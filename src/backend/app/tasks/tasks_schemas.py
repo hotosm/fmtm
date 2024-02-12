@@ -133,7 +133,8 @@ class Task(BaseModel):
 
 class TaskCommentResponse(BaseModel):
     """Task mapping history."""
-    id:int
+
+    id: int
     task_id: int
     comment: Optional[str] = None
     commented_by: str
@@ -142,6 +143,7 @@ class TaskCommentResponse(BaseModel):
 
 class TaskCommentBase(BaseModel):
     """Task mapping history."""
+
     comment: str
     commented_by: str
     created_at: datetime
