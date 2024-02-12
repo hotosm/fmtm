@@ -95,7 +95,7 @@ export default function Dialog({ taskId, feature, map, view }) {
     <div className="fmtm-flex fmtm-flex-col">
       {list_of_task_status?.length > 0 && (
         <div
-          className={`fmtm-grid fmtm-border-y-[1px] fmtm-p-5 ${
+          className={`fmtm-grid fmtm-border-t-[1px] fmtm-p-5 ${
             list_of_task_status?.length === 1 ? 'fmtm-grid-cols-1' : 'fmtm-grid-cols-2'
           }`}
         >
@@ -122,7 +122,7 @@ export default function Dialog({ taskId, feature, map, view }) {
         </div>
       )}
       {task_status !== 'READY' && task_status !== 'LOCKED_FOR_MAPPING' && (
-        <div className="fmtm-p-5">
+        <div className="fmtm-p-5 fmtm-border-t">
           <Button
             btnText="GO TO TASK SUBMISSION"
             btnType="primary"
@@ -133,7 +133,7 @@ export default function Dialog({ taskId, feature, map, view }) {
         </div>
       )}
       {task_status === 'LOCKED_FOR_MAPPING' && (
-        <div className="fmtm-p-5">
+        <div className="fmtm-p-5 fmtm-border-t">
           <Button
             btnText="GO TO ODK"
             btnType="primary"

@@ -52,10 +52,10 @@ const TaskSectionPopup = ({ taskId, body, feature }: TaskSectionPopupPropType) =
 
   return (
     <div
-      className={`fmtm-duration-1000 fmtm-z-[10002] ${
+      className={`fmtm-duration-1000 fmtm-z-[10002] fmtm-h-fit ${
         taskModalStatus
-          ? 'fmtm-bottom-0 fmtm-right-0 md:fmtm-bottom-[calc(20vh)] fmtm-w-[100vw] md:fmtm-w-[50vw] md:fmtm-max-w-[25rem]'
-          : 'fmtm-top-[calc(100vh)] md:fmtm-top-[calc(50vh)] md:fmtm-left-[calc(100vw)] fmtm-w-[100vw]'
+          ? 'fmtm-bottom-0 fmtm-right-0 md:fmtm-top-[calc(40vh)] fmtm-w-[100vw] md:fmtm-w-[50vw] md:fmtm-max-w-[25rem]'
+          : 'fmtm-top-[calc(100vh)] md:fmtm-top-[calc(40vh)] md:fmtm-left-[calc(100vw)] fmtm-w-[100vw]'
       } fmtm-fixed
         fmtm-rounded-t-3xl fmtm-border-opacity-50`}
     >
