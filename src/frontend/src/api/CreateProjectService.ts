@@ -301,7 +301,6 @@ const TaskSplittingPreviewService: Function = (
         taskSplittingFileFormData.append('project_geojson', projectAoiFile);
         taskSplittingFileFormData.append('no_of_buildings', no_of_buildings);
         // Only include data extract if custom extract uploaded
-        console.log(dataExtractFile);
         if (dataExtractFile) {
           taskSplittingFileFormData.append('extract_geojson', dataExtractFile);
         }
