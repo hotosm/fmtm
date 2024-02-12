@@ -371,7 +371,7 @@ class DbTaskHistory(Base):
     invalidation_history = relationship(
         DbTaskInvalidationHistory, lazy="dynamic", cascade="all"
     )
-    actioned_by = relationship(DbUser)
+    actioned_by = relationship(DbUser, overlaps="task_history_user,user")
     task_mapping_issues = relationship(DbTaskMappingIssue, cascade="all")
 
     __table_args__ = (
@@ -601,6 +601,7 @@ class DbProject(Base):
     data_extract_type = cast(
         str, Column(String)
     )  # Type of data extract (Polygon or Centroid)
+    data_extract_url = cast(str, Column(String))
     task_split_type = cast(
         TaskSplitType, Column(Enum(TaskSplitType), nullable=True)
     )  # Options: divide on square, manual upload, task splitting algo
