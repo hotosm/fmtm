@@ -64,7 +64,7 @@ async def create_organisation(
     org: organisation_schemas.OrganisationIn = Depends(),
     logo: UploadFile = File(None),
     db: Session = Depends(database.get_db),
-    current_user: DbUser = Depends(super_admin),
+    current_user: DbUser = Depends(login_required),
 ) -> organisation_schemas.OrganisationOut:
     """Create an organisation with the given details."""
     return await organisation_crud.create_organisation(db, org, logo)
