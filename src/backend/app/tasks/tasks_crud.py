@@ -320,7 +320,7 @@ async def get_task_comments(db: Session, project_id: int, task_id: int):
     """Get a list of tasks id for a project."""
     query = text(
         f"""
-        SELECT task_history.id,users.username,task_history.action_text,
+        SELECT task_history.id,task_history.task_id,users.username,task_history.action_text,
         task_history.action_date FROM task_history
         LEFT JOIN users ON task_history.user_id = users.id
         where project_id = {project_id} AND task_id = {task_id} AND action = 'COMMENT'
@@ -332,7 +332,7 @@ async def get_task_comments(db: Session, project_id: int, task_id: int):
 
     # Convert the result to a list of dictionaries
     result_dict_list = [
-        {"id": row[0], "commented_by": row[1], "comment": row[2], "created_at": row[3]}
+        {"id": row[0], "task_id":row[1],"commented_by": row[2], "comment": row[3], "created_at": row[4]}
         for row in result.fetchall()
     ]
 
@@ -360,11 +360,11 @@ async def add_task_comments(
         INSERT INTO task_history
         (project_id,task_id,"action",action_text,action_date,user_id)
         VALUES({comment.project_id},{comment.task_id},'COMMENT',
-        '{comment.action_text}','{currentdate}',{user_data.id})
+        '{comment.comment}','{currentdate}',{user_data.id})
         RETURNING
-        task_history.id, task_history.action_text,
+        task_history.id,task_history.task_id, task_history.action_text,
         task_history.action_date,task_history.user_id )
-        SELECT ic.id,username as user_id,action_text,action_date
+        SELECT ic.id, ic.task_id,username as user_id,action_text,action_date
         FROM inserted_comment ic
         LEFT JOIN users u ON ic.user_id = u.id;
     """
@@ -379,9 +379,10 @@ async def add_task_comments(
     # Return the details of the added comment as a dictionary
     return {
         "id": row[0],
-        "commented_by": row[1],
-        "comment": row[2],
-        "created_at": row[3],
+        "task_id": row[1],
+        "commented_by": row[2],
+        "comment": row[3],
+        "created_at": row[4],
     }
 
 

@@ -131,38 +131,28 @@ class Task(BaseModel):
         return decrypt_value(value)
 
 
-class TaskCommentRequest(BaseModel):
+class TaskCommentResponse(BaseModel):
     """Task mapping history."""
-
-    action_text: Any = Field(exclude=True)
-
+    id:int
     task_id: int
-    project_id: int
     comment: Optional[str] = None
-
-    @field_serializer("comment")
-    def convert_action_to_comment(self, value: str) -> Optional[str]:
-        """Get the task history comment."""
-        if self.action_text:
-            return self.action_text
-        return None
+    commented_by: str
+    created_at: datetime
 
 
 class TaskCommentBase(BaseModel):
     """Task mapping history."""
-
     comment: str
     commented_by: str
     created_at: datetime
 
 
-class TaskCommentResponse(BaseModel):
+class TaskCommentRequest(BaseModel):
     """Task mapping history."""
 
-    id: int
-    commented_by: str
+    task_id: int
+    project_id: int
     comment: str
-    created_at: datetime
 
 
 class ReadTask(Task):
