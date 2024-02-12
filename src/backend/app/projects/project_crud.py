@@ -528,7 +528,7 @@ async def update_project_boundary(
 ):
     """Update the boundary for a project and update tasks.
 
-    TODO this needs a big refactor / removal
+    TODO this needs a big refactor or removal
     #
     """
     # verify project exists in db
