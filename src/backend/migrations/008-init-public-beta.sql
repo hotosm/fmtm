@@ -48,7 +48,7 @@ VALUES (
     'svcfmtm',
     'ADMIN',
     'Admin',
-    'admin@hotosm.org',
+    '${ODK_CENTRAL_USER}',
     true,
     'ADVANCED',
     0,
