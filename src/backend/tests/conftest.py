@@ -134,7 +134,6 @@ async def project(db, admin_user, organisation):
         odk_central_user=os.getenv("ODK_CENTRAL_USER"),
         odk_central_password=os.getenv("ODK_CENTRAL_PASSWD"),
         hashtags=["hot-fmtm"],
-        organisation_id=organisation.id,
         outline_geojson={
             "type": "Feature",
             "properties": {},
