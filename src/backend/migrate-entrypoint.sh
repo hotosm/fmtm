@@ -145,10 +145,11 @@ execute_migrations() {
     for script_name in "${scripts_to_execute[@]}"; do
         script_file="/opt/migrations/$script_name"
         pretty_echo "Executing migration: $script_name"
-        # Apply migration & if succeeds, add an entry 
-        # in the migrations table to indicate completion
-        psql "$db_url" -v ON_ERROR_STOP=1 -a -f "$script_file" && \
-        psql "$db_url" <<SQL
+        # Apply migration with env vars substituted & if succeeds,
+        # add an entry in the migrations table to indicate completion
+        envsubst < "$script_file" | psql "$db_url" \
+            --set ON_ERROR_STOP=1 --echo-all \
+        && psql "$db_url" <<SQL
     DO \$\$
     BEGIN
         INSERT INTO public."_migrations" (date_executed, script_name)
