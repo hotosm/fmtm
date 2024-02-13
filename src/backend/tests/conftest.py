@@ -150,6 +150,7 @@ async def project(db, admin_user, organisation):
                 "type": "Polygon",
             },
         },
+        organisation_id=organisation.id,
     )
 
     odk_creds_decrypted = ODKCentralDecrypted(
