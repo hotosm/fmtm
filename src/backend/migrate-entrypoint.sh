@@ -163,20 +163,6 @@ SQL
     done
 }
 
-create_svc_user() {
-    pretty_echo "Creating default svcfmtm user."
-    psql "$db_url" <<SQL
-    DO \$\$
-    BEGIN
-        INSERT INTO users (id, username, role, mapping_level, tasks_mapped, tasks_validated, tasks_invalidated)
-        VALUES (20386219, 'svcfmtm', 'MAPPER', 'BEGINNER', 0, 0, 0);
-        RAISE NOTICE 'User "svcfmtm" (uid 20386219) successfully created.';
-    EXCEPTION   
-        WHEN OTHERS THEN
-            RAISE NOTICE 'User "svcfmtm" (uid 20386219) already exists.';
-    END\$\$;
-SQL
-}
 ### Functions END ###
 
 
@@ -207,12 +193,7 @@ if [ ${#scripts_to_execute[@]} -gt 0 ]; then
 else
     pretty_echo "No new migrations found."
 fi
-pretty_echo "Migrations complete."
-
-# Create service user account, if not exists
-create_svc_user
-
-pretty_echo "### Script End ###"
+pretty_echo "### Script End: Migrations Complete ###"
 
 ####################
 ###  Script END  ###
