@@ -531,8 +531,7 @@ CREATE TABLE public.users (
     tasks_invalidated integer NOT NULL,
     projects_mapped integer[],
     date_registered timestamp without time zone,
-    last_validation_date timestamp without time zone,
-    password character varying
+    last_validation_date timestamp without time zone
 );
 ALTER TABLE public.users OWNER TO fmtm;
 CREATE SEQUENCE public.users_id_seq
