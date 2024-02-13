@@ -73,6 +73,7 @@ async def init_admin_org(db: Session):
 
         -- Insert svcfmtm admin user
         INSERT INTO public.users (
+            id,
             username,
             role,
             name,
@@ -84,7 +85,8 @@ async def init_admin_org(db: Session):
             tasks_invalidated
         )
         VALUES (
-            'svcfmtm',
+            :user_id,
+            :username,
             'ADMIN',
             'Admin',
             :odk_user,
@@ -100,12 +102,9 @@ async def init_admin_org(db: Session):
         WITH org_cte AS (
             SELECT id FROM public.organisations
             WHERE name = 'FMTM Public Beta'
-        ), user_cte AS (
-            SELECT id FROM public.users
-            WHERE username = 'svcfmtm'
         )
         INSERT INTO public.organisation_managers (organisation_id, user_id)
-        SELECT (SELECT id FROM org_cte), (SELECT id FROM user_cte)
+        SELECT (SELECT id FROM org_cte), :user_id
         ON CONFLICT DO NOTHING;
 
         -- Commit the transaction
@@ -116,6 +115,8 @@ async def init_admin_org(db: Session):
     db.execute(
         sql,
         {
+            "user_id": 20386219,
+            "username": "svcfmtm",
             "odk_url": settings.ODK_CENTRAL_URL,
             "odk_user": settings.ODK_CENTRAL_USER,
             "odk_pass": encrypt_value(settings.ODK_CENTRAL_PASSWD),
