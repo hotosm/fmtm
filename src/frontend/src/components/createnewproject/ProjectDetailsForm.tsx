@@ -36,11 +36,6 @@ const ProjectDetailsForm = ({ flag }) => {
     CreateProjectValidation,
   );
 
-  const orgDefaultOdkCreds = useAppSelector((state) => state.createproject.orgDefaultOdkCreds);
-  const handleCheckboxChange = () => {
-    dispatch(CreateProjectActions.ToggleOrgDefaultOdkCreds(!orgDefaultOdkCreds)); // Dispatch the action to toggle the orgDefaultOdkCreds state
-  };
-
   const onFocus = () => {
     dispatch(OrganisationService(`${import.meta.env.VITE_API_URL}/organisation/`));
   };
@@ -118,41 +113,36 @@ const ProjectDetailsForm = ({ flag }) => {
               required
               errorMsg={errors.short_description}
             />
-            <label>
-              <input type="checkbox" checked={orgDefaultOdkCreds} onChange={handleCheckboxChange} /> Use Custom ODK
-              Credentials (Optional)
-            </label>
-            {orgDefaultOdkCreds && (
-              <>
-                <InputTextField
-                  id="odk_central_url"
-                  name="odk_central_url"
-                  label="ODK Central URL"
-                  value={values?.odk_central_url}
-                  onChange={handleChange}
-                  fieldType="text"
-                  errorMsg={errors.odk_central_url}
-                />
-                <InputTextField
-                  id="odk_central_user"
-                  name="odk_central_user"
-                  label="ODK Central Email"
-                  value={values?.odk_central_user}
-                  onChange={handleChange}
-                  fieldType="text"
-                  errorMsg={errors.odk_central_user}
-                />
-                <InputTextField
-                  id="odk_central_password"
-                  name="odk_central_password"
-                  label="ODK Central Password"
-                  value={values?.odk_central_password}
-                  onChange={handleChange}
-                  fieldType="password"
-                  errorMsg={errors.odk_central_password}
-                />
-              </>
-            )}
+            <InputTextField
+              id="odk_central_url"
+              name="odk_central_url"
+              label="ODK Central URL"
+              value={values?.odk_central_url}
+              onChange={handleChange}
+              fieldType="text"
+              errorMsg={errors.odk_central_url}
+              required
+            />
+            <InputTextField
+              id="odk_central_user"
+              name="odk_central_user"
+              label="ODK Central Email"
+              value={values?.odk_central_user}
+              onChange={handleChange}
+              fieldType="text"
+              errorMsg={errors.odk_central_user}
+              required
+            />
+            <InputTextField
+              id="odk_central_password"
+              name="odk_central_password"
+              label="ODK Central Password"
+              value={values?.odk_central_password}
+              onChange={handleChange}
+              fieldType="password"
+              errorMsg={errors.odk_central_password}
+              required
+            />
             <div>
               <InputTextField
                 id="hashtags"

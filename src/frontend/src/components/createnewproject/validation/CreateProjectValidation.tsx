@@ -40,8 +40,14 @@ function CreateProjectValidation(values: ProjectValues) {
   if (!values?.organisation_id) {
     errors.organisation_id = 'Organization is Required.';
   }
-  if (values?.odk_central_url && !isValidUrl(values.odk_central_url)) {
+  if (!values?.odk_central_url && !isValidUrl(values.odk_central_url)) {
     errors.odk_central_url = 'Invalid URL.';
+  }
+  if (!values?.odk_central_user) {
+    errors.odk_central_user = 'ODK Central User is Required.';
+  }
+  if (!values?.odk_central_password) {
+    errors.odk_central_password = 'ODK Central Password is Required.';
   }
   if (!values?.name) {
     errors.name = 'Project Name is Required.';
@@ -56,7 +62,6 @@ function CreateProjectValidation(values: ProjectValues) {
     errors.description = 'Description is Required.';
   }
 
-  console.log(errors);
   return errors;
 }
 
