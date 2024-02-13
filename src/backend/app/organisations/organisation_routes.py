@@ -44,15 +44,15 @@ router = APIRouter(
 async def get_organisations(
     db: Session = Depends(database.get_db),
     current_user: AuthUser = Depends(login_required),
-    approved: bool = True,
-) -> list[organisation_schemas.OrganisationOut]:
+) -> list[DbOrganisation]:
     """Get a list of all organisations."""
-    return await organisation_crud.get_organisations(db, current_user, approved)
+    return await organisation_crud.get_organisations(db, current_user)
 
 
 @router.get("/{org_id}", response_model=organisation_schemas.OrganisationOut)
 async def get_organisation_detail(
     organisation: DbOrganisation = Depends(org_exists),
+    current_user: AuthUser = Depends(login_required),
 ):
     """Get a specific organisation by id or name."""
     return organisation
@@ -64,6 +64,7 @@ async def create_organisation(
     org: organisation_schemas.OrganisationIn = Depends(),
     logo: UploadFile = File(None),
     db: Session = Depends(database.get_db),
+    current_user: DbUser = Depends(super_admin),
 ) -> organisation_schemas.OrganisationOut:
     """Create an organisation with the given details."""
     return await organisation_crud.create_organisation(db, org, logo)
@@ -75,6 +76,7 @@ async def update_organisation(
     logo: UploadFile = File(None),
     organisation: DbOrganisation = Depends(org_exists),
     db: Session = Depends(database.get_db),
+    org_user_dict: DbUser = Depends(org_admin),
 ):
     """Partial update for an existing organisation."""
     return await organisation_crud.update_organisation(
@@ -86,6 +88,7 @@ async def update_organisation(
 async def delete_organisations(
     organisation: DbOrganisation = Depends(org_exists),
     db: Session = Depends(database.get_db),
+    org_user_dict: DbUser = Depends(org_admin),
 ):
     """Delete an organisation."""
     return await organisation_crud.delete_organisation(db, organisation)
@@ -95,7 +98,7 @@ async def delete_organisations(
 async def approve_organisation(
     org_id: int,
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(super_admin),
+    current_user: DbUser = Depends(super_admin),
 ):
     """Approve the organisation request made by the user.
 
@@ -110,7 +113,7 @@ async def add_new_organisation_admin(
     db: Session = Depends(database.get_db),
     organisation: DbOrganisation = Depends(org_exists),
     user: DbUser = Depends(user_exists_in_db),
-    current_user: AuthUser = Depends(org_admin),
+    org_user_dict: DbUser = Depends(org_admin),
 ):
     """Add a new organisation admin.
 

@@ -25,12 +25,13 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
+from app.auth.osm import AuthUser
+from app.auth.roles import get_uid, mapper, project_admin
 from app.central import central_crud
 from app.db import database
 from app.models.enums import TaskStatus
 from app.projects import project_crud, project_schemas
 from app.tasks import tasks_crud, tasks_schemas
-from app.users import user_schemas
 
 from ..auth.osm import AuthUser, login_required
 
@@ -123,14 +124,13 @@ async def get_specific_task(task_id: int, db: Session = Depends(database.get_db)
     "/{task_id}/new_status/{new_status}", response_model=tasks_schemas.ReadTask
 )
 async def update_task_status(
-    user: user_schemas.User,
     task_id: int,
     new_status: TaskStatus,
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(mapper),
 ):
     """Update the task status."""
-    user_id = user.id
-
+    user_id = get_uid(current_user)
     task = await tasks_crud.update_task_status(db, user_id, task_id, new_status)
     updated_task = await tasks_crud.update_task_history(task, db)
     if not task:
@@ -143,6 +143,7 @@ async def edit_task_boundary(
     task_id: int,
     boundary: UploadFile = File(...),
     db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(project_admin),
 ):
     """Update the task boundary manually."""
     # read entire file
@@ -245,19 +246,38 @@ async def task_activity(
     """Retrieves the validate and mapped task count for a specific project.
 
     Args:
-        project_id: The ID of the project.
-        days: The number of days to consider for the
-        task activity (default: 10).
-        db: The database session.
+        project_id (int): The ID of the project.
+        days (int): The number of days to consider for the
+            task activity (default: 10).
+        db (Session): The database session.
 
     Returns:
         list[TaskHistoryCount]: A list of task history counts.
 
     """
     end_date = datetime.now() - timedelta(days=days)
-    task_history = tasks_crud.get_task_history(project_id, end_date, db)
+    task_history = await tasks_crud.get_project_task_history(project_id, end_date, db)
 
     return await tasks_crud.count_validated_and_mapped_tasks(
         task_history,
         end_date,
     )
+
+
+@router.get("/task_history/", response_model=List[tasks_schemas.TaskHistory])
+async def task_history(
+    project_id: int, days: int = 10, db: Session = Depends(database.get_db)
+):
+    """Get the detailed task history for a project.
+
+    Args:
+        project_id (int): The ID of the project.
+        days (int): The number of days to consider for the
+            task activity (default: 10).
+        db (Session): The database session.
+
+    Returns:
+        List[TaskHistory]: A list of task history.
+    """
+    end_date = datetime.now() - timedelta(days=days)
+    return await tasks_crud.get_project_task_history(project_id, end_date, db)

@@ -62,8 +62,13 @@ import {
   AccessTime as AccessTimeIcon,
   ImportExport as ImportExportIcon,
   Check as CheckIcon,
+  CloudUploadOutlined as CloudUploadOutlinedIcon,
+  Autorenew as AutorenewIcon,
+  EditOutlined as EditOutlinedIcon,
+  DeleteOutlined as DeleteOutlinedIcon,
   Undo as UndoIcon,
   Timeline as TimelineIcon,
+  PeopleAlt as PeopleAltIcon,
 } from '@mui/icons-material';
 import LockPng from '@/assets/images/lock.png';
 import RedLockPng from '@/assets/images/red-lock.png';
@@ -136,6 +141,11 @@ export default {
   AccessTimeIcon,
   ImportExportIcon,
   CheckIcon,
+  CloudUploadOutlinedIcon,
+  AutorenewIcon,
+  EditOutlinedIcon,
+  DeleteOutlinedIcon,
   UndoIcon,
   TimelineIcon,
+  PeopleAltIcon,
 };

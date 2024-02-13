@@ -27,7 +27,10 @@ from pydantic.networks import HttpUrl, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 HttpUrlStr = Annotated[
-    str, BeforeValidator(lambda value: str(TypeAdapter(HttpUrl).validate_python(value)))
+    str,
+    BeforeValidator(
+        lambda value: str(TypeAdapter(HttpUrl).validate_python(value) if value else "")
+    ),
 ]
 
 
@@ -79,9 +82,7 @@ class Settings(BaseSettings):
             default_origins += val
             return default_origins
 
-        raise ValueError(f"Not a valid CORS origin list: {val}")
-
-    API_PREFIX: Optional[str] = "/"
+    API_PREFIX: str = "/"
 
     FMTM_DB_HOST: Optional[str] = "fmtm-db"
     FMTM_DB_USER: Optional[str] = "fmtm"
@@ -140,7 +141,7 @@ class Settings(BaseSettings):
 
         # Externally hosted S3
         s3_endpoint = info.data.get("S3_ENDPOINT")
-        if s3_endpoint.startswith("https://"):
+        if s3_endpoint and s3_endpoint.startswith("https://"):
             return s3_endpoint
 
         # Containerised S3

@@ -125,7 +125,7 @@ const Home = () => {
         ...feature.outline_geojson.properties,
         centroid: feature.bbox,
       },
-      id: `${feature.project_task_name}_${feature.task_status}`,
+      id: `${feature.id}_${feature.task_status}`,
     }));
     const taskBuildingGeojsonFeatureCollection = {
       ...geojsonObjectModel,
@@ -304,6 +304,7 @@ const Home = () => {
               btnType="other"
               className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md"
               icon={<AssetModules.SettingsIcon />}
+              onClick={() => navigate(`/manage-project/${params?.id}`)}
             />
           </div>
           <div className="fmtm-flex fmtm-flex-col fmtm-gap-4">
@@ -380,7 +381,7 @@ const Home = () => {
                 />
               </div>
               <div
-                className={`fmtm-flex fmtm-gap-4 fmtm-absolute fmtm-duration-200 fmtm-z-[1000] fmtm-bg-[#F5F5F5] fmtm-p-2 fmtm-rounded-md fmtm-left-0 fmtm-top-0 ${
+                className={`fmtm-flex fmtm-gap-4 fmtm-absolute fmtm-duration-200 fmtm-z-[1000] fmtm-bg-[#F5F5F5] fmtm-p-2 fmtm-rounded-md ${
                   toggle ? 'fmtm-left-0 fmtm-top-0' : '-fmtm-left-[60rem] fmtm-top-0'
                 }`}
               >

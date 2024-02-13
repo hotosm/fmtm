@@ -335,6 +335,7 @@ ALTER TABLE public.project_teams OWNER TO fmtm;
 
 CREATE TABLE public.projects (
     id integer NOT NULL,
+    organisation_id integer,
     odkid integer,
     author_id bigint NOT NULL,
     created timestamp without time zone NOT NULL,
@@ -352,7 +353,6 @@ CREATE TABLE public.projects (
     featured boolean,
     mapping_permission public.mappingpermission,
     validation_permission public.validationpermission,
-    organisation_id integer,
     due_date timestamp without time zone,
     changeset_comment character varying,
     osmcha_filter_id character varying,
@@ -371,6 +371,7 @@ CREATE TABLE public.projects (
     form_xls bytea,
     form_config_file bytea,
     data_extract_type character varying,
+    data_extract_url character varying,
     task_split_type character varying,
     hashtags character varying[]
 );
@@ -690,7 +691,8 @@ CREATE INDEX ix_tasks_project_id ON public.tasks USING btree (project_id);
 CREATE INDEX ix_tasks_validated_by ON public.tasks USING btree (validated_by);
 CREATE INDEX ix_users_id ON public.users USING btree (id);
 CREATE INDEX textsearch_idx ON public.project_info USING btree (text_searchable);
-
+CREATE INDEX idx_user_roles ON public.user_roles USING btree (project_id, user_id);
+CREATE INDEX idx_org_managers ON public.organisation_managers USING btree (user_id, organisation_id);
 
 -- Foreign keys
 

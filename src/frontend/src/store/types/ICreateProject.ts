@@ -36,6 +36,7 @@ export type CreateProjectStateTypes = {
   isTasksGenerated: {};
   isFgbFetching: boolean;
   toggleSplittedGeojsonEdit: boolean;
+  orgDefaultOdkCreds: boolean;
 };
 export type ValidateCustomFormResponse = {
   detail: { message: string; possible_reason: string };
@@ -58,7 +59,6 @@ export type ProjectTaskTypes = {
   id: number;
   project_id: number;
   project_task_index: number;
-  project_task_name: string;
   outline_geojson: GeoJSONFeatureTypes;
   outline_centroid: GeoJSONFeatureTypes;
   task_status: number;
@@ -93,6 +93,7 @@ export type EditProjectDetailsTypes = {
 
 export type ProjectDetailsTypes = {
   data_extract_type: string;
+  data_extract_url: string;
   task_split_dimension: number;
   task_num_buildings: number;
   no_of_buildings: number;
@@ -107,7 +108,6 @@ export type ProjectDetailsTypes = {
   task_split_type?: number;
   xform_title?: string;
   data_extract_options?: string;
-  data_extractWays?: string;
   form_ways?: string;
   organisation_id?: number | null;
 };

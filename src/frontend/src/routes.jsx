@@ -11,6 +11,8 @@ import ProtectedRoute from '@/utilities/ProtectedRoute';
 import NotFoundPage from '@/views/NotFound404';
 import Organisation from '@/views/Organisation';
 import CreateOrganisation from '@/views/CreateOrganisation';
+import CreateEditOrganization from '@/views/CreateEditOrganization';
+import ApproveOrganization from '@/views/ApproveOrganization';
 import Authorized from '@/views/Authorized';
 import SubmissionDetails from '@/views/SubmissionDetails';
 import CreateNewProject from '@/views/CreateNewProject';
@@ -20,6 +22,7 @@ import ErrorBoundary from '@/views/ErrorBoundary';
 import NewProjectDetails from '@/views/NewProjectDetails';
 import ProjectDetailsV2 from '@/views/ProjectDetailsV2';
 import ProjectSubmissions from '@/views/ProjectSubmissions';
+import ManageProject from '@/views/ManageProject';
 
 // const ProjectDetails = React.lazy(() => import('./views/ProjectDetails'));
 const Submissions = React.lazy(() => import('./views/Submissions'));
@@ -51,6 +54,30 @@ const routes = createBrowserRouter([
         element: (
           <ErrorBoundary>
             <CreateOrganisation />
+          </ErrorBoundary>
+        ),
+      },
+      {
+        path: '/create-organization',
+        element: (
+          <ErrorBoundary>
+            <CreateEditOrganization />
+          </ErrorBoundary>
+        ),
+      },
+      {
+        path: '/edit-organization/:id',
+        element: (
+          <ErrorBoundary>
+            <CreateEditOrganization />
+          </ErrorBoundary>
+        ),
+      },
+      {
+        path: '/approve-organization/:id',
+        element: (
+          <ErrorBoundary>
+            <ApproveOrganization />
           </ErrorBoundary>
         ),
       },
@@ -343,6 +370,18 @@ const routes = createBrowserRouter([
           <Suspense fallback={<div>Loading...</div>}>
             <UnderConstruction />
           </Suspense>
+        ),
+      },
+      {
+        path: '/manage-project/:id',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <ErrorBoundary>
+                <ManageProject />
+              </ErrorBoundary>
+            </Suspense>
+          </ProtectedRoute>
         ),
       },
       {
