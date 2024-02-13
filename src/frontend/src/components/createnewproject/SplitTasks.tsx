@@ -116,6 +116,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customLineUpload, custo
       hashtags: arrayHashtag,
       data_extract_type: projectDetails.data_extract_type,
       data_extract_url: projectDetails.data_extract_url,
+      organisation_id: projectDetails.organisation_id,
     };
     // Append extra param depending on task split type
     if (splitTasksSelection === task_split_type['task_splitting_algorithm']) {
