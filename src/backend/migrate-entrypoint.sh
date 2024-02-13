@@ -128,7 +128,7 @@ backup_db() {
         --host "$FMTM_DB_HOST" --username "$FMTM_DB_USER" "$FMTM_DB_NAME"
 
     echo "gzipping file --> ${db_backup_file}.gz"
-    gzip "$db_backup_file"
+    gzip --force "$db_backup_file"
     db_backup_file="${db_backup_file}.gz"
 
     BUCKET_NAME="fmtm-db-backups"
@@ -145,9 +145,9 @@ execute_migrations() {
     for script_name in "${scripts_to_execute[@]}"; do
         script_file="/opt/migrations/$script_name"
         pretty_echo "Executing migration: $script_name"
-        psql "$db_url" -a -f "$script_file"
-
-        # Add an entry in the migrations table to indicate completion
+        # Apply migration & if succeeds, add an entry 
+        # in the migrations table to indicate completion
+        psql "$db_url" -v ON_ERROR_STOP=1 -a -f "$script_file" && \
         psql "$db_url" <<SQL
     DO \$\$
     BEGIN
