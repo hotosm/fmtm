@@ -82,7 +82,7 @@ const lineKeyData = [
   },
 ];
 
-const SubmissionsInfographics = () => {
+const SubmissionsInfographics = ({ toggleView }) => {
   const formSubmissionRef = useRef(null);
   const projectProgressRef = useRef(null);
   const totalContributorsRef = useRef(null);
@@ -158,6 +158,7 @@ const SubmissionsInfographics = () => {
 
   return (
     <div className="fmtm-flex fmtm-flex-col fmtm-gap-5">
+      {toggleView}
       <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5 lg:fmtm-gap-10">
         <div className="lg:fmtm-w-[70%]">
           <InfographicsCard
@@ -299,7 +300,6 @@ const SubmissionsInfographics = () => {
           }
         />
       </div>
-
       <div>
         <TaskSubmissions />
       </div>

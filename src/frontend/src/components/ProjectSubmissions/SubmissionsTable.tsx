@@ -21,7 +21,7 @@ type filterType = {
   submitted_date: string | null;
 };
 
-const SubmissionsTable = () => {
+const SubmissionsTable = ({ toggleView }) => {
   const initialFilterState = {
     task_id: null,
     submitted_by: '',
@@ -148,7 +148,7 @@ const SubmissionsTable = () => {
         <div
           className={`${
             windowSize.width < 2000 ? 'fmtm-w-full md:fmtm-w-fit' : 'fmtm-w-fit'
-          } fmtm-flex xl:fmtm-items-end fmtm-gap-2 xl:fmtm-gap-4 fmtm-rounded-lg fmtm-relative fmtm-flex-col xl:fmtm-flex-row  fmtm-pt-3 `}
+          } fmtm-flex xl:fmtm-items-end fmtm-gap-2 xl:fmtm-gap-4 fmtm-rounded-lg fmtm-relative fmtm-flex-col xl:fmtm-flex-row `}
         >
           <div className="fmtm-grid fmtm-grid-cols-2 sm:fmtm-grid-cols-3 md:fmtm-grid-cols-4 lg:fmtm-grid-cols-5 fmtm-gap-4 fmtm-items-end">
             <div className={`${windowSize.width < 500 ? 'fmtm-w-full' : 'fmtm-w-[11rem]'}`}>
@@ -211,7 +211,7 @@ const SubmissionsTable = () => {
             />
           </div>
         </div>
-        <div className="fmtm-w-full fmtm-flex fmtm-justify-end -fmtm-order-1 xl:fmtm-order-2 xl:fmtm-w-fit">
+        <div className="fmtm-w-full fmtm-flex fmtm-justify-end -fmtm-order-1 xl:fmtm-order-2 xl:fmtm-w-fit fmtm-gap-3">
           <button
             className={`fmtm-px-4 fmtm-py-1 fmtm-flex fmtm-items-center fmtm-w-fit fmtm-rounded fmtm-gap-2 fmtm-duration-150 ${
               submissionTableDataLoading || submissionFormFieldsLoading
@@ -228,6 +228,7 @@ const SubmissionsTable = () => {
             )}
             <p className="fmtm-text-white fmtm-text-base">REFRESH</p>
           </button>
+          {toggleView}
         </div>
       </div>
       {submissionTableDataLoading || submissionFormFieldsLoading ? (
