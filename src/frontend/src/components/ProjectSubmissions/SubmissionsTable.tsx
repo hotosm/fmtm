@@ -11,12 +11,14 @@ import { Loader2 } from 'lucide-react';
 import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 import { reviewStateData } from '@/constants/projectSubmissionsConstants';
 import InputTextField from '@/components/common/InputTextField';
+import CustomDatePicker from '@/components/common/CustomDatePicker';
+import { format } from 'date-fns';
 
 type filterType = {
   task_id: number | null;
   submitted_by: string;
   review_state: string | null;
-  submitted_date: Date | null;
+  submitted_date: string | null;
 };
 
 const SubmissionsTable = () => {
@@ -76,34 +78,23 @@ const SubmissionsTable = () => {
   useEffect(() => {
     if (!filter.task_id) {
       dispatch(
-        SubmissionTableService(
-          `${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}?page=${paginationPage}`,
-        ),
+        SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}`, {
+          page: paginationPage,
+          ...filter,
+        }),
       );
     } else {
       dispatch(
-        SubmissionTableService(
-          `${import.meta.env.VITE_API_URL}/submission/task_submissions/${decodedId}?task_id=${
-            filter.task_id
-          }&page=${paginationPage}`,
-        ),
+        SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/task_submissions/${decodedId}`, {
+          page: paginationPage,
+          ...filter,
+        }),
       );
     }
-  }, [paginationPage]);
+  }, [filter, paginationPage]);
 
   useEffect(() => {
     setPaginationPage(1);
-    if (!filter.task_id) {
-      dispatch(
-        SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}?page=1`),
-      );
-    } else {
-      dispatch(
-        SubmissionTableService(
-          `${import.meta.env.VITE_API_URL}/submission/task_submissions/${decodedId}?task_id=${filter.task_id}&page=1`,
-        ),
-      );
-    }
   }, [filter]);
 
   const refreshTable = () => {
@@ -113,17 +104,17 @@ const SubmissionsTable = () => {
     dispatch(SubmissionActions.SetSubmissionTableRefreshing(true));
     if (!filter.task_id) {
       dispatch(
-        SubmissionTableService(
-          `${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}?page=${paginationPage}`,
-        ),
+        SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${decodedId}`, {
+          page: paginationPage,
+          ...filter,
+        }),
       );
     } else {
       dispatch(
-        SubmissionTableService(
-          `${import.meta.env.VITE_API_URL}/submission/task_submissions/${decodedId}?task_id=${
-            filter.task_id
-          }&page=${paginationPage}`,
-        ),
+        SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/task_submissions/${decodedId}`, {
+          page: paginationPage,
+          ...filter,
+        }),
       );
     }
   };
@@ -210,7 +201,7 @@ const SubmissionsTable = () => {
                   placeholder="Select"
                   data={taskInfo}
                   dataKey="value"
-                  value={filter?.task_id?.toString()}
+                  value={filter?.task_id?.toString() || null}
                   valueKey="task_id"
                   label="task_id"
                   onValueChange={(value) => value && setFilter((prev) => ({ ...prev, task_id: +value }))}
@@ -232,17 +223,13 @@ const SubmissionsTable = () => {
                 />
               </div>
               <div className={`${windowSize.width < 500 ? 'fmtm-w-full' : 'fmtm-w-[11rem]'}`}>
-                <CustomSelect
+                <CustomDatePicker
                   title="Submitted Date"
-                  placeholder="Select"
-                  data={[]}
-                  dataKey="value"
-                  value={''}
-                  valueKey="value"
-                  label="label"
-                  onValueChange={() => {}}
-                  errorMsg=""
-                  className="fmtm-text-grey-700 fmtm-text-sm !fmtm-mb-0"
+                  selectedDate={filter?.submitted_date}
+                  setSelectedDate={(date) =>
+                    setFilter((prev) => ({ ...prev, submitted_date: format(new Date(date), 'yyyy-MM-dd') }))
+                  }
+                  className="fmtm-text-grey-700 fmtm-text-sm !fmtm-mb-0 fmtm-w-full"
                 />
               </div>
               <div className={`${windowSize.width < 500 ? 'fmtm-w-full' : 'fmtm-w-[11rem]'}`}>
