@@ -134,7 +134,7 @@ class ProjectIn(BaseModel):
     """Upload new project."""
 
     project_info: ProjectInfo
-    organisation_id: Optional[int] = None
+    organisation_id: int
     xform_title: str
     hashtags: Optional[List[str]] = None
     task_split_type: Optional[TaskSplitType] = None
@@ -202,7 +202,6 @@ class ProjectUpdate(ProjectIn):
     name: Optional[str] = None
     short_description: Optional[str] = None
     description: Optional[str] = None
-    organisation_id: Optional[int] = None
 
 
 class GeojsonFeature(BaseModel):
