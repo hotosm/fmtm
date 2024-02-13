@@ -25,15 +25,13 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
-from app.auth.osm import AuthUser
+from app.auth.osm import AuthUser, login_required
 from app.auth.roles import get_uid, mapper, project_admin
 from app.central import central_crud
 from app.db import database
 from app.models.enums import TaskStatus
 from app.projects import project_crud, project_schemas
 from app.tasks import tasks_crud, tasks_schemas
-
-from ..auth.osm import AuthUser, login_required
 
 router = APIRouter(
     prefix="/tasks",
