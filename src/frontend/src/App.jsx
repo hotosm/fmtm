@@ -31,6 +31,7 @@ console.error = function filterWarnings(msg, ...args) {
 
 const GlobalInit = () => {
   useEffect(() => {
+    console.log('adding interceptors');
     axios.interceptors.request.use(
       (config) => {
         // Do something before request is sent
@@ -133,8 +134,8 @@ const MatomoTrackingInit = () => {
 ReactDOM.render(
   <Provider store={store}>
     <PersistGate loading={null} persistor={persistor}>
-      <RouterProvider router={routes} />
       <GlobalInit />
+      <RouterProvider router={routes} />
       <MatomoTrackingInit />
       <SentryInit />
     </PersistGate>
