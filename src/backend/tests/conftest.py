@@ -108,11 +108,13 @@ def organisation(db):
     """A test organisation."""
     db_org = DbOrganisation(
         name="test_org_qwerty",
+        email="test@gmail.com",
         slug="test_qwerty",
         description="test org",
         url="https://test.org",
         logo="none",
         approved=True,
+        community_type=0,
     )
     db.add(db_org)
     db.commit()
