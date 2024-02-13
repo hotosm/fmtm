@@ -134,7 +134,6 @@ class ProjectIn(BaseModel):
     """Upload new project."""
 
     project_info: ProjectInfo
-    organisation_id: int
     xform_title: str
     hashtags: Optional[List[str]] = None
     task_split_type: Optional[TaskSplitType] = None
