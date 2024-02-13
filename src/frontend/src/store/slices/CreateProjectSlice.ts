@@ -7,7 +7,7 @@ export const initialState: CreateProjectStateTypes = {
   projectDetails: {
     dimension: 10,
     no_of_buildings: 5,
-    hashtags: '',
+    hashtags: '#FMTM',
     name: '',
     short_description: '',
     odk_central_url: '',
