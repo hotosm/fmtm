@@ -36,7 +36,7 @@ from app.config import settings
 from app.db.database import Base, get_db
 from app.db.db_models import DbOrganisation
 from app.main import get_application
-from app.models.enums import UserRole
+from app.models.enums import CommunityType, UserRole
 from app.projects import project_crud
 from app.projects.project_schemas import ODKCentralDecrypted, ProjectInfo, ProjectUpload
 
@@ -114,7 +114,7 @@ def organisation(db):
         url="https://test.org",
         logo="none",
         approved=True,
-        community_type=0,
+        community_type=CommunityType.OSM_COMMUNITY,
     )
     db.add(db_org)
     db.commit()
