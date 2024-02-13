@@ -169,7 +169,6 @@ class DbOrganisation(Base):
     odk_central_user = cast(str, Column(String))
     odk_central_password = cast(str, Column(String))
 
-    email = cast(str, Column(String))
     community_type = cast(
         CommunityType,
         Column(
