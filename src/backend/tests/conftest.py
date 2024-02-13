@@ -108,7 +108,6 @@ def organisation(db):
     """A test organisation."""
     db_org = DbOrganisation(
         name="test_org_qwerty",
-        email="test@gmail.com",
         slug="test_qwerty",
         description="test org",
         url="https://test.org",
