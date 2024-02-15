@@ -17,6 +17,8 @@
 #
 """Routes for organisation management."""
 
+from typing import Optional
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -49,6 +51,15 @@ async def get_organisations(
     return await organisation_crud.get_organisations(db, current_user)
 
 
+@router.get("/unapproved/", response_model=list[organisation_schemas.OrganisationOut])
+async def list_unapproved_organisations(
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(super_admin),
+) -> list[DbOrganisation]:
+    """Get a list of all organisations."""
+    return await organisation_crud.get_unapproved_organisations(db)
+
+
 @router.get("/{org_id}", response_model=organisation_schemas.OrganisationOut)
 async def get_organisation_detail(
     organisation: DbOrganisation = Depends(org_exists),
@@ -62,11 +73,15 @@ async def get_organisation_detail(
 async def create_organisation(
     # Depends required below to allow logo upload
     org: organisation_schemas.OrganisationIn = Depends(),
-    logo: UploadFile = File(None),
+    logo: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
-    current_user: DbUser = Depends(super_admin),
+    current_user: DbUser = Depends(login_required),
 ) -> organisation_schemas.OrganisationOut:
-    """Create an organisation with the given details."""
+    """Create an organisation with the given details.
+
+    TODO refactor to use base64 encoded logo / no upload file.
+    TODO then we can use the pydantic model as intended.
+    """
     return await organisation_crud.create_organisation(db, org, logo)
 
 
