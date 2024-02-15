@@ -215,11 +215,23 @@ async def flatgeobuf_to_geojson(
             SELECT jsonb_build_object(
                 'type', 'Feature',
                 'geometry', ST_AsGeoJSON(fgb_data.geom)::jsonb,
-                'properties', fgb_data.properties::jsonb
+                'properties', jsonb_build_object(
+                    'osm_id', fgb_data.osm_id,
+                    'tags', fgb_data.tags,
+                    'version', fgb_data.version,
+                    'changeset', fgb_data.changeset,
+                    'timestamp', fgb_data.timestamp
+
+                )::jsonb
             ) AS feature
             FROM (
-            SELECT *,
-                NULL as properties
+                SELECT
+                    geom,
+                    NULL as osm_id,
+                    NULL as tags,
+                    NULL as version,
+                    NULL as changeset,
+                    NULL as timestamp
                 FROM ST_FromFlatGeobuf(null::temp_fgb, :fgb_bytes)
             ) AS fgb_data
         ) AS features;
