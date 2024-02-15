@@ -83,7 +83,7 @@ const ProjectDescriptionTab = ({ projectId }) => {
       <InputTextField
         id="tags"
         name="hashtags"
-        label="Tags"
+        label="Hashtags"
         value={values?.hashtags}
         onChange={handleChange}
         fieldType="text"
