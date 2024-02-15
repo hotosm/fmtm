@@ -242,6 +242,6 @@ button {
 .react-datepicker__day--selected:hover {
   background-color: #bc2c2c;
 }
-.react-datepicker__day--keyboard-selected{
+.react-datepicker__day--keyboard-selected {
   background-color: #fcc2c2;
 }
