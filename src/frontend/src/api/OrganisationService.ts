@@ -185,3 +185,31 @@ export const ApproveOrganizationService: Function = (url: string, organizationId
     await approveOrganization(url);
   };
 };
+
+export const RejectOrganizationService: Function = (url: string) => {
+  return async (dispatch) => {
+    const rejectOrganization = async (url: string) => {
+      try {
+        await axios.delete(url);
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: 'Organization rejected successfully.',
+            variant: 'success',
+            duration: 2000,
+          }),
+        );
+      } catch (error) {
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: 'Failed to reject organization.',
+            variant: 'error',
+            duration: 2000,
+          }),
+        );
+      }
+    };
+    await rejectOrganization(url);
+  };
+};
