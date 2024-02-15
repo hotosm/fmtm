@@ -171,7 +171,7 @@ async def geojson_to_flatgeobuf(
             FROM data
         ) AS f;
 
-        SELECT ST_AsFlatGeobuf(fgb_data)
+        SELECT ST_AsFlatGeobuf(fgb_data, true)
         FROM (SELECT * FROM public.temp_features as geoms) AS fgb_data;
     """
     # Run the SQL
