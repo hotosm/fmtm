@@ -69,9 +69,26 @@ const ProjectDetailsForm = ({ flag }) => {
   };
 
   useEffect(() => {
-    handleCustomChange('fillODKCredentials', false);
+    if (!values.organisation_id) {
+      handleCustomChange('defaultODKCredentials', false);
+    }
   }, []);
 
+  useEffect(() => {
+    if (values.defaultODKCredentials) {
+      handleCustomChange('odk_central_url', '');
+      handleCustomChange('odk_central_user', '');
+      handleCustomChange('odk_central_password', '');
+    }
+  }, [values.defaultODKCredentials]);
+
+  useEffect(() => {
+    organisationList?.map((organization) => {
+      if (values?.organisation_id == organization?.value) {
+        setHasODKCredentials(organization.hasODKCredentials);
+      }
+    });
+  }, [values?.organisation_id, organisationList]);
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
       <div className="fmtm-bg-white xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6">
@@ -124,16 +141,16 @@ const ProjectDetailsForm = ({ flag }) => {
             />
             {hasODKCredentials && (
               <CustomCheckbox
-                key="fillODKCredentials"
+                key="defaultODKCredentials"
                 label="Use default ODK credentials"
-                checked={values.fillODKCredentials}
+                checked={values.defaultODKCredentials}
                 onCheckedChange={() => {
-                  handleCustomChange('fillODKCredentials', !values.fillODKCredentials);
+                  handleCustomChange('defaultODKCredentials', !values.defaultODKCredentials);
                 }}
                 className="fmtm-text-black"
               />
             )}
-            {!values.fillODKCredentials && (
+            {!values.defaultODKCredentials && (
               <div className="fmtm-flex fmtm-flex-col fmtm-gap-6">
                 <InputTextField
                   id="odk_central_url"
@@ -196,12 +213,8 @@ const ProjectDetailsForm = ({ flag }) => {
                   valueKey="value"
                   label="label"
                   onValueChange={(value) => {
-                    organisationList?.map((organization) => {
-                      if (value == organization?.value) {
-                        setHasODKCredentials(organization.hasODKCredentials);
-                      }
-                    });
                     handleCustomChange('organisation_id', value && +value);
+                    handleCustomChange('defaultODKCredentials', false);
                   }}
                 />
                 <AssetModules.AddIcon
