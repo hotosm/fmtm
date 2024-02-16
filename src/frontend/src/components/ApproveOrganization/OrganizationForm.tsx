@@ -42,14 +42,6 @@ const OrganizationForm = () => {
           fieldType="text"
         />
         <InputTextField
-          id="email"
-          name="email"
-          label="Email"
-          value={organisationFormData?.email}
-          onChange={() => {}}
-          fieldType="text"
-        />
-        <InputTextField
           id="url"
           name="url"
           label="Website URL"

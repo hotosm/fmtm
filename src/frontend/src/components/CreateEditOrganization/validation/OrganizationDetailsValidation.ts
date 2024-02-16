@@ -8,7 +8,6 @@ interface OrganisationValues {
   odk_central_url: string;
   odk_central_user: string;
   odk_central_password: string;
-  email: string;
   osm_profile: string;
   organization_type: string;
 }
@@ -21,7 +20,6 @@ interface ValidationErrors {
   odk_central_url?: string;
   odk_central_user?: string;
   odk_central_password?: string;
-  email?: string;
   osm_profile?: string;
   organization_type?: string;
 }
@@ -59,10 +57,6 @@ function OrganizationDetailsValidation(values: OrganisationValues) {
 
   if (values?.odk_central_url && !isValidUrl(values.odk_central_url)) {
     errors.odk_central_url = 'Invalid URL.';
-  }
-
-  if (!values?.email) {
-    errors.email = 'Email is Required.';
   }
 
   return errors;
