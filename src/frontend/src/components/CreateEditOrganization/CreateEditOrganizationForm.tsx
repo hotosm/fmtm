@@ -17,6 +17,7 @@ import {
 } from '@/api/OrganisationService';
 import { diffObject } from '@/utilfunctions/compareUtils';
 import InstructionsSidebar from '@/components/CreateEditOrganization/InstructionsSidebar';
+import { CustomCheckbox } from '@/components/common/Checkbox';
 
 type optionsType = {
   name: string;
@@ -43,6 +44,7 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
   );
   const postOrganisationData: any = CoreModules.useAppSelector((state) => state.organisation.postOrganisationData);
   const [previewSource, setPreviewSource] = useState<any>('');
+  const [fillODKCredentials, setFillODKCredentials] = useState(false);
 
   const submission = () => {
     if (!organizationId) {
@@ -126,17 +128,6 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
             required
             errorMsg={errors.name}
           />
-          <InputTextField
-            id="email"
-            name="email"
-            label="Email?"
-            subLabel="We will use this email for scheduling on-boarding training sessions and follow-up needed to create your org."
-            value={values?.email}
-            onChange={handleChange}
-            fieldType="text"
-            required
-            errorMsg={errors.email}
-          />
           {!organizationId && (
             <InputTextField
               id="url"
@@ -159,10 +150,19 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
             required
             errorMsg={errors.description}
           />
+          <CustomCheckbox
+            key="fillODKCredentials"
+            label="Fill ODK credentials now"
+            checked={fillODKCredentials}
+            onCheckedChange={() => {
+              setFillODKCredentials(!fillODKCredentials);
+            }}
+            className="fmtm-text-black"
+          />
           <InputTextField
             id="odk_central_url"
             name="odk_central_url"
-            label="ODK Central URL (Optional)"
+            label="ODK Central URL"
             value={values?.odk_central_url}
             onChange={handleChange}
             fieldType="text"
@@ -170,7 +170,7 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
           <InputTextField
             id="odk_central_user"
             name="odk_central_user"
-            label="ODK Central User (Optional)"
+            label="ODK Central User"
             value={values?.odk_central_user}
             onChange={handleChange}
             fieldType="text"
@@ -178,7 +178,7 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
           <InputTextField
             id="odk_central_password"
             name="odk_central_password"
-            label="ODK Central Password (Optional)"
+            label="ODK Central Password"
             value={values?.odk_central_password}
             onChange={handleChange}
             fieldType="password"
