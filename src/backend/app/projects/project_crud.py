@@ -32,6 +32,7 @@ import requests
 import shapely.wkb as wkblib
 import sozipfile.sozipfile as zipfile
 from asgiref.sync import async_to_sync
+from cpuinfo import get_cpu_info
 from fastapi import File, HTTPException, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fmtm_splitter.splitter import split_by_sql, split_by_square
@@ -1283,8 +1284,13 @@ def generate_appuser_files(
             except Exception as e:
                 log.exception(str(e))
 
-        # Use a ThreadPoolExecutor to run the synchronous code in threads
-        with ThreadPoolExecutor() as executor:
+        # The number of threads is based on the CPU cores
+        info = get_cpu_info()
+        cores = info["count"] * 2
+
+        # Use a ThreadPoolExecutor to run the synchronous code in threads.
+        # Used no.of threads = number of cores - 2
+        with ThreadPoolExecutor(max_workers=cores - 2) as executor:
             # Submit tasks to the thread pool
             futures = [
                 executor.submit(wrap_generate_task_files, task) for task in task_list
