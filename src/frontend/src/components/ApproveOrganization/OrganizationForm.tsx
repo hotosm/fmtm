@@ -30,7 +30,9 @@ const OrganizationForm = () => {
 
   useEffect(() => {
     if (organizationId) {
-      dispatch(GetIndividualOrganizationService(`${import.meta.env.VITE_API_URL}/organisation/${organizationId}`));
+      dispatch(
+        GetIndividualOrganizationService(`${import.meta.env.VITE_API_URL}/organisation/unapproved/${organizationId}`),
+      );
     }
   }, [organizationId]);
 
