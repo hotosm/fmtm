@@ -1,7 +1,6 @@
 import TextArea from '@/components/common/TextArea';
 import InputTextField from '@/components/common/InputTextField';
-import RadioButton from '@/components/common/RadioButton';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +13,8 @@ import AssetModules from '@/shared/AssetModules.js';
 import { createPopup } from '@/utilfunctions/createPopup';
 import { CustomSelect } from '@/components/common/Select';
 import { OrganisationService } from '@/api/CreateProjectService';
+import { CustomCheckbox } from '@/components/common/Checkbox';
+import { organizationDropdownType } from '@/models/createproject/createProjectModel';
 
 const ProjectDetailsForm = ({ flag }) => {
   const dispatch = useDispatch();
@@ -21,8 +22,12 @@ const ProjectDetailsForm = ({ flag }) => {
 
   const projectDetails: any = useAppSelector((state) => state.createproject.projectDetails);
   const organisationListData: any = useAppSelector((state) => state.createproject.organisationList);
-
-  const organisationList = organisationListData.map((item) => ({ label: item.name, value: item.id }));
+  const organisationList: organizationDropdownType[] = organisationListData.map((item) => ({
+    label: item.name,
+    value: item.id,
+    hasODKCredentials: item?.odk_central_url ? true : false,
+  }));
+  const [hasODKCredentials, setHasODKCredentials] = useState(false);
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(values));
@@ -62,6 +67,10 @@ const ProjectDetailsForm = ({ flag }) => {
     handleChange(e);
     dispatch(CreateProjectActions.SetIsUnsavedChanges(true));
   };
+
+  useEffect(() => {
+    handleCustomChange('fillODKCredentials', false);
+  }, []);
 
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
@@ -113,36 +122,51 @@ const ProjectDetailsForm = ({ flag }) => {
               required
               errorMsg={errors.short_description}
             />
-            <InputTextField
-              id="odk_central_url"
-              name="odk_central_url"
-              label="ODK Central URL"
-              value={values?.odk_central_url}
-              onChange={handleChange}
-              fieldType="text"
-              errorMsg={errors.odk_central_url}
-              required
-            />
-            <InputTextField
-              id="odk_central_user"
-              name="odk_central_user"
-              label="ODK Central Email"
-              value={values?.odk_central_user}
-              onChange={handleChange}
-              fieldType="text"
-              errorMsg={errors.odk_central_user}
-              required
-            />
-            <InputTextField
-              id="odk_central_password"
-              name="odk_central_password"
-              label="ODK Central Password"
-              value={values?.odk_central_password}
-              onChange={handleChange}
-              fieldType="password"
-              errorMsg={errors.odk_central_password}
-              required
-            />
+            {hasODKCredentials && (
+              <CustomCheckbox
+                key="fillODKCredentials"
+                label="Use default ODK credentials"
+                checked={values.fillODKCredentials}
+                onCheckedChange={() => {
+                  handleCustomChange('fillODKCredentials', !values.fillODKCredentials);
+                }}
+                className="fmtm-text-black"
+              />
+            )}
+            {!values.fillODKCredentials && (
+              <div className="fmtm-flex fmtm-flex-col fmtm-gap-6">
+                <InputTextField
+                  id="odk_central_url"
+                  name="odk_central_url"
+                  label="ODK Central URL"
+                  value={values?.odk_central_url}
+                  onChange={handleChange}
+                  fieldType="text"
+                  errorMsg={errors.odk_central_url}
+                  required
+                />
+                <InputTextField
+                  id="odk_central_user"
+                  name="odk_central_user"
+                  label="ODK Central Email"
+                  value={values?.odk_central_user}
+                  onChange={handleChange}
+                  fieldType="text"
+                  errorMsg={errors.odk_central_user}
+                  required
+                />
+                <InputTextField
+                  id="odk_central_password"
+                  name="odk_central_password"
+                  label="ODK Central Password"
+                  value={values?.odk_central_password}
+                  onChange={handleChange}
+                  fieldType="password"
+                  errorMsg={errors.odk_central_password}
+                  required
+                />
+              </div>
+            )}
             <div>
               <InputTextField
                 id="hashtags"
@@ -171,7 +195,14 @@ const ProjectDetailsForm = ({ flag }) => {
                   value={values.organisation_id?.toString()}
                   valueKey="value"
                   label="label"
-                  onValueChange={(value) => handleCustomChange('organisation_id', value && +value)}
+                  onValueChange={(value) => {
+                    organisationList?.map((organization) => {
+                      if (value == organization?.value) {
+                        setHasODKCredentials(organization.hasODKCredentials);
+                      }
+                    });
+                    handleCustomChange('organisation_id', value && +value);
+                  }}
                 />
                 <AssetModules.AddIcon
                   className="fmtm-bg-red-600 fmtm-text-white fmtm-rounded-full fmtm-mb-[0.15rem] hover:fmtm-bg-red-700 hover:fmtm-cursor-pointer fmtm-ml-5 fmtm-mt-9"
