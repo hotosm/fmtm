@@ -44,13 +44,14 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
   );
   const postOrganisationData: any = CoreModules.useAppSelector((state) => state.organisation.postOrganisationData);
   const [previewSource, setPreviewSource] = useState<any>('');
-  const [fillODKCredentials, setFillODKCredentials] = useState(false);
 
   const submission = () => {
     if (!organizationId) {
-      dispatch(PostOrganisationDataService(`${import.meta.env.VITE_API_URL}/organisation/`, values));
+      const { fillODKCredentials, ...filteredValues } = values;
+      dispatch(PostOrganisationDataService(`${import.meta.env.VITE_API_URL}/organisation/`, filteredValues));
     } else {
-      const changedValues = diffObject(organisationFormData, values);
+      const { fillODKCredentials, ...filteredValues } = values;
+      const changedValues = diffObject(organisationFormData, filteredValues);
       if (Object.keys(changedValues).length > 0) {
         dispatch(
           PatchOrganizationDataService(
@@ -105,6 +106,18 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
     }
   }, [organizationId]);
 
+  useEffect(() => {
+    if (!values?.fillODKCredentials) {
+      handleCustomChange('odk_central_url', null);
+      handleCustomChange('odk_central_user', null);
+      handleCustomChange('odk_central_password', null);
+    }
+  }, [values?.fillODKCredentials]);
+
+  useEffect(() => {
+    handleCustomChange('fillODKCredentials', false);
+  }, []);
+
   return (
     <div
       className={`fmtm-flex ${
@@ -153,36 +166,46 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
           <CustomCheckbox
             key="fillODKCredentials"
             label="Fill ODK credentials now"
-            checked={fillODKCredentials}
+            checked={values.fillODKCredentials}
             onCheckedChange={() => {
-              setFillODKCredentials(!fillODKCredentials);
+              handleCustomChange('fillODKCredentials', !values.fillODKCredentials);
             }}
             className="fmtm-text-black"
           />
-          <InputTextField
-            id="odk_central_url"
-            name="odk_central_url"
-            label="ODK Central URL"
-            value={values?.odk_central_url}
-            onChange={handleChange}
-            fieldType="text"
-          />
-          <InputTextField
-            id="odk_central_user"
-            name="odk_central_user"
-            label="ODK Central User"
-            value={values?.odk_central_user}
-            onChange={handleChange}
-            fieldType="text"
-          />
-          <InputTextField
-            id="odk_central_password"
-            name="odk_central_password"
-            label="ODK Central Password"
-            value={values?.odk_central_password}
-            onChange={handleChange}
-            fieldType="password"
-          />
+          {values?.fillODKCredentials && (
+            <div className="fmtm-flex fmtm-flex-col fmtm-gap-6">
+              <InputTextField
+                id="odk_central_url"
+                name="odk_central_url"
+                label="ODK Central URL"
+                value={values?.odk_central_url}
+                onChange={handleChange}
+                fieldType="text"
+                errorMsg={errors.odk_central_url}
+                required
+              />
+              <InputTextField
+                id="odk_central_user"
+                name="odk_central_user"
+                label="ODK Central Email"
+                value={values?.odk_central_user}
+                onChange={handleChange}
+                fieldType="text"
+                errorMsg={errors.odk_central_user}
+                required
+              />
+              <InputTextField
+                id="odk_central_password"
+                name="odk_central_password"
+                label="ODK Central Password"
+                value={values?.odk_central_password}
+                onChange={handleChange}
+                fieldType="password"
+                errorMsg={errors.odk_central_password}
+                required
+              />
+            </div>
+          )}
           {!organizationId && (
             <RadioButton
               topic="What type of community or organization are you applying for? "
