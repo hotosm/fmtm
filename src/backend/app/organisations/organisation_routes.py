@@ -61,7 +61,7 @@ async def list_unapproved_organisations(
 
 
 @router.get(
-    "/unapproved/{org_id}", response_model=list[organisation_schemas.OrganisationOut]
+    "/unapproved/{org_id}", response_model=organisation_schemas.OrganisationOut
 )
 async def unapproved_org_detail(
     org_id: int,
