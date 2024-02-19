@@ -7,6 +7,7 @@ export interface IOrganisationState {
   postOrganisationData: any;
   organisationDataLoading: Boolean;
   postOrganisationDataLoading: Boolean;
+  myOrganisationDataLoading: false;
   consentDetailsFormData: {
     give_consent: any;
     review_documentation: any;
@@ -14,4 +15,9 @@ export interface IOrganisationState {
     participated_in: any;
   };
   consentApproval: Boolean;
+  organizationApprovalStatus: {
+    isSuccess: Boolean;
+    organizationApproving: Boolean;
+    organizationRejecting: Boolean;
+  };
 }

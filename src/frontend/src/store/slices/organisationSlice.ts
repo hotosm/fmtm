@@ -7,6 +7,7 @@ const initialState: IOrganisationState = {
   myOrganisationData: [],
   postOrganisationData: null,
   organisationDataLoading: false,
+  myOrganisationDataLoading: false,
   postOrganisationDataLoading: false,
   consentDetailsFormData: {
     give_consent: '',
@@ -15,6 +16,11 @@ const initialState: IOrganisationState = {
     participated_in: [],
   },
   consentApproval: false,
+  organizationApprovalStatus: {
+    isSuccess: false,
+    organizationApproving: false,
+    organizationRejecting: false,
+  },
 };
 const OrganisationSlice = CoreModules.createSlice({
   name: 'organisation',
@@ -49,6 +55,15 @@ const OrganisationSlice = CoreModules.createSlice({
     },
     SetIndividualOrganization(state, action) {
       state.organisationFormData = action.payload;
+    },
+    SetOrganizationApproving(state, action) {
+      state.organizationApprovalStatus.organizationApproving = action.payload;
+    },
+    SetOrganizationRejecting(state, action) {
+      state.organizationApprovalStatus.organizationRejecting = action.payload;
+    },
+    SetOrganizationApprovalStatus(state, action) {
+      state.organizationApprovalStatus.isSuccess = action.payload;
     },
   },
 });

@@ -5,11 +5,14 @@ import { MyOrganisationDataService, OrganisationDataService } from '@/api/Organi
 import { user_roles } from '@/types/enums';
 import { GetOrganisationDataModel } from '@/models/organisation/organisationModel';
 import OrganisationGridCard from '@/components/organisation/OrganisationGridCard';
+import { useNavigate } from 'react-router-dom';
 
 const Organisation = () => {
+  const navigate = useNavigate();
+
   const [searchKeyword, setSearchKeyword] = useState<string>('');
   const [activeTab, setActiveTab] = useState<0 | 1>(0);
-  const [verifiedTab, setVerifiedTab] = useState<boolean>(false);
+  const [verifiedTab, setVerifiedTab] = useState<boolean>(true);
   const token = CoreModules.useAppSelector((state) => state.login.loginToken);
 
   const handleSearchChange = (event) => {
@@ -30,12 +33,20 @@ const Organisation = () => {
     );
     return filteredCardData;
   };
-
   useEffect(() => {
-    dispatch(OrganisationDataService(`${import.meta.env.VITE_API_URL}/organisation/`));
     dispatch(MyOrganisationDataService(`${import.meta.env.VITE_API_URL}/organisation/my-organisations`));
   }, []);
-  console.log(filteredBySearch(organisationData, searchKeyword), 'filteredBySearch(organisationData, searchKeyword)');
+  useEffect(() => {
+    if (verifiedTab) {
+      dispatch(OrganisationDataService(`${import.meta.env.VITE_API_URL}/organisation/`));
+    } else {
+      dispatch(OrganisationDataService(`${import.meta.env.VITE_API_URL}/organisation/unapproved/`));
+    }
+  }, [verifiedTab]);
+
+  const approveOrganization = (id: number) => {
+    navigate(`/approve-organization/${id}`);
+  };
 
   return (
     <CoreModules.Box
