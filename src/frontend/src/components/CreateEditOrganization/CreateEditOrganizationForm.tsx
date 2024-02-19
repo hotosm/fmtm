@@ -45,10 +45,6 @@ const CreateEditOrganizationForm = ({ organizationId }) => {
   const postOrganisationData: any = CoreModules.useAppSelector((state) => state.organisation.postOrganisationData);
   const [previewSource, setPreviewSource] = useState<any>('');
 
-  useEffect(() => {
-    if (!organizationId) dispatch(OrganisationAction.SetOrganisationFormData({}));
-  }, []);
-
   const submission = () => {
     if (!organizationId) {
       const { fillODKCredentials, ...filteredValues } = values;

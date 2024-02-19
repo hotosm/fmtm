@@ -24,6 +24,10 @@ const CreateEditOrganization = () => {
     dispatch(OrganisationAction.SetConsentApproval(false));
   }, []);
 
+  useEffect(() => {
+    dispatch(OrganisationAction.SetOrganisationFormData({}));
+  }, []);
+
   return (
     <div className="fmtm-bg-[#F5F5F5]">
       <CreateEditOrganizationHeader organizationId={organizationId} />
