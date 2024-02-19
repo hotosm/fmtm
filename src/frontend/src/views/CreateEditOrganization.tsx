@@ -13,6 +13,7 @@ const CreateEditOrganization = () => {
   const consentApproval: any = CoreModules.useAppSelector((state) => state.organisation.consentApproval);
 
   useEffect(() => {
+    // clear consent form on new org add
     dispatch(
       OrganisationAction.SetConsentDetailsFormData({
         give_consent: '',
@@ -25,6 +26,7 @@ const CreateEditOrganization = () => {
   }, []);
 
   useEffect(() => {
+    // clear state of formData to empty
     dispatch(OrganisationAction.SetOrganisationFormData({}));
   }, []);
 
