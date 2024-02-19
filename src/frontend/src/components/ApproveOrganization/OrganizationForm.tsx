@@ -53,6 +53,7 @@ const OrganizationForm = () => {
   // redirect to manage-organization page after approve/reject success
   useEffect(() => {
     if (organizationApprovalSuccess) {
+      dispatch(OrganisationAction.SetOrganisationFormData({}));
       dispatch(OrganisationAction.SetOrganizationApprovalStatus(false));
       navigate('/organisation');
     }

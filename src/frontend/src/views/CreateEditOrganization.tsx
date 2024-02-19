@@ -1,14 +1,28 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import CoreModules from '@/shared/CoreModules';
-import environment from '@/environment';
 import CreateEditOrganizationHeader from '@/components/CreateEditOrganization/CreateEditOrganizationHeader';
 import ConsentDetailsForm from '@/components/CreateEditOrganization/ConsentDetailsForm';
 import CreateEditOrganizationForm from '@/components/CreateEditOrganization/CreateEditOrganizationForm';
+import { useDispatch } from 'react-redux';
+import { OrganisationAction } from '@/store/slices/organisationSlice';
 
 const CreateEditOrganization = () => {
   const params = CoreModules.useParams();
+  const dispatch = useDispatch();
   const organizationId = params.id;
   const consentApproval: any = CoreModules.useAppSelector((state) => state.organisation.consentApproval);
+
+  useEffect(() => {
+    dispatch(
+      OrganisationAction.SetConsentDetailsFormData({
+        give_consent: '',
+        review_documentation: [],
+        log_into: [],
+        participated_in: [],
+      }),
+    );
+    dispatch(OrganisationAction.SetConsentApproval(false));
+  }, []);
 
   return (
     <div className="fmtm-bg-[#F5F5F5]">
