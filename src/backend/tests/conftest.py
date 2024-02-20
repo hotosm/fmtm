@@ -113,6 +113,7 @@ def organisation(db):
         url="https://test.org",
         logo="none",
         approved=True,
+        user_id=20386219,
         community_type=CommunityType.OSM_COMMUNITY,
     )
     db.add(db_org)
