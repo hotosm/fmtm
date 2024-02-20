@@ -155,7 +155,6 @@ async def get_my_organisations(
     """
     db_user = await get_user(db, current_user.id)
 
-    print(db_user.organisations)
     return db_user.organisations
 
 
