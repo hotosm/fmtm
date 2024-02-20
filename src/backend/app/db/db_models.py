@@ -163,6 +163,8 @@ class DbOrganisation(Base):
         Column(Enum(OrganisationType), default=OrganisationType.FREE, nullable=False),
     )
     approved = cast(bool, Column(Boolean, default=False))
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user = relationship(DbUser)
 
     ## Odk central server
     odk_central_url = cast(str, Column(String))
@@ -181,6 +183,8 @@ class DbOrganisation(Base):
         secondary=organisation_managers,
         backref=backref("organisations", lazy="joined"),
     )
+
+    _table_args__ = (ForeignKeyConstraint(["user_id"], ["users.id"]),)
 
 
 class DbTeam(Base):
