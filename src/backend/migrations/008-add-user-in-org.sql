@@ -1,5 +1,5 @@
 -- ## Migration to:
--- Add the created_by column to the organisations table
+-- * Add the created_by column to the organisations table
 
 -- Start a transaction
 
