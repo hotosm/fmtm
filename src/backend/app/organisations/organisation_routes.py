@@ -94,7 +94,7 @@ async def create_organisation(
     TODO refactor to use base64 encoded logo / no upload file.
     TODO then we can use the pydantic model as intended.
     """
-    return await organisation_crud.create_organisation(db, org, logo)
+    return await organisation_crud.create_organisation(db, org, current_user, logo)
 
 
 @router.patch("/{org_id}/", response_model=organisation_schemas.OrganisationOut)

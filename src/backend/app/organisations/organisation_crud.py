@@ -35,6 +35,7 @@ from app.organisations.organisation_deps import (
 from app.organisations.organisation_schemas import OrganisationEdit, OrganisationIn
 from app.s3 import add_obj_to_bucket
 from app.users.user_crud import get_user
+from app.users.user_deps import user_exists_in_db
 
 
 async def init_admin_org(db: Session):
@@ -179,7 +180,10 @@ async def upload_logo_to_s3(
 
 
 async def create_organisation(
-    db: Session, org_model: OrganisationIn, logo: Optional[UploadFile] = File(None)
+    db: Session,
+    org_model: OrganisationIn,
+    current_user: AuthUser,
+    logo: Optional[UploadFile] = File(None),
 ) -> db_models.DbOrganisation:
     """Creates a new organisation with the given name, description, url, type, and logo.
 
@@ -190,6 +194,7 @@ async def create_organisation(
         org_model (OrganisationIn): Pydantic model for organisation input.
         logo (UploadFile, optional): logo file of the organisation.
             Defaults to File(...).
+        current_user: logged in user.
 
     Returns:
         DbOrganisation: SQLAlchemy Organisation model.
@@ -206,6 +211,7 @@ async def create_organisation(
     try:
         # Create new organisation without logo set
         db_organisation = db_models.DbOrganisation(**org_model.model_dump())
+        db_organisation.user_id = current_user.id
 
         db.add(db_organisation)
         db.commit()
@@ -324,10 +330,27 @@ async def approve_organisation(db, organisation):
     Returns:
         Response: An HTTP response with the status code 200.
     """
-    log.info(f"Approving organisation ID {organisation.id}")
-    organisation.approved = True
-    db.commit()
-    return Response(status_code=HTTPStatus.OK)
+    try:
+        log.info(f"Approving organisation ID {organisation.id}")
+        user = await user_exists_in_db(organisation.user_id, db)
+
+        if organisation and user:
+            organisation.managers.append(user)
+            organisation.approved = True
+            db.commit()
+            return Response(
+                status_code=HTTPStatus.OK,
+                detail="Organisation is approved successfully",
+            )
+        else:
+            raise HTTPException(
+                status_code=404, detail="Organisation or user not found."
+            )
+    except Exception as e:
+        log.error(f"Error approving organisation: {str(e)}")
+        # Rollback the transaction if an error occurs
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 async def get_unapproved_org_detail(db, org_id):
