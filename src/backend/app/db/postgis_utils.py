@@ -201,6 +201,7 @@ async def flatgeobuf_to_geojson(
     Returns:
         geojson.FeatureCollection: A FeatureCollection object.
     """
+    # FIXME can we use SELECT * to extract all fields into geojson properties?
     sql = text(
         """
         DROP TABLE IF EXISTS public.temp_fgb CASCADE;
