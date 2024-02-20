@@ -67,8 +67,6 @@ const ProjectInfo = () => {
     if (state.projectTaskBoundries.findIndex((project) => project.id == environment.decode(encodedId)) == -1) {
       dispatch(ProjectActions.SetProjectTaskBoundries([]));
       dispatch(ProjectById(state.projectTaskBoundries, environment.decode(encodedId)));
-
-      // dispatch(ProjectBuildingGeojsonService(`${import.meta.env.VITE_API_URL}/projects/${environment.decode(encodedId)}/features`))
     } else {
       dispatch(ProjectActions.SetProjectTaskBoundries([]));
       dispatch(ProjectById(state.projectTaskBoundries, environment.decode(encodedId)));
