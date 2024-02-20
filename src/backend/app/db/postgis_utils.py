@@ -125,6 +125,8 @@ async def geojson_to_flatgeobuf(
     """
     # FIXME make this with with properties / tags
     # FIXME this is important
+    # FIXME but difficult to guarantee users upload geojson
+    # FIXME With required properties included
     # sql = """
     #     DROP TABLE IF EXISTS public.temp_features CASCADE;
 
