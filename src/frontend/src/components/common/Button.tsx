@@ -2,7 +2,6 @@ import { Loader2 } from 'lucide-react';
 import React from 'react';
 
 interface IButton {
-  id?: string;
   btnText: string;
   btnType: 'primary' | 'secondary' | 'other' | 'disabled';
   type?: 'submit' | 'button';
@@ -14,6 +13,7 @@ interface IButton {
   isLoading?: boolean;
   disabled?: boolean;
   loadingText?: string;
+  btnId?: string;
 }
 
 const btnStyle = (btnType, className) => {
@@ -33,7 +33,6 @@ const btnStyle = (btnType, className) => {
   }
 };
 const Button = ({
-  id,
   btnText,
   btnType,
   type,
@@ -45,10 +44,11 @@ const Button = ({
   icon,
   isLoading,
   loadingText,
+  btnId,
 }: IButton) => (
-  <div className="fmtm-w-fit">
+  <div>
     <button
-      id={id}
+      data-btnid={btnId}
       data-testid="test-button"
       type={type === 'submit' ? 'submit' : 'button'}
       onClick={onClick}
