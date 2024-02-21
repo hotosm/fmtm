@@ -49,10 +49,10 @@ export default function Dialog({ taskId, feature, map, view }) {
   }, [projectData, taskId, feature]);
 
   const handleOnClick = (event) => {
-    const status = task_priority_str[event.target.id];
+    const status = task_priority_str[event.currentTarget.dataset.btnid];
     const body = token != null ? { ...token } : {};
-    const geoStyle = geojsonStyles[event.target.id];
-    if (event.target.id != undefined) {
+    const geoStyle = geojsonStyles[event.currentTarget.dataset.btnid];
+    if (event.currentTarget.dataset.btnid != undefined) {
       if (body.hasOwnProperty('id')) {
         dispatch(
           ProjectTaskStatus(
@@ -104,7 +104,7 @@ export default function Dialog({ taskId, feature, map, view }) {
             list_of_task_status?.map((data, index) => {
               return list_of_task_status?.length != 0 ? (
                 <Button
-                  id={data.value}
+                  btnId={data.value}
                   key={index}
                   onClick={handleOnClick}
                   disabled={loading}
