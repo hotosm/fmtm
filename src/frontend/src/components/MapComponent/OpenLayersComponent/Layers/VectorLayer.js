@@ -187,16 +187,24 @@ const VectorLayer = ({
     return false;
   }
 
-  async function loadFgbRemote(filterExtent = true) {
+  async function loadFgbRemote(filterExtent = true, extractGeomCol = true) {
     this.clear();
     const filteredFeatures = [];
 
     for await (let feature of FGBGeoJson.deserialize(fgbUrl, fgbBoundingBox(fgbExtent.getExtent()))) {
-      const extractGeom = new GeoJSON().readFeature(feature, {
+      if (extractGeomCol && feature.geometry.type === 'GeometryCollection') {
+        // Extract first geom from geomcollection
+        feature = {
+          ...feature,
+          geometry: feature.geometry.geometries[0],
+        };
+      }
+      let extractGeom = new GeoJSON().readFeature(feature, {
         dataProjection: 'EPSG:4326',
         featureProjection: 'EPSG:3857',
       });
 
+      // Clip geoms to another geometry (i.e. ST_Within)
       if (filterExtent) {
         if (geomWithin(extractGeom.getGeometry(), fgbExtent)) {
           filteredFeatures.push(extractGeom);
@@ -206,6 +214,22 @@ const VectorLayer = ({
       }
     }
     this.addFeatures(filteredFeatures);
+  }
+
+  function triggerMapClick(feature) {
+    // Perform an action if a feature is found
+    if (feature) {
+      // Extract properties
+      const properties = feature.getProperties();
+      // Remove geometry key if properties are present
+      // If no properties are set, the feature uid is included
+      if (!('uid' in properties)) {
+        const { geometry, ...restProperties } = properties;
+        mapOnClick(restProperties, feature);
+        return;
+      }
+      mapOnClick(properties, feature);
+    }
   }
 
   useEffect(() => {
@@ -230,12 +254,7 @@ const VectorLayer = ({
         }
       });
 
-      // Perform an action if a feature is found
-      if (feature) {
-        // Do something with the feature
-        // dispatch()
-        mapOnClick(feature.getProperties(), feature);
-      }
+      triggerMapClick(feature);
     });
 
     setVectorLayer(vectorLyr);
@@ -265,12 +284,7 @@ const VectorLayer = ({
         }
       });
 
-      // Perform an action if a feature is found
-      if (feature) {
-        // Do something with the feature
-        // dispatch()
-        mapOnClick(feature.getProperties(), feature);
-      }
+      triggerMapClick(feature);
     });
 
     // map.addLayer(vectorLyr);

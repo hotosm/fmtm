@@ -269,20 +269,22 @@ const Home = () => {
         />
       </div>
 
-      <Modal
-        className={`fmtm-w-[700px]`}
-        description={
-          <div>
-            {Object.entries(selectedFeature).map(([key, value]) => (
-              <p key={key} className="fmtm-text-base">{`${key}: ${value}`}</p>
-            ))}
-          </div>
-        }
-        open={dataExtractModalOpen}
-        onOpenChange={(value) => {
-          setDataExtractModalOpen(value);
-        }}
-      />
+      <div>
+        <Modal
+          className={`fmtm-w-[700px]`}
+          description={
+            <div>
+              {Object.entries(selectedFeature).map(([key, value]) => (
+                <p key={key} className="fmtm-text-base">{`${key}: ${value}`}</p>
+              ))}
+            </div>
+          }
+          open={dataExtractModalOpen}
+          onOpenChange={(value) => {
+            setDataExtractModalOpen(value);
+          }}
+        />
+      </div>
 
       {/* Top project details heading medium dimension*/}
       {windowSize.width >= 640 && (
@@ -411,7 +413,7 @@ const Home = () => {
                   }}
                   mapOnClick={displayDataExtractValues}
                   zoomToLayer
-                  zIndex={5}
+                  zIndex={10}
                 />
               )}
               {geolocationStatus && currentCoordinate?.latitude && currentCoordinate?.longitude && (
@@ -425,7 +427,7 @@ const Home = () => {
                     constrainResolution: true,
                     duration: 2000,
                   }}
-                  zIndex={5}
+                  zIndex={15}
                   rotation={deviceRotation}
                 />
               )}
