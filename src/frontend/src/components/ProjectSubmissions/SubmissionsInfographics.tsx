@@ -82,7 +82,7 @@ const lineKeyData = [
   },
 ];
 
-const SubmissionsInfographics = () => {
+const SubmissionsInfographics = ({ toggleView }) => {
   const formSubmissionRef = useRef(null);
   const projectProgressRef = useRef(null);
   const totalContributorsRef = useRef(null);
@@ -106,6 +106,8 @@ const SubmissionsInfographics = () => {
     (state) => state.submission.validatedVsMappedInfographics,
   );
   const validatedVsMappedLoading = CoreModules.useAppSelector((state) => state.submission.validatedVsMappedLoading);
+  const taskData = CoreModules.useAppSelector((state) => state.task.taskData);
+  const taskLoading = CoreModules.useAppSelector((state) => state.task.taskLoading);
 
   useEffect(() => {
     dispatch(
@@ -146,20 +148,27 @@ const SubmissionsInfographics = () => {
     </div>
   );
 
-  // Test data for project progress
-  const featCount = 500;
-  const current = 450;
-  const remaining = featCount - current;
-
-  const pieData = [
-    { names: 'Current Progress', value: current },
-    { names: 'Remaining', value: remaining },
+  const projectProgressData = [
+    {
+      names: 'Current',
+      value:
+        taskData?.submission_count > taskData?.feature_count ||
+        (taskData?.submission_count === 0 && taskData?.feature_count === 0)
+          ? 100
+          : taskData?.submission_count,
+    },
+    {
+      names: 'Remaining',
+      value:
+        taskData?.submission_count > taskData?.feature_count ? 0 : taskData?.feature_count - taskData?.submission_count,
+    },
   ];
 
   return (
     <div className="fmtm-flex fmtm-flex-col fmtm-gap-5">
-      <div className="fmtm-flex fmtm-gap-10">
-        <div className="fmtm-w-[70%]">
+      {toggleView}
+      <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5 lg:fmtm-gap-10">
+        <div className="lg:fmtm-w-[70%]">
           <InfographicsCard
             cardRef={formSubmissionRef}
             header="Form Submissions"
@@ -183,26 +192,22 @@ const SubmissionsInfographics = () => {
             }
           />
         </div>
-        <div className="fmtm-w-[30%]">
+        <div className="lg:fmtm-w-[30%]">
           <InfographicsCard
             cardRef={projectProgressRef}
             header="Project Progress"
             body={
-              false ? (
+              taskLoading ? (
                 <CoreModules.Skeleton className="!fmtm-w-full fmtm-h-full" />
-              ) : pieData.length > 0 ? (
-                <CustomPieChart data={pieData} dataKey="value" nameKey="names" />
               ) : (
-                <div className="fmtm-w-full fmtm-h-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-text-3xl fmtm-text-gray-400">
-                  No data available!
-                </div>
+                <CustomPieChart data={projectProgressData} dataKey="value" nameKey="names" />
               )
             }
           />
         </div>
       </div>
-      <div className="fmtm-flex fmtm-gap-10">
-        <div className="fmtm-w-[70%]">
+      <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5 lg:fmtm-gap-10">
+        <div className="lg:fmtm-w-[70%]">
           <InfographicsCard
             cardRef={plannedVsActualRef}
             header="Validated vs Mapped Task"
@@ -226,7 +231,7 @@ const SubmissionsInfographics = () => {
             }
           />
         </div>
-        <div className="fmtm-w-[30%]">
+        <div className="lg:fmtm-w-[30%]">
           <InfographicsCard
             cardRef={totalContributorsRef}
             header={`Total Contributors: ${submissionContributorsData.length}`}
@@ -299,7 +304,6 @@ const SubmissionsInfographics = () => {
           }
         />
       </div>
-
       <div>
         <TaskSubmissions />
       </div>

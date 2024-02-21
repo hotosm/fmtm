@@ -70,7 +70,7 @@ class Task(BaseModel):
     id: int
     project_id: int
     project_task_index: int
-    project_task_name: str
+    project_task_name: Optional[str]
     outline_geojson: Optional[GeojsonFeature] = None
     outline_centroid: Optional[GeojsonFeature] = None
     initial_feature_count: Optional[int] = None
@@ -131,6 +131,32 @@ class Task(BaseModel):
             return ""
 
         return decrypt_value(value)
+
+
+class TaskCommentResponse(BaseModel):
+    """Task mapping history."""
+
+    id: int
+    task_id: int
+    comment: Optional[str] = None
+    commented_by: str
+    created_at: datetime
+
+
+class TaskCommentBase(BaseModel):
+    """Task mapping history."""
+
+    comment: str
+    commented_by: str
+    created_at: datetime
+
+
+class TaskCommentRequest(BaseModel):
+    """Task mapping history."""
+
+    task_id: int
+    project_id: int
+    comment: str
 
 
 class ReadTask(Task):

@@ -52,6 +52,7 @@ from app.db.database import Base, FmtmMetadata
 from app.db.postgis_utils import timestamp
 from app.models.enums import (
     BackgroundTaskStatus,
+    CommunityType,
     MappingLevel,
     MappingPermission,
     OrganisationType,
@@ -92,7 +93,7 @@ class DbUser(Base):
 
     __tablename__ = "users"
 
-    id = cast(int, Column(BigInteger, primary_key=True, index=True))
+    id = cast(int, Column(BigInteger, primary_key=True))
     username = cast(str, Column(String, unique=True))
     profile_img = cast(str, Column(String))
     role = cast(UserRole, Column(Enum(UserRole), default=UserRole.MAPPER))
@@ -162,11 +163,19 @@ class DbOrganisation(Base):
         Column(Enum(OrganisationType), default=OrganisationType.FREE, nullable=False),
     )
     approved = cast(bool, Column(Boolean, default=False))
+    created_by = Column(Integer)
 
     ## Odk central server
     odk_central_url = cast(str, Column(String))
     odk_central_user = cast(str, Column(String))
     odk_central_password = cast(str, Column(String))
+
+    community_type = cast(
+        CommunityType,
+        Column(
+            Enum(CommunityType), default=CommunityType.OSM_COMMUNITY, nullable=False
+        ),
+    )
 
     managers = relationship(
         DbUser,
@@ -380,6 +389,32 @@ class DbTaskHistory(Base):
         ),
         Index("idx_task_history_composite", "task_id", "project_id"),
         Index("idx_task_history_project_id_user_id", "user_id", "project_id"),
+        {},
+    )
+
+
+class TaskComment(Base):
+    """Represents a comment associated with a task."""
+
+    __tablename__ = "task_comment"
+
+    id = Column(Integer, primary_key=True)
+    task_id = Column(Integer, nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id"), index=True)
+    comment_text = Column(String)
+    commented_by = Column(
+        BigInteger,
+        ForeignKey("users.id", name="fk_users"),
+        index=True,
+        nullable=False,
+    )
+    created_at = Column(DateTime, nullable=False, default=timestamp)
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            [task_id, project_id], ["tasks.id", "tasks.project_id"], name="fk_tasks"
+        ),
+        Index("idx_task_comment_composite", "task_id", "project_id"),
         {},
     )
 
@@ -601,6 +636,7 @@ class DbProject(Base):
     data_extract_type = cast(
         str, Column(String)
     )  # Type of data extract (Polygon or Centroid)
+    data_extract_url = cast(str, Column(String))
     task_split_type = cast(
         TaskSplitType, Column(Enum(TaskSplitType), nullable=True)
     )  # Options: divide on square, manual upload, task splitting algo

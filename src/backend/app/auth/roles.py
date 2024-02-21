@@ -207,11 +207,16 @@ async def org_admin(
             detail="org_id must be provided to check organisation admin role",
         )
 
-    return await check_org_admin(
+    org_user_dict = await check_org_admin(
         db,
         user_data,
         org_id=org_id,
     )
+
+    if project:
+        org_user_dict["project"] = project
+
+    return org_user_dict
 
 
 async def project_admin(
@@ -266,13 +271,12 @@ async def mapper(
     """A mapper for a specific project."""
     # If project is public, skip permission check
     if project.visibility == ProjectVisibility.PUBLIC:
-        return None
-
+        return user_data
     db_user = await check_access(
         user_data,
         db,
         project_id=project.id,
-        role=ProjectRole.VALIDATOR,
+        role=ProjectRole.MAPPER,
     )
 
     if db_user:

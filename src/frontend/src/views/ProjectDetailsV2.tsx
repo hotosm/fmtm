@@ -124,7 +124,7 @@ const Home = () => {
         ...feature.outline_geojson.properties,
         centroid: feature.bbox,
       },
-      id: `${feature.project_task_name}_${feature.task_status}`,
+      id: `${feature.id}_${feature.task_status}`,
     }));
     const taskBuildingGeojsonFeatureCollection = {
       ...geojsonObjectModel,
@@ -317,14 +317,6 @@ const Home = () => {
                 >
                   {state.projectInfo.title}
                 </p>
-
-                <div title="Edit Project">
-                  <AssetModules.EditIcon
-                    className="fmtm-absolute fmtm-bottom-2 fmtm-right-0 fmtm-text-primaryRed hover:fmtm-cursor-pointer hover:fmtm-text-red-700"
-                    style={{ fontSize: '18px' }}
-                    onClick={() => navigate(`/edit-project/project-details/${encodedId}`)}
-                  />
-                </div>
               </div>
             )}
             <div className="fmtm-w-full fmtm-h-1 fmtm-bg-white"></div>

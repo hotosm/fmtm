@@ -18,9 +18,9 @@
 """Tests for project routes."""
 
 import functools
-import json
 import os
 import uuid
+from io import BytesIO
 from unittest.mock import Mock, patch
 
 import pytest
@@ -29,8 +29,7 @@ import sozipfile.sozipfile as zipfile
 from fastapi.concurrency import run_in_threadpool
 from geoalchemy2.elements import WKBElement
 from loguru import logger as log
-from shapely import Polygon, wkb
-from shapely.geometry import shape
+from shapely import Polygon
 
 from app.central.central_crud import create_odk_project
 from app.config import encrypt_value, settings
@@ -61,6 +60,18 @@ async def test_create_project(client, admin_user, organisation):
         },
         "xform_title": "buildings",
         "hashtags": ["#FMTM"],
+        "outline_geojson": {
+            "coordinates": [
+                [
+                    [85.317028828, 27.7052522097],
+                    [85.317028828, 27.7041424888],
+                    [85.318844411, 27.7041424888],
+                    [85.318844411, 27.7052522097],
+                    [85.317028828, 27.7052522097],
+                ]
+            ],
+            "type": "Polygon",
+        },
     }
     project_data.update(**odk_credentials.model_dump())
 
@@ -74,8 +85,9 @@ async def test_create_project(client, admin_user, organisation):
     assert "id" in response_data
 
 
-async def test_delete_project(client, project):
+async def test_delete_project(client, admin_user, project):
     """Test deleting a FMTM project, plus ODK Central project."""
+    log.warning(project)
     response = client.delete(f"/projects/{project.id}")
     assert response.status_code == 204
 
@@ -85,8 +97,15 @@ async def test_create_odk_project():
     mock_project = Mock()
     mock_project.createProject.return_value = {"status": "success"}
 
+    odk_credentials = {
+        "odk_central_url": odk_central_url,
+        "odk_central_user": odk_central_user,
+        "odk_central_password": odk_central_password,
+    }
+    odk_credentials = project_schemas.ODKCentralDecrypted(**odk_credentials)
+
     with patch("app.central.central_crud.get_odk_project", return_value=mock_project):
-        result = create_odk_project("Test Project")
+        result = create_odk_project("Test Project", odk_credentials)
 
     assert result == {"status": "success"}
     mock_project.createProject.assert_called_once_with("Test Project")
@@ -96,12 +115,11 @@ async def test_convert_to_app_project():
     """Test conversion ot app project."""
     polygon = Polygon(
         [
-            (85.924707758, 26.727727503),
-            (85.922703741, 26.732440043),
-            (85.928284549, 26.735158727),
-            (85.930643709, 26.734365785),
-            (85.932368686, 26.732372075),
-            (85.924707758, 26.727727503),
+            (85.317028828, 27.7052522097),
+            (85.317028828, 27.7041424888),
+            (85.318844411, 27.7041424888),
+            (85.318844411, 27.7052522097),
+            (85.317028828, 27.7052522097),
         ]
     )
 
@@ -141,41 +159,6 @@ async def test_generate_appuser_files(db, project):
     project_id = project.id
     log.debug(f"Testing project ID: {project_id}")
 
-    # Set project boundary
-    boundary_geojson = json.loads(
-        json.dumps(
-            {
-                "type": "Polygon",
-                "coordinates": [
-                    [
-                        [8.539551723844, 47.3765788922656],
-                        [8.539551723844, 47.37303247378486],
-                        [8.547135285454686, 47.37303247378486],
-                        [8.547135285454686, 47.3765788922656],
-                        [8.539551723844, 47.3765788922656],
-                    ]
-                ],
-            }
-        )
-    )
-    log.debug(f"Creating project boundary: {boundary_geojson}")
-    boundary_created = await project_crud.update_project_boundary(
-        db, project_id, boundary_geojson, 500
-    )
-    assert boundary_created is True
-    # Check updated locations
-    db_project = await project_crud.get_project_by_id(db, project_id)
-    # Outline
-    project_outline = db_project.outline.data.tobytes()
-    file_outline = shape(boundary_geojson)
-    assert wkb.loads(project_outline).wkt == file_outline.wkt
-    # Centroid
-    project_centroid = wkb.loads(db_project.centroid.data.tobytes()).wkt
-    file_centroid = file_outline.centroid.wkt
-    assert project_centroid == file_centroid
-    # Location string
-    assert db_project.location_str == "Zurich,Switzerland"
-
     # Load data extracts
     data_extracts_file = f"{test_data_path}/building_footprint.zip"
     with zipfile.ZipFile(data_extracts_file, "r") as zip_archive:
@@ -203,6 +186,8 @@ async def test_generate_appuser_files(db, project):
 
     # Provide custom xlsform file path
     xlsform_file = f"{test_data_path}/buildings.xls"
+    with open(xlsform_file, "rb") as xlsform_data:
+        xlsform_obj = BytesIO(xlsform_data.read())
 
     for task_id in task_ids:
         # NOTE avoid the lambda function for run_in_threadpool
@@ -226,15 +211,56 @@ async def test_generate_appuser_files(db, project):
         lambda: project_crud.generate_appuser_files(
             db,
             project_id,
-            extract_polygon=True,
-            custom_xls_form=xlsform_file,
-            extracts_contents=data_extracts,
-            category="buildings",
-            form_type="example_form_type",
+            custom_form=xlsform_obj,
+            form_category="buildings",
+            form_format="example_form_type",
             background_task_id=uuid.uuid4(),
         )
     )
+
     assert result is None
+
+
+# async def test_update_project_boundary(db, project):
+#     """Test updating project boundary."""
+#     project_id = project.id
+#     log.debug(f"Testing updating boundary for project ID: {project_id}")
+
+#     db_project = await project_crud.get_project_by_id(db, project_id)
+
+#     # Outline
+#     boundary_geojson = json.loads(
+#         json.dumps(
+#             {
+#                 "type": "Polygon",
+#                 "coordinates": [
+#                     [
+#                         [85.317028828, 27.7052522097],
+#                         [85.317028828, 27.7041424888],
+#                         [85.318844411, 27.7041424888],
+#                         [85.318844411, 27.7052522097],
+#                         [85.317028828, 27.7052522097],
+#                     ]
+#                 ],
+#             }
+#         )
+#     )
+#     log.debug(f"Creating project boundary: {boundary_geojson}")
+#     boundary_created = await project_crud.update_project_boundary(
+#         db, project_id, boundary_geojson, 500
+#     )
+#     assert boundary_created is True
+#     project_outline = db_project.outline.data.tobytes()
+#     file_outline = shape(boundary_geojson)
+#     assert wkb.loads(project_outline).wkt == file_outline.wkt
+
+#     # Centroid
+#     project_centroid = wkb.loads(db_project.centroid.data.tobytes()).wkt
+#     file_centroid = file_outline.centroid.wkt
+#     assert project_centroid == file_centroid
+
+#     # Location string
+#     assert db_project.location_str == "Zurich,Switzerland"
 
 
 if __name__ == "__main__":

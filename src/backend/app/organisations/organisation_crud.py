@@ -18,22 +18,111 @@
 """Logic for organisation management."""
 
 from io import BytesIO
+from typing import Optional
 
-from fastapi import HTTPException, Response, UploadFile
+from fastapi import File, HTTPException, Response, UploadFile
 from loguru import logger as log
-from sqlalchemy import update
+from sqlalchemy import text, update
 from sqlalchemy.orm import Session
 
 from app.auth.osm import AuthUser
-from app.config import settings
+from app.config import encrypt_value, settings
 from app.db import db_models
 from app.models.enums import HTTPStatus, UserRole
 from app.organisations.organisation_deps import (
+    check_org_exists,
     get_organisation_by_name,
 )
 from app.organisations.organisation_schemas import OrganisationEdit, OrganisationIn
 from app.s3 import add_obj_to_bucket
 from app.users.user_crud import get_user
+
+
+async def init_admin_org(db: Session):
+    """Init admin org and user at application startup."""
+    sql = text(
+        """
+        -- Start a transaction
+        BEGIN;
+
+        -- Insert FMTM Public Beta organisation
+        INSERT INTO public.organisations (
+            name,
+            slug,
+            logo,
+            description,
+            url,
+            type,
+            approved,
+            odk_central_url,
+            odk_central_user,
+            odk_central_password
+        )
+        VALUES (
+            'FMTM Public Beta',
+            'fmtm-public-beta',
+            'https://avatars.githubusercontent.com/u/458752?s=280&v=4',
+            'HOTOSM Public Beta for FMTM.',
+            'https://hotosm.org',
+            'FREE',
+            true,
+            :odk_url,
+            :odk_user,
+            :odk_pass
+        )
+        ON CONFLICT ("name") DO NOTHING;
+
+        -- Insert svcfmtm admin user
+        INSERT INTO public.users (
+            id,
+            username,
+            role,
+            name,
+            email_address,
+            is_email_verified,
+            mapping_level,
+            tasks_mapped,
+            tasks_validated,
+            tasks_invalidated
+        )
+        VALUES (
+            :user_id,
+            :username,
+            'ADMIN',
+            'Admin',
+            :odk_user,
+            true,
+            'ADVANCED',
+            0,
+            0,
+            0
+        )
+        ON CONFLICT ("username") DO NOTHING;
+
+        -- Set svcfmtm user as org admin
+        WITH org_cte AS (
+            SELECT id FROM public.organisations
+            WHERE name = 'FMTM Public Beta'
+        )
+        INSERT INTO public.organisation_managers (organisation_id, user_id)
+        SELECT (SELECT id FROM org_cte), :user_id
+        ON CONFLICT DO NOTHING;
+
+        -- Commit the transaction
+        COMMIT;
+    """
+    )
+
+    db.execute(
+        sql,
+        {
+            "user_id": 20386219,
+            "username": "svcfmtm",
+            "odk_url": settings.ODK_CENTRAL_URL,
+            "odk_user": settings.ODK_CENTRAL_USER,
+            "odk_pass": encrypt_value(settings.ODK_CENTRAL_PASSWD),
+        },
+    )
 
 
 async def get_organisations(
@@ -51,8 +140,34 @@ async def get_organisations(
     return db.query(db_models.DbOrganisation).filter_by(approved=True).all()
 
 
+async def get_my_organisations(
+    db: Session,
+    current_user: AuthUser,
+) -> list[db_models.DbOrganisation]:
+    """Get organisations filtered by the current user.
+
+    Args:
+    db (Session): The database session.
+    current_user (AuthUser): The current user.
+
+    Returns:
+    list[db_models.DbOrganisation]: A list of organisations
+    filtered by the current user.
+    """
+    db_user = await get_user(db, current_user.id)
+
+    return db_user.organisations
+
+
+async def get_unapproved_organisations(
+    db: Session,
+) -> list[db_models.DbOrganisation]:
+    """Get unapproved orgs."""
+    return db.query(db_models.DbOrganisation).filter_by(approved=False)
+
+
 async def upload_logo_to_s3(
-    db_org: db_models.DbOrganisation, logo_file: UploadFile(None)
+    db_org: db_models.DbOrganisation, logo_file: UploadFile
 ) -> str:
     """Upload logo using standardised /{org_id}/logo.png format.
 
@@ -84,7 +199,10 @@ async def upload_logo_to_s3(
 
 
 async def create_organisation(
-    db: Session, org_model: OrganisationIn, logo: UploadFile(None)
+    db: Session,
+    org_model: OrganisationIn,
+    current_user: AuthUser,
+    logo: Optional[UploadFile] = File(None),
 ) -> db_models.DbOrganisation:
     """Creates a new organisation with the given name, description, url, type, and logo.
 
@@ -95,6 +213,7 @@ async def create_organisation(
         org_model (OrganisationIn): Pydantic model for organisation input.
         logo (UploadFile, optional): logo file of the organisation.
             Defaults to File(...).
+        current_user: logged in user.
 
     Returns:
         DbOrganisation: SQLAlchemy Organisation model.
@@ -111,6 +230,7 @@ async def create_organisation(
     try:
         # Create new organisation without logo set
         db_organisation = db_models.DbOrganisation(**org_model.model_dump())
+        db_organisation.user_id = current_user.id
 
         db.add(db_organisation)
         db.commit()
@@ -198,38 +318,64 @@ async def delete_organisation(
     return Response(status_code=HTTPStatus.NO_CONTENT)
 
 
-async def add_organisation_admin(
-    db: Session, user: db_models.DbUser, organisation: db_models.DbOrganisation
-):
+async def add_organisation_admin(db: Session, org_id: int, user_id: int):
     """Adds a user as an admin to the specified organisation.
 
     Args:
         db (Session): The database session.
-        user (DbUser): The user model instance.
-        organisation (DbOrganisation): The organisation model instance.
+        org_id (int): The organisation ID.
+        user_id (int): The user ID to add as manager.
 
     Returns:
         Response: The HTTP response with status code 200.
     """
-    log.info(f"Adding user ({user.id}) as org ({organisation.id}) admin")
-    # add data to the managers field in organisation model
-    organisation.managers.append(user)
+    log.info(f"Adding user ({user_id}) as org ({org_id}) admin")
+    sql = text(
+        """
+        INSERT INTO public.organisation_managers
+        (organisation_id, user_id) VALUES (:org_id, :user_id)
+        ON CONFLICT DO NOTHING;
+    """
+    )
+
+    db.execute(
+        sql,
+        {
+            "org_id": org_id,
+            "user_id": user_id,
+        },
+    )
+
     db.commit()
 
     return Response(status_code=HTTPStatus.OK)
 
 
-async def approve_organisation(db, organisation):
+async def approve_organisation(db, org_id: int):
     """Approves an oranisation request made by the user .
 
     Args:
         db: The database session.
-        organisation (DbOrganisation): The organisation model instance.
+        org_id (int): The organisation ID.
 
     Returns:
         Response: An HTTP response with the status code 200.
     """
-    log.info(f"Approving organisation ID {organisation.id}")
-    organisation.approved = True
+    org_obj = await check_org_exists(db, org_id, check_approved=False)
+
+    org_obj.approved = True
     db.commit()
-    return Response(status_code=HTTPStatus.OK)
+
+    return org_obj
+
+
+async def get_unapproved_org_detail(db, org_id):
+    """Returns detail of an unapproved organisation.
+
+    Args:
+        db: The database session.
+        org_id: ID of unapproved organisation.
+    """
+    return (
+        db.query(db_models.DbOrganisation).filter_by(approved=False, id=org_id).first()
+    )

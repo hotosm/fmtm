@@ -46,34 +46,37 @@ const Button = ({
   isLoading,
   loadingText,
 }: IButton) => (
-  <button
-    id={id}
-    type={type === 'submit' ? 'submit' : 'button'}
-    onClick={onClick}
-    className={`fmtm-text-lg fmtm-group fmtm-flex fmtm-items-center fmtm-gap-2 ${btnStyle(
-      isLoading || disabled ? 'disabled' : btnType,
-      className,
-    )}`}
-    disabled={disabled || isLoading}
-    title={dataTip}
-  >
-    {isLoading ? (
-      <>
-        {loadingText ? loadingText : type === 'submit' ? 'Submitting...' : 'Loading...'}
-        <Loader2 className="fmtm-mr-2 fmtm-h-6 fmtm-w-6 fmtm-animate-spin" />
-      </>
-    ) : (
-      <>
-        <p className="fmtm-whitespace-nowrap">{btnText}</p>
-        {count && (
-          <p className="fmtm-flex fmtm-justify-center fmtm-items-center fmtm-text-overline fmtm-ml-2 fmtm-rounded-[40px] fmtm-bg-active_text fmtm-text-white fmtm-w-6 fmtm-h-6">
-            {count}
-          </p>
-        )}
-        {icon && <div>{icon}</div>}
-      </>
-    )}
-  </button>
+  <div className="fmtm-w-fit">
+    <button
+      id={id}
+      data-testid="test-button"
+      type={type === 'submit' ? 'submit' : 'button'}
+      onClick={onClick}
+      className={`fmtm-text-lg fmtm-group fmtm-flex fmtm-items-center fmtm-gap-2 ${btnStyle(
+        isLoading || disabled ? 'disabled' : btnType,
+        className,
+      )}`}
+      disabled={disabled || isLoading}
+      title={dataTip}
+    >
+      {isLoading ? (
+        <>
+          {loadingText ? loadingText : type === 'submit' ? 'Submitting...' : 'Loading...'}
+          <Loader2 className="fmtm-mr-2 fmtm-h-6 fmtm-w-6 fmtm-animate-spin" />
+        </>
+      ) : (
+        <>
+          <p className="fmtm-whitespace-nowrap">{btnText}</p>
+          {count && (
+            <p className="fmtm-flex fmtm-justify-center fmtm-items-center fmtm-text-overline fmtm-ml-2 fmtm-rounded-[40px] fmtm-bg-active_text fmtm-text-white fmtm-w-6 fmtm-h-6">
+              {count}
+            </p>
+          )}
+          {icon && <div>{icon}</div>}
+        </>
+      )}
+    </button>
+  </div>
 );
 
 export default Button;

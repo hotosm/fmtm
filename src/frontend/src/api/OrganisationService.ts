@@ -55,8 +55,25 @@ export const OrganisationDataService: Function = (url: string) => {
   };
 };
 
+export const MyOrganisationDataService: Function = (url: string) => {
+  return async (dispatch) => {
+    dispatch(OrganisationAction.GetMyOrganisationDataLoading(true));
+    const getMyOrganisationData = async (url) => {
+      try {
+        const getMyOrganisationDataResponse = await API.get(url);
+        const response: GetOrganisationDataModel[] = getMyOrganisationDataResponse.data;
+        dispatch(OrganisationAction.GetMyOrganisationsData(response));
+      } catch (error) {
+        dispatch(OrganisationAction.GetMyOrganisationDataLoading(false));
+      }
+    };
+    await getMyOrganisationData(url);
+  };
+};
+
 export const PostOrganisationDataService: Function = (url: string, payload: any) => {
   return async (dispatch) => {
+    dispatch(OrganisationAction.SetOrganisationFormData({}));
     dispatch(OrganisationAction.PostOrganisationDataLoading(true));
 
     const postOrganisationData = async (url, payload) => {
@@ -102,6 +119,7 @@ export const PostOrganisationDataService: Function = (url: string, payload: any)
 
 export const GetIndividualOrganizationService: Function = (url: string) => {
   return async (dispatch) => {
+    dispatch(OrganisationAction.SetOrganisationFormData({}));
     const getOrganisationData = async (url) => {
       try {
         const getOrganisationDataResponse = await axios.get(url);
@@ -115,6 +133,7 @@ export const GetIndividualOrganizationService: Function = (url: string) => {
 
 export const PatchOrganizationDataService: Function = (url: string, payload: any) => {
   return async (dispatch) => {
+    dispatch(OrganisationAction.SetOrganisationFormData({}));
     dispatch(OrganisationAction.PostOrganisationDataLoading(true));
 
     const patchOrganisationData = async (url, payload) => {
@@ -158,11 +177,12 @@ export const PatchOrganizationDataService: Function = (url: string, payload: any
   };
 };
 
-export const ApproveOrganizationService: Function = (url: string, organizationId: string) => {
+export const ApproveOrganizationService: Function = (url: string) => {
   return async (dispatch) => {
-    const approveOrganization = async (url) => {
+    const approveOrganization = async (url: string) => {
       try {
-        await axios.post(url, organizationId);
+        dispatch(OrganisationAction.SetOrganizationApproving(true));
+        await axios.post(url);
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
@@ -171,7 +191,11 @@ export const ApproveOrganizationService: Function = (url: string, organizationId
             duration: 2000,
           }),
         );
+        dispatch(OrganisationAction.SetOrganizationApproving(false));
+        dispatch(OrganisationAction.SetOrganisationFormData({}));
+        dispatch(OrganisationAction.SetOrganizationApprovalStatus(true));
       } catch (error) {
+        dispatch(OrganisationAction.SetOrganizationApproving(false));
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
@@ -183,5 +207,38 @@ export const ApproveOrganizationService: Function = (url: string, organizationId
       }
     };
     await approveOrganization(url);
+  };
+};
+
+export const RejectOrganizationService: Function = (url: string) => {
+  return async (dispatch) => {
+    const rejectOrganization = async (url: string) => {
+      try {
+        dispatch(OrganisationAction.SetOrganizationRejecting(true));
+        await axios.delete(url);
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: 'Organization rejected successfully.',
+            variant: 'success',
+            duration: 2000,
+          }),
+        );
+        dispatch(OrganisationAction.SetOrganizationRejecting(false));
+        dispatch(OrganisationAction.SetOrganisationFormData({}));
+        dispatch(OrganisationAction.SetOrganizationApprovalStatus(true));
+      } catch (error) {
+        dispatch(OrganisationAction.SetOrganizationRejecting(false));
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: 'Failed to reject organization.',
+            variant: 'error',
+            duration: 2000,
+          }),
+        );
+      }
+    };
+    await rejectOrganization(url);
   };
 };

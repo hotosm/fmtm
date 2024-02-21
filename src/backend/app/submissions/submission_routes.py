@@ -371,7 +371,12 @@ async def get_submission_form_fields(
     """
     project = await project_crud.get_project(db, project_id)
     task_list = await tasks_crud.get_task_id_list(db, project_id)
-    odk_form = central_crud.get_odk_form(project)
+    odk_credentials = project_schemas.ODKCentralDecrypted(
+        odk_central_url=project.odk_central_url,
+        odk_central_user=project.odk_central_user,
+        odk_central_password=project.odk_central_password,
+    )
+    odk_form = central_crud.get_odk_form(odk_credentials)
     response = odk_form.form_fields(project.odkid, str(task_list[0]))
     return response
 
@@ -382,6 +387,11 @@ async def submission_table(
     project_id: int,
     page: int = Query(1, ge=1),
     results_per_page: int = Query(13, le=100),
+    submitted_by: Optional[str] = None,
+    review_state: Optional[str] = None,
+    submitted_date: Optional[str] = Query(
+        None, title="Submitted Date", description="Date in format (e.g., 'YYYY-MM-DD')"
+    ),
     db: Session = Depends(database.get_db),
     current_user: AuthUser = Depends(mapper),
 ):
@@ -396,7 +406,7 @@ async def submission_table(
     skip = (page - 1) * results_per_page
     limit = results_per_page
     count, data = await submission_crud.get_submission_by_project(
-        project_id, skip, limit, db
+        project_id, skip, limit, db, submitted_by, review_state, submitted_date
     )
     background_task_id = await project_crud.insert_background_task_into_database(
         db, "sync_submission", project_id
@@ -419,6 +429,11 @@ async def task_submissions(
     project: db_models.DbProject = Depends(project_deps.get_project_by_id),
     page: int = Query(1, ge=1),
     limit: int = Query(13, le=100),
+    submitted_by: Optional[str] = None,
+    review_state: Optional[str] = None,
+    submitted_date: Optional[str] = Query(
+        None, title="Submitted Date", description="Date in format (e.g., 'YYYY-MM-DD')"
+    ),
     db: Session = Depends(database.get_db),
     current_user: AuthUser = Depends(mapper),
 ):
@@ -437,6 +452,24 @@ async def task_submissions(
         "$count": True,
         "$wkt": True,
     }
+
+    if submitted_date:
+        filters["$filter"] = (
+            "__system/submissionDate ge {}T00:00:00+00:00 "
+            "and __system/submissionDate le {}T23:59:59.999+00:00"
+        ).format(submitted_date, submitted_date)
+
+    if submitted_by:
+        if "$filter" in filters:
+            filters["$filter"] += f"and (username eq '{submitted_by}')"
+        else:
+            filters["$filter"] = f"username eq '{submitted_by}'"
+
+    if review_state:
+        if "$filter" in filters:
+            filters["$filter"] += f" and (__system/reviewState eq '{review_state}')"
+        else:
+            filters["$filter"] = f"__system/reviewState eq '{review_state}'"
 
     data, count = await submission_crud.get_submission_by_task(
         project, task_id, filters, db
