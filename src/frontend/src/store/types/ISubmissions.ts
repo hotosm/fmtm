@@ -12,4 +12,10 @@ export type SubmissionStateTypes = {
   submissionTableRefreshing: boolean;
   validatedVsMappedInfographics: [];
   validatedVsMappedLoading: boolean;
+  updateReviewStatusModal: updateReviewStatusModal;
+};
+
+type updateReviewStatusModal = {
+  toggleModalStatus: boolean;
+  submissionId: string | null;
 };

@@ -15,6 +15,7 @@ const initialState: SubmissionStateTypes = {
   submissionTableRefreshing: false,
   validatedVsMappedInfographics: [],
   validatedVsMappedLoading: false,
+  updateReviewStatusModal: { toggleModalStatus: false, submissionId: null },
 };
 
 const SubmissionSlice = createSlice({
@@ -59,6 +60,9 @@ const SubmissionSlice = createSlice({
     },
     SetSubmissionTableRefreshing(state, action) {
       state.submissionTableRefreshing = action.payload;
+    },
+    SetUpdateReviewStatusModal(state, action) {
+      state.updateReviewStatusModal = action.payload;
     },
   },
 });

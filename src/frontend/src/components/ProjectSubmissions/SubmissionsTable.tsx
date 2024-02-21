@@ -15,9 +15,10 @@ import { format } from 'date-fns';
 import Button from '@/components/common/Button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/common/Dropdown';
 import { ConvertXMLToJOSM, getDownloadProjectSubmission, getDownloadProjectSubmissionJson } from '@/api/task';
-import { Modal } from '../common/Modal';
+import { Modal } from '@/components/common/Modal';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import filterParams from '@/utilfunctions/filterParams';
+import UpdateReviewStatusModal from '@/components/ProjectSubmissions/UpdateReviewStatusModal';
 
 type filterType = {
   task_id: string | null;
@@ -241,6 +242,7 @@ const SubmissionsTable = ({ toggleView }) => {
           dispatch(CoreModules.TaskActions.SetJosmEditorError(null));
         }}
       />
+      <UpdateReviewStatusModal />
       <div className="fmtm-flex xl:fmtm-items-end xl:fmtm-justify-between fmtm-flex-col md:fmtm-flex-row fmtm-gap-4 fmtm-mb-6">
         <div
           className={`${
@@ -439,7 +441,17 @@ const SubmissionsTable = ({ toggleView }) => {
                   }}
                 />{' '}
                 <span className="fmtm-text-primaryRed fmtm-border-[1px] fmtm-border-primaryRed fmtm-mx-1"></span>{' '}
-                <AssetModules.CheckOutlinedIcon className="fmtm-text-[#545454]" />{' '}
+                <AssetModules.CheckOutlinedIcon
+                  className="fmtm-text-[#545454]"
+                  onClick={() => {
+                    dispatch(
+                      SubmissionActions.SetUpdateReviewStatusModal({
+                        toggleModalStatus: true,
+                        submissionId: row?.meta?.instanceID,
+                      }),
+                    );
+                  }}
+                />{' '}
                 <span className="fmtm-text-primaryRed fmtm-border-[1px] fmtm-border-primaryRed fmtm-mx-1"></span>{' '}
                 <AssetModules.DeleteIcon className="fmtm-text-[#545454]" />
               </div>
