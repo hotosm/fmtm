@@ -27,6 +27,7 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db.db_models import DbProject
 from app.models.enums import HTTPStatus
+from app.projects import project_crud, project_schemas
 
 
 async def get_project_by_id(
@@ -45,3 +46,15 @@ async def get_project_by_id(
         )
 
     return db_project
+
+
+async def get_odk_credentials(project_id: int, db: Session):
+    """Get odk credentials of project."""
+    project = await project_crud.get_project(db, project_id)
+    odk_credentials = {
+        "odk_central_url": project.odk_central_url,
+        "odk_central_user": project.odk_central_user,
+        "odk_central_password": project.odk_central_password,
+    }
+
+    return project_schemas.ODKCentralDecrypted(**odk_credentials)
