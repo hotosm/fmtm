@@ -15,6 +15,8 @@ import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { basicGeojsonTemplate } from '@/utilities/mapUtils';
 import TaskSubmissionsMapLegend from '@/components/ProjectSubmissions/TaskSubmissionsMapLegend';
 import Accordion from '@/components/common/Accordion';
+import AsyncPopup from '@/components/MapComponent/OpenLayersComponent/AsyncPopup/AsyncPopup';
+import { taskFeaturePropertyType, taskInfoType } from '@/models/submission/submissionModel';
 
 export const defaultStyles = {
   lineColor: '#000000',
@@ -107,7 +109,7 @@ const TaskSubmissionsMap = () => {
   const [buildingGeojson, setBuildingGeojson] = useState(null);
   const projectTaskBoundries = CoreModules.useAppSelector((state) => state.project.projectTaskBoundries);
 
-  const taskInfo = CoreModules.useAppSelector((state) => state.task.taskInfo);
+  const taskInfo: taskInfoType[] = CoreModules.useAppSelector((state) => state.task.taskInfo);
   const federalWiseProjectCount = taskInfo?.map((task) => ({
     code: task.task_id,
     count: task.submission_count,
@@ -236,6 +238,24 @@ const TaskSubmissionsMap = () => {
   map?.on('loadend', function () {
     map.getTargetElement().classList.remove('spinner');
   });
+
+  const taskSubmissionsPopupUI = (properties: taskFeaturePropertyType) => {
+    const currentTask = taskInfo?.filter((task) => +task.task_id === properties.uid);
+    return (
+      <div className="fmtm-h-fit">
+        <h2 className="fmtm-border-b-[1px] fmtm-border-primaryRed">Task ID: #{currentTask?.[0].task_id}</h2>
+        <div className="fmtm-flex fmtm-flex-col fmtm-gap-1 fmtm-mt-1">
+          <p>
+            Expected Count: <span className="fmtm-text-primaryRed">{currentTask?.[0].feature_count}</span>
+          </p>
+          <p>
+            Submission Count: <span className="fmtm-text-primaryRed">{currentTask?.[0].submission_count}</span>
+          </p>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <CoreModules.Box
       sx={{
@@ -288,6 +308,7 @@ const TaskSubmissionsMap = () => {
           />
         </div>
         {buildingGeojson && <VectorLayer key={buildingGeojson} geojson={buildingGeojson} zIndex={15} />}
+        <AsyncPopup map={map} popupUI={taskSubmissionsPopupUI} />
       </MapComponent>
     </CoreModules.Box>
   );
