@@ -145,7 +145,7 @@ async def task_features_count(
     project = await project_crud.get_project(db, project_id)
 
     # ODK Credentials
-    odk_credentials = await project_deps.get_odk_credentials(project_id, db)
+    odk_credentials = await project_deps.get_odk_credentials(db, project)
 
     odk_details = central_crud.list_odk_xforms(project.odkid, odk_credentials, True)
 

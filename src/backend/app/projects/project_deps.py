@@ -18,7 +18,7 @@
 
 """Project dependencies for use in Depends."""
 
-from typing import Optional
+from typing import Any, Optional, Union
 
 from fastapi import Depends
 from fastapi.exceptions import HTTPException
@@ -48,13 +48,17 @@ async def get_project_by_id(
     return db_project
 
 
-async def get_odk_credentials(project_id: int, db: Session):
+async def get_odk_credentials(db: Session, project: Union[int, Any]):
     """Get odk credentials of project."""
-    project = await project_crud.get_project(db, project_id)
+    if isinstance(project, int):
+        db_project = await project_crud.get_project(db, project)
+    else:
+        db_project = project
+
     odk_credentials = {
-        "odk_central_url": project.odk_central_url,
-        "odk_central_user": project.odk_central_user,
-        "odk_central_password": project.odk_central_password,
+        "odk_central_url": db_project.odk_central_url,
+        "odk_central_user": db_project.odk_central_user,
+        "odk_central_password": db_project.odk_central_password,
     }
 
     return project_schemas.ODKCentralDecrypted(**odk_credentials)

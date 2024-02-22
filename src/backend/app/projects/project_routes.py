@@ -234,7 +234,7 @@ async def delete_project(
         f"deletion of project {project.id}"
     )
     # Odk crendentials
-    odk_credentials = await project_deps.get_odk_credentials(project.id, db)
+    odk_credentials = await project_deps.get_odk_credentials(db, project)
     # Delete ODK Central project
     await central_crud.delete_odk_project(project.odkid, odk_credentials)
     # Delete FMTM project

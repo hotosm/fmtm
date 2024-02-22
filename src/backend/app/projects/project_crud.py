@@ -1660,7 +1660,7 @@ async def update_project_form(
     odk_id = project.odkid
 
     # ODK Credentials
-    odk_credentials = await project_deps.get_odk_credentials(project_id, db)
+    odk_credentials = await project_deps.get_odk_credentials(db, project)
 
     if form:
         xlsform = f"/tmp/custom_form.{form_type}"
