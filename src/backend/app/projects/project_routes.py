@@ -843,7 +843,7 @@ async def upload_custom_extract(
     """Upload a custom data extract geojson for a project.
 
     Request Body
-    - 'custom_extract_file' (file): Geojson files with the features. Required.
+    - 'custom_extract_file' (file): File with the data extract features.
 
     Query Params:
     - 'project_id' (int): the project's id. Required.
@@ -851,14 +851,23 @@ async def upload_custom_extract(
     # Validating for .geojson File.
     file_name = os.path.splitext(custom_extract_file.filename)
     file_ext = file_name[1]
-    allowed_extensions = [".geojson", ".json"]
+    allowed_extensions = [".geojson", ".json", ".fgb"]
     if file_ext not in allowed_extensions:
-        raise HTTPException(status_code=400, detail="Provide a valid .geojson file")
+        raise HTTPException(
+            status_code=400, detail="Provide a valid .geojson or .fgb file"
+        )
 
     # read entire file
-    geojson_str = await custom_extract_file.read()
+    extract_data = await custom_extract_file.read()
 
-    fgb_url = await project_crud.upload_custom_data_extract(db, project_id, geojson_str)
+    if file_ext == ".fgb":
+        fgb_url = await project_crud.upload_custom_fgb_extract(
+            db, project_id, extract_data
+        )
+    else:
+        fgb_url = await project_crud.upload_custom_geojson_extract(
+            db, project_id, extract_data
+        )
     return JSONResponse(status_code=200, content={"url": fgb_url})
 
 

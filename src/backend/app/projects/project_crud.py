@@ -940,12 +940,108 @@ async def update_data_extract_url_in_db(
     db.commit()
 
 
-async def upload_custom_data_extract(
+async def upload_custom_extract_to_s3(
+    db: Session,
+    project_id: int,
+    fgb_content: bytes,
+    data_extract_type: str,
+) -> str:
+    """Uploads custom data extracts to S3.
+
+    Args:
+        db (Session): SQLAlchemy database session.
+        project_id (int): The ID of the project.
+        fgb_content (bytes): Content of read flatgeobuf file.
+        data_extract_type (str): centroid/polygon/line for database.
+
+    Returns:
+        str: URL to fgb file in S3.
+    """
+    project = await get_project(db, project_id)
+    log.debug(f"Uploading custom data extract for project: {project}")
+
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    fgb_obj = BytesIO(fgb_content)
+    s3_fgb_path = f"/{project.organisation_id}/{project_id}/custom_extract.fgb"
+
+    log.debug(f"Uploading fgb to S3 path: {s3_fgb_path}")
+    add_obj_to_bucket(
+        settings.S3_BUCKET_NAME,
+        fgb_obj,
+        s3_fgb_path,
+        content_type="application/octet-stream",
+    )
+
+    # Add url and type to database
+    s3_fgb_full_url = (
+        f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}{s3_fgb_path}"
+    )
+
+    await update_data_extract_url_in_db(db, project, s3_fgb_full_url, data_extract_type)
+
+    return s3_fgb_full_url
+
+
+async def upload_custom_fgb_extract(
+    db: Session,
+    project_id: int,
+    fgb_content: bytes,
+) -> str:
+    """Upload a flatgeobuf data extract.
+
+    Args:
+        db (Session): SQLAlchemy database session.
+        project_id (int): The ID of the project.
+        fgb_content (bytes): Content of read flatgeobuf file.
+
+    Returns:
+        str: URL to fgb file in S3.
+    """
+    featcol = await flatgeobuf_to_geojson(db, fgb_content)
+
+    if not featcol:
+        msg = f"Failed extracting geojson from flatgeobuf for project ({project_id})"
+        log.error(msg)
+        raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg)
+
+    data_extract_type = await get_data_extract_type(featcol)
+
+    return await upload_custom_extract_to_s3(
+        db,
+        project_id,
+        fgb_content,
+        data_extract_type,
+    )
+
+
+async def get_data_extract_type(featcol: FeatureCollection) -> str:
+    """Determine predominant geometry type for extract."""
+    geom_type = get_featcol_main_geom_type(featcol)
+    if geom_type not in ["Polygon", "Polyline", "Point"]:
+        msg = (
+            "Extract does not contain valid geometry types, from 'Polygon' "
+            ", 'Polyline' and 'Point'."
+        )
+        log.error(msg)
+        raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg)
+    geom_name_map = {
+        "Polygon": "polygon",
+        "Point": "centroid",
+        "Polyline": "line",
+    }
+    data_extract_type = geom_name_map.get(geom_type, "polygon")
+
+    return data_extract_type
+
+
+async def upload_custom_geojson_extract(
     db: Session,
     project_id: int,
     geojson_str: str,
 ) -> str:
-    """Uploads custom data extracts to S3.
+    """Upload a geojson data extract.
 
     Args:
         db (Session): SQLAlchemy database session.
@@ -967,47 +1063,25 @@ async def upload_custom_data_extract(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
             detail="Could not process geojson input",
         )
+
     await check_crs(featcol_filtered)
 
-    # Get geom type from data extract
-    geom_type = get_featcol_main_geom_type(featcol_filtered)
-    if geom_type not in ["Polygon", "Polyline", "Point"]:
-        msg = (
-            "Extract does not contain valid geometry types, from 'Polygon' "
-            ", 'Polyline' and 'Point'."
-        )
-        log.error(msg)
-        raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg)
-    geom_name_map = {
-        "Polygon": "polygon",
-        "Point": "centroid",
-        "Polyline": "line",
-    }
-    data_extract_type = geom_name_map.get(geom_type, "polygon")
+    data_extract_type = await get_data_extract_type(featcol_filtered)
 
     log.debug(
         "Generating fgb object from geojson with "
         f"{len(featcol_filtered.get('features', []))} features"
     )
-    fgb_obj = BytesIO(await geojson_to_flatgeobuf(db, featcol_filtered))
-    s3_fgb_path = f"/{project.organisation_id}/{project_id}/custom_extract.fgb"
+    fgb_data = await geojson_to_flatgeobuf(db, featcol_filtered)
 
-    log.debug(f"Uploading fgb to S3 path: {s3_fgb_path}")
-    add_obj_to_bucket(
-        settings.S3_BUCKET_NAME,
-        fgb_obj,
-        s3_fgb_path,
-        content_type="application/octet-stream",
+    if not fgb_data:
+        msg = f"Failed converting geojson to flatgeobuf for project ({project_id})"
+        log.error(msg)
+        raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg)
+
+    return await upload_custom_extract_to_s3(
+        db, project_id, fgb_data, data_extract_type
     )
-
-    # Add url and type to database
-    s3_fgb_full_url = (
-        f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}{s3_fgb_path}"
-    )
-
-    await update_data_extract_url_in_db(db, project, s3_fgb_full_url, data_extract_type)
-
-    return s3_fgb_full_url
 
 
 def flatten_dict(d, parent_key="", sep="_"):
