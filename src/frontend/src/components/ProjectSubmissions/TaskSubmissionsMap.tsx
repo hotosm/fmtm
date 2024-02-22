@@ -243,7 +243,9 @@ const TaskSubmissionsMap = () => {
     const currentTask = taskInfo?.filter((task) => +task.task_id === properties.uid);
     return (
       <div className="fmtm-h-fit">
-        <h2 className="fmtm-border-b-[1px] fmtm-border-primaryRed">Task ID: #{currentTask?.[0].task_id}</h2>
+        <h2 className="fmtm-border-b-[2px] fmtm-border-primaryRed fmtm-w-fit fmtm-pr-1">
+          Task ID: #{currentTask?.[0].task_id}
+        </h2>
         <div className="fmtm-flex fmtm-flex-col fmtm-gap-1 fmtm-mt-1">
           <p>
             Expected Count: <span className="fmtm-text-primaryRed">{currentTask?.[0].feature_count}</span>
