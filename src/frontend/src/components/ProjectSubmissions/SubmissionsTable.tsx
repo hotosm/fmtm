@@ -442,7 +442,7 @@ const SubmissionsTable = ({ toggleView }) => {
                 />{' '}
                 <span className="fmtm-text-primaryRed fmtm-border-[1px] fmtm-border-primaryRed fmtm-mx-1"></span>{' '}
                 <AssetModules.CheckOutlinedIcon
-                  className="fmtm-text-[#545454]"
+                  className="fmtm-text-[#545454] hover:fmtm-text-primaryRed"
                   onClick={() => {
                     dispatch(
                       SubmissionActions.SetUpdateReviewStatusModal({

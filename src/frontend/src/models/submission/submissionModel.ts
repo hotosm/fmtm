@@ -4,3 +4,10 @@ export type taskInfoType = {
   last_submission: string | null;
   feature_count: number;
 };
+
+export type reviewListType = {
+  id: string;
+  title: string;
+  className: string;
+  hoverClass: string;
+};
