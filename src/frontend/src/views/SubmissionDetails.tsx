@@ -4,6 +4,9 @@ import environment from '@/environment';
 import { SubmissionService } from '@/api/Submission';
 import SubmissionInstanceMap from '@/components/SubmissionMap/SubmissionInstanceMap';
 import { GetProjectDashboard } from '@/api/Project';
+import Button from '@/components/common/Button';
+import { SubmissionActions } from '@/store/slices/SubmissionSlice';
+import UpdateReviewStatusModal from '@/components/ProjectSubmissions/UpdateReviewStatusModal';
 
 const SubmissionDetails = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -115,15 +118,15 @@ const SubmissionDetails = () => {
     dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${decodedProjectId}`));
   }, []);
 
-  useEffect(() => {
-    dispatch(
-      SubmissionService(
-        `${
-          import.meta.env.VITE_API_URL
-        }/central/submission?project_id=${decodedProjectId}&xmlFormId=${decodedTaskId}&submission_id=${paramsInstanceId}`,
-      ),
-    );
-  }, []);
+  // useEffect(() => {
+  //   dispatch(
+  //     SubmissionService(
+  //       `${
+  //         import.meta.env.VITE_API_URL
+  //       }/central/submission?project_id=${decodedProjectId}&xmlFormId=${decodedTaskId}&submission_id=${paramsInstanceId}`,
+  //     ),
+  //   );
+  // }, []);
 
   function removeNullValues(obj) {
     const newObj = {};
@@ -168,14 +171,29 @@ const SubmissionDetails = () => {
     ],
   };
 
-  const renderValue = (value) => {
-    if (typeof value === 'object') {
+  const renderValue = (value, key = '') => {
+    if (key === 'start' || key === 'end') {
       return (
-        <ul>
+        <p>
+          {value?.split('T')[0]}, {value?.split('T')[1]}
+        </p>
+      );
+    } else if (typeof value === 'object' && Object.values(value).includes('Point')) {
+      return (
+        <div>
+          <p className="fmtm-capitalize"></p> {value?.type} ({value?.coordinates?.[0]},{value?.coordinates?.[1]},
+          {value?.coordinates?.[2]}){renderValue(value?.properties)}
+        </div>
+      );
+    } else if (typeof value === 'object') {
+      return (
+        <ul className="fmtm-flex fmtm-flex-col fmtm-gap-1">
           {Object.entries(value).map(([key, nestedValue]) => (
             <CoreModules.Box sx={{ textTransform: 'capitalize' }} key={key}>
-              <strong color="error">{key}: </strong>
-              {renderValue(nestedValue)}
+              <span color="error" className="fmtm-font-bold">
+                {key}:{' '}
+              </span>
+              {renderValue(nestedValue, key)}
             </CoreModules.Box>
           ))}
         </ul>
@@ -186,22 +204,46 @@ const SubmissionDetails = () => {
   };
 
   return (
-    <div className="fmtm-mx-[4rem] fmtm-my-[2rem]">
-      <h3>{projectDashboardDetail?.project_name_prefix}</h3>
-      <h4>{decodedTaskId}</h4>
+    <div className="fmtm-bg-gray-100 fmtm-box-border fmtm-border-[1px] fmtm-border-t-white fmtm-border-t-[0px] fmtm-px-[1.5rem] md:fmtm-px-[3.5rem] fmtm-py-[1.5rem] md:fmtm-py-[2rem]">
+      <UpdateReviewStatusModal />
+      <div className="fmtm-flex fmtm-flex-col xl:fmtm-flex-row">
+        <div>
+          <div className="fmtm-bg-white fmtm-rounded-lg fmtm-w-full md:fmtm-w-[35rem] fmtm-h-fit fmtm-p-2 fmtm-px-4 md:fmtm-p-4 md:fmtm-shadow-[0px_10px_20px_0px_rgba(96,96,96,0.1)] fmtm-flex fmtm-flex-col">
+            <h2 className="fmtm-text-2xl fmtm-text-[#545454] fmtm-font-bold fmtm-mb-4">
+              {/* {projectDashboardDetail?.project_name_prefix} */}
+              generate app user
+            </h2>
+            <h2 className="fmtm-text-xl fmtm-font-bold fmtm-text-[#545454]">Task: {decodedTaskId}</h2>
+            <h2 className="fmtm-text-lg fmtm-font-bold fmtm-text-[#545454]">Submission Id: {paramsInstanceId}</h2>
+          </div>
+          <Button
+            btnText="Update Review Status"
+            btnType="primary"
+            className="fmtm-w-fit fmtm-justify-center !fmtm-rounded fmtm-font-bold fmtm-text-sm !fmtm-py-2 fmtm-mt-8"
+            onClick={() => {
+              dispatch(
+                SubmissionActions.SetUpdateReviewStatusModal({
+                  toggleModalStatus: true,
+                  submissionId: paramsInstanceId,
+                }),
+              );
+            }}
+          />
+        </div>
+        <div className="fmtm-flex fmtm-flex-grow fmtm-justify-center">
+          <div className="fmtm-w-full fmtm-my-10 xl:fmtm-my-0 xl:fmtm-w-[500px] 2xl:fmtm-w-[700px] fmtm-h-[300px] fmtm-rounded-lg fmtm-overflow-hidden">
+            <SubmissionInstanceMap featureGeojson={geojsonFeature} />
+          </div>
+        </div>
+      </div>
       {Object.entries(filteredData).map(([key, value]) => (
         <div key={key}>
           <CoreModules.Box sx={{ borderBottom: '1px solid #e2e2e2', padding: '8px' }}>
-            <CoreModules.Typography variant="h1" sx={{ textTransform: 'capitalize' }}>
-              {key}
-            </CoreModules.Typography>
-            {renderValue(value)}
+            <div className="fmtm-capitalize fmtm-text-xl fmtm-font-bold fmtm-mb-1">{key}</div>
+            {renderValue(value, key)}
           </CoreModules.Box>
         </div>
-      ))}
-      <div className="fmtm-w-[500px] fmtm-h-[400px] fmtm-my-5">
-        <SubmissionInstanceMap featureGeojson={geojsonFeature} />
-      </div>
+      ))}{' '}
     </div>
   );
 };
