@@ -70,7 +70,14 @@ const UpdateReviewStatusModal = () => {
               btnText="Cancel"
               btnType="other"
               className="fmtm-w-full fmtm-justify-center !fmtm-rounded fmtm-font-bold fmtm-text-sm !fmtm-py-2"
-              onClick={() => {}}
+              onClick={() => {
+                dispatch(
+                  SubmissionActions.SetUpdateReviewStatusModal({
+                    toggleModalStatus: false,
+                    submissionId: null,
+                  }),
+                );
+              }}
             />
             <Button
               btnText="Update"
