@@ -69,7 +69,7 @@ const colorCodes = {
 };
 function colorRange(data, noOfRange) {
   if (data?.length === 0) return [];
-  const actualCodes = [{ min: 0, max: 0, color: '#605f5e' }];
+  const actualCodes = [{ min: 0, max: 0, color: '#FF4538' }];
   const maxVal = Math.max(...data?.map((d) => d.count));
   const maxValue = maxVal <= noOfRange ? 10 : maxVal;
   // const minValue = Math.min(...data?.map((d) => d.count)) 0;
@@ -213,7 +213,7 @@ const TaskSubmissionsMap = () => {
     (style, feature, resolution) => {
       const stylex = { ...style };
       stylex.fillOpacity = 80;
-      const getFederal = federalWiseProjectCount?.find((d) => d.code === feature.getProperties().uid);
+      const getFederal = federalWiseProjectCount?.find((d) => d.code == feature.getProperties().uid);
       const getFederalCount = getFederal?.count;
       stylex.labelMaxResolution = 1000;
       stylex.showLabel = true;
@@ -276,7 +276,7 @@ const TaskSubmissionsMap = () => {
         )}
         <div className="fmtm-absolute fmtm-bottom-2 fmtm-left-2 sm:fmtm-bottom-5 sm:fmtm-left-5 fmtm-z-50 fmtm-rounded-lg">
           <Accordion
-            body={<TaskSubmissionsMapLegend defaultTheme={defaultTheme} />}
+            body={<TaskSubmissionsMapLegend legendColorArray={legendColorArray} />}
             header={
               <p className="fmtm-text-lg fmtm-font-normal fmtm-my-auto fmtm-mb-[0.35rem] fmtm-ml-2">
                 No. of Submissions
