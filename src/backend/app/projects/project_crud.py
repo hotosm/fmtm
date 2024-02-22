@@ -1278,9 +1278,9 @@ def generate_project_files(
 
         # Split extract by task area
         split_geojson_sync = async_to_sync(split_geojson_by_task_areas)
-        split_extract = split_geojson_sync(db, feature_collection, project_id)
+        split_extract_dict = split_geojson_sync(db, feature_collection, project_id)
 
-        if not split_extract:
+        if not split_extract_dict:
             log.warning("Project ({project_id}) failed splitting tasks")
             raise HTTPException(
                 status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
@@ -1300,7 +1300,7 @@ def generate_project_files(
                     next(get_db()),
                     project_id,
                     task_id,
-                    split_extract[task_id],
+                    split_extract_dict[task_id],
                     xlsform,
                     form_format,
                     odk_credentials,
@@ -1313,7 +1313,7 @@ def generate_project_files(
             # Submit tasks to the thread pool
             futures = [
                 executor.submit(wrap_generate_task_files, task_id)
-                for task_id in split_extract.keys()
+                for task_id in split_extract_dict.keys()
             ]
             # Wait for all tasks to complete
             wait(futures)
