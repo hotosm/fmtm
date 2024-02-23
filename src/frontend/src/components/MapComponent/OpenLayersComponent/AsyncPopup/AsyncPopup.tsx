@@ -7,7 +7,7 @@ import './asyncpopup.scss';
 type asyncPopupPropType = {
   map: any;
   fetchPopupData?: any;
-  popupUI: React.ReactNode;
+  popupUI: any;
   openPopupFor?: () => void;
   zoomedExtent?: any;
   onPopupClose?: () => void;

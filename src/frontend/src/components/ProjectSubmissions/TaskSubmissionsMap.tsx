@@ -8,7 +8,6 @@ import { VectorLayer } from '@/components/MapComponent/OpenLayersComponent/Layer
 import { Vector as VectorSource } from 'ol/source';
 import GeoJSON from 'ol/format/GeoJSON';
 import { get } from 'ol/proj';
-import { ProjectBuildingGeojsonService } from '@/api/SubmissionService';
 import environment from '@/environment';
 import { getStyles } from '@/components/MapComponent/OpenLayersComponent/helpers/styleUtils';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
@@ -17,6 +16,7 @@ import TaskSubmissionsMapLegend from '@/components/ProjectSubmissions/TaskSubmis
 import Accordion from '@/components/common/Accordion';
 import AsyncPopup from '@/components/MapComponent/OpenLayersComponent/AsyncPopup/AsyncPopup';
 import { taskFeaturePropertyType, taskInfoType } from '@/models/submission/submissionModel';
+import { isValidUrl } from '@/utilfunctions/urlChecker';
 
 export const defaultStyles = {
   lineColor: '#000000',
@@ -106,7 +106,9 @@ const getChoroplethColor = (value, colorCodesOutput) => {
 const TaskSubmissionsMap = () => {
   const dispatch = CoreModules.useAppDispatch();
   const [taskBoundaries, setTaskBoundaries] = useState(null);
-  const [buildingGeojson, setBuildingGeojson] = useState(null);
+  const [dataExtractUrl, setDataExtractUrl] = useState(null);
+  const [dataExtractExtent, setDataExtractExtent] = useState(null);
+  const projectInfo = CoreModules.useAppSelector((state) => state.project.projectInfo);
   const projectTaskBoundries = CoreModules.useAppSelector((state) => state.project.projectTaskBoundries);
 
   const taskInfo: taskInfoType[] = CoreModules.useAppSelector((state) => state.task.taskInfo);
@@ -115,7 +117,6 @@ const TaskSubmissionsMap = () => {
     count: task.submission_count,
   }));
 
-  const projectBuildingGeojson = CoreModules.useAppSelector((state) => state.project.projectBuildingGeojson);
   const selectedTask = CoreModules.useAppSelector((state) => state.task.selectedTask);
   const defaultTheme = CoreModules.useAppSelector((state) => state.theme.hotTheme);
   const params = CoreModules.useParams();
@@ -127,12 +128,6 @@ const TaskSubmissionsMap = () => {
     zoom: 4,
     maxZoom: 25,
   });
-
-  useEffect(() => {
-    return () => {
-      dispatch(ProjectActions.SetProjectBuildingGeojson(null));
-    };
-  }, []);
 
   useEffect(() => {
     if (
@@ -152,32 +147,10 @@ const TaskSubmissionsMap = () => {
       ],
     };
     setTaskBoundaries(taskGeojsonFeatureCollection);
-    // const taskBuildingGeojsonFeatureCollection = {
-    //   ...basicGeojsonTemplate,
-    //   features: [
-    //     ...projectBuildingGeojson?.map((feature) => ({
-    //       ...feature.geometry,
-    //       id: feature.id,
-    //     })),
-    //   ],
-    // };
-    // setBuildingGeojson(taskBuildingGeojsonFeatureCollection);
   }, [projectTaskBoundries]);
-  useEffect(() => {
-    if (!projectBuildingGeojson) return;
-    const taskBuildingGeojsonFeatureCollection = {
-      ...basicGeojsonTemplate,
-      features: [
-        ...projectBuildingGeojson?.map((feature) => ({
-          ...feature.geometry,
-          id: feature.id,
-        })),
-      ],
-    };
-    setBuildingGeojson(taskBuildingGeojsonFeatureCollection);
-  }, [projectBuildingGeojson]);
 
   useEffect(() => {
+    console.log(taskBoundaries);
     if (!taskBoundaries) return;
     const filteredSelectedTaskGeojson = {
       ...basicGeojsonTemplate,
@@ -188,7 +161,11 @@ const TaskSubmissionsMap = () => {
         featureProjection: get('EPSG:3857'),
       }),
     });
-    var extent = vectorSource.getExtent();
+    const extent = vectorSource.getExtent();
+
+    setDataExtractExtent(vectorSource.getFeatures()[0].getGeometry());
+    setDataExtractUrl(projectInfo.data_extract_url);
+
     map.getView().fit(extent, {
       // easing: elastic,
       animate: true,
@@ -199,12 +176,6 @@ const TaskSubmissionsMap = () => {
       constrainResolution: true,
       duration: 2000,
     });
-
-    dispatch(
-      ProjectBuildingGeojsonService(
-        `${import.meta.env.VITE_API_URL}/projects/${decodedId}/features?task_id=${selectedTask}`,
-      ),
-    );
   }, [selectedTask]);
 
   const taskOnSelect = (properties, feature) => {
@@ -280,7 +251,6 @@ const TaskSubmissionsMap = () => {
         <LayerSwitcherControl />
         {taskBoundaries && (
           <VectorLayer
-            hoverEffect
             setStyle={(feature, resolution) =>
               setChoropleth({ ...municipalStyles, lineThickness: 3 }, feature, resolution)
             }
@@ -309,8 +279,10 @@ const TaskSubmissionsMap = () => {
             collapsed={true}
           />
         </div>
-        {buildingGeojson && <VectorLayer key={buildingGeojson} geojson={buildingGeojson} zIndex={15} />}
         <AsyncPopup map={map} popupUI={taskSubmissionsPopupUI} />
+        {dataExtractUrl && isValidUrl(dataExtractUrl) && (
+          <VectorLayer fgbUrl={dataExtractUrl} fgbExtent={dataExtractExtent} zIndex={15} />
+        )}
       </MapComponent>
     </CoreModules.Box>
   );
