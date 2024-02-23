@@ -1,11 +1,12 @@
+// TODO should this be deleted??
+
 import React, { useEffect } from 'react';
 // import '../styles/home.css'
 import CoreModules from '@/shared/CoreModules';
 // import { useLocation, useNavigate } from 'react-router-dom';
 import Avatar from '@/assets/images/avatar.png';
-import SubmissionMap from '@/components/SubmissionMap/SubmissionMap';
+// import SubmissionMap from '@/components/SubmissionMap/SubmissionMap';
 import environment from '@/environment';
-import { ProjectBuildingGeojsonService, ProjectSubmissionService } from '@/api/SubmissionService';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { ProjectById } from '@/api/Project';
 
@@ -23,7 +24,7 @@ const Submissions = () => {
   // const theme = CoreModules.useAppSelector(state => state.theme.hotTheme)
   useEffect(() => {
     dispatch(ProjectSubmissionService(`${import.meta.env.VITE_API_URL}/submission/?project_id=${decodedId}`));
-    dispatch(ProjectBuildingGeojsonService(`${import.meta.env.VITE_API_URL}/projects/${decodedId}/features`));
+    // dispatch(ProjectDataExtractService(`${import.meta.env.VITE_API_URL}/projects/${decodedId}/features`));
     //creating a manual thunk that will make an API call then autamatically perform state mutation whenever we navigate to home page
   }, []);
 
@@ -125,7 +126,7 @@ const Submissions = () => {
           </CoreModules.Box>
         </CoreModules.Stack>
         <CoreModules.Box sx={{ width: '100%', ml: 6, border: '1px solid green' }}>
-          <SubmissionMap />
+          {/* <SubmissionMap /> */}
         </CoreModules.Box>
       </CoreModules.Stack>
     </CoreModules.Box>
