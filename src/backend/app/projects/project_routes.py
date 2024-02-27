@@ -294,12 +294,12 @@ async def create_project(
             SELECT EXISTS (
                 SELECT 1
                 FROM project_info
-                WHERE name = :project_name
+                WHERE LOWER(name) = :project_name
             )
             """
     )
-    result = db.execute(sql, {"project_name": project_info.project_info.name})
-    project_exists = result.first()
+    result = db.execute(sql, {"project_name": project_info.project_info.name.lower()})
+    project_exists = result.fetchone()[0]
     if project_exists:
         raise HTTPException(
             status_code=400,
