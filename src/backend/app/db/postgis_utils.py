@@ -126,7 +126,8 @@ async def geojson_to_flatgeobuf(
     Returns:
         flatgeobuf (bytes): a Python bytes representation of a flatgeobuf file.
     """
-    sql = """
+    sql = text(
+        """
         DROP TABLE IF EXISTS temp_features CASCADE;
 
         -- Wrap geometries in GeometryCollection
@@ -155,9 +156,12 @@ async def geojson_to_flatgeobuf(
         SELECT ST_AsFlatGeobuf(geoms, true)
         FROM (SELECT * FROM temp_features) AS geoms;
     """
+    )
 
     # Run the SQL
-    result = db.execute(text(sql), {"geojson": json.dumps(geojson)})
+    log.warning(json.dumps(geojson))
+
+    result = db.execute(sql, {"geojson": json.dumps(geojson)})
     # Get a memoryview object, then extract to Bytes
     flatgeobuf = result.first()
 
@@ -196,6 +200,7 @@ async def flatgeobuf_to_geojson(
             SELECT jsonb_build_object(
                 'type', 'Feature',
                 'geometry', ST_AsGeoJSON(ST_GeometryN(fgb_data.geom, 1))::jsonb,
+                'id', fgb_data.osm_id,
                 'properties', jsonb_build_object(
                     'osm_id', fgb_data.osm_id,
                     'tags', fgb_data.tags,
@@ -257,18 +262,30 @@ async def split_geojson_by_task_areas(
 
         -- Create a temporary table to store the parsed GeoJSON features
         CREATE TEMP TABLE temp_features (
-            id SERIAL PRIMARY KEY,
+            id VARCHAR,
             geometry GEOMETRY,
             properties JSONB
         );
 
         -- Insert parsed geometries and properties into the temporary table
-        INSERT INTO temp_features (geometry, properties)
+        INSERT INTO temp_features (id, geometry, properties)
         SELECT
+            (feature->'properties'->>'osm_id')::VARCHAR AS id,
             ST_SetSRID(ST_GeomFromGeoJSON(feature->>'geometry'), 4326) AS geometry,
             jsonb_set(
-                jsonb_set(feature->'properties', '{task_id}', to_jsonb(tasks.id), true),
-                '{project_id}', to_jsonb(tasks.project_id), true
+                jsonb_set(
+                    jsonb_set(
+                        feature->'properties',
+                        '{task_id}', to_jsonb(tasks.id), true
+                    ),
+                    '{project_id}', to_jsonb(tasks.project_id), true
+                ),
+                '{title}', to_jsonb(CONCAT(
+                    'project_',
+                    :project_id,
+                    '_task_',
+                    tasks.id
+                )), true
             ) AS properties
         FROM (
             SELECT jsonb_array_elements(CAST(:geojson_featcol AS jsonb)->'features')
@@ -278,34 +295,36 @@ async def split_geojson_by_task_areas(
         WHERE tasks.project_id = :project_id;
 
         -- Retrieve task outlines based on the provided project_id
-        WITH task_outlines AS (
-            SELECT id, outline
-            FROM tasks
-            WHERE project_id = :project_id
-        )
         SELECT
-            task_outlines.id AS task_id,
+            tasks.id AS task_id,
             jsonb_build_object(
                 'type', 'FeatureCollection',
-                'features', jsonb_agg(features.feature)
+                'features', jsonb_agg(feature)
             ) AS task_features
         FROM
-            task_outlines
+            tasks
         LEFT JOIN LATERAL (
-            -- Construct a feature collection with geometries per task area
             SELECT
                 jsonb_build_object(
                     'type', 'Feature',
                     'geometry', ST_AsGeoJSON(temp_features.geometry)::jsonb,
+                    'id', temp_features.id,
                     'properties', temp_features.properties
                 ) AS feature
-            FROM
-                temp_features
+            FROM (
+                SELECT DISTINCT ON (geometry)
+                    id,
+                    geometry,
+                    properties
+                FROM temp_features
+            ) AS temp_features
             WHERE
-                ST_Within(temp_features.geometry, task_outlines.outline)
-        ) AS features ON true
+                ST_Within(temp_features.geometry, tasks.outline)
+        ) AS feature ON true
+        WHERE
+            tasks.project_id = :project_id
         GROUP BY
-            task_outlines.id;
+            tasks.id;
         """
     )
 
@@ -339,6 +358,7 @@ def parse_and_filter_geojson(
 ) -> Optional[geojson.FeatureCollection]:
     """Parse geojson string and filter out incomaptible geometries."""
     geojson_parsed = geojson.loads(geojson_str)
+
     if isinstance(geojson_parsed, geojson.FeatureCollection):
         log.debug("Already in FeatureCollection format, skipping reparse")
         featcol = geojson_parsed
@@ -352,8 +372,17 @@ def parse_and_filter_geojson(
         )
 
     # Exit early if no geoms
-    if not featcol.get("features", []):
+    if not (features := featcol.get("features", [])):
         return None
+
+    # Strip out GeometryCollection wrappers
+    for feat in features:
+        geom = feat.get("geometry")
+        if (
+            geom.get("type") == "GeometryCollection"
+            and len(geom.get("geometries")) == 1
+        ):
+            feat["geometry"] = geom.get("geometries")[0]
 
     # Return unfiltered featcol
     if not filter:
@@ -363,7 +392,7 @@ def parse_and_filter_geojson(
     geom_type = get_featcol_main_geom_type(featcol)
     features_filtered = [
         feature
-        for feature in featcol.get("features", [])
+        for feature in features
         if feature.get("geometry", {}).get("type", "") == geom_type
     ]
 

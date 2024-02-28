@@ -114,10 +114,10 @@ class ODKCentralDecrypted(BaseModel):
 
     @field_validator("odk_central_url", mode="after")
     @classmethod
-    def remove_trailing_slash(cls, value: HttpUrlStr) -> HttpUrlStr:
+    def remove_trailing_slash(cls, value: HttpUrlStr) -> Optional[HttpUrlStr]:
         """Remove trailing slash from ODK Central URL."""
         if not value:
-            return ""
+            return None
         if value.endswith("/"):
             return value[:-1]
         return value
@@ -173,6 +173,12 @@ class ProjectIn(BaseModel):
         latitude, longitude = geom.y, geom.x
         address = get_address_from_lat_lon(latitude, longitude)
         return address if address is not None else ""
+
+    @computed_field
+    @property
+    def project_name_prefix(self) -> str:
+        """Compute project name prefix with underscores."""
+        return self.project_info.name.replace(" ", "_").lower()
 
     @field_validator("hashtags", mode="after")
     @classmethod
@@ -322,7 +328,7 @@ class ReadProject(ProjectBase):
 
     project_uuid: uuid.UUID = uuid.uuid4()
     location_str: Optional[str] = None
-    data_extract_url: str
+    data_extract_url: Optional[str] = None
 
 
 class BackgroundTaskStatus(BaseModel):

@@ -115,6 +115,7 @@ services:
       args:
         APP_VERSION: ${GIT_BRANCH}
         VITE_API_URL: https://${FMTM_API_DOMAIN:-api.${FMTM_DOMAIN}}
+        NODE_ENV: development
     volumes:
       - fmtm_frontend:/frontend
     network_mode: none
@@ -126,7 +127,8 @@ services:
       central-db:
         condition: service_healthy
     environment:
-      - DOMAIN=local
+      - DOMAIN=${FMTM_ODK_DOMAIN:-odk.${FMTM_DOMAIN}}
+      - SSL_TYPE=upstream
       - SYSADMIN_EMAIL=${ODK_CENTRAL_USER}
       - SYSADMIN_PASSWD=${ODK_CENTRAL_PASSWD}
       - HTTPS_PORT=443
@@ -182,6 +184,7 @@ services:
 
   fmtm-db:
     image: "postgis/postgis:${POSTGIS_TAG:-14-3.4-alpine}"
+    command: -c 'max_connections=300'
     volumes:
       - fmtm_db_data:/var/lib/postgresql/data/
     environment:

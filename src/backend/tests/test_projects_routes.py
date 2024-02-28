@@ -55,7 +55,7 @@ async def test_create_project(client, admin_user, organisation):
 
     project_data = {
         "project_info": {
-            "name": "test project",
+            "name": "Test Project",
             "short_description": "test",
             "description": "test",
         },
@@ -109,7 +109,8 @@ async def test_create_odk_project():
         result = create_odk_project("Test Project", odk_credentials)
 
     assert result == {"status": "success"}
-    mock_project.createProject.assert_called_once_with("Test Project")
+    # FMTM gets appended to project name by default
+    mock_project.createProject.assert_called_once_with("FMTM Test Project")
 
 
 async def test_convert_to_app_project():
@@ -281,7 +282,7 @@ async def test_generate_project_files(db, client, project):
             functools.partial(
                 project_crud.generate_task_files,
                 db,
-                project_id,
+                project,
                 task_id,
                 split_extract_dict[task_id],
                 xlsform_file,

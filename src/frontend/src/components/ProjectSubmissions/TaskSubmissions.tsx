@@ -5,14 +5,14 @@ import Button from '@/components/common/Button';
 import AssetModules from '@/shared/AssetModules.js';
 import CoreModules from '@/shared/CoreModules.js';
 import { TaskCardSkeletonLoader } from '@/components/ProjectSubmissions/ProjectSubmissionsSkeletonLoader';
-import { taskInfoType } from '@/models/submission/submissionModel';
+import { taskInfoType } from '@/models/task/taskModel';
 import { useSearchParams } from 'react-router-dom';
 
 const TaskSubmissions = () => {
   const dispatch = CoreModules.useAppDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const taskInfo: taskInfoType[] = CoreModules.useAppSelector((state) => state.task.taskInfo);
-  const taskLoading = CoreModules.useAppSelector((state) => state.task.taskLoading);
+  const taskLoading: boolean = CoreModules.useAppSelector((state) => state.task.taskLoading);
   const [searchedTaskId, setSearchedTaskId] = useState<string>('');
   const [debouncedSearchedTaskId, setDebouncedSearchedTaskId] = useState<string>('');
   const [filteredTaskInfo, setFilteredTaskInfo] = useState<taskInfoType[]>([]);

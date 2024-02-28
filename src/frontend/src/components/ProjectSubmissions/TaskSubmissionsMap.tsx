@@ -14,7 +14,17 @@ import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { basicGeojsonTemplate } from '@/utilities/mapUtils';
 import TaskSubmissionsMapLegend from '@/components/ProjectSubmissions/TaskSubmissionsMapLegend';
 import Accordion from '@/components/common/Accordion';
+import AsyncPopup from '@/components/MapComponent/OpenLayersComponent/AsyncPopup/AsyncPopup';
+import {
+  colorCodesType,
+  federalWiseProjectCount,
+  legendColorArrayType,
+  taskBoundariesType,
+  taskFeaturePropertyType,
+  taskInfoType,
+} from '@/models/task/taskModel';
 import { isValidUrl } from '@/utilfunctions/urlChecker';
+import { projectInfoType, projectTaskBoundriesType } from '@/models/project/projectModel';
 
 export const defaultStyles = {
   lineColor: '#000000',
@@ -60,8 +70,7 @@ export const municipalStyles = {
   width: 10,
 };
 
-const colorCodes = {
-  // '#9edefa': { min: 0, max: 5 },
+const colorCodes: colorCodesType = {
   '#A9D2F3': { min: 10, max: 50 },
   '#7CB2E8': { min: 50, max: 100 },
   '#4A90D9': { min: 100, max: 130 },
@@ -69,7 +78,7 @@ const colorCodes = {
 };
 function colorRange(data, noOfRange) {
   if (data?.length === 0) return [];
-  const actualCodes = [{ min: 0, max: 0, color: '#605f5e' }];
+  const actualCodes = [{ min: 0, max: 0, color: '#FF4538' }];
   const maxVal = Math.max(...data?.map((d) => d.count));
   const maxValue = maxVal <= noOfRange ? 10 : maxVal;
   // const minValue = Math.min(...data?.map((d) => d.count)) 0;
@@ -103,24 +112,22 @@ const getChoroplethColor = (value, colorCodesOutput) => {
 
 const TaskSubmissionsMap = () => {
   const dispatch = CoreModules.useAppDispatch();
-  const [taskBoundaries, setTaskBoundaries] = useState(null);
-  const [dataExtractUrl, setDataExtractUrl] = useState(null);
+  const [taskBoundaries, setTaskBoundaries] = useState<taskBoundariesType | null>(null);
+  const [dataExtractUrl, setDataExtractUrl] = useState<string | null>(null);
   const [dataExtractExtent, setDataExtractExtent] = useState(null);
-  const projectInfo = CoreModules.useAppSelector((state) => state.project.projectInfo);
-  const projectTaskBoundries = CoreModules.useAppSelector((state) => state.project.projectTaskBoundries);
+  const projectInfo: projectInfoType = CoreModules.useAppSelector((state) => state.project.projectInfo);
+  const projectTaskBoundries: projectTaskBoundriesType[] = CoreModules.useAppSelector(
+    (state) => state.project.projectTaskBoundries,
+  );
 
-  const taskInfo = CoreModules.useAppSelector((state) => state.task.taskInfo);
-  const federalWiseProjectCount = taskInfo?.map((task) => ({
+  const taskInfo: taskInfoType[] = CoreModules.useAppSelector((state) => state.task.taskInfo);
+  const federalWiseProjectCount: federalWiseProjectCount[] = taskInfo?.map((task) => ({
     code: task.task_id,
     count: task.submission_count,
   }));
 
-  const selectedTask = CoreModules.useAppSelector((state) => state.task.selectedTask);
-  const defaultTheme = CoreModules.useAppSelector((state) => state.theme.hotTheme);
-  const params = CoreModules.useParams();
-  const encodedId = params.projectId;
-  const decodedId = environment.decode(encodedId);
-  const legendColorArray = colorRange(federalWiseProjectCount, '4');
+  const selectedTask: number = CoreModules.useAppSelector((state) => state.task.selectedTask);
+  const legendColorArray: legendColorArrayType[] = colorRange(federalWiseProjectCount, '4');
   const { mapRef, map } = useOLMap({
     center: [0, 0],
     zoom: 4,
@@ -148,7 +155,6 @@ const TaskSubmissionsMap = () => {
   }, [projectTaskBoundries]);
 
   useEffect(() => {
-    console.log(taskBoundaries);
     if (!taskBoundaries) return;
     const filteredSelectedTaskGeojson = {
       ...basicGeojsonTemplate,
@@ -184,7 +190,7 @@ const TaskSubmissionsMap = () => {
     (style, feature, resolution) => {
       const stylex = { ...style };
       stylex.fillOpacity = 80;
-      const getFederal = federalWiseProjectCount?.find((d) => d.code === feature.getProperties().uid);
+      const getFederal = federalWiseProjectCount?.find((d) => d.code == feature.getProperties().uid);
       const getFederalCount = getFederal?.count;
       stylex.labelMaxResolution = 1000;
       stylex.showLabel = true;
@@ -207,6 +213,26 @@ const TaskSubmissionsMap = () => {
   map?.on('loadend', function () {
     map.getTargetElement().classList.remove('spinner');
   });
+
+  const taskSubmissionsPopupUI = (properties: taskFeaturePropertyType) => {
+    const currentTask = taskInfo?.filter((task) => +task.task_id === properties.uid);
+    return (
+      <div className="fmtm-h-fit">
+        <h2 className="fmtm-border-b-[2px] fmtm-border-primaryRed fmtm-w-fit fmtm-pr-1">
+          Task ID: #{currentTask?.[0].task_id}
+        </h2>
+        <div className="fmtm-flex fmtm-flex-col fmtm-gap-1 fmtm-mt-1">
+          <p>
+            Expected Count: <span className="fmtm-text-primaryRed">{currentTask?.[0].feature_count}</span>
+          </p>
+          <p>
+            Submission Count: <span className="fmtm-text-primaryRed">{currentTask?.[0].submission_count}</span>
+          </p>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <CoreModules.Box
       sx={{
@@ -246,7 +272,7 @@ const TaskSubmissionsMap = () => {
         )}
         <div className="fmtm-absolute fmtm-bottom-2 fmtm-left-2 sm:fmtm-bottom-5 sm:fmtm-left-5 fmtm-z-50 fmtm-rounded-lg">
           <Accordion
-            body={<TaskSubmissionsMapLegend defaultTheme={defaultTheme} />}
+            body={<TaskSubmissionsMapLegend legendColorArray={legendColorArray} />}
             header={
               <p className="fmtm-text-lg fmtm-font-normal fmtm-my-auto fmtm-mb-[0.35rem] fmtm-ml-2">
                 No. of Submissions
@@ -257,6 +283,7 @@ const TaskSubmissionsMap = () => {
             collapsed={true}
           />
         </div>
+        <AsyncPopup map={map} popupUI={taskSubmissionsPopupUI} />
         {dataExtractUrl && isValidUrl(dataExtractUrl) && (
           <VectorLayer fgbUrl={dataExtractUrl} fgbExtent={dataExtractExtent} zIndex={15} />
         )}

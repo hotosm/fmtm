@@ -139,7 +139,8 @@ services:
       central-db:
         condition: service_healthy
     environment:
-      - DOMAIN=local
+      - DOMAIN=odk.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}
+      - SSL_TYPE=upstream
       - SYSADMIN_EMAIL=${ODK_CENTRAL_USER}
       - SYSADMIN_PASSWD=${ODK_CENTRAL_PASSWD}
       - HTTPS_PORT=${HTTPS_PORT:-443}
@@ -205,6 +206,7 @@ services:
 
   fmtm-db:
     image: "postgis/postgis:${POSTGIS_TAG:-14-3.4-alpine}"
+    command: -c 'max_connections=300'
     volumes:
       - fmtm_db_data:/var/lib/postgresql/data/
     environment:

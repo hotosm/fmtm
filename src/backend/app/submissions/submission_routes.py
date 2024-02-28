@@ -298,21 +298,9 @@ async def get_osm_xml(
     # Remove the extra closing </osm> tag from the end of the file
     with open(osmoutfile, "r") as f:
         osmoutfile_data = f.read()
-        # Find the last index of the closing </osm> tag
-        last_osm_index = osmoutfile_data.rfind("</osm>")
-        # Remove the extra closing </osm> tag from the end
-        processed_xml_string = (
-            osmoutfile_data[:last_osm_index]
-            + osmoutfile_data[last_osm_index + len("</osm>") :]
-        )
-
-    # Write the modified XML data back to the file
-    with open(osmoutfile, "w") as f:
-        f.write(processed_xml_string)
 
     # Create a plain XML response
-    response = Response(content=processed_xml_string, media_type="application/xml")
-    return response
+    return Response(content=osmoutfile_data, media_type="application/xml")
 
 
 @router.get("/submission_page/{project_id}")
@@ -371,7 +359,7 @@ async def get_submission_form_fields(
     """
     project = await project_crud.get_project(db, project_id)
     task_list = await tasks_crud.get_task_id_list(db, project_id)
-    odk_credentials = await project_deps.get_odk_credentials(db, project)
+    odk_credentials = await project_deps.get_odk_credentials(db, project_id)
     odk_form = central_crud.get_odk_form(odk_credentials)
     response = odk_form.form_fields(project.odkid, str(task_list[0]))
     return response

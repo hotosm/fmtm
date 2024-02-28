@@ -46,8 +46,8 @@ dependencies = [
     "sozipfile==0.3.2",
     "cryptography>=42.0.1",
     "osm-login-python==1.0.1",
-    "osm-fieldwork==0.4.3rc0",
-    "osm-rawdata==0.2.2",
+    "osm-fieldwork==0.4.4",
+    "osm-rawdata==0.2.3",
     "fmtm-splitter==1.1.2",
 ]
 requires-python = ">=3.10"
