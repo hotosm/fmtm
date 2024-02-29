@@ -5,6 +5,7 @@ import { ProjectActions } from '@/store/slices/ProjectSlice';
 import environment from '@/environment';
 import { ProjectFilesById } from '@/api/Files';
 import QrcodeComponent from '@/components/QrcodeComponent';
+import { useNavigate } from 'react-router-dom';
 
 type TaskSectionPopupPropType = {
   taskId: number | null;
@@ -14,10 +15,13 @@ type TaskSectionPopupPropType = {
 
 const TaskSectionPopup = ({ taskId, body, feature }: TaskSectionPopupPropType) => {
   const dispatch = CoreModules.useAppDispatch();
-  const [task_status, set_task_status] = useState('READY');
-  const taskModalStatus = CoreModules.useAppSelector((state) => state.project.taskModalStatus);
+  const navigate = useNavigate();
   const params = CoreModules.useParams();
   const currentProjectId = environment.decode(params.id);
+
+  const [task_status, set_task_status] = useState('READY');
+
+  const taskModalStatus = CoreModules.useAppSelector((state) => state.project.taskModalStatus);
   const projectData = CoreModules.useAppSelector((state) => state.project.projectTaskBoundries);
   const projectIndex = projectData.findIndex((project) => project.id == currentProjectId);
 
@@ -74,7 +78,9 @@ const TaskSectionPopup = ({ taskId, body, feature }: TaskSectionPopupPropType) =
         <AssetModules.DescriptionOutlinedIcon
           style={{ width: '20px' }}
           className="hover:fmtm-text-primaryRed"
-          onClick={() => {}}
+          onClick={() => {
+            navigate(`/project-submissions/MTAwMTExMTE=?tab=table&task_id=${taskId}`);
+          }}
         />
         <AssetModules.CloseIcon
           style={{ width: '20px' }}
