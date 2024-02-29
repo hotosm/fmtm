@@ -431,10 +431,10 @@ const SubmissionsTable = ({ toggleView }) => {
           })}
           <TableHeader
             dataField="Actions"
-            headerClassName="updatedHeader"
-            rowClassName="updatedRow"
+            headerClassName="updatedHeader !fmtm-sticky fmtm-right-0 fmtm-shadow-[-10px_0px_20px_0px_rgba(0,0,0,0.1)] fmtm-text-center"
+            rowClassName="updatedRow !fmtm-sticky fmtm-right-0 fmtm-bg-white fmtm-shadow-[-10px_0px_20px_0px_rgba(0,0,0,0.1)]"
             dataFormat={(row) => (
-              <div className="fmtm-w-[7rem] fmtm-overflow-hidden fmtm-truncate fmtm-text-center">
+              <div className="fmtm-w-[5rem] fmtm-overflow-hidden fmtm-truncate fmtm-text-center">
                 <AssetModules.VisibilityOutlinedIcon
                   className="fmtm-text-[#545454] hover:fmtm-text-primaryRed"
                   onClick={() => {
@@ -452,9 +452,7 @@ const SubmissionsTable = ({ toggleView }) => {
                       }),
                     );
                   }}
-                />{' '}
-                <span className="fmtm-text-primaryRed fmtm-border-[1px] fmtm-border-primaryRed fmtm-mx-1"></span>{' '}
-                <AssetModules.DeleteIcon className="fmtm-text-[#545454]" />
+                />
               </div>
             )}
           />
