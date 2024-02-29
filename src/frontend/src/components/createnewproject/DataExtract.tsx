@@ -134,8 +134,8 @@ const DataExtract = ({ flag, customDataExtractUpload, setCustomDataExtractUpload
     if (!file) return;
     // Parse file as JSON
     const fileReader = new FileReader();
-    const fileLoaded = await new Promise((resolve) => {
-      fileReader.onload = (e) => resolve(e.target.result);
+    const fileLoaded: any = await new Promise((resolve) => {
+      fileReader.onload = (e) => resolve(e.target?.result);
       fileReader.readAsText(file, 'UTF-8');
     });
     const parsedJSON = JSON.parse(fileLoaded);
