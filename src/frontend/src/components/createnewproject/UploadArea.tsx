@@ -119,7 +119,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomLineUpload, se
       );
     }
     handleCustomChange('drawnGeojson', null);
-    // dispatch(CreateProjectActions.SetTotalAreaSelection(null));
+    dispatch(CreateProjectActions.SetTotalAreaSelection(null));
   };
 
   useEffect(() => {
@@ -156,8 +156,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomLineUpload, se
     handleCustomChange('uploadedAreaFile', null);
     handleCustomChange('drawnGeojson', null);
     dispatch(CreateProjectActions.SetDrawnGeojson(null));
-    // dispatch(CreateProjectActions.SetTotalAreaSelection(null));
-    dispatch(CreateProjectActions.ClearProjectStepState(formValues));
+    dispatch(CreateProjectActions.SetTotalAreaSelection(null));
   };
 
   useEffect(() => {
@@ -316,20 +315,20 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomLineUpload, se
                   : (geojson, area) => {
                       handleCustomChange('drawnGeojson', geojson);
                       dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
-                      // dispatch(CreateProjectActions.SetTotalAreaSelection(area));
+                      dispatch(CreateProjectActions.SetTotalAreaSelection(area));
                       setGeojsonFile(null);
                     }
               }
               onModify={(geojson, area) => {
                 handleCustomChange('drawnGeojson', geojson);
                 dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
-                // dispatch(CreateProjectActions.SetTotalAreaSelection(area));
+                dispatch(CreateProjectActions.SetTotalAreaSelection(area));
                 dispatch(CreateProjectActions.ClearProjectStepState(formValues));
                 setCustomLineUpload(null);
                 setCustomPolygonUpload(null);
               }}
               getAOIArea={(area) => {
-                // dispatch(CreateProjectActions.SetTotalAreaSelection(area));
+                dispatch(CreateProjectActions.SetTotalAreaSelection(area));
               }}
             />
           </div>
