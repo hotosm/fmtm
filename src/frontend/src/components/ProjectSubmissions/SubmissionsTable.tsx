@@ -19,6 +19,8 @@ import { Modal } from '@/components/common/Modal';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import filterParams from '@/utilfunctions/filterParams';
 import UpdateReviewStatusModal from '@/components/ProjectSubmissions/UpdateReviewStatusModal';
+import { projectInfoType } from '@/models/project/projectModel';
+import { useAppSelector } from '@/types/reduxTypes';
 
 type filterType = {
   task_id: string | null;
@@ -30,7 +32,7 @@ type filterType = {
 const SubmissionsTable = ({ toggleView }) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const initialFilterState = {
+  const initialFilterState: filterType = {
     task_id: searchParams.get('task_id') ? searchParams?.get('task_id') : null,
     submitted_by: searchParams.get('submitted_by'),
     review_state: searchParams.get('review_state'),
@@ -45,17 +47,15 @@ const SubmissionsTable = ({ toggleView }) => {
 
   const encodedId = params.projectId;
   const decodedId = environment.decode(encodedId);
-  const submissionFormFields = CoreModules.useAppSelector((state) => state.submission.submissionFormFields);
-  const submissionTableData = CoreModules.useAppSelector((state) => state.submission.submissionTableData);
-  const submissionFormFieldsLoading = CoreModules.useAppSelector(
-    (state) => state.submission.submissionFormFieldsLoading,
-  );
-  const submissionTableDataLoading = CoreModules.useAppSelector((state) => state.submission.submissionTableDataLoading);
-  const submissionTableRefreshing = CoreModules.useAppSelector((state) => state.submission.submissionTableRefreshing);
-  const taskInfo = CoreModules.useAppSelector((state) => state.task.taskInfo);
-  const projectInfo = CoreModules.useAppSelector((state) => state.project.projectInfo);
-  const josmEditorError = CoreModules.useAppSelector((state) => state.task.josmEditorError);
-  const downloadSubmissionLoading = CoreModules.useAppSelector((state) => state.task.downloadSubmissionLoading);
+  const submissionFormFields = useAppSelector((state) => state.submission.submissionFormFields);
+  const submissionTableData = useAppSelector((state) => state.submission.submissionTableData);
+  const submissionFormFieldsLoading = useAppSelector((state) => state.submission.submissionFormFieldsLoading);
+  const submissionTableDataLoading = useAppSelector((state) => state.submission.submissionTableDataLoading);
+  const submissionTableRefreshing = useAppSelector((state) => state.submission.submissionTableRefreshing);
+  const taskInfo = useAppSelector((state) => state.task.taskInfo);
+  const projectInfo: projectInfoType = CoreModules.useAppSelector((state) => state.project.projectInfo);
+  const josmEditorError = useAppSelector((state) => state.task.josmEditorError);
+  const downloadSubmissionLoading = useAppSelector((state) => state.task.downloadSubmissionLoading);
   const [numberOfFilters, setNumberOfFilters] = useState<number>(0);
   const [paginationPage, setPaginationPage] = useState<number>(1);
   const [submittedBy, setSubmittedBy] = useState<string | null>(null);
@@ -158,6 +158,7 @@ const SubmissionsTable = ({ toggleView }) => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | React.KeyboardEvent<HTMLInputElement>,
     newPage: number,
   ) => {
+    if (!submissionTableData?.pagination?.pages) return;
     if (newPage + 1 > submissionTableData?.pagination?.pages || newPage + 1 < 1) {
       setPaginationPage(paginationPage);
       return;
@@ -199,7 +200,7 @@ const SubmissionsTable = ({ toggleView }) => {
     dispatch(
       ConvertXMLToJOSM(
         `${import.meta.env.VITE_API_URL}/submission/get_osm_xml/${decodedId}`,
-        projectInfo.outline_geojson.bbox,
+        projectInfo?.outline_geojson?.properties?.bbox,
       ),
     );
   };
@@ -467,7 +468,7 @@ const SubmissionsTable = ({ toggleView }) => {
           <CoreModules.TablePagination
             component="div"
             count={submissionTableData?.pagination?.total}
-            page={submissionTableData?.pagination?.page - 1}
+            page={submissionTableData?.pagination?.page ? submissionTableData?.pagination?.page - 1 : 1}
             onPageChange={handleChangePage}
             rowsPerPage={submissionTableData?.pagination?.per_page}
             rowsPerPageOptions={[]}

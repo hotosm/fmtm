@@ -7,7 +7,7 @@ export type CreateProjectStateTypes = {
   editProjectDetailsLoading: boolean;
   projectArea: ProjectAreaTypes | null;
   projectAreaLoading: boolean;
-  formCategoryList: FormCategoryListTypes | [];
+  formCategoryList: FormCategoryListTypes[] | [];
   formCategoryLoading: boolean;
   generateQrLoading: boolean;
   organisationList: OrganisationListTypes[];
@@ -26,16 +26,17 @@ export type CreateProjectStateTypes = {
   drawToggle: boolean;
   validateCustomFormLoading: boolean;
   validateCustomFormResponse: ValidateCustomFormResponse | null;
-  uploadAreaSelection: string | null;
+  uploadAreaSelection: string;
   totalAreaSelection: string | null;
   splitTasksSelection: string | null;
-  dataExtractGeojson: null;
+  dataExtractGeojson: GeoJSONFeatureTypes | null;
   createProjectValidations: {};
   isUnsavedChanges: boolean;
   canSwitchCreateProjectSteps: boolean;
   isTasksGenerated: {};
   isFgbFetching: boolean;
   toggleSplittedGeojsonEdit: boolean;
+  customFileValidity: boolean;
 };
 export type ValidateCustomFormResponse = {
   detail: { message: string; possible_reason: string };
@@ -134,6 +135,7 @@ export type OrganisationListTypes = {
   name: string;
   description: string;
   type: 1;
+  odk_central_url: string | null;
 };
 
 export type GenerateProjectLogTypes = {

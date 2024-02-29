@@ -18,16 +18,18 @@
 
 """Project dependencies for use in Depends."""
 
-from typing import Any, Optional, Union
+from typing import Optional
 
 from fastapi import Depends
 from fastapi.exceptions import HTTPException
+from loguru import logger as log
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.db.db_models import DbProject
 from app.models.enums import HTTPStatus
-from app.projects import project_crud, project_schemas
+from app.projects import project_schemas
 
 
 async def get_project_by_id(
@@ -48,17 +50,42 @@ async def get_project_by_id(
     return db_project
 
 
-async def get_odk_credentials(db: Session, project: Union[int, Any]):
-    """Get odk credentials of project."""
-    if isinstance(project, int):
-        db_project = await project_crud.get_project(db, project)
-    else:
-        db_project = project
+async def get_odk_credentials(db: Session, project_id: int):
+    """Get ODK credentials of a project, or default organization credentials."""
+    sql = text(
+        """
+    SELECT
+        COALESCE(
+            NULLIF(projects.odk_central_url, ''),
+            organisations.odk_central_url)
+        AS odk_central_url,
+        COALESCE(
+            NULLIF(projects.odk_central_user, ''),
+            organisations.odk_central_user)
+        AS odk_central_user,
+        COALESCE(
+            NULLIF(projects.odk_central_password, ''),
+            organisations.odk_central_password
+        ) AS odk_central_password
+    FROM
+        projects
+    LEFT JOIN
+        organisations ON projects.organisation_id = organisations.id
+    WHERE
+        projects.id = :project_id
+    """
+    )
+    result = db.execute(sql, {"project_id": project_id})
+    creds = result.first()
 
-    odk_credentials = {
-        "odk_central_url": db_project.odk_central_url,
-        "odk_central_user": db_project.odk_central_user,
-        "odk_central_password": db_project.odk_central_password,
-    }
+    url = creds.odk_central_url
+    user = creds.odk_central_user
+    password = creds.odk_central_password
 
-    return project_schemas.ODKCentralDecrypted(**odk_credentials)
+    log.debug(f"Retrieved ODK creds for project ({project_id}): {url} | {user}")
+
+    return project_schemas.ODKCentralDecrypted(
+        odk_central_url=url,
+        odk_central_user=user,
+        odk_central_password=password,
+    )

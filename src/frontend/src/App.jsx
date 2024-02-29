@@ -24,10 +24,13 @@ const SUPPRESSED_WARNINGS = [
 ];
 
 console.error = function filterWarnings(msg, ...args) {
-  if (!SUPPRESSED_WARNINGS.some((entry) => msg.includes(entry))) {
+  if (typeof msg !== 'string') {
+    consoleError(...args);
+  } else if (!SUPPRESSED_WARNINGS.some((entry) => msg.includes(entry))) {
     consoleError(msg, ...args);
   }
 };
+
 axios.interceptors.request.use(
   (config) => {
     // Do something before request is sent
@@ -46,36 +49,18 @@ axios.interceptors.request.use(
     // Do something with request error
     Promise.reject(error),
 );
+
 const GlobalInit = () => {
   useEffect(() => {
-    console.log('adding interceptors');
-    axios.interceptors.request.use(
-      (config) => {
-        // Do something before request is sent
-
-        // const excludedDomains = ['xxx', 'xxx'];
-        // const urlIsExcluded = excludedDomains.some((domain) => config.url.includes(domain));
-        // if (!urlIsExcluded) {
-        //   config.withCredentials = true;
-        // }
-
-        config.withCredentials = true;
-
-        return config;
-      },
-      (error) =>
-        // Do something with request error
-        Promise.reject(error),
-    );
+    // Do stuff at init here
     return () => {};
   }, []);
-
   return null; // Renders nothing
 };
 
 const SentryInit = () => {
   useEffect(() => {
-    if (import.meta.env.MODE === 'development') {
+    if (import.meta.env.MODE === 'development' || import.meta.env.BASE_URL !== 'fmtm.hotosm.org') {
       return;
     }
     console.log('Adding Sentry');
@@ -83,14 +68,11 @@ const SentryInit = () => {
     import('@sentry/react').then((Sentry) => {
       // Init Sentry
       Sentry.init({
-        dsn:
-          import.meta.env.BASE_URL === 'fmtm.hotosm.org'
-            ? 'https://35c80d0894e441f593c5ac5dfa1094a0@o68147.ingest.sentry.io/4505557311356928'
-            : 'https://35c80d0894e441f593c5ac5dfa1094a0@o68147.ingest.sentry.io/4505557311356928',
+        dsn: 'https://35c80d0894e441f593c5ac5dfa1094a0@o68147.ingest.sentry.io/4505557311356928',
         integrations: [
           new Sentry.BrowserTracing({
             // Set 'tracePropagationTargets' to control for which URLs distributed tracing should be enabled
-            tracePropagationTargets: ['https://fmtm.naxa.com.np/', 'https://fmtm.hotosm.org/'],
+            tracePropagationTargets: ['https://fmtm.hotosm.org/'],
           }),
           new Sentry.Replay(),
         ],
@@ -114,6 +96,8 @@ const MatomoTrackingInit = () => {
     if (import.meta.env.MODE === 'development' || import.meta.env.BASE_URL !== 'fmtm.hotosm.org') {
       return;
     }
+    console.log('Adding Matomo');
+
     // Set matomo tracking id
     window.site_id = environment.matomoTrackingId;
 
@@ -160,21 +144,21 @@ ReactDOM.render(
   document.getElementById('app'),
 );
 
-// Register service worker
-if (import.meta.env.MODE === 'production') {
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker
-        .register('/service-worker.js')
-        .then((registration) => {
-          console.log('ServiceWorker registered: ', registration);
-        })
-        .catch((error) => {
-          console.log('ServiceWorker registration failed: ', error);
-        });
-    });
-  }
-}
+// // Register service worker manually
+// if (import.meta.env.MODE === 'production') {
+//   if ('serviceWorker' in navigator) {
+//     window.addEventListener('load', () => {
+//       navigator.serviceWorker
+//         .register('/service-worker.js')
+//         .then((registration) => {
+//           console.log('ServiceWorker registered: ', registration);
+//         })
+//         .catch((error) => {
+//           console.log('ServiceWorker registration failed: ', error);
+//         });
+//     });
+//   }
+// }
 // if (import.meta.env.MODE === 'development') {
 //   navigator.serviceWorker.getRegistrations().then(function (registrations) {
 //     for (let registration of registrations) {

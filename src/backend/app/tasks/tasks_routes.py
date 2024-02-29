@@ -21,6 +21,7 @@ from datetime import datetime, timedelta
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
+from loguru import logger as log
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
@@ -145,30 +146,44 @@ async def task_features_count(
     project = await project_crud.get_project(db, project_id)
 
     # ODK Credentials
-    odk_credentials = await project_deps.get_odk_credentials(db, project)
+    odk_credentials = await project_deps.get_odk_credentials(db, project_id)
 
     odk_details = central_crud.list_odk_xforms(project.odkid, odk_credentials, True)
 
     # Assemble the final data list
     data = []
-    for x in odk_details:
-        # TODO features table will be removed, calc from temp table
-        feature_count_query = text(
-            f"""
-            select count(*) from features
-            where project_id = {project_id} and task_id = {x['xmlFormId']}
+    feature_count_query = text(
         """
-        )
+        SELECT id, feature_count
+        FROM tasks
+        WHERE project_id = :project_id;
+    """
+    )
+    result = db.execute(feature_count_query, {"project_id": project_id})
+    feature_counts = result.all()
 
-        result = db.execute(feature_count_query)
-        feature_count = result.fetchone()
+    if not feature_counts:
+        msg = f"To tasks found for project {project_id}"
+        log.warning(msg)
+        raise HTTPException(status_code=404, detail=msg)
+
+    feature_count_task_dict = {f"{record[0]}": record[1] for record in feature_counts}
+
+    project_name_prefix = project.project_name_prefix
+    form_category = project.xform_title
+
+    for x in odk_details:
+        # Strip project name and form type from xmlFormId
+        task_id = f"{x['xmlFormId']}".strip(f"{project_name_prefix}_").strip(
+            f"_{form_category}"
+        )
 
         data.append(
             {
-                "task_id": x["xmlFormId"],
+                "task_id": task_id,
                 "submission_count": x["submissions"],
                 "last_submission": x["lastSubmission"],
-                "feature_count": feature_count[0],
+                "feature_count": feature_count_task_dict[task_id],
             }
         )
 

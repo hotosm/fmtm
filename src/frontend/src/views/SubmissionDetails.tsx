@@ -7,6 +7,7 @@ import { GetProjectDashboard } from '@/api/Project';
 import Button from '@/components/common/Button';
 import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 import UpdateReviewStatusModal from '@/components/ProjectSubmissions/UpdateReviewStatusModal';
+import { useAppSelector } from '@/types/reduxTypes';
 
 const SubmissionDetails = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -18,7 +19,8 @@ const SubmissionDetails = () => {
   const paramsInstanceId = params.instanceId;
   const projectDashboardDetail = CoreModules.useAppSelector((state) => state.project.projectDashboardDetail);
 
-  // const submissionDetails = CoreModules.useAppSelector((state) => state.submission.submissionDetails);
+  // const submissionDetails = useAppSelector((state) => state.submission.submissionDetails);
+
   const submissionDetails = {
     start: '2024-02-21T15:46:15.790+05:45',
     end: '2024-02-21T15:47:03.138+05:45',

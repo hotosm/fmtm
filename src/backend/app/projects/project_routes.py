@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Optional
 
 import geojson
+import requests
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -48,7 +49,11 @@ from app.auth.osm import AuthUser, login_required
 from app.auth.roles import mapper, org_admin, project_admin, super_admin
 from app.central import central_crud
 from app.db import database, db_models
-from app.db.postgis_utils import check_crs
+from app.db.postgis_utils import (
+    check_crs,
+    flatgeobuf_to_geojson,
+    parse_and_filter_geojson,
+)
 from app.models.enums import TILES_FORMATS, TILES_SOURCE, HTTPStatus
 from app.organisations import organisation_deps
 from app.projects import project_crud, project_deps, project_schemas
@@ -234,7 +239,7 @@ async def delete_project(
         f"deletion of project {project.id}"
     )
     # Odk crendentials
-    odk_credentials = await project_deps.get_odk_credentials(db, project)
+    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
     # Delete ODK Central project
     await central_crud.delete_odk_project(project.odkid, odk_credentials)
     # Delete FMTM project
@@ -269,6 +274,7 @@ async def create_project(
     )
 
     # Must decrypt ODK password & connect to ODK Central before proj created
+    # cannot use get_odk_credentials helper as no project id yet
     if project_info.odk_central_url:
         odk_creds_decrypted = project_schemas.ODKCentralDecrypted(
             odk_central_url=project_info.odk_central_url,
@@ -282,6 +288,24 @@ async def create_project(
             "Defaulting to organisation credentials."
         )
         odk_creds_decrypted = await organisation_deps.get_org_odk_creds(db_org)
+
+    sql = text(
+        """
+            SELECT EXISTS (
+                SELECT 1
+                FROM project_info
+                WHERE LOWER(name) = :project_name
+            )
+            """
+    )
+    result = db.execute(sql, {"project_name": project_info.project_info.name.lower()})
+    project_exists = result.fetchone()[0]
+    if project_exists:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Project already exists with the name "
+            f"{project_info.project_info.name}",
+        )
 
     odkproject = central_crud.create_odk_project(
         project_info.project_info.name,
@@ -455,8 +479,12 @@ async def task_split(
     # read data extract
     parsed_extract = None
     if extract_geojson:
-        parsed_extract = geojson.loads(await extract_geojson.read())
-        await check_crs(parsed_extract)
+        geojson_data = json.dumps(json.loads(await extract_geojson.read()))
+        parsed_extract = parse_and_filter_geojson(geojson_data, filter=False)
+        if parsed_extract:
+            await check_crs(parsed_extract)
+        else:
+            log.warning("Parsed geojson file contained no geometries")
 
     return await project_crud.split_geojson_into_tasks(
         db,
@@ -1013,20 +1041,26 @@ async def download_task_boundaries(
 @router.get("/features/download/")
 async def download_features(
     project_id: int,
+    task_id: Optional[int] = None,
     db: Session = Depends(database.get_db),
     current_user: AuthUser = Depends(mapper),
 ):
     """Downloads the features of a project as a GeoJSON file.
 
+    Can generate a geojson for the entire project, or specific task areas.
+
     Args:
         project_id (int): The id of the project.
+        task_id (int): Specify a specific task area to download for.
         db (Session): The database session, provided automatically.
         current_user (AuthUser): Check if user has MAPPER permission.
 
     Returns:
         Response: The HTTP response object containing the downloaded file.
     """
-    feature_collection = await project_crud.get_project_features_geojson(db, project_id)
+    feature_collection = await project_crud.get_project_features_geojson(
+        db, project_id, task_id
+    )
 
     headers = {
         "Content-Disposition": (
@@ -1036,6 +1070,48 @@ async def download_features(
     }
 
     return Response(content=json.dumps(feature_collection), headers=headers)
+
+
+@router.get("/convert-fgb-to-geojson/")
+async def convert_fgb_to_geojson(
+    url: str,
+    db: Session = Depends(database.get_db),
+    current_user: AuthUser = Depends(login_required),
+):
+    """Convert flatgeobuf to GeoJSON format, extracting GeometryCollection.
+
+    Helper endpoint to test data extracts during project creation.
+    Required as the flatgeobuf files wrapped in GeometryCollection
+    cannot be read in QGIS or other tools.
+
+    Args:
+        url (str): URL to the flatgeobuf file.
+        db (Session): The database session, provided automatically.
+        current_user (AuthUser): Check if user is logged in.
+
+    Returns:
+        Response: The HTTP response object containing the downloaded file.
+    """
+    with requests.get(url) as response:
+        if not response.ok:
+            raise HTTPException(
+                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                detail="Download failed for data extract",
+            )
+        data_extract_geojson = await flatgeobuf_to_geojson(db, response.content)
+
+    if not data_extract_geojson:
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail=("Failed to convert flatgeobuf --> geojson"),
+        )
+
+    headers = {
+        "Content-Disposition": ("attachment; filename=fmtm_data_extract.geojson"),
+        "Content-Type": "application/media",
+    }
+
+    return Response(content=json.dumps(data_extract_geojson), headers=headers)
 
 
 @router.get("/tiles/{project_id}")
@@ -1128,7 +1204,7 @@ async def download_tiles(
     project_id = tiles_path.project_id
     project = await project_crud.get_project(db, project_id)
     filename = Path(tiles_path.path).name.replace(
-        f"{project_id}_", f"{project.project_name_prefix.replace(' ', '_')}_"
+        f"{project_id}_", f"{project.project_name_prefix}_"
     )
     log.debug(f"Sending tile archive to user: {filename}")
 

@@ -40,7 +40,7 @@ export const initialState: CreateProjectStateTypes = {
   drawToggle: false,
   validateCustomFormLoading: false,
   validateCustomFormResponse: null,
-  uploadAreaSelection: null,
+  uploadAreaSelection: '',
   totalAreaSelection: null,
   splitTasksSelection: null,
   dataExtractGeojson: null,
@@ -50,6 +50,7 @@ export const initialState: CreateProjectStateTypes = {
   isTasksGenerated: { divide_on_square: false, task_splitting_algorithm: false },
   isFgbFetching: false,
   toggleSplittedGeojsonEdit: false,
+  customFileValidity: false,
 };
 
 const CreateProject = createSlice({
@@ -88,7 +89,7 @@ const CreateProject = createSlice({
       state.generateProjectLog = null;
       state.generateProjectLogLoading = false;
       state.isUnsavedChanges = false;
-      state.uploadAreaSelection = null;
+      state.uploadAreaSelection = '';
       state.dividedTaskGeojson = null;
       state.dividedTaskLoading = false;
     },
@@ -228,6 +229,9 @@ const CreateProject = createSlice({
     },
     SetToggleSplittedGeojsonEdit(state, action) {
       state.toggleSplittedGeojsonEdit = action.payload;
+    },
+    SetCustomFileValidity(state, action) {
+      state.customFileValidity = action.payload;
     },
   },
 });

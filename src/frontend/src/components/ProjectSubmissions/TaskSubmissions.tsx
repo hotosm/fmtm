@@ -5,16 +5,17 @@ import Button from '@/components/common/Button';
 import AssetModules from '@/shared/AssetModules.js';
 import CoreModules from '@/shared/CoreModules.js';
 import { TaskCardSkeletonLoader } from '@/components/ProjectSubmissions/ProjectSubmissionsSkeletonLoader';
-import { taskInfoType } from '@/models/submission/submissionModel';
+import { taskInfoType } from '@/models/task/taskModel';
 import { useSearchParams } from 'react-router-dom';
+import { useAppSelector } from '@/types/reduxTypes';
 
 const TaskSubmissions = () => {
   const dispatch = CoreModules.useAppDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
-  const taskInfo: taskInfoType[] = CoreModules.useAppSelector((state) => state.task.taskInfo);
-  const taskLoading = CoreModules.useAppSelector((state) => state.task.taskLoading);
-  const [searchedTaskId, setSearchedTaskId] = useState<string>('');
-  const [debouncedSearchedTaskId, setDebouncedSearchedTaskId] = useState<string>('');
+  const taskInfo = useAppSelector((state) => state.task.taskInfo);
+  const taskLoading = useAppSelector((state) => state.task.taskLoading);
+  const [searchedTaskId, setSearchedTaskId] = useState('');
+  const [debouncedSearchedTaskId, setDebouncedSearchedTaskId] = useState('');
   const [filteredTaskInfo, setFilteredTaskInfo] = useState<taskInfoType[]>([]);
 
   const zoomToTask = (taskId) => {

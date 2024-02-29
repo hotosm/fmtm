@@ -138,7 +138,7 @@ To install for a quick test, or on a production instance,
 use the convenience script:
 
 ```bash
-curl -L https://get.fmtm.dev -o install.sh
+curl -L https://https://hotosm.github.io/fmtm-installer/install.sh -o install.sh
 bash install.sh
 ```
 
@@ -189,7 +189,7 @@ A computer-screen-optimized web app that allows Campaign Managers to:
 
 #### Steps to create a project in FMTM
 
-- Go to [fmtm](https://dev.fmtm.hotosm.org/) .
+- Go to [fmtm](https://fmtm.hotosm.org/) .
 - If you are new then on the top right cornor click on Sign up and create an account.
   Else, Sign in to your existing account .
 - Click the '+ CREATE NEW PROJECT' button.
@@ -287,6 +287,7 @@ Thanks goes to these wonderful people:
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Balofire"><img src="https://avatars.githubusercontent.com/u/102294666?v=4?s=100" width="100px;" alt="Ahmeed Etti-Balogun"/><br /><sub><b>Ahmeed Etti-Balogun</b></sub></a><br /><a href="https://github.com/hotosm/fmtm/commits?author=Balofire" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Roseford"><img src="https://avatars.githubusercontent.com/u/75838716?v=4?s=100" width="100px;" alt="Uju"/><br /><sub><b>Uju</b></sub></a><br /><a href="https://github.com/hotosm/fmtm/commits?author=Roseford" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://www.el-cordovez.com"><img src="https://avatars.githubusercontent.com/u/75356640?v=4?s=100" width="100px;" alt="JC CorMan"/><br /><sub><b>JC CorMan</b></sub></a><br /><a href="https://github.com/hotosm/fmtm/commits?author=cordovez" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Prajwalism"><img src="https://avatars.githubusercontent.com/u/123072058?v=4?s=100" width="100px;" alt="Prajwal Khadgi"/><br /><sub><b>Prajwal Khadgi</b></sub></a><br /><a href="https://github.com/hotosm/fmtm/commits?author=Prajwalism" title="Code">💻</a></td>
     </tr>
   </tbody>
   <tfoot>
