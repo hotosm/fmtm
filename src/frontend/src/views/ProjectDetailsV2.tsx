@@ -138,10 +138,6 @@ const Home = () => {
     setTaskBoundariesLayer(taskBoundariesFeatcol);
   }, [state.projectTaskBoundries[0]?.taskBoundries?.length]);
 
-  useEffect(() => {
-    dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${decodedId}`));
-  }, []);
-
   const dataExtractDataPopup = (properties: dataExtractPropertyType) => {
     return (
       <div className="fmtm-h-fit">
