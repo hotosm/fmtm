@@ -33,7 +33,7 @@ const extensions = [
   Youtube,
 ];
 
-const content = '<p>Hello World!</p>';
+const content = '';
 
 const Tiptap = () => {
   const [editorHtmlContent, setEditorHtmlContent] = useState('');

@@ -15,6 +15,7 @@ import { CustomSelect } from '@/components/common/Select';
 import { OrganisationService } from '@/api/CreateProjectService';
 import { CustomCheckbox } from '@/components/common/Checkbox';
 import { organizationDropdownType } from '@/models/createproject/createProjectModel';
+import Tiptap from '@/components/common/Editor/Editor';
 
 const ProjectDetailsForm = ({ flag }) => {
   const dispatch = useDispatch();
@@ -232,6 +233,10 @@ const ProjectDetailsForm = ({ flag }) => {
             required
             errorMsg={errors.description}
           />
+          <div>
+            <p className="fmtm-text-[1rem] fmtm-font-semibold fmtm-mb-2">Instructions</p>
+            <Tiptap />
+          </div>
           <div className="fmtm-w-fit fmtm-mx-auto fmtm-mt-10">
             <Button btnText="NEXT" btnType="primary" type="submit" className="fmtm-font-bold" />
           </div>
