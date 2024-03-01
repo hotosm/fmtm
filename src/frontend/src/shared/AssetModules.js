@@ -80,6 +80,7 @@ import {
   FormatQuote as FormatQuoteIcon,
   AddPhotoAlternateOutlined as ImageAddIcon,
   HorizontalRule as HorizontalRuleIcon,
+  VideoFileOutlined as VideoFileOutlinedIcon,
 } from '@mui/icons-material';
 import LockPng from '@/assets/images/lock.png';
 import RedLockPng from '@/assets/images/red-lock.png';
@@ -170,4 +171,5 @@ export default {
   FormatQuoteIcon,
   ImageAddIcon,
   HorizontalRuleIcon,
+  VideoFileOutlinedIcon,
 };
