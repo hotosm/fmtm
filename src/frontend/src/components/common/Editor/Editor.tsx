@@ -10,6 +10,8 @@ import Text from '@tiptap/extension-text';
 import Heading from '@tiptap/extension-heading';
 import Document from '@tiptap/extension-document';
 import Link from '@tiptap/extension-link';
+import Image from '@tiptap/extension-image';
+import Youtube from '@tiptap/extension-youtube';
 import './editorStyles.scss';
 
 // define your extension array
@@ -25,6 +27,10 @@ const extensions = [
   Link.configure({
     validate: (href) => /^https?:\/\//.test(href),
   }),
+  Image.configure({
+    inline: true,
+  }),
+  Youtube,
 ];
 
 const content = '<p>Hello World!</p>';

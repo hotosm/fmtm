@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Editor } from '@tiptap/react';
 import AssetModules from '@/shared/AssetModules';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../Dropdown';
@@ -15,6 +15,12 @@ const iconClassName = 'fmtm-duration-300 hover:fmtm-bg-red-100 fmtm-rounded fmtm
 export const Toolbar = ({ editor }: ToolbarProps) => {
   const [linkText, setLinkText] = useState('');
   const [linkDropdownOpen, setLinkDropdownOpen] = useState(false);
+  const [imageURL, setImageURL] = useState('');
+  const [imageDropdownOpen, setImageDropdownOpen] = useState(false);
+  const [youtubeURL, setYoutubeURL] = useState('');
+  const [youtubeDropdownOpen, setYoutubeDropdownOpen] = useState(false);
+  const videoWidthRef = useRef(null);
+  const videoHeightRef = useRef(null);
 
   const isEditorActive = (editorItem) => {
     if (editor?.isActive(editorItem)) {
@@ -23,6 +29,7 @@ export const Toolbar = ({ editor }: ToolbarProps) => {
     return '';
   };
 
+  // set link if a link is already linked
   const previousUrl = editor?.getAttributes('link').href;
   useEffect(() => {
     if (previousUrl) {
@@ -46,6 +53,33 @@ export const Toolbar = ({ editor }: ToolbarProps) => {
     setLinkText('');
     setLinkDropdownOpen(false);
   }, [editor, linkText]);
+
+  // add image to editor
+  const addImage = useCallback(() => {
+    if (imageURL) {
+      editor?.chain().focus().setImage({ src: imageURL }).run();
+    }
+    setImageURL('');
+  }, [editor, imageURL]);
+
+  // embed youtube video to editor
+  useEffect(() => {
+    if (videoWidthRef.current && videoHeightRef.current) {
+      videoWidthRef.current.value = 640;
+      videoHeightRef.current.value = 480;
+    }
+  }, [videoWidthRef.current, videoHeightRef.current]);
+
+  const addYoutubeVideo = () => {
+    if (youtubeURL) {
+      editor?.commands.setYoutubeVideo({
+        src: youtubeURL,
+        width: Math.max(320, parseInt(videoWidthRef.current.value, 10)) || 640,
+        height: Math.max(180, parseInt(videoHeightRef.current.value, 10)) || 480,
+      });
+    }
+    setYoutubeURL('');
+  };
 
   return (
     <div className="fmtm-flex fmtm-justify-between fmtm-px-2 fmtm-border-b-[1px] fmtm-border-gray-300">
@@ -71,13 +105,13 @@ export const Toolbar = ({ editor }: ToolbarProps) => {
         <DropdownMenu>
           <DropdownMenuTrigger className="fmtm-outline-none">
             <Tooltip title="Heading">
-              <p
+              <div
                 className={`fmtm-font-bold fmtm-font-archivo fmtm-scale-110 ${iconClassName} !fmtm-py-0 fmtm-px-2 ${isEditorActive(
                   'heading',
                 )}`}
               >
                 h
-              </p>
+              </div>
             </Tooltip>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="fmtm-flex fmtm-gap-1 fmtm-bg-white fmtm-px-1">
@@ -147,16 +181,18 @@ export const Toolbar = ({ editor }: ToolbarProps) => {
               <AssetModules.LinkIcon className={`${iconClassName} ${isEditorActive('link')}`} />
             </Tooltip>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="fmtm-flex fmtm-items-center fmtm-gap-2">
+          <DropdownMenuContent className="fmtm-flex fmtm-items-center fmtm-gap-2 fmtm-bg-white">
             <InputTextField
+              placeholder="URL"
               onChange={(e) => {
                 setLinkText(e.target.value);
               }}
               value={linkText}
               fieldType="text"
             />
+            <InputTextField placeholder="URL" onChange={() => {}} value={linkText} fieldType="text" />
             <Button
-              btnText="Add Link"
+              btnText="Add"
               btnType="other"
               className="fmtm-text-sm !fmtm-px-2 !fmtm-py-1 fmtm-rounded-[6px] !fmtm-bg-primaryRed !fmtm-text-white"
               onClick={setLink}
@@ -175,9 +211,76 @@ export const Toolbar = ({ editor }: ToolbarProps) => {
             className={`${iconClassName}`}
           />
         </Tooltip>
-        <Tooltip title="Image">
-          <AssetModules.ImageAddIcon className={`${iconClassName}`} />
-        </Tooltip>
+        <DropdownMenu open={imageDropdownOpen} onOpenChange={(state) => setImageDropdownOpen(state)}>
+          <DropdownMenuTrigger className="fmtm-outline-none">
+            <Tooltip title="Image">
+              <AssetModules.ImageAddIcon className={`${iconClassName}`} />
+            </Tooltip>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="fmtm-flex fmtm-items-center fmtm-gap-2 fmtm-bg-white">
+            <InputTextField
+              placeholder="Image URL"
+              onChange={(e) => {
+                setImageURL(e.target.value);
+              }}
+              value={imageURL}
+              fieldType="text"
+            />
+            <Button
+              btnText="Insert"
+              btnType="other"
+              className="fmtm-text-sm !fmtm-px-2 !fmtm-py-1 fmtm-rounded-[6px] !fmtm-bg-primaryRed !fmtm-text-white"
+              onClick={addImage}
+            />
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <DropdownMenu
+          open={youtubeDropdownOpen}
+          onOpenChange={(state) => {
+            setYoutubeDropdownOpen(state);
+            setYoutubeURL('');
+          }}
+        >
+          <DropdownMenuTrigger className="fmtm-outline-none">
+            <Tooltip title="Embed Video">
+              <AssetModules.VideoFileOutlinedIcon className={`${iconClassName}`} />
+            </Tooltip>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="fmtm-flex fmtm-items-center fmtm-gap-2 fmtm-bg-white">
+            <InputTextField
+              placeholder="Youtube Video URL"
+              onChange={(e) => {
+                setYoutubeURL(e.target.value);
+              }}
+              value={youtubeURL}
+              fieldType="text"
+            />
+            <input
+              id="width"
+              type="number"
+              min="320"
+              max="1024"
+              ref={videoWidthRef}
+              placeholder="width"
+              className="fmtm-border-[1px] fmtm-border-gray-300 fmtm-h-[2.3rem] fmtm-rounded-md fmtm-pl-1"
+            />
+            <input
+              id="height"
+              type="number"
+              min="180"
+              max="720"
+              ref={videoHeightRef}
+              placeholder="height"
+              className="fmtm-border-[1px] fmtm-border-gray-300 fmtm-h-[2.3rem] fmtm-rounded-md fmtm-pl-1"
+            />
+            <Button
+              btnText="Insert"
+              btnType="other"
+              className="fmtm-text-sm !fmtm-px-2 !fmtm-py-1 fmtm-rounded-[6px] !fmtm-bg-primaryRed !fmtm-text-white"
+              onClick={addYoutubeVideo}
+            />
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <div className="fmtm-flex fmtm-gap-2 fmtm-py-1">
         <Tooltip title="Undo">
