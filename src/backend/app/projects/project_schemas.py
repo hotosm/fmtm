@@ -331,7 +331,7 @@ class ProjectBase(BaseModel):
 class ProjectWithTasks(ProjectBase):
     """Project plus list of tasks objects."""
 
-    project_tasks: Optional[List[tasks_schemas.Task]]
+    tasks: Optional[List[tasks_schemas.Task]]
 
 
 class ProjectOut(ProjectWithTasks):
