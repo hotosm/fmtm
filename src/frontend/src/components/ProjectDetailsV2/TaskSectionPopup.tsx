@@ -17,7 +17,10 @@ const TaskSectionPopup = ({ taskId, body, feature }: TaskSectionPopupPropType) =
   const dispatch = CoreModules.useAppDispatch();
   const navigate = useNavigate();
   const params = CoreModules.useParams();
+  const encodedProjectId = params.id;
   const currentProjectId = environment.decode(params.id);
+
+  console.log(encodedProjectId);
 
   const [task_status, set_task_status] = useState('READY');
 
@@ -79,7 +82,7 @@ const TaskSectionPopup = ({ taskId, body, feature }: TaskSectionPopupPropType) =
           style={{ width: '20px' }}
           className="hover:fmtm-text-primaryRed"
           onClick={() => {
-            navigate(`/project-submissions/MTAwMTExMTE=?tab=table&task_id=${taskId}`);
+            navigate(`/project-submissions/${encodedProjectId}?tab=table&task_id=${taskId}`);
           }}
         />
         <AssetModules.CloseIcon
