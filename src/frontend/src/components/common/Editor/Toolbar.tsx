@@ -190,7 +190,6 @@ export const Toolbar = ({ editor }: ToolbarProps) => {
               value={linkText}
               fieldType="text"
             />
-            <InputTextField placeholder="URL" onChange={() => {}} value={linkText} fieldType="text" />
             <Button
               btnText="Add"
               btnType="other"
