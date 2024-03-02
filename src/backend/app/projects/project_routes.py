@@ -588,7 +588,7 @@ async def generate_files(
 
     project = org_user_dict.get("project")
 
-    form_category = project.xform_title
+    xform_title = project.xform_title
     custom_xls_form = None
     file_ext = None
     if xls_form_upload:
@@ -603,7 +603,6 @@ async def generate_files(
                 detail=f"Invalid file extension, must be {allowed_extensions}",
             )
 
-        form_category = file_path.stem
         custom_xls_form = await xls_form_upload.read()
 
         # Write XLS form content to db
@@ -622,7 +621,7 @@ async def generate_files(
         db,
         project_id,
         BytesIO(custom_xls_form) if custom_xls_form else None,
-        form_category,
+        xform_title,
         file_ext if xls_form_upload else ".xls",
         background_task_id,
     )
@@ -657,11 +656,21 @@ async def generate_log(
         task_status, task_message = await project_crud.get_background_task_status(
             uuid, db
         )
-        extract_completion_count = (
-            db.query(db_models.DbProject)
-            .filter(db_models.DbProject.id == project_id)
-            .first()
-        ).extract_completed_count
+
+        sql = text(
+            """
+            SELECT
+                COUNT(CASE WHEN odk_token IS NOT NULL THEN 1 END) AS tasks_complete,
+                COUNT(*) AS total_tasks
+            FROM tasks
+            WHERE project_id = :project_id;
+        """
+        )
+        result = db.execute(sql, {"project_id": project_id})
+        row = result.fetchone()
+
+        tasks_generated = row[0] if row else 0
+        total_task_count = row[1] if row else 0
 
         project_log_file = Path("/opt/logs/create_project.json")
         project_log_file.touch(exist_ok=True)
@@ -677,12 +686,12 @@ async def generate_log(
             last_50_logs = filtered_logs[-50:]
 
             logs = "\n".join(last_50_logs)
-            task_count = await project_crud.get_tasks_count(db, project_id)
+
             return {
                 "status": task_status.name,
-                "total_tasks": task_count,
+                "total_tasks": total_task_count,
                 "message": task_message,
-                "progress": extract_completion_count,
+                "progress": tasks_generated,
                 "logs": logs,
             }
     except Exception as e:
@@ -830,7 +839,7 @@ async def upload_custom_extract(
     return JSONResponse(status_code=200, content={"url": fgb_url})
 
 
-@router.get("/download_form/{project_id}/")
+@router.get("/download-form/{project_id}/")
 async def download_form(
     project_id: int,
     db: Session = Depends(database.get_db),
@@ -868,7 +877,7 @@ async def update_project_form(
     # TODO migrate most logic to project_crud
     project = project_user_dict["project"]
 
-    if project.xform_title == category:
+    if project.xform_category == category:
         if not upload:
             raise HTTPException(
                 status_code=400, detail="Current category is same as new category"
@@ -892,10 +901,13 @@ async def update_project_form(
         with open(xlsform_path, "rb") as f:
             new_xform_data = BytesIO(f.read())
 
-    # Update category in database
-    project.xform_title = category
+    # NOTE never update xform_title as this links to ODK Central
+    project.xform_category = category
     # Commit changes to db
     db.commit()
+
+    # The reference to the form via ODK Central API (minus task_id)
+    xform_name_prefix = f"{project.project_name_prefix}_{project.xform_title}"
 
     # Get ODK Central credentials for project
     odk_creds = await project_deps.get_odk_credentials(db, project.id)
@@ -909,7 +921,7 @@ async def update_project_form(
         project.odkid,
         new_xform_data,
         file_ext,
-        f"{project.project_name_prefix}_{category}",
+        xform_name_prefix,
         odk_creds,
     )
 
