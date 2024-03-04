@@ -130,6 +130,15 @@ const ProjectDetailsForm = ({ flag }) => {
             errorMsg={errors.name}
           />
           <TextArea
+            id="description"
+            label="Description"
+            rows={3}
+            value={values?.description}
+            onChange={(e) => handleCustomChange('description', e.target.value)}
+            required
+            errorMsg={errors.description}
+          />
+          <TextArea
             id="short_description"
             name="short_description"
             label="Short Description"
@@ -224,15 +233,6 @@ const ProjectDetailsForm = ({ flag }) => {
               analysis later, but should be human informative and not overused, #group #event
             </p>
           </div>
-          <TextArea
-            id="description"
-            label="Description"
-            rows={3}
-            value={values?.description}
-            onChange={(e) => handleCustomChange('description', e.target.value)}
-            required
-            errorMsg={errors.description}
-          />
           <div>
             <p className="fmtm-text-[1rem] fmtm-font-semibold fmtm-mb-2">Instructions</p>
             <Tiptap />
