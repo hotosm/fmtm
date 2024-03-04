@@ -131,15 +131,6 @@ const ProjectDetailsForm = ({ flag }) => {
             errorMsg={errors.name}
           />
           <TextArea
-            id="description"
-            label="Description"
-            rows={3}
-            value={values?.description}
-            onChange={(e) => handleCustomChange('description', e.target.value)}
-            required
-            errorMsg={errors.description}
-          />
-          <TextArea
             id="short_description"
             name="short_description"
             label="Short Description"
@@ -148,6 +139,15 @@ const ProjectDetailsForm = ({ flag }) => {
             onChange={handleInputChanges}
             required
             errorMsg={errors.short_description}
+          />
+          <TextArea
+            id="description"
+            label="Description"
+            rows={3}
+            value={values?.description}
+            onChange={(e) => handleCustomChange('description', e.target.value)}
+            required
+            errorMsg={errors.description}
           />
           <div className="">
             <div className="fmtm-flex fmtm-items-center">
@@ -237,8 +237,8 @@ const ProjectDetailsForm = ({ flag }) => {
           <div>
             <p className="fmtm-text-[1rem] fmtm-font-semibold fmtm-mb-2">Instructions</p>
             <RichTextEditor
-              editorHtmlContent={editorHtmlContent}
-              setEditorHtmlContent={(content) => setEditorHtmlContent(content)}
+              editorHtmlContent={values?.per_task_instructions}
+              setEditorHtmlContent={(content) => handleCustomChange('per_task_instructions', content)}
               editable={true}
             />
           </div>
