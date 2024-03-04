@@ -31,7 +31,7 @@ const uploadAreaOptions = [
   },
 ];
 
-const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomLineUpload, setCustomPolygonUpload }) => {
+const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpload }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   // const [uploadAreaFile, setUploadAreaFile] = useState(null);
@@ -46,7 +46,8 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomLineUpload, se
   const submission = () => {
     if (totalAreaSelection) {
       const totalArea = parseFloat(totalAreaSelection?.split(' ')[0]);
-      if (totalArea > 1000) {
+      const areaUnit = totalAreaSelection?.split(' ')[1];
+      if (totalArea > 1000 && areaUnit === 'km²') {
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
@@ -162,7 +163,8 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomLineUpload, se
   useEffect(() => {
     if (totalAreaSelection) {
       const totalArea = parseFloat(totalAreaSelection?.split(' ')[0]);
-      if (totalArea > 100) {
+      const areaUnit = totalAreaSelection?.split(' ')[1];
+      if (totalArea > 100 && areaUnit === 'km²') {
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
@@ -172,7 +174,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomLineUpload, se
           }),
         );
       }
-      if (totalArea > 1000) {
+      if (totalArea > 1000 && areaUnit === 'km²') {
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
@@ -323,8 +325,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomLineUpload, se
                 dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
                 dispatch(CreateProjectActions.SetTotalAreaSelection(area));
                 dispatch(CreateProjectActions.ClearProjectStepState(formValues));
-                setCustomLineUpload(null);
-                setCustomPolygonUpload(null);
+                setCustomDataExtractUpload(null);
               }}
               getAOIArea={(area) => {
                 dispatch(CreateProjectActions.SetTotalAreaSelection(area));

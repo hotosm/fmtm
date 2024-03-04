@@ -24,7 +24,6 @@ from asyncio import gather
 from concurrent.futures import ThreadPoolExecutor, wait
 from importlib.resources import files as pkg_files
 from io import BytesIO
-from pathlib import Path
 from typing import List, Optional, Union
 
 import geoalchemy2
@@ -33,7 +32,7 @@ import requests
 import shapely.wkb as wkblib
 import sozipfile.sozipfile as zipfile
 from asgiref.sync import async_to_sync
-from fastapi import File, HTTPException, Response, UploadFile
+from fastapi import HTTPException, Response
 from fastapi.concurrency import run_in_threadpool
 from fmtm_splitter.splitter import split_by_sql, split_by_square
 from geoalchemy2.shape import to_shape
@@ -186,20 +185,13 @@ async def delete_one_project(db: Session, db_project: db_models.DbProject) -> No
 
 
 async def partial_update_project_info(
-    db: Session, project_metadata: project_schemas.ProjectUpdate, project_id
+    db: Session,
+    project_metadata: project_schemas.ProjectPartialUpdate,
+    db_project: db_models.DbProject,
 ):
     """Partial project update for PATCH."""
-    # Get the project from db
-    db_project = await get_project_by_id(db, project_id)
-
-    # Raise an exception if project is not found.
-    if not db_project:
-        raise HTTPException(
-            status_code=428, detail=f"Project with id {project_id} does not exist"
-        ) from None
-
     # Get project info
-    db_project_info = await get_project_info_by_id(db, project_id)
+    db_project_info = await get_project_info_by_id(db, db_project.id)
 
     # Update project informations
     if db_project and db_project_info:
@@ -226,7 +218,7 @@ async def partial_update_project_info(
 async def update_project_info(
     db: Session,
     project_metadata: project_schemas.ProjectUpdate,
-    project_id: int,
+    db_project: db_models.DbProject,
     db_user: db_models.DbUser,
 ):
     """Full project update for PUT."""
@@ -238,13 +230,6 @@ async def update_project_info(
             detail="No project info passed in",
         )
 
-    # verify project exists in db
-    db_project = await get_project_by_id(db, project_id)
-    if not db_project:
-        raise HTTPException(
-            status_code=428, detail=f"Project with id {project_id} does not exist"
-        )
-
     # Project meta informations
     project_info = project_metadata.project_info
 
@@ -253,7 +238,7 @@ async def update_project_info(
     db_project.project_name_prefix = project_metadata.project_name_prefix
 
     # get project info
-    db_project_info = await get_project_info_by_id(db, project_id)
+    db_project_info = await get_project_info_by_id(db, db_project.id)
 
     # Update projects meta informations (name, descriptions)
     if db_project and db_project_info:
@@ -284,7 +269,7 @@ async def create_project_with_project_info(
         "Creating project in FMTM database with vars: "
         f"project_user: {current_user.username} | "
         f"project_name: {project_metadata.project_info.name} | "
-        f"xform_title: {project_metadata.xform_title} | "
+        f"xform_category: {project_metadata.xform_category} | "
         f"hashtags: {project_metadata.hashtags} | "
         f"organisation_id: {project_metadata.organisation_id}"
     )
@@ -317,35 +302,6 @@ async def create_project_with_project_info(
     db.refresh(db_project)
 
     return await convert_to_app_project(db_project)
-
-
-async def upload_xlsform(
-    db: Session,
-    xlsform: str,
-    name: str,
-    category: str,
-):
-    """Upload a custom XLSForm from the user."""
-    try:
-        forms = table(
-            "xlsforms",
-            column("title"),
-            column("xls"),
-            column("xml"),
-            column("id"),
-            column("category"),
-        )
-        ins = insert(forms).values(title=name, xls=xlsform, category=category)
-        sql = ins.on_conflict_do_update(
-            constraint="xlsforms_title_key",
-            set_=dict(title=name, xls=xlsform, category=category),
-        )
-        db.execute(sql)
-        db.commit()
-        return True
-    except Exception as e:
-        log.exception(e)
-        raise HTTPException(status_code=400, detail={"message": str(e)}) from e
 
 
 async def create_tasks_from_geojson(
@@ -842,7 +798,7 @@ async def read_xlsforms(
                 xlsforms.append(xls)
             else:
                 continue
-    log.info(xls)
+
     inspect(db_models.DbXForm)
     forms = table(
         "xlsforms", column("title"), column("xls"), column("xml"), column("id")
@@ -996,6 +952,15 @@ async def upload_custom_fgb_extract(
 ) -> str:
     """Upload a flatgeobuf data extract.
 
+    FIXME how can we validate this has the required fields for geojson conversion?
+    Requires:
+        "id"
+        "osm_id"
+        "tags"
+        "version"
+        "changeset"
+        "timestamp"
+
     Args:
         db (Session): SQLAlchemy database session.
         project_id (int): The ID of the project.
@@ -1044,14 +1009,14 @@ async def get_data_extract_type(featcol: FeatureCollection) -> str:
 async def upload_custom_geojson_extract(
     db: Session,
     project_id: int,
-    geojson_str: str,
+    geojson_raw: Union[str, bytes],
 ) -> str:
     """Upload a geojson data extract.
 
     Args:
         db (Session): SQLAlchemy database session.
         project_id (int): The ID of the project.
-        geojson_str (str): The custom data extracts contents.
+        geojson_raw (str): The custom data extracts contents.
 
     Returns:
         str: URL to fgb file in S3.
@@ -1059,7 +1024,7 @@ async def upload_custom_geojson_extract(
     project = await get_project(db, project_id)
     log.debug(f"Uploading custom data extract for project: {project}")
 
-    featcol_filtered = parse_and_filter_geojson(geojson_str)
+    featcol_filtered = parse_and_filter_geojson(geojson_raw)
     if not featcol_filtered:
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
@@ -1110,102 +1075,110 @@ def flatten_dict(d, parent_key="", sep="_"):
 # NOTE defined as non-async to run in separate thread
 def generate_task_files(
     db: Session,
-    project: db_models.DbProject,
+    project_id: int,
+    odk_id,
     task_id: int,
     data_extract: FeatureCollection,
-    xlsform_path: str,
-    form_file_extension: str,
+    xform_name: str,
+    xform_data: BytesIO,
     odk_credentials: project_schemas.ODKCentralDecrypted,
 ):
-    """Generate all files for a task."""
-    project_log = log.bind(task="create_project", project_id=project.id)
+    """Generate all files for a task.
+
+    TODO refactor to pass through a dict project variables, instead of DB connection.
+    TODO All required vars could be genrated from the DB first before
+    """
+    project_log = log.bind(task="create_project", project_id=project_id)
 
     project_log.info(f"Generating files for task {task_id}")
 
-    odk_id = project.odkid
-    project_name = project.project_name_prefix
-    category = project.xform_title
-    appuser_name = f"{project_name}_{category}_{task_id}"
+    # NOTE START create ODK Central appuser and form
 
     # Create an app user for the task
     project_log.info(
-        f"Creating odkcentral app user ({appuser_name}) "
-        f"for FMTM task ({task_id}) in FMTM project ({project.id})"
+        f"Creating odkcentral app user ({xform_name}) "
+        f"for FMTM task ({task_id}) in FMTM project ({project_id})"
     )
     appuser = OdkAppUser(
         odk_credentials.odk_central_url,
         odk_credentials.odk_central_user,
         odk_credentials.odk_central_password,
     )
-    appuser_json = appuser.create(odk_id, appuser_name)
+    appuser_json = appuser.create(odk_id, xform_name)
 
     # If app user could not be created, raise an exception.
     if not appuser_json:
-        project_log.error(f"Couldn't create appuser {appuser_name} for project")
+        project_log.error(f"Couldn't create appuser {xform_name} for project")
         return False
     if not (appuser_token := appuser_json.get("token")):
-        project_log.error(f"Couldn't get token for appuser {appuser_name}")
+        project_log.error(f"Couldn't get token for appuser {xform_name}")
         return False
 
+    # Create memory object from split data extract
+    geojson_string = geojson.dumps(data_extract)
+    geojson_bytes = geojson_string.encode("utf-8")
+    geojson_data = BytesIO(geojson_bytes)
+
+    project_log.info(f"Generating xform from for task: ({task_id})")
+
+    # This is where the ODK form name and geojson media name are set
+    update_xform_sync = async_to_sync(central_crud.update_xform_info)
+    updated_xform = update_xform_sync(
+        xform_data,
+        xform_name,
+        f"{xform_name}.geojson",
+    )
+
+    # Create an odk xform
+    project_log.info(f"Uploading data extract media to task ({task_id})")
+    xform_name = central_crud.create_odk_xform(
+        odk_id,
+        updated_xform,
+        f"{xform_name}.geojson",
+        geojson_data,
+        odk_credentials,
+    )
+
+    project_log.info(f"Updating xform role for appuser in task {task_id}")
+    # Update the user role for the created xform
+    response = appuser.updateRole(
+        projectId=odk_id, xform=xform_name, actorId=appuser_json.get("id")
+    )
+    if not response.ok:
+        try:
+            json_data = response.json()
+            log.error(json_data)
+        except json.decoder.JSONDecodeError:
+            log.error(
+                "Could not parse response json during appuser update. "
+                f"status_code={response.status_code}"
+            )
+        finally:
+            msg = f"Failed to update appuser for form: ({xform_name})"
+            log.error(msg)
+            raise HTTPException(
+                status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg
+            ) from None
+
+    # NOTE ODK Central creation complete, update task in database
+
+    # Get task entry from db
     get_task_sync = async_to_sync(tasks_crud.get_task)
     task = get_task_sync(db, task_id)
+
+    # Add odk_token to task
     odk_url = odk_credentials.odk_central_url
     log.debug(f"Setting odk token for task ({task_id}) on server: {odk_url}")
     task.odk_token = encrypt_value(
         f"{odk_url}/v1/key/{appuser_token}/projects/{odk_id}"
     )
 
-    # This file will store xml contents of an xls form
-    # NOTE there must be two underscores, for [2] index in OdkCentral.py
-    xform_path = Path(f"/tmp/fmtm/{project_name}_{task_id}_{category}.xml")
-    xform_path.parents[0].mkdir(parents=True, exist_ok=True)
-
-    # Create memory object from split data extract
-    geojson_string = geojson.dumps(data_extract)
-    geojson_bytes = geojson_string.encode("utf-8")
-    geojson_bytesio = BytesIO(geojson_bytes)
-
-    project_log.info(
-        f"Generating xform for task: {task_id} | "
-        f"xform: {xform_path} | form_type: {form_file_extension}"
-    )
-    central_crud.generate_updated_xform(
-        xlsform_path, xform_path, form_file_extension, category
-    )
-
-    # Create an odk xform
-    project_log.info(f"Uploading data extract media to task ({task_id})")
-    central_crud.create_odk_xform(
-        odk_id,
-        xform_path,
-        category,
-        geojson_bytesio,
-        odk_credentials,
-        create_draft=False,
-    )
-
-    # Update db with feature count after form uploaded with media
+    # Add task feature count to task
     task.feature_count = len(data_extract.get("features", []))
     log.debug(f"({task.feature_count}) features added for task ({task_id})")
 
-    project_log.info(f"Updating role for app user in task {task_id}")
-    # Update the user role for the created xform.
-    try:
-        log.debug("Updating appuser role to access XForm")
-        appuser.updateRole(
-            projectId=odk_id, xform=xform_path.stem, actorId=appuser_json.get("id")
-        )
-    except Exception as e:
-        log.exception(e)
-
-    # Remove xform temp files
-    xform_path.unlink(missing_ok=True)
-
-    project.extract_completed_count += 1
-
-    # Commit db transaction
+    # Commit database after final task record update
     db.commit()
-    # db.refresh(project)
 
     return True
 
@@ -1216,7 +1189,7 @@ def generate_project_files(
     project_id: int,
     custom_form: Optional[BytesIO],
     form_category: str,
-    form_format: str,
+    form_file_ext: str,
     background_task_id: Optional[uuid.UUID] = None,
 ):
     """Generate the files for a project.
@@ -1228,7 +1201,7 @@ def generate_project_files(
         - project_id: Project ID
         - custom_form: the xls file to upload if we have a custom form
         - form_category: the category for the custom XLS form
-        - form_format: weather the form is xls, xlsx or xml
+        - form_file_ext: weather the form is xls, xlsx or xml
         - background_task_id: the task_id of the background task running this function.
     """
     try:
@@ -1249,22 +1222,16 @@ def generate_project_files(
 
         if custom_form:
             log.debug("User provided custom XLSForm")
-            # TODO uncomment after refactor to use BytesIO
-            # xlsform = custom_form
-
-            xlsform_path = f"/tmp/{form_category}.{form_format}"
-            with open(xlsform_path, "wb") as f:
-                f.write(custom_form.getvalue())
+            xlsform = custom_form
         else:
             log.debug(f"Using default XLSForm for category: '{form_category}'")
 
-            # TODO uncomment after refactor to use BytesIO
-            # xlsform_path = f"{xlsforms_path}/{form_category}.xls"
-            # with open(xlsform_path, "rb") as f:
-            #     xlsform = BytesIO(f.read())
-
             xlsform_path = f"{xlsforms_path}/{form_category}.xls"
+            with open(xlsform_path, "rb") as f:
+                xlsform = BytesIO(f.read())
 
+            # NOTE would filtering be required at any point if this
+            # NOTE is handled upstream?
             # filter = FilterData(xlsform)
             # updated_data_extract = {"type": "FeatureCollection", "features": []}
             # filtered_data_extract = (
@@ -1291,6 +1258,15 @@ def generate_project_files(
                 detail="Failed splitting extract by tasks.",
             )
 
+        # Convert XLSForm --> XForm for all tasks
+        read_xform_sync = async_to_sync(central_crud.read_and_test_xform)
+        xform_data = read_xform_sync(xlsform, form_file_ext, return_form_data=True)
+
+        # Get project name for XForm name
+        project_name = project.project_name_prefix
+        # Get ODK Project ID
+        project_odk_id = project.odkid
+
         # Run with expensive task via threadpool
         def wrap_generate_task_files(task_id):
             """Func to wrap and return errors from thread.
@@ -1302,11 +1278,12 @@ def generate_project_files(
             try:
                 generate_task_files(
                     next(get_db()),
-                    project,
+                    project_id,
+                    project_odk_id,
                     task_id,
                     task_extract_dict[task_id],
-                    xlsform_path,
-                    form_format,
+                    f"{project_name}_task_{task_id}",
+                    xform_data,
                     odk_credentials,
                 )
             except Exception as e:
@@ -1515,16 +1492,14 @@ async def convert_to_app_project(db_project: db_models.DbProject):
         log.debug("convert_to_app_project called, but no project provided")
         return None
 
-    log.debug("Converting db project to app project")
     app_project = db_project
 
     if db_project.outline:
-        log.debug("Converting project outline to geojson")
         app_project.outline_geojson = geometry_to_geojson(
             db_project.outline, {"id": db_project.id}, db_project.id
         )
 
-    app_project.project_tasks = db_project.tasks
+    app_project.tasks = db_project.tasks
 
     return app_project
 
@@ -1672,76 +1647,76 @@ async def update_background_task_status_in_database(
     return True
 
 
-async def update_project_form(
-    db: Session, project_id: int, form_type: str, form: UploadFile = File(None)
-):
-    """Upload a new custom XLSForm for a project."""
-    project = await get_project(db, project_id)
-    category = project.xform_title
-    odk_id = project.odkid
+# TODO remove me
+# async def update_project_form(
+#     db: Session, project_id: int, form_type: str, form: UploadFile = File(None)
+# ):
+#     """Upload a new custom XLSForm for a project."""
+#     project = await get_project(db, project_id)
+#     category = project.xform_title
+#     odk_id = project.odkid
 
-    # ODK Credentials
-    odk_credentials = await project_deps.get_odk_credentials(db, project_id)
+#     # ODK Credentials
+#     odk_credentials = await project_deps.get_odk_credentials(db, project_id)
 
-    if form:
-        xlsform = f"/tmp/custom_form.{form_type}"
-        contents = await form.read()
-        with open(xlsform, "wb") as f:
-            f.write(contents)
-    else:
-        xlsform = f"{xlsforms_path}/{category}.xls"
+#     if form:
+#         xlsform = f"/tmp/custom_form.{form_type}"
+#         contents = await form.read()
+#         with open(xlsform, "wb") as f:
+#             f.write(contents)
+#     else:
+#         xlsform = f"{xlsforms_path}/{category}.xls"
 
-    # TODO fix this to use correct data extract generation
-    pg = PostgresClient("underpass")
-    outfile = f"/tmp/{category}.geojson"  # This file will store osm extracts
+#     # TODO fix this to use correct data extract generation
+#     pg = PostgresClient("underpass")
+#     outfile = f"/tmp/{category}.geojson"  # This file will store osm extracts
 
-    # FIXME test this works
-    # FIXME PostgresClient.getFeatures does not exist...
-    # FIXME getFeatures is part of the DataExtract osm-fieldwork class
-    extract_polygon = True if project.data_extract_type == "polygon" else False
+#     # FIXME test this works
+#     # FIXME PostgresClient.getFeatures does not exist...
+#     # FIXME getFeatures is part of the DataExtract osm-fieldwork class
+#     extract_polygon = True if project.data_extract_type == "polygon" else False
 
-    project = table("projects", column("outline"))
+#     project = table("projects", column("outline"))
 
-    # where = f"id={project_id}
-    sql = select(
-        geoalchemy2.functions.ST_AsGeoJSON(project.c.outline).label("outline"),
-    ).where(text(f"id={project_id}"))
-    result = db.execute(sql)
-    project_outline = result.first()
+#     # where = f"id={project_id}
+#     sql = select(
+#         geoalchemy2.functions.ST_AsGeoJSON(project.c.outline).label("outline"),
+#     ).where(text(f"id={project_id}"))
+#     result = db.execute(sql)
+#     project_outline = result.first()
 
-    final_outline = json.loads(project_outline.outline)
+#     final_outline = json.loads(project_outline.outline)
 
-    feature_geojson = pg.getFeatures(
-        boundary=final_outline,
-        filespec=outfile,
-        polygon=extract_polygon,
-        xlsfile=f"{category}.xls",
-        category=category,
-    )
-    # TODO upload data extract to S3 bucket
+#     feature_geojson = pg.getFeatures(
+#         boundary=final_outline,
+#         filespec=outfile,
+#         polygon=extract_polygon,
+#         xlsfile=f"{category}.xls",
+#         category=category,
+#     )
+#     # TODO upload data extract to S3 bucket
 
-    tasks_list = await tasks_crud.get_task_id_list(db, project_id)
+#     tasks_list = await tasks_crud.get_task_id_list(db, project_id)
 
-    for task_id in tasks_list:
-        # This file will store xml contents of an xls form.
-        xform_path = Path(f"/tmp/{category}_{task_id}.xml")
+#     for task_id in tasks_list:
+#         # This file will store xml contents of an xls form.
+#         xform_path = Path(f"/tmp/{category}_{task_id}.xml")
 
-        outfile = central_crud.generate_updated_xform(
-            xlsform, xform_path, form_type, category
-        )
+#         outfile = central_crud.update_xform_info(
+#             xlsform, xform_path, form_type, category
+#         )
 
-        # Create an odk xform
-        # TODO include data extract geojson correctly
-        result = central_crud.create_odk_xform(
-            odk_id,
-            xform_path,
-            category,
-            feature_geojson,
-            odk_credentials,
-            create_draft=True,
-            convert_to_draft_when_publishing=False,
-        )
-    return True
+#         # Create an odk xform
+#         # TODO include data extract geojson correctly
+#         result = central_crud.create_odk_xform(
+#             odk_id,
+#             xform_path,
+#             category,
+#             feature_geojson,
+#             odk_credentials,
+#         )
+
+#     return True
 
 
 async def get_extracted_data_from_db(db: Session, project_id: int, outfile: str):
@@ -1906,17 +1881,6 @@ async def get_mbtiles_list(db: Session, project_id: int):
 async def convert_geojson_to_osm(geojson_file: str):
     """Convert a GeoJSON file to OSM format."""
     return json2osm(geojson_file)
-
-
-async def get_tasks_count(db: Session, project_id: int):
-    """Get number of tasks for a project."""
-    db_task = (
-        db.query(db_models.DbProject)
-        .filter(db_models.DbProject.id == project_id)
-        .first()
-    )
-    task_count = len(db_task.tasks)
-    return task_count
 
 
 async def get_pagination(page: int, count: int, results_per_page: int, total: int):

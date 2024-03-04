@@ -136,7 +136,7 @@ class ProjectIn(BaseModel):
     """Upload new project."""
 
     project_info: ProjectInfo
-    xform_title: str
+    xform_category: str
     organisation_id: Optional[int] = None
     hashtags: Optional[List[str]] = None
     task_split_type: Optional[TaskSplitType] = None
@@ -234,6 +234,7 @@ class ProjectSummary(BaseModel):
     priority: ProjectPriority = ProjectPriority.MEDIUM
     priority_str: str = priority.name
     title: Optional[str] = None
+    centroid: list[float]
     location_str: Optional[str] = None
     description: Optional[str] = None
     total_tasks: Optional[int] = None
@@ -252,11 +253,16 @@ class ProjectSummary(BaseModel):
     ) -> "ProjectSummary":
         """Generate model from database obj."""
         priority = project.priority
+        centroid_point = read_wkb(project.centroid)
+        # NOTE format x,y (lon,lat) required for GeoJSON
+        centroid_coords = [centroid_point.x, centroid_point.y]
+
         return cls(
             id=project.id,
             priority=priority,
             priority_str=priority.name,
             title=project.title,
+            centroid=centroid_coords,
             location_str=project.location_str,
             description=project.description,
             total_tasks=project.total_tasks,
@@ -268,6 +274,12 @@ class ProjectSummary(BaseModel):
             organisation_id=project.organisation_id,
             organisation_logo=project.organisation_logo,
         )
+
+    # @field_serializer("centroid")
+    # def get_coord_from_centroid(self, value):
+    #     """Get the cetroid coordinates from WBKElement."""
+    #     if value is None:
+    #         return None
 
 
 class PaginationInfo(BaseModel):
@@ -301,8 +313,7 @@ class ProjectBase(BaseModel):
     project_info: ProjectInfo
     status: ProjectStatus
     # location_str: str
-    project_tasks: Optional[List[tasks_schemas.Task]]
-    xform_title: Optional[str] = None
+    xform_category: Optional[str] = None
     hashtags: Optional[List[str]] = None
     organisation_id: Optional[int] = None
 
@@ -317,13 +328,19 @@ class ProjectBase(BaseModel):
         return geometry_to_geojson(self.outline, {"id": self.id, "bbox": bbox}, self.id)
 
 
-class ProjectOut(ProjectBase):
+class ProjectWithTasks(ProjectBase):
+    """Project plus list of tasks objects."""
+
+    tasks: Optional[List[tasks_schemas.Task]]
+
+
+class ProjectOut(ProjectWithTasks):
     """Project display to user."""
 
     project_uuid: uuid.UUID = uuid.uuid4()
 
 
-class ReadProject(ProjectBase):
+class ReadProject(ProjectWithTasks):
     """Redundant model for refactor."""
 
     project_uuid: uuid.UUID = uuid.uuid4()

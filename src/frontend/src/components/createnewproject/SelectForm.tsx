@@ -81,7 +81,7 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
   };
   useEffect(() => {
     if (customFormFile && !customFileValidity) {
-      dispatch(ValidateCustomForm(`${import.meta.env.VITE_API_URL}/projects/validate_form`, customFormFile));
+      dispatch(ValidateCustomForm(`${import.meta.env.VITE_API_URL}/projects/validate-form`, customFormFile));
     }
   }, [customFormFile]);
   return (
@@ -125,7 +125,7 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
                   className="fmtm-max-w-[13.5rem]"
                 />
                 <p className="fmtm-text-base fmtm-mt-2">
-                  You will view the OSM data extracts of{' '}
+                  The category will be used to set the OpenStreetMap{' '}
                   <a
                     href="https://wiki.openstreetmap.org/wiki/Tags"
                     target="_"
@@ -133,7 +133,7 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
                   >
                     tags
                   </a>{' '}
-                  {`that match the selected category in OSM database, if you don't choose to upload custom data extract.`}
+                  {`if uploading the final submissions to OSM.`}
                 </p>
               </div>
               <RadioButton
@@ -153,8 +153,8 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
                   onResetFile={resetFile}
                   customFile={customFormFile}
                   btnText="Select a Form"
-                  accept=".xls,.xlsx"
-                  fileDescription="*The supported file formats are .xlsx, .xls"
+                  accept=".xls,.xlsx,.xml"
+                  fileDescription="*The supported file formats are .xlsx, .xls, .xml"
                   errorMsg={errors.customFormUpload}
                 />
               ) : null}

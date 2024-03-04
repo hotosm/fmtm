@@ -15,6 +15,7 @@ const ProtectedRoute = ({ children }) => {
     createLoginWindow('/');
     return <Navigate to="/" replace />;
   }
+
   return children;
 };
 export default ProtectedRoute;

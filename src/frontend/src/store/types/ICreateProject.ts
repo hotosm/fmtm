@@ -1,7 +1,9 @@
+import { task_split_type } from '@/types/enums';
+
 export type CreateProjectStateTypes = {
   editProjectDetails: EditProjectDetailsTypes;
   editProjectResponse?: EditProjectResponseTypes | null;
-  projectDetails: ProjectDetailsTypes;
+  projectDetails: Partial<ProjectDetailsTypes>;
   projectDetailsResponse: EditProjectResponseTypes | null;
   projectDetailsLoading: boolean;
   editProjectDetailsLoading: boolean;
@@ -17,7 +19,7 @@ export type CreateProjectStateTypes = {
   generateProjectLog: GenerateProjectLogTypes | null;
   createProjectStep: number;
   dividedTaskLoading: boolean;
-  dividedTaskGeojson: string | null;
+  dividedTaskGeojson: null | GeoJSONFeatureTypes;
   formUpdateLoading: boolean;
   taskSplittingGeojsonLoading: boolean;
   taskSplittingGeojson: TaskSplittingGeojsonTypes | null;
@@ -28,12 +30,12 @@ export type CreateProjectStateTypes = {
   validateCustomFormResponse: ValidateCustomFormResponse | null;
   uploadAreaSelection: string;
   totalAreaSelection: string | null;
-  splitTasksSelection: string | null;
+  splitTasksSelection: task_split_type | null;
   dataExtractGeojson: GeoJSONFeatureTypes | null;
   createProjectValidations: {};
   isUnsavedChanges: boolean;
   canSwitchCreateProjectSteps: boolean;
-  isTasksGenerated: {};
+  isTasksGenerated: Record<string, any>;
   isFgbFetching: boolean;
   toggleSplittedGeojsonEdit: boolean;
   customFileValidity: boolean;
@@ -53,6 +55,7 @@ export type GeoJSONFeatureTypes = {
   properties: Record<string, any>;
   id: string;
   bbox: null | number[];
+  features?: [];
 };
 
 export type ProjectTaskTypes = {
@@ -81,8 +84,8 @@ type EditProjectResponseTypes = {
   project_info: ProjectInfoTypes[];
   status: number;
   outline_geojson: GeoJSONFeatureTypes;
-  project_tasks: ProjectTaskTypes[];
-  xform_title: string;
+  tasks: ProjectTaskTypes[];
+  xform_category: string;
   hashtags: string[];
 };
 export type EditProjectDetailsTypes = {
@@ -93,7 +96,6 @@ export type EditProjectDetailsTypes = {
 
 export type ProjectDetailsTypes = {
   dimension: number;
-  data_extract_type?: string;
   data_extract_url?: string;
   task_split_dimension?: number;
   task_num_buildings?: number;
@@ -107,10 +109,14 @@ export type ProjectDetailsTypes = {
   short_description?: string;
   description?: string;
   task_split_type?: number;
-  xform_title?: string;
+  xform_category?: string;
   data_extract_options?: string;
   form_ways?: string;
   organisation_id?: number | null;
+  formWays?: string;
+  formCategorySelection?: string;
+  average_buildings_per_task?: number;
+  dataExtractWays?: string;
 };
 
 export type ProjectAreaTypes = {
@@ -153,4 +159,5 @@ export type DrawnGeojsonTypes = {
   type: string;
   properties: null;
   geometry: GeometryTypes;
+  features?: [];
 };

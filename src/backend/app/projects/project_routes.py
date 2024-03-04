@@ -46,7 +46,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
 from app.auth.osm import AuthUser, login_required
-from app.auth.roles import mapper, org_admin, project_admin, super_admin
+from app.auth.roles import mapper, org_admin, project_admin
 from app.central import central_crud
 from app.db import database, db_models
 from app.db.postgis_utils import (
@@ -60,7 +60,6 @@ from app.projects import project_crud, project_deps, project_schemas
 from app.static import data_path
 from app.submissions import submission_crud
 from app.tasks import tasks_crud
-from app.users.user_deps import user_exists_in_db
 
 router = APIRouter(
     prefix="/projects",
@@ -178,7 +177,7 @@ async def read_project_summaries(
 
 
 @router.get(
-    "/search_projects", response_model=project_schemas.PaginatedProjectSummaries
+    "/search-projects", response_model=project_schemas.PaginatedProjectSummaries
 )
 async def search_project(
     search: str,
@@ -326,10 +325,9 @@ async def create_project(
 
 @router.put("/{project_id}", response_model=project_schemas.ProjectOut)
 async def update_project(
-    project_id: int,
     project_info: project_schemas.ProjectUpdate,
     db: Session = Depends(database.get_db),
-    current_user: db_models.DbUser = Depends(project_admin),
+    project_user_dict: dict = Depends(project_admin),
 ):
     """Update an existing project by ID.
 
@@ -348,7 +346,7 @@ async def update_project(
     - HTTPException with 404 status code if project not found
     """
     project = await project_crud.update_project_info(
-        db, project_info, project_id, current_user
+        db, project_info, project_user_dict["project"], project_user_dict["user"]
     )
     if not project:
         raise HTTPException(status_code=422, detail="Project could not be updated")
@@ -360,7 +358,7 @@ async def project_partial_update(
     project_id: int,
     project_info: project_schemas.ProjectPartialUpdate,
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(project_admin),
+    project_user_dict: dict = Depends(project_admin),
 ):
     """Partial Update an existing project by ID.
 
@@ -378,35 +376,12 @@ async def project_partial_update(
     """
     # Update project informations
     project = await project_crud.partial_update_project_info(
-        db, project_info, project_id
+        db, project_info, project_user_dict["project"]
     )
 
     if not project:
         raise HTTPException(status_code=422, detail="Project could not be updated")
     return project
-
-
-@router.post("/upload_xlsform")
-async def upload_custom_xls(
-    upload: UploadFile = File(...),
-    category: str = Form(...),
-    db: Session = Depends(database.get_db),
-    current_user: db_models.DbUser = Depends(super_admin),
-):
-    """Upload a custom XLSForm to the database.
-
-    Args:
-        upload (UploadFile): the XLSForm file
-        category (str): the category of the XLSForm.
-        db (Session): the DB session, provided automatically.
-        current_user (DbUser): Check if user is super_admin
-    """
-    content = await upload.read()  # read file content
-    name = upload.filename.split(".")[0]  # get name of file without extension
-    await project_crud.upload_xlsform(db, content, name, category)
-
-    # FIXME: fix return value
-    return {"xform_title": f"{category}"}
 
 
 @router.post("/{project_id}/upload-task-boundaries")
@@ -479,7 +454,7 @@ async def task_split(
     # read data extract
     parsed_extract = None
     if extract_geojson:
-        geojson_data = json.dumps(json.loads(await extract_geojson.read()))
+        geojson_data = await extract_geojson.read()
         parsed_extract = parse_and_filter_geojson(geojson_data, filter=False)
         if parsed_extract:
             await check_crs(parsed_extract)
@@ -494,66 +469,13 @@ async def task_split(
     )
 
 
-@router.post("/{project_id}/upload")
-async def upload_project_boundary(
-    project_id: int,
-    boundary_geojson: UploadFile = File(...),
-    dimension: int = Form(500),
-    db: Session = Depends(database.get_db),
-    org_user_dict: db_models.DbUser = Depends(org_admin),
-):
-    """Uploads the project boundary. The boundary is uploaded as a geojson file.
-
-    Args:
-        project_id (int): The ID of the project to update.
-        boundary_geojson (UploadFile): The boundary file to upload.
-        dimension (int): The new dimension of the project.
-        db (Session): The database session to use.
-        org_user_dict (AuthUser): Check if user is org_admin.
-
-    Returns:
-        dict: JSON with message, project ID, and task count for project.
-    """
-    # Validating for .geojson File.
-    file_name = os.path.splitext(boundary_geojson.filename)
-    file_ext = file_name[1]
-    allowed_extensions = [".geojson", ".json"]
-    if file_ext not in allowed_extensions:
-        raise HTTPException(status_code=400, detail="Provide a valid .geojson file")
-
-    # read entire file
-    content = await boundary_geojson.read()
-    boundary = json.loads(content)
-
-    # Validatiing Coordinate Reference System
-    await check_crs(boundary)
-
-    # update project boundary and dimension
-    result = await project_crud.update_project_boundary(
-        db, project_id, boundary, dimension
-    )
-    if not result:
-        raise HTTPException(
-            status_code=428, detail=f"Project with id {project_id} does not exist"
-        )
-
-    # Get the number of tasks in a project
-    task_count = await tasks_crud.get_task_count_in_project(db, project_id)
-
-    return {
-        "message": "Project Boundary Uploaded",
-        "project_id": project_id,
-        "task_count": task_count,
-    }
-
-
 @router.post("/edit_project_boundary/{project_id}/")
 async def edit_project_boundary(
     project_id: int,
     boundary_geojson: UploadFile = File(...),
     dimension: int = Form(500),
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(project_admin),
+    project_user_dict: dict = Depends(project_admin),
 ):
     """Edit the existing project boundary."""
     # Validating for .geojson File.
@@ -588,22 +510,24 @@ async def edit_project_boundary(
     }
 
 
-@router.post("/validate_form")
+@router.post("/validate-form")
 async def validate_form(form: UploadFile):
     """Tests the validity of the xls form uploaded.
 
     Parameters:
         - form: The xls form to validate
     """
-    file_name = os.path.splitext(form.filename)
-    file_ext = file_name[1]
+    file = Path(form.filename)
+    file_ext = file.suffix.lower()
 
-    allowed_extensions = [".xls", ".xlsx"]
+    allowed_extensions = [".xls", ".xlsx", ".xml"]
     if file_ext not in allowed_extensions:
-        raise HTTPException(status_code=400, detail="Provide a valid .xls file")
+        raise HTTPException(
+            status_code=400, detail="Provide a valid .xls,.xlsx,.xml file"
+        )
 
     contents = await form.read()
-    return await central_crud.test_form_validity(contents, file_ext[1:])
+    return await central_crud.read_and_test_xform(BytesIO(contents), file_ext)
 
 
 @router.post("/{project_id}/generate-project-data")
@@ -641,7 +565,7 @@ async def generate_files(
 
     project = org_user_dict.get("project")
 
-    form_category = project.xform_title
+    xform_category = project.xform_category
     custom_xls_form = None
     file_ext = None
     if xls_form_upload:
@@ -656,7 +580,6 @@ async def generate_files(
                 detail=f"Invalid file extension, must be {allowed_extensions}",
             )
 
-        form_category = file_path.stem
         custom_xls_form = await xls_form_upload.read()
 
         # Write XLS form content to db
@@ -675,8 +598,8 @@ async def generate_files(
         db,
         project_id,
         BytesIO(custom_xls_form) if custom_xls_form else None,
-        form_category,
-        file_ext if xls_form_upload else "xls",
+        xform_category,
+        file_ext if xls_form_upload else ".xls",
         background_task_id,
     )
 
@@ -684,31 +607,6 @@ async def generate_files(
         status_code=200,
         content={"Message": f"{project_id}", "task_id": f"{background_task_id}"},
     )
-
-
-@router.post("/update-form/{project_id}")
-async def update_project_form(
-    project_id: int,
-    form: Optional[UploadFile],
-    db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(project_admin),
-):
-    """Update XLSForm for a project."""
-    file_name = os.path.splitext(form.filename)
-    file_ext = file_name[1]
-    allowed_extensions = [".xls"]
-    if file_ext not in allowed_extensions:
-        raise HTTPException(status_code=400, detail="Provide a valid .xls file")
-    contents = await form.read()
-
-    form_updated = await project_crud.update_project_form(
-        db,
-        project_id,
-        contents,
-        file_ext[1:],  # Form Contents  # File type
-    )
-
-    return form_updated
 
 
 @router.get("/generate-log/")
@@ -735,11 +633,21 @@ async def generate_log(
         task_status, task_message = await project_crud.get_background_task_status(
             uuid, db
         )
-        extract_completion_count = (
-            db.query(db_models.DbProject)
-            .filter(db_models.DbProject.id == project_id)
-            .first()
-        ).extract_completed_count
+
+        sql = text(
+            """
+            SELECT
+                COUNT(CASE WHEN odk_token IS NOT NULL THEN 1 END) AS tasks_complete,
+                COUNT(*) AS total_tasks
+            FROM tasks
+            WHERE project_id = :project_id;
+        """
+        )
+        result = db.execute(sql, {"project_id": project_id})
+        row = result.fetchone()
+
+        tasks_generated = row[0] if row else 0
+        total_task_count = row[1] if row else 0
 
         project_log_file = Path("/opt/logs/create_project.json")
         project_log_file.touch(exist_ok=True)
@@ -755,12 +663,12 @@ async def generate_log(
             last_50_logs = filtered_logs[-50:]
 
             logs = "\n".join(last_50_logs)
-            task_count = await project_crud.get_tasks_count(db, project_id)
+
             return {
                 "status": task_status.name,
-                "total_tasks": task_count,
+                "total_tasks": total_task_count,
                 "message": task_message,
-                "progress": extract_completion_count,
+                "progress": tasks_generated,
                 "logs": logs,
             }
     except Exception as e:
@@ -846,7 +754,7 @@ async def get_or_set_data_extract(
     url: Optional[str] = None,
     project_id: int = Query(..., description="Project ID"),
     db: Session = Depends(database.get_db),
-    org_user_dict: db_models.DbUser = Depends(project_admin),
+    project_user_dict: dict = Depends(project_admin),
 ):
     """Get or set the data extract URL for a project."""
     fgb_url = await project_crud.get_or_set_data_extract_url(
@@ -863,9 +771,21 @@ async def upload_custom_extract(
     custom_extract_file: UploadFile = File(...),
     project_id: int = Query(..., description="Project ID"),
     db: Session = Depends(database.get_db),
-    org_user_dict: db_models.DbUser = Depends(project_admin),
+    project_user_dict: dict = Depends(project_admin),
 ):
     """Upload a custom data extract geojson for a project.
+
+    Extract can be in geojson for flatgeobuf format.
+
+    Note the following properties are mandatory:
+    - "id"
+    - "osm_id"
+    - "tags"
+    - "version"
+    - "changeset"
+    - "timestamp"
+
+    Extracts are best generated with https://export.hotosm.org for full compatibility.
 
     Request Body
     - 'custom_extract_file' (file): File with the data extract features.
@@ -896,7 +816,7 @@ async def upload_custom_extract(
     return JSONResponse(status_code=200, content={"url": fgb_url})
 
 
-@router.get("/download_form/{project_id}/")
+@router.get("/download-form/{project_id}/")
 async def download_form(
     project_id: int,
     db: Session = Depends(database.get_db),
@@ -910,8 +830,7 @@ async def download_form(
         "Content-Type": "application/media",
     }
     if not project.form_xls:
-        project_category = project.xform_title
-        xlsform_path = f"{xlsforms_path}/{project_category}.xls"
+        xlsform_path = f"{xlsforms_path}/{project.xform_category}.xls"
         if os.path.exists(xlsform_path):
             return FileResponse(xlsform_path, filename="form.xls")
         else:
@@ -919,58 +838,70 @@ async def download_form(
     return Response(content=project.form_xls, headers=headers)
 
 
-@router.post("/update_category")
-async def update_project_category(
-    # background_tasks: BackgroundTasks,
-    project_id: int,
+@router.post("/update-form")
+async def update_project_form(
+    background_tasks: BackgroundTasks,
     category: str = Form(...),
     upload: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(project_admin),
-):
-    """Update the XLSForm category for a project.
+    project_user_dict: dict = Depends(project_admin),
+) -> project_schemas.ProjectBase:
+    """Update the XForm data in ODK Central.
 
-    Not valid for custom form uploads.
+    Also updates the category and custom XLSForm data in the database.
     """
-    contents = None
+    # TODO migrate most logic to project_crud
+    project = project_user_dict["project"]
 
-    project = await project_crud.get_project(db, project_id)
-    if not project:
-        raise HTTPException(
-            status_code=400, detail=f"Project with id {project_id} does not exist"
-        )
-
-    current_category = project.xform_title
-    if current_category == category:
+    if project.xform_category == category:
         if not upload:
             raise HTTPException(
                 status_code=400, detail="Current category is same as new category"
             )
 
     if upload:
-        # Validating for .XLS File.
-        file_name = os.path.splitext(upload.filename)
-        file_ext = file_name[1]
+        file_ext = Path(upload.filename).suffix.lower()
         allowed_extensions = [".xls", ".xlsx", ".xml"]
         if file_ext not in allowed_extensions:
-            raise HTTPException(status_code=400, detail="Provide a valid .xls file")
+            raise HTTPException(
+                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                detail="Provide a valid .xls, .xlsx, .xml file.",
+            )
+        new_xform_data = await upload.read()
+        # Update the XLSForm blob in the database
+        project.form_xls = new_xform_data
+        new_xform_data = BytesIO(new_xform_data)
+    else:
+        xlsform_path = Path(f"{xlsforms_path}/{category}.xls")
+        file_ext = xlsform_path.suffix.lower()
+        with open(xlsform_path, "rb") as f:
+            new_xform_data = BytesIO(f.read())
 
-        # FIXME
-        project.form_xls = contents
-        db.commit()
-
-    project.xform_title = category
+    # Update form category in database
+    project.xform_category = category
+    # Commit changes to db
     db.commit()
 
-    # Update odk forms
-    await project_crud.update_project_form(
-        db,
-        project_id,
-        file_ext[1:] if upload else "xls",
-        upload,  # Form
+    # The reference to the form via ODK Central API (minus task_id)
+    xform_name_prefix = project.project_name_prefix
+
+    # Get ODK Central credentials for project
+    odk_creds = await project_deps.get_odk_credentials(db, project.id)
+    # Get task id list
+    task_list = await tasks_crud.get_task_id_list(db, project.id)
+    # Update ODK Central form data
+    # FIXME runs in background but status is not tracked
+    background_tasks.add_task(
+        central_crud.update_odk_xforms,
+        task_list,
+        project.odkid,
+        new_xform_data,
+        file_ext,
+        xform_name_prefix,
+        odk_creds,
     )
 
-    return JSONResponse(status_code=200, content={"success": True})
+    return project
 
 
 @router.get("/download_template/")
@@ -1343,6 +1274,7 @@ async def project_dashboard(
     background_task_id = await project_crud.insert_background_task_into_database(
         db, "sync_submission", db_project.id
     )
+    # Update submissions in S3
     background_tasks.add_task(
         submission_crud.update_submission_in_s3, db, db_project.id, background_task_id
     )
@@ -1373,12 +1305,12 @@ async def get_contributors(
 @router.post("/add_admin/")
 async def add_new_project_admin(
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(project_admin),
-    user: db_models.DbUser = Depends(user_exists_in_db),
-    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    project_user_dict: dict = Depends(project_admin),
 ):
     """Add a new project manager.
 
     The logged in user must be either the admin of the organisation or a super admin.
     """
-    return await project_crud.add_project_admin(db, user, project)
+    return await project_crud.add_project_admin(
+        db, project_user_dict["user"], project_user_dict["project"]
+    )
