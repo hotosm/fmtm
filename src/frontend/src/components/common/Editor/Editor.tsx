@@ -11,7 +11,6 @@ import Heading from '@tiptap/extension-heading';
 import Document from '@tiptap/extension-document';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
-import Youtube from '@tiptap/extension-youtube';
 import './editorStyles.scss';
 
 type RichTextEditorProps = {
@@ -35,7 +34,6 @@ const extensions = [
   Image.configure({
     inline: true,
   }),
-  Youtube,
 ];
 
 const RichTextEditor = ({ editorHtmlContent, setEditorHtmlContent, editable }: RichTextEditorProps) => {
@@ -53,7 +51,7 @@ const RichTextEditor = ({ editorHtmlContent, setEditorHtmlContent, editable }: R
   }
 
   return (
-    <div className="no-tailwindcss fmtm-remove-all fmtm-border-[1px] fmtm-border-gray-300 fmtm-rounded-md">
+    <div className="no-tailwindcss fmtm-remove-all fmtm-border-[1px] fmtm-border-gray-300 fmtm-rounded-md fmtm-bg-white">
       {editable && <Toolbar editor={editor} />}
       <EditorContent editor={editor} />
     </div>
