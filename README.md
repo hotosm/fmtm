@@ -174,7 +174,8 @@ ODK Central server, using the
 [ODK Central API](https://odkcentral.docs.apiary.io/#) to allocate specific
 areas/features to individual mappers, and receive their data submissions.
 
-![1](https://github.com/hotosm/fmtm/assets/97789856/305be31a-96b4-42df-96fc-6968e9bd4e5f)
+![image](https://github.com/hotosm/fmtm/assets/97273021/e1bac364-d9dd-47b3-b10f-676e6abab298)
+
 
 #### Manager Web Interface (with PC browser-friendlymap view)
 
