@@ -72,11 +72,14 @@ const ProjectDescriptionTab = ({ projectId }) => {
         errorMsg={errors.description}
         required
       />
-      <RichTextEditor
-        editorHtmlContent={values?.per_task_instructions}
-        setEditorHtmlContent={(content) => handleCustomChange('per_task_instructions', content)}
-        editable={true}
-      />
+      <div>
+        <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold">Instructions</p>
+        <RichTextEditor
+          editorHtmlContent={values?.per_task_instructions}
+          setEditorHtmlContent={(content) => handleCustomChange('per_task_instructions', content)}
+          editable={true}
+        />
+      </div>
       <InputTextField
         id="tags"
         name="hashtags"
