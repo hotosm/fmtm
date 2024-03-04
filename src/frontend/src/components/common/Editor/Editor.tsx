@@ -14,7 +14,12 @@ import Image from '@tiptap/extension-image';
 import Youtube from '@tiptap/extension-youtube';
 import './editorStyles.scss';
 
-// define your extension array
+type RichTextEditorProps = {
+  editorHtmlContent: string;
+  setEditorHtmlContent?: (content: string) => any;
+  editable: boolean;
+};
+
 const extensions = [
   StarterKit,
   Document,
@@ -33,17 +38,14 @@ const extensions = [
   Youtube,
 ];
 
-const content = '';
-
-const Tiptap = () => {
-  const [editorHtmlContent, setEditorHtmlContent] = useState('');
-
+const RichTextEditor = ({ editorHtmlContent, setEditorHtmlContent, editable }: RichTextEditorProps) => {
   const editor = useEditor({
     extensions,
-    content,
+    content: editorHtmlContent,
     onUpdate: ({ editor }) => {
-      setEditorHtmlContent(editor.getHTML());
+      setEditorHtmlContent && setEditorHtmlContent(editor.getHTML());
     },
+    editable,
   });
 
   if (!editor) {
@@ -52,10 +54,10 @@ const Tiptap = () => {
 
   return (
     <div className="no-tailwindcss fmtm-remove-all fmtm-border-[1px] fmtm-border-gray-300 fmtm-rounded-md">
-      <Toolbar editor={editor} />
+      {editable && <Toolbar editor={editor} />}
       <EditorContent editor={editor} />
     </div>
   );
 };
 
-export default Tiptap;
+export default RichTextEditor;
