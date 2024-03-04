@@ -10,7 +10,8 @@ type ToolbarProps = {
   editor: Editor | null;
 };
 
-const iconClassName = 'fmtm-duration-300 hover:fmtm-bg-red-100 fmtm-rounded fmtm-cursor-pointer fmtm-p-[2px]';
+const iconClassName =
+  'fmtm-duration-300 hover:fmtm-bg-red-100 fmtm-rounded fmtm-cursor-pointer fmtm-p-[2px] fmtm-w-fit';
 
 export const Toolbar = ({ editor }: ToolbarProps) => {
   const [linkText, setLinkText] = useState('');
@@ -60,7 +61,7 @@ export const Toolbar = ({ editor }: ToolbarProps) => {
 
   return (
     <div className="fmtm-flex fmtm-justify-between fmtm-px-2 fmtm-border-b-[1px] fmtm-border-gray-300">
-      <div className="fmtm-flex fmtm-gap-2 fmtm-py-1 fmtm-items-center">
+      <div className="fmtm-flex fmtm-flex-wrap fmtm-gap-2 fmtm-py-1 fmtm-items-center">
         <Tooltip title="Bold">
           <AssetModules.FormatBoldIcon
             onClick={() => editor?.chain().focus().toggleBold().run()}
@@ -80,7 +81,7 @@ export const Toolbar = ({ editor }: ToolbarProps) => {
           />
         </Tooltip>
         <DropdownMenu>
-          <DropdownMenuTrigger className="fmtm-outline-none">
+          <DropdownMenuTrigger className="fmtm-outline-none fmtm-w-fit">
             <Tooltip title="Heading">
               <div
                 className={`fmtm-font-bold fmtm-font-archivo fmtm-scale-110 ${iconClassName} !fmtm-py-0 fmtm-px-2 ${isEditorActive(
@@ -153,7 +154,7 @@ export const Toolbar = ({ editor }: ToolbarProps) => {
             }
           }}
         >
-          <DropdownMenuTrigger className="fmtm-outline-none">
+          <DropdownMenuTrigger className="fmtm-outline-none fmtm-w-fit">
             <Tooltip title="Link">
               <AssetModules.LinkIcon className={`${iconClassName} ${isEditorActive('link')}`} />
             </Tooltip>
@@ -188,7 +189,7 @@ export const Toolbar = ({ editor }: ToolbarProps) => {
           />
         </Tooltip>
         <DropdownMenu open={imageDropdownOpen} onOpenChange={(state) => setImageDropdownOpen(state)}>
-          <DropdownMenuTrigger className="fmtm-outline-none">
+          <DropdownMenuTrigger className="fmtm-outline-none fmtm-w-fit">
             <Tooltip title="Image">
               <AssetModules.ImageAddIcon className={`${iconClassName}`} />
             </Tooltip>
