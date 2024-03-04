@@ -193,23 +193,33 @@ A computer-screen-optimized web app that allows Campaign Managers to:
 - If you are new then on the top right cornor click on Sign up and create an account.
   Else, Sign in to your existing account .
 - Click the '+ CREATE NEW PROJECT' button.
-- Enter the project details.
+- Enter the project details like name, descriptions, odk credentials and instuctions.
 
-![2](https://github.com/hotosm/fmtm/assets/97789856/97c38c80-aa0e-4fe2-b8a5-f4ee43a9a63a)
+![2](https://github.com/hotosm/fmtm/assets/97273021/9b8d7a83-11e3-4623-a14a-66ac47d91443)
 
-- Upload Area in the GEOJSON file format.
+- Draw or Upload Area in the GEOJSON file format.
 
-![3](https://github.com/hotosm/fmtm/assets/97789856/680eb831-790a-48f1-8997-c20b5213909d)
+![3](https://github.com/hotosm/fmtm/assets/97273021/892f9051-dbb3-434d-b35a-94e90435a5d8)
 
-- Define the tasks of the project.
 
-![Screenshot 2023-06-07 232152](https://github.com/hotosm/fmtm/assets/97789856/b735a661-d0f6-46b8-b548-5ad7b1928480)
+- Choose the category of field mapping. Also choose if you want survey using existing form or upload custom form.
 
-- Select Form .
+![image](https://github.com/hotosm/fmtm/assets/97273021/02ebb3af-a48f-40eb-b9f8-fd7eec393485)
 
-![Screenshot 2023-06-07 232316](https://github.com/hotosm/fmtm/assets/97789856/475a6070-4897-4e84-8050-6ecf024d0095)
+
+- Choose whether you want osm data extact or you will upload your own data extracts.
+
+![image](https://github.com/hotosm/fmtm/assets/97273021/e4a7f9a6-b411-4f8c-b2ba-9fa9e0d42531)
+
+- choose the type of task splitting. As you want your tasks to be square of specific size, want each polygon to be each tasks or you want to use task splitting algorithm for splitting your Area of interest.
+  
+![image](https://github.com/hotosm/fmtm/assets/97273021/c8a905e2-dd52-49e8-87df-0ac6d9a85077)
+
 
 - Click on Submit button.
+  
+![image](https://github.com/hotosm/fmtm/assets/97273021/0c95e324-3365-4d0a-ba91-c9f9b06b2318)
+
 
 #### FMTM Backend
 
