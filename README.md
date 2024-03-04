@@ -176,7 +176,6 @@ areas/features to individual mappers, and receive their data submissions.
 
 ![image](https://github.com/hotosm/fmtm/assets/97273021/e1bac364-d9dd-47b3-b10f-676e6abab298)
 
-
 #### Manager Web Interface (with PC browser-friendlymap view)
 
 A computer-screen-optimized web app that allows Campaign Managers to:
