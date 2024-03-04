@@ -23,6 +23,7 @@ import os
 import uuid
 from io import BytesIO
 from pathlib import Path
+from random import randint
 from unittest.mock import Mock, patch
 
 import pytest
@@ -32,7 +33,7 @@ from geoalchemy2.elements import WKBElement
 from loguru import logger as log
 from shapely import Polygon
 
-from app.central.central_crud import create_odk_project
+from app.central.central_crud import create_odk_project, read_and_test_xform
 from app.config import encrypt_value, settings
 from app.db import db_models
 from app.db.postgis_utils import split_geojson_by_task_areas
@@ -56,11 +57,11 @@ async def test_create_project(client, admin_user, organisation):
 
     project_data = {
         "project_info": {
-            "name": "Test Project",
+            "name": f"Test Project {randint(1, 1000000)}",
             "short_description": "test",
             "description": "test",
         },
-        "xform_title": "buildings",
+        "xform_category": "buildings",
         "hashtags": ["#FMTM"],
         "outline_geojson": {
             "coordinates": [
@@ -81,6 +82,8 @@ async def test_create_project(client, admin_user, organisation):
         f"/projects/create_project?org_id={organisation.id}", json=project_data
     )
 
+    if response.status_code != 200:
+        log.error(response.json())
     assert response.status_code == 200
 
     response_data = response.json()
@@ -140,8 +143,8 @@ async def test_convert_to_app_project():
 
     assert result.outline_geojson is not None
 
-    assert result.project_tasks is not None
-    assert isinstance(result.project_tasks, list)
+    assert result.tasks is not None
+    assert isinstance(result.tasks, list)
 
 
 async def test_create_project_with_project_info(db, project):
@@ -275,6 +278,16 @@ async def test_generate_project_files(db, client, project):
     with open(xlsform_file, "rb") as xlsform_data:
         xlsform_obj = BytesIO(xlsform_data.read())
 
+    # Convert XLSForm --> XForm for all tasks
+    xform_data = await read_and_test_xform(
+        xlsform_obj, xlsform_file.suffix.lower(), return_form_data=True
+    )
+
+    # Get project name for XForm name
+    project_name = project.project_name_prefix
+    # Get ODK Project ID
+    project_odk_id = project.odkid
+
     for task_id in split_extract_dict.keys():
         # NOTE avoid the lambda function for run_in_threadpool
         # functools.partial captures the loop variable task_id in a
@@ -283,11 +296,12 @@ async def test_generate_project_files(db, client, project):
             functools.partial(
                 project_crud.generate_task_files,
                 db,
-                project,
+                project_id,
+                project_odk_id,
                 task_id,
                 split_extract_dict[task_id],
-                xlsform_obj,
-                xlsform_file.suffix.lower(),
+                f"{project_name}_task_{task_id}",
+                xform_data,
                 odk_credentials,
             )
         )

@@ -103,8 +103,8 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customDataExtractUpload
       odk_central_url: projectDetails.odk_central_url,
       odk_central_user: projectDetails.odk_central_user,
       odk_central_password: projectDetails.odk_central_password,
-      // dont send xform_title if upload custom form is selected
-      xform_title: projectDetails.formCategorySelection,
+      // dont send xform_category if upload custom form is selected
+      xform_category: projectDetails.formCategorySelection,
       task_split_type: splitTasksSelection,
       form_ways: projectDetails.formWays,
       // "uploaded_form": projectDetails.uploaded_form,
@@ -234,7 +234,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customDataExtractUpload
               uuid: generateQrSuccess.task_id,
             }),
           );
-        }, 2000);
+        }, 5000);
       }
     }
   }, [generateQrSuccess, generateProjectLog]);

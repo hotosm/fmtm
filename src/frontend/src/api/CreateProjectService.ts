@@ -463,11 +463,9 @@ const ValidateCustomForm: Function = (url: string, formUpload: any) => {
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
-            message:
-              JSON.stringify(`${error.response.data.message}, ${error.response.data.possible_reason}`) ||
-              'Something Went Wrong',
+            message: JSON.stringify(error.response.data.detail) || 'Something Went Wrong',
             variant: 'error',
-            duration: 2000,
+            duration: 5000,
           }),
         );
         dispatch(CreateProjectActions.ValidateCustomFormLoading(false));
@@ -514,7 +512,6 @@ const DeleteProjectService: Function = (url: string) => {
     };
 
     await deleteProject(url);
-    // TODO extra cleanup required?
   };
 };
 

@@ -46,7 +46,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
 from app.auth.osm import AuthUser, login_required
-from app.auth.roles import mapper, org_admin, project_admin, super_admin
+from app.auth.roles import mapper, org_admin, project_admin
 from app.central import central_crud
 from app.db import database, db_models
 from app.db.postgis_utils import (
@@ -177,7 +177,7 @@ async def read_project_summaries(
 
 
 @router.get(
-    "/search_projects", response_model=project_schemas.PaginatedProjectSummaries
+    "/search-projects", response_model=project_schemas.PaginatedProjectSummaries
 )
 async def search_project(
     search: str,
@@ -384,29 +384,6 @@ async def project_partial_update(
     return project
 
 
-@router.post("/upload_xlsform")
-async def upload_custom_xls(
-    upload: UploadFile = File(...),
-    category: str = Form(...),
-    db: Session = Depends(database.get_db),
-    current_user: db_models.DbUser = Depends(super_admin),
-):
-    """Upload a custom XLSForm to the database.
-
-    Args:
-        upload (UploadFile): the XLSForm file
-        category (str): the category of the XLSForm.
-        db (Session): the DB session, provided automatically.
-        current_user (DbUser): Check if user is super_admin
-    """
-    content = await upload.read()  # read file content
-    name = upload.filename.split(".")[0]  # get name of file without extension
-    await project_crud.upload_xlsform(db, content, name, category)
-
-    # FIXME: fix return value
-    return {"xform_title": f"{category}"}
-
-
 @router.post("/{project_id}/upload-task-boundaries")
 async def upload_project_task_boundaries(
     project_id: int,
@@ -492,59 +469,6 @@ async def task_split(
     )
 
 
-@router.post("/{project_id}/upload")
-async def upload_project_boundary(
-    project_id: int,
-    boundary_geojson: UploadFile = File(...),
-    dimension: int = Form(500),
-    db: Session = Depends(database.get_db),
-    org_user_dict: db_models.DbUser = Depends(org_admin),
-):
-    """Uploads the project boundary. The boundary is uploaded as a geojson file.
-
-    Args:
-        project_id (int): The ID of the project to update.
-        boundary_geojson (UploadFile): The boundary file to upload.
-        dimension (int): The new dimension of the project.
-        db (Session): The database session to use.
-        org_user_dict (AuthUser): Check if user is org_admin.
-
-    Returns:
-        dict: JSON with message, project ID, and task count for project.
-    """
-    # Validating for .geojson File.
-    file_name = os.path.splitext(boundary_geojson.filename)
-    file_ext = file_name[1]
-    allowed_extensions = [".geojson", ".json"]
-    if file_ext not in allowed_extensions:
-        raise HTTPException(status_code=400, detail="Provide a valid .geojson file")
-
-    # read entire file
-    content = await boundary_geojson.read()
-    boundary = json.loads(content)
-
-    # Validatiing Coordinate Reference System
-    await check_crs(boundary)
-
-    # update project boundary and dimension
-    result = await project_crud.update_project_boundary(
-        db, project_id, boundary, dimension
-    )
-    if not result:
-        raise HTTPException(
-            status_code=428, detail=f"Project with id {project_id} does not exist"
-        )
-
-    # Get the number of tasks in a project
-    task_count = await tasks_crud.get_task_count_in_project(db, project_id)
-
-    return {
-        "message": "Project Boundary Uploaded",
-        "project_id": project_id,
-        "task_count": task_count,
-    }
-
-
 @router.post("/edit_project_boundary/{project_id}/")
 async def edit_project_boundary(
     project_id: int,
@@ -603,7 +527,7 @@ async def validate_form(form: UploadFile):
         )
 
     contents = await form.read()
-    return await central_crud.test_form_validity(contents, file_ext)
+    return await central_crud.read_and_test_xform(BytesIO(contents), file_ext)
 
 
 @router.post("/{project_id}/generate-project-data")
@@ -641,7 +565,7 @@ async def generate_files(
 
     project = org_user_dict.get("project")
 
-    form_category = project.xform_title
+    xform_category = project.xform_category
     custom_xls_form = None
     file_ext = None
     if xls_form_upload:
@@ -656,7 +580,6 @@ async def generate_files(
                 detail=f"Invalid file extension, must be {allowed_extensions}",
             )
 
-        form_category = file_path.stem
         custom_xls_form = await xls_form_upload.read()
 
         # Write XLS form content to db
@@ -675,7 +598,7 @@ async def generate_files(
         db,
         project_id,
         BytesIO(custom_xls_form) if custom_xls_form else None,
-        form_category,
+        xform_category,
         file_ext if xls_form_upload else ".xls",
         background_task_id,
     )
@@ -710,11 +633,21 @@ async def generate_log(
         task_status, task_message = await project_crud.get_background_task_status(
             uuid, db
         )
-        extract_completion_count = (
-            db.query(db_models.DbProject)
-            .filter(db_models.DbProject.id == project_id)
-            .first()
-        ).extract_completed_count
+
+        sql = text(
+            """
+            SELECT
+                COUNT(CASE WHEN odk_token IS NOT NULL THEN 1 END) AS tasks_complete,
+                COUNT(*) AS total_tasks
+            FROM tasks
+            WHERE project_id = :project_id;
+        """
+        )
+        result = db.execute(sql, {"project_id": project_id})
+        row = result.fetchone()
+
+        tasks_generated = row[0] if row else 0
+        total_task_count = row[1] if row else 0
 
         project_log_file = Path("/opt/logs/create_project.json")
         project_log_file.touch(exist_ok=True)
@@ -730,12 +663,12 @@ async def generate_log(
             last_50_logs = filtered_logs[-50:]
 
             logs = "\n".join(last_50_logs)
-            task_count = await project_crud.get_tasks_count(db, project_id)
+
             return {
                 "status": task_status.name,
-                "total_tasks": task_count,
+                "total_tasks": total_task_count,
                 "message": task_message,
-                "progress": extract_completion_count,
+                "progress": tasks_generated,
                 "logs": logs,
             }
     except Exception as e:
@@ -883,7 +816,7 @@ async def upload_custom_extract(
     return JSONResponse(status_code=200, content={"url": fgb_url})
 
 
-@router.get("/download_form/{project_id}/")
+@router.get("/download-form/{project_id}/")
 async def download_form(
     project_id: int,
     db: Session = Depends(database.get_db),
@@ -897,8 +830,7 @@ async def download_form(
         "Content-Type": "application/media",
     }
     if not project.form_xls:
-        project_category = project.xform_title
-        xlsform_path = f"{xlsforms_path}/{project_category}.xls"
+        xlsform_path = f"{xlsforms_path}/{project.xform_category}.xls"
         if os.path.exists(xlsform_path):
             return FileResponse(xlsform_path, filename="form.xls")
         else:
@@ -908,7 +840,7 @@ async def download_form(
 
 @router.post("/update-form")
 async def update_project_form(
-    # background_tasks: BackgroundTasks,
+    background_tasks: BackgroundTasks,
     category: str = Form(...),
     upload: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
@@ -921,7 +853,7 @@ async def update_project_form(
     # TODO migrate most logic to project_crud
     project = project_user_dict["project"]
 
-    if project.xform_title == category:
+    if project.xform_category == category:
         if not upload:
             raise HTTPException(
                 status_code=400, detail="Current category is same as new category"
@@ -945,22 +877,27 @@ async def update_project_form(
         with open(xlsform_path, "rb") as f:
             new_xform_data = BytesIO(f.read())
 
-    # Update category in database
-    project.xform_title = category
+    # Update form category in database
+    project.xform_category = category
     # Commit changes to db
     db.commit()
+
+    # The reference to the form via ODK Central API (minus task_id)
+    xform_name_prefix = project.project_name_prefix
 
     # Get ODK Central credentials for project
     odk_creds = await project_deps.get_odk_credentials(db, project.id)
     # Get task id list
     task_list = await tasks_crud.get_task_id_list(db, project.id)
     # Update ODK Central form data
-    await central_crud.update_odk_xforms(
+    # FIXME runs in background but status is not tracked
+    background_tasks.add_task(
+        central_crud.update_odk_xforms,
         task_list,
         project.odkid,
         new_xform_data,
         file_ext,
-        f"{project.project_name_prefix}_{category}",
+        xform_name_prefix,
         odk_creds,
     )
 
@@ -1337,6 +1274,7 @@ async def project_dashboard(
     background_task_id = await project_crud.insert_background_task_into_database(
         db, "sync_submission", db_project.id
     )
+    # Update submissions in S3
     background_tasks.add_task(
         submission_crud.update_submission_in_s3, db, db_project.id, background_task_id
     )

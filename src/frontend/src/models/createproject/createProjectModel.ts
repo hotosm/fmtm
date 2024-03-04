@@ -11,7 +11,7 @@ export interface ProjectDetailsModel {
     per_task_instructions: string;
   };
   status: number;
-  xform_title: string;
+  xform_category: string;
   location_str: string;
   outline_geojson: {
     type: string;
@@ -23,7 +23,7 @@ export interface ProjectDetailsModel {
     id: string;
     bbox: [string, string, string, string];
   };
-  project_tasks: {
+  tasks: {
     id: number;
     project_id: number;
     project_task_index: number;
