@@ -190,32 +190,41 @@ A computer-screen-optimized web app that allows Campaign Managers to:
 #### Steps to create a project in FMTM
 
 - Go to [fmtm](https://fmtm.hotosm.org/) .
-- If you are new then on the top right cornor click on Sign up and create an account.
-  Else, Sign in to your existing account .
+- Sign into your OpenStreetMap account by clicking the top right button.
 - Click the '+ CREATE NEW PROJECT' button.
-- Enter the project details like name, descriptions, odk credentials and instuctions.
+- Enter the project details like name, description, instructions, and
+  (optional) ODK credentials.
 
-![2](https://github.com/hotosm/fmtm/assets/97273021/9b8d7a83-11e3-4623-a14a-66ac47d91443)
+  ![2](https://github.com/hotosm/fmtm/assets/97273021/9b8d7a83-11e3-4623-a14a-66ac47d91443)
 
-- Draw or Upload Area in the GEOJSON file format.
+- Draw or Upload Area in the GeoJSON file format.
 
-![3](https://github.com/hotosm/fmtm/assets/97273021/892f9051-dbb3-434d-b35a-94e90435a5d8)
+  ![3](https://github.com/hotosm/fmtm/assets/97273021/892f9051-dbb3-434d-b35a-94e90435a5d8)
 
-- Choose the category of field mapping. Also choose if you want survey using existing form or upload custom form.
+- Choose the category of field mapping. If you require a custom
+  XLSForm to be used, upload it at this point.
 
-![image](https://github.com/hotosm/fmtm/assets/97273021/02ebb3af-a48f-40eb-b9f8-fd7eec393485)
+  ![image](https://github.com/hotosm/fmtm/assets/97273021/02ebb3af-a48f-40eb-b9f8-fd7eec393485)
 
-- Choose whether you want osm data extact or you will upload your own data extracts.
+- Generate a data extract from your category selection, or upload your
+  own geometries inside a custom data extract GeoJSON.
 
-![image](https://github.com/hotosm/fmtm/assets/97273021/e4a7f9a6-b411-4f8c-b2ba-9fa9e0d42531)
+  ![image](https://github.com/hotosm/fmtm/assets/97273021/e4a7f9a6-b411-4f8c-b2ba-9fa9e0d42531)
 
-- choose the type of task splitting. As you want your tasks to be square of specific size, want each polygon to be each tasks or you want to use task splitting algorithm for splitting your Area of interest.
+- Choose the type of task splitting:
 
-![image](https://github.com/hotosm/fmtm/assets/97273021/c8a905e2-dd52-49e8-87df-0ac6d9a85077)
+  - Divide on square: create a simple grid over your project area.
+  - Choose area as tasks: if you have already determined how tasks
+    should be split (your project area contains multiple polygons), then
+    select this option.
+  - Task Splitting Algorithm: use the FMTM splitting algorithm to split
+    task boundaries by average building and linear features.
+
+  ![image](https://github.com/hotosm/fmtm/assets/97273021/c8a905e2-dd52-49e8-87df-0ac6d9a85077)
 
 - Click on Submit button.
 
-![image](https://github.com/hotosm/fmtm/assets/97273021/0c95e324-3365-4d0a-ba91-c9f9b06b2318)
+  ![image](https://github.com/hotosm/fmtm/assets/97273021/0c95e324-3365-4d0a-ba91-c9f9b06b2318)
 
 #### FMTM Backend
 
