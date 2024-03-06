@@ -3,7 +3,7 @@ import { SubmissionStateTypes } from '@/store/types/ISubmissions';
 
 const initialState: SubmissionStateTypes = {
   submissionDetailsLoading: true,
-  submissionDetails: [],
+  submissionDetails: null,
   submissionInfographics: [],
   submissionInfographicsLoading: false,
   submissionContributors: [],

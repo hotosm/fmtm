@@ -8,7 +8,7 @@ import {
 
 export type SubmissionStateTypes = {
   submissionDetailsLoading: boolean;
-  submissionDetails: [];
+  submissionDetails: Record<string, any> | null;
   submissionInfographics: submissionInfographicsTypes[];
   submissionInfographicsLoading: boolean;
   submissionContributors: submissionContributorsTypes[];
