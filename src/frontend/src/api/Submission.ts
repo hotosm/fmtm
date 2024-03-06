@@ -9,6 +9,7 @@ export const SubmissionService: Function = (url: string) => {
         const getSubmissionDetailsResponse = await axios.get(url);
         const response: any = getSubmissionDetailsResponse.data;
         dispatch(SubmissionActions.SetSubmissionDetails(response));
+        dispatch(SubmissionActions.SetSubmissionDetailsLoading(false));
       } catch (error) {
         dispatch(SubmissionActions.SetSubmissionDetailsLoading(false));
       } finally {

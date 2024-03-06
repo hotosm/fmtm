@@ -17,8 +17,10 @@ const SubmissionDetails = () => {
   const taskId = params.taskId;
   const paramsInstanceId = params.instanceId;
   const projectDashboardDetail = CoreModules.useAppSelector((state) => state.project.projectDashboardDetail);
+  const projectDashboardLoading = CoreModules.useAppSelector((state) => state.project.projectDashboardLoading);
 
   const submissionDetails = useAppSelector((state) => state.submission.submissionDetails);
+  const submissionDetailsLoading = useAppSelector((state) => state.submission.submissionDetailsLoading);
 
   useEffect(() => {
     dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${decodedProjectId}`));
@@ -33,16 +35,6 @@ const SubmissionDetails = () => {
       ),
     );
   }, [decodedProjectId, taskId, paramsInstanceId]);
-
-  // useEffect(() => {
-  //   dispatch(
-  //     SubmissionService(
-  //       `${
-  //         import.meta.env.VITE_API_URL
-  //       }/central/submission?project_id=${decodedProjectId}&xmlFormId=${decodedTaskId}&submission_id=${paramsInstanceId}`,
-  //     ),
-  //   );
-  // }, []);
 
   function removeNullValues(obj) {
     const newObj = {};
@@ -124,13 +116,17 @@ const SubmissionDetails = () => {
       <UpdateReviewStatusModal />
       <div className="fmtm-flex fmtm-flex-col xl:fmtm-flex-row">
         <div>
-          <div className="fmtm-bg-white fmtm-rounded-lg fmtm-w-full md:fmtm-w-[35rem] fmtm-h-fit fmtm-p-2 fmtm-px-4 md:fmtm-p-4 md:fmtm-shadow-[0px_10px_20px_0px_rgba(96,96,96,0.1)] fmtm-flex fmtm-flex-col">
-            <h2 className="fmtm-text-2xl fmtm-text-[#545454] fmtm-font-bold fmtm-mb-4">
-              {projectDashboardDetail?.project_name_prefix}
-            </h2>
-            <h2 className="fmtm-text-xl fmtm-font-bold fmtm-text-[#545454]">Task: {taskId}</h2>
-            <h2 className="fmtm-text-lg fmtm-font-bold fmtm-text-[#545454]">Submission Id: {paramsInstanceId}</h2>
-          </div>
+          {projectDashboardLoading ? (
+            <CoreModules.Skeleton className="md:!fmtm-w-[35rem] fmtm-h-[8.5rem]" />
+          ) : (
+            <div className="fmtm-bg-white fmtm-rounded-lg fmtm-w-full md:fmtm-w-[35rem] fmtm-h-fit fmtm-p-2 fmtm-px-4 md:fmtm-p-4 md:fmtm-shadow-[0px_10px_20px_0px_rgba(96,96,96,0.1)] fmtm-flex fmtm-flex-col">
+              <h2 className="fmtm-text-2xl fmtm-text-[#545454] fmtm-font-bold fmtm-mb-4">
+                {projectDashboardDetail?.project_name_prefix}
+              </h2>
+              <h2 className="fmtm-text-xl fmtm-font-bold fmtm-text-[#545454]">Task: {taskId}</h2>
+              <h2 className="fmtm-text-lg fmtm-font-bold fmtm-text-[#545454]">Submission Id: {paramsInstanceId}</h2>
+            </div>
+          )}
           <Button
             btnText="Update Review Status"
             btnType="primary"
@@ -151,14 +147,26 @@ const SubmissionDetails = () => {
           </div>
         </div>
       </div>
-      {Object.entries(filteredData).map(([key, value]) => (
-        <div key={key}>
-          <CoreModules.Box sx={{ borderBottom: '1px solid #e2e2e2', padding: '8px' }}>
-            <div className="fmtm-capitalize fmtm-text-xl fmtm-font-bold fmtm-mb-1">{key}</div>
-            {renderValue(value, key)}
-          </CoreModules.Box>
+      {submissionDetailsLoading ? (
+        <div className="fmtm-flex fmtm-flex-col fmtm-gap-3 fmtm-mt-5">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="fmtm-border-b-[1px] fmtm-pb-4">
+              <CoreModules.Skeleton key={i} className="fmtm-h-[100px]" />
+            </div>
+          ))}
         </div>
-      ))}{' '}
+      ) : (
+        <div>
+          {Object.entries(filteredData).map(([key, value]) => (
+            <div key={key}>
+              <CoreModules.Box sx={{ borderBottom: '1px solid #e2e2e2', padding: '8px' }}>
+                <div className="fmtm-capitalize fmtm-text-xl fmtm-font-bold fmtm-mb-1">{key}</div>
+                {renderValue(value, key)}
+              </CoreModules.Box>
+            </div>
+          ))}{' '}
+        </div>
+      )}
     </div>
   );
 };

@@ -12,6 +12,13 @@ const SubmissionInstanceMap = ({ featureGeojson }) => {
     maxZoom: 25,
   });
 
+  map?.on('loadstart', function () {
+    map.getTargetElement().classList.add('spinner');
+  });
+  map?.on('loadend', function () {
+    map.getTargetElement().classList.remove('spinner');
+  });
+
   return (
     <div className="map-container" style={{ height: '100%' }}>
       <MapComponent
