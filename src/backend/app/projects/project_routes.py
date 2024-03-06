@@ -461,12 +461,16 @@ async def task_split(
         else:
             log.warning("Parsed geojson file contained no geometries")
 
-    return await project_crud.split_geojson_into_tasks(
+    feature=await project_crud.split_geojson_into_tasks(
         db,
         parsed_boundary,
         no_of_buildings,
         parsed_extract,
     )
+    features_value=feature["features"]
+    if features_value is None:
+        raise HTTPException(status_code=404, detail="No catagories found in AOI")
+    return feature
 
 
 @router.post("/edit_project_boundary/{project_id}/")
