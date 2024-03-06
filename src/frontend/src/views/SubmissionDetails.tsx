@@ -14,8 +14,7 @@ const SubmissionDetails = () => {
   const params = CoreModules.useParams();
   const encodedProjectId = params.projectId;
   const decodedProjectId = environment.decode(encodedProjectId);
-  const encodedTaskId = params.taskId;
-  const decodedTaskId = environment.decode(encodedTaskId);
+  const taskId = params.taskId;
   const paramsInstanceId = params.instanceId;
   const projectDashboardDetail = CoreModules.useAppSelector((state) => state.project.projectDashboardDetail);
 
@@ -119,6 +118,16 @@ const SubmissionDetails = () => {
   useEffect(() => {
     dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${decodedProjectId}`));
   }, []);
+
+  useEffect(() => {
+    dispatch(
+      SubmissionService(
+        `${
+          import.meta.env.VITE_API_URL
+        }/submission/task_submissions/${decodedProjectId}?task_id=${taskId}&submission_id=${paramsInstanceId}`,
+      ),
+    );
+  }, [decodedProjectId, taskId, paramsInstanceId]);
 
   // useEffect(() => {
   //   dispatch(
