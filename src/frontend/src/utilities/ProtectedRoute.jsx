@@ -4,7 +4,7 @@ import CoreModules from '@/shared/CoreModules';
 import { createLoginWindow } from '@/utilfunctions/login';
 import environment from '@/environment';
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, permittedRoles }) => {
   // Bypass check if NODE_ENV=development (local dev)
   if (import.meta.env.MODE === 'development') {
     return children;
@@ -13,6 +13,10 @@ const ProtectedRoute = ({ children }) => {
   const token = CoreModules.useAppSelector((state) => state.login.loginToken);
   if (token == null) {
     createLoginWindow('/');
+    return <Navigate to="/" replace />;
+  }
+
+  if (permittedRoles && token && !permittedRoles.includes(token['role'])) {
     return <Navigate to="/" replace />;
   }
 
