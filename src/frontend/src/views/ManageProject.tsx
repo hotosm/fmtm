@@ -8,12 +8,8 @@ import environment from '@/environment';
 import { GetIndividualProjectDetails } from '@/api/CreateProjectService';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '@/types/reduxTypes';
+import { user_roles } from '@/types/enums';
 
-const tabList = [
-  { id: 'users', name: 'USERS', icon: <AssetModules.PersonIcon style={{ fontSize: '20px' }} /> },
-  { id: 'edit', name: 'EDIT', icon: <AssetModules.EditIcon style={{ fontSize: '20px' }} /> },
-  { id: 'delete', name: 'DELETE', icon: <AssetModules.DeleteIcon style={{ fontSize: '20px' }} /> },
-];
 const ManageProject = () => {
   const dispatch = CoreModules.useAppDispatch();
   const params = CoreModules.useParams();
@@ -22,6 +18,23 @@ const ManageProject = () => {
   const decodedProjectId = environment.decode(encodedProjectId);
   const [tabView, setTabView] = useState<'users' | 'edit' | string>('users');
   const editProjectDetails = useAppSelector((state) => state.createproject.editProjectDetails);
+  const token = CoreModules.useAppSelector((state) => state.login.loginToken);
+
+  const tabList = [
+    { id: 'users', name: 'USERS', icon: <AssetModules.PersonIcon style={{ fontSize: '20px' }} />, permission: !!token },
+    {
+      id: 'edit',
+      name: 'EDIT',
+      icon: <AssetModules.EditIcon style={{ fontSize: '20px' }} />,
+      permission: token && [user_roles.ADMIN].includes(token['role']),
+    },
+    {
+      id: 'delete',
+      name: 'DELETE',
+      icon: <AssetModules.DeleteIcon style={{ fontSize: '20px' }} />,
+      permission: token && [user_roles.ADMIN].includes(token['role']),
+    },
+  ];
 
   useEffect(() => {
     dispatch(GetIndividualProjectDetails(`${import.meta.env.VITE_API_URL}/projects/${decodedProjectId}`));
@@ -38,18 +51,21 @@ const ManageProject = () => {
           <p className="fmtm-text-base">BACK</p>
         </div>
         <div className="fmtm-flex fmtm-flex-row sm:fmtm-flex-col sm:fmtm-w-full fmtm-bg-[#F2F2F2] fmtm-h-full">
-          {tabList.map((tab) => (
-            <div
-              key={tab.id}
-              className={`fmtm-flex fmtm-items-center fmtm-gap-2 fmtm-text-base fmtm-px-3 sm:fmtm-px-5 fmtm-py-1 sm:fmtm-py-3 fmtm-duration-300 fmtm-cursor-pointer hover:fmtm-text-primaryRed hover:fmtm-bg-[#EFE0E0] ${
-                tabView === tab.id ? 'fmtm-text-primaryRed fmtm-bg-[#EFE0E0]' : ''
-              }`}
-              onClick={() => setTabView(tab.id)}
-            >
-              <div className="fmtm-pb-1">{tab.icon}</div>
-              <p>{tab.name}</p>
-            </div>
-          ))}
+          {tabList.map(
+            (tab) =>
+              tab.permission && (
+                <div
+                  key={tab.id}
+                  className={`fmtm-flex fmtm-items-center fmtm-gap-2 fmtm-text-base fmtm-px-3 sm:fmtm-px-5 fmtm-py-1 sm:fmtm-py-3 fmtm-duration-300 fmtm-cursor-pointer hover:fmtm-text-primaryRed hover:fmtm-bg-[#EFE0E0] ${
+                    tabView === tab.id ? 'fmtm-text-primaryRed fmtm-bg-[#EFE0E0]' : ''
+                  }`}
+                  onClick={() => setTabView(tab.id)}
+                >
+                  <div className="fmtm-pb-1">{tab.icon}</div>
+                  <p>{tab.name}</p>
+                </div>
+              ),
+          )}
         </div>
       </div>
       <div className=" sm:fmtm-w-[calc(100%-140px)] lg:fmtm-w-[85%]">
