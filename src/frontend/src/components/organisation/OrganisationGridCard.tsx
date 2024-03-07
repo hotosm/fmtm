@@ -3,8 +3,9 @@ import CoreModules from '@/shared/CoreModules';
 import CustomizedImage from '@/utilities/CustomizedImage';
 import { useNavigate } from 'react-router-dom';
 import { user_roles } from '@/types/enums';
+import AssetModules from '@/shared/AssetModules';
 
-const OrganisationGridCard = ({ filteredData, allDataLength }) => {
+const OrganisationGridCard = ({ filteredData, allDataLength, isEditable = false }) => {
   const navigate = useNavigate();
   const token = CoreModules.useAppSelector((state) => state.login.loginToken);
   const cardStyle = {
@@ -47,12 +48,20 @@ const OrganisationGridCard = ({ filteredData, allDataLength }) => {
               className="fmtm-overflow-hidden fmtm-grow fmtm-h-full fmtm-justify-between"
             >
               <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
-                <h2
-                  className="fmtm-line-clamp-1 fmtm-text-base sm:fmtm-text-lg fmtm-font-bold fmtm-capitalize"
-                  title={data.name}
-                >
-                  {data.name}
-                </h2>
+                <div className="fmtm-flex fmtm-justify-between fmtm-items-center">
+                  <h2
+                    className="fmtm-line-clamp-1 fmtm-text-base sm:fmtm-text-lg fmtm-font-bold fmtm-capitalize"
+                    title={data.name}
+                  >
+                    {data.name}
+                  </h2>
+                  {isEditable && token && [user_roles.ADMIN].includes(token['role']) && (
+                    <AssetModules.EditIcon
+                      className="fmtm-text-[#7A7676] hover:fmtm-text-[#5a5757]"
+                      onClick={() => navigate(`/edit-organization/${data.id}`)}
+                    />
+                  )}
+                </div>
                 <p
                   className="fmtm-line-clamp-3 fmtm-text-[#7A7676] fmtm-font-archivo fmtm-text-sm sm:fmtm-text-base"
                   title={data.description}
