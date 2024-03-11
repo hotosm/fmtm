@@ -21,3 +21,11 @@ export enum user_roles {
   MAPPER = '0',
   ADMIN = '1',
 }
+
+export enum user_project_roles {
+  MAPPER = '0',
+  VALIDATOR = '1',
+  FIELD_MANAGER = '2',
+  ASSOCIATE_PROJECT_MANAGER = '3',
+  PROJECT_MANAGER = '4',
+}
