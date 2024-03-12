@@ -168,7 +168,7 @@ async def get_or_create_user(
             {
                 "user_id": user_data.id,
                 "username": user_data.username,
-                "profile_img": user_data.img_url or None,
+                "profile_img": user_data.profile_img or None,
                 "role": "MAPPER",
                 "mapping_level": "BEGINNER",
                 "current_date": datetime.now(timezone.utc),
@@ -197,7 +197,7 @@ async def get_or_create_user(
             {
                 "id": row.id,
                 "username": row.username,
-                "img_url": row.profile_img,
+                "profile_img": row.profile_img,
                 "role": row.role,
                 "project_id": row.project_id,
                 "project_role": row.project_role,
