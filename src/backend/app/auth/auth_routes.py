@@ -17,17 +17,17 @@
 #
 
 """Auth routes, to login, logout, and get user details."""
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from loguru import logger as log
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.auth.osm import AuthUser, init_osm_auth, login_required
 from app.config import settings
 from app.db import database
-from app.db.db_models import DbUser
-from app.users import user_crud
 
 router = APIRouter(
     prefix="/auth",
@@ -127,45 +127,104 @@ async def logout():
 async def get_or_create_user(
     db: Session,
     user_data: AuthUser,
-) -> DbUser:
+):
     """Get user from User table if exists, else create."""
-    existing_user = await user_crud.get_user(db, user_data.id)
+    try:
+        update_sql = text(
+            """
+        DO
+        $$
+        BEGIN
+            IF EXISTS (SELECT 1 FROM users WHERE id = :user_id) THEN
+                UPDATE users
+                SET profile_img = :profile_img
+                WHERE id = :user_id;
+            ELSIF EXISTS (SELECT 1 FROM users WHERE username = :username) THEN
+                -- Username already exists, raise an error
+                RAISE EXCEPTION
+                    '
+                    User with this username % already exists
+                    ', :username;
+            ELSE
+                INSERT INTO users (
+                    id, username, profile_img, role, mapping_level,
+                    is_email_verified, is_expert, tasks_mapped, tasks_validated,
+                    tasks_invalidated, date_registered, last_validation_date
+                    )
+                VALUES (
+                    :user_id, :username, :profile_img, :role,
+                    :mapping_level, FALSE, FALSE, 0, 0, 0,
+                    :current_date, :current_date
+                    );
+            END IF;
+        END
+        $$;
 
-    if existing_user:
-        # Update an existing user
-        if user_data.img_url:
-            existing_user.profile_img = user_data.img_url
-        db.commit()
-        return existing_user
-
-    user_by_username = await user_crud.get_user_by_username(db, user_data.username)
-    if user_by_username:
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                f"User with this username {user_data.username} already exists. "
-                "Please contact the administrator."
-            ),
+        """
         )
 
-    # Add user to database
-    db_user = DbUser(
-        id=user_data.id,
-        username=user_data.username,
-        profile_img=user_data.img_url,
-        role=user_data.role,
-    )
-    db.add(db_user)
-    db.commit()
+        db.execute(
+            update_sql,
+            {
+                "user_id": user_data.id,
+                "username": user_data.username,
+                "profile_img": user_data.img_url or None,
+                "role": "MAPPER",
+                "mapping_level": "BEGINNER",
+                "current_date": datetime.now(timezone.utc),
+            },
+        )
+        db.commit()
 
-    return db_user
+        get_sql = text(
+            """
+        SELECT users.*,
+            COALESCE(user_roles.project_id, Null) as project_id,
+            COALESCE(user_roles.role, 'MAPPER') as project_role,
+            COALESCE(organisation_managers.organisation_id, Null) as created_org
+        FROM users
+        LEFT JOIN user_roles ON users.id = user_roles.user_id
+        LEFT JOIN organisation_managers on users.id = organisation_managers.user_id
+        WHERE users.id = :user_id;
+        """
+        )
+        result = db.execute(
+            get_sql,
+            {"user_id": user_data.id},
+        )
+        db_user = result.fetchall()
+        user = [
+            {
+                "id": row.id,
+                "username": row.username,
+                "img_url": row.profile_img,
+                "role": row.role,
+                "project_id": row.project_id,
+                "project_role": row.project_role,
+                "created_org": row.created_org,
+            }
+            for row in db_user
+        ]
+        return user[0]
+
+    except Exception as e:
+        # Check if the exception is due to username already existing
+        if "already exists" in str(e):
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"User with this username {user_data.username} already exists."
+                ),
+            ) from e
+        else:
+            raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-@router.get("/me/", response_model=AuthUser)
+@router.get("/me/")
 async def my_data(
     db: Session = Depends(database.get_db),
     user_data: AuthUser = Depends(login_required),
-) -> AuthUser:
+):
     """Read access token and get user details from OSM.
 
     Args:
