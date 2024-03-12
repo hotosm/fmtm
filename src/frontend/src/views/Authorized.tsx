@@ -30,8 +30,24 @@ function Authorized() {
     const osm_oauth_token = params.get('osm_oauth_token');
     const picture = params.get('picture');
     const role = params.get('role');
+    const project_role = params.get('project_role');
+    const project_id = params.get('project_id');
+    const created_org = params.get('created_org');
+
     dispatch(LoginActions.setAuthDetails(username, sessionToken, osm_oauth_token));
-    dispatch(LoginActions.SetLoginToken({ username, id, sessionToken, osm_oauth_token, picture, role }));
+    dispatch(
+      LoginActions.SetLoginToken({
+        username,
+        id,
+        sessionToken,
+        osm_oauth_token,
+        picture,
+        role,
+        project_id,
+        project_role,
+        created_org,
+      }),
+    );
 
     const redirectUrl = params.get('redirect_to') || '/';
     setIsReadyToRedirect(true);
