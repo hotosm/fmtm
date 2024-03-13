@@ -23,7 +23,7 @@ import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
@@ -46,6 +46,23 @@ from app.projects.project_crud import read_xlsforms
 from app.submissions import submission_routes
 from app.tasks import tasks_routes
 from app.users import user_routes
+
+
+def get_api() -> FastAPI:
+    """Return the FastAPI app, configured for the environment.
+
+    Add endpoint profiler or monitoring setup based on environment.
+    """
+    api = get_application()
+    # Add endpoint profiler to check for bottlenecks
+    if settings.DEBUG:
+        add_endpoint_profiler(api)
+    # Add monitoring if flag set
+    if settings.otel_exporter_otpl_endpoint:
+        set_otel_tracer(api)
+        # set_otel_logger()
+        instrument_app_otel(api)
+    return api
 
 
 @asynccontextmanager
@@ -125,6 +142,9 @@ def get_logger():
         if logger_name == "sqlalchemy":
             # Don't hook sqlalchemy, very verbose
             continue
+        if logger_name == "urllib3":
+            # Don't hook urllib3, called on each OTEL trace
+            continue
         if "." not in logger_name:
             logging.getLogger(logger_name).addHandler(InterceptHandler())
 
@@ -155,14 +175,11 @@ def get_logger():
         )
 
 
-api = get_application()
-
-
-# Add endpoint profiler to check for bottlenecks
-if settings.DEBUG:
+def add_endpoint_profiler(app: FastAPI):
+    """Add endpoint profiler if DEBUG is enabled."""
     from pyinstrument import Profiler
 
-    @api.middleware("http")
+    @app.middleware("http")
     async def profile_request(request: Request, call_next):
         """Calculate the execution time for routes."""
         profiling = request.query_params.get("profile", False)
@@ -176,9 +193,145 @@ if settings.DEBUG:
             return await call_next(request)
 
 
+def set_otel_tracer(app: FastAPI):
+    """Add OpenTelemetry tracing only if environment variables configured."""
+    from opentelemetry import trace
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+
+    # from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import (
+        BatchSpanProcessor,
+    )
+
+    log.info(
+        "Adding OpenTelemetry tracing for url: "
+        f"{settings.otel_exporter_otpl_endpoint}"
+    )
+
+    trace.set_tracer_provider(
+        TracerProvider(
+            resource=Resource.create({}),
+        ),
+    )
+
+    # from opentelemetry.context import (
+    #     Context,
+    # )
+    # from opentelemetry.sdk.trace import Span
+    # class CustomBatchSpanProcessor(BatchSpanProcessor):
+    #     def on_start(self, span: Span, parent_context: Optional[Context] = None):
+    #         """Startup for Span, override to reduce verbosity of attributes."""
+    #         span.set_attributes({
+    #             "http.host": "",
+    #             "net.host.port": "",
+    #             "http.flavor": "",
+    #             "http.url": "",
+    #             "http.server_name": "",
+    #         })
+
+    # Console log processor (for debugging)
+    # SimpleSpanProcessor(ConsoleSpanExporter()),
+    span_processor = BatchSpanProcessor(
+        OTLPSpanExporter(
+            endpoint=settings.otel_exporter_otpl_endpoint,
+        )
+    )
+    trace.get_tracer_provider().add_span_processor(
+        span_processor,
+    )
+
+    # Ensure the HTTPException text is included in attributes
+    @app.exception_handler(HTTPException)
+    async def http_exception_handler(request, exc):
+        current_span = trace.get_current_span()
+        current_span.set_attributes(
+            {
+                # "span_status": "ERROR",
+                "http.status_text": str(exc.detail),
+                # "otel.status_description": f"{exc.status_code} / {str(exc.detail)}",
+                # "otel.status_code": "ERROR"
+            }
+        )
+        # current_span.add_event("Test")
+        current_span.record_exception(exc)
+        return JSONResponse(
+            status_code=exc.status_code, content={"detail": str(exc.detail)}
+        )
+
+
+def set_otel_logger():
+    """Add OpenTelemetry logging only if environment variables configured.
+
+    FIXME not quite functional yet.
+    FIXME requires better interop with loguru.
+    FIXME https://github.com/Delgan/loguru/issues/674
+    FIXME https://github.com/open-telemetry/opentelemetry-python/issues/3615
+    FIXME Details: https://opentelemetry-python-contrib.readthedocs.io
+                    /en/latest/instrumentation/logging/logging.html
+    """
+    from opentelemetry._logs import set_logger_provider
+    from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
+    from opentelemetry.instrumentation.logging import LoggingInstrumentor
+    from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+    from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+    from opentelemetry.sdk.resources import Resource
+
+    log.info(
+        "Adding OpenTelemetry logging for url: "
+        f"{settings.otel_exporter_otpl_endpoint}"
+    )
+
+    class FormattedLoggingHandler(LoggingHandler):
+        def emit(self, record: logging.LogRecord) -> None:
+            msg = self.format(record)
+            record.msg = msg
+            record.args = None
+            self._logger.emit(self._translate(record))
+
+    logger_provider = LoggerProvider(resource=Resource.create({}))
+    set_logger_provider(logger_provider)
+    otlp_log_exporter = OTLPLogExporter()
+    logger_provider.add_log_record_processor(BatchLogRecordProcessor(otlp_log_exporter))
+
+    otel_log_handler = FormattedLoggingHandler(logger_provider=logger_provider)
+
+    # This has to be called first before logger.getLogger().addHandler()
+    # so that it can call logging.basicConfig first to set the logging format
+    # based on the environment variable OTEL_PYTHON_LOG_FORMAT
+    LoggingInstrumentor().instrument()
+    log_formatter = logging.Formatter(
+        "%(asctime)s.%(msecs)03d [%(levelname)s] %(name)s | "
+        "%(funcName)s:%(lineno)d | %(message)s",
+        None,
+    )
+    otel_log_handler.setFormatter(log_formatter)
+    logging.getLogger().addHandler(otel_log_handler)
+
+
+def instrument_app_otel(app: FastAPI):
+    """Add OpenTelemetry FastAPI instrumentation.
+
+    Only used if environment variables configured.
+    """
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+    from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
+    from opentelemetry.instrumentation.requests import RequestsInstrumentor
+
+    FastAPIInstrumentor.instrument_app(app)
+    Psycopg2Instrumentor().instrument(enable_commenter=True, commenter_options={})
+    RequestsInstrumentor().instrument()
+
+
+# NOTE the application below
+
+api = get_api()
+
+
 @api.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Exception handler for more descriptive logging."""
+    """Exception handler for more descriptive logging and traces."""
     status_code = 500
     errors = []
     for error in exc.errors():

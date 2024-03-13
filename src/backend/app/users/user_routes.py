@@ -83,3 +83,70 @@ async def get_user_roles():
     for role in UserRoleEnum:
         user_roles[role.name] = role.value
     return user_roles
+
+
+# from osm_fieldwork.OdkCentral import OdkProject
+
+# from app.db.db_models import DbProject
+# from app.projects.project_deps import get_odk_credentials, get_project_by_id
+
+
+# @router.get("/broken/")
+# async def test_create_exception(
+#     db: Session = Depends(database.get_db),
+#     project: DbProject = Depends(get_project_by_id),
+# ):
+#     """OTEL Logging."""
+#     import logging
+
+#     from sqlalchemy import text
+
+#     log = logging.getLogger(__name__)
+
+#     sql = text(
+#         """
+#         SELECT * FROM projects;
+#     """
+#     )
+#     db.execute(sql)
+
+#     sql = text(
+#         """
+#         INSERT INTO xlsforms (title)
+#         VALUES ('newform');
+#     """
+#     )
+#     db.execute(sql)
+
+#     odk_creds = await get_odk_credentials(db, project.id)
+#     odk_project = OdkProject(
+#         odk_creds.odk_central_url,
+#         odk_creds.odk_central_user,
+#         odk_creds.odk_central_password,
+#     )
+#     log.info(odk_project.listForms(1))
+
+#     log.error("Error error error")
+#     raise HTTPException(status_code=500, detail="Error error error!!")
+
+
+# @router.get("/broken2/")
+# async def test_create_exception(
+#     db: Session = Depends(database.get_db),
+#     project: DbProject = Depends(get_project_by_id),
+# ):
+#     """OTEL Logging."""
+#     import logging
+
+#     from sqlalchemy import text
+
+#     log = logging.getLogger(__name__)
+
+#     sql = text(
+#         """
+#         INSERT INTO thistabledoesnotexist (title)
+#         VALUES ('newform');
+#     """
+#     )
+#     db.execute(sql)
+#     return {}
