@@ -51,14 +51,18 @@ COPY pyproject.toml pdm.lock /opt/python/
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir pdm==2.6.1
 RUN pdm export --prod > requirements.txt \
-    && pdm export -G debug --no-default \
-    --without-hashes > requirements-debug.txt \
-    && pdm export -G test -G docs -G dev --no-default \
-    --without-hashes > requirements-ci.txt
+    # Export with default deps, as we install one or the other
+    && pdm export -G monitoring \
+    --without-hashes > requirements-monitoring.txt \
+    && pdm export -G debug \
+    --no-default --without-hashes > requirements-debug.txt \
+    && pdm export -G test -G docs -G dev \
+    --no-default --without-hashes > requirements-ci.txt
 
 
 # Build stage will all dependencies required to build Python wheels
 FROM base as build
+ARG WITH_MONITORING
 RUN set -ex \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install \
@@ -73,9 +77,16 @@ RUN set -ex \
         "git" \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=extract-deps \
-    /opt/python/requirements.txt /opt/python/
-RUN pip install --user --no-warn-script-location \
-    --no-cache-dir -r /opt/python/requirements.txt
+    /opt/python/requirements.txt \
+    /opt/python/requirements-monitoring.txt \
+    /opt/python/
+# Install with or without monitoring, depending on flag
+RUN pip install --user --no-warn-script-location --no-cache-dir \
+    $(if [ "$WITH_MONITORING" = "true" ]; then \
+        echo "-r /opt/python/requirements-monitoring.txt"; \
+    else \
+        echo "-r /opt/python/requirements.txt"; \
+    fi)
 
 
 # Run stage will minimal dependencies required to run Python libraries
@@ -129,7 +140,7 @@ VOLUME /opt/tiles
 USER appuser
 # Add Healthcheck
 HEALTHCHECK --start-period=10s --interval=5s --retries=20 --timeout=5s \
-    CMD curl --fail http://localhost:8000 || exit 1
+    CMD curl --fail http://localhost:8000/status || exit 1
 
 
 # Add certificates to use ODK Central over SSL (HTTPS, required)
