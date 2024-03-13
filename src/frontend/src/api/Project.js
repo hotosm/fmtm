@@ -3,6 +3,7 @@ import { CommonActions } from '@/store/slices/CommonSlice';
 import CoreModules from '@/shared/CoreModules';
 import { task_priority_str } from '@/types/enums';
 import axios from 'axios';
+import { readFileFromOPFS, writeBinaryToOPFS, pmtilesFromFile } from '@/api/Files';
 
 export const ProjectById = (existingProjectList, projectId) => {
   return async (dispatch) => {
@@ -155,23 +156,47 @@ export const GenerateProjectTiles = (url, payload) => {
   };
 };
 
-export const DownloadTile = (url, payload) => {
+export const DownloadTile = (url, payload, toOpfs = false) => {
   return async (dispatch) => {
     dispatch(ProjectActions.SetDownloadTileLoading({ type: payload, loading: true }));
 
-    const getDownloadTile = async (url, payload) => {
+    const getDownloadTile = async (url, payload, toOpfs) => {
       try {
         const response = await CoreModules.axios.get(url, {
-          responseType: 'blob',
+          responseType: 'arraybuffer',
         });
 
         // Get filename from content-disposition header
-        const filename = response.headers['content-disposition'].split('filename=')[1];
+        const tileData = response.data;
 
-        var a = document.createElement('a');
-        a.href = window.URL.createObjectURL(response.data);
+        if (toOpfs) {
+          // Copy to OPFS filesystem for offline use
+          const projectId = payload.id;
+          const filePath = `${projectId}/all.pmtiles`;
+          await writeBinaryToOPFS(filePath, tileData);
+          const opfsData = await readFileFromOPFS(filePath);
+          const pmData = await pmtilesFromFile(opfsData);
+          console.log(pmData);
+          const metadata = await pmData.getMetadata();
+          console.log(metadata);
+          const header = await pmData.getHeader();
+          console.log(header);
+          return;
+        }
+
+        const filename = response.headers['content-disposition'].split('filename=')[1];
+        // Create Blob from ArrayBuffer
+        const blob = new Blob([tileData], { type: response.headers['content-type'] });
+        const downloadUrl = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = downloadUrl;
         a.download = filename;
         a.click();
+
+        // Clean up object URL
+        URL.revokeObjectURL(downloadUrl);
+
         dispatch(ProjectActions.SetDownloadTileLoading({ type: payload, loading: false }));
       } catch (error) {
         dispatch(ProjectActions.SetDownloadTileLoading({ type: payload, loading: false }));
@@ -179,7 +204,7 @@ export const DownloadTile = (url, payload) => {
         dispatch(ProjectActions.SetDownloadTileLoading({ type: payload, loading: false }));
       }
     };
-    await getDownloadTile(url, payload);
+    await getDownloadTile(url, payload, toOpfs);
   };
 };
 
