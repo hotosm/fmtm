@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { useEditor, EditorContent, FloatingMenu, BubbleMenu } from '@tiptap/react';
 import { Toolbar } from '@/components/common/Editor/Toolbar';
 import StarterKit from '@tiptap/starter-kit';
@@ -12,6 +12,9 @@ import Document from '@tiptap/extension-document';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
 import './editorStyles.scss';
+import { ProjectActions } from '@/store/slices/ProjectSlice';
+import { useDispatch } from 'react-redux';
+import { useAppSelector } from '@/types/reduxTypes';
 
 type RichTextEditorProps = {
   editorHtmlContent: string;
@@ -37,6 +40,7 @@ const extensions = [
 ];
 
 const RichTextEditor = ({ editorHtmlContent, setEditorHtmlContent, editable }: RichTextEditorProps) => {
+  const dispatch = useDispatch();
   const editor = useEditor({
     extensions,
     content: editorHtmlContent,
@@ -45,6 +49,14 @@ const RichTextEditor = ({ editorHtmlContent, setEditorHtmlContent, editable }: R
     },
     editable,
   });
+  const clearEditorContent = useAppSelector((state) => state?.project?.clearEditorContent);
+
+  useEffect(() => {
+    if (clearEditorContent) {
+      editor?.commands.clearContent(true);
+      dispatch(ProjectActions.ClearEditorContent(false));
+    }
+  }, [clearEditorContent]);
 
   if (!editor) {
     return null;

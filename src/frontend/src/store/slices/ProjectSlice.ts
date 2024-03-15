@@ -35,6 +35,7 @@ const initialState: ProjectStateTypes = {
   projectCommentsList: [],
   projectPostCommentsLoading: false,
   projectGetCommentsLoading: false,
+  clearEditorContent: false,
 };
 
 const ProjectSlice = createSlice({
@@ -110,6 +111,9 @@ const ProjectSlice = createSlice({
     },
     SetProjectGetCommentsLoading(state, action) {
       state.projectGetCommentsLoading = action.payload;
+    },
+    ClearEditorContent(state, action) {
+      state.clearEditorContent = action.payload;
     },
   },
 });

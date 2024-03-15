@@ -29,6 +29,7 @@ export type ProjectStateTypes = {
   projectCommentsList: projectCommentsListTypes[];
   projectPostCommentsLoading: boolean;
   projectGetCommentsLoading: boolean;
+  clearEditorContent: boolean;
 };
 
 type tilesListTypes = {
