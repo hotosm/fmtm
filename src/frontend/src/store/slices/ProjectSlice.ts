@@ -32,6 +32,9 @@ const initialState: ProjectStateTypes = {
     last_active: '',
   },
   projectDashboardLoading: false,
+  projectCommentsList: [],
+  projectPostCommentsLoading: false,
+  projectGetCommentsLoading: false,
 };
 
 const ProjectSlice = createSlice({
@@ -98,6 +101,15 @@ const ProjectSlice = createSlice({
     },
     SetProjectDashboardLoading(state, action) {
       state.projectDashboardLoading = action.payload;
+    },
+    SetProjectCommentsList(state, action) {
+      state.projectCommentsList = action.payload;
+    },
+    SetPostProjectCommentsLoading(state, action) {
+      state.projectPostCommentsLoading = action.payload;
+    },
+    SetProjectGetCommentsLoading(state, action) {
+      state.projectGetCommentsLoading = action.payload;
     },
   },
 });

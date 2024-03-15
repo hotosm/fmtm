@@ -2,6 +2,7 @@ import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import CoreModules from '@/shared/CoreModules';
 import { task_priority_str } from '@/types/enums';
+import axios from 'axios';
 
 export const ProjectById = (existingProjectList, projectId) => {
   return async (dispatch) => {
@@ -196,5 +197,41 @@ export const GetProjectDashboard = (url) => {
       }
     };
     await getProjectDashboard(url);
+  };
+};
+
+export const GetProjectComments = (url) => {
+  return async (dispatch) => {
+    const getProjectComments = async (url) => {
+      try {
+        dispatch(ProjectActions.SetProjectGetCommentsLoading(true));
+        const response = await axios.get(url);
+        dispatch(ProjectActions.SetProjectCommentsList(response.data));
+        dispatch(ProjectActions.SetProjectGetCommentsLoading(false));
+      } catch (error) {
+        dispatch(ProjectActions.SetProjectGetCommentsLoading(false));
+      } finally {
+        dispatch(ProjectActions.SetProjectGetCommentsLoading(false));
+      }
+    };
+    await getProjectComments(url);
+  };
+};
+
+export const PostProjectComments = (url, payload) => {
+  return async (dispatch) => {
+    const postProjectComments = async (url) => {
+      try {
+        dispatch(ProjectActions.SetPostProjectCommentsLoading(true));
+        const response = await axios.post(url, payload);
+        dispatch(ProjectActions.SetProjectDashboardDetail(response.data));
+        dispatch(ProjectActions.SetPostProjectCommentsLoading(false));
+      } catch (error) {
+        dispatch(ProjectActions.SetPostProjectCommentsLoading(false));
+      } finally {
+        dispatch(ProjectActions.SetPostProjectCommentsLoading(false));
+      }
+    };
+    await postProjectComments(url);
   };
 };
