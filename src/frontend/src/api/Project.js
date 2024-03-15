@@ -224,7 +224,7 @@ export const PostProjectComments = (url, payload) => {
       try {
         dispatch(ProjectActions.SetPostProjectCommentsLoading(true));
         const response = await axios.post(url, payload);
-        dispatch(ProjectActions.SetProjectDashboardDetail(response.data));
+        dispatch(ProjectActions.UpdateProjectCommentsList(response.data));
         dispatch(ProjectActions.SetPostProjectCommentsLoading(false));
       } catch (error) {
         dispatch(ProjectActions.SetPostProjectCommentsLoading(false));

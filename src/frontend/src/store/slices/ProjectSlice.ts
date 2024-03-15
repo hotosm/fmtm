@@ -115,6 +115,9 @@ const ProjectSlice = createSlice({
     ClearEditorContent(state, action) {
       state.clearEditorContent = action.payload;
     },
+    UpdateProjectCommentsList(state, action) {
+      state.projectCommentsList = [...state.projectCommentsList, action.payload];
+    },
   },
 });
 

@@ -34,7 +34,7 @@ const Comments = () => {
         comment,
       }),
     );
-    dispatch(ProjectActions.ClearEditorContent(true));
+    // dispatch(ProjectActions.ClearEditorContent(true));
     setComment('');
   };
 
