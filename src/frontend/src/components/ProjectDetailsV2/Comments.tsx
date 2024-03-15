@@ -9,6 +9,7 @@ import { useAppSelector } from '@/types/reduxTypes';
 import AssetModules from '@/shared/AssetModules';
 import { ProjectCommentsSekeletonLoader } from '@/components/ProjectDetailsV2/SkeletonLoader';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
+import { CommonActions } from '@/store/slices/CommonSlice';
 
 const Comments = () => {
   const dispatch = useDispatch();
@@ -27,6 +28,17 @@ const Comments = () => {
   }, []);
 
   const handleComment = () => {
+    if (!comment) {
+      dispatch(
+        CommonActions.SetSnackBar({
+          open: true,
+          message: 'Empty comment field.',
+          variant: 'error',
+          duration: 2000,
+        }),
+      );
+      return;
+    }
     dispatch(
       PostProjectComments(`${import.meta.env.VITE_API_URL}/tasks/task-comments/`, {
         task_id: 3968,
