@@ -460,7 +460,7 @@ const Home = () => {
                 />
               )}
               <div className="fmtm-top-28 fmtm-left-5">{window.DeviceMotionEvent}</div>
-              <div className="fmtm-hidden sm:fmtm-block fmtm-absolute fmtm-bottom-5 fmtm-left-5 fmtm-z-50 fmtm-rounded-lg">
+              <div className="fmtm-absolute fmtm-bottom-36 sm:fmtm-bottom-5 fmtm-left-5 fmtm-z-50 fmtm-rounded-lg">
                 <Accordion
                   body={<MapLegends defaultTheme={defaultTheme} />}
                   header={
@@ -510,11 +510,11 @@ const Home = () => {
                 <img src={FmtmLogo} alt="Hot Fmtm Logo" className="fmtm-ml-2 fmtm-z-10 fmtm-w-[5.2rem]" />
               </div>
             )}
-            {mobileFooterSelection === 'mapLegend' && (
+            {mobileFooterSelection === 'comment' && (
               <BottomSheet
                 body={
                   <div className="fmtm-mb-[12vh]">
-                    <MapLegends defaultTheme={defaultTheme} />
+                    <Comments />
                   </div>
                 }
                 onClose={() => dispatch(ProjectActions.SetMobileFooterSelection('explore'))}

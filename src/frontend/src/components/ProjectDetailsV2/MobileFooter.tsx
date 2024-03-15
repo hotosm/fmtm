@@ -43,12 +43,12 @@ const MobileFooter = () => {
       ),
     },
     {
-      id: 'mapLegend',
-      title: 'Legend',
+      id: 'comment',
+      title: 'Comment',
       icon: (
-        <AssetModules.LegendToggleIcon
+        <AssetModules.QuestionAnswerIcon
           className={`${
-            mobileFooterSelection === 'mapLegend' ? 'fmtm-text-primaryRed' : 'fmtm-text-gray-500'
+            mobileFooterSelection === 'comment' ? 'fmtm-text-primaryRed' : 'fmtm-text-gray-500'
           } fmtm-duration-300`}
         />
       ),
