@@ -44,6 +44,7 @@ import useOutsideClick from '@/hooks/useOutsideClick';
 import { dataExtractPropertyType } from '@/models/project/projectModel';
 import { isValidUrl } from '@/utilfunctions/urlChecker';
 import { useAppSelector } from '@/types/reduxTypes';
+import Comments from '@/components/ProjectDetailsV2/Comments';
 
 const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -311,7 +312,7 @@ const Home = () => {
               onClick={() => navigate(`/manage-project/${params?.id}`)}
             />
           </div>
-          <div className="fmtm-flex fmtm-flex-col fmtm-gap-4">
+          <div className="fmtm-flex fmtm-flex-col fmtm-gap-4 fmtm-flex-auto" style={{ height: 'calc(100% - 95px)' }}>
             {projectDetailsLoading ? (
               <CoreModules.Skeleton className="!fmtm-w-[250px] fmtm-h-[25px]" />
             ) : (
@@ -338,7 +339,7 @@ const Home = () => {
               </button>
               <button
                 className={`fmtm-rounded-none fmtm-border-none fmtm-text-base ${
-                  viewState !== 'project_info'
+                  viewState === 'task_activity'
                     ? 'fmtm-bg-primaryRed fmtm-text-white hover:fmtm-bg-red-700'
                     : 'fmtm-bg-white fmtm-text-[#706E6E] hover:fmtm-bg-grey-50'
                 } fmtm-py-1`}
@@ -346,10 +347,20 @@ const Home = () => {
               >
                 Task Activity
               </button>
+              <button
+                className={`fmtm-rounded-none fmtm-border-none fmtm-text-base ${
+                  viewState === 'comments'
+                    ? 'fmtm-bg-primaryRed fmtm-text-white hover:fmtm-bg-red-700'
+                    : 'fmtm-bg-white fmtm-text-[#706E6E] hover:fmtm-bg-grey-50'
+                } fmtm-py-1`}
+                onClick={() => setViewState('comments')}
+              >
+                Comments
+              </button>
             </div>
             {viewState === 'project_info' ? (
               <ProjectInfo />
-            ) : (
+            ) : viewState === 'task_activity' ? (
               <ActivitiesPanel
                 params={params}
                 state={state.projectTaskBoundries}
@@ -359,32 +370,36 @@ const Home = () => {
                 mapDivPostion={y}
                 states={state}
               />
+            ) : (
+              <Comments />
             )}
           </div>
-          <div className="fmtm-flex fmtm-gap-4">
-            <Button
-              btnText="VIEW INFOGRAPHICS"
-              btnType="other"
-              className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md fmtm-my-2"
-              onClick={() => navigate(`/project-submissions/${encodedId}`)}
-            />
-            <div className="fmtm-relative" ref={divRef}>
-              <div onClick={() => handleToggle()}>
-                <Button
-                  btnText="DOWNLOAD"
-                  btnType="other"
-                  className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md fmtm-my-2"
-                />
-              </div>
-              <div
-                className={`fmtm-flex fmtm-gap-4 fmtm-absolute fmtm-duration-200 fmtm-z-[1000] fmtm-bg-[#F5F5F5] fmtm-p-2 fmtm-rounded-md ${
-                  toggle ? 'fmtm-left-0 fmtm-top-0' : '-fmtm-left-[60rem] fmtm-top-0'
-                }`}
-              >
-                <ProjectOptions />
+          {viewState !== 'comments' && (
+            <div className="fmtm-flex fmtm-gap-4">
+              <Button
+                btnText="VIEW INFOGRAPHICS"
+                btnType="other"
+                className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md fmtm-my-2"
+                onClick={() => navigate(`/project-submissions/${encodedId}`)}
+              />
+              <div className="fmtm-relative" ref={divRef}>
+                <div onClick={() => handleToggle()}>
+                  <Button
+                    btnText="DOWNLOAD"
+                    btnType="other"
+                    className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md fmtm-my-2"
+                  />
+                </div>
+                <div
+                  className={`fmtm-flex fmtm-gap-4 fmtm-absolute fmtm-duration-200 fmtm-z-[1000] fmtm-bg-[#F5F5F5] fmtm-p-2 fmtm-rounded-md ${
+                    toggle ? 'fmtm-left-0 fmtm-top-0' : '-fmtm-left-[60rem] fmtm-top-0'
+                  }`}
+                >
+                  <ProjectOptions />
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
         {params?.id && (
           <div className="fmtm-relative sm:fmtm-static fmtm-flex-grow fmtm-h-full sm:fmtm-rounded-2xl fmtm-overflow-hidden">
