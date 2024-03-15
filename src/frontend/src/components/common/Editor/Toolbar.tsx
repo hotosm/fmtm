@@ -92,7 +92,7 @@ export const Toolbar = ({ editor }: ToolbarProps) => {
               </div>
             </Tooltip>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="fmtm-flex fmtm-gap-1 fmtm-bg-white fmtm-px-1">
+          <DropdownMenuContent className="fmtm-flex fmtm-gap-1 fmtm-bg-white fmtm-px-1 fmtm-z-50">
             <Tooltip title="Heading 1">
               <p
                 onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}

@@ -51,9 +51,9 @@ const RichTextEditor = ({ editorHtmlContent, setEditorHtmlContent, editable }: R
   }
 
   return (
-    <div className="no-tailwindcss fmtm-remove-all fmtm-border-[1px] fmtm-border-gray-300 fmtm-rounded-md fmtm-bg-white">
+    <div className="fmtm-border-[1px] fmtm-border-gray-300 fmtm-rounded-md fmtm-bg-white">
       {editable && <Toolbar editor={editor} />}
-      <EditorContent editor={editor} />
+      <EditorContent editor={editor} className={`${editable ? 'fmtm-min-h-[150px]' : 'fmtm-min-h-[50px]'}`} />
     </div>
   );
 };
