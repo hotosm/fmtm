@@ -90,7 +90,15 @@ const Comments = () => {
         />
       </div>
       <div className="fmtm-mt-2 fmtm-w-full fmtm-flex fmtm-justify-center">
-        <Button type="button" btnText="Comment" btnType="primary" className="!fmtm-rounded" onClick={handleComment} />
+        <Button
+          type="button"
+          btnText="Comment"
+          btnType="primary"
+          className="!fmtm-rounded"
+          onClick={handleComment}
+          isLoading={projectPostCommentsLoading}
+          loadingText="Posting..."
+        />
       </div>
     </div>
   );
