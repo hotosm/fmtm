@@ -159,7 +159,7 @@ export const Toolbar = ({ editor }: ToolbarProps) => {
               <AssetModules.LinkIcon className={`${iconClassName} ${isEditorActive('link')}`} />
             </Tooltip>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="fmtm-flex fmtm-items-center fmtm-gap-2 fmtm-bg-white">
+          <DropdownMenuContent className="fmtm-z-50 fmtm-flex fmtm-items-center fmtm-gap-2 fmtm-bg-white">
             <InputTextField
               placeholder="URL"
               onChange={(e) => {
@@ -194,7 +194,7 @@ export const Toolbar = ({ editor }: ToolbarProps) => {
               <AssetModules.ImageAddIcon className={`${iconClassName}`} />
             </Tooltip>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="fmtm-flex fmtm-items-center fmtm-gap-2 fmtm-bg-white">
+          <DropdownMenuContent className="fmtm-z-50 fmtm-flex fmtm-items-center fmtm-gap-2 fmtm-bg-white">
             <InputTextField
               placeholder="Image URL"
               onChange={(e) => {
