@@ -110,7 +110,7 @@ RUN set -ex \
 COPY --from=minio /usr/bin/mc /usr/local/bin/
 # Copy go-pmtiles until for mbtiles-->pmtiles conversion
 # FIXME osm-fieldwork should do this, but is currently broken
-COPY --from=go-pmtiles /go-pmtiles /usr/local/bin/pmtiles
+COPY --from=go-pmtiles /go-pmtiles /usr/local/bin/
 COPY *-entrypoint.sh /
 ENTRYPOINT ["/app-entrypoint.sh"]
 # Copy Python deps from build to runtime
