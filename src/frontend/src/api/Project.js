@@ -2,7 +2,7 @@ import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import CoreModules from '@/shared/CoreModules';
 import { task_priority_str } from '@/types/enums';
-import { readFileFromOPFS, writeBinaryToOPFS, pmtilesFromFile } from '@/api/Files';
+import { writeBinaryToOPFS } from '@/api/Files';
 
 export const ProjectById = (existingProjectList, projectId) => {
   return async (dispatch) => {
@@ -172,13 +172,8 @@ export const DownloadTile = (url, payload, toOpfs = false) => {
           const projectId = payload.id;
           const filePath = `${projectId}/all.pmtiles`;
           await writeBinaryToOPFS(filePath, tileData);
-          const opfsData = await readFileFromOPFS(filePath);
-          const pmData = await pmtilesFromFile(opfsData);
-          console.log(pmData);
-          const metadata = await pmData.getMetadata();
-          console.log(metadata);
-          const header = await pmData.getHeader();
-          console.log(header);
+          // Set the OPFS file path to project state
+          dispatch(ProjectActions.SetProjectOpfsBasemapPath(filePath));
           return;
         }
 

@@ -26,6 +26,7 @@ export type ProjectStateTypes = {
   projectDetailsLoading: boolean;
   projectDashboardDetail: projectDashboardDetailTypes;
   projectDashboardLoading: boolean;
+  projectOpfsBasemapPath: string | null;
 };
 
 type tilesListTypes = {

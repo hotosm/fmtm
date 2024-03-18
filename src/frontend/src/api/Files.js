@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import qrcodeGenerator from 'qrcode-generator';
 import { deflate } from 'pako/lib/deflate';
-import { PMTiles } from 'pmtiles';
 
 // function base64zlibdecode(string) {
 //   return new TextDecoder().decode(inflate(Uint8Array.from(window.atob(string), (c) => c.codePointAt(0))))
@@ -120,8 +119,4 @@ export async function writeBinaryToOPFS(filePath, data) {
   // Close the writable stream
   await writable.close();
   console.log(`Finished write to OPFS file: ${filePath}`);
-}
-
-export async function pmtilesFromFile(fileData) {
-  return new PMTiles(fileData);
 }

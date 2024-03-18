@@ -32,6 +32,7 @@ const initialState: ProjectStateTypes = {
     last_active: '',
   },
   projectDashboardLoading: false,
+  projectOpfsBasemapPath: null,
 };
 
 const ProjectSlice = createSlice({
@@ -98,6 +99,9 @@ const ProjectSlice = createSlice({
     },
     SetProjectDashboardLoading(state, action) {
       state.projectDashboardLoading = action.payload;
+    },
+    SetProjectOpfsBasemapPath(state, action) {
+      state.projectOpfsBasemapPath = action.payload;
     },
   },
 });

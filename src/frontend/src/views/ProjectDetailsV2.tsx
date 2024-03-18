@@ -44,6 +44,7 @@ import useOutsideClick from '@/hooks/useOutsideClick';
 import { dataExtractPropertyType } from '@/models/project/projectModel';
 import { isValidUrl } from '@/utilfunctions/urlChecker';
 import { useAppSelector } from '@/types/reduxTypes';
+import { readFileFromOPFS } from '@/api/Files';
 
 const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -62,6 +63,8 @@ const Home = () => {
     latitude: null,
     longitude: null,
   });
+  // Can pass a File object, or a string URL to be read by PMTiles
+  const [customBasemapData, setCustomBasemapData] = useState<File | string>();
   const [positionGeojson, setPositionGeojson] = useState<any>(null);
   const [deviceRotation, setDeviceRotation] = useState(0);
   const [viewState, setViewState] = useState('project_info');
@@ -76,6 +79,7 @@ const Home = () => {
   const mapTheme = useAppSelector((state) => state.theme.hotTheme);
   const geolocationStatus = useAppSelector((state) => state.project.geolocationStatus);
   const projectDetailsLoading = useAppSelector((state) => state?.project?.projectDetailsLoading);
+  const projectOpfsBasemapPath = useAppSelector((state) => state?.project?.projectOpfsBasemapPath);
 
   //snackbar handle close funtion
   const handleClose = (event, reason) => {
@@ -276,6 +280,19 @@ const Home = () => {
     return () => {};
   }, [geolocationStatus]);
 
+  useEffect(async () => {
+    if (!projectOpfsBasemapPath) {
+      return;
+    }
+
+    console.log(projectOpfsBasemapPath);
+    const opfsPmtilesData = await readFileFromOPFS(projectOpfsBasemapPath);
+    setCustomBasemapData(opfsPmtilesData);
+    // setCustomBasemapData(projectOpfsBasemapPath);
+
+    return () => {};
+  }, [projectOpfsBasemapPath]);
+
   return (
     <div className="fmtm-bg-[#F5F5F5] fmtm-h-[100vh] sm:fmtm-h-[90vh]">
       {/* Customized Modal For Generate Tiles */}
@@ -395,7 +412,10 @@ const Home = () => {
                 windowSize.width <= 640 ? 'fmtm-h-[100vh]' : 'fmtm-h-full'
               }`}
             >
-              <LayerSwitcherControl visible={'outdoors'} />
+              <LayerSwitcherControl
+                visible={customBasemapData ? 'custom' : 'outdoors'}
+                pmTileLayerData={customBasemapData}
+              />
 
               {taskBoundariesLayer && taskBoundariesLayer?.features?.length > 0 && (
                 <VectorLayer
