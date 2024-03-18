@@ -20,6 +20,7 @@ type RichTextEditorProps = {
   editorHtmlContent: string;
   setEditorHtmlContent?: (content: string) => any;
   editable: boolean;
+  isEditorEmpty?: (status: boolean) => void;
 };
 
 const extensions = [
@@ -39,7 +40,7 @@ const extensions = [
   }),
 ];
 
-const RichTextEditor = ({ editorHtmlContent, setEditorHtmlContent, editable }: RichTextEditorProps) => {
+const RichTextEditor = ({ editorHtmlContent, setEditorHtmlContent, editable, isEditorEmpty }: RichTextEditorProps) => {
   const dispatch = useDispatch();
   const editor = useEditor({
     extensions,
@@ -57,6 +58,16 @@ const RichTextEditor = ({ editorHtmlContent, setEditorHtmlContent, editable }: R
       dispatch(ProjectActions.ClearEditorContent(false));
     }
   }, [clearEditorContent]);
+
+  useEffect(() => {
+    if (isEditorEmpty) {
+      if (typeof editor?.isEmpty === 'undefined') {
+        isEditorEmpty(true);
+        return;
+      }
+      isEditorEmpty(editor?.isEmpty);
+    }
+  }, [editorHtmlContent]);
 
   if (!editor) {
     return null;

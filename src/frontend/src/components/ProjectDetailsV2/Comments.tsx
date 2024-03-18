@@ -15,6 +15,7 @@ const Comments = () => {
   const dispatch = useDispatch();
   const params = useParams();
   const [comment, setComment] = useState('');
+  const [isEditorEmpty, setIsEditorEmpty] = useState(true);
   const projectCommentsList = useAppSelector((state) => state?.project?.projectCommentsList);
   const projectGetCommentsLoading = useAppSelector((state) => state?.project?.projectGetCommentsLoading);
   const projectPostCommentsLoading = useAppSelector((state) => state?.project?.projectPostCommentsLoading);
@@ -28,7 +29,7 @@ const Comments = () => {
   }, []);
 
   const handleComment = () => {
-    if (!comment) {
+    if (isEditorEmpty) {
       dispatch(
         CommonActions.SetSnackBar({
           open: true,
@@ -87,6 +88,7 @@ const Comments = () => {
           editorHtmlContent={comment}
           setEditorHtmlContent={(content) => setComment(content)}
           editable={true}
+          isEditorEmpty={(status) => setIsEditorEmpty(status)}
         />
       </div>
       <div className="fmtm-mt-2 fmtm-w-full fmtm-flex fmtm-justify-center">
