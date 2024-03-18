@@ -52,7 +52,7 @@ const RichTextEditor = ({ editorHtmlContent, setEditorHtmlContent, editable }: R
   const clearEditorContent = useAppSelector((state) => state?.project?.clearEditorContent);
 
   useEffect(() => {
-    if (clearEditorContent) {
+    if (editable && clearEditorContent) {
       editor?.commands.clearContent(true);
       dispatch(ProjectActions.ClearEditorContent(false));
     }
