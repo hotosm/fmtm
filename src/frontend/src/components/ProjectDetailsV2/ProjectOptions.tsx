@@ -19,6 +19,7 @@ const ProjectOptions = () => {
   const downloadDataExtractLoading: boolean = CoreModules.useAppSelector(
     (state) => state.project.downloadDataExtractLoading,
   );
+  const token = CoreModules.useAppSelector((state) => state.login.loginToken);
 
   const encodedId: string = params.id;
   const decodedId: number = environment.decode(encodedId);
@@ -107,16 +108,18 @@ const ProjectOptions = () => {
             >
               Generate MbTiles
             </CoreModules.Button>
-            <CoreModules.Button
-              onClick={() => navigate(`/manage-project/${encodedId}`)}
-              variant="contained"
-              color="error"
-              sx={{ width: '200px', mr: '15px' }}
-              endIcon={<AssetModules.SettingsIcon />}
-              className="fmtm-truncate"
-            >
-              Manage Project
-            </CoreModules.Button>
+            {token && (
+              <CoreModules.Button
+                onClick={() => navigate(`/manage-project/${encodedId}`)}
+                variant="contained"
+                color="error"
+                sx={{ width: '200px', mr: '15px' }}
+                endIcon={<AssetModules.SettingsIcon />}
+                className="fmtm-truncate"
+              >
+                Manage Project
+              </CoreModules.Button>
+            )}
             <CoreModules.Button
               onClick={() => navigate(`/project-submissions/${encodedId}`)}
               variant="contained"

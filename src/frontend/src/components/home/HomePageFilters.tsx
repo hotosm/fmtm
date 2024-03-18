@@ -6,6 +6,7 @@ import Switch from '@/components/common/Switch';
 import { HomeActions } from '@/store/slices/HomeSlice';
 import { homeProjectPaginationTypes } from '@/models/home/homeModel';
 import { useAppSelector } from '@/types/reduxTypes';
+import { user_roles } from '@/types/enums';
 
 type homePageFiltersPropType = {
   onSearch: (data: string) => void;
@@ -21,6 +22,7 @@ const HomePageFilters = ({ onSearch, filteredProjectCount, totalProjectCount }: 
   const defaultTheme: any = useAppSelector((state) => state.theme.hotTheme);
   const showMapStatus = useAppSelector((state) => state.home.showMapStatus);
   const homeProjectPagination = useAppSelector((state) => state.home.homeProjectPagination);
+  const token = CoreModules.useAppSelector((state) => state.login.loginToken);
 
   const { windowSize } = windowDimention();
   const searchableInnerStyle: any = {
@@ -117,16 +119,18 @@ const HomePageFilters = ({ onSearch, filteredProjectCount, totalProjectCount }: 
       <div className="fmtm-px-4 fmtm-py-3 ">
         <div className="fmtm-flex fmtm-flex-col sm:fmtm-flex-row sm:fmtm-items-center fmtm-gap-4">
           <h5 className="fmtm-text-2xl">PROJECTS</h5>
-          <CoreModules.Link
-            to={'/create-project'}
-            style={{
-              textDecoration: 'none',
-            }}
-          >
-            <button className="fmtm-bg-primaryRed fmtm-text-sm sm:fmtm-text-[1rem] fmtm-px-4 fmtm-py-2 fmtm-rounded fmtm-w-auto fmtm-text-white fmtm-uppercase">
-              + Create New Project{' '}
-            </button>
-          </CoreModules.Link>
+          {token && [user_roles.ADMIN].includes(token['role']) && (
+            <CoreModules.Link
+              to={'/create-project'}
+              style={{
+                textDecoration: 'none',
+              }}
+            >
+              <button className="fmtm-bg-primaryRed fmtm-text-sm sm:fmtm-text-[1rem] fmtm-px-4 fmtm-py-2 fmtm-rounded fmtm-w-auto fmtm-text-white fmtm-uppercase">
+                + Create New Project{' '}
+              </button>
+            </CoreModules.Link>
+          )}
         </div>
         <div className="fmtm-flex fmtm-flex-col fmtm-gap-3 sm:fmtm-flex-row sm:fmtm-justify-between">
           <div className="fmtm-mt-3 fmtm-flex fmtm-items-center fmtm-gap-1">

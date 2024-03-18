@@ -16,6 +16,7 @@ import ErrorBoundary from '@/views/ErrorBoundary';
 import ProjectDetailsV2 from '@/views/ProjectDetailsV2';
 import ProjectSubmissions from '@/views/ProjectSubmissions';
 import ManageProject from '@/views/ManageProject';
+import { user_roles } from '@/types/enums';
 
 const Submissions = React.lazy(() => import('./views/Submissions'));
 const Tasks = React.lazy(() => import('./views/Tasks'));
@@ -35,33 +36,41 @@ const routes = createBrowserRouter([
       {
         path: '/organisation',
         element: (
-          <ErrorBoundary>
-            <Organisation />
-          </ErrorBoundary>
+          <ProtectedRoute>
+            <ErrorBoundary>
+              <Organisation />
+            </ErrorBoundary>
+          </ProtectedRoute>
         ),
       },
       {
         path: '/create-organization',
         element: (
-          <ErrorBoundary>
-            <CreateEditOrganization />
-          </ErrorBoundary>
+          <ProtectedRoute>
+            <ErrorBoundary>
+              <CreateEditOrganization />
+            </ErrorBoundary>
+          </ProtectedRoute>
         ),
       },
       {
         path: '/edit-organization/:id',
         element: (
-          <ErrorBoundary>
-            <CreateEditOrganization />
-          </ErrorBoundary>
+          <ProtectedRoute permittedRoles={[user_roles.ADMIN]}>
+            <ErrorBoundary>
+              <CreateEditOrganization />
+            </ErrorBoundary>
+          </ProtectedRoute>
         ),
       },
       {
         path: '/approve-organization/:id',
         element: (
-          <ErrorBoundary>
-            <ApproveOrganization />
-          </ErrorBoundary>
+          <ProtectedRoute permittedRoles={[user_roles.ADMIN]}>
+            <ErrorBoundary>
+              <ApproveOrganization />
+            </ErrorBoundary>
+          </ProtectedRoute>
         ),
       },
       // {
@@ -143,7 +152,7 @@ const routes = createBrowserRouter([
       {
         path: '/create-project',
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute permittedRoles={[user_roles.ADMIN]}>
             <Suspense fallback={<div>Loading...</div>}>
               <ErrorBoundary>
                 <CreateNewProject />
@@ -155,7 +164,7 @@ const routes = createBrowserRouter([
       {
         path: '/upload-area',
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute permittedRoles={[user_roles.ADMIN]}>
             <Suspense fallback={<div>Loading...</div>}>
               <ErrorBoundary>
                 <CreateNewProject />
@@ -167,7 +176,7 @@ const routes = createBrowserRouter([
       {
         path: '/data-extract',
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute permittedRoles={[user_roles.ADMIN]}>
             <Suspense fallback={<div>Loading...</div>}>
               <ErrorBoundary>
                 <CreateNewProject />
@@ -179,7 +188,7 @@ const routes = createBrowserRouter([
       {
         path: '/split-tasks',
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute permittedRoles={[user_roles.ADMIN]}>
             <Suspense fallback={<div>Loading...</div>}>
               <ErrorBoundary>
                 <CreateNewProject />
@@ -191,7 +200,7 @@ const routes = createBrowserRouter([
       {
         path: '/select-category',
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute permittedRoles={[user_roles.ADMIN]}>
             <Suspense fallback={<div>Loading...</div>}>
               <ErrorBoundary>
                 <CreateNewProject />
@@ -233,7 +242,7 @@ const routes = createBrowserRouter([
       {
         path: '/manage-project/:id',
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute permittedRoles={[user_roles.ADMIN]}>
             <Suspense fallback={<div>Loading...</div>}>
               <ErrorBoundary>
                 <ManageProject />

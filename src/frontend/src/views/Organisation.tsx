@@ -241,6 +241,7 @@ const Organisation = () => {
           <OrganisationGridCard
             filteredData={filteredBySearch(myOrganisationData, searchKeyword)}
             allDataLength={myOrganisationData?.length}
+            isEditable={true}
           />
         )
       ) : null}

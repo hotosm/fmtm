@@ -76,6 +76,7 @@ const Home = () => {
   const mapTheme = useAppSelector((state) => state.theme.hotTheme);
   const geolocationStatus = useAppSelector((state) => state.project.geolocationStatus);
   const projectDetailsLoading = useAppSelector((state) => state?.project?.projectDetailsLoading);
+  const token = CoreModules.useAppSelector((state) => state.login.loginToken);
 
   //snackbar handle close funtion
   const handleClose = (event, reason) => {
@@ -303,13 +304,15 @@ const Home = () => {
             ) : (
               <p className="fmtm-text-lg fmtm-font-archivo fmtm-text-[#9B9999]">{`#${state.projectInfo.id}`}</p>
             )}
-            <Button
-              btnText="MANAGE PROJECT"
-              btnType="other"
-              className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md"
-              icon={<AssetModules.SettingsIcon />}
-              onClick={() => navigate(`/manage-project/${params?.id}`)}
-            />
+            {token && (
+              <Button
+                btnText="MANAGE PROJECT"
+                btnType="other"
+                className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md"
+                icon={<AssetModules.SettingsIcon />}
+                onClick={() => navigate(`/manage-project/${params?.id}`)}
+              />
+            )}
           </div>
           <div className="fmtm-flex fmtm-flex-col fmtm-gap-4">
             {projectDetailsLoading ? (
@@ -361,30 +364,32 @@ const Home = () => {
               />
             )}
           </div>
-          <div className="fmtm-flex fmtm-gap-4">
-            <Button
-              btnText="VIEW INFOGRAPHICS"
-              btnType="other"
-              className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md fmtm-my-2"
-              onClick={() => navigate(`/project-submissions/${encodedId}`)}
-            />
-            <div className="fmtm-relative" ref={divRef}>
-              <div onClick={() => handleToggle()}>
-                <Button
-                  btnText="DOWNLOAD"
-                  btnType="other"
-                  className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md fmtm-my-2"
-                />
-              </div>
-              <div
-                className={`fmtm-flex fmtm-gap-4 fmtm-absolute fmtm-duration-200 fmtm-z-[1000] fmtm-bg-[#F5F5F5] fmtm-p-2 fmtm-rounded-md ${
-                  toggle ? 'fmtm-left-0 fmtm-top-0' : '-fmtm-left-[60rem] fmtm-top-0'
-                }`}
-              >
-                <ProjectOptions />
+          {token && (
+            <div className="fmtm-flex fmtm-gap-4">
+              <Button
+                btnText="VIEW INFOGRAPHICS"
+                btnType="other"
+                className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md fmtm-my-2"
+                onClick={() => navigate(`/project-submissions/${encodedId}`)}
+              />
+              <div className="fmtm-relative" ref={divRef}>
+                <div onClick={() => handleToggle()}>
+                  <Button
+                    btnText="DOWNLOAD"
+                    btnType="other"
+                    className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md fmtm-my-2"
+                  />
+                </div>
+                <div
+                  className={`fmtm-flex fmtm-gap-4 fmtm-absolute fmtm-duration-200 fmtm-z-[1000] fmtm-bg-[#F5F5F5] fmtm-p-2 fmtm-rounded-md ${
+                    toggle ? 'fmtm-left-0 fmtm-top-0' : '-fmtm-left-[60rem] fmtm-top-0'
+                  }`}
+                >
+                  <ProjectOptions />
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
         {params?.id && (
           <div className="fmtm-relative sm:fmtm-static fmtm-flex-grow fmtm-h-full sm:fmtm-rounded-2xl fmtm-overflow-hidden">
@@ -459,17 +464,19 @@ const Home = () => {
                   collapsed={true}
                 />
               </div>
-              <div className="fmtm-absolute fmtm-top-3 fmtm-right-3 fmtm-z-50">
-                <Button
-                  btnText="GENERATE MBTILES"
-                  icon={<AssetModules.BoltIcon />}
-                  onClick={() => {
-                    dispatch(ProjectActions.ToggleGenerateMbTilesModalStatus(true));
-                  }}
-                  btnType="primary"
-                  className="!fmtm-text-base !fmtm-pr-2"
-                />
-              </div>
+              {token && (
+                <div className="fmtm-absolute fmtm-top-3 fmtm-right-3 fmtm-z-50">
+                  <Button
+                    btnText="GENERATE MBTILES"
+                    icon={<AssetModules.BoltIcon />}
+                    onClick={() => {
+                      dispatch(ProjectActions.ToggleGenerateMbTilesModalStatus(true));
+                    }}
+                    btnType="primary"
+                    className="!fmtm-text-base !fmtm-pr-2"
+                  />
+                </div>
+              )}
               <MapControlComponent map={map} />
             </MapComponent>
             <div
@@ -520,7 +527,7 @@ const Home = () => {
           </div>
         )}
       </div>
-      {featuresLayer != undefined && (
+      {featuresLayer != undefined && token && (
         <TaskSectionPopup
           taskId={selectedTask}
           feature={featuresLayer}
