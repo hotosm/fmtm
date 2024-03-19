@@ -28,6 +28,7 @@ from sqlalchemy.orm import Session
 from app.auth.osm import AuthUser, init_osm_auth, login_required
 from app.config import settings
 from app.db import database
+from app.models.enums import UserRole
 
 router = APIRouter(
     prefix="/auth",
@@ -132,21 +133,7 @@ async def get_or_create_user(
     try:
         update_sql = text(
             """
-        DO
-        $$
-        BEGIN
-            IF EXISTS (SELECT 1 FROM users WHERE id = :user_id) THEN
-                UPDATE users
-                SET profile_img = :profile_img
-                WHERE id = :user_id;
-            ELSIF EXISTS (SELECT 1 FROM users WHERE username = :username) THEN
-                -- Username already exists, raise an error
-                RAISE EXCEPTION
-                    '
-                    User with this username % already exists
-                    ', :username;
-            ELSE
-                INSERT INTO users (
+            INSERT INTO users (
                     id, username, profile_img, role, mapping_level,
                     is_email_verified, is_expert, tasks_mapped, tasks_validated,
                     tasks_invalidated, date_registered, last_validation_date
@@ -155,21 +142,19 @@ async def get_or_create_user(
                     :user_id, :username, :profile_img, :role,
                     :mapping_level, FALSE, FALSE, 0, 0, 0,
                     :current_date, :current_date
-                    );
-            END IF;
-        END
-        $$;
-
-        """
+                    )
+            ON CONFLICT (id)
+                DO UPDATE SET profile_img = :profile_img;
+            """
         )
-
+        role = UserRole(user_data.role).name
         db.execute(
             update_sql,
             {
                 "user_id": user_data.id,
                 "username": user_data.username,
-                "profile_img": user_data.profile_img or None,
-                "role": "MAPPER",
+                "profile_img": user_data.profile_img,
+                "role": role,
                 "mapping_level": "BEGINNER",
                 "current_date": datetime.now(timezone.utc),
             },
@@ -178,21 +163,22 @@ async def get_or_create_user(
 
         get_sql = text(
             """
-        SELECT users.*,
-            COALESCE(user_roles.project_id, Null) as project_id,
-            COALESCE(user_roles.role, 'MAPPER') as project_role,
-            COALESCE(organisation_managers.organisation_id, Null) as created_org
-        FROM users
-        LEFT JOIN user_roles ON users.id = user_roles.user_id
-        LEFT JOIN organisation_managers on users.id = organisation_managers.user_id
-        WHERE users.id = :user_id;
-        """
+            SELECT users.*,
+                COALESCE(user_roles.project_id) as project_id,
+                COALESCE(user_roles.role, 'MAPPER') as project_role,
+                COALESCE(organisation_managers.organisation_id) as created_org
+            FROM users
+            LEFT JOIN user_roles ON users.id = user_roles.user_id
+            LEFT JOIN organisation_managers on users.id = organisation_managers.user_id
+            WHERE users.id = :user_id;
+            """
         )
         result = db.execute(
             get_sql,
             {"user_id": user_data.id},
         )
         db_user = result.fetchall()
+
         user = [
             {
                 "id": row.id,
@@ -209,12 +195,12 @@ async def get_or_create_user(
 
     except Exception as e:
         # Check if the exception is due to username already existing
-        if "already exists" in str(e):
+        if 'duplicate key value violates unique constraint "users_username_key"' in str(
+            e
+        ):
             raise HTTPException(
                 status_code=400,
-                detail=(
-                    f"User with this username {user_data.username} already exists."
-                ),
+                detail=f"User with this username {user_data.username} already exists.",
             ) from e
         else:
             raise HTTPException(status_code=400, detail=str(e)) from e
