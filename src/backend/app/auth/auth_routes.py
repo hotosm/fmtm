@@ -164,9 +164,9 @@ async def get_or_create_user(
         get_sql = text(
             """
             SELECT users.*,
-                COALESCE(user_roles.project_id) as project_id,
-                COALESCE(user_roles.role, 'MAPPER') as project_role,
-                COALESCE(organisation_managers.organisation_id) as created_org
+                user_roles.project_id as project_id,
+                organisation_managers.organisation_id as created_org,
+                COALESCE(user_roles.role, 'MAPPER') as project_role
             FROM users
             LEFT JOIN user_roles ON users.id = user_roles.user_id
             LEFT JOIN organisation_managers on users.id = organisation_managers.user_id
@@ -177,21 +177,18 @@ async def get_or_create_user(
             get_sql,
             {"user_id": user_data.id},
         )
-        db_user = result.fetchall()
+        db_user = result.first()
 
-        user = [
-            {
-                "id": row.id,
-                "username": row.username,
-                "profile_img": row.profile_img,
-                "role": row.role,
-                "project_id": row.project_id,
-                "project_role": row.project_role,
-                "created_org": row.created_org,
-            }
-            for row in db_user
-        ]
-        return user[0]
+        user = {
+            "id": db_user.id,
+            "username": db_user.username,
+            "profile_img": db_user.profile_img,
+            "role": db_user.role,
+            "project_id": db_user.project_id,
+            "project_role": db_user.project_role,
+            "created_org": db_user.created_org,
+        }
+        return user
 
     except Exception as e:
         # Check if the exception is due to username already existing
