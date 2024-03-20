@@ -18,8 +18,8 @@ import MultiPoint from 'ol/geom/MultiPoint.js';
 import { buffer } from 'ol/extent';
 import { bbox as OLBbox } from 'ol/loadingstrategy';
 import { geojson as FGBGeoJson } from 'flatgeobuf';
-
 import { isValidUrl } from '@/utilfunctions/urlChecker';
+import { featureCollectionHasFeatures } from '@/utilfunctions/commonUtils';
 
 const selectElement = 'singleselect';
 
@@ -229,6 +229,7 @@ const VectorLayer = ({
     if (!map) return;
     if (!geojson) return;
     if (!valid(geojson)) return;
+    if (!featureCollectionHasFeatures(geojson)) return;
 
     const vectorLyr = new OLVectorLayer({
       source: new VectorSource({
@@ -340,7 +341,7 @@ const VectorLayer = ({
   useEffect(() => {
     if (!map || !vectorLayer || !zoomToLayer) return;
     const source = vectorLayer.getSource();
-    if (source.getFeatures().length === 0) return;
+    if (source.getFeatures()?.length === 0) return;
     const extent = source.getExtent();
     if (!isExtentValid(extent)) return;
     map.getView().fit(extent, viewProperties);
@@ -379,7 +380,7 @@ const VectorLayer = ({
     });
     function pointerMovefn(event) {
       vectorLayer.getFeatures(event.pixel).then((features) => {
-        if (!features.length) {
+        if (!features?.length) {
           selection = {};
           hoverEffect(undefined, vectorLayer);
 
