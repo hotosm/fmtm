@@ -446,7 +446,9 @@ const SubmissionsTable = ({ toggleView }) => {
                     dispatch(
                       SubmissionActions.SetUpdateReviewStatusModal({
                         toggleModalStatus: true,
-                        submissionId: row?.meta?.instanceID,
+                        instanceId: row?.meta?.instanceID,
+                        taskId: row?.phonenumber,
+                        projectId: decodedId,
                       }),
                     );
                   }}
