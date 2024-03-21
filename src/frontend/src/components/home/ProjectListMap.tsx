@@ -91,45 +91,6 @@ const ProjectListMap = () => {
           }}
         >
           <LayerSwitcherControl visible={'outdoors'} />
-          {/* {projectGeojson && projectGeojson?.features?.length > 0 && (
-            <VectorLayer
-              geojson={projectGeojson}
-              style={projectGeojsonLayerStyle}
-              viewProperties={{
-                size: map?.getSize(),
-                padding: [50, 50, 50, 50],
-                constrainResolution: true,
-                duration: 2000,
-              }}
-              mapOnClick={projectClickOnMap}
-              zoomToLayer
-              zIndex={5}
-              // hoverEffect={(selectedFeature, layer) => {
-              //   if (!selectedFeature)
-              //     return layer.setStyle((feature, resolution) =>
-              //       getStyles({
-              //         style: { ...projectGeojsonLayerStyle },
-              //         feature,
-              //         resolution,
-              //       }),
-              //     );
-              //   else {
-              //     selectedFeature.setStyle((feature, resolution) =>
-              //       getStyles({
-              //         style: { ...projectGeojsonLayerStyle, icon: { scale: [0.15, 0.15], url: MarkerIcon } },
-              //         feature,
-              //         resolution,
-              //       }),
-              //     );
-              //   }
-              //   // selectedFeature.setStyle({
-              //   //   ...projectGeojsonLayerStyle,
-              //   //   icon: { scale: [0.15, 0.15], url: MarkerIcon },
-              //   // });
-              //   // selectedFeature.setStyle();
-              // }}
-            />
-          )} */}
           {projectGeojson && projectGeojson?.features?.length > 0 && (
             <ClusterLayer
               map={map}
