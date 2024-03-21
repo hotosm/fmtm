@@ -49,6 +49,18 @@ export const Geolocation = (map, geolocationStatus) => {
   }
 
   if (geolocationStatus) {
+    // zooom to current location extent
+    navigator.geolocation.getCurrentPosition((position) => {
+      const currentCoordinate = [position.coords.longitude, position.coords.latitude];
+      const coordinatePolygon = circular(currentCoordinate, position.coords.accuracy).transform(
+        'EPSG:4326',
+        map.getView().getProjection(),
+      );
+      map.getView().fit(coordinatePolygon.getExtent(), {
+        padding: [10, 10, 10, 10],
+      });
+    });
+
     navigator.geolocation.watchPosition(
       function (pos) {
         const coords = [pos.coords.longitude, pos.coords.latitude];
