@@ -63,6 +63,7 @@ const Home = () => {
   const mobileFooterSelection = useAppSelector((state) => state.project.mobileFooterSelection);
   const mapTheme = useAppSelector((state) => state.theme.hotTheme);
   const projectDetailsLoading = useAppSelector((state) => state?.project?.projectDetailsLoading);
+  const geolocationStatus = useAppSelector((state) => state.project.geolocationStatus);
 
   //snackbar handle close funtion
   const handleClose = (event, reason) => {
@@ -106,8 +107,8 @@ const Home = () => {
 
   useEffect(() => {
     if (!map) return;
-    Geolocation(map);
-  }, [map]);
+    Geolocation(map, geolocationStatus);
+  }, [geolocationStatus]);
 
   const { y } = OnScroll(map, windowSize.width);
 

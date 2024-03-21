@@ -31,6 +31,7 @@ const initialState: ProjectStateTypes = {
     last_active: '',
   },
   projectDashboardLoading: false,
+  geolocationStatus: false,
 };
 
 const ProjectSlice = createSlice({
@@ -94,6 +95,9 @@ const ProjectSlice = createSlice({
     },
     SetProjectDashboardLoading(state, action) {
       state.projectDashboardLoading = action.payload;
+    },
+    ToggleGeolocationStatus(state, action) {
+      state.geolocationStatus = action.payload;
     },
   },
 });
