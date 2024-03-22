@@ -40,6 +40,7 @@ import { isValidUrl } from '@/utilfunctions/urlChecker';
 import { useAppSelector } from '@/types/reduxTypes';
 import Comments from '@/components/ProjectDetailsV2/Comments';
 import { Geolocation } from '@/utilfunctions/Geolocation';
+import Instructions from '@/components/ProjectDetailsV2/Instructions';
 
 const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -303,7 +304,7 @@ const Home = () => {
                 states={state}
               />
             ) : (
-              <div>instruct</div>
+              <Instructions instructions={state?.projectInfo?.instructions} />
             )}
           </div>
           {viewState !== 'comments' && (

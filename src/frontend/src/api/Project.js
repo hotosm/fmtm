@@ -43,6 +43,7 @@ export const ProjectById = (existingProjectList, projectId) => {
             xform_category: projectResp.xform_category,
             tasks_bad: projectResp.tasks_bad,
             data_extract_url: projectResp.data_extract_url,
+            instructions: projectResp?.project_info?.per_task_instructions,
           }),
         );
         dispatch(ProjectActions.SetProjectDetialsLoading(false));
