@@ -111,7 +111,10 @@ const Comments = () => {
             btnText="Cancel"
             btnType="other"
             className="!fmtm-rounded !fmtm-py-[3px] fmtm-w-full fmtm-flex fmtm-justify-center"
-            onClick={clearComment}
+            onClick={() => {
+              clearComment();
+              dispatch(ProjectActions.SetMobileFooterSelection(''));
+            }}
           />
         </div>
         <div className="fmtm-w-1/2">
