@@ -10,17 +10,6 @@ const MobileFooter = () => {
 
   const footerItem = [
     {
-      id: 'explore',
-      title: 'Explore',
-      icon: (
-        <AssetModules.LocationOnIcon
-          className={`${
-            mobileFooterSelection === 'explore' ? 'fmtm-text-primaryRed' : 'fmtm-text-gray-500'
-          } fmtm-duration-300`}
-        />
-      ),
-    },
-    {
       id: 'projectInfo',
       title: 'Project Info',
       icon: (
@@ -38,6 +27,17 @@ const MobileFooter = () => {
         <AssetModules.TaskIcon
           className={`${
             mobileFooterSelection === 'activities' ? 'fmtm-text-primaryRed' : 'fmtm-text-gray-500'
+          } fmtm-duration-300`}
+        />
+      ),
+    },
+    {
+      id: 'instructions',
+      title: 'Instructions',
+      icon: (
+        <AssetModules.IntegrationInstructionsIcon
+          className={`${
+            mobileFooterSelection === 'instructions' ? 'fmtm-text-primaryRed' : 'fmtm-text-gray-500'
           } fmtm-duration-300`}
         />
       ),

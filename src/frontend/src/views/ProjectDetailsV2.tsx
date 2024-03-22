@@ -191,7 +191,7 @@ const Home = () => {
   };
 
   useEffect(() => {
-    if (mobileFooterSelection !== 'explore') {
+    if (mobileFooterSelection !== '') {
       dispatch(ProjectActions.ToggleGenerateMbTilesModalStatus(false));
     }
   }, [mobileFooterSelection]);
@@ -420,19 +420,24 @@ const Home = () => {
             {mobileFooterSelection === 'projectInfo' && (
               <BottomSheet
                 body={<MobileProjectInfoContent projectInfo={state.projectInfo} />}
-                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection('explore'))}
+                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
               />
             )}
             {mobileFooterSelection === 'activities' && (
               <BottomSheet
                 body={<MobileActivitiesContents map={map} view={mainView} mapDivPostion={y} />}
-                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection('explore'))}
+                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
               />
             )}
-            {mobileFooterSelection === 'explore' && (
-              <div className="fmtm-absolute fmtm-bottom-[5.8rem] sm:fmtm-hidden">
-                <img src={FmtmLogo} alt="Hot Fmtm Logo" className="fmtm-ml-2 fmtm-z-10 fmtm-w-[5.2rem]" />
-              </div>
+            {mobileFooterSelection === 'instructions' && (
+              <BottomSheet
+                body={
+                  <div className="fmtm-mb-[12vh]">
+                    <Instructions instructions={state?.projectInfo?.instructions} />
+                  </div>
+                }
+                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
+              />
             )}
             {mobileFooterSelection === 'comment' && (
               <BottomSheet
@@ -441,7 +446,7 @@ const Home = () => {
                     <Comments />
                   </div>
                 }
-                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection('explore'))}
+                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
               />
             )}
             {mobileFooterSelection === 'others' && (
@@ -451,7 +456,7 @@ const Home = () => {
                     <ProjectOptions />
                   </div>
                 }
-                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection('explore'))}
+                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
               />
             )}
 
