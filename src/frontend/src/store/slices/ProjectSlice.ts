@@ -32,6 +32,10 @@ const initialState: ProjectStateTypes = {
   },
   projectDashboardLoading: false,
   geolocationStatus: false,
+  projectCommentsList: [],
+  projectPostCommentsLoading: false,
+  projectGetCommentsLoading: false,
+  clearEditorContent: false,
 };
 
 const ProjectSlice = createSlice({
@@ -98,6 +102,21 @@ const ProjectSlice = createSlice({
     },
     ToggleGeolocationStatus(state, action) {
       state.geolocationStatus = action.payload;
+    },
+    SetProjectCommentsList(state, action) {
+      state.projectCommentsList = action.payload;
+    },
+    SetPostProjectCommentsLoading(state, action) {
+      state.projectPostCommentsLoading = action.payload;
+    },
+    SetProjectGetCommentsLoading(state, action) {
+      state.projectGetCommentsLoading = action.payload;
+    },
+    ClearEditorContent(state, action) {
+      state.clearEditorContent = action.payload;
+    },
+    UpdateProjectCommentsList(state, action) {
+      state.projectCommentsList = [...state.projectCommentsList, action.payload];
     },
   },
 });

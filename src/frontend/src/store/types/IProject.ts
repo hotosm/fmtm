@@ -26,6 +26,10 @@ export type ProjectStateTypes = {
   projectDashboardDetail: projectDashboardDetailTypes;
   projectDashboardLoading: boolean;
   geolocationStatus: boolean;
+  projectCommentsList: projectCommentsListTypes[];
+  projectPostCommentsLoading: boolean;
+  projectGetCommentsLoading: boolean;
+  clearEditorContent: boolean;
 };
 
 type tilesListTypes = {
@@ -33,4 +37,12 @@ type tilesListTypes = {
   project_id: number;
   status: string;
   tile_source: string;
+};
+
+type projectCommentsListTypes = {
+  comment: string;
+  commented_by: string;
+  created_at: string;
+  id: number;
+  task_id: number;
 };
