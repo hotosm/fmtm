@@ -198,6 +198,12 @@ const Home = () => {
 
   useEffect(() => {
     if (taskModalStatus) {
+      dispatch(ProjectActions.ToggleTaskModalStatus(false));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (taskModalStatus) {
       setViewState('comments');
     } else {
       setViewState('project_info');
