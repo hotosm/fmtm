@@ -57,6 +57,7 @@ const Home = () => {
 
   const [viewState, setViewState] = useState('project_info');
   const encodedId: string = params.id;
+  const decodedId = environment.decode(encodedId);
   const defaultTheme = useAppSelector((state) => state.theme.hotTheme);
   const state = CoreModules.useAppSelector((state) => state.project);
   const projectInfo = useAppSelector((state) => state.home.selectedProject);
@@ -209,6 +210,10 @@ const Home = () => {
       setViewState('project_info');
     }
   }, [taskModalStatus]);
+
+  useEffect(() => {
+    dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${decodedId}`));
+  }, []);
 
   return (
     <div className="fmtm-bg-[#f5f5f5]" style={{ height: '100%' }}>
