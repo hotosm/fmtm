@@ -64,6 +64,7 @@ const Home = () => {
   const mobileFooterSelection = useAppSelector((state) => state.project.mobileFooterSelection);
   const mapTheme = useAppSelector((state) => state.theme.hotTheme);
   const projectDetailsLoading = useAppSelector((state) => state?.project?.projectDetailsLoading);
+  const taskModalStatus = CoreModules.useAppSelector((state) => state.project.taskModalStatus);
 
   //snackbar handle close funtion
   const handleClose = (event, reason) => {
@@ -194,6 +195,14 @@ const Home = () => {
     }
   }, [mobileFooterSelection]);
 
+  useEffect(() => {
+    if (taskModalStatus) {
+      setViewState('comments');
+    } else {
+      setViewState('project_info');
+    }
+  }, [taskModalStatus]);
+
   return (
     <div className="fmtm-bg-[#F5F5F5] fmtm-h-[100vh] sm:fmtm-h-[90vh]">
       {/* Customized Modal For Generate Tiles */}
@@ -228,7 +237,10 @@ const Home = () => {
               onClick={() => navigate(`/manage-project/${params?.id}`)}
             />
           </div>
-          <div className="fmtm-flex fmtm-flex-col fmtm-gap-4 fmtm-flex-auto" style={{ height: 'calc(100% - 95px)' }}>
+          <div
+            className="fmtm-flex fmtm-flex-col fmtm-gap-4 fmtm-flex-auto"
+            style={{ height: `${viewState === 'comments' ? 'calc(100% - 50px)' : 'calc(100% - 95px)'}` }}
+          >
             {projectDetailsLoading ? (
               <CoreModules.Skeleton className="!fmtm-w-[250px] fmtm-h-[25px]" />
             ) : (
@@ -245,13 +257,15 @@ const Home = () => {
             <div className="fmtm-flex fmtm-w-full">
               <button
                 className={`fmtm-rounded-none fmtm-border-none fmtm-text-base ${
-                  viewState === 'project_info'
+                  viewState === 'project_info' || viewState === 'comments'
                     ? 'fmtm-bg-primaryRed fmtm-text-white hover:fmtm-bg-red-700'
                     : 'fmtm-bg-white fmtm-text-[#706E6E] hover:fmtm-bg-grey-50'
                 } fmtm-py-1`}
-                onClick={() => setViewState('project_info')}
+                onClick={() => {
+                  taskModalStatus ? setViewState('comments') : setViewState('project_info');
+                }}
               >
-                Project Info
+                {taskModalStatus ? 'Comments' : 'Project Info'}
               </button>
               <button
                 className={`fmtm-rounded-none fmtm-border-none fmtm-text-base ${
@@ -265,17 +279,19 @@ const Home = () => {
               </button>
               <button
                 className={`fmtm-rounded-none fmtm-border-none fmtm-text-base ${
-                  viewState === 'comments'
+                  viewState === 'instructions'
                     ? 'fmtm-bg-primaryRed fmtm-text-white hover:fmtm-bg-red-700'
                     : 'fmtm-bg-white fmtm-text-[#706E6E] hover:fmtm-bg-grey-50'
                 } fmtm-py-1`}
-                onClick={() => setViewState('comments')}
+                onClick={() => setViewState('instructions')}
               >
-                Comments
+                Instructions
               </button>
             </div>
             {viewState === 'project_info' ? (
               <ProjectInfo />
+            ) : viewState === 'comments' ? (
+              <Comments />
             ) : viewState === 'task_activity' ? (
               <ActivitiesPanel
                 params={params}
@@ -287,7 +303,7 @@ const Home = () => {
                 states={state}
               />
             ) : (
-              <Comments />
+              <div>instruct</div>
             )}
           </div>
           {viewState !== 'comments' && (

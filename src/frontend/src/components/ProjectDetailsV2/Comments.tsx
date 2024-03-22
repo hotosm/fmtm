@@ -19,14 +19,22 @@ const Comments = () => {
   const projectCommentsList = useAppSelector((state) => state?.project?.projectCommentsList);
   const projectGetCommentsLoading = useAppSelector((state) => state?.project?.projectGetCommentsLoading);
   const projectPostCommentsLoading = useAppSelector((state) => state?.project?.projectPostCommentsLoading);
+  const selectedTask = useAppSelector((state) => state.task.selectedTask);
 
   const projectId = environment.decode(params.id);
 
   useEffect(() => {
     dispatch(
-      GetProjectComments(`${import.meta.env.VITE_API_URL}/tasks/task-comments/?project_id=${projectId}&task_id=3968`),
+      GetProjectComments(
+        `${import.meta.env.VITE_API_URL}/tasks/task-comments/?project_id=${projectId}&task_id=${selectedTask}`,
+      ),
     );
-  }, []);
+  }, [selectedTask, projectId]);
+
+  const clearComment = () => {
+    dispatch(ProjectActions.ClearEditorContent(true));
+    setComment('');
+  };
 
   const handleComment = () => {
     if (isEditorEmpty) {
@@ -42,17 +50,16 @@ const Comments = () => {
     }
     dispatch(
       PostProjectComments(`${import.meta.env.VITE_API_URL}/tasks/task-comments/`, {
-        task_id: 3968,
+        task_id: selectedTask,
         project_id: projectId,
         comment,
       }),
     );
-    dispatch(ProjectActions.ClearEditorContent(true));
-    setComment('');
+    clearComment();
   };
 
   return (
-    <div style={{ height: 'calc(100% - 60px)' }} className="fmtm-w-full fmtm-z-50">
+    <div style={{ height: 'calc(100% - 120px)' }} className="fmtm-w-full fmtm-z-50">
       <div style={{ height: 'calc(100% - 271px)' }} className="fmtm-overflow-y-scroll scrollbar">
         {projectGetCommentsLoading ? (
           <div className="fmtm-flex fmtm-flex-col fmtm-gap-4 fmtm-mb-1">
@@ -61,25 +68,31 @@ const Comments = () => {
             ))}
           </div>
         ) : (
-          <div className="fmtm-flex fmtm-flex-col fmtm-gap-4 fmtm-mb-1">
-            {projectCommentsList?.map((projectComment, i) => (
-              <div key={i} className="fmtm-flex fmtm-w-full fmtm-gap-4 fmtm-px-2">
-                <div className="fmtm-h-8 fmtm-w-8 fmtm-rounded-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-bg-white">
-                  <AssetModules.PersonIcon color="success" sx={{ fontSize: '30px' }} />
-                </div>
-                <div className=" fmtm-flex-1">
-                  <div className="fmtm-flex fmtm-gap-3 fmtm-items-center">
-                    <p>{projectComment?.commented_by}</p>
-                    <p className="fmtm-text-sm fmtm-text-gray-600">
-                      {projectComment?.created_at?.split('T')[0]} {projectComment?.created_at?.split('T')[1]}
-                    </p>
+          <div>
+            {projectCommentsList?.length > 0 ? (
+              <div className="fmtm-flex fmtm-flex-col fmtm-gap-4 fmtm-mb-1">
+                {projectCommentsList?.map((projectComment, i) => (
+                  <div key={i} className="fmtm-flex fmtm-w-full fmtm-gap-4 fmtm-px-2">
+                    <div className="fmtm-h-8 fmtm-w-8 fmtm-rounded-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-bg-white">
+                      <AssetModules.PersonIcon color="success" sx={{ fontSize: '30px' }} />
+                    </div>
+                    <div className=" fmtm-flex-1">
+                      <div className="fmtm-flex fmtm-gap-3 fmtm-items-center">
+                        <p>{projectComment?.commented_by}</p>
+                        <p className="fmtm-text-sm fmtm-text-gray-600">
+                          {projectComment?.created_at?.split('T')[0]} {projectComment?.created_at?.split('T')[1]}
+                        </p>
+                      </div>
+                      <div className="fmtm-mt-2">
+                        <RichTextEditor editorHtmlContent={projectComment?.comment} editable={false} />
+                      </div>
+                    </div>
                   </div>
-                  <div className="fmtm-mt-2">
-                    <RichTextEditor editorHtmlContent={projectComment?.comment} editable={false} />
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              <p className="fmtm-mt-5 fmtm-text-center fmtm-text-xl fmtm-text-gray-400">No Comments!</p>
+            )}
           </div>
         )}
       </div>
@@ -91,16 +104,27 @@ const Comments = () => {
           isEditorEmpty={(status) => setIsEditorEmpty(status)}
         />
       </div>
-      <div className="fmtm-mt-2 fmtm-w-full fmtm-flex fmtm-justify-center">
-        <Button
-          type="button"
-          btnText="Comment"
-          btnType="primary"
-          className="!fmtm-rounded"
-          onClick={handleComment}
-          isLoading={projectPostCommentsLoading}
-          loadingText="Posting..."
-        />
+      <div className="fmtm-mt-4 fmtm-w-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-gap-4">
+        <div className="fmtm-w-1/2">
+          <Button
+            type="button"
+            btnText="Cancel"
+            btnType="other"
+            className="!fmtm-rounded !fmtm-py-[3px] fmtm-w-full fmtm-flex fmtm-justify-center"
+            onClick={clearComment}
+          />
+        </div>
+        <div className="fmtm-w-1/2">
+          <Button
+            type="button"
+            btnText="Save Comment"
+            btnType="primary"
+            className="!fmtm-rounded fmtm-w-full fmtm-flex fmtm-justify-center"
+            onClick={handleComment}
+            isLoading={projectPostCommentsLoading}
+            loadingText="Saving..."
+          />
+        </div>
       </div>
     </div>
   );
