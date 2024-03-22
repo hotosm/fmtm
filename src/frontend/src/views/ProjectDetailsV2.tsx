@@ -205,7 +205,7 @@ const Home = () => {
   }, [taskModalStatus]);
 
   return (
-    <div className="fmtm-bg-[#F5F5F5] fmtm-h-[100vh] sm:fmtm-h-[90vh]">
+    <div className="fmtm-bg-[#f5f5f5]" style={{ height: '100%' }}>
       {/* Customized Modal For Generate Tiles */}
       <div>
         <GenerateBasemap projectInfo={state.projectInfo} />
