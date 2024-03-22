@@ -19,7 +19,10 @@ export default function CustomDrawer({ open, placement, size, type, onClose, onS
       const originalConsoleLog = console.log;
       console.log = (...args) => {
         originalConsoleLog.apply(console, args);
-        setLogs((prevLogs) => [...prevLogs, args.join(' ')]);
+        setLogs((prevLogs) => [
+          ...prevLogs,
+          args.map((arg) => (typeof arg === 'object' ? JSON.stringify(arg) : arg)).join(' '),
+        ]);
       };
 
       // Restore original console.log when component unmounts
