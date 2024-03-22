@@ -148,6 +148,8 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
               <ActivitiesCardSkeletonLoader key={i} />
             ))}
           </div>
+        ) : taskHistories?.length === 0 ? (
+          <p className="fmtm-mt-5 fmtm-text-center fmtm-text-xl fmtm-text-gray-400">No Task History!</p>
         ) : (
           <div>{taskHistories?.map((taskHistory) => <ActivitiesCard taskHistory={taskHistory} />)}</div>
         )}
