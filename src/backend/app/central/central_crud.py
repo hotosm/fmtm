@@ -17,9 +17,10 @@
 #
 """Logic for interaction with ODK Central & data."""
 
+import csv
 import os
 from asyncio import gather
-from io import BytesIO
+from io import BytesIO, StringIO
 from typing import Optional, Union
 
 from defusedxml import ElementTree
@@ -33,6 +34,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.db.postgis_utils import geojson_to_javarosa_geom, parse_and_filter_geojson
 from app.models.enums import HTTPStatus
 from app.projects import project_schemas
 
@@ -576,6 +578,54 @@ async def update_xform_info(
             inst.set("src", f"jr://file/{geojson_file_name}")
 
     return BytesIO(ElementTree.tostring(root))
+
+
+async def convert_geojson_to_odk_csv(
+    input_geojson: BytesIO,
+) -> StringIO:
+    """Convert GeoJSON features to ODK CSV format.
+
+    Used for form upload media (dataset) in ODK Central.
+
+    Args:
+        input_geojson (BytesIO): GeoJSON file to convert.
+
+    Returns:
+        feature_csv (StringIO): CSV of features in XLSForm format for ODK.
+    """
+    parsed_geojson = parse_and_filter_geojson(input_geojson.getvalue(), filter=False)
+
+    if not parsed_geojson:
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail="Conversion GeoJSON --> CSV failed",
+        )
+
+    csv_buffer = StringIO()
+    csv_writer = csv.writer(csv_buffer)
+
+    header = ["osm_id", "tags", "version", "changeset", "timestamp", "geometry"]
+    csv_writer.writerow(header)
+
+    features = parsed_geojson.get("features", [])
+    for feature in features:
+        geometry = feature.get("geometry")
+        javarosa_geom = await geojson_to_javarosa_geom(geometry)
+
+        properties = feature.get("properties", {})
+        osm_id = properties.get("osm_id")
+        tags = properties.get("tags")
+        version = properties.get("version")
+        changeset = properties.get("changeset")
+        timestamp = properties.get("timestamp")
+
+        csv_row = [osm_id, tags, version, changeset, timestamp, javarosa_geom]
+        csv_writer.writerow(csv_row)
+
+    # Reset buffer position to start to .read() works
+    csv_buffer.seek(0)
+
+    return csv_buffer
 
 
 def upload_media(
