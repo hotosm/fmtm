@@ -163,7 +163,7 @@ const SubmissionDetails = () => {
                   instanceId: paramsInstanceId,
                   projectId: decodedProjectId,
                   taskId: taskId,
-                  reviewState: '',
+                  reviewState: submissionDetails?.__system?.reviewState,
                 }),
               );
             }}

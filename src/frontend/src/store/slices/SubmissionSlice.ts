@@ -86,16 +86,28 @@ const SubmissionSlice = createSlice({
     },
     UpdateSubmissionTableDataReview(state, action) {
       const updatedSubmission = action.payload;
-      const updatedSubmissionDataList = state.submissionTableData.results.map((submissionData: any) => {
-        if (updatedSubmission.instanceId === submissionData.meta.instanceID) {
-          return {
-            ...submissionData,
-            __system: { ...submissionData.__system, reviewState: updatedSubmission.reviewState },
-          };
-        }
-        return submissionData;
-      });
-      state.submissionTableData.results = updatedSubmissionDataList;
+
+      // submission-instance table update
+      if (state.submissionTableData.results.length > 0) {
+        const updatedSubmissionDataList = state.submissionTableData.results.map((submissionData: any) => {
+          if (updatedSubmission.instanceId === submissionData.meta.instanceID) {
+            return {
+              ...submissionData,
+              __system: { ...submissionData.__system, reviewState: updatedSubmission.reviewState },
+            };
+          }
+          return submissionData;
+        });
+        state.submissionTableData.results = updatedSubmissionDataList;
+      }
+
+      // submission-instance key value pair update
+      if (state.submissionDetails) {
+        state.submissionDetails = {
+          ...state.submissionDetails,
+          __system: { ...state.submissionDetails.__system, reviewState: updatedSubmission.reviewState },
+        };
+      }
     },
   },
 });
