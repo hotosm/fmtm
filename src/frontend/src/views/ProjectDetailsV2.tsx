@@ -239,6 +239,19 @@ const Home = () => {
     return () => {};
   }, [projectOpfsBasemapPath]);
 
+  useEffect(async () => {
+    if (!projectOpfsBasemapPath) {
+      return;
+    }
+
+    console.log(projectOpfsBasemapPath);
+    const opfsPmtilesData = await readFileFromOPFS(projectOpfsBasemapPath);
+    setCustomBasemapData(opfsPmtilesData);
+    // setCustomBasemapData(projectOpfsBasemapPath);
+
+    return () => {};
+  }, [projectOpfsBasemapPath]);
+
   return (
     <div className="fmtm-bg-[#f5f5f5]" style={{ height: '100%' }}>
       {/* Customized Modal For Generate Tiles */}
