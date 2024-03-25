@@ -20,14 +20,15 @@
 import json
 import logging
 from datetime import datetime, timezone
-from typing import Optional, Union
 from random import getrandbits
+from typing import Optional, Union
 
 import geojson
 import requests
 from fastapi import HTTPException
 from geoalchemy2 import WKBElement
 from geoalchemy2.shape import from_shape, to_shape
+from geojson.feature import FeatureCollection
 from geojson_pydantic import Feature, Polygon
 from geojson_pydantic import FeatureCollection as FeatCol
 from shapely.geometry import mapping, shape
@@ -386,7 +387,7 @@ def add_required_geojson_properties(
             else:
                 # Random id
                 # NOTE 32-bit int is max supported by standard postgres Integer
-                properties["osm_id"] = getrandbits(32)
+                properties["osm_id"] = getrandbits(30)
 
         # Other required fields
         if not properties.get("tags"):
@@ -585,3 +586,37 @@ async def geojson_to_javarosa_geom(geojson_geometry: dict) -> str:
     javarosa_geometry_string = ";".join(javarosa_geometry)
 
     return javarosa_geometry_string
+
+
+async def get_entity_dicts_from_task_geojson(
+    project_id: int,
+    task_id: int,
+    task_data_extract: FeatureCollection,
+) -> dict:
+    """Get a dictionary of Entity info mapped from task geojsons."""
+    id_properties_dict = {}
+
+    features = task_data_extract.get("features", [])
+    for feature in features:
+        geometry = feature.get("geometry")
+        javarosa_geom = await geojson_to_javarosa_geom(geometry)
+
+        properties = feature.get("properties", {})
+        osm_id = properties.get("osm_id", getrandbits(30))
+        tags = properties.get("tags")
+        version = properties.get("version")
+        changeset = properties.get("changeset")
+        timestamp = properties.get("timestamp")
+
+        # Must be string values to work with Entities
+        id_properties_dict[osm_id] = {
+            "project_id": str(project_id),
+            "task_id": str(task_id),
+            "geometry": javarosa_geom,
+            "tags": str(tags),
+            "version": str(version),
+            "changeset": str(changeset),
+            "timestamp": str(timestamp),
+        }
+
+    return id_properties_dict
