@@ -220,7 +220,7 @@ async def my_data(
     return await get_or_create_user(db, user_data)
 
 
-@router.get("/introspect")
+@router.get("/introspect", response_model=AuthUser)
 async def check_login(
     db: Session = Depends(database.get_db),
     user_data: AuthUser = Depends(login_required),
@@ -229,4 +229,4 @@ async def check_login(
 
     Returns True if authenticated, False otherwise.
     """
-    return bool(user_data)
+    return user_data
