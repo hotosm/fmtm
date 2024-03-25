@@ -20,8 +20,8 @@
 import json
 import logging
 from datetime import datetime, timezone
+from random import getrandbits
 from typing import Optional, Union
-from uuid import uuid4
 
 import geojson
 import requests
@@ -381,10 +381,12 @@ def add_required_geojson_properties(
             if prop_id := properties.get("id"):
                 properties["osm_id"] = prop_id
             elif fid := properties.get("fid"):
+                # The default from QGIS
                 properties["osm_id"] = fid
             else:
                 # Random id
-                properties["osm_id"] = uuid4()
+                # NOTE 32-bit int is max supported by standard postgres Integer
+                properties["osm_id"] = getrandbits(30)
 
         # Other required fields
         if not properties.get("tags"):
