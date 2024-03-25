@@ -78,6 +78,19 @@ const SubmissionSlice = createSlice({
     UpdateReviewStateLoading(state, action) {
       state.updateReviewStateLoading = action.payload;
     },
+    UpdateSubmissionTableDataReview(state, action) {
+      const updatedSubmission = action.payload;
+      const updatedSubmissionDataList = state.submissionTableData.results.map((submissionData: any) => {
+        if (updatedSubmission.instanceId === submissionData.meta.instanceID) {
+          return {
+            ...submissionData,
+            __system: { ...submissionData.__system, reviewState: updatedSubmission.reviewState },
+          };
+        }
+        return submissionData;
+      });
+      state.submissionTableData.results = updatedSubmissionDataList;
+    },
   },
 });
 

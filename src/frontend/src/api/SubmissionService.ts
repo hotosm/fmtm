@@ -122,6 +122,7 @@ export const UpdateReviewStateService: Function = (url: string) => {
       try {
         dispatch(SubmissionActions.UpdateReviewStateLoading(true));
         const response = await CoreModules.axios.post(url);
+        dispatch(SubmissionActions.UpdateSubmissionTableDataReview(response.data));
         dispatch(
           SubmissionActions.SetUpdateReviewStatusModal({
             toggleModalStatus: false,

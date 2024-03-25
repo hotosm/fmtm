@@ -21,6 +21,7 @@ import filterParams from '@/utilfunctions/filterParams';
 import UpdateReviewStatusModal from '@/components/ProjectSubmissions/UpdateReviewStatusModal';
 import { projectInfoType } from '@/models/project/projectModel';
 import { useAppSelector } from '@/types/reduxTypes';
+import { camelToFlat } from '@/utilfunctions/commonUtils';
 
 type filterType = {
   task_id: string | null;
@@ -405,6 +406,16 @@ const SubmissionsTable = ({ toggleView }) => {
             headerClassName="snHeader"
             rowClassName="snRow"
             dataFormat={(row, _, index) => <span>{index + 1}</span>}
+          />
+          <TableHeader
+            dataField="Review State"
+            headerClassName="codeHeader"
+            rowClassName="codeRow"
+            dataFormat={(row) => (
+              <div className="fmtm-w-[7rem] fmtm-overflow-hidden fmtm-truncate">
+                <span>{row?.__system?.reviewState ? camelToFlat(row?.__system?.reviewState) : '-'}</span>
+              </div>
+            )}
           />
           {updatedSubmissionFormFields?.map((field: any): React.ReactNode | null => {
             if (field) {
