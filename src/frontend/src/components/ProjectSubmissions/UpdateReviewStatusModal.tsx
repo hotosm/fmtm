@@ -31,11 +31,15 @@ const reviewList: reviewListType[] = [
 
 const UpdateReviewStatusModal = () => {
   const dispatch = useDispatch();
-  const [reviewStatus, setReviewStatus] = useState('');
   const [noteComments, setNoteComments] = useState('');
   const [error, setError] = useState('');
+  const [reviewStatus, setReviewStatus] = useState('');
   const updateReviewStatusModal = useAppSelector((state) => state.submission.updateReviewStatusModal);
   const updateReviewStateLoading = useAppSelector((state) => state.submission.updateReviewStateLoading);
+
+  useEffect(() => {
+    setReviewStatus(updateReviewStatusModal.reviewState);
+  }, [updateReviewStatusModal.reviewState]);
 
   const handleStatusUpdate = () => {
     if (!updateReviewStatusModal.instanceId || !updateReviewStatusModal.projectId || !updateReviewStatusModal.taskId) {
@@ -101,6 +105,9 @@ const UpdateReviewStatusModal = () => {
                   SubmissionActions.SetUpdateReviewStatusModal({
                     toggleModalStatus: false,
                     submissionId: null,
+                    instanceId: null,
+                    taskId: null,
+                    reviewState: '',
                   }),
                 );
               }}
@@ -122,9 +129,10 @@ const UpdateReviewStatusModal = () => {
         dispatch(
           SubmissionActions.SetUpdateReviewStatusModal({
             toggleModalStatus: value,
-            submissionId: null,
+            projectId: null,
             instanceId: null,
             taskId: null,
+            reviewState: '',
           }),
         );
       }}

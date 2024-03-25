@@ -29,4 +29,5 @@ type updateReviewStatusModal = {
   instanceId: string | null;
   taskId: string | null;
   projectId: number | null;
+  reviewState: string;
 };

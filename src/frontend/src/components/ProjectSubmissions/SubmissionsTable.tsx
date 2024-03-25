@@ -460,6 +460,7 @@ const SubmissionsTable = ({ toggleView }) => {
                         instanceId: row?.meta?.instanceID,
                         taskId: row?.phonenumber,
                         projectId: decodedId,
+                        reviewState: row?.__system?.reviewState,
                       }),
                     );
                   }}

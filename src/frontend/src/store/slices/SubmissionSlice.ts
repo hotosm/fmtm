@@ -25,7 +25,13 @@ const initialState: SubmissionStateTypes = {
   submissionTableRefreshing: false,
   validatedVsMappedInfographics: [],
   validatedVsMappedLoading: false,
-  updateReviewStatusModal: { toggleModalStatus: false, instanceId: null, taskId: null, projectId: null },
+  updateReviewStatusModal: {
+    toggleModalStatus: false,
+    instanceId: null,
+    taskId: null,
+    projectId: null,
+    reviewState: '',
+  },
   updateReviewStateLoading: false,
 };
 

@@ -126,9 +126,10 @@ export const UpdateReviewStateService: Function = (url: string) => {
         dispatch(
           SubmissionActions.SetUpdateReviewStatusModal({
             toggleModalStatus: false,
-            submissionId: null,
+            projectId: null,
             instanceId: null,
             taskId: null,
+            reviewState: '',
           }),
         );
         dispatch(SubmissionActions.UpdateReviewStateLoading(false));
