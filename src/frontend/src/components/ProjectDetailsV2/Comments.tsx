@@ -118,7 +118,7 @@ const Comments = () => {
           </div>
         )}
       </div>
-      <div className="fmtm-pt-2">
+      <div className="fmtm-pt-2 sm:fmtm-max-h-[235px] sm:fmtm-overflow-scroll sm:scrollbar">
         <RichTextEditor
           editorHtmlContent={comment}
           setEditorHtmlContent={(content) => setComment(content)}
