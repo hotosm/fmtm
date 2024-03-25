@@ -74,7 +74,7 @@ const Comments = () => {
                 {projectCommentsList?.map((projectComment, i) => (
                   <div
                     key={i}
-                    className="fmtm-flex fmtm-w-full fmtm-gap-4 fmtm-px-2 fmtm-border-b fmtm-border-white fmtm-pb-3"
+                    className="fmtm-flex fmtm-w-full fmtm-gap-4 fmtm-px-2 fmtm-border-b fmtm-border-[#e9e9e9] sm:fmtm-border-white fmtm-pb-3"
                   >
                     <div className="fmtm-h-8 fmtm-w-8 fmtm-rounded-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-bg-white">
                       <AssetModules.PersonIcon color="success" sx={{ fontSize: '30px' }} />
@@ -87,7 +87,7 @@ const Comments = () => {
                         <RichTextEditor
                           editorHtmlContent={projectComment?.comment}
                           editable={false}
-                          className="!fmtm-bg-[#f5f5f5] !fmtm-rounded-none !fmtm-border-none"
+                          className="sm:!fmtm-bg-[#f5f5f5] !fmtm-rounded-none !fmtm-border-none"
                         />
                       </div>
                       <div className="fmtm-flex fmtm-items-center fmtm-justify-between">
