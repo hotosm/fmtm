@@ -45,6 +45,9 @@ async def get_xform_name(
     else:
         db_project = project
 
-    project_name = db_project.project_name_prefix
-    form_name = f"{project_name}_task_{task_id}"
+    project_name = db_project.project_name_prefix  #
+    # TODO in the future we may possibly support multiple forms per project.
+    # TODO to faciliate this we need to add the _{category} suffix and track.
+    # TODO this in the new xforms.category field/table.
+    form_name = project_name
     return form_name

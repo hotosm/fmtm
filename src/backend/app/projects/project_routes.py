@@ -839,7 +839,6 @@ async def download_form(
 
 @router.post("/update-form")
 async def update_project_form(
-    background_tasks: BackgroundTasks,
     category: str = Form(...),
     upload: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
@@ -852,11 +851,10 @@ async def update_project_form(
     # TODO migrate most logic to project_crud
     project = project_user_dict["project"]
 
-    if project.xform_category == category:
-        if not upload:
-            raise HTTPException(
-                status_code=400, detail="Current category is same as new category"
-            )
+    if project.xform_category == category and not upload:
+        raise HTTPException(
+            status_code=400, detail="Current category is same as new category"
+        )
 
     if upload:
         file_ext = Path(upload.filename).suffix.lower()
@@ -882,21 +880,20 @@ async def update_project_form(
     db.commit()
 
     # The reference to the form via ODK Central API (minus task_id)
-    xform_name_prefix = project.project_name_prefix
+    project_name = project.project_name_prefix
 
     # Get ODK Central credentials for project
     odk_creds = await project_deps.get_odk_credentials(db, project.id)
     # Get task id list
     task_list = await tasks_crud.get_task_id_list(db, project.id)
     # Update ODK Central form data
-    # FIXME runs in background but status is not tracked
-    background_tasks.add_task(
-        central_crud.update_odk_xforms,
+    await central_crud.update_project_xform(
         task_list,
         project.odkid,
         new_xform_data,
         file_ext,
-        xform_name_prefix,
+        project_name,
+        category,
         odk_creds,
     )
 

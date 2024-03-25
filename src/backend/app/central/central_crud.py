@@ -19,9 +19,9 @@
 
 import csv
 import os
-from asyncio import gather
 from io import BytesIO, StringIO
 from typing import Optional, Union
+from xml.etree.ElementTree import Element, SubElement
 
 from defusedxml import ElementTree
 from fastapi import HTTPException
@@ -184,8 +184,6 @@ def delete_odk_app_user(
 def create_odk_xform(
     odk_id: int,
     xform_data: BytesIO,
-    geojson_file_name: str,
-    geojson_data: BytesIO,
     odk_credentials: project_schemas.ODKCentralDecrypted,
 ) -> str:
     """Create an XForm on a remote ODK Central server.
@@ -193,8 +191,6 @@ def create_odk_xform(
     Args:
         odk_id (str): Project ID for ODK Central.
         xform_data (BytesIO): XForm data to set.
-        geojson_file_name (str): Name of the attached geojson media file.
-        geojson_data (BytesIO): GeoJSON data to set.
         odk_credentials (ODKCentralDecrypted): Creds for ODK Central.
 
     Returns:
@@ -215,31 +211,13 @@ def create_odk_xform(
             "odk": "http://www.opendatakit.org/xforms",
             "xforms": "http://www.w3.org/2002/xforms",
         }
-        # Parse the XML
+        # Get the form id from the XML
         root = ElementTree.fromstring(xform_data.getvalue())
-        # Update id attribute to equal the form name to be generated
         xml_data = root.findall(".//xforms:data[@id]", namespaces)
         extracted_name = "Not Found"
         for dt in xml_data:
             extracted_name = dt.get("id")
         msg = f"Failed to create form on ODK Central: ({extracted_name})"
-        log.error(msg)
-        raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg
-        ) from None
-
-    # This modifies an existing published XForm to be in draft mode.
-    # An XForm must be in draft mode to upload an attachment.
-    # Upload the geojson of features to be modified
-    # NOTE the form is automatically republished
-    result = xform.uploadMedia(
-        odk_id,
-        form_name,
-        geojson_data,
-        filename=geojson_file_name,
-    )
-    if not result:
-        msg = f"Failed to upload file ({geojson_file_name}) to form ({form_name})"
         log.error(msg)
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg
@@ -343,77 +321,41 @@ def get_form_list(db: Session, skip: int, limit: int):
         ) from e
 
 
-async def update_odk_xforms(
-    task_list: list[int],
+async def update_project_xform(
+    task_ids: list[int],
     odk_id: int,
     xform_data: BytesIO,
     form_file_ext: str,
-    form_name_prefix: str,
-    odk_credentials: project_schemas.ODKCentralDecrypted,
-) -> bool:
-    """Asyncio update XForm data for each ODK Form in project.
-
-    Args:
-        task_list (List[int]): List of task IDs.
-        odk_id (int): ODK Central form ID.
-        xform_data (BytesIO): XForm data.
-        form_file_ext (str): Extension of the form file.
-        form_name_prefix (str): Prefix for the form name in ODK Central.
-        odk_credentials (project_schemas.ODKCentralDecrypted): ODK Central creds.
-
-    Returns:
-        bool: True if the update is successful.
-    """
-    coroutines = []
-
-    for task_id in task_list:
-        coro = update_and_publish_form(
-            task_id,
-            odk_id,
-            xform_data,
-            form_file_ext,
-            form_name_prefix,
-            odk_credentials,
-        )
-        coroutines.append(coro)
-
-    await gather(*coroutines)
-
-    log.info(
-        f"{len(task_list)} XForms updated in ODK Central for: ({form_name_prefix})"
-    )
-
-    return True
-
-
-async def update_and_publish_form(
-    task_id: int,
-    odk_id: int,
-    xform_data: BytesIO,
-    form_file_ext: str,
-    form_name_prefix: str,
+    project_name: str,
+    category: str,
     odk_credentials: project_schemas.ODKCentralDecrypted,
 ) -> None:
-    """Update and publish the XForm for a specific task.
+    """Update and publish the XForm for a project.
 
     Args:
-        task_id (int): Task ID.
+        task_ids (List[int]): List of task IDs.
         odk_id (int): ODK Central form ID.
         xform_data (BytesIO): XForm data.
         form_file_ext (str): Extension of the form file.
-        form_name_prefix (str): Prefix for the form name in ODK Central.
+        project_name (str): Name (title) of the project.
+        category (str): Category of the XForm.
         odk_credentials (project_schemas.ODKCentralDecrypted): ODK Central creds.
     """
-    odk_form_name = f"{form_name_prefix}_task_{task_id}"
+    # TODO in the future we may possibly support multiple forms per project.
+    # TODO to faciliate this we need to add the _{category} suffix and track.
+    # TODO this in the new xforms.category field/table.
+    form_name = project_name
+
     xform_data = await read_and_test_xform(
         xform_data,
         form_file_ext,
         return_form_data=True,
     )
-    updated_xform_data = await update_xform_info(
+    updated_xform_data = await update_survey_xform(
         xform_data,
-        odk_form_name,
-        f"{odk_form_name}.geojson",
+        form_name,
+        category,
+        task_ids,
     )
 
     try:
@@ -428,10 +370,10 @@ async def update_and_publish_form(
     xform.createForm(
         odk_id,
         updated_xform_data,
-        odk_form_name,
+        form_name,
     )
     # The draft form must be published after upload
-    xform.publishForm(odk_id, odk_form_name)
+    xform.publishForm(odk_id, form_name)
 
 
 def download_submissions(
@@ -503,24 +445,24 @@ async def read_and_test_xform(
     # Load XML
     xform_xml = ElementTree.fromstring(xform_bytesio.getvalue())
 
-    # Extract geojson filenames
+    # Extract csv filenames
     try:
         namespaces = {"xforms": "http://www.w3.org/2002/xforms"}
-        geojson_list = [
+        csv_list = [
             os.path.splitext(inst.attrib["src"].split("/")[-1])[0]
             for inst in xform_xml.findall(".//xforms:instance[@src]", namespaces)
-            if inst.attrib.get("src", "").endswith(".geojson")
+            if inst.attrib.get("src", "").endswith(".csv")
         ]
 
         # No select_one_from_file defined
-        if not geojson_list:
+        if not csv_list:
             msg = (
                 "The form has no select_one_from_file or "
-                "select_multiple_from_file field defined."
+                "select_multiple_from_file field defined for a CSV."
             )
             raise ValueError(msg) from None
 
-        return {"required_media": geojson_list, "message": "Your form is valid"}
+        return {"required_media": csv_list, "message": "Your form is valid"}
 
     except Exception as e:
         log.error(e)
@@ -529,32 +471,77 @@ async def read_and_test_xform(
         ) from e
 
 
-async def update_xform_info(
+async def update_entity_registration_xform(
     form_data: BytesIO,
-    form_name: str,
-    geojson_file_name: str,
+    category: str,
 ) -> BytesIO:
-    """Update fields in the XForm to work with FMTM.
+    """Update fields in entity registration to name dataset.
 
-    Updated the 'id' field as the form name via the API.
-    Also updates the geojson filename to match that of the uploaded media.
+    The CSV media must be named the same as the dataset (entity list).
 
     Args:
-        form_data (str): The input form data.
-        form_file_ext (str): Extension from xls, xlsx or xml (xform).
-        form_name (str): Name of the XForm to set.
-        geojson_file_name (str): Name of the geojson media to set.
+        form_data (str): The input registration form data.
+        category (str): The form category, used to name the dataset (entity list)
+            and the .csv file containing the geometries.
 
     Returns:
         BytesIO: The XForm data.
     """
-    log.debug("Updating XML keys in XForm with data extract file & form id")
+    log.debug(f"Updating XML keys in Entity Registration XForm: {category}")
 
-    # Namespaces definition
+    # Parse the XML
+    root = ElementTree.fromstring(form_data.getvalue())
+
+    # Define namespaces
+    namespaces = {
+        "h": "http://www.w3.org/1999/xhtml",
+        "xforms": "http://www.w3.org/2002/xforms",
+        "jr": "http://openrosa.org/javarosa",
+        "ns3": "http://www.opendatakit.org/xforms/entities",
+        "odk": "http://www.opendatakit.org/xforms",
+    }
+
+    # Update the dataset name within the meta section
+    for meta_elem in root.findall(".//xforms:entity[@dataset]", namespaces):
+        meta_elem.set("dataset", category)
+
+    # Update the attachment name to {category}.csv, to link to the entity list
+    for instance_elem in root.findall(".//xforms:instance[@src]", namespaces):
+        src_value = instance_elem.get("src", "")
+        if src_value.endswith(".csv"):
+            instance_elem.set("src", f"jr://file/{category}.csv")
+
+    return BytesIO(ElementTree.tostring(root))
+
+
+async def update_survey_xform(
+    form_data: BytesIO,
+    form_name: str,
+    category: str,
+    task_ids: list,
+) -> BytesIO:
+    """Update fields in the XForm to work with FMTM.
+
+    Updates the 'id' and 'name' fields for the form.
+    Updates the csv filename to match the dataset name.
+
+    Args:
+        form_data (str): The input form data.
+        form_name (str): Name of the XForm to set.
+        category (str): The form category, used to name the dataset (entity list)
+            and the .csv file containing the geometries.
+        task_ids (list): List of task IDs to insert as choices in form.
+
+    Returns:
+        BytesIO: The XForm data.
+    """
+    log.debug(f"Updating XML keys in survey XForm: {category}")
+
     namespaces = {
         "h": "http://www.w3.org/1999/xhtml",
         "odk": "http://www.opendatakit.org/xforms",
         "xforms": "http://www.w3.org/2002/xforms",
+        "entities": "http://www.opendatakit.org/xforms/entities",
     }
 
     # Parse the XML
@@ -565,17 +552,29 @@ async def update_xform_info(
     for dt in xform_data:
         dt.set("id", form_name)
 
-    # # Update the form title if needed
-    # existing_title = root.find('.//h:title', namespaces)
-    # if existing_title is not None:
-    #     existing_title.text = "New Title"
+    # Update the form title (displayed in ODK Collect)
+    existing_title = root.find(".//h:title", namespaces)
+    if existing_title is not None:
+        existing_title.text = form_name
 
-    # Update src attribute for instances ending with .geojson
-    xform_instances = root.findall(".//xforms:instance[@src]", namespaces)
-    for inst in xform_instances:
+    # Update the attachment name to {category}.csv, to link to the entity list
+    xform_instance_src = root.findall(".//xforms:instance[@src]", namespaces)
+    for inst in xform_instance_src:
         src_value = inst.get("src", "")
-        if src_value.endswith(".geojson"):
-            inst.set("src", f"jr://file/{geojson_file_name}")
+        if src_value.endswith(".csv"):
+            inst.set("src", f"jr://file/{category}.csv")
+
+    # <instance> must be defined inside <model></model> key
+    model_element = root.find(".//xforms:model", namespaces)
+    instance_task_ids = Element("instance", id="task_id")
+    # Create sub-elements for each task ID, <name> <label> pairs
+    for task_id in task_ids:
+        item = SubElement(instance_task_ids, "item")
+        name = SubElement(item, "name")
+        name.text = str(task_id)
+        label = SubElement(item, "label")
+        label.text = str(task_id)
+    model_element.append(instance_task_ids)
 
     return BytesIO(ElementTree.tostring(root))
 
