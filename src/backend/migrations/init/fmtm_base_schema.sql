@@ -553,6 +553,22 @@ CREATE SEQUENCE public.xlsforms_id_seq
 ALTER TABLE public.xlsforms_id_seq OWNER TO fmtm;
 ALTER SEQUENCE public.xlsforms_id_seq OWNED BY public.xlsforms.id;
 
+CREATE TABLE public.xforms (
+    id integer NOT NULL,
+    project_id integer,
+    form_id character varying,
+    category character varying
+);
+ALTER TABLE public.xforms OWNER TO fmtm;
+CREATE SEQUENCE public.xforms_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER TABLE public.xforms_id_seq OWNER TO fmtm;
+ALTER SEQUENCE public.xforms_id_seq OWNED BY public.xforms.id;
 
 -- nextval for primary keys (autoincrement)
 
@@ -568,6 +584,7 @@ ALTER TABLE ONLY public.task_mapping_issues ALTER COLUMN id SET DEFAULT nextval(
 ALTER TABLE ONLY public.tasks ALTER COLUMN id SET DEFAULT nextval('public.tasks_id_seq'::regclass);
 ALTER TABLE ONLY public.teams ALTER COLUMN id SET DEFAULT nextval('public.teams_id_seq'::regclass);
 ALTER TABLE ONLY public.xlsforms ALTER COLUMN id SET DEFAULT nextval('public.xlsforms_id_seq'::regclass);
+ALTER TABLE ONLY public.xforms ALTER COLUMN id SET DEFAULT nextval('public.xforms_id_seq'::regclass);
 
 
 -- Constraints for primary keys
@@ -650,6 +667,8 @@ ALTER TABLE ONLY public.xlsforms
 ALTER TABLE ONLY public.xlsforms
     ADD CONSTRAINT xlsforms_title_key UNIQUE (title);
 
+ALTER TABLE ONLY public.xforms
+    ADD CONSTRAINT xforms_pkey PRIMARY KEY (id);
 
 -- Indexing
 
