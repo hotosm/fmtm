@@ -75,9 +75,9 @@ const ProjectInfo = () => {
                 Created On:{' '}
                 <span>
                   {projectDashboardDetail?.created
-                    ? `${projectDashboardDetail?.created?.split('T')[0]} ${projectDashboardDetail?.created
-                        ?.split('T')[1]
-                        ?.split('.')[0]}`
+                    ? `${projectDashboardDetail?.created?.split('T')[0]} ${
+                        projectDashboardDetail?.created?.split('T')[1]?.split('.')[0]
+                      }`
                     : '-'}
                 </span>
               </p>
