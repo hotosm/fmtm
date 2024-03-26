@@ -4,7 +4,6 @@ import '../styles/home.scss';
 import WindowDimension from '@/hooks/WindowDimension';
 // import MapDescriptionComponents from '@/components/MapDescriptionComponents';
 import ActivitiesPanel from '@/components/ProjectDetailsV2/ActivitiesPanel';
-import environment from '@/environment';
 import { ProjectById, GetProjectDashboard } from '@/api/Project';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import CustomizedSnackbar from '@/utilities/CustomizedSnackbar';
@@ -56,8 +55,7 @@ const Home = () => {
   const [taskBoundariesLayer, setTaskBoundariesLayer] = useState<null | Record<string, any>>(null);
 
   const [viewState, setViewState] = useState('project_info');
-  const encodedId: string = params.id;
-  const decodedId = environment.decode(encodedId);
+  const projectId: string = params.id;
   const defaultTheme = useAppSelector((state) => state.theme.hotTheme);
   const state = CoreModules.useAppSelector((state) => state.project);
   const projectInfo = useAppSelector((state) => state.home.selectedProject);
@@ -87,17 +85,17 @@ const Home = () => {
   //Fetch project for the first time
   useEffect(() => {
     dispatch(ProjectActions.SetNewProjectTrigger());
-    if (state.projectTaskBoundries.findIndex((project) => project.id == environment.decode(encodedId)) == -1) {
+    if (state.projectTaskBoundries.findIndex((project) => project.id == projectId) == -1) {
       dispatch(ProjectActions.SetProjectTaskBoundries([]));
-      dispatch(ProjectById(state.projectTaskBoundries, environment.decode(encodedId)));
+      dispatch(ProjectById(state.projectTaskBoundries, projectId));
     } else {
       dispatch(ProjectActions.SetProjectTaskBoundries([]));
-      dispatch(ProjectById(state.projectTaskBoundries, environment.decode(encodedId)));
+      dispatch(ProjectById(state.projectTaskBoundries, projectId));
     }
     if (Object.keys(state.projectInfo)?.length == 0) {
       dispatch(ProjectActions.SetProjectInfo(projectInfo));
     } else {
-      if (state.projectInfo.id != environment.decode(encodedId)) {
+      if (state.projectInfo.id != projectId) {
         dispatch(ProjectActions.SetProjectInfo(projectInfo));
       }
     }
@@ -213,7 +211,7 @@ const Home = () => {
   }, [taskModalStatus]);
 
   useEffect(() => {
-    dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${decodedId}`));
+    dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${projectId}`));
   }, []);
 
   return (
@@ -325,7 +323,7 @@ const Home = () => {
                 btnText="VIEW INFOGRAPHICS"
                 btnType="other"
                 className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md fmtm-my-2"
-                onClick={() => navigate(`/project-submissions/${encodedId}`)}
+                onClick={() => navigate(`/project-submissions/${projectId}`)}
               />
               <div className="fmtm-relative" ref={divRef}>
                 <div onClick={() => handleToggle()}>
