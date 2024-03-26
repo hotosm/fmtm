@@ -346,7 +346,9 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
                   : null
               }
               getAOIArea={(area) => {
-                dispatch(CreateProjectActions.SetTotalAreaSelection(area));
+                if (drawnGeojson) {
+                  dispatch(CreateProjectActions.SetTotalAreaSelection(area));
+                }
               }}
               hasEditUndo
             />
