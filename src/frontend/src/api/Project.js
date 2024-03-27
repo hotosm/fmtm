@@ -2,6 +2,7 @@ import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import CoreModules from '@/shared/CoreModules';
 import { task_priority_str } from '@/types/enums';
+import axios from 'axios';
 import { writeBinaryToOPFS } from '@/api/Files';
 
 export const ProjectById = (existingProjectList, projectId) => {
