@@ -443,7 +443,7 @@ const Home = () => {
                   collapsed={true}
                 />
               </div>
-              <div className="fmtm-absolute fmtm-bottom-[8.6rem] sm:fmtm-top-3 fmtm-right-3 fmtm-z-50">
+              <div className="fmtm-absolute fmtm-bottom-[8.6rem] sm:fmtm-top-3 fmtm-right-3 fmtm-z-50 fmtm-h-fit">
                 <Button
                   btnText="GENERATE MBTILES"
                   icon={<AssetModules.BoltIcon />}
