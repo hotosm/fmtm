@@ -11,8 +11,8 @@ import React, { useEffect, useState } from 'react';
 import { XYZ } from 'ol/source';
 import { useLocation } from 'react-router-dom';
 import DataTile from 'ol/source/DataTile.js';
-import WebGLTileLayer from 'ol/layer/WebGLTile.js';
-import { PMTiles } from 'pmtiles';
+import TileLayer from 'ol/layer/WebGLTile.js';
+import { FileSource, PMTiles } from 'pmtiles';
 
 // const mapboxOutdoors = new MapboxVector({
 //   styleUrl: 'mapbox://styles/geovation/ckpicg3of094w17nyqyd2ziie',
@@ -144,9 +144,7 @@ const pmTileLayer = (pmTileLayerData, visible) => {
     });
   }
 
-  const pmTiles = new PMTiles(pmTileLayerData);
-  // const pmTiles = new PMTiles('2_esritiles.pmtiles');
-  console.log(pmTiles);
+  const pmTiles = new PMTiles(new FileSource(pmTileLayerData));
 
   async function loader(z, x, y) {
     const response = await pmTiles.getZxy(z, x, y);
@@ -156,10 +154,10 @@ const pmTileLayer = (pmTileLayerData, visible) => {
     URL.revokeObjectURL(src);
     return image;
   }
-  return new WebGLTileLayer({
-    title: 'Custom',
-    type: 'base',
-    visible: visible === 'custom',
+  return new TileLayer({
+    title: `${pmTileLayerData.name}`,
+    type: 'raster pm tiles',
+    visible: true,
     source: new DataTile({
       loader,
       wrapX: true,
@@ -174,45 +172,26 @@ const LayerSwitcherControl = ({ map, visible = 'osm', pmTileLayerData = null }) 
   const [basemapLayers, setBasemapLayers] = useState(
     new LayerGroup({
       title: 'Base maps',
-      layers: [bingMaps(visible), osm(visible), mapboxMap(visible), mapboxOutdoors(visible), none(visible)],
+      layers: [
+        bingMaps(visible),
+        osm(visible),
+        mapboxMap(visible),
+        mapboxOutdoors(visible),
+        none(visible),
+        // pmTileLayer(pmTileLayerData, visible),
+      ],
     }),
   );
 
   useEffect(() => {
     if (!map) return;
 
-    const layerSwitcher = new LayerSwitcher({
+    const layerSwitcherControl = new LayerSwitcher({
       reverse: true,
       groupSelectStyle: 'group',
     });
     map.addLayer(basemapLayers);
-    map.addControl(layerSwitcher);
-
-    // eslint-disable-next-line consistent-return
-    return () => {
-      map.removeLayer(basemapLayers);
-      map.removeControl(layerSwitcher);
-    };
-  }, [map, visible]);
-
-  useEffect(() => {
-    if (!pmTileLayerData) {
-      return;
-    }
-
-    const pmTileBaseLayer = pmTileLayer(pmTileLayerData, visible);
-
-    const currentLayers = basemapLayers.getLayers();
-    currentLayers.push(pmTileBaseLayer);
-    basemapLayers.setLayers(currentLayers);
-
-    return () => {
-      basemapLayers.getLayers().remove(pmTileBaseLayer);
-    };
-  }, [pmTileLayerData]);
-
-  const location = useLocation();
-  useEffect(() => {
+    map.addControl(layerSwitcherControl);
     const layerSwitcher = document.querySelector('.layer-switcher');
     if (layerSwitcher) {
       const layerSwitcherButton = layerSwitcher.querySelector('button');
@@ -242,7 +221,31 @@ const LayerSwitcherControl = ({ map, visible = 'osm', pmTileLayerData = null }) 
         layerSwitcher.style.zIndex = '1000';
       }
     }
-  }, [map]);
+    // eslint-disable-next-line consistent-return
+    return () => {
+      map.removeLayer(basemapLayers);
+      map.removeControl(layerSwitcherControl);
+    };
+  }, [map, visible]);
+
+  useEffect(() => {
+    if (!pmTileLayerData) {
+      return;
+    }
+
+    const pmTileBaseLayer = pmTileLayer(pmTileLayerData, visible);
+
+    const currentLayers = basemapLayers.getLayers();
+    currentLayers.push(pmTileBaseLayer);
+    basemapLayers.setLayers(currentLayers);
+
+    return () => {
+      basemapLayers.getLayers().remove(pmTileBaseLayer);
+    };
+  }, [pmTileLayerData]);
+
+  const location = useLocation();
+  useEffect(() => {}, [map]);
 
   return null;
 };
