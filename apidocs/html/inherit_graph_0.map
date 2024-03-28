@@ -1,0 +1,45 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" title=" " alt="" coords="5,895,100,922"/>
+<area shape="rect" id="node2" href="$classapp_1_1auth_1_1osm_1_1AuthUser.html" title=" " alt="" coords="198,19,373,46"/>
+<area shape="rect" id="node3" href="$classapp_1_1central_1_1central__schemas_1_1CentralBase.html" title=" " alt="" coords="200,71,371,112"/>
+<area shape="rect" id="node7" href="$classapp_1_1central_1_1central__schemas_1_1CentralFileType.html" title=" " alt="" coords="190,136,381,177"/>
+<area shape="rect" id="node8" href="$classapp_1_1organisations_1_1organisation__schemas_1_1OrganisationOut.html" title=" " alt="" coords="174,201,397,243"/>
+<area shape="rect" id="node9" href="$classapp_1_1projects_1_1project__schemas_1_1BackgroundTaskStatus.html" title=" " alt="" coords="166,267,405,308"/>
+<area shape="rect" id="node10" href="$classapp_1_1projects_1_1project__schemas_1_1GeojsonFeature.html" title=" " alt="" coords="189,332,382,373"/>
+<area shape="rect" id="node11" href="$classapp_1_1projects_1_1project__schemas_1_1ODKCentralDecrypted.html" title=" " alt="" coords="169,397,402,439"/>
+<area shape="rect" id="node12" href="$classapp_1_1projects_1_1project__schemas_1_1ODKCentralIn.html" title=" " alt="" coords="196,463,375,504"/>
+<area shape="rect" id="node16" href="$classapp_1_1projects_1_1project__schemas_1_1PaginatedProjectSummaries.html" title=" " alt="" coords="148,593,423,635"/>
+<area shape="rect" id="node17" href="$classapp_1_1projects_1_1project__schemas_1_1PaginationInfo.html" title=" " alt="" coords="193,659,377,700"/>
+<area shape="rect" id="node18" href="$classapp_1_1projects_1_1project__schemas_1_1ProjectBase.html" title=" " alt="" coords="201,724,369,765"/>
+<area shape="rect" id="node22" href="$classapp_1_1projects_1_1project__schemas_1_1ProjectDashboard.html" title=" " alt="" coords="182,789,389,831"/>
+<area shape="rect" id="node23" href="$classapp_1_1projects_1_1project__schemas_1_1ProjectIn.html" title=" " alt="" coords="210,528,361,569"/>
+<area shape="rect" id="node25" href="$classapp_1_1projects_1_1project__schemas_1_1ProjectInfo.html" title=" " alt="" coords="205,855,366,896"/>
+<area shape="rect" id="node26" href="$classapp_1_1projects_1_1project__schemas_1_1ProjectPartialUpdate.html" title=" " alt="" coords="173,920,397,961"/>
+<area shape="rect" id="node27" href="$classapp_1_1projects_1_1project__schemas_1_1ProjectSummary.html" title=" " alt="" coords="186,985,385,1027"/>
+<area shape="rect" id="node28" href="$classapp_1_1submissions_1_1submission__schemas_1_1PaginatedSubmissions.html" title=" " alt="" coords="167,1051,404,1092"/>
+<area shape="rect" id="node29" href="$classapp_1_1submissions_1_1submission__schemas_1_1PaginationInfo.html" title=" " alt="" coords="181,1116,390,1157"/>
+<area shape="rect" id="node30" href="$classapp_1_1tasks_1_1tasks__schemas_1_1Task.html" title=" " alt="" coords="174,1182,397,1209"/>
+<area shape="rect" id="node32" href="$classapp_1_1tasks_1_1tasks__schemas_1_1TaskCommentBase.html" title=" " alt="" coords="189,1233,382,1275"/>
+<area shape="rect" id="node33" href="$classapp_1_1tasks_1_1tasks__schemas_1_1TaskCommentRequest.html" title=" " alt="" coords="189,1299,382,1340"/>
+<area shape="rect" id="node34" href="$classapp_1_1tasks_1_1tasks__schemas_1_1TaskCommentResponse.html" title=" " alt="" coords="189,1364,382,1405"/>
+<area shape="rect" id="node35" href="$classapp_1_1tasks_1_1tasks__schemas_1_1TaskHistory.html" title=" " alt="" coords="189,1429,382,1471"/>
+<area shape="rect" id="node36" href="$classapp_1_1tasks_1_1tasks__schemas_1_1TaskHistoryBase.html" title=" " alt="" coords="189,1495,382,1536"/>
+<area shape="rect" id="node38" href="$classapp_1_1tasks_1_1tasks__schemas_1_1TaskHistoryCount.html" title=" " alt="" coords="189,1560,382,1601"/>
+<area shape="rect" id="node39" href="$classapp_1_1users_1_1user__schemas_1_1UserBase.html" title=" " alt="" coords="161,1626,409,1653"/>
+<area shape="rect" id="node42" href="$classapp_1_1users_1_1user__schemas_1_1UserRole.html" title=" " alt="" coords="163,1677,408,1703"/>
+<area shape="rect" id="node43" href="$classapp_1_1users_1_1user__schemas_1_1UserRoles.html" title=" " alt="" coords="177,1728,393,1769"/>
+<area shape="rect" id="node4" href="$classapp_1_1central_1_1central__schemas_1_1Central.html" title=" " alt="" coords="518,5,662,47"/>
+<area shape="rect" id="node5" href="$classapp_1_1central_1_1central__schemas_1_1CentralDetails.html" title=" " alt="" coords="498,71,682,112"/>
+<area shape="rect" id="node6" href="$classapp_1_1central_1_1central__schemas_1_1CentralOut.html" title=" " alt="" coords="509,136,671,177"/>
+<area shape="rect" id="node13" href="$classapp_1_1organisations_1_1organisation__schemas_1_1OrganisationIn.html" title=" " alt="" coords="479,431,701,472"/>
+<area shape="rect" id="node15" href="$classapp_1_1projects_1_1project__schemas_1_1ProjectUpload.html" title=" " alt="" coords="499,496,681,537"/>
+<area shape="rect" id="node14" href="$classapp_1_1organisations_1_1organisation__schemas_1_1OrganisationEdit.html" title=" " alt="" coords="757,431,980,472"/>
+<area shape="rect" id="node19" href="$classapp_1_1projects_1_1project__schemas_1_1ProjectWithTasks.html" title=" " alt="" coords="489,724,691,765"/>
+<area shape="rect" id="node20" href="$classapp_1_1projects_1_1project__schemas_1_1ProjectOut.html" title=" " alt="" coords="789,692,948,733"/>
+<area shape="rect" id="node21" href="$classapp_1_1projects_1_1project__schemas_1_1ReadProject.html" title=" " alt="" coords="784,757,953,799"/>
+<area shape="rect" id="node24" href="$classapp_1_1projects_1_1project__schemas_1_1ProjectUpdate.html" title=" " alt="" coords="499,561,681,603"/>
+<area shape="rect" id="node31" href="$classapp_1_1tasks_1_1tasks__schemas_1_1ReadTask.html" title=" " alt="" coords="493,1175,687,1216"/>
+<area shape="rect" id="node37" href="$classapp_1_1tasks_1_1tasks__schemas_1_1TaskHistoryOut.html" title=" " alt="" coords="493,1495,687,1536"/>
+<area shape="rect" id="node40" href="$classapp_1_1users_1_1user__schemas_1_1User.html" title=" " alt="" coords="482,1601,698,1627"/>
+<area shape="rect" id="node41" href="$classapp_1_1users_1_1user__schemas_1_1UserOut.html" title=" " alt="" coords="471,1651,709,1678"/>
+</map>

@@ -1,0 +1,25 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classapp_1_1models_1_1enums_1_1HTTPStatus.html" title=" " alt="" coords="5,409,231,435"/>
+<area shape="rect" id="node2" href="$classapp_1_1models_1_1enums_1_1IntEnum.html" title=" " alt="" coords="279,409,483,435"/>
+<area shape="rect" id="node3" href="$classapp_1_1models_1_1enums_1_1BackgroundTaskStatus.html" title=" " alt="" coords="553,175,780,216"/>
+<area shape="rect" id="node4" href="$classapp_1_1models_1_1enums_1_1CommunityType.html" title=" " alt="" coords="539,241,795,267"/>
+<area shape="rect" id="node5" href="$classapp_1_1models_1_1enums_1_1MappingLevel.html" title=" " alt="" coords="563,292,770,333"/>
+<area shape="rect" id="node6" href="$classapp_1_1models_1_1enums_1_1MappingPermission.html" title=" " alt="" coords="563,357,770,399"/>
+<area shape="rect" id="node7" href="$classapp_1_1models_1_1enums_1_1OrganisationType.html" title=" " alt="" coords="535,423,798,450"/>
+<area shape="rect" id="node8" href="$classapp_1_1models_1_1enums_1_1ProjectPriority.html" title=" " alt="" coords="569,475,764,516"/>
+<area shape="rect" id="node9" href="$classapp_1_1models_1_1enums_1_1ProjectRole.html" title=" " alt="" coords="555,541,779,567"/>
+<area shape="rect" id="node10" href="$classapp_1_1models_1_1enums_1_1ProjectSplitStrategy.html" title=" " alt="" coords="569,592,764,633"/>
+<area shape="rect" id="node11" href="$classapp_1_1models_1_1enums_1_1ProjectStatus.html" title=" " alt="" coords="569,657,764,699"/>
+<area shape="rect" id="node12" href="$classapp_1_1models_1_1enums_1_1ProjectVisibility.html" title=" " alt="" coords="569,723,764,764"/>
+<area shape="rect" id="node13" href="$classapp_1_1models_1_1enums_1_1TaskAction.html" title=" " alt="" coords="557,789,777,815"/>
+<area shape="rect" id="node14" href="$classapp_1_1models_1_1enums_1_1TaskSplitType.html" title=" " alt="" coords="547,839,786,866"/>
+<area shape="rect" id="node15" href="$classapp_1_1models_1_1enums_1_1TaskStatus.html" title=" " alt="" coords="557,890,777,917"/>
+<area shape="rect" id="node16" href="$classapp_1_1models_1_1enums_1_1TaskType.html" title=" " alt="" coords="562,941,771,967"/>
+<area shape="rect" id="node17" href="$classapp_1_1models_1_1enums_1_1TeamVisibility.html" title=" " alt="" coords="545,7,788,34"/>
+<area shape="rect" id="node18" href="$classapp_1_1models_1_1enums_1_1UserRole.html" title=" " alt="" coords="562,58,771,85"/>
+<area shape="rect" id="node19" href="$classapp_1_1models_1_1enums_1_1ValidationPermission.html" title=" " alt="" coords="559,109,774,151"/>
+<area shape="rect" id="node20" title=" " alt="" coords="99,1017,137,1043"/>
+<area shape="rect" id="node21" href="$classapp_1_1models_1_1enums_1_1StrEnum.html" title=" " alt="" coords="279,1017,484,1043"/>
+<area shape="rect" id="node22" href="$classapp_1_1models_1_1enums_1_1ReviewStateEnum.html" title=" " alt="" coords="532,999,801,1026"/>
+<area shape="rect" id="node23" title=" " alt="" coords="89,535,147,562"/>
+</map>
