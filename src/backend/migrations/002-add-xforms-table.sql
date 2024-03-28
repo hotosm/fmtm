@@ -24,5 +24,10 @@ ALTER TABLE ONLY public.xforms ALTER COLUMN id SET DEFAULT nextval('public.xform
 ALTER TABLE ONLY public.xforms
     ADD CONSTRAINT xforms_pkey PRIMARY KEY (id);
 
+ALTER TABLE public.xforms
+ADD CONSTRAINT fk_projects
+FOREIGN KEY (project_id)
+REFERENCES projects(id);
+
 -- Commit the transaction
 COMMIT;

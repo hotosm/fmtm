@@ -169,7 +169,7 @@ async def task_features_count(
         log.warning(msg)
         raise HTTPException(status_code=404, detail=msg)
 
-    data.append(
+    data.extend(
         {
             "task_id": record[0],
             "submission_count": odk_details[0]["submissions"],
