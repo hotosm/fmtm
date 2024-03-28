@@ -40,6 +40,8 @@ import { useAppSelector } from '@/types/reduxTypes';
 import Comments from '@/components/ProjectDetailsV2/Comments';
 import { Geolocation } from '@/utilfunctions/Geolocation';
 import Instructions from '@/components/ProjectDetailsV2/Instructions';
+import { readFileFromOPFS } from '@/api/Files';
+import DebugConsole from '@/utilities/DebugConsole';
 
 const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -53,7 +55,14 @@ const Home = () => {
   const [dataExtractUrl, setDataExtractUrl] = useState(null);
   const [dataExtractExtent, setDataExtractExtent] = useState(null);
   const [taskBoundariesLayer, setTaskBoundariesLayer] = useState<null | Record<string, any>>(null);
-
+  const [currentCoordinate, setCurrentCoordinate] = useState<{ latitude: null | number; longitude: null | number }>({
+    latitude: null,
+    longitude: null,
+  });
+  // Can pass a File object, or a string URL to be read by PMTiles
+  const [customBasemapData, setCustomBasemapData] = useState<File | string>();
+  const [positionGeojson, setPositionGeojson] = useState<any>(null);
+  const [deviceRotation, setDeviceRotation] = useState(0);
   const [viewState, setViewState] = useState('project_info');
   const projectId: string = params.id;
   const defaultTheme = useAppSelector((state) => state.theme.hotTheme);
@@ -66,6 +75,7 @@ const Home = () => {
   const projectDetailsLoading = useAppSelector((state) => state?.project?.projectDetailsLoading);
   const geolocationStatus = useAppSelector((state) => state.project.geolocationStatus);
   const taskModalStatus = CoreModules.useAppSelector((state) => state.project.taskModalStatus);
+  const projectOpfsBasemapPath = useAppSelector((state) => state?.project?.projectOpfsBasemapPath);
 
   //snackbar handle close funtion
   const handleClose = (event, reason) => {
@@ -214,8 +224,24 @@ const Home = () => {
     dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${projectId}`));
   }, []);
 
+  useEffect(async () => {
+    if (!projectOpfsBasemapPath) {
+      return;
+    }
+
+    console.log(projectOpfsBasemapPath);
+    const opfsPmtilesData = await readFileFromOPFS(projectOpfsBasemapPath);
+    setCustomBasemapData(opfsPmtilesData);
+    // setCustomBasemapData(projectOpfsBasemapPath);
+
+    return () => {};
+  }, [projectOpfsBasemapPath]);
+  const [showDebugConsole, setShowDebugConsole] = useState(false);
+
   return (
     <div className="fmtm-bg-[#f5f5f5]" style={{ height: '100%' }}>
+      {/* only used to display debug console */}
+      <DebugConsole showDebugConsole={showDebugConsole} setShowDebugConsole={setShowDebugConsole} />
       {/* Customized Modal For Generate Tiles */}
       <div>
         <GenerateBasemap projectInfo={state.projectInfo} />
@@ -353,7 +379,19 @@ const Home = () => {
                 windowSize.width <= 640 ? 'fmtm-h-[100vh]' : 'fmtm-h-full'
               }`}
             >
-              <LayerSwitcherControl visible={'outdoors'} />
+              {import.meta.env.MODE === 'development' && (
+                <div className="fmtm-absolute fmtm-top-16 fmtm-left-4 fmtm-z-50">
+                  <Button
+                    btnText="Toggle Console"
+                    btnType="secondary"
+                    onClick={() => setShowDebugConsole(!showDebugConsole)}
+                  />
+                </div>
+              )}
+              <LayerSwitcherControl
+                visible={customBasemapData ? 'custom' : 'outdoors'}
+                pmTileLayerData={customBasemapData}
+              />
 
               {taskBoundariesLayer && taskBoundariesLayer?.features?.length > 0 && (
                 <VectorLayer
@@ -402,7 +440,7 @@ const Home = () => {
                   collapsed={true}
                 />
               </div>
-              <div className="fmtm-absolute fmtm-bottom-[8.6rem] sm:fmtm-top-3 fmtm-right-3 fmtm-z-50">
+              <div className="fmtm-absolute fmtm-bottom-[8.6rem] sm:fmtm-top-3 fmtm-right-3 fmtm-z-50 fmtm-h-fit">
                 <Button
                   btnText="GENERATE MBTILES"
                   icon={<AssetModules.BoltIcon />}
