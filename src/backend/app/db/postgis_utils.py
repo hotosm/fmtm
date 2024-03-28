@@ -549,8 +549,9 @@ def get_address_from_lat_lon(latitude, longitude):
 
     country = address.get("country", "")
     city = address.get("city", "")
+    state = address.get("state", "")
 
-    address_str = f"{city},{country}"
+    address_str = f"{city},{country}" if city else f"{state},{country}"
 
     if not address_str or address_str == ",":
         log.error("Getting address string failed")
@@ -581,23 +582,22 @@ async def geojson_to_javarosa_geom(geojson_geometry: dict) -> str:
     Returns:
         str: A string representing the geometry in JavaRosa format.
     """
-    # Ensure the GeoJSON geometry is of type Polygon
-    # FIXME support other geom types
-    if geojson_geometry["type"] != "Polygon":
-        raise ValueError("Input must be a GeoJSON Polygon")
+    coordinates = []
+    if geojson_geometry["type"] in ["Point", "LineString", "MultiPoint"]:
+        coordinates = [geojson_geometry.get("coordinates")]
+    elif geojson_geometry["type"] in ["Polygon", "MultiLineString"]:
+        coordinates = geojson_geometry.get("coordinates")
+    elif geojson_geometry["type"] == "MultiPolygon":
+        coordinates = sum(geojson_geometry.get("coordinates", []), [])
+    else:
+        raise ValueError("Unsupported GeoJSON geometry type")
 
-    coordinates = geojson_geometry["coordinates"][
-        0
-    ]  # Extract the coordinates of the Polygon
-    javarosa_geometry = []
+    javarosa_geometry = [
+        f"{lat} {lon} 0.0 0.0"
+        for lon, lat in (coordinate[:2] for coordinate in coordinates)
+    ]
 
-    for coordinate in coordinates:
-        lon, lat = coordinate[:2]
-        javarosa_geometry.append(f"{lat} {lon} 0.0 0.0")
-
-    javarosa_geometry_string = ";".join(javarosa_geometry)
-
-    return javarosa_geometry_string
+    return ";".join(javarosa_geometry)
 
 
 async def get_entity_dicts_from_task_geojson(
@@ -607,7 +607,7 @@ async def get_entity_dicts_from_task_geojson(
 ) -> dict:
     """Get a dictionary of Entity info mapped from task geojsons."""
     id_properties_dict = {}
-
+    print("task_data_extract", task_data_extract)
     features = task_data_extract.get("features", [])
     for feature in features:
         geometry = feature.get("geometry")
