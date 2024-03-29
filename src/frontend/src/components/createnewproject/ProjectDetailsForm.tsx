@@ -179,6 +179,7 @@ const ProjectDetailsForm = ({ flag }) => {
                 onValueChange={(value) => {
                   setSelectedOrganisation(value);
                 }}
+                required
               />
             </div>
             {errors.organisation_id && (
