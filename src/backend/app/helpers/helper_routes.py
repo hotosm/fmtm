@@ -30,7 +30,11 @@ from fastapi.exceptions import HTTPException
 from fastapi.responses import Response
 
 from app.auth.osm import AuthUser, login_required
-from app.central.central_crud import convert_geojson_to_odk_csv, read_and_test_xform
+from app.central.central_crud import (
+    convert_geojson_to_odk_csv,
+    convert_odk_submission_json_to_geojson,
+    read_and_test_xform,
+)
 from app.db.postgis_utils import (
     add_required_geojson_properties,
     parse_and_filter_geojson,
@@ -121,3 +125,28 @@ async def convert_geojson_to_odk_csv_wrapper(
 
     headers = {"Content-Disposition": f"attachment; filename={filename.stem}.csv"}
     return Response(feature_csv.getvalue(), headers=headers)
+
+
+@router.post("/convert-odk-submission-json-to-geojson")
+async def convert_odk_submission_json_to_geojson_wrapper(
+    json_file: UploadFile,
+    current_user: AuthUser = Depends(login_required),
+):
+    """Convert the ODK submission output JSON to GeoJSON.
+    
+    The submission JSON be downloaded via ODK Central, or osm-fieldwork.
+    The logic works with the standardised XForm form fields from osm-fieldwork.
+    """
+    filename = Path(json_file.filename)
+    file_ext = filename.suffix.lower()
+
+    allowed_extensions = [".json"]
+    if file_ext not in allowed_extensions:
+        raise HTTPException(status_code=400, detail="Provide a valid .json file")
+
+    contents = await json_file.read()
+    submission_geojson = await convert_odk_submission_json_to_geojson(BytesIO(contents))
+
+    headers = {"Content-Disposition": f"attachment; filename={filename.stem}.geojson"}
+    return Response(submission_geojson.getvalue(), headers=headers)
+

@@ -18,11 +18,13 @@
 """Logic for interaction with ODK Central & data."""
 
 import csv
+import json
 import os
 from io import BytesIO, StringIO
 from typing import Optional, Union
 from xml.etree.ElementTree import Element, SubElement
 
+import geojson
 from defusedxml import ElementTree
 from fastapi import HTTPException
 from loguru import logger as log
@@ -34,7 +36,11 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.db.postgis_utils import geojson_to_javarosa_geom, parse_and_filter_geojson
+from app.db.postgis_utils import (
+    geojson_to_javarosa_geom,
+    javarosa_to_geojson_geom,
+    parse_and_filter_geojson,
+)
 from app.models.enums import HTTPStatus
 from app.projects import project_schemas
 
@@ -625,6 +631,65 @@ async def convert_geojson_to_odk_csv(
     csv_buffer.seek(0)
 
     return csv_buffer
+
+
+async def convert_odk_submission_json_to_geojson(
+    input_json: BytesIO,
+) -> BytesIO:
+    """Convert ODK submission JSON file to GeoJSON.
+
+    Used for loading into QGIS.
+
+    Args:
+        input_json (BytesIO): ODK JSON submission list.
+
+    Returns:
+        geojson (BytesIO): GeoJSON format ODK submission.
+    """
+    submission_json = json.loads(input_json.getvalue())
+
+    if not submission_json:
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail="Loading JSON submission failed",
+        )
+
+    all_features = []
+    for submission in submission_json:
+        # Convert geom to geojson
+        javarosa_geom = (
+            submission.get("feature_geolocation")
+            .get("building_selected_with_note")
+            .get("xlocation")
+        )
+        geojson_geom = await javarosa_to_geojson_geom(
+            javarosa_geom, geom_type="polygon"
+        )
+
+        props_to_append = {}
+
+        # Add username & task id
+        props_to_append.update({
+            "username": submission.get("username", ""),
+            "task_id": submission.get("phonenumber", ""),
+        })
+        
+        # Extract feature location verification keys (including image name)
+        verification_data = submission.get("verification", {})
+        props_to_append.update(verification_data)
+
+        # Extract and add collected data
+        # NOTE this is in format {form_name}_details, e.g. building_details
+        for key, value in submission.items():
+            if key.endswith("_details"):
+                props_to_append.update(value)
+
+        feature = geojson.Feature(geometry=geojson_geom, properties=props_to_append)
+        all_features.append(feature)
+
+    featcol = geojson.FeatureCollection(features=all_features)
+
+    return BytesIO(json.dumps(featcol).encode("utf-8"))
 
 
 def upload_media(
