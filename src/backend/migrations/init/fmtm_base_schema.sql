@@ -556,7 +556,7 @@ ALTER SEQUENCE public.xlsforms_id_seq OWNED BY public.xlsforms.id;
 CREATE TABLE public.xforms (
     id integer NOT NULL,
     project_id integer,
-    form_id character varying,
+    odk_form_id character varying,
     category character varying
 );
 ALTER TABLE public.xforms OWNER TO fmtm;
@@ -787,6 +787,9 @@ ALTER TABLE ONLY public.user_roles
 
 ALTER TABLE ONLY public.user_roles
     ADD CONSTRAINT user_roles_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+ALTER TABLE ONLY public.xforms
+    ADD CONSTRAINT fk_project_id FOREIGN KEY (project_id) REFERENCES public.projects(id);
 
 
 -- Finalise
