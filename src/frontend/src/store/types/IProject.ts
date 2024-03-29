@@ -31,6 +31,8 @@ export type ProjectStateTypes = {
   projectGetCommentsLoading: boolean;
   clearEditorContent: boolean;
   projectOpfsBasemapPath: string | null;
+  projectTaskActivity: projectTaskActivity[];
+  projectActivityLoading: boolean;
 };
 
 type tilesListTypes = {
@@ -46,4 +48,16 @@ type projectCommentsListTypes = {
   created_at: string;
   id: number;
   task_id: number;
+};
+
+type projectTaskActivity = {
+  id: number;
+  project_id: number;
+  task_id: number;
+  action: string;
+  action_text: string;
+  action_date: string;
+  status: string;
+  profile_img: null | string;
+  username: string;
 };
