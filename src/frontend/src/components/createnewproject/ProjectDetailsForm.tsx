@@ -150,11 +150,12 @@ const ProjectDetailsForm = ({ flag }) => {
             id="short_description"
             name="short_description"
             label="Short Description"
-            rows={3}
+            rows={2}
             value={values?.short_description}
             onChange={handleInputChanges}
             required
             errorMsg={errors.short_description}
+            maxLength={200}
           />
           <TextArea
             id="description"
