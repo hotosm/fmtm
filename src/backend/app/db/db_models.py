@@ -290,7 +290,7 @@ class DbXForm(Base):
     project_id = cast(
         int, Column(Integer, ForeignKey("projects.id"), name="fk_projects", index=True)
     )
-    form_id = cast(str, Column(String))
+    odk_form_id = cast(str, Column(String))
     category = cast(str, Column(String))
 
 
