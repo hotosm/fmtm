@@ -5,10 +5,15 @@ import AssetModules from '@/shared/AssetModules';
 import { Feature } from 'ol';
 import { Polygon } from 'ol/geom';
 import { ActivitiesCardSkeletonLoader, ShowingCountSkeletonLoader } from '@/components/ProjectDetailsV2/SkeletonLoader';
-import { taskHistoryListType } from '@/models/project/projectModel';
+import { taskBoundriesGeojson, taskHistoryListType } from '@/models/project/projectModel';
 import { useAppSelector } from '@/types/reduxTypes';
+import { useDispatch } from 'react-redux';
+import { GetProjectTaskActivity } from '@/api/Project';
 
 const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion, states }) => {
+  const dispatch = useDispatch();
+  const id = params.id;
+  const decodedId = environment.decode(id);
   const displayLimit = 10;
   const [searchText, setSearchText] = useState<string>('');
   const [taskHistories, setTaskHistories] = useState<taskHistoryListType[]>([]);
@@ -17,6 +22,15 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [showShortBy, setShowSortBy] = useState(false);
   const projectDetailsLoading = useAppSelector((state) => state?.project?.projectDetailsLoading);
+  const projectTaskActivityList = useAppSelector((state) => state?.project?.projectTaskActivity);
+
+  useEffect(() => {
+    dispatch(
+      GetProjectTaskActivity(
+        `${import.meta.env.VITE_API_URL}/tasks/task_history/?project_id=${decodedId}&comment=false`,
+      ),
+    );
+  }, []);
 
   const handleOnchange = (event) => {
     setSearchText(event.target.value);
@@ -25,42 +39,34 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
   useEffect(() => {
     const index = state.findIndex((project) => project.id == environment.decode(params.id));
     let taskHistories: taskHistoryListType[] = [];
-
     if (index != -1) {
-      state[index].taskBoundries.forEach((task) => {
-        taskHistories = taskHistories.concat(
-          task.task_history.map((history) => {
-            return {
-              ...history,
-              changedToStatus: history.status,
-              taskId: task.id,
-              status: task.task_status,
-              outlineGeojson: task.outline_geojson,
-            };
-          }),
-        );
+      state[index]?.taskBoundries?.map((taskBoundary: taskBoundriesGeojson) => {
+        projectTaskActivityList?.map(({ id, ...activity }) => {
+          if (taskBoundary.id === activity.task_id) {
+            taskHistories.push({ ...activity, outlineGeojson: taskBoundary?.outline_geojson });
+          }
+        });
       });
     }
-    setAllActivities(taskHistories.length);
+
+    setAllActivities(projectTaskActivityList.length);
     let finalTaskHistory: taskHistoryListType[] = taskHistories.filter((task) => {
       return (
-        task.taskId.toString().includes(searchText) ||
+        task.task_id.toString().includes(searchText) ||
         task.action_text.split(':')[1].replace(/\s+/g, '').toString().includes(searchText.toString())
       );
     });
-
     if (searchText != '') {
       setTaskHistories(finalTaskHistory);
     } else {
       setTaskHistories(taskHistories);
     }
-  }, [taskDisplay, state, searchText]);
+  }, [taskDisplay, state, searchText, projectTaskActivityList]);
 
   const zoomToTask = (taskId) => {
     const geojson = taskHistories
-      .filter((history) => history.taskId === taskId)
+      .filter((history) => history.task_id === taskId)
       .map((history) => history.outlineGeojson)[0];
-
     const olFeature = new Feature({
       geometry: new Polygon(geojson.geometry.coordinates).transform('EPSG:4326', 'EPSG:3857'),
     });
@@ -93,14 +99,11 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
             <span className="fmtm-text-[#7A7676] fmtm-font-extralight fmtm-italic fmtm-font-archivo">
               updated status to{' '}
             </span>
-            <p
-              style={{ color: defaultTheme.statusTextTheme[taskHistory?.changedToStatus] }}
-              className="fmtm-font-archivo"
-            >
-              {taskHistory?.changedToStatus}
+            <p style={{ color: defaultTheme.statusTextTheme[taskHistory?.status] }} className="fmtm-font-archivo">
+              {taskHistory?.status}
             </p>
             <div className="fmtm-flex fmtm-items-center fmtm-justify-between">
-              <p className="fmtm-font-archivo fmtm-text-sm fmtm-text-[#7A7676]">#{taskHistory.taskId}</p>
+              <p className="fmtm-font-archivo fmtm-text-sm fmtm-text-[#7A7676]">#{taskHistory.task_id}</p>
               <div className="fmtm-flex fmtm-items-center fmtm-mb-1">
                 <AssetModules.AccessTimeIcon className="fmtm-text-primaryRed" style={{ fontSize: '20px' }} />
               </div>
@@ -111,7 +114,7 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
             </div>
           </div>
         </div>
-        <div title="Zoom to Task" onClick={() => zoomToTask(taskHistory.taskId)}>
+        <div title="Zoom to Task" onClick={() => zoomToTask(taskHistory.task_id)}>
           <AssetModules.MapIcon
             className="fmtm-text-[#9B9999] hover:fmtm-text-[#555555] fmtm-cursor-pointer"
             style={{ fontSize: '20px' }}
