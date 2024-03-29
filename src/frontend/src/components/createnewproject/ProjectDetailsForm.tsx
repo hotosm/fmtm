@@ -27,7 +27,6 @@ const ProjectDetailsForm = ({ flag }) => {
     hasODKCredentials: item?.odk_central_url ? true : false,
   }));
   const [hasODKCredentials, setHasODKCredentials] = useState(false);
-  const [editorHtmlContent, setEditorHtmlContent] = useState('');
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(values));
@@ -197,7 +196,7 @@ const ProjectDetailsForm = ({ flag }) => {
               className="fmtm-text-black"
             />
           )}
-          {!values.defaultODKCredentials && (
+          {((!values.defaultODKCredentials && hasODKCredentials) || !hasODKCredentials) && (
             <div className="fmtm-flex fmtm-flex-col fmtm-gap-6">
               <InputTextField
                 id="odk_central_url"
