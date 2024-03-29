@@ -566,7 +566,7 @@ async def get_address_from_lat_lon_async(latitude, longitude):
 
 
 async def geojson_to_javarosa_geom(geojson_geometry: dict) -> str:
-    """Convert a GeoJSON Polygon geometry to JavaRosa format string.
+    """Convert a GeoJSON geometry to JavaRosa format string.
 
     This format is unique to ODK and the JavaRosa XForm processing library.
     Example JavaRosa polygon (semicolon separated):
@@ -577,7 +577,7 @@ async def geojson_to_javarosa_geom(geojson_geometry: dict) -> str:
     -8.38071535576881 115.640801902838 0.0 0.0
 
     Args:
-        geojson_geometry (dict): The geojson polygon geom.
+        geojson_geometry (dict): The GeoJSON geometry.
 
     Returns:
         str: A string representing the geometry in JavaRosa format.
@@ -598,6 +598,40 @@ async def geojson_to_javarosa_geom(geojson_geometry: dict) -> str:
     ]
 
     return ";".join(javarosa_geometry)
+
+
+async def javarosa_to_geojson_geom(javarosa_geom_string: str, geom_type: str) -> dict:
+    """Convert a JavaRosa format string to GeoJSON geometry.
+
+    Args:
+        javarosa_geom_string (str): The JavaRosa geometry.
+        geom_type (str): The geometry type.
+
+    Returns:
+        dict: A geojson geometry.
+    """
+    if geom_type == "point":
+        lat, lon, _, _ = map(float, javarosa_geom_string.split())
+        geojson_geometry = {"type": "Point", "coordinates": [lon, lat]}
+    elif geom_type == "line":
+        coordinates = [
+            [float(coord) for coord in reversed(point.split()[:2])]
+            for point in javarosa_geom_string.split(";")
+        ]
+        geojson_geometry = {"type": "LineString", "coordinates": coordinates}
+    elif geom_type == "polygon":
+        coordinates = [
+            [
+                [float(coord) for coord in reversed(point.split()[:2])]
+                for point in coordinate.split(";")
+            ]
+            for coordinate in javarosa_geom_string.split(",")
+        ]
+        geojson_geometry = {"type": "Polygon", "coordinates": coordinates}
+    else:
+        raise ValueError("Unsupported GeoJSON geometry type")
+
+    return geojson_geometry
 
 
 async def get_entity_dicts_from_task_geojson(
