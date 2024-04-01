@@ -239,8 +239,9 @@ const Home = () => {
   const [showDebugConsole, setShowDebugConsole] = useState(false);
 
   return (
-    <div className="fmtm-bg-[#f5f5f5]" style={{ height: '100%' }}>
+    <div className="fmtm-bg-[#f5f5f5] fmtm-h-[100dvh] sm:fmtm-h-full">
       {/* only used to display debug console */}
+
       <DebugConsole showDebugConsole={showDebugConsole} setShowDebugConsole={setShowDebugConsole} />
       {/* Customized Modal For Generate Tiles */}
       <div>
@@ -376,7 +377,7 @@ const Home = () => {
               ref={mapRef}
               mapInstance={map}
               className={`map naxatw-relative naxatw-min-h-full naxatw-w-full ${
-                windowSize.width <= 640 ? 'fmtm-h-[100vh]' : 'fmtm-h-full'
+                windowSize.width <= 640 ? 'fmtm-h-[100dvh]' : 'fmtm-h-full'
               }`}
             >
               {import.meta.env.MODE === 'development' && (
@@ -428,7 +429,7 @@ const Home = () => {
                 />
               )}
               <AsyncPopup map={map} popupUI={dataExtractDataPopup} primaryKey={'osm_id'} showOnHover="singleclick" />
-              <div className="fmtm-absolute fmtm-bottom-36 sm:fmtm-bottom-5 fmtm-left-5 fmtm-z-50 fmtm-rounded-lg">
+              <div className="fmtm-absolute fmtm-bottom-20 sm:fmtm-bottom-5 fmtm-left-3 fmtm-z-50 fmtm-rounded-lg">
                 <Accordion
                   body={<MapLegends defaultTheme={defaultTheme} />}
                   header={
@@ -442,9 +443,9 @@ const Home = () => {
                   collapsed={true}
                 />
               </div>
-              <div className="fmtm-absolute fmtm-bottom-36 sm:fmtm-top-3 fmtm-right-3 fmtm-z-50 fmtm-h-fit">
+              <div className="fmtm-absolute fmtm-bottom-20 sm:fmtm-top-3 fmtm-right-3 fmtm-z-50 fmtm-h-fit">
                 <Button
-                  btnText="GENERATE TILES"
+                  btnText="TILES"
                   icon={<AssetModules.BoltIcon />}
                   onClick={() => {
                     dispatch(ProjectActions.ToggleGenerateMbTilesModalStatus(true));
