@@ -428,12 +428,11 @@ const Home = () => {
                 />
               )}
               <AsyncPopup map={map} popupUI={dataExtractDataPopup} primaryKey={'osm_id'} showOnHover="singleclick" />
-              <div className="fmtm-top-28 fmtm-left-5">{window.DeviceMotionEvent}</div>
               <div className="fmtm-absolute fmtm-bottom-36 sm:fmtm-bottom-5 fmtm-left-5 fmtm-z-50 fmtm-rounded-lg">
                 <Accordion
                   body={<MapLegends defaultTheme={defaultTheme} />}
                   header={
-                    <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
+                    <div className="fmtm-flex fmtm-items-center fmtm-gap-1 sm:fmtm-gap-2">
                       <AssetModules.LegendToggleIcon className=" fmtm-text-primaryRed" sx={{ fontSize: '30px' }} />
                       <p className="fmtm-text-lg fmtm-font-normal">Legend</p>
                     </div>
@@ -443,9 +442,9 @@ const Home = () => {
                   collapsed={true}
                 />
               </div>
-              <div className="fmtm-absolute fmtm-bottom-[8.6rem] sm:fmtm-top-3 fmtm-right-3 fmtm-z-50 fmtm-h-fit">
+              <div className="fmtm-absolute fmtm-bottom-36 sm:fmtm-top-3 fmtm-right-3 fmtm-z-50 fmtm-h-fit">
                 <Button
-                  btnText="GENERATE MBTILES"
+                  btnText="GENERATE TILES"
                   icon={<AssetModules.BoltIcon />}
                   onClick={() => {
                     dispatch(ProjectActions.ToggleGenerateMbTilesModalStatus(true));

@@ -4,8 +4,8 @@ import AssetModules from '@/shared/AssetModules';
 
 const TasksComponent = ({ qrcode, taskId }) => {
   return (
-    <div className="fmtm-flex fmtm-justify-center fmtm-py-5 fmtm-border-t-[1px]">
-      <div className="fmtm-p-5 fmtm-border-[1px] fmtm-rounded-lg fmtm-relative">
+    <div className="fmtm-flex fmtm-justify-center sm:fmtm-py-5 fmtm-border-t-[1px]">
+      <div className="fmtm-p-5 fmtm-border-[1px] fmtm-rounded-lg fmtm-relative fmtm-hidden sm:fmtm-block">
         {qrcode == '' ? (
           <CoreModules.Skeleton width={170} height={170} />
         ) : (
