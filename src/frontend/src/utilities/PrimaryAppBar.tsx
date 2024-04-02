@@ -121,9 +121,17 @@ export default function PrimaryAppBar() {
               />
             </CoreModules.Link>
           </CoreModules.Tabs>
+          <CoreModules.Stack sx={{ flexGrow: 1 }} />
+
           {/* position changed */}
           {token != null && (
-            <CoreModules.Stack direction={'row'} spacing={1} justifyContent="center" alignItems="center">
+            <CoreModules.Stack
+              direction={'row'}
+              spacing={1}
+              justifyContent="end"
+              alignItems="center"
+              className="fmtm-text-ellipsis fmtm-max-w-[9.5rem]"
+            >
               {token['picture'] !== 'null' && token['picture'] ? (
                 <CoreModules.Stack
                   className="fmtm-w-7 fmtm-h-7 fmtm-flex fmtm-items-center fmtm-justify-center fmtm-overflow-hidden fmtm-rounded-full fmtm-border-[1px]"
@@ -132,20 +140,14 @@ export default function PrimaryAppBar() {
                   <img src={token['picture']} alt="Profile Picture" />
                 </CoreModules.Stack>
               ) : (
-                <AssetModules.PersonIcon color="success" sx={{ display: { xs: 'none', md: 'block' }, mt: '3%' }} />
+                <AssetModules.PersonIcon color="success" sx={{ mt: '3%' }} />
               )}
-              <CoreModules.Typography
-                variant="typography"
-                color={'info'}
-                noWrap
-                sx={{ display: { xs: 'none', md: 'block' } }}
-              >
+              <CoreModules.Typography variant="typography" color={'info'} noWrap>
                 {token['username']}
               </CoreModules.Typography>
             </CoreModules.Stack>
           )}
 
-          <CoreModules.Stack sx={{ flexGrow: 1 }} />
           <CoreModules.Stack direction={'row'} sx={{ display: { md: 'flex', xs: 'none' } }}>
             {token != null ? (
               <CoreModules.Link style={{ textDecoration: 'none' }} to={'/'}>
