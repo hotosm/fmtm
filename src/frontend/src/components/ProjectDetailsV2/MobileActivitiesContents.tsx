@@ -9,7 +9,7 @@ const MobileActivitiesContents = ({ map, mainView, mapDivPostion }) => {
   const defaultTheme = useAppSelector((state) => state.theme.hotTheme);
 
   return (
-    <div className="fmtm-w-full fmtm-bg-white fmtm-mb-[12vh]">
+    <div className="fmtm-w-full fmtm-bg-white fmtm-mb-[8vh]">
       <ActivitiesPanel
         params={params}
         state={state.projectTaskBoundries}

@@ -477,7 +477,7 @@ const Home = () => {
             {mobileFooterSelection === 'instructions' && (
               <BottomSheet
                 body={
-                  <div className="fmtm-mb-[12vh]">
+                  <div className="fmtm-mb-[8vh]">
                     <Instructions instructions={state?.projectInfo?.instructions} />
                   </div>
                 }
@@ -487,7 +487,7 @@ const Home = () => {
             {mobileFooterSelection === 'comment' && (
               <BottomSheet
                 body={
-                  <div className="fmtm-mb-[12vh]">
+                  <div className="fmtm-mb-[8vh]">
                     <Comments />
                   </div>
                 }
@@ -497,7 +497,7 @@ const Home = () => {
             {mobileFooterSelection === 'others' && (
               <BottomSheet
                 body={
-                  <div className="fmtm-mb-[10vh]">
+                  <div className="fmtm-mb-[8vh]">
                     <ProjectOptions />
                   </div>
                 }
