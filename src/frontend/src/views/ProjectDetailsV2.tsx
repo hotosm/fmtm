@@ -80,6 +80,14 @@ const Home = () => {
   const taskModalStatus = CoreModules.useAppSelector((state) => state.project.taskModalStatus);
   const projectOpfsBasemapPath = useAppSelector((state) => state?.project?.projectOpfsBasemapPath);
 
+  useEffect(() => {
+    if (state.projectInfo.title) {
+      document.title = `${state.projectInfo.title} - HOT Field Mapping Tasking Manager`;
+    } else {
+      document.title = 'HOT Field Mapping Tasking Manager';
+    }
+  }, [state.projectInfo.title]);
+
   //snackbar handle close funtion
   const handleClose = (event, reason) => {
     if (reason === 'clickaway') {
