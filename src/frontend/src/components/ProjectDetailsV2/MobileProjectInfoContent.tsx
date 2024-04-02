@@ -4,7 +4,7 @@ import { projectInfoType } from '@/models/project/projectModel';
 
 const MobileProjectInfoContent = ({ projectInfo }: { projectInfo: projectInfoType }) => {
   return (
-    <div className="fmtm-flex fmtm-flex-col fmtm-gap-3 fmtm-mb-[8vh]">
+    <div className="fmtm-flex fmtm-flex-col fmtm-gap-3 fmtm-mb-[10vh]">
       <div className="fmtm-flex fmtm-gap-3 fmtm-border-b-[1px] fmtm-pb-2">
         <AssetModules.InfoIcon className=" fmtm-text-primaryRed" sx={{ fontSize: '35px' }} />
         <p className="fmtm-text-2xl">Project Information</p>
