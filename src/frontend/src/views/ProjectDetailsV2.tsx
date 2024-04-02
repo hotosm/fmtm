@@ -43,8 +43,10 @@ import Instructions from '@/components/ProjectDetailsV2/Instructions';
 import { readFileFromOPFS } from '@/api/Files';
 import DebugConsole from '@/utilities/DebugConsole';
 import { CustomCheckbox } from '@/components/common/Checkbox';
+import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 
 const Home = () => {
+  useDocumentTitle('Project Details');
   const dispatch = CoreModules.useAppDispatch();
   const params = CoreModules.useParams();
   const navigate = useNavigate();
