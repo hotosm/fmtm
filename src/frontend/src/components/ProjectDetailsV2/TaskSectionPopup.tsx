@@ -88,7 +88,11 @@ const TaskSectionPopup = ({ taskId, body, feature }: TaskSectionPopupPropType) =
           />
         </div>
       </div>
-      <div className="fmtm-bg-[#fbfbfb] fmtm-rounded-t-2xl fmtm-shadow-[-20px_0px_60px_25px_rgba(0,0,0,0.2)]  md:fmtm-rounded-tr-none md:fmtm-rounded-l-2xl">
+      <div
+        className={`fmtm-bg-[#fbfbfb] ${
+          taskModalStatus ? 'fmtm-shadow-[-20px_0px_60px_25px_rgba(0,0,0,0.2)]' : ''
+        } fmtm-rounded-t-2xl md:fmtm-rounded-tr-none md:fmtm-rounded-l-2xl`}
+      >
         <div className="fmtm-flex fmtm-flex-col fmtm-gap-2 fmtm-p-3 sm:fmtm-p-5">
           <h4 className="fmtm-text-lg fmtm-font-bold">Task: {taskId}</h4>
           <p className="fmtm-text-base fmtm-text-[#757575]">Status: {task_status}</p>
