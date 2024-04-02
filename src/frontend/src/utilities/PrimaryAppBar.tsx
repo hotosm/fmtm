@@ -1,7 +1,6 @@
 import * as React from 'react';
 import windowDimention from '@/hooks/WindowDimension';
 import DrawerComponent from '@/utilities/CustomDrawer';
-import CustomizedImage from '@/utilities/CustomizedImage';
 import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
 import { CommonActions } from '@/store/slices/CommonSlice';
@@ -9,10 +8,12 @@ import { LoginActions } from '@/store/slices/LoginSlice';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { createLoginWindow, revokeCookie } from '@/utilfunctions/login';
 import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import logo from '@/assets/images/hotLog.png';
 
 export default function PrimaryAppBar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [open, setOpen] = React.useState<boolean>(false);
   const dispatch = CoreModules.useAppDispatch();
   const defaultTheme: any = CoreModules.useAppSelector((state) => state.theme.hotTheme);
@@ -81,9 +82,7 @@ export default function PrimaryAppBar() {
         sx={{ boxShadow: 0, borderBottom: '1px solid #e1e0e0', borderTop: '1px solid #e1e0e0' }}
       >
         <CoreModules.Toolbar>
-          <CoreModules.Link to={'/'}>
-            <CustomizedImage status={'logo'} style={appBarInnerStyles.logo} />
-          </CoreModules.Link>
+          <img src={logo} alt="FMTM Logo" onClick={() => navigate('/')} className="fmtm-w-[5.5rem] sm:fmtm-w-28" />
 
           {/* Tabs switch added */}
           <CoreModules.Tabs
