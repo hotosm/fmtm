@@ -17,52 +17,16 @@
 #
 
 """Temporary Auth methods related to field users."""
-
-
-import os
-from datetime import datetime, timedelta
-from typing import Dict, Union
-
-import jwt
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-from app.auth.osm import AuthUser
 from app.config import settings
-from app.models.enums import UserRole
 
 router = APIRouter(
     prefix="/temp",
     tags=["temp-auth"],
     responses={404: {"description": "Not found"}},
 )
-
-SECRET_KEY = os.environ.get("AUTH_SECRET_KEY")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 1 week
-
-
-def create_access_token(data: dict):
-    """Creates an access token based on the provided user data."""
-    to_encode = data.copy()
-    expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode["exp"] = expire
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-
-def verify_token(request: Request, token: str) -> Dict[str, Union[str, int]]:
-    """Verifies the authenticity of a token by decoding it."""
-    try:
-        if token:
-            return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        else:
-            cookie_name = settings.FMTM_DOMAIN.replace(".", "_")
-            access_token = request.cookies.get(cookie_name)
-            return access_token
-    except jwt.ExpiredSignatureError as e:
-        raise HTTPException(status_code=401, detail="Token has expired") from e
-    except jwt.InvalidTokenError as e:
-        raise HTTPException(status_code=401, detail="Invalid token") from e
 
 
 @router.get("/login/")
@@ -81,27 +45,19 @@ async def temp_login(
     Returns:
         Response: The response object containing the access token as a cookie.
     """
-    access_token = create_access_token(
-        {"id": 20386219, "username": "svcfmtm", "role": "MAPPER"}
-    )  # create temporary user token
+    access_token = settings.OSM_SVC_TOKEN
 
     response = JSONResponse(content={"access_token": access_token}, status_code=200)
     cookie_name = settings.FMTM_DOMAIN.replace(".", "_")
-
-    # Set JWT token as cookie
     response.set_cookie(
         key=cookie_name,
         value=access_token,
-        expires=ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # Convert to seconds
+        max_age=604800,
+        expires=604800,  # expiry set to 7 days,
+        path="/",
+        domain=settings.FMTM_DOMAIN,
+        secure=False if settings.DEBUG else True,
         httponly=True,
+        samesite="lax",
     )
     return response
-
-
-async def auth_check(access_token: str = Depends(verify_token)):
-    """Wrapper of verify token requiring temporary access."""
-    return AuthUser(
-        id=20386219,
-        username="svcfmtm",
-        role=UserRole.ADMIN,
-    )

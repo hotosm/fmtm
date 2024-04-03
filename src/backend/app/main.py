@@ -33,7 +33,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.__version__ import __version__
-from app.auth import auth_routes
+from app.auth import auth_routes, temp_auth
 from app.central import central_routes
 from app.config import settings
 from app.db.database import get_db
@@ -96,6 +96,7 @@ def get_application() -> FastAPI:
     _app.include_router(tasks_routes.router)
     _app.include_router(central_routes.router)
     _app.include_router(auth_routes.router)
+    _app.include_router(temp_auth.router)
     _app.include_router(submission_routes.router)
     _app.include_router(organisation_routes.router)
     _app.include_router(helper_routes.router)
