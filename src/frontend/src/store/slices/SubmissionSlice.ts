@@ -3,7 +3,7 @@ import { SubmissionStateTypes } from '@/store/types/ISubmissions';
 
 const initialState: SubmissionStateTypes = {
   submissionDetailsLoading: true,
-  submissionDetails: [],
+  submissionDetails: null,
   submissionInfographics: [],
   submissionInfographicsLoading: false,
   submissionContributors: [],
@@ -25,6 +25,14 @@ const initialState: SubmissionStateTypes = {
   submissionTableRefreshing: false,
   validatedVsMappedInfographics: [],
   validatedVsMappedLoading: false,
+  updateReviewStatusModal: {
+    toggleModalStatus: false,
+    instanceId: null,
+    taskId: null,
+    projectId: null,
+    reviewState: '',
+  },
+  updateReviewStateLoading: false,
 };
 
 const SubmissionSlice = createSlice({
@@ -69,6 +77,37 @@ const SubmissionSlice = createSlice({
     },
     SetSubmissionTableRefreshing(state, action) {
       state.submissionTableRefreshing = action.payload;
+    },
+    SetUpdateReviewStatusModal(state, action) {
+      state.updateReviewStatusModal = action.payload;
+    },
+    UpdateReviewStateLoading(state, action) {
+      state.updateReviewStateLoading = action.payload;
+    },
+    UpdateSubmissionTableDataReview(state, action) {
+      const updatedSubmission = action.payload;
+
+      // submission-instance table update
+      if (state.submissionTableData.results.length > 0) {
+        const updatedSubmissionDataList = state.submissionTableData.results.map((submissionData: any) => {
+          if (updatedSubmission.instanceId === submissionData.meta.instanceID) {
+            return {
+              ...submissionData,
+              __system: { ...submissionData.__system, reviewState: updatedSubmission.reviewState },
+            };
+          }
+          return submissionData;
+        });
+        state.submissionTableData.results = updatedSubmissionDataList;
+      }
+
+      // submission-instance key value pair update
+      if (state.submissionDetails) {
+        state.submissionDetails = {
+          ...state.submissionDetails,
+          __system: { ...state.submissionDetails.__system, reviewState: updatedSubmission.reviewState },
+        };
+      }
     },
   },
 });

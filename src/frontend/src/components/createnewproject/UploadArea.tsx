@@ -42,16 +42,17 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
   const uploadAreaSelection = useAppSelector((state) => state.createproject.uploadAreaSelection);
   const drawToggle = useAppSelector((state) => state.createproject.drawToggle);
   const totalAreaSelection = useAppSelector((state) => state.createproject.totalAreaSelection);
+  const toggleSplittedGeojsonEdit = useAppSelector((state) => state.createproject.toggleSplittedGeojsonEdit);
 
   const submission = () => {
     if (totalAreaSelection) {
       const totalArea = parseFloat(totalAreaSelection?.split(' ')[0]);
       const areaUnit = totalAreaSelection?.split(' ')[1];
-      if (totalArea > 1000 && areaUnit === 'km²') {
+      if (totalArea > 200 && areaUnit === 'km²') {
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
-            message: 'Cannot create project of project area exceeding 1000 Sq.KM.',
+            message: 'Cannot create project of project area exceeding 200 Sq.KM.',
             variant: 'error',
             duration: 3000,
           }),
@@ -62,6 +63,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 3 }));
     navigate('/select-category');
+    dispatch(CreateProjectActions.SetToggleSplittedGeojsonEdit(false));
   };
   const {
     handleSubmit,
@@ -72,6 +74,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
   const toggleStep = (step, url) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
     navigate(url);
+    dispatch(CreateProjectActions.SetToggleSplittedGeojsonEdit(false));
   };
 
   const convertFileToGeojson = async (file) => {
@@ -123,6 +126,17 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
   };
 
   useEffect(() => {
+    if (drawnGeojson && !valid(drawnGeojson)) {
+      dispatch(
+        CommonActions.SetSnackBar({
+          open: true,
+          message: 'File not a valid geojson',
+          variant: 'error',
+          duration: 4000,
+        }),
+      );
+      return;
+    }
     if (drawnGeojson) {
       const isWGS84 = () => {
         if (uploadAreaSelection === 'upload_file') {
@@ -174,11 +188,11 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
           }),
         );
       }
-      if (totalArea > 1000 && areaUnit === 'km²') {
+      if (totalArea > 200 && areaUnit === 'km²') {
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
-            message: 'The project area exceeded 1000 Sq.KM. and must be less than 1000 Sq.KM.',
+            message: 'The project area exceeded 200 Sq.KM. and must be less than 200 Sq.KM.',
             variant: 'error',
             duration: 3000,
           }),
@@ -320,16 +334,23 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
                       setGeojsonFile(null);
                     }
               }
-              onModify={(geojson, area) => {
-                handleCustomChange('drawnGeojson', geojson);
-                dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
-                dispatch(CreateProjectActions.SetTotalAreaSelection(area));
-                dispatch(CreateProjectActions.ClearProjectStepState(formValues));
-                setCustomDataExtractUpload(null);
-              }}
+              onModify={
+                toggleSplittedGeojsonEdit
+                  ? (geojson, area) => {
+                      handleCustomChange('drawnGeojson', geojson);
+                      dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
+                      dispatch(CreateProjectActions.SetTotalAreaSelection(area));
+                      dispatch(CreateProjectActions.ClearProjectStepState(formValues));
+                      setCustomDataExtractUpload(null);
+                    }
+                  : null
+              }
               getAOIArea={(area) => {
-                dispatch(CreateProjectActions.SetTotalAreaSelection(area));
+                if (drawnGeojson) {
+                  dispatch(CreateProjectActions.SetTotalAreaSelection(area));
+                }
               }}
+              hasEditUndo
             />
           </div>
         </div>

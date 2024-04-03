@@ -5,6 +5,7 @@ import { ProjectActions } from '@/store/slices/ProjectSlice';
 import environment from '@/environment';
 import { ProjectFilesById } from '@/api/Files';
 import QrcodeComponent from '@/components/QrcodeComponent';
+import { useNavigate } from 'react-router-dom';
 
 type TaskSectionPopupPropType = {
   taskId: number | null;
@@ -14,6 +15,7 @@ type TaskSectionPopupPropType = {
 
 const TaskSectionPopup = ({ taskId, body, feature }: TaskSectionPopupPropType) => {
   const dispatch = CoreModules.useAppDispatch();
+  const navigate = useNavigate();
   const [task_status, set_task_status] = useState('READY');
   const taskModalStatus = CoreModules.useAppSelector((state) => state.project.taskModalStatus);
   const params = CoreModules.useParams();
@@ -54,7 +56,7 @@ const TaskSectionPopup = ({ taskId, body, feature }: TaskSectionPopupPropType) =
     <div
       className={`fmtm-duration-1000 fmtm-z-[10002] fmtm-h-fit ${
         taskModalStatus
-          ? 'fmtm-bottom-0 fmtm-right-0 md:fmtm-top-[calc(40vh)] fmtm-w-[100vw] md:fmtm-w-[50vw] md:fmtm-max-w-[25rem]'
+          ? 'fmtm-bottom-0 md:fmtm-top-[50%] md:-fmtm-translate-y-[35%] fmtm-right-0 fmtm-w-[100vw] md:fmtm-w-[50vw] md:fmtm-max-w-[25rem]'
           : 'fmtm-top-[calc(100vh)] md:fmtm-top-[calc(40vh)] md:fmtm-left-[calc(100vw)] fmtm-w-[100vw]'
       } fmtm-fixed
         fmtm-rounded-t-3xl fmtm-border-opacity-50`}
@@ -64,23 +66,27 @@ const TaskSectionPopup = ({ taskId, body, feature }: TaskSectionPopupPropType) =
           taskModalStatus ? '' : 'fmtm-hidden'
         }  fmtm-cursor-pointer fmtm-flex fmtm-items-center fmtm-gap-3`}
       >
-        <AssetModules.FileDownloadOutlinedIcon
-          style={{ width: '20px' }}
-          className="hover:fmtm-text-primaryRed"
+        <div
+          title="Download Tiles"
+          className="fmtm-flex fmtm-items-center fmtm-gap-1 fmtm-group"
           onClick={() => {
             dispatch(ProjectActions.ToggleGenerateMbTilesModalStatus(true));
+            dispatch(ProjectActions.ToggleTaskModalStatus(false));
           }}
-        />
-        <AssetModules.DescriptionOutlinedIcon
-          style={{ width: '20px' }}
-          className="hover:fmtm-text-primaryRed"
-          onClick={() => {}}
-        />
-        <AssetModules.CloseIcon
-          style={{ width: '20px' }}
-          className="hover:fmtm-text-primaryRed"
-          onClick={() => dispatch(ProjectActions.ToggleTaskModalStatus(false))}
-        />
+        >
+          <AssetModules.FileDownloadOutlinedIcon
+            style={{ width: '20px' }}
+            className="fmtm-text-primaryRed group-hover:fmtm-text-red-700"
+          />
+          <p className="fmtm-text-base fmtm-text-primaryRed group-hover:fmtm-text-red-700">MB TILES</p>
+        </div>
+        <div title="Close">
+          <AssetModules.CloseIcon
+            style={{ width: '20px' }}
+            className="hover:fmtm-text-primaryRed"
+            onClick={() => dispatch(ProjectActions.ToggleTaskModalStatus(false))}
+          />
+        </div>
       </div>
       <div className="fmtm-bg-[#fbfbfb] fmtm-rounded-t-2xl fmtm-shadow-[-20px_0px_60px_25px_rgba(0,0,0,0.2)]  md:fmtm-rounded-tr-none md:fmtm-rounded-l-2xl">
         <div className="fmtm-flex fmtm-flex-col fmtm-gap-2 fmtm-p-5">

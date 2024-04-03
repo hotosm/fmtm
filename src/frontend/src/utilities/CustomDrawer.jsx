@@ -1,5 +1,7 @@
-import * as React from 'react';
+import React, { useEffect, useState } from 'react';
 import SwipeableDrawer from '@mui/material/SwipeableDrawer';
+import Button from '@/components/common/Button';
+import { Modal } from '@/components/common/Modal';
 import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
 import { NavLink } from 'react-router-dom';
@@ -7,10 +9,12 @@ import { createLoginWindow, revokeCookie } from '@/utilfunctions/login';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import { LoginActions } from '@/store/slices/LoginSlice';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
+import DebugConsole from '@/utilities/DebugConsole';
 
 export default function CustomDrawer({ open, placement, size, type, onClose, onSignOut, setOpen }) {
   const defaultTheme = CoreModules.useAppSelector((state) => state.theme.hotTheme);
   const dispatch = CoreModules.useAppDispatch();
+  const [showDebugConsole, setShowDebugConsole] = useState(false);
 
   const onMouseEnter = (event) => {
     const element = document.getElementById(`text${event.target.id}`);
@@ -84,6 +88,12 @@ export default function CustomDrawer({ open, placement, size, type, onClose, onS
       isExternalLink: true,
       isActive: true,
     },
+    {
+      name: 'Download Custom ODK Collect',
+      ref: 'https://github.com/hotosm/odkcollect/releases/download/entity-preselection/ODK-Collect-entity-preselection.apk',
+      isExternalLink: true,
+      isActive: true,
+    },
   ];
 
   const handleOnSignOut = async () => {
@@ -106,6 +116,7 @@ export default function CustomDrawer({ open, placement, size, type, onClose, onS
 
   return (
     <div>
+      <DebugConsole showDebugConsole={showDebugConsole} setShowDebugConsole={setShowDebugConsole} />
       <React.Fragment>
         <SwipeableDrawer swipeAreaWidth={0} onOpen={onClose} anchor={'right'} open={open} onClose={onClose}>
           <CoreModules.Stack sx={{ display: 'flex', flexDirection: 'column', padding: 3 }}>
@@ -198,6 +209,9 @@ export default function CustomDrawer({ open, placement, size, type, onClose, onS
                     </CoreModules.ListItem>
                   </NavLink>
                 ),
+              )}
+              {import.meta.env.MODE === 'development' && (
+                <Button onClick={() => setShowDebugConsole(true)} btnText="Open Console" btnType="secondary" />
               )}
               <div className="fmtm-ml-4 fmtm-mt-2 lg:fmtm-hidden">
                 {token != null ? (

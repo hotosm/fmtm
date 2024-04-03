@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
+import { CommonActions } from '@/store/slices/CommonSlice';
 import environment from '@/environment';
 import { DownloadTile, GenerateProjectTiles, GetTilesList } from '@/api/Project';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
@@ -29,8 +30,10 @@ const GenerateBasemap = ({ projectInfo }) => {
     padding: '16px 32px 24px 32px',
     maxWidth: '1000px',
   });
-  const downloadBasemap = (tileId) => {
-    dispatch(DownloadTile(`${import.meta.env.VITE_API_URL}/projects/download_tiles/?tile_id=${tileId}`, projectInfo));
+  const downloadBasemap = (tileId, toOpfs = false) => {
+    dispatch(
+      DownloadTile(`${import.meta.env.VITE_API_URL}/projects/download_tiles/?tile_id=${tileId}`, projectInfo, toOpfs),
+    );
   };
 
   const getTilesList = () => {
@@ -253,7 +256,7 @@ const GenerateBasemap = ({ projectInfo }) => {
             component={CoreModules.Paper}
             className="scrollbar fmtm-overflow-y-auto fmtm-max-h-[38vh] lg:fmtm-max-h-[45vh] sm:fmtm-mb-5"
           >
-            <CoreModules.Table sx={{ minWidth: 650 }} aria-label="simple table">
+            <CoreModules.Table className="fmtm-min-w-[300px] md:fmtm-min-w-[650px]" aria-label="simple table">
               <CoreModules.TableHead>
                 <CoreModules.TableRow>
                   {/* <CoreModules.TableCell>Id</CoreModules.TableCell> */}
@@ -297,18 +300,32 @@ const GenerateBasemap = ({ projectInfo }) => {
                     </CoreModules.TableCell>
                     <CoreModules.TableCell align="center">
                       <div className="fmtm-flex fmtm-gap-4 fmtm-float-right">
-                        {list.status === 'SUCCESS' ? (
-                          <AssetModules.FileDownloadIcon
-                            sx={{ cursor: 'pointer', fontSize: '22px' }}
-                            onClick={() => downloadBasemap(list.id)}
-                            className="fmtm-text-gray-500 hover:fmtm-text-blue-500"
-                          ></AssetModules.FileDownloadIcon>
-                        ) : (
-                          <></>
+                        {list.status === 'SUCCESS' && (
+                          <>
+                            <AssetModules.FileDownloadIcon
+                              sx={{ cursor: 'pointer', fontSize: '22px' }}
+                              onClick={() => downloadBasemap(list.id)}
+                              className="fmtm-text-gray-500 hover:fmtm-text-blue-500"
+                            />
+                            <AssetModules.BoltIcon
+                              sx={{ cursor: 'pointer', fontSize: '22px' }}
+                              onClick={() => downloadBasemap(list.id, true)}
+                              className="fmtm-text-red-500 hover:fmtm-text-red-700"
+                            />
+                          </>
                         )}
                         <AssetModules.DeleteIcon
                           sx={{ cursor: 'pointer', fontSize: '22px' }}
-                          onClick={() => {}}
+                          onClick={() => {
+                            dispatch(
+                              CommonActions.SetSnackBar({
+                                open: true,
+                                message: 'Not implemented',
+                                variant: 'error',
+                                duration: 2000,
+                              }),
+                            );
+                          }}
                           className="fmtm-text-red-500 hover:fmtm-text-red-700"
                         ></AssetModules.DeleteIcon>
                       </div>

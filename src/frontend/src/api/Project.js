@@ -2,6 +2,8 @@ import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import CoreModules from '@/shared/CoreModules';
 import { task_priority_str } from '@/types/enums';
+import axios from 'axios';
+import { writeBinaryToOPFS } from '@/api/Files';
 
 export const ProjectById = (existingProjectList, projectId) => {
   return async (dispatch) => {
@@ -42,6 +44,7 @@ export const ProjectById = (existingProjectList, projectId) => {
             xform_category: projectResp.xform_category,
             tasks_bad: projectResp.tasks_bad,
             data_extract_url: projectResp.data_extract_url,
+            instructions: projectResp?.project_info?.per_task_instructions,
           }),
         );
         dispatch(ProjectActions.SetProjectDetialsLoading(false));
@@ -141,9 +144,11 @@ export const GenerateProjectTiles = (url, payload) => {
     const generateProjectTiles = async (url, payload) => {
       try {
         const response = await CoreModules.axios.get(url);
+        console.log(response, 'response-mbtiles');
         dispatch(GetTilesList(`${import.meta.env.VITE_API_URL}/projects/tiles_list/${payload}/`));
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));
       } catch (error) {
+        console.log(error, 'error-mbtiles');
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));
       } finally {
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));
@@ -153,23 +158,42 @@ export const GenerateProjectTiles = (url, payload) => {
   };
 };
 
-export const DownloadTile = (url, payload) => {
+export const DownloadTile = (url, payload, toOpfs = false) => {
   return async (dispatch) => {
     dispatch(ProjectActions.SetDownloadTileLoading({ type: payload, loading: true }));
 
-    const getDownloadTile = async (url, payload) => {
+    const getDownloadTile = async (url, payload, toOpfs) => {
       try {
         const response = await CoreModules.axios.get(url, {
-          responseType: 'blob',
+          responseType: 'arraybuffer',
         });
 
         // Get filename from content-disposition header
-        const filename = response.headers['content-disposition'].split('filename=')[1];
+        const tileData = response.data;
 
-        var a = document.createElement('a');
-        a.href = window.URL.createObjectURL(response.data);
+        if (toOpfs) {
+          // Copy to OPFS filesystem for offline use
+          const projectId = payload.id;
+          const filePath = `${projectId}/all.pmtiles`;
+          await writeBinaryToOPFS(filePath, tileData);
+          // Set the OPFS file path to project state
+          dispatch(ProjectActions.SetProjectOpfsBasemapPath(filePath));
+          return;
+        }
+
+        const filename = response.headers['content-disposition'].split('filename=')[1];
+        // Create Blob from ArrayBuffer
+        const blob = new Blob([tileData], { type: response.headers['content-type'] });
+        const downloadUrl = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = downloadUrl;
         a.download = filename;
         a.click();
+
+        // Clean up object URL
+        URL.revokeObjectURL(downloadUrl);
+
         dispatch(ProjectActions.SetDownloadTileLoading({ type: payload, loading: false }));
       } catch (error) {
         dispatch(ProjectActions.SetDownloadTileLoading({ type: payload, loading: false }));
@@ -177,7 +201,7 @@ export const DownloadTile = (url, payload) => {
         dispatch(ProjectActions.SetDownloadTileLoading({ type: payload, loading: false }));
       }
     };
-    await getDownloadTile(url, payload);
+    await getDownloadTile(url, payload, toOpfs);
   };
 };
 
@@ -196,5 +220,41 @@ export const GetProjectDashboard = (url) => {
       }
     };
     await getProjectDashboard(url);
+  };
+};
+
+export const GetProjectComments = (url) => {
+  return async (dispatch) => {
+    const getProjectComments = async (url) => {
+      try {
+        dispatch(ProjectActions.SetProjectGetCommentsLoading(true));
+        const response = await CoreModules.axios.get(url);
+        dispatch(ProjectActions.SetProjectCommentsList(response.data));
+        dispatch(ProjectActions.SetProjectGetCommentsLoading(false));
+      } catch (error) {
+        dispatch(ProjectActions.SetProjectGetCommentsLoading(false));
+      } finally {
+        dispatch(ProjectActions.SetProjectGetCommentsLoading(false));
+      }
+    };
+    await getProjectComments(url);
+  };
+};
+
+export const PostProjectComments = (url, payload) => {
+  return async (dispatch) => {
+    const postProjectComments = async (url) => {
+      try {
+        dispatch(ProjectActions.SetPostProjectCommentsLoading(true));
+        const response = await CoreModules.axios.post(url, payload);
+        dispatch(ProjectActions.UpdateProjectCommentsList(response.data));
+        dispatch(ProjectActions.SetPostProjectCommentsLoading(false));
+      } catch (error) {
+        dispatch(ProjectActions.SetPostProjectCommentsLoading(false));
+      } finally {
+        dispatch(ProjectActions.SetPostProjectCommentsLoading(false));
+      }
+    };
+    await postProjectComments(url);
   };
 };

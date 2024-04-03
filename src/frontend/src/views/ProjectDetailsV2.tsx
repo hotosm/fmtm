@@ -27,23 +27,22 @@ import LayerSwitcherControl from '@/components/MapComponent/OpenLayersComponent/
 import MapControlComponent from '@/components/ProjectDetailsV2/MapControlComponent';
 import { VectorLayer } from '@/components/MapComponent/OpenLayersComponent/Layers';
 import { geojsonObjectModel } from '@/constants/geojsonObjectModal';
-// import { basicGeojsonTemplate } from '@/utilities/mapUtils';
 import getTaskStatusStyle from '@/utilfunctions/getTaskStatusStyle';
 import { defaultStyles } from '@/components/MapComponent/OpenLayersComponent/helpers/styleUtils';
 import MapLegends from '@/components/MapLegends';
 import Accordion from '@/components/common/Accordion';
 import AsyncPopup from '@/components/MapComponent/OpenLayersComponent/AsyncPopup/AsyncPopup';
-import { Geolocation } from '@capacitor/geolocation';
-import { Icon, Style } from 'ol/style';
-import { Motion } from '@capacitor/motion';
-import locationArc from '@/assets/images/locationArc.png';
-import { CommonActions } from '@/store/slices/CommonSlice';
 import Button from '@/components/common/Button';
 import ProjectInfo from '@/components/ProjectDetailsV2/ProjectInfo';
 import useOutsideClick from '@/hooks/useOutsideClick';
 import { dataExtractPropertyType } from '@/models/project/projectModel';
 import { isValidUrl } from '@/utilfunctions/urlChecker';
 import { useAppSelector } from '@/types/reduxTypes';
+import Comments from '@/components/ProjectDetailsV2/Comments';
+import { Geolocation } from '@/utilfunctions/Geolocation';
+import Instructions from '@/components/ProjectDetailsV2/Instructions';
+import { readFileFromOPFS } from '@/api/Files';
+import DebugConsole from '@/utilities/DebugConsole';
 
 const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -54,7 +53,6 @@ const Home = () => {
 
   const [mainView, setView] = useState<any>();
   const [featuresLayer, setFeaturesLayer] = useState();
-  const [toggleGenerateModal, setToggleGenerateModal] = useState(false);
   const [dataExtractUrl, setDataExtractUrl] = useState(null);
   const [dataExtractExtent, setDataExtractExtent] = useState(null);
   const [taskBoundariesLayer, setTaskBoundariesLayer] = useState<null | Record<string, any>>(null);
@@ -62,11 +60,13 @@ const Home = () => {
     latitude: null,
     longitude: null,
   });
+  // Can pass a File object, or a string URL to be read by PMTiles
+  const [customBasemapData, setCustomBasemapData] = useState<File | string>();
   const [positionGeojson, setPositionGeojson] = useState<any>(null);
   const [deviceRotation, setDeviceRotation] = useState(0);
   const [viewState, setViewState] = useState('project_info');
   const encodedId: string = params.id;
-  const decodedId: number = environment.decode(encodedId);
+  const decodedId = environment.decode(encodedId);
   const defaultTheme = useAppSelector((state) => state.theme.hotTheme);
   const state = CoreModules.useAppSelector((state) => state.project);
   const projectInfo = useAppSelector((state) => state.home.selectedProject);
@@ -74,8 +74,10 @@ const Home = () => {
   const stateSnackBar = useAppSelector((state) => state.home.snackbar);
   const mobileFooterSelection = useAppSelector((state) => state.project.mobileFooterSelection);
   const mapTheme = useAppSelector((state) => state.theme.hotTheme);
-  const geolocationStatus = useAppSelector((state) => state.project.geolocationStatus);
   const projectDetailsLoading = useAppSelector((state) => state?.project?.projectDetailsLoading);
+  const geolocationStatus = useAppSelector((state) => state.project.geolocationStatus);
+  const taskModalStatus = CoreModules.useAppSelector((state) => state.project.taskModalStatus);
+  const projectOpfsBasemapPath = useAppSelector((state) => state?.project?.projectOpfsBasemapPath);
 
   //snackbar handle close funtion
   const handleClose = (event, reason) => {
@@ -116,6 +118,11 @@ const Home = () => {
     center: [0, 0],
     zoom: 4,
   });
+
+  useEffect(() => {
+    if (!map) return;
+    Geolocation(map, geolocationStatus, dispatch);
+  }, [geolocationStatus]);
 
   const { y } = OnScroll(map, windowSize.width);
 
@@ -178,11 +185,11 @@ const Home = () => {
     dispatch(CoreModules.TaskActions.SetSelectedTask(properties.uid));
 
     dispatch(ProjectActions.ToggleTaskModalStatus(true));
-    if (windowSize.width < 768) {
+    if (windowSize.width < 768 && map.getView().getZoom() < 17) {
       map.getView().fit(extent, {
         padding: [10, 20, 300, 20],
       });
-    } else {
+    } else if (windowSize.width > 768 && map.getView().getZoom() < 17) {
       map.getView().fit(extent, {
         padding: [20, 350, 50, 10],
       });
@@ -196,92 +203,50 @@ const Home = () => {
   };
 
   useEffect(() => {
-    if (mobileFooterSelection !== 'explore') {
+    if (mobileFooterSelection !== '') {
       dispatch(ProjectActions.ToggleGenerateMbTilesModalStatus(false));
     }
   }, [mobileFooterSelection]);
 
-  const handlePositionChange = (position) => {
-    setCurrentCoordinate({
-      latitude: position.coords.latitude,
-      longitude: position.coords.longitude,
-    });
+  useEffect(() => {
+    if (taskModalStatus) {
+      dispatch(ProjectActions.ToggleTaskModalStatus(false));
+    }
+  }, []);
 
-    const geojson = {
-      type: 'Point',
-      coordinates: [position.coords.longitude, position.coords.latitude],
-    };
-    setPositionGeojson(geojson);
-  };
+  useEffect(() => {
+    if (taskModalStatus) {
+      setViewState('comments');
+    } else {
+      setViewState('project_info');
+    }
+  }, [taskModalStatus]);
+
+  useEffect(() => {
+    dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${decodedId}`));
+  }, []);
 
   useEffect(async () => {
-    if (geolocationStatus) {
-      const checkPermission = await Geolocation.checkPermissions();
-      if (checkPermission.location === 'denied') {
-        await Geolocation.requestPermissions(['location']);
-      }
+    if (!projectOpfsBasemapPath) {
+      return;
     }
-  }, [geolocationStatus]);
 
-  useEffect(() => {
-    if (geolocationStatus) {
-      const getCurrentPosition = async () => {
-        try {
-          const position = await Geolocation.getCurrentPosition();
-          handlePositionChange(position);
-          // Watch for position changes
-          const watchId = Geolocation.watchPosition({ enableHighAccuracy: true }, handlePositionChange);
-          // Clean up the watchPosition when the component unmounts
-          return () => {
-            Geolocation.clearWatch({ id: watchId });
-          };
-        } catch (error) {
-          dispatch(
-            CommonActions.SetSnackBar({
-              open: true,
-              message: `Error getting current position. Please ensure location permissions has been granted.`,
-              variant: 'error',
-              duration: 2000,
-            }),
-          );
-          dispatch(ProjectActions.ToggleGeolocationStatus(false));
-        }
-      };
+    console.log(projectOpfsBasemapPath);
+    const opfsPmtilesData = await readFileFromOPFS(projectOpfsBasemapPath);
+    setCustomBasemapData(opfsPmtilesData);
+    // setCustomBasemapData(projectOpfsBasemapPath);
 
-      getCurrentPosition();
-    }
-  }, [geolocationStatus]);
-
-  const locationArcStyle = new Style({
-    image: new Icon({
-      src: locationArc,
-    }),
-  });
-
-  const startOrientation = async () => {
-    const handler = await Motion.addListener('orientation', (event) => {
-      var alphaRad = event?.alpha * (Math.PI / 180);
-      var betaRad = event?.beta * (Math.PI / 180);
-      var gammaRad = event?.gamma * (Math.PI / 180);
-
-      setDeviceRotation(alphaRad + betaRad + gammaRad);
-    });
-  };
-
-  useEffect(() => {
-    // Cleanup when the component unmounts
-    if (geolocationStatus) {
-      startOrientation();
-    }
     return () => {};
-  }, [geolocationStatus]);
+  }, [projectOpfsBasemapPath]);
+  const [showDebugConsole, setShowDebugConsole] = useState(false);
 
   return (
-    <div className="fmtm-bg-[#F5F5F5] fmtm-h-[100vh] sm:fmtm-h-[90vh]">
+    <div className="fmtm-bg-[#f5f5f5]" style={{ height: '100%' }}>
+      {/* only used to display debug console */}
+      <DebugConsole showDebugConsole={showDebugConsole} setShowDebugConsole={setShowDebugConsole} />
       {/* Customized Modal For Generate Tiles */}
       <div>
         <GenerateBasemap projectInfo={state.projectInfo} />
-
         {/* Home snackbar */}
         <CustomizedSnackbar
           duration={stateSnackBar.duration}
@@ -311,7 +276,10 @@ const Home = () => {
               onClick={() => navigate(`/manage-project/${params?.id}`)}
             />
           </div>
-          <div className="fmtm-flex fmtm-flex-col fmtm-gap-4">
+          <div
+            className="fmtm-flex fmtm-flex-col fmtm-gap-4 fmtm-flex-auto"
+            style={{ height: `${viewState === 'comments' ? 'calc(100% - 50px)' : 'calc(100% - 95px)'}` }}
+          >
             {projectDetailsLoading ? (
               <CoreModules.Skeleton className="!fmtm-w-[250px] fmtm-h-[25px]" />
             ) : (
@@ -328,17 +296,19 @@ const Home = () => {
             <div className="fmtm-flex fmtm-w-full">
               <button
                 className={`fmtm-rounded-none fmtm-border-none fmtm-text-base ${
-                  viewState === 'project_info'
+                  viewState === 'project_info' || viewState === 'comments'
                     ? 'fmtm-bg-primaryRed fmtm-text-white hover:fmtm-bg-red-700'
                     : 'fmtm-bg-white fmtm-text-[#706E6E] hover:fmtm-bg-grey-50'
                 } fmtm-py-1`}
-                onClick={() => setViewState('project_info')}
+                onClick={() => {
+                  taskModalStatus ? setViewState('comments') : setViewState('project_info');
+                }}
               >
-                Project Info
+                {taskModalStatus ? 'Comments' : 'Project Info'}
               </button>
               <button
                 className={`fmtm-rounded-none fmtm-border-none fmtm-text-base ${
-                  viewState !== 'project_info'
+                  viewState === 'task_activity'
                     ? 'fmtm-bg-primaryRed fmtm-text-white hover:fmtm-bg-red-700'
                     : 'fmtm-bg-white fmtm-text-[#706E6E] hover:fmtm-bg-grey-50'
                 } fmtm-py-1`}
@@ -346,10 +316,22 @@ const Home = () => {
               >
                 Task Activity
               </button>
+              <button
+                className={`fmtm-rounded-none fmtm-border-none fmtm-text-base ${
+                  viewState === 'instructions'
+                    ? 'fmtm-bg-primaryRed fmtm-text-white hover:fmtm-bg-red-700'
+                    : 'fmtm-bg-white fmtm-text-[#706E6E] hover:fmtm-bg-grey-50'
+                } fmtm-py-1`}
+                onClick={() => setViewState('instructions')}
+              >
+                Instructions
+              </button>
             </div>
             {viewState === 'project_info' ? (
               <ProjectInfo />
-            ) : (
+            ) : viewState === 'comments' ? (
+              <Comments />
+            ) : viewState === 'task_activity' ? (
               <ActivitiesPanel
                 params={params}
                 state={state.projectTaskBoundries}
@@ -359,32 +341,36 @@ const Home = () => {
                 mapDivPostion={y}
                 states={state}
               />
+            ) : (
+              <Instructions instructions={state?.projectInfo?.instructions} />
             )}
           </div>
-          <div className="fmtm-flex fmtm-gap-4">
-            <Button
-              btnText="VIEW INFOGRAPHICS"
-              btnType="other"
-              className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md fmtm-my-2"
-              onClick={() => navigate(`/project-submissions/${encodedId}`)}
-            />
-            <div className="fmtm-relative" ref={divRef}>
-              <div onClick={() => handleToggle()}>
-                <Button
-                  btnText="DOWNLOAD"
-                  btnType="other"
-                  className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md fmtm-my-2"
-                />
-              </div>
-              <div
-                className={`fmtm-flex fmtm-gap-4 fmtm-absolute fmtm-duration-200 fmtm-z-[1000] fmtm-bg-[#F5F5F5] fmtm-p-2 fmtm-rounded-md ${
-                  toggle ? 'fmtm-left-0 fmtm-top-0' : '-fmtm-left-[60rem] fmtm-top-0'
-                }`}
-              >
-                <ProjectOptions />
+          {viewState !== 'comments' && (
+            <div className="fmtm-flex fmtm-gap-4">
+              <Button
+                btnText="VIEW INFOGRAPHICS"
+                btnType="other"
+                className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md fmtm-my-2"
+                onClick={() => navigate(`/project-submissions/${encodedId}`)}
+              />
+              <div className="fmtm-relative" ref={divRef}>
+                <div onClick={() => handleToggle()}>
+                  <Button
+                    btnText="DOWNLOAD"
+                    btnType="other"
+                    className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md fmtm-my-2"
+                  />
+                </div>
+                <div
+                  className={`fmtm-flex fmtm-gap-4 fmtm-absolute fmtm-duration-200 fmtm-z-[1000] fmtm-bg-[#F5F5F5] fmtm-p-2 fmtm-rounded-md ${
+                    toggle ? 'fmtm-left-0 fmtm-top-0' : '-fmtm-left-[60rem] fmtm-top-0'
+                  }`}
+                >
+                  <ProjectOptions />
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
         {params?.id && (
           <div className="fmtm-relative sm:fmtm-static fmtm-flex-grow fmtm-h-full sm:fmtm-rounded-2xl fmtm-overflow-hidden">
@@ -395,7 +381,19 @@ const Home = () => {
                 windowSize.width <= 640 ? 'fmtm-h-[100vh]' : 'fmtm-h-full'
               }`}
             >
-              <LayerSwitcherControl visible={'outdoors'} />
+              {import.meta.env.MODE === 'development' && (
+                <div className="fmtm-absolute fmtm-top-16 fmtm-left-4 fmtm-z-50">
+                  <Button
+                    btnText="Toggle Console"
+                    btnType="secondary"
+                    onClick={() => setShowDebugConsole(!showDebugConsole)}
+                  />
+                </div>
+              )}
+              <LayerSwitcherControl
+                visible={customBasemapData ? 'custom' : 'outdoors'}
+                pmTileLayerData={customBasemapData}
+              />
 
               {taskBoundariesLayer && taskBoundariesLayer?.features?.length > 0 && (
                 <VectorLayer
@@ -428,24 +426,9 @@ const Home = () => {
                   zIndex={5}
                 />
               )}
-              <AsyncPopup map={map} popupUI={dataExtractDataPopup} primaryKey={'osm_id'} />
-              {geolocationStatus && currentCoordinate?.latitude && currentCoordinate?.longitude && (
-                <VectorLayer
-                  map={map}
-                  geojson={positionGeojson}
-                  setStyle={locationArcStyle}
-                  viewProperties={{
-                    size: map?.getSize(),
-                    padding: [50, 50, 50, 50],
-                    constrainResolution: true,
-                    duration: 2000,
-                  }}
-                  zIndex={5}
-                  rotation={deviceRotation}
-                />
-              )}
+              <AsyncPopup map={map} popupUI={dataExtractDataPopup} primaryKey={'osm_id'} showOnHover="singleclick" />
               <div className="fmtm-top-28 fmtm-left-5">{window.DeviceMotionEvent}</div>
-              <div className="fmtm-hidden sm:fmtm-block fmtm-absolute fmtm-bottom-5 fmtm-left-5 fmtm-z-50 fmtm-rounded-lg">
+              <div className="fmtm-absolute fmtm-bottom-36 sm:fmtm-bottom-5 fmtm-left-5 fmtm-z-50 fmtm-rounded-lg">
                 <Accordion
                   body={<MapLegends defaultTheme={defaultTheme} />}
                   header={
@@ -459,7 +442,7 @@ const Home = () => {
                   collapsed={true}
                 />
               </div>
-              <div className="fmtm-absolute fmtm-top-3 fmtm-right-3 fmtm-z-50">
+              <div className="fmtm-absolute fmtm-bottom-[8.6rem] sm:fmtm-top-3 fmtm-right-3 fmtm-z-50 fmtm-h-fit">
                 <Button
                   btnText="GENERATE MBTILES"
                   icon={<AssetModules.BoltIcon />}
@@ -481,28 +464,33 @@ const Home = () => {
             {mobileFooterSelection === 'projectInfo' && (
               <BottomSheet
                 body={<MobileProjectInfoContent projectInfo={state.projectInfo} />}
-                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection('explore'))}
+                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
               />
             )}
             {mobileFooterSelection === 'activities' && (
               <BottomSheet
                 body={<MobileActivitiesContents map={map} view={mainView} mapDivPostion={y} />}
-                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection('explore'))}
+                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
               />
             )}
-            {mobileFooterSelection === 'explore' && (
-              <div className="fmtm-absolute fmtm-bottom-[5.8rem] sm:fmtm-hidden">
-                <img src={FmtmLogo} alt="Hot Fmtm Logo" className="fmtm-ml-2 fmtm-z-10 fmtm-w-[5.2rem]" />
-              </div>
-            )}
-            {mobileFooterSelection === 'mapLegend' && (
+            {mobileFooterSelection === 'instructions' && (
               <BottomSheet
                 body={
                   <div className="fmtm-mb-[12vh]">
-                    <MapLegends defaultTheme={defaultTheme} />
+                    <Instructions instructions={state?.projectInfo?.instructions} />
                   </div>
                 }
-                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection('explore'))}
+                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
+              />
+            )}
+            {mobileFooterSelection === 'comment' && (
+              <BottomSheet
+                body={
+                  <div className="fmtm-mb-[12vh]">
+                    <Comments />
+                  </div>
+                }
+                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
               />
             )}
             {mobileFooterSelection === 'others' && (
@@ -512,7 +500,7 @@ const Home = () => {
                     <ProjectOptions />
                   </div>
                 }
-                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection('explore'))}
+                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
               />
             )}
 

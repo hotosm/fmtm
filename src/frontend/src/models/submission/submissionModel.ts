@@ -29,7 +29,7 @@ export type taskDataTypes = {
 };
 
 export type submissionTableDataTypes = {
-  results: [];
+  results: any[];
   pagination: {
     total: number | null;
     page: number | null;
@@ -38,4 +38,11 @@ export type submissionTableDataTypes = {
     per_page: number | null;
     pages: number | null;
   };
+};
+
+export type reviewListType = {
+  id: string;
+  title: string;
+  className: string;
+  hoverClass: string;
 };
