@@ -197,7 +197,7 @@ async def partial_update_project_info(
     # Update project informations
     if db_project and db_project_info:
         if project_metadata.name:
-            db_project.project_name_prefix = project_metadata.project_name_prefix
+            db_project.project_name_prefix = project_metadata.name
             db_project_info.name = project_metadata.name
         if project_metadata.description:
             db_project_info.description = project_metadata.description
