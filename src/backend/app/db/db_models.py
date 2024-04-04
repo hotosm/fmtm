@@ -288,7 +288,7 @@ class DbXForm(Base):
     __tablename__ = "xforms"
     id = cast(int, Column(Integer, primary_key=True, autoincrement=True))
     project_id = cast(
-        int, Column(Integer, ForeignKey("projects.id"), name="fk_projects", index=True)
+        int, Column(Integer, ForeignKey("projects.id"), name="project_id", index=True)
     )
     odk_form_id = cast(str, Column(String))
     category = cast(str, Column(String))
