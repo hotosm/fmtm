@@ -19,7 +19,6 @@
 
 import json
 import os
-import uuid
 from io import BytesIO
 from pathlib import Path
 from typing import Optional
@@ -606,73 +605,6 @@ async def generate_files(
         status_code=200,
         content={"Message": f"{project_id}", "task_id": f"{background_task_id}"},
     )
-
-
-@router.get("/generate-log/")
-async def generate_log(
-    project_id: int,
-    uuid: uuid.UUID,
-    db: Session = Depends(database.get_db),
-    org_user_dict: db_models.DbUser = Depends(org_admin),
-):
-    r"""Get the contents of a log file in a log format.
-
-    ### Response
-    - **200 OK**: Returns the contents of the log file in a log format.
-        Each line is separated by a newline character "\n".
-
-    - **500 Internal Server Error**: Returns an error message if the log file
-        cannot be generated.
-
-    ### Return format
-    Task Status and Logs are returned in a JSON format.
-    """
-    try:
-        # Get the backgrund task status
-        task_status, task_message = await project_crud.get_background_task_status(
-            uuid, db
-        )
-
-        sql = text(
-            """
-            SELECT
-                COUNT(CASE WHEN odk_token IS NOT NULL THEN 1 END) AS tasks_complete,
-                COUNT(*) AS total_tasks
-            FROM tasks
-            WHERE project_id = :project_id;
-        """
-        )
-        result = db.execute(sql, {"project_id": project_id})
-        row = result.fetchone()
-
-        tasks_generated = row[0] if row else 0
-        total_task_count = row[1] if row else 0
-
-        project_log_file = Path("/opt/logs/create_project.json")
-        project_log_file.touch(exist_ok=True)
-        with open(project_log_file, "r") as log_file:
-            logs = [json.loads(line) for line in log_file]
-
-            filtered_logs = [
-                log.get("record", {}).get("message", None)
-                for log in logs
-                if log.get("record", {}).get("extra", {}).get("project_id")
-                == project_id
-            ]
-            last_50_logs = filtered_logs[-50:]
-
-            logs = "\n".join(last_50_logs)
-
-            return {
-                "status": task_status.name,
-                "total_tasks": total_task_count,
-                "message": task_message,
-                "progress": tasks_generated,
-                "logs": logs,
-            }
-    except Exception as e:
-        log.error(e)
-        return "Error in generating log file"
 
 
 @router.get("/categories/")
