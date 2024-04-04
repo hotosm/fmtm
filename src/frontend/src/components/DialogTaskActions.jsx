@@ -22,6 +22,7 @@ export default function Dialog({ taskId, feature, map, view }) {
   const params = CoreModules.useParams();
   const currentProjectId = params.id;
   const currentTaskId = taskId;
+  const projectData = CoreModules.useAppSelector((state) => state.project.projectTaskBoundries);
   const projectIndex = projectData.findIndex((project) => project.id == currentProjectId);
   const currentStatus = {
     ...taskBoundaryData?.[projectIndex]?.taskBoundries?.filter((task) => {
