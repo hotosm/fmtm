@@ -37,9 +37,10 @@ from app.central.central_crud import (
 )
 from app.db.postgis_utils import (
     add_required_geojson_properties,
+    javarosa_to_geojson_geom,
     parse_and_filter_geojson,
 )
-from app.models.enums import HTTPStatus
+from app.models.enums import GeometryType, HTTPStatus
 
 router = APIRouter(
     prefix="/helper",
@@ -125,6 +126,16 @@ async def convert_geojson_to_odk_csv_wrapper(
 
     headers = {"Content-Disposition": f"attachment; filename={filename.stem}.csv"}
     return Response(feature_csv.getvalue(), headers=headers)
+
+
+@router.post("/javarosa-geom-to-geojson")
+async def convert_javarosa_geom_to_geojson(
+    javarosa_string: str,
+    geometry_type: GeometryType,
+    current_user: AuthUser = Depends(login_required),
+):
+    """Convert a JavaRosa geometry string to GeoJSON."""
+    return await javarosa_to_geojson_geom(javarosa_string, geometry_type)
 
 
 @router.post("/convert-odk-submission-json-to-geojson")

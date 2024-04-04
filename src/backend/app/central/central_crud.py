@@ -663,7 +663,7 @@ async def convert_odk_submission_json_to_geojson(
             .get("xlocation")
         )
         geojson_geom = await javarosa_to_geojson_geom(
-            javarosa_geom, geom_type="polygon"
+            javarosa_geom, geom_type="Polygon"
         )
 
         props_to_append = {}
