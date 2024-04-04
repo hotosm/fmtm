@@ -1091,14 +1091,14 @@ def generate_task_entities(
     get_entity_dicts_sync = async_to_sync(get_entity_dicts_from_task_geojson)
     entity_geom_dict = get_entity_dicts_sync(project_id, task_id, data_extract)
 
+    entity = OdkEntity(
+        odk_credentials.odk_central_url,
+        odk_credentials.odk_central_user,
+        odk_credentials.odk_central_password,
+    )
     for feature_id in entity_geom_dict.keys():
         project_log.info(
             f"Generating entity from for task ({task_id}) feature ({feature_id})"
-        )
-        entity = OdkEntity(
-            odk_credentials.odk_central_url,
-            odk_credentials.odk_central_user,
-            odk_credentials.odk_central_password,
         )
         entity.createEntity(
             odk_id,

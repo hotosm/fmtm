@@ -669,11 +669,13 @@ async def convert_odk_submission_json_to_geojson(
         props_to_append = {}
 
         # Add username & task id
-        props_to_append.update({
-            "username": submission.get("username", ""),
-            "task_id": submission.get("phonenumber", ""),
-        })
-        
+        props_to_append.update(
+            {
+                "username": submission.get("username", ""),
+                "task_id": submission.get("phonenumber", ""),
+            }
+        )
+
         # Extract feature location verification keys (including image name)
         verification_data = submission.get("verification", {})
         props_to_append.update(verification_data)

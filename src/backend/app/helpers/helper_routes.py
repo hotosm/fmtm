@@ -133,7 +133,7 @@ async def convert_odk_submission_json_to_geojson_wrapper(
     current_user: AuthUser = Depends(login_required),
 ):
     """Convert the ODK submission output JSON to GeoJSON.
-    
+
     The submission JSON be downloaded via ODK Central, or osm-fieldwork.
     The logic works with the standardised XForm form fields from osm-fieldwork.
     """
@@ -149,4 +149,3 @@ async def convert_odk_submission_json_to_geojson_wrapper(
 
     headers = {"Content-Disposition": f"attachment; filename={filename.stem}.geojson"}
     return Response(submission_geojson.getvalue(), headers=headers)
-
