@@ -364,6 +364,7 @@ CREATE TABLE public.projects (
     odk_central_url character varying,
     odk_central_user character varying,
     odk_central_password character varying,
+    odk_token character varying,
     form_xls bytea,
     form_config_file bytea,
     data_extract_type character varying,
@@ -462,8 +463,7 @@ CREATE TABLE public.tasks (
     task_status public.taskstatus,
     locked_by bigint,
     mapped_by bigint,
-    validated_by bigint,
-    odk_token character varying
+    validated_by bigint
 );
 ALTER TABLE public.tasks OWNER TO fmtm;
 CREATE SEQUENCE public.tasks_id_seq

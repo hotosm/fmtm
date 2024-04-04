@@ -466,7 +466,6 @@ class DbTask(Base):
             BigInteger, ForeignKey("users.id", name="fk_users_validator"), index=True
         ),
     )
-    odk_token = cast(str, Column(String, nullable=True))
 
     # Define relationships
     task_history = relationship(
@@ -640,6 +639,7 @@ class DbProject(Base):
     odk_central_url = cast(str, Column(String))
     odk_central_user = cast(str, Column(String))
     odk_central_password = cast(str, Column(String))
+    odk_token = cast(str, Column(String, nullable=True))
 
     form_xls = cast(
         bytes, Column(LargeBinary)
