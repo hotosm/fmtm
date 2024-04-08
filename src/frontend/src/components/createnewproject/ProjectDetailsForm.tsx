@@ -14,8 +14,10 @@ import { OrganisationService } from '@/api/CreateProjectService';
 import { CustomCheckbox } from '@/components/common/Checkbox';
 import { organizationDropdownType } from '@/models/createproject/createProjectModel';
 import RichTextEditor from '@/components/common/Editor/Editor';
+import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 
 const ProjectDetailsForm = ({ flag }) => {
+  useDocumentTitle('Create Project: Project Details');
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -27,7 +29,6 @@ const ProjectDetailsForm = ({ flag }) => {
     hasODKCredentials: item?.odk_central_url ? true : false,
   }));
   const [hasODKCredentials, setHasODKCredentials] = useState(false);
-  const [editorHtmlContent, setEditorHtmlContent] = useState('');
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(values));
@@ -151,11 +152,12 @@ const ProjectDetailsForm = ({ flag }) => {
             id="short_description"
             name="short_description"
             label="Short Description"
-            rows={3}
+            rows={2}
             value={values?.short_description}
             onChange={handleInputChanges}
             required
             errorMsg={errors.short_description}
+            maxLength={200}
           />
           <TextArea
             id="description"
@@ -179,6 +181,7 @@ const ProjectDetailsForm = ({ flag }) => {
                 onValueChange={(value) => {
                   setSelectedOrganisation(value);
                 }}
+                required
               />
             </div>
             {errors.organisation_id && (
@@ -196,7 +199,7 @@ const ProjectDetailsForm = ({ flag }) => {
               className="fmtm-text-black"
             />
           )}
-          {!values.defaultODKCredentials && (
+          {((!values.defaultODKCredentials && hasODKCredentials) || !hasODKCredentials) && (
             <div className="fmtm-flex fmtm-flex-col fmtm-gap-6">
               <InputTextField
                 id="odk_central_url"

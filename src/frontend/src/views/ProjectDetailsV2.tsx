@@ -4,7 +4,6 @@ import '../styles/home.scss';
 import WindowDimension from '@/hooks/WindowDimension';
 // import MapDescriptionComponents from '@/components/MapDescriptionComponents';
 import ActivitiesPanel from '@/components/ProjectDetailsV2/ActivitiesPanel';
-import environment from '@/environment';
 import { ProjectById, GetProjectDashboard } from '@/api/Project';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import CustomizedSnackbar from '@/utilities/CustomizedSnackbar';
@@ -43,8 +42,11 @@ import { Geolocation } from '@/utilfunctions/Geolocation';
 import Instructions from '@/components/ProjectDetailsV2/Instructions';
 import { readFileFromOPFS } from '@/api/Files';
 import DebugConsole from '@/utilities/DebugConsole';
+import { CustomCheckbox } from '@/components/common/Checkbox';
+import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 
 const Home = () => {
+  useDocumentTitle('Project Details');
   const dispatch = CoreModules.useAppDispatch();
   const params = CoreModules.useParams();
   const navigate = useNavigate();
@@ -65,8 +67,7 @@ const Home = () => {
   const [positionGeojson, setPositionGeojson] = useState<any>(null);
   const [deviceRotation, setDeviceRotation] = useState(0);
   const [viewState, setViewState] = useState('project_info');
-  const encodedId: string = params.id;
-  const decodedId = environment.decode(encodedId);
+  const projectId: string = params.id;
   const defaultTheme = useAppSelector((state) => state.theme.hotTheme);
   const state = CoreModules.useAppSelector((state) => state.project);
   const projectInfo = useAppSelector((state) => state.home.selectedProject);
@@ -78,6 +79,14 @@ const Home = () => {
   const geolocationStatus = useAppSelector((state) => state.project.geolocationStatus);
   const taskModalStatus = CoreModules.useAppSelector((state) => state.project.taskModalStatus);
   const projectOpfsBasemapPath = useAppSelector((state) => state?.project?.projectOpfsBasemapPath);
+
+  useEffect(() => {
+    if (state.projectInfo.title) {
+      document.title = `${state.projectInfo.title} - HOT Field Mapping Tasking Manager`;
+    } else {
+      document.title = 'HOT Field Mapping Tasking Manager';
+    }
+  }, [state.projectInfo.title]);
 
   //snackbar handle close funtion
   const handleClose = (event, reason) => {
@@ -97,17 +106,17 @@ const Home = () => {
   //Fetch project for the first time
   useEffect(() => {
     dispatch(ProjectActions.SetNewProjectTrigger());
-    if (state.projectTaskBoundries.findIndex((project) => project.id == environment.decode(encodedId)) == -1) {
+    if (state.projectTaskBoundries.findIndex((project) => project.id == projectId) == -1) {
       dispatch(ProjectActions.SetProjectTaskBoundries([]));
-      dispatch(ProjectById(state.projectTaskBoundries, environment.decode(encodedId)));
+      dispatch(ProjectById(state.projectTaskBoundries, projectId));
     } else {
       dispatch(ProjectActions.SetProjectTaskBoundries([]));
-      dispatch(ProjectById(state.projectTaskBoundries, environment.decode(encodedId)));
+      dispatch(ProjectById(state.projectTaskBoundries, projectId));
     }
     if (Object.keys(state.projectInfo)?.length == 0) {
       dispatch(ProjectActions.SetProjectInfo(projectInfo));
     } else {
-      if (state.projectInfo.id != environment.decode(encodedId)) {
+      if (state.projectInfo.id != projectId) {
         dispatch(ProjectActions.SetProjectInfo(projectInfo));
       }
     }
@@ -223,7 +232,7 @@ const Home = () => {
   }, [taskModalStatus]);
 
   useEffect(() => {
-    dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${decodedId}`));
+    dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${projectId}`));
   }, []);
 
   useEffect(async () => {
@@ -231,7 +240,6 @@ const Home = () => {
       return;
     }
 
-    console.log(projectOpfsBasemapPath);
     const opfsPmtilesData = await readFileFromOPFS(projectOpfsBasemapPath);
     setCustomBasemapData(opfsPmtilesData);
     // setCustomBasemapData(projectOpfsBasemapPath);
@@ -351,7 +359,7 @@ const Home = () => {
                 btnText="VIEW INFOGRAPHICS"
                 btnType="other"
                 className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md fmtm-my-2"
-                onClick={() => navigate(`/project-submissions/${encodedId}`)}
+                onClick={() => navigate(`/project-submissions/${projectId}`)}
               />
               <div className="fmtm-relative" ref={divRef}>
                 <div onClick={() => handleToggle()}>
@@ -382,11 +390,14 @@ const Home = () => {
               }`}
             >
               {import.meta.env.MODE === 'development' && (
-                <div className="fmtm-absolute fmtm-top-16 fmtm-left-4 fmtm-z-50">
-                  <Button
-                    btnText="Toggle Console"
-                    btnType="secondary"
-                    onClick={() => setShowDebugConsole(!showDebugConsole)}
+                <div className="fmtm-block sm:fmtm-hidden fmtm-absolute fmtm-top-6 fmtm-left-16 fmtm-z-50">
+                  <CustomCheckbox
+                    label="Toggle-Console"
+                    checked={showDebugConsole}
+                    onCheckedChange={(status) => {
+                      setShowDebugConsole(status);
+                    }}
+                    className="fmtm-text-black !fmtm-w-full"
                   />
                 </div>
               )}

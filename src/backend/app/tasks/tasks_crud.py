@@ -18,7 +18,7 @@
 """Logic for FMTM tasks."""
 
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import Depends, HTTPException
 from loguru import logger as log
@@ -160,7 +160,7 @@ async def update_task_status(
 
         db.commit()
         db.refresh(db_task)
-        return db_task
+        return update_history
 
     else:
         raise HTTPException(
@@ -254,7 +254,7 @@ async def get_task_comments(db: Session, project_id: int, task_id: int):
 
 
 async def add_task_comments(
-    db: Session, comment: tasks_schemas.TaskCommentBase, user_data: AuthUser
+    db: Session, comment: tasks_schemas.TaskCommentRequest, user_data: AuthUser
 ):
     """Add a comment to a task.
 
@@ -281,9 +281,10 @@ async def add_task_comments(
         RETURNING
             task_history.id,
             task_history.task_id,
-            (SELECT username FROM users WHERE id = task_history.user_id) AS user_id,
             task_history.action_text,
-            task_history.action_date;
+            task_history.action_date,
+            (SELECT username FROM users WHERE id = :user_id) AS username,
+            (SELECT profile_img FROM users WHERE id = :user_id) AS profile_img;
     """
     )
 
@@ -307,36 +308,25 @@ async def add_task_comments(
     return {
         "id": row[0],
         "task_id": row[1],
-        "commented_by": row[2],
-        "comment": row[3],
-        "created_at": row[4],
+        "action_text": row[2],
+        "action_date": row[3],
+        "username": row[4],
+        "profile_img": row[5],
     }
 
 
 async def update_task_history(
-    tasks: List[tasks_schemas.Task], db: Session = Depends(database.get_db)
+    task: db_models.DbTaskHistory, db: Session = Depends(database.get_db)
 ):
     """Update task history with username and user profile image."""
-
-    def process_history_entry(history_entry):
-        status = history_entry.action_text.split()
-        history_entry.status = status[5]
-
-        if history_entry.user_id:
-            user = (
-                db.query(db_models.DbUser).filter_by(id=history_entry.user_id).first()
-            )
-            if user:
-                history_entry.username = user.username
-                history_entry.profile_img = user.profile_img
-
-    for task in tasks if isinstance(tasks, list) else [tasks]:
-        task_history = task.task_history
-        if isinstance(task_history, list):
-            for history_entry in task_history:
-                process_history_entry(history_entry)
-
-    return tasks
+    status = task.action_text.split()
+    task.status = status[5]
+    if user_id := task.user_id:
+        user = db.query(db_models.DbUser).filter_by(id=user_id).first()
+        if user:
+            task.username = user.username
+            task.profile_img = user.profile_img
+    return task
 
 
 async def get_project_task_history(
@@ -361,8 +351,12 @@ async def get_project_task_history(
     Returns:
         A list of task history records for the specified project.
     """
-    query = f"""SELECT *
+    query = f"""
+                SELECT task_history.id, task_history.task_id, task_history.action_text,
+                    task_history.action_date, users.username,
+                    users.profile_img
                     FROM task_history
+                    LEFT JOIN users on users.id = task_history.user_id
                     WHERE project_id = {project_id}
                     AND  action_date >= '{end_date}'
             """
@@ -376,12 +370,12 @@ async def get_project_task_history(
     task_history = [
         {
             "id": row[0],
-            "project_id": row[1],
-            "task_id": row[2],
-            "action": row[3],
-            "action_text": row[4],
-            "action_date": row[5],
-            "status": None if comment else row[4].split()[5],
+            "task_id": row[1],
+            "action_text": row[2],
+            "action_date": row[3],
+            "username": row[4],
+            "profile_img": row[5],
+            "status": None if comment else row[2].split()[5],
         }
         for row in result
     ]
@@ -415,8 +409,8 @@ async def count_validated_and_mapped_tasks(
 
     # Populate cumulative_counts with counts from task_history
     for result in task_history:
-        task_status = result.action_text.split()[5]
-        date_str = result.action_date.strftime("%m/%d")
+        task_status = (result.get("action_text")).split()[5]
+        date_str = (result.get("action_date")).strftime("%m/%d")
         entry = next((entry for entry in results if entry["date"] == date_str), None)
 
         if entry:

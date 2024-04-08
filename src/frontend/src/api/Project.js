@@ -19,6 +19,9 @@ export const ProjectById = (existingProjectList, projectId) => {
             outline_centroid: data.outline_centroid,
             task_status: task_priority_str[data.task_status],
             odk_token: data.odk_token,
+            locked_by_uid: data.locked_by_uid,
+            locked_by_username: data.locked_by_username,
+            task_history: data.task_history,
           };
         });
         // At top level id project id to object
@@ -42,6 +45,7 @@ export const ProjectById = (existingProjectList, projectId) => {
             tasks_bad: projectResp.tasks_bad,
             data_extract_url: projectResp.data_extract_url,
             instructions: projectResp?.project_info?.per_task_instructions,
+            odk_token: projectResp?.odk_token,
           }),
         );
         dispatch(ProjectActions.SetProjectDetialsLoading(false));
@@ -141,11 +145,9 @@ export const GenerateProjectTiles = (url, payload) => {
     const generateProjectTiles = async (url, payload) => {
       try {
         const response = await CoreModules.axios.get(url);
-        console.log(response, 'response-mbtiles');
         dispatch(GetTilesList(`${import.meta.env.VITE_API_URL}/projects/tiles_list/${payload}/`));
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));
       } catch (error) {
-        console.log(error, 'error-mbtiles');
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));
       } finally {
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));

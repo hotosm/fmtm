@@ -1,6 +1,5 @@
 import CoreModules from '@/shared/CoreModules.js';
 import React, { useEffect } from 'react';
-import environment from '@/environment';
 import { SubmissionService } from '@/api/Submission';
 import SubmissionInstanceMap from '@/components/SubmissionMap/SubmissionInstanceMap';
 import { GetProjectDashboard } from '@/api/Project';
@@ -9,13 +8,14 @@ import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 import UpdateReviewStatusModal from '@/components/ProjectSubmissions/UpdateReviewStatusModal';
 import { useAppSelector } from '@/types/reduxTypes';
 import { useNavigate } from 'react-router-dom';
+import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 
 const SubmissionDetails = () => {
+  useDocumentTitle('Submission Instance');
   const dispatch = CoreModules.useAppDispatch();
   const params = CoreModules.useParams();
   const navigate = useNavigate();
-  const encodedProjectId = params.projectId;
-  const decodedProjectId = environment.decode(encodedProjectId);
+  const projectId = params.projectId;
   const taskId = params.taskId;
   const paramsInstanceId = params.instanceId;
   const projectDashboardDetail = CoreModules.useAppSelector((state) => state.project.projectDashboardDetail);
@@ -25,7 +25,7 @@ const SubmissionDetails = () => {
   const submissionDetailsLoading = useAppSelector((state) => state.submission.submissionDetailsLoading);
 
   useEffect(() => {
-    dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${decodedProjectId}`));
+    dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${projectId}`));
   }, []);
 
   useEffect(() => {
@@ -33,10 +33,10 @@ const SubmissionDetails = () => {
       SubmissionService(
         `${
           import.meta.env.VITE_API_URL
-        }/submission/task_submissions/${decodedProjectId}?task_id=${taskId}&submission_id=${paramsInstanceId}`,
+        }/submission/task_submissions/${projectId}?task_id=${taskId}&submission_id=${paramsInstanceId}`,
       ),
     );
-  }, [decodedProjectId, taskId, paramsInstanceId]);
+  }, [projectId, taskId, paramsInstanceId]);
 
   function removeNullValues(obj) {
     const newObj = {};
@@ -123,14 +123,14 @@ const SubmissionDetails = () => {
           <p className="fmtm-text-[#706E6E] fmtm-text-base">
             <span
               className="hover:fmtm-text-primaryRed fmtm-cursor-pointer fmtm-duration-200"
-              onClick={() => navigate(`/project_details/${encodedProjectId}`)}
+              onClick={() => navigate(`/project_details/${projectId}`)}
             >
               {projectDashboardDetail?.project_name_prefix}
             </span>
             <span> &gt; </span>
             <span
               className="hover:fmtm-text-primaryRed fmtm-cursor-pointer fmtm-duration-200"
-              onClick={() => navigate(`/project-submissions/${encodedProjectId}?tab=table`)}
+              onClick={() => navigate(`/project-submissions/${projectId}?tab=table`)}
             >
               Dashboard
             </span>
