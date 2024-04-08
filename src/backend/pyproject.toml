@@ -19,7 +19,7 @@
 [project]
 name = "fmtm"
 dynamic = ["version"]
-description = "Field mapping tasking manager"
+description = "Field Mapping Tasking Manager - coordinated field mapping."
 authors = [
     {name = "HOTOSM", email = "sysadmin@hotosm.org"},
 ]
@@ -47,7 +47,7 @@ dependencies = [
     "cryptography>=42.0.1",
     "defusedxml>=0.7.1",
     "osm-login-python==1.0.1",
-    "osm-fieldwork==0.5.4",
+    "osm-fieldwork==0.7.0",
     "osm-rawdata==0.2.3",
     "fmtm-splitter==1.2.1",
 ]
@@ -128,11 +128,12 @@ asyncio_mode="auto"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "2024.3.0"
+version = "2024.2.0"
 version_files = [
     "pyproject.toml:version",
     "app/__version__.py",
     "../frontend/package.json:version",
+    "../../chart/Chart.yaml:appVersion",
 ]
 changelog_file = "../../CHANGELOG.md"
 update_changelog_on_bump = true

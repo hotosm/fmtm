@@ -25,7 +25,6 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, computed_fiel
 from pydantic.functional_serializers import field_serializer
 from pydantic.functional_validators import field_validator
 
-from app.config import decrypt_value
 from app.db.postgis_utils import geometry_to_geojson, get_centroid
 from app.models.enums import TaskStatus
 
@@ -34,6 +33,7 @@ class TaskHistoryBase(BaseModel):
     """Task mapping history."""
 
     id: int
+    task_id: int
     action_text: str
     action_date: datetime
 
@@ -41,9 +41,9 @@ class TaskHistoryBase(BaseModel):
 class TaskHistoryOut(TaskHistoryBase):
     """Task mapping history display."""
 
-    status: str
     username: str
     profile_img: Optional[str]
+    status: Optional[str] = None
 
 
 class TaskHistoryCount(BaseModel):
@@ -77,7 +77,6 @@ class Task(BaseModel):
     locked_by_uid: Optional[int] = None
     locked_by_username: Optional[str] = None
     task_history: Optional[List[TaskHistoryBase]] = None
-    odk_token: Optional[str] = None
 
     @field_validator("outline_geojson", mode="before")
     @classmethod
@@ -121,35 +120,13 @@ class Task(BaseModel):
             return self.lock_holder.username
         return None
 
-    @field_serializer("odk_token")
-    def decrypt_password(self, value: str) -> Optional[str]:
-        """Decrypt the ODK Token extracted from the db."""
-        if not value:
-            return ""
 
-        return decrypt_value(value)
-
-
-class TaskCommentResponse(BaseModel):
-    """Task mapping history."""
-
-    id: int
-    task_id: int
-    comment: Optional[str] = None
-    commented_by: str
-    created_at: datetime
-
-
-class TaskCommentBase(BaseModel):
-    """Task mapping history."""
-
-    comment: str
-    commented_by: str
-    created_at: datetime
+class TaskCommentResponse(TaskHistoryOut):
+    """Wrapper Class for comment."""
 
 
 class TaskCommentRequest(BaseModel):
-    """Task mapping history."""
+    """Task comment form."""
 
     task_id: int
     project_id: int

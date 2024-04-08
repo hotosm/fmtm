@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "FMTM"
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"
-    ENCRYPTION_KEY: str = ""
+    ENCRYPTION_KEY: str
 
     FMTM_DOMAIN: str
     FMTM_DEV_PORT: Optional[str] = "7050"
@@ -153,7 +153,7 @@ class Settings(BaseSettings):
                 return f"http://s3.{fmtm_domain}:{dev_port}"
             return f"https://s3.{fmtm_domain}"
 
-    UNDERPASS_API_URL: HttpUrlStr = "https://api-prod.raw-data.hotosm.org/v1/"
+    UNDERPASS_API_URL: HttpUrlStr = "https://api-prod.raw-data.hotosm.org/v1"
     SENTRY_DSN: Optional[str] = None
 
     model_config = SettingsConfigDict(

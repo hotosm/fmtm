@@ -213,6 +213,12 @@ class ProjectPartialUpdate(BaseModel):
     hashtags: Optional[List[str]] = None
     per_task_instructions: Optional[str] = None
 
+    @computed_field
+    @property
+    def project_name_prefix(self) -> str:
+        """Compute project name prefix with underscores."""
+        return self.name.replace(" ", "_").lower()
+
 
 class ProjectUpdate(ProjectIn):
     """Update project."""
@@ -345,9 +351,18 @@ class ProjectOut(ProjectWithTasks):
 class ReadProject(ProjectWithTasks):
     """Redundant model for refactor."""
 
+    odk_token: str
     project_uuid: uuid.UUID = uuid.uuid4()
     location_str: Optional[str] = None
     data_extract_url: Optional[str] = None
+
+    @field_serializer("odk_token")
+    def decrypt_password(self, value: str) -> Optional[str]:
+        """Decrypt the ODK Token extracted from the db."""
+        if not value:
+            return ""
+
+        return decrypt_value(value)
 
 
 class BackgroundTaskStatus(BaseModel):
