@@ -24,7 +24,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.auth.osm import AuthUser, login_required
-from app.auth.roles import get_uid, mapper
+from app.auth.roles import get_uid
+from app.auth.roles import get_uid
 from app.db import database
 from app.models.enums import TaskStatus
 from app.tasks import tasks_crud, tasks_schemas
@@ -124,7 +125,7 @@ async def update_task_status(
     task_id: int,
     new_status: TaskStatus,
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(mapper),
+    current_user: AuthUser = Depends(login_required),
 ):
     """Update the task status."""
     user_id = await get_uid(current_user)
