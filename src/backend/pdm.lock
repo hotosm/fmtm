@@ -1521,7 +1521,7 @@ files = [
 
 [[package]]
 name = "osm-rawdata"
-version = "0.2.3"
+version = "0.2.4"
 requires_python = ">=3.10"
 summary = "Make data extracts from OSM data."
 dependencies = [
@@ -1537,8 +1537,8 @@ dependencies = [
     "sqlalchemy>=2.0.0",
 ]
 files = [
-    {file = "osm-rawdata-0.2.3.tar.gz", hash = "sha256:56ebb4147041f86cb5f30564e93621813de4a8bdfc2508fb1d9080db392b9151"},
-    {file = "osm_rawdata-0.2.3-py3-none-any.whl", hash = "sha256:a0d11bab1143386c9fe05aa0b6d878e577a9386698e3a061ee948eaeecbcd87f"},
+    {file = "osm-rawdata-0.2.4.tar.gz", hash = "sha256:5fbf1b91930846a3d6bd1ea3fcedb99b46e2968ef6bad397de8c2f395ba3fbe7"},
+    {file = "osm_rawdata-0.2.4-py3-none-any.whl", hash = "sha256:028968edbe02d53285c721a9c8f6a3e4ed20bcfd1837ad1d8822eed35515a43e"},
 ]
 
 [[package]]
