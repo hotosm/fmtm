@@ -90,10 +90,15 @@ def get_centroid(
 
 
 def geojson_to_geometry(
-    geojson: Union[FeatCol, Feature, Polygon],
+    geojson: Union[dict, FeatCol, Feature, Polygon],
 ) -> Optional[WKBElement]:
     """Convert GeoJSON to SQLAlchemy geometry."""
-    parsed_geojson = parse_and_filter_geojson(geojson.model_dump_json(), filter=False)
+    if isinstance(geojson, dict):
+        parsed_geojson = geojson
+    else:
+        parsed_geojson = parse_and_filter_geojson(
+            geojson.model_dump_json(), filter=False
+        )
 
     if not parsed_geojson:
         return None
@@ -666,3 +671,37 @@ async def task_geojson_dict_to_entity_values(task_geojson_dict):
     entity_values = await gather(*asyncio_tasks)
     # Merge all dicts into a single dict
     return {k: v for result in entity_values for k, v in result.items()}
+
+
+def multipolygon_to_polygon(features: Union[Feature, FeatCol, Polygon]):
+    """Converts a GeoJSON FeatureCollection of MultiPolygons to Polygons.
+
+    Args:
+        features : A GeoJSON FeatureCollection containing MultiPolygons/Polygons.
+
+    Returns:
+        geojson.FeatureCollection: A GeoJSON FeatureCollection containing Polygons.
+    """
+    geojson_feature = []
+    # If the input is a single Polygon, wrap it into a FeatureCollection
+    if isinstance(features, Polygon):
+        features = FeatCol([Feature(geometry=features, properties={})])
+
+    # If the input is a Feature, convert it to a FeatureCollection
+    if isinstance(features, Feature):
+        features = FeatCol([features])
+
+    for feature in features.features:
+        properties = feature.properties
+        geom = shape(feature.geometry)
+        if geom.geom_type == "Polygon":
+            geojson_feature.append(
+                geojson.Feature(geometry=geom, properties=properties)
+            )
+        elif geom.geom_type == "MultiPolygon":
+            geojson_feature.extend(
+                geojson.Feature(geometry=polygon_coords, properties=properties)
+                for polygon_coords in geom.geoms
+            )
+
+    return geojson.FeatureCollection(geojson_feature)
