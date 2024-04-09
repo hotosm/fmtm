@@ -116,9 +116,7 @@ class Settings(BaseSettings):
     OSM_URL: HttpUrlStr = "https://www.openstreetmap.org"
     OSM_SCOPE: str = "read_prefs"
     OSM_LOGIN_REDIRECT_URI: str = "http://127.0.0.1:7051/osmauth/"
-    OSM_SVC_TOKEN: str = """ZXlKcFpDSTZNakF6T0RZeU1Ua3NJblZ6WlhKdVlXMWx
-    Jam9pYzNaalptMTBiU0lzSW1sdFoxOTFjbXdpT201MWJHeDkuS2JJdl
-    JNWHdQQ0MwVDNoTUVhSjlPMDdCS2pj"""
+    OSM_SVC_TOKEN: Optional[str] = None
 
     S3_ENDPOINT: str = "http://s3:9000"
     S3_ACCESS_KEY: Optional[str] = ""
