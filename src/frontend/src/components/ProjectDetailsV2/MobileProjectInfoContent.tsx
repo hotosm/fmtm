@@ -19,7 +19,7 @@ const MobileProjectInfoContent = ({ projectInfo }: { projectInfo: projectInfoTyp
           btnText="Manage Project"
           icon={<AssetModules.SettingsIcon />}
           onClick={() => {
-            navigate('/manage-project/${projectId}');
+            navigate(`/manage-project/${projectInfo?.id}`);
           }}
           btnType="other"
           className="!fmtm-text-base !fmtm-pr-2"
