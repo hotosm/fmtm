@@ -54,7 +54,7 @@ const TaskSectionPopup = ({ taskId, body, feature }: TaskSectionPopupPropType) =
     <div
       className={`fmtm-duration-1000 fmtm-z-[10002] fmtm-h-fit ${
         taskModalStatus
-          ? 'fmtm-bottom-0 md:fmtm-top-[50%] md:-fmtm-translate-y-[35%] fmtm-right-0 fmtm-w-[100vw] md:fmtm-w-[50vw] md:fmtm-max-w-[25rem]'
+          ? 'fmtm-bottom-[4.4rem] md:fmtm-top-[50%] md:-fmtm-translate-y-[35%] fmtm-right-0 fmtm-w-[100vw] md:fmtm-w-[50vw] md:fmtm-max-w-[25rem]'
           : 'fmtm-top-[calc(100vh)] md:fmtm-top-[calc(40vh)] md:fmtm-left-[calc(100vw)] fmtm-w-[100vw]'
       } fmtm-fixed
         fmtm-rounded-t-3xl fmtm-border-opacity-50`}
@@ -88,7 +88,7 @@ const TaskSectionPopup = ({ taskId, body, feature }: TaskSectionPopupPropType) =
       </div>
       <div
         className={`fmtm-bg-[#fbfbfb] ${
-          taskModalStatus ? 'fmtm-shadow-[-20px_0px_60px_25px_rgba(0,0,0,0.2)]' : ''
+          taskModalStatus ? 'sm:fmtm-shadow-[-20px_0px_60px_25px_rgba(0,0,0,0.2)] fmtm-border-b sm:fmtm-border-b-0' : ''
         } fmtm-rounded-t-2xl md:fmtm-rounded-tr-none md:fmtm-rounded-l-2xl`}
       >
         <div className="fmtm-flex fmtm-flex-col fmtm-gap-2 fmtm-p-3 sm:fmtm-p-5">
