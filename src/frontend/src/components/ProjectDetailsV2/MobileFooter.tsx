@@ -13,9 +13,9 @@ type footerItemType = {
 
 const MobileFooter = () => {
   const dispatch = CoreModules.useAppDispatch();
-  const { id } = useParams();
+  const params = useParams();
   const mobileFooterSelection = useAppSelector((state) => state.project.mobileFooterSelection);
-  const taskModalStatus = CoreModules.useAppSelector((state) => state.project.taskModalStatus);
+  const taskModalStatus = useAppSelector((state) => state.project.taskModalStatus);
 
   const footerItem: footerItemType[] = [
     {
@@ -109,7 +109,7 @@ const MobileFooter = () => {
         {footerItem.map((item) => (
           <FooterItemList key={item?.id} item={item} />
         ))}
-        <Link to={`/project-submissions/${id}?tab=infographics`}>
+        <Link to={`/project-submissions/${params.id}?tab=infographics`}>
           <FooterItemList item={infographicFooterItem} />
         </Link>
       </div>
