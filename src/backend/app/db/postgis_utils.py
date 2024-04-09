@@ -685,11 +685,13 @@ def multipolygon_to_polygon(features: Union[Feature, FeatCol, Polygon]):
     geojson_feature = []
     # If the input is a single Polygon, wrap it into a FeatureCollection
     if isinstance(features, Polygon):
-        features = FeatCol([Feature(geometry=features, properties={})])
+        features = geojson.FeatureCollection(
+            features=[geojson.Feature(type="Feature", geometry=features, properties={})]
+        )
 
     # If the input is a Feature, convert it to a FeatureCollection
     if isinstance(features, Feature):
-        features = FeatCol([features])
+        features = geojson.FeatureCollection(features=[features])
 
     for feature in features.features:
         properties = feature.properties
