@@ -148,9 +148,9 @@ export default function PrimaryAppBar() {
             </CoreModules.Stack>
           )}
 
-          <CoreModules.Stack direction={'row'} sx={{ display: { md: 'flex', xs: 'none' } }}>
+          <CoreModules.Stack direction={'row'} sx={{ display: { md: 'flex' } }}>
             {token != null ? (
-              <CoreModules.Link style={{ textDecoration: 'none' }} to={'/'}>
+              <CoreModules.Link style={{ textDecoration: 'none' }} className="fmtm-hidden sm:fmtm-flex" to={'/'}>
                 <CoreModules.Button
                   className="btnLogin fmtm-truncate"
                   style={appBarInnerStyles.btnLogin}
