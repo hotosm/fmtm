@@ -21,12 +21,15 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
   const [showShortBy, setShowSortBy] = useState(false);
   const projectDetailsLoading = useAppSelector((state) => state?.project?.projectDetailsLoading);
   const projectTaskActivityList = useAppSelector((state) => state?.project?.projectTaskActivity);
+  const selectedTask = useAppSelector((state) => state.task.selectedTask);
 
   useEffect(() => {
     dispatch(
-      GetProjectTaskActivity(`${import.meta.env.VITE_API_URL}/tasks/task_history/?project_id=${id}&comment=false`),
+      GetProjectTaskActivity(
+        `${import.meta.env.VITE_API_URL}/tasks/task_history/?project_id=${id}&comment=false&task_id=${selectedTask}`,
+      ),
     );
-  }, []);
+  }, [selectedTask]);
 
   const handleOnchange = (event) => {
     setSearchText(event.target.value);
@@ -128,7 +131,7 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
             type="text"
             onChange={handleOnchange}
             value={searchText}
-            placeholder="Search by task id or username"
+            placeholder="Search by username"
             className="fmtm-w-full fmtm-text-md fmtm-px-2 fmtm-py-[0.18rem] fmtm-outline-none fmtm-border-[1px] fmtm-border-[#E7E2E2] fmtm-mr-2"
           />
         </div>
