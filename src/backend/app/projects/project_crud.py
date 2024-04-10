@@ -450,7 +450,11 @@ async def generate_data_extract(
     fgb_url = pg.execQuery(
         aoi,
         extra_params={
-            "fileName": f"fmtm/{settings.FMTM_DOMAIN}/fmtm_extract",
+            "fileName": (
+                f"fmtm/{settings.FMTM_DOMAIN}/data_extract"
+                if settings.OSM_SVC_ACCOUNT_TOKEN
+                else "fmtm_extract"
+            ),
             "outputType": "fgb",
             "bind_zip": False,
             "useStWithin": False,
