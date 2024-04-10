@@ -12,7 +12,6 @@ import { GetProjectTaskActivity } from '@/api/Project';
 const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion, states }) => {
   const dispatch = useDispatch();
   const id = params.id;
-  const decodedId = environment.decode(id);
   const displayLimit = 10;
   const [searchText, setSearchText] = useState<string>('');
   const [taskHistories, setTaskHistories] = useState<taskHistoryListType[]>([]);
@@ -25,9 +24,7 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
 
   useEffect(() => {
     dispatch(
-      GetProjectTaskActivity(
-        `${import.meta.env.VITE_API_URL}/tasks/task_history/?project_id=${decodedId}&comment=false`,
-      ),
+      GetProjectTaskActivity(`${import.meta.env.VITE_API_URL}/tasks/task_history/?project_id=${id}&comment=false`),
     );
   }, []);
 
