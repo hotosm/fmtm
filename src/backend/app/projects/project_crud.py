@@ -754,7 +754,7 @@ async def upload_custom_extract_to_s3(
 
     # Add url and type to database
     s3_fgb_full_url = (
-        f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}{s3_fgb_path}"
+        f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}/{s3_fgb_path}"
     )
 
     await update_data_extract_url_in_db(db, project, s3_fgb_full_url, data_extract_type)
