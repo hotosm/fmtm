@@ -163,6 +163,7 @@ class Settings(BaseSettings):
         """Set OSM_SVC_ACCOUNT_TOKEN to None if set to empty string."""
         if v == "":
             return None
+        return v
 
     SENTRY_DSN: Optional[str] = None
 
