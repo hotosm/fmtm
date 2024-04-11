@@ -328,6 +328,7 @@ async def update_task_history(
 
 
 async def get_project_task_history(
+    project_id: int,
     task_id: int,
     comment: bool,
     end_date: datetime,
@@ -336,6 +337,7 @@ async def get_project_task_history(
     """Retrieves the task history records for a specific project.
 
     Args:
+        project_id (int): The ID of the project.
         task_id (int): The task_id of the project.
         comment (bool): True or False, True to get comments
             from the project tasks and False by default for
