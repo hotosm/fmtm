@@ -83,8 +83,9 @@ async def get_projects(
     hashtags: Optional[List[str]] = None,
     search: Optional[str] = None,
 ):
-    """Get all projects."""
+    """Get all projects, or a filtered subset."""
     filters = []
+
     if user_id:
         filters.append(db_models.DbProject.author_id == user_id)
 
@@ -118,7 +119,58 @@ async def get_projects(
             .all()
         )
         project_count = db.query(db_models.DbProject).count()
-    return project_count, await convert_to_app_projects(db_projects)
+
+    filtered_projects = await convert_to_app_projects(db_projects)
+    return project_count, filtered_projects
+
+
+async def get_projects_featcol(
+    db: Session,
+    bbox: Optional[str] = None,
+):
+    """Get all projects, or a filtered subset."""
+    bbox_condition = (
+        """WHERE ST_Intersects(
+            p.outline, ST_MakeEnvelope(:minx, :miny, :maxx, :maxy, 4326)
+        )"""
+        if bbox
+        else ""
+    )
+
+    bbox_params = {}
+    if bbox:
+        minx, miny, maxx, maxy = map(float, bbox.split(","))
+        bbox_params = {"minx": minx, "miny": miny, "maxx": maxx, "maxy": maxy}
+
+    query = text(
+        f"""
+        SELECT jsonb_build_object(
+            'type', 'FeatureCollection',
+            'features', jsonb_agg(feature)
+        ) AS featcol
+        FROM (
+            SELECT jsonb_build_object(
+                'type', 'Feature',
+                'id', p.id,
+                'geometry', ST_AsGeoJSON(p.outline)::jsonb,
+                'properties', jsonb_build_object(
+                    'name', pi.name,
+                    'percentMapped', 0,
+                    'percentValidated', 0,
+                    'link', concat('https://', :domain, '/project/', p.id)
+                )
+            ) AS feature
+            FROM projects p
+            LEFT JOIN project_info pi ON p.id = pi.project_id
+            {bbox_condition}
+        ) features;
+        """
+    )
+
+    result = db.execute(query, {"domain": settings.FMTM_DOMAIN, **bbox_params})
+    featcol = result.scalar_one()
+
+    return featcol
 
 
 async def get_project_summaries(
