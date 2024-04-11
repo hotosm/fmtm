@@ -66,7 +66,7 @@ from app.db.postgis_utils import (
     split_geojson_by_task_areas,
     task_geojson_dict_to_entity_values,
 )
-from app.models.enums import HTTPStatus, ProjectRole
+from app.models.enums import HTTPStatus, ProjectRole, ProjectVisibility
 from app.projects import project_deps, project_schemas
 from app.s3 import add_obj_to_bucket, get_obj_from_bucket
 from app.tasks import tasks_crud
@@ -113,6 +113,10 @@ async def get_projects(
     else:
         db_projects = (
             db.query(db_models.DbProject)
+            .filter(
+                db_models.DbProject.visibility  # type: ignore
+                == ProjectVisibility.PUBLIC  # type: ignore
+            )
             .order_by(db_models.DbProject.id.desc())  # type: ignore
             .offset(skip)
             .limit(limit)

@@ -54,7 +54,7 @@ from app.db.postgis_utils import (
     flatgeobuf_to_geojson,
     parse_and_filter_geojson,
 )
-from app.models.enums import TILES_FORMATS, TILES_SOURCE, HTTPStatus
+from app.models.enums import TILES_FORMATS, TILES_SOURCE, HTTPStatus, ProjectVisibility
 from app.organisations import organisation_deps
 from app.projects import project_crud, project_deps, project_schemas
 from app.static import data_path
@@ -115,7 +115,14 @@ async def read_project_summaries(
             filter(lambda hashtag: hashtag.startswith("#"), hashtags)
         )  # filter hashtags that do start with #
 
-    total_projects = db.query(db_models.DbProject).count()
+    total_project_count = (
+        db.query(db_models.DbProject)
+        .filter(
+            db_models.DbProject.visibility  # type: ignore
+            == ProjectVisibility.PUBLIC  # type: ignore
+        )
+        .count()
+    )
     skip = (page - 1) * results_per_page
     limit = results_per_page
 
@@ -124,8 +131,9 @@ async def read_project_summaries(
     )
 
     pagination = await project_crud.get_pagination(
-        page, project_count, results_per_page, total_projects
+        page, project_count, results_per_page, total_project_count
     )
+
     project_summaries = [
         project_schemas.ProjectSummary.from_db_project(project) for project in projects
     ]
