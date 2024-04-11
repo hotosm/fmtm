@@ -127,10 +127,10 @@ async def get_projects(
 async def get_projects_featcol(
     db: Session,
     bbox: Optional[str] = None,
-):
+) -> geojson.FeatureCollection:
     """Get all projects, or a filtered subset."""
     bbox_condition = (
-        """WHERE ST_Intersects(
+        """AND ST_Intersects(
             p.outline, ST_MakeEnvelope(:minx, :miny, :maxx, :maxy, 4326)
         )"""
         if bbox
@@ -146,7 +146,7 @@ async def get_projects_featcol(
         f"""
         SELECT jsonb_build_object(
             'type', 'FeatureCollection',
-            'features', jsonb_agg(feature)
+            'features', COALESCE(jsonb_agg(feature), '[]'::jsonb)
         ) AS featcol
         FROM (
             SELECT jsonb_build_object(
@@ -157,11 +157,13 @@ async def get_projects_featcol(
                     'name', pi.name,
                     'percentMapped', 0,
                     'percentValidated', 0,
+                    'created', p.created,
                     'link', concat('https://', :domain, '/project/', p.id)
                 )
             ) AS feature
             FROM projects p
             LEFT JOIN project_info pi ON p.id = pi.project_id
+            WHERE p.visibility = 'PUBLIC'
             {bbox_condition}
         ) features;
         """
