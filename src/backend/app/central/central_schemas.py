@@ -18,8 +18,10 @@
 """Schemas for returned ODK Central objects."""
 
 from enum import Enum
+from typing import Optional
 
-from pydantic import BaseModel
+from geojson_pydantic import Feature, FeatureCollection
+from pydantic import BaseModel, Field, computed_field
 
 
 class CentralBase(BaseModel):
@@ -51,3 +53,51 @@ class CentralDetails(CentralBase):
     """ODK Central details."""
 
     pass
+
+
+class EntityProperties(BaseModel):
+    """ODK Entity properties to include in GeoJSON."""
+
+    updatedAt: Optional[str] = Field(exclude=True)  # noqa: N815
+
+    # project_id: Optional[str] = None
+    task_id: Optional[str] = None
+    osm_id: Optional[str] = None
+    tags: Optional[str] = None
+    version: Optional[str] = None
+    changeset: Optional[str] = None
+    timestamp: Optional[str] = None
+    status: Optional[str] = None
+
+    @computed_field
+    @property
+    def updated_at(self) -> Optional[str]:
+        """Convert updatedAt field to updated_at."""
+        return self.updatedAt
+
+
+class EntityFeature(Feature):
+    """ODK Entities as a GeoJSON Feature."""
+
+    properties: EntityProperties
+
+
+class EntityFeatureCollection(FeatureCollection):
+    """ODK Entity Features wrapped in a FeatureCollection."""
+
+    features: list[EntityFeature]
+
+
+class EntityMappingStatus(BaseModel):
+    """The status for mapping an Entity/feature."""
+
+    updatedAt: Optional[str] = Field(exclude=True)  # noqa: N815
+
+    id: str
+    status: Optional[str] = None
+
+    @computed_field
+    @property
+    def updated_at(self) -> Optional[str]:
+        """Convert updatedAt field to updated_at."""
+        return self.updatedAt

@@ -710,8 +710,8 @@ async def get_entities_geojson(
                 "type": "Polygon",
                 "coordinates": [xxx]
             },
+            "id": uuid_of_entity,
             "properties": {
-                "id": "b13a2793-3cd3-42f2-beb0-3c42bcbd7dab",
                 "updated_at": "2024-04-11T18:23:30.787Z",
                 "project_id": "1",
                 "task_id": "1",
@@ -735,8 +735,9 @@ async def get_entities_geojson(
                 "type": "Polygon",
                 "coordinates": [xxx]
             },
+            "id": uuid_of_entity,
             "properties": {
-                "id": "b13a2793-3cd3-42f2-beb0-3c42bcbd7dab",
+                "osm_id": "0044554",
                 "updated_at": "2024-04-11T18:23:30.787Z",
                 "status": "LOCKED_FOR_MAPPING"
             }
@@ -760,7 +761,7 @@ async def get_entities_geojson(
         entities = await odk_central.getEntityData(
             odk_id,
             dataset_name,
-            url_params="$select=__id, __system/updatedAt, geometry, status"
+            url_params="$select=__id, __system/updatedAt, geometry, osm_id, status"
             if minimal
             else None,
         )
@@ -809,7 +810,9 @@ async def get_entity_mapping_status(
         passwd=odk_creds.odk_central_password,
     ) as odk_central:
         entities = await odk_central.getEntityData(
-            odk_id, dataset_name, url_params="$select=__id, __system/updatedAt, status"
+            odk_id,
+            dataset_name,
+            url_params="$select=__system/updatedAt, osm_id, status",
         )
 
     all_entities = []
