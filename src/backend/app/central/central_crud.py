@@ -42,7 +42,7 @@ from app.db.postgis_utils import (
     javarosa_to_geojson_geom,
     parse_and_filter_geojson,
 )
-from app.models.enums import HTTPStatus, XLSFormType, TaskStatus
+from app.models.enums import HTTPStatus, TaskStatus, XLSFormType
 from app.projects import project_schemas
 
 
