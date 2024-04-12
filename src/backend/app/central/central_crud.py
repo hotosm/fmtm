@@ -30,6 +30,7 @@ from fastapi import HTTPException
 from loguru import logger as log
 from osm_fieldwork.CSVDump import CSVDump
 from osm_fieldwork.OdkCentral import OdkAppUser, OdkForm, OdkProject
+from osm_fieldwork.OdkCentralAsync import OdkEntity
 from pyxform.builder import create_survey_element_from_dict
 from pyxform.xls2json import parse_file_to_json
 from sqlalchemy import text
@@ -41,7 +42,7 @@ from app.db.postgis_utils import (
     javarosa_to_geojson_geom,
     parse_and_filter_geojson,
 )
-from app.models.enums import HTTPStatus, XLSFormType
+from app.models.enums import HTTPStatus, XLSFormType, TaskStatus
 from app.projects import project_schemas
 
 
@@ -624,6 +625,26 @@ async def convert_geojson_to_odk_csv(
     return csv_buffer
 
 
+def flatten_json(data: dict, target: dict):
+    """Flatten json properties to a single level.
+
+    Removes any existing GeoJSON data from captured GPS coordinates in
+    ODK submission.
+
+    Usage:
+        new_dict = {}
+        flatten_json(original_dict, new_dict)
+    """
+    for k, v in data.items():
+        if isinstance(v, dict):
+            if "type" in v and "coordinates" in v:
+                # GeoJSON object found, skip it
+                continue
+            flatten_json(v, target)
+        else:
+            target[k] = v
+
+
 async def convert_odk_submission_json_to_geojson(
     input_json: BytesIO,
 ) -> BytesIO:
@@ -637,21 +658,6 @@ async def convert_odk_submission_json_to_geojson(
     Returns:
         geojson (BytesIO): GeoJSON format ODK submission.
     """
-
-    def flatten_submission(data, target):
-        """Flatten geojson properties to a single level.
-
-        Removes any existing GeoJSON data from captured GPS coordinates.
-        """
-        for k, v in data.items():
-            if isinstance(v, dict):
-                if "type" in v and "coordinates" in v:
-                    # GeoJSON object found, skip it
-                    continue
-                flatten_submission(v, target)
-            else:
-                target[k] = v
-
     submission_json = json.loads(input_json.getvalue())
 
     if not submission_json:
@@ -667,10 +673,10 @@ async def convert_odk_submission_json_to_geojson(
             submission.pop(key)
 
         data = {}
-        flatten_submission(submission, data)
+        flatten_json(submission, data)
 
         geojson_geom = await javarosa_to_geojson_geom(
-            data.get("xlocation", {}), geom_type="Polygon"
+            data.pop("xlocation", {}), geom_type="Polygon"
         )
 
         feature = geojson.Feature(geometry=geojson_geom, properties=data)
@@ -679,6 +685,194 @@ async def convert_odk_submission_json_to_geojson(
     featcol = geojson.FeatureCollection(features=all_features)
 
     return BytesIO(json.dumps(featcol).encode("utf-8"))
+
+
+async def get_entities_geojson(
+    odk_creds: project_schemas.ODKCentralDecrypted,
+    odk_id: int,
+    dataset_name: str,
+    minimal: Optional[bool] = False,
+) -> geojson.FeatureCollection:
+    """Get the Entity details for a dataset / Entity list.
+
+    Uses the OData endpoint from ODK Central.
+
+    Currently it is not possible to filter via OData filters on custom params.
+    TODO in the future filter by task_id via the URL,
+    instead of returning all and filtering.
+
+    Response GeoJSON format:
+    {
+        "type": "FeatureCollection",
+        "features": [
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [xxx]
+            },
+            "properties": {
+                "id": "b13a2793-3cd3-42f2-beb0-3c42bcbd7dab",
+                "updatedAt": "2024-04-11T18:23:30.787Z",
+                "project_id": "1",
+                "task_id": "1",
+                "osm_id": "2",
+                "tags": "xxx",
+                "version": "1",
+                "changeset": "1",
+                "timestamp": "2024-12-20",
+                "status": "LOCKED_FOR_MAPPING"
+            }
+        ]
+    }
+
+
+    Response GeoJSON format, minimal:
+    {
+        "type": "FeatureCollection",
+        "features": [
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [xxx]
+            },
+            "properties": {
+                "id": "b13a2793-3cd3-42f2-beb0-3c42bcbd7dab",
+                "updatedAt": "2024-04-11T18:23:30.787Z",
+                "status": "LOCKED_FOR_MAPPING"
+            }
+        ]
+    }
+
+    Args:
+        odk_creds (ODKCentralDecrypted): ODK credentials for a project.
+        odk_id (str): The project ID in ODK Central.
+        dataset_name (str): The dataset / Entity list name in ODK Central.
+        minimal (bool): Remove all fields apart from __id, updatedAt, and status.
+
+    Returns:
+        dict: Entity data in OData JSON format.
+    """
+    async with OdkEntity(
+        url=odk_creds.odk_central_url,
+        user=odk_creds.odk_central_user,
+        passwd=odk_creds.odk_central_password,
+    ) as odk_central:
+        entities = await odk_central.getEntityData(
+            odk_id,
+            dataset_name,
+            url_params="$select=__id, __system/updatedAt, geometry, status"
+            if minimal
+            else None,
+        )
+
+    all_features = []
+    for entity in entities:
+        flattened_dict = {}
+        flatten_json(entity, flattened_dict)
+
+        keys_to_keep = [
+            "__id",
+            "updatedAt",
+            "geometry",
+            # "project_id",
+            "task_id",
+            "osm_id",
+            "tags",
+            "version",
+            "changeset",
+            "timestamp",
+            "status",
+        ]
+        filtered_data = {
+            key: flattened_dict.get(key)
+            for key in keys_to_keep
+            if (flattened_dict.get(key)) is not None
+        }
+
+        javarosa_geom = filtered_data.pop("geometry") or ""
+        geojson_geom = await javarosa_to_geojson_geom(
+            javarosa_geom, geom_type="Polygon"
+        )
+
+        feature = geojson.Feature(
+            geometry=geojson_geom,
+            id=filtered_data.pop("__id"),
+            properties=filtered_data,
+        )
+        all_features.append(feature)
+
+    return geojson.FeatureCollection(features=all_features)
+
+
+async def get_entity_mapping_status(
+    odk_creds: project_schemas.ODKCentralDecrypted,
+    odk_id: int,
+    dataset_name: str,
+) -> list:
+    """Get the entity mapping statuses.
+
+    No geometries are included.
+
+    Args:
+        odk_creds (ODKCentralDecrypted): ODK credentials for a project.
+        odk_id (str): The project ID in ODK Central.
+        dataset_name (str): The dataset / Entity list name in ODK Central.
+
+    Returns:
+        list: JSON list containing Entity: id, status, updatedAt.
+            updatedAt is in string format 2022-01-31T23:59:59.999Z.
+    """
+    async with OdkEntity(
+        url=odk_creds.odk_central_url,
+        user=odk_creds.odk_central_user,
+        passwd=odk_creds.odk_central_password,
+    ) as odk_central:
+        entities = await odk_central.getEntityData(
+            odk_id, dataset_name, url_params="$select=__id, __system/updatedAt, status"
+        )
+
+    all_entities = []
+    for entity in entities:
+        # Rename '__id' to 'id'
+        entity["id"] = entity.pop("__id")
+        filtered_data = {key: entity.get(key) for key in ["id", "updatedAt", "status"]}
+        all_entities.append(filtered_data)
+
+    return all_entities
+
+
+async def update_entity_mapping_status(
+    odk_creds: project_schemas.ODKCentralDecrypted,
+    odk_id: int,
+    dataset_name: str,
+    entity_uuid: str,
+    status: TaskStatus,
+) -> dict:
+    """Update the Entity 'status' data field.
+
+    Args:
+        odk_creds (ODKCentralDecrypted): ODK credentials for a project.
+        odk_id (str): The project ID in ODK Central.
+        dataset_name (str): The dataset / Entity list name in ODK Central.
+        entity_uuid (str): The unique entity to identify in ODK Central.
+        status (TaskStatus): The new mapping status to assign.
+
+    Returns:
+        dict: All Entity data in OData JSON format.
+    """
+    async with OdkEntity(
+        url=odk_creds.odk_central_url,
+        user=odk_creds.odk_central_user,
+        passwd=odk_creds.odk_central_password,
+    ) as odk_central:
+        return await odk_central.updateEntity(
+            odk_id,
+            dataset_name,
+            entity_uuid,
+            data={
+                "status": status,
+            },
+        )
 
 
 def upload_media(
