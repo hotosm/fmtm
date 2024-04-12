@@ -712,7 +712,7 @@ async def get_entities_geojson(
             },
             "properties": {
                 "id": "b13a2793-3cd3-42f2-beb0-3c42bcbd7dab",
-                "updatedAt": "2024-04-11T18:23:30.787Z",
+                "updated_at": "2024-04-11T18:23:30.787Z",
                 "project_id": "1",
                 "task_id": "1",
                 "osm_id": "2",
@@ -737,7 +737,7 @@ async def get_entities_geojson(
             },
             "properties": {
                 "id": "b13a2793-3cd3-42f2-beb0-3c42bcbd7dab",
-                "updatedAt": "2024-04-11T18:23:30.787Z",
+                "updated_at": "2024-04-11T18:23:30.787Z",
                 "status": "LOCKED_FOR_MAPPING"
             }
         ]
@@ -747,7 +747,7 @@ async def get_entities_geojson(
         odk_creds (ODKCentralDecrypted): ODK credentials for a project.
         odk_id (str): The project ID in ODK Central.
         dataset_name (str): The dataset / Entity list name in ODK Central.
-        minimal (bool): Remove all fields apart from __id, updatedAt, and status.
+        minimal (bool): Remove all fields apart from id, updated_at, and status.
 
     Returns:
         dict: Entity data in OData JSON format.
@@ -770,34 +770,15 @@ async def get_entities_geojson(
         flattened_dict = {}
         flatten_json(entity, flattened_dict)
 
-        keys_to_keep = [
-            "__id",
-            "updatedAt",
-            "geometry",
-            # "project_id",
-            "task_id",
-            "osm_id",
-            "tags",
-            "version",
-            "changeset",
-            "timestamp",
-            "status",
-        ]
-        filtered_data = {
-            key: flattened_dict.get(key)
-            for key in keys_to_keep
-            if (flattened_dict.get(key)) is not None
-        }
-
-        javarosa_geom = filtered_data.pop("geometry") or ""
+        javarosa_geom = flattened_dict.pop("geometry") or ""
         geojson_geom = await javarosa_to_geojson_geom(
             javarosa_geom, geom_type="Polygon"
         )
 
         feature = geojson.Feature(
             geometry=geojson_geom,
-            id=filtered_data.pop("__id"),
-            properties=filtered_data,
+            id=flattened_dict.pop("__id"),
+            properties=flattened_dict,
         )
         all_features.append(feature)
 
@@ -819,8 +800,8 @@ async def get_entity_mapping_status(
         dataset_name (str): The dataset / Entity list name in ODK Central.
 
     Returns:
-        list: JSON list containing Entity: id, status, updatedAt.
-            updatedAt is in string format 2022-01-31T23:59:59.999Z.
+        list: JSON list containing Entity: id, status, updated_at.
+            updated_at is in string format 2022-01-31T23:59:59.999Z.
     """
     async with OdkEntity(
         url=odk_creds.odk_central_url,
@@ -833,10 +814,12 @@ async def get_entity_mapping_status(
 
     all_entities = []
     for entity in entities:
+        flattened_dict = {}
+        flatten_json(entity, flattened_dict)
+
         # Rename '__id' to 'id'
-        entity["id"] = entity.pop("__id")
-        filtered_data = {key: entity.get(key) for key in ["id", "updatedAt", "status"]}
-        all_entities.append(filtered_data)
+        flattened_dict["id"] = flattened_dict.pop("__id")
+        all_entities.append(flattened_dict)
 
     return all_entities
 

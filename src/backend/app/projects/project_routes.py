@@ -230,20 +230,53 @@ async def task_features_count(
     return data
 
 
-@router.get("/{project_id}", response_model=project_schemas.ReadProject)
-async def read_project(
-    project_id: int,
-    current_user: AuthUser = Depends(mapper),
+@router.get(
+    "/{project_id}/entities", response_model=project_schemas.EntityFeatureCollection
+)
+async def get_odk_entities_geojson(
+    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    minimal: bool = False,
     db: Session = Depends(database.get_db),
 ):
+    """Get the ODK entities for a project in GeoJSON format.
+
+    NOTE This endpoint should not not be used to display the feature geometries.
+    Rendering multiple GeoJSONs if inefficient.
+    This is done by the flatgeobuf by filtering the task area bbox.
+    """
+    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
+    return await central_crud.get_entities_geojson(
+        odk_credentials,
+        project.odkid,
+        project.xform_category,
+        minimal=minimal,
+    )
+
+
+@router.get(
+    "/{project_id}/entity-mapping-status",
+    response_model=list[project_schemas.EntityMappingStatus],
+)
+async def get_odk_entities_mapping_status(
+    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    db: Session = Depends(database.get_db),
+):
+    """Get the ODK entities mapping status, i.e. in progress or complete."""
+    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
+    return await central_crud.get_entity_mapping_status(
+        odk_credentials,
+        project.odkid,
+        project.xform_category,
+    )
+
+
+@router.get("/{project_id}", response_model=project_schemas.ReadProject)
+async def read_project(
+    current_user: AuthUser = Depends(mapper),
+    db: Session = Depends(database.get_db),
+    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+):
     """Get a specific project by ID."""
-    project = await project_crud.get_project_by_id(db, project_id)
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-    if project.odk_token == "":
-        log.warning(
-            f"Project ({project.id}) has no 'odk_token' set. The QRCode will not work!"
-        )
     return project
 
 
@@ -259,7 +292,6 @@ async def delete_project(
         f"User {org_user_dict.get('user').username} attempting "
         f"deletion of project {project.id}"
     )
-    # Odk crendentials
     odk_credentials = await project_deps.get_odk_credentials(db, project.id)
     # Delete ODK Central project
     await central_crud.delete_odk_project(project.odkid, odk_credentials)
