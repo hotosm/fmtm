@@ -687,7 +687,6 @@ def multipolygon_to_polygon(features: Union[Feature, FeatCol, MultiPolygon, Poly
     if isinstance(features, FeatCol):
         features = features.model_dump_json()
         features = geojson.loads(features)
-
     # If the input is a single Polygon or Multipolygons,
     # wrap it into a FeatureCollection
     elif isinstance(features, (Polygon, MultiPolygon)):
@@ -697,7 +696,10 @@ def multipolygon_to_polygon(features: Union[Feature, FeatCol, MultiPolygon, Poly
     elif isinstance(features, Feature):
         features = geojson.FeatureCollection(features=[features])
 
-    for feature in features["features"]:
+    # handles both collection or single feature
+    features = features["features"] if "features" in features else [features]
+
+    for feature in features:
         properties = feature["properties"]
         geom = shape(feature["geometry"])
         if geom.geom_type == "Polygon":
@@ -737,7 +739,10 @@ def merge_multipolygon(features: Union[Feature, FeatCol, MultiPolygon, Polygon])
             features = geojson.FeatureCollection([features])
 
         multi_polygons = []
-        for feature in features["features"]:
+        # handles both collection or single feature
+        features = features["features"] if "features" in features else [features]
+
+        for feature in features:
             list(map(remove_z_dimension, feature["geometry"]["coordinates"][0]))
             polygon = shapely.geometry.shape(feature["geometry"])
             multi_polygons.append(polygon)
