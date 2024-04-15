@@ -115,7 +115,7 @@ async def update_task_status(
             TaskStatus.LOCKED_FOR_VALIDATION,
         ]:
             log.debug(f"Task {task_id} currently locked")
-            if not (user_id is not db_task.locked_by):
+            if user_id != db_task.locked_by:
                 msg = (
                     f"User {user_id} with username {db_user.username} "
                     "has not locked this task."
