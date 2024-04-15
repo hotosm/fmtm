@@ -42,7 +42,7 @@ from app.db.postgis_utils import (
     javarosa_to_geojson_geom,
     parse_and_filter_geojson,
 )
-from app.models.enums import HTTPStatus, TaskStatus, XLSFormType
+from app.models.enums import HTTPStatus, XLSFormType
 from app.projects import project_schemas
 
 
@@ -784,12 +784,12 @@ async def get_entities_geojson(
     return geojson.FeatureCollection(features=all_features)
 
 
-async def get_entity_mapping_status(
+async def get_entities_mapping_statuses(
     odk_creds: project_schemas.ODKCentralDecrypted,
     odk_id: int,
     dataset_name: str,
 ) -> list:
-    """Get the entity mapping statuses.
+    """Get all the entity mapping statuses.
 
     No geometries are included.
 
@@ -810,7 +810,7 @@ async def get_entity_mapping_status(
         entities = await odk_central.getEntityData(
             odk_id,
             dataset_name,
-            url_params="$select=__system/updatedAt, osm_id, status",
+            url_params="$select=__id, __system/updatedAt, osm_id, status",
         )
 
     all_entities = []
@@ -825,21 +825,82 @@ async def get_entity_mapping_status(
     return all_entities
 
 
-async def update_entity_mapping_status(
+def entity_to_flat_dict(
+    entity: Optional[dict], odk_id: int, dataset_name: str, entity_uuid: str
+) -> dict:
+    """Convert returned Entity from ODK Central to flattened dict."""
+    if not entity:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=(
+                f"Entity ({entity_uuid}) not found in ODK project ({odk_id}) "
+                f"and dataset ({dataset_name})"
+            ),
+        )
+
+    # Remove dataReceived prior to flatten to avoid conflict with currentVersion
+    entity.get("currentVersion", {}).pop("dataReceived")
+    flattened_dict = {}
+    flatten_json(entity, flattened_dict)
+
+    # Rename 'uuid' to 'id'
+    flattened_dict["id"] = flattened_dict.pop("uuid")
+
+    return flattened_dict
+
+
+async def get_entity_mapping_status(
     odk_creds: project_schemas.ODKCentralDecrypted,
     odk_id: int,
     dataset_name: str,
     entity_uuid: str,
-    status: TaskStatus,
 ) -> dict:
-    """Update the Entity 'status' data field.
+    """Get an single entity mapping status.
+
+    No geometries are included.
 
     Args:
         odk_creds (ODKCentralDecrypted): ODK credentials for a project.
         odk_id (str): The project ID in ODK Central.
         dataset_name (str): The dataset / Entity list name in ODK Central.
-        entity_uuid (str): The unique entity to identify in ODK Central.
-        status (TaskStatus): The new mapping status to assign.
+        entity_uuid (str): The unique entity UUID for ODK Central.
+
+    Returns:
+        dict: JSON containing Entity: id, status, updated_at.
+            updated_at is in string format 2022-01-31T23:59:59.999Z.
+    """
+    async with OdkEntity(
+        url=odk_creds.odk_central_url,
+        user=odk_creds.odk_central_user,
+        passwd=odk_creds.odk_central_password,
+    ) as odk_central:
+        entity = await odk_central.getEntity(
+            odk_id,
+            dataset_name,
+            entity_uuid,
+        )
+    return entity_to_flat_dict(entity, odk_id, dataset_name, entity_uuid)
+
+
+async def update_entity_mapping_status(
+    odk_creds: project_schemas.ODKCentralDecrypted,
+    odk_id: int,
+    dataset_name: str,
+    entity_uuid: str,
+    label: str,
+    status: str,
+) -> dict:
+    """Update the Entity mapping status.
+
+    This includes both the 'label' and 'status' data field.
+
+    Args:
+        odk_creds (ODKCentralDecrypted): ODK credentials for a project.
+        odk_id (str): The project ID in ODK Central.
+        dataset_name (str): The dataset / Entity list name in ODK Central.
+        entity_uuid (str): The unique entity UUID for ODK Central.
+        label (str): New label, with emoji prepended for status.
+        status (str): New TaskStatus to assign, in string form.
 
     Returns:
         dict: All Entity data in OData JSON format.
@@ -849,14 +910,16 @@ async def update_entity_mapping_status(
         user=odk_creds.odk_central_user,
         passwd=odk_creds.odk_central_password,
     ) as odk_central:
-        return await odk_central.updateEntity(
+        entity = await odk_central.updateEntity(
             odk_id,
             dataset_name,
             entity_uuid,
+            label=label,
             data={
                 "status": status,
             },
         )
+    return entity_to_flat_dict(entity, odk_id, dataset_name, entity_uuid)
 
 
 def upload_media(

@@ -47,7 +47,7 @@ from sqlalchemy.sql import text
 
 from app.auth.osm import AuthUser, login_required
 from app.auth.roles import mapper, org_admin, project_admin
-from app.central import central_crud
+from app.central import central_crud, central_schemas
 from app.db import database, db_models
 from app.db.postgis_utils import (
     check_crs,
@@ -56,7 +56,12 @@ from app.db.postgis_utils import (
     multipolygon_to_polygon,
     parse_and_filter_geojson,
 )
-from app.models.enums import TILES_FORMATS, TILES_SOURCE, HTTPStatus, ProjectVisibility
+from app.models.enums import (
+    TILES_FORMATS,
+    TILES_SOURCE,
+    HTTPStatus,
+    ProjectVisibility,
+)
 from app.organisations import organisation_deps
 from app.projects import project_crud, project_deps, project_schemas
 from app.submissions import submission_crud
@@ -231,7 +236,7 @@ async def task_features_count(
 
 
 @router.get(
-    "/{project_id}/entities", response_model=project_schemas.EntityFeatureCollection
+    "/{project_id}/entities", response_model=central_schemas.EntityFeatureCollection
 )
 async def get_odk_entities_geojson(
     project: db_models.DbProject = Depends(project_deps.get_project_by_id),
@@ -254,19 +259,67 @@ async def get_odk_entities_geojson(
 
 
 @router.get(
-    "/{project_id}/entity-mapping-status",
-    response_model=list[project_schemas.EntityMappingStatus],
+    "/{project_id}/entities/statuses",
+    response_model=list[central_schemas.EntityMappingStatus],
 )
-async def get_odk_entities_mapping_status(
+async def get_odk_entities_mapping_statuses(
     project: db_models.DbProject = Depends(project_deps.get_project_by_id),
     db: Session = Depends(database.get_db),
 ):
-    """Get the ODK entities mapping status, i.e. in progress or complete."""
+    """Get the ODK entities mapping statuses, i.e. in progress or complete."""
+    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
+    return await central_crud.get_entities_mapping_statuses(
+        odk_credentials,
+        project.odkid,
+        project.xform_category,
+    )
+
+
+@router.get(
+    "/{project_id}/entity/status",
+    response_model=central_schemas.EntityMappingStatus,
+)
+async def get_odk_entity_mapping_status(
+    entity_id: str,
+    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    db: Session = Depends(database.get_db),
+):
+    """Get the ODK entity mapping status, i.e. in progress or complete."""
     odk_credentials = await project_deps.get_odk_credentials(db, project.id)
     return await central_crud.get_entity_mapping_status(
         odk_credentials,
         project.odkid,
         project.xform_category,
+        entity_id,
+    )
+
+
+@router.post(
+    "/{project_id}/entity/status",
+    response_model=central_schemas.EntityMappingStatus,
+)
+async def set_odk_entities_mapping_status(
+    entity_details: central_schemas.EntityMappingStatusIn,
+    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    db: Session = Depends(database.get_db),
+):
+    """Set the ODK entities mapping status, i.e. in progress or complete.
+
+    entity_details must be a JSON body with params:
+    {
+        "entity_id": "string",
+        "label": "task <TASK_ID> feature <FEATURE_ID>",
+        "status": 0
+    }
+    """
+    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
+    return await central_crud.update_entity_mapping_status(
+        odk_credentials,
+        project.odkid,
+        project.xform_category,
+        entity_details.entity_id,
+        entity_details.label,
+        entity_details.status,
     )
 
 
@@ -587,7 +640,6 @@ async def validate_form(form: UploadFile):
 @router.post("/{project_id}/generate-project-data")
 async def generate_files(
     background_tasks: BackgroundTasks,
-    project_id: int,
     xls_form_upload: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
     org_user_dict: db_models.DbUser = Depends(org_admin),
@@ -604,9 +656,13 @@ async def generate_files(
     provided by the user to the xform, generates osm data extracts and uploads
     it to the form.
 
+    TODO this requires org_admin permission.
+    We should refactor to create a project as a stub.
+    Then move most logic to another endpoint to edit an existing project.
+    The edit project endpoint can have project manager permissions.
+
     Args:
         background_tasks (BackgroundTasks): FastAPI bg tasks, provided automatically.
-        project_id (int): The ID of the project for which files are being generated.
         xls_form_upload (UploadFile, optional): A custom XLSForm to use in the project.
             A file should be provided if user wants to upload a custom xls form.
         db (Session): Database session, provided automatically.
@@ -615,9 +671,9 @@ async def generate_files(
     Returns:
         json (JSONResponse): A success message containing the project ID.
     """
-    log.debug(f"Generating media files tasks for project: {project_id}")
-
     project = org_user_dict.get("project")
+
+    log.debug(f"Generating media files tasks for project: {project.id}")
 
     xform_category = project.xform_category
     custom_xls_form = None
@@ -641,16 +697,16 @@ async def generate_files(
         db.commit()
 
     # Create task in db and return uuid
-    log.debug(f"Creating export background task for project ID: {project_id}")
+    log.debug(f"Creating export background task for project ID: {project.id}")
     background_task_id = await project_crud.insert_background_task_into_database(
-        db, project_id=str(project_id)
+        db, project_id=str(project.id)
     )
 
     log.debug(f"Submitting {background_task_id} to background tasks stack")
     background_tasks.add_task(
         project_crud.generate_project_files,
         db,
-        project_id,
+        project,
         BytesIO(custom_xls_form) if custom_xls_form else None,
         xform_category,
         file_ext if xls_form_upload else ".xls",
@@ -659,7 +715,7 @@ async def generate_files(
 
     return JSONResponse(
         status_code=200,
-        content={"Message": f"{project_id}", "task_id": f"{background_task_id}"},
+        content={"Message": f"{project.id}", "task_id": f"{background_task_id}"},
     )
 
 
