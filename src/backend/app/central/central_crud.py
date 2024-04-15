@@ -784,10 +784,11 @@ async def get_entities_geojson(
     return geojson.FeatureCollection(features=all_features)
 
 
-async def get_entities_mapping_statuses(
+async def get_entities_data(
     odk_creds: project_schemas.ODKCentralDecrypted,
     odk_id: int,
     dataset_name: str,
+    fields: str = "__system/updatedAt, osm_id, status",
 ) -> list:
     """Get all the entity mapping statuses.
 
@@ -797,10 +798,12 @@ async def get_entities_mapping_statuses(
         odk_creds (ODKCentralDecrypted): ODK credentials for a project.
         odk_id (str): The project ID in ODK Central.
         dataset_name (str): The dataset / Entity list name in ODK Central.
+        fields (str): Extra fields to include in $select filter.
+            __id is included by default.
 
     Returns:
-        list: JSON list containing Entity: id, status, updated_at.
-            updated_at is in string format 2022-01-31T23:59:59.999Z.
+        list: JSON list containing Entity info. If updated_at is included,
+            the format is string 2022-01-31T23:59:59.999Z.
     """
     async with OdkEntity(
         url=odk_creds.odk_central_url,
@@ -810,7 +813,7 @@ async def get_entities_mapping_statuses(
         entities = await odk_central.getEntityData(
             odk_id,
             dataset_name,
-            url_params="$select=__id, __system/updatedAt, osm_id, status",
+            url_params=f"$select=__id{',' if fields else ''} {fields}",
         )
 
     all_entities = []

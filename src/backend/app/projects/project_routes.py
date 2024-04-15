@@ -262,16 +262,39 @@ async def get_odk_entities_geojson(
     "/{project_id}/entities/statuses",
     response_model=list[central_schemas.EntityMappingStatus],
 )
-async def get_odk_entities_mapping_statuses(
+async def get_odk_entities_osm_ids(
     project: db_models.DbProject = Depends(project_deps.get_project_by_id),
     db: Session = Depends(database.get_db),
 ):
     """Get the ODK entities mapping statuses, i.e. in progress or complete."""
     odk_credentials = await project_deps.get_odk_credentials(db, project.id)
-    return await central_crud.get_entities_mapping_statuses(
+    return await central_crud.get_entities_data(
         odk_credentials,
         project.odkid,
         project.xform_category,
+    )
+
+
+@router.get(
+    "/{project_id}/entities/osm-ids",
+    response_model=list[central_schemas.EntityOsmID],
+)
+async def get_odk_entities_mapping_statuses(
+    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    db: Session = Depends(database.get_db),
+):
+    """Get the ODK entities linked OSM IDs.
+
+    This endpoint is required as we cannot modify the data extract fields
+    when generated via raw-data-api.
+    We need to link Entity UUIDs to OSM/Feature IDs.
+    """
+    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
+    return await central_crud.get_entities_data(
+        odk_credentials,
+        project.odkid,
+        project.xform_category,
+        fields="osm_id",
     )
 
 
