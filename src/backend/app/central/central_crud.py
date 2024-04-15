@@ -557,7 +557,7 @@ async def update_survey_xform(
     xform_instance_src = root.findall(".//xforms:instance[@src]", namespaces)
     for inst in xform_instance_src:
         src_value = inst.get("src", "")
-        if src_value.endswith(".csv"):
+        if src_value.endswith(".geojson") or src_value.endswith(".csv"):
             inst.set("src", f"jr://file/{category}.csv")
 
     # <instance> must be defined inside <model></model> key
