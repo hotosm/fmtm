@@ -24,7 +24,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.auth.osm import AuthUser
-from app.auth.osm import AuthUser
 from app.auth.roles import get_uid, mapper
 from app.db import database
 from app.models.enums import TaskStatus
