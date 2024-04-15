@@ -250,7 +250,7 @@ async def temp_login(
     Returns:
         Response: The response object containing the access token as a cookie.
     """
-    access_token = settings.OSM_SVC_TOKEN
+    access_token = settings.OSM_SVC_ACCOUNT_TOKEN
     response = JSONResponse(content={"access_token": access_token}, status_code=200)
     cookie_name = settings.FMTM_DOMAIN.replace(".", "_")
     response.set_cookie(
