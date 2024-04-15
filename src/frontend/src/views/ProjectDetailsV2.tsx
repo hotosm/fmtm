@@ -13,7 +13,7 @@ import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
 import FmtmLogo from '@/assets/images/hotLog.png';
 import GenerateBasemap from '@/components/GenerateBasemap';
-import TaskSectionPopup from '@/components/ProjectDetailsV2/TaskSectionPopup';
+import TaskSelectionPopup from '@/components/ProjectDetailsV2/TaskSelectionPopup';
 import DialogTaskActions from '@/components/DialogTaskActions';
 import MobileFooter from '@/components/ProjectDetailsV2/MobileFooter';
 import MobileActivitiesContents from '@/components/ProjectDetailsV2/MobileActivitiesContents';
@@ -548,7 +548,7 @@ const Home = () => {
         )}
       </div>
       {featuresLayer != undefined && (
-        <TaskSectionPopup
+        <TaskSelectionPopup
           taskId={selectedTask}
           feature={featuresLayer}
           body={
