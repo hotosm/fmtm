@@ -13,6 +13,7 @@ import { useLocation } from 'react-router-dom';
 import DataTile from 'ol/source/DataTile.js';
 import TileLayer from 'ol/layer/WebGLTile.js';
 import { FileSource, PMTiles } from 'pmtiles';
+import windowDimention from '@/hooks/WindowDimension';
 
 // const mapboxOutdoors = new MapboxVector({
 //   styleUrl: 'mapbox://styles/geovation/ckpicg3of094w17nyqyd2ziie',
@@ -169,6 +170,8 @@ const pmTileLayer = (pmTileLayerData, visible) => {
 };
 
 const LayerSwitcherControl = ({ map, visible = 'osm', pmTileLayerData = null }) => {
+  const { windowSize } = windowDimention();
+
   const [basemapLayers, setBasemapLayers] = useState(
     new LayerGroup({
       title: 'Base maps',
@@ -205,7 +208,7 @@ const LayerSwitcherControl = ({ map, visible = 'osm', pmTileLayerData = null }) 
       layerSwitcher.style.alignItems = 'center';
     }
     if (
-      location.pathname.includes('project_details') ||
+      location.pathname.includes('project/') ||
       location.pathname.includes('upload-area') ||
       location.pathname.includes('select-category') ||
       location.pathname.includes('data-extract') ||
@@ -215,9 +218,9 @@ const LayerSwitcherControl = ({ map, visible = 'osm', pmTileLayerData = null }) 
       if (olZoom) {
         olZoom.style.display = 'none';
       }
-      if (layerSwitcher && location.pathname.includes('project_details')) {
+      if (layerSwitcher && location.pathname.includes('project/')) {
         layerSwitcher.style.right = '14px';
-        layerSwitcher.style.top = '300px';
+        layerSwitcher.style.top = windowSize.width > 640 ? '300px' : '355px';
         layerSwitcher.style.zIndex = '1000';
       }
     }

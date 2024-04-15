@@ -18,19 +18,15 @@
 """Routes for FMTM tasks."""
 
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
-from loguru import logger as log
 from sqlalchemy.orm import Session
-from sqlalchemy.sql import text
 
 from app.auth.osm import AuthUser, login_required
 from app.auth.roles import get_uid, mapper
-from app.central import central_crud
 from app.db import database
 from app.models.enums import TaskStatus
-from app.projects import project_crud, project_deps
 from app.tasks import tasks_crud, tasks_schemas
 
 router = APIRouter(
@@ -138,74 +134,6 @@ async def update_task_status(
     return await tasks_crud.update_task_history(task, db)
 
 
-@router.get("/features/")
-async def task_features_count(
-    project_id: int,
-    db: Session = Depends(database.get_db),
-):
-    """Get all features within a task area."""
-    # Get the project object.
-    project = await project_crud.get_project(db, project_id)
-
-    # ODK Credentials
-    odk_credentials = await project_deps.get_odk_credentials(db, project_id)
-
-    odk_details = central_crud.list_odk_xforms(project.odkid, odk_credentials, True)
-
-    # Assemble the final data list
-    data = []
-    feature_count_query = text(
-        """
-        SELECT id, feature_count
-        FROM tasks
-        WHERE project_id = :project_id;
-    """
-    )
-    result = db.execute(feature_count_query, {"project_id": project_id})
-    feature_counts = result.all()
-
-    if not feature_counts:
-        msg = f"To tasks found for project {project_id}"
-        log.warning(msg)
-        raise HTTPException(status_code=404, detail=msg)
-
-    data.extend(
-        {
-            "task_id": record[0],
-            "submission_count": odk_details[0]["submissions"],
-            "last_submission": odk_details[0]["lastSubmission"],
-            "feature_count": record[1],
-        }
-        for record in feature_counts
-    )
-
-    return data
-
-    # @router.get(
-    # "/task-comments/", response_model=list[tasks_schemas.TaskCommentResponse]
-    # )
-    # async def task_comments(
-    #     project_id: int,
-    #     task_id: int,
-    #     db: Session = Depends(database.get_db),
-    # ):
-    #     """Retrieve a list of task comments for a specific project and task.
-
-    #     Args:
-    #         project_id (int): The ID of the project.
-    #         task_id (int): The ID of the task.
-    #         db (Session, optional): The database session.
-
-    #     Returns:
-    #         A list of task comments.
-    #     """
-    #     task_comment_list = await tasks_crud.get_task_comments(
-    #               db, project_id, task_id
-    #               )
-
-    # return task_comment_list
-
-
 @router.post("/task-comments/", response_model=tasks_schemas.TaskCommentResponse)
 async def add_task_comments(
     comment: tasks_schemas.TaskCommentRequest,
@@ -253,24 +181,26 @@ async def task_activity(
     )
 
 
-@router.get("/task_history/", response_model=List[tasks_schemas.TaskHistoryOut])
+@router.get(
+    "/task_history/{project_id}", response_model=List[tasks_schemas.TaskHistoryOut]
+)
 async def task_history(
     project_id: int,
+    task_id: int,
     days: int = 10,
     comment: bool = False,
-    task_id: Optional[int] = None,
     db: Session = Depends(database.get_db),
 ):
     """Get the detailed task history for a project.
 
     Args:
         project_id (int): The ID of the project.
+        task_id (int): The task_id of the project.
         days (int): The number of days to consider for the
             task activity (default: 10).
         comment (bool): True or False, True to get comments
             from the project tasks and False by default for
             entire task status history.
-        task_id (int): The task_id of the project.
         db (Session): The database session.
 
     Returns:
@@ -278,5 +208,5 @@ async def task_history(
     """
     end_date = datetime.now() - timedelta(days=days)
     return await tasks_crud.get_project_task_history(
-        project_id, comment, end_date, task_id, db
+        project_id, task_id, comment, end_date, db
     )

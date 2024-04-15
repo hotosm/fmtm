@@ -82,7 +82,7 @@ const Comments = () => {
                     </div>
                     <div className="fmtm-flex-1 fmtm-flex fmtm-flex-col fmtm-gap-1">
                       <div className="fmtm-flex fmtm-gap-3 fmtm-items-center">
-                        <p>{projectComment?.commented_by}</p>
+                        <p>{projectComment?.username}</p>
                       </div>
                       <div>
                         <RichTextEditor

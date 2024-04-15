@@ -66,7 +66,7 @@ from app.db.postgis_utils import (
     split_geojson_by_task_areas,
     task_geojson_dict_to_entity_values,
 )
-from app.models.enums import HTTPStatus, ProjectRole
+from app.models.enums import HTTPStatus, ProjectRole, ProjectVisibility
 from app.projects import project_deps, project_schemas
 from app.s3 import add_obj_to_bucket, get_obj_from_bucket
 from app.tasks import tasks_crud
@@ -83,8 +83,9 @@ async def get_projects(
     hashtags: Optional[List[str]] = None,
     search: Optional[str] = None,
 ):
-    """Get all projects."""
+    """Get all projects, or a filtered subset."""
     filters = []
+
     if user_id:
         filters.append(db_models.DbProject.author_id == user_id)
 
@@ -112,13 +113,70 @@ async def get_projects(
     else:
         db_projects = (
             db.query(db_models.DbProject)
+            .filter(
+                db_models.DbProject.visibility  # type: ignore
+                == ProjectVisibility.PUBLIC  # type: ignore
+            )
             .order_by(db_models.DbProject.id.desc())  # type: ignore
             .offset(skip)
             .limit(limit)
             .all()
         )
         project_count = db.query(db_models.DbProject).count()
-    return project_count, await convert_to_app_projects(db_projects)
+
+    filtered_projects = await convert_to_app_projects(db_projects)
+    return project_count, filtered_projects
+
+
+async def get_projects_featcol(
+    db: Session,
+    bbox: Optional[str] = None,
+) -> geojson.FeatureCollection:
+    """Get all projects, or a filtered subset."""
+    bbox_condition = (
+        """AND ST_Intersects(
+            p.outline, ST_MakeEnvelope(:minx, :miny, :maxx, :maxy, 4326)
+        )"""
+        if bbox
+        else ""
+    )
+
+    bbox_params = {}
+    if bbox:
+        minx, miny, maxx, maxy = map(float, bbox.split(","))
+        bbox_params = {"minx": minx, "miny": miny, "maxx": maxx, "maxy": maxy}
+
+    query = text(
+        f"""
+        SELECT jsonb_build_object(
+            'type', 'FeatureCollection',
+            'features', COALESCE(jsonb_agg(feature), '[]'::jsonb)
+        ) AS featcol
+        FROM (
+            SELECT jsonb_build_object(
+                'type', 'Feature',
+                'id', p.id,
+                'geometry', ST_AsGeoJSON(p.outline)::jsonb,
+                'properties', jsonb_build_object(
+                    'name', pi.name,
+                    'percentMapped', 0,
+                    'percentValidated', 0,
+                    'created', p.created,
+                    'link', concat('https://', :domain, '/project/', p.id)
+                )
+            ) AS feature
+            FROM projects p
+            LEFT JOIN project_info pi ON p.id = pi.project_id
+            WHERE p.visibility = 'PUBLIC'
+            {bbox_condition}
+        ) features;
+        """
+    )
+
+    result = db.execute(query, {"domain": settings.FMTM_DOMAIN, **bbox_params})
+    featcol = result.scalar_one()
+
+    return featcol
 
 
 async def get_project_summaries(
@@ -443,12 +501,18 @@ async def generate_data_extract(
     pg = PostgresClient(
         "underpass",
         extract_config,
-        # auth_token=settings.OSM_SVC_ACCOUNT_TOKEN,
+        auth_token=settings.OSM_SVC_ACCOUNT_TOKEN
+        if settings.OSM_SVC_ACCOUNT_TOKEN
+        else None,
     )
     fgb_url = pg.execQuery(
         aoi,
         extra_params={
-            "fileName": "fmtm_extract",
+            "fileName": (
+                f"fmtm/{settings.FMTM_DOMAIN}/data_extract"
+                if settings.OSM_SVC_ACCOUNT_TOKEN
+                else "fmtm_extract"
+            ),
             "outputType": "fgb",
             "bind_zip": False,
             "useStWithin": False,
@@ -736,9 +800,9 @@ async def upload_custom_extract_to_s3(
         raise HTTPException(status_code=404, detail="Project not found")
 
     fgb_obj = BytesIO(fgb_content)
-    s3_fgb_path = f"/{project.organisation_id}/{project_id}/custom_extract.fgb"
+    s3_fgb_path = f"{project.organisation_id}/{project_id}/custom_extract.fgb"
 
-    log.debug(f"Uploading fgb to S3 path: {s3_fgb_path}")
+    log.debug(f"Uploading fgb to S3 path: /{s3_fgb_path}")
     add_obj_to_bucket(
         settings.S3_BUCKET_NAME,
         fgb_obj,
@@ -748,7 +812,7 @@ async def upload_custom_extract_to_s3(
 
     # Add url and type to database
     s3_fgb_full_url = (
-        f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}{s3_fgb_path}"
+        f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}/{s3_fgb_path}"
     )
 
     await update_data_extract_url_in_db(db, project, s3_fgb_full_url, data_extract_type)
@@ -924,16 +988,6 @@ async def generate_project_files(
             xlsform_path = f"{xlsforms_path}/{form_category}.xls"
             with open(xlsform_path, "rb") as f:
                 xlsform = BytesIO(f.read())
-
-            # NOTE would filtering be required at any point if this
-            # NOTE is handled upstream?
-            # filter = FilterData(xlsform)
-            # updated_data_extract = {"type": "FeatureCollection", "features": []}
-            # filtered_data_extract = (
-            #     filter.cleanData(data_extract)
-            #     if data_extract
-            #     else updated_data_extract
-            # )
 
         # Extract data extract from flatgeobuf
         log.debug("Getting data extract geojson from flatgeobuf")

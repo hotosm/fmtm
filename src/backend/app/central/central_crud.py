@@ -41,7 +41,7 @@ from app.db.postgis_utils import (
     javarosa_to_geojson_geom,
     parse_and_filter_geojson,
 )
-from app.models.enums import HTTPStatus
+from app.models.enums import HTTPStatus, XLSFormType
 from app.projects import project_schemas
 
 
@@ -291,31 +291,22 @@ def list_submissions(
     return submissions
 
 
-def get_form_list(db: Session, skip: int, limit: int):
-    """Returns the list of id and title of xforms from the database."""
+async def get_form_list(db: Session) -> dict:
+    """Returns the dict of {id:title} for XLSForms in the database."""
     try:
-        categories_to_filter = [
-            "amenities",
-            "camping",
-            "cemeteries",
-            "education",
-            "nature",
-            "places",
-            "wastedisposal",
-            "waterpoints",
-        ]
+        include_categories = [category.value for category in XLSFormType]
 
         sql_query = text(
             """
             SELECT id, title FROM xlsforms
-            WHERE title NOT IN
+            WHERE title IN
                 (SELECT UNNEST(:categories));
             """
         )
 
-        result = db.execute(sql_query, {"categories": categories_to_filter}).fetchall()
+        result = db.execute(sql_query, {"categories": include_categories}).fetchall()
 
-        result_dict = [{"id": row.id, "title": row.title} for row in result]
+        result_dict = {row.id: row.title for row in result}
 
         return result_dict
 
@@ -646,6 +637,21 @@ async def convert_odk_submission_json_to_geojson(
     Returns:
         geojson (BytesIO): GeoJSON format ODK submission.
     """
+
+    def flatten_submission(data, target):
+        """Flatten geojson properties to a single level.
+
+        Removes any existing GeoJSON data from captured GPS coordinates.
+        """
+        for k, v in data.items():
+            if isinstance(v, dict):
+                if "type" in v and "coordinates" in v:
+                    # GeoJSON object found, skip it
+                    continue
+                flatten_submission(v, target)
+            else:
+                target[k] = v
+
     submission_json = json.loads(input_json.getvalue())
 
     if not submission_json:
@@ -656,37 +662,18 @@ async def convert_odk_submission_json_to_geojson(
 
     all_features = []
     for submission in submission_json:
-        # Convert geom to geojson
-        javarosa_geom = (
-            submission.get("feature_geolocation")
-            .get("building_selected_with_note")
-            .get("xlocation")
-        )
+        keys_to_remove = ["meta", "__id", "__system"]
+        for key in keys_to_remove:
+            submission.pop(key)
+
+        data = {}
+        flatten_submission(submission, data)
+
         geojson_geom = await javarosa_to_geojson_geom(
-            javarosa_geom, geom_type="Polygon"
+            data.get("xlocation", {}), geom_type="Polygon"
         )
 
-        props_to_append = {}
-
-        # Add username & task id
-        props_to_append.update(
-            {
-                "username": submission.get("username", ""),
-                "task_id": submission.get("phonenumber", ""),
-            }
-        )
-
-        # Extract feature location verification keys (including image name)
-        verification_data = submission.get("verification", {})
-        props_to_append.update(verification_data)
-
-        # Extract and add collected data
-        # NOTE this is in format {form_name}_details, e.g. building_details
-        for key, value in submission.items():
-            if key.endswith("_details"):
-                props_to_append.update(value)
-
-        feature = geojson.Feature(geometry=geojson_geom, properties=props_to_append)
+        feature = geojson.Feature(geometry=geojson_geom, properties=data)
         all_features.append(feature)
 
     featcol = geojson.FeatureCollection(features=all_features)
