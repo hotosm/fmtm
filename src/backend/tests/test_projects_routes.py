@@ -59,20 +59,16 @@ async def test_create_project(client, admin_user, organisation):
         "xform_category": "buildings",
         "hashtags": ["#FMTM"],
         "outline_geojson": {
-            "type": "Feature",
-            "properties": {},
-            "geometry": {
-                "coordinates": [
-                    [
-                        [85.317028828, 27.7052522097],
-                        [85.317028828, 27.7041424888],
-                        [85.318844411, 27.7041424888],
-                        [85.318844411, 27.7052522097],
-                        [85.317028828, 27.7052522097],
-                    ]
-                ],
-                "type": "Polygon",
-            },
+            "coordinates": [
+                [
+                    [85.317028828, 27.7052522097],
+                    [85.317028828, 27.7041424888],
+                    [85.318844411, 27.7041424888],
+                    [85.318844411, 27.7052522097],
+                    [85.317028828, 27.7052522097],
+                ]
+            ],
+            "type": "Polygon",
         },
     }
     project_data.update(**odk_credentials.model_dump())

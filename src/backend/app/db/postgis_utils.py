@@ -684,20 +684,10 @@ def multipolygon_to_polygon(features: Union[Feature, FeatCol, MultiPolygon, Poly
         geojson.FeatureCollection: A GeoJSON FeatureCollection containing Polygons.
     """
     geojson_feature = []
-    if isinstance(features, FeatCol):
-        features = features.model_dump_json()
-        features = geojson.loads(features)
-    # If the input is a single Polygon or Multipolygons,
-    # wrap it into a FeatureCollection
-    elif isinstance(features, (Polygon, MultiPolygon)):
-        features = geojson.FeatureCollection(
-            features=[geojson.Feature(type="Feature", geometry=features, properties={})]
-        )
-    elif isinstance(features, Feature):
-        features = geojson.FeatureCollection(features=[features])
+    features = parse_featcol(features)
 
     # handles both collection or single feature
-    features = features["features"] if "features" in features else [features]
+    features = features.get("features", [features])
 
     for feature in features:
         properties = feature["properties"]
@@ -730,17 +720,11 @@ def merge_multipolygon(features: Union[Feature, FeatCol, MultiPolygon, Polygon])
             """Remove z dimension from geojson."""
             return coord.pop() if len(coord) == 3 else None
 
-        if isinstance(features, FeatCol):
-            features = features.model_dump_json()
-            features = geojson.loads(features)
-        if isinstance(features, (Polygon, MultiPolygon)):
-            features = geojson.FeatureCollection([geojson.Feature(geometry=features)])
-        elif isinstance(features, Feature):
-            features = geojson.FeatureCollection([features])
+        features = parse_featcol(features)
 
         multi_polygons = []
         # handles both collection or single feature
-        features = features["features"] if "features" in features else [features]
+        features = features.get("features", [features])
 
         for feature in features:
             list(map(remove_z_dimension, feature["geometry"]["coordinates"][0]))
@@ -763,3 +747,24 @@ def merge_multipolygon(features: Union[Feature, FeatCol, MultiPolygon, Polygon])
             status_code=400,
             detail=f"Couldn't merge the multipolygon to polygon: {str(e)}",
         ) from e
+
+
+def parse_featcol(features: Union[Feature, FeatCol, MultiPolygon, Polygon]):
+    """Parse a feature collection or feature into a GeoJSON FeatureCollection.
+
+    Args:
+        features: Feature, FeatCol, MultiPolygon, Polygon or dict.
+
+    Returns:
+        dict: Parsed GeoJSON FeatureCollection.
+    """
+    if isinstance(features, dict):
+        return features
+
+    feat_col = features.model_dump_json()
+    feat_col = geojson.loads(feat_col)
+    if isinstance(features, (Polygon, MultiPolygon)):
+        feat_col = geojson.FeatureCollection([geojson.Feature(geometry=feat_col)])
+    elif isinstance(features, Feature):
+        feat_col = geojson.FeatureCollection([feat_col])
+    return feat_col
