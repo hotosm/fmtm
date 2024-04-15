@@ -130,6 +130,9 @@ const ProjectSlice = createSlice({
     SetProjectTaskActivityLoading(state, action) {
       state.projectActivityLoading = action.payload;
     },
+    UpdateProjectTaskActivity(state, action) {
+      state.projectTaskActivity = [action.payload, ...state.projectTaskActivity];
+    },
   },
 });
 
