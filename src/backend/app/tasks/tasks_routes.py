@@ -182,7 +182,7 @@ async def task_activity(
 
 
 @router.get(
-    "/task_history/{project_id}", response_model=List[tasks_schemas.TaskHistoryOut]
+    "/task-history/{project_id}", response_model=List[tasks_schemas.TaskHistoryOut]
 )
 async def task_history(
     project_id: int,
