@@ -137,7 +137,7 @@ class ProjectIn(BaseModel):
 
     project_info: ProjectInfo
     xform_category: str
-    tms_url: Optional[str] = None
+    custom_tms_url: Optional[str] = None
     organisation_id: Optional[int] = None
     hashtags: Optional[List[str]] = None
     task_split_type: Optional[TaskSplitType] = None
@@ -356,6 +356,7 @@ class ReadProject(ProjectWithTasks):
     project_uuid: uuid.UUID = uuid.uuid4()
     location_str: Optional[str] = None
     data_extract_url: Optional[str] = None
+    custom_tms_url: Optional[str] = None
 
     @field_serializer("odk_token")
     def decrypt_password(self, value: str) -> Optional[str]:
