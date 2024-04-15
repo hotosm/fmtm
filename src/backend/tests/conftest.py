@@ -94,7 +94,7 @@ async def admin_user(db):
         db,
         AuthUser(
             username="localadmin",
-            id=0,
+            id=1,
             role=UserRole.ADMIN,
         ),
     )

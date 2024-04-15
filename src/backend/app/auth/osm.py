@@ -63,7 +63,7 @@ async def login_required(
     """Dependency to inject into endpoints requiring login."""
     if settings.DEBUG:
         return AuthUser(
-            id=0,
+            id=1,
             username="localadmin",
             role=UserRole.ADMIN,
         )

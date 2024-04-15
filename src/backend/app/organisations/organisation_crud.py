@@ -146,7 +146,7 @@ async def init_admin_org(db: Session):
     db.execute(
         sql,
         {
-            "admin_user_id": 0,
+            "admin_user_id": 1,
             "admin_username": "localadmin",
             "odk_url": settings.ODK_CENTRAL_URL,
             "odk_user": settings.ODK_CENTRAL_USER,
