@@ -137,6 +137,7 @@ class ProjectIn(BaseModel):
 
     project_info: ProjectInfo
     xform_category: str
+    tms_url: Optional[str] = None
     organisation_id: Optional[int] = None
     hashtags: Optional[List[str]] = None
     task_split_type: Optional[TaskSplitType] = None
