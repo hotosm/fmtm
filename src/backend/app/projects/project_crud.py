@@ -1065,7 +1065,8 @@ async def generate_project_files(
 
         for task in project.tasks:
             # Add task feature count to task
-            task.feature_count = len(task_extract_dict[task.id].get("features", []))
+            task_features = task_extract_dict.get(task.id, {})
+            task.feature_count = len(task_features.get("features", []))
             log.debug(f"({task.feature_count}) features added for task ({task.id})")
 
         # Commit all updated database records
