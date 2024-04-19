@@ -79,7 +79,7 @@ const TaskFeatureSelectionPopup = ({ featureProperties }: TaskFeatureSelectionPo
 
         <div className="fmtm-p-2 sm:fmtm-p-5 fmtm-border-t">
           <Button
-            btnText="OPEN FEATURE IN ODK"
+            btnText="MAP FEATURE IN ODK"
             btnType="primary"
             type="submit"
             className="fmtm-font-bold !fmtm-rounded fmtm-text-sm !fmtm-py-2 !fmtm-w-full fmtm-flex fmtm-justify-center"
