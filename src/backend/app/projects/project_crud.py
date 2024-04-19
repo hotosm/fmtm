@@ -331,12 +331,6 @@ async def create_project_with_project_info(
         f"organisation_id: {project_metadata.organisation_id}"
     )
 
-    # Extract project_info details, then remove key
-    project_name = project_metadata.project_info.name
-    project_description = project_metadata.project_info.description
-    project_short_description = project_metadata.project_info.short_description
-    project_instructions = project_metadata.project_info.per_task_instructions
-
     # create new project
     db_project = db_models.DbProject(
         author_id=current_user.id,
@@ -348,10 +342,10 @@ async def create_project_with_project_info(
     # add project info (project id needed to create project info)
     db_project_info = db_models.DbProjectInfo(
         project=db_project,
-        name=project_name,
-        short_description=project_short_description,
-        description=project_description,
-        per_task_instructions=project_instructions,
+        name=project_metadata.project_info.name,
+        description=project_metadata.project_info.description,
+        short_description=project_metadata.project_info.short_description,
+        per_task_instructions=project_metadata.project_info.per_task_instructions,
     )
     db.add(db_project_info)
 
