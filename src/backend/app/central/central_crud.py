@@ -30,12 +30,12 @@ from fastapi import HTTPException
 from loguru import logger as log
 from osm_fieldwork.CSVDump import CSVDump
 from osm_fieldwork.OdkCentral import OdkAppUser, OdkForm, OdkProject
-from osm_fieldwork.OdkCentralAsync import OdkEntity
 from pyxform.builder import create_survey_element_from_dict
 from pyxform.xls2json import parse_file_to_json
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.central import central_deps
 from app.config import settings
 from app.db.postgis_utils import (
     geojson_to_javarosa_geom,
@@ -751,11 +751,7 @@ async def get_entities_geojson(
     Returns:
         dict: Entity data in OData JSON format.
     """
-    async with OdkEntity(
-        url=odk_creds.odk_central_url,
-        user=odk_creds.odk_central_user,
-        passwd=odk_creds.odk_central_password,
-    ) as odk_central:
+    async with central_deps.get_odk_entity(odk_creds) as odk_central:
         entities = await odk_central.getEntityData(
             odk_id,
             dataset_name,
@@ -805,11 +801,7 @@ async def get_entities_data(
         list: JSON list containing Entity info. If updated_at is included,
             the format is string 2022-01-31T23:59:59.999Z.
     """
-    async with OdkEntity(
-        url=odk_creds.odk_central_url,
-        user=odk_creds.odk_central_user,
-        passwd=odk_creds.odk_central_password,
-    ) as odk_central:
+    async with central_deps.get_odk_entity(odk_creds) as odk_central:
         entities = await odk_central.getEntityData(
             odk_id,
             dataset_name,
@@ -872,11 +864,7 @@ async def get_entity_mapping_status(
         dict: JSON containing Entity: id, status, updated_at.
             updated_at is in string format 2022-01-31T23:59:59.999Z.
     """
-    async with OdkEntity(
-        url=odk_creds.odk_central_url,
-        user=odk_creds.odk_central_user,
-        passwd=odk_creds.odk_central_password,
-    ) as odk_central:
+    async with central_deps.get_odk_entity(odk_creds) as odk_central:
         entity = await odk_central.getEntity(
             odk_id,
             dataset_name,
@@ -908,11 +896,7 @@ async def update_entity_mapping_status(
     Returns:
         dict: All Entity data in OData JSON format.
     """
-    async with OdkEntity(
-        url=odk_creds.odk_central_url,
-        user=odk_creds.odk_central_user,
-        passwd=odk_creds.odk_central_password,
-    ) as odk_central:
+    async with central_deps.get_odk_entity(odk_creds) as odk_central:
         entity = await odk_central.updateEntity(
             odk_id,
             dataset_name,

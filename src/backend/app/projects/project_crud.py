@@ -41,7 +41,6 @@ from loguru import logger as log
 from osm_fieldwork.basemapper import create_basemap_file
 from osm_fieldwork.json2osm import json2osm
 from osm_fieldwork.OdkCentral import OdkAppUser
-from osm_fieldwork.OdkCentralAsync import OdkEntity
 from osm_fieldwork.xlsforms import xlsforms_path
 from osm_fieldwork.xlsforms.entities import registration_form
 from osm_rawdata.postgres import PostgresClient
@@ -51,7 +50,7 @@ from sqlalchemy import and_, column, func, inspect, select, table, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from app.central import central_crud
+from app.central import central_crud, central_deps
 from app.config import encrypt_value, settings
 from app.db import db_models
 from app.db.postgis_utils import (
@@ -1075,11 +1074,7 @@ async def generate_project_files(
         # Map geojson to entities dict
         entities_data_dict = await task_geojson_dict_to_entity_values(task_extract_dict)
         # Create entities
-        async with OdkEntity(
-            url=odk_credentials.odk_central_url,
-            user=odk_credentials.odk_central_user,
-            passwd=odk_credentials.odk_central_password,
-        ) as odk_central:
+        async with central_deps.get_odk_entity(odk_credentials) as odk_central:
             entities = await odk_central.createEntities(
                 project_odk_id,
                 form_category,
