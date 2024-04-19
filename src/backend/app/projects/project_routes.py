@@ -1044,9 +1044,6 @@ async def update_project_form(
     # Commit changes to db
     db.commit()
 
-    # The reference to the form via ODK Central API (minus task_id)
-    project_name = project.project_name_prefix
-
     # Get ODK Central credentials for project
     odk_creds = await project_deps.get_odk_credentials(db, project.id)
     # Get task id list
@@ -1057,7 +1054,6 @@ async def update_project_form(
         project.odkid,
         new_xform_data,
         file_ext,
-        project_name,
         category,
         odk_creds,
     )

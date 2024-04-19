@@ -322,7 +322,6 @@ async def update_project_xform(
     odk_id: int,
     xform_data: BytesIO,
     form_file_ext: str,
-    project_name: str,
     category: str,
     odk_credentials: project_schemas.ODKCentralDecrypted,
 ) -> None:
@@ -333,14 +332,10 @@ async def update_project_xform(
         odk_id (int): ODK Central form ID.
         xform_data (BytesIO): XForm data.
         form_file_ext (str): Extension of the form file.
-        project_name (str): Name (title) of the project.
         category (str): Category of the XForm.
         odk_credentials (project_schemas.ODKCentralDecrypted): ODK Central creds.
     """
-    # TODO in the future we may possibly support multiple forms per project.
-    # TODO to faciliate this we need to add the _{category} suffix and track.
-    # TODO this in the new xforms.category field/table.
-    form_name = project_name
+    form_name = category
 
     xform_data = await read_and_test_xform(
         xform_data,
@@ -349,7 +344,6 @@ async def update_project_xform(
     )
     updated_xform_data = await update_survey_xform(
         xform_data,
-        form_name,
         category,
         task_ids,
     )
