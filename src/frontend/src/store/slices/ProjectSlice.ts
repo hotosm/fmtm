@@ -101,7 +101,7 @@ const ProjectSlice = createSlice({
     SetProjectDashboardDetail(state, action) {
       state.projectDashboardDetail = action.payload;
     },
-    SetEntityOsmMap(state, action) {
+    SetEntityToOsmIdMapping(state, action) {
       // Convert osm_id to int before mapping to state
       state.entityOsmMap = action.payload.map((entity) => ({
         ...entity,

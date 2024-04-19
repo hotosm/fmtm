@@ -226,7 +226,7 @@ export const GetEntityInfo = (url) => {
     const getEntityOsmMap = async (url) => {
       try {
         const response = await CoreModules.axios.get(url);
-        dispatch(ProjectActions.SetEntityOsmMap(response.data));
+        dispatch(ProjectActions.SetEntityToOsmIdMapping(response.data));
       } catch (error) {
       } finally {
       }
