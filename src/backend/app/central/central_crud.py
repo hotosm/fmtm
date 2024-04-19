@@ -512,18 +512,17 @@ async def update_entity_registration_xform(
 
 async def update_survey_xform(
     form_data: BytesIO,
-    form_name: str,
     category: str,
-    task_ids: list,
+    task_ids: list[int],
 ) -> BytesIO:
     """Update fields in the XForm to work with FMTM.
 
-    Updates the 'id' and 'name' fields for the form.
-    Updates the csv filename to match the dataset name.
+    The 'id' field is set to random UUID (xFormId)
+    The 'name' field is set to the category name.
+    The upload media must mathc the (entity) dataset name (with .csv).
 
     Args:
         form_data (str): The input form data.
-        form_name (str): Name of the XForm to set.
         category (str): The form category, used to name the dataset (entity list)
             and the .csv file containing the geometries.
         task_ids (list): List of task IDs to insert as choices in form.
@@ -546,12 +545,12 @@ async def update_survey_xform(
     # Update id attribute to equal the form name to be generated
     xform_data = root.findall(".//xforms:data[@id]", namespaces)
     for dt in xform_data:
-        dt.set("id", form_name)
+        dt.set("id", category)
 
     # Update the form title (displayed in ODK Collect)
     existing_title = root.find(".//h:title", namespaces)
     if existing_title is not None:
-        existing_title.text = form_name
+        existing_title.text = category
 
     # Update the attachment name to {category}.csv, to link to the entity list
     xform_instance_src = root.findall(".//xforms:instance[@src]", namespaces)

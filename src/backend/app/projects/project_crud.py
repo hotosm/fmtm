@@ -904,28 +904,128 @@ def flatten_dict(d, parent_key="", sep="_"):
     return items
 
 
+async def generate_odk_central_project_content(
+    project_odk_id: int,
+    odk_credentials: project_schemas.ODKCentralDecrypted,
+    xlsform: BytesIO,
+    form_category: str,
+    form_file_ext: str,
+    task_ids: list[int],
+) -> str:
+    """Populate the project in ODK Central with XForm, Appuser, Permissions."""
+    # Create an app user (i.e. QR Code) for the project
+    appuser_name = f"fmtm_user_{form_category}"
+    log.info(
+        f"Creating ODK appuser ({appuser_name}) for ODK project ({project_odk_id})"
+    )
+    appuser = OdkAppUser(
+        odk_credentials.odk_central_url,
+        odk_credentials.odk_central_user,
+        odk_credentials.odk_central_password,
+    )
+    appuser_json = appuser.create(project_odk_id, appuser_name)
+
+    # If app user could not be created, raise an exception.
+    if not appuser_json:
+        msg = f"Couldn't create appuser {appuser_name} for project"
+        log.error(msg)
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg
+        ) from None
+    if not (appuser_token := appuser_json.get("token")):
+        msg = f"Couldn't get token for appuser {appuser_name}"
+        log.error(msg)
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg
+        ) from None
+    appuser_id = appuser_json.get("id")
+
+    # NOTE Entity Registration form: this may be removed with future Central
+    # API changes to allow Entity creation
+    with open(registration_form, "rb") as f:
+        registration_xlsform = BytesIO(f.read())
+    registration_xform = await central_crud.read_and_test_xform(
+        registration_xlsform, "xls", return_form_data=True
+    )
+    # Manually modify fields in XML specific to project
+    updated_reg_xform = await central_crud.update_entity_registration_xform(
+        registration_xform, form_category
+    )
+    # Upload entity registration XForm
+    log.info("Uploading Entity registration XForm to ODK Central")
+    central_crud.create_odk_xform(
+        project_odk_id,
+        updated_reg_xform,
+        odk_credentials,
+    )
+
+    # NOTE Survey form
+    xform = await central_crud.read_and_test_xform(
+        xlsform, form_file_ext, return_form_data=True
+    )
+    # Manually modify fields in XML specific to project (id, name, etc)
+    updated_xform = await central_crud.update_survey_xform(
+        xform,
+        form_category,
+        task_ids,
+    )
+    # Upload survey XForm
+    log.info("Uploading survey XForm to ODK Central")
+    xform_name = central_crud.create_odk_xform(
+        project_odk_id,
+        updated_xform,
+        odk_credentials,
+    )
+
+    log.info("Updating XForm role for appuser in ODK Central")
+    # Update the user role for the created xform
+    response = appuser.updateRole(
+        projectId=project_odk_id,
+        xform=xform_name,
+        actorId=appuser_id,
+    )
+    if not response.ok:
+        try:
+            json_data = response.json()
+            log.error(json_data)
+        except json.decoder.JSONDecodeError:
+            log.error(
+                "Could not parse response json during appuser update. "
+                f"status_code={response.status_code}"
+            )
+        finally:
+            msg = f"Failed to update appuser for form: ({xform_name})"
+            log.error(msg)
+            raise HTTPException(
+                status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg
+            ) from None
+
+    odk_url = odk_credentials.odk_central_url
+
+    return encrypt_value(f"{odk_url}/v1/key/{appuser_token}/projects/{project_odk_id}")
+
+
 async def generate_project_files(
     db: Session,
     project: db_models.DbProject,
     custom_form: Optional[BytesIO],
-    form_category: str,
     form_file_ext: str,
     background_task_id: Optional[uuid.UUID] = None,
 ) -> None:
     """Generate the files for a project.
 
-    QR code, new XForm, and the OSM data extract.
+    QR code (appuser), ODK XForm, ODK Entities from OSM data extract.
 
     Args:
         db (Session): the database session.
         project (DbProject): FMTM database project.
         custom_form (BytesIO): the xls file to upload if we have a custom form
-        form_category (str): the category for the custom XLS form
         form_file_ext (str): weather the form is xls, xlsx or xml
         background_task_id (uuid): the task_id of the background task.
     """
     try:
         project_id = project.id
+        form_category = project.xform_category
         log.info(f"Starting generate_project_files for project {project_id}")
         odk_credentials = await project_deps.get_odk_credentials(db, project_id)
 
@@ -961,100 +1061,20 @@ async def generate_project_files(
         # Get ODK Project ID
         project_odk_id = project.odkid
 
-        # Create an app user (i.e. QR Code) for the project
-        log.info(
-            f"Creating odkcentral app user ({project_name}) "
-            f"for FMTM project ({project_id})"
-        )
-        appuser = OdkAppUser(
-            odk_credentials.odk_central_url,
-            odk_credentials.odk_central_user,
-            odk_credentials.odk_central_password,
-        )
-        appuser_json = appuser.create(project_odk_id, project_name)
-
-        # If app user could not be created, raise an exception.
-        if not appuser_json:
-            log.error(f"Couldn't create appuser {project_name} for project")
-            return False
-        if not (appuser_token := appuser_json.get("token")):
-            log.error(f"Couldn't get token for appuser {project_name}")
-            return False
-        appuser_id = appuser_json.get("id")
-
-        # First upload entity registration form
-        with open(registration_form, "rb") as f:
-            reg_form_bytes = BytesIO(f.read())
-        # Convert XLSForm --> XForm
-        registration_form_data = await central_crud.read_and_test_xform(
-            reg_form_bytes, "xls", return_form_data=True
-        )
-        # Update fields in XML
-        updated_reg_xform = await central_crud.update_entity_registration_xform(
-            registration_form_data, form_category
-        )
-        # Upload entity registration XForm
-        log.info("Uploading Entity registration XForm to ODK Central")
-        central_crud.create_odk_xform(
+        encrypted_odk_token = await generate_odk_central_project_content(
             project_odk_id,
-            updated_reg_xform,
             odk_credentials,
-        )
-
-        # TODO in the future we may possibly support multiple forms per project.
-        # TODO to faciliate this we need to add the _{form_category} suffix and track.
-        # TODO this in the new xforms.category field/table.
-        xform_name_to_inject = project_name
-        task_ids = task_extract_dict.keys()
-        # Convert XLSForm --> XForm
-        xform_data = await central_crud.read_and_test_xform(
-            xlsform, form_file_ext, return_form_data=True
-        )
-        # This is where the ODK form name is set
-        updated_xform = await central_crud.update_survey_xform(
-            xform_data,
-            xform_name_to_inject,
+            xlsform,
             form_category,
-            task_ids,
+            form_file_ext,
+            project_name,
+            list(task_extract_dict.keys()),
         )
-        # Upload survey XForm
-        log.info("Uploading survey XForm to ODK Central")
-        xform_name = central_crud.create_odk_xform(
-            project_odk_id,
-            updated_xform,
-            odk_credentials,
+        log.debug(
+            f"Setting odk token for FMTM project ({project_id}) "
+            f"ODK project {project_odk_id}"
         )
-
-        log.info("Updating XForm role for appuser in ODK Central")
-        # Update the user role for the created xform
-        response = appuser.updateRole(
-            projectId=project_odk_id,
-            xform=xform_name,
-            actorId=appuser_id,
-        )
-        if not response.ok:
-            try:
-                json_data = response.json()
-                log.error(json_data)
-            except json.decoder.JSONDecodeError:
-                log.error(
-                    "Could not parse response json during appuser update. "
-                    f"status_code={response.status_code}"
-                )
-            finally:
-                msg = f"Failed to update appuser for form: ({xform_name})"
-                log.error(msg)
-                raise HTTPException(
-                    status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg
-                ) from None
-
-        odk_url = odk_credentials.odk_central_url
-
-        # NOTE ODK Central creation complete, update database
-        log.debug(f"Setting odk token for project ({project_id}) on server: {odk_url}")
-        project.odk_token = encrypt_value(
-            f"{odk_url}/v1/key/{appuser_token}/projects/{project_odk_id}"
-        )
+        project.odk_token = encrypted_odk_token
 
         for task in project.tasks:
             # Add task feature count to task
@@ -1068,13 +1088,18 @@ async def generate_project_files(
         # Map geojson to entities dict
         entities_data_dict = await task_geojson_dict_to_entity_values(task_extract_dict)
         # Create entities
+        # TODO after Entity creation is a single API call,
+        # TODO move to generate_odk_central_project_content
         async with central_deps.get_odk_entity(odk_credentials) as odk_central:
             entities = await odk_central.createEntities(
                 project_odk_id,
                 form_category,
                 entities_data_dict,
             )
-            log.debug(f"Wrote {len(entities)} entities for project ({project_id})")
+            if entities:
+                log.debug(f"Wrote {len(entities)} entities for project ({project_id})")
+            else:
+                log.debug(f"No entities uploaded for project ({project_id})")
 
         if background_task_id:
             # Update background task status to COMPLETED

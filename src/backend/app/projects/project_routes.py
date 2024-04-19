@@ -798,9 +798,8 @@ async def generate_files(
 
     log.debug(f"Generating media files tasks for project: {project.id}")
 
-    xform_category = project.xform_category
     custom_xls_form = None
-    file_ext = None
+    file_ext = ".xls"
     if xls_form_upload:
         log.debug("Validating uploaded XLS form")
 
@@ -831,8 +830,7 @@ async def generate_files(
         db,
         project,
         BytesIO(custom_xls_form) if custom_xls_form else None,
-        xform_category,
-        file_ext if xls_form_upload else ".xls",
+        file_ext,
         background_task_id,
     )
 
