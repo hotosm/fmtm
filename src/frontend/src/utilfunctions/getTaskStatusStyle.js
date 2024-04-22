@@ -32,8 +32,8 @@ function createIconStyle(iconSrc) {
   });
 }
 
-const strokeColor = 'rgb(0,0,0,0.5)';
-const secondaryStrokeColor = 'rgb(230,0,0,0.5)';
+const strokeColor = 'rgb(0,0,0,0.3)';
+const secondaryStrokeColor = 'rgb(0,0,0,1)';
 
 const getTaskStatusStyle = (feature, mapTheme, taskLockedByUser) => {
   let id = feature.getId().toString().replace('_', ',');
