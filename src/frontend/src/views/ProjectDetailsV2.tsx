@@ -181,7 +181,7 @@ const Home = () => {
   };
 
   const lockedPopup = () => {
-    return <p>This task was locked by you.</p>;
+    return <p>This task was locked by you</p>;
   };
 
   /**
@@ -474,8 +474,22 @@ const Home = () => {
                   zIndex={5}
                 />
               )}
-              <AsyncPopup map={map} popupUI={lockedPopup} primaryKey={'locked_by_user'} showOnHover="pointermove" />
-              <AsyncPopup map={map} popupUI={dataExtractDataPopup} primaryKey={'osm_id'} showOnHover="singleclick" />
+              <AsyncPopup
+                map={map}
+                popupUI={lockedPopup}
+                primaryKey={'locked_by_user'}
+                showOnHover="pointermove"
+                popupId="locked-popup"
+                className="fmtm-w-[235px]"
+              />
+              <AsyncPopup
+                map={map}
+                popupUI={dataExtractDataPopup}
+                primaryKey={'osm_id'}
+                showOnHover="singleclick"
+                popupId="data-extract-popup"
+                className="fmtm-w-[300px]"
+              />
               <div className="fmtm-absolute fmtm-bottom-20 sm:fmtm-bottom-5 fmtm-left-3 fmtm-z-50 fmtm-rounded-lg">
                 <Accordion
                   body={<MapLegends defaultTheme={defaultTheme} />}
