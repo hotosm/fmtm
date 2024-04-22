@@ -16,6 +16,7 @@ function createPolygonStyle(fillColor, strokeColor) {
     fill: new Fill({
       color: fillColor,
     }),
+    zIndex: 10,
   });
 }
 function createIconStyle(iconSrc) {
