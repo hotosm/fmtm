@@ -419,6 +419,7 @@ async def read_and_test_xform(
             xform_bytesio = BytesIO(
                 generated_xform.to_xml(
                     validate=False,
+                    pretty_print=False,
                 ).encode("utf-8")
             )
         except Exception as e:
