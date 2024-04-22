@@ -32,14 +32,22 @@ function createIconStyle(iconSrc) {
 }
 
 const strokeColor = 'rgb(0,0,0,0.5)';
+const secondaryStrokeColor = 'rgb(230,0,0,0.5)';
 
-const getTaskStatusStyle = (feature, mapTheme) => {
+const getTaskStatusStyle = (feature, mapTheme, taskLockedByUser) => {
   let id = feature.getId().toString().replace('_', ',');
   const status = id.split(',')[1];
-  const lockedPolygonStyle = createPolygonStyle(mapTheme.palette.mapFeatureColors.locked_for_mapping_rgb, strokeColor);
+
+  const isTaskStatusLocked = ['LOCKED_FOR_MAPPING', 'LOCKED_FOR_VALIDATION'].includes(status);
+  const borderStrokeColor = isTaskStatusLocked && taskLockedByUser ? secondaryStrokeColor : strokeColor;
+
+  const lockedPolygonStyle = createPolygonStyle(
+    mapTheme.palette.mapFeatureColors.locked_for_mapping_rgb,
+    borderStrokeColor,
+  );
   const lockedValidationStyle = createPolygonStyle(
     mapTheme.palette.mapFeatureColors.locked_for_validation_rgb,
-    strokeColor,
+    borderStrokeColor,
   );
   const iconStyle = createIconStyle(AssetModules.LockPng);
   const redIconStyle = createIconStyle(AssetModules.RedLockPng);
@@ -47,7 +55,7 @@ const getTaskStatusStyle = (feature, mapTheme) => {
   const geojsonStyles = {
     READY: new Style({
       stroke: new Stroke({
-        color: strokeColor,
+        color: borderStrokeColor,
         width: 3,
       }),
       fill: new Fill({
@@ -57,7 +65,7 @@ const getTaskStatusStyle = (feature, mapTheme) => {
     LOCKED_FOR_MAPPING: [lockedPolygonStyle, iconStyle],
     MAPPED: new Style({
       stroke: new Stroke({
-        color: strokeColor,
+        color: borderStrokeColor,
         width: 3,
       }),
       fill: new Fill({
@@ -68,7 +76,7 @@ const getTaskStatusStyle = (feature, mapTheme) => {
 
     VALIDATED: new Style({
       stroke: new Stroke({
-        color: strokeColor,
+        color: borderStrokeColor,
         width: 3,
       }),
       fill: new Fill({
@@ -77,7 +85,7 @@ const getTaskStatusStyle = (feature, mapTheme) => {
     }),
     INVALIDATED: new Style({
       stroke: new Stroke({
-        color: strokeColor,
+        color: borderStrokeColor,
         width: 3,
       }),
       fill: new Fill({
@@ -86,7 +94,7 @@ const getTaskStatusStyle = (feature, mapTheme) => {
     }),
     BAD: new Style({
       stroke: new Stroke({
-        color: strokeColor,
+        color: borderStrokeColor,
         width: 3,
       }),
       fill: new Fill({
@@ -95,7 +103,7 @@ const getTaskStatusStyle = (feature, mapTheme) => {
     }),
     SPLIT: new Style({
       stroke: new Stroke({
-        color: strokeColor,
+        color: borderStrokeColor,
         width: 3,
       }),
       fill: new Fill({

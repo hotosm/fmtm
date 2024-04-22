@@ -37,16 +37,17 @@ export default function MapStyles() {
   const mapTheme = CoreModules.useAppSelector((state) => state.theme.hotTheme);
   const [style, setStyle] = useState({});
   const strokeColor = 'rgb(0,0,0,0.5)';
+  const secondaryStrokeColor = 'rgb(230,0,0,0.5)';
 
   useEffect(() => {
     // Example usage:
     const lockedPolygonStyle = createPolygonStyle(
       mapTheme.palette.mapFeatureColors.locked_for_mapping_rgb,
-      strokeColor,
+      secondaryStrokeColor,
     );
     const lockedValidationStyle = createPolygonStyle(
       mapTheme.palette.mapFeatureColors.locked_for_validation_rgb,
-      strokeColor,
+      secondaryStrokeColor,
     );
     const iconStyle = createIconStyle(AssetModules.LockPng);
     const redIconStyle = createIconStyle(AssetModules.RedLockPng);
