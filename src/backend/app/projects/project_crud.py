@@ -1026,7 +1026,7 @@ async def generate_project_files(
         )
         # Upload survey XForm
         log.info("Uploading survey XForm to ODK Central")
-        xform_name = central_crud.create_odk_xform(
+        xform_id = central_crud.create_odk_xform(
             project_odk_id,
             updated_xform,
             odk_credentials,
@@ -1036,7 +1036,7 @@ async def generate_project_files(
         # Update the user role for the created xform
         response = appuser.updateRole(
             projectId=project_odk_id,
-            xform=xform_name,
+            xform=xform_id,
             actorId=appuser_id,
         )
         if not response.ok:
@@ -1049,11 +1049,26 @@ async def generate_project_files(
                     f"status_code={response.status_code}"
                 )
             finally:
-                msg = f"Failed to update appuser for form: ({xform_name})"
+                msg = f"Failed to update appuser for form: ({project_name})"
                 log.error(msg)
                 raise HTTPException(
                     status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg
                 ) from None
+
+        sql = text(
+            """
+                INSERT INTO xforms (
+                        project_id, odk_form_id, category
+                        )
+                    VALUES (
+                        :project_id, :xform_id, :category
+                        )
+                """
+        )
+        db.execute(
+            sql,
+            {"project_id": project_id, "xform_id": xform_id, "category": form_category},
+        )
 
         odk_url = odk_credentials.odk_central_url
 
@@ -1065,8 +1080,13 @@ async def generate_project_files(
 
         for task in project.tasks:
             # Add task feature count to task
-            task.feature_count = len(task_extract_dict[task.id].get("features", []))
-            log.debug(f"({task.feature_count}) features added for task ({task.id})")
+            feature_count = len(
+                task_extract_dict[task.project_task_index].get("features", [])
+            )
+            task.feature_count = feature_count
+            log.debug(
+                f"({feature_count} features added for task {task.project_task_index})"
+            )
 
         # Commit all updated database records
         db.commit()

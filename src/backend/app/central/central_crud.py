@@ -20,6 +20,7 @@
 import csv
 import json
 import os
+import uuid
 from io import BytesIO, StringIO
 from typing import Optional, Union
 from xml.etree.ElementTree import Element, SubElement
@@ -211,8 +212,8 @@ def create_odk_xform(
             status_code=500, detail={"message": "Connection failed to odk central"}
         ) from e
 
-    form_name = xform.createForm(odk_id, xform_data, publish=True)
-    if not form_name:
+    xform_id = xform.createForm(odk_id, xform_data, publish=True)
+    if not xform_id:
         namespaces = {
             "h": "http://www.w3.org/1999/xhtml",
             "odk": "http://www.opendatakit.org/xforms",
@@ -229,8 +230,7 @@ def create_odk_xform(
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg
         ) from None
-
-    return form_name
+    return xform_id
 
 
 def delete_odk_xform(
@@ -542,11 +542,11 @@ async def update_survey_xform(
 
     # Parse the XML
     root = ElementTree.fromstring(form_data.getvalue())
-
+    xform_id = uuid.uuid4()
     # Update id attribute to equal the form name to be generated
     xform_data = root.findall(".//xforms:data[@id]", namespaces)
     for dt in xform_data:
-        dt.set("id", form_name)
+        dt.set("id", str(xform_id))
 
     # Update the form title (displayed in ODK Collect)
     existing_title = root.find(".//h:title", namespaces)

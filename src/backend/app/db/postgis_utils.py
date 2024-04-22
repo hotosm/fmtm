@@ -296,7 +296,7 @@ async def split_geojson_by_task_areas(
             jsonb_set(
                 jsonb_set(
                     feature->'properties',
-                    '{task_id}', to_jsonb(tasks.id), true
+                    '{task_id}', to_jsonb(tasks.project_task_index), true
                 ),
                 '{project_id}', to_jsonb(tasks.project_id), true
             ) AS properties
@@ -309,7 +309,7 @@ async def split_geojson_by_task_areas(
 
         -- Retrieve task outlines based on the provided project_id
         SELECT
-            tasks.id AS task_id,
+            tasks.project_task_index AS task_id,
             jsonb_build_object(
                 'type', 'FeatureCollection',
                 'features', jsonb_agg(feature)
@@ -337,7 +337,7 @@ async def split_geojson_by_task_areas(
         WHERE
             tasks.project_id = :project_id
         GROUP BY
-            tasks.id;
+            tasks.project_task_index;
         """
     )
 
