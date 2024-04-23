@@ -670,7 +670,7 @@ async def task_geojson_dict_to_entity_values(task_geojson_dict):
     for _, geojson_dict in task_geojson_dict.items():
         features = geojson_dict.get("features", [])
         asyncio_tasks.extend(
-            [feature_geojson_to_entity_dict(feature) for feature in features]
+            [feature_geojson_to_entity_dict(feature) for feature in features if feature]
         )
 
     entity_values = await gather(*asyncio_tasks)
