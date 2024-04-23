@@ -20,6 +20,7 @@
 import csv
 import json
 import os
+import uuid
 from io import BytesIO, StringIO
 from typing import Optional, Union
 from xml.etree.ElementTree import Element, SubElement
@@ -522,6 +523,7 @@ async def update_survey_xform(
         BytesIO: The XForm data.
     """
     log.debug(f"Updating XML keys in survey XForm: {category}")
+    xform_id = uuid.uuid4()
 
     namespaces = {
         "h": "http://www.w3.org/1999/xhtml",
@@ -536,7 +538,7 @@ async def update_survey_xform(
     xform_data = root.findall(".//xforms:data[@id]", namespaces)
     for dt in xform_data:
         # This sets the xFormId in ODK Central (the form reference via API)
-        dt.set("id", category)
+        dt.set("id", str(xform_id))
 
     # Update the form title (displayed in ODK Collect)
     existing_title = root.find(".//h:title", namespaces)

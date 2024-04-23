@@ -904,14 +904,16 @@ def flatten_dict(d, parent_key="", sep="_"):
 
 
 async def generate_odk_central_project_content(
-    project_odk_id: int,
+    project: db_models.DbProject,
     odk_credentials: project_schemas.ODKCentralDecrypted,
     xlsform: BytesIO,
     form_category: str,
     form_file_ext: str,
     task_ids: list[int],
+    db: Session,
 ) -> str:
     """Populate the project in ODK Central with XForm, Appuser, Permissions."""
+    project_odk_id = project.odkid
     # Create an app user (i.e. QR Code) for the project
     appuser_name = f"fmtm_user_{form_category}"
     log.info(
@@ -970,7 +972,7 @@ async def generate_odk_central_project_content(
     )
     # Upload survey XForm
     log.info("Uploading survey XForm to ODK Central")
-    xform_name = central_crud.create_odk_xform(
+    xform_id = central_crud.create_odk_xform(
         project_odk_id,
         updated_xform,
         odk_credentials,
@@ -980,7 +982,7 @@ async def generate_odk_central_project_content(
     # Update the user role for the created xform
     response = appuser.updateRole(
         projectId=project_odk_id,
-        xform=xform_name,
+        xform=xform_id,
         actorId=appuser_id,
     )
     if not response.ok:
@@ -993,14 +995,27 @@ async def generate_odk_central_project_content(
                 f"status_code={response.status_code}"
             )
         finally:
-            msg = f"Failed to update appuser for form: ({xform_name})"
+            msg = f"Failed to update appuser for formId: ({xform_id})"
             log.error(msg)
             raise HTTPException(
                 status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg
             ) from None
-
+    sql = text(
+        """
+                INSERT INTO xforms (
+                        project_id, odk_form_id, category
+                        )
+                    VALUES (
+                        :project_id, :xform_id, :category
+                        )
+                """
+    )
+    db.execute(
+        sql,
+        {"project_id": project.id, "xform_id": xform_id, "category": form_category},
+    )
+    db.commit()
     odk_url = odk_credentials.odk_central_url
-
     return encrypt_value(f"{odk_url}/v1/key/{appuser_token}/projects/{project_odk_id}")
 
 
@@ -1059,12 +1074,13 @@ async def generate_project_files(
         project_odk_id = project.odkid
 
         encrypted_odk_token = await generate_odk_central_project_content(
-            project_odk_id,
+            project,
             odk_credentials,
             xlsform,
             form_category,
             form_file_ext,
             list(task_extract_dict.keys()),
+            db,
         )
         log.debug(
             f"Setting odk token for FMTM project ({project_id}) "
@@ -1074,9 +1090,12 @@ async def generate_project_files(
 
         for task in project.tasks:
             # Add task feature count to task
-            task_features = task_extract_dict.get(task.id, {})
-            task.feature_count = len(task_features.get("features", []))
-            log.debug(f"({task.feature_count}) features added for task ({task.id})")
+            task_features = task_extract_dict.get(task.project_task_index, {})
+            feature_count = len(task_features.get("features", []))
+            task.feature_count = feature_count
+            log.debug(
+                f"{feature_count} features added for task {task.project_task_index}"
+            )
 
         # Commit all updated database records
         db.commit()
