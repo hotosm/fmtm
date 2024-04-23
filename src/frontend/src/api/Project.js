@@ -45,6 +45,7 @@ export const ProjectById = (existingProjectList, projectId) => {
             data_extract_url: projectResp.data_extract_url,
             instructions: projectResp?.project_info?.per_task_instructions,
             odk_token: projectResp?.odk_token,
+            custom_tms_url: projectResp?.custom_tms_url,
           }),
         );
         dispatch(ProjectActions.SetProjectDetialsLoading(false));
@@ -144,7 +145,7 @@ export const GenerateProjectTiles = (url, payload) => {
     const generateProjectTiles = async (url, payload) => {
       try {
         const response = await CoreModules.axios.get(url);
-        dispatch(GetTilesList(`${import.meta.env.VITE_API_URL}/projects/tiles_list/${payload}/`));
+        dispatch(GetTilesList(`${import.meta.env.VITE_API_URL}/projects/${payload}/tiles-list/`));
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));
       } catch (error) {
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));
@@ -218,6 +219,20 @@ export const GetProjectDashboard = (url) => {
       }
     };
     await getProjectDashboard(url);
+  };
+};
+
+export const GetEntityInfo = (url) => {
+  return async (dispatch) => {
+    const getEntityOsmMap = async (url) => {
+      try {
+        const response = await CoreModules.axios.get(url);
+        dispatch(ProjectActions.SetEntityToOsmIdMapping(response.data));
+      } catch (error) {
+      } finally {
+      }
+    };
+    await getEntityOsmMap(url);
   };
 };
 
