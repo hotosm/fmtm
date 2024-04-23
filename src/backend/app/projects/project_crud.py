@@ -41,8 +41,7 @@ from loguru import logger as log
 from osm_fieldwork.basemapper import create_basemap_file
 from osm_fieldwork.json2osm import json2osm
 from osm_fieldwork.OdkCentral import OdkAppUser
-from osm_fieldwork.xlsforms import xlsforms_path
-from osm_fieldwork.xlsforms.entities import registration_form
+from osm_fieldwork.xlsforms import entities_registration, xlsforms_path
 from osm_rawdata.postgres import PostgresClient
 from shapely import wkt
 from shapely.geometry import Polygon, shape
@@ -942,7 +941,7 @@ async def generate_odk_central_project_content(
 
     # NOTE Entity Registration form: this may be removed with future Central
     # API changes to allow Entity creation
-    with open(registration_form, "rb") as f:
+    with open(entities_registration, "rb") as f:
         registration_xlsform = BytesIO(f.read())
     registration_xform = await central_crud.read_and_test_xform(
         registration_xlsform, "xls", return_form_data=True
@@ -1056,8 +1055,6 @@ async def generate_project_files(
                 detail="Failed splitting extract by tasks.",
             )
 
-        # Get project name for XForm name
-        project_name = project.project_name_prefix
         # Get ODK Project ID
         project_odk_id = project.odkid
 
@@ -1067,7 +1064,6 @@ async def generate_project_files(
             xlsform,
             form_category,
             form_file_ext,
-            project_name,
             list(task_extract_dict.keys()),
         )
         log.debug(
