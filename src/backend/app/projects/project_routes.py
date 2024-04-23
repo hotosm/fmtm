@@ -209,7 +209,7 @@ async def task_features_count(
     data = []
     feature_count_query = text(
         """
-        SELECT id, feature_count
+        SELECT id, project_task_index, feature_count
         FROM tasks
         WHERE project_id = :project_id;
     """
@@ -225,9 +225,10 @@ async def task_features_count(
     data.extend(
         {
             "task_id": record[0],
+            "index": record[1],
             "submission_count": odk_details[0]["submissions"],
             "last_submission": odk_details[0]["lastSubmission"],
-            "feature_count": record[1],
+            "feature_count": record[2],
         }
         for record in feature_counts
     )
