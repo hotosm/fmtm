@@ -390,7 +390,7 @@ async def create_tasks_from_geojson(
             db_task = db_models.DbTask(
                 project_id=project_id,
                 outline=wkblib.dumps(shape(polygon["geometry"]), hex=True),
-                project_task_index=index,
+                project_task_index=index + 1,
             )
             db.add(db_task)
             log.debug(
