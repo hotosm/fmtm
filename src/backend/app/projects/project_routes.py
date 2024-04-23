@@ -699,47 +699,6 @@ async def task_split(
     )
 
 
-@router.post("/edit_project_boundary/{project_id}/")
-async def edit_project_boundary(
-    project_id: int,
-    boundary_geojson: UploadFile = File(...),
-    dimension: int = Form(500),
-    db: Session = Depends(database.get_db),
-    project_user_dict: dict = Depends(project_admin),
-):
-    """Edit the existing project boundary."""
-    # Validating for .geojson File.
-    file_name = os.path.splitext(boundary_geojson.filename)
-    file_ext = file_name[1]
-    allowed_extensions = [".geojson", ".json"]
-    if file_ext not in allowed_extensions:
-        raise HTTPException(status_code=400, detail="Provide a valid .geojson file")
-
-    # read entire file
-    content = await boundary_geojson.read()
-    boundary = json.loads(content)
-
-    # Validatiing Coordinate Reference System
-    await check_crs(boundary)
-
-    result = await project_crud.update_project_boundary(
-        db, project_id, boundary, dimension
-    )
-    if not result:
-        raise HTTPException(
-            status_code=428, detail=f"Project with id {project_id} does not exist"
-        )
-
-    # Get the number of tasks in a project
-    task_count = await tasks_crud.get_task_count_in_project(db, project_id)
-
-    return {
-        "message": "Project Boundary Uploaded",
-        "project_id": project_id,
-        "task_count": task_count,
-    }
-
-
 @router.post("/validate-form")
 async def validate_form(form: UploadFile):
     """Tests the validity of the xls form uploaded.

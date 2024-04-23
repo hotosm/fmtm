@@ -43,8 +43,7 @@ from osm_fieldwork.json2osm import json2osm
 from osm_fieldwork.OdkCentral import OdkAppUser
 from osm_fieldwork.xlsforms import entities_registration, xlsforms_path
 from osm_rawdata.postgres import PostgresClient
-from shapely import wkt
-from shapely.geometry import Polygon, shape
+from shapely.geometry import shape
 from sqlalchemy import and_, column, func, inspect, select, table, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
@@ -57,7 +56,6 @@ from app.db.postgis_utils import (
     flatgeobuf_to_geojson,
     geojson_to_flatgeobuf,
     geometry_to_geojson,
-    get_address_from_lat_lon_async,
     get_featcol_main_geom_type,
     merge_multipolygon,
     parse_and_filter_geojson,
@@ -520,92 +518,6 @@ async def split_geojson_into_tasks(
     )
     log.debug("COMPLETE task splitting")
     return features
-
-
-async def update_project_boundary(
-    db: Session, project_id: int, boundary: str, meters: int
-):
-    """Update the boundary for a project and update tasks.
-
-    TODO this needs a big refactor or removal
-    #
-    """
-    # verify project exists in db
-    db_project = await get_project_by_id(db, project_id)
-    if not db_project:
-        log.error(f"Project {project_id} doesn't exist!")
-        return False
-
-    # Use a lambda function to remove the "z" dimension from each
-    # coordinate in the feature's geometry
-    def remove_z_dimension(coord):
-        """Remove the z dimension from a geojson."""
-        return coord.pop() if len(coord) == 3 else None
-
-    """ Check if the boundary is a Feature or a FeatureCollection """
-    if boundary["type"] == "Feature":
-        features = [boundary]
-    elif boundary["type"] == "FeatureCollection":
-        features = boundary["features"]
-    elif boundary["type"] == "Polygon":
-        features = [
-            {
-                "type": "Feature",
-                "properties": {},
-                "geometry": boundary,
-            }
-        ]
-    else:
-        # Raise an exception
-        raise HTTPException(
-            status_code=400, detail=f"Invalid GeoJSON type: {boundary['type']}"
-        )
-
-    """ Apply the lambda function to each coordinate in its geometry """
-    multi_polygons = []
-    for feature in features:
-        list(map(remove_z_dimension, feature["geometry"]["coordinates"][0]))
-        if feature["geometry"]["type"] == "MultiPolygon":
-            multi_polygons.append(Polygon(feature["geometry"]["coordinates"][0][0]))
-
-    """Update the boundary polygon on the database."""
-    if multi_polygons:
-        outline = multi_polygons[0]
-        for geom in multi_polygons[1:]:
-            outline = outline.union(geom)
-    else:
-        outline = shape(features[0]["geometry"])
-
-    centroid = (wkt.loads(outline.wkt)).centroid.wkt
-    db_project.centroid = centroid
-    geometry = wkt.loads(centroid)
-    longitude, latitude = geometry.x, geometry.y
-    address = await get_address_from_lat_lon_async(latitude, longitude)
-    db_project.location_str = address if address is not None else ""
-
-    db.commit()
-    db.refresh(db_project)
-    log.debug("Finished updating project boundary")
-
-    log.debug("Splitting tasks")
-    tasks = split_by_square(
-        boundary,
-        meters=meters,
-    )
-    for index, poly in enumerate(tasks["features"]):
-        db_task = db_models.DbTask(
-            project_id=project_id,
-            outline=wkblib.dumps(shape(poly["geometry"]), hex=True),
-            # qr_code=db_qr,
-            # qr_code_id=db_qr.id,
-            # project_task_index=feature["properties"]["fid"],
-            project_task_index=index,
-            # geometry_geojson=geojson.dumps(task_geojson),
-            # feature_count=len(task_geojson["features"]),
-        )
-        db.add(db_task)
-        db.commit()
-    return True
 
 
 # ---------------------------
