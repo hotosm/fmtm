@@ -211,7 +211,8 @@ async def task_features_count(
         """
         SELECT id, project_task_index, feature_count
         FROM tasks
-        WHERE project_id = :project_id;
+        WHERE project_id = :project_id
+        ORDER BY id;
     """
     )
     result = db.execute(feature_count_query, {"project_id": project_id})
