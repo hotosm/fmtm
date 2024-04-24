@@ -29,8 +29,7 @@ function Authorized() {
     const sessionToken = params.get('session_token');
     const picture = params.get('picture');
     const role = params.get('role');
-    dispatch(LoginActions.setAuthDetails(username, sessionToken));
-    dispatch(LoginActions.SetLoginToken({ username, id, sessionToken, picture, role }));
+    dispatch(LoginActions.setAuthDetails({ username, id, picture, role, sessionToken }));
 
     const redirectUrl = params.get('redirect_to') || '/';
     setIsReadyToRedirect(true);

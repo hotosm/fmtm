@@ -20,7 +20,7 @@ export default function CustomDrawer({ open, placement, size, type, onClose, onS
     const element = document.getElementById(`text${event.target.id}`);
     element != null ? (element.style.color = `${defaultTheme.palette.error['main']}`) : null;
   };
-  const token = CoreModules.useAppSelector((state) => state.login.loginToken);
+  const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
   const onMouseLeave = (event) => {
     const element = document.getElementById(`text${event.target.id}`);
     element != null ? (element.style.color = `${defaultTheme.palette.info['main']}`) : null;
@@ -100,7 +100,7 @@ export default function CustomDrawer({ open, placement, size, type, onClose, onS
     setOpen(false);
     try {
       await revokeCookie();
-      dispatch(LoginActions.signOut(null));
+      dispatch(LoginActions.signOut());
       dispatch(ProjectActions.clearProjects([]));
     } catch {
       dispatch(
@@ -133,19 +133,19 @@ export default function CustomDrawer({ open, placement, size, type, onClose, onS
             </CoreModules.Stack>
 
             <CoreModules.Divider color={'info'} sx={{ display: { xs: 'block', md: 'none' } }} />
-            {token != null && (
+            {authDetails && (
               <CoreModules.Stack
                 direction={'row'}
                 className="fmtm-justify-center fmtm-items-center fmtm-my-2"
                 ml={'3%'}
                 spacing={1}
               >
-                {token['picture'] !== 'null' && token['picture'] ? (
+                {authDetails['picture'] !== 'null' && authDetails['picture'] ? (
                   <CoreModules.Stack
                     className="fmtm-w-7 fmtm-h-7 fmtm-flex fmtm-items-center fmtm-justify-center fmtm-overflow-hidden fmtm-rounded-full fmtm-border-[1px]"
                     sx={{ display: { xs: 'block', md: 'none' }, mt: '3%' }}
                   >
-                    <img src={token['picture']} alt="Profile Picture" />
+                    <img src={authDetails['picture']} alt="Profile Picture" />
                   </CoreModules.Stack>
                 ) : (
                   <AssetModules.PersonIcon color="success" sx={{ display: { xs: 'block', md: 'none' }, mt: '1%' }} />
@@ -157,7 +157,7 @@ export default function CustomDrawer({ open, placement, size, type, onClose, onS
                   sx={{ display: { xs: 'block', md: 'none' } }}
                   className="fmtm-w-fit"
                 >
-                  {token['username']}
+                  {authDetails['username']}
                 </CoreModules.Typography>
               </CoreModules.Stack>
             )}
@@ -214,7 +214,7 @@ export default function CustomDrawer({ open, placement, size, type, onClose, onS
                 <Button onClick={() => setShowDebugConsole(true)} btnText="Open Console" btnType="secondary" />
               )}
               <div className="fmtm-ml-4 fmtm-mt-2 lg:fmtm-hidden">
-                {token != null ? (
+                {authDetails ? (
                   <div
                     className="fmtm-text-[#d73e3e] hover:fmtm-text-[#d73e3e] fmtm-cursor-pointer fmtm-opacity-80"
                     onClick={handleOnSignOut}
