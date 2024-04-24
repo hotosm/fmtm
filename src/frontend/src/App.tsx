@@ -72,6 +72,8 @@ const GlobalInit = () => {
         return resp.json();
       })
       .then((apiUser) => {
+        if (!apiUser) return;
+
         if (apiUser.username !== storeUser?.loginToken?.username) {
           // Mismatch between store user and logged in user via api
           dispatch(LoginActions.signOut(null));
@@ -99,8 +101,10 @@ const GlobalInit = () => {
     window.addEventListener('offline', () => checkStatus('offline'));
     window.addEventListener('online', () => checkStatus('online'));
 
-    // Check current login state
-    checkIfUserLoggedIn();
+    // Check current login state (omit callback url)
+    if (!window.location.pathname.includes('osmauth')) {
+      checkIfUserLoggedIn();
+    }
 
     // Do things when component is unmounted
     return () => {
