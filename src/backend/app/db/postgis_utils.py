@@ -588,7 +588,7 @@ async def geojson_to_javarosa_geom(geojson_geometry: dict) -> str:
 
     coordinates = []
     if geojson_geometry["type"] in ["Point", "LineString", "MultiPoint"]:
-        coordinates = [geojson_geometry.get("coordinates", [])]
+        coordinates = [[geojson_geometry.get("coordinates", [])]]
     elif geojson_geometry["type"] in ["Polygon", "MultiLineString"]:
         coordinates = geojson_geometry.get("coordinates", [])
     elif geojson_geometry["type"] == "MultiPolygon":
