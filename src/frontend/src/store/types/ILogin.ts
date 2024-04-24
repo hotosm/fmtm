@@ -5,8 +5,8 @@ export type LoginStateTypes = {
 
 type authDetailsType = {
   id: string;
-  picture: string;
+  img_url: string;
   role: string;
   username: string;
-  sessionToken: string | null;
+  // sessionToken: string | null;
 };

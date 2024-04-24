@@ -6,7 +6,7 @@ import AssetModules from '@/shared/AssetModules';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import { LoginActions } from '@/store/slices/LoginSlice';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
-import { createLoginWindow, revokeCookie } from '@/utilfunctions/login';
+import { revokeCookie } from '@/utilfunctions/login';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import logo from '@/assets/images/hotLog.png';
@@ -134,12 +134,12 @@ export default function PrimaryAppBar() {
               alignItems="center"
               className="fmtm-text-ellipsis fmtm-max-w-[9.5rem]"
             >
-              {authDetails['picture'] !== 'null' && authDetails['picture'] ? (
+              {authDetails['img_url'] !== 'null' && authDetails['img_url'] ? (
                 <CoreModules.Stack
                   className="fmtm-w-7 fmtm-h-7 fmtm-flex fmtm-items-center fmtm-justify-center fmtm-overflow-hidden fmtm-rounded-full fmtm-border-[1px]"
                   sx={{ display: { xs: 'none', md: 'block' }, mt: '3%' }}
                 >
-                  <img src={authDetails['picture']} alt="Profile Picture" />
+                  <img src={authDetails['img_url']} alt="Profile Picture" />
                 </CoreModules.Stack>
               ) : (
                 <AssetModules.PersonIcon color="success" sx={{ mt: '3%' }} />
