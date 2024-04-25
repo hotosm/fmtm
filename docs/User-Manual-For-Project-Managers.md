@@ -122,14 +122,14 @@ and improve the effectiveness of humanitarian efforts.
    be disabled.
 6. If you are new then on the top right cornor click on Sign up and create an
    account . Else , Sign in to your existing account .
-7. When you click on sign in, a pop-up will appear to ask if you want to sign in through your personal osm account or you want to use temporary account to sign in. You can select the options accordingly. 
+7. When you click on sign in, a pop-up will appear to ask if you want to sign in through your personal osm account or you want to use temporary account to sign in. You can select the options accordingly.
 8. Once signed in, the "Create new project" button will be enabled. Click on it.
 9. The process of creating a new project involves five steps: Project Details,
    Upload Area, Select Category, Data Extract and Split the tasks.
 10. Start by filling in the project details, including the organization name,
-   project name, description, and other relevant information.
+    project name, description, and other relevant information.
 
-   ![project details 2][14]
+![project details 2][14]
 
 11. If your organization's name is not listed, you can add it through the
     "Manage Organization" tab.
@@ -138,13 +138,13 @@ and improve the effectiveness of humanitarian efforts.
 13. Also, If you want to upload custom tile for baslayer, you can also add TMS URL by ticking on the checkbox asking "Will you use a custom TMS basemap"
 14. Proceed to the next step, which is uploading the area for field mapping.
     Choose the file option and select the AOI (Area of Interest) file in GEOJSON
-    file format. You can also draw the AOI from map on the right side of that page. 
+    file format. You can also draw the AOI from map on the right side of that page.
     Review the displayed map that corresponds to your selected area and click
     on "Next".
 
     ![project create info][15]
 
-15. In the third step, You should select the category on which you want to perform field mapping like buildings, health, waterways, Highways etc. You can also upload your custom XLS form for field mapping by ticking on upload custom Xform instead. 
+15. In the third step, You should select the category on which you want to perform field mapping like buildings, health, waterways, Highways etc. You can also upload your custom XLS form for field mapping by ticking on upload custom Xform instead.
 
     ![project create area][16]
 
@@ -154,7 +154,7 @@ and improve the effectiveness of humanitarian efforts.
 
     ![project task split][17]
 
-16. Select Form . Select the form category you want to use for the field
+17. Select Form . Select the form category you want to use for the field
     mapping, such as "Data Extract" or any other relevant category.
 
     Choose a specific form from the existing categories or upload a custom form
@@ -163,9 +163,9 @@ and improve the effectiveness of humanitarian efforts.
 
     ![project creation status][18]
 
-17. Wait for the system to generate QR codes for each task, which will be used
+18. Wait for the system to generate QR codes for each task, which will be used
     later in the field mapping process.
-18. After the QR codes are generated, you can find your project in the project
+19. After the QR codes are generated, you can find your project in the project
     dashboard.
 
 ## Steps to start access your project and Start mapping or a mapping campaign
