@@ -176,15 +176,8 @@ async def task_activity(
     tasks = []
     for task_id in task_list:
         tasks.extend(
-            [
-            tasks_crud.get_project_task_history(
-                task_id, 
-                False,
-                end_date,
-                db
-            )
-        ]
-    )
+            [tasks_crud.get_project_task_history(task_id, False, end_date, db)]
+        )
     task_history = await asyncio.gather(*tasks)
     return await tasks_crud.count_validated_and_mapped_tasks(
         task_history,

@@ -408,9 +408,11 @@ async def count_validated_and_mapped_tasks(
     # Populate cumulative_counts with counts from task_history
     for history in task_history:
         for result in history:
-            task_status = (result.get("status"))
+            task_status = result.get("status")
             date_str = (result.get("action_date")).strftime("%m/%d")
-            entry = next((entry for entry in results if entry["date"] == date_str), None)
+            entry = next(
+                (entry for entry in results if entry["date"] == date_str), None
+            )
 
             if entry:
                 if task_status == "VALIDATED":
