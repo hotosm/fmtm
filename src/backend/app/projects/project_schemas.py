@@ -32,7 +32,6 @@ from shapely import wkb
 from typing_extensions import Self
 
 from app.config import HttpUrlStr, decrypt_value, encrypt_value
-from app.db import db_models
 from app.db.postgis_utils import (
     geojson_to_geometry,
     geometry_to_geojson,
@@ -245,7 +244,7 @@ class ProjectSummary(BaseModel):
     id: int
     priority: ProjectPriority
     title: Optional[str] = None
-    centroid: Optional[WKBElement]= None
+    centroid: Optional[WKBElement] = None
     location_str: Optional[str] = None
     description: Optional[str] = None
     total_tasks: Optional[int] = None
@@ -259,7 +258,7 @@ class ProjectSummary(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
-    
+
     @field_serializer("centroid")
     def get_coord_from_centroid(self, value):
         """Get the cetroid coordinates from WBKElement."""

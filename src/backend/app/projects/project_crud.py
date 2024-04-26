@@ -1280,7 +1280,7 @@ async def convert_to_project_summary(db: Session, db_project: db_models.DbProjec
             db.query(db_models.DbTaskHistory.user_id)
             .filter(
                 db_models.DbTaskHistory.project_id == db_project.id,
-                db_models.DbTaskHistory.user_id!=(None),
+                db_models.DbTaskHistory.user_id != (None),
             )
             .distinct()
             .count()
@@ -1295,8 +1295,8 @@ async def convert_to_project_summary(db: Session, db_project: db_models.DbProjec
 
 
 async def convert_to_project_summaries(
-        db: Session,
-        db_projects: List[db_models.DbProject],
+    db: Session,
+    db_projects: List[db_models.DbProject],
 ) -> List[project_schemas.ProjectSummary]:
     """Legacy function to convert db models --> Pydantic.
 
