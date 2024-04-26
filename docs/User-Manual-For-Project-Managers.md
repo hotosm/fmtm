@@ -148,24 +148,18 @@ and improve the effectiveness of humanitarian efforts.
 
     ![project create area][16]
 
-16. If you choose "Divide on Square," specify the dimensions of the square tasks.
-
-    Click on "Next" to proceed.
+16. In Next step, User select whether they want their data extract from osm or they already have their custom data extract. If they have their custom data extract extracted from various other sources then it can be uploaded by clicking on upload data extract and surfing through your device. 
 
     ![project task split][17]
 
-17. Select Form . Select the form category you want to use for the field
-    mapping, such as "Data Extract" or any other relevant category.
-
-    Choose a specific form from the existing categories or upload a custom form
-    if needed.
-    Click on "Submit" to proceed.
+17. After having data extracts, you can go to next task splitting step. You will be provided with three options: Divide on square, Choose area as Tasks and Task splitting Algorithm. You can select an option based on your requirement for tasks.
+        Click on "Submit" to proceed.
 
     ![project creation status][18]
 
-18. Wait for the system to generate QR codes for each task, which will be used
+19. Wait for the system to generate QR codes for each task, which will be used
     later in the field mapping process.
-19. After the QR codes are generated, you can find your project in the project
+20. After the QR codes are generated, you can find your project in the project
     dashboard.
 
 ## Steps to start access your project and Start mapping or a mapping campaign
