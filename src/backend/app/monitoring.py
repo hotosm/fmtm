@@ -31,7 +31,7 @@ def add_endpoint_profiler(app: FastAPI):
     from pyinstrument import Profiler
 
     @app.middleware("http")
-    async def profile_request(request: Request, call_next):
+    async def _profile_request(request: Request, call_next):
         """Calculate the execution time for routes."""
         profiling = request.query_params.get("profile", False)
         if profiling:
@@ -44,9 +44,28 @@ def add_endpoint_profiler(app: FastAPI):
             return await call_next(request)
 
 
-def set_sentry_otel_tracer(app: FastAPI, endpoint: str):
+def set_sentry_otel_tracer(dsn: str):
     """Add OpenTelemetry tracing only if environment variables configured."""
-    return
+    from opentelemetry import trace
+    from opentelemetry.propagate import set_global_textmap
+    from opentelemetry.sdk.trace import TracerProvider
+    from sentry_sdk import init
+    from sentry_sdk.integrations.opentelemetry import (
+        SentryPropagator,
+        SentrySpanProcessor,
+    )
+
+    init(
+        dsn=dsn,
+        enable_tracing=True,
+        traces_sample_rate=1.0,
+        instrumenter="otel",
+    )
+
+    provider = TracerProvider()
+    provider.add_span_processor(SentrySpanProcessor())
+    trace.set_tracer_provider(provider)
+    set_global_textmap(SentryPropagator())
 
 
 def set_otel_tracer(app: FastAPI, endpoint: str):
@@ -170,5 +189,9 @@ def instrument_app_otel(app: FastAPI):
     from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
     FastAPIInstrumentor.instrument_app(app)
+    # FastAPIInstrumentor.instrument_app(
+    #   app, tracer_provider=trace.get_tracer_provider()
+    # )
     Psycopg2Instrumentor().instrument(enable_commenter=True, commenter_options={})
     RequestsInstrumentor().instrument()
+    # RequestsInstrumentor().instrument(tracer_provider=tracer_provider)

@@ -43,6 +43,7 @@ from app.monitoring import (
     add_endpoint_profiler,
     instrument_app_otel,
     set_otel_tracer,
+    set_sentry_otel_tracer,
 )
 from app.organisations import organisation_routes
 from app.organisations.organisation_crud import init_admin_org
@@ -66,14 +67,11 @@ def get_api() -> FastAPI:
 
     # Add monitoring if flag set
     if settings.MONITORING == MonitoringTypes.SENTRY:
-        # set_sentry_otel_tracer(
-        #   api,
-        #   settings.monitoring_config.otel_exporter_otpl_endpoint
-        # )
-        # set_otel_logger()
-        # instrument_app_otel(api)
-        pass
-    if settings.MONITORING == MonitoringTypes.OPENOBSERVE:
+        log.info("Adding Sentry OpenTelemetry monitoring config")
+        set_sentry_otel_tracer(settings.monitoring_config.SENTRY_DSN)
+        instrument_app_otel(api)
+    elif settings.MONITORING == MonitoringTypes.OPENOBSERVE:
+        log.info("Adding OpenObserve OpenTelemetry monitoring config")
         set_otel_tracer(api, settings.monitoring_config.otel_exporter_otpl_endpoint)
         # set_otel_logger(settings.monitoring_config.otel_exporter_otpl_endpoint)
         instrument_app_otel(api)

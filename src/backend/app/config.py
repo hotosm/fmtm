@@ -50,39 +50,15 @@ class MonitoringTypes(str, Enum):
     OPENOBSERVE = "openobserve"
 
 
-class SentrySettings(BaseSettings):
-    """Optional Sentry OpenTelemetry specific settings (monitoring)."""
-
-    SENTRY_DSN: HttpUrlStr
-
-
 class OtelSettings(BaseSettings):
-    """Optional OpenObserve OpenTelemetry specific settings (monitoring)."""
+    """Inherited OpenTelemetry specific settings (monitoring).
+
+    These mostly set environment variables set by the OTEL SDK.
+    """
 
     FMTM_DOMAIN: Optional[str] = Field(exclude=True)
     LOG_LEVEL: Optional[str] = Field(exclude=True)
     ODK_CENTRAL_URL: Optional[str] = Field(exclude=True)
-
-    OTEL_ENDPOINT: HttpUrlStr = Field(exclude=True)
-    OTEL_AUTH_TOKEN: Optional[str] = Field(exclude=True)
-
-    @computed_field
-    @property
-    def otel_exporter_otpl_endpoint(self) -> Optional[HttpUrlStr]:
-        """Set endpoint for OpenTelemetry."""
-        os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = str(self.OTEL_ENDPOINT)
-        return self.OTEL_ENDPOINT
-
-    @computed_field
-    @property
-    def otel_exporter_otlp_headers(self) -> Optional[str]:
-        """Set headers for OpenTelemetry collector service."""
-        if not self.OTEL_AUTH_TOKEN:
-            return None
-        # NOTE auth token must be URL encoded, i.e. space=%20
-        auth_header = f"Authorization=Basic%20{self.OTEL_AUTH_TOKEN}"
-        os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = auth_header
-        return auth_header
 
     @computed_field
     @property
@@ -129,6 +105,37 @@ class OtelSettings(BaseSettings):
         value = "true"
         os.environ["OTEL_PYTHON_LOG_CORRELATION"] = value
         return value
+
+
+class SentrySettings(OtelSettings):
+    """Optional Sentry OpenTelemetry specific settings (monitoring)."""
+
+    SENTRY_DSN: HttpUrlStr
+
+
+class OpenObserveSettings(OtelSettings):
+    """Optional OpenTelemetry specific settings (monitoring)."""
+
+    OTEL_ENDPOINT: HttpUrlStr = Field(exclude=True)
+    OTEL_AUTH_TOKEN: Optional[str] = Field(exclude=True)
+
+    @computed_field
+    @property
+    def otel_exporter_otpl_endpoint(self) -> Optional[HttpUrlStr]:
+        """Set endpoint for OpenTelemetry."""
+        os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = str(self.OTEL_ENDPOINT)
+        return self.OTEL_ENDPOINT
+
+    @computed_field
+    @property
+    def otel_exporter_otlp_headers(self) -> Optional[str]:
+        """Set headers for OpenTelemetry collector service."""
+        if not self.OTEL_AUTH_TOKEN:
+            return None
+        # NOTE auth token must be URL encoded, i.e. space=%20
+        auth_header = f"Authorization=Basic%20{self.OTEL_AUTH_TOKEN}"
+        os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = auth_header
+        return auth_header
 
 
 class Settings(BaseSettings):
@@ -271,12 +278,12 @@ class Settings(BaseSettings):
 
     @computed_field
     @property
-    def monitoring_config(self) -> Optional[OtelSettings | SentrySettings]:
+    def monitoring_config(self) -> Optional[OpenObserveSettings | SentrySettings]:
         """Get the monitoring configuration."""
         if self.MONITORING == MonitoringTypes.SENTRY:
             return SentrySettings()
         elif self.MONITORING == MonitoringTypes.OPENOBSERVE:
-            return OtelSettings()
+            return OpenObserveSettings()
         return None
 
 
