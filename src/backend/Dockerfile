@@ -63,6 +63,8 @@ RUN pdm export --prod > requirements.txt \
 
 # Build stage will all dependencies required to build Python wheels
 FROM base as build
+# NOTE this argument is specified during production build on Github workflow
+# NOTE only the production API image contains the monitoring dependencies
 ARG WITH_MONITORING
 RUN set -ex \
     && apt-get update \
