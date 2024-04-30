@@ -218,7 +218,7 @@ async def get_odk_entities_geojson(
     "/{project_id}/entities/statuses",
     response_model=list[central_schemas.EntityMappingStatus],
 )
-async def get_odk_entities_osm_ids(
+async def get_odk_entities_mapping_statuses(
     project: db_models.DbProject = Depends(project_deps.get_project_by_id),
     db: Session = Depends(database.get_db),
 ):
@@ -235,7 +235,7 @@ async def get_odk_entities_osm_ids(
     "/{project_id}/entities/osm-ids",
     response_model=list[central_schemas.EntityOsmID],
 )
-async def get_odk_entities_mapping_statuses(
+async def get_odk_entities_osm_ids(
     project: db_models.DbProject = Depends(project_deps.get_project_by_id),
     db: Session = Depends(database.get_db),
 ):
@@ -251,6 +251,24 @@ async def get_odk_entities_mapping_statuses(
         project.odkid,
         project.xform_category,
         fields="osm_id",
+    )
+
+
+@router.get(
+    "/{project_id}/entities/task-ids",
+    response_model=list[central_schemas.EntityTaskID],
+)
+async def get_odk_entities_task_ids(
+    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    db: Session = Depends(database.get_db),
+):
+    """Get the ODK entities linked FMTM Task IDs."""
+    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
+    return await central_crud.get_entities_data(
+        odk_credentials,
+        project.odkid,
+        project.xform_category,
+        fields="task_id",
     )
 
 
