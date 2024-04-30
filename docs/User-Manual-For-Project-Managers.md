@@ -54,7 +54,7 @@ their progress. The tool includes features for collaborative editing,
 data validation, and error detection. This ensures that the data
 collected by volunteers is accurate and reliable.
 
-**FMTM** is designed to be used in conjunction with **ODK
+**FMTM** is designed to be used in conjunction with **Open Data Kit
 (ODK)**. **ODK** is a free and open-source set of tools that allows
 users to create, collect, and manage data with mobile devices. The
 **ODK** provides a set of open-source tools that allow users to build
@@ -107,7 +107,8 @@ and improve the effectiveness of humanitarian efforts.
 ## Steps to create a project in FMTM
 
 1. Go to [fmtm][11] .
-2. In the header, you'll find two tabs: Explore Projects and Manage Organization.
+2. In the header, you'll find three tabs: Explore Projects, Manage Organization,
+   and Manage Categories.
 
    ![fmtm dashboard][12]
 
@@ -122,44 +123,48 @@ and improve the effectiveness of humanitarian efforts.
    be disabled.
 6. If you are new then on the top right cornor click on Sign up and create an
    account . Else , Sign in to your existing account .
-7. When you click on sign in, a pop-up will appear to ask if you want to sign in through your personal osm account or you want to use temporary account to sign in. You can select the options accordingly.
-8. Once signed in, the "Create new project" button will be enabled. Click on it.
-9. The process of creating a new project involves five steps: Project Details,
-   Upload Area, Select Category, Data Extract and Split the tasks.
-10. Start by filling in the project details, including the organization name,
-    project name, description, and other relevant information.
+7. Once signed in, the "Create new project" button will be enabled. Click on it.
+8. The process of creating a new project involves four steps: Project Details,
+   Uploading the Area, Defining the Task, and Selecting the Form.
+9. Start by filling in the project details, including the organization name,
+   project name, description, and other relevant information.
 
-![project details 2][14]
+   ![project details 2][14]
 
-11. If your organization's name is not listed, you can add it through the
+10. If your organization's name is not listed, you can add it through the
     "Manage Organization" tab.
-12. Provide the necessary credentials for the ODK (ODK) central setup,
+11. Provide the necessary credentials for the ODK (Open Data Kit) central setup,
     including URL, username, and password.
-13. Also, If you want to upload custom tile for baslayer, you can also add TMS URL by ticking on the checkbox asking "Will you use a custom TMS basemap"
-14. Proceed to the next step, which is uploading the area for field mapping.
+12. Proceed to the next step, which is uploading the area for field mapping.
     Choose the file option and select the AOI (Area of Interest) file in GEOJSON
-    file format. You can also draw the AOI from map on the right side of that page.
+    file format.
     Review the displayed map that corresponds to your selected area and click
     on "Next".
 
     ![project create info][15]
 
-15. In the third step, You should select the category on which you want to perform field mapping like buildings, health, waterways, Highways etc. You can also upload your custom XLS form for field mapping by ticking on upload custom Xform instead.
+13. Define the tasks of the project.
 
     ![project create area][16]
 
-16. In Next step, User select whether they want their data extract from osm or they already have their custom data extract. If they have their custom data extract extracted from various other sources then it can be uploaded by clicking on upload data extract and surfing through your device.
+    If you choose "Divide on Square," specify the dimensions of the square tasks.
+
+    Click on "Next" to proceed.
 
     ![project task split][17]
 
-17. After having data extracts, you can go to next task splitting step. You will be provided with three options: Divide on square, Choose area as Tasks and Task splitting Algorithm. You can select an option based on your requirement for tasks.
+14. Select Form . Select the form category you want to use for the field
+    mapping, such as "Data Extract" or any other relevant category.
+
+    Choose a specific form from the existing categories or upload a custom form
+    if needed.
     Click on "Submit" to proceed.
 
     ![project creation status][18]
 
-18. Wait for the system to generate QR codes for each task, which will be used
+15. Wait for the system to generate QR codes for each task, which will be used
     later in the field mapping process.
-19. After the QR codes are generated, you can find your project in the project
+16. After the QR codes are generated, you can find your project in the project
     dashboard.
 
 ## Steps to start access your project and Start mapping or a mapping campaign
@@ -213,6 +218,25 @@ and improve the effectiveness of humanitarian efforts.
 9. Save and send the completed form to the server.
 10. After completing the assigned task, go back to the project platform on FMTM
     and mark it as fully mapped.
+
+## Steps to Create an organisation
+
+1. Go to the Manage organization tab. You can see the number of organizations. On the top, there is a New button, clicking on which you can request for a new organization. You have to provide your consent and fill up the form by providing necessary details like Organization name, URL, Description of organization, type of organization etc.
+2. Now submit the form. The request will reach the Admin who will create your organization and inform you through the email. 
+
+## Steps to view your submissions and infographics
+
+1. Go to the respective project. On the bottom left side, you will see the view infographics button.
+2. Click on the button will lead you to the infographics page.
+3. On the right side there is an icon which will switch the layout to table view, meaning you can see the submissions in table format.
+4. Users can also download the submission in Json or CSV format.
+5. The submission can also be uploaded to JOSM. For that, you should have JOSM software installed in your device and should have your remote control enabled.
+
+## Steps to Edit project details
+
+1. Users can also edit a few fields after project creation like basic details like name, description, instructions as well as XLS form.
+2. Go to the respective project you want to edit. Click on the manage button. 
+3. Go to the edit section. And you can edit project details from there. You can also switch to the form update tab and upload a custom updated form.
 
 ## Help and Support
 
