@@ -222,16 +222,11 @@ and improve the effectiveness of humanitarian efforts.
 ## Steps to Create an organisation
 
 1. Go to the Manage organization tab. You can see the number of organizations. On the top, there is a New button, clicking on which you can request for a new organization. You have to provide your consent and fill up the form by providing necessary details like Organization name, URL, Description of organization, type of organization etc.
-   <<<<<<< HEAD
 2. Now submit the form. The request will reach the Admin who will create your organization and inform you through the email.
 
-## Steps to view your submissions and infographics
-
-======= 2. Now submit the form. The request will reach the Admin who will create your organization and inform you through the email.
 
 ## Steps to view your submissions and infographics
 
-> > > > > > > 1bfe0935a95aaf4fe29885f03350251e86994d52
 
 1. Go to the respective project. On the bottom left side, you will see the view infographics button.
 2. Click on the button will lead you to the infographics page.
@@ -241,15 +236,13 @@ and improve the effectiveness of humanitarian efforts.
 
 ## Steps to Edit project details
 
-<<<<<<< HEAD
 
 1. Users can also edit a few fields after project creation like basic details like name, description, instructions as well as XLS form.
 
-2. # Go to the respective project you want to edit. Click on the manage button
+2. Go to the respective project you want to edit. Click on the manage button
 
 3. Users can also edit a few fields after project creation like basic details like name, description, instructions as well as XLS form.
 4. Go to the respective project you want to edit. Click on the manage button.
-   > > > > > > > 1bfe0935a95aaf4fe29885f03350251e86994d52
 5. Go to the edit section. And you can edit project details from there. You can also switch to the form update tab and upload a custom updated form.
 
 ## Help and Support
