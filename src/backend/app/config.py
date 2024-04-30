@@ -46,6 +46,7 @@ HttpUrlStr = Annotated[
 class MonitoringTypes(str, Enum):
     """Configuration options for monitoring."""
 
+    NONE = ""
     SENTRY = "sentry"
     OPENOBSERVE = "openobserve"
 
