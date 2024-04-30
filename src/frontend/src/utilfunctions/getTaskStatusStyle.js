@@ -2,7 +2,7 @@ import { Fill, Icon, Stroke, Style } from 'ol/style';
 import { getCenter } from 'ol/extent';
 import { Point } from 'ol/geom';
 import AssetModules from '@/shared/AssetModules';
-import { task_priority_str } from '@/types/enums';
+import { task_status } from '@/types/enums';
 
 function createPolygonStyle(fillColor, strokeColor) {
   return new Style({
