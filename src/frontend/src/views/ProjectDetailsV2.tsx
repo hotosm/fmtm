@@ -27,8 +27,7 @@ import LayerSwitcherControl from '@/components/MapComponent/OpenLayersComponent/
 import MapControlComponent from '@/components/ProjectDetailsV2/MapControlComponent';
 import { VectorLayer } from '@/components/MapComponent/OpenLayersComponent/Layers';
 import { geojsonObjectModel } from '@/constants/geojsonObjectModal';
-import getTaskStatusStyle from '@/utilfunctions/getTaskStatusStyle';
-import { defaultStyles } from '@/components/MapComponent/OpenLayersComponent/helpers/styleUtils';
+import getTaskStatusStyle, { getFeatureStatusStyle } from '@/utilfunctions/getTaskStatusStyle';
 import MapLegends from '@/components/MapLegends';
 import Accordion from '@/components/common/Accordion';
 import AsyncPopup from '@/components/MapComponent/OpenLayersComponent/AsyncPopup/AsyncPopup';
@@ -84,6 +83,7 @@ const Home = () => {
   const taskModalStatus = CoreModules.useAppSelector((state) => state.project.taskModalStatus);
   const projectOpfsBasemapPath = useAppSelector((state) => state?.project?.projectOpfsBasemapPath);
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
+  const entityOsmMap = useAppSelector((state) => state?.project?.entityOsmMap);
 
   useEffect(() => {
     if (state.projectInfo.title) {
@@ -245,12 +245,6 @@ const Home = () => {
     //     padding: [20, 350, 50, 10],
     //   });
     // }
-  };
-
-  const buildingStyle = {
-    ...defaultStyles,
-    lineColor: '#FF0000',
-    fillOpacity: '0',
   };
 
   useEffect(() => {
@@ -492,7 +486,9 @@ const Home = () => {
                 <VectorLayer
                   fgbUrl={dataExtractUrl}
                   fgbExtent={dataExtractExtent}
-                  style={buildingStyle}
+                  getTaskStatusStyle={(feature) => {
+                    return getFeatureStatusStyle(feature?.getProperties()?.osm_id, mapTheme, entityOsmMap);
+                  }}
                   viewProperties={{
                     size: map?.getSize(),
                     padding: [50, 50, 50, 50],
