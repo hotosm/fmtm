@@ -117,7 +117,7 @@ const getTaskStatusStyle = (feature, mapTheme, taskLockedByUser) => {
 
 export const getFeatureStatusStyle = (osmId, mapTheme, entityOsmMap) => {
   const entity = entityOsmMap?.find((entity) => entity?.osm_id === osmId);
-  const status = task_priority_str[entity?.status];
+  const status = task_status[entity?.status];
   const borderStrokeColor = '#FF0000';
 
   const lockedPolygonStyle = createPolygonStyle(
