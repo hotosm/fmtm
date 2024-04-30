@@ -224,9 +224,7 @@ and improve the effectiveness of humanitarian efforts.
 1. Go to the Manage organization tab. You can see the number of organizations. On the top, there is a New button, clicking on which you can request for a new organization. You have to provide your consent and fill up the form by providing necessary details like Organization name, URL, Description of organization, type of organization etc.
 2. Now submit the form. The request will reach the Admin who will create your organization and inform you through the email.
 
-
 ## Steps to view your submissions and infographics
-
 
 1. Go to the respective project. On the bottom left side, you will see the view infographics button.
 2. Click on the button will lead you to the infographics page.
@@ -235,7 +233,6 @@ and improve the effectiveness of humanitarian efforts.
 5. The submission can also be uploaded to JOSM. For that, you should have JOSM software installed in your device and should have your remote control enabled.
 
 ## Steps to Edit project details
-
 
 1. Users can also edit a few fields after project creation like basic details like name, description, instructions as well as XLS form.
 
