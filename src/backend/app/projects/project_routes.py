@@ -191,52 +191,6 @@ async def search_project(
     return response
 
 
-@router.get("/{project_id}/task-completion")
-async def task_features_count(
-    project_id: int,
-    db: Session = Depends(database.get_db),
-):
-    """Get all features within a task area."""
-    # Get the project object.
-    project = await project_crud.get_project(db, project_id)
-
-    # ODK Credentials
-    odk_credentials = await project_deps.get_odk_credentials(db, project_id)
-
-    odk_details = central_crud.list_odk_xforms(project.odkid, odk_credentials, True)
-
-    # Assemble the final data list
-    data = []
-    feature_count_query = text(
-        """
-        SELECT id, project_task_index, feature_count
-        FROM tasks
-        WHERE project_id = :project_id
-        ORDER BY id;
-    """
-    )
-    result = db.execute(feature_count_query, {"project_id": project_id})
-    feature_counts = result.all()
-
-    if not feature_counts:
-        msg = f"To tasks found for project {project_id}"
-        log.warning(msg)
-        raise HTTPException(status_code=404, detail=msg)
-
-    data.extend(
-        {
-            "task_id": record[0],
-            "index": record[1],
-            "submission_count": odk_details[0]["submissions"],
-            "last_submission": odk_details[0]["lastSubmission"],
-            "feature_count": record[2],
-        }
-        for record in feature_counts
-    )
-
-    return data
-
-
 @router.get(
     "/{project_id}/entities", response_model=central_schemas.EntityFeatureCollection
 )
