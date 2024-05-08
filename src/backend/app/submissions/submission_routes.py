@@ -357,7 +357,6 @@ async def get_submission_form_fields(
     Returns:
         Any: The response from the submission form API.
     """
-
     project = await project_crud.get_project(db, project_id)
     odk_credentials = await project_deps.get_odk_credentials(db, project_id)
     odk_form = central_crud.get_odk_form(odk_credentials)
@@ -388,7 +387,6 @@ async def submission_table(
 
     task_id: The ID of the task.
     """
-    
     skip = (page - 1) * results_per_page
     filters = {
         "$top": results_per_page,
@@ -414,7 +412,7 @@ async def submission_table(
             filters["$filter"] += f" and (__system/reviewState eq '{review_state}')"
         else:
             filters["$filter"] = f"__system/reviewState eq '{review_state}'"
-    
+
     count, data = await submission_crud.get_submission_by_project(
         project_id, filters, db, task_id
     )
@@ -427,7 +425,8 @@ async def submission_table(
 
     return response
 
-#FIXME remove it since separate endpoint is not required now.
+
+# FIXME remove it since separate endpoint is not required now.
 # @router.get("/task_submissions/{project_id}")
 # async def task_submissions(
 #     task_id: int,
@@ -500,7 +499,7 @@ async def submission_detail(
     project: db_models.DbProject = Depends(project_deps.get_project_by_id),
     db: Session = Depends(database.get_db),
     current_user: AuthUser = Depends(mapper),
-)-> dict:
+) -> dict:
     """This api returns the submission detail of individual submission.
 
     It takes two parameter: project_id and submission_id.
@@ -529,7 +528,6 @@ async def update_review_state(
         db (Session): The database session dependency.
     """
     try:
-
         project = await project_crud.get_project(db, project_id)
         odk_creds = await project_deps.get_odk_credentials(db, project_id)
         odk_project = central_crud.get_odk_project(odk_creds)
