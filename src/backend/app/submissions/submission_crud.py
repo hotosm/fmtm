@@ -32,7 +32,6 @@ from typing import Optional
 
 import sozipfile.sozipfile as zipfile
 from asgiref.sync import async_to_sync
-from dateutil import parser
 from fastapi import HTTPException, Response
 from fastapi.responses import FileResponse
 from loguru import logger as log
@@ -770,6 +769,7 @@ async def get_submission_by_project(
         filters (dict): The filters to apply directly to submissions
             in odk central.
         db (Session): The database session.
+        task_id (Optional[int]): The index task of the project.
 
     Returns:
         Tuple[int, List]: A tuple containing the total number of submissions and
@@ -790,12 +790,15 @@ async def get_submission_by_project(
 
     if task_id:
         submissions = [
-            sub for sub in submissions if sub.get("all", {}).get("task_id") == str(task_id)
-            ]
+            sub
+            for sub in submissions
+            if sub.get("all", {}).get("task_id") == str(task_id)
+        ]
 
     return count, submissions
 
-#FIXME this is not needed now it can be directly filtered from submission table
+
+# FIXME this is not needed now it can be directly filtered from submission table
 # async def get_submission_by_task(
 #     project: db_models.DbProject,
 #     task_id: int,
@@ -842,5 +845,7 @@ async def get_submission_detail(
     odk_credentials = await project_deps.get_odk_credentials(db, project.id)
     odk_form = get_odk_form(odk_credentials)
     db_xform = await project_deps.get_project_xform(db, project.id)
-    submission = json.loads(odk_form.getSubmissions(project.odkid, db_xform.odk_form_id, submission_id))
-    return submission.get("value",[])[0]
+    submission = json.loads(
+        odk_form.getSubmissions(project.odkid, db_xform.odk_form_id, submission_id)
+    )
+    return submission.get("value", [])[0]

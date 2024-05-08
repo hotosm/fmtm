@@ -99,8 +99,7 @@ async def get_odk_credentials(db: Session, project_id: int):
 
 
 async def get_project_xform(db, project_id):
-    """
-    Retrieve the transformation associated with a specific project.
+    """Retrieve the transformation associated with a specific project.
 
     Args:
         db: Database connection object.
@@ -112,17 +111,13 @@ async def get_project_xform(db, project_id):
     Raises:
         None
     """
-
-    sql = text("""
+    sql = text(
+        """
         SELECT * FROM xforms
         WHERE project_id = :project_id;
-    """)
-    
-    result = db.execute(
-        sql,
-        {
-            "project_id": project_id
-        }
+    """
     )
+
+    result = db.execute(sql, {"project_id": project_id})
     db_xform = result.first()
     return db_xform
