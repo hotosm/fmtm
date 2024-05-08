@@ -101,14 +101,12 @@ const SubmissionsTable = ({ toggleView }) => {
   }, []);
 
   useEffect(() => {
-    {
-      dispatch(
-        SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${projectId}`, {
-          page: paginationPage,
-          ...filter,
-        }),
-      );
-    }
+    dispatch(
+      SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${projectId}`, {
+        page: paginationPage,
+        ...filter,
+      }),
+    );
   }, [filter, paginationPage]);
 
   useEffect(() => {
@@ -120,14 +118,12 @@ const SubmissionsTable = ({ toggleView }) => {
       SubmissionFormFieldsService(`${import.meta.env.VITE_API_URL}/submission/submission_form_fields/${projectId}`),
     );
     dispatch(SubmissionActions.SetSubmissionTableRefreshing(true));
-    {
-      dispatch(
-        SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${projectId}`, {
-          page: paginationPage,
-          ...filter,
-        }),
-      );
-    }
+    dispatch(
+      SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${projectId}`, {
+        page: paginationPage,
+        ...filter,
+      }),
+    );
   };
 
   useEffect(() => {
