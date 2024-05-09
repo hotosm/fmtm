@@ -159,7 +159,7 @@ const TaskSubmissionsMap = () => {
     if (!taskBoundaries) return;
     const filteredSelectedTaskGeojson = {
       ...basicGeojsonTemplate,
-      features: taskBoundaries?.features?.filter((task) => task.properties.uid === selectedTask),
+      features: taskBoundaries?.features?.filter((task) => task?.properties?.fid === selectedTask),
     };
     const vectorSource = new VectorSource({
       features: new GeoJSON().readFeatures(filteredSelectedTaskGeojson, {
@@ -168,7 +168,7 @@ const TaskSubmissionsMap = () => {
     });
     const extent = vectorSource.getExtent();
 
-    setDataExtractExtent(vectorSource.getFeatures()[0].getGeometry());
+    setDataExtractExtent(vectorSource.getFeatures()[0]?.getGeometry());
     setDataExtractUrl(projectInfo.data_extract_url);
 
     map.getView().fit(extent, {
