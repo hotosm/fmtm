@@ -148,7 +148,7 @@ const TaskSubmissionsMap = () => {
       features: [
         ...projectTaskBoundries?.[0]?.taskBoundries?.map((task) => ({
           ...task.outline_geojson,
-          id: task.outline_geojson.properties.uid,
+          id: task?.outline_geojson?.properties?.fid,
         })),
       ],
     };
@@ -184,7 +184,7 @@ const TaskSubmissionsMap = () => {
   }, [selectedTask]);
 
   const taskOnSelect = (properties, feature) => {
-    dispatch(CoreModules.TaskActions.SetSelectedTask(properties.uid));
+    dispatch(CoreModules.TaskActions.SetSelectedTask(properties?.fid));
   };
 
   const setChoropleth = useCallback(
@@ -216,7 +216,7 @@ const TaskSubmissionsMap = () => {
   });
 
   const taskSubmissionsPopupUI = (properties: taskFeaturePropertyType) => {
-    const currentTask = taskInfo?.filter((task) => +task.task_id === properties.uid);
+    const currentTask = taskInfo?.filter((task) => +task?.task_id === properties?.fid);
     if (currentTask?.length === 0) return;
     return (
       <div className="fmtm-h-fit">
@@ -285,7 +285,7 @@ const TaskSubmissionsMap = () => {
             collapsed={true}
           />
         </div>
-        {taskInfo?.length > 0 && <AsyncPopup map={map} popupUI={taskSubmissionsPopupUI} />}
+        {taskInfo?.length > 0 && <AsyncPopup map={map} popupUI={taskSubmissionsPopupUI} primaryKey="fid" />}
         {dataExtractUrl && isValidUrl(dataExtractUrl) && (
           <VectorLayer fgbUrl={dataExtractUrl} fgbExtent={dataExtractExtent} zIndex={15} />
         )}
