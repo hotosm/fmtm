@@ -32,6 +32,7 @@ const initialState: ProjectStateTypes = {
   },
   entityOsmMap: [],
   entityOsmMapLoading: false,
+  updateEntityStatusLoading: false,
   projectDashboardLoading: false,
   geolocationStatus: false,
   projectCommentsList: [],
@@ -140,6 +141,18 @@ const ProjectSlice = createSlice({
     },
     UpdateProjectTaskActivity(state, action) {
       state.projectTaskActivity = [action.payload, ...state.projectTaskActivity];
+    },
+    UpdateEntityStatusLoading(state, action) {
+      state.updateEntityStatusLoading = action.payload;
+    },
+    UpdateEntityStatus(state, action) {
+      const updatedEntityOsmMap = state.entityOsmMap?.map((entity) => {
+        if (entity.id === action.payload.id) {
+          return action.payload;
+        }
+        return entity;
+      });
+      state.entityOsmMap = updatedEntityOsmMap;
     },
   },
 });
