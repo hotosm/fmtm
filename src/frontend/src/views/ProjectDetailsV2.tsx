@@ -206,7 +206,7 @@ const Home = () => {
    */
   const projectClickOnTaskFeature = (properties, feature) => {
     // Close task area popup, open task feature popup
-    setSelectedTaskArea(undefined);
+    // setSelectedTaskArea(undefined);
     setSelectedTaskFeature(feature);
 
     dispatch(CoreModules.TaskActions.SetSelectedFeatureProps(properties));
@@ -573,7 +573,7 @@ const Home = () => {
           </div>
         )}
       </div>
-      {selectedTaskArea != undefined && (
+      {selectedTaskArea != undefined && selectedTaskFeature === undefined && (
         <TaskSelectionPopup
           taskId={selectedTask}
           feature={selectedTaskArea}
@@ -584,7 +584,13 @@ const Home = () => {
           }
         />
       )}
-      {selectedTaskFeature != undefined && <FeatureSelectionPopup featureProperties={selectedFeatureProps} />}
+      {selectedTaskFeature != undefined && selectedTask && selectedTaskArea && (
+        <FeatureSelectionPopup
+          featureProperties={selectedFeatureProps}
+          taskId={selectedTask}
+          taskFeature={selectedTaskArea}
+        />
+      )}
     </div>
   );
 };
