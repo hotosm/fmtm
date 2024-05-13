@@ -586,6 +586,8 @@ const Home = () => {
       )}
       {selectedTaskFeature != undefined && selectedTask && selectedTaskArea && (
         <FeatureSelectionPopup
+          map={map}
+          view={mainView}
           featureProperties={selectedFeatureProps}
           taskId={selectedTask}
           taskFeature={selectedTaskArea}
