@@ -9,16 +9,27 @@ import environment from '@/environment';
 import { useParams } from 'react-router-dom';
 import { UpdateEntityStatus } from '@/api/Project';
 import { TaskFeatureSelectionProperties } from '@/store/types/ITask';
+import ProjectTaskStatus from '@/api/ProjectTaskStatus';
+import MapStyles from '@/hooks/MapStyles';
 
 type TaskFeatureSelectionPopupPropType = {
   featureProperties: TaskFeatureSelectionProperties | null;
   taskId: number;
   taskFeature: Record<string, any>;
+  map: any;
+  view: any;
 };
 
-const TaskFeatureSelectionPopup = ({ featureProperties, taskId, taskFeature }: TaskFeatureSelectionPopupPropType) => {
+const TaskFeatureSelectionPopup = ({
+  featureProperties,
+  taskId,
+  taskFeature,
+  map,
+  view,
+}: TaskFeatureSelectionPopupPropType) => {
   const dispatch = CoreModules.useAppDispatch();
   const params = useParams();
+  const geojsonStyles = MapStyles();
   const taskModalStatus = CoreModules.useAppSelector((state) => state.project.taskModalStatus);
   const projectInfo = CoreModules.useAppSelector((state) => state.project.projectInfo);
   const entityOsmMap = CoreModules.useAppSelector((state) => state.project.entityOsmMap);
@@ -36,6 +47,7 @@ const TaskFeatureSelectionPopup = ({ featureProperties, taskId, taskFeature }: T
       return task?.index == taskId;
     })?.[0],
   };
+  const geoStyle = geojsonStyles['LOCKED_FOR_MAPPING'];
   const entity = entityOsmMap.find((x) => x.osm_id === featureProperties?.osm_id);
 
   useEffect(() => {
@@ -101,41 +113,61 @@ const TaskFeatureSelectionPopup = ({ featureProperties, taskId, taskFeature }: T
             </p>
           </div>
         </div>
-        <div className="fmtm-p-2 sm:fmtm-p-5 fmtm-border-t">
-          <Button
-            btnText="MAP FEATURE IN ODK"
-            btnType="primary"
-            type="submit"
-            className="fmtm-font-bold !fmtm-rounded fmtm-text-sm !fmtm-py-2 !fmtm-w-full fmtm-flex fmtm-justify-center"
-            disabled={
-              task_status !== 'LOCKED_FOR_MAPPING' ||
-              (authDetails && currentTaskInfo?.locked_by_uid !== authDetails?.id) ||
-              entity?.status !== 0
-            }
-            isLoading={updateEntityStatusLoading}
-            onClick={() => {
-              // XForm name is constructed from lower case project title with underscores
-              const projectName = projectInfo.title.toLowerCase().split(' ').join('_');
-              const projectCategory = projectInfo.xform_category;
-              const formName = `${projectName}_${projectCategory}`;
-
-              const entity = entityOsmMap.find((x) => x.osm_id === featureProperties?.osm_id);
-              const entityUuid = entity ? entity.id : null;
-
-              if (!formName || !entityUuid) {
-                return;
+        {(task_status === 'READY' || task_status === 'LOCKED_FOR_MAPPING') && (
+          <div className="fmtm-p-2 sm:fmtm-p-5 fmtm-border-t">
+            <Button
+              btnText="MAP FEATURE IN ODK"
+              btnType="primary"
+              type="submit"
+              className="fmtm-font-bold !fmtm-rounded fmtm-text-sm !fmtm-py-2 !fmtm-w-full fmtm-flex fmtm-justify-center"
+              disabled={
+                (task_status === 'LOCKED_FOR_MAPPING' &&
+                  authDetails &&
+                  currentTaskInfo?.locked_by_uid !== authDetails?.id) ||
+                entity?.status !== 0
               }
-              dispatch(
-                UpdateEntityStatus(`${import.meta.env.VITE_API_URL}/projects/${currentProjectId}/entity/status`, {
-                  entity_id: entityUuid,
-                  status: 1,
-                  label: '',
-                }),
-              );
-              document.location.href = `odkcollect://form/${formName}?existing=${entityUuid}`;
-            }}
-          />
-        </div>
+              isLoading={updateEntityStatusLoading}
+              onClick={() => {
+                // XForm name is constructed from lower case project title with underscores
+                const projectName = projectInfo.title.toLowerCase().split(' ').join('_');
+                const projectCategory = projectInfo.xform_category;
+                const formName = `${projectName}_${projectCategory}`;
+
+                const entity = entityOsmMap.find((x) => x.osm_id === featureProperties?.osm_id);
+                const entityUuid = entity ? entity.id : null;
+
+                if (!formName || !entityUuid) {
+                  return;
+                }
+                dispatch(
+                  UpdateEntityStatus(`${import.meta.env.VITE_API_URL}/projects/${currentProjectId}/entity/status`, {
+                    entity_id: entityUuid,
+                    status: 1,
+                    label: '',
+                  }),
+                );
+                if (task_status === 'READY') {
+                  dispatch(
+                    ProjectTaskStatus(
+                      `${import.meta.env.VITE_API_URL}/tasks/${currentTaskInfo?.id}/new-status/1`,
+                      geoStyle,
+                      taskBoundaryData,
+                      currentProjectId,
+                      taskFeature,
+                      map,
+                      view,
+                      taskId,
+                      authDetails,
+                      { project_id: currentProjectId },
+                    ),
+                  );
+                }
+
+                document.location.href = `odkcollect://form/${formName}?existing=${entityUuid}`;
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
