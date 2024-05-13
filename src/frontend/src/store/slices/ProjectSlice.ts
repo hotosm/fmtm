@@ -154,6 +154,25 @@ const ProjectSlice = createSlice({
       });
       state.entityOsmMap = updatedEntityOsmMap;
     },
+    UpdateProjectTaskBoundries(state, action) {
+      const updatedProjectTaskBoundries = state.projectTaskBoundries?.map((boundary) => {
+        if (boundary.id == action.payload.projectId) {
+          const updatedBoundary = boundary?.taskBoundries?.map((taskBoundary) => {
+            if (taskBoundary?.index === action.payload.taskId) {
+              return {
+                ...taskBoundary,
+                locked_by_uid: action.payload.locked_by_uid,
+                locked_by_username: action.payload.locked_by_username,
+              };
+            }
+            return taskBoundary;
+          });
+          return { id: boundary.id, taskBoundries: updatedBoundary };
+        }
+        return boundary;
+      });
+      state.projectTaskBoundries = updatedProjectTaskBoundries;
+    },
   },
 });
 
