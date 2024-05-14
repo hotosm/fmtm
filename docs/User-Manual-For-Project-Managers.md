@@ -223,10 +223,10 @@ and improve the effectiveness of humanitarian efforts.
 
 1. Go to the Manage organization tab. You can see the number of organizations.
    On the top, there is a New button, clicking on which you can request
-    for a new organization.
-2.  You have to provide your consent and fill up the form by providing
+   for a new organization.
+2. You have to provide your consent and fill up the form by providing
    necessary details like Organization name, URL, Description of
-    organization, type of organization etc.
+   organization, type of organization etc.
 3. Now submit the form. The request will reach the Admin who will create your
    organization and inform you through the email.
 
@@ -239,7 +239,7 @@ and improve the effectiveness of humanitarian efforts.
    table view, meaning you can see the submissions in table format.
 4. Users can also download the submission in Json or CSV format.
 5. The submission can also be uploaded to JOSM. For that, you should
-    have JOSM software installed in your device and should have your remote
+   have JOSM software installed in your device and should have your remote
    control enabled.
 
 ## Steps to Edit project details
@@ -254,7 +254,7 @@ and improve the effectiveness of humanitarian efforts.
    details like name, description, instructions as well as XLS form.
 4. Go to the respective project you want to edit. Click on the manage button.
 5. Go to the edit section. And you can edit project details from there.
-    You can also switch to the form update tab and upload a
+   You can also switch to the form update tab and upload a
    custom updated form.
 
 ## Help and Support
