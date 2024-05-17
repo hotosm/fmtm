@@ -20,7 +20,7 @@ export const getDownloadProjectSubmission: Function = (url: string) => {
         });
         var a = document.createElement('a');
         a.href = window.URL.createObjectURL(response.data);
-        a.download = 'Submissions';
+        a.download = isExportJson === 'true' ? 'Submissions.json' : 'Submissions.zip';
         a.click();
         dispatch(
           CoreModules.TaskActions.GetDownloadProjectSubmissionLoading({
