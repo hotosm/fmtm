@@ -76,7 +76,7 @@ const DataExtract = ({ flag, customDataExtractUpload, setCustomDataExtractUpload
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/projects/generate-data-extract/`,
+        `${import.meta.env.VITE_API_URL}/projects/xxx/generate-data-extract/`,
         dataExtractRequestFormData,
       );
 

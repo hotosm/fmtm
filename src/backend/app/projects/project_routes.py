@@ -815,44 +815,50 @@ async def preview_split_by_square(
     return result
 
 
-@router.post("/generate-data-extract/")
+@router.post("/{project_id}/generate-data-extract/")
 async def get_data_extract(
     geojson_file: UploadFile = File(...),
     form_category: Optional[str] = Form(None),
     # config_file: Optional[str] = Form(None),
-    current_user: AuthUser = Depends(login_required),
+    project_user_dict: dict = Depends(project_admin),
 ):
     """Get a new data extract for a given project AOI.
 
     TODO allow config file (YAML/JSON) upload for data extract generation
     TODO alternatively, direct to raw-data-api to generate first, then upload
     """
+    project_id = project_user_dict.get("project", {}).id
     boundary_geojson = json.loads(await geojson_file.read())
 
-    # Get extract config file from existing data_models
-    if form_category:
-        data_model = f"{data_models_path}/{form_category}.yaml"
-        with open(data_model, "rb") as data_model_yaml:
-            extract_config = BytesIO(data_model_yaml.read())
-    else:
-        extract_config = None
+    if not form_category:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="To generate a new data extract a form_category must be specified.",
+        )
+
+    data_model = f"{data_models_path}/{form_category}.yaml"
+    with open(data_model, "rb") as data_model_yaml:
+        extract_config = BytesIO(data_model_yaml.read())
 
     fgb_url = await project_crud.generate_data_extract(
+        project_id,
         boundary_geojson,
+        form_category,
         extract_config,
     )
 
     return JSONResponse(status_code=200, content={"url": fgb_url})
 
 
-@router.get("/data-extract-url/")
+@router.get("/{project_id}/data-extract-url/")
 async def get_or_set_data_extract(
     url: Optional[str] = None,
-    project_id: int = Query(..., description="Project ID"),
     db: Session = Depends(database.get_db),
     project_user_dict: dict = Depends(project_admin),
 ):
     """Get or set the data extract URL for a project."""
+    project_id = project_user_dict.get("project", {}).id
+
     fgb_url = await project_crud.get_or_set_data_extract_url(
         db,
         project_id,

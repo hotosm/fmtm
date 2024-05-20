@@ -49,9 +49,7 @@ const CreateProjectService: Function = (
         if (isOsmExtract) {
           // Upload data extract generated from raw-data-api
           const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/projects/data-extract-url/?project_id=${resp.id}&url=${
-              projectData.data_extract_url
-            }`,
+            `${import.meta.env.VITE_API_URL}/projects/${resp.id}/data-extract-url/?url=${projectData.data_extract_url}`,
           );
         } else if (dataExtractFile) {
           // Upload custom data extract from user

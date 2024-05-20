@@ -165,7 +165,7 @@ async def test_upload_data_extracts(client, project):
     assert response.status_code == 200
 
     response = client.get(
-        f"/projects/data-extract-url/?project_id={project.id}",
+        f"/projects/{project.id}/data-extract-url",
     )
     assert "url" in response.json()
 
@@ -184,7 +184,7 @@ async def test_upload_data_extracts(client, project):
     assert response.status_code == 200
 
     response = client.get(
-        f"/projects/data-extract-url/?project_id={project.id}",
+        f"/projects/{project.id}/data-extract-url",
     )
     assert "url" in response.json()
 

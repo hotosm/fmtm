@@ -424,18 +424,19 @@ async def preview_split_by_square(boundary: str, meters: int):
 
 
 async def generate_data_extract(
+    project_id: int,
     aoi: Union[FeatureCollection, Feature, dict],
-    extract_config: Optional[BytesIO] = None,
+    category: str,
+    extract_config: BytesIO,
 ) -> str:
     """Request a new data extract in flatgeobuf format.
 
     Args:
-        db (Session):
-            Database session.
-        aoi (Union[FeatureCollection, Feature, dict]):
-            Area of interest for data extraction.
-        extract_config (Optional[BytesIO], optional):
-            Configuration for data extraction. Defaults to None.
+        project_id (int): ID of the FMTM project.
+        aoi (Union[FeatureCollection, Feature, dict]): Area of interest
+            for data extraction.
+        category (str): The category for the data extract.
+        extract_config (BytesIO): Configuration for data extraction.
 
     Raises:
         HTTPException:
@@ -445,12 +446,6 @@ async def generate_data_extract(
         str:
             URL for the flatgeobuf data extract.
     """
-    if not extract_config:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail="To generate a new data extract a form_category must be specified.",
-        )
-
     pg = PostgresClient(
         "underpass",
         extract_config,
@@ -462,7 +457,8 @@ async def generate_data_extract(
         aoi,
         extra_params={
             "fileName": (
-                f"fmtm/{settings.FMTM_DOMAIN}/data_extract"
+                f"FMTM/hotosm_project_{project_id}/{category}/polygons"
+                f"/hotosm_project_{project_id}_{category}/polygons"
                 if settings.RAW_DATA_API_AUTH_TOKEN
                 else "fmtm_extract"
             ),
