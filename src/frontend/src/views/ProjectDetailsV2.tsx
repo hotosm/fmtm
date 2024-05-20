@@ -2,16 +2,14 @@ import React, { useEffect, useState } from 'react';
 import '../../node_modules/ol/ol.css';
 import '../styles/home.scss';
 import WindowDimension from '@/hooks/WindowDimension';
-// import MapDescriptionComponents from '@/components/MapDescriptionComponents';
 import ActivitiesPanel from '@/components/ProjectDetailsV2/ActivitiesPanel';
-import { ProjectById, GetProjectDashboard, GetEntityInfo } from '@/api/Project';
+import { ProjectById, GetEntityInfo } from '@/api/Project';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import CustomizedSnackbar from '@/utilities/CustomizedSnackbar';
 import OnScroll from '@/hooks/OnScroll';
 import { HomeActions } from '@/store/slices/HomeSlice';
 import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
-import FmtmLogo from '@/assets/images/hotLog.png';
 import GenerateBasemap from '@/components/GenerateBasemap';
 import TaskSelectionPopup from '@/components/ProjectDetailsV2/TaskSelectionPopup';
 import FeatureSelectionPopup from '@/components/ProjectDetailsV2/FeatureSelectionPopup';
@@ -27,15 +25,13 @@ import LayerSwitcherControl from '@/components/MapComponent/OpenLayersComponent/
 import MapControlComponent from '@/components/ProjectDetailsV2/MapControlComponent';
 import { VectorLayer } from '@/components/MapComponent/OpenLayersComponent/Layers';
 import { geojsonObjectModel } from '@/constants/geojsonObjectModal';
-import getTaskStatusStyle from '@/utilfunctions/getTaskStatusStyle';
-import { defaultStyles } from '@/components/MapComponent/OpenLayersComponent/helpers/styleUtils';
+import getTaskStatusStyle, { getFeatureStatusStyle } from '@/utilfunctions/getTaskStatusStyle';
 import MapLegends from '@/components/MapLegends';
 import Accordion from '@/components/common/Accordion';
 import AsyncPopup from '@/components/MapComponent/OpenLayersComponent/AsyncPopup/AsyncPopup';
 import Button from '@/components/common/Button';
 import ProjectInfo from '@/components/ProjectDetailsV2/ProjectInfo';
 import useOutsideClick from '@/hooks/useOutsideClick';
-import { dataExtractPropertyType } from '@/models/project/projectModel';
 import { isValidUrl } from '@/utilfunctions/urlChecker';
 import { useAppSelector } from '@/types/reduxTypes';
 import Comments from '@/components/ProjectDetailsV2/Comments';
@@ -51,7 +47,7 @@ const Home = () => {
   const dispatch = CoreModules.useAppDispatch();
   const params = CoreModules.useParams();
   const navigate = useNavigate();
-  const { windowSize, type } = WindowDimension();
+  const { windowSize } = WindowDimension();
   const [divRef, toggle, handleToggle] = useOutsideClick();
 
   const [mainView, setView] = useState<any>();
@@ -60,14 +56,8 @@ const Home = () => {
   const [dataExtractUrl, setDataExtractUrl] = useState(null);
   const [dataExtractExtent, setDataExtractExtent] = useState(null);
   const [taskBoundariesLayer, setTaskBoundariesLayer] = useState<null | Record<string, any>>(null);
-  const [currentCoordinate, setCurrentCoordinate] = useState<{ latitude: null | number; longitude: null | number }>({
-    latitude: null,
-    longitude: null,
-  });
   // Can pass a File object, or a string URL to be read by PMTiles
   const [customBasemapData, setCustomBasemapData] = useState<File | string>();
-  const [positionGeojson, setPositionGeojson] = useState<any>(null);
-  const [deviceRotation, setDeviceRotation] = useState(0);
   const [viewState, setViewState] = useState('project_info');
   const projectId: string = params.id;
   const defaultTheme = useAppSelector((state) => state.theme.hotTheme);
@@ -83,6 +73,7 @@ const Home = () => {
   const taskModalStatus = CoreModules.useAppSelector((state) => state.project.taskModalStatus);
   const projectOpfsBasemapPath = useAppSelector((state) => state?.project?.projectOpfsBasemapPath);
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
+  const entityOsmMap = useAppSelector((state) => state?.project?.entityOsmMap);
 
   useEffect(() => {
     if (state.projectInfo.title) {
@@ -166,8 +157,11 @@ const Home = () => {
     setDataExtractUrl(state.projectInfo.data_extract_url);
   }, [state.projectInfo.data_extract_url]);
 
-  const lockedPopup = () => {
-    return <p>This task was locked by you</p>;
+  const lockedPopup = (properties: Record<string, any>) => {
+    if (properties.locked_by_user === authDetails?.id) {
+      return <p>This task was locked by you</p>;
+    }
+    return null;
   };
 
   /**
@@ -189,7 +183,7 @@ const Home = () => {
       behavior: 'smooth',
     });
 
-    dispatch(CoreModules.TaskActions.SetSelectedTask(properties.uid));
+    dispatch(CoreModules.TaskActions.SetSelectedTask(properties?.fid));
     dispatch(ProjectActions.ToggleTaskModalStatus(true));
 
     // Fit the map view to the clicked feature's extent based on the window size
@@ -239,12 +233,6 @@ const Home = () => {
     // }
   };
 
-  const buildingStyle = {
-    ...defaultStyles,
-    lineColor: '#FF0000',
-    fillOpacity: '0',
-  };
-
   useEffect(() => {
     if (mobileFooterSelection !== '') {
       dispatch(ProjectActions.ToggleGenerateMbTilesModalStatus(false));
@@ -259,14 +247,13 @@ const Home = () => {
 
   useEffect(() => {
     if (taskModalStatus) {
-      setViewState('comments');
+      setViewState('task_activity');
     } else {
       setViewState('project_info');
     }
   }, [taskModalStatus]);
 
   useEffect(() => {
-    dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${projectId}`));
     dispatch(GetEntityInfo(`${import.meta.env.VITE_API_URL}/projects/${projectId}/entities/statuses`));
   }, []);
 
@@ -353,18 +340,6 @@ const Home = () => {
               {taskModalStatus && (
                 <button
                   className={`fmtm-rounded-none fmtm-border-none fmtm-text-base ${
-                    viewState === 'comments'
-                      ? 'fmtm-bg-primaryRed fmtm-text-white hover:fmtm-bg-red-700'
-                      : 'fmtm-bg-white fmtm-text-[#706E6E] hover:fmtm-bg-grey-50'
-                  } fmtm-py-1`}
-                  onClick={() => setViewState('comments')}
-                >
-                  Comments
-                </button>
-              )}
-              {taskModalStatus && (
-                <button
-                  className={`fmtm-rounded-none fmtm-border-none fmtm-text-base ${
                     viewState === 'task_activity'
                       ? 'fmtm-bg-primaryRed fmtm-text-white hover:fmtm-bg-red-700'
                       : 'fmtm-bg-white fmtm-text-[#706E6E] hover:fmtm-bg-grey-50'
@@ -372,6 +347,18 @@ const Home = () => {
                   onClick={() => setViewState('task_activity')}
                 >
                   Task Activity
+                </button>
+              )}
+              {taskModalStatus && (
+                <button
+                  className={`fmtm-rounded-none fmtm-border-none fmtm-text-base ${
+                    viewState === 'comments'
+                      ? 'fmtm-bg-primaryRed fmtm-text-white hover:fmtm-bg-red-700'
+                      : 'fmtm-bg-white fmtm-text-[#706E6E] hover:fmtm-bg-grey-50'
+                  } fmtm-py-1`}
+                  onClick={() => setViewState('comments')}
+                >
+                  Comments
                 </button>
               )}
               <button
@@ -422,11 +409,11 @@ const Home = () => {
                 <div
                   className={`fmtm-flex fmtm-gap-4 fmtm-absolute fmtm-duration-200 fmtm-z-[1000] fmtm-bg-[#F5F5F5] fmtm-p-2 fmtm-rounded-md ${
                     toggle
-                      ? 'fmtm-left-0 fmtm-bottom-0 md:fmtm-top-0'
-                      : '-fmtm-left-[60rem] fmtm-bottom-0 md:fmtm-top-0'
+                      ? 'fmtm-left-0 fmtm-bottom-0 lg:fmtm-top-0'
+                      : '-fmtm-left-[60rem] fmtm-bottom-0 lg:fmtm-top-0'
                   }`}
                 >
-                  <ProjectOptions />
+                  <ProjectOptions projectName={state?.projectInfo?.title} />
                 </div>
               </div>
             </div>
@@ -484,7 +471,9 @@ const Home = () => {
                 <VectorLayer
                   fgbUrl={dataExtractUrl}
                   fgbExtent={dataExtractExtent}
-                  style={buildingStyle}
+                  getTaskStatusStyle={(feature) => {
+                    return getFeatureStatusStyle(feature?.getProperties()?.osm_id, mapTheme, entityOsmMap);
+                  }}
                   viewProperties={{
                     size: map?.getSize(),
                     padding: [50, 50, 50, 50],
@@ -529,7 +518,7 @@ const Home = () => {
                   className="!fmtm-text-base !fmtm-pr-2"
                 />
               </div>
-              <MapControlComponent map={map} />
+              <MapControlComponent map={map} projectName={state?.projectInfo?.title} />
             </MapComponent>
             <div
               className="fmtm-absolute fmtm-top-4 fmtm-left-4 fmtm-bg-white fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-red-50 fmtm-duration-300 fmtm-border-[1px] sm:fmtm-hidden fmtm-cursor-pointer"
@@ -569,17 +558,6 @@ const Home = () => {
                 onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
               />
             )}
-            {mobileFooterSelection === 'others' && (
-              <BottomSheet
-                body={
-                  <div className="fmtm-mb-[10vh]">
-                    <ProjectOptions />
-                  </div>
-                }
-                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
-              />
-            )}
-
             <MobileFooter />
           </div>
         )}

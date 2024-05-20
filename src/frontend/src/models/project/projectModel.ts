@@ -54,7 +54,6 @@ export type projectInfoType = {
     id: number;
   };
   priority: number;
-  priority_str: string;
   title: string;
   location_str: string;
   description: string;
@@ -67,6 +66,8 @@ export type projectInfoType = {
   tasks_mapped: any;
   tasks_validated: any;
   total_tasks: any;
+  organisation_id: number;
+  organisation_logo: string;
 };
 
 export type downloadProjectFormLoadingType = { type: 'form' | 'geojson' | 'csv' | 'json'; loading: boolean };
@@ -105,6 +106,7 @@ export type taskBoundriesTypes = {
   };
   task_history: taskHistoryTypes[];
   task_status: string;
+  index: number;
 };
 
 export type taskBoundriesGeojson = {

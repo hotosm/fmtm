@@ -25,6 +25,7 @@ export type ProjectStateTypes = {
   projectDetailsLoading: boolean;
   projectDashboardDetail: projectDashboardDetailTypes;
   entityOsmMap: EntityOsmMap[];
+  entityOsmMapLoading: boolean;
   projectDashboardLoading: boolean;
   geolocationStatus: boolean;
   projectCommentsList: projectCommentsListTypes[];
@@ -34,12 +35,14 @@ export type ProjectStateTypes = {
   projectOpfsBasemapPath: string | null;
   projectTaskActivity: projectTaskActivity[];
   projectActivityLoading: boolean;
+  downloadSubmissionLoading: boolean;
 };
 
-type EntityOsmMap = {
+export type EntityOsmMap = {
   id: string;
   osm_id: string;
   status: number;
+  task_id: number;
   updated_at: string;
 };
 

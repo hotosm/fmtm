@@ -63,7 +63,7 @@
       "name": "Sujan Adhikari",
       "avatar_url": "https://avatars.githubusercontent.com/u/109404840?v=4",
       "profile": "https://github.com/Sujanadh",
-      "contributions": ["code"]
+      "contributions": ["code", "maintenance"]
     },
     {
       "login": "Mudi-business",
@@ -77,7 +77,7 @@
       "name": "Nishit Suwal",
       "avatar_url": "https://avatars.githubusercontent.com/u/81785002?v=4",
       "profile": "https://github.com/NSUWAL123",
-      "contributions": ["code"]
+      "contributions": ["code", "maintenance"]
     },
     {
       "login": "biomassives",
@@ -154,7 +154,14 @@
       "name": "Manjita Pandey",
       "avatar_url": "https://avatars.githubusercontent.com/u/97273021?v=4",
       "profile": "https://github.com/manjitapandey",
-      "contributions": ["bug"]
+      "contributions": ["bug", "doc", "ideas"]
+    },
+    {
+      "login": "susmina94",
+      "name": "Susmina_Manandhar",
+      "avatar_url": "https://avatars.githubusercontent.com/u/108750444?v=4",
+      "profile": "https://github.com/susmina94",
+      "contributions": ["doc", "ideas", "bug"]
     }
   ],
   "contributorsPerLine": 7,

@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import AssetModules from '@/shared/AssetModules';
 import ProjectInfo from '@/components/ProjectSubmissions/ProjectInfo.js';
 import SubmissionsInfographics from '@/components/ProjectSubmissions/SubmissionsInfographics.js';
 import SubmissionsTable from '@/components/ProjectSubmissions/SubmissionsTable.js';
 import CoreModules from '@/shared/CoreModules';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
-import { ProjectById } from '@/api/Project';
-import { fetchInfoTask } from '@/api/task';
+import { ProjectById, GetEntityInfo } from '@/api/Project';
 import { GetProjectDashboard } from '@/api/Project';
 import { useSearchParams } from 'react-router-dom';
 import { projectInfoType } from '@/models/project/projectModel';
@@ -41,14 +40,13 @@ const ProjectSubmissions = () => {
   }, [params.id]);
 
   useEffect(() => {
-    const fetchData = () => {
-      dispatch(fetchInfoTask(`${import.meta.env.VITE_API_URL}/projects/${projectId}/task-completion`));
-    };
-    fetchData();
+    dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${projectId}`));
   }, []);
 
+  // for hot fix to diplay task-list and show option of task-list for submission table filter
+  // better solution needs to be researched
   useEffect(() => {
-    dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${projectId}`));
+    dispatch(GetEntityInfo(`${import.meta.env.VITE_API_URL}/projects/${projectId}/entities/statuses`));
   }, []);
 
   useEffect(() => {

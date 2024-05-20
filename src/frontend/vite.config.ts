@@ -59,9 +59,6 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 7051,
       host: '0.0.0.0',
-      watch: {
-        usePolling: false,
-      },
     },
     build: {
       minify: mode === 'development' ? false : 'esbuild',

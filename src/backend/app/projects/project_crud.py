@@ -30,7 +30,6 @@ import geoalchemy2
 import geojson
 import requests
 import shapely.wkb as wkblib
-import sozipfile.sozipfile as zipfile
 from asgiref.sync import async_to_sync
 from fastapi import HTTPException, Response
 from fastapi.concurrency import run_in_threadpool
@@ -64,7 +63,7 @@ from app.db.postgis_utils import (
 )
 from app.models.enums import HTTPStatus, ProjectRole, ProjectVisibility
 from app.projects import project_deps, project_schemas
-from app.s3 import add_obj_to_bucket, get_obj_from_bucket
+from app.s3 import add_obj_to_bucket
 from app.tasks import tasks_crud
 from app.users import user_crud
 
@@ -187,7 +186,7 @@ async def get_project_summaries(
     project_count, db_projects = await get_projects(
         db, skip, limit, user_id, hashtags, search
     )
-    return project_count, await convert_to_project_summaries(db_projects)
+    return project_count, await convert_to_project_summaries(db, db_projects)
 
 
 async def get_project(db: Session, project_id: int):
@@ -1265,7 +1264,7 @@ async def convert_to_app_projects(
         return []
 
 
-async def convert_to_project_summary(db_project: db_models.DbProject):
+async def convert_to_project_summary(db: Session, db_project: db_models.DbProject):
     """Legacy function to convert db models --> Pydantic.
 
     TODO refactor to use Pydantic model methods instead.
@@ -1274,13 +1273,17 @@ async def convert_to_project_summary(db_project: db_models.DbProject):
         summary: project_schemas.ProjectSummary = db_project
 
         if db_project.project_info:
-            summary.location_str = db_project.location_str
             summary.title = db_project.project_info.name
             summary.description = db_project.project_info.short_description
-
         summary.num_contributors = (
-            db_project.tasks_mapped + db_project.tasks_validated
-        )  # TODO: get real number of contributors
+            db.query(db_models.DbTaskHistory.user_id)
+            .filter(
+                db_models.DbTaskHistory.project_id == db_project.id,
+                db_models.DbTaskHistory.user_id is not None,
+            )
+            .distinct()
+            .count()
+        )
         summary.organisation_logo = (
             db_project.organisation.logo if db_project.organisation else None
         )
@@ -1291,6 +1294,7 @@ async def convert_to_project_summary(db_project: db_models.DbProject):
 
 
 async def convert_to_project_summaries(
+    db: Session,
     db_projects: List[db_models.DbProject],
 ) -> List[project_schemas.ProjectSummary]:
     """Legacy function to convert db models --> Pydantic.
@@ -1299,11 +1303,11 @@ async def convert_to_project_summaries(
     """
     if db_projects and len(db_projects) > 0:
 
-        async def convert_summary(project):
-            return await convert_to_project_summary(project)
+        async def convert_summary(db, project):
+            return await convert_to_project_summary(db, project)
 
         project_summaries = await gather(
-            *[convert_summary(project) for project in db_projects]
+            *[convert_summary(db, project) for project in db_projects]
         )
         return [summary for summary in project_summaries if summary is not None]
     else:
@@ -1582,32 +1586,19 @@ async def get_dashboard_detail(
     project: db_models.DbProject, db_organisation: db_models.DbOrganisation, db: Session
 ):
     """Get project details for project dashboard."""
-    s3_project_path = f"/{project.organisation_id}/{project.id}"
-    s3_submission_path = f"/{s3_project_path}/submission.zip"
-    s3_submission_meta_path = f"/{s3_project_path}/submissions.meta.json"
+    odk_central = await project_deps.get_odk_credentials(db, project.id)
+    xform = central_crud.get_odk_form(odk_central)
+    db_xform = await project_deps.get_project_xform(db, project.id)
 
-    try:
-        submission = get_obj_from_bucket(settings.S3_BUCKET_NAME, s3_submission_path)
-        with zipfile.ZipFile(submission, "r") as zip_ref:
-            with zip_ref.open("submissions.json") as file_in_zip:
-                content = file_in_zip.read()
-        content = json.loads(content)
-        project.total_submission = len(content)
-        submission_meta = get_obj_from_bucket(
-            settings.S3_BUCKET_NAME, s3_submission_meta_path
-        )
-        project.last_active = (json.loads(submission_meta.getvalue()))[
-            "last_submission"
-        ]
-    except ValueError:
-        project.total_submission = 0
-        pass
+    submission_meta_data = xform.getFullDetails(project.odkid, db_xform.odk_form_id)
+    project.total_submission = submission_meta_data.get("submissions", 0)
+    project.last_active = submission_meta_data.get("lastSubmission")
 
     contributors = (
         db.query(db_models.DbTaskHistory.user_id)
         .filter(
             db_models.DbTaskHistory.project_id == project.id,
-            db_models.DbTaskHistory.user_id.isnot(None),
+            db_models.DbTaskHistory.user_id is not None,
         )
         .distinct()
         .count()

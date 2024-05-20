@@ -31,6 +31,7 @@ const initialState: ProjectStateTypes = {
     last_active: '',
   },
   entityOsmMap: [],
+  entityOsmMapLoading: false,
   projectDashboardLoading: false,
   geolocationStatus: false,
   projectCommentsList: [],
@@ -40,6 +41,7 @@ const initialState: ProjectStateTypes = {
   projectOpfsBasemapPath: null,
   projectTaskActivity: [],
   projectActivityLoading: false,
+  downloadSubmissionLoading: false,
 };
 
 const ProjectSlice = createSlice({
@@ -102,11 +104,10 @@ const ProjectSlice = createSlice({
       state.projectDashboardDetail = action.payload;
     },
     SetEntityToOsmIdMapping(state, action) {
-      // Convert osm_id to int before mapping to state
-      state.entityOsmMap = action.payload.map((entity) => ({
-        ...entity,
-        osm_id: entity.osm_id ? parseInt(entity.osm_id, 10) : null,
-      }));
+      state.entityOsmMap = action.payload;
+    },
+    SetEntityToOsmIdMappingLoading(state, action) {
+      state.entityOsmMapLoading = action.payload;
     },
     SetProjectDashboardLoading(state, action) {
       state.projectDashboardLoading = action.payload;
@@ -140,6 +141,9 @@ const ProjectSlice = createSlice({
     },
     UpdateProjectTaskActivity(state, action) {
       state.projectTaskActivity = [action.payload, ...state.projectTaskActivity];
+    },
+    SetDownloadSubmissionGeojsonLoading(state, action) {
+      state.downloadSubmissionLoading = action.payload;
     },
   },
 });

@@ -101,21 +101,12 @@ const SubmissionsTable = ({ toggleView }) => {
   }, []);
 
   useEffect(() => {
-    if (!filter.task_id) {
-      dispatch(
-        SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${projectId}`, {
-          page: paginationPage,
-          ...filter,
-        }),
-      );
-    } else {
-      dispatch(
-        SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/task_submissions/${projectId}`, {
-          page: paginationPage,
-          ...filter,
-        }),
-      );
-    }
+    dispatch(
+      SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${projectId}`, {
+        page: paginationPage,
+        ...filter,
+      }),
+    );
   }, [filter, paginationPage]);
 
   useEffect(() => {
@@ -127,21 +118,12 @@ const SubmissionsTable = ({ toggleView }) => {
       SubmissionFormFieldsService(`${import.meta.env.VITE_API_URL}/submission/submission_form_fields/${projectId}`),
     );
     dispatch(SubmissionActions.SetSubmissionTableRefreshing(true));
-    if (!filter.task_id) {
-      dispatch(
-        SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${projectId}`, {
-          page: paginationPage,
-          ...filter,
-        }),
-      );
-    } else {
-      dispatch(
-        SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/task_submissions/${projectId}`, {
-          page: paginationPage,
-          ...filter,
-        }),
-      );
-    }
+    dispatch(
+      SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table/${projectId}`, {
+        page: paginationPage,
+        ...filter,
+      }),
+    );
   };
 
   useEffect(() => {
@@ -209,12 +191,14 @@ const SubmissionsTable = ({ toggleView }) => {
       dispatch(
         getDownloadProjectSubmission(
           `${import.meta.env.VITE_API_URL}/submission/download?project_id=${projectId}&export_json=false`,
+          projectInfo?.title,
         ),
       );
     } else if (downloadType === 'json') {
       dispatch(
-        getDownloadProjectSubmissionJson(
-          `${import.meta.env.VITE_API_URL}/submission/download-submission?project_id=${projectId}`,
+        getDownloadProjectSubmission(
+          `${import.meta.env.VITE_API_URL}/submission/download?project_id=${projectId}&export_json=true`,
+          projectInfo?.title,
         ),
       );
     }
@@ -413,7 +397,7 @@ const SubmissionsTable = ({ toggleView }) => {
             rowClassName="codeRow"
             dataFormat={(row) => (
               <div className="fmtm-w-[7rem] fmtm-overflow-hidden fmtm-truncate">
-                <span>{row?.__system?.reviewState ? camelToFlat(row?.__system?.reviewState) : '-'}</span>
+                <span>{row?.__system?.reviewState ? camelToFlat(row?.__system?.reviewState) : 'Recieved'}</span>
               </div>
             )}
           />
@@ -458,8 +442,8 @@ const SubmissionsTable = ({ toggleView }) => {
                       SubmissionActions.SetUpdateReviewStatusModal({
                         toggleModalStatus: true,
                         instanceId: row?.meta?.instanceID,
-                        taskId: row?.phonenumber,
-                        projectId: decodedId,
+                        taskId: row?.all?.task_id,
+                        projectId: projectId,
                         reviewState: row?.__system?.reviewState,
                       }),
                     );
