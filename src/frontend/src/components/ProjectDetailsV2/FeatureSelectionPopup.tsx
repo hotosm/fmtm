@@ -141,7 +141,7 @@ const TaskFeatureSelectionPopup = ({
                   UpdateEntityStatus(`${import.meta.env.VITE_API_URL}/projects/${currentProjectId}/entity/status`, {
                     entity_id: entityUuid,
                     status: 1,
-                    label: '',
+                    label: `Task ${taskId} Feature ${entity.osm_id}`,
                   }),
                 );
 
