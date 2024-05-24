@@ -191,12 +191,14 @@ const SubmissionsTable = ({ toggleView }) => {
       dispatch(
         getDownloadProjectSubmission(
           `${import.meta.env.VITE_API_URL}/submission/download?project_id=${projectId}&export_json=false`,
+          projectInfo?.title,
         ),
       );
     } else if (downloadType === 'json') {
       dispatch(
-        getDownloadProjectSubmissionJson(
-          `${import.meta.env.VITE_API_URL}/submission/download-submission?project_id=${projectId}`,
+        getDownloadProjectSubmission(
+          `${import.meta.env.VITE_API_URL}/submission/download?project_id=${projectId}&export_json=true`,
+          projectInfo?.title,
         ),
       );
     }
@@ -298,7 +300,7 @@ const SubmissionsTable = ({ toggleView }) => {
                         setSubmittedBy(e.target.value);
                       }}
                     ></input>
-                    <i className="material-icons fmtm-text-[#9B9999] fmtm-cursor-pointer">search</i>
+                    <AssetModules.SearchIcon className="fmtm-text-[#9B9999] fmtm-cursor-pointer" />
                   </div>
                 </div>
                 <Button

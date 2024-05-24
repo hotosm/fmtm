@@ -304,8 +304,11 @@ async def split_geojson_by_task_areas(
             SELECT jsonb_array_elements(CAST(:geojson_featcol AS jsonb)->'features')
             AS feature
         ) AS features
-        CROSS JOIN tasks
-        WHERE tasks.project_id = :project_id;
+        JOIN tasks ON tasks.project_id = :project_id
+        WHERE
+            ST_Within(
+                ST_Centroid(ST_SetSRID(ST_GeomFromGeoJSON(feature->>'geometry'), 4326)
+                ), tasks.outline);
 
         -- Retrieve task outlines based on the provided project_id
         SELECT
@@ -418,7 +421,7 @@ def add_required_geojson_properties(
 def parse_and_filter_geojson(
     geojson_raw: Union[str, bytes], filter: bool = True
 ) -> Optional[geojson.FeatureCollection]:
-    """Parse geojson string and filter out incomaptible geometries."""
+    """Parse geojson string and filter out incompatible geometries."""
     geojson_parsed = geojson.loads(geojson_raw)
 
     if isinstance(geojson_parsed, geojson.FeatureCollection):
@@ -534,7 +537,9 @@ def get_address_from_lat_lon(latitude, longitude):
     }
     headers = {"Accept-Language": "en"}  # Set the language to English
 
-    log.debug("Getting Nominatim address from project centroid")
+    log.debug(
+        f"Getting Nominatim address from project lat ({latitude}) lon ({longitude})"
+    )
     response = requests.get(base_url, params=params, headers=headers)
     if (status_code := response.status_code) != 200:
         log.error(f"Getting address string failed: {status_code}")

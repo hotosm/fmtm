@@ -48,7 +48,7 @@ from app.monitoring import (
 from app.organisations import organisation_routes
 from app.organisations.organisation_crud import init_admin_org
 from app.projects import project_routes
-from app.projects.project_crud import read_xlsforms
+from app.projects.project_crud import read_and_insert_xlsforms
 from app.submissions import submission_routes
 from app.tasks import tasks_routes
 from app.users import user_routes
@@ -80,14 +80,16 @@ def get_api() -> FastAPI:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(
+    app: FastAPI,  # dead: disable
+):
     """FastAPI startup/shutdown event."""
     log.debug("Starting up FastAPI server.")
     db_conn = next(get_db())
     log.debug("Initialising admin org and user in DB.")
     await init_admin_org(db_conn)
     log.debug("Reading XLSForms from DB.")
-    await read_xlsforms(db_conn, xlsforms_path)
+    await read_and_insert_xlsforms(db_conn, xlsforms_path)
 
     yield
 
@@ -193,7 +195,10 @@ api = get_api()
 
 
 @api.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
+async def validation_exception_handler(
+    request: Request,  # dead: disable
+    exc: RequestValidationError,
+):
     """Exception handler for more descriptive logging and traces."""
     status_code = 500
     errors = []

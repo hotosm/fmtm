@@ -19,6 +19,21 @@ repos:
       - id: ruff-format
         files: ^src/backend/(?:.*/)*.*$
 
+  # # Dead code: Python usused code detection
+  # - repo: https://github.com/asottile/dead
+  #   rev: v1.5.2
+  #   hooks:
+  #     - id: dead
+  #       args: ["--exclude", "contrib"]
+
+  # Spelling: Checks for common misspellings in text files.
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.6
+    hooks:
+      - id: codespell
+        types: [text]
+        args: [--toml, src/backend/pyproject.toml]
+
   # Autoformat: YAML, JSON, Markdown, etc.
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v3.1.0
@@ -47,6 +62,17 @@ repos:
   #           "--ignore=DL3018",
   #           "--ignore=DL3059",
   #         ]
+
+  # Lint & Autoformat: SQL
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 3.0.6
+    hooks:
+      - id: sqlfluff-lint
+        files: ^src/backend/migrations/(?:.*/)*.*$
+        types: [sql]
+      - id: sqlfluff-fix
+        files: ^src/backend/migrations/(?:.*/)*.*$
+        types: [sql]
 
   # Lint: Bash scripts
   - repo: https://github.com/openstack-dev/bashate.git

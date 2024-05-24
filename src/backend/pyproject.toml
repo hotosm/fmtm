@@ -47,7 +47,7 @@ dependencies = [
     "defusedxml>=0.7.1",
     "osm-login-python==1.0.3",
     "osm-fieldwork==0.9.2",
-    "osm-rawdata==0.2.4",
+    "osm-rawdata==0.3.0",
     "fmtm-splitter==1.2.1",
 ]
 requires-python = ">=3.10"
@@ -147,3 +147,13 @@ version_files = [
 ]
 changelog_file = "../../CHANGELOG.md"
 update_changelog_on_bump = true
+
+[tool.sqlfluff.core]
+dialect = "postgres"
+large_file_skip_byte_limit = 30000  # Required to process fmtm_base_schema.sql
+exclude_rules = "CP05"  # Avoid capitalisation of enums
+
+[tool.codespell]
+skip = "contrib/*.py,*languages_and_countries.py,*pnpm-lock.yaml,*CHANGELOG.md"
+write-changes = true
+

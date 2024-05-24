@@ -1,5 +1,5 @@
 site_name: FMTM
-site_description: A project to provide tools for Open Mapping campaigns.
+site_description: Coordinated field mapping for Open Mapping campaigns.
 # strict: true
 site_url: "https://hotosm.github.io/fmtm/"
 
@@ -86,7 +86,7 @@ nav:
       - Backend: dev/Backend.md
       - Frontend: dev/Frontend.md
       - Production Deployment: dev/Production.md
-      - Deployment Flow: dev/Deployment-Flow.md
+      - Release Cycle: dev/Release-Cycle.md
       - Database Tips: dev/Database-Tips.md
       - Troubleshooting: dev/Troubleshooting.md
       - Pre-Commit: https://docs.hotosm.org/dev-guide/pre-commit/

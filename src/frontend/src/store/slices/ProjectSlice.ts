@@ -42,6 +42,7 @@ const initialState: ProjectStateTypes = {
   projectOpfsBasemapPath: null,
   projectTaskActivity: [],
   projectActivityLoading: false,
+  downloadSubmissionLoading: false,
 };
 
 const ProjectSlice = createSlice({
@@ -172,6 +173,9 @@ const ProjectSlice = createSlice({
         return boundary;
       });
       state.projectTaskBoundries = updatedProjectTaskBoundries;
+    },
+    SetDownloadSubmissionGeojsonLoading(state, action) {
+      state.downloadSubmissionLoading = action.payload;
     },
   },
 });

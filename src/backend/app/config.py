@@ -178,6 +178,8 @@ class Settings(BaseSettings):
         if frontend_domain := info.data.get("FMTM_DOMAIN"):
             default_origins = [
                 f"{url_scheme}://{frontend_domain}{local_server_port}",
+                # Also add the xlsform-editor url
+                "https://xlsforms.fmtm.dev",
             ]
 
         if val is None:
@@ -262,7 +264,16 @@ class Settings(BaseSettings):
                 return f"http://s3.{fmtm_domain}:{dev_port}"
             return f"https://s3.{fmtm_domain}"
 
-    UNDERPASS_API_URL: HttpUrlStr = "https://api-prod.raw-data.hotosm.org/v1"
+    RAW_DATA_API_URL: HttpUrlStr = "https://api-prod.raw-data.hotosm.org/v1"
+    RAW_DATA_API_AUTH_TOKEN: Optional[str] = None
+
+    @field_validator("RAW_DATA_API_AUTH_TOKEN", mode="before")
+    @classmethod
+    def set_raw_data_api_auth_none(cls, v: Optional[str]) -> Optional[str]:
+        """Set RAW_DATA_API_AUTH_TOKEN to None if set to empty string."""
+        if v == "":
+            return None
+        return v
 
     # Used for temporary auth feature
     OSM_SVC_ACCOUNT_TOKEN: Optional[str] = None

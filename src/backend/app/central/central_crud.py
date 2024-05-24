@@ -236,7 +236,6 @@ def create_odk_xform(
 def delete_odk_xform(
     project_id: int,
     xform_id: str,
-    filespec: str,
     odk_central: Optional[project_schemas.ODKCentralDecrypted] = None,
 ):
     """Delete an XForm from a remote ODK Central server."""
@@ -357,21 +356,6 @@ async def update_project_xform(
     )
     # The draft form must be published after upload
     xform_obj.publishForm(odk_id, form_name)
-
-
-def download_submissions(
-    project_id: int,
-    xform_id: str,
-    submission_id: Optional[str] = None,
-    get_json: bool = True,
-    odk_central: Optional[project_schemas.ODKCentralDecrypted] = None,
-):
-    """Download all submissions for an XForm."""
-    xform = get_odk_form(odk_central)
-    # FIXME: should probably filter by timestamps or status value
-    data = xform.getSubmissions(project_id, xform_id, submission_id, True, get_json)
-    fixed = str(data, "utf-8")
-    return fixed.splitlines()
 
 
 async def read_and_test_xform(
@@ -599,7 +583,6 @@ async def update_survey_xform(
     form_category_update = root.find(
         ".//xforms:bind[@nodeset='/data/all/form_category']", namespaces
     )
-    log.warning(form_category_update)
     if form_category_update is not None:
         form_category_update.set("calculate", f"once('{category}')")
 
@@ -954,12 +937,11 @@ def upload_media(
 def download_media(
     project_id: int,
     xform_id: str,
-    filespec: str,
+    filename: str = "test",
     odk_central: Optional[project_schemas.ODKCentralDecrypted] = None,
 ):
     """Upload a data file to Central."""
     xform = get_odk_form(odk_central)
-    filename = "test"
     xform.getMedia(project_id, xform_id, filename)
 
 
