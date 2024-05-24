@@ -487,7 +487,7 @@ async def update_entity_registration_xform(
 async def update_survey_xform(
     form_data: BytesIO,
     category: str,
-    task_ids: list[int],
+    existing_id: Optional[str] = None,
 ) -> BytesIO:
     """Update fields in the XForm to work with FMTM.
 
@@ -507,7 +507,11 @@ async def update_survey_xform(
         BytesIO: The XForm data.
     """
     log.debug(f"Updating XML keys in survey XForm: {category}")
-    xform_id = uuid.uuid4()
+
+    if existing_id:
+        xform_id = existing_id
+    else:
+        xform_id = uuid.uuid4()
 
     namespaces = {
         "h": "http://www.w3.org/1999/xhtml",
