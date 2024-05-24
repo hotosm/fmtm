@@ -206,13 +206,13 @@ export default function Dialog({ taskId, feature, map, view }) {
             type="submit"
             className="fmtm-font-bold !fmtm-rounded fmtm-text-sm !fmtm-py-2 !fmtm-w-full fmtm-flex fmtm-justify-center"
             onClick={() => {
-              // XForm name is constructed from lower case project title with underscores
-              const projectName = projectInfo.title.toLowerCase().split(' ').join('_');
-              const projectCategory = projectInfo.xform_category;
-              const formName = `${projectName}_${projectCategory}`;
-              document.location.href = `odkcollect://form/${formName}?task_id=${taskId}`;
-              // TODO add this to each feature popup to pre-load a selected entity
-              // document.location.href = `odkcollect://form/${formName}?${geomFieldName}=${entityId}`;
+              const xformId = projectInfo.xform_id;
+
+              try {
+                document.location.href = `odkcollect://form/${xformId}?task_id=${taskId}`;
+              } catch (error) {
+                document.location.href = 'https://play.google.com/store/apps/details?id=org.odk.collect.android';
+              }
             }}
           />
         </div>

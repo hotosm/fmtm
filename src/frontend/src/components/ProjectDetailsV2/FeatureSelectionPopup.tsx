@@ -13,6 +13,7 @@ import ProjectTaskStatus from '@/api/ProjectTaskStatus';
 import MapStyles from '@/hooks/MapStyles';
 
 type TaskFeatureSelectionPopupPropType = {
+  taskId: number;
   featureProperties: TaskFeatureSelectionProperties | null;
   taskId: number;
   taskFeature: Record<string, any>;
@@ -128,17 +129,14 @@ const TaskFeatureSelectionPopup = ({
               }
               isLoading={updateEntityStatusLoading}
               onClick={() => {
-                // XForm name is constructed from lower case project title with underscores
-                const projectName = projectInfo.title.toLowerCase().split(' ').join('_');
-                const projectCategory = projectInfo.xform_category;
-                const formName = `${projectName}_${projectCategory}`;
-
+                const xformId = projectInfo.xform_id;
                 const entity = entityOsmMap.find((x) => x.osm_id === featureProperties?.osm_id);
                 const entityUuid = entity ? entity.id : null;
 
-                if (!formName || !entityUuid) {
+                if (!xformId || !entityUuid) {
                   return;
                 }
+
                 dispatch(
                   UpdateEntityStatus(`${import.meta.env.VITE_API_URL}/projects/${currentProjectId}/entity/status`, {
                     entity_id: entityUuid,
@@ -146,6 +144,7 @@ const TaskFeatureSelectionPopup = ({
                     label: '',
                   }),
                 );
+
                 if (task_status === 'READY') {
                   dispatch(
                     ProjectTaskStatus(
@@ -163,7 +162,11 @@ const TaskFeatureSelectionPopup = ({
                   );
                 }
 
-                document.location.href = `odkcollect://form/${formName}?existing=${entityUuid}`;
+                try {
+                  document.location.href = `odkcollect://form/${xformId}?task_id=${taskId}&existing=${entityUuid}`;
+                } catch (error) {
+                  document.location.href = 'https://play.google.com/store/apps/details?id=org.odk.collect.android';
+                }
               }}
             />
           </div>
