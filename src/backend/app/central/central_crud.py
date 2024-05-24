@@ -584,7 +584,10 @@ async def update_survey_xform(
         ".//xforms:bind[@nodeset='/data/all/form_category']", namespaces
     )
     if form_category_update is not None:
-        form_category_update.set("calculate", f"once('{category}')")
+        if category.endswith("s"):
+            # Plural to singular
+            category = category[:-1]
+        form_category_update.set("calculate", f"once('{category.rstrip('s')}')")
 
     return BytesIO(ElementTree.tostring(root))
 
