@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
+import { CommonActions } from '@/store/slices/CommonSlice';
 import Button from '@/components/common/Button';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import environment from '@/environment';
@@ -15,7 +16,6 @@ import MapStyles from '@/hooks/MapStyles';
 type TaskFeatureSelectionPopupPropType = {
   taskId: number;
   featureProperties: TaskFeatureSelectionProperties | null;
-  taskId: number;
   taskFeature: Record<string, any>;
   map: any;
   view: any;
@@ -162,10 +162,22 @@ const TaskFeatureSelectionPopup = ({
                   );
                 }
 
-                try {
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+                  navigator.userAgent,
+                );
+
+                if (isMobile) {
+                  // Load entity in ODK Collect by intent
                   document.location.href = `odkcollect://form/${xformId}?task_id=${taskId}&existing=${entityUuid}`;
-                } catch (error) {
-                  document.location.href = 'https://play.google.com/store/apps/details?id=org.odk.collect.android';
+                } else {
+                  dispatch(
+                    CommonActions.SetSnackBar({
+                      open: true,
+                      message: 'Requires a mobile phone with ODK Collect.',
+                      variant: 'warning',
+                      duration: 3000,
+                    }),
+                  );
                 }
               }}
             />

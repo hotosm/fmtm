@@ -206,12 +206,21 @@ export default function Dialog({ taskId, feature, map, view }) {
             type="submit"
             className="fmtm-font-bold !fmtm-rounded fmtm-text-sm !fmtm-py-2 !fmtm-w-full fmtm-flex fmtm-justify-center"
             onClick={() => {
-              const xformId = projectInfo.xform_id;
+              const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+                navigator.userAgent,
+              );
 
-              try {
-                document.location.href = `odkcollect://form/${xformId}?task_id=${taskId}`;
-              } catch (error) {
-                document.location.href = 'https://play.google.com/store/apps/details?id=org.odk.collect.android';
+              if (isMobile) {
+                document.location.href = `odkcollect://form/${projectInfo.xform_id}?task_id=${taskId}`;
+              } else {
+                dispatch(
+                  CommonActions.SetSnackBar({
+                    open: true,
+                    message: 'Requires a mobile phone with ODK Collect.',
+                    variant: 'warning',
+                    duration: 3000,
+                  }),
+                );
               }
             }}
           />
