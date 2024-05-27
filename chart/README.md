@@ -10,7 +10,7 @@ Requires secrets to be pre-populated inside the correct namespace:
 
 ```bash
 kubectl create namespace fmtm
-kubectl 
+kubectl
 ```
 
 - **db-fmtm-vars** for postgres database

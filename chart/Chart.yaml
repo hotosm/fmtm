@@ -5,8 +5,8 @@ description: Field Mapping Tasking Manager - coordinated field mapping.
 version: "0.1.0"
 appVersion: "2024.3.0"
 maintainers:
-- email: sam.woodcock@hotosm.org
-  name: Sam Woodcock
+  - email: sam.woodcock@hotosm.org
+    name: Sam Woodcock
 home: https://github.com/hotosm/fmtm/tree/main/chart
 icon: https://fmtm.hotosm.org/favicon.ico
 dependencies:

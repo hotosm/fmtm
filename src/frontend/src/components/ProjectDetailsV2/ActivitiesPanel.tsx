@@ -58,9 +58,9 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion
 
   const ActivitiesCard = ({ taskHistory }: { taskHistory: taskHistoryListType }) => {
     const actionDate = taskHistory?.action_date?.split('T')[0];
-    const actionTime = `${taskHistory?.action_date?.split('T')[1].split(':')[0]}:${taskHistory?.action_date
-      ?.split('T')[1]
-      .split(':')[1]}`;
+    const actionTime = `${taskHistory?.action_date?.split('T')[1].split(':')[0]}:${
+      taskHistory?.action_date?.split('T')[1].split(':')[1]
+    }`;
     return (
       <div className="fmtm-flex fmtm-gap-2 fmtm-items-center fmtm-justify-between fmtm-px-1 fmtm-border-b-[2px] fmtm-border-white fmtm-py-3">
         <div className="fmtm-flex fmtm-items-center">
