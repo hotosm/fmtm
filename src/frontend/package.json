@@ -55,10 +55,7 @@
     "workbox-window": "^7.1.0"
   },
   "dependencies": {
-    "@capacitor/geolocation": "^5.0.6",
-    "@capacitor/motion": "^5.0.6",
-    "@emotion/react": "^11.11.1",
-    "@emotion/styled": "^11.11.0",
+    "@hotosm/ui": "0.2.0-a3",
     "@mui/base": "5.0.0-beta.18",
     "@mui/icons-material": "^5.11.0",
     "@mui/lab": "^5.0.0-alpha.134",
