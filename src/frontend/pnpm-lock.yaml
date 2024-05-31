@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@hotosm/ui':
-        specifier: 0.2.0-a3
-        version: 0.2.0-a3(@types/react@17.0.67)
+        specifier: 0.2.0-b2
+        version: 0.2.0-b2
       '@mui/base':
         specifier: 5.0.0-beta.18
         version: 5.0.0-beta.18(@types/react@17.0.67)(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
@@ -53,6 +53,9 @@ importers:
       '@sentry/react':
         specifier: ^7.59.3
         version: 7.73.0(react@17.0.2)
+      '@shoelace-style/shoelace':
+        specifier: ^2.15.1
+        version: 2.15.1(@types/react@17.0.67)
       '@tiptap/extension-bullet-list':
         specifier: ^2.2.4
         version: 2.2.4(@tiptap/core@2.2.4(@tiptap/pm@2.2.4))
@@ -1196,8 +1199,8 @@ packages:
   '@floating-ui/utils@0.2.1':
     resolution: {integrity: sha512-9TANp6GPoMtYzQdt54kfAyMmz1+osLlXdg2ENroU7zzrtflTLrrC/lgrIfaSe+Wu0b89GKccT7vxXA0MoAIO+Q==}
 
-  '@hotosm/ui@0.2.0-a3':
-    resolution: {integrity: sha512-f+YwqhVoH3ysoSq38075KLbsGNwt9qOI3DVcEffJpdLkFgTn7LoH2CvhSfALAzz9013yBC87n+LD/x3GXkJg6Q==}
+  '@hotosm/ui@0.2.0-b2':
+    resolution: {integrity: sha512-Ci2Pyrr+m3saXB4Uq0PYrucNhpuSQm22ll6dIX6mWQC32jo4yuzorKND2NFM3tYxOfphSXxk68uBUXLC4sa0Cw==}
     engines: {node: '>=14.17'}
 
   '@humanwhocodes/config-array@0.11.11':
@@ -6234,7 +6237,7 @@ snapshots:
 
   '@emotion/babel-plugin@11.11.0':
     dependencies:
-      '@babel/helper-module-imports': 7.22.15
+      '@babel/helper-module-imports': 7.24.3
       '@babel/runtime': 7.23.1
       '@emotion/hash': 0.9.1
       '@emotion/memoize': 0.8.1
@@ -6436,11 +6439,7 @@ snapshots:
 
   '@floating-ui/utils@0.2.1': {}
 
-  '@hotosm/ui@0.2.0-a3(@types/react@17.0.67)':
-    dependencies:
-      '@shoelace-style/shoelace': 2.15.1(@types/react@17.0.67)
-    transitivePeerDependencies:
-      - '@types/react'
+  '@hotosm/ui@0.2.0-b2': {}
 
   '@humanwhocodes/config-array@0.11.11':
     dependencies:

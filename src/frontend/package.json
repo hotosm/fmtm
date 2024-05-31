@@ -55,7 +55,7 @@
     "workbox-window": "^7.1.0"
   },
   "dependencies": {
-    "@hotosm/ui": "0.2.0-a3",
+    "@hotosm/ui": "0.2.0-b2",
     "@mui/base": "5.0.0-beta.18",
     "@mui/icons-material": "^5.11.0",
     "@mui/lab": "^5.0.0-alpha.134",
@@ -111,5 +111,8 @@
     "tailwind-merge": "^1.14.0",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^9.0.1"
+  },
+  "peerDependencies": {
+    "@shoelace-style/shoelace": "^2.15.1"
   }
 }
