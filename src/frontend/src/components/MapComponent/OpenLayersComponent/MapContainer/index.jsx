@@ -2,7 +2,6 @@
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable react/jsx-no-useless-fragment */
 import React from 'react';
-import PropTypes from 'prop-types';
 import '../map.scss';
 
 const { Children, cloneElement, forwardRef } = React;
