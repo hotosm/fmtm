@@ -4,12 +4,13 @@ import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
 
 const Transition = function Transition(
+  ref,
   props: TransitionProps & {
     children: React.ReactElement<any, any>;
     ref?: React.Ref<unknown>;
   },
 ) {
-  return <CoreModules.Slide direction="up" {...props} />;
+  return <CoreModules.Slide direction="up" ref={ref} {...props} />;
 };
 
 export default function BasicDialog({ open, onClose, title, iconCloseMode, actionsButton, element }) {

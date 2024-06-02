@@ -1,8 +1,8 @@
 import * as React from 'react';
 import CoreModules from '@/shared/CoreModules';
 
-function Alert(props) {
-  return <CoreModules.MuiAlert elevation={6} variant="filled" {...props} />;
+function Alert(props, ref) {
+  return <CoreModules.MuiAlert ref={ref} elevation={6} variant="filled" {...props} />;
 }
 
 function SlideTransition(props) {
