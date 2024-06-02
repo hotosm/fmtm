@@ -12,8 +12,7 @@ type CustomCheckboxType = {
   disabled?: boolean;
 };
 
-const Checkbox = ({ className, ...props }) => {
-  const { ref } = props;
+const Checkbox = ({ className, ref, ...props }) => {
   return (
     <CheckboxPrimitive.Root
       ref={ref}
