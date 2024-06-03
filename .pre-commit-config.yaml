@@ -53,6 +53,7 @@ repos:
             "!CHANGELOG.md",
             "!CONTRIBUTING.md",
             "!src/frontend/pnpm-lock.yaml",
+            "!src/mapper/pnpm-lock.yaml",
             "!src/backend/tests/test_data/**",
           ]
 
