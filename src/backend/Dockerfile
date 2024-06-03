@@ -166,8 +166,8 @@ RUN pip install --user --upgrade --no-warn-script-location \
     -r /opt/python/requirements-debug.txt \
     -r /opt/python/requirements-ci.txt \
     && rm -r /opt/python
-CMD ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", \
-    "-m", "uvicorn", "app.main:api", \
+CMD ["python", "-Xfrozen_modules=off", "-m", "debugpy", \
+    "--listen", "0.0.0.0:5678", "-m", "uvicorn", "app.main:api", \
     "--host", "0.0.0.0", "--port", "8000", "--workers", "1", \
     "--reload", "--log-level", "critical", "--no-access-log"]
 
