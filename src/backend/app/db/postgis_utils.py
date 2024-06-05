@@ -23,7 +23,7 @@ from asyncio import gather
 from datetime import datetime, timezone
 from io import BytesIO
 from random import getrandbits
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import geojson
 import requests
