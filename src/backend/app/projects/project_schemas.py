@@ -332,7 +332,7 @@ class ProjectBase(BaseModel):
 
     @computed_field
     @property
-    def outline_geojson(self) -> Optional[Feature]:
+    def outline_geojson(self) -> Optional[Feature | dict]:
         """Compute the geojson outline from WKBElement outline."""
         if not self.outline:
             return None
