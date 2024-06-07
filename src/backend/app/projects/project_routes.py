@@ -209,7 +209,6 @@ async def get_odk_entities_geojson(
     return await central_crud.get_entities_geojson(
         odk_credentials,
         project.odkid,
-        project.xform_category,
         minimal=minimal,
     )
 
@@ -227,7 +226,6 @@ async def get_odk_entities_mapping_statuses(
     return await central_crud.get_entities_data(
         odk_credentials,
         project.odkid,
-        project.xform_category,
     )
 
 
@@ -249,7 +247,6 @@ async def get_odk_entities_osm_ids(
     return await central_crud.get_entities_data(
         odk_credentials,
         project.odkid,
-        project.xform_category,
         fields="osm_id",
     )
 
@@ -267,7 +264,6 @@ async def get_odk_entities_task_ids(
     return await central_crud.get_entities_data(
         odk_credentials,
         project.odkid,
-        project.xform_category,
         fields="task_id",
     )
 
@@ -286,7 +282,6 @@ async def get_odk_entity_mapping_status(
     return await central_crud.get_entity_mapping_status(
         odk_credentials,
         project.odkid,
-        project.xform_category,
         entity_id,
     )
 
@@ -313,7 +308,6 @@ async def set_odk_entities_mapping_status(
     return await central_crud.update_entity_mapping_status(
         odk_credentials,
         project.odkid,
-        project.xform_category,
         entity_details.entity_id,
         entity_details.label,
         entity_details.status,

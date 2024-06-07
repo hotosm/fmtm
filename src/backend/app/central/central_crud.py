@@ -43,7 +43,7 @@ from app.db.postgis_utils import (
     javarosa_to_geojson_geom,
     parse_and_filter_geojson,
 )
-from app.models.enums import HTTPStatus, XLSFormType
+from app.models.enums import HTTPStatus, TaskStatus, XLSFormType
 from app.projects import project_schemas
 
 
@@ -668,7 +668,7 @@ async def convert_odk_submission_json_to_geojson(
 async def get_entities_geojson(
     odk_creds: project_schemas.ODKCentralDecrypted,
     odk_id: int,
-    dataset_name: str,
+    dataset_name: str = "features",
     minimal: Optional[bool] = False,
 ) -> geojson.FeatureCollection:
     """Get the Entity details for a dataset / Entity list.
@@ -763,7 +763,7 @@ async def get_entities_geojson(
 async def get_entities_data(
     odk_creds: project_schemas.ODKCentralDecrypted,
     odk_id: int,
-    dataset_name: str,
+    dataset_name: str = "features",
     fields: str = "__system/updatedAt, osm_id, status, task_id",
 ) -> list:
     """Get all the entity mapping statuses.
@@ -801,7 +801,10 @@ async def get_entities_data(
 
 
 def entity_to_flat_dict(
-    entity: Optional[dict], odk_id: int, dataset_name: str, entity_uuid: str
+    entity: Optional[dict],
+    odk_id: int,
+    entity_uuid: str,
+    dataset_name: str = "features",
 ) -> dict:
     """Convert returned Entity from ODK Central to flattened dict."""
     if not entity:
@@ -827,8 +830,8 @@ def entity_to_flat_dict(
 async def get_entity_mapping_status(
     odk_creds: project_schemas.ODKCentralDecrypted,
     odk_id: int,
-    dataset_name: str,
     entity_uuid: str,
+    dataset_name: str = "features",
 ) -> dict:
     """Get an single entity mapping status.
 
@@ -850,16 +853,16 @@ async def get_entity_mapping_status(
             dataset_name,
             entity_uuid,
         )
-    return entity_to_flat_dict(entity, odk_id, dataset_name, entity_uuid)
+    return entity_to_flat_dict(entity, odk_id, entity_uuid, dataset_name)
 
 
 async def update_entity_mapping_status(
     odk_creds: project_schemas.ODKCentralDecrypted,
     odk_id: int,
-    dataset_name: str,
     entity_uuid: str,
     label: str,
-    status: str,
+    status: TaskStatus,
+    dataset_name: str = "features",
 ) -> dict:
     """Update the Entity mapping status.
 
@@ -868,10 +871,10 @@ async def update_entity_mapping_status(
     Args:
         odk_creds (ODKCentralDecrypted): ODK credentials for a project.
         odk_id (str): The project ID in ODK Central.
-        dataset_name (str): The dataset / Entity list name in ODK Central.
         entity_uuid (str): The unique entity UUID for ODK Central.
         label (str): New label, with emoji prepended for status.
-        status (str): New TaskStatus to assign, in string form.
+        status (TaskStatus): New TaskStatus to assign, in string form.
+        dataset_name (str): Override the default dataset / Entity list name 'features'.
 
     Returns:
         dict: All Entity data in OData JSON format.
@@ -886,7 +889,7 @@ async def update_entity_mapping_status(
                 "status": status,
             },
         )
-    return entity_to_flat_dict(entity, odk_id, dataset_name, entity_uuid)
+    return entity_to_flat_dict(entity, odk_id, entity_uuid, dataset_name)
 
 
 def upload_media(
