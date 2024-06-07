@@ -319,7 +319,7 @@ class XLSFormType(str, Enum):
 
     BUILDING = "buildings"
     HIGHWAYS = "highways"
-    HEALTH = "health"
+    HEALTHCARE = "healthcare"
     TOILETS = "toilets"
     RELIGIOUS = "religious"
     LANDUSAGE = "landusage"
