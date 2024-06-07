@@ -57,7 +57,7 @@ from app.db.postgis_utils import (
     split_geojson_by_task_areas,
     task_geojson_dict_to_entity_values,
 )
-from app.models.enums import HTTPStatus, ProjectRole, ProjectVisibility
+from app.models.enums import HTTPStatus, ProjectRole, ProjectVisibility, XLSFormType
 from app.projects import project_deps, project_schemas
 from app.s3 import add_obj_to_bucket
 from app.tasks import tasks_crud
@@ -520,20 +520,17 @@ async def split_geojson_into_tasks(
 # ---------------------------
 
 
-async def read_and_insert_xlsforms(db, directory):
+async def read_and_insert_xlsforms(db, directory) -> None:
     """Read the list of XLSForms from the disk and insert to DB."""
-    existing_titles = set(
-        title for (title,) in db.query(db_models.DbXLSForm.title).all()
-    )
-    xlsforms_on_disk = [
-        file.stem
-        for file in Path(directory).glob("*.xls")
-        if not file.stem.startswith("entities")
-    ]
-
     # Insert new XLSForms to DB and update existing ones
-    for xlsform_name in xlsforms_on_disk:
-        file_path = Path(directory) / f"{xlsform_name}.xls"
+    for xls_type in XLSFormType:
+        file_name = xls_type.name
+        category = xls_type.value
+        file_path = Path(directory) / f"{file_name}.xls"
+
+        if not file_path.exists():
+            log.warning(f"{file_path} does not exist!")
+            continue
 
         if file_path.stat().st_size == 0:
             log.warning(f"{file_path} is empty!")
@@ -551,17 +548,21 @@ async def read_and_insert_xlsforms(db, directory):
                 title = EXCLUDED.title, xls = EXCLUDED.xls
             """
             )
-            db.execute(insert_query, {"title": xlsform_name, "xls": data})
+            db.execute(insert_query, {"title": category, "xls": data})
             db.commit()
-            log.info(f"Inserted or updated {xlsform_name} xlsform to database")
+            log.info(f"XLSForm for '{category}' present in the database")
 
         except Exception as e:
             log.error(
-                f"Failed to insert or update {xlsform_name} in the database. Error: {e}"
+                f"Failed to insert or update {category} in the database. Error: {e}"
             )
 
+    existing_db_forms = set(
+        title for (title,) in db.query(db_models.DbXLSForm.title).all()
+    )
+    required_forms = set(xls_type.value for xls_type in XLSFormType)
     # Delete XLSForms from DB that are not found on disk
-    for title in existing_titles - set(xlsforms_on_disk):
+    for title in existing_db_forms - required_forms:
         delete_query = text(
             """
             DELETE FROM xlsforms WHERE title = :title
@@ -569,9 +570,9 @@ async def read_and_insert_xlsforms(db, directory):
         )
         db.execute(delete_query, {"title": title})
         db.commit()
-        log.info(f"Deleted {title} from the database as it was not found on disk.")
-
-    return xlsforms_on_disk
+        log.info(
+            f"Deleted {title} from the database as it was not present in XLSFormType."
+        )
 
 
 async def get_odk_id_for_project(db: Session, project_id: int):
@@ -832,7 +833,7 @@ async def generate_odk_central_project_content(
     """Populate the project in ODK Central with XForm, Appuser, Permissions."""
     project_odk_id = project.odkid
     # Create an app user (i.e. QR Code) for the project
-    appuser_name = f"fmtm_user_{form_category}"
+    appuser_name = "fmtm_user"
     log.info(
         f"Creating ODK appuser ({appuser_name}) for ODK project ({project_odk_id})"
     )
@@ -962,7 +963,8 @@ async def generate_project_files(
         else:
             log.debug(f"Using default XLSForm for category: '{form_category}'")
 
-            xlsform_path = f"{xlsforms_path}/{form_category}.xls"
+            form_filename = XLSFormType(form_category).name
+            xlsform_path = f"{xlsforms_path}/{form_filename}.xls"
             with open(xlsform_path, "rb") as f:
                 xlsform = BytesIO(f.read())
 
@@ -1021,7 +1023,7 @@ async def generate_project_files(
         async with central_deps.get_odk_entity(odk_credentials) as odk_central:
             entities = await odk_central.createEntities(
                 project_odk_id,
-                form_category,
+                "features",
                 entities_data_dict,
             )
             if entities:

@@ -61,6 +61,7 @@ from app.models.enums import (
     TILES_SOURCE,
     HTTPStatus,
     ProjectVisibility,
+    XLSFormType,
 )
 from app.organisations import organisation_deps
 from app.projects import project_crud, project_deps, project_schemas
@@ -926,7 +927,8 @@ async def download_form(
         "Content-Type": "application/media",
     }
     if not project.form_xls:
-        xlsform_path = f"{xlsforms_path}/{project.xform_category}.xls"
+        form_filename = XLSFormType(project.xform_category).name
+        xlsform_path = f"{xlsforms_path}/{form_filename}.xls"
         if os.path.exists(xlsform_path):
             return FileResponse(xlsform_path, filename="form.xls")
         else:
@@ -937,7 +939,7 @@ async def download_form(
 @router.post("/update-form")
 async def update_project_form(
     xform_id: str = Form(...),
-    category: str = Form(...),
+    category: XLSFormType = Form(...),
     upload: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
     project_user_dict: dict = Depends(project_admin),
@@ -967,7 +969,8 @@ async def update_project_form(
         project.form_xls = new_xform_data
         new_xform_data = BytesIO(new_xform_data)
     else:
-        xlsform_path = Path(f"{xlsforms_path}/{category}.xls")
+        form_filename = XLSFormType(project.xform_category).name
+        xlsform_path = Path(f"{xlsforms_path}/{form_filename}.xls")
         file_ext = xlsform_path.suffix.lower()
         with open(xlsform_path, "rb") as f:
             new_xform_data = BytesIO(f.read())
