@@ -1120,35 +1120,35 @@ async def convert_fgb_to_geojson(
     return Response(content=json.dumps(data_extract_geojson), headers=headers)
 
 
-@router.get("/boundary_in_osm/{project_id}/")
-async def download_task_boundary_osm(
-    project_id: int,
-    db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(mapper),
-):
-    """Downloads the boundary of a task as a OSM file.
+# @router.get("/boundary_in_osm/{project_id}/")
+# async def download_task_boundary_osm(
+#     project_id: int,
+#     db: Session = Depends(database.get_db),
+#     current_user: AuthUser = Depends(mapper),
+# ):
+#     """Downloads the boundary of a task as a OSM file.
 
-    Args:
-        project_id (int): The id of the project.
-        db (Session): The database session, provided automatically.
-        current_user (AuthUser): Check if user has MAPPER permission.
+#     Args:
+#         project_id (int): The id of the project.
+#         db (Session): The database session, provided automatically.
+#         current_user (AuthUser): Check if user has MAPPER permission.
 
-    Returns:
-        Response: The HTTP response object containing the downloaded file.
-    """
-    out = await project_crud.get_task_geometry(db, project_id)
-    file_path = f"/tmp/{project_id}_task_boundary.geojson"
+#     Returns:
+#         Response: The HTTP response object containing the downloaded file.
+#     """
+#     out = await project_crud.get_task_geometry(db, project_id)
+#     file_path = f"/tmp/{project_id}_task_boundary.geojson"
 
-    # Write the response content to the file
-    with open(file_path, "w") as f:
-        f.write(out)
-    result = await project_crud.convert_geojson_to_osm(file_path)
+#     # Write the response content to the file
+#     with open(file_path, "w") as f:
+#         f.write(out)
+#     result = await project_crud.convert_geojson_to_osm(file_path)
 
-    with open(result, "r") as f:
-        content = f.read()
+#     with open(result, "r") as f:
+#         content = f.read()
 
-    response = Response(content=content, media_type="application/xml")
-    return response
+#     response = Response(content=content, media_type="application/xml")
+#     return response
 
 
 @router.get("/centroid/")

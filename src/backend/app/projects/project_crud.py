@@ -36,7 +36,6 @@ from geoalchemy2.shape import to_shape
 from geojson.feature import Feature, FeatureCollection
 from loguru import logger as log
 from osm_fieldwork.basemapper import create_basemap_file
-from osm_fieldwork.json2osm import json2osm
 from osm_fieldwork.OdkCentral import OdkAppUser
 from osm_fieldwork.xlsforms import entities_registration, xlsforms_path
 from osm_rawdata.postgres import PostgresClient
@@ -1549,9 +1548,23 @@ async def get_mbtiles_list(db: Session, project_id: int):
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-async def convert_geojson_to_osm(geojson_file: str):
-    """Convert a GeoJSON file to OSM format."""
-    return json2osm(geojson_file)
+# async def convert_geojson_to_osm(geojson_file: str):
+#     """Convert a GeoJSON file to OSM format."""
+#     jsonin = JsonDump()
+#     geojson_path = Path(geojson_file)
+#     data = jsonin.parse(geojson_path)
+
+#     osmoutfile = f"{geojson_path.stem}.osm"
+#     jsonin.createOSM(osmoutfile)
+
+#     for entry in data:
+#         feature = jsonin.createEntry(entry)
+
+#     # TODO add json2osm back in
+#     # https://github.com/hotosm/osm-fieldwork/blob/1a94afff65c4653190d735
+#     # f104c0644dcfb71e64/osm_fieldwork/json2osm.py#L363
+
+#     return json2osm(geojson_file)
 
 
 async def get_pagination(page: int, count: int, results_per_page: int, total: int):
