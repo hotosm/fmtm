@@ -865,15 +865,11 @@ async def generate_odk_central_project_content(
     registration_xform = await central_crud.read_and_test_xform(
         registration_xlsform, "xls", return_form_data=True
     )
-    # Manually modify fields in XML specific to project
-    updated_reg_xform = await central_crud.update_entity_registration_xform(
-        registration_xform, form_category
-    )
     # Upload entity registration XForm
     log.info("Uploading Entity registration XForm to ODK Central")
     central_crud.create_odk_xform(
         project_odk_id,
-        updated_reg_xform,
+        registration_xform,
         odk_credentials,
     )
 
@@ -882,7 +878,7 @@ async def generate_odk_central_project_content(
         xlsform, form_file_ext, return_form_data=True
     )
     # Manually modify fields in XML specific to project (id, name, etc)
-    updated_xform = await central_crud.update_survey_xform(
+    updated_xform = await central_crud.modify_xform_xml(
         xform,
         form_category,
         task_count,
