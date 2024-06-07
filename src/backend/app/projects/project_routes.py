@@ -813,7 +813,7 @@ async def preview_split_by_square(
 @router.post("/generate-data-extract/")
 async def get_data_extract(
     geojson_file: UploadFile = File(...),
-    form_category: Optional[str] = Form(None),
+    form_category: Optional[XLSFormType] = Form(None),
     # config_file: Optional[str] = Form(None),
     current_user: AuthUser = Depends(login_required),
 ):
@@ -826,7 +826,8 @@ async def get_data_extract(
 
     # Get extract config file from existing data_models
     if form_category:
-        data_model = f"{data_models_path}/{form_category}.yaml"
+        config_filename = XLSFormType(form_category).name
+        data_model = f"{data_models_path}/{config_filename}.yaml"
         with open(data_model, "rb") as data_model_yaml:
             extract_config = BytesIO(data_model_yaml.read())
     else:
