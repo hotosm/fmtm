@@ -1332,13 +1332,13 @@ async def get_background_task_status(task_id: uuid.UUID, db: Session):
 
 
 async def insert_background_task_into_database(
-    db: Session, name: str = None, project_id: str = None
-) -> uuid.uuid4:
+    db: Session, name: Optional[str] = None, project_id: Optional[int] = None
+) -> uuid.UUID:
     """Inserts a new task into the database.
 
     Args:
         db (Session): database session
-        name (str): name of the task.
+        name (int): name of the task.
         project_id (str): associated project id
 
     Returns:
