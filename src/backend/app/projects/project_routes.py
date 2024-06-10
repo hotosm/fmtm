@@ -341,23 +341,37 @@ async def download_tiles(
 ):
     """Download the basemap tile archive for a project."""
     log.debug("Getting tile archive path from DB")
-    tiles_path = (
+    dbtile_obj = (
         db.query(db_models.DbTilesPath)
         .filter(db_models.DbTilesPath.id == str(tile_id))
         .first()
     )
-    log.info(f"User requested download for tiles: {tiles_path.path}")
+    if not dbtile_obj:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="Basemap ID does not exist!"
+        )
+    log.info(f"User requested download for tiles: {dbtile_obj.path}")
 
-    project_id = tiles_path.project_id
+    project_id = dbtile_obj.project_id
     project = await project_crud.get_project(db, project_id)
-    filename = Path(tiles_path.path).name.replace(
+    filename = Path(dbtile_obj.path).name.replace(
         f"{project_id}_", f"{project.project_name_prefix}_"
     )
     log.debug(f"Sending tile archive to user: {filename}")
 
+    if (tiles_path := Path(filename).suffix) == ".mbtiles":
+        tiles_mime_type = "application/vnd.mapbox-vector-tile"
+    elif tiles_path == ".pmtiles":
+        tiles_mime_type = "application/vnd.pmtiles"
+    else:
+        tiles_mime_type = "application/vnd.sqlite3"
+
     return FileResponse(
-        tiles_path.path,
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        dbtile_obj.path,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Type": tiles_mime_type,
+        },
     )
 
 
