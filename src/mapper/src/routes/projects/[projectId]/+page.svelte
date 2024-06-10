@@ -1,11 +1,14 @@
 <script lang="ts">
 	import '@openlayers-elements/core/ol-map';
 	import '@openlayers-elements/maps/ol-layer-openstreetmap';
-	import '@hotosm/ui/components/Toolbar';
-	import '@hotosm/ui/components/Tracking';
+	import '@hotosm/ui/components/toolbar/toolbar';
+
+	import type { ProjectData } from "./+page";
+
+	export let data: ProjectData;
 </script>
 
-<hot-tracking site-id="28" domain="fmtm.hotosm.org"></hot-tracking>
+<h1>{data.project_info.name}</h1>
 <hot-toolbar></hot-toolbar>
 <ol-map
 	style="width: calc(100vw - 16px); height: 80vh; display: inline-block"
