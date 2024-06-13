@@ -275,7 +275,38 @@ class Settings(BaseSettings):
             return None
         return v
 
-    # Used for temporary auth feature
+    ALGORITHM: str = "RS256"
+    AUTH_PRIVATE_KEY_PATH: str
+    AUTH_PUBLIC_KEY_PATH: str
+    AUTH_PRIVATE_KEY: Optional[str] = None
+    AUTH_PUBLIC_KEY: Optional[str] = None
+
+    @field_validator("AUTH_PRIVATE_KEY", mode="before")
+    @classmethod
+    def load_private_key(cls, v: Optional[str], info: ValidationInfo) -> str:
+        """Loads the private key for authentication."""
+        if v:
+            try:
+                with open(info.data.get("AUTH_PRIVATE_KEY_PATH"), "r") as f:
+                    public_key = f.read()
+                    return public_key
+            except Exception as e:
+                raise ValueError(f"Error reading public key: {e}") from e
+        return str(v)
+
+    @field_validator("AUTH_PUBLIC_KEY", mode="before")
+    @classmethod
+    def load_public_key(cls, v: Optional[str], info: ValidationInfo) -> str:
+        """Loads the public key for authentication."""
+        if v:
+            try:
+                with open(info.data.get("AUTH_PUBLIC_KEY_PATH"), "r") as f:
+                    public_key = f.read()
+                    return public_key
+            except Exception as e:
+                raise ValueError(f"Error reading public key: {e}") from e
+        return str(v)
+
     OSM_SVC_ACCOUNT_TOKEN: Optional[str] = None
 
     @field_validator("OSM_SVC_ACCOUNT_TOKEN", mode="before")

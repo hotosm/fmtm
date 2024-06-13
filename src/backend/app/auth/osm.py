@@ -21,6 +21,7 @@
 import os
 from typing import Optional
 
+import jwt
 from fastapi import Header, HTTPException, Request
 from loguru import logger as log
 from osm_login_python.core import Auth
@@ -68,8 +69,6 @@ async def login_required(
             role=UserRole.ADMIN,
         )
 
-    osm_auth = await init_osm_auth()
-
     # Attempt extract from cookie if access token not passed
     if not access_token:
         cookie_name = settings.FMTM_DOMAIN.replace(".", "_")
@@ -80,10 +79,47 @@ async def login_required(
         raise HTTPException(status_code=401, detail="No access token provided")
 
     try:
-        osm_user = osm_auth.deserialize_access_token(access_token)
+        token_data = verify_access_token(access_token)
     except ValueError as e:
         log.error(e)
         log.error("Failed to deserialise access token")
         raise HTTPException(status_code=401, detail="Access token not valid") from e
 
-    return AuthUser(**osm_user)
+    return AuthUser(**token_data)
+
+
+def create_access_token(payload: dict) -> str:
+    """Generates an access token for the specified user.
+
+    Args:
+        payload (dict): user data for which the access token is being generated.
+
+    Returns:
+        str: The generated access token.
+    """
+    private_key = settings.AUTH_PRIVATE_KEY
+    return jwt.encode(payload, str(private_key), algorithm=settings.ALGORITHM)
+
+
+def verify_access_token(token: str):
+    """Verifies the access token and returns the payload if valid.
+
+    Args:
+        token (str): The access token to be verified.
+
+    Returns:
+        dict: The payload of the access token if verification is successful.
+
+    Raises:
+        HTTPException: If the token has expired or credentials could not be validated.
+    """
+    try:
+        public_key = settings.AUTH_PUBLIC_KEY
+        return jwt.decode(token, str(public_key), algorithms=[settings.ALGORITHM])
+    except jwt.ExpiredSignatureError as e:
+        raise HTTPException(status_code=401, detail="Token has expired") from e
+    except Exception as e:
+        print(e)
+        raise HTTPException(
+            status_code=401, detail="Could not validate credentials"
+        ) from e

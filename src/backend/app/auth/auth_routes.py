@@ -18,6 +18,7 @@
 
 """Auth routes, to login, logout, and get user details."""
 
+import time
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -26,7 +27,7 @@ from loguru import logger as log
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.auth.osm import AuthUser, init_osm_auth, login_required
+from app.auth.osm import AuthUser, create_access_token, init_osm_auth, login_required
 from app.config import settings
 from app.db import database
 from app.models.enums import HTTPStatus, UserRole
@@ -83,19 +84,27 @@ async def callback(request: Request, osm_auth=Depends(init_osm_auth)):
     log.debug(f"Access token returned of length {len(access_token)}")
     response = Response(status_code=HTTPStatus.OK)
 
+    osm_user = osm_auth.deserialize_access_token(access_token)
+    user_data = {
+        "sub": f"fmtm|{osm_user['id']}",
+        "aud": "fmtm.localhost:8000",
+        "iat": int(time.time()),
+        "exp": int(time.time()) + 86400,
+        "username": osm_user["username"],
+        "email": osm_user.get("email"),
+        "img_url": osm_user.get("img_url"),
+        "role": UserRole.MAPPER,
+    }
+    jwt_token = create_access_token(user_data)
+
     # Set cookie
     cookie_name = settings.FMTM_DOMAIN.replace(".", "_")
-    log.debug(
-        f"Setting cookie in response named '{cookie_name}' with params: "
-        f"max_age=31536000 | expires=31536000 | path='/' | "
-        f"domain={settings.FMTM_DOMAIN} | httponly=True | samesite='lax' | "
-        f"secure={False if settings.DEBUG else True}"
-    )
+    response = Response(status_code=200)
     response.set_cookie(
         key=cookie_name,
-        value=access_token,
-        max_age=31536000,  # OSM currently has no expiry
-        expires=31536000,  # OSM currently has no expiry
+        value=jwt_token,
+        max_age=31536000,
+        expires=31536000,
         path="/",
         domain=settings.FMTM_DOMAIN,
         secure=False if settings.DEBUG else True,
@@ -248,29 +257,24 @@ async def temp_login(
     Returns:
         Response: The response object containing the access token as a cookie.
     """
-    access_token = settings.OSM_SVC_ACCOUNT_TOKEN
+    username = "temp"
+    user_data = {
+        "sub": f"fmtm|{username}",
+        "aud": settings.FMTM_DOMAIN,
+        "iat": int(time.time()),
+        "exp": int(time.time()) + 86400,
+        "username": username,
+        "role": UserRole.MAPPER,
+    }
+    jwt_token = create_access_token(user_data)
 
-    if not access_token:
-        raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN,
-            detail=(
-                "OSM_SVC_ACCOUNT_TOKEN variable is not set. Temp login not possible."
-            ),
-        )
-
-    response = Response(status_code=HTTPStatus.OK)
+    response = Response(status_code=200)
     cookie_name = settings.FMTM_DOMAIN.replace(".", "_")
-    log.debug(
-        f"Setting TEMP cookie in response named '{cookie_name}' with params: "
-        f"max_age=604800 | expires=604800 | path='/' | "
-        f"domain={settings.FMTM_DOMAIN} | httponly=True | samesite='lax' | "
-        f"secure={False if settings.DEBUG else True}"
-    )
     response.set_cookie(
         key=cookie_name,
-        value=access_token,
-        max_age=604800,
-        expires=604800,  # expiry set to 7 days,
+        value=jwt_token,
+        max_age=86400,
+        expires=86400,
         path="/",
         domain=settings.FMTM_DOMAIN,
         secure=False if settings.DEBUG else True,
