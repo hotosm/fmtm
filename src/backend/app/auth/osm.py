@@ -115,7 +115,12 @@ def verify_access_token(token: str):
     """
     try:
         public_key = settings.AUTH_PUBLIC_KEY
-        return jwt.decode(token, str(public_key), algorithms=[settings.ALGORITHM])
+        return jwt.decode(
+            token,
+            str(public_key),
+            algorithms=[settings.ALGORITHM],
+            audience=settings.FMTM_DOMAIN,
+        )
     except jwt.ExpiredSignatureError as e:
         raise HTTPException(status_code=401, detail="Token has expired") from e
     except Exception as e:

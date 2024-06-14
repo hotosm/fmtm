@@ -86,10 +86,11 @@ async def callback(request: Request, osm_auth=Depends(init_osm_auth)):
 
     osm_user = osm_auth.deserialize_access_token(access_token)
     user_data = {
+        "id": osm_user["id"],
         "sub": f"fmtm|{osm_user['id']}",
-        "aud": "fmtm.localhost:8000",
+        "aud": settings.FMTM_DOMAIN,
         "iat": int(time.time()),
-        "exp": int(time.time()) + 86400,
+        "exp": int(time.time()) + 86400,  # expiry set to 1 day
         "username": osm_user["username"],
         "email": osm_user.get("email"),
         "img_url": osm_user.get("img_url"),
@@ -257,13 +258,15 @@ async def temp_login(
     Returns:
         Response: The response object containing the access token as a cookie.
     """
-    username = "temp"
+    username = "Temp User"
     user_data = {
+        "id": 99,
         "sub": f"fmtm|{username}",
         "aud": settings.FMTM_DOMAIN,
         "iat": int(time.time()),
-        "exp": int(time.time()) + 86400,
+        "exp": int(time.time()) + 86400,  # expiry set to 1 day
         "username": username,
+        "img_url": None,
         "role": UserRole.MAPPER,
     }
     jwt_token = create_access_token(user_data)

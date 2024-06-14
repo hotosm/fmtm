@@ -285,7 +285,7 @@ class Settings(BaseSettings):
     @classmethod
     def load_private_key(cls, v: Optional[str], info: ValidationInfo) -> str:
         """Loads the private key for authentication."""
-        if v:
+        if not v:
             try:
                 with open(info.data.get("AUTH_PRIVATE_KEY_PATH"), "r") as f:
                     public_key = f.read()
@@ -298,7 +298,7 @@ class Settings(BaseSettings):
     @classmethod
     def load_public_key(cls, v: Optional[str], info: ValidationInfo) -> str:
         """Loads the public key for authentication."""
-        if v:
+        if not v:
             try:
                 with open(info.data.get("AUTH_PUBLIC_KEY_PATH"), "r") as f:
                     public_key = f.read()
