@@ -21,17 +21,17 @@ import json
 from io import BytesIO
 from typing import Optional
 
-import geojson
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
+from shapely.geometry import box
 from sqlalchemy.orm import Session
 
 from app.auth.osm import AuthUser, login_required
 from app.auth.roles import mapper, project_admin
 from app.central import central_crud
 from app.db import database, db_models, postgis_utils
-from app.models.enums import HTTPStatus, ReviewStateEnum
+from app.models.enums import ReviewStateEnum
 from app.projects import project_crud, project_deps
 from app.submissions import submission_crud, submission_schemas
 
@@ -554,35 +554,49 @@ async def download_submission_geojson(
         HTTPException: If loading JSON submission fails.
     """
     project = await project_deps.get_project_by_id(db, project_id)
-    data = await submission_crud.get_submission_by_project(project_id, {}, db)
-    submission_json = data.get("value", [])
-
-    if not submission_json:
-        raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail="Loading JSON submission failed",
-        )
-
-    all_features = []
-    for submission in submission_json:
-        keys_to_remove = ["meta", "__id", "__system"]
-        for key in keys_to_remove:
-            submission.pop(key)
-
-        data = {}
-        central_crud.flatten_json(submission, data)
-
-        geojson_geom = await postgis_utils.javarosa_to_geojson_geom(
-            data.pop("xlocation", {}), geom_type="Polygon"
-        )
-
-        feature = geojson.Feature(geometry=geojson_geom, properties=data)
-        all_features.append(feature)
-
-    featcol = geojson.FeatureCollection(features=all_features)
-    submission_geojson = BytesIO(json.dumps(featcol).encode("utf-8"))
+    submissions = await submission_crud.get_submission_geojson(project_id, db)
+    submission_geojson = BytesIO(json.dumps(submissions).encode("utf-8"))
     filename = project.project_name_prefix
 
     headers = {"Content-Disposition": f"attachment; filename={filename}.geojson"}
 
     return Response(submission_geojson.getvalue(), headers=headers)
+
+
+@router.get("/conflate_submission_geojson/{project_id}")
+async def conflate_geojson(
+    project_id: int, remove_conflated=False, db: Session = Depends(database.get_db)
+):
+    """Conflates the input GeoJSON with OpenStreetMap data.
+
+    Args:
+        project_id(int): id of project in FMTM.
+        remove_conflated(bool): returns geojson which are not overlapped with osm data.
+        db (Session): The database session.
+
+    Returns:
+        str: Updated GeoJSON string with conflated features.
+    """
+    geojsonn = await submission_crud.get_submission_geojson(project_id, db)
+
+    input_features = geojsonn["features"]
+    input_bbox = postgis_utils.calculate_bbox(input_features)
+
+    bbox_geometry = box(*input_bbox)
+    bbox_geojson_str = json.dumps(bbox_geometry.__geo_interface__)
+
+    snapshot_data = postgis_utils.request_snapshot(bbox_geojson_str)
+    task_link = snapshot_data["track_link"]
+    task_result = postgis_utils.poll_task_status(task_link)
+    if task_result["status"] != "SUCCESS":
+        raise RuntimeError(
+            "Raw Data API did not respond correctly. Please try again later."
+        )
+
+    snapshot_url = task_result["result"]["download_url"]
+    osm_features = postgis_utils.download_snapshot(snapshot_url)
+    geojsonn["features"] = postgis_utils.conflate_features(
+        input_features, osm_features["features"], remove_conflated
+    )
+
+    return geojsonn
