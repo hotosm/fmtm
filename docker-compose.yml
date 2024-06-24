@@ -220,7 +220,7 @@ services:
     # Temp workaround until https://github.com/postgis/docker-postgis/issues/216
     build:
       context: https://github.com/postgis/docker-postgis.git#master:14-3.4/alpine
-    command: -c 'max_connections=300'
+    command: -c 'max_connections=300' -c 'wal_level=logical'
     volumes:
       - fmtm_db_data:/var/lib/postgresql/data/
     environment:
@@ -238,6 +238,27 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+
+  electric:
+    image: "electricsql/electric:${ELECTRIC_TAG:-0.12.1}"
+    depends_on:
+      fmtm-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${FMTM_DB_USER:-fmtm}:${FMTM_DB_PASSWORD:-fmtm}@${FMTM_DB_HOST:-fmtm-db}/${FMTM_DB_NAME:-fmtm}
+      DATABASE_REQUIRE_SSL: false
+      ELECTRIC_WRITE_TO_PG_MODE: direct_writes
+      PG_PROXY_PASSWORD: proxy_password
+      AUTH_MODE: insecure
+      # AUTH_JWT_ALG: RS256
+      # AUTH_JWT_KEY: 
+      # AUTH_JWT_NAMESPACE: 
+    ports:
+      - "5133:5133"
+      - "65432:65432"
+    networks:
+      - fmtm-net
+    restart: "unless-stopped"
 
   central-db:
     profiles: ["", "central"]
