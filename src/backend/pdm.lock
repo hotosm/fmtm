@@ -1662,7 +1662,7 @@ files = [
 
 [[package]]
 name = "osm-fieldwork"
-version = "0.11.2"
+version = "0.12.4"
 requires_python = ">=3.10"
 summary = "Processing field data from ODK to OpenStreetMap format."
 dependencies = [
@@ -1687,8 +1687,8 @@ dependencies = [
     "xmltodict>=0.13.0",
 ]
 files = [
-    {file = "osm-fieldwork-0.11.2.tar.gz", hash = "sha256:472edd6873a173d526b636a01abb39cb558609d9df14da19cfe82413945954db"},
-    {file = "osm_fieldwork-0.11.2-py3-none-any.whl", hash = "sha256:be919fc058811253c7ee9276822d9160e2dff170d777bbf3e95d7fc40ec26def"},
+    {file = "osm-fieldwork-0.12.4.tar.gz", hash = "sha256:d7ecc68080030c092bfbcd4df61b9bb6cfc7aa03e1a7a03e5b73065c552dbe70"},
+    {file = "osm_fieldwork-0.12.4-py3-none-any.whl", hash = "sha256:5d9f10c87f0247fddbed6db9a87bf6023ecd294e01c563fbeb5b829ee6f9dc36"},
 ]
 
 [[package]]

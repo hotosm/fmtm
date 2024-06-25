@@ -46,7 +46,7 @@ dependencies = [
     "cryptography>=42.0.1",
     "defusedxml>=0.7.1",
     "osm-login-python==1.0.3",
-    "osm-fieldwork==0.11.2",
+    "osm-fieldwork==0.12.4",
     "osm-rawdata==0.3.0",
     "fmtm-splitter==1.2.2",
     "pyjwt>=2.8.0",
@@ -137,7 +137,7 @@ asyncio_mode="auto"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "2024.3.0"
+version = "2024.3.1"
 version_files = [
     "pyproject.toml:version",
     "app/__version__.py",
