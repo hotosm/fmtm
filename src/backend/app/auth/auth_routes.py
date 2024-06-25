@@ -27,10 +27,19 @@ from loguru import logger as log
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.auth.osm import AuthUser, create_access_token, init_osm_auth, login_required
+from app.auth.osm import (
+    AuthUser,
+    create_tokens,
+    extract_refresh_token_from_cookie,
+    init_osm_auth,
+    login_required,
+    refresh_access_token,
+    set_cookies,
+    verify_token,
+)
 from app.config import settings
 from app.db import database
-from app.models.enums import HTTPStatus, UserRole
+from app.models.enums import UserRole
 
 router = APIRouter(
     prefix="/auth",
@@ -82,7 +91,6 @@ async def callback(request: Request, osm_auth=Depends(init_osm_auth)):
     # Get access token
     access_token = osm_auth.callback(callback_url).get("access_token")
     log.debug(f"Access token returned of length {len(access_token)}")
-    response = Response(status_code=HTTPStatus.OK)
 
     osm_user = osm_auth.deserialize_access_token(access_token)
     user_data = {
@@ -96,23 +104,8 @@ async def callback(request: Request, osm_auth=Depends(init_osm_auth)):
         "img_url": osm_user.get("img_url"),
         "role": UserRole.MAPPER,
     }
-    jwt_token = create_access_token(user_data)
-
-    # Set cookie
-    cookie_name = settings.FMTM_DOMAIN.replace(".", "_")
-    response = Response(status_code=200)
-    response.set_cookie(
-        key=cookie_name,
-        value=jwt_token,
-        max_age=31536000,
-        expires=31536000,
-        path="/",
-        domain=settings.FMTM_DOMAIN,
-        secure=False if settings.DEBUG else True,
-        httponly=True,
-        samesite="lax",
-    )
-    return response
+    access_token, refresh_token = create_tokens(user_data)
+    return set_cookies(access_token, refresh_token)
 
 
 @router.get("/logout/")
@@ -231,15 +224,35 @@ async def my_data(
     return await get_or_create_user(db, user_data)
 
 
-@router.get("/introspect", response_model=AuthUser)
-async def check_login(
-    user_data: AuthUser = Depends(login_required),
+@router.get("/refresh")
+async def refresh_token(
+    request: Request,
 ):
     """Verifies the validity of login cookies.
 
     Returns True if authenticated, False otherwise.
     """
-    return user_data
+    refresh_token = extract_refresh_token_from_cookie(request)
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="No tokens provided")
+
+    token_data = verify_token(refresh_token)
+    access_token = refresh_access_token(token_data)
+
+    response = Response(status_code=200)
+    cookie_name = settings.FMTM_DOMAIN.replace(".", "_")
+    response.set_cookie(
+        key=cookie_name,
+        value=access_token,
+        max_age=86400,
+        expires=86400,
+        path="/",
+        domain=settings.FMTM_DOMAIN,
+        secure=False if settings.DEBUG else True,
+        httponly=True,
+        samesite="lax",
+    )
+    return response
 
 
 @router.get("/temp-login")
@@ -264,24 +277,10 @@ async def temp_login(
         "sub": f"fmtm|{username}",
         "aud": settings.FMTM_DOMAIN,
         "iat": int(time.time()),
-        "exp": int(time.time()) + 86400,  # expiry set to 1 day
+        "exp": int(time.time()) + 86400 * 7,  # expiry set to 7 days
         "username": username,
         "img_url": None,
         "role": UserRole.MAPPER,
     }
-    jwt_token = create_access_token(user_data)
-
-    response = Response(status_code=200)
-    cookie_name = settings.FMTM_DOMAIN.replace(".", "_")
-    response.set_cookie(
-        key=cookie_name,
-        value=jwt_token,
-        max_age=86400,
-        expires=86400,
-        path="/",
-        domain=settings.FMTM_DOMAIN,
-        secure=False if settings.DEBUG else True,
-        httponly=True,
-        samesite="lax",
-    )
-    return response
+    access_token, refresh_token = create_tokens(user_data)
+    return set_cookies(access_token, refresh_token)
