@@ -11,14 +11,8 @@ import {
   ProjectSubmissionInfographicsService,
   ValidatedVsMappedInfographicsService,
 } from '@/api/SubmissionService';
-import {
-  submissionContributorsTypes,
-  submissionInfographicsTypes,
-  validatedVsMappedInfographicsTypes,
-} from '@/models/submission/submissionModel';
-import { taskSubmissionInfoType } from '@/models/task/taskModel';
-
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
+import { useAppSelector } from '@/types/reduxTypes';
 
 const lineKeyData = [
   {
@@ -100,27 +94,15 @@ const SubmissionsInfographics = ({ toggleView }) => {
   const params = CoreModules.useParams();
   const projectId = params.projectId;
 
-  const submissionInfographicsData: submissionInfographicsTypes[] = CoreModules.useAppSelector(
-    (state) => state.submission.submissionInfographics,
-  );
-  const submissionInfographicsLoading: boolean = CoreModules.useAppSelector(
-    (state) => state.submission.submissionInfographicsLoading,
-  );
-  const submissionContributorsData: submissionContributorsTypes[] = CoreModules.useAppSelector(
-    (state) => state.submission.submissionContributors,
-  );
-  const submissionContributorsLoading: boolean = CoreModules.useAppSelector(
-    (state) => state.submission.submissionContributorsLoading,
-  );
+  const submissionInfographicsData = useAppSelector((state) => state.submission.submissionInfographics);
+  const submissionInfographicsLoading = useAppSelector((state) => state.submission.submissionInfographicsLoading);
+  const submissionContributorsData = useAppSelector((state) => state.submission.submissionContributors);
+  const submissionContributorsLoading = useAppSelector((state) => state.submission.submissionContributorsLoading);
   const [submissionProjection, setSubmissionProjection] = useState<10 | 30>(10);
-  const validatedVsMappedInfographics: validatedVsMappedInfographicsTypes[] = CoreModules.useAppSelector(
-    (state) => state.submission.validatedVsMappedInfographics,
-  );
-  const validatedVsMappedLoading: boolean = CoreModules.useAppSelector(
-    (state) => state.submission.validatedVsMappedLoading,
-  );
-  const taskInfo: taskSubmissionInfoType[] = CoreModules.useAppSelector((state) => state.task.taskInfo);
-  const taskLoading: boolean = CoreModules.useAppSelector((state) => state.task.taskLoading);
+  const validatedVsMappedInfographics = useAppSelector((state) => state.submission.validatedVsMappedInfographics);
+  const validatedVsMappedLoading = useAppSelector((state) => state.submission.validatedVsMappedLoading);
+  const taskInfo = useAppSelector((state) => state.task.taskInfo);
+  const taskLoading = useAppSelector((state) => state.task.taskLoading);
 
   useEffect(() => {
     dispatch(
