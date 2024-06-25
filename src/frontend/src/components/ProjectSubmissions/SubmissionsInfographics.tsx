@@ -119,7 +119,7 @@ const SubmissionsInfographics = ({ toggleView }) => {
   const validatedVsMappedLoading: boolean = CoreModules.useAppSelector(
     (state) => state.submission.validatedVsMappedLoading,
   );
-  const taskInfo: taskSubmissionInfoType = CoreModules.useAppSelector((state) => state.task.taskInfo);
+  const taskInfo: taskSubmissionInfoType[] = CoreModules.useAppSelector((state) => state.task.taskInfo);
   const taskLoading: boolean = CoreModules.useAppSelector((state) => state.task.taskLoading);
 
   useEffect(() => {
@@ -163,7 +163,6 @@ const SubmissionsInfographics = ({ toggleView }) => {
 
   const totalFeatureCount = taskInfo.reduce((total, task) => total + task.feature_count, 0);
   const totalSubmissionCount = taskInfo.reduce((total, task) => total + task.submission_count, 0);
-  const totalTaskCount = taskInfo.length;
   const projectProgressData = [
     {
       names: 'Current',
@@ -239,7 +238,7 @@ const SubmissionsInfographics = ({ toggleView }) => {
                 />
               ) : (
                 <div className="fmtm-w-full fmtm-h-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-text-3xl fmtm-text-gray-400">
-                  No tasks validated or mapped yet!
+                  No Tasks Validated or Mapped in the Last 30 Days
                 </div>
               )
             }
