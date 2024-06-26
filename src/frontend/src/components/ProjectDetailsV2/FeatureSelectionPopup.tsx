@@ -153,8 +153,6 @@ const TaskFeatureSelectionPopup = ({
                       taskBoundaryData,
                       currentProjectId,
                       taskFeature,
-                      map,
-                      view,
                       taskId,
                       authDetails,
                       { project_id: currentProjectId },

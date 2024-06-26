@@ -77,8 +77,6 @@ export default function Dialog({ taskId, feature, map, view }) {
             taskBoundaryData,
             currentProjectId,
             feature,
-            map,
-            view,
             taskId,
             authDetailsCopy,
             { project_id: currentProjectId },

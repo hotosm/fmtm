@@ -2,9 +2,8 @@ import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { HomeActions } from '@/store/slices/HomeSlice';
 import CoreModules from '@/shared/CoreModules';
 import { CommonActions } from '@/store/slices/CommonSlice';
-import { task_status } from '@/types/enums';
 
-const UpdateTaskStatus = (url, style, existingData, currentProjectId, feature, map, view, taskId, body, params) => {
+const UpdateTaskStatus = (url, style, existingData, currentProjectId, feature, taskId, body, params) => {
   return async (dispatch) => {
     const updateTask = async (url, existingData, body, feature, params) => {
       try {
