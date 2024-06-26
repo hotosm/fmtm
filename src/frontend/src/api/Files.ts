@@ -10,10 +10,18 @@ function base64zlibencode(string: string) {
   return window.btoa(String.fromCodePoint(...deflate(new TextEncoder().encode(string))));
 }
 
-export const GetProjectQrCode = (odkToken: string, projectName: string, osmUser: string): { qrcode: string } => {
+export const GetProjectQrCode = (
+  odkToken: string | undefined,
+  projectName: string | undefined,
+  osmUser: string,
+): { qrcode: string } => {
   const [qrcode, setQrcode] = useState('');
   useEffect(() => {
-    const fetchProjectFileById = async (odkToken: string, projectName: string, osmUser: string) => {
+    const fetchProjectFileById = async (
+      odkToken: string | undefined,
+      projectName: string | undefined,
+      osmUser: string,
+    ) => {
       if (odkToken === '') {
         setQrcode('');
         return;
