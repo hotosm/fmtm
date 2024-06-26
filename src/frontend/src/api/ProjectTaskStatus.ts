@@ -2,10 +2,20 @@ import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { HomeActions } from '@/store/slices/HomeSlice';
 import CoreModules from '@/shared/CoreModules';
 import { CommonActions } from '@/store/slices/CommonSlice';
+import { projectTaskBoundriesType } from '@/models/project/projectModel';
 
-const UpdateTaskStatus = (url, style, existingData, currentProjectId, feature, taskId, body, params) => {
+const UpdateTaskStatus = (
+  url: string,
+  style: any,
+  existingData: projectTaskBoundriesType[],
+  currentProjectId: string,
+  feature: Record<string, any>,
+  taskId: number,
+  body: any,
+  params: { project_id: string },
+) => {
   return async (dispatch) => {
-    const updateTask = async (url, existingData, body, feature, params) => {
+    const updateTask = async (url: string, body: any, feature: Record<string, any>, params: string) => {
       try {
         dispatch(CommonActions.SetLoading(true));
 
@@ -49,7 +59,7 @@ const UpdateTaskStatus = (url, style, existingData, currentProjectId, feature, t
         );
       }
     };
-    await updateTask(url, existingData, body, feature, params);
+    await updateTask(url, body, feature, params);
   };
 };
 
