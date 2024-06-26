@@ -55,7 +55,7 @@ const ProjectDetailsV2 = () => {
   const [selectedTaskArea, setSelectedTaskArea] = useState<Record<string, any> | null>(null);
   console.log(selectedTaskArea, 'selectedTaskArea');
   const [selectedTaskFeature, setSelectedTaskFeature] = useState();
-  const [dataExtractUrl, setDataExtractUrl] = useState(null);
+  const [dataExtractUrl, setDataExtractUrl] = useState<string | undefined>();
   const [dataExtractExtent, setDataExtractExtent] = useState(null);
   const [taskBoundariesLayer, setTaskBoundariesLayer] = useState<null | Record<string, any>>(null);
   // Can pass a File object, or a string URL to be read by PMTiles
@@ -63,7 +63,7 @@ const ProjectDetailsV2 = () => {
   const [viewState, setViewState] = useState('project_info');
   const projectId: string = params.id;
   const defaultTheme = useAppSelector((state) => state.theme.hotTheme);
-  const state = CoreModules.useAppSelector((state) => state.project);
+  const state = useAppSelector((state) => state.project);
   const projectInfo = useAppSelector((state) => state.home.selectedProject);
   const selectedTask = useAppSelector((state) => state.task.selectedTask);
   const selectedFeatureProps = useAppSelector((state) => state.task.selectedFeatureProps);
@@ -103,7 +103,7 @@ const ProjectDetailsV2 = () => {
   //Fetch project for the first time
   useEffect(() => {
     dispatch(ProjectActions.SetNewProjectTrigger());
-    if (state.projectTaskBoundries.findIndex((project) => project.id == projectId) == -1) {
+    if (state.projectTaskBoundries.findIndex((project) => project.id.toString() === projectId) == -1) {
       dispatch(ProjectActions.SetProjectTaskBoundries([]));
       dispatch(ProjectById(state.projectTaskBoundries, projectId));
     } else {
@@ -113,7 +113,7 @@ const ProjectDetailsV2 = () => {
     if (Object.keys(state.projectInfo)?.length == 0) {
       dispatch(ProjectActions.SetProjectInfo(projectInfo));
     } else {
-      if (state.projectInfo.id != projectId) {
+      if (state.projectInfo.id?.toString() != projectId) {
         dispatch(ProjectActions.SetProjectInfo(projectInfo));
       }
     }
@@ -540,7 +540,7 @@ const ProjectDetailsV2 = () => {
                   className="!fmtm-text-base !fmtm-pr-2"
                 />
               </div>
-              <MapControlComponent map={map} projectName={state?.projectInfo?.title} />
+              <MapControlComponent map={map} projectName={state?.projectInfo?.title || ''} />
             </MapComponent>
             <div
               className="fmtm-absolute fmtm-top-4 fmtm-left-4 fmtm-bg-white fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-red-50 fmtm-duration-300 fmtm-border-[1px] sm:fmtm-hidden fmtm-cursor-pointer"
