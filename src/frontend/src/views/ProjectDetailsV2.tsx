@@ -556,7 +556,7 @@ const ProjectDetailsV2 = () => {
             )}
             {mobileFooterSelection === 'activities' && (
               <BottomSheet
-                body={<MobileActivitiesContents map={map} view={mainView} mapDivPostion={y} />}
+                body={<MobileActivitiesContents map={map} mainView={mainView} mapDivPostion={y} />}
                 onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
               />
             )}
