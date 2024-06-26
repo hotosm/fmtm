@@ -8,11 +8,12 @@ import CoreModules from '@/shared/CoreModules';
 import InfographicsCard from '@/components/ProjectSubmissions/InfographicsCard';
 import {
   ProjectContributorsService,
-  ProjectSubmissionInfographicsService,
+  // ProjectSubmissionInfographicsService,
   ValidatedVsMappedInfographicsService,
 } from '@/api/SubmissionService';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import { useAppSelector } from '@/types/reduxTypes';
+// import { task_status } from '@/types/enums';
 
 const lineKeyData = [
   {
@@ -83,6 +84,34 @@ const lineKeyData = [
   },
 ];
 
+type formSubmissionType = { date: string; count: number; label: string };
+// type validatedMappedType = { date: string; Validated: number; Mapped: number; label: string };
+
+// get date N days ago
+const dateNDaysAgo = (NDays: number) => {
+  return new Date(new Date().getTime() - NDays * 24 * 60 * 60 * 1000).toISOString();
+};
+
+// extract month & day in MM/DD format for chart date labels
+const getMonthDate = (date: string) => {
+  const splittedDate = date?.split('T')[0]?.split('-');
+  return `${splittedDate[1]}/${splittedDate[2]}`;
+};
+
+// generates an array of date strings for last 30 days
+// const generateLast30Days = (): string[] => {
+//   const last30Days: string[] = [];
+//   const today = new Date();
+
+//   for (let i = 0; i < 30; i++) {
+//     const date = new Date();
+//     date.setDate(today.getDate() - i);
+//     last30Days.push(date.toISOString().split('T')[0]);
+//   }
+
+//   return last30Days;
+// };
+
 const SubmissionsInfographics = ({ toggleView }) => {
   useDocumentTitle('Submission Infographics');
   const formSubmissionRef = useRef(null);
@@ -94,8 +123,8 @@ const SubmissionsInfographics = ({ toggleView }) => {
   const params = CoreModules.useParams();
   const projectId = params.projectId;
 
-  const submissionInfographicsData = useAppSelector((state) => state.submission.submissionInfographics);
-  const submissionInfographicsLoading = useAppSelector((state) => state.submission.submissionInfographicsLoading);
+  // const submissionInfographicsData = useAppSelector((state) => state.submission.submissionInfographics);
+  // const submissionInfographicsLoading = useAppSelector((state) => state.submission.submissionInfographicsLoading);
   const submissionContributorsData = useAppSelector((state) => state.submission.submissionContributors);
   const submissionContributorsLoading = useAppSelector((state) => state.submission.submissionContributorsLoading);
   const [submissionProjection, setSubmissionProjection] = useState<10 | 30>(10);
@@ -103,14 +132,118 @@ const SubmissionsInfographics = ({ toggleView }) => {
   const validatedVsMappedLoading = useAppSelector((state) => state.submission.validatedVsMappedLoading);
   const taskInfo = useAppSelector((state) => state.task.taskInfo);
   const taskLoading = useAppSelector((state) => state.task.taskLoading);
+  const entityOsmMapLoading = useAppSelector((state) => state.project.entityOsmMapLoading);
 
+  const entityList = useAppSelector((state) => state.project.entityOsmMap);
+  const updatedEntities = entityList?.filter((entity) => entity?.updated_at);
+  const today = new Date().toISOString();
+  const [formSubmissionsData, setFormSubmissionsData] = useState<formSubmissionType[]>([]);
+  // const [validatedVsMappedInfographics, setValidatedVsMappedInfographics] = useState<validatedMappedType[]>([]);
+
+  // data for validated vs mapped graph
   useEffect(() => {
-    dispatch(
-      ProjectSubmissionInfographicsService(
-        `${import.meta.env.VITE_API_URL}/submission/submission_page/${projectId}?days=${submissionProjection}`,
-      ),
-    );
-  }, [submissionProjection]);
+    if (updatedEntities?.length === 0) return;
+
+    // get entities updated within the last 10 or 30 days
+    const updatedEntityLastNDays = updatedEntities?.filter((entity) => {
+      const updatedDate = new Date(entity?.updated_at).toISOString();
+      return updatedDate >= dateNDaysAgo(submissionProjection) && updatedDate <= today;
+    });
+
+    // group entity submission according to date
+    const submissions: formSubmissionType[] = [];
+    updatedEntityLastNDays?.map((entity) => {
+      if (submissions?.find((submission) => submission.label === getMonthDate(entity.updated_at))) {
+        const index = submissions.findIndex((submission) => submission.label === getMonthDate(entity.updated_at));
+        submissions[index].count += 1;
+      } else {
+        submissions.push({
+          date: entity.updated_at?.split('T')[0],
+          label: getMonthDate(entity.updated_at),
+          count: 1,
+        });
+      }
+    });
+
+    // sort submissions by ascending date
+    const sortedEntitySubmissions = submissions?.sort((a, b) => {
+      const dateA: any = new Date(a.date);
+      const dateB: any = new Date(b.date);
+      return dateA - dateB;
+    });
+
+    setFormSubmissionsData(sortedEntitySubmissions);
+  }, [entityList, submissionProjection]);
+
+  // // data for planned vs actual graph
+  // useEffect(() => {
+  //   if (updatedEntities?.length === 0) return;
+
+  //   // get entities updated within the last 30 days
+  //   const mappedValidatedEntities = updatedEntities?.filter((entity) => {
+  //     const updatedDate = new Date(entity?.updated_at).toISOString();
+  //     return (
+  //       updatedDate >= dateNDaysAgo(30) &&
+  //       updatedDate <= today &&
+  //       (entity?.status === task_status['MAPPED'] || entity?.status === task_status['VALIDATED'])
+  //     );
+  //   });
+
+  //   // group entities by date with validated & mapped count
+  //   const validatedMappedGroupedEntity: validatedMappedType[] = mappedValidatedEntities?.reduce(
+  //     (acc: validatedMappedType[], entity) => {
+  //       const date = entity?.updated_at.split('T')[0];
+  //       const index = acc.findIndex((submission) => submission.date === date);
+  //       if (acc?.find((submission) => submission.date === date)) {
+  //         if (entity?.status === task_status['MAPPED']) {
+  //           acc[index].Mapped += 1;
+  //         }
+  //         if (entity?.status === task_status['VALIDATED']) {
+  //           acc[index].Validated += 1;
+  //         }
+  //       } else {
+  //         const splittedDate = date?.split('-');
+  //         const label = `${splittedDate[1]}/${splittedDate[2]}`;
+  //         if (entity?.status === task_status['MAPPED']) {
+  //           acc.push({ date: date, Validated: 0, Mapped: 1, label });
+  //         }
+  //         if (entity?.status === task_status['VALIDATED']) {
+  //           acc.push({ date: date, Validated: 1, Mapped: 0, label });
+  //         }
+  //       }
+  //       return acc;
+  //     },
+  //     [],
+  //   );
+
+  //   // populate mapped & validated count if no mapped or validated count in the time frame
+  //   const groupedEntityLast30Days = generateLast30Days()?.map((datex) => {
+  //     const mappedValidatedValue = validatedMappedGroupedEntity.find((entity) => entity?.date === datex);
+  //     if (mappedValidatedValue) {
+  //       return mappedValidatedValue;
+  //     } else {
+  //       const splittedDate = datex?.split('-');
+  //       const label = `${splittedDate[1]}/${splittedDate[2]}`;
+  //       return { date: datex, Validated: 0, Mapped: 0, label };
+  //     }
+  //   });
+
+  //   // sort grouped mapped & validated count by ascending date
+  //   const sortedEntitySubmissions = groupedEntityLast30Days?.sort((a, b) => {
+  //     const dateA: any = new Date(a.date);
+  //     const dateB: any = new Date(b.date);
+  //     return dateA - dateB;
+  //   });
+  //   setValidatedVsMappedInfographics(sortedEntitySubmissions);
+  // }, [entityList]);
+
+  // useEffect(() => {
+  //   dispatch(
+  //     ProjectSubmissionInfographicsService(
+  //       `${import.meta.env.VITE_API_URL}/submission/submission_page/${projectId}?days=${submissionProjection}`,
+  //     ),
+  //   );
+  // }, [submissionProjection]);
 
   useEffect(() => {
     dispatch(
@@ -169,15 +302,15 @@ const SubmissionsInfographics = ({ toggleView }) => {
             header="Form Submissions"
             subHeader={<FormSubmissionSubHeader />}
             body={
-              submissionInfographicsLoading ? (
+              entityOsmMapLoading ? (
                 <CoreModules.Skeleton className="!fmtm-w-full fmtm-h-full" />
-              ) : submissionInfographicsData.length > 0 ? (
+              ) : formSubmissionsData.length > 0 ? (
                 <CustomBarChart
-                  data={submissionInfographicsData}
+                  data={formSubmissionsData}
                   xLabel="Submission Data"
                   yLabel="Submission Count"
                   dataKey="count"
-                  nameKey="date"
+                  nameKey="label"
                 />
               ) : (
                 <div className="fmtm-w-full fmtm-h-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-text-3xl fmtm-text-gray-400">
