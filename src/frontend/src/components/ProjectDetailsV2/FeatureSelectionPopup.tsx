@@ -17,17 +17,9 @@ type TaskFeatureSelectionPopupPropType = {
   taskId: number;
   featureProperties: TaskFeatureSelectionProperties | null;
   taskFeature: Record<string, any>;
-  map: any;
-  view: any;
 };
 
-const TaskFeatureSelectionPopup = ({
-  featureProperties,
-  taskId,
-  taskFeature,
-  map,
-  view,
-}: TaskFeatureSelectionPopupPropType) => {
+const TaskFeatureSelectionPopup = ({ featureProperties, taskId, taskFeature }: TaskFeatureSelectionPopupPropType) => {
   const dispatch = CoreModules.useAppDispatch();
   const params = useParams();
   const geojsonStyles = MapStyles();

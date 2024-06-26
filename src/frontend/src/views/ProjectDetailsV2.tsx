@@ -52,7 +52,8 @@ const ProjectDetailsV2 = () => {
   const [legendRef, legendToggle, handleLegendToggle] = useOutsideClick();
 
   const [mainView, setView] = useState<any>();
-  const [selectedTaskArea, setSelectedTaskArea] = useState();
+  const [selectedTaskArea, setSelectedTaskArea] = useState<Record<string, any> | null>(null);
+  console.log(selectedTaskArea, 'selectedTaskArea');
   const [selectedTaskFeature, setSelectedTaskFeature] = useState();
   const [dataExtractUrl, setDataExtractUrl] = useState(null);
   const [dataExtractExtent, setDataExtractExtent] = useState(null);
@@ -583,21 +584,19 @@ const ProjectDetailsV2 = () => {
           </div>
         )}
       </div>
-      {selectedTaskArea != undefined && selectedTaskFeature === undefined && (
+      {selectedTaskArea != undefined && selectedTaskFeature === undefined && selectedTask && (
         <TaskSelectionPopup
           taskId={selectedTask}
           feature={selectedTaskArea}
           body={
             <div>
-              <DialogTaskActions map={map} view={mainView} feature={selectedTaskArea} taskId={selectedTask} />
+              <DialogTaskActions feature={selectedTaskArea} taskId={selectedTask} />
             </div>
           }
         />
       )}
       {selectedTaskFeature != undefined && selectedTask && selectedTaskArea && (
         <FeatureSelectionPopup
-          map={map}
-          view={mainView}
           featureProperties={selectedFeatureProps}
           taskId={selectedTask}
           taskFeature={selectedTaskArea}
