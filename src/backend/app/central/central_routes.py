@@ -17,7 +17,7 @@
 #
 """Routes to relay requests to ODK Central server."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -25,6 +25,7 @@ from sqlalchemy.orm import Session
 from app.auth.roles import project_admin
 from app.central import central_crud
 from app.db import database, db_models
+from app.models.enums import HTTPStatus
 from app.projects import project_deps
 
 router = APIRouter(
@@ -58,9 +59,8 @@ async def get_form_lists(
     return forms
 
 
-@router.post("/refresh_appuser_token/{project_id}")
+@router.post("/refresh_appuser_token")
 async def refresh_appuser_token(
-    project_id: int,
     current_user: db_models.DbUser = Depends(project_admin),
     db: Session = Depends(database.get_db),
 ):
@@ -74,17 +74,23 @@ async def refresh_appuser_token(
     Returns:
         The refreshed app user token.
     """
-    odk_credentials = await project_deps.get_odk_credentials(db, project_id)
-    project = await project_deps.get_project_by_id(db, project_id)
-    project_odk_id = project.odkid
-    db_xform = await project_deps.get_project_xform(db, project_id)
-    odk_token = await central_crud.get_appuser_token(
-        db_xform.odk_form_id, project_odk_id, odk_credentials, db
-    )
-    if odk_token:
+    project = current_user.get("project")
+    project_id = project.id
+    try:
+        odk_credentials = await project_deps.get_odk_credentials(db, project_id)
+        project_odk_id = project.odkid
+        db_xform = await project_deps.get_project_xform(db, project_id)
+        odk_token = await central_crud.get_appuser_token(
+            db_xform.odk_form_id, project_odk_id, odk_credentials, db
+        )
         project.odk_token = odk_token
-    db.commit()
-    return {
-        "status_code": 200,
-        "message": "App User token has been successfully refreshed.",
-    }
+        db.commit()
+        return {
+            "status_code": HTTPStatus.OK,
+            "message": "App User token has been successfully refreshed.",
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail={f"failed to refresh the appuser token for project{project_id}"},
+        ) from e
