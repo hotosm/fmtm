@@ -246,7 +246,7 @@ class ProjectPartialUpdate(BaseModel):
         return self.name.replace(" ", "_").lower()
 
 
-class ProjectUpdate(ProjectIn):
+class ProjectUpdate(ProjectUpload):
     """Update project."""
 
     pass
