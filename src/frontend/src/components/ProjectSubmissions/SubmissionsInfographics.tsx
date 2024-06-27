@@ -138,7 +138,6 @@ const SubmissionsInfographics = ({ toggleView }) => {
   const updatedEntities = entityList?.filter((entity) => entity?.updated_at);
   const today = new Date().toISOString();
   const [formSubmissionsData, setFormSubmissionsData] = useState<formSubmissionType[]>([]);
-  // const [validatedVsMappedInfographics, setValidatedVsMappedInfographics] = useState<validatedMappedType[]>([]);
 
   // data for validated vs mapped graph
   useEffect(() => {
@@ -174,68 +173,6 @@ const SubmissionsInfographics = ({ toggleView }) => {
 
     setFormSubmissionsData(sortedEntitySubmissions);
   }, [entityList, submissionProjection]);
-
-  // // data for planned vs actual graph
-  // useEffect(() => {
-  //   if (updatedEntities?.length === 0) return;
-
-  //   // get entities updated within the last 30 days
-  //   const mappedValidatedEntities = updatedEntities?.filter((entity) => {
-  //     const updatedDate = new Date(entity?.updated_at).toISOString();
-  //     return (
-  //       updatedDate >= dateNDaysAgo(30) &&
-  //       updatedDate <= today &&
-  //       (entity?.status === task_status['MAPPED'] || entity?.status === task_status['VALIDATED'])
-  //     );
-  //   });
-
-  //   // group entities by date with validated & mapped count
-  //   const validatedMappedGroupedEntity: validatedMappedType[] = mappedValidatedEntities?.reduce(
-  //     (acc: validatedMappedType[], entity) => {
-  //       const date = entity?.updated_at.split('T')[0];
-  //       const index = acc.findIndex((submission) => submission.date === date);
-  //       if (acc?.find((submission) => submission.date === date)) {
-  //         if (entity?.status === task_status['MAPPED']) {
-  //           acc[index].Mapped += 1;
-  //         }
-  //         if (entity?.status === task_status['VALIDATED']) {
-  //           acc[index].Validated += 1;
-  //         }
-  //       } else {
-  //         const splittedDate = date?.split('-');
-  //         const label = `${splittedDate[1]}/${splittedDate[2]}`;
-  //         if (entity?.status === task_status['MAPPED']) {
-  //           acc.push({ date: date, Validated: 0, Mapped: 1, label });
-  //         }
-  //         if (entity?.status === task_status['VALIDATED']) {
-  //           acc.push({ date: date, Validated: 1, Mapped: 0, label });
-  //         }
-  //       }
-  //       return acc;
-  //     },
-  //     [],
-  //   );
-
-  //   // populate mapped & validated count if no mapped or validated count in the time frame
-  //   const groupedEntityLast30Days = generateLast30Days()?.map((datex) => {
-  //     const mappedValidatedValue = validatedMappedGroupedEntity.find((entity) => entity?.date === datex);
-  //     if (mappedValidatedValue) {
-  //       return mappedValidatedValue;
-  //     } else {
-  //       const splittedDate = datex?.split('-');
-  //       const label = `${splittedDate[1]}/${splittedDate[2]}`;
-  //       return { date: datex, Validated: 0, Mapped: 0, label };
-  //     }
-  //   });
-
-  //   // sort grouped mapped & validated count by ascending date
-  //   const sortedEntitySubmissions = groupedEntityLast30Days?.sort((a, b) => {
-  //     const dateA: any = new Date(a.date);
-  //     const dateB: any = new Date(b.date);
-  //     return dateA - dateB;
-  //   });
-  //   setValidatedVsMappedInfographics(sortedEntitySubmissions);
-  // }, [entityList]);
 
   // useEffect(() => {
   //   dispatch(
@@ -296,7 +233,7 @@ const SubmissionsInfographics = ({ toggleView }) => {
     <div className="fmtm-flex fmtm-flex-col fmtm-gap-5">
       {toggleView}
       <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5 lg:fmtm-gap-10">
-        <div className="lg:fmtm-w-[70%]">
+        <div className="lg:fmtm-w-[60%] xl:fmtm-w-[70%]">
           <InfographicsCard
             cardRef={formSubmissionRef}
             header="Form Submissions"
@@ -320,7 +257,7 @@ const SubmissionsInfographics = ({ toggleView }) => {
             }
           />
         </div>
-        <div className="lg:fmtm-w-[30%]">
+        <div className="lg:fmtm-w-[40%] xl:fmtm-w-[30%]">
           <InfographicsCard
             cardRef={projectProgressRef}
             header="Project Progress"
@@ -335,7 +272,7 @@ const SubmissionsInfographics = ({ toggleView }) => {
         </div>
       </div>
       <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5 lg:fmtm-gap-10">
-        <div className="lg:fmtm-w-[70%]">
+        <div className="lg:fmtm-w-[60%] xl:fmtm-w-[70%]">
           <InfographicsCard
             cardRef={plannedVsActualRef}
             header="Validated vs Mapped Task"
@@ -359,7 +296,7 @@ const SubmissionsInfographics = ({ toggleView }) => {
             }
           />
         </div>
-        <div className="lg:fmtm-w-[30%]">
+        <div className="lg:fmtm-w-[40%] xl:fmtm-w-[30%]">
           <InfographicsCard
             cardRef={totalContributorsRef}
             header={`Total Contributors: ${submissionContributorsData.length}`}
