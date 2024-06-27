@@ -94,14 +94,13 @@ async def callback(request: Request, osm_auth=Depends(init_osm_auth)):
 
     osm_user = osm_auth.deserialize_access_token(access_token)
     user_data = {
-        "id": osm_user["id"],
         "sub": f"fmtm|{osm_user['id']}",
         "aud": settings.FMTM_DOMAIN,
         "iat": int(time.time()),
         "exp": int(time.time()) + 86400,  # expiry set to 1 day
         "username": osm_user["username"],
         "email": osm_user.get("email"),
-        "img_url": osm_user.get("img_url"),
+        "picture": osm_user.get("img_url"),
         "role": UserRole.MAPPER,
     }
     access_token, refresh_token = create_tokens(user_data)
@@ -157,7 +156,7 @@ async def get_or_create_user(
             {
                 "user_id": user_data.id,
                 "username": user_data.username,
-                "profile_img": user_data.img_url,
+                "profile_img": user_data.picture,
                 "role": role,
                 "mapping_level": "BEGINNER",
                 "current_date": datetime.now(timezone.utc),
@@ -272,13 +271,12 @@ async def temp_login(
     """
     username = "svcfmtm"
     user_data = {
-        "id": 20386219,
-        "sub": f"fmtm|{username}",
+        "sub": "fmtm|20386219",
         "aud": settings.FMTM_DOMAIN,
         "iat": int(time.time()),
         "exp": int(time.time()) + 86400 * 7,  # expiry set to 7 days
         "username": username,
-        "img_url": None,
+        "picture": None,
         "role": UserRole.MAPPER,
     }
     access_token, refresh_token = create_tokens(user_data)

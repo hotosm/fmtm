@@ -26,7 +26,7 @@ import jwt
 from fastapi import Header, HTTPException, Request, Response
 from loguru import logger as log
 from osm_login_python.core import Auth
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, PrivateAttr, computed_field
 
 from app.config import settings
 from app.models.enums import UserRole
@@ -41,10 +41,23 @@ class AuthUser(BaseModel):
 
     model_config = ConfigDict(use_enum_values=True)
 
-    id: int
     username: str
-    img_url: Optional[str] = None
+    picture: Optional[str] = None
     role: Optional[UserRole] = UserRole.MAPPER
+
+    _sub: str = PrivateAttr()  # it won't return this field
+
+    def __init__(self, sub: str, **data):
+        """Initializes the AuthUser class."""
+        super().__init__(**data)
+        self._sub = sub
+
+    @computed_field
+    @property
+    def id(self) -> Optional[str]:
+        """Compute id from sub field."""
+        sub = self._sub
+        return (sub.split("|"))[1]
 
 
 async def init_osm_auth():
@@ -65,7 +78,7 @@ async def login_required(
     """Dependency to inject into endpoints requiring login."""
     if settings.DEBUG:
         return AuthUser(
-            id=1,
+            sub="fmtm|1",
             username="localadmin",
             role=UserRole.ADMIN,
         )
