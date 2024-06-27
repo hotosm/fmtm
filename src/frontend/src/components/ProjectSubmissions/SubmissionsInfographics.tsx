@@ -98,20 +98,6 @@ const getMonthDate = (date: string) => {
   return `${splittedDate[1]}/${splittedDate[2]}`;
 };
 
-// generates an array of date strings for last 30 days
-// const generateLast30Days = (): string[] => {
-//   const last30Days: string[] = [];
-//   const today = new Date();
-
-//   for (let i = 0; i < 30; i++) {
-//     const date = new Date();
-//     date.setDate(today.getDate() - i);
-//     last30Days.push(date.toISOString().split('T')[0]);
-//   }
-
-//   return last30Days;
-// };
-
 const SubmissionsInfographics = ({ toggleView }) => {
   useDocumentTitle('Submission Infographics');
   const formSubmissionRef = useRef(null);
