@@ -399,9 +399,6 @@ const ProjectDetailsV2 = () => {
                 state={state.projectTaskBoundries}
                 defaultTheme={defaultTheme}
                 map={map}
-                view={mainView}
-                mapDivPostion={y}
-                states={state}
               />
             ) : (
               <Instructions instructions={state?.projectInfo?.instructions} />
@@ -556,7 +553,7 @@ const ProjectDetailsV2 = () => {
             )}
             {mobileFooterSelection === 'activities' && (
               <BottomSheet
-                body={<MobileActivitiesContents map={map} mainView={mainView} mapDivPostion={y} />}
+                body={<MobileActivitiesContents map={map} />}
                 onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
               />
             )}

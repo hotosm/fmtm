@@ -6,11 +6,8 @@ import { Polygon } from 'ol/geom';
 import { ActivitiesCardSkeletonLoader, ShowingCountSkeletonLoader } from '@/components/ProjectDetailsV2/SkeletonLoader';
 import { taskHistoryListType } from '@/models/project/projectModel';
 import { useAppSelector } from '@/types/reduxTypes';
-import { useDispatch } from 'react-redux';
 
-const ActivitiesPanel = ({ defaultTheme, state, params, map, view, mapDivPostion, states }) => {
-  const dispatch = useDispatch();
-  const id = params.id;
+const ActivitiesPanel = ({ defaultTheme, state, params, map }) => {
   const [searchText, setSearchText] = useState<string>('');
   const [taskHistories, setTaskHistories] = useState<taskHistoryListType[]>([]);
   const [allActivities, setAllActivities] = useState(0);
