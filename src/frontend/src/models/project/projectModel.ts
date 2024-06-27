@@ -70,6 +70,7 @@ export type projectInfoType = {
   organisation_id: number;
   organisation_logo: string;
   instructions: string;
+  custom_tms_url: string;
 };
 
 export type downloadProjectFormLoadingType = { type: 'form' | 'geojson' | 'csv' | 'json'; loading: boolean };
