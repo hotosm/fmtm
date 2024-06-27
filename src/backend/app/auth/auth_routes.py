@@ -39,7 +39,7 @@ from app.auth.osm import (
 )
 from app.config import settings
 from app.db import database
-from app.models.enums import UserRole
+from app.models.enums import HTTPStatus, UserRole
 
 router = APIRouter(
     prefix="/auth",
@@ -83,28 +83,32 @@ async def callback(request: Request, osm_auth=Depends(init_osm_auth)):
     Returns:
         access_token (string): The access token provided by the login URL request.
     """
-    log.debug(f"Callback url requested: {request.url}")
+    try:
+        log.debug(f"Callback url requested: {request.url}")
 
-    # Enforce https callback url for openstreetmap.org
-    callback_url = str(request.url).replace("http://", "https://")
+        # Enforce https callback url for openstreetmap.org
+        callback_url = str(request.url).replace("http://", "https://")
 
-    # Get access token
-    access_token = osm_auth.callback(callback_url).get("access_token")
-    log.debug(f"Access token returned of length {len(access_token)}")
-
-    osm_user = osm_auth.deserialize_access_token(access_token)
-    user_data = {
-        "sub": f"fmtm|{osm_user['id']}",
-        "aud": settings.FMTM_DOMAIN,
-        "iat": int(time.time()),
-        "exp": int(time.time()) + 86400,  # expiry set to 1 day
-        "username": osm_user["username"],
-        "email": osm_user.get("email"),
-        "picture": osm_user.get("img_url"),
-        "role": UserRole.MAPPER,
-    }
-    access_token, refresh_token = create_tokens(user_data)
-    return set_cookies(access_token, refresh_token)
+        # Get access token
+        access_token = osm_auth.callback(callback_url).get("access_token")
+        log.debug(f"Access token returned of length {len(access_token)}")
+        osm_user = osm_auth.deserialize_access_token(access_token)
+        user_data = {
+            "sub": f"fmtm|{osm_user['id']}",
+            "aud": settings.FMTM_DOMAIN,
+            "iat": int(time.time()),
+            "exp": int(time.time()) + 86400,  # expiry set to 1 day
+            "username": osm_user["username"],
+            "email": osm_user.get("email"),
+            "picture": osm_user.get("img_url"),
+            "role": UserRole.MAPPER,
+        }
+        access_token, refresh_token = create_tokens(user_data)
+        return set_cookies(access_token, refresh_token)
+    except Exception as e:
+        raise HTTPException(
+            status_code=HTTPStatus.UNAUTHORIZED, detail=f"Invalid OSM token: {e}"
+        ) from e
 
 
 @router.get("/logout/")
@@ -231,26 +235,32 @@ async def refresh_token(
 
     Returns True if authenticated, False otherwise.
     """
-    refresh_token = extract_refresh_token_from_cookie(request)
-    if not refresh_token:
-        raise HTTPException(status_code=401, detail="No tokens provided")
+    try:
+        refresh_token = extract_refresh_token_from_cookie(request)
+        if not refresh_token:
+            raise HTTPException(status_code=401, detail="No tokens provided")
 
-    token_data = verify_token(refresh_token)
-    access_token = refresh_access_token(token_data)
-    response = JSONResponse(content=user_data.dict(), status_code=200)
-    cookie_name = settings.FMTM_DOMAIN.replace(".", "_")
-    response.set_cookie(
-        key=cookie_name,
-        value=access_token,
-        max_age=86400,
-        expires=86400,
-        path="/",
-        domain=settings.FMTM_DOMAIN,
-        secure=False if settings.DEBUG else True,
-        httponly=True,
-        samesite="lax",
-    )
-    return response
+        token_data = verify_token(refresh_token)
+        access_token = refresh_access_token(token_data)
+        response = JSONResponse(content=user_data.dict(), status_code=200)
+        cookie_name = settings.FMTM_DOMAIN.replace(".", "_")
+        response.set_cookie(
+            key=cookie_name,
+            value=access_token,
+            max_age=86400,
+            expires=86400,
+            path="/",
+            domain=settings.FMTM_DOMAIN,
+            secure=False if settings.DEBUG else True,
+            httponly=True,
+            samesite="lax",
+        )
+        return response
+    except Exception as e:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail=f"fail to refresh the access token: {e}",
+        ) from e
 
 
 @router.get("/temp-login")
