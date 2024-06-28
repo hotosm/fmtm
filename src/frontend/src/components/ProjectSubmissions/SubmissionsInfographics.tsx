@@ -121,7 +121,7 @@ const SubmissionsInfographics = ({ toggleView }) => {
   const entityOsmMapLoading = useAppSelector((state) => state.project.entityOsmMapLoading);
 
   const entityList = useAppSelector((state) => state.project.entityOsmMap);
-  const updatedEntities = entityList?.filter((entity) => entity?.updated_at);
+  const updatedEntities = entityList?.filter((entity) => entity?.updated_at && entity?.status > 1);
   const today = new Date().toISOString();
   const [formSubmissionsData, setFormSubmissionsData] = useState<formSubmissionType[]>([]);
 
