@@ -302,7 +302,10 @@ def get_settings():
     _settings = Settings()
 
     if _settings.DEBUG:
-        print("Loaded settings: " f"{_settings.model_dump()}")
+        print(
+            "Loaded settings: "
+            f"{_settings.model_dump(exclude=['AUTH_PRIVATE_KEY', 'AUTH_PUBLIC_KEY'])}"
+        )
     return _settings
 
 
