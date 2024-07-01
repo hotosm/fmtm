@@ -270,52 +270,18 @@ class Settings(BaseSettings):
     @field_validator("RAW_DATA_API_AUTH_TOKEN", mode="before")
     @classmethod
     def set_raw_data_api_auth_none(cls, v: Optional[str]) -> Optional[str]:
-        """Set RAW_DATA_API_AUTH_TOKEN to None if set to empty string."""
+        """Set RAW_DATA_API_AUTH_TOKEN to None if set to empty string.
+
+        This variable is used by HOTOSM to track raw-data-api usage.
+        It is not required if running your own instance.
+        """
         if v == "":
             return None
         return v
 
     ALGORITHM: str = "RS256"
-    AUTH_PRIVATE_KEY_PATH: str
-    AUTH_PUBLIC_KEY_PATH: str
-    AUTH_PRIVATE_KEY: Optional[str] = None
-    AUTH_PUBLIC_KEY: Optional[str] = None
-
-    @field_validator("AUTH_PRIVATE_KEY", mode="before")
-    @classmethod
-    def load_private_key(cls, v: Optional[str], info: ValidationInfo) -> str:
-        """Loads the private key for authentication."""
-        if not v:
-            try:
-                with open(info.data.get("AUTH_PRIVATE_KEY_PATH"), "r") as f:
-                    public_key = f.read()
-                    return public_key
-            except Exception as e:
-                raise ValueError(f"Error reading public key: {e}") from e
-        return str(v)
-
-    @field_validator("AUTH_PUBLIC_KEY", mode="before")
-    @classmethod
-    def load_public_key(cls, v: Optional[str], info: ValidationInfo) -> str:
-        """Loads the public key for authentication."""
-        if not v:
-            try:
-                with open(info.data.get("AUTH_PUBLIC_KEY_PATH"), "r") as f:
-                    public_key = f.read()
-                    return public_key
-            except Exception as e:
-                raise ValueError(f"Error reading public key: {e}") from e
-        return str(v)
-
-    OSM_SVC_ACCOUNT_TOKEN: Optional[str] = None
-
-    @field_validator("OSM_SVC_ACCOUNT_TOKEN", mode="before")
-    @classmethod
-    def set_osm_svc_account_none(cls, v: Optional[str]) -> Optional[str]:
-        """Set OSM_SVC_ACCOUNT_TOKEN to None if set to empty string."""
-        if v == "":
-            return None
-        return v
+    AUTH_PRIVATE_KEY: str
+    AUTH_PUBLIC_KEY: str
 
     MONITORING: Optional[MonitoringTypes] = None
 
