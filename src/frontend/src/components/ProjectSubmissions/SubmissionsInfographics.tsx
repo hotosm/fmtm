@@ -9,83 +9,14 @@ import InfographicsCard from '@/components/ProjectSubmissions/InfographicsCard';
 import {
   ProjectContributorsService,
   // ProjectSubmissionInfographicsService,
-  ValidatedVsMappedInfographicsService,
+  // ValidatedVsMappedInfographicsService,
 } from '@/api/SubmissionService';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import { useAppSelector } from '@/types/reduxTypes';
-// import { task_status } from '@/types/enums';
-
-const lineKeyData = [
-  {
-    name: '11/25',
-    Actual: 4000,
-    Planned: 2400,
-    amt: 2400,
-  },
-  {
-    name: '11/26',
-    Actual: 3000,
-    Planned: 1398,
-    amt: 2210,
-  },
-  {
-    name: '11/27',
-    Actual: 2000,
-    Planned: 9800,
-    amt: 2290,
-  },
-  {
-    name: '11/28',
-    Actual: 2780,
-    Planned: 3908,
-    amt: 2000,
-  },
-  {
-    name: '11/29',
-    Actual: 1890,
-    Planned: 4800,
-    amt: 2181,
-  },
-  {
-    name: '11/30',
-    Actual: 2390,
-    Planned: 3800,
-    amt: 2500,
-  },
-  {
-    name: '12/01',
-    Actual: 3490,
-    Planned: 4300,
-    amt: 2100,
-  },
-  {
-    name: '12/02',
-    Actual: 2780,
-    Planned: 3908,
-    amt: 2000,
-  },
-  {
-    name: '12/03',
-    Actual: 1890,
-    Planned: 4800,
-    amt: 2181,
-  },
-  {
-    name: '12/04',
-    Actual: 2390,
-    Planned: 3800,
-    amt: 2500,
-  },
-  {
-    name: '12/05',
-    Actual: 3490,
-    Planned: 4300,
-    amt: 2100,
-  },
-];
+import { taskHistoryTypes } from '@/models/project/projectModel';
 
 type formSubmissionType = { date: string; count: number; label: string };
-// type validatedMappedType = { date: string; Validated: number; Mapped: number; label: string };
+type validatedMappedType = { date: string; Validated: number; Mapped: number; label: string };
 
 // get date N days ago
 const dateNDaysAgo = (NDays: number) => {
@@ -98,7 +29,21 @@ const getMonthDate = (date: string) => {
   return `${splittedDate[1]}/${splittedDate[2]}`;
 };
 
-const SubmissionsInfographics = ({ toggleView }) => {
+// generates an array of date strings for last 30 days
+const generateLast30Days = (): string[] => {
+  const last30Days: string[] = [];
+  const today = new Date();
+
+  for (let i = 0; i < 30; i++) {
+    const date = new Date();
+    date.setDate(today.getDate() - i);
+    last30Days.push(date.toISOString().split('T')[0]);
+  }
+
+  return last30Days;
+};
+
+const SubmissionsInfographics = ({ toggleView, entities }) => {
   useDocumentTitle('Submission Infographics');
   const formSubmissionRef = useRef(null);
   const projectProgressRef = useRef(null);
@@ -114,23 +59,101 @@ const SubmissionsInfographics = ({ toggleView }) => {
   const submissionContributorsData = useAppSelector((state) => state.submission.submissionContributors);
   const submissionContributorsLoading = useAppSelector((state) => state.submission.submissionContributorsLoading);
   const [submissionProjection, setSubmissionProjection] = useState<10 | 30>(10);
-  const validatedVsMappedInfographics = useAppSelector((state) => state.submission.validatedVsMappedInfographics);
-  const validatedVsMappedLoading = useAppSelector((state) => state.submission.validatedVsMappedLoading);
+  // const validatedVsMappedInfographics = useAppSelector((state) => state.submission.validatedVsMappedInfographics);
+  // const validatedVsMappedLoading = useAppSelector((state) => state.submission.validatedVsMappedLoading);
   const taskInfo = useAppSelector((state) => state.task.taskInfo);
   const taskLoading = useAppSelector((state) => state.task.taskLoading);
   const entityOsmMapLoading = useAppSelector((state) => state.project.entityOsmMapLoading);
+  const projectTaskList = useAppSelector((state) => state.project.projectTaskBoundries);
+  const projectDetailsLoading = useAppSelector((state) => state.project.projectDetailsLoading);
 
-  const entityList = useAppSelector((state) => state.project.entityOsmMap);
-  const updatedEntities = entityList?.filter((entity) => entity?.updated_at && entity?.status > 1);
   const today = new Date().toISOString();
   const [formSubmissionsData, setFormSubmissionsData] = useState<formSubmissionType[]>([]);
+  const [validatedVsMappedInfographics, setValidatedVsMappedInfographics] = useState<validatedMappedType[]>([]);
+
+  useEffect(() => {
+    if (!projectTaskList || (projectTaskList && projectTaskList?.length === 0)) return;
+
+    const projectIndex = projectTaskList.findIndex((project) => project.id == +projectId);
+    // task activities history list
+    const taskActivities = projectTaskList?.[projectIndex]?.taskBoundries?.reduce((acc: taskHistoryTypes[], task) => {
+      return [...acc, ...task?.task_history];
+    }, []);
+
+    // filter activities for last 30 days
+    const taskActivities30Days = taskActivities?.filter((activity) => {
+      const actionDate = new Date(activity?.action_date).toISOString();
+      return actionDate >= dateNDaysAgo(30) && actionDate <= today;
+    });
+
+    // only filter MAPPED & VALIDATED activities
+    const groupedData: validatedMappedType[] = taskActivities30Days?.reduce((acc: validatedMappedType[], activity) => {
+      const date = activity?.action_date.split('T')[0];
+      const index = acc.findIndex((submission) => submission.date === date);
+      if (acc?.find((submission) => submission.date === date)) {
+        if (activity?.action_text?.includes('LOCKED_FOR_MAPPING to MAPPED')) {
+          acc[index].Mapped += 1;
+        }
+        if (activity?.action_text?.includes('LOCKED_FOR_VALIDATION to VALIDATED')) {
+          acc[index].Validated += 1;
+        }
+      } else {
+        const splittedDate = date?.split('-');
+        const label = `${splittedDate[1]}/${splittedDate[2]}`;
+        if (activity?.action_text?.includes('LOCKED_FOR_MAPPING to MAPPED')) {
+          acc.push({ date: date, Validated: 0, Mapped: 1, label });
+        }
+        if (activity?.action_text?.includes('LOCKED_FOR_VALIDATION to VALIDATED')) {
+          acc.push({ date: date, Validated: 1, Mapped: 0, label });
+        }
+      }
+      return acc;
+    }, []);
+
+    // generate validatedMapped data for last 30 days
+    const last30Days = generateLast30Days().map((datex) => {
+      const mappedVsValidatedValue = groupedData?.find((group) => {
+        return group?.date === datex;
+      });
+
+      if (mappedVsValidatedValue) {
+        return mappedVsValidatedValue;
+      } else {
+        // if no validated-mapped date - return count of 0 for both
+        const splittedDate = datex?.split('-');
+        const label = `${splittedDate[1]}/${splittedDate[2]}`;
+        return { date: datex, Validated: 0, Mapped: 0, label: label };
+      }
+    });
+
+    // sort by ascending date
+    const sortedValidatedMapped = last30Days?.sort((a, b) => {
+      const dateA: any = new Date(a.date);
+      const dateB: any = new Date(b.date);
+      return dateA - dateB;
+    });
+
+    const cumulativeCount = {
+      validated: 0,
+      mapped: 0,
+    };
+
+    // generate cumulative count data
+    const finalData = sortedValidatedMapped?.map((submission) => {
+      cumulativeCount.validated += submission.Validated;
+      cumulativeCount.mapped += submission.Mapped;
+      return { ...submission, Validated: cumulativeCount.validated, Mapped: cumulativeCount.mapped };
+    });
+
+    setValidatedVsMappedInfographics(finalData);
+  }, [projectTaskList]);
 
   // data for validated vs mapped graph
   useEffect(() => {
-    if (updatedEntities?.length === 0) return;
+    if (entities?.length === 0) return;
 
     // get entities updated within the last 10 or 30 days
-    const updatedEntityLastNDays = updatedEntities?.filter((entity) => {
+    const updatedEntityLastNDays = entities?.filter((entity) => {
       const updatedDate = new Date(entity?.updated_at).toISOString();
       return updatedDate >= dateNDaysAgo(submissionProjection) && updatedDate <= today;
     });
@@ -156,9 +179,8 @@ const SubmissionsInfographics = ({ toggleView }) => {
       const dateB: any = new Date(b.date);
       return dateA - dateB;
     });
-
     setFormSubmissionsData(sortedEntitySubmissions);
-  }, [entityList, submissionProjection]);
+  }, [entities, submissionProjection]);
 
   // useEffect(() => {
   //   dispatch(
@@ -168,11 +190,11 @@ const SubmissionsInfographics = ({ toggleView }) => {
   //   );
   // }, [submissionProjection]);
 
-  useEffect(() => {
-    dispatch(
-      ValidatedVsMappedInfographicsService(`${import.meta.env.VITE_API_URL}/tasks/activity/?project_id=${projectId}`),
-    );
-  }, []);
+  // useEffect(() => {
+  //   dispatch(
+  //     ValidatedVsMappedInfographicsService(`${import.meta.env.VITE_API_URL}/tasks/activity/?project_id=${projectId}`),
+  //   );
+  // }, []);
 
   useEffect(() => {
     dispatch(ProjectContributorsService(`${import.meta.env.VITE_API_URL}/projects/contributors/${projectId}`));
@@ -263,14 +285,14 @@ const SubmissionsInfographics = ({ toggleView }) => {
             cardRef={plannedVsActualRef}
             header="Validated vs Mapped Task"
             body={
-              validatedVsMappedLoading ? (
+              projectDetailsLoading ? (
                 <CoreModules.Skeleton className="!fmtm-w-full fmtm-h-full" />
               ) : validatedVsMappedInfographics.length > 0 ? (
                 <CustomLineChart
                   data={validatedVsMappedInfographics}
-                  xAxisDataKey="date"
-                  lineOneKey="validated"
-                  lineTwoKey="mapped"
+                  xAxisDataKey="label"
+                  lineOneKey="Validated"
+                  lineTwoKey="Mapped"
                   xLabel="Submission Date"
                   yLabel="Task Count"
                 />
@@ -331,7 +353,7 @@ const SubmissionsInfographics = ({ toggleView }) => {
           />
         </div>
       </div>
-      <div>
+      {/* <div>
         <InfographicsCard
           cardRef={plannedVsActualRef}
           header="Planned vs Actual"
@@ -354,7 +376,7 @@ const SubmissionsInfographics = ({ toggleView }) => {
             )
           }
         />
-      </div>
+      </div> */}
       <div>
         <TaskSubmissions />
       </div>
