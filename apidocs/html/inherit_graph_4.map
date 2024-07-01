@@ -1,0 +1,22 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" title=" " alt="" coords="5,509,60,535"/>
+<area shape="rect" id="node2" href="$classapp_1_1db_1_1db__models_1_1BackgroundTasks.html" title=" " alt="" coords="131,5,354,47"/>
+<area shape="rect" id="node3" href="$classapp_1_1db_1_1db__models_1_1DbLicense.html" title=" " alt="" coords="137,71,349,98"/>
+<area shape="rect" id="node4" href="$classapp_1_1db_1_1db__models_1_1DbMappingIssueCategory.html" title=" " alt="" coords="133,123,352,164"/>
+<area shape="rect" id="node5" href="$classapp_1_1db_1_1db__models_1_1DbOrganisation.html" title=" " alt="" coords="119,189,366,215"/>
+<area shape="rect" id="node6" href="$classapp_1_1db_1_1db__models_1_1DbProject.html" title=" " alt="" coords="139,239,347,266"/>
+<area shape="rect" id="node7" href="$classapp_1_1db_1_1db__models_1_1DbProjectChat.html" title=" " alt="" coords="123,290,362,317"/>
+<area shape="rect" id="node8" href="$classapp_1_1db_1_1db__models_1_1DbProjectInfo.html" title=" " alt="" coords="126,341,359,367"/>
+<area shape="rect" id="node9" href="$classapp_1_1db_1_1db__models_1_1DbProjectTeams.html" title=" " alt="" coords="139,392,347,433"/>
+<area shape="rect" id="node10" href="$classapp_1_1db_1_1db__models_1_1DbTask.html" title=" " alt="" coords="147,458,339,485"/>
+<area shape="rect" id="node11" href="$classapp_1_1db_1_1db__models_1_1DbTaskHistory.html" title=" " alt="" coords="123,509,362,535"/>
+<area shape="rect" id="node12" href="$classapp_1_1db_1_1db__models_1_1DbTaskInvalidationHistory.html" title=" " alt="" coords="108,560,377,601"/>
+<area shape="rect" id="node13" href="$classapp_1_1db_1_1db__models_1_1DbTaskMappingIssue.html" title=" " alt="" coords="119,625,367,667"/>
+<area shape="rect" id="node14" href="$classapp_1_1db_1_1db__models_1_1DbTeam.html" title=" " alt="" coords="143,691,342,718"/>
+<area shape="rect" id="node15" href="$classapp_1_1db_1_1db__models_1_1DbTilesPath.html" title=" " alt="" coords="131,742,354,769"/>
+<area shape="rect" id="node16" href="$classapp_1_1db_1_1db__models_1_1DbUser.html" title=" " alt="" coords="146,793,339,819"/>
+<area shape="rect" id="node17" href="$classapp_1_1db_1_1db__models_1_1DbUserRoles.html" title=" " alt="" coords="128,843,357,870"/>
+<area shape="rect" id="node18" href="$classapp_1_1db_1_1db__models_1_1DbXForm.html" title=" " alt="" coords="140,894,345,921"/>
+<area shape="rect" id="node19" href="$classapp_1_1db_1_1db__models_1_1DbXLSForm.html" title=" " alt="" coords="133,945,353,971"/>
+<area shape="rect" id="node20" href="$classapp_1_1db_1_1db__models_1_1TaskComment.html" title=" " alt="" coords="123,995,362,1022"/>
+</map>
