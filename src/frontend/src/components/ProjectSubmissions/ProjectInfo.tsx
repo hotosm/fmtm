@@ -2,18 +2,15 @@ import React from 'react';
 import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
 import { useNavigate } from 'react-router-dom';
-import { projectDashboardDetailTypes, projectInfoType } from '@/models/project/projectModel';
 import { useAppSelector } from '@/types/reduxTypes';
 
 const ProjectInfo = ({ entities }) => {
   const navigate = useNavigate();
   const params = CoreModules.useParams();
   const projectId = params.projectId;
-  const projectInfo: projectInfoType = CoreModules.useAppSelector((state) => state.project.projectInfo);
-  const projectDashboardDetail: projectDashboardDetailTypes = CoreModules.useAppSelector(
-    (state) => state.project.projectDashboardDetail,
-  );
-  const projectDashboardLoading: boolean = CoreModules.useAppSelector((state) => state.project.projectDashboardLoading);
+  const projectInfo = useAppSelector((state) => state.project.projectInfo);
+  const projectDashboardDetail = useAppSelector((state) => state.project.projectDashboardDetail);
+  const projectDashboardLoading = useAppSelector((state) => state.project.projectDashboardLoading);
   const submissionContributorsData = useAppSelector((state) => state.submission.submissionContributors);
 
   const projectTaskList = useAppSelector((state) => state.project.projectTaskBoundries);
