@@ -54,10 +54,10 @@ class AuthUser(BaseModel):
 
     @computed_field
     @property
-    def id(self) -> Optional[str]:
+    def id(self) -> int:
         """Compute id from sub field."""
         sub = self._sub
-        return (sub.split("|"))[1]
+        return int(sub.split("|")[1])
 
 
 async def init_osm_auth():
