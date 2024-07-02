@@ -57,7 +57,7 @@ async def test_create_project(client, admin_user, organisation):
             "description": "test",
         },
         "xform_category": "buildings",
-        "hashtags": ["#FMTM"],
+        "hashtags": "#FMTM",
         "outline_geojson": {
             "coordinates": [
                 [
@@ -283,8 +283,8 @@ async def test_update_project(client, admin_user, project):
             "short_description": "updated short description",
             "description": "updated description",
         },
-        "xform_category": "buildings",
-        "hashtags": ["#FMTM"],
+        "xform_category": "healthcare",
+        "hashtags": "#FMTM anothertag",
         "outline_geojson": {
             "coordinates": [
                 [
@@ -319,6 +319,53 @@ async def test_update_project(client, admin_user, project):
         response_data["project_info"]["description"]
         == updated_project_data["project_info"]["description"]
     )
+
+    assert response_data["xform_category"] == "healthcare"
+    assert response_data["hashtags"] == ["#FMTM", "#anothertag"]
+
+
+async def test_project_summaries(client, project):
+    """Test read project summaries."""
+    response = client.get("/projects/summaries")
+    assert response.status_code == 200
+    assert "results" in response.json()
+
+    results = response.json()["results"]
+    result = results[0]
+
+    assert result["id"] == project.id
+    assert result["title"] == project.title
+    assert result["description"] == project.description
+    assert result["hashtags"] == project.hashtags
+    assert result["organisation_id"] == project.organisation_id
+
+
+async def test_project_by_id(client, project):
+    """Test read project by id."""
+    response = client.get(f"projects/{project.id}")
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["id"] == project.id
+    assert data["odkid"] == project.odkid
+    assert data["author"]["username"] == project.author.username
+    assert data["author"]["id"] == project.author.id
+    assert data["project_info"]["name"] == project.project_info.name
+    assert (
+        data["project_info"]["short_description"]
+        == project.project_info.short_description
+    )
+    assert data["project_info"]["description"] == project.project_info.description
+    assert (
+        data["project_info"]["per_task_instructions"]
+        == project.project_info.per_task_instructions
+    )
+    assert data["status"] == project.status
+    assert data["xform_category"] == project.xform_category
+    assert data["hashtags"] == project.hashtags
+    assert data["organisation_id"] == project.organisation_id
+    assert data["tasks"] == project.tasks
 
 
 if __name__ == "__main__":
