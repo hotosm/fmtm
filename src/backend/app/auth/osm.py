@@ -20,44 +20,19 @@
 
 import os
 import time
-from typing import Optional
 
 import jwt
 from fastapi import Header, HTTPException, Request, Response
 from loguru import logger as log
 from osm_login_python.core import Auth
-from pydantic import BaseModel, ConfigDict, PrivateAttr, computed_field
 
+from app.auth.auth_schemas import AuthUser
 from app.config import settings
 from app.models.enums import UserRole
 
 if settings.DEBUG:
     # Required as callback url is http during dev
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
-
-
-class AuthUser(BaseModel):
-    """The user model returned from OSM OAuth2."""
-
-    model_config = ConfigDict(use_enum_values=True)
-
-    username: str
-    picture: Optional[str] = None
-    role: Optional[UserRole] = UserRole.MAPPER
-
-    _sub: str = PrivateAttr()  # it won't return this field
-
-    def __init__(self, sub: str, **data):
-        """Initializes the AuthUser class."""
-        super().__init__(**data)
-        self._sub = sub
-
-    @computed_field
-    @property
-    def id(self) -> int:
-        """Compute id from sub field."""
-        sub = self._sub
-        return int(sub.split("|")[1])
 
 
 async def init_osm_auth():

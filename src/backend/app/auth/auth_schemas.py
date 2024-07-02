@@ -16,12 +16,51 @@
 #
 """Pydantic models for Auth."""
 
-from typing import Any, Optional
+from typing import Any, Optional, TypedDict
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, PrivateAttr, computed_field
 from pydantic.functional_validators import field_validator
 
+from app.db.db_models import DbOrganisation, DbProject, DbUser
 from app.models.enums import ProjectRole, UserRole
+
+
+class OrgUserDict(TypedDict):
+    """Dict of both DbOrganisation & DbUser."""
+
+    user: DbUser
+    org: DbOrganisation
+
+
+class ProjectUserDict(TypedDict):
+    """Dict of both DbProject & DbUser."""
+
+    user: DbUser
+    project: DbProject
+
+
+class AuthUser(BaseModel):
+    """The user model returned from OSM OAuth2."""
+
+    model_config = ConfigDict(use_enum_values=True)
+
+    username: str
+    picture: Optional[str] = None
+    role: Optional[UserRole] = UserRole.MAPPER
+
+    _sub: str = PrivateAttr()  # it won't return this field
+
+    def __init__(self, sub: str, **data):
+        """Initializes the AuthUser class."""
+        super().__init__(**data)
+        self._sub = sub
+
+    @computed_field
+    @property
+    def id(self) -> int:
+        """Compute id from sub field."""
+        sub = self._sub
+        return int(sub.split("|")[1])
 
 
 class FMTMUser(BaseModel):

@@ -26,9 +26,8 @@ from loguru import logger as log
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.auth.auth_schemas import FMTMUser
+from app.auth.auth_schemas import AuthUser, FMTMUser
 from app.auth.osm import (
-    AuthUser,
     create_tokens,
     extract_refresh_token_from_cookie,
     init_osm_auth,
@@ -146,8 +145,8 @@ async def get_or_create_user(
                     is_email_verified, is_expert, tasks_mapped, tasks_validated,
                     tasks_invalidated, date_registered, last_validation_date
                 ) VALUES (
-                    :user_id, :username, :profile_img, :role, :mapping_level,
-                    FALSE, FALSE, 0, 0, 0, NOW(), NOW()
+                    :user_id, :username, :profile_img, :role,
+                    'BEGINNER', FALSE, FALSE, 0, 0, 0, NOW(), NOW()
                 )
                 ON CONFLICT (id)
                 DO UPDATE SET
@@ -175,7 +174,6 @@ async def get_or_create_user(
             "username": user_data.username,
             "profile_img": user_data.picture or "",
             "role": UserRole(user_data.role).name,
-            "mapping_level": "BEGINNER",
         }
         result = db.execute(upsert_sql, parameters)
         db.commit()
