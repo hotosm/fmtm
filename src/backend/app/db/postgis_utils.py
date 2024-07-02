@@ -19,8 +19,11 @@
 
 import json
 import logging
+import time
+import zipfile
 from asyncio import gather
 from datetime import datetime, timezone
+from io import BytesIO
 from random import getrandbits
 from typing import Optional, Union
 
@@ -33,12 +36,17 @@ from geoalchemy2.shape import from_shape, to_shape
 from geojson_pydantic import Feature, MultiPolygon, Polygon
 from geojson_pydantic import FeatureCollection as FeatCol
 from shapely.geometry import mapping, shape
+from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
+from shapely.validation import make_valid
 from sqlalchemy import text
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session
 
+from app.config import settings
+
 log = logging.getLogger(__name__)
+API_URL = settings.RAW_DATA_API_URL
 
 
 def timestamp():
@@ -777,3 +785,160 @@ def parse_featcol(features: Union[Feature, FeatCol, MultiPolygon, Polygon]):
     elif isinstance(features, Feature):
         feat_col = geojson.FeatureCollection([feat_col])
     return feat_col
+
+
+def request_snapshot(geometry):
+    """Request a snapshot based on the provided geometry.
+
+    Args:
+        geometry (str): The geometry data in JSON format.
+
+    Returns:
+        dict: The JSON response containing the snapshot data.
+    """
+    headers = {"accept": "application/json", "Content-Type": "application/json"}
+
+    payload = {
+        "geometry": json.loads(geometry),
+        "filters": {"tags": {"all_geometry": {"join_or": {"building": []}}}},
+        "geometryType": ["polygon"],
+    }
+    response = requests.post(
+        f"{API_URL}/snapshot/", data=json.dumps(payload), headers=headers
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def poll_task_status(task_link):
+    """Poll the status of a task until it reaches state (SUCCESS or FAILED).
+
+    Args:
+        task_link (str): The link to the task status endpoint.
+
+    Returns:
+        dict: The final status of the task as a JSON response.
+    """
+    stop_loop = False
+    while not stop_loop:
+        check_result = requests.get(url=f"{API_URL}{task_link}")
+        check_result.raise_for_status()
+        res = check_result.json()
+        if res["status"] in ["SUCCESS", "FAILED"]:
+            stop_loop = True
+        time.sleep(1)
+    return res
+
+
+def download_snapshot(download_url):
+    """Download a snapshot from the provided URL and extract the GeoJSON.
+
+    Args:
+        download_url (str): The URL to download the snapshot from.
+
+    Returns:
+        dict: The extracted GeoJSON data from the downloaded snapshot.
+    """
+    response = requests.get(download_url)
+    response.raise_for_status()
+    with zipfile.ZipFile(BytesIO(response.content), "r") as zip_ref:
+        with zip_ref.open("Export.geojson") as file:
+            return json.load(file)
+
+
+def calculate_bbox(features):
+    """Calculate the bounding box of a collection of features(geojson).
+
+    Args:
+        features (list): A list of features with geometries.
+
+    Returns:
+        tuple: the bounding box coordinates (minx, miny, maxx, maxy).
+    """
+    geometries = [make_valid(shape(feature["geometry"])) for feature in features]
+    union = unary_union(geometries)
+    bbox = union.bounds
+    return bbox
+
+
+def geometries_almost_equal(
+    geom1: BaseGeometry, geom2: BaseGeometry, tolerance: float = 1e-6
+) -> bool:
+    """Determine if two geometries are almost equal within a tolerance.
+
+    Args:
+        geom1 (BaseGeometry): First geometry.
+        geom2 (BaseGeometry): Second geometry.
+        tolerance (float): Tolerance level for almost equality.
+
+    Returns:
+        bool: True if geometries are almost equal else False.
+    """
+    return geom1.equals_exact(geom2, tolerance)
+
+
+def check_partial_overlap(geom1: BaseGeometry, geom2: BaseGeometry) -> bool:
+    """Determine if two geometries have a partial overlap.
+
+    Args:
+        geom1 (BaseGeometry): First geometry.
+        geom2 (BaseGeometry): Second geometry.
+
+    Returns:
+        bool: True if geometries have a partial overlap, else False.
+    """
+    intersection = geom1.intersection(geom2)
+    return not intersection.is_empty and (
+        0 < intersection.area < geom1.area and 0 < intersection.area < geom2.area
+    )
+
+
+def conflate_features(
+    input_features: list, osm_features: list, remove_conflated=False, tolerance=1e-6
+):
+    """Conflate input features with OSM features to identify overlaps.
+
+    Args:
+        input_features (list): A list of input features with geometries.
+        osm_features (list): A list of OSM features with geometries.
+        remove_conflated (bool): Flag to remove conflated features.
+        tolerance (float): Tolerance level for almost equality.
+
+    Returns:
+        list: A list of features after conflation with OSM features.
+    """
+    osm_geometries = [shape(feature["geometry"]) for feature in osm_features]
+    return_features = []
+
+    for input_feature in input_features:
+        input_geometry = shape(input_feature["geometry"])
+        is_duplicate = False
+        is_partial_overlap = False
+
+        for osm_feature, osm_geometry in zip(
+            osm_features, osm_geometries, strict=False
+        ):
+            if geometries_almost_equal(input_geometry, osm_geometry, tolerance):
+                is_duplicate = True
+                input_feature["properties"].update(osm_feature["properties"])
+                break
+
+            if check_partial_overlap(input_geometry, osm_geometry):
+                is_partial_overlap = True
+                new_feature = {
+                    "type": "Feature",
+                    "geometry": mapping(osm_feature["geometry"]),
+                    "properties": osm_feature["properties"],
+                }
+                return_features.append(new_feature)
+                break
+
+        input_feature["properties"]["is_duplicate"] = is_duplicate
+        input_feature["properties"]["is_partial_overlap"] = is_partial_overlap
+
+        if (is_duplicate or is_partial_overlap) and remove_conflated is True:
+            continue
+
+        return_features.append(input_feature)
+
+    return return_features
