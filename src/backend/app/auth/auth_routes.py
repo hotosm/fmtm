@@ -19,7 +19,6 @@
 """Auth routes, to login, logout, and get user details."""
 
 import time
-from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
@@ -27,6 +26,7 @@ from loguru import logger as log
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.auth.auth_schemas import FMTMUser
 from app.auth.osm import (
     AuthUser,
     create_tokens,
@@ -138,79 +138,74 @@ async def get_or_create_user(
 ):
     """Get user from User table if exists, else create."""
     try:
-        update_sql = text(
+        upsert_sql = text(
             """
-            INSERT INTO users (
+            WITH upserted_user AS (
+                INSERT INTO users (
                     id, username, profile_img, role, mapping_level,
                     is_email_verified, is_expert, tasks_mapped, tasks_validated,
                     tasks_invalidated, date_registered, last_validation_date
-                    )
-                VALUES (
-                    :user_id, :username, :profile_img, :role,
-                    :mapping_level, FALSE, FALSE, 0, 0, 0,
-                    :current_date, :current_date
-                    )
-            ON CONFLICT (id)
-                DO UPDATE SET profile_img = :profile_img;
+                ) VALUES (
+                    :user_id, :username, :profile_img, :role, :mapping_level,
+                    FALSE, FALSE, 0, 0, 0, NOW(), NOW()
+                )
+                ON CONFLICT (id)
+                DO UPDATE SET
+                    profile_img = EXCLUDED.profile_img
+                RETURNING id, username, profile_img, role
+            )
+            SELECT
+                u.id, u.username, u.profile_img, u.role,
+                array_agg(
+                    DISTINCT om.organisation_id
+                ) FILTER (WHERE om.organisation_id IS NOT NULL) as orgs_managed,
+                jsonb_object_agg(
+                    ur.project_id,
+                    COALESCE(ur.role, 'MAPPER')
+                ) FILTER (WHERE ur.project_id IS NOT NULL) as project_roles
+            FROM upserted_user u
+            LEFT JOIN user_roles ur ON u.id = ur.user_id
+            LEFT JOIN organisation_managers om ON u.id = om.user_id
+            GROUP BY u.id, u.username, u.profile_img, u.role;
             """
         )
-        role = UserRole(user_data.role).name
-        db.execute(
-            update_sql,
-            {
-                "user_id": user_data.id,
-                "username": user_data.username,
-                "profile_img": user_data.picture,
-                "role": role,
-                "mapping_level": "BEGINNER",
-                "current_date": datetime.now(timezone.utc),
-            },
-        )
+
+        parameters = {
+            "user_id": user_data.id,
+            "username": user_data.username,
+            "profile_img": user_data.picture or "",
+            "role": UserRole(user_data.role).name,
+            "mapping_level": "BEGINNER",
+        }
+        result = db.execute(upsert_sql, parameters)
         db.commit()
 
-        get_sql = text(
-            """
-            SELECT users.*,
-                user_roles.project_id as project_id,
-                organisation_managers.organisation_id as created_org,
-                COALESCE(user_roles.role, 'MAPPER') as project_role
-            FROM users
-            LEFT JOIN user_roles ON users.id = user_roles.user_id
-            LEFT JOIN organisation_managers on users.id = organisation_managers.user_id
-            WHERE users.id = :user_id;
-            """
-        )
-        result = db.execute(
-            get_sql,
-            {"user_id": user_data.id},
-        )
-        db_user = result.first()
+        db_user_details = result.first()
+        if not db_user_details:
+            raise HTTPException(
+                status_code=HTTPStatus.NOT_FOUND,
+                detail=f"User ID ({user_data.id}) could not be inserted in db",
+            )
 
-        user = {
-            "id": db_user.id,
-            "username": db_user.username,
-            "profile_img": db_user.profile_img,
-            "role": db_user.role,
-            "project_id": db_user.project_id,
-            "project_role": db_user.project_role,
-            "created_org": db_user.created_org,
-        }
-        return user
+        return db_user_details
 
     except Exception as e:
-        # Check if the exception is due to username already existing
+        db.rollback()
+        log.error(f"Exception occurred: {e}")
         if 'duplicate key value violates unique constraint "users_username_key"' in str(
             e
         ):
             raise HTTPException(
-                status_code=400,
+                status_code=HTTPStatus.BAD_REQUEST,
                 detail=f"User with this username {user_data.username} already exists.",
             ) from e
         else:
-            raise HTTPException(status_code=400, detail=str(e)) from e
+            raise HTTPException(
+                status_code=HTTPStatus.BAD_REQUEST, detail=str(e)
+            ) from e
 
 
-@router.get("/me/")
+@router.get("/me/", response_model=FMTMUser)
 async def my_data(
     db: Session = Depends(database.get_db),
     user_data: AuthUser = Depends(login_required),
