@@ -217,3 +217,9 @@ def client(app, db):
 
     with TestClient(app) as c:
         yield c
+
+
+@pytest.fixture
+def access_token():
+    """Returns a hardcoded test access token."""
+    return "access_token"
