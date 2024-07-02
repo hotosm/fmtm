@@ -21,8 +21,8 @@ import json
 import os
 from io import BytesIO
 from pathlib import Path
-from random import randint
 from unittest.mock import Mock, patch
+from uuid import uuid4
 
 import pytest
 import requests
@@ -52,7 +52,7 @@ async def test_create_project(client, admin_user, organisation):
 
     project_data = {
         "project_info": {
-            "name": f"Test Project {randint(1, 1000000)}",
+            "name": f"Test Project {uuid4()}",
             "short_description": "test",
             "description": "test",
         },
@@ -87,7 +87,6 @@ async def test_create_project(client, admin_user, organisation):
 
 async def test_delete_project(client, admin_user, project):
     """Test deleting a FMTM project, plus ODK Central project."""
-    log.warning(project)
     response = client.delete(f"/projects/{project.id}")
     assert response.status_code == 204
 
@@ -279,7 +278,7 @@ async def test_update_project(client, admin_user, project):
     """Test update project metadata."""
     updated_project_data = {
         "project_info": {
-            "name": f"Updated Test Project {randint(1, 1000000)}",
+            "name": f"Updated Test Project {uuid4()}",
             "short_description": "updated short description",
             "description": "updated description",
         },
