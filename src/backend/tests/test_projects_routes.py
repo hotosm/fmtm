@@ -48,7 +48,7 @@ async def test_create_project(client, admin_user, organisation):
         "odk_central_user": odk_central_user,
         "odk_central_password": odk_central_password,
     }
-    odk_credentials = project_schemas.ODKCentralDecrypted(**odk_credentials)
+    odk_creds_models = project_schemas.ODKCentralDecrypted(**odk_credentials)
 
     project_data = {
         "project_info": {
@@ -71,7 +71,7 @@ async def test_create_project(client, admin_user, organisation):
             "type": "Polygon",
         },
     }
-    project_data.update(**odk_credentials.model_dump())
+    project_data.update(**odk_creds_models.model_dump())
 
     response = client.post(
         f"/projects/create_project?org_id={organisation.id}", json=project_data
