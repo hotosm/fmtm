@@ -69,8 +69,10 @@ components directory.
 To run the frontend tests locally, run:
 
 ```bash
-docker compose run --rm ui-test
+docker compose run --rm --service-ports ui-test
 ```
+
+> View the HTML report at: `http://localhost:9323`.
 
 To run the FMTM UI for interactive testing, run:
 
