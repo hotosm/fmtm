@@ -1,0 +1,59 @@
+{
+  "cookies": [
+    {
+      "name": "_osm_session",
+      "value": "c411c68dc6887f330c6e3a22349aa552",
+      "domain": "www.openstreetmap.org",
+      "path": "/",
+      "expires": 1722415176.947293,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_pk_ref.1.cf09",
+      "value": "%5B%22%22%2C%22%22%2C1719995977%2C%22http%3A%2F%2Ffmtm.localhost%3A7050%2F%22%5D",
+      "domain": "www.openstreetmap.org",
+      "path": "/",
+      "expires": 1720600776,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_pk_id.1.cf09",
+      "value": "1e02bce056a71dd8.1719995977.",
+      "domain": "www.openstreetmap.org",
+      "path": "/",
+      "expires": 1722415177,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_pk_ses.1.cf09",
+      "value": "1",
+      "domain": "www.openstreetmap.org",
+      "path": "/",
+      "expires": 1719997776,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://fmtm.localhost:7050",
+      "localStorage": [
+        {
+          "name": "persist:login",
+          "value": "{\"authDetails\":\"null\",\"_persist\":\"{\\\"version\\\":-1,\\\"rehydrated\\\":true}\"}"
+        },
+        {
+          "name": "requestedPath",
+          "value": "/"
+        }
+      ]
+    }
+  ]
+}
