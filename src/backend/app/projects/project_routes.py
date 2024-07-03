@@ -511,7 +511,7 @@ async def create_project(
             """
     )
     result = db.execute(sql, {"project_name": project_info.project_info.name.lower()})
-    project_exists = result.first()
+    project_exists = result.scalar()
     if project_exists:
         raise HTTPException(
             status_code=400,
