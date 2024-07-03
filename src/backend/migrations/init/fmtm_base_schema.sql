@@ -300,7 +300,7 @@ ALTER SEQUENCE public.projects_id_seq OWNED BY public.projects.id;
 
 
 CREATE TABLE public.task_history (
-    id integer NOT NULL,
+    event_id UUID NOT NULL,
     project_id integer,
     task_id integer NOT NULL,
     action public.taskaction NOT NULL,
@@ -309,15 +309,6 @@ CREATE TABLE public.task_history (
     user_id bigint NOT NULL
 );
 ALTER TABLE public.task_history OWNER TO fmtm;
-CREATE SEQUENCE public.task_history_id_seq
-AS integer
-START WITH 1
-INCREMENT BY 1
-NO MINVALUE
-NO MAXVALUE
-CACHE 1;
-ALTER TABLE public.task_history_id_seq OWNER TO fmtm;
-ALTER SEQUENCE public.task_history_id_seq OWNED BY public.task_history.id;
 
 
 CREATE TABLE public.tasks (
@@ -421,9 +412,6 @@ ALTER TABLE ONLY public.organisations ALTER COLUMN id SET DEFAULT nextval(
 ALTER TABLE ONLY public.projects ALTER COLUMN id SET DEFAULT nextval(
     'public.projects_id_seq'::regclass
 );
-ALTER TABLE ONLY public.task_history ALTER COLUMN id SET DEFAULT nextval(
-    'public.task_history_id_seq'::regclass
-);
 ALTER TABLE ONLY public.tasks ALTER COLUMN id SET DEFAULT nextval(
     'public.tasks_id_seq'::regclass
 );
@@ -465,7 +453,7 @@ ALTER TABLE ONLY public.projects
 ADD CONSTRAINT projects_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY public.task_history
-ADD CONSTRAINT task_history_pkey PRIMARY KEY (id);
+ADD CONSTRAINT task_history_pkey PRIMARY KEY (uuid);
 
 ALTER TABLE ONLY public.tasks
 ADD CONSTRAINT tasks_pkey PRIMARY KEY (id, project_id);
@@ -500,18 +488,18 @@ CREATE INDEX idx_task_history_project_id_user_id ON public.task_history
 USING btree (
     user_id, project_id
 );
+CREATE INDEX ix_task_history_project_id ON public.task_history USING btree (
+    project_id
+);
+CREATE INDEX ix_task_history_user_id ON public.task_history USING btree (
+    user_id
+);
 CREATE INDEX idx_tasks_outline ON public.tasks USING gist (outline);
 CREATE INDEX ix_projects_mapper_level ON public.projects USING btree (
     mapper_level
 );
 CREATE INDEX ix_projects_organisation_id ON public.projects USING btree (
     organisation_id
-);
-CREATE INDEX ix_task_history_project_id ON public.task_history USING btree (
-    project_id
-);
-CREATE INDEX ix_task_history_user_id ON public.task_history USING btree (
-    user_id
 );
 CREATE INDEX ix_tasks_locked_by ON public.tasks USING btree (locked_by);
 CREATE INDEX ix_tasks_mapped_by ON public.tasks USING btree (mapped_by);
