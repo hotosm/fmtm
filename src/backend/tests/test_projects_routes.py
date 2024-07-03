@@ -367,6 +367,33 @@ async def test_project_by_id(client, project):
     assert data["tasks"] == project.tasks
 
 
+async def test_get_odk_entities_mapping_statuses(client, project):
+    """Test get the ODK entities mapping statuses."""
+    # mock dependency on odk central library
+    entities_data_mock = [
+        {
+            "id": "455d0982-f4d9-4a08-ab94-dba22aa951b2",
+            "task_id": 1,
+            "osm_id": 302546443,
+            "status": 0,
+            "updatedAt": None,
+        }
+    ]
+
+    with patch(
+        "app.central.central_crud.get_entities_data", return_value=entities_data_mock
+    ):
+        response = client.get(f"/projects/{project.id}/entities/statuses")
+
+        assert len(response.json()) == 1
+        entity = response.json()[0]
+
+        # updated at field is defined as computed in central_schemas
+        entity["updatedAt"] = entity.pop("updated_at")
+        assert response.status_code == 200
+        assert entity == entities_data_mock[0]
+
+
 if __name__ == "__main__":
     """Main func if file invoked directly."""
     pytest.main()
