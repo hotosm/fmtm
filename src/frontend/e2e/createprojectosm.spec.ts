@@ -1,7 +1,7 @@
 import { test } from '@playwright/test';
 
 test('test', async ({ page }) => {
-  await page.goto('http://fmtm.localhost:7050/');
+  await page.goto('http://http://ui:7051');
   await page.getByRole('button', { name: '+ Create New Project' }).click();
 
   //UNCOMMENT FOR LOGIN
@@ -441,18 +441,5 @@ test('test', async ({ page }) => {
   //   },
   // });
 
-  await page.getByRole('button', { name: 'NEXT' }).click();
-  // await page.getByRole('combobox').click();
-  // await page.getByLabel('buildings').getByText('buildings').click();
-  // await page.getByRole('button', { name: 'NEXT' }).click();
-  // await page.getByText('Use OSM data extract').click();
-  // await page.getByRole('button', { name: 'Generate Data Extract' }).click();
-  // await page.getByRole('button', { name: 'NEXT' }).click();
-  // await page.getByText('Divide on square').click();
-  // await page.getByRole('spinbutton').click();
-  // await page.getByRole('spinbutton').fill('500');
-  // await page.getByRole('button', { name: 'Click to generate task' }).click();
-  // await page.getByRole('button', { name: 'SUBMIT' }).click();
-
-  // await page.goto('http://fmtm.localhost:7050/project/64');
+  await page.goto('http://ui:7051/project/64');
 });
