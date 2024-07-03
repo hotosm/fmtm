@@ -69,6 +69,7 @@ components directory.
 To run the frontend tests locally, run:
 
 ```bash
+API_URL_OVERRIDE="http://api:8000" docker compose build ui
 docker compose run --rm --service-ports ui-test
 ```
 
