@@ -43,7 +43,7 @@
   ],
   "origins": [
     {
-      "origin": "http://fmtm.localhost:7050",
+      "origin": "http://ui:7051",
       "localStorage": [
         {
           "name": "persist:login",

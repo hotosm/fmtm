@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 const authFile = '.src/frontend/playwright/.auth/user.json';
 
 test('test', async ({ page }) => {
-  await page.goto('http://fmtm.localhost:7050/');
+  await page.goto('http://ui:7051');
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page
     .locator('div')
