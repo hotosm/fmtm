@@ -23,7 +23,7 @@ DROP TABLE IF EXISTS public.task_invalidation_history;
 DROP SEQUENCE IF EXISTS public.task_invalidation_history_id_seq;
 
 ALTER TABLE public.projects
-DROP COLUMN license_id;
+DROP COLUMN IF EXISTS license_id;
 
 DROP TABLE IF EXISTS public.user_licenses;
 DROP TABLE IF EXISTS public.licenses;
@@ -40,8 +40,8 @@ DROP TABLE IF EXISTS public.teams;
 DROP SEQUENCE IF EXISTS public.teams_id_seq;
 
 ALTER TABLE public.projects
-DROP COLUMN mapping_permission,
-DROP COLUMN validation_permission;
+DROP COLUMN IF EXISTS mapping_permission,
+DROP COLUMN IF EXISTS validation_permission;
 DROP TYPE IF EXISTS public.validationpermission;
 DROP TYPE IF EXISTS public.mappingpermission;
 DROP TYPE IF EXISTS public.teamvisibility;
