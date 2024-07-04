@@ -19,8 +19,6 @@
 
 import json
 import logging
-import time
-import zipfile
 from asyncio import gather
 from datetime import datetime, timezone
 from io import BytesIO
@@ -35,15 +33,17 @@ from geoalchemy2 import WKBElement
 from geoalchemy2.shape import from_shape, to_shape
 from geojson_pydantic import Feature, MultiPolygon, Polygon
 from geojson_pydantic import FeatureCollection as FeatCol
+from osm_fieldwork.data_models import data_models_path
+from osm_rawdata.postgres import PostgresClient
 from shapely.geometry import mapping, shape
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
-from shapely.validation import make_valid
 from sqlalchemy import text
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.models.enums import XLSFormType
 
 log = logging.getLogger(__name__)
 API_URL = settings.RAW_DATA_API_URL
@@ -787,78 +787,42 @@ def parse_featcol(features: Union[Feature, FeatCol, MultiPolygon, Polygon]):
     return feat_col
 
 
-def request_snapshot(geometry):
+def get_osm_geometries(form_category, geometry):
     """Request a snapshot based on the provided geometry.
 
     Args:
+        form_category(str): feature category type (eg: buildings).
         geometry (str): The geometry data in JSON format.
 
     Returns:
         dict: The JSON response containing the snapshot data.
     """
-    headers = {"accept": "application/json", "Content-Type": "application/json"}
+    config_filename = XLSFormType(form_category).name
+    data_model = f"{data_models_path}/{config_filename}.yaml"
 
-    payload = {
-        "geometry": json.loads(geometry),
-        "filters": {"tags": {"all_geometry": {"join_or": {"building": []}}}},
-        "geometryType": ["polygon"],
-    }
-    response = requests.post(
-        f"{API_URL}/snapshot/", data=json.dumps(payload), headers=headers
+    with open(data_model, "rb") as data_model_yaml:
+        extract_config = BytesIO(data_model_yaml.read())
+
+    pg = PostgresClient(
+        "underpass",
+        extract_config,
+        auth_token=settings.RAW_DATA_API_AUTH_TOKEN
+        if settings.RAW_DATA_API_AUTH_TOKEN
+        else None,
     )
-    response.raise_for_status()
-    return response.json()
-
-
-def poll_task_status(task_link):
-    """Poll the status of a task until it reaches state (SUCCESS or FAILED).
-
-    Args:
-        task_link (str): The link to the task status endpoint.
-
-    Returns:
-        dict: The final status of the task as a JSON response.
-    """
-    stop_loop = False
-    while not stop_loop:
-        check_result = requests.get(url=f"{API_URL}{task_link}")
-        check_result.raise_for_status()
-        res = check_result.json()
-        if res["status"] in ["SUCCESS", "FAILED"]:
-            stop_loop = True
-        time.sleep(1)
-    return res
-
-
-def download_snapshot(download_url):
-    """Download a snapshot from the provided URL and extract the GeoJSON.
-
-    Args:
-        download_url (str): The URL to download the snapshot from.
-
-    Returns:
-        dict: The extracted GeoJSON data from the downloaded snapshot.
-    """
-    response = requests.get(download_url)
-    response.raise_for_status()
-    with zipfile.ZipFile(BytesIO(response.content), "r") as zip_ref:
-        with zip_ref.open("Export.geojson") as file:
-            return json.load(file)
-
-
-def calculate_bbox(features):
-    """Calculate the bounding box of a collection of features(geojson).
-
-    Args:
-        features (list): A list of features with geometries.
-
-    Returns:
-        tuple: the bounding box coordinates (minx, miny, maxx, maxy).
-    """
-    geometries = [make_valid(shape(feature["geometry"])) for feature in features]
-    union = unary_union(geometries)
-    bbox = union.bounds
-    return bbox
+    return pg.execQuery(
+        geometry,
+        extra_params={
+            "fileName": (
+                f"fmtm/{settings.FMTM_DOMAIN}/data_extract"
+                if settings.RAW_DATA_API_AUTH_TOKEN
+                else "fmtm_extract"
+            ),
+            "outputType": "geojson",
+            "bind_zip": True,
+            "useStWithin": False,
+        },
+    )
 
 
 def geometries_almost_equal(

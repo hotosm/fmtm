@@ -27,7 +27,6 @@ from datetime import datetime, timedelta
 from io import BytesIO
 from typing import Optional
 
-import geojson
 import sozipfile.sozipfile as zipfile
 from asgiref.sync import async_to_sync
 from fastapi import HTTPException, Response
@@ -37,13 +36,12 @@ from loguru import logger as log
 from sqlalchemy.orm import Session
 
 from app.central.central_crud import (
-    flatten_json,
     get_odk_form,
     get_odk_project,
     list_odk_xforms,
 )
 from app.config import settings
-from app.db import db_models, postgis_utils
+from app.db import db_models
 from app.models.enums import HTTPStatus
 from app.projects import project_crud, project_deps
 from app.s3 import add_obj_to_bucket, get_obj_from_bucket
@@ -532,43 +530,43 @@ async def get_submission_detail(
     return submission.get("value", [])[0]
 
 
-async def get_submission_geojson(
-    project_id: int,
-    db: Session,
-):
-    """Retrieve GeoJSON data for a submission associated with a project.
+# FIXME might not needed
+# async def get_submission_geojson(
+#     project_id: int,
+#     db: Session,
+# ):
+#     """Retrieve GeoJSON data for a submission associated with a project.
 
-    Args:
-        project_id (int): The ID of the project.
-        db (Session): The database session.
+#     Args:
+#         project_id (int): The ID of the project.
+#         db (Session): The database session.
 
-    Returns:
-        FeatCol: A GeoJSON FeatCol containing the submission features.
-    """
-    data = await get_submission_by_project(project_id, {}, db)
-    submission_json = data.get("value", [])
+#     Returns:
+#         FeatCol: A GeoJSON FeatCol containing the submission features.
+#     """
+#     data = await get_submission_by_project(project_id, {}, db)
+#     submission_json = data.get("value", [])
 
-    if not submission_json:
-        raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail="Loading JSON submission failed",
-        )
+#     if not submission_json:
+#         raise HTTPException(
+#             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+#             detail="Loading JSON submission failed",
+#         )
 
-    all_features = []
-    for submission in submission_json:
-        keys_to_remove = ["meta", "__id", "__system"]
-        for key in keys_to_remove:
-            submission.pop(key)
+#     all_features = []
+#     for submission in submission_json:
+#         keys_to_remove = ["meta", "__id", "__system"]
+#         for key in keys_to_remove:
+#             submission.pop(key)
 
-        data = {}
-        flatten_json(submission, data)
+#         data = {}
+#         flatten_json(submission, data)
 
-        geojson_geom = await postgis_utils.javarosa_to_geojson_geom(
-            data.pop("xlocation", {}), geom_type="Polygon"
-        )
+#         geojson_geom = await postgis_utils.javarosa_to_geojson_geom(
+#             data.pop("xlocation", {}), geom_type="Polygon"
+#         )
 
-        feature = geojson.Feature(geometry=geojson_geom, properties=data)
-        all_features.append(feature)
+#         feature = geojson.Feature(geometry=geojson_geom, properties=data)
+#         all_features.append(feature)
 
-    featcol = geojson.FeatureCollection(features=all_features)
-    return featcol
+#     return geojson.FeatureCollection(features=all_features)
