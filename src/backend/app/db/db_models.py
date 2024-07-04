@@ -19,10 +19,12 @@
 
 from datetime import datetime
 from typing import cast
+from uuid import uuid4
 
 from geoalchemy2 import Geometry, WKBElement
 from sqlalchemy import (
     ARRAY,
+    UUID,
     BigInteger,
     Boolean,
     Column,
@@ -232,7 +234,7 @@ class DbTaskHistory(Base):
 
     __tablename__ = "task_history"
 
-    id = cast(int, Column(Integer, primary_key=True))
+    event_id = cast(str, Column(UUID, primary_key=True, default=uuid4()))
     project_id = cast(int, Column(Integer, ForeignKey("projects.id"), index=True))
     task_id = cast(int, Column(Integer, nullable=False))
     action = cast(TaskAction, Column(Enum(TaskAction), nullable=False))
