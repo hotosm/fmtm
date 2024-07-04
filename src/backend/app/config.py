@@ -150,6 +150,9 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"
     ENCRYPTION_KEY: str
+    # NOTE HS384 is used for simplicity of implementation and compatibility with
+    # existing Fernet based database value encryption
+    JWT_ENCRYPTION_ALGORITHM: str = "HS384"
 
     FMTM_DOMAIN: str
     FMTM_DEV_PORT: Optional[str] = "7050"
@@ -270,18 +273,11 @@ class Settings(BaseSettings):
     @field_validator("RAW_DATA_API_AUTH_TOKEN", mode="before")
     @classmethod
     def set_raw_data_api_auth_none(cls, v: Optional[str]) -> Optional[str]:
-        """Set RAW_DATA_API_AUTH_TOKEN to None if set to empty string."""
-        if v == "":
-            return None
-        return v
+        """Set RAW_DATA_API_AUTH_TOKEN to None if set to empty string.
 
-    # Used for temporary auth feature
-    OSM_SVC_ACCOUNT_TOKEN: Optional[str] = None
-
-    @field_validator("OSM_SVC_ACCOUNT_TOKEN", mode="before")
-    @classmethod
-    def set_osm_svc_account_none(cls, v: Optional[str]) -> Optional[str]:
-        """Set OSM_SVC_ACCOUNT_TOKEN to None if set to empty string."""
+        This variable is used by HOTOSM to track raw-data-api usage.
+        It is not required if running your own instance.
+        """
         if v == "":
             return None
         return v
@@ -312,6 +308,14 @@ def get_settings():
 @lru_cache
 def get_cipher_suite():
     """Cache cypher suite."""
+    # Fernet is used by cryptography as a simple and effective default
+    # it enforces a 32 char secret.
+    #
+    # In the future we could migrate this to HS384 encryption, which we also
+    # use for our JWT signing. Ideally this needs 48 characters, but for now
+    # we are stuck at 32 char to maintain support with Fernet (reuse the same key).
+    #
+    # However this would require a migration for all existing instances of FMTM.
     return Fernet(settings.ENCRYPTION_KEY)
 
 

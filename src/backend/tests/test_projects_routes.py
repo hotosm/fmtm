@@ -21,8 +21,8 @@ import json
 import os
 from io import BytesIO
 from pathlib import Path
-from random import randint
 from unittest.mock import Mock, patch
+from uuid import uuid4
 
 import pytest
 import requests
@@ -48,16 +48,16 @@ async def test_create_project(client, admin_user, organisation):
         "odk_central_user": odk_central_user,
         "odk_central_password": odk_central_password,
     }
-    odk_credentials = project_schemas.ODKCentralDecrypted(**odk_credentials)
+    odk_creds_models = project_schemas.ODKCentralDecrypted(**odk_credentials)
 
     project_data = {
         "project_info": {
-            "name": f"Test Project {randint(1, 1000000)}",
+            "name": f"Test Project {uuid4()}",
             "short_description": "test",
             "description": "test",
         },
         "xform_category": "buildings",
-        "hashtags": ["#FMTM"],
+        "hashtags": "#FMTM",
         "outline_geojson": {
             "coordinates": [
                 [
@@ -71,7 +71,7 @@ async def test_create_project(client, admin_user, organisation):
             "type": "Polygon",
         },
     }
-    project_data.update(**odk_credentials.model_dump())
+    project_data.update(**odk_creds_models.model_dump())
 
     response = client.post(
         f"/projects/create_project?org_id={organisation.id}", json=project_data
@@ -87,7 +87,6 @@ async def test_create_project(client, admin_user, organisation):
 
 async def test_delete_project(client, admin_user, project):
     """Test deleting a FMTM project, plus ODK Central project."""
-    log.warning(project)
     response = client.delete(f"/projects/{project.id}")
     assert response.status_code == 204
 
@@ -279,12 +278,12 @@ async def test_update_project(client, admin_user, project):
     """Test update project metadata."""
     updated_project_data = {
         "project_info": {
-            "name": f"Updated Test Project {randint(1, 1000000)}",
+            "name": f"Updated Test Project {uuid4()}",
             "short_description": "updated short description",
             "description": "updated description",
         },
-        "xform_category": "buildings",
-        "hashtags": ["#FMTM"],
+        "xform_category": "healthcare",
+        "hashtags": "#FMTM anothertag",
         "outline_geojson": {
             "coordinates": [
                 [
@@ -319,6 +318,53 @@ async def test_update_project(client, admin_user, project):
         response_data["project_info"]["description"]
         == updated_project_data["project_info"]["description"]
     )
+
+    assert response_data["xform_category"] == "healthcare"
+    assert response_data["hashtags"] == ["#FMTM", "#anothertag"]
+
+
+async def test_project_summaries(client, project):
+    """Test read project summaries."""
+    response = client.get("/projects/summaries")
+    assert response.status_code == 200
+    assert "results" in response.json()
+
+    results = response.json()["results"]
+    result = results[0]
+
+    assert result["id"] == project.id
+    assert result["title"] == project.title
+    assert result["description"] == project.description
+    assert result["hashtags"] == project.hashtags
+    assert result["organisation_id"] == project.organisation_id
+
+
+async def test_project_by_id(client, project):
+    """Test read project by id."""
+    response = client.get(f"projects/{project.id}")
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["id"] == project.id
+    assert data["odkid"] == project.odkid
+    assert data["author"]["username"] == project.author.username
+    assert data["author"]["id"] == project.author.id
+    assert data["project_info"]["name"] == project.project_info.name
+    assert (
+        data["project_info"]["short_description"]
+        == project.project_info.short_description
+    )
+    assert data["project_info"]["description"] == project.project_info.description
+    assert (
+        data["project_info"]["per_task_instructions"]
+        == project.project_info.per_task_instructions
+    )
+    assert data["status"] == project.status
+    assert data["xform_category"] == project.xform_category
+    assert data["hashtags"] == project.hashtags
+    assert data["organisation_id"] == project.organisation_id
+    assert data["tasks"] == project.tasks
 
 
 if __name__ == "__main__":

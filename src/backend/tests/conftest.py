@@ -31,7 +31,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists
 
 from app.auth.auth_routes import get_or_create_user
-from app.auth.osm import AuthUser
+from app.auth.auth_schemas import AuthUser, FMTMUser
 from app.central import central_crud
 from app.config import settings
 from app.db.database import Base, get_db
@@ -93,15 +93,18 @@ async def admin_user(db):
     db_user = await get_or_create_user(
         db,
         AuthUser(
+            sub="fmtm|1",
             username="localadmin",
-            id=1,
             role=UserRole.ADMIN,
         ),
     )
-    # Upgrade role from default MAPPER (if user already exists)
-    db_user["role"] = UserRole.ADMIN
-    db.commit()
-    return db_user
+
+    return FMTMUser(
+        id=db_user.id,
+        username=db_user.username,
+        role=UserRole[db_user.role],
+        profile_img=db_user.profile_img,
+    )
 
 
 @pytest.fixture(scope="function")
@@ -134,7 +137,7 @@ async def project(db, admin_user, organisation):
         odk_central_url=os.getenv("ODK_CENTRAL_URL"),
         odk_central_user=os.getenv("ODK_CENTRAL_USER"),
         odk_central_password=os.getenv("ODK_CENTRAL_PASSWD"),
-        hashtags=["hot-fmtm"],
+        hashtags="hashtag1 hashtag2",
         outline_geojson=Polygon(
             type="Polygon",
             coordinates=[
@@ -174,11 +177,7 @@ async def project(db, admin_user, organisation):
             db,
             project_metadata,
             odkproject["id"],
-            AuthUser(
-                username=admin_user["username"],
-                id=admin_user["id"],
-                role=UserRole.ADMIN,
-            ),
+            admin_user,
         )
         log.debug(f"Project returned: {new_project.__dict__}")
         assert new_project is not None

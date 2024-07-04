@@ -19,30 +19,21 @@
 """Auth methods related to OSM OAuth2."""
 
 import os
-from typing import Optional
+import time
 
+import jwt
 from fastapi import Header, HTTPException, Request
+from fastapi.responses import JSONResponse
 from loguru import logger as log
 from osm_login_python.core import Auth
-from pydantic import BaseModel, ConfigDict
 
+from app.auth.auth_schemas import AuthUser
 from app.config import settings
-from app.models.enums import UserRole
+from app.models.enums import HTTPStatus, UserRole
 
 if settings.DEBUG:
     # Required as callback url is http during dev
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
-
-
-class AuthUser(BaseModel):
-    """The user model returned from OSM OAuth2."""
-
-    model_config = ConfigDict(use_enum_values=True)
-
-    id: int
-    username: str
-    img_url: Optional[str] = None
-    role: Optional[UserRole] = UserRole.MAPPER
 
 
 async def init_osm_auth():
@@ -63,27 +54,149 @@ async def login_required(
     """Dependency to inject into endpoints requiring login."""
     if settings.DEBUG:
         return AuthUser(
-            id=1,
+            sub="fmtm|1",
             username="localadmin",
             role=UserRole.ADMIN,
         )
 
-    osm_auth = await init_osm_auth()
-
     # Attempt extract from cookie if access token not passed
     if not access_token:
-        cookie_name = settings.FMTM_DOMAIN.replace(".", "_")
-        log.debug(f"Extracting token from cookie {cookie_name}")
-        access_token = request.cookies.get(cookie_name)
+        access_token = extract_token_from_cookie(request)
 
     if not access_token:
         raise HTTPException(status_code=401, detail="No access token provided")
 
     try:
-        osm_user = osm_auth.deserialize_access_token(access_token)
+        token_data = verify_token(access_token)
     except ValueError as e:
         log.error(e)
         log.error("Failed to deserialise access token")
         raise HTTPException(status_code=401, detail="Access token not valid") from e
 
-    return AuthUser(**osm_user)
+    return AuthUser(**token_data)
+
+
+def extract_token_from_cookie(request: Request) -> str:
+    """Extract access token from cookies."""
+    cookie_name = settings.FMTM_DOMAIN.replace(".", "_")
+    log.debug(f"Extracting token from cookie {cookie_name}")
+    return request.cookies.get(cookie_name)
+
+
+def extract_refresh_token_from_cookie(request: Request) -> str:
+    """Extract refresh token from cookies."""
+    cookie_name = settings.FMTM_DOMAIN.replace(".", "_")
+    return request.cookies.get(f"{cookie_name}_refresh")
+
+
+def create_tokens(jwt_data: dict) -> tuple[str, str]:
+    """Generates tokens for the specified user.
+
+    Args:
+        jwt_data (dict): user data for which the access token is being generated.
+
+    Returns:
+        Tuple: The generated access tokens.
+    """
+    access_token_data = jwt_data
+    access_token = jwt.encode(
+        access_token_data,
+        settings.ENCRYPTION_KEY,
+        algorithm=settings.JWT_ENCRYPTION_ALGORITHM,
+    )
+
+    refresh_token_data = jwt_data
+    refresh_token_data["exp"] = (
+        int(time.time()) + 86400 * 7
+    )  # set refresh token expiry to 7 days
+    refresh_token = jwt.encode(
+        refresh_token_data,
+        settings.ENCRYPTION_KEY,
+        algorithm=settings.JWT_ENCRYPTION_ALGORITHM,
+    )
+
+    return access_token, refresh_token
+
+
+def refresh_access_token(payload: dict) -> str:
+    """Generate a new access token."""
+    payload["exp"] = int(time.time()) + 60  # Access token valid for 15 minutes
+
+    return jwt.encode(
+        payload,
+        settings.ENCRYPTION_KEY,
+        algorithm=settings.JWT_ENCRYPTION_ALGORITHM,
+    )
+
+
+def verify_token(token: str):
+    """Verifies the access token and returns the payload if valid.
+
+    Args:
+        token (str): The access token to be verified.
+
+    Returns:
+        dict: The payload of the access token if verification is successful.
+
+    Raises:
+        HTTPException: If the token has expired or credentials could not be validated.
+    """
+    try:
+        return jwt.decode(
+            token,
+            settings.ENCRYPTION_KEY,
+            algorithms=[settings.JWT_ENCRYPTION_ALGORITHM],
+            audience=settings.FMTM_DOMAIN,
+        )
+    except jwt.ExpiredSignatureError as e:
+        raise HTTPException(status_code=401, detail="Refresh token has expired") from e
+    except Exception as e:
+        raise HTTPException(
+            status_code=401, detail="Could not validate refresh token"
+        ) from e
+
+
+def set_cookies(access_token: str, refresh_token: str):
+    """Sets cookies for the access token and refresh token.
+
+    Args:
+        access_token (str): The access token to be stored in the cookie.
+        refresh_token (str): The refresh token to be stored in the cookie.
+
+    Returns:
+        JSONResponse: A response object with the cookies set.
+
+    TODO we can refactor this to remove setting the access_token cookie
+    TODO only the refresh token should be stored in the httpOnly cookie
+    TODO the access token is used in memory in the browser (not stored)
+    """
+    # NOTE we return the access token to the frontend for electric-sql
+    # as the expiry is set to 1hr and is relatively safe
+    response = JSONResponse(
+        status_code=HTTPStatus.OK,
+        content={"token": access_token},
+    )
+    cookie_name = settings.FMTM_DOMAIN.replace(".", "_")
+    response.set_cookie(
+        key=cookie_name,
+        value=access_token,
+        max_age=3600,
+        expires=3600,  # expiry set for 1 hour
+        path="/",
+        domain=settings.FMTM_DOMAIN,
+        secure=False if settings.DEBUG else True,
+        httponly=True,
+        samesite="lax",
+    )
+    response.set_cookie(
+        key=f"{cookie_name}_refresh",
+        value=refresh_token,
+        max_age=86400 * 7,
+        expires=86400 * 7,  # expiry set for 7 days
+        path="/",
+        domain=settings.FMTM_DOMAIN,
+        secure=False if settings.DEBUG else True,
+        httponly=True,
+        samesite="lax",
+    )
+    return response
