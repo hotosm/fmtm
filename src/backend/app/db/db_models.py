@@ -218,7 +218,7 @@ class DbTaskHistory(Base):
     __tablename__ = "task_history"
 
     event_id = cast(str, Column(UUID, primary_key=True, default=uuid4()))
-    project_id = cast(int, Column(Integer, ForeignKey("projects.id"), index=True))
+    project_id = cast(int, Column(Integer, index=True))
     task_id = cast(int, Column(Integer, nullable=False))
     action = cast(TaskAction, Column(Enum(TaskAction), nullable=False))
     action_text = cast(str, Column(String))
@@ -227,20 +227,12 @@ class DbTaskHistory(Base):
         int,
         Column(
             BigInteger,
-            ForeignKey("users.id", name="fk_users"),
             index=True,
             nullable=False,
         ),
     )
 
-    # Define relationships
-    user = relationship(DbUser, uselist=False, backref="task_history_user")
-    actioned_by = relationship(DbUser, overlaps="task_history_user,user")
-
     __table_args__ = (
-        ForeignKeyConstraint(
-            [task_id, project_id], ["tasks.id", "tasks.project_id"], name="fk_tasks"
-        ),
         Index("idx_task_history_composite", "task_id", "project_id"),
         Index("idx_task_history_project_id_user_id", "user_id", "project_id"),
         {},
