@@ -453,7 +453,7 @@ ALTER TABLE ONLY public.projects
 ADD CONSTRAINT projects_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY public.task_history
-ADD CONSTRAINT task_history_pkey PRIMARY KEY (uuid);
+ADD CONSTRAINT task_history_pkey PRIMARY KEY (event_id);
 
 ALTER TABLE ONLY public.tasks
 ADD CONSTRAINT tasks_pkey PRIMARY KEY (id, project_id);
