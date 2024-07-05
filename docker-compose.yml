@@ -273,7 +273,7 @@ services:
     environment:
       ELECTRIC_SERVICE: http://electric:5133
       ELECTRIC_PROXY: postgresql://${FMTM_DB_USER:-fmtm}:${FMTM_DB_PASSWORD:-fmtm}@electric:65432/${FMTM_DB_NAME:-fmtm}
-      ELECTRIC_CLIENT_PATH: /app/migrations
+      ELECTRIC_CLIENT_PATH: /app/src/lib/migrations
     networks:
       - fmtm-net
     # Must override existing entrypoint
