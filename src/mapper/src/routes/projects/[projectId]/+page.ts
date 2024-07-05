@@ -16,6 +16,7 @@ type ProjectAuthor = {
     username: string
     id: number
 }
+// TODO add type
 type ProjectTaskHistory = {
 
 }
