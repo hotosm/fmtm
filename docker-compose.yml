@@ -248,17 +248,38 @@ services:
       DATABASE_URL: postgresql://${FMTM_DB_USER:-fmtm}:${FMTM_DB_PASSWORD:-fmtm}@${FMTM_DB_HOST:-fmtm-db}/${FMTM_DB_NAME:-fmtm}
       DATABASE_REQUIRE_SSL: false
       ELECTRIC_WRITE_TO_PG_MODE: direct_writes
-      PG_PROXY_PASSWORD: proxy_password
+      PG_PROXY_PASSWORD: ${FMTM_DB_PASSWORD}
       AUTH_MODE: insecure
-      # AUTH_JWT_ALG: RS256
-      # AUTH_JWT_KEY: 
-      # AUTH_JWT_NAMESPACE: 
+      # AUTH_JWT_ALG: HS384
+      # AUTH_JWT_KEY: ${ENCRYPTION_KEY}
+      # AUTH_JWT_AUD: ${FMTM_DOMAIN}
     ports:
       - "5133:5133"
       - "65432:65432"
     networks:
       - fmtm-net
     restart: "unless-stopped"
+
+  electric-migrations:
+    image: "ghcr.io/hotosm/fmtm/frontend:debug"
+    depends_on:
+      fmtm-db:
+        condition: service_healthy
+      electric:
+        # condition: service_healthy
+        condition: service_started
+    volumes:
+    - ./src/mapper:/app
+    environment:
+      ELECTRIC_SERVICE: http://electric:5133
+      ELECTRIC_PROXY: postgresql://${FMTM_DB_USER:-fmtm}:${FMTM_DB_PASSWORD:-fmtm}@electric:65432/${FMTM_DB_NAME:-fmtm}
+      ELECTRIC_CLIENT_PATH: /app/migrations
+    networks:
+      - fmtm-net
+    # Must override existing entrypoint
+    entrypoint: []
+    command: "npm run electric:migrations"
+    restart: "on-failure:2"
 
   central-db:
     profiles: ["", "central"]
