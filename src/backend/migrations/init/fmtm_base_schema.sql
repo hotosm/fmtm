@@ -305,7 +305,7 @@ CREATE TABLE public.task_history (
     task_id integer NOT NULL,
     action public.taskaction NOT NULL,
     action_text character varying,
-    action_date timestamp without time zone NOT NULL DEFAULT now(),
+    action_date timestamp without time zone NOT NULL,
     user_id bigint NOT NULL
 );
 ALTER TABLE public.task_history OWNER TO fmtm;
