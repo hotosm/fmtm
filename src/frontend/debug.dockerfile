@@ -1,4 +1,10 @@
 FROM docker.io/node:20-slim
+RUN set -ex \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install \
+    -y --no-install-recommends \
+          "openssl" \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY ./package.json ./pnpm-lock.yaml ./
 ENV PNPM_HOME="/pnpm"
