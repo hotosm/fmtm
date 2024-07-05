@@ -31,7 +31,7 @@ from app.models.enums import TaskStatus
 class TaskHistoryBase(BaseModel):
     """Task mapping history."""
 
-    id: int
+    event_id: str
     action_text: str
     action_date: datetime
 
