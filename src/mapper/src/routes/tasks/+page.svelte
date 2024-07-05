@@ -1,89 +1,73 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
-    import { initElectric } from '$lib/initElectric';
-    import { type Electric } from '../../generated/client';
-    import { createLiveQuery } from '$lib/liveQuery';
-  
-    let electric: Electric;
-    let results;
-  
-    // Declare add function in the script scope
-    const add = () => {
-      electric.db.tasks_electric.create({
-        data: {
-          id: Math.floor(Math.random() * 1000),
-          project_id: 1,
-          project_task_index: Math.floor(Math.random() * 1000),
-        },
-      });
-    };
+  import { onMount } from 'svelte'
+  import type { PageData } from './$types'
+  import { type Electric } from '$lib/migrations'
+  import { map, finish, validate, good, comment } from '$lib/task-events'
+  import { createLiveQuery } from '$lib/live-query'
 
-    const deleteTasks = () => electric.db.tasks_electric.deleteMany()
+  export let data: PageData
+  let electric: Electric = data.electric
+  let history
+  let comments
 
-    const lockTasks = async () => {
-    try {
-			const tasks = await electric.db.tasks_electric.findMany({
-				where: { project_id: 1 }
-			});
-			const promises = tasks.map(task => {
-				return electric.db.tasks_electric.update({
-					where: { id: task.id },
-					data: { task_status: 'LOCKED_FOR_MAPPING' }
-				});
-			});
-			return await Promise.all(promises);
-		} catch (err) {
-			console.error('Error locking tasks:', err);
-			throw err;
-		}
-    };
+  onMount(async () => {
+    await electric.db.task_history.sync()
 
-    const unlockTasks = async () => {
-    try {
-			const tasks = await electric.db.tasks_electric.findMany({
-				where: { project_id: 1 }
-			});
-			const promises = tasks.map(task => {
-				return electric.db.tasks_electric.update({
-					where: { id: task.id },
-					data: { task_status: 'READY' }
-				});
-			});
-			return await Promise.all(promises);
-		} catch (err) {
-			console.error('Error unlocking tasks:', err);
-			throw err;
-		}
-    };
+    const taskHistory = electric.db.task_history.liveMany({
+      select: { action_date: true, action: true },
+      where: {
+        project_id: 1,
+      },
+    })
+    history = createLiveQuery(electric.notifier, taskHistory)
 
+    const taskComments = electric.db.task_history.liveMany({
+      select: { action_date: true, action_text: true },
+      where: {
+        project_id: 1,
+        action: 'COMMENT',
+      },
+    })
+    comments = createLiveQuery(electric.notifier, taskComments)
+  })
 
-onMount(async () => {
-  electric = await initElectric();
-  await electric.db.tasks_electric.sync();
+  const formatDateString = (dateString: string): string => {
+    const date = new Date(dateString)
+    const day = ('0' + date.getDate()).slice(-2)
+    const month = ('0' + (date.getMonth() + 1)).slice(-2)
+    const year = date.getFullYear()
+    const hours = ('0' + date.getHours()).slice(-2)
+    const minutes = ('0' + date.getMinutes()).slice(-2)
+    return `${day}/${month}/${year} ${hours}:${minutes}`
+  }
+</script>
 
-  const query = electric.db.tasks_electric.liveMany({
-    select: {id: true, project_task_index: true},
-    where: {
-      project_id: 1,
-    },
-  });
-  results = createLiveQuery(electric.notifier, query);
-});
+<main>
+  <button on:click={() => { map(electric.db, 1, 1, 1) }}>Map</button>
+  <button on:click={() => { finish(electric.db, 1, 1, 1) }}>Finish</button>
+  <button on:click={() => { validate(electric.db, 1, 1, 1) }}>Validate</button>
+  <button on:click={() => { good(electric.db, 1, 1, 1) }}>Good</button>
+  <button on:click={() => { comment(electric.db, 1, 1, 1, 'A comment') }}>Comment</button>
 
-  </script>
-  
-  <button on:click={add}>Add</button>
-  <button on:click={deleteTasks}>clear</button>
-  <button on:click={lockTasks}>lock</button>
-  <button on:click={unlockTasks}>unlock</button>
-
-
-  {#if $results}
+  <p>History:</p>
+  {#if $history}
     <div>
-        {#each $results as r}
-        <div>{r.id} {r.project_task_index} {r.task_status}</div>
-        {/each}
+      {#each $history as r}
+        <div>{formatDateString(r.action_date)} | {r.action}</div>
+      {/each}
     </div>
-    {:else}
+  {:else}
     <p>No tasks found.</p>
-    {/if}
+  {/if}
+
+  <p>Comments:</p>
+  {#if $comments}
+    <div>
+      {#each $comments as r}
+        <div>{formatDateString(r.action_date)} | {r.action_text}</div>
+      {/each}
+    </div>
+  {:else}
+    <p>No tasks found.</p>
+  {/if}
+</main>
