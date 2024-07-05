@@ -13,32 +13,26 @@ type UnwrapTuple<Tuple extends readonly unknown[]> = {
 
 
 /**
- * Model Tasks_electric
+ * Model Task_history
  * 
  */
-export type Tasks_electric = {
+export type Task_history = {
+  /**
+   * @zod.string.uuid()
+   */
+  event_id: string
   /**
    * @zod.number.int().gte(-2147483648).lte(2147483647)
    */
-  id: number
+  project_id: number | null
   /**
    * @zod.number.int().gte(-2147483648).lte(2147483647)
    */
-  project_id: number
-  /**
-   * @zod.number.int().gte(-2147483648).lte(2147483647)
-   */
-  project_task_index: number | null
-  project_task_name: string | null
-  geometry_geojson: string | null
-  /**
-   * @zod.number.int().gte(-2147483648).lte(2147483647)
-   */
-  feature_count: number | null
-  task_status: taskstatus | null
-  locked_by: bigint | null
-  mapped_by: bigint | null
-  validated_by: bigint | null
+  task_id: number
+  action: taskaction
+  action_text: string | null
+  action_date: Date
+  user_id: bigint
 }
 
 
@@ -49,19 +43,20 @@ export type Tasks_electric = {
 // Based on
 // https://github.com/microsoft/TypeScript/issues/3192#issuecomment-261720275
 
-export const taskstatus: {
-  READY: 'READY',
+export const taskaction: {
+  RELEASED_FOR_MAPPING: 'RELEASED_FOR_MAPPING',
   LOCKED_FOR_MAPPING: 'LOCKED_FOR_MAPPING',
-  MAPPED: 'MAPPED',
+  MARKED_MAPPED: 'MARKED_MAPPED',
   LOCKED_FOR_VALIDATION: 'LOCKED_FOR_VALIDATION',
   VALIDATED: 'VALIDATED',
-  INVALIDATED: 'INVALIDATED',
-  BAD: 'BAD',
-  SPLIT: 'SPLIT',
-  ARCHIVED: 'ARCHIVED'
+  MARKED_INVALID: 'MARKED_INVALID',
+  MARKED_BAD: 'MARKED_BAD',
+  SPLIT_NEEDED: 'SPLIT_NEEDED',
+  RECREATED: 'RECREATED',
+  COMMENT: 'COMMENT'
 };
 
-export type taskstatus = (typeof taskstatus)[keyof typeof taskstatus]
+export type taskaction = (typeof taskaction)[keyof typeof taskaction]
 
 
 /**
@@ -71,8 +66,8 @@ export type taskstatus = (typeof taskstatus)[keyof typeof taskstatus]
  * @example
  * ```
  * const prisma = new PrismaClient()
- * // Fetch zero or more Tasks_electrics
- * const tasks_electrics = await prisma.tasks_electric.findMany()
+ * // Fetch zero or more Task_histories
+ * const task_histories = await prisma.task_history.findMany()
  * ```
  *
  * 
@@ -92,8 +87,8 @@ export class PrismaClient<
    * @example
    * ```
    * const prisma = new PrismaClient()
-   * // Fetch zero or more Tasks_electrics
-   * const tasks_electrics = await prisma.tasks_electric.findMany()
+   * // Fetch zero or more Task_histories
+   * const task_histories = await prisma.task_history.findMany()
    * ```
    *
    * 
@@ -182,14 +177,14 @@ export class PrismaClient<
   $transaction<R>(fn: (prisma: Prisma.TransactionClient) => Promise<R>, options?: {maxWait?: number, timeout?: number, isolationLevel?: Prisma.TransactionIsolationLevel}): Promise<R>;
 
       /**
-   * `prisma.tasks_electric`: Exposes CRUD operations for the **Tasks_electric** model.
+   * `prisma.task_history`: Exposes CRUD operations for the **Task_history** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more Tasks_electrics
-    * const tasks_electrics = await prisma.tasks_electric.findMany()
+    * // Fetch zero or more Task_histories
+    * const task_histories = await prisma.task_history.findMany()
     * ```
     */
-  get tasks_electric(): Prisma.Tasks_electricDelegate<GlobalReject>;
+  get task_history(): Prisma.Task_historyDelegate<GlobalReject>;
 }
 
 export namespace Prisma {
@@ -674,7 +669,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   }
 
   export const ModelName: {
-    Tasks_electric: 'Tasks_electric'
+    Task_history: 'Task_history'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -845,438 +840,398 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
    */
 
   /**
-   * Model Tasks_electric
+   * Model Task_history
    */
 
 
-  export type AggregateTasks_electric = {
-    _count: Tasks_electricCountAggregateOutputType | null
-    _avg: Tasks_electricAvgAggregateOutputType | null
-    _sum: Tasks_electricSumAggregateOutputType | null
-    _min: Tasks_electricMinAggregateOutputType | null
-    _max: Tasks_electricMaxAggregateOutputType | null
+  export type AggregateTask_history = {
+    _count: Task_historyCountAggregateOutputType | null
+    _avg: Task_historyAvgAggregateOutputType | null
+    _sum: Task_historySumAggregateOutputType | null
+    _min: Task_historyMinAggregateOutputType | null
+    _max: Task_historyMaxAggregateOutputType | null
   }
 
-  export type Tasks_electricAvgAggregateOutputType = {
-    id: number | null
+  export type Task_historyAvgAggregateOutputType = {
     project_id: number | null
-    project_task_index: number | null
-    feature_count: number | null
-    locked_by: number | null
-    mapped_by: number | null
-    validated_by: number | null
+    task_id: number | null
+    user_id: number | null
   }
 
-  export type Tasks_electricSumAggregateOutputType = {
-    id: number | null
+  export type Task_historySumAggregateOutputType = {
     project_id: number | null
-    project_task_index: number | null
-    feature_count: number | null
-    locked_by: bigint | null
-    mapped_by: bigint | null
-    validated_by: bigint | null
+    task_id: number | null
+    user_id: bigint | null
   }
 
-  export type Tasks_electricMinAggregateOutputType = {
-    id: number | null
+  export type Task_historyMinAggregateOutputType = {
+    event_id: string | null
     project_id: number | null
-    project_task_index: number | null
-    project_task_name: string | null
-    geometry_geojson: string | null
-    feature_count: number | null
-    task_status: taskstatus | null
-    locked_by: bigint | null
-    mapped_by: bigint | null
-    validated_by: bigint | null
+    task_id: number | null
+    action: taskaction | null
+    action_text: string | null
+    action_date: Date | null
+    user_id: bigint | null
   }
 
-  export type Tasks_electricMaxAggregateOutputType = {
-    id: number | null
+  export type Task_historyMaxAggregateOutputType = {
+    event_id: string | null
     project_id: number | null
-    project_task_index: number | null
-    project_task_name: string | null
-    geometry_geojson: string | null
-    feature_count: number | null
-    task_status: taskstatus | null
-    locked_by: bigint | null
-    mapped_by: bigint | null
-    validated_by: bigint | null
+    task_id: number | null
+    action: taskaction | null
+    action_text: string | null
+    action_date: Date | null
+    user_id: bigint | null
   }
 
-  export type Tasks_electricCountAggregateOutputType = {
-    id: number
+  export type Task_historyCountAggregateOutputType = {
+    event_id: number
     project_id: number
-    project_task_index: number
-    project_task_name: number
-    geometry_geojson: number
-    feature_count: number
-    task_status: number
-    locked_by: number
-    mapped_by: number
-    validated_by: number
+    task_id: number
+    action: number
+    action_text: number
+    action_date: number
+    user_id: number
     _all: number
   }
 
 
-  export type Tasks_electricAvgAggregateInputType = {
-    id?: true
+  export type Task_historyAvgAggregateInputType = {
     project_id?: true
-    project_task_index?: true
-    feature_count?: true
-    locked_by?: true
-    mapped_by?: true
-    validated_by?: true
+    task_id?: true
+    user_id?: true
   }
 
-  export type Tasks_electricSumAggregateInputType = {
-    id?: true
+  export type Task_historySumAggregateInputType = {
     project_id?: true
-    project_task_index?: true
-    feature_count?: true
-    locked_by?: true
-    mapped_by?: true
-    validated_by?: true
+    task_id?: true
+    user_id?: true
   }
 
-  export type Tasks_electricMinAggregateInputType = {
-    id?: true
+  export type Task_historyMinAggregateInputType = {
+    event_id?: true
     project_id?: true
-    project_task_index?: true
-    project_task_name?: true
-    geometry_geojson?: true
-    feature_count?: true
-    task_status?: true
-    locked_by?: true
-    mapped_by?: true
-    validated_by?: true
+    task_id?: true
+    action?: true
+    action_text?: true
+    action_date?: true
+    user_id?: true
   }
 
-  export type Tasks_electricMaxAggregateInputType = {
-    id?: true
+  export type Task_historyMaxAggregateInputType = {
+    event_id?: true
     project_id?: true
-    project_task_index?: true
-    project_task_name?: true
-    geometry_geojson?: true
-    feature_count?: true
-    task_status?: true
-    locked_by?: true
-    mapped_by?: true
-    validated_by?: true
+    task_id?: true
+    action?: true
+    action_text?: true
+    action_date?: true
+    user_id?: true
   }
 
-  export type Tasks_electricCountAggregateInputType = {
-    id?: true
+  export type Task_historyCountAggregateInputType = {
+    event_id?: true
     project_id?: true
-    project_task_index?: true
-    project_task_name?: true
-    geometry_geojson?: true
-    feature_count?: true
-    task_status?: true
-    locked_by?: true
-    mapped_by?: true
-    validated_by?: true
+    task_id?: true
+    action?: true
+    action_text?: true
+    action_date?: true
+    user_id?: true
     _all?: true
   }
 
-  export type Tasks_electricAggregateArgs = {
+  export type Task_historyAggregateArgs = {
     /**
-     * Filter which Tasks_electric to aggregate.
+     * Filter which Task_history to aggregate.
      * 
     **/
-    where?: Tasks_electricWhereInput
+    where?: Task_historyWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of Tasks_electrics to fetch.
+     * Determine the order of Task_histories to fetch.
      * 
     **/
-    orderBy?: Enumerable<Tasks_electricOrderByWithRelationInput>
+    orderBy?: Enumerable<Task_historyOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
      * Sets the start position
      * 
     **/
-    cursor?: Tasks_electricWhereUniqueInput
+    cursor?: Task_historyWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` Tasks_electrics from the position of the cursor.
+     * Take `±n` Task_histories from the position of the cursor.
      * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` Tasks_electrics.
+     * Skip the first `n` Task_histories.
      * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Count returned Tasks_electrics
+     * Count returned Task_histories
     **/
-    _count?: true | Tasks_electricCountAggregateInputType
+    _count?: true | Task_historyCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to average
     **/
-    _avg?: Tasks_electricAvgAggregateInputType
+    _avg?: Task_historyAvgAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to sum
     **/
-    _sum?: Tasks_electricSumAggregateInputType
+    _sum?: Task_historySumAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the minimum value
     **/
-    _min?: Tasks_electricMinAggregateInputType
+    _min?: Task_historyMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the maximum value
     **/
-    _max?: Tasks_electricMaxAggregateInputType
+    _max?: Task_historyMaxAggregateInputType
   }
 
-  export type GetTasks_electricAggregateType<T extends Tasks_electricAggregateArgs> = {
-        [P in keyof T & keyof AggregateTasks_electric]: P extends '_count' | 'count'
+  export type GetTask_historyAggregateType<T extends Task_historyAggregateArgs> = {
+        [P in keyof T & keyof AggregateTask_history]: P extends '_count' | 'count'
       ? T[P] extends true
         ? number
-        : GetScalarType<T[P], AggregateTasks_electric[P]>
-      : GetScalarType<T[P], AggregateTasks_electric[P]>
+        : GetScalarType<T[P], AggregateTask_history[P]>
+      : GetScalarType<T[P], AggregateTask_history[P]>
   }
 
 
 
 
-  export type Tasks_electricGroupByArgs = {
-    where?: Tasks_electricWhereInput
-    orderBy?: Enumerable<Tasks_electricOrderByWithAggregationInput>
-    by: Array<Tasks_electricScalarFieldEnum>
-    having?: Tasks_electricScalarWhereWithAggregatesInput
+  export type Task_historyGroupByArgs = {
+    where?: Task_historyWhereInput
+    orderBy?: Enumerable<Task_historyOrderByWithAggregationInput>
+    by: Array<Task_historyScalarFieldEnum>
+    having?: Task_historyScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    _count?: Tasks_electricCountAggregateInputType | true
-    _avg?: Tasks_electricAvgAggregateInputType
-    _sum?: Tasks_electricSumAggregateInputType
-    _min?: Tasks_electricMinAggregateInputType
-    _max?: Tasks_electricMaxAggregateInputType
+    _count?: Task_historyCountAggregateInputType | true
+    _avg?: Task_historyAvgAggregateInputType
+    _sum?: Task_historySumAggregateInputType
+    _min?: Task_historyMinAggregateInputType
+    _max?: Task_historyMaxAggregateInputType
   }
 
 
-  export type Tasks_electricGroupByOutputType = {
-    id: number
-    project_id: number
-    project_task_index: number | null
-    project_task_name: string | null
-    geometry_geojson: string | null
-    feature_count: number | null
-    task_status: taskstatus | null
-    locked_by: bigint | null
-    mapped_by: bigint | null
-    validated_by: bigint | null
-    _count: Tasks_electricCountAggregateOutputType | null
-    _avg: Tasks_electricAvgAggregateOutputType | null
-    _sum: Tasks_electricSumAggregateOutputType | null
-    _min: Tasks_electricMinAggregateOutputType | null
-    _max: Tasks_electricMaxAggregateOutputType | null
+  export type Task_historyGroupByOutputType = {
+    event_id: string
+    project_id: number | null
+    task_id: number
+    action: taskaction
+    action_text: string | null
+    action_date: Date
+    user_id: bigint
+    _count: Task_historyCountAggregateOutputType | null
+    _avg: Task_historyAvgAggregateOutputType | null
+    _sum: Task_historySumAggregateOutputType | null
+    _min: Task_historyMinAggregateOutputType | null
+    _max: Task_historyMaxAggregateOutputType | null
   }
 
-  type GetTasks_electricGroupByPayload<T extends Tasks_electricGroupByArgs> = PrismaPromise<
+  type GetTask_historyGroupByPayload<T extends Task_historyGroupByArgs> = PrismaPromise<
     Array<
-      PickArray<Tasks_electricGroupByOutputType, T['by']> &
+      PickArray<Task_historyGroupByOutputType, T['by']> &
         {
-          [P in ((keyof T) & (keyof Tasks_electricGroupByOutputType))]: P extends '_count'
+          [P in ((keyof T) & (keyof Task_historyGroupByOutputType))]: P extends '_count'
             ? T[P] extends boolean
               ? number
-              : GetScalarType<T[P], Tasks_electricGroupByOutputType[P]>
-            : GetScalarType<T[P], Tasks_electricGroupByOutputType[P]>
+              : GetScalarType<T[P], Task_historyGroupByOutputType[P]>
+            : GetScalarType<T[P], Task_historyGroupByOutputType[P]>
         }
       >
     >
 
 
-  export type Tasks_electricSelect = {
-    id?: boolean
+  export type Task_historySelect = {
+    event_id?: boolean
     project_id?: boolean
-    project_task_index?: boolean
-    project_task_name?: boolean
-    geometry_geojson?: boolean
-    feature_count?: boolean
-    task_status?: boolean
-    locked_by?: boolean
-    mapped_by?: boolean
-    validated_by?: boolean
+    task_id?: boolean
+    action?: boolean
+    action_text?: boolean
+    action_date?: boolean
+    user_id?: boolean
   }
 
 
-  export type Tasks_electricGetPayload<S extends boolean | null | undefined | Tasks_electricArgs> =
+  export type Task_historyGetPayload<S extends boolean | null | undefined | Task_historyArgs> =
     S extends { select: any, include: any } ? 'Please either choose `select` or `include`' :
-    S extends true ? Tasks_electric :
+    S extends true ? Task_history :
     S extends undefined ? never :
-    S extends { include: any } & (Tasks_electricArgs | Tasks_electricFindManyArgs)
-    ? Tasks_electric 
-    : S extends { select: any } & (Tasks_electricArgs | Tasks_electricFindManyArgs)
+    S extends { include: any } & (Task_historyArgs | Task_historyFindManyArgs)
+    ? Task_history 
+    : S extends { select: any } & (Task_historyArgs | Task_historyFindManyArgs)
       ? {
     [P in TruthyKeys<S['select']>]:
-    P extends keyof Tasks_electric ? Tasks_electric[P] : never
+    P extends keyof Task_history ? Task_history[P] : never
   } 
-      : Tasks_electric
+      : Task_history
 
 
-  type Tasks_electricCountArgs = Merge<
-    Omit<Tasks_electricFindManyArgs, 'select' | 'include'> & {
-      select?: Tasks_electricCountAggregateInputType | true
+  type Task_historyCountArgs = Merge<
+    Omit<Task_historyFindManyArgs, 'select' | 'include'> & {
+      select?: Task_historyCountAggregateInputType | true
     }
   >
 
-  export interface Tasks_electricDelegate<GlobalRejectSettings extends Prisma.RejectOnNotFound | Prisma.RejectPerOperation | false | undefined> {
+  export interface Task_historyDelegate<GlobalRejectSettings extends Prisma.RejectOnNotFound | Prisma.RejectPerOperation | false | undefined> {
     /**
-     * Find zero or one Tasks_electric that matches the filter.
-     * @param {Tasks_electricFindUniqueArgs} args - Arguments to find a Tasks_electric
+     * Find zero or one Task_history that matches the filter.
+     * @param {Task_historyFindUniqueArgs} args - Arguments to find a Task_history
      * @example
-     * // Get one Tasks_electric
-     * const tasks_electric = await prisma.tasks_electric.findUnique({
+     * // Get one Task_history
+     * const task_history = await prisma.task_history.findUnique({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
     **/
-    findUnique<T extends Tasks_electricFindUniqueArgs,  LocalRejectSettings = T["rejectOnNotFound"] extends RejectOnNotFound ? T['rejectOnNotFound'] : undefined>(
-      args: SelectSubset<T, Tasks_electricFindUniqueArgs>
-    ): HasReject<GlobalRejectSettings, LocalRejectSettings, 'findUnique', 'Tasks_electric'> extends True ? Prisma__Tasks_electricClient<Tasks_electricGetPayload<T>> : Prisma__Tasks_electricClient<Tasks_electricGetPayload<T> | null, null>
+    findUnique<T extends Task_historyFindUniqueArgs,  LocalRejectSettings = T["rejectOnNotFound"] extends RejectOnNotFound ? T['rejectOnNotFound'] : undefined>(
+      args: SelectSubset<T, Task_historyFindUniqueArgs>
+    ): HasReject<GlobalRejectSettings, LocalRejectSettings, 'findUnique', 'Task_history'> extends True ? Prisma__Task_historyClient<Task_historyGetPayload<T>> : Prisma__Task_historyClient<Task_historyGetPayload<T> | null, null>
 
     /**
-     * Find one Tasks_electric that matches the filter or throw an error  with `error.code='P2025'` 
+     * Find one Task_history that matches the filter or throw an error  with `error.code='P2025'` 
      *     if no matches were found.
-     * @param {Tasks_electricFindUniqueOrThrowArgs} args - Arguments to find a Tasks_electric
+     * @param {Task_historyFindUniqueOrThrowArgs} args - Arguments to find a Task_history
      * @example
-     * // Get one Tasks_electric
-     * const tasks_electric = await prisma.tasks_electric.findUniqueOrThrow({
+     * // Get one Task_history
+     * const task_history = await prisma.task_history.findUniqueOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
     **/
-    findUniqueOrThrow<T extends Tasks_electricFindUniqueOrThrowArgs>(
-      args?: SelectSubset<T, Tasks_electricFindUniqueOrThrowArgs>
-    ): Prisma__Tasks_electricClient<Tasks_electricGetPayload<T>>
+    findUniqueOrThrow<T extends Task_historyFindUniqueOrThrowArgs>(
+      args?: SelectSubset<T, Task_historyFindUniqueOrThrowArgs>
+    ): Prisma__Task_historyClient<Task_historyGetPayload<T>>
 
     /**
-     * Find the first Tasks_electric that matches the filter.
+     * Find the first Task_history that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {Tasks_electricFindFirstArgs} args - Arguments to find a Tasks_electric
+     * @param {Task_historyFindFirstArgs} args - Arguments to find a Task_history
      * @example
-     * // Get one Tasks_electric
-     * const tasks_electric = await prisma.tasks_electric.findFirst({
+     * // Get one Task_history
+     * const task_history = await prisma.task_history.findFirst({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
     **/
-    findFirst<T extends Tasks_electricFindFirstArgs,  LocalRejectSettings = T["rejectOnNotFound"] extends RejectOnNotFound ? T['rejectOnNotFound'] : undefined>(
-      args?: SelectSubset<T, Tasks_electricFindFirstArgs>
-    ): HasReject<GlobalRejectSettings, LocalRejectSettings, 'findFirst', 'Tasks_electric'> extends True ? Prisma__Tasks_electricClient<Tasks_electricGetPayload<T>> : Prisma__Tasks_electricClient<Tasks_electricGetPayload<T> | null, null>
+    findFirst<T extends Task_historyFindFirstArgs,  LocalRejectSettings = T["rejectOnNotFound"] extends RejectOnNotFound ? T['rejectOnNotFound'] : undefined>(
+      args?: SelectSubset<T, Task_historyFindFirstArgs>
+    ): HasReject<GlobalRejectSettings, LocalRejectSettings, 'findFirst', 'Task_history'> extends True ? Prisma__Task_historyClient<Task_historyGetPayload<T>> : Prisma__Task_historyClient<Task_historyGetPayload<T> | null, null>
 
     /**
-     * Find the first Tasks_electric that matches the filter or
+     * Find the first Task_history that matches the filter or
      * throw `NotFoundError` if no matches were found.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {Tasks_electricFindFirstOrThrowArgs} args - Arguments to find a Tasks_electric
+     * @param {Task_historyFindFirstOrThrowArgs} args - Arguments to find a Task_history
      * @example
-     * // Get one Tasks_electric
-     * const tasks_electric = await prisma.tasks_electric.findFirstOrThrow({
+     * // Get one Task_history
+     * const task_history = await prisma.task_history.findFirstOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
     **/
-    findFirstOrThrow<T extends Tasks_electricFindFirstOrThrowArgs>(
-      args?: SelectSubset<T, Tasks_electricFindFirstOrThrowArgs>
-    ): Prisma__Tasks_electricClient<Tasks_electricGetPayload<T>>
+    findFirstOrThrow<T extends Task_historyFindFirstOrThrowArgs>(
+      args?: SelectSubset<T, Task_historyFindFirstOrThrowArgs>
+    ): Prisma__Task_historyClient<Task_historyGetPayload<T>>
 
     /**
-     * Find zero or more Tasks_electrics that matches the filter.
+     * Find zero or more Task_histories that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {Tasks_electricFindManyArgs=} args - Arguments to filter and select certain fields only.
+     * @param {Task_historyFindManyArgs=} args - Arguments to filter and select certain fields only.
      * @example
-     * // Get all Tasks_electrics
-     * const tasks_electrics = await prisma.tasks_electric.findMany()
+     * // Get all Task_histories
+     * const task_histories = await prisma.task_history.findMany()
      * 
-     * // Get first 10 Tasks_electrics
-     * const tasks_electrics = await prisma.tasks_electric.findMany({ take: 10 })
+     * // Get first 10 Task_histories
+     * const task_histories = await prisma.task_history.findMany({ take: 10 })
      * 
-     * // Only select the `id`
-     * const tasks_electricWithIdOnly = await prisma.tasks_electric.findMany({ select: { id: true } })
+     * // Only select the `event_id`
+     * const task_historyWithEvent_idOnly = await prisma.task_history.findMany({ select: { event_id: true } })
      * 
     **/
-    findMany<T extends Tasks_electricFindManyArgs>(
-      args?: SelectSubset<T, Tasks_electricFindManyArgs>
-    ): PrismaPromise<Array<Tasks_electricGetPayload<T>>>
+    findMany<T extends Task_historyFindManyArgs>(
+      args?: SelectSubset<T, Task_historyFindManyArgs>
+    ): PrismaPromise<Array<Task_historyGetPayload<T>>>
 
     /**
-     * Create a Tasks_electric.
-     * @param {Tasks_electricCreateArgs} args - Arguments to create a Tasks_electric.
+     * Create a Task_history.
+     * @param {Task_historyCreateArgs} args - Arguments to create a Task_history.
      * @example
-     * // Create one Tasks_electric
-     * const Tasks_electric = await prisma.tasks_electric.create({
+     * // Create one Task_history
+     * const Task_history = await prisma.task_history.create({
      *   data: {
-     *     // ... data to create a Tasks_electric
+     *     // ... data to create a Task_history
      *   }
      * })
      * 
     **/
-    create<T extends Tasks_electricCreateArgs>(
-      args: SelectSubset<T, Tasks_electricCreateArgs>
-    ): Prisma__Tasks_electricClient<Tasks_electricGetPayload<T>>
+    create<T extends Task_historyCreateArgs>(
+      args: SelectSubset<T, Task_historyCreateArgs>
+    ): Prisma__Task_historyClient<Task_historyGetPayload<T>>
 
     /**
-     * Create many Tasks_electrics.
-     *     @param {Tasks_electricCreateManyArgs} args - Arguments to create many Tasks_electrics.
+     * Create many Task_histories.
+     *     @param {Task_historyCreateManyArgs} args - Arguments to create many Task_histories.
      *     @example
-     *     // Create many Tasks_electrics
-     *     const tasks_electric = await prisma.tasks_electric.createMany({
+     *     // Create many Task_histories
+     *     const task_history = await prisma.task_history.createMany({
      *       data: {
      *         // ... provide data here
      *       }
      *     })
      *     
     **/
-    createMany<T extends Tasks_electricCreateManyArgs>(
-      args?: SelectSubset<T, Tasks_electricCreateManyArgs>
+    createMany<T extends Task_historyCreateManyArgs>(
+      args?: SelectSubset<T, Task_historyCreateManyArgs>
     ): PrismaPromise<BatchPayload>
 
     /**
-     * Delete a Tasks_electric.
-     * @param {Tasks_electricDeleteArgs} args - Arguments to delete one Tasks_electric.
+     * Delete a Task_history.
+     * @param {Task_historyDeleteArgs} args - Arguments to delete one Task_history.
      * @example
-     * // Delete one Tasks_electric
-     * const Tasks_electric = await prisma.tasks_electric.delete({
+     * // Delete one Task_history
+     * const Task_history = await prisma.task_history.delete({
      *   where: {
-     *     // ... filter to delete one Tasks_electric
+     *     // ... filter to delete one Task_history
      *   }
      * })
      * 
     **/
-    delete<T extends Tasks_electricDeleteArgs>(
-      args: SelectSubset<T, Tasks_electricDeleteArgs>
-    ): Prisma__Tasks_electricClient<Tasks_electricGetPayload<T>>
+    delete<T extends Task_historyDeleteArgs>(
+      args: SelectSubset<T, Task_historyDeleteArgs>
+    ): Prisma__Task_historyClient<Task_historyGetPayload<T>>
 
     /**
-     * Update one Tasks_electric.
-     * @param {Tasks_electricUpdateArgs} args - Arguments to update one Tasks_electric.
+     * Update one Task_history.
+     * @param {Task_historyUpdateArgs} args - Arguments to update one Task_history.
      * @example
-     * // Update one Tasks_electric
-     * const tasks_electric = await prisma.tasks_electric.update({
+     * // Update one Task_history
+     * const task_history = await prisma.task_history.update({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -1286,34 +1241,34 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      * })
      * 
     **/
-    update<T extends Tasks_electricUpdateArgs>(
-      args: SelectSubset<T, Tasks_electricUpdateArgs>
-    ): Prisma__Tasks_electricClient<Tasks_electricGetPayload<T>>
+    update<T extends Task_historyUpdateArgs>(
+      args: SelectSubset<T, Task_historyUpdateArgs>
+    ): Prisma__Task_historyClient<Task_historyGetPayload<T>>
 
     /**
-     * Delete zero or more Tasks_electrics.
-     * @param {Tasks_electricDeleteManyArgs} args - Arguments to filter Tasks_electrics to delete.
+     * Delete zero or more Task_histories.
+     * @param {Task_historyDeleteManyArgs} args - Arguments to filter Task_histories to delete.
      * @example
-     * // Delete a few Tasks_electrics
-     * const { count } = await prisma.tasks_electric.deleteMany({
+     * // Delete a few Task_histories
+     * const { count } = await prisma.task_history.deleteMany({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      * 
     **/
-    deleteMany<T extends Tasks_electricDeleteManyArgs>(
-      args?: SelectSubset<T, Tasks_electricDeleteManyArgs>
+    deleteMany<T extends Task_historyDeleteManyArgs>(
+      args?: SelectSubset<T, Task_historyDeleteManyArgs>
     ): PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more Tasks_electrics.
+     * Update zero or more Task_histories.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {Tasks_electricUpdateManyArgs} args - Arguments to update one or more rows.
+     * @param {Task_historyUpdateManyArgs} args - Arguments to update one or more rows.
      * @example
-     * // Update many Tasks_electrics
-     * const tasks_electric = await prisma.tasks_electric.updateMany({
+     * // Update many Task_histories
+     * const task_history = await prisma.task_history.updateMany({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -1323,59 +1278,59 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      * })
      * 
     **/
-    updateMany<T extends Tasks_electricUpdateManyArgs>(
-      args: SelectSubset<T, Tasks_electricUpdateManyArgs>
+    updateMany<T extends Task_historyUpdateManyArgs>(
+      args: SelectSubset<T, Task_historyUpdateManyArgs>
     ): PrismaPromise<BatchPayload>
 
     /**
-     * Create or update one Tasks_electric.
-     * @param {Tasks_electricUpsertArgs} args - Arguments to update or create a Tasks_electric.
+     * Create or update one Task_history.
+     * @param {Task_historyUpsertArgs} args - Arguments to update or create a Task_history.
      * @example
-     * // Update or create a Tasks_electric
-     * const tasks_electric = await prisma.tasks_electric.upsert({
+     * // Update or create a Task_history
+     * const task_history = await prisma.task_history.upsert({
      *   create: {
-     *     // ... data to create a Tasks_electric
+     *     // ... data to create a Task_history
      *   },
      *   update: {
      *     // ... in case it already exists, update
      *   },
      *   where: {
-     *     // ... the filter for the Tasks_electric we want to update
+     *     // ... the filter for the Task_history we want to update
      *   }
      * })
     **/
-    upsert<T extends Tasks_electricUpsertArgs>(
-      args: SelectSubset<T, Tasks_electricUpsertArgs>
-    ): Prisma__Tasks_electricClient<Tasks_electricGetPayload<T>>
+    upsert<T extends Task_historyUpsertArgs>(
+      args: SelectSubset<T, Task_historyUpsertArgs>
+    ): Prisma__Task_historyClient<Task_historyGetPayload<T>>
 
     /**
-     * Count the number of Tasks_electrics.
+     * Count the number of Task_histories.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {Tasks_electricCountArgs} args - Arguments to filter Tasks_electrics to count.
+     * @param {Task_historyCountArgs} args - Arguments to filter Task_histories to count.
      * @example
-     * // Count the number of Tasks_electrics
-     * const count = await prisma.tasks_electric.count({
+     * // Count the number of Task_histories
+     * const count = await prisma.task_history.count({
      *   where: {
-     *     // ... the filter for the Tasks_electrics we want to count
+     *     // ... the filter for the Task_histories we want to count
      *   }
      * })
     **/
-    count<T extends Tasks_electricCountArgs>(
-      args?: Subset<T, Tasks_electricCountArgs>,
+    count<T extends Task_historyCountArgs>(
+      args?: Subset<T, Task_historyCountArgs>,
     ): PrismaPromise<
       T extends _Record<'select', any>
         ? T['select'] extends true
           ? number
-          : GetScalarType<T['select'], Tasks_electricCountAggregateOutputType>
+          : GetScalarType<T['select'], Task_historyCountAggregateOutputType>
         : number
     >
 
     /**
-     * Allows you to perform aggregations operations on a Tasks_electric.
+     * Allows you to perform aggregations operations on a Task_history.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {Tasks_electricAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @param {Task_historyAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
      * @example
      * // Ordered by age ascending
      * // Where email contains prisma.io
@@ -1395,13 +1350,13 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *   take: 10,
      * })
     **/
-    aggregate<T extends Tasks_electricAggregateArgs>(args: Subset<T, Tasks_electricAggregateArgs>): PrismaPromise<GetTasks_electricAggregateType<T>>
+    aggregate<T extends Task_historyAggregateArgs>(args: Subset<T, Task_historyAggregateArgs>): PrismaPromise<GetTask_historyAggregateType<T>>
 
     /**
-     * Group by Tasks_electric.
+     * Group by Task_history.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {Tasks_electricGroupByArgs} args - Group by arguments.
+     * @param {Task_historyGroupByArgs} args - Group by arguments.
      * @example
      * // Group by city, order by createdAt, get count
      * const result = await prisma.user.groupBy({
@@ -1416,14 +1371,14 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      * 
     **/
     groupBy<
-      T extends Tasks_electricGroupByArgs,
+      T extends Task_historyGroupByArgs,
       HasSelectOrTake extends Or<
         Extends<'skip', Keys<T>>,
         Extends<'take', Keys<T>>
       >,
       OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: Tasks_electricGroupByArgs['orderBy'] }
-        : { orderBy?: Tasks_electricGroupByArgs['orderBy'] },
+        ? { orderBy: Task_historyGroupByArgs['orderBy'] }
+        : { orderBy?: Task_historyGroupByArgs['orderBy'] },
       OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
       ByFields extends TupleToUnion<T['by']>,
       ByValid extends Has<ByFields, OrderFields>,
@@ -1472,17 +1427,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
             ? never
             : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
         }[OrderFields]
-    >(args: SubsetIntersection<T, Tasks_electricGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTasks_electricGroupByPayload<T> : PrismaPromise<InputErrors>
+    >(args: SubsetIntersection<T, Task_historyGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTask_historyGroupByPayload<T> : PrismaPromise<InputErrors>
 
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for Tasks_electric.
+   * The delegate class that acts as a "Promise-like" for Task_history.
    * Why is this prefixed with `Prisma__`?
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export class Prisma__Tasks_electricClient<T, Null = never> implements PrismaPromise<T> {
+  export class Prisma__Task_historyClient<T, Null = never> implements PrismaPromise<T> {
     [prisma]: true;
     private readonly _dmmf;
     private readonly _fetcher;
@@ -1528,25 +1483,25 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   // Custom InputTypes
 
   /**
-   * Tasks_electric base type for findUnique actions
+   * Task_history base type for findUnique actions
    */
-  export type Tasks_electricFindUniqueArgsBase = {
+  export type Task_historyFindUniqueArgsBase = {
     /**
-     * Select specific fields to fetch from the Tasks_electric
+     * Select specific fields to fetch from the Task_history
      * 
     **/
-    select?: Tasks_electricSelect | null
+    select?: Task_historySelect | null
     /**
-     * Filter, which Tasks_electric to fetch.
+     * Filter, which Task_history to fetch.
      * 
     **/
-    where: Tasks_electricWhereUniqueInput
+    where: Task_historyWhereUniqueInput
   }
 
   /**
-   * Tasks_electric findUnique
+   * Task_history findUnique
    */
-  export interface Tasks_electricFindUniqueArgs extends Tasks_electricFindUniqueArgsBase {
+  export interface Task_historyFindUniqueArgs extends Task_historyFindUniqueArgsBase {
    /**
     * Throw an Error if query returns no results
     * @deprecated since 4.0.0: use `findUniqueOrThrow` method instead
@@ -1556,77 +1511,77 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
       
 
   /**
-   * Tasks_electric findUniqueOrThrow
+   * Task_history findUniqueOrThrow
    */
-  export type Tasks_electricFindUniqueOrThrowArgs = {
+  export type Task_historyFindUniqueOrThrowArgs = {
     /**
-     * Select specific fields to fetch from the Tasks_electric
+     * Select specific fields to fetch from the Task_history
      * 
     **/
-    select?: Tasks_electricSelect | null
+    select?: Task_historySelect | null
     /**
-     * Filter, which Tasks_electric to fetch.
+     * Filter, which Task_history to fetch.
      * 
     **/
-    where: Tasks_electricWhereUniqueInput
+    where: Task_historyWhereUniqueInput
   }
 
 
   /**
-   * Tasks_electric base type for findFirst actions
+   * Task_history base type for findFirst actions
    */
-  export type Tasks_electricFindFirstArgsBase = {
+  export type Task_historyFindFirstArgsBase = {
     /**
-     * Select specific fields to fetch from the Tasks_electric
+     * Select specific fields to fetch from the Task_history
      * 
     **/
-    select?: Tasks_electricSelect | null
+    select?: Task_historySelect | null
     /**
-     * Filter, which Tasks_electric to fetch.
+     * Filter, which Task_history to fetch.
      * 
     **/
-    where?: Tasks_electricWhereInput
+    where?: Task_historyWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of Tasks_electrics to fetch.
+     * Determine the order of Task_histories to fetch.
      * 
     **/
-    orderBy?: Enumerable<Tasks_electricOrderByWithRelationInput>
+    orderBy?: Enumerable<Task_historyOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for Tasks_electrics.
+     * Sets the position for searching for Task_histories.
      * 
     **/
-    cursor?: Tasks_electricWhereUniqueInput
+    cursor?: Task_historyWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` Tasks_electrics from the position of the cursor.
+     * Take `±n` Task_histories from the position of the cursor.
      * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` Tasks_electrics.
+     * Skip the first `n` Task_histories.
      * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of Tasks_electrics.
+     * Filter by unique combinations of Task_histories.
      * 
     **/
-    distinct?: Enumerable<Tasks_electricScalarFieldEnum>
+    distinct?: Enumerable<Task_historyScalarFieldEnum>
   }
 
   /**
-   * Tasks_electric findFirst
+   * Task_history findFirst
    */
-  export interface Tasks_electricFindFirstArgs extends Tasks_electricFindFirstArgsBase {
+  export interface Task_historyFindFirstArgs extends Task_historyFindFirstArgsBase {
    /**
     * Throw an Error if query returns no results
     * @deprecated since 4.0.0: use `findFirstOrThrow` method instead
@@ -1636,237 +1591,237 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
       
 
   /**
-   * Tasks_electric findFirstOrThrow
+   * Task_history findFirstOrThrow
    */
-  export type Tasks_electricFindFirstOrThrowArgs = {
+  export type Task_historyFindFirstOrThrowArgs = {
     /**
-     * Select specific fields to fetch from the Tasks_electric
+     * Select specific fields to fetch from the Task_history
      * 
     **/
-    select?: Tasks_electricSelect | null
+    select?: Task_historySelect | null
     /**
-     * Filter, which Tasks_electric to fetch.
+     * Filter, which Task_history to fetch.
      * 
     **/
-    where?: Tasks_electricWhereInput
+    where?: Task_historyWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of Tasks_electrics to fetch.
+     * Determine the order of Task_histories to fetch.
      * 
     **/
-    orderBy?: Enumerable<Tasks_electricOrderByWithRelationInput>
+    orderBy?: Enumerable<Task_historyOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for Tasks_electrics.
+     * Sets the position for searching for Task_histories.
      * 
     **/
-    cursor?: Tasks_electricWhereUniqueInput
+    cursor?: Task_historyWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` Tasks_electrics from the position of the cursor.
+     * Take `±n` Task_histories from the position of the cursor.
      * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` Tasks_electrics.
+     * Skip the first `n` Task_histories.
      * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of Tasks_electrics.
+     * Filter by unique combinations of Task_histories.
      * 
     **/
-    distinct?: Enumerable<Tasks_electricScalarFieldEnum>
+    distinct?: Enumerable<Task_historyScalarFieldEnum>
   }
 
 
   /**
-   * Tasks_electric findMany
+   * Task_history findMany
    */
-  export type Tasks_electricFindManyArgs = {
+  export type Task_historyFindManyArgs = {
     /**
-     * Select specific fields to fetch from the Tasks_electric
+     * Select specific fields to fetch from the Task_history
      * 
     **/
-    select?: Tasks_electricSelect | null
+    select?: Task_historySelect | null
     /**
-     * Filter, which Tasks_electrics to fetch.
+     * Filter, which Task_histories to fetch.
      * 
     **/
-    where?: Tasks_electricWhereInput
+    where?: Task_historyWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of Tasks_electrics to fetch.
+     * Determine the order of Task_histories to fetch.
      * 
     **/
-    orderBy?: Enumerable<Tasks_electricOrderByWithRelationInput>
+    orderBy?: Enumerable<Task_historyOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for listing Tasks_electrics.
+     * Sets the position for listing Task_histories.
      * 
     **/
-    cursor?: Tasks_electricWhereUniqueInput
+    cursor?: Task_historyWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` Tasks_electrics from the position of the cursor.
+     * Take `±n` Task_histories from the position of the cursor.
      * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` Tasks_electrics.
+     * Skip the first `n` Task_histories.
      * 
     **/
     skip?: number
-    distinct?: Enumerable<Tasks_electricScalarFieldEnum>
+    distinct?: Enumerable<Task_historyScalarFieldEnum>
   }
 
 
   /**
-   * Tasks_electric create
+   * Task_history create
    */
-  export type Tasks_electricCreateArgs = {
+  export type Task_historyCreateArgs = {
     /**
-     * Select specific fields to fetch from the Tasks_electric
+     * Select specific fields to fetch from the Task_history
      * 
     **/
-    select?: Tasks_electricSelect | null
+    select?: Task_historySelect | null
     /**
-     * The data needed to create a Tasks_electric.
+     * The data needed to create a Task_history.
      * 
     **/
-    data: XOR<Tasks_electricCreateInput, Tasks_electricUncheckedCreateInput>
+    data: XOR<Task_historyCreateInput, Task_historyUncheckedCreateInput>
   }
 
 
   /**
-   * Tasks_electric createMany
+   * Task_history createMany
    */
-  export type Tasks_electricCreateManyArgs = {
+  export type Task_historyCreateManyArgs = {
     /**
-     * The data used to create many Tasks_electrics.
+     * The data used to create many Task_histories.
      * 
     **/
-    data: Enumerable<Tasks_electricCreateManyInput>
+    data: Enumerable<Task_historyCreateManyInput>
     skipDuplicates?: boolean
   }
 
 
   /**
-   * Tasks_electric update
+   * Task_history update
    */
-  export type Tasks_electricUpdateArgs = {
+  export type Task_historyUpdateArgs = {
     /**
-     * Select specific fields to fetch from the Tasks_electric
+     * Select specific fields to fetch from the Task_history
      * 
     **/
-    select?: Tasks_electricSelect | null
+    select?: Task_historySelect | null
     /**
-     * The data needed to update a Tasks_electric.
+     * The data needed to update a Task_history.
      * 
     **/
-    data: XOR<Tasks_electricUpdateInput, Tasks_electricUncheckedUpdateInput>
+    data: XOR<Task_historyUpdateInput, Task_historyUncheckedUpdateInput>
     /**
-     * Choose, which Tasks_electric to update.
+     * Choose, which Task_history to update.
      * 
     **/
-    where: Tasks_electricWhereUniqueInput
+    where: Task_historyWhereUniqueInput
   }
 
 
   /**
-   * Tasks_electric updateMany
+   * Task_history updateMany
    */
-  export type Tasks_electricUpdateManyArgs = {
+  export type Task_historyUpdateManyArgs = {
     /**
-     * The data used to update Tasks_electrics.
+     * The data used to update Task_histories.
      * 
     **/
-    data: XOR<Tasks_electricUpdateManyMutationInput, Tasks_electricUncheckedUpdateManyInput>
+    data: XOR<Task_historyUpdateManyMutationInput, Task_historyUncheckedUpdateManyInput>
     /**
-     * Filter which Tasks_electrics to update
+     * Filter which Task_histories to update
      * 
     **/
-    where?: Tasks_electricWhereInput
+    where?: Task_historyWhereInput
   }
 
 
   /**
-   * Tasks_electric upsert
+   * Task_history upsert
    */
-  export type Tasks_electricUpsertArgs = {
+  export type Task_historyUpsertArgs = {
     /**
-     * Select specific fields to fetch from the Tasks_electric
+     * Select specific fields to fetch from the Task_history
      * 
     **/
-    select?: Tasks_electricSelect | null
+    select?: Task_historySelect | null
     /**
-     * The filter to search for the Tasks_electric to update in case it exists.
+     * The filter to search for the Task_history to update in case it exists.
      * 
     **/
-    where: Tasks_electricWhereUniqueInput
+    where: Task_historyWhereUniqueInput
     /**
-     * In case the Tasks_electric found by the `where` argument doesn't exist, create a new Tasks_electric with this data.
+     * In case the Task_history found by the `where` argument doesn't exist, create a new Task_history with this data.
      * 
     **/
-    create: XOR<Tasks_electricCreateInput, Tasks_electricUncheckedCreateInput>
+    create: XOR<Task_historyCreateInput, Task_historyUncheckedCreateInput>
     /**
-     * In case the Tasks_electric was found with the provided `where` argument, update it with this data.
+     * In case the Task_history was found with the provided `where` argument, update it with this data.
      * 
     **/
-    update: XOR<Tasks_electricUpdateInput, Tasks_electricUncheckedUpdateInput>
+    update: XOR<Task_historyUpdateInput, Task_historyUncheckedUpdateInput>
   }
 
 
   /**
-   * Tasks_electric delete
+   * Task_history delete
    */
-  export type Tasks_electricDeleteArgs = {
+  export type Task_historyDeleteArgs = {
     /**
-     * Select specific fields to fetch from the Tasks_electric
+     * Select specific fields to fetch from the Task_history
      * 
     **/
-    select?: Tasks_electricSelect | null
+    select?: Task_historySelect | null
     /**
-     * Filter which Tasks_electric to delete.
+     * Filter which Task_history to delete.
      * 
     **/
-    where: Tasks_electricWhereUniqueInput
+    where: Task_historyWhereUniqueInput
   }
 
 
   /**
-   * Tasks_electric deleteMany
+   * Task_history deleteMany
    */
-  export type Tasks_electricDeleteManyArgs = {
+  export type Task_historyDeleteManyArgs = {
     /**
-     * Filter which Tasks_electrics to delete
+     * Filter which Task_histories to delete
      * 
     **/
-    where?: Tasks_electricWhereInput
+    where?: Task_historyWhereInput
   }
 
 
   /**
-   * Tasks_electric without action
+   * Task_history without action
    */
-  export type Tasks_electricArgs = {
+  export type Task_historyArgs = {
     /**
-     * Select specific fields to fetch from the Tasks_electric
+     * Select specific fields to fetch from the Task_history
      * 
     **/
-    select?: Tasks_electricSelect | null
+    select?: Task_historySelect | null
   }
 
 
@@ -1894,20 +1849,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
-  export const Tasks_electricScalarFieldEnum: {
-    id: 'id',
+  export const Task_historyScalarFieldEnum: {
+    event_id: 'event_id',
     project_id: 'project_id',
-    project_task_index: 'project_task_index',
-    project_task_name: 'project_task_name',
-    geometry_geojson: 'geometry_geojson',
-    feature_count: 'feature_count',
-    task_status: 'task_status',
-    locked_by: 'locked_by',
-    mapped_by: 'mapped_by',
-    validated_by: 'validated_by'
+    task_id: 'task_id',
+    action: 'action',
+    action_text: 'action_text',
+    action_date: 'action_date',
+    user_id: 'user_id'
   };
 
-  export type Tasks_electricScalarFieldEnum = (typeof Tasks_electricScalarFieldEnum)[keyof typeof Tasks_electricScalarFieldEnum]
+  export type Task_historyScalarFieldEnum = (typeof Task_historyScalarFieldEnum)[keyof typeof Task_historyScalarFieldEnum]
 
 
   export const TransactionIsolationLevel: {
@@ -1925,162 +1877,152 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
    */
 
 
-  export type Tasks_electricWhereInput = {
-    AND?: Enumerable<Tasks_electricWhereInput>
-    OR?: Enumerable<Tasks_electricWhereInput>
-    NOT?: Enumerable<Tasks_electricWhereInput>
-    id?: IntFilter | number
-    project_id?: IntFilter | number
-    project_task_index?: IntNullableFilter | number | null
-    project_task_name?: StringNullableFilter | string | null
-    geometry_geojson?: StringNullableFilter | string | null
-    feature_count?: IntNullableFilter | number | null
-    task_status?: EnumtaskstatusNullableFilter | taskstatus | null
-    locked_by?: BigIntNullableFilter | bigint | number | null
-    mapped_by?: BigIntNullableFilter | bigint | number | null
-    validated_by?: BigIntNullableFilter | bigint | number | null
+  export type Task_historyWhereInput = {
+    AND?: Enumerable<Task_historyWhereInput>
+    OR?: Enumerable<Task_historyWhereInput>
+    NOT?: Enumerable<Task_historyWhereInput>
+    event_id?: UuidFilter | string
+    project_id?: IntNullableFilter | number | null
+    task_id?: IntFilter | number
+    action?: EnumtaskactionFilter | taskaction
+    action_text?: StringNullableFilter | string | null
+    action_date?: DateTimeFilter | Date | string
+    user_id?: BigIntFilter | bigint | number
   }
 
-  export type Tasks_electricOrderByWithRelationInput = {
-    id?: SortOrder
+  export type Task_historyOrderByWithRelationInput = {
+    event_id?: SortOrder
     project_id?: SortOrder
-    project_task_index?: SortOrder
-    project_task_name?: SortOrder
-    geometry_geojson?: SortOrder
-    feature_count?: SortOrder
-    task_status?: SortOrder
-    locked_by?: SortOrder
-    mapped_by?: SortOrder
-    validated_by?: SortOrder
+    task_id?: SortOrder
+    action?: SortOrder
+    action_text?: SortOrder
+    action_date?: SortOrder
+    user_id?: SortOrder
   }
 
-  export type Tasks_electricWhereUniqueInput = {
-    id_project_id?: Tasks_electricIdProject_idCompoundUniqueInput
+  export type Task_historyWhereUniqueInput = {
+    event_id?: string
   }
 
-  export type Tasks_electricOrderByWithAggregationInput = {
-    id?: SortOrder
+  export type Task_historyOrderByWithAggregationInput = {
+    event_id?: SortOrder
     project_id?: SortOrder
-    project_task_index?: SortOrder
-    project_task_name?: SortOrder
-    geometry_geojson?: SortOrder
-    feature_count?: SortOrder
-    task_status?: SortOrder
-    locked_by?: SortOrder
-    mapped_by?: SortOrder
-    validated_by?: SortOrder
-    _count?: Tasks_electricCountOrderByAggregateInput
-    _avg?: Tasks_electricAvgOrderByAggregateInput
-    _max?: Tasks_electricMaxOrderByAggregateInput
-    _min?: Tasks_electricMinOrderByAggregateInput
-    _sum?: Tasks_electricSumOrderByAggregateInput
+    task_id?: SortOrder
+    action?: SortOrder
+    action_text?: SortOrder
+    action_date?: SortOrder
+    user_id?: SortOrder
+    _count?: Task_historyCountOrderByAggregateInput
+    _avg?: Task_historyAvgOrderByAggregateInput
+    _max?: Task_historyMaxOrderByAggregateInput
+    _min?: Task_historyMinOrderByAggregateInput
+    _sum?: Task_historySumOrderByAggregateInput
   }
 
-  export type Tasks_electricScalarWhereWithAggregatesInput = {
-    AND?: Enumerable<Tasks_electricScalarWhereWithAggregatesInput>
-    OR?: Enumerable<Tasks_electricScalarWhereWithAggregatesInput>
-    NOT?: Enumerable<Tasks_electricScalarWhereWithAggregatesInput>
-    id?: IntWithAggregatesFilter | number
-    project_id?: IntWithAggregatesFilter | number
-    project_task_index?: IntNullableWithAggregatesFilter | number | null
-    project_task_name?: StringNullableWithAggregatesFilter | string | null
-    geometry_geojson?: StringNullableWithAggregatesFilter | string | null
-    feature_count?: IntNullableWithAggregatesFilter | number | null
-    task_status?: EnumtaskstatusNullableWithAggregatesFilter | taskstatus | null
-    locked_by?: BigIntNullableWithAggregatesFilter | bigint | number | null
-    mapped_by?: BigIntNullableWithAggregatesFilter | bigint | number | null
-    validated_by?: BigIntNullableWithAggregatesFilter | bigint | number | null
+  export type Task_historyScalarWhereWithAggregatesInput = {
+    AND?: Enumerable<Task_historyScalarWhereWithAggregatesInput>
+    OR?: Enumerable<Task_historyScalarWhereWithAggregatesInput>
+    NOT?: Enumerable<Task_historyScalarWhereWithAggregatesInput>
+    event_id?: UuidWithAggregatesFilter | string
+    project_id?: IntNullableWithAggregatesFilter | number | null
+    task_id?: IntWithAggregatesFilter | number
+    action?: EnumtaskactionWithAggregatesFilter | taskaction
+    action_text?: StringNullableWithAggregatesFilter | string | null
+    action_date?: DateTimeWithAggregatesFilter | Date | string
+    user_id?: BigIntWithAggregatesFilter | bigint | number
   }
 
-  export type Tasks_electricCreateInput = {
-    id: number
-    project_id: number
-    project_task_index?: number | null
-    project_task_name?: string | null
-    geometry_geojson?: string | null
-    feature_count?: number | null
-    task_status?: taskstatus | null
-    locked_by?: bigint | number | null
-    mapped_by?: bigint | number | null
-    validated_by?: bigint | number | null
+  export type Task_historyCreateInput = {
+    event_id: string
+    project_id?: number | null
+    task_id: number
+    action: taskaction
+    action_text?: string | null
+    action_date: Date | string
+    user_id: bigint | number
   }
 
-  export type Tasks_electricUncheckedCreateInput = {
-    id: number
-    project_id: number
-    project_task_index?: number | null
-    project_task_name?: string | null
-    geometry_geojson?: string | null
-    feature_count?: number | null
-    task_status?: taskstatus | null
-    locked_by?: bigint | number | null
-    mapped_by?: bigint | number | null
-    validated_by?: bigint | number | null
+  export type Task_historyUncheckedCreateInput = {
+    event_id: string
+    project_id?: number | null
+    task_id: number
+    action: taskaction
+    action_text?: string | null
+    action_date: Date | string
+    user_id: bigint | number
   }
 
-  export type Tasks_electricUpdateInput = {
-    id?: IntFieldUpdateOperationsInput | number
-    project_id?: IntFieldUpdateOperationsInput | number
-    project_task_index?: NullableIntFieldUpdateOperationsInput | number | null
-    project_task_name?: NullableStringFieldUpdateOperationsInput | string | null
-    geometry_geojson?: NullableStringFieldUpdateOperationsInput | string | null
-    feature_count?: NullableIntFieldUpdateOperationsInput | number | null
-    task_status?: NullableEnumtaskstatusFieldUpdateOperationsInput | taskstatus | null
-    locked_by?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    mapped_by?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    validated_by?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  export type Task_historyUpdateInput = {
+    event_id?: StringFieldUpdateOperationsInput | string
+    project_id?: NullableIntFieldUpdateOperationsInput | number | null
+    task_id?: IntFieldUpdateOperationsInput | number
+    action?: EnumtaskactionFieldUpdateOperationsInput | taskaction
+    action_text?: NullableStringFieldUpdateOperationsInput | string | null
+    action_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    user_id?: BigIntFieldUpdateOperationsInput | bigint | number
   }
 
-  export type Tasks_electricUncheckedUpdateInput = {
-    id?: IntFieldUpdateOperationsInput | number
-    project_id?: IntFieldUpdateOperationsInput | number
-    project_task_index?: NullableIntFieldUpdateOperationsInput | number | null
-    project_task_name?: NullableStringFieldUpdateOperationsInput | string | null
-    geometry_geojson?: NullableStringFieldUpdateOperationsInput | string | null
-    feature_count?: NullableIntFieldUpdateOperationsInput | number | null
-    task_status?: NullableEnumtaskstatusFieldUpdateOperationsInput | taskstatus | null
-    locked_by?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    mapped_by?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    validated_by?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  export type Task_historyUncheckedUpdateInput = {
+    event_id?: StringFieldUpdateOperationsInput | string
+    project_id?: NullableIntFieldUpdateOperationsInput | number | null
+    task_id?: IntFieldUpdateOperationsInput | number
+    action?: EnumtaskactionFieldUpdateOperationsInput | taskaction
+    action_text?: NullableStringFieldUpdateOperationsInput | string | null
+    action_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    user_id?: BigIntFieldUpdateOperationsInput | bigint | number
   }
 
-  export type Tasks_electricCreateManyInput = {
-    id: number
-    project_id: number
-    project_task_index?: number | null
-    project_task_name?: string | null
-    geometry_geojson?: string | null
-    feature_count?: number | null
-    task_status?: taskstatus | null
-    locked_by?: bigint | number | null
-    mapped_by?: bigint | number | null
-    validated_by?: bigint | number | null
+  export type Task_historyCreateManyInput = {
+    event_id: string
+    project_id?: number | null
+    task_id: number
+    action: taskaction
+    action_text?: string | null
+    action_date: Date | string
+    user_id: bigint | number
   }
 
-  export type Tasks_electricUpdateManyMutationInput = {
-    id?: IntFieldUpdateOperationsInput | number
-    project_id?: IntFieldUpdateOperationsInput | number
-    project_task_index?: NullableIntFieldUpdateOperationsInput | number | null
-    project_task_name?: NullableStringFieldUpdateOperationsInput | string | null
-    geometry_geojson?: NullableStringFieldUpdateOperationsInput | string | null
-    feature_count?: NullableIntFieldUpdateOperationsInput | number | null
-    task_status?: NullableEnumtaskstatusFieldUpdateOperationsInput | taskstatus | null
-    locked_by?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    mapped_by?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    validated_by?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  export type Task_historyUpdateManyMutationInput = {
+    event_id?: StringFieldUpdateOperationsInput | string
+    project_id?: NullableIntFieldUpdateOperationsInput | number | null
+    task_id?: IntFieldUpdateOperationsInput | number
+    action?: EnumtaskactionFieldUpdateOperationsInput | taskaction
+    action_text?: NullableStringFieldUpdateOperationsInput | string | null
+    action_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    user_id?: BigIntFieldUpdateOperationsInput | bigint | number
   }
 
-  export type Tasks_electricUncheckedUpdateManyInput = {
-    id?: IntFieldUpdateOperationsInput | number
-    project_id?: IntFieldUpdateOperationsInput | number
-    project_task_index?: NullableIntFieldUpdateOperationsInput | number | null
-    project_task_name?: NullableStringFieldUpdateOperationsInput | string | null
-    geometry_geojson?: NullableStringFieldUpdateOperationsInput | string | null
-    feature_count?: NullableIntFieldUpdateOperationsInput | number | null
-    task_status?: NullableEnumtaskstatusFieldUpdateOperationsInput | taskstatus | null
-    locked_by?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    mapped_by?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    validated_by?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  export type Task_historyUncheckedUpdateManyInput = {
+    event_id?: StringFieldUpdateOperationsInput | string
+    project_id?: NullableIntFieldUpdateOperationsInput | number | null
+    task_id?: IntFieldUpdateOperationsInput | number
+    action?: EnumtaskactionFieldUpdateOperationsInput | taskaction
+    action_text?: NullableStringFieldUpdateOperationsInput | string | null
+    action_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    user_id?: BigIntFieldUpdateOperationsInput | bigint | number
+  }
+
+  export type UuidFilter = {
+    equals?: string
+    in?: Enumerable<string>
+    notIn?: Enumerable<string>
+    lt?: string
+    lte?: string
+    gt?: string
+    gte?: string
+    mode?: QueryMode
+    not?: NestedUuidFilter | string
+  }
+
+  export type IntNullableFilter = {
+    equals?: number | null
+    in?: Enumerable<number> | null
+    notIn?: Enumerable<number> | null
+    lt?: number
+    lte?: number
+    gt?: number
+    gte?: number
+    not?: NestedIntNullableFilter | number | null
   }
 
   export type IntFilter = {
@@ -2094,15 +2036,11 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     not?: NestedIntFilter | number
   }
 
-  export type IntNullableFilter = {
-    equals?: number | null
-    in?: Enumerable<number> | null
-    notIn?: Enumerable<number> | null
-    lt?: number
-    lte?: number
-    gt?: number
-    gte?: number
-    not?: NestedIntNullableFilter | number | null
+  export type EnumtaskactionFilter = {
+    equals?: taskaction
+    in?: Enumerable<taskaction>
+    notIn?: Enumerable<taskaction>
+    not?: NestedEnumtaskactionFilter | taskaction
   }
 
   export type StringNullableFilter = {
@@ -2120,86 +2058,99 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     not?: NestedStringNullableFilter | string | null
   }
 
-  export type EnumtaskstatusNullableFilter = {
-    equals?: taskstatus | null
-    in?: Enumerable<taskstatus> | null
-    notIn?: Enumerable<taskstatus> | null
-    not?: NestedEnumtaskstatusNullableFilter | taskstatus | null
+  export type DateTimeFilter = {
+    equals?: Date | string
+    in?: Enumerable<Date> | Enumerable<string>
+    notIn?: Enumerable<Date> | Enumerable<string>
+    lt?: Date | string
+    lte?: Date | string
+    gt?: Date | string
+    gte?: Date | string
+    not?: NestedDateTimeFilter | Date | string
   }
 
-  export type BigIntNullableFilter = {
-    equals?: bigint | number | null
-    in?: Enumerable<bigint> | Enumerable<number> | null
-    notIn?: Enumerable<bigint> | Enumerable<number> | null
+  export type BigIntFilter = {
+    equals?: bigint | number
+    in?: Enumerable<bigint> | Enumerable<number>
+    notIn?: Enumerable<bigint> | Enumerable<number>
     lt?: bigint | number
     lte?: bigint | number
     gt?: bigint | number
     gte?: bigint | number
-    not?: NestedBigIntNullableFilter | bigint | number | null
+    not?: NestedBigIntFilter | bigint | number
   }
 
-  export type Tasks_electricIdProject_idCompoundUniqueInput = {
-    id: number
-    project_id: number
-  }
-
-  export type Tasks_electricCountOrderByAggregateInput = {
-    id?: SortOrder
+  export type Task_historyCountOrderByAggregateInput = {
+    event_id?: SortOrder
     project_id?: SortOrder
-    project_task_index?: SortOrder
-    project_task_name?: SortOrder
-    geometry_geojson?: SortOrder
-    feature_count?: SortOrder
-    task_status?: SortOrder
-    locked_by?: SortOrder
-    mapped_by?: SortOrder
-    validated_by?: SortOrder
+    task_id?: SortOrder
+    action?: SortOrder
+    action_text?: SortOrder
+    action_date?: SortOrder
+    user_id?: SortOrder
   }
 
-  export type Tasks_electricAvgOrderByAggregateInput = {
-    id?: SortOrder
+  export type Task_historyAvgOrderByAggregateInput = {
     project_id?: SortOrder
-    project_task_index?: SortOrder
-    feature_count?: SortOrder
-    locked_by?: SortOrder
-    mapped_by?: SortOrder
-    validated_by?: SortOrder
+    task_id?: SortOrder
+    user_id?: SortOrder
   }
 
-  export type Tasks_electricMaxOrderByAggregateInput = {
-    id?: SortOrder
+  export type Task_historyMaxOrderByAggregateInput = {
+    event_id?: SortOrder
     project_id?: SortOrder
-    project_task_index?: SortOrder
-    project_task_name?: SortOrder
-    geometry_geojson?: SortOrder
-    feature_count?: SortOrder
-    task_status?: SortOrder
-    locked_by?: SortOrder
-    mapped_by?: SortOrder
-    validated_by?: SortOrder
+    task_id?: SortOrder
+    action?: SortOrder
+    action_text?: SortOrder
+    action_date?: SortOrder
+    user_id?: SortOrder
   }
 
-  export type Tasks_electricMinOrderByAggregateInput = {
-    id?: SortOrder
+  export type Task_historyMinOrderByAggregateInput = {
+    event_id?: SortOrder
     project_id?: SortOrder
-    project_task_index?: SortOrder
-    project_task_name?: SortOrder
-    geometry_geojson?: SortOrder
-    feature_count?: SortOrder
-    task_status?: SortOrder
-    locked_by?: SortOrder
-    mapped_by?: SortOrder
-    validated_by?: SortOrder
+    task_id?: SortOrder
+    action?: SortOrder
+    action_text?: SortOrder
+    action_date?: SortOrder
+    user_id?: SortOrder
   }
 
-  export type Tasks_electricSumOrderByAggregateInput = {
-    id?: SortOrder
+  export type Task_historySumOrderByAggregateInput = {
     project_id?: SortOrder
-    project_task_index?: SortOrder
-    feature_count?: SortOrder
-    locked_by?: SortOrder
-    mapped_by?: SortOrder
-    validated_by?: SortOrder
+    task_id?: SortOrder
+    user_id?: SortOrder
+  }
+
+  export type UuidWithAggregatesFilter = {
+    equals?: string
+    in?: Enumerable<string>
+    notIn?: Enumerable<string>
+    lt?: string
+    lte?: string
+    gt?: string
+    gte?: string
+    mode?: QueryMode
+    not?: NestedUuidWithAggregatesFilter | string
+    _count?: NestedIntFilter
+    _min?: NestedStringFilter
+    _max?: NestedStringFilter
+  }
+
+  export type IntNullableWithAggregatesFilter = {
+    equals?: number | null
+    in?: Enumerable<number> | null
+    notIn?: Enumerable<number> | null
+    lt?: number
+    lte?: number
+    gt?: number
+    gte?: number
+    not?: NestedIntNullableWithAggregatesFilter | number | null
+    _count?: NestedIntNullableFilter
+    _avg?: NestedFloatNullableFilter
+    _sum?: NestedIntNullableFilter
+    _min?: NestedIntNullableFilter
+    _max?: NestedIntNullableFilter
   }
 
   export type IntWithAggregatesFilter = {
@@ -2218,20 +2169,14 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     _max?: NestedIntFilter
   }
 
-  export type IntNullableWithAggregatesFilter = {
-    equals?: number | null
-    in?: Enumerable<number> | null
-    notIn?: Enumerable<number> | null
-    lt?: number
-    lte?: number
-    gt?: number
-    gte?: number
-    not?: NestedIntNullableWithAggregatesFilter | number | null
-    _count?: NestedIntNullableFilter
-    _avg?: NestedFloatNullableFilter
-    _sum?: NestedIntNullableFilter
-    _min?: NestedIntNullableFilter
-    _max?: NestedIntNullableFilter
+  export type EnumtaskactionWithAggregatesFilter = {
+    equals?: taskaction
+    in?: Enumerable<taskaction>
+    notIn?: Enumerable<taskaction>
+    not?: NestedEnumtaskactionWithAggregatesFilter | taskaction
+    _count?: NestedIntFilter
+    _min?: NestedEnumtaskactionFilter
+    _max?: NestedEnumtaskactionFilter
   }
 
   export type StringNullableWithAggregatesFilter = {
@@ -2252,38 +2197,38 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     _max?: NestedStringNullableFilter
   }
 
-  export type EnumtaskstatusNullableWithAggregatesFilter = {
-    equals?: taskstatus | null
-    in?: Enumerable<taskstatus> | null
-    notIn?: Enumerable<taskstatus> | null
-    not?: NestedEnumtaskstatusNullableWithAggregatesFilter | taskstatus | null
-    _count?: NestedIntNullableFilter
-    _min?: NestedEnumtaskstatusNullableFilter
-    _max?: NestedEnumtaskstatusNullableFilter
+  export type DateTimeWithAggregatesFilter = {
+    equals?: Date | string
+    in?: Enumerable<Date> | Enumerable<string>
+    notIn?: Enumerable<Date> | Enumerable<string>
+    lt?: Date | string
+    lte?: Date | string
+    gt?: Date | string
+    gte?: Date | string
+    not?: NestedDateTimeWithAggregatesFilter | Date | string
+    _count?: NestedIntFilter
+    _min?: NestedDateTimeFilter
+    _max?: NestedDateTimeFilter
   }
 
-  export type BigIntNullableWithAggregatesFilter = {
-    equals?: bigint | number | null
-    in?: Enumerable<bigint> | Enumerable<number> | null
-    notIn?: Enumerable<bigint> | Enumerable<number> | null
+  export type BigIntWithAggregatesFilter = {
+    equals?: bigint | number
+    in?: Enumerable<bigint> | Enumerable<number>
+    notIn?: Enumerable<bigint> | Enumerable<number>
     lt?: bigint | number
     lte?: bigint | number
     gt?: bigint | number
     gte?: bigint | number
-    not?: NestedBigIntNullableWithAggregatesFilter | bigint | number | null
-    _count?: NestedIntNullableFilter
-    _avg?: NestedFloatNullableFilter
-    _sum?: NestedBigIntNullableFilter
-    _min?: NestedBigIntNullableFilter
-    _max?: NestedBigIntNullableFilter
+    not?: NestedBigIntWithAggregatesFilter | bigint | number
+    _count?: NestedIntFilter
+    _avg?: NestedFloatFilter
+    _sum?: NestedBigIntFilter
+    _min?: NestedBigIntFilter
+    _max?: NestedBigIntFilter
   }
 
-  export type IntFieldUpdateOperationsInput = {
-    set?: number
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
+  export type StringFieldUpdateOperationsInput = {
+    set?: string
   }
 
   export type NullableIntFieldUpdateOperationsInput = {
@@ -2294,20 +2239,54 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     divide?: number
   }
 
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type EnumtaskactionFieldUpdateOperationsInput = {
+    set?: taskaction
+  }
+
   export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null
   }
 
-  export type NullableEnumtaskstatusFieldUpdateOperationsInput = {
-    set?: taskstatus | null
+  export type DateTimeFieldUpdateOperationsInput = {
+    set?: Date | string
   }
 
-  export type NullableBigIntFieldUpdateOperationsInput = {
-    set?: bigint | number | null
+  export type BigIntFieldUpdateOperationsInput = {
+    set?: bigint | number
     increment?: bigint | number
     decrement?: bigint | number
     multiply?: bigint | number
     divide?: bigint | number
+  }
+
+  export type NestedUuidFilter = {
+    equals?: string
+    in?: Enumerable<string>
+    notIn?: Enumerable<string>
+    lt?: string
+    lte?: string
+    gt?: string
+    gte?: string
+    not?: NestedUuidFilter | string
+  }
+
+  export type NestedIntNullableFilter = {
+    equals?: number | null
+    in?: Enumerable<number> | null
+    notIn?: Enumerable<number> | null
+    lt?: number
+    lte?: number
+    gt?: number
+    gte?: number
+    not?: NestedIntNullableFilter | number | null
   }
 
   export type NestedIntFilter = {
@@ -2321,15 +2300,11 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     not?: NestedIntFilter | number
   }
 
-  export type NestedIntNullableFilter = {
-    equals?: number | null
-    in?: Enumerable<number> | null
-    notIn?: Enumerable<number> | null
-    lt?: number
-    lte?: number
-    gt?: number
-    gte?: number
-    not?: NestedIntNullableFilter | number | null
+  export type NestedEnumtaskactionFilter = {
+    equals?: taskaction
+    in?: Enumerable<taskaction>
+    notIn?: Enumerable<taskaction>
+    not?: NestedEnumtaskactionFilter | taskaction
   }
 
   export type NestedStringNullableFilter = {
@@ -2346,49 +2321,54 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     not?: NestedStringNullableFilter | string | null
   }
 
-  export type NestedEnumtaskstatusNullableFilter = {
-    equals?: taskstatus | null
-    in?: Enumerable<taskstatus> | null
-    notIn?: Enumerable<taskstatus> | null
-    not?: NestedEnumtaskstatusNullableFilter | taskstatus | null
+  export type NestedDateTimeFilter = {
+    equals?: Date | string
+    in?: Enumerable<Date> | Enumerable<string>
+    notIn?: Enumerable<Date> | Enumerable<string>
+    lt?: Date | string
+    lte?: Date | string
+    gt?: Date | string
+    gte?: Date | string
+    not?: NestedDateTimeFilter | Date | string
   }
 
-  export type NestedBigIntNullableFilter = {
-    equals?: bigint | number | null
-    in?: Enumerable<bigint> | Enumerable<number> | null
-    notIn?: Enumerable<bigint> | Enumerable<number> | null
+  export type NestedBigIntFilter = {
+    equals?: bigint | number
+    in?: Enumerable<bigint> | Enumerable<number>
+    notIn?: Enumerable<bigint> | Enumerable<number>
     lt?: bigint | number
     lte?: bigint | number
     gt?: bigint | number
     gte?: bigint | number
-    not?: NestedBigIntNullableFilter | bigint | number | null
+    not?: NestedBigIntFilter | bigint | number
   }
 
-  export type NestedIntWithAggregatesFilter = {
-    equals?: number
-    in?: Enumerable<number>
-    notIn?: Enumerable<number>
-    lt?: number
-    lte?: number
-    gt?: number
-    gte?: number
-    not?: NestedIntWithAggregatesFilter | number
+  export type NestedUuidWithAggregatesFilter = {
+    equals?: string
+    in?: Enumerable<string>
+    notIn?: Enumerable<string>
+    lt?: string
+    lte?: string
+    gt?: string
+    gte?: string
+    not?: NestedUuidWithAggregatesFilter | string
     _count?: NestedIntFilter
-    _avg?: NestedFloatFilter
-    _sum?: NestedIntFilter
-    _min?: NestedIntFilter
-    _max?: NestedIntFilter
+    _min?: NestedStringFilter
+    _max?: NestedStringFilter
   }
 
-  export type NestedFloatFilter = {
-    equals?: number
-    in?: Enumerable<number>
-    notIn?: Enumerable<number>
-    lt?: number
-    lte?: number
-    gt?: number
-    gte?: number
-    not?: NestedFloatFilter | number
+  export type NestedStringFilter = {
+    equals?: string
+    in?: Enumerable<string>
+    notIn?: Enumerable<string>
+    lt?: string
+    lte?: string
+    gt?: string
+    gte?: string
+    contains?: string
+    startsWith?: string
+    endsWith?: string
+    not?: NestedStringFilter | string
   }
 
   export type NestedIntNullableWithAggregatesFilter = {
@@ -2418,6 +2398,43 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     not?: NestedFloatNullableFilter | number | null
   }
 
+  export type NestedIntWithAggregatesFilter = {
+    equals?: number
+    in?: Enumerable<number>
+    notIn?: Enumerable<number>
+    lt?: number
+    lte?: number
+    gt?: number
+    gte?: number
+    not?: NestedIntWithAggregatesFilter | number
+    _count?: NestedIntFilter
+    _avg?: NestedFloatFilter
+    _sum?: NestedIntFilter
+    _min?: NestedIntFilter
+    _max?: NestedIntFilter
+  }
+
+  export type NestedFloatFilter = {
+    equals?: number
+    in?: Enumerable<number>
+    notIn?: Enumerable<number>
+    lt?: number
+    lte?: number
+    gt?: number
+    gte?: number
+    not?: NestedFloatFilter | number
+  }
+
+  export type NestedEnumtaskactionWithAggregatesFilter = {
+    equals?: taskaction
+    in?: Enumerable<taskaction>
+    notIn?: Enumerable<taskaction>
+    not?: NestedEnumtaskactionWithAggregatesFilter | taskaction
+    _count?: NestedIntFilter
+    _min?: NestedEnumtaskactionFilter
+    _max?: NestedEnumtaskactionFilter
+  }
+
   export type NestedStringNullableWithAggregatesFilter = {
     equals?: string | null
     in?: Enumerable<string> | null
@@ -2435,30 +2452,34 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     _max?: NestedStringNullableFilter
   }
 
-  export type NestedEnumtaskstatusNullableWithAggregatesFilter = {
-    equals?: taskstatus | null
-    in?: Enumerable<taskstatus> | null
-    notIn?: Enumerable<taskstatus> | null
-    not?: NestedEnumtaskstatusNullableWithAggregatesFilter | taskstatus | null
-    _count?: NestedIntNullableFilter
-    _min?: NestedEnumtaskstatusNullableFilter
-    _max?: NestedEnumtaskstatusNullableFilter
+  export type NestedDateTimeWithAggregatesFilter = {
+    equals?: Date | string
+    in?: Enumerable<Date> | Enumerable<string>
+    notIn?: Enumerable<Date> | Enumerable<string>
+    lt?: Date | string
+    lte?: Date | string
+    gt?: Date | string
+    gte?: Date | string
+    not?: NestedDateTimeWithAggregatesFilter | Date | string
+    _count?: NestedIntFilter
+    _min?: NestedDateTimeFilter
+    _max?: NestedDateTimeFilter
   }
 
-  export type NestedBigIntNullableWithAggregatesFilter = {
-    equals?: bigint | number | null
-    in?: Enumerable<bigint> | Enumerable<number> | null
-    notIn?: Enumerable<bigint> | Enumerable<number> | null
+  export type NestedBigIntWithAggregatesFilter = {
+    equals?: bigint | number
+    in?: Enumerable<bigint> | Enumerable<number>
+    notIn?: Enumerable<bigint> | Enumerable<number>
     lt?: bigint | number
     lte?: bigint | number
     gt?: bigint | number
     gte?: bigint | number
-    not?: NestedBigIntNullableWithAggregatesFilter | bigint | number | null
-    _count?: NestedIntNullableFilter
-    _avg?: NestedFloatNullableFilter
-    _sum?: NestedBigIntNullableFilter
-    _min?: NestedBigIntNullableFilter
-    _max?: NestedBigIntNullableFilter
+    not?: NestedBigIntWithAggregatesFilter | bigint | number
+    _count?: NestedIntFilter
+    _avg?: NestedFloatFilter
+    _sum?: NestedBigIntFilter
+    _min?: NestedBigIntFilter
+    _max?: NestedBigIntFilter
   }
 
 
