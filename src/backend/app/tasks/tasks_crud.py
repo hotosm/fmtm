@@ -18,6 +18,7 @@
 """Logic for FMTM tasks."""
 
 from datetime import datetime, timedelta
+from uuid import uuid4
 
 from fastapi import Depends, HTTPException
 from loguru import logger as log
@@ -25,6 +26,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
 from app.db import database, db_models
+from app.db.postgis_utils import timestamp
 from app.models.enums import (
     TaskStatus,
     get_action_for_status_change,
@@ -186,23 +188,14 @@ async def create_task_history_for_status_change(
     log.info(msg)
 
     new_task_history = db_models.DbTaskHistory(
+        event_id=uuid4(),
         project_id=db_task.project_id,
         task_id=db_task.id,
         action=get_action_for_status_change(new_status),
         action_text=msg,
-        actioned_by=db_user,
+        action_date=timestamp(),
         user_id=db_user.id,
     )
-
-    # TODO add invalidation history
-    # if new_status == TaskStatus.INVALIDATED:
-    #     new_invalidation_history = db_models.DbTaskInvalidationHistory(
-    #         project_id=db_task.project_id,
-    #         task_id=db_task.id,
-    #     )
-
-    # TODO add mapping issue
-    # if new_status == TaskStatus.BAD:
 
     return new_task_history
 
@@ -212,43 +205,6 @@ async def create_task_history_for_status_change(
 # --------------------
 
 # TODO: write tests for these
-
-# TODO: remove it
-# async def get_task_comments(db: Session, project_id: int, task_id: int):
-#     """Get a list of tasks id for a project."""
-#     query = text(
-#         """
-#         SELECT
-#             task_history.id, task_history.task_id, users.username,
-#             task_history.action_text, task_history.action_date
-#         FROM
-#             task_history
-#         LEFT JOIN
-#             users ON task_history.user_id = users.id
-#         WHERE
-#             project_id = :project_id
-#             AND task_id = :task_id
-#             AND action = 'COMMENT'
-#     """
-#     )
-
-#     params = {"project_id": project_id, "task_id": task_id}
-
-#     result = db.execute(query, params)
-
-#     # Convert the result to a list of dictionaries
-#     result_dict_list = [
-#         {
-#             "id": row[0],
-#             "task_id": row[1],
-#             "commented_by": row[2],
-#             "comment": row[3],
-#             "created_at": row[4],
-#         }
-#         for row in result.fetchall()
-#     ]
-
-#     return result_dict_list
 
 
 async def add_task_comments(
@@ -264,21 +220,19 @@ async def add_task_comments(
     Returns:
     - Dictionary with the details of the added comment
     """
-    currentdate = datetime.now()
     # Construct the query to insert the comment and retrieve inserted comment details
     query = text(
         """
-        INSERT INTO task_history (
-            project_id, task_id, action, action_text,
-            action_date, user_id
+        INSERT INTO public.task_history (
+            event_id, project_id, task_id, action,
+            action_text, action_date, user_id
         )
         VALUES (
-            :project_id, :task_id, 'COMMENT', :comment_text,
-            :current_date, :user_id
+            :event_id :project_id, :task_id, 'COMMENT',
+            :comment_text, :current_date, :user_id
         )
         RETURNING
-            task_history.id,
-            task_history.task_id,
+            task_history.event_id,
             task_history.action_text,
             task_history.action_date,
             (SELECT username FROM users WHERE id = :user_id) AS username,
@@ -288,10 +242,11 @@ async def add_task_comments(
 
     # Define a dictionary with the parameter values
     params = {
+        "event_id": uuid4(),
         "project_id": comment.project_id,
         "task_id": comment.task_id,
         "comment_text": comment.comment,
-        "current_date": currentdate,
+        "current_date": timestamp(),
         "user_id": user_id,
     }
 
@@ -304,11 +259,11 @@ async def add_task_comments(
 
     # Return the details of the added comment as a dictionary
     return {
-        "id": row[0],
-        "action_text": row[2],
-        "action_date": row[3],
-        "username": row[4],
-        "profile_img": row[5],
+        "event_id": row[0],
+        "action_text": row[1],
+        "action_date": row[2],
+        "username": row[3],
+        "profile_img": row[4],
     }
 
 
@@ -347,13 +302,12 @@ async def get_project_task_history(
         A list of task history records for the specified project.
     """
     query = """
-        SELECT task_history.id, task_history.task_id, task_history.action_text,
-            task_history.action_date, users.username,
-            users.profile_img
-            FROM task_history
-            LEFT JOIN users on users.id = task_history.user_id
-            WHERE task_id = :task_id
-            AND  action_date >= :end_date
+        SELECT th.event_id, th.action_text, th.action_date,
+            u.username, u.profile_img
+        FROM public.task_history th
+        LEFT JOIN users u
+            ON users.id = task_history.user_id
+        WHERE task_id = :task_id AND  action_date >= :end_date
     """
 
     query += " AND action = 'COMMENT'" if comment else " AND action != 'COMMENT'"
@@ -366,12 +320,12 @@ async def get_project_task_history(
     ).fetchall()
     task_history = [
         {
-            "id": row[0],
-            "action_text": row[2],
-            "action_date": row[3],
-            "username": row[4],
-            "profile_img": row[5],
-            "status": None if comment else row[2].split()[5],
+            "event_id": row[0],
+            "action_text": row[1],
+            "action_date": row[2],
+            "username": row[3],
+            "profile_img": row[4],
+            "status": None if comment else row[1].split()[5],
         }
         for row in result
     ]
