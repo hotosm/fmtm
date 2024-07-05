@@ -297,6 +297,6 @@ services:
     networks:
       - fmtm-net
     entrypoint: ["/migrate-entrypoint.sh"]
-    restart: "on-failure:3"
+    restart: "on-failure:2"
     healthcheck:
       test: [] # Set the health check test to an empty value to disable it
