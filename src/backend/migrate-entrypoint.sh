@@ -182,7 +182,9 @@ backup_db() {
 }
 
 execute_migrations() {
-    for script_name in "${scripts_to_execute[@]}"; do
+    mapfile -t ordered_scripts < <(for script in "${scripts_to_execute[@]}"; do echo "$script"; done | sort)
+
+    for script_name in "${ordered_scripts[@]}"; do
         script_file="/opt/migrations/$script_name"
         pretty_echo "Executing migration: $script_name"
         # Apply migration with env vars substituted & if succeeds,
