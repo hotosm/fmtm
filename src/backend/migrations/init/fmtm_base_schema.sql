@@ -523,16 +523,8 @@ ADD CONSTRAINT fk_organisations FOREIGN KEY (
     organisation_id
 ) REFERENCES public.organisations (id);
 
-ALTER TABLE ONLY public.task_history
-ADD CONSTRAINT fk_tasks FOREIGN KEY (
-    task_id, project_id
-) REFERENCES public.tasks (id, project_id);
-
 ALTER TABLE ONLY public.projects
 ADD CONSTRAINT fk_users FOREIGN KEY (author_id) REFERENCES public.users (id);
-
-ALTER TABLE ONLY public.task_history
-ADD CONSTRAINT fk_users FOREIGN KEY (user_id) REFERENCES public.users (id);
 
 ALTER TABLE ONLY public.tasks
 ADD CONSTRAINT fk_users_locked FOREIGN KEY (
@@ -561,11 +553,6 @@ ADD CONSTRAINT organisation_managers_user_id_fkey FOREIGN KEY (
 
 ALTER TABLE ONLY public.project_info
 ADD CONSTRAINT project_info_project_id_fkey FOREIGN KEY (
-    project_id
-) REFERENCES public.projects (id);
-
-ALTER TABLE ONLY public.task_history
-ADD CONSTRAINT task_history_project_id_fkey FOREIGN KEY (
     project_id
 ) REFERENCES public.projects (id);
 
