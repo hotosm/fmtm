@@ -1,4 +1,5 @@
 # Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+#
 # This file is part of FMTM.
 #
 #     FMTM is free software: you can redistribute it and/or modify
@@ -14,31 +15,25 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
+"""Tests for task routes."""
 
-ARG node_version=20.10
-
-
-
-FROM docker.io/bitnami/git:2 as repo
-ARG ODK_CENTRAL_TAG
-RUN git clone --depth 1 --branch ${ODK_CENTRAL_TAG} \
-    "https://github.com/getodk/central.git" \
-    && cd central && git submodule update --init
+import pytest
 
 
+def test_read_task_history(client, task_history):
+    """Test task history for a project."""
+    task_id = task_history.task_id
 
-FROM docker.io/node:${node_version}-slim as build
-WORKDIR /frontend
-COPY --from=repo central/client/ /frontend/
-RUN npm ci --no-audit --fund=false --update-notifier=false
-RUN VUE_APP_OIDC_ENABLED="false" npm run build
+    assert task_id is not None
+
+    response = client.get(f"/tasks/{task_id}/history/")
+    data = response.json()[0]
+
+    assert response.status_code == 200
+    assert data["id"] == task_history.id
+    assert data["username"] == task_history.actioned_by.username
 
 
-
-FROM docker.io/rclone/rclone:1 as prod
-VOLUME /frontend
-COPY container-entrypoint.sh /
-RUN chmod +x /container-entrypoint.sh
-ENTRYPOINT ["/container-entrypoint.sh"]
-WORKDIR /app
-COPY --from=build /frontend/dist .
+if __name__ == "__main__":
+    """Main func if file invoked directly."""
+    pytest.main()

@@ -229,7 +229,7 @@ async def delete_one_project(db: Session, db_project: db_models.DbProject) -> No
         log.info(f"Deleted project with ID: {project_id}")
     except Exception as e:
         log.exception(e)
-        raise HTTPException(e) from e
+        raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=e) from e
 
 
 async def partial_update_project_info(
@@ -263,7 +263,7 @@ async def partial_update_project_info(
     return await convert_to_app_project(db_project)
 
 
-async def update_project_info(
+async def update_project_with_project_info(
     db: Session,
     project_metadata: project_schemas.ProjectUpdate,
     db_project: db_models.DbProject,
@@ -278,24 +278,20 @@ async def update_project_info(
             detail="No project info passed in",
         )
 
-    # Project meta information
-    project_info = project_metadata.project_info
+    for key, value in project_metadata.model_dump(
+        exclude=["project_info", "outline_geojson"]
+    ).items():
+        setattr(db_project, key, value)
 
-    # Update author of the project
-    db_project.author_id = db_user.id
-    db_project.project_name_prefix = project_metadata.project_name_prefix
-
-    # get project info
     db_project_info = await get_project_info_by_id(db, db_project.id)
-
-    # Update projects meta information (name, descriptions)
-    if db_project and db_project_info:
-        db_project_info.name = project_info.name
-        db_project_info.short_description = project_info.short_description
-        db_project_info.description = project_info.description
+    # Update project's meta information (name, descriptions)
+    if db_project_info:
+        for key, value in project_info.model_dump(exclude_unset=True).items():
+            setattr(db_project_info, key, value)
 
     db.commit()
     db.refresh(db_project)
+    db.refresh(db_project_info)
 
     return await convert_to_app_project(db_project)
 
@@ -399,7 +395,7 @@ async def create_tasks_from_geojson(
         return True
     except Exception as e:
         log.exception(e)
-        raise HTTPException(e) from e
+        raise HTTPException(HTTPStatus.UNPROCESSABLE_ENTITY, detail=e) from e
 
 
 async def preview_split_by_square(boundary: str, meters: int):
@@ -1372,7 +1368,7 @@ def get_project_tiles(
     background_task_id: uuid.UUID,
     source: str,
     output_format: str = "mbtiles",
-    tms: str = None,
+    tms: Optional[str] = None,
 ):
     """Get the tiles for a project.
 
@@ -1385,7 +1381,12 @@ def get_project_tiles(
             Other options: "pmtiles", "sqlite3".
         tms (str, optional): Default None. Custom TMS provider URL.
     """
-    zooms = "12-19"
+    # TODO update this for user input or automatic
+    # maxzoom can be determined from OAM: https://tiles.openaerialmap.org/663
+    # c76196049ef00013b8494/0/663c76196049ef00013b8495
+    # TODO xy should also be user configurable
+    # NOTE mbtile max supported zoom level is 22 (in GDAL at least)
+    zooms = "12-22" if tms else "12-19"
     tiles_dir = f"{TILESDIR}/{project_id}"
     outfile = f"{tiles_dir}/{project_id}_{source}tiles.{output_format}"
 
@@ -1419,7 +1420,9 @@ def get_project_tiles(
         if project_bbox:
             min_lon, min_lat, max_lon, max_lat = project_bbox
         else:
-            log.error(f"Failed to get bbox from project: {project_id}")
+            msg = f"Failed to get bbox from project: {project_id}"
+            log.error(msg)
+            raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg)
 
         log.debug(
             "Creating basemap with params: "
@@ -1428,7 +1431,7 @@ def get_project_tiles(
             f"zooms={zooms} | "
             f"outdir={tiles_dir} | "
             f"source={source} | "
-            f"xy={False} | "
+            f"xy={True if tms else False} | "
             f"tms={tms}"
         )
 
@@ -1438,7 +1441,7 @@ def get_project_tiles(
             zooms=zooms,
             outdir=tiles_dir,
             source=source,
-            xy=False,
+            xy=True if tms else False,
             tms=tms,
         )
 
@@ -1624,10 +1627,10 @@ def count_user_contributions(db: Session, user_id: int, project_id: int) -> int:
     return contributions_count
 
 
-async def add_project_admin(
+async def add_project_manager(
     db: Session, user: db_models.DbUser, project: db_models.DbProject
 ):
-    """Adds a user as an admin to the specified organisation.
+    """Adds a user as an manager to the specified project.
 
     Args:
         db (Session): The database session.

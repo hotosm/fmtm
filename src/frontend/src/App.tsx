@@ -19,7 +19,7 @@ const CheckLoginState = () => {
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
 
   const checkIfUserLoginValid = () => {
-    fetch(`${import.meta.env.VITE_API_URL}/auth/introspect`, { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL}/auth/refresh`, { credentials: 'include' })
       .then((resp) => {
         if (resp.status !== 200) {
           dispatch(LoginActions.signOut());
@@ -43,7 +43,7 @@ const CheckLoginState = () => {
   useEffect(() => {
     // Check current login state (omit callback url)
     if (!window.location.pathname.includes('osmauth')) {
-      // No need for introspect check if user details are not set
+      // No need for token refresh check if user details are not set
       if (!authDetails) return;
       checkIfUserLoginValid();
     }

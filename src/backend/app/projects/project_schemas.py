@@ -143,7 +143,7 @@ class ProjectIn(BaseModel):
     xform_category: str
     custom_tms_url: Optional[str] = None
     organisation_id: Optional[int] = None
-    hashtags: Optional[List[str]] = None
+    hashtags: Optional[str] = None
     task_split_type: Optional[TaskSplitType] = None
     task_split_dimension: Optional[int] = None
     task_num_buildings: Optional[int] = None
@@ -177,11 +177,24 @@ class ProjectIn(BaseModel):
 
     @field_validator("hashtags", mode="after")
     @classmethod
-    def prepend_hash_to_tags(cls, hashtags: List[str]) -> Optional[List[str]]:
-        """Add '#' to hashtag if missing. Also added default '#FMTM'."""
+    def validate_hashtags(cls, hashtags: Optional[str]) -> List[str]:
+        """Validate hashtags.
+
+        - Receives a string and parsed as a list of tags.
+        - Commas or semicolons are replaced with spaces before splitting.
+        - Add '#' to hashtag if missing.
+        - Also add default '#FMTM' tag.
+        """
+        if hashtags is None:
+            return ["#FMTM"]
+
+        hashtags = hashtags.replace(",", " ").replace(";", " ")
+        hashtags_list = hashtags.split()
+
+        # Add '#' to hashtag strings if missing
         hashtags_with_hash = [
             f"#{hashtag}" if hashtag and not hashtag.startswith("#") else hashtag
-            for hashtag in hashtags
+            for hashtag in hashtags_list
         ]
 
         if "#FMTM" not in hashtags_with_hash:
@@ -228,12 +241,14 @@ class ProjectPartialUpdate(BaseModel):
 
     @computed_field
     @property
-    def project_name_prefix(self) -> str:
+    def project_name_prefix(self) -> Optional[str]:
         """Compute project name prefix with underscores."""
+        if not self.name:
+            return None
         return self.name.replace(" ", "_").lower()
 
 
-class ProjectUpdate(ProjectIn):
+class ProjectUpdate(ProjectUpload):
     """Update project."""
 
     pass
@@ -306,6 +321,7 @@ class ProjectBase(BaseModel):
     author: User
     project_info: ProjectInfo
     status: ProjectStatus
+    created: datetime
     # location_str: str
     xform_category: Optional[XLSFormType] = None
     hashtags: Optional[List[str]] = None
