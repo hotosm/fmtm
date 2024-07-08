@@ -213,7 +213,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customDataExtractUpload
     };
 
     handleQRGeneration();
-  }, [generateProjectSuccess]);
+  }, [generateProjectSuccess, generateProjectError]);
 
   const renderTraceback = (errorText: string) => {
     if (!errorText) {
