@@ -95,6 +95,9 @@ const CreateProject = createSlice({
       state.uploadAreaSelection = '';
       state.dividedTaskGeojson = null;
       state.dividedTaskLoading = false;
+      state.generateProjectSuccess = false;
+      state.generateProjectError = false;
+      state.drawToggle = false;
     },
     UploadAreaLoading(state, action) {
       state.projectAreaLoading = action.payload;
