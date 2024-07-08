@@ -9,6 +9,7 @@ import { ProjectById, GetEntityInfo } from '@/api/Project';
 // import { GetProjectDashboard } from '@/api/Project';
 import { useSearchParams } from 'react-router-dom';
 import { useAppSelector } from '@/types/reduxTypes';
+import { ProjectContributorsService } from '@/api/SubmissionService';
 
 const ProjectSubmissions = () => {
   const dispatch = CoreModules.useAppDispatch();
@@ -49,6 +50,10 @@ const ProjectSubmissions = () => {
   // better solution needs to be researched
   useEffect(() => {
     dispatch(GetEntityInfo(`${import.meta.env.VITE_API_URL}/projects/${projectId}/entities/statuses`));
+  }, []);
+
+  useEffect(() => {
+    dispatch(ProjectContributorsService(`${import.meta.env.VITE_API_URL}/projects/contributors/${projectId}`));
   }, []);
 
   useEffect(() => {

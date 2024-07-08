@@ -196,9 +196,9 @@ const SubmissionsInfographics = ({ toggleView, entities }) => {
   //   );
   // }, []);
 
-  useEffect(() => {
-    dispatch(ProjectContributorsService(`${import.meta.env.VITE_API_URL}/projects/contributors/${projectId}`));
-  }, []);
+  // useEffect(() => {
+  //   dispatch(ProjectContributorsService(`${import.meta.env.VITE_API_URL}/projects/contributors/${projectId}`));
+  // }, []);
 
   const FormSubmissionSubHeader = () => (
     <div className="fmtm-text-sm fmtm-flex fmtm-gap-5 fmtm-mb-2">
