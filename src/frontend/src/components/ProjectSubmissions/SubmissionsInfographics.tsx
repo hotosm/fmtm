@@ -49,7 +49,6 @@ const SubmissionsInfographics = ({ toggleView, entities }) => {
   const projectProgressRef = useRef(null);
   const totalContributorsRef = useRef(null);
   const plannedVsActualRef = useRef(null);
-  const dispatch = CoreModules.useAppDispatch();
 
   const params = CoreModules.useParams();
   const projectId = params.projectId;
@@ -128,9 +127,9 @@ const SubmissionsInfographics = ({ toggleView, entities }) => {
 
     // sort by ascending date
     const sortedValidatedMapped = last30Days?.sort((a, b) => {
-      const dateA: any = new Date(a.date);
-      const dateB: any = new Date(b.date);
-      return dateA - dateB;
+      const date1: any = new Date(a.date);
+      const date2: any = new Date(b.date);
+      return date1 - date2;
     });
 
     const cumulativeCount = {
@@ -175,9 +174,9 @@ const SubmissionsInfographics = ({ toggleView, entities }) => {
 
     // sort submissions by ascending date
     const sortedEntitySubmissions = submissions?.sort((a, b) => {
-      const dateA: any = new Date(a.date);
-      const dateB: any = new Date(b.date);
-      return dateA - dateB;
+      const date1: any = new Date(a.date);
+      const date2: any = new Date(b.date);
+      return date1 - date2;
     });
     setFormSubmissionsData(sortedEntitySubmissions);
   }, [entities, submissionProjection]);
