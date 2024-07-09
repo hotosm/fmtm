@@ -31,6 +31,7 @@ from loguru import logger as log
 from shapely import Polygon
 
 from app.central.central_crud import create_odk_project
+from app.central.central_schemas import TaskStatus
 from app.config import encrypt_value, settings
 from app.db import db_models
 from app.projects import project_crud, project_schemas
@@ -367,31 +368,58 @@ async def test_project_by_id(client, project):
     assert data["tasks"] == project.tasks
 
 
-async def test_get_odk_entities_mapping_statuses(client, project):
+async def test_set_entity_mapping_status(client, odk_project, entities):
+    """Test set the ODK entity mapping status."""
+    entity = entities[0]
+    expected_status = TaskStatus.LOCKED_FOR_MAPPING
+
+    response = client.post(
+        f"/projects/{odk_project.id}/entity/status",
+        json={
+            "entity_id": entity["id"],
+            "status": expected_status,
+            "label": f"Task {entity['task_id']} Feature {entity['osm_id']}",
+        },
+    )
+    response_entity = response.json()
+
+    expected_entity = entity
+    expected_entity["status"] = expected_status.value
+    assert response.status_code == 200
+    compare_entities(response_entity, expected_entity)
+
+
+async def test_get_entity_mapping_status(client, odk_project, entities):
+    """Test get the ODK entity mapping status."""
+    entity = entities[0]
+    response = client.get(
+        f"/projects/{odk_project.id}/entity/status", params={"entity_id": entity["id"]}
+    )
+    response_entity = response.json()
+
+    assert response.status_code == 200
+    compare_entities(response_entity, entity)
+
+
+async def test_get_entities_mapping_statuses(client, odk_project, entities):
     """Test get the ODK entities mapping statuses."""
-    # mock dependency on odk central library
-    entities_data_mock = [
-        {
-            "id": "455d0982-f4d9-4a08-ab94-dba22aa951b2",
-            "task_id": 1,
-            "osm_id": 302546443,
-            "status": 0,
-            "updatedAt": None,
-        }
-    ]
+    odk_project_id = odk_project.id
+    response = client.get(f"projects/{odk_project_id}/entities/statuses")
+    response_entities = response.json()
 
-    with patch(
-        "app.central.central_crud.get_entities_data", return_value=entities_data_mock
+    assert len(response_entities) == len(entities)
+    for response_entity, expected_entity in zip(
+        response_entities, entities, strict=False
     ):
-        response = client.get(f"/projects/{project.id}/entities/statuses")
+        compare_entities(expected_entity, response_entity)
 
-        assert len(response.json()) == 1
-        entity = response.json()[0]
 
-        # updated at field is defined as computed in central_schemas
-        entity["updatedAt"] = entity.pop("updated_at")
-        assert response.status_code == 200
-        assert entity == entities_data_mock[0]
+def compare_entities(response_entity, expected_entity):
+    """Utility function for testing by comparing response and expected entity fields."""
+    assert response_entity["id"] == str(expected_entity["id"])
+    assert str(response_entity["task_id"]) == str(expected_entity["task_id"])
+    assert str(response_entity["osm_id"]) == str(expected_entity["osm_id"])
+    assert str(response_entity["status"]) == str(expected_entity["status"])
 
 
 if __name__ == "__main__":
