@@ -6,42 +6,11 @@ import Table, { TableHeader } from '@/components/common/CustomTable';
 import CustomLineChart from '@/components/common/LineChart';
 import CoreModules from '@/shared/CoreModules';
 import InfographicsCard from '@/components/ProjectSubmissions/InfographicsCard';
-import {
-  ProjectContributorsService,
-  // ProjectSubmissionInfographicsService,
-  // ValidatedVsMappedInfographicsService,
-} from '@/api/SubmissionService';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import { useAppSelector } from '@/types/reduxTypes';
 import { taskHistoryTypes } from '@/models/project/projectModel';
-
-type formSubmissionType = { date: string; count: number; label: string };
-type validatedMappedType = { date: string; Validated: number; Mapped: number; label: string };
-
-// get date N days ago
-const dateNDaysAgo = (NDays: number) => {
-  return new Date(new Date().getTime() - NDays * 24 * 60 * 60 * 1000).toISOString();
-};
-
-// extract month & day in MM/DD format for chart date labels
-const getMonthDate = (date: string) => {
-  const splittedDate = date?.split('T')[0]?.split('-');
-  return `${splittedDate[1]}/${splittedDate[2]}`;
-};
-
-// generates an array of date strings for last 30 days
-const generateLast30Days = (): string[] => {
-  const last30Days: string[] = [];
-  const today = new Date();
-
-  for (let i = 0; i < 30; i++) {
-    const date = new Date();
-    date.setDate(today.getDate() - i);
-    last30Days.push(date.toISOString().split('T')[0]);
-  }
-
-  return last30Days;
-};
+import { formSubmissionType, validatedMappedType } from '@/models/submission/submissionModel';
+import { dateNDaysAgo, generateLast30Days, getMonthDate } from '@/utilfunctions/commonUtils';
 
 const SubmissionsInfographics = ({ toggleView, entities }) => {
   useDocumentTitle('Submission Infographics');
@@ -53,13 +22,9 @@ const SubmissionsInfographics = ({ toggleView, entities }) => {
   const params = CoreModules.useParams();
   const projectId = params.projectId;
 
-  // const submissionInfographicsData = useAppSelector((state) => state.submission.submissionInfographics);
-  // const submissionInfographicsLoading = useAppSelector((state) => state.submission.submissionInfographicsLoading);
   const submissionContributorsData = useAppSelector((state) => state.submission.submissionContributors);
   const submissionContributorsLoading = useAppSelector((state) => state.submission.submissionContributorsLoading);
   const [submissionProjection, setSubmissionProjection] = useState<10 | 30>(10);
-  // const validatedVsMappedInfographics = useAppSelector((state) => state.submission.validatedVsMappedInfographics);
-  // const validatedVsMappedLoading = useAppSelector((state) => state.submission.validatedVsMappedLoading);
   const taskInfo = useAppSelector((state) => state.task.taskInfo);
   const taskLoading = useAppSelector((state) => state.task.taskLoading);
   const entityOsmMapLoading = useAppSelector((state) => state.project.entityOsmMapLoading);
@@ -180,24 +145,6 @@ const SubmissionsInfographics = ({ toggleView, entities }) => {
     });
     setFormSubmissionsData(sortedEntitySubmissions);
   }, [entities, submissionProjection]);
-
-  // useEffect(() => {
-  //   dispatch(
-  //     ProjectSubmissionInfographicsService(
-  //       `${import.meta.env.VITE_API_URL}/submission/submission_page/${projectId}?days=${submissionProjection}`,
-  //     ),
-  //   );
-  // }, [submissionProjection]);
-
-  // useEffect(() => {
-  //   dispatch(
-  //     ValidatedVsMappedInfographicsService(`${import.meta.env.VITE_API_URL}/tasks/activity/?project_id=${projectId}`),
-  //   );
-  // }, []);
-
-  // useEffect(() => {
-  //   dispatch(ProjectContributorsService(`${import.meta.env.VITE_API_URL}/projects/contributors/${projectId}`));
-  // }, []);
 
   const FormSubmissionSubHeader = () => (
     <div className="fmtm-text-sm fmtm-flex fmtm-gap-5 fmtm-mb-2">
