@@ -5,15 +5,15 @@ test('test', async ({ page }) => {
   await page.getByRole('button', { name: '+ Create New Project' }).click();
 
   //UNCOMMENT FOR LOGIN
-  // await page.getByText('Personal OSM Account').click();
-  // await page.goto(
-  //   'https://www.openstreetmap.org/login?cookie_test=true&referer=%2Foauth2%2Fauthorize%3Fresponse_type%3Dcode%26client_id%3D9qmECyRwBNFyqNl9LszwHX1WOxKFKeBsA5ofAS1GJGY%26redirect_uri%3Dhttp%253A%252F%252F127.0.0.1%253A7051%252Fosmauth%252F%26scope%3Dread_prefs%26state%3D0SqgC9WJxFnGYX4OS3iVrIb3pM6AqY',
-  // );
-  // await page.getByLabel('Email Address or Username').click();
-  // await page.getByLabel('Email Address or Username').fill('yourmail@gmail.com');
-  // await page.getByLabel('Email Address or Username').press('Tab');
-  // await page.getByLabel('Password').fill('your password');
-  // await page.getByRole('button', { name: 'Log in' }).click();
+  await page.getByText('Personal OSM Account').click();
+  await page.goto(
+    'https://www.openstreetmap.org/login?cookie_test=true&referer=%2Foauth2%2Fauthorize%3Fresponse_type%3Dcode%26client_id%3D9qmECyRwBNFyqNl9LszwHX1WOxKFKeBsA5ofAS1GJGY%26redirect_uri%3Dhttp%253A%252F%252F127.0.0.1%253A7051%252Fosmauth%252F%26scope%3Dread_prefs%26state%3D0SqgC9WJxFnGYX4OS3iVrIb3pM6AqY',
+  );
+  await page.getByLabel('Email Address or Username').click();
+  await page.getByLabel('Email Address or Username').fill('suwalnishit@gmail.com');
+  await page.getByLabel('Email Address or Username').press('Tab');
+  await page.getByLabel('Password').fill('nsuwal123');
+  await page.getByRole('button', { name: 'Log in' }).click();
 
   await page.locator('#name').click();
   await page.locator('#name').fill('test tes ttes');
