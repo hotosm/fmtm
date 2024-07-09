@@ -6,7 +6,6 @@ import SubmissionsTable from '@/components/ProjectSubmissions/SubmissionsTable.j
 import CoreModules from '@/shared/CoreModules';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { ProjectById, GetEntityInfo } from '@/api/Project';
-// import { GetProjectDashboard } from '@/api/Project';
 import { useSearchParams } from 'react-router-dom';
 import { useAppSelector } from '@/types/reduxTypes';
 import { ProjectContributorsService } from '@/api/SubmissionService';
@@ -41,10 +40,6 @@ const ProjectSubmissions = () => {
       }
     }
   }, [params.id]);
-
-  // useEffect(() => {
-  //   dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${projectId}`));
-  // }, []);
 
   // for hot fix to display task-list and show option of task-list for submission table filter
   // better solution needs to be researched
