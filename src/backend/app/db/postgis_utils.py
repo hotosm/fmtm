@@ -819,11 +819,6 @@ def get_osm_geometries(form_category, geometry):
     return pg.execQuery(
         geometry,
         extra_params={
-            "fileName": (
-                f"fmtm/{settings.FMTM_DOMAIN}/data_extract"
-                if settings.RAW_DATA_API_AUTH_TOKEN
-                else "fmtm_extract"
-            ),
             "outputType": "geojson",
             "bind_zip": True,
             "useStWithin": False,
