@@ -27,417 +27,432 @@ test('test', async ({ page }) => {
 
   await page.getByRole('button', { name: 'NEXT' }).click();
 
-  await page.locator('canvas').click({
-    position: {
-      x: 361,
-      y: 146,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 361,
-      y: 146,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 361,
-      y: 146,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 363,
-      y: 139,
-    },
-  });
-  await page.locator('canvas').click({
-    position: {
-      x: 362,
-      y: 100,
-    },
-  });
-  await page.locator('canvas').click({
-    position: {
-      x: 360,
-      y: 144,
-    },
-  });
-  await page.locator('canvas').click({
-    position: {
-      x: 360,
-      y: 144,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 361,
-      y: 146,
-    },
-  });
-  await page.locator('canvas').dblclick({
-    position: {
-      x: 361,
-      y: 146,
-    },
-  });
-  await page.locator('canvas').click({
-    position: {
-      x: 361,
-      y: 146,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 364,
-      y: 142,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 364,
-      y: 142,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 364,
-      y: 142,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 367,
-      y: 140,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 367,
-      y: 140,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 367,
-      y: 140,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 398,
-      y: 144,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 407,
-      y: 145,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 407,
-      y: 145,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 407,
-      y: 145,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 407,
-      y: 145,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 407,
-      y: 145,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 407,
-      y: 145,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 228,
-      y: 172,
-    },
-  });
+  // await page.locator('canvas').click({
+  //   position: {
+  //     x: 361,
+  //     y: 146,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 361,
+  //     y: 146,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 361,
+  //     y: 146,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 363,
+  //     y: 139,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   position: {
+  //     x: 362,
+  //     y: 100,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   position: {
+  //     x: 360,
+  //     y: 144,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   position: {
+  //     x: 360,
+  //     y: 144,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 361,
+  //     y: 146,
+  //   },
+  // });
+  // await page.locator('canvas').dblclick({
+  //   position: {
+  //     x: 361,
+  //     y: 146,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   position: {
+  //     x: 361,
+  //     y: 146,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 364,
+  //     y: 142,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 364,
+  //     y: 142,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 364,
+  //     y: 142,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 367,
+  //     y: 140,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 367,
+  //     y: 140,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 367,
+  //     y: 140,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 398,
+  //     y: 144,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 407,
+  //     y: 145,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 407,
+  //     y: 145,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 407,
+  //     y: 145,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 407,
+  //     y: 145,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 407,
+  //     y: 145,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 407,
+  //     y: 145,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 228,
+  //     y: 172,
+  //   },
+  // });
 
-  await page.locator('canvas').click({
-    position: {
-      x: 361,
-      y: 146,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 361,
-      y: 146,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 361,
-      y: 146,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 363,
-      y: 139,
-    },
-  });
-  await page.locator('canvas').click({
-    position: {
-      x: 362,
-      y: 100,
-    },
-  });
-  await page.locator('canvas').click({
-    position: {
-      x: 360,
-      y: 144,
-    },
-  });
-  await page.locator('canvas').click({
-    position: {
-      x: 360,
-      y: 144,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 361,
-      y: 146,
-    },
-  });
-  await page.locator('canvas').dblclick({
-    position: {
-      x: 361,
-      y: 146,
-    },
-  });
-  await page.locator('canvas').click({
-    position: {
-      x: 361,
-      y: 146,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 364,
-      y: 142,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 364,
-      y: 142,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 364,
-      y: 142,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 367,
-      y: 140,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 367,
-      y: 140,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 367,
-      y: 140,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 398,
-      y: 144,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 407,
-      y: 145,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 407,
-      y: 145,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 407,
-      y: 145,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 407,
-      y: 145,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 407,
-      y: 145,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 407,
-      y: 145,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 228,
-      y: 172,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 367,
-      y: 140,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 398,
-      y: 144,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 407,
-      y: 145,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 407,
-      y: 145,
-    },
-  });
-  await page.locator('canvas').click({
-    clickCount: 3,
-    position: {
-      x: 407,
-      y: 145,
-    },
-  });
+  // await page.locator('canvas').click({
+  //   position: {
+  //     x: 361,
+  //     y: 146,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 361,
+  //     y: 146,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 361,
+  //     y: 146,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 363,
+  //     y: 139,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   position: {
+  //     x: 362,
+  //     y: 100,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   position: {
+  //     x: 360,
+  //     y: 144,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   position: {
+  //     x: 360,
+  //     y: 144,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 361,
+  //     y: 146,
+  //   },
+  // });
+  // await page.locator('canvas').dblclick({
+  //   position: {
+  //     x: 361,
+  //     y: 146,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   position: {
+  //     x: 361,
+  //     y: 146,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 364,
+  //     y: 142,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 364,
+  //     y: 142,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 364,
+  //     y: 142,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 367,
+  //     y: 140,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 367,
+  //     y: 140,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 367,
+  //     y: 140,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 398,
+  //     y: 144,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 407,
+  //     y: 145,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 407,
+  //     y: 145,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 407,
+  //     y: 145,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 407,
+  //     y: 145,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 407,
+  //     y: 145,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 407,
+  //     y: 145,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 228,
+  //     y: 172,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 367,
+  //     y: 140,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 398,
+  //     y: 144,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 407,
+  //     y: 145,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 407,
+  //     y: 145,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   clickCount: 3,
+  //   position: {
+  //     x: 407,
+  //     y: 145,
+  //   },
+  // });
 
   await page.getByText('Draw', { exact: true }).click();
-  await page.locator('canvas').click({
-    position: {
-      x: 137,
-      y: 48,
-    },
-  });
-  await page.locator('canvas').click({
-    position: {
-      x: 114,
-      y: 311,
-    },
-  });
-  await page.locator('canvas').click({
-    position: {
-      x: 430,
-      y: 334,
-    },
-  });
-  await page.locator('canvas').click({
-    position: {
-      x: 397,
-      y: 38,
-    },
-  });
-  await page.locator('canvas').click({
-    position: {
-      x: 137,
-      y: 48,
-    },
-  });
-  await page.locator('canvas').click({
-    position: {
-      x: 137,
-      y: 48,
-    },
+
+  await page.evaluate(() => {
+    console.log('testttttttttttt ----------------------------------------------------------------------------------');
+    const map = document.getElementById('ol-map');
+
+    draw.appendCoordinates([
+      [85.30975492561487, 27.69184476860042],
+      [85.30975492561487, 27.685529976740412],
+      [85.31878796930516, 27.685529976740412],
+      [85.31878796930516, 27.69184476860042],
+      [85.30975492561487, 27.69184476860042],
+    ]);
+    draw.finishDrawing();
   });
 
-  await page.getByRole('button', { name: 'NEXT' }).click();
-  await page.getByRole('combobox').click();
-  await page.getByLabel('buildings').getByText('buildings').click();
-  await page.getByRole('button', { name: 'NEXT' }).click();
-  await page.getByText('Use OSM data extract').click();
-  await page.getByRole('button', { name: 'Generate Data Extract' }).click();
-  await page.getByRole('button', { name: 'NEXT' }).click();
-  await page.getByText('Divide on square').click();
-  await page.getByRole('spinbutton').click();
-  await page.getByRole('spinbutton').fill('500');
-  await page.getByRole('button', { name: 'Click to generate task' }).click();
-  await page.getByRole('button', { name: 'SUBMIT' }).click();
+  // await page.locator('canvas').click({
+  //   position: {
+  //     x: 137,
+  //     y: 48,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   position: {
+  //     x: 114,
+  //     y: 311,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   position: {
+  //     x: 430,
+  //     y: 334,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   position: {
+  //     x: 397,
+  //     y: 38,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   position: {
+  //     x: 137,
+  //     y: 48,
+  //   },
+  // });
+  // await page.locator('canvas').click({
+  //   position: {
+  //     x: 137,
+  //     y: 48,
+  //   },
+  // });
 
-  await page.goto('http://fmtm.localhost:7050/project/64');
+  await page.getByRole('button', { name: 'NEXT' }).click();
+  // await page.getByRole('combobox').click();
+  // await page.getByLabel('buildings').getByText('buildings').click();
+  // await page.getByRole('button', { name: 'NEXT' }).click();
+  // await page.getByText('Use OSM data extract').click();
+  // await page.getByRole('button', { name: 'Generate Data Extract' }).click();
+  // await page.getByRole('button', { name: 'NEXT' }).click();
+  // await page.getByText('Divide on square').click();
+  // await page.getByRole('spinbutton').click();
+  // await page.getByRole('spinbutton').fill('500');
+  // await page.getByRole('button', { name: 'Click to generate task' }).click();
+  // await page.getByRole('button', { name: 'SUBMIT' }).click();
+
+  // await page.goto('http://fmtm.localhost:7050/project/64');
 });

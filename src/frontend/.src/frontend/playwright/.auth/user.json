@@ -2,12 +2,42 @@
   "cookies": [
     {
       "name": "_osm_session",
-      "value": "d2d01b7b9572e8bdf036b30994b6fedd",
+      "value": "9785e35b4b0e71272f2ae1dcb17754ba",
       "domain": "www.openstreetmap.org",
       "path": "/",
       "expires": -1,
       "httpOnly": true,
       "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_pk_ref.1.cf09",
+      "value": "%5B%22%22%2C%22%22%2C1720589511%2C%22http%3A%2F%2Ffmtm.localhost%3A7050%2F%22%5D",
+      "domain": "www.openstreetmap.org",
+      "path": "/",
+      "expires": 1721194310,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_pk_id.1.cf09",
+      "value": "be07b16e596eb58b.1720589511.",
+      "domain": "www.openstreetmap.org",
+      "path": "/",
+      "expires": 1723008711,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_pk_ses.1.cf09",
+      "value": "1",
+      "domain": "www.openstreetmap.org",
+      "path": "/",
+      "expires": 1720591310,
+      "httpOnly": false,
+      "secure": true,
       "sameSite": "Lax"
     }
   ],
