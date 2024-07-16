@@ -39,7 +39,6 @@ from sqlalchemy import (
     String,
     Table,
     UniqueConstraint,
-    desc,
 )
 from sqlalchemy.dialects.postgresql import ARRAY as PostgreSQLArray  # noqa: N811
 from sqlalchemy.dialects.postgresql import TSVECTOR
@@ -297,9 +296,6 @@ class DbTask(Base):
     )
 
     # Define relationships
-    task_history = relationship(
-        DbTaskHistory, cascade="all", order_by=desc(DbTaskHistory.action_date)
-    )
     lock_holder = relationship(DbUser, foreign_keys=[locked_by])
     mapper = relationship(DbUser, foreign_keys=[mapped_by])
 
