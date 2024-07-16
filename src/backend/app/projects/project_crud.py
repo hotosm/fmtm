@@ -24,7 +24,6 @@ from io import BytesIO
 from pathlib import Path
 from typing import List, Optional, Union
 
-import geoalchemy2
 import geojson
 import requests
 import shapely.wkb as wkblib
@@ -61,7 +60,6 @@ from app.models.enums import HTTPStatus, ProjectRole, ProjectVisibility, XLSForm
 from app.projects import project_deps, project_schemas
 from app.s3 import add_obj_to_bucket
 from app.tasks import tasks_crud
-from app.users import user_crud
 
 TILESDIR = "/opt/tiles"
 
@@ -1006,30 +1004,6 @@ async def generate_project_files(
             raise e
 
 
-async def get_project_geometry(db: Session, project_id: int):
-    """Retrieves the geometry of a project.
-
-    Args:
-        db (Session): The database session.
-        project_id (int): The ID of the project.
-
-    Returns:
-        str: A geojson of the project outline.
-    """
-    projects = table("projects", column("outline"), column("id"))
-    where = f"projects.id={project_id}"
-    sql = select(geoalchemy2.functions.ST_AsGeoJSON(projects.c.outline)).where(
-        text(where)
-    )
-    result = db.execute(sql)
-    # There should only be one match
-    if result.rowcount != 1:
-        log.warning(str(sql))
-        return False
-    row = eval(result.first()[0])
-    return json.dumps(row)
-
-
 async def get_task_geometry(db: Session, project_id: int):
     """Retrieves the geometry of tasks associated with a project.
 
@@ -1058,14 +1032,10 @@ async def get_task_geometry(db: Session, project_id: int):
 
 async def get_project_features_geojson(
     db: Session,
-    project: Union[db_models.DbProject, int],
+    db_project: db_models.DbProject,
     task_id: Optional[int] = None,
 ) -> FeatureCollection:
     """Get a geojson of all features for a task."""
-    if isinstance(project, int):
-        db_project = await get_project(db, project)
-    else:
-        db_project = project
     project_id = db_project.id
 
     data_extract_url = db_project.data_extract_url
@@ -1558,18 +1528,21 @@ async def get_dashboard_detail(
     return project
 
 
-async def get_project_users(db: Session, project_id: int):
+async def get_project_users(db: Session, project_id: int, db_user: db_models.DbUser):
     """Get the users and their contributions for a project.
 
     Args:
         db (Session): The database session.
         project_id (int): The ID of the project.
+        db_user (DbUser): User that called the endpoint.
 
     Returns:
         List[Dict[str, Union[str, int]]]: A list of dictionaries containing
             the username and the number of contributions made by each user
             for the specified project.
     """
+    # TODO refactor this
+    # TODO it could probably just be a single raw SQL statement
     contributors = (
         db.query(db_models.DbTaskHistory)
         .filter(db_models.DbTaskHistory.project_id == project_id)
@@ -1582,7 +1555,6 @@ async def get_project_users(db: Session, project_id: int):
 
     for user_id in unique_user_ids:
         contributions = count_user_contributions(db, user_id, project_id)
-        db_user = await user_crud.get_user(db, user_id)
         response.append({"user": db_user.username, "contributions": contributions})
 
     response = sorted(response, key=lambda x: x["contributions"], reverse=True)
