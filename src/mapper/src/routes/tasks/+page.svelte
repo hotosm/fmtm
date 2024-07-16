@@ -1,73 +1,103 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
-  import type { PageData } from './$types'
-  import { type Electric } from '$lib/migrations'
-  import { map, finish, validate, good, comment } from '$lib/task-events'
-  import { createLiveQuery } from '$lib/live-query'
+	import { onMount, onDestroy } from 'svelte';
+	import type { PageData } from './$types';
 
-  export let data: PageData
-  let electric: Electric = data.electric
-  let history
-  let comments
+	import { Map } from 'maplibre-gl';
+	import 'maplibre-gl/dist/maplibre-gl.css';
 
-  onMount(async () => {
-    await electric.db.task_history.sync()
+	import { type Electric } from '$lib/migrations';
+	import { mapTask, finishTask, validateTask, goodTask, commentTask } from '$lib/task-events';
+	import { createLiveQuery } from '$lib/live-query';
 
-    const taskHistory = electric.db.task_history.liveMany({
-      select: { action_date: true, action: true },
-      where: {
-        project_id: 1,
-      },
-    })
-    history = createLiveQuery(electric.notifier, taskHistory)
+	export let data: PageData;
+	let electric: Electric = data.electric;
+	let history;
+	let comments;
 
-    const taskComments = electric.db.task_history.liveMany({
-      select: { action_date: true, action_text: true },
-      where: {
-        project_id: 1,
-        action: 'COMMENT',
-      },
-    })
-    comments = createLiveQuery(electric.notifier, taskComments)
-  })
+	let map;
+	let mapContainer;
 
-  const formatDateString = (dateString: string): string => {
-    const date = new Date(dateString)
-    const day = ('0' + date.getDate()).slice(-2)
-    const month = ('0' + (date.getMonth() + 1)).slice(-2)
-    const year = date.getFullYear()
-    const hours = ('0' + date.getHours()).slice(-2)
-    const minutes = ('0' + date.getMinutes()).slice(-2)
-    return `${day}/${month}/${year} ${hours}:${minutes}`
-  }
+	onMount(async () => {
+		await electric.db.task_history.sync();
+
+		const taskHistory = electric.db.task_history.liveMany({
+			select: { action_date: true, action: true },
+			where: {
+				project_id: 1,
+			},
+		});
+		history = createLiveQuery(electric.notifier, taskHistory);
+
+		const taskComments = electric.db.task_history.liveMany({
+			select: { action_date: true, action_text: true },
+			where: {
+				project_id: 1,
+				action: 'COMMENT',
+			},
+		});
+		comments = createLiveQuery(electric.notifier, taskComments);
+
+		map = new Map({
+			container: mapContainer,
+			style: {
+				version: 8,
+				sources: {
+					osm: {
+						type: 'raster',
+						tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+						tileSize: 256,
+						attribution: '&copy; OpenStreetMap Contributors',
+						maxzoom: 19,
+					},
+				},
+				layers: [
+					{
+						id: 'osm',
+						type: 'raster',
+						source: 'osm',
+					},
+				],
+			},
+			center: [139.753, 35.6844],
+			zoom: 5,
+		});
+	});
+
+	onDestroy(() => {
+		map.remove();
+	});
+
+	const formatDateString = (dateString: string): string => {
+		const date = new Date(dateString);
+		const day = ('0' + date.getDate()).slice(-2);
+		const month = ('0' + (date.getMonth() + 1)).slice(-2);
+		const year = date.getFullYear();
+		const hours = ('0' + date.getHours()).slice(-2);
+		const minutes = ('0' + date.getMinutes()).slice(-2);
+		return `${day}/${month}/${year} ${hours}:${minutes}`;
+	};
 </script>
 
-<main>
-  <button on:click={() => { map(electric.db, 1, 1, 1) }}>Map</button>
-  <button on:click={() => { finish(electric.db, 1, 1, 1) }}>Finish</button>
-  <button on:click={() => { validate(electric.db, 1, 1, 1) }}>Validate</button>
-  <button on:click={() => { good(electric.db, 1, 1, 1) }}>Good</button>
-  <button on:click={() => { comment(electric.db, 1, 1, 1, 'A comment') }}>Comment</button>
+<div class="map-wrap">
+	<div class="map" bind:this={mapContainer}></div>
+</div>
 
-  <p>History:</p>
-  {#if $history}
-    <div>
-      {#each $history as r}
-        <div>{formatDateString(r.action_date)} | {r.action}</div>
-      {/each}
-    </div>
-  {:else}
-    <p>No tasks found.</p>
-  {/if}
+<style>
+	.map-wrap {
+		flex: 1;
+		position: relative;
+		overflow: hidden; /* Prevent overflow */
+		display: flex;
+		flex-direction: column; /* Ensure any children are arranged in a column */
+	}
 
-  <p>Comments:</p>
-  {#if $comments}
-    <div>
-      {#each $comments as r}
-        <div>{formatDateString(r.action_date)} | {r.action_text}</div>
-      {/each}
-    </div>
-  {:else}
-    <p>No tasks found.</p>
-  {/if}
-</main>
+	.map {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		width: 100%;
+		height: 100%;
+	}
+</style>
