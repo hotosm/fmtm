@@ -1,8 +1,14 @@
 import { error } from '@sveltejs/kit';
 import type { PageLoad } from './$types';
 
-export const load: PageLoad = async ({ params, fetch }) => {
+export const load: PageLoad = async ({ parent, params, fetch }) => {
+	const { electric } = await parent();
+
 	const { projectId } = params;
+
+	const test = await fetch('https://sandbox.hotosm.dev/api/0.6/changesets');
+	console.log(test);
+
 	const project = await fetch(`http://api.fmtm.localhost:7050/projects/${projectId}`);
 
 	if (project.status == 404) {
@@ -12,5 +18,9 @@ export const load: PageLoad = async ({ params, fetch }) => {
 		});
 	}
 
-	return project.json();
+	return {
+		project: await project.json(),
+		projectId: parseInt(projectId),
+		electric: electric,
+	};
 };
