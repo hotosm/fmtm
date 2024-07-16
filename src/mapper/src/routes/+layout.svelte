@@ -1,9 +1,11 @@
 <script lang="ts">
-	import '@hotosm/ui/dist/style.css'
-	import '@hotosm/ui/dist/components.js'
+	import '@hotosm/ui/dist/style.css';
+	import '@hotosm/ui/dist/components.js';
 
-    export let data
+	export let data;
 </script>
 
-<hot-header></hot-header>
-<slot {data} />
+<main class="flex flex-col h-screen overflow-hidden">
+	<hot-header></hot-header>
+	<slot {data}></slot>
+</main>
