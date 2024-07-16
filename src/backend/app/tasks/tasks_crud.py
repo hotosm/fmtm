@@ -268,17 +268,17 @@ async def add_task_comments(
 
 
 async def update_task_history(
-    task: db_models.DbTaskHistory, db: Session = Depends(database.get_db)
+    task_history: db_models.DbTaskHistory, db: Session = Depends(database.get_db)
 ):
     """Update task history with username and user profile image."""
-    status = task.action_text.split()
-    task.status = status[5]
-    if user_id := task.user_id:
+    status = task_history.action_text.split()
+    task_history.status = status[5]
+    if user_id := task_history.user_id:
         user = db.query(db_models.DbUser).filter_by(id=user_id).first()
         if user:
-            task.username = user.username
-            task.profile_img = user.profile_img
-    return task
+            task_history.username = user.username
+            task_history.profile_img = user.profile_img
+    return task_history
 
 
 async def get_project_task_history(
@@ -302,18 +302,17 @@ async def get_project_task_history(
         A list of task history records for the specified project.
     """
     query = """
-        SELECT th.event_id, th.action_text, th.action_date,
+        SELECT
+            th.event_id, th.action, th.action_text, th.action_date,
             u.username, u.profile_img
         FROM public.task_history th
         LEFT JOIN users u
-            ON users.id = task_history.user_id
+            ON u.id = th.user_id
         WHERE task_id = :task_id AND  action_date >= :end_date
     """
 
     query += " AND action = 'COMMENT'" if comment else " AND action != 'COMMENT'"
-    query += " ORDER BY id DESC"
-
-    query += ";"
+    query += " ORDER BY id DESC;"
 
     result = db.execute(
         text(query), {"task_id": task_id, "end_date": end_date}
@@ -321,11 +320,11 @@ async def get_project_task_history(
     task_history = [
         {
             "event_id": row[0],
-            "action_text": row[1],
-            "action_date": row[2],
-            "username": row[3],
-            "profile_img": row[4],
-            "status": None if comment else row[1].split()[5],
+            "status": None if comment else row[1],
+            "action_text": row[2],
+            "action_date": row[3],
+            "username": row[4],
+            "profile_img": row[5],
         }
         for row in result
     ]
