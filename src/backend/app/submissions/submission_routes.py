@@ -591,7 +591,7 @@ async def conflate_geojson(
     try:
         project = current_user["project"]
         db_task = await get_task_by_id(project.id, task_id, db)
-        task_aoi = postgis_utils.geometry_to_geojson(db_task.outline)
+        task_aoi = postgis_utils.wkb_geom_to_feature(db_task.outline)
         task_geojson = geojson.dumps(task_aoi, indent=2)
 
         data = await submission_crud.get_submission_by_project(project.id, {}, db)

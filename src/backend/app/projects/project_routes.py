@@ -23,8 +23,6 @@ from io import BytesIO
 from pathlib import Path
 from typing import Optional
 
-import geojson
-import geojson_pydantic
 import requests
 from fastapi import (
     APIRouter,
@@ -38,6 +36,7 @@ from fastapi import (
     UploadFile,
 )
 from fastapi.responses import FileResponse, JSONResponse
+from geojson_pydantic import FeatureCollection
 from loguru import logger as log
 from osm_fieldwork.data_models import data_models_path
 from osm_fieldwork.make_data_extract import getChoices
@@ -52,10 +51,9 @@ from app.central import central_crud, central_schemas
 from app.db import database, db_models
 from app.db.postgis_utils import (
     check_crs,
-    flatgeobuf_to_geojson,
-    merge_multipolygon,
-    multipolygon_to_polygon,
-    parse_and_filter_geojson,
+    flatgeobuf_to_featcol,
+    merge_polygons,
+    parse_geojson_file_to_featcol,
 )
 from app.models.enums import (
     TILES_FORMATS,
@@ -75,7 +73,7 @@ router = APIRouter(
 )
 
 
-@router.get("/features", response_model=geojson_pydantic.FeatureCollection)
+@router.get("/features", response_model=FeatureCollection)
 async def read_projects_to_featcol(
     db: Session = Depends(database.get_db),
     bbox: Optional[str] = None,
@@ -615,15 +613,12 @@ async def upload_project_task_boundaries(
         dict: JSON containing success message, project ID, and number of tasks.
     """
     log.debug(f"Uploading project boundary multipolygon for project ID: {project_id}")
-    # read entire file
-    content = await task_geojson.read()
-    task_boundaries = json.loads(content)
-    task_boundaries = multipolygon_to_polygon(task_boundaries)
+    tasks_featcol = parse_geojson_file_to_featcol(await task_geojson.read())
     # Validatiing Coordinate Reference System
-    await check_crs(task_boundaries)
+    await check_crs(tasks_featcol)
 
     log.debug("Creating tasks for each polygon in project")
-    await project_crud.create_tasks_from_geojson(db, project_id, task_boundaries)
+    await project_crud.create_tasks_from_geojson(db, project_id, tasks_featcol)
 
     # Get the number of tasks in a project
     task_count = await tasks_crud.get_task_count_in_project(db, project_id)
@@ -658,17 +653,15 @@ async def task_split(
         The result of splitting the task into subtasks.
 
     """
-    # read project boundary
-    boundary = geojson.loads(await project_geojson.read())
-    parsed_boundary = merge_multipolygon(boundary, False)
+    boundary_featcol = parse_geojson_file_to_featcol(await project_geojson.read())
+    merged_boundary = merge_polygons(boundary_featcol, False)
     # Validatiing Coordinate Reference Systems
-    await check_crs(parsed_boundary)
+    await check_crs(merged_boundary)
 
     # read data extract
     parsed_extract = None
     if extract_geojson:
-        geojson_data = await extract_geojson.read()
-        parsed_extract = parse_and_filter_geojson(geojson_data, filter=False)
+        parsed_extract = parse_geojson_file_to_featcol(await extract_geojson.read())
         if parsed_extract:
             await check_crs(parsed_extract)
         else:
@@ -676,7 +669,7 @@ async def task_split(
 
     return await project_crud.split_geojson_into_tasks(
         db,
-        parsed_boundary,
+        merged_boundary,
         no_of_buildings,
         parsed_extract,
     )
@@ -817,22 +810,20 @@ async def preview_split_by_square(
         raise HTTPException(status_code=400, detail="Provide a valid .geojson file")
 
     # read entire file
-    content = await project_geojson.read()
-    boundary = geojson.loads(content)
+    boundary_featcol = parse_geojson_file_to_featcol(await project_geojson.read())
 
     # Validatiing Coordinate Reference System
-    await check_crs(boundary)
+    await check_crs(boundary_featcol)
     parsed_extract = None
     if extract_geojson:
-        geojson_data = await extract_geojson.read()
-        parsed_extract = parse_and_filter_geojson(geojson_data, filter=False)
+        parsed_extract = parse_geojson_file_to_featcol(await extract_geojson.read())
         if parsed_extract:
             await check_crs(parsed_extract)
         else:
             log.warning("Parsed geojson file contained no geometries")
 
     return await project_crud.preview_split_by_square(
-        boundary, dimension, parsed_extract
+        boundary_featcol, dimension, parsed_extract
     )
 
 
@@ -1128,7 +1119,7 @@ async def convert_fgb_to_geojson(
                 status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
                 detail="Download failed for data extract",
             )
-        data_extract_geojson = await flatgeobuf_to_geojson(db, response.content)
+        data_extract_geojson = await flatgeobuf_to_featcol(db, response.content)
 
     if not data_extract_geojson:
         raise HTTPException(
