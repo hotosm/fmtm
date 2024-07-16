@@ -18,14 +18,14 @@ const config = {
 			assets: 'build',
 			fallback: undefined,
 			precompress: false,
-			strict: true
-		})
+			strict: true,
+		}),
 	},
 
 	alias: {
 		$components: 'src/components',
-		$static: 'static'
-	}
+		$static: 'static',
+	},
 };
 
 export default config;
