@@ -37,13 +37,16 @@ router = APIRouter(
 )
 
 
-@router.get("/task-list", response_model=List[tasks_schemas.ReadTask])
+@router.get("/task-list", response_model=List[tasks_schemas.Task])
 async def read_task_list(
     project_id: int,
     limit: int = 1000,
     db: Session = Depends(database.get_db),
 ):
-    """Get the task list for a project."""
+    """Get the task list for a project.
+
+    FIXME this is broken
+    """
     tasks = await tasks_crud.get_tasks(db, project_id, limit)
     updated_tasks = await tasks_crud.update_task_history(tasks, db)
     if not tasks:

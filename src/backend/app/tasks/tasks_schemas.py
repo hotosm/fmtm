@@ -18,11 +18,12 @@
 """Pydantic schemas for FMTM task areas."""
 
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from geojson_pydantic import Feature
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 from pydantic.functional_serializers import field_serializer
+from pydantic.types import UUID4
 
 from app.db.postgis_utils import wkb_geom_to_feature
 from app.models.enums import TaskStatus
@@ -31,8 +32,8 @@ from app.models.enums import TaskStatus
 class TaskHistoryBase(BaseModel):
     """Task mapping history."""
 
-    event_id: str
-    action_text: str
+    event_id: UUID4
+    action_text: Optional[str]
     action_date: datetime
 
 
@@ -72,7 +73,6 @@ class Task(BaseModel):
     task_status: TaskStatus
     locked_by_uid: Optional[int] = None
     locked_by_username: Optional[str] = None
-    task_history: Optional[List[TaskHistoryBase]] = None
 
     @computed_field
     @property
@@ -118,12 +118,6 @@ class TaskCommentRequest(BaseModel):
     comment: str
 
 
-class ReadTask(Task):
-    """Task details plus updated task history."""
-
-    task_history: Optional[List[TaskHistoryOut]] = None
-
-
 class TaskHistory(BaseModel):
     """Task history details."""
 
@@ -135,7 +129,7 @@ class TaskHistory(BaseModel):
     user: Any = Field(exclude=True)
 
     task_id: int
-    action_text: str
+    action_text: Optional[str]
     action_date: datetime
 
     @computed_field

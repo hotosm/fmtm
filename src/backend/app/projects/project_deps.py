@@ -35,7 +35,7 @@ from app.projects import project_schemas
 
 async def get_project_by_id(
     db: Session = Depends(get_db), project_id: Optional[int] = None
-) -> DbProject:
+) -> Optional[DbProject]:
     """Get a single project by id."""
     if not project_id:
         # Skip if no project id passed
