@@ -47,8 +47,8 @@ from app.db.postgis_utils import (
     add_required_geojson_properties,
     featcol_keep_dominant_geom_type,
     javarosa_to_geojson_geom,
-    parse_geojson_file_to_featcol,
     multipolygon_to_polygon,
+    parse_geojson_file_to_featcol,
 )
 from app.models.enums import GeometryType, HTTPStatus, XLSFormType
 from app.projects.project_schemas import ODKCentral
