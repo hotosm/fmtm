@@ -38,16 +38,26 @@ from app.organisations.organisation_deps import check_org_exists
 from app.projects.project_deps import get_project_by_id
 
 
-async def get_uid(user_data: AuthUser) -> int:
+async def get_uid(user_data: AuthUser | DbUser | int | dict) -> int:
     """Extract user id from returned OSM user."""
-    if user_id := user_data.id:
-        return user_id
-    else:
+    try:
+        if isinstance(user_data, int):
+            return user_data
+
+        if isinstance(user_data, AuthUser | DbUser):
+            return user_data.id
+
+        if isinstance(user_data, dict):
+            user_id = user_data.get("user", user_data).id
+            return user_id
+
+    except Exception as e:
+        log.error(e)
         log.error(f"Failed to get user id from auth object: {user_data}")
         raise HTTPException(
             status_code=HTTPStatus.UNAUTHORIZED,
             detail="Auth failed. No user id present",
-        )
+        ) from e
 
 
 async def check_access(
@@ -77,7 +87,7 @@ async def check_access(
     Returns:
         Optional[DbUser]: The user details if access is granted, otherwise None.
     """
-    user_id = user if isinstance(user, int) else await get_uid(user)
+    user_id = await get_uid(user)
 
     sql = text(
         """
