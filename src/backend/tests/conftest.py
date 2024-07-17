@@ -20,7 +20,6 @@
 import json
 import logging
 import os
-import time
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Generator
@@ -37,7 +36,6 @@ from sqlalchemy_utils import create_database, database_exists
 
 from app.auth.auth_routes import get_or_create_user
 from app.auth.auth_schemas import AuthUser, FMTMUser
-from app.auth.osm import create_tokens
 from app.central import central_crud
 from app.config import encrypt_value, settings
 from app.db.database import Base, get_db
@@ -318,27 +316,6 @@ async def entities(odk_project):
         odk_project.odkid,
     )
     yield entities
-
-
-@pytest.fixture(scope="function")
-async def access_token(admin_user):
-    """A test access and refresh tokens."""
-    user_data = {
-        "sub": f"fmtm|{admin_user.id}",
-        "username": admin_user.username,
-        "picture": admin_user.profile_img,
-        "role": admin_user.role,
-    }
-    user_data.update(
-        {
-            "aud": settings.FMTM_DOMAIN,
-            "iat": int(time.time()),
-            "exp": int(time.time()) + 86400,  # expiry set to 1 day
-        }
-    )
-
-    access_token, refresh_token = create_tokens(user_data)
-    return access_token
 
 
 # @pytest.fixture(scope="function")

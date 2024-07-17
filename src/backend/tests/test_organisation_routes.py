@@ -20,9 +20,9 @@
 import pytest
 
 
-async def test_get_organisation(client, access_token, organisation):
+async def test_get_organisation(client, organisation):
     """Test get list of organisations."""
-    response = client.get("/organisation/", headers={"access-token": access_token})
+    response = client.get("/organisation/")
     assert response.status_code == 200
 
     data = response.json()[-1]
