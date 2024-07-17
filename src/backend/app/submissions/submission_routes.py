@@ -533,7 +533,7 @@ async def update_review_state(
 @router.get("/download-submission-geojson")
 async def download_submission_geojson(
     db: Session = Depends(database.get_db),
-    current_user: ProjectUserDict = Depends(mapper)
+    current_user: ProjectUserDict = Depends(mapper),
 ):
     """Download submission geojson for a specific project.
 
