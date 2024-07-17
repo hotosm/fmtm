@@ -132,16 +132,12 @@ from app.tasks import tasks_crud
 #     return final_zip_file_path
 
 
-async def gather_all_submission_csvs(
-        db: Session, 
-        project: db_models.DbProject
-    ):
+async def gather_all_submission_csvs(db: Session, project: db_models.DbProject):
     """Gather all of the submission CSVs for a project.
 
     Generate a single zip with all submissions.
     """
     log.info(f"Downloading all CSV submissions for project {project.id}")
-
 
     odkid = project.odkid
 
@@ -391,7 +387,10 @@ async def get_submission_count_of_a_project(db: Session, project: db_models.DbPr
 
 
 async def get_submissions_by_date(
-    db: Session, project: db_models.DbProject, days: int, planned_task: Optional[int] = None
+    db: Session,
+    project: db_models.DbProject,
+    days: int,
+    planned_task: Optional[int] = None,
 ):
     """Get submissions by date.
 
