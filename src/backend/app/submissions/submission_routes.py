@@ -59,7 +59,7 @@ async def read_submissions(
         list[dict]: The list of submissions.
     """
     project = current_user.get("project")
-    data = await submission_crud.get_submission_by_project(project.id, {}, db)
+    data = await submission_crud.get_submission_by_project(project, {}, db)
     return data.get("value", [])
 
 
@@ -84,11 +84,11 @@ async def download_submission(
     project = current_user.get("project")
     project_name = project.project_name_prefix
     if not export_json:
-        file_content = await submission_crud.gather_all_submission_csvs(db, project.id)
+        file_content = await submission_crud.gather_all_submission_csvs(db, project)
         headers = {"Content-Disposition": f"attachment; filename={project_name}.zip"}
         return Response(file_content, headers=headers)
 
-    return await submission_crud.download_submission_in_json(db, project.id)
+    return await submission_crud.download_submission_in_json(db, project)
 
 
 @router.get("/submission-points")
@@ -147,7 +147,7 @@ async def get_submission_count(
 ):
     """Get the submission count for a project."""
     project = current_user.get("project")
-    return await submission_crud.get_submission_count_of_a_project(db, project.id)
+    return await submission_crud.get_submission_count_of_a_project(db, project)
 
 
 # FIXME 07/06/2024 since osm-fieldwork update
@@ -322,7 +322,7 @@ async def get_submission_page(
     """
     project = current_user.get("project")
     data = await submission_crud.get_submissions_by_date(
-        db, project.id, days, planned_task
+        db, project, days, planned_task
     )
 
     return data
@@ -397,7 +397,7 @@ async def submission_table(
             filters["$filter"] = f"__system/reviewState eq '{review_state}'"
 
     data = await submission_crud.get_submission_by_project(
-        project.id, filters, db, task_id
+        project, filters, db, task_id
     )
     count = data.get("@odata.count", 0)
     submissions = data.get("value", [])
@@ -530,9 +530,10 @@ async def update_review_state(
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-@router.get("/download-submission-geojson/{project_id}")
+@router.get("/download-submission-geojson")
 async def download_submission_geojson(
-    project_id: int, db: Session = Depends(database.get_db)
+    db: Session = Depends(database.get_db),
+    current_user: ProjectUserDict = Depends(mapper)
 ):
     """Download submission geojson for a specific project.
 
@@ -546,8 +547,8 @@ async def download_submission_geojson(
     Raises:
         HTTPException: If loading JSON submission fails.
     """
-    project = await project_deps.get_project_by_id(db, project_id)
-    data = await submission_crud.get_submission_by_project(project_id, {}, db)
+    project = current_user.get("project")
+    data = await submission_crud.get_submission_by_project(project, {}, db)
     submission_json = data.get("value", [])
 
     submission_geojson = await central_crud.convert_odk_submission_json_to_geojson(
@@ -585,7 +586,7 @@ async def conflate_geojson(
         task_aoi = postgis_utils.wkb_geom_to_feature(db_task.outline)
         task_geojson = geojson.dumps(task_aoi, indent=2)
 
-        data = await submission_crud.get_submission_by_project(project.id, {}, db)
+        data = await submission_crud.get_submission_by_project(project, {}, db)
         submission_json = data.get("value", [])
 
         submission_geojson = await central_crud.convert_odk_submission_json_to_geojson(
