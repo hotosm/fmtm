@@ -505,14 +505,7 @@ async def update_review_state(
     current_user: ProjectUserDict = Depends(project_manager),
     db: Session = Depends(database.get_db),
 ):
-    """Updates the review state of a project submission.
-
-    Args:
-        instance_id (str): The uuid of the submission instance.
-        review_state (ReviewStateEnum): The new review state to be set.
-        current_user(ProjectUserDict): check if user if project manager.
-        db (Session): The database session dependency.
-    """
+    """Updates the review state of a project submission."""
     try:
         project = current_user.get("project")
         odk_creds = await project_deps.get_odk_credentials(db, project.id)
@@ -535,18 +528,7 @@ async def download_submission_geojson(
     db: Session = Depends(database.get_db),
     current_user: ProjectUserDict = Depends(mapper),
 ):
-    """Download submission geojson for a specific project.
-
-    Args:
-        project_id (int): The ID of the project to download submission geojson for.
-        db (Session): The database session.
-
-    Returns:
-        Response: A response containing the submission geojson file as an attachment.
-
-    Raises:
-        HTTPException: If loading JSON submission fails.
-    """
+    """Download submission geojson for a specific project."""
     project = current_user.get("project")
     data = await submission_crud.get_submission_by_project(project, {}, db)
     submission_json = data.get("value", [])

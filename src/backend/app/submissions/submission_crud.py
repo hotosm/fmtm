@@ -398,7 +398,7 @@ async def get_submissions_by_date(
 
     Args:
         db (Session): The database session.
-        project_id (int): The ID of the project.
+        project (DbProject): The database project object.
         days (int): The number of days to consider for fetching submissions.
         planned_task (int): Associated task id.
 
@@ -446,18 +446,16 @@ async def get_submission_by_project(
     project: db_models.DbProject,
     filters: dict,
     db: Session,
-    task_id: Optional[int] = None,
 ):
     """Get submission by project.
 
     Retrieves a paginated list of submissions for a given project.
 
     Args:
-        project_id (int): The ID of the project.
+        project (DbProject): The database project object.
         filters (dict): The filters to apply directly to submissions
             in odk central.
         db (Session): The database session.
-        task_id (Optional[int]): The index task of the project.
 
     Returns:
         Tuple[int, List]: A tuple containing the total number of submissions and
