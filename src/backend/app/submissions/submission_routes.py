@@ -19,12 +19,12 @@
 
 import json
 from io import BytesIO
-from typing import Optional
+from typing import Annotated, Optional
 
 import geojson
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from sqlalchemy.orm import Session
 
 from app.auth.auth_schemas import AuthUser, ProjectUserDict
@@ -47,18 +47,14 @@ router = APIRouter(
 @router.get("/")
 async def read_submissions(
     db: Session = Depends(database.get_db),
-    current_user: ProjectUserDict = Depends(mapper),
+    project_user: ProjectUserDict = Depends(mapper),
 ) -> list[dict]:
     """Get all submissions made for a project.
-
-    Args:
-        db (Session): The database session, automatically provided.
-        current_user (ProjectUserDict): Check if user has MAPPER permission.
 
     Returns:
         list[dict]: The list of submissions.
     """
-    project = current_user.get("project")
+    project = project_user.get("project")
     data = await submission_crud.get_submission_by_project(project, {}, db)
     return data.get("value", [])
 
@@ -67,21 +63,16 @@ async def read_submissions(
 async def download_submission(
     export_json: bool = True,
     db: Session = Depends(database.get_db),
-    current_user: ProjectUserDict = Depends(mapper),
+    project_user: ProjectUserDict = Depends(mapper),
 ):
     """Download the submissions for a given project.
 
     Returned as either a JSONResponse, or a file to download.
 
-    Args:
-        export_json (bool): Export in JSON format, else returns a file.
-        db (Session): The database session, automatically provided.
-        current_user (ProjectUserDict): Check if user has MAPPER permission.
-
     Returns:
         Union[list[dict], File]: JSON of submissions, or submission file.
     """
-    project = current_user.get("project")
+    project = project_user.get("project")
     project_name = project.project_name_prefix
     if not export_json:
         file_content = await submission_crud.gather_all_submission_csvs(db, project)
@@ -143,10 +134,10 @@ async def convert_to_osm(
 @router.get("/get-submission-count")
 async def get_submission_count(
     db: Session = Depends(database.get_db),
-    current_user: ProjectUserDict = Depends(mapper),
+    project_user: ProjectUserDict = Depends(mapper),
 ):
     """Get the submission count for a project."""
-    project = current_user.get("project")
+    project = project_user.get("project")
     return await submission_crud.get_submission_count_of_a_project(db, project)
 
 
@@ -307,20 +298,14 @@ async def get_submission_page(
     days: int,
     planned_task: Optional[int] = None,
     db: Session = Depends(database.get_db),
-    current_user: ProjectUserDict = Depends(mapper),
+    project_user: ProjectUserDict = Depends(mapper),
 ):
     """Summary submissison details for submission page.
-
-    Args:
-        db (Session): The database session, automatically generated.
-        days (int): The number of days to consider for fetching submissions.
-        planned_task (int): Associated task id.
-        current_user (ProjectUserDict): Check if user has MAPPER permission.
 
     Returns:
         dict: A dictionary containing the submission counts for each date.
     """
-    project = current_user.get("project")
+    project = project_user.get("project")
     data = await submission_crud.get_submissions_by_date(
         db, project, days, planned_task
     )
@@ -331,18 +316,14 @@ async def get_submission_page(
 @router.get("/submission_form_fields")
 async def get_submission_form_fields(
     db: Session = Depends(database.get_db),
-    current_user: ProjectUserDict = Depends(mapper),
+    project_user: ProjectUserDict = Depends(mapper),
 ):
     """Retrieves the submission form for a specific project.
-
-    Args:
-        db (Session): The database session, automatically generated.
-        current_user (ProjectUserDict): Check if user has MAPPER permission.
 
     Returns:
         Any: The response from the submission form API.
     """
-    project = current_user.get("project")
+    project = project_user.get("project")
     odk_credentials = await project_deps.get_odk_credentials(db, project.id)
     odk_form = central_crud.get_odk_form(odk_credentials)
     db_xform = await project_deps.get_project_xform(db, project.id)
@@ -361,15 +342,14 @@ async def submission_table(
         None, title="Submitted Date", description="Date in format (e.g., 'YYYY-MM-DD')"
     ),
     db: Session = Depends(database.get_db),
-    current_user: ProjectUserDict = Depends(mapper),
+    project_user: ProjectUserDict = Depends(mapper),
 ):
     """This api returns the submission table of a project.
 
-    It takes a parameter: task_id.
-
-    task_id: The task index of the project.
+    Returns:
+        dict: Paginated submissions with `results` and `pagination` keys.
     """
-    project = current_user.get("project")
+    project = project_user.get("project")
     skip = (page - 1) * results_per_page
     filters = {
         "$top": results_per_page,
@@ -485,13 +465,10 @@ async def submission_table(
 async def submission_detail(
     submission_id: str,
     db: Session = Depends(database.get_db),
-    current_user: ProjectUserDict = Depends(mapper),
+    project_user: ProjectUserDict = Depends(mapper),
 ) -> dict:
-    """This api returns the submission detail of individual submission.
-
-    It takes two parameter: project_id and submission_id.
-    """
-    project = current_user.get("project")
+    """This api returns the submission detail of individual submission."""
+    project = project_user.get("project")
     submission_detail = await submission_crud.get_submission_detail(
         submission_id, project, db
     )
@@ -526,10 +503,10 @@ async def update_review_state(
 @router.get("/download-submission-geojson")
 async def download_submission_geojson(
     db: Session = Depends(database.get_db),
-    current_user: ProjectUserDict = Depends(mapper),
+    project_user: ProjectUserDict = Depends(mapper),
 ):
     """Download submission geojson for a specific project."""
-    project = current_user.get("project")
+    project = project_user.get("project")
     data = await submission_crud.get_submission_by_project(project, {}, db)
     submission_json = data.get("value", [])
 
@@ -544,26 +521,25 @@ async def download_submission_geojson(
     return Response(submission_data.getvalue(), headers=headers)
 
 
-@router.get("/conflate_submission_geojson/")
+@router.get("/conflate-submission-geojson/")
 async def conflate_geojson(
     task_id: int,
-    current_user: ProjectUserDict = Depends(mapper),  # FIXME change this to validator
-    remove_conflated=False,
+    project_user: ProjectUserDict = Depends(mapper),  # FIXME change this to validator
+    remove_conflated: Annotated[
+        bool,
+        Query(
+            description="Removes geometries not overlapping with OSM data",
+        ),
+    ] = False,
     db: Session = Depends(database.get_db),
 ):
     """Conflates the input GeoJSON with OpenStreetMap data.
-
-    Args:
-        task_id(int): task index of project.
-        current_user(ProjectUserDict): Check if user is mapper.
-        remove_conflated(bool): returns geojson which are not overlapped with osm data.
-        db (Session): The database session.
 
     Returns:
         str: Updated GeoJSON string with conflated features.
     """
     try:
-        project = current_user.get("project")
+        project = project_user.get("project")
         db_task = await get_task_by_id(project.id, task_id, db)
         task_aoi = postgis_utils.wkb_geom_to_feature(db_task.outline)
         task_geojson = geojson.dumps(task_aoi, indent=2)
