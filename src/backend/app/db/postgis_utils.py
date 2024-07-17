@@ -740,7 +740,11 @@ def multipolygon_to_polygon(
 
     for feature in featcol.get("features", []):
         properties = feature["properties"]
-        geom = shape(feature["geometry"])
+        try:
+            geom = shape(feature["geometry"])
+        except ValueError:
+            log.warning(f"Geometry is not valid, so was skipped: {feature['geometry']}")
+            continue
 
         if geom.geom_type == "Polygon":
             final_features.append(geojson.Feature(geometry=geom, properties=properties))
