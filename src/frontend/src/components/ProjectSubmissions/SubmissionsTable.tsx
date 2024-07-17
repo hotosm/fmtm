@@ -96,7 +96,9 @@ const SubmissionsTable = ({ toggleView }) => {
 
   useEffect(() => {
     dispatch(
-      SubmissionFormFieldsService(`${import.meta.env.VITE_API_URL}/submission/submission_form_fields?project_id=${projectId}`),
+      SubmissionFormFieldsService(
+        `${import.meta.env.VITE_API_URL}/submission/submission_form_fields?project_id=${projectId}`,
+      ),
     );
   }, []);
 
@@ -115,7 +117,9 @@ const SubmissionsTable = ({ toggleView }) => {
 
   const refreshTable = () => {
     dispatch(
-      SubmissionFormFieldsService(`${import.meta.env.VITE_API_URL}/submission/submission_form_fields?project_id=${projectId}`),
+      SubmissionFormFieldsService(
+        `${import.meta.env.VITE_API_URL}/submission/submission_form_fields?project_id=${projectId}`,
+      ),
     );
     dispatch(SubmissionActions.SetSubmissionTableRefreshing(true));
     dispatch(

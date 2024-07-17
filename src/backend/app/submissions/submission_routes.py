@@ -31,7 +31,7 @@ from app.auth.auth_schemas import AuthUser, ProjectUserDict
 from app.auth.osm import login_required
 from app.auth.roles import mapper, project_manager
 from app.central import central_crud
-from app.db import database, db_models, postgis_utils
+from app.db import database, postgis_utils
 from app.models.enums import ReviewStateEnum
 from app.projects import project_crud, project_deps
 from app.submissions import submission_crud, submission_schemas
