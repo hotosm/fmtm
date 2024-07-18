@@ -182,8 +182,8 @@ async def create_task_history_for_status_change(
 ):
     """Append task status change to task history."""
     msg = (
-        f"Status changed from {db_task.task_status.name} "
-        f"to {new_status.name} by: {db_user.username}"
+        f"Task {db_task.id} changed from {db_task.task_status.name} "
+        f"to {new_status.name} by {db_user.username}"
     )
     log.info(msg)
 
