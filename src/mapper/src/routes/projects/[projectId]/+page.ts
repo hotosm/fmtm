@@ -5,10 +5,6 @@ export const load: PageLoad = async ({ parent, params, fetch }) => {
 	const { electric } = await parent();
 
 	const { projectId } = params;
-
-	const test = await fetch('https://sandbox.hotosm.dev/api/0.6/changesets');
-	console.log(test);
-
 	const project = await fetch(`http://api.fmtm.localhost:7050/projects/${projectId}`);
 
 	if (project.status == 404) {

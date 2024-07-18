@@ -1,6 +1,8 @@
 <script lang="ts">
+	import '@hotosm/ui/dist/components'
 	import type { PageData } from './$types';
 	import { onMount } from 'svelte';
+	import { writable } from 'svelte/store'
 	import { MapLibre, GeoJSON, FillLayer, LineLayer, hoverStateFilter } from 'svelte-maplibre';
 	import type { FeatureCollection } from 'geojson';
 	import { polygon } from '@turf/helpers';
@@ -23,23 +25,16 @@
 	// let electric: Electric = data.electric;
 	let electricSyncKey: string
 	const taskHistory = data.electric.db.task_history.liveMany({
-		select: { action_date: true, action: true },
-		where: {
-			project_id: data.projectId,
+		select: { action: true, action_text: true, action_date: true },
+		where: { project_id: data.projectId },
+		orderBy: {
+			action_date: 'desc'
 		},
 	});
 	let history = createLiveQuery(data.electric.notifier, taskHistory)
 
-	const taskComments = data.electric.db.task_history.liveMany({
-		select: { action_date: true, action_text: true },
-		where: {
-			project_id: data.projectId,
-			action: 'COMMENT',
-		},
-	})
-	let comments = createLiveQuery(data.electric.notifier, taskComments)
-
 	let taskFeatcol: FeatureCollection = { type: 'FeatureCollection', features: [] }
+	const taskFeatcolStore = writable<FeatureCollection>(taskFeatcol)
 
 	async function getStatusFromTaskHistory(taskId: number) {
 		const result = await data.electric.db.task_history.findMany({
@@ -120,8 +115,30 @@
 		};
 	});
 
-	$: {
-		console.log('History updated:', history);
+	$: if ($history) {
+		updateTaskFeatures();
+	}
+
+	async function updateTaskFeatures() {
+		console.log('UPDATED!!')
+		const features = await Promise.all(
+		data.project.tasks.map(async (x: ProjectTask) => {
+			const taskId = x.outline_geojson.id;
+			const status = await getStatusFromTaskHistory(taskId);
+			return {
+			...x.outline_geojson,
+			properties: {
+				...x.outline_geojson.properties,
+				status,
+			},
+			};
+		})
+		);
+
+		taskFeatcolStore.set({
+		type: 'FeatureCollection',
+		features: features,
+		});
 	}
 
 	// onDestroy(() => {
@@ -130,6 +147,11 @@
 	// })
 </script>
 
+{#if $history}
+	<hot-card class="absolute top-18 right-0 font-sans">
+		Latest: { $history[0].action_text }
+	</hot-card>
+{/if}
 <MapLibre
 	bind:map
 	bind:loaded
@@ -139,7 +161,7 @@
 	center={[0, 0]}
 	zoom={2}
 >
-	<GeoJSON id="states" data={taskFeatcol} promoteId="TASKS">
+	<GeoJSON id="states" data={$taskFeatcolStore} promoteId="TASKS">
 		<FillLayer
 			paint={{
 				'fill-color': [
@@ -163,4 +185,9 @@
 	</GeoJSON>
 </MapLibre>
 
-<!-- Add model here with history values -->
+<style>
+	hot-card {
+		z-index: 1;
+		--padding: 0.3rem;
+	}
+</style>
