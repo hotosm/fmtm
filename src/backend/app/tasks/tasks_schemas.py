@@ -129,6 +129,7 @@ class TaskHistory(BaseModel):
     user: Any = Field(exclude=True)
 
     task_id: int
+    action: TaskStatus
     action_text: Optional[str]
     action_date: datetime
 
@@ -150,12 +151,6 @@ class TaskHistory(BaseModel):
 
     @computed_field
     @property
-    def status(self) -> Optional[str]:
-        """Extract status from standard format action_text."""
-        if self.action_text:
-            split_text = self.action_text.split()
-            if len(split_text) > 5:
-                return split_text[5]
-            else:
-                return self.action_text
-        return None
+    def status(self) -> Optional[TaskStatus]:
+        """Alias of 'action'."""
+        return self.action
