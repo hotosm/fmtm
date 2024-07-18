@@ -103,7 +103,7 @@ version = {from = "app/__version__.py"}
 [tool.ruff]
 fix = true
 line-length = 88
-target-version = "py310"
+target-version = "py311"
 exclude = [
     ".ruff_cache",
     "__pypackages__",
