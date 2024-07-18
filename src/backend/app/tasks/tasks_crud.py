@@ -271,8 +271,6 @@ async def update_task_history(
     task_history: db_models.DbTaskHistory, db: Session = Depends(database.get_db)
 ):
     """Update task history with username and user profile image."""
-    status = task_history.action_text.split()
-    task_history.status = status[5]
     if user_id := task_history.user_id:
         user = db.query(db_models.DbUser).filter_by(id=user_id).first()
         if user:
