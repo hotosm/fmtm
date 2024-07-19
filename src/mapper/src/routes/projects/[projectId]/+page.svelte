@@ -43,7 +43,7 @@
 
 	let taskFeatcol: FeatureCollection = { type: 'FeatureCollection', features: [] }
 	const taskFeatcolStore = writable<FeatureCollection>(taskFeatcol)
-	let selectedTaskId: number | null = (null)
+	let selectedTaskId = writable<number | null>(null)
 	$: qrCodeData = generateQrCode(data.project.project_info.name, data.project.odk_token, "TEMP");
 
 	async function getStatusFromTaskHistory(taskId: number) {
@@ -205,8 +205,8 @@
 					beforeLayerType="symbol"
 					manageHoverState
 					on:click={(e) => {
-						  selectedTaskId = e.detail.features?.[0]?.properties?.uid;
-					  }}					  
+						  selectedTaskId.set(e.detail.features?.[0]?.properties?.uid);
+					}}  
 				/>
 				<LineLayer
 					layout={{ 'line-cap': 'round', 'line-join': 'round' }}
@@ -232,13 +232,13 @@
 		
 		<!-- Task events tab -->
 		<sl-tab-panel name="events">
-			{#if selectedTaskId}
-				Task: { selectedTaskId }
-			{/if}
-
 			{#if $history}
 				{#each $history as record}
-					<EventCard on:zoomToTask={(e) => zoomToTask(e)} record={record}></EventCard>
+					<EventCard
+						record={record}
+						highlight={record.task_id === $selectedTaskId}
+						on:zoomToTask={(e) => zoomToTask(e)}
+					></EventCard>
 				{/each}
 			{/if}
 		</sl-tab-panel>
@@ -281,7 +281,7 @@
 				<!-- Open ODK Button -->
 				<div class="w-full max-w-sm text-center">
 					<sl-button
-						href="odkcollect://form/{data.project.xform_id}{selectedTaskId ? `?task_filter=${selectedTaskId}` : ''}"
+						href="odkcollect://form/{data.project.xform_id}{$selectedTaskId ? `?task_filter=${$selectedTaskId}` : ''}"
 					>Open ODK</sl-button>
 				</div>
 			</div>
