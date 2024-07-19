@@ -377,7 +377,7 @@ async def submission_table(
             filters["$filter"] = f"__system/reviewState eq '{review_state}'"
 
     data = await submission_crud.get_submission_by_project(
-        project, filters, db, task_id
+        project, filters, db
     )
     count = data.get("@odata.count", 0)
     submissions = data.get("value", [])
