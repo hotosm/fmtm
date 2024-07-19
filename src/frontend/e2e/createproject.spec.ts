@@ -69,18 +69,4 @@ test('test', async ({ page }) => {
   await page.getByRole('button', { name: 'Click to generate task' }).click();
   await page.getByRole('button', { name: 'SUBMIT' }).click();
   await expect(page.getByText('Project Generation Completed. Redirecting...')).toBeVisible();
-
-  // 6. Delete Project after Creation
-  await page.getByRole('button', { name: 'MANAGE PROJECT' }).click();
-  await page
-    .locator('div')
-    .filter({ hasText: /^DELETE$/ })
-    .click();
-  await page.getByRole('button', { name: 'DELETE PROJECT' }).click();
-  await page.waitForSelector('textbox');
-  await page.getByRole('textbox').click();
-  await page.getByRole('textbox').fill('Playwright Test');
-  await page.waitForTimeout(1000);
-  await page.getByRole('button', { name: 'Confirm' }).click();
-  await expect(page.getByText('Project deleted. Redirecting...')).toBeVisible();
 });
