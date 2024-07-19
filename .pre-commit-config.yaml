@@ -54,6 +54,7 @@ repos:
             "!CONTRIBUTING.md",
             "!src/frontend/pnpm-lock.yaml",
             "!src/mapper/pnpm-lock.yaml",
+            "!src/mapper/src/lib/migrations/**",
             "!src/backend/tests/test_data/**",
           ]
 
