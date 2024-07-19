@@ -18,6 +18,10 @@ type UnwrapTuple<Tuple extends readonly unknown[]> = {
  */
 export type Task_history = {
   /**
+   * @zod.string.uuid()
+   */
+  event_id: string
+  /**
    * @zod.number.int().gte(-2147483648).lte(2147483647)
    */
   project_id: number | null
@@ -29,10 +33,6 @@ export type Task_history = {
   action_text: string | null
   action_date: Date
   user_id: bigint
-  /**
-   * @zod.string.uuid()
-   */
-  event_id: string
 }
 
 
@@ -535,7 +535,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   type NoExpand<T> = T extends unknown ? T : never;
 
   // this type assumes the passed object is entirely optional
-  type AtLeast<O extends object, K extends string> = NoExpand<
+  type at least<O extends object, K extends string> = NoExpand<
     O extends unknown
     ? | (K extends keyof O ? { [P in K]: O[P] } & O : O)
       | {[P in keyof O as P extends K ? K : never]-?: O[P]} & O
@@ -865,33 +865,33 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   }
 
   export type Task_historyMinAggregateOutputType = {
+    event_id: string | null
     project_id: number | null
     task_id: number | null
     action: taskaction | null
     action_text: string | null
     action_date: Date | null
     user_id: bigint | null
-    event_id: string | null
   }
 
   export type Task_historyMaxAggregateOutputType = {
+    event_id: string | null
     project_id: number | null
     task_id: number | null
     action: taskaction | null
     action_text: string | null
     action_date: Date | null
     user_id: bigint | null
-    event_id: string | null
   }
 
   export type Task_historyCountAggregateOutputType = {
+    event_id: number
     project_id: number
     task_id: number
     action: number
     action_text: number
     action_date: number
     user_id: number
-    event_id: number
     _all: number
   }
 
@@ -909,33 +909,33 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   }
 
   export type Task_historyMinAggregateInputType = {
+    event_id?: true
     project_id?: true
     task_id?: true
     action?: true
     action_text?: true
     action_date?: true
     user_id?: true
-    event_id?: true
   }
 
   export type Task_historyMaxAggregateInputType = {
+    event_id?: true
     project_id?: true
     task_id?: true
     action?: true
     action_text?: true
     action_date?: true
     user_id?: true
-    event_id?: true
   }
 
   export type Task_historyCountAggregateInputType = {
+    event_id?: true
     project_id?: true
     task_id?: true
     action?: true
     action_text?: true
     action_date?: true
     user_id?: true
-    event_id?: true
     _all?: true
   }
 
@@ -1032,13 +1032,13 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
 
 
   export type Task_historyGroupByOutputType = {
+    event_id: string
     project_id: number | null
     task_id: number
     action: taskaction
     action_text: string | null
     action_date: Date
     user_id: bigint
-    event_id: string
     _count: Task_historyCountAggregateOutputType | null
     _avg: Task_historyAvgAggregateOutputType | null
     _sum: Task_historySumAggregateOutputType | null
@@ -1061,13 +1061,13 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
 
 
   export type Task_historySelect = {
+    event_id?: boolean
     project_id?: boolean
     task_id?: boolean
     action?: boolean
     action_text?: boolean
     action_date?: boolean
     user_id?: boolean
-    event_id?: boolean
   }
 
 
@@ -1170,8 +1170,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      * // Get first 10 Task_histories
      * const task_histories = await prisma.task_history.findMany({ take: 10 })
      * 
-     * // Only select the `project_id`
-     * const task_historyWithProject_idOnly = await prisma.task_history.findMany({ select: { project_id: true } })
+     * // Only select the `event_id`
+     * const task_historyWithEvent_idOnly = await prisma.task_history.findMany({ select: { event_id: true } })
      * 
     **/
     findMany<T extends Task_historyFindManyArgs>(
@@ -1850,13 +1850,13 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
 
 
   export const Task_historyScalarFieldEnum: {
+    event_id: 'event_id',
     project_id: 'project_id',
     task_id: 'task_id',
     action: 'action',
     action_text: 'action_text',
     action_date: 'action_date',
-    user_id: 'user_id',
-    event_id: 'event_id'
+    user_id: 'user_id'
   };
 
   export type Task_historyScalarFieldEnum = (typeof Task_historyScalarFieldEnum)[keyof typeof Task_historyScalarFieldEnum]
@@ -1881,23 +1881,23 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     AND?: Enumerable<Task_historyWhereInput>
     OR?: Enumerable<Task_historyWhereInput>
     NOT?: Enumerable<Task_historyWhereInput>
+    event_id?: UuidFilter | string
     project_id?: IntNullableFilter | number | null
     task_id?: IntFilter | number
     action?: EnumtaskactionFilter | taskaction
     action_text?: StringNullableFilter | string | null
     action_date?: DateTimeFilter | Date | string
     user_id?: BigIntFilter | bigint | number
-    event_id?: UuidFilter | string
   }
 
   export type Task_historyOrderByWithRelationInput = {
+    event_id?: SortOrder
     project_id?: SortOrder
     task_id?: SortOrder
     action?: SortOrder
     action_text?: SortOrder
     action_date?: SortOrder
     user_id?: SortOrder
-    event_id?: SortOrder
   }
 
   export type Task_historyWhereUniqueInput = {
@@ -1905,13 +1905,13 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   }
 
   export type Task_historyOrderByWithAggregationInput = {
+    event_id?: SortOrder
     project_id?: SortOrder
     task_id?: SortOrder
     action?: SortOrder
     action_text?: SortOrder
     action_date?: SortOrder
     user_id?: SortOrder
-    event_id?: SortOrder
     _count?: Task_historyCountOrderByAggregateInput
     _avg?: Task_historyAvgOrderByAggregateInput
     _max?: Task_historyMaxOrderByAggregateInput
@@ -1923,83 +1923,95 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     AND?: Enumerable<Task_historyScalarWhereWithAggregatesInput>
     OR?: Enumerable<Task_historyScalarWhereWithAggregatesInput>
     NOT?: Enumerable<Task_historyScalarWhereWithAggregatesInput>
+    event_id?: UuidWithAggregatesFilter | string
     project_id?: IntNullableWithAggregatesFilter | number | null
     task_id?: IntWithAggregatesFilter | number
     action?: EnumtaskactionWithAggregatesFilter | taskaction
     action_text?: StringNullableWithAggregatesFilter | string | null
     action_date?: DateTimeWithAggregatesFilter | Date | string
     user_id?: BigIntWithAggregatesFilter | bigint | number
-    event_id?: UuidWithAggregatesFilter | string
   }
 
   export type Task_historyCreateInput = {
+    event_id: string
     project_id?: number | null
     task_id: number
     action: taskaction
     action_text?: string | null
     action_date: Date | string
     user_id: bigint | number
-    event_id: string
   }
 
   export type Task_historyUncheckedCreateInput = {
+    event_id: string
     project_id?: number | null
     task_id: number
     action: taskaction
     action_text?: string | null
     action_date: Date | string
     user_id: bigint | number
-    event_id: string
   }
 
   export type Task_historyUpdateInput = {
+    event_id?: StringFieldUpdateOperationsInput | string
     project_id?: NullableIntFieldUpdateOperationsInput | number | null
     task_id?: IntFieldUpdateOperationsInput | number
     action?: EnumtaskactionFieldUpdateOperationsInput | taskaction
     action_text?: NullableStringFieldUpdateOperationsInput | string | null
     action_date?: DateTimeFieldUpdateOperationsInput | Date | string
     user_id?: BigIntFieldUpdateOperationsInput | bigint | number
-    event_id?: StringFieldUpdateOperationsInput | string
   }
 
   export type Task_historyUncheckedUpdateInput = {
+    event_id?: StringFieldUpdateOperationsInput | string
     project_id?: NullableIntFieldUpdateOperationsInput | number | null
     task_id?: IntFieldUpdateOperationsInput | number
     action?: EnumtaskactionFieldUpdateOperationsInput | taskaction
     action_text?: NullableStringFieldUpdateOperationsInput | string | null
     action_date?: DateTimeFieldUpdateOperationsInput | Date | string
     user_id?: BigIntFieldUpdateOperationsInput | bigint | number
-    event_id?: StringFieldUpdateOperationsInput | string
   }
 
   export type Task_historyCreateManyInput = {
+    event_id: string
     project_id?: number | null
     task_id: number
     action: taskaction
     action_text?: string | null
     action_date: Date | string
     user_id: bigint | number
-    event_id: string
   }
 
   export type Task_historyUpdateManyMutationInput = {
+    event_id?: StringFieldUpdateOperationsInput | string
     project_id?: NullableIntFieldUpdateOperationsInput | number | null
     task_id?: IntFieldUpdateOperationsInput | number
     action?: EnumtaskactionFieldUpdateOperationsInput | taskaction
     action_text?: NullableStringFieldUpdateOperationsInput | string | null
     action_date?: DateTimeFieldUpdateOperationsInput | Date | string
     user_id?: BigIntFieldUpdateOperationsInput | bigint | number
-    event_id?: StringFieldUpdateOperationsInput | string
   }
 
   export type Task_historyUncheckedUpdateManyInput = {
+    event_id?: StringFieldUpdateOperationsInput | string
     project_id?: NullableIntFieldUpdateOperationsInput | number | null
     task_id?: IntFieldUpdateOperationsInput | number
     action?: EnumtaskactionFieldUpdateOperationsInput | taskaction
     action_text?: NullableStringFieldUpdateOperationsInput | string | null
     action_date?: DateTimeFieldUpdateOperationsInput | Date | string
     user_id?: BigIntFieldUpdateOperationsInput | bigint | number
-    event_id?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type UuidFilter = {
+    equals?: string
+    in?: Enumerable<string>
+    notIn?: Enumerable<string>
+    lt?: string
+    lte?: string
+    gt?: string
+    gte?: string
+    mode?: QueryMode
+    not?: NestedUuidFilter | string
   }
 
   export type IntNullableFilter = {
@@ -2068,26 +2080,14 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     not?: NestedBigIntFilter | bigint | number
   }
 
-  export type UuidFilter = {
-    equals?: string
-    in?: Enumerable<string>
-    notIn?: Enumerable<string>
-    lt?: string
-    lte?: string
-    gt?: string
-    gte?: string
-    mode?: QueryMode
-    not?: NestedUuidFilter | string
-  }
-
   export type Task_historyCountOrderByAggregateInput = {
+    event_id?: SortOrder
     project_id?: SortOrder
     task_id?: SortOrder
     action?: SortOrder
     action_text?: SortOrder
     action_date?: SortOrder
     user_id?: SortOrder
-    event_id?: SortOrder
   }
 
   export type Task_historyAvgOrderByAggregateInput = {
@@ -2097,29 +2097,44 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   }
 
   export type Task_historyMaxOrderByAggregateInput = {
+    event_id?: SortOrder
     project_id?: SortOrder
     task_id?: SortOrder
     action?: SortOrder
     action_text?: SortOrder
     action_date?: SortOrder
     user_id?: SortOrder
-    event_id?: SortOrder
   }
 
   export type Task_historyMinOrderByAggregateInput = {
+    event_id?: SortOrder
     project_id?: SortOrder
     task_id?: SortOrder
     action?: SortOrder
     action_text?: SortOrder
     action_date?: SortOrder
     user_id?: SortOrder
-    event_id?: SortOrder
   }
 
   export type Task_historySumOrderByAggregateInput = {
     project_id?: SortOrder
     task_id?: SortOrder
     user_id?: SortOrder
+  }
+
+  export type UuidWithAggregatesFilter = {
+    equals?: string
+    in?: Enumerable<string>
+    notIn?: Enumerable<string>
+    lt?: string
+    lte?: string
+    gt?: string
+    gte?: string
+    mode?: QueryMode
+    not?: NestedUuidWithAggregatesFilter | string
+    _count?: NestedIntFilter
+    _min?: NestedStringFilter
+    _max?: NestedStringFilter
   }
 
   export type IntNullableWithAggregatesFilter = {
@@ -2212,19 +2227,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     _max?: NestedBigIntFilter
   }
 
-  export type UuidWithAggregatesFilter = {
-    equals?: string
-    in?: Enumerable<string>
-    notIn?: Enumerable<string>
-    lt?: string
-    lte?: string
-    gt?: string
-    gte?: string
-    mode?: QueryMode
-    not?: NestedUuidWithAggregatesFilter | string
-    _count?: NestedIntFilter
-    _min?: NestedStringFilter
-    _max?: NestedStringFilter
+  export type StringFieldUpdateOperationsInput = {
+    set?: string
   }
 
   export type NullableIntFieldUpdateOperationsInput = {
@@ -2263,8 +2267,15 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     divide?: bigint | number
   }
 
-  export type StringFieldUpdateOperationsInput = {
-    set?: string
+  export type NestedUuidFilter = {
+    equals?: string
+    in?: Enumerable<string>
+    notIn?: Enumerable<string>
+    lt?: string
+    lte?: string
+    gt?: string
+    gte?: string
+    not?: NestedUuidFilter | string
   }
 
   export type NestedIntNullableFilter = {
@@ -2332,7 +2343,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     not?: NestedBigIntFilter | bigint | number
   }
 
-  export type NestedUuidFilter = {
+  export type NestedUuidWithAggregatesFilter = {
     equals?: string
     in?: Enumerable<string>
     notIn?: Enumerable<string>
@@ -2340,7 +2351,24 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     lte?: string
     gt?: string
     gte?: string
-    not?: NestedUuidFilter | string
+    not?: NestedUuidWithAggregatesFilter | string
+    _count?: NestedIntFilter
+    _min?: NestedStringFilter
+    _max?: NestedStringFilter
+  }
+
+  export type NestedStringFilter = {
+    equals?: string
+    in?: Enumerable<string>
+    notIn?: Enumerable<string>
+    lt?: string
+    lte?: string
+    gt?: string
+    gte?: string
+    contains?: string
+    startsWith?: string
+    endsWith?: string
+    not?: NestedStringFilter | string
   }
 
   export type NestedIntNullableWithAggregatesFilter = {
@@ -2452,34 +2480,6 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     _sum?: NestedBigIntFilter
     _min?: NestedBigIntFilter
     _max?: NestedBigIntFilter
-  }
-
-  export type NestedUuidWithAggregatesFilter = {
-    equals?: string
-    in?: Enumerable<string>
-    notIn?: Enumerable<string>
-    lt?: string
-    lte?: string
-    gt?: string
-    gte?: string
-    not?: NestedUuidWithAggregatesFilter | string
-    _count?: NestedIntFilter
-    _min?: NestedStringFilter
-    _max?: NestedStringFilter
-  }
-
-  export type NestedStringFilter = {
-    equals?: string
-    in?: Enumerable<string>
-    notIn?: Enumerable<string>
-    lt?: string
-    lte?: string
-    gt?: string
-    gte?: string
-    contains?: string
-    startsWith?: string
-    endsWith?: string
-    not?: NestedStringFilter | string
   }
 
 
