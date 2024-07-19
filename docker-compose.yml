@@ -269,7 +269,7 @@ services:
         # condition: service_healthy
         condition: service_started
     volumes:
-    - ./src/mapper:/app
+      - ./src/mapper:/app
     environment:
       ELECTRIC_SERVICE: http://electric:5133
       ELECTRIC_PROXY: postgresql://${FMTM_DB_USER:-fmtm}:${FMTM_DB_PASSWORD:-fmtm}@electric:65432/${FMTM_DB_NAME:-fmtm}
