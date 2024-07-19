@@ -28,9 +28,7 @@ async def test_list_forms(client):
     assert response.status_code == 200
 
     forms_json = response.json()
-    supported_form_categories = {
-        member.value for member in XLSFormType.__members__.values()
-    }
+    supported_form_categories = {xls_type.value for xls_type in XLSFormType}
     for form in forms_json:
         assert "id" in form
         assert form["title"] in supported_form_categories
