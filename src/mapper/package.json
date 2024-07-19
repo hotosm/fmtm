@@ -49,6 +49,7 @@
 		"@turf/buffer": "^7.0.0",
 		"@turf/helpers": "^7.0.0",
 		"electric-sql": "^0.12.1",
+		"pako": "^2.1.0",
 		"prisma": "4.8.1",
 		"svelte-maplibre": "^0.9.9",
 		"zod": "3.21.1"
