@@ -46,8 +46,8 @@ field survey.
 
 ## Project Creation
 
- The project creation workflow consists of 5 steps. The
- Flow diagram for project creation is as below:
+The project creation workflow consists of 5 steps. The
+Flow diagram for project creation is as below:
 
 [Link](https://www.figma.com/embed?embed_host=share&url=https%3A%2F%2Fwww.figma.com%2Fdesign%2Fql3I4DigHvFFbIGZUpEdjv%2FUser-flow-diagram%3Fnode-id%3D0-1%26t%3DvbkyN4gQXVOAnqgF-1)
 
