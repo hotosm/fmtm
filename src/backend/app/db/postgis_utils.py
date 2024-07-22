@@ -859,10 +859,10 @@ def check_overlap(geom1: BaseGeometry, geom2: BaseGeometry) -> float:
     """
     intersection = geom1.intersection(geom2)
     intersection_area = intersection.area
-    
+
     geom1_area = geom1.area
     geom2_area = geom2.area
-    
+
     # Calculate overlap percentage with respect to the smaller geometry
     smaller_area = min(geom1_area, geom2_area)
     overlap_percentage = (intersection_area / smaller_area) * 100
@@ -889,17 +889,19 @@ def conflate_features(
     for input_feature in input_features:
         input_geometry = shape(input_feature["geometry"])
 
-        for osm_feature, osm_geometry in zip(osm_features, osm_geometries):
+        for osm_feature, osm_geometry in zip(
+            osm_features, osm_geometries, strict=False
+        ):
             overlap_percent = check_overlap(input_geometry, osm_geometry)
             input_feature["id"] = input_feature["properties"].pop("xid")
             input_feature["properties"]["overlap_percent"] = overlap_percent
             if overlap_percent < 90:
                 corresponding_feature = {
-                        "type": "Feature",
-                        "id": osm_feature["properties"].pop("osm_id"),
-                        "geometry": mapping(osm_geometry),
-                        "properties": osm_feature["properties"],
-                        }
+                    "type": "Feature",
+                    "id": osm_feature["properties"].pop("osm_id"),
+                    "geometry": mapping(osm_geometry),
+                    "properties": osm_feature["properties"],
+                }
                 return_features.append(corresponding_feature)
                 break
 
