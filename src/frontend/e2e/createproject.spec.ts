@@ -25,23 +25,23 @@ test('test', async ({ page }) => {
   await page.getByRole('button', { name: 'NEXT' }).click();
 
   // 2. Upload Area Step
-  await page.getByText('Upload File').click();
+  const uploadAOIFileRadio = await page.getByText('Upload File');
+  await uploadAOIFileRadio.click();
+  await expect(uploadAOIFileRadio).toBeChecked();
   await page.waitForSelector('#file-input');
   await page.locator('#file-input').click();
   const input = page.locator('#data-extract-custom-file');
-  // Remove the hidden class from the input element
+  // Remove the hidden class from the input element so that playwright can click on it
   await page.evaluate(
     (input) => {
       if (input) input.classList.remove('fmtm-hidden');
     },
     await input.elementHandle(),
   );
-
+  // first adding invalid geojson then valid geojson
   await page.locator('#data-extract-custom-file').setInputFiles(`${__dirname}/files/invalid-aoi.geojson`);
   await expect(page.getByText('The project area exceeded 200')).toBeVisible();
-
   await page.locator('#data-extract-custom-file').setInputFiles([]);
-
   await page.locator('#data-extract-custom-file').setInputFiles(`${__dirname}/files/valid-aoi.geojson`);
   // Reapply the hidden class to the input element
   await page.evaluate(
@@ -53,12 +53,16 @@ test('test', async ({ page }) => {
   await page.getByRole('button', { name: 'NEXT' }).click();
 
   // 3. Select Category Step
+  await page.getByRole('button', { name: 'NEXT' }).click();
+  await expect(page.getByText('Form Category is Required.')).toBeVisible();
   await page.getByRole('combobox').click();
   await page.getByLabel('buildings').getByText('buildings').click();
+  await page.getByRole('button', { name: 'NEXT' }).click();
 
   // 4. Data Extract Step
-  await page.getByRole('button', { name: 'NEXT' }).click();
-  await page.getByText('Use OSM data extract').click();
+  const dataExtractRadio = await page.getByText('Use OSM data extract');
+  await dataExtractRadio.click();
+  await expect(dataExtractRadio).toBeChecked();
   await page.getByRole('button', { name: 'Generate Data Extract' }).click();
   await page.getByRole('button', { name: 'NEXT' }).click();
 
