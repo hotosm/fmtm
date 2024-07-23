@@ -883,26 +883,46 @@ def conflate_features(
     Returns:
         list: A list of features after conflation with OSM features.
     """
-    osm_geometries = [shape(feature["geometry"]) for feature in osm_features]
+    osm_ids_in_subs = {int(feature["properties"]["xid"]) for feature in input_features}
+
+    # filter and create a json with key osm_id and its feature
+    osm_id_to_feature = {
+        feature["properties"]["osm_id"]: feature
+        for feature in osm_features
+        if feature["properties"]["osm_id"] in osm_ids_in_subs
+    }
     return_features = []
 
     for input_feature in input_features:
+        osm_id = int(input_feature["properties"]["xid"])
+        osm_feature = osm_id_to_feature.get(osm_id) # get same feature from osm
+        if not osm_feature:
+            continue
+
         input_geometry = shape(input_feature["geometry"])
+        osm_geometry = shape(osm_feature["geometry"])
+        overlap_percent = check_overlap(input_geometry, osm_geometry)
 
-        for osm_feature, osm_geometry in zip(osm_features, osm_geometries):
-            overlap_percent = check_overlap(input_geometry, osm_geometry)
-            input_feature["id"] = input_feature["properties"].pop("xid")
-            input_feature["properties"]["overlap_percent"] = overlap_percent
-            if overlap_percent < 90:
-                corresponding_feature = {
-                        "type": "Feature",
-                        "id": osm_feature["properties"].pop("osm_id"),
-                        "geometry": mapping(osm_geometry),
-                        "properties": osm_feature["properties"],
-                        }
-                return_features.append(corresponding_feature)
-                break
+        updated_input_feature = {
+            "type": input_feature["type"],
+            "id": input_feature["properties"]["xid"],
+            "geometry": input_feature["geometry"],
+            "properties": {
+                **input_feature["properties"],
+                "overlap_percent": overlap_percent,
+            },
+        }
 
-        return_features.append(input_feature)
+        if overlap_percent < 90:
+            corresponding_feature = {
+                    "type": "Feature",
+                    "id": osm_feature["properties"].pop("osm_id"),
+                    "geometry": mapping(osm_geometry),
+                    "properties": osm_feature["properties"],
+                    }
+            return_features.append(corresponding_feature)
+        
+
+        return_features.append(updated_input_feature)
 
     return return_features
