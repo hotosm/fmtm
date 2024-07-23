@@ -134,6 +134,8 @@ services:
         condition: service_healthy
       s3:
         condition: service_healthy
+      pyxform:
+        condition: service_started
     environment:
       - DOMAIN=${FMTM_ODK_DOMAIN:-odk.${FMTM_DOMAIN}}
       - SSL_TYPE=upstream
