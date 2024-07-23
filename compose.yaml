@@ -59,7 +59,7 @@ services:
         condition: service_started
     volumes:
       - nginx-configs:/etc/nginx
-      - central_frontend:/var/www/html/${FMTM_ODK_DOMAIN:-odk.${FMTM_DOMAIN}}:ro
+      - central_frontend:/var/www/html/odk.fmtm.localhost:ro
     environment:
       # General
       LOG_LEVEL: notice
@@ -83,18 +83,18 @@ services:
       # EMAIL_LETS_ENCRYPT:
       # USE_LETS_ENCRYPT_STAGING: yes
       # Reverse proxy configs
-      SERVER_NAME: ${FMTM_DOMAIN} ${FMTM_API_DOMAIN:-api.${FMTM_DOMAIN}} ${FMTM_ODK_DOMAIN:-odk.${FMTM_DOMAIN}} ${FMTM_S3_DOMAIN:-s3.${FMTM_DOMAIN}} odkcentral
-      ${FMTM_DOMAIN}_REVERSE_PROXY_HOST: http://ui:7051
-      ${FMTM_DOMAIN}_MAX_CLIENT_SIZE: 1G
-      ${FMTM_API_DOMAIN:-api.${FMTM_DOMAIN}}_REVERSE_PROXY_HOST: http://api:8000
-      ${FMTM_API_DOMAIN:-api.${FMTM_DOMAIN}}_MAX_CLIENT_SIZE: 1G
-      ${FMTM_S3_DOMAIN:-s3.${FMTM_DOMAIN}}_REVERSE_PROXY_HOST: http://s3:9000
-      ${FMTM_S3_DOMAIN:-s3.${FMTM_DOMAIN}}_MAX_CLIENT_SIZE: 10G
-      ${FMTM_ODK_DOMAIN:-odk.${FMTM_DOMAIN}}_REVERSE_PROXY_HOST: http://central:8383
-      ${FMTM_ODK_DOMAIN:-odk.${FMTM_DOMAIN}}_REVERSE_PROXY_URL: ~ ^/v\d
+      SERVER_NAME: fmtm.localhost api.fmtm.localhost s3.fmtm.localhost odk.fmtm.localhost odkcentral
+      fmtm.localhost_REVERSE_PROXY_HOST: http://ui:7051
+      fmtm.localhost_MAX_CLIENT_SIZE: 1G
+      api.fmtm.localhost_REVERSE_PROXY_HOST: http://api:8000
+      api.fmtm.localhost_MAX_CLIENT_SIZE: 1G
+      s3.fmtm.localhost_REVERSE_PROXY_HOST: http://s3:9000
+      s3.fmtm.localhost_MAX_CLIENT_SIZE: 10G
+      odk.fmtm.localhost_REVERSE_PROXY_HOST: http://central:8383
+      odk.fmtm.localhost_REVERSE_PROXY_URL: ~ ^/v\d
       # buffer requests, but not responses, so streaming out works
-      ${FMTM_ODK_DOMAIN:-odk.${FMTM_DOMAIN}}_REVERSE_PROXY_BUFFERING: no
-      ${FMTM_ODK_DOMAIN:-odk.${FMTM_DOMAIN}}_MAX_CLIENT_SIZE: 500m
+      odk.fmtm.localhost_REVERSE_PROXY_BUFFERING: no
+      odk.fmtm.localhost_MAX_CLIENT_SIZE: 500m
       # Service for local development only to facilitate https odkcentral
       odkcentral_REVERSE_PROXY_HOST: http://central:8383
       odkcentral_REVERSE_PROXY_URL: ~ ^/v\d
@@ -250,7 +250,7 @@ services:
       pyxform:
         condition: service_started
     environment:
-      - DOMAIN=${FMTM_ODK_DOMAIN:-odk.${FMTM_DOMAIN}}:${FMTM_DEV_PORT:-7050}
+      - DOMAIN=${FMTM_ODK_DOMAIN:-odk.fmtm.localhost}:${FMTM_DEV_PORT:-7050}
       - SSL_TYPE=upstream
       - SYSADMIN_EMAIL=${ODK_CENTRAL_USER}
       - SYSADMIN_PASSWD=${ODK_CENTRAL_PASSWD}
