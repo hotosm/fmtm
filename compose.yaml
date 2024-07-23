@@ -73,9 +73,9 @@ services:
       USE_BACKUP: no
       USE_METRICS: no
       # USE_ANTIBOT: yes
-      USE_BAD_BEHAVIOR: yes
-      USE_LIMIT_REQ: yes
-      USE_MODSECURITY: yes
+      USE_BAD_BEHAVIOR: no
+      USE_LIMIT_REQ: no
+      USE_MODSECURITY: no
       USE_BROTLI: yes
       # For OpenTelemetry
       CUSTOM_HEADER: "Access-Control-Allow-Headers: 'traceparent,tracestate'"
