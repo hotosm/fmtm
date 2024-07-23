@@ -39,7 +39,7 @@ services:
   proxy:
     image: "ghcr.io/bunkerity/bunkerweb:1.5.9"
     depends_on:
-      proxy-configs:
+      proxy-config:
         condition: service_started
       api:
         condition: service_started
@@ -111,7 +111,7 @@ services:
         ipv4_address: 10.20.30.50
     restart: "unless-stopped"
 
-  proxy-configs:
+  proxy-config:
     image: "ghcr.io/bunkerity/bunkerweb-scheduler:1.5.9"
     depends_on:
       proxy-docker-sock:
