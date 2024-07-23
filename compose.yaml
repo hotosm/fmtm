@@ -78,7 +78,8 @@ services:
       USE_MODSECURITY: no
       USE_BROTLI: yes
       # For OpenTelemetry
-      CUSTOM_HEADER: "Access-Control-Allow-Headers: 'traceparent,tracestate'"
+      # KEEP_UPSTREAM_HEADERS: "*"
+      # CUSTOM_HEADER: "Access-Control-Allow-Headers: traceparent,tracestate"
       # AUTO_LETS_ENCRYPT: yes
       # EMAIL_LETS_ENCRYPT:
       # USE_LETS_ENCRYPT_STAGING: yes
