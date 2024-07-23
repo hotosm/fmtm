@@ -18,6 +18,7 @@
 name: fmtm
 
 volumes:
+  nginx-configs:
   fmtm_data:
   fmtm_db_data:
   fmtm_logs:
@@ -29,11 +30,17 @@ volumes:
 networks:
   fmtm-net:
     name: fmtm-${GIT_BRANCH:-local}
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.20.30.0/24
 
 services:
   proxy:
-    image: "ghcr.io/bunkerity/bunkerweb:1.5.8"
+    image: "ghcr.io/bunkerity/bunkerweb:1.5.9"
     depends_on:
+      proxy-configs:
+        condition: service_started
       api:
         condition: service_started
       ui:
@@ -50,23 +57,65 @@ services:
         condition: service_healthy
       electric:
         condition: service_started
-    # volumes:
-    # - central_frontend:/usr/share/nginx/html/central
+    volumes:
+      - nginx-configs:/etc/nginx
+      - central_frontend:/var/www/html/odk.fmtm.localhost
     environment:
-      # MULTISITE: yes
+      # General
+      LOG_LEVEL: notice
+      API_WHITELIST_IP: 127.0.0.0/8 10.20.30.0/24
+      MULTISITE: yes
       USE_REVERSE_PROXY: yes
-      # SERVER_NAME: fmtm.localhost api.fmtm.localhost odk.fmtm.localhost s3.fmtm.localhost
-      SERVER_NAME: api.fmtm.localhost
-      REVERSE_PROXY_HOST: http://api:8000
-      # fmtm.localhost_REVERSE_PROXY_HOST: http://ui:7051
-      # api.fmtm.localhost_REVERSE_PROXY_HOST: http://api:8000
-      # odk.fmtm.localhost_REVERSE_PROXY_HOST: http://central:8383
-      # s3.fmtm.localhost_REVERSE_PROXY_HOST: http://s3:9000
+      REVERSE_PROXY_INTERCEPT_ERRORS: no
+      ALLOWED_METHODS: HEAD|GET|POST|PATCH|PUT|DELETE
+      USE_REAL_IP: yes
+      SERVE_FILES: yes
+      USE_BACKUP: no
+      USE_METRICS: no
+      # USE_ANTIBOT: yes
+      USE_BAD_BEHAVIOR: yes
+      USE_LIMIT_REQ: yes
+      USE_MODSECURITY: yes
+      USE_BROTLI: yes
+      # AUTO_LETS_ENCRYPT: yes
+      # EMAIL_LETS_ENCRYPT:
+      # USE_LETS_ENCRYPT_STAGING: yes
+      # Reverse proxy
+      SERVER_NAME: fmtm.localhost api.fmtm.localhost odk.fmtm.localhost s3.fmtm.localhost
+      fmtm.localhost_REVERSE_PROXY_HOST: http://ui:7051
+      api.fmtm.localhost_REVERSE_PROXY_HOST: http://api:8000
+      s3.fmtm.localhost_REVERSE_PROXY_HOST: http://s3:9000
+      odk.fmtm.localhost_REVERSE_PROXY_HOST: http://central:8383
+      odk.fmtm.localhost_REVERSE_PROXY_URL: ~ ^/v\d
     ports:
       - ${FMTM_DEV_PORT:-7050}:8080
     networks:
       - fmtm-net
     restart: "unless-stopped"
+
+  proxy-configs:
+    image: "ghcr.io/bunkerity/bunkerweb-scheduler:1.5.9"
+    depends_on:
+      proxy-docker-sock:
+        condition: service_started
+    environment:
+      - DOCKER_HOST=tcp://proxy-docker-sock:2375
+    networks:
+      - fmtm-net
+    restart: "no"
+    entrypoint: timeout 60 ./entrypoint.sh
+
+  proxy-docker-sock:
+    image: "docker.io/tecnativa/docker-socket-proxy:0.2.0"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - CONTAINERS=1
+      - LOG_LEVEL=warning
+    networks:
+      - fmtm-net
+    restart: "no"
+    command: timeout 60 haproxy -W -db -f /usr/local/etc/haproxy/haproxy.cfg
 
   api:
     image: "ghcr.io/hotosm/fmtm/backend:${TAG_OVERRIDE:-debug}"
