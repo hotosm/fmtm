@@ -866,7 +866,7 @@ def check_overlap(geom1: BaseGeometry, geom2: BaseGeometry) -> float:
     # Calculate overlap percentage with respect to the smaller geometry
     smaller_area = min(geom1_area, geom2_area)
     overlap_percentage = (intersection_area / smaller_area) * 100
-    return overlap_percentage
+    return round(overlap_percentage, 2)
 
 
 def conflate_features(
