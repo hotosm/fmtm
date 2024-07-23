@@ -859,10 +859,10 @@ def check_overlap(geom1: BaseGeometry, geom2: BaseGeometry) -> float:
     """
     intersection = geom1.intersection(geom2)
     intersection_area = intersection.area
-    
+
     geom1_area = geom1.area
     geom2_area = geom2.area
-    
+
     # Calculate overlap percentage with respect to the smaller geometry
     smaller_area = min(geom1_area, geom2_area)
     overlap_percentage = (intersection_area / smaller_area) * 100
