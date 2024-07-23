@@ -895,7 +895,7 @@ def conflate_features(
 
     for input_feature in input_features:
         osm_id = int(input_feature["properties"]["xid"])
-        osm_feature = osm_id_to_feature.get(osm_id) # get same feature from osm
+        osm_feature = osm_id_to_feature.get(osm_id)  # get same feature from osm
         if not osm_feature:
             continue
 
@@ -916,13 +916,12 @@ def conflate_features(
 
         if overlap_percent < 90:
             corresponding_feature = {
-                    "type": "Feature",
-                    "id": osm_feature["properties"].pop("osm_id"),
-                    "geometry": mapping(osm_geometry),
-                    "properties": osm_feature["properties"],
-                    }
+                "type": "Feature",
+                "id": osm_feature["properties"].pop("osm_id"),
+                "geometry": mapping(osm_geometry),
+                "properties": osm_feature["properties"],
+            }
             return_features.append(corresponding_feature)
-        
 
         return_features.append(updated_input_feature)
 
