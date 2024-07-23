@@ -41,10 +41,26 @@
 		updateTaskFeatures();
 	}
 
+	$: qrCodeData = generateQrCode(data.project.project_info.name, data.project.odk_token, "TEMP");
 	let taskFeatcol: FeatureCollection = { type: 'FeatureCollection', features: [] }
 	const taskFeatcolStore = writable<FeatureCollection>(taskFeatcol)
 	let selectedTaskId = writable<number | null>(null)
-	$: qrCodeData = generateQrCode(data.project.project_info.name, data.project.odk_token, "TEMP");
+	let selectedTask = writable<any>(null);
+	$: selectedTask = data.project.tasks.find((task: ProjectTask) => task.id === $selectedTaskId)
+	let nextAction = writable<string>('');
+	$: (async() => $nextAction = await getStatusFromTaskHistory($selectedTask))();
+	// $: {(async () => {
+	// 	const task = $selectedTask;
+	// 	console.log(task)
+	// 	if (task && task.id) {
+	// 		const status = await getStatusFromTaskHistory(task.id);
+	// 		// TODO get next action in sequence here
+	// 		nextAction.set(status);
+	// 	} else {
+	// 		nextAction.set('');
+	// 	}
+	// 	})();
+	// }
 
 	async function getStatusFromTaskHistory(taskId: number) {
 		const result = await data.electric.db.task_history.findMany({
@@ -178,128 +194,138 @@
 	</hot-card>
 {/if}
 
-	<MapLibre
-		bind:map
-		bind:loaded
-		style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-		class="flex-auto w-full sm:aspect-video sm:max-h-full"
-		standardControls
-		center={[0, 0]}
-		zoom={2}
-		attributionControl={false}
-	>
-		<GeoJSON id="states" data={$taskFeatcolStore} promoteId="TASKS">
-				<FillLayer
-					hoverCursor="pointer"
-					paint={{
-						'fill-color': [
-							'match', ['get', 'status'],
-							'0', '#c5fbf5',
-							'1', '#ff0000',
-							'2', '#66ff33',
-							'3', '#ff9900',
-							'#c5fbf5' // default color if no match is found
-						],
-						'fill-opacity': hoverStateFilter(0.5, 0),
-					}}
-					beforeLayerType="symbol"
-					manageHoverState
-					on:click={(e) => {
-						  selectedTaskId.set(e.detail.features?.[0]?.properties?.uid);
-					}}  
-				/>
-				<LineLayer
-					layout={{ 'line-cap': 'round', 'line-join': 'round' }}
-					paint={{ 
-						'line-color': hoverStateFilter('#0fffff', '#0fffff'),
-						'line-width': 3 
-					}}
-					beforeLayerType="symbol"
-					manageHoverState
-				/>
-		</GeoJSON>
-	</MapLibre>
+{#if $selectedTaskId && $nextAction}
+	<sl-tooltip content={$nextAction}>
+		<hot-icon-button
+		name="fast-forward-circle"
+		class="fixed top-30 left-1/2 transform -translate-x-1/2 text-5xl z-10"
+		label={$nextAction}
+		></hot-icon-button>
+	</sl-tooltip>
+{/if}
 
-	<sl-tab-group
-		placement="bottom"
-		no-scroll-controls
-		on:sl-tab-show={(e) => selectedTab = e.detail.name}
-		style="--panel-display: {panelDisplay};"
-		bind:this={tabGroup}
-	>
-		<!-- Map tab: panel is hidden to display the map below it -->
-		<sl-tab-panel name="map"></sl-tab-panel>
-		
-		<!-- Task events tab -->
-		<sl-tab-panel name="events">
-			{#if $history}
-				{#each $history as record}
-					<EventCard
-						record={record}
-						highlight={record.task_id === $selectedTaskId}
-						on:zoomToTask={(e) => zoomToTask(e)}
-					></EventCard>
-				{/each}
-			{/if}
-		</sl-tab-panel>
-		
-		<!-- Offline mode tab -->
-		<sl-tab-panel name="offline">
-			TODO stuff here
-		</sl-tab-panel>
-		
-		<!-- QRCode tab -->
-		<sl-tab-panel name="qrcode">
-			<div class="flex flex-col items-center justify-center h-full p-4 space-y-4">
-				<!-- Text above the QR code -->
-				<div class="text-center w-full">
-					<div class="h-12 font-bold text-lg">
-						Scan this QR Code in ODK Collect
-					</div>
-				</div>
+<MapLibre
+	bind:map
+	bind:loaded
+	style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+	class="flex-auto w-full sm:aspect-video sm:max-h-full"
+	standardControls
+	center={[0, 0]}
+	zoom={2}
+	attributionControl={false}
+>
+	<GeoJSON id="states" data={$taskFeatcolStore} promoteId="TASKS">
+			<FillLayer
+				hoverCursor="pointer"
+				paint={{
+					'fill-color': [
+						'match', ['get', 'status'],
+						'0', '#c5fbf5',
+						'1', '#ff0000',
+						'2', '#66ff33',
+						'3', '#ff9900',
+						'#c5fbf5' // default color if no match is found
+					],
+					'fill-opacity': hoverStateFilter(0.5, 0),
+				}}
+				beforeLayerType="symbol"
+				manageHoverState
+				on:click={(e) => {
+						selectedTaskId.set(e.detail.features?.[0]?.properties?.uid);
+				}}  
+			/>
+			<LineLayer
+				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+				paint={{ 
+					'line-color': hoverStateFilter('#0fffff', '#0fffff'),
+					'line-width': 3 
+				}}
+				beforeLayerType="symbol"
+				manageHoverState
+			/>
+	</GeoJSON>
+</MapLibre>
 
-				<!-- QR Code Container -->
-				<div class="flex justify-center w-full max-w-sm">
-					<hot-qr-code
-						value={qrCodeData}
-						label="Scan to open ODK Collect"
-						size="300"
-						radius="0.5"
-						errorCorrection="L"
-					></hot-qr-code>
-				</div>
-
-				<!-- Download Button -->
-				<div class="w-full max-w-sm text-center">
-					<sl-icon-button
-						name="download"
-						label="Download QRCode"
-						on:click={downloadQrCode(data.project.project_info.name, qrCodeData)}
-					>Download</sl-icon-button>
-				</div>
-
-				<!-- Open ODK Button -->
-				<div class="w-full max-w-sm text-center">
-					<sl-button
-						href="odkcollect://form/{data.project.xform_id}{$selectedTaskId ? `?task_filter=${$selectedTaskId}` : ''}"
-					>Open ODK</sl-button>
+<sl-tab-group
+	placement="bottom"
+	no-scroll-controls
+	on:sl-tab-show={(e) => selectedTab = e.detail.name}
+	style="--panel-display: {panelDisplay};"
+	bind:this={tabGroup}
+>
+	<!-- Map tab: panel is hidden to display the map below it -->
+	<sl-tab-panel name="map"></sl-tab-panel>
+	
+	<!-- Task events tab -->
+	<sl-tab-panel name="events">
+		{#if $history}
+			{#each $history as record}
+				<EventCard
+					record={record}
+					highlight={record.task_id === $selectedTaskId}
+					on:zoomToTask={(e) => zoomToTask(e)}
+				></EventCard>
+			{/each}
+		{/if}
+	</sl-tab-panel>
+	
+	<!-- Offline mode tab -->
+	<sl-tab-panel name="offline">
+		TODO stuff here
+	</sl-tab-panel>
+	
+	<!-- QRCode tab -->
+	<sl-tab-panel name="qrcode">
+		<div class="flex flex-col items-center justify-center h-full p-4 space-y-4">
+			<!-- Text above the QR code -->
+			<div class="text-center w-full">
+				<div class="h-12 font-bold text-lg">
+					Scan this QR Code in ODK Collect
 				</div>
 			</div>
-		</sl-tab-panel>
 
-		<sl-tab slot="nav" panel="map">
-			<sl-icon name="map"></sl-icon>
-		</sl-tab>
-		<sl-tab slot="nav" panel="events">
-			<sl-icon name="list"></sl-icon>
-		</sl-tab>
-		<sl-tab slot="nav" panel="offline">
-			<sl-icon name="wifi-off"></sl-icon>
-		</sl-tab>
-		<sl-tab slot="nav" panel="qrcode">
-			<sl-icon name="qr-code"></sl-icon>
-		</sl-tab>
-	</sl-tab-group>
+			<!-- QR Code Container -->
+			<div class="flex justify-center w-full max-w-sm">
+				<hot-qr-code
+					value={qrCodeData}
+					label="Scan to open ODK Collect"
+					size="300"
+					radius="0.5"
+					errorCorrection="L"
+				></hot-qr-code>
+			</div>
+
+			<!-- Download Button -->
+			<div class="w-full max-w-sm text-center">
+				<hot-icon-button
+					name="download"
+					label="Download QRCode"
+					on:click={downloadQrCode(data.project.project_info.name, qrCodeData)}
+				>Download</hot-icon-button>
+			</div>
+
+			<!-- Open ODK Button -->
+			<div class="w-full max-w-sm text-center">
+				<sl-button
+					href="odkcollect://form/{data.project.xform_id}{$selectedTaskId ? `?task_filter=${$selectedTaskId}` : ''}"
+				>Open ODK</sl-button>
+			</div>
+		</div>
+	</sl-tab-panel>
+
+	<sl-tab slot="nav" panel="map">
+		<hot-icon name="map"></hot-icon>
+	</sl-tab>
+	<sl-tab slot="nav" panel="events">
+		<hot-icon name="list"></hot-icon>
+	</sl-tab>
+	<sl-tab slot="nav" panel="offline">
+		<hot-icon name="wifi-off"></hot-icon>
+	</sl-tab>
+	<sl-tab slot="nav" panel="qrcode">
+		<hot-icon name="qr-code"></hot-icon>
+	</sl-tab>
+</sl-tab-group>
 
 <style>
 	:root {
@@ -348,9 +374,14 @@
 	}
 
 	/* The tab item icon */
-	sl-icon {
+	hot-icon {
 		font-size: 2rem;
 	}
+
+	/* Floating map buttons
+	hot-icon-button {
+		font-size: 2rem;
+	} */
 
 	#notification-banner {
 		--padding: 0.3rem;
