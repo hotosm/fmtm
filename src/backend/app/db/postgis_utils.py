@@ -912,6 +912,7 @@ def conflate_features(
                 "overlap_percent": overlap_percent,
             },
         }
+        updated_input_feature |= osm_feature["properties"]
 
         if overlap_percent < 90:
             corresponding_feature = {
