@@ -92,7 +92,7 @@ const FormUpdateTab = ({ projectId }) => {
           label="title"
           value={selectedCategory}
           onValueChange={(value) => {
-            setSelectedCategory(value);
+            if (value) setSelectedCategory(value?.toString());
           }}
           className="fmtm-max-w-[13.5rem]"
         />
