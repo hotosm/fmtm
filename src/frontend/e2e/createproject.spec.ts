@@ -39,9 +39,11 @@ test('test', async ({ page }) => {
     await input.elementHandle(),
   );
   // first adding invalid geojson then valid geojson
+  // @ts-ignore
   await page.locator('#data-extract-custom-file').setInputFiles(`${__dirname}/files/invalid-aoi.geojson`);
   await expect(page.getByText('The project area exceeded 200')).toBeVisible();
   await page.locator('#data-extract-custom-file').setInputFiles([]);
+  // @ts-ignore
   await page.locator('#data-extract-custom-file').setInputFiles(`${__dirname}/files/valid-aoi.geojson`);
   // Reapply the hidden class to the input element
   await page.evaluate(
