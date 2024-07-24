@@ -4,7 +4,6 @@
   - "src/backend/**/*"
 "devops":
   - ".github/**/*"
-  - "nginx/**/*"
   - "scripts/**/*"
   - "docker-*.yml"
   - "**/Dockerfile"

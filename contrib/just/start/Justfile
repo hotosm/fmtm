@@ -83,7 +83,7 @@ tunnel:
     up -d api ui
 
   # Restart ODK Central with domain override (for form download urls)
-  CENTRAL_DOMAIN_OVERRIDE="$(echo "${odk_url}" | sed 's|^https://||')" \
+  FMTM_ODK_DOMAIN="$(echo "${odk_url}" | sed 's|^https://||')" \
   docker compose \
     -f docker-compose.yml \
     -f contrib/tunnel/docker-compose.yml \
@@ -135,6 +135,5 @@ _print-tunnel-urls fmtm_url api_url odk_url s3_url:
   @echo
   @echo "\033[0;33m ############################################### \033[0m"
   @echo
-
 
 
