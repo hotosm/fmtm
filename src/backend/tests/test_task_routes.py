@@ -36,8 +36,8 @@ def test_read_task_history(client, task_history):
     assert data["username"] == task_history.actioned_by.username
 
 
-def test_task_new_status(client, tasks):
-    """Test new task status."""
+def test_update_task_status(client, tasks):
+    """Test update the task status."""
     task_id = tasks[0].id
     project_id = tasks[0].project_id
     new_status = TaskStatus.LOCKED_FOR_MAPPING
