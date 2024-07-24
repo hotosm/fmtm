@@ -51,6 +51,8 @@ services:
         required: false
       s3:
         condition: service_started
+      electric-migrations:
+        condition: service_started
     volumes:
       - central_frontend:/usr/share/nginx/html/central
     ports:
@@ -244,8 +246,6 @@ services:
     depends_on:
       fmtm-db:
         condition: service_healthy
-      electric-migrations:
-        condition: service_completed_successfully
     environment:
       DATABASE_URL: postgresql://${FMTM_DB_USER:-fmtm}:${FMTM_DB_PASSWORD:-fmtm}@${FMTM_DB_HOST:-fmtm-db}/${FMTM_DB_NAME:-fmtm}
       DATABASE_REQUIRE_SSL: false
@@ -262,6 +262,8 @@ services:
       - fmtm-net
     restart: "unless-stopped"
 
+  # FIXME prima errors
+  # TODO it also requires entrypoint to run ENABLE ELECTRIC
   electric-migrations:
     image: "ghcr.io/hotosm/fmtm/frontend:debug"
     depends_on:
