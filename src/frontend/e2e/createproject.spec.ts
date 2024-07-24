@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 test('test', async ({ page }) => {
-  await page.goto('http://fmtm.localhost:7050/');
+  // await page.goto('http://fmtm.localhost:7050/');
+  await page.goto('http://ui:7051/');
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page.getByText('Temporary Account').click();
   await page.getByRole('button', { name: '+ Create New Project' }).click();
