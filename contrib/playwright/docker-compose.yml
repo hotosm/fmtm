@@ -9,9 +9,36 @@ services:
       FMTM_DOMAIN: "fmtm.dev.test"
       # Do not use dev port, use port 80
       FMTM_DEV_PORT: "false"
+
   ui:
     # This hostname is used for Playwright test internal networking
     hostname: fmtm.dev.test
     environment:
       VITE_API_URL: "http://fmtm.dev.test:8000"
     command: --port 80
+    healthcheck:
+      test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/80' || exit 1
+      interval: 5s
+      retries: 3
+      start_period: 5s
+      timeout: 5s
+
+  ui-test:
+    image: mcr.microsoft.com/playwright:v1.44.1
+    depends_on:
+      api:
+        condition: service_healthy
+      ui:
+        condition: service_healthy
+    working_dir: /app
+    environment:
+      - DISPLAY=:0
+    volumes:
+      - ./src/frontend:/app
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    command: npm run test:e2e
+    ports:
+      - "9323:9323"
+    networks:
+      - fmtm-net
+    restart: "no"
