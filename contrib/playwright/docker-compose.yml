@@ -1,0 +1,17 @@
+# Uses hostname fmtm.dev.test for api and ui on same domain
+# otherwise tests will not work using the cookie for auth
+
+services:
+  api:
+    hostname: fmtm.dev.test
+    environment:
+      # Run via alias fmtm.dev.test
+      FMTM_DOMAIN: "fmtm.dev.test"
+      # Do not use dev port, use port 80
+      FMTM_DEV_PORT: "false"
+  ui:
+    # This hostname is used for Playwright test internal networking
+    hostname: fmtm.dev.test
+    environment:
+      VITE_API_URL: "http://fmtm.dev.test:8000"
+    command: --port 80

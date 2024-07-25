@@ -69,8 +69,7 @@ components directory.
 To run the frontend tests locally, run:
 
 ```bash
-API_URL="http://api:8000" docker compose build ui
-docker compose run --rm --service-ports ui-test
+just test frontend
 ```
 
 > View the HTML report at: `http://localhost:9323`.
@@ -78,6 +77,5 @@ docker compose run --rm --service-ports ui-test
 To run the FMTM UI for interactive testing, run:
 
 ```bash
-docker compose up -d
-docker compose run --rm ui-test npx -y playwright open http://ui:7051
+just test frontend-interactive
 ```

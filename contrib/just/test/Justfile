@@ -28,8 +28,18 @@ backend:
 # Test frontend with Playwright
 [no-cd]
 frontend:
-  API_URL="http://api:8000" docker compose build ui
-  docker compose run --rm --service-ports ui-test
+  docker compose \
+    -f docker-compose.yml \
+    -f contrib/playwright/docker-compose.yml \
+  run --rm --service-ports ui-test
+
+# Create Playwright tests interactively
+[no-cd]
+frontend-interactive:
+  docker compose \
+    -f docker-compose.yml \
+    -f contrib/playwright/docker-compose.yml \
+  run --rm ui-test npm run test:interactive
 
 # Check coverage for backend tests
 [no-cd]
