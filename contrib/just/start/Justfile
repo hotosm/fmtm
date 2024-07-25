@@ -77,7 +77,7 @@ tunnel:
   just --unstable dotenv update "S3_ENDPOINT" "${s3_url}"
 
   # Restart the API and UI with environment variables set
-  API_URL_OVERRIDE="${api_url}" docker compose \
+  API_URL="${api_url}" docker compose \
     -f docker-compose.yml \
     -f contrib/tunnel/docker-compose.yml \
     up -d api ui
