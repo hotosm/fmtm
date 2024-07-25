@@ -31,6 +31,7 @@ const FormUpdateTab = ({ projectId }) => {
   const customFileValidity = useAppSelector((state) => state.createproject.customFileValidity);
   const validateCustomFormLoading = useAppSelector((state) => state.createproject.validateCustomFormLoading);
   const selectedCategory = useAppSelector((state) => state.createproject.editProjectDetails.xform_category);
+  const formUpdateLoading = useAppSelector((state) => state.createproject.formUpdateLoading);
 
   useEffect(() => {
     dispatch(FormCategoryService(`${import.meta.env.VITE_API_URL}/central/list-forms`));
@@ -124,7 +125,15 @@ const FormUpdateTab = ({ projectId }) => {
         {error.formError && <p className="fmtm-text-primaryRed fmtm-text-base">{error.formError}</p>}
       </div>
       <div className="fmtm-flex fmtm-justify-center">
-        <Button onClick={onSave} btnText="UPDATE" btnType="primary" className="fmtm-rounded-md" />
+        <Button
+          isLoading={formUpdateLoading}
+          disabled={validateCustomFormLoading}
+          loadingText="UPDATE"
+          onClick={onSave}
+          btnText="UPDATE"
+          btnType="primary"
+          className="fmtm-rounded-md"
+        />
       </div>
     </div>
   );

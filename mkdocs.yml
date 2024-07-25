@@ -66,16 +66,18 @@ plugins:
 nav:
   - Home: index.md
   - Get Started:
-      - About: About.md
+      - About: about/about.md
       - Installation: INSTALL.md
       - Contribution Guidelines: CONTRIBUTING.md
       - Code of Conduct: https://docs.hotosm.org/code-of-conduct
-      - FAQ: FAQ.md
+      - FAQ: about/faq.md
+      - The Team: about/team.md
   - User Manuals:
       - Video Guides: manuals/videos.md
       - User Types Explanation: user-breakdown.md
       - Workflow Diagrams: manuals/workflow-diagrams.md
       - Project Manager Guide: manuals/project-managers.md
+      - XLSForm Design: manuals/xlsform-design.md
   - Dev:
       - Dev Practices: https://docs.hotosm.org/dev-practices
       - Setup: dev/Setup.md
@@ -84,8 +86,8 @@ nav:
       - Production Deployment: dev/Production.md
       - Database Tips: dev/Database-Tips.md
       - Troubleshooting: dev/Troubleshooting.md
-      - Pre-Commit: https://docs.hotosm.org/dev-guide/pre-commit/
-      - Versioning: https://docs.hotosm.org/dev-guide/version-control/#creating-releases
+      - Pre-Commit: https://docs.hotosm.org/dev-guide/repo-management/pre-commit/
+      - Versioning: https://docs.hotosm.org/dev-guide/repo-management/version-control/#creating-releases
       - Class Hierarchy: apidocs/html/inherits.html
       - Code Coverage: coverage.html
   - Utilities:
