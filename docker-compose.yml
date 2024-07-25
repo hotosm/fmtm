@@ -126,12 +126,20 @@ services:
     networks:
       - fmtm-net
     restart: "unless-stopped"
+    healthcheck:
+      test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/7051' || exit 1
+      interval: 5s
+      retries: 3
+      start_period: 5s
+      timeout: 5s
 
   ui-test:
     profiles: ["ui-test"]
     image: mcr.microsoft.com/playwright:v1.44.1
     depends_on:
       api:
+        condition: service_healthy
+      ui:
         condition: service_healthy
     working_dir: /app
     environment:
