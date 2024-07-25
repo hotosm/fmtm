@@ -11,6 +11,7 @@
     "test:unit": "vitest",
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
+    "test:interactive": "playwright open http://fmtm.dev.test",
     "test:install-deps": "playwright install-deps",
     "lint": "eslint --fix --ext .js,.jsx,.ts,.tsx src"
   },
