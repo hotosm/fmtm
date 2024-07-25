@@ -900,7 +900,7 @@ async def generate_project_files(
 
     Args:
         db (Session): the database session.
-        project (DbProject): FMTM database project.
+        project_id(int): id of the FMTM project.
         custom_form (BytesIO): the xls file to upload if we have a custom form
         form_file_ext (str): weather the form is xls, xlsx or xml
         background_task_id (uuid): the task_id of the background task.
