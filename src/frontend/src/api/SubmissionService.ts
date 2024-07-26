@@ -96,6 +96,7 @@ export const UpdateReviewStateService: Function = (url: string) => {
             instanceId: null,
             taskId: null,
             reviewState: '',
+            taskUId: null,
           }),
         );
         dispatch(SubmissionActions.UpdateReviewStateLoading(false));

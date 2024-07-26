@@ -87,6 +87,7 @@ const SubmissionDetails = () => {
 
   const projectId = params.projectId;
   const paramsInstanceId = params.instanceId;
+  const taskUId = params.taskId;
   const projectDashboardDetail = useAppSelector((state) => state.project.projectDashboardDetail);
   const projectDashboardLoading = useAppSelector((state) => state.project.projectDashboardLoading);
   const submissionDetails = useAppSelector((state) => state.submission.submissionDetails);
@@ -203,6 +204,7 @@ const SubmissionDetails = () => {
                     projectId: projectId,
                     taskId: taskId,
                     reviewState: restSubmissionDetails?.__system?.reviewState,
+                    taskUId: taskUId,
                   }),
                 );
               }}
