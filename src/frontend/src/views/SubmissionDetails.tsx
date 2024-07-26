@@ -10,6 +10,55 @@ import { useAppSelector } from '@/types/reduxTypes';
 import { useNavigate } from 'react-router-dom';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 
+const renderValue = (value: any, key: string = '') => {
+  if (key === 'start' || key === 'end') {
+    return (
+      <p>
+        {value?.split('T')[0]}, {value?.split('T')[1]}
+      </p>
+    );
+  } else if (typeof value === 'object' && Object.values(value).includes('Point')) {
+    return (
+      <div>
+        <p className="fmtm-capitalize"></p> {value?.type} ({value?.coordinates?.[0]},{value?.coordinates?.[1]},
+        {value?.coordinates?.[2]}){renderValue(value?.properties)}
+      </div>
+    );
+  } else if (typeof value === 'object') {
+    return (
+      <ul className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+        {Object.entries(value).map(([key, nestedValue]) => (
+          <CoreModules.Box sx={{ textTransform: 'capitalize' }} key={key}>
+            <span color="error" className="fmtm-font-bold">
+              {key}:{' '}
+            </span>
+            {renderValue(nestedValue, key)}
+          </CoreModules.Box>
+        ))}
+      </ul>
+    );
+  } else {
+    return <span>{value}</span>;
+  }
+};
+
+function removeNullValues(obj: Record<string, any>) {
+  const newObj = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== null) {
+      if (typeof value === 'object') {
+        const nestedObj = removeNullValues(value);
+        if (Object.keys(nestedObj).length > 0) {
+          newObj[key] = nestedObj;
+        }
+      } else {
+        newObj[key] = value;
+      }
+    }
+  }
+  return newObj;
+}
+
 const SubmissionDetails = () => {
   useDocumentTitle('Submission Instance');
   const dispatch = CoreModules.useAppDispatch();
@@ -28,6 +77,9 @@ const SubmissionDetails = () => {
       ? submissionDetails?.task_filter
       : '-';
 
+  const { start, end, today, deviceid, ...restSubmissionDetails } = submissionDetails || {};
+  const dateDeviceDetails = { start, end, today, deviceid };
+
   useEffect(() => {
     dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${projectId}`));
   }, []);
@@ -35,30 +87,18 @@ const SubmissionDetails = () => {
   useEffect(() => {
     dispatch(
       SubmissionService(
-        `${import.meta.env.VITE_API_URL}/submission/submission-detail?submission_id=${paramsInstanceId}&project_id=${projectId}`,
+        `${
+          import.meta.env.VITE_API_URL
+        }/submission/submission-detail?submission_id=${paramsInstanceId}&project_id=${projectId}`,
       ),
     );
   }, [projectId, paramsInstanceId]);
 
-  function removeNullValues(obj: Record<string, any>) {
-    const newObj = {};
-    for (const [key, value] of Object.entries(obj)) {
-      if (value !== null) {
-        if (typeof value === 'object') {
-          const nestedObj = removeNullValues(value);
-          if (Object.keys(nestedObj).length > 0) {
-            newObj[key] = nestedObj;
-          }
-        } else {
-          newObj[key] = value;
-        }
-      }
-    }
-    return newObj;
-  }
-  const filteredData = submissionDetails ? removeNullValues(submissionDetails) : {};
+  const filteredData = restSubmissionDetails ? removeNullValues(restSubmissionDetails) : {};
 
-  const coordinatesArray: [number, number][] = submissionDetails?.xlocation?.split(';').map(function (coord: string) {
+  const coordinatesArray: [number, number][] = restSubmissionDetails?.xlocation?.split(';').map(function (
+    coord: string,
+  ) {
     let coordinate = coord
       .trim()
       .split(' ')
@@ -86,48 +126,16 @@ const SubmissionDetails = () => {
   const pointFeature = {
     type: 'Feature',
     geometry: {
-      ...submissionDetails?.point,
+      ...restSubmissionDetails?.point,
     },
     properties: {},
   };
 
-  const renderValue = (value: any, key: string = '') => {
-    if (key === 'start' || key === 'end') {
-      return (
-        <p>
-          {value?.split('T')[0]}, {value?.split('T')[1]}
-        </p>
-      );
-    } else if (typeof value === 'object' && Object.values(value).includes('Point')) {
-      return (
-        <div>
-          <p className="fmtm-capitalize"></p> {value?.type} ({value?.coordinates?.[0]},{value?.coordinates?.[1]},
-          {value?.coordinates?.[2]}){renderValue(value?.properties)}
-        </div>
-      );
-    } else if (typeof value === 'object') {
-      return (
-        <ul className="fmtm-flex fmtm-flex-col fmtm-gap-1">
-          {Object.entries(value).map(([key, nestedValue]) => (
-            <CoreModules.Box sx={{ textTransform: 'capitalize' }} key={key}>
-              <span color="error" className="fmtm-font-bold">
-                {key}:{' '}
-              </span>
-              {renderValue(nestedValue, key)}
-            </CoreModules.Box>
-          ))}
-        </ul>
-      );
-    } else {
-      return <span>{value}</span>;
-    }
-  };
-
   return (
-    <div className="fmtm-bg-gray-100 fmtm-box-border fmtm-border-[1px] fmtm-border-t-white fmtm-border-t-[0px] fmtm-px-[1.5rem] md:fmtm-px-[3.5rem] fmtm-py-[1.5rem] md:fmtm-py-[2rem]">
+    <div className="fmtm-bg-gray-100 fmtm-box-border fmtm-border-[1px] fmtm-border-t-white fmtm-border-t-[0px] fmtm-px-[1.5rem] md:fmtm-px-[3.5rem]">
       <UpdateReviewStatusModal />
       {projectDashboardLoading ? (
-        <CoreModules.Skeleton style={{ width: '250px' }} className="fmtm-mb-1" />
+        <CoreModules.Skeleton style={{ width: '250px' }} className="fmtm-mb-4" />
       ) : (
         <div className="fmtm-pb-4">
           <p className="fmtm-text-[#706E6E] fmtm-text-base">
@@ -149,40 +157,63 @@ const SubmissionDetails = () => {
           </p>
         </div>
       )}
-      <div className="fmtm-flex fmtm-flex-col xl:fmtm-flex-row">
+      <div className="fmtm-grid fmtm-grid-cols-2 fmtm-gap-x-8">
         <div>
-          {projectDashboardLoading ? (
-            <CoreModules.Skeleton className="md:!fmtm-w-[35rem] fmtm-h-[8.5rem]" />
+          <div>
+            {projectDashboardLoading ? (
+              <CoreModules.Skeleton className="md:!fmtm-w-full fmtm-h-[9rem]" />
+            ) : (
+              <div className="fmtm-bg-white fmtm-rounded-lg fmtm-w-full fmtm-h-fit fmtm-p-2 fmtm-px-4 md:fmtm-py-5 md:fmtm-shadow-[0px_10px_20px_0px_rgba(96,96,96,0.1)] fmtm-flex fmtm-flex-col">
+                <h2 className="fmtm-text-2xl fmtm-text-[#545454] fmtm-font-bold fmtm-mb-4">
+                  {projectDashboardDetail?.project_name_prefix}
+                </h2>
+                <h2 className="fmtm-text-xl fmtm-font-bold fmtm-text-[#545454]">Task: {taskId}</h2>
+                <h2 className="fmtm-text-lg fmtm-font-bold fmtm-text-[#545454]">Submission Id: {paramsInstanceId}</h2>
+              </div>
+            )}
+            <Button
+              btnText="Update Review Status"
+              btnType="primary"
+              className="fmtm-w-fit fmtm-justify-center !fmtm-rounded fmtm-font-bold fmtm-text-sm !fmtm-py-2 fmtm-mt-8"
+              onClick={() => {
+                dispatch(
+                  SubmissionActions.SetUpdateReviewStatusModal({
+                    toggleModalStatus: true,
+                    instanceId: paramsInstanceId,
+                    projectId: projectId,
+                    taskId: taskId,
+                    reviewState: restSubmissionDetails?.__system?.reviewState,
+                  }),
+                );
+              }}
+            />
+          </div>
+          {/* start, end, today, deviceid values */}
+          {submissionDetailsLoading ? (
+            <div className="fmtm-grid fmtm-grid-cols-2 fmtm-mt-6 fmtm-gap-0">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="fmtm-border-b fmtm-py-3">
+                  <CoreModules.Skeleton key={i} className="fmtm-h-[51px] !fmtm-w-[90%]" />
+                </div>
+              ))}
+            </div>
           ) : (
-            <div className="fmtm-bg-white fmtm-rounded-lg fmtm-w-full md:fmtm-w-[35rem] fmtm-h-fit fmtm-p-2 fmtm-px-4 md:fmtm-p-4 md:fmtm-shadow-[0px_10px_20px_0px_rgba(96,96,96,0.1)] fmtm-flex fmtm-flex-col">
-              <h2 className="fmtm-text-2xl fmtm-text-[#545454] fmtm-font-bold fmtm-mb-4">
-                {projectDashboardDetail?.project_name_prefix}
-              </h2>
-              <h2 className="fmtm-text-xl fmtm-font-bold fmtm-text-[#545454]">Task: {taskId}</h2>
-              <h2 className="fmtm-text-lg fmtm-font-bold fmtm-text-[#545454]">Submission Id: {paramsInstanceId}</h2>
+            <div className="fmtm-grid fmtm-grid-cols-2 fmtm-mt-6">
+              {Object.entries(dateDeviceDetails).map(([key, value]) => (
+                <div key={key}>
+                  <div className="fmtm-border-b fmtm-border-[#e2e2e2] fmtm-py-3">
+                    <div className="fmtm-capitalize fmtm-text-xl fmtm-font-bold">{key}</div>
+                    {renderValue(value, key)}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
-          <Button
-            btnText="Update Review Status"
-            btnType="primary"
-            className="fmtm-w-fit fmtm-justify-center !fmtm-rounded fmtm-font-bold fmtm-text-sm !fmtm-py-2 fmtm-mt-8"
-            onClick={() => {
-              dispatch(
-                SubmissionActions.SetUpdateReviewStatusModal({
-                  toggleModalStatus: true,
-                  instanceId: paramsInstanceId,
-                  projectId: projectId,
-                  taskId: taskId,
-                  reviewState: submissionDetails?.__system?.reviewState,
-                }),
-              );
-            }}
-          />
         </div>
         <div className="fmtm-flex fmtm-flex-grow fmtm-justify-center">
-          <div className="fmtm-w-full fmtm-my-10 xl:fmtm-my-0 xl:fmtm-w-[500px] 2xl:fmtm-w-[700px] fmtm-h-[300px] fmtm-rounded-lg fmtm-overflow-hidden">
+          <div className="fmtm-w-full fmtm-my-10 xl:fmtm-my-0 fmtm-h-full fmtm-rounded-lg fmtm-overflow-hidden">
             <SubmissionInstanceMap
-              featureGeojson={coordinatesArray ? geojsonFeature : submissionDetails?.point ? pointFeature : {}}
+              featureGeojson={coordinatesArray ? geojsonFeature : restSubmissionDetails?.point ? pointFeature : {}}
             />
           </div>
         </div>
@@ -204,7 +235,7 @@ const SubmissionDetails = () => {
                 {renderValue(value, key)}
               </CoreModules.Box>
             </div>
-          ))}{' '}
+          ))}
         </div>
       )}
     </div>
