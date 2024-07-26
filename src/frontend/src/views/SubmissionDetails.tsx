@@ -9,36 +9,56 @@ import UpdateReviewStatusModal from '@/components/ProjectSubmissions/UpdateRevie
 import { useAppSelector } from '@/types/reduxTypes';
 import { useNavigate } from 'react-router-dom';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
+import Accordion from '@/components/common/Accordion';
 
 const renderValue = (value: any, key: string = '') => {
   if (key === 'start' || key === 'end') {
     return (
-      <p>
-        {value?.split('T')[0]}, {value?.split('T')[1]}
-      </p>
+      <>
+        <div className="fmtm-capitalize fmtm-text-base fmtm-font-bold fmtm-mb-1 fmtm-text-[#555]">{key}</div>
+        <p className="fmtm-text-sm fmtm-text-[#555]">
+          {value?.split('T')[0]}, {value?.split('T')[1]}
+        </p>
+      </>
     );
   } else if (typeof value === 'object' && Object.values(value).includes('Point')) {
     return (
-      <div>
-        <p className="fmtm-capitalize"></p> {value?.type} ({value?.coordinates?.[0]},{value?.coordinates?.[1]},
-        {value?.coordinates?.[2]}){renderValue(value?.properties)}
-      </div>
+      <>
+        {renderValue(
+          `${value?.type} (${value?.coordinates?.[0]},${value?.coordinates?.[1]},${value?.coordinates?.[2]}`,
+          key,
+        )}
+        <div className="fmtm-border-b fmtm-my-3" />
+        {renderValue(value?.properties?.accuracy, 'accuracy')}
+      </>
     );
   } else if (typeof value === 'object') {
     return (
       <ul className="fmtm-flex fmtm-flex-col fmtm-gap-1">
-        {Object.entries(value).map(([key, nestedValue]) => (
-          <CoreModules.Box sx={{ textTransform: 'capitalize' }} key={key}>
-            <span color="error" className="fmtm-font-bold">
-              {key}:{' '}
-            </span>
-            {renderValue(nestedValue, key)}
-          </CoreModules.Box>
-        ))}
+        <Accordion
+          className="fmtm-rounded-xl fmtm-px-6"
+          onToggle={() => {}}
+          hasSeperator={false}
+          header={<p className="fmtm-text-xl fmtm-text-[#555]">{key}</p>}
+          body={Object.entries(value).map(([key, nestedValue]) => {
+            return (
+              <CoreModules.Box sx={{ textTransform: 'capitalize' }} key={key}>
+                {renderValue(nestedValue, key)}
+              </CoreModules.Box>
+            );
+          })}
+        />
       </ul>
     );
   } else {
-    return <span>{value}</span>;
+    return (
+      <>
+        <div className="fmtm-capitalize fmtm-text-base fmtm-font-bold fmtm-mb-1 fmtm-leading-normal fmtm-text-[#555]">
+          {key}
+        </div>
+        <span className="fmtm-text-sm fmtm-text-[#555]">{value}</span>
+      </>
+    );
   }
 };
 
@@ -201,43 +221,39 @@ const SubmissionDetails = () => {
             <div className="fmtm-grid fmtm-grid-cols-2 fmtm-mt-6">
               {Object.entries(dateDeviceDetails).map(([key, value]) => (
                 <div key={key}>
-                  <div className="fmtm-border-b fmtm-border-[#e2e2e2] fmtm-py-3">
-                    <div className="fmtm-capitalize fmtm-text-xl fmtm-font-bold">{key}</div>
-                    {renderValue(value, key)}
-                  </div>
+                  <div className="fmtm-border-b fmtm-border-[#e2e2e2] fmtm-py-3">{renderValue(value, key)}</div>
                 </div>
               ))}
             </div>
           )}
         </div>
         <div className="fmtm-flex fmtm-flex-grow fmtm-justify-center">
-          <div className="fmtm-w-full fmtm-my-10 xl:fmtm-my-0 fmtm-h-full fmtm-rounded-lg fmtm-overflow-hidden">
+          <div className="fmtm-w-full fmtm-h-full fmtm-rounded-lg fmtm-overflow-hidden">
             <SubmissionInstanceMap
               featureGeojson={coordinatesArray ? geojsonFeature : restSubmissionDetails?.point ? pointFeature : {}}
             />
           </div>
         </div>
       </div>
-      {submissionDetailsLoading ? (
-        <div className="fmtm-flex fmtm-flex-col fmtm-gap-3 fmtm-mt-5">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="fmtm-border-b-[1px] fmtm-pb-4">
-              <CoreModules.Skeleton key={i} className="fmtm-h-[100px]" />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div>
-          {Object.entries(filteredData).map(([key, value]) => (
-            <div key={key}>
-              <CoreModules.Box sx={{ borderBottom: '1px solid #e2e2e2', padding: '8px' }}>
-                <div className="fmtm-capitalize fmtm-text-xl fmtm-font-bold fmtm-mb-1">{key}</div>
-                {renderValue(value, key)}
-              </CoreModules.Box>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="fmtm-grid fmtm-grid-cols-2 fmtm-gap-x-8">
+        {submissionDetailsLoading ? (
+          <div className="fmtm-flex fmtm-flex-col fmtm-gap-3 fmtm-mt-5">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="fmtm-border-b-[1px] fmtm-pb-4">
+                <CoreModules.Skeleton key={i} className="fmtm-h-[100px]" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div>
+            {Object.entries(filteredData).map(([key, value]) => (
+              <div key={key}>
+                <div className="fmtm-border-b fmtm-border-[#e2e2e2] fmtm-py-3">{renderValue(value, key)}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
