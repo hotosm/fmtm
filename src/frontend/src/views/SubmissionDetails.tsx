@@ -10,6 +10,8 @@ import { useAppSelector } from '@/types/reduxTypes';
 import { useNavigate } from 'react-router-dom';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import Accordion from '@/components/common/Accordion';
+import { GetProjectComments } from '@/api/Project';
+import SubmissionComments from '@/components/SubmissionInstance/SubmissionComments';
 
 const renderValue = (value: any, key: string = '') => {
   if (key === 'start' || key === 'end') {
@@ -53,10 +55,10 @@ const renderValue = (value: any, key: string = '') => {
   } else {
     return (
       <>
-        <div className="fmtm-capitalize fmtm-text-base fmtm-font-bold fmtm-mb-1 fmtm-leading-normal fmtm-text-[#555]">
+        <div className="fmtm-capitalize fmtm-text-base fmtm-font-bold fmtm-mb-1 fmtm-leading-normal fmtm-text-[#555] fmtm-break-words">
           {key}
         </div>
-        <span className="fmtm-text-sm fmtm-text-[#555]">{value}</span>
+        <span className="fmtm-text-sm fmtm-text-[#555] fmtm-break-words">{value}</span>
       </>
     );
   }
@@ -114,6 +116,11 @@ const SubmissionDetails = () => {
       ),
     );
   }, [projectId, paramsInstanceId]);
+
+  useEffect(() => {
+    if (!taskUId) return;
+    dispatch(GetProjectComments(`${import.meta.env.VITE_API_URL}/tasks/${parseInt(taskUId)}/history/?comment=true`));
+  }, [taskUId]);
 
   const filteredData = restSubmissionDetails ? removeNullValues(restSubmissionDetails) : {};
 
@@ -178,22 +185,25 @@ const SubmissionDetails = () => {
           </p>
         </div>
       )}
-      <div className="fmtm-grid fmtm-grid-cols-2 fmtm-gap-x-8">
+      <div className="fmtm-grid fmtm-grid-cols-1 md:fmtm-grid-cols-2 fmtm-gap-x-8">
         <div>
           <div>
             {projectDashboardLoading ? (
               <CoreModules.Skeleton className="md:!fmtm-w-full fmtm-h-[9rem]" />
             ) : (
               <div className="fmtm-bg-white fmtm-rounded-lg fmtm-w-full fmtm-h-fit fmtm-p-2 fmtm-px-4 md:fmtm-py-5 md:fmtm-shadow-[0px_10px_20px_0px_rgba(96,96,96,0.1)] fmtm-flex fmtm-flex-col">
-                <h2 className="fmtm-text-2xl fmtm-text-[#545454] fmtm-font-bold fmtm-mb-4">
+                <h2 className="fmtm-text-2xl fmtm-text-[#545454] fmtm-font-bold fmtm-mb-4 fmtm-break-words">
                   {projectDashboardDetail?.project_name_prefix}
                 </h2>
                 <h2 className="fmtm-text-xl fmtm-font-bold fmtm-text-[#545454]">Task: {taskId}</h2>
-                <h2 className="fmtm-text-lg fmtm-font-bold fmtm-text-[#545454]">Submission Id: {paramsInstanceId}</h2>
+                <h2 className="fmtm-text-lg fmtm-font-bold fmtm-text-[#545454] fmtm-break-words">
+                  Submission Id: {paramsInstanceId}
+                </h2>
               </div>
             )}
             <Button
               btnText="Update Review Status"
+              disabled={submissionDetailsLoading}
               btnType="primary"
               className="fmtm-w-fit fmtm-justify-center !fmtm-rounded fmtm-font-bold fmtm-text-sm !fmtm-py-2 fmtm-mt-8"
               onClick={() => {
@@ -229,15 +239,15 @@ const SubmissionDetails = () => {
             </div>
           )}
         </div>
-        <div className="fmtm-flex fmtm-flex-grow fmtm-justify-center">
-          <div className="fmtm-w-full fmtm-h-full fmtm-rounded-lg fmtm-overflow-hidden">
+        <div className="fmtm-flex fmtm-flex-grow fmtm-justify-center fmtm-mt-10 md:fmtm-mt-0">
+          <div className="fmtm-w-full fmtm-h-[20rem] md:fmtm-h-full fmtm-rounded-lg fmtm-overflow-hidden">
             <SubmissionInstanceMap
               featureGeojson={coordinatesArray ? geojsonFeature : restSubmissionDetails?.point ? pointFeature : {}}
             />
           </div>
         </div>
       </div>
-      <div className="fmtm-grid fmtm-grid-cols-2 fmtm-gap-x-8">
+      <div className="fmtm-grid fmtm-grid-cols-1 md:fmtm-grid-cols-2 fmtm-gap-x-8 fmtm-mt-10 fmtm-gap-y-10">
         {submissionDetailsLoading ? (
           <div className="fmtm-flex fmtm-flex-col fmtm-gap-3 fmtm-mt-5">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -255,6 +265,9 @@ const SubmissionDetails = () => {
             ))}
           </div>
         )}
+        <div>
+          <SubmissionComments />
+        </div>
       </div>
     </div>
   );
