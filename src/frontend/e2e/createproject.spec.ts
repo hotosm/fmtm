@@ -1,3 +1,6 @@
+// This file tests the project creation workflow, using standard inputs
+// such as the default XLSForm and an OSM data extract.
+
 import { test, expect } from '@playwright/test';
 
 test('test', async ({ page }) => {
