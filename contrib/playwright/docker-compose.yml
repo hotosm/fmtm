@@ -9,6 +9,23 @@ services:
       FMTM_DOMAIN: "fmtm.dev.test"
       # Do not use dev port, use port 80
       FMTM_DEV_PORT: "false"
+    # The ci image has overrides for CMD and ENTRYPOINT, so re-apply
+    entrypoint: ["/app-entrypoint.sh"]
+    # API_REPLICAS can be increased via CI env vars
+    command:
+      [
+        "uvicorn",
+        "app.main:api",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--workers",
+        "1",
+        "--log-level",
+        "critical",
+        "--no-access-log",
+      ]
 
   ui:
     # This hostname is used for Playwright test internal networking
