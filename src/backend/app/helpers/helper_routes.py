@@ -34,7 +34,8 @@ from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Resp
 from osm_fieldwork.xlsforms import xlsforms_path
 from requests import get
 
-from app.auth.osm import AuthUser, login_required
+from app.auth.auth_schemas import AuthUser
+from app.auth.osm import login_required
 from app.central import central_deps
 from app.central.central_crud import (
     convert_geojson_to_odk_csv,
@@ -44,8 +45,10 @@ from app.central.central_crud import (
 from app.config import settings
 from app.db.postgis_utils import (
     add_required_geojson_properties,
+    featcol_keep_dominant_geom_type,
     javarosa_to_geojson_geom,
-    parse_and_filter_geojson,
+    multipolygon_to_polygon,
+    parse_geojson_file_to_featcol,
 )
 from app.models.enums import GeometryType, HTTPStatus, XLSFormType
 from app.projects.project_schemas import ODKCentral
@@ -88,9 +91,15 @@ async def append_required_geojson_properties(
     These are added automatically if missing during the project creation workflow.
     However it may be useful to run your file through this endpoint to validation.
     """
-    featcol = parse_and_filter_geojson(await geojson.read())
-    if featcol:
-        processed_featcol = add_required_geojson_properties(featcol)
+    featcol = parse_geojson_file_to_featcol(await geojson.read())
+    if not featcol:
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail="No geometries present"
+        )
+    featcol_single_geom_type = featcol_keep_dominant_geom_type(featcol)
+
+    if featcol_single_geom_type:
+        processed_featcol = add_required_geojson_properties(featcol_single_geom_type)
         headers = {
             "Content-Disposition": ("attachment; filename=geojson_withtags.geojson"),
             "Content-Type": "application/media",
@@ -224,9 +233,10 @@ async def convert_odk_submission_json_to_geojson_wrapper(
 
     contents = await json_file.read()
     submission_geojson = await convert_odk_submission_json_to_geojson(BytesIO(contents))
+    submission_data = BytesIO(json.dumps(submission_geojson).encode("utf-8"))
 
     headers = {"Content-Disposition": f"attachment; filename={filename.stem}.geojson"}
-    return Response(submission_geojson.getvalue(), headers=headers)
+    return Response(submission_data.getvalue(), headers=headers)
 
 
 @router.get("/view-raw-data-api-token")
@@ -264,4 +274,30 @@ async def view_user_oauth_token(
     return JSONResponse(
         status_code=HTTPStatus.OK,
         content={"access_token": request.cookies.get(cookie_name)},
+    )
+
+
+@router.post("/multipolygons-to-polygons")
+async def flatten_multipolygons_to_polygons(
+    geojson: UploadFile,
+    current_user: AuthUser = Depends(login_required),
+):
+    """If any MultiPolygons are present, replace with multiple Polygons."""
+    featcol = parse_geojson_file_to_featcol(await geojson.read())
+    if not featcol:
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail="No geometries present"
+        )
+    multi_to_single_polygons = multipolygon_to_polygon(featcol)
+
+    if multi_to_single_polygons:
+        headers = {
+            "Content-Disposition": ("attachment; filename=flattened_polygons.geojson"),
+            "Content-Type": "application/media",
+        }
+        return Response(content=json.dumps(multi_to_single_polygons), headers=headers)
+
+    raise HTTPException(
+        status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+        detail="Your geojson file is invalid.",
     )

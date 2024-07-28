@@ -35,7 +35,11 @@ from loguru import logger as log
 # from osm_fieldwork.json2osm import json2osm
 from sqlalchemy.orm import Session
 
-from app.central.central_crud import get_odk_form, get_odk_project, list_odk_xforms
+from app.central.central_crud import (
+    get_odk_form,
+    get_odk_project,
+    list_odk_xforms,
+)
 from app.config import settings
 from app.db import db_models
 from app.models.enums import HTTPStatus
@@ -128,20 +132,18 @@ from app.tasks import tasks_crud
 #     return final_zip_file_path
 
 
-async def gather_all_submission_csvs(db, project_id):
+async def gather_all_submission_csvs(db: Session, project: db_models.DbProject):
     """Gather all of the submission CSVs for a project.
 
     Generate a single zip with all submissions.
     """
-    log.info(f"Downloading all CSV submissions for project {project_id}")
+    log.info(f"Downloading all CSV submissions for project {project.id}")
 
-    project_info = await project_crud.get_project(db, project_id)
+    odkid = project.odkid
 
-    odkid = project_info.odkid
-
-    odk_credentials = await project_deps.get_odk_credentials(db, project_id)
+    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
     xform = get_odk_form(odk_credentials)
-    db_xform = await project_deps.get_project_xform(db, project_id)
+    db_xform = await project_deps.get_project_xform(db, project.id)
     file = xform.getSubmissionMedia(odkid, db_xform.odk_form_id)
     return file.content
 
@@ -309,12 +311,11 @@ def get_all_submissions_json(db: Session, project_id):
     return submissions
 
 
-async def download_submission_in_json(db: Session, project_id: int):
+async def download_submission_in_json(db: Session, project: db_models.DbProject):
     """Download submission data from ODK Central."""
-    project = await project_crud.get_project(db, project_id)
     project_name = project.project_name_prefix
 
-    if data := await get_submission_by_project(project_id, {}, db):
+    if data := await get_submission_by_project(project, {}, db):
         json_data = data
     else:
         json_data = None
@@ -372,12 +373,10 @@ async def get_submission_points(db: Session, project_id: int, task_id: Optional[
         return None
 
 
-async def get_submission_count_of_a_project(db: Session, project_id: int):
+async def get_submission_count_of_a_project(db: Session, project: db_models.DbProject):
     """Return the total number of submissions made for a project."""
-    project = await project_crud.get_project(db, project_id)
-
     # ODK Credentials
-    odk_credentials = await project_deps.get_odk_credentials(db, project_id)
+    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
 
     # Get ODK Form with odk credentials from the project.
     xform = get_odk_form(odk_credentials)
@@ -388,7 +387,10 @@ async def get_submission_count_of_a_project(db: Session, project_id: int):
 
 
 async def get_submissions_by_date(
-    db: Session, project_id: int, days: int, planned_task: Optional[int] = None
+    db: Session,
+    project: db_models.DbProject,
+    days: int,
+    planned_task: Optional[int] = None,
 ):
     """Get submissions by date.
 
@@ -396,7 +398,7 @@ async def get_submissions_by_date(
 
     Args:
         db (Session): The database session.
-        project_id (int): The ID of the project.
+        project (DbProject): The database project object.
         days (int): The number of days to consider for fetching submissions.
         planned_task (int): Associated task id.
 
@@ -407,7 +409,7 @@ async def get_submissions_by_date(
         # Fetch submissions for project with ID 1 within the last 7 days
         submissions = await get_submissions_by_date(db, 1, 7)
     """
-    data = await get_submission_by_project(project_id, {}, db)
+    data = await get_submission_by_project(project, {}, db)
 
     end_dates = [
         datetime.fromisoformat(entry["end"].split("+")[0])
@@ -441,21 +443,19 @@ async def get_submissions_by_date(
 
 
 async def get_submission_by_project(
-    project_id: int,
+    project: db_models.DbProject,
     filters: dict,
     db: Session,
-    task_id: Optional[int] = None,
 ):
     """Get submission by project.
 
     Retrieves a paginated list of submissions for a given project.
 
     Args:
-        project_id (int): The ID of the project.
+        project (DbProject): The database project object.
         filters (dict): The filters to apply directly to submissions
             in odk central.
         db (Session): The database session.
-        task_id (Optional[int]): The index task of the project.
 
     Returns:
         Tuple[int, List]: A tuple containing the total number of submissions and
@@ -465,9 +465,8 @@ async def get_submission_by_project(
         ValueError: If the submission file cannot be found.
 
     """
-    project = await project_crud.get_project(db, project_id)
     db_xform = await project_deps.get_project_xform(db, project.id)
-    odk_central = await project_deps.get_odk_credentials(db, project_id)
+    odk_central = await project_deps.get_odk_credentials(db, project.id)
 
     xform = get_odk_form(odk_central)
     return xform.listSubmissions(project.odkid, db_xform.odk_form_id, filters)
@@ -524,3 +523,45 @@ async def get_submission_detail(
         odk_form.getSubmissions(project.odkid, db_xform.odk_form_id, submission_id)
     )
     return submission.get("value", [])[0]
+
+
+# FIXME might not needed
+# async def get_submission_geojson(
+#     project_id: int,
+#     db: Session,
+# ):
+#     """Retrieve GeoJSON data for a submission associated with a project.
+
+#     Args:
+#         project_id (int): The ID of the project.
+#         db (Session): The database session.
+
+#     Returns:
+#         FeatCol: A GeoJSON FeatCol containing the submission features.
+#     """
+#     data = await get_submission_by_project(project_id, {}, db)
+#     submission_json = data.get("value", [])
+
+#     if not submission_json:
+#         raise HTTPException(
+#             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+#             detail="Loading JSON submission failed",
+#         )
+
+#     all_features = []
+#     for submission in submission_json:
+#         keys_to_remove = ["meta", "__id", "__system"]
+#         for key in keys_to_remove:
+#             submission.pop(key)
+
+#         data = {}
+#         flatten_json(submission, data)
+
+#         geojson_geom = await postgis_utils.javarosa_to_geojson_geom(
+#             data.pop("xlocation", {}), geom_type="Polygon"
+#         )
+
+#         feature = geojson.Feature(geometry=geojson_geom, properties=data)
+#         all_features.append(feature)
+
+#     return geojson.FeatureCollection(features=all_features)

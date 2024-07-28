@@ -54,13 +54,6 @@ class HTTPStatus(IntEnum):
     NOT_IMPLEMENTED = 501
 
 
-class TeamVisibility(IntEnum, Enum):
-    """Describes the visibility associated with an Team."""
-
-    PUBLIC = 0
-    PRIVATE = 1
-
-
 class OrganisationType(IntEnum, Enum):
     """Describes an organisation's subscription type."""
 
@@ -124,24 +117,6 @@ class MappingLevel(IntEnum, Enum):
     BEGINNER = 1
     INTERMEDIATE = 2
     ADVANCED = 3
-
-
-class MappingPermission(IntEnum, Enum):
-    """Describes a set of permissions for mapping on a project."""
-
-    ANY = 0
-    LEVEL = 1
-    TEAMS = 2
-    TEAMS_LEVEL = 3
-
-
-class ValidationPermission(IntEnum, Enum):
-    """Describes a set of permissions for validating on a project."""
-
-    ANY = 0
-    LEVEL = 1
-    TEAMS = 2
-    TEAMS_LEVEL = 3
 
 
 class TaskStatus(IntEnum, Enum):
@@ -225,22 +200,24 @@ def is_status_change_action(task_action):
 
 def get_action_for_status_change(task_status: TaskStatus):
     """Update task action inferred from previous state."""
-    return TaskAction.RELEASED_FOR_MAPPING
-    # match task_status:
-    #     case TaskStatus.READY:
-    #         return TaskAction.RELEASED_FOR_MAPPING
-    #     case TaskStatus.LOCKED_FOR_MAPPING:
-    #         return TaskAction.LOCKED_FOR_MAPPING
-    #     case TaskStatus.MAPPED:
-    #         return TaskAction.MARKED_MAPPED
-    #     case TaskStatus.LOCKED_FOR_VALIDATION:
-    #         return TaskAction.LOCKED_FOR_VALIDATION
-    #     case TaskStatus.VALIDATED:
-    #         return TaskAction.VALIDATED
-    #     case TaskStatus.BAD:
-    #         return TaskAction.MARKED_BAD
-    #     case TaskStatus.SPLIT:
-    #         return TaskAction.SPLIT_NEEDED
+    # return TaskAction.RELEASED_FOR_MAPPING
+    match task_status:
+        case TaskStatus.READY:
+            return TaskAction.RELEASED_FOR_MAPPING
+        case TaskStatus.LOCKED_FOR_MAPPING:
+            return TaskAction.LOCKED_FOR_MAPPING
+        case TaskStatus.MAPPED:
+            return TaskAction.MARKED_MAPPED
+        case TaskStatus.LOCKED_FOR_VALIDATION:
+            return TaskAction.LOCKED_FOR_VALIDATION
+        case TaskStatus.VALIDATED:
+            return TaskAction.VALIDATED
+        case TaskStatus.BAD:
+            return TaskAction.MARKED_BAD
+        case TaskStatus.SPLIT:
+            return TaskAction.SPLIT_NEEDED
+        case TaskStatus.INVALIDATED:
+            return TaskAction.MARKED_INVALID
 
 
 class TaskType(IntEnum, Enum):

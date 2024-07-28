@@ -48,6 +48,7 @@ export const ProjectById = (existingProjectList, projectId) => {
             custom_tms_url: projectResp?.custom_tms_url,
             organisation_id: projectResp?.organisation_id,
             organisation_logo: projectResp?.organisation_logo,
+            created: projectResp?.created,
           }),
         );
         dispatch(ProjectActions.SetProjectDetialsLoading(false));
@@ -182,9 +183,10 @@ export const DownloadTile = (url, payload, toOpfs = false) => {
           return;
         }
 
-        const filename = response.headers['Content-Disposition'].split('filename=')[1];
+        const filename = response.headers['content-disposition'].split('filename=')[1];
+        console.log(filename);
         // Create Blob from ArrayBuffer
-        const blob = new Blob([tileData], { type: response.headers['Content-Type'] });
+        const blob = new Blob([tileData], { type: response.headers['content-type'] });
         const downloadUrl = URL.createObjectURL(blob);
 
         const a = document.createElement('a');
@@ -329,10 +331,11 @@ export const DownloadSubmissionGeojson = (url, projectName) => {
         a.click();
         dispatch(ProjectActions.SetDownloadSubmissionGeojsonLoading(false));
       } catch (error) {
+        const errortxt = JSON.parse(await error.response.data.text()).detail;
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
-            message: 'Failed to download submission geojson.',
+            message: errortxt || 'Failed to download submission geojson.',
             variant: 'error',
             duration: 2000,
           }),

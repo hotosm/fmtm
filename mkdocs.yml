@@ -66,24 +66,29 @@ plugins:
 nav:
   - Home: index.md
   - Get Started:
-      - About: About.md
+      - About: about/about.md
       - Installation: INSTALL.md
       - Contribution Guidelines: CONTRIBUTING.md
       - Code of Conduct: https://docs.hotosm.org/code-of-conduct
-      - FAQ: FAQ.md
+      - FAQ: about/faq.md
+      - The Team: about/team.md
   - User Manuals:
-      - User Types: user-breakdown.md
-      - Project Managers: User-Manual-For-Project-Managers.md
+      - Video Guides: manuals/videos.md
+      - User Types Explanation: user-breakdown.md
+      - Workflow Diagrams: manuals/workflow-diagrams.md
+      - Project Manager Guide: manuals/project-managers.md
+      - XLSForm Design: manuals/xlsform-design.md
+      - ODKCollect Offline Maps: https://docs.getodk.org/collect-offline-maps
   - Dev:
+      - Dev Practices: https://docs.hotosm.org/dev-practices
       - Setup: dev/Setup.md
       - Backend: dev/Backend.md
       - Frontend: dev/Frontend.md
       - Production Deployment: dev/Production.md
-      - Release Cycle: dev/Release-Cycle.md
       - Database Tips: dev/Database-Tips.md
       - Troubleshooting: dev/Troubleshooting.md
-      - Pre-Commit: https://docs.hotosm.org/dev-guide/pre-commit/
-      - Versioning: https://docs.hotosm.org/dev-guide/version-control/#creating-releases
+      - Pre-Commit: https://docs.hotosm.org/dev-guide/repo-management/pre-commit/
+      - Versioning: https://docs.hotosm.org/dev-guide/repo-management/version-control/#creating-releases
       - Class Hierarchy: apidocs/html/inherits.html
       - Code Coverage: coverage.html
   - Utilities:
@@ -92,7 +97,8 @@ nav:
       - Helpers: https://api.stage.fmtm.hotosm.org/docs#/helper
   - Example XLSForms: example-xlsforms/README.md
   - Roadmap:
-      - Users: user-roadmap.md
-      - Developers: https://roadmap.fmtm.dev
+      - User: user-roadmap.md
+      - Development: https://roadmap.fmtm.dev
+      - Task Board: https://github.com/orgs/hotosm/projects/22/views/1?sliceBy%5BcolumnId%5D=Milestone
   - Timeline: timeline.md
   - API Docs: https://hotosm.github.io/swagger/?url=https://docs.fmtm.dev/openapi.json

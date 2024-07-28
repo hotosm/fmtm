@@ -24,7 +24,6 @@ from io import BytesIO
 from pathlib import Path
 from typing import List, Optional, Union
 
-import geoalchemy2
 import geojson
 import requests
 import shapely.wkb as wkblib
@@ -36,7 +35,6 @@ from geoalchemy2.shape import to_shape
 from geojson.feature import Feature, FeatureCollection
 from loguru import logger as log
 from osm_fieldwork.basemapper import create_basemap_file
-from osm_fieldwork.OdkCentral import OdkAppUser
 from osm_fieldwork.xlsforms import entities_registration, xlsforms_path
 from osm_rawdata.postgres import PostgresClient
 from shapely.geometry import shape
@@ -44,24 +42,24 @@ from sqlalchemy import and_, column, func, select, table, text
 from sqlalchemy.orm import Session
 
 from app.central import central_crud, central_deps
-from app.config import encrypt_value, settings
+from app.config import settings
 from app.db import db_models
 from app.db.postgis_utils import (
     check_crs,
-    flatgeobuf_to_geojson,
-    geojson_to_flatgeobuf,
-    geometry_to_geojson,
-    get_featcol_main_geom_type,
-    merge_multipolygon,
-    parse_and_filter_geojson,
+    featcol_keep_dominant_geom_type,
+    featcol_to_flatgeobuf,
+    flatgeobuf_to_featcol,
+    get_featcol_dominant_geom_type,
+    merge_polygons,
+    parse_geojson_file_to_featcol,
     split_geojson_by_task_areas,
     task_geojson_dict_to_entity_values,
+    wkb_geom_to_feature,
 )
 from app.models.enums import HTTPStatus, ProjectRole, ProjectVisibility, XLSFormType
 from app.projects import project_deps, project_schemas
 from app.s3 import add_obj_to_bucket
 from app.tasks import tasks_crud
-from app.users import user_crud
 
 TILESDIR = "/opt/tiles"
 
@@ -230,7 +228,7 @@ async def delete_one_project(db: Session, db_project: db_models.DbProject) -> No
         log.info(f"Deleted project with ID: {project_id}")
     except Exception as e:
         log.exception(e)
-        raise HTTPException(e) from e
+        raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=e) from e
 
 
 async def partial_update_project_info(
@@ -264,7 +262,7 @@ async def partial_update_project_info(
     return await convert_to_app_project(db_project)
 
 
-async def update_project_info(
+async def update_project_with_project_info(
     db: Session,
     project_metadata: project_schemas.ProjectUpdate,
     db_project: db_models.DbProject,
@@ -279,24 +277,20 @@ async def update_project_info(
             detail="No project info passed in",
         )
 
-    # Project meta information
-    project_info = project_metadata.project_info
+    for key, value in project_metadata.model_dump(
+        exclude=["project_info", "outline_geojson"]
+    ).items():
+        setattr(db_project, key, value)
 
-    # Update author of the project
-    db_project.author_id = db_user.id
-    db_project.project_name_prefix = project_metadata.project_name_prefix
-
-    # get project info
     db_project_info = await get_project_info_by_id(db, db_project.id)
-
-    # Update projects meta information (name, descriptions)
-    if db_project and db_project_info:
-        db_project_info.name = project_info.name
-        db_project_info.short_description = project_info.short_description
-        db_project_info.description = project_info.description
+    # Update project's meta information (name, descriptions)
+    if db_project_info:
+        for key, value in project_info.model_dump(exclude_unset=True).items():
+            setattr(db_project_info, key, value)
 
     db.commit()
     db.refresh(db_project)
+    db.refresh(db_project_info)
 
     return await convert_to_app_project(db_project)
 
@@ -348,7 +342,7 @@ async def create_project_with_project_info(
     generated_project_id = db_project.id
     if db_project.hashtags:
         db_project.hashtags = db_project.hashtags + [
-            f"{settings.FMTM_DOMAIN}-{generated_project_id}"
+            f"#{settings.FMTM_DOMAIN}-{generated_project_id}"
         ]
     db.commit()
 
@@ -400,20 +394,25 @@ async def create_tasks_from_geojson(
         return True
     except Exception as e:
         log.exception(e)
-        raise HTTPException(e) from e
+        raise HTTPException(HTTPStatus.UNPROCESSABLE_ENTITY, detail=e) from e
 
 
-async def preview_split_by_square(boundary: str, meters: int):
+async def preview_split_by_square(
+    boundary: FeatureCollection,
+    meters: int,
+    extract_geojson: Optional[FeatureCollection] = None,
+):
     """Preview split by square for a project boundary.
 
     Use a lambda function to remove the "z" dimension from each
     coordinate in the feature's geometry.
     """
-    boundary = merge_multipolygon(boundary)
+    boundary = merge_polygons(boundary)
 
     return await run_in_threadpool(
         lambda: split_by_square(
             boundary,
+            osm_extract=extract_geojson,
             meters=meters,
         )
     )
@@ -482,7 +481,7 @@ async def generate_data_extract(
 
 async def split_geojson_into_tasks(
     db: Session,
-    project_geojson: Union[dict, FeatureCollection],
+    project_geojson: FeatureCollection,
     no_of_buildings: int,
     extract_geojson: Optional[FeatureCollection] = None,
 ):
@@ -490,8 +489,8 @@ async def split_geojson_into_tasks(
 
     Args:
         db (Session): A database session.
-        project_geojson (Union[dict, FeatureCollection]): A GeoJSON of the project
-            boundary.
+        project_geojson (FeatureCollection): A FeatureCollection containing a
+            single project boundary geometry.
         extract_geojson (Union[dict, FeatureCollection]): A GeoJSON of the project
             boundary osm data extract (features).
         extract_geojson (FeatureCollection): A GeoJSON of the project
@@ -557,10 +556,10 @@ async def read_and_insert_xlsforms(db, directory) -> None:
                 f"Failed to insert or update {category} in the database. Error: {e}"
             )
 
-    existing_db_forms = set(
+    existing_db_forms = {
         title for (title,) in db.query(db_models.DbXLSForm.title).all()
-    )
-    required_forms = set(xls_type.value for xls_type in XLSFormType)
+    }
+    required_forms = {xls_type.value for xls_type in XLSFormType}
     # Delete XLSForms from DB that are not found on disk
     for title in existing_db_forms - required_forms:
         delete_query = text(
@@ -718,7 +717,7 @@ async def upload_custom_fgb_extract(
     Returns:
         str: URL to fgb file in S3.
     """
-    featcol = await flatgeobuf_to_geojson(db, fgb_content)
+    featcol = await flatgeobuf_to_featcol(db, fgb_content)
 
     if not featcol:
         msg = f"Failed extracting geojson from flatgeobuf for project ({project_id})"
@@ -737,7 +736,7 @@ async def upload_custom_fgb_extract(
 
 async def get_data_extract_type(featcol: FeatureCollection) -> str:
     """Determine predominant geometry type for extract."""
-    geom_type = get_featcol_main_geom_type(featcol)
+    geom_type = get_featcol_dominant_geom_type(featcol)
     if geom_type not in ["Polygon", "Polyline", "Point"]:
         msg = (
             "Extract does not contain valid geometry types, from 'Polygon' "
@@ -773,22 +772,24 @@ async def upload_custom_geojson_extract(
     project = await get_project(db, project_id)
     log.debug(f"Uploading custom data extract for project: {project}")
 
-    featcol_filtered = parse_and_filter_geojson(geojson_raw)
-    if not featcol_filtered:
+    featcol = parse_geojson_file_to_featcol(geojson_raw)
+    featcol_single_geom_type = featcol_keep_dominant_geom_type(featcol)
+
+    if not featcol_single_geom_type:
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
             detail="Could not process geojson input",
         )
 
-    await check_crs(featcol_filtered)
+    await check_crs(featcol_single_geom_type)
 
-    data_extract_type = await get_data_extract_type(featcol_filtered)
+    data_extract_type = await get_data_extract_type(featcol_single_geom_type)
 
     log.debug(
         "Generating fgb object from geojson with "
-        f"{len(featcol_filtered.get('features', []))} features"
+        f"{len(featcol_single_geom_type.get('features', []))} features"
     )
-    fgb_data = await geojson_to_flatgeobuf(db, featcol_filtered)
+    fgb_data = await featcol_to_flatgeobuf(db, featcol_single_geom_type)
 
     if not fgb_data:
         msg = f"Failed converting geojson to flatgeobuf for project ({project_id})"
@@ -832,32 +833,6 @@ async def generate_odk_central_project_content(
 ) -> str:
     """Populate the project in ODK Central with XForm, Appuser, Permissions."""
     project_odk_id = project.odkid
-    # Create an app user (i.e. QR Code) for the project
-    appuser_name = "fmtm_user"
-    log.info(
-        f"Creating ODK appuser ({appuser_name}) for ODK project ({project_odk_id})"
-    )
-    appuser = OdkAppUser(
-        odk_credentials.odk_central_url,
-        odk_credentials.odk_central_user,
-        odk_credentials.odk_central_password,
-    )
-    appuser_json = appuser.create(project_odk_id, appuser_name)
-
-    # If app user could not be created, raise an exception.
-    if not appuser_json:
-        msg = f"Couldn't create appuser {appuser_name} for project"
-        log.error(msg)
-        raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg
-        ) from None
-    if not (appuser_token := appuser_json.get("token")):
-        msg = f"Couldn't get token for appuser {appuser_name}"
-        log.error(msg)
-        raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg
-        ) from None
-    appuser_id = appuser_json.get("id")
 
     # NOTE Entity Registration form: this may be removed with future Central
     # API changes to allow Entity creation
@@ -892,28 +867,6 @@ async def generate_odk_central_project_content(
         odk_credentials,
     )
 
-    log.info("Updating XForm role for appuser in ODK Central")
-    # Update the user role for the created xform
-    response = appuser.updateRole(
-        projectId=project_odk_id,
-        xform=xform_id,
-        actorId=appuser_id,
-    )
-    if not response.ok:
-        try:
-            json_data = response.json()
-            log.error(json_data)
-        except json.decoder.JSONDecodeError:
-            log.error(
-                "Could not parse response json during appuser update. "
-                f"status_code={response.status_code}"
-            )
-        finally:
-            msg = f"Failed to update appuser for formId: ({xform_id})"
-            log.error(msg)
-            raise HTTPException(
-                status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg
-            ) from None
     sql = text(
         """
                 INSERT INTO xforms (
@@ -929,13 +882,14 @@ async def generate_odk_central_project_content(
         {"project_id": project.id, "xform_id": xform_id, "category": form_category},
     )
     db.commit()
-    odk_url = odk_credentials.odk_central_url
-    return encrypt_value(f"{odk_url}/v1/key/{appuser_token}/projects/{project_odk_id}")
+    return await central_crud.get_appuser_token(
+        xform_id, project_odk_id, odk_credentials, db
+    )
 
 
 async def generate_project_files(
     db: Session,
-    project: db_models.DbProject,
+    project_id: int,
     custom_form: Optional[BytesIO],
     form_file_ext: str,
     background_task_id: Optional[uuid.UUID] = None,
@@ -946,13 +900,13 @@ async def generate_project_files(
 
     Args:
         db (Session): the database session.
-        project (DbProject): FMTM database project.
+        project_id(int): id of the FMTM project.
         custom_form (BytesIO): the xls file to upload if we have a custom form
         form_file_ext (str): weather the form is xls, xlsx or xml
         background_task_id (uuid): the task_id of the background task.
     """
     try:
-        project_id = project.id
+        project = await get_project_by_id(db, project_id)
         form_category = project.xform_category
         log.info(f"Starting generate_project_files for project {project_id}")
         odk_credentials = await project_deps.get_odk_credentials(db, project_id)
@@ -1050,30 +1004,6 @@ async def generate_project_files(
             raise e
 
 
-async def get_project_geometry(db: Session, project_id: int):
-    """Retrieves the geometry of a project.
-
-    Args:
-        db (Session): The database session.
-        project_id (int): The ID of the project.
-
-    Returns:
-        str: A geojson of the project outline.
-    """
-    projects = table("projects", column("outline"), column("id"))
-    where = f"projects.id={project_id}"
-    sql = select(geoalchemy2.functions.ST_AsGeoJSON(projects.c.outline)).where(
-        text(where)
-    )
-    result = db.execute(sql)
-    # There should only be one match
-    if result.rowcount != 1:
-        log.warning(str(sql))
-        return False
-    row = eval(result.first()[0])
-    return json.dumps(row)
-
-
 async def get_task_geometry(db: Session, project_id: int):
     """Retrieves the geometry of tasks associated with a project.
 
@@ -1102,14 +1032,10 @@ async def get_task_geometry(db: Session, project_id: int):
 
 async def get_project_features_geojson(
     db: Session,
-    project: Union[db_models.DbProject, int],
+    db_project: db_models.DbProject,
     task_id: Optional[int] = None,
 ) -> FeatureCollection:
     """Get a geojson of all features for a task."""
-    if isinstance(project, int):
-        db_project = await get_project(db, project)
-    else:
-        db_project = project
     project_id = db_project.id
 
     data_extract_url = db_project.data_extract_url
@@ -1135,7 +1061,7 @@ async def get_project_features_geojson(
                 detail=msg,
             )
         log.debug("Converting download flatgeobuf to geojson")
-        data_extract_geojson = await flatgeobuf_to_geojson(db, response.content)
+        data_extract_geojson = await flatgeobuf_to_featcol(db, response.content)
 
     if not data_extract_geojson:
         msg = "Failed to convert flatgeobuf --> geojson for " f"project ({project_id})"
@@ -1173,28 +1099,6 @@ async def get_json_from_zip(zip, filename: str, error_detail: str):
         ) from e
 
 
-async def get_outline_from_geojson_file_in_zip(
-    zip, filename: str, error_detail: str, feature_index: int = 0
-):
-    """Parse geojson outline within a zip."""
-    try:
-        with zip.open(filename) as file:
-            data = file.read()
-            json_dump = json.loads(data)
-            await check_crs(json_dump)  # Validatiing Coordinate Reference System
-            feature_collection = FeatureCollection(json_dump)
-            feature = feature_collection["features"][feature_index]
-            geom = feature["geometry"]
-            shape_from_geom = shape(geom)
-            return shape_from_geom
-    except Exception as e:
-        log.exception(e)
-        raise HTTPException(
-            status_code=400,
-            detail=f"{error_detail} ----- Error: {e} ----",
-        ) from e
-
-
 async def get_shape_from_json_str(feature: str, error_detail: str):
     """Parse geojson outline within a zip to shapely geom."""
     try:
@@ -1227,7 +1131,7 @@ async def convert_to_app_project(db_project: db_models.DbProject):
     app_project = db_project
 
     if db_project.outline:
-        app_project.outline_geojson = geometry_to_geojson(
+        app_project.outline_geojson = wkb_geom_to_feature(
             db_project.outline, {"id": db_project.id}, db_project.id
         )
 
@@ -1420,7 +1324,7 @@ def get_project_tiles(
     background_task_id: uuid.UUID,
     source: str,
     output_format: str = "mbtiles",
-    tms: str = None,
+    tms: Optional[str] = None,
 ):
     """Get the tiles for a project.
 
@@ -1433,7 +1337,12 @@ def get_project_tiles(
             Other options: "pmtiles", "sqlite3".
         tms (str, optional): Default None. Custom TMS provider URL.
     """
-    zooms = "12-19"
+    # TODO update this for user input or automatic
+    # maxzoom can be determined from OAM: https://tiles.openaerialmap.org/663
+    # c76196049ef00013b8494/0/663c76196049ef00013b8495
+    # TODO xy should also be user configurable
+    # NOTE mbtile max supported zoom level is 22 (in GDAL at least)
+    zooms = "12-22" if tms else "12-19"
     tiles_dir = f"{TILESDIR}/{project_id}"
     outfile = f"{tiles_dir}/{project_id}_{source}tiles.{output_format}"
 
@@ -1467,7 +1376,9 @@ def get_project_tiles(
         if project_bbox:
             min_lon, min_lat, max_lon, max_lat = project_bbox
         else:
-            log.error(f"Failed to get bbox from project: {project_id}")
+            msg = f"Failed to get bbox from project: {project_id}"
+            log.error(msg)
+            raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg)
 
         log.debug(
             "Creating basemap with params: "
@@ -1476,7 +1387,7 @@ def get_project_tiles(
             f"zooms={zooms} | "
             f"outdir={tiles_dir} | "
             f"source={source} | "
-            f"xy={False} | "
+            f"xy={True if tms else False} | "
             f"tms={tms}"
         )
 
@@ -1486,7 +1397,7 @@ def get_project_tiles(
             zooms=zooms,
             outdir=tiles_dir,
             source=source,
-            xy=False,
+            xy=True if tms else False,
             tms=tms,
         )
 
@@ -1617,18 +1528,21 @@ async def get_dashboard_detail(
     return project
 
 
-async def get_project_users(db: Session, project_id: int):
+async def get_project_users(db: Session, project_id: int, db_user: db_models.DbUser):
     """Get the users and their contributions for a project.
 
     Args:
         db (Session): The database session.
         project_id (int): The ID of the project.
+        db_user (DbUser): User that called the endpoint.
 
     Returns:
         List[Dict[str, Union[str, int]]]: A list of dictionaries containing
             the username and the number of contributions made by each user
             for the specified project.
     """
+    # TODO refactor this
+    # TODO it could probably just be a single raw SQL statement
     contributors = (
         db.query(db_models.DbTaskHistory)
         .filter(db_models.DbTaskHistory.project_id == project_id)
@@ -1641,7 +1555,6 @@ async def get_project_users(db: Session, project_id: int):
 
     for user_id in unique_user_ids:
         contributions = count_user_contributions(db, user_id, project_id)
-        db_user = await user_crud.get_user(db, user_id)
         response.append({"user": db_user.username, "contributions": contributions})
 
     response = sorted(response, key=lambda x: x["contributions"], reverse=True)
@@ -1672,10 +1585,10 @@ def count_user_contributions(db: Session, user_id: int, project_id: int) -> int:
     return contributions_count
 
 
-async def add_project_admin(
+async def add_project_manager(
     db: Session, user: db_models.DbUser, project: db_models.DbProject
 ):
-    """Adds a user as an admin to the specified organisation.
+    """Adds a user as an manager to the specified project.
 
     Args:
         db (Session): The database session.

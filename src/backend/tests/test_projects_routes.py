@@ -21,8 +21,8 @@ import json
 import os
 from io import BytesIO
 from pathlib import Path
-from random import randint
 from unittest.mock import Mock, patch
+from uuid import uuid4
 
 import pytest
 import requests
@@ -31,6 +31,7 @@ from loguru import logger as log
 from shapely import Polygon
 
 from app.central.central_crud import create_odk_project
+from app.central.central_schemas import TaskStatus
 from app.config import encrypt_value, settings
 from app.db import db_models
 from app.projects import project_crud, project_schemas
@@ -48,16 +49,16 @@ async def test_create_project(client, admin_user, organisation):
         "odk_central_user": odk_central_user,
         "odk_central_password": odk_central_password,
     }
-    odk_credentials = project_schemas.ODKCentralDecrypted(**odk_credentials)
+    odk_creds_models = project_schemas.ODKCentralDecrypted(**odk_credentials)
 
     project_data = {
         "project_info": {
-            "name": f"Test Project {randint(1, 1000000)}",
+            "name": f"Test Project {uuid4()}",
             "short_description": "test",
             "description": "test",
         },
         "xform_category": "buildings",
-        "hashtags": ["#FMTM"],
+        "hashtags": "#FMTM",
         "outline_geojson": {
             "coordinates": [
                 [
@@ -71,10 +72,10 @@ async def test_create_project(client, admin_user, organisation):
             "type": "Polygon",
         },
     }
-    project_data.update(**odk_credentials.model_dump())
+    project_data.update(**odk_creds_models.model_dump())
 
     response = client.post(
-        f"/projects/create_project?org_id={organisation.id}", json=project_data
+        f"/projects/create-project?org_id={organisation.id}", json=project_data
     )
 
     if response.status_code != 200:
@@ -87,7 +88,6 @@ async def test_create_project(client, admin_user, organisation):
 
 async def test_delete_project(client, admin_user, project):
     """Test deleting a FMTM project, plus ODK Central project."""
-    log.warning(project)
     response = client.delete(f"/projects/{project.id}")
     assert response.status_code == 204
 
@@ -279,12 +279,12 @@ async def test_update_project(client, admin_user, project):
     """Test update project metadata."""
     updated_project_data = {
         "project_info": {
-            "name": f"Updated Test Project {randint(1, 1000000)}",
+            "name": f"Updated Test Project {uuid4()}",
             "short_description": "updated short description",
             "description": "updated description",
         },
-        "xform_category": "buildings",
-        "hashtags": ["#FMTM"],
+        "xform_category": "healthcare",
+        "hashtags": "#FMTM anothertag",
         "outline_geojson": {
             "coordinates": [
                 [
@@ -319,6 +319,127 @@ async def test_update_project(client, admin_user, project):
         response_data["project_info"]["description"]
         == updated_project_data["project_info"]["description"]
     )
+
+    assert response_data["xform_category"] == "healthcare"
+    assert response_data["hashtags"] == ["#FMTM", "#anothertag"]
+
+
+async def test_project_summaries(client, project):
+    """Test read project summaries."""
+    response = client.get("/projects/summaries")
+    assert response.status_code == 200
+    assert "results" in response.json()
+
+    results = response.json()["results"]
+    result = results[0]
+
+    assert result["id"] == project.id
+    assert result["title"] == project.title
+    assert result["description"] == project.description
+    assert result["hashtags"] == project.hashtags
+    assert result["organisation_id"] == project.organisation_id
+
+
+async def test_project_by_id(client, project):
+    """Test read project by id."""
+    response = client.get(f"projects/{project.id}")
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["id"] == project.id
+    assert data["odkid"] == project.odkid
+    assert data["author"]["username"] == project.author.username
+    assert data["author"]["id"] == project.author.id
+    assert data["project_info"]["name"] == project.project_info.name
+    assert (
+        data["project_info"]["short_description"]
+        == project.project_info.short_description
+    )
+    assert data["project_info"]["description"] == project.project_info.description
+    assert (
+        data["project_info"]["per_task_instructions"]
+        == project.project_info.per_task_instructions
+    )
+    assert data["status"] == project.status
+    assert data["xform_category"] == project.xform_category
+    assert data["hashtags"] == project.hashtags
+    assert data["organisation_id"] == project.organisation_id
+    assert data["tasks"] == project.tasks
+
+
+async def test_set_entity_mapping_status(client, odk_project, entities):
+    """Test set the ODK entity mapping status."""
+    entity = entities[0]
+    expected_status = TaskStatus.LOCKED_FOR_MAPPING
+
+    response = client.post(
+        f"/projects/{odk_project.id}/entity/status",
+        json={
+            "entity_id": entity["id"],
+            "status": expected_status,
+            "label": f"Task {entity['task_id']} Feature {entity['osm_id']}",
+        },
+    )
+    response_entity = response.json()
+
+    expected_entity = entity
+    expected_entity["status"] = expected_status.value
+    assert response.status_code == 200
+    compare_entities(response_entity, expected_entity)
+
+
+async def test_get_entity_mapping_status(client, odk_project, entities):
+    """Test get the ODK entity mapping status."""
+    entity = entities[0]
+    response = client.get(
+        f"/projects/{odk_project.id}/entity/status", params={"entity_id": entity["id"]}
+    )
+    response_entity = response.json()
+
+    assert response.status_code == 200
+    compare_entities(response_entity, entity)
+
+
+async def test_get_entities_mapping_statuses(client, odk_project, entities):
+    """Test get the ODK entities mapping statuses."""
+    odk_project_id = odk_project.id
+    response = client.get(f"projects/{odk_project_id}/entities/statuses")
+    response_entities = response.json()
+
+    assert len(response_entities) == len(entities)
+    for response_entity, expected_entity in zip(
+        response_entities, entities, strict=False
+    ):
+        compare_entities(expected_entity, response_entity)
+
+
+def compare_entities(response_entity, expected_entity):
+    """Utility function for testing by comparing response and expected entity fields."""
+    assert response_entity["id"] == str(expected_entity["id"])
+    assert str(response_entity["task_id"]) == str(expected_entity["task_id"])
+    assert str(response_entity["osm_id"]) == str(expected_entity["osm_id"])
+    assert str(response_entity["status"]) == str(expected_entity["status"])
+
+
+def test_project_task_split(client):
+    """Test project task split."""
+    with open(f"{test_data_path}/data_extract_kathmandu.geojson", "rb") as project_file:
+        project_geojson = project_file.read()
+
+    response = client.post(
+        "/projects/task-split",
+        files={"project_geojson": ("data_extract_kathmandu.geojson", project_geojson)},
+        data={"no_of_buildings": 40},
+    )
+
+    assert response.status_code == 200
+    assert response.json() is not None
+    assert "features" in response.json()
+
+    # Test without required value should cause validation error
+    response = client.post("/projects/task-split")
+    assert response.status_code == 422
 
 
 if __name__ == "__main__":

@@ -31,7 +31,8 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customDataExtractUpload
   const projectDetails = useAppSelector((state) => state.createproject.projectDetails);
   const dataExtractGeojson = useAppSelector((state) => state.createproject.dataExtractGeojson);
 
-  const generateQrSuccess = useAppSelector((state) => state.createproject.generateQrSuccess);
+  const generateProjectSuccess = useAppSelector((state) => state.createproject.generateProjectSuccess);
+  const generateProjectError = useAppSelector((state) => state.createproject.generateProjectError);
   const projectDetailsResponse = useAppSelector((state) => state.createproject.projectDetailsResponse);
   const dividedTaskGeojson = useAppSelector((state) => state.createproject.dividedTaskGeojson);
   const projectDetailsLoading = useAppSelector((state) => state.createproject.projectDetailsLoading);
@@ -92,12 +93,6 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customDataExtractUpload
     dispatch(CreateProjectActions.SetIsUnsavedChanges(false));
 
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
-    const hashtags = projectDetails.hashtags;
-    const arrayHashtag = hashtags
-      ?.split('#')
-      .map((item) => item.trim())
-      .filter(Boolean);
-
     // Project POST data
     let projectData = {
       project_info: {
@@ -116,7 +111,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customDataExtractUpload
       task_split_type: splitTasksSelection,
       form_ways: projectDetails.formWays,
       // "uploaded_form": projectDetails.uploaded_form,
-      hashtags: arrayHashtag,
+      hashtags: projectDetails.hashtags,
       data_extract_url: projectDetails.data_extract_url,
       custom_tms_url: projectDetails.custom_tms_url,
     };
@@ -135,7 +130,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customDataExtractUpload
 
     dispatch(
       CreateProjectService(
-        `${import.meta.env.VITE_API_URL}/projects/create_project?org_id=${projectDetails.organisation_id}`,
+        `${import.meta.env.VITE_API_URL}/projects/create-project?org_id=${projectDetails.organisation_id}`,
         projectData,
         taskAreaGeojsonFile,
         customFormFile,
@@ -177,6 +172,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customDataExtractUpload
       dispatch(
         GetDividedTaskFromGeojson(`${import.meta.env.VITE_API_URL}/projects/preview-split-by-square/`, {
           geojson: drawnGeojsonFile,
+          extract_geojson: formValues.dataExtractWays === 'osm_data_extract' ? null : dataExtractFile,
           dimension: formValues?.dimension,
         }),
       );
@@ -197,12 +193,12 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customDataExtractUpload
     const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
     const handleQRGeneration = async () => {
-      if (generateQrSuccess) {
+      if (!generateProjectError && generateProjectSuccess) {
         const projectId = projectDetailsResponse?.id;
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
-            message: 'QR Generation Completed. Redirecting...',
+            message: 'Project Generation Completed. Redirecting...',
             variant: 'success',
             duration: 2000,
           }),
@@ -211,7 +207,6 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customDataExtractUpload
         // Add 5-second delay to allow backend Entity generation to catch up
         await delay(5000);
         dispatch(CreateProjectActions.CreateProjectLoading(false));
-        dispatch(CreateProjectActions.SetGenerateProjectQRSuccess(null));
         navigate(`/project/${projectId}`);
         dispatch(CreateProjectActions.ClearCreateProjectFormData());
         dispatch(CreateProjectActions.SetCanSwitchCreateProjectSteps(false));
@@ -219,7 +214,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customDataExtractUpload
     };
 
     handleQRGeneration();
-  }, [generateQrSuccess]);
+  }, [generateProjectSuccess, generateProjectError]);
 
   const renderTraceback = (errorText: string) => {
     if (!errorText) {
@@ -349,7 +344,10 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customDataExtractUpload
                     btnText="PREVIOUS"
                     btnType="secondary"
                     type="button"
-                    onClick={() => toggleStep(3, '/data-extract')}
+                    onClick={() => {
+                      dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
+                      toggleStep(3, '/data-extract');
+                    }}
                     className="fmtm-font-bold"
                   />
                   <Button

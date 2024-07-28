@@ -15,15 +15,18 @@ const SubmissionDetails = () => {
   const dispatch = CoreModules.useAppDispatch();
   const params = CoreModules.useParams();
   const navigate = useNavigate();
+
   const projectId = params.projectId;
   const paramsInstanceId = params.instanceId;
-  const projectDashboardDetail = CoreModules.useAppSelector((state) => state.project.projectDashboardDetail);
-  const projectDashboardLoading = CoreModules.useAppSelector((state) => state.project.projectDashboardLoading);
-
+  const projectDashboardDetail = useAppSelector((state) => state.project.projectDashboardDetail);
+  const projectDashboardLoading = useAppSelector((state) => state.project.projectDashboardLoading);
   const submissionDetails = useAppSelector((state) => state.submission.submissionDetails);
   const submissionDetailsLoading = useAppSelector((state) => state.submission.submissionDetailsLoading);
-
-  const taskId = submissionDetails?.task_id;
+  const taskId = submissionDetails?.task_id
+    ? submissionDetails?.task_id
+    : submissionDetails?.task_filter
+      ? submissionDetails?.task_filter
+      : '-';
 
   useEffect(() => {
     dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${projectId}`));
@@ -32,12 +35,12 @@ const SubmissionDetails = () => {
   useEffect(() => {
     dispatch(
       SubmissionService(
-        `${import.meta.env.VITE_API_URL}/submission/submission-detail/${projectId}?submission_id=${paramsInstanceId}`,
+        `${import.meta.env.VITE_API_URL}/submission/submission-detail?submission_id=${paramsInstanceId}&project_id=${projectId}`,
       ),
     );
   }, [projectId, paramsInstanceId]);
 
-  function removeNullValues(obj) {
+  function removeNullValues(obj: Record<string, any>) {
     const newObj = {};
     for (const [key, value] of Object.entries(obj)) {
       if (value !== null) {
@@ -55,18 +58,18 @@ const SubmissionDetails = () => {
   }
   const filteredData = submissionDetails ? removeNullValues(submissionDetails) : {};
 
-  var coordinatesArray = submissionDetails?.all?.xlocation?.split(';').map(function (coord) {
+  const coordinatesArray: [number, number][] = submissionDetails?.xlocation?.split(';').map(function (coord: string) {
     let coordinate = coord
       .trim()
       .split(' ')
       .slice(0, 2)
-      .map((value) => {
+      .map((value: string) => {
         return parseFloat(value);
       });
     return [coordinate[1], coordinate[0]];
   });
 
-  const geojsonFeature = {
+  const geojsonFeature: Record<string, any> = {
     type: 'FeatureCollection',
     features: [
       {
@@ -80,7 +83,15 @@ const SubmissionDetails = () => {
     ],
   };
 
-  const renderValue = (value, key = '') => {
+  const pointFeature = {
+    type: 'Feature',
+    geometry: {
+      ...submissionDetails?.point,
+    },
+    properties: {},
+  };
+
+  const renderValue = (value: any, key: string = '') => {
     if (key === 'start' || key === 'end') {
       return (
         <p>
@@ -170,7 +181,9 @@ const SubmissionDetails = () => {
         </div>
         <div className="fmtm-flex fmtm-flex-grow fmtm-justify-center">
           <div className="fmtm-w-full fmtm-my-10 xl:fmtm-my-0 xl:fmtm-w-[500px] 2xl:fmtm-w-[700px] fmtm-h-[300px] fmtm-rounded-lg fmtm-overflow-hidden">
-            <SubmissionInstanceMap featureGeojson={geojsonFeature} />
+            <SubmissionInstanceMap
+              featureGeojson={coordinatesArray ? geojsonFeature : submissionDetails?.point ? pointFeature : {}}
+            />
           </div>
         </div>
       </div>

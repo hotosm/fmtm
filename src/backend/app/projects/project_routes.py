@@ -23,8 +23,6 @@ from io import BytesIO
 from pathlib import Path
 from typing import Optional
 
-import geojson
-import geojson_pydantic
 import requests
 from fastapi import (
     APIRouter,
@@ -37,7 +35,8 @@ from fastapi import (
     Response,
     UploadFile,
 )
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from geojson_pydantic import Feature, FeatureCollection
 from loguru import logger as log
 from osm_fieldwork.data_models import data_models_path
 from osm_fieldwork.make_data_extract import getChoices
@@ -45,16 +44,17 @@ from osm_fieldwork.xlsforms import xlsforms_path
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
-from app.auth.osm import AuthUser, login_required
-from app.auth.roles import mapper, org_admin, project_admin
+from app.auth.auth_schemas import AuthUser, OrgUserDict, ProjectUserDict
+from app.auth.osm import login_required
+from app.auth.roles import mapper, org_admin, project_manager
 from app.central import central_crud, central_schemas
 from app.db import database, db_models
 from app.db.postgis_utils import (
     check_crs,
-    flatgeobuf_to_geojson,
-    merge_multipolygon,
-    multipolygon_to_polygon,
-    parse_and_filter_geojson,
+    flatgeobuf_to_featcol,
+    merge_polygons,
+    parse_geojson_file_to_featcol,
+    wkb_geom_to_feature,
 )
 from app.models.enums import (
     TILES_FORMATS,
@@ -74,7 +74,7 @@ router = APIRouter(
 )
 
 
-@router.get("/features", response_model=geojson_pydantic.FeatureCollection)
+@router.get("/features", response_model=FeatureCollection)
 async def read_projects_to_featcol(
     db: Session = Depends(database.get_db),
     bbox: Optional[str] = None,
@@ -316,9 +316,8 @@ async def set_odk_entities_mapping_status(
 
 @router.get("/{project_id}/tiles-list/")
 async def tiles_list(
-    project_id: int,
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(mapper),
+    project_user: ProjectUserDict = Depends(mapper),
 ):
     """Returns the list of tiles for a project.
 
@@ -330,14 +329,14 @@ async def tiles_list(
     Returns:
         Response: List of generated tiles for a project.
     """
-    return await project_crud.get_mbtiles_list(db, project_id)
+    return await project_crud.get_mbtiles_list(db, project_user.get("project").id)
 
 
 @router.get("/{project_id}/download-tiles/")
 async def download_tiles(
     tile_id: int,
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(mapper),
+    project_user: ProjectUserDict = Depends(mapper),
 ):
     """Download the basemap tile archive for a project."""
     log.debug("Getting tile archive path from DB")
@@ -352,10 +351,9 @@ async def download_tiles(
         )
     log.info(f"User requested download for tiles: {dbtile_obj.path}")
 
-    project_id = dbtile_obj.project_id
-    project = await project_crud.get_project(db, project_id)
+    project = project_user.get("project")
     filename = Path(dbtile_obj.path).name.replace(
-        f"{project_id}_", f"{project.project_name_prefix}_"
+        f"{project.id}_", f"{project.project_name_prefix}_"
     )
     log.debug(f"Sending tile archive to user: {filename}")
 
@@ -369,7 +367,7 @@ async def download_tiles(
     return FileResponse(
         dbtile_obj.path,
         headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Disposition": f"attachment; filename={filename}",
             "Content-Type": tiles_mime_type,
         },
     )
@@ -390,22 +388,9 @@ async def generate_project_tiles(
         description="Provide a custom TMS URL, optional",
     ),
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(mapper),
+    project_user: ProjectUserDict = Depends(mapper),
 ):
-    """Returns basemap tiles for a project.
-
-    Args:
-        background_tasks (BackgroundTasks): FastAPI bg tasks, provided automatically.
-        project_id (int): ID of project to create tiles for.
-        source (str): Tile source ("esri", "bing", "google", "custom" (tms)).
-        format (str, optional): Default "mbtiles". Other options: "pmtiles", "sqlite3".
-        tms (str, optional): Default None. Custom TMS provider URL.
-        db (Session): The database session, provided automatically.
-        current_user (AuthUser): Check if user has MAPPER permission.
-
-    Returns:
-        str: Success message that tile generation started.
-    """
+    """Returns basemap tiles for a project."""
     # Create task in db and return uuid
     log.debug(
         "Creating generate_project_tiles background task "
@@ -430,22 +415,19 @@ async def generate_project_tiles(
 
 @router.get("/{project_id}", response_model=project_schemas.ReadProject)
 async def read_project(
-    current_user: AuthUser = Depends(mapper),
-    db: Session = Depends(database.get_db),
-    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    project_user: ProjectUserDict = Depends(mapper),
 ):
     """Get a specific project by ID."""
-    return project
+    return project_user.get("project")
 
 
 @router.delete("/{project_id}")
 async def delete_project(
     db: Session = Depends(database.get_db),
-    org_user_dict: db_models.DbUser = Depends(org_admin),
+    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    org_user_dict: OrgUserDict = Depends(org_admin),
 ):
     """Delete a project from both ODK Central and the local database."""
-    project = org_user_dict.get("project")
-
     log.info(
         f"User {org_user_dict.get('user').username} attempting "
         f"deletion of project {project.id}"
@@ -460,10 +442,10 @@ async def delete_project(
     return Response(status_code=HTTPStatus.NO_CONTENT)
 
 
-@router.post("/create_project", response_model=project_schemas.ProjectOut)
+@router.post("/create-project", response_model=project_schemas.ProjectOut)
 async def create_project(
     project_info: project_schemas.ProjectUpload,
-    org_user_dict: db_models.DbUser = Depends(org_admin),
+    org_user_dict: OrgUserDict = Depends(org_admin),
     db: Session = Depends(database.get_db),
 ):
     """Create a project in ODK Central and the local database.
@@ -476,6 +458,7 @@ async def create_project(
     TODO but first check doesn't break other endpoints
     """
     db_user = org_user_dict.get("user")
+
     db_org = org_user_dict.get("org")
     project_info.organisation_id = db_org.id
 
@@ -510,7 +493,7 @@ async def create_project(
             """
     )
     result = db.execute(sql, {"project_name": project_info.project_info.name.lower()})
-    project_exists = result.fetchone()[0]
+    project_exists = result.scalar()
     if project_exists:
         raise HTTPException(
             status_code=400,
@@ -539,7 +522,7 @@ async def create_project(
 async def update_project(
     project_info: project_schemas.ProjectUpdate,
     db: Session = Depends(database.get_db),
-    project_user_dict: dict = Depends(project_admin),
+    project_user_dict: ProjectUserDict = Depends(project_manager),
 ):
     """Update an existing project by ID.
 
@@ -549,7 +532,7 @@ async def update_project(
     Parameters:
     - id: ID of the project to update
     - project_info: Updated project information
-    - current_user (DbUser): Check if user is project_admin
+    - current_user (DbUser): Check if user is project_manager
 
     Returns:
     - Updated project information
@@ -557,7 +540,7 @@ async def update_project(
     Raises:
     - HTTPException with 404 status code if project not found
     """
-    project = await project_crud.update_project_info(
+    project = await project_crud.update_project_with_project_info(
         db, project_info, project_user_dict["project"], project_user_dict["user"]
     )
     if not project:
@@ -569,7 +552,7 @@ async def update_project(
 async def project_partial_update(
     project_info: project_schemas.ProjectPartialUpdate,
     db: Session = Depends(database.get_db),
-    project_user_dict: dict = Depends(project_admin),
+    project_user_dict: ProjectUserDict = Depends(project_manager),
 ):
     """Partial Update an existing project by ID.
 
@@ -600,7 +583,7 @@ async def upload_project_task_boundaries(
     project_id: int,
     task_geojson: UploadFile = File(...),
     db: Session = Depends(database.get_db),
-    org_user_dict: db_models.DbUser = Depends(org_admin),
+    org_user_dict: OrgUserDict = Depends(org_admin),
 ):
     """Set project task boundaries using split GeoJSON from frontend.
 
@@ -614,15 +597,12 @@ async def upload_project_task_boundaries(
         dict: JSON containing success message, project ID, and number of tasks.
     """
     log.debug(f"Uploading project boundary multipolygon for project ID: {project_id}")
-    # read entire file
-    content = await task_geojson.read()
-    task_boundaries = json.loads(content)
-    task_boundaries = multipolygon_to_polygon(task_boundaries)
+    tasks_featcol = parse_geojson_file_to_featcol(await task_geojson.read())
     # Validatiing Coordinate Reference System
-    await check_crs(task_boundaries)
+    await check_crs(tasks_featcol)
 
     log.debug("Creating tasks for each polygon in project")
-    await project_crud.create_tasks_from_geojson(db, project_id, task_boundaries)
+    await project_crud.create_tasks_from_geojson(db, project_id, tasks_featcol)
 
     # Get the number of tasks in a project
     task_count = await tasks_crud.get_task_count_in_project(db, project_id)
@@ -657,17 +637,15 @@ async def task_split(
         The result of splitting the task into subtasks.
 
     """
-    # read project boundary
-    boundary = geojson.loads(await project_geojson.read())
-    parsed_boundary = merge_multipolygon(boundary)
+    boundary_featcol = parse_geojson_file_to_featcol(await project_geojson.read())
+    merged_boundary = merge_polygons(boundary_featcol, False)
     # Validatiing Coordinate Reference Systems
-    await check_crs(parsed_boundary)
+    await check_crs(merged_boundary)
 
     # read data extract
     parsed_extract = None
     if extract_geojson:
-        geojson_data = await extract_geojson.read()
-        parsed_extract = parse_and_filter_geojson(geojson_data, filter=False)
+        parsed_extract = parse_geojson_file_to_featcol(await extract_geojson.read())
         if parsed_extract:
             await check_crs(parsed_extract)
         else:
@@ -675,7 +653,7 @@ async def task_split(
 
     return await project_crud.split_geojson_into_tasks(
         db,
-        parsed_boundary,
+        merged_boundary,
         no_of_buildings,
         parsed_extract,
     )
@@ -706,7 +684,7 @@ async def generate_files(
     background_tasks: BackgroundTasks,
     xls_form_upload: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
-    org_user_dict: db_models.DbUser = Depends(org_admin),
+    project_user_dict: ProjectUserDict = Depends(project_manager),
 ):
     """Generate additional content to initialise the project.
 
@@ -730,12 +708,13 @@ async def generate_files(
         xls_form_upload (UploadFile, optional): A custom XLSForm to use in the project.
             A file should be provided if user wants to upload a custom xls form.
         db (Session): Database session, provided automatically.
-        org_user_dict (AuthUser): Current logged in user. Must be org admin.
+        project_user_dict (ProjectUserDict): Project admin role.
 
     Returns:
         json (JSONResponse): A success message containing the project ID.
     """
-    project = org_user_dict.get("project")
+    project = project_user_dict.get("project")
+    project_id = project.id
 
     log.debug(f"Generating media files tasks for project: {project.id}")
 
@@ -760,16 +739,16 @@ async def generate_files(
         db.commit()
 
     # Create task in db and return uuid
-    log.debug(f"Creating export background task for project ID: {project.id}")
+    log.debug(f"Creating export background task for project ID: {project_id}")
     background_task_id = await project_crud.insert_background_task_into_database(
-        db, project_id=str(project.id)
+        db, project_id=project_id
     )
 
     log.debug(f"Submitting {background_task_id} to background tasks stack")
     background_tasks.add_task(
         project_crud.generate_project_files,
         db,
-        project,
+        project_id,
         BytesIO(custom_xls_form) if custom_xls_form else None,
         file_ext,
         background_task_id,
@@ -800,7 +779,9 @@ async def get_categories(current_user: AuthUser = Depends(login_required)):
 
 @router.post("/preview-split-by-square/")
 async def preview_split_by_square(
-    project_geojson: UploadFile = File(...), dimension: int = Form(100)
+    project_geojson: UploadFile = File(...),
+    extract_geojson: UploadFile = File(None),
+    dimension: int = Form(100),
 ):
     """Preview splitting by square.
 
@@ -814,14 +795,21 @@ async def preview_split_by_square(
         raise HTTPException(status_code=400, detail="Provide a valid .geojson file")
 
     # read entire file
-    content = await project_geojson.read()
-    boundary = geojson.loads(content)
+    boundary_featcol = parse_geojson_file_to_featcol(await project_geojson.read())
 
     # Validatiing Coordinate Reference System
-    await check_crs(boundary)
+    await check_crs(boundary_featcol)
+    parsed_extract = None
+    if extract_geojson:
+        parsed_extract = parse_geojson_file_to_featcol(await extract_geojson.read())
+        if parsed_extract:
+            await check_crs(parsed_extract)
+        else:
+            log.warning("Parsed geojson file contained no geometries")
 
-    result = await project_crud.preview_split_by_square(boundary, dimension)
-    return result
+    return await project_crud.preview_split_by_square(
+        boundary_featcol, dimension, parsed_extract
+    )
 
 
 @router.post("/generate-data-extract/")
@@ -860,7 +848,7 @@ async def get_or_set_data_extract(
     url: Optional[str] = None,
     project_id: int = Query(..., description="Project ID"),
     db: Session = Depends(database.get_db),
-    project_user_dict: dict = Depends(project_admin),
+    project_user_dict: ProjectUserDict = Depends(project_manager),
 ):
     """Get or set the data extract URL for a project."""
     fgb_url = await project_crud.get_or_set_data_extract_url(
@@ -877,7 +865,7 @@ async def upload_custom_extract(
     custom_extract_file: UploadFile = File(...),
     project_id: int = Query(..., description="Project ID"),
     db: Session = Depends(database.get_db),
-    project_user_dict: dict = Depends(project_admin),
+    project_user_dict: ProjectUserDict = Depends(project_manager),
 ):
     """Upload a custom data extract geojson for a project.
 
@@ -924,12 +912,10 @@ async def upload_custom_extract(
 
 @router.get("/download-form/{project_id}/")
 async def download_form(
-    project_id: int,
-    db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(mapper),
+    project_user: ProjectUserDict = Depends(mapper),
 ):
     """Download the XLSForm for a project."""
-    project = await project_crud.get_project(db, project_id)
+    project = project_user.get("project")
 
     headers = {
         "Content-Disposition": "attachment; filename=submission_data.xls",
@@ -949,9 +935,9 @@ async def download_form(
 async def update_project_form(
     xform_id: str = Form(...),
     category: XLSFormType = Form(...),
-    upload: Optional[UploadFile] = File(None),
+    upload: UploadFile = File(...),
     db: Session = Depends(database.get_db),
-    project_user_dict: dict = Depends(project_admin),
+    project_user_dict: ProjectUserDict = Depends(project_manager),
 ) -> project_schemas.ProjectBase:
     """Update the XForm data in ODK Central.
 
@@ -960,32 +946,32 @@ async def update_project_form(
     # TODO migrate most logic to project_crud
     project = project_user_dict["project"]
 
-    if project.xform_category == category and not upload:
+    # TODO we currently do nothing with the provided category
+    # TODO allowing for category updates is disabled due to complexity
+    # TODO as it would mean also updating data extracts,
+    # TODO so perhaps we just remove this?
+    # form_filename = XLSFormType(project.xform_category).name
+    # xlsform_path = Path(f"{xlsforms_path}/{form_filename}.xls")
+    # file_ext = xlsform_path.suffix.lower()
+    # with open(xlsform_path, "rb") as f:
+    #     new_xform_data = BytesIO(f.read())
+
+    file_ext = Path(upload.filename or "x.xls").suffix.lower()
+    allowed_extensions = [".xls", ".xlsx", ".xml"]
+    if file_ext not in allowed_extensions:
         raise HTTPException(
-            status_code=400, detail="Current category is same as new category"
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail="Provide a valid .xls, .xlsx, .xml file.",
         )
+    new_xform_data = await upload.read()
+    # Update the XLSForm blob in the database
+    project.form_xls = new_xform_data
+    new_xform_data = BytesIO(new_xform_data)
 
-    if upload:
-        file_ext = Path(upload.filename).suffix.lower()
-        allowed_extensions = [".xls", ".xlsx", ".xml"]
-        if file_ext not in allowed_extensions:
-            raise HTTPException(
-                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-                detail="Provide a valid .xls, .xlsx, .xml file.",
-            )
-        new_xform_data = await upload.read()
-        # Update the XLSForm blob in the database
-        project.form_xls = new_xform_data
-        new_xform_data = BytesIO(new_xform_data)
-    else:
-        form_filename = XLSFormType(project.xform_category).name
-        xlsform_path = Path(f"{xlsforms_path}/{form_filename}.xls")
-        file_ext = xlsform_path.suffix.lower()
-        with open(xlsform_path, "rb") as f:
-            new_xform_data = BytesIO(f.read())
+    # TODO related to above info about category updating
+    # # Update form category in database
+    # project.xform_category = category
 
-    # Update form category in database
-    project.xform_category = category
     # Commit changes to db
     db.commit()
 
@@ -1007,27 +993,20 @@ async def update_project_form(
 
 @router.get("/{project_id}/download")
 async def download_project_boundary(
-    project_id: int,
-    db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(mapper),
-):
-    """Downloads the boundary of a project as a GeoJSON file.
-
-    Args:
-        project_id (int): The id of the project.
-        db (Session): The database session, provided automatically.
-        current_user (AuthUser): Check if user is mapper.
-
-    Returns:
-        Response: The HTTP response object containing the downloaded file.
-    """
-    out = await project_crud.get_project_geometry(db, project_id)
-    headers = {
-        "Content-Disposition": "attachment; filename=project_outline.geojson",
-        "Content-Type": "application/media",
-    }
-
-    return Response(content=out, headers=headers)
+    project_user: ProjectUserDict = Depends(mapper),
+) -> StreamingResponse:
+    """Downloads the boundary of a project as a GeoJSON file."""
+    project = project_user.get("project")
+    geojson = wkb_geom_to_feature(project.outline, id=project.id)
+    return StreamingResponse(
+        BytesIO(json.dumps(geojson).encode("utf-8")),
+        headers={
+            "Content-Disposition": (
+                f"attachment; filename={project.project_name_prefix}.geojson"
+            ),
+            "Content-Type": "application/media",
+        },
+    )
 
 
 @router.get("/{project_id}/download_tasks")
@@ -1058,31 +1037,22 @@ async def download_task_boundaries(
 
 @router.get("/features/download/")
 async def download_features(
-    project_id: int,
     task_id: Optional[int] = None,
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(mapper),
+    project_user: ProjectUserDict = Depends(mapper),
 ):
     """Downloads the features of a project as a GeoJSON file.
 
     Can generate a geojson for the entire project, or specific task areas.
-
-    Args:
-        project_id (int): The id of the project.
-        task_id (int): Specify a specific task area to download for.
-        db (Session): The database session, provided automatically.
-        current_user (AuthUser): Check if user has MAPPER permission.
-
-    Returns:
-        Response: The HTTP response object containing the downloaded file.
     """
+    project = project_user.get("project")
     feature_collection = await project_crud.get_project_features_geojson(
-        db, project_id, task_id
+        db, project, task_id
     )
 
     headers = {
         "Content-Disposition": (
-            f"attachment; filename=fmtm_project_{project_id}_features.geojson"
+            f"attachment; filename=fmtm_project_{project.id}_features.geojson"
         ),
         "Content-Type": "application/media",
     }
@@ -1116,7 +1086,7 @@ async def convert_fgb_to_geojson(
                 status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
                 detail="Download failed for data extract",
             )
-        data_extract_geojson = await flatgeobuf_to_geojson(db, response.content)
+        data_extract_geojson = await flatgeobuf_to_featcol(db, response.content)
 
     if not data_extract_geojson:
         raise HTTPException(
@@ -1136,7 +1106,7 @@ async def convert_fgb_to_geojson(
 # async def download_task_boundary_osm(
 #     project_id: int,
 #     db: Session = Depends(database.get_db),
-#     current_user: AuthUser = Depends(mapper),
+#     project_user: ProjectUserDict = Depends(mapper),
 # ):
 #     """Downloads the boundary of a task as a OSM file.
 
@@ -1165,10 +1135,8 @@ async def convert_fgb_to_geojson(
 
 @router.get("/centroid/")
 async def project_centroid(
-    project_id: int = None,
-    current_user: AuthUser = Depends(mapper),
-    db: Session = Depends(database.get_db),
-):
+    project_user: ProjectUserDict = Depends(mapper),
+) -> Feature:
     """Get a centroid of each projects.
 
     Parameters:
@@ -1179,18 +1147,9 @@ async def project_centroid(
         list[tuple[int, str]]: A list of tuples containing the task ID and
             the centroid as a string.
     """
-    query = text(
-        f"""SELECT id,
-            ARRAY_AGG(ARRAY[ST_X(ST_Centroid(outline)),
-            ST_Y(ST_Centroid(outline))]) AS centroid
-            FROM projects
-            WHERE {f"id={project_id}" if project_id else "1=1"}
-            GROUP BY id;"""
-    )
-
-    result = db.execute(query)
-    result_dict_list = [{"id": row[0], "centroid": row[1]} for row in result.fetchall()]
-    return result_dict_list
+    project = project_user.get("project")
+    centroid = project.centroid
+    return wkb_geom_to_feature(centroid)
 
 
 @router.get("/task-status/{uuid}", response_model=project_schemas.BackgroundTaskStatus)
@@ -1215,56 +1174,41 @@ async def get_task_status(
     "/project_dashboard/{project_id}", response_model=project_schemas.ProjectDashboard
 )
 async def project_dashboard(
-    db_project: db_models.DbProject = Depends(project_deps.get_project_by_id),
     db_organisation: db_models.DbOrganisation = Depends(
         organisation_deps.org_from_project
     ),
-    current_user: AuthUser = Depends(mapper),
+    project_user: ProjectUserDict = Depends(mapper),
     db: Session = Depends(database.get_db),
 ):
-    """Get the project dashboard details.
-
-    Args:
-        db_project (db_models.DbProject): An instance of the project.
-        db_organisation (db_models.DbOrganisation): An instance of the organisation.
-        current_user(AuthUser): logged in user.
-        db (Session): The database session.
-
-    Returns:
-        ProjectDashboard: The project dashboard details.
-    """
-    return await project_crud.get_dashboard_detail(db_project, db_organisation, db)
+    """Get the project dashboard details."""
+    project = project_user.get("project")
+    return await project_crud.get_dashboard_detail(project, db_organisation, db)
 
 
 @router.get("/contributors/{project_id}")
 async def get_contributors(
     project_id: int,
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(mapper),
+    project_user: ProjectUserDict = Depends(mapper),
 ):
     """Get contributors of a project.
 
-    Args:
-        project_id (int): ID of project.
-        db (Session): The database session.
-        current_user (AuthUser): Check if user is mapper.
-
-    Returns:
-        list[project_schemas.ProjectUser]: List of project users.
+    TODO use a pydantic model for return type
     """
-    project_users = await project_crud.get_project_users(db, project_id)
+    db_user = project_user.get("user")
+    project_users = await project_crud.get_project_users(db, project_id, db_user)
     return project_users
 
 
-@router.post("/add_admin/")
-async def add_new_project_admin(
+@router.post("/add-manager/")
+async def add_new_project_manager(
     db: Session = Depends(database.get_db),
-    project_user_dict: dict = Depends(project_admin),
+    project_user_dict: ProjectUserDict = Depends(project_manager),
 ):
     """Add a new project manager.
 
     The logged in user must be either the admin of the organisation or a super admin.
     """
-    return await project_crud.add_project_admin(
+    return await project_crud.add_project_manager(
         db, project_user_dict["user"], project_user_dict["project"]
     )

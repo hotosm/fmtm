@@ -6,7 +6,7 @@ import Button from '@/components/common/Button';
 import { useAppSelector } from '@/types/reduxTypes';
 
 type projectOptionPropTypes = {
-  projectName: string;
+  projectName: string | undefined;
 };
 
 const ProjectOptions = ({ projectName }: projectOptionPropTypes) => {
@@ -48,7 +48,7 @@ const ProjectOptions = ({ projectName }: projectOptionPropTypes) => {
   const onSubmissionDownload = () => {
     dispatch(
       DownloadSubmissionGeojson(
-        `${import.meta.env.VITE_API_URL}/submission/download-submission-geojson/${projectId}`,
+        `${import.meta.env.VITE_API_URL}/submission/download-submission-geojson?project_id=${projectId}`,
         projectName,
       ),
     );

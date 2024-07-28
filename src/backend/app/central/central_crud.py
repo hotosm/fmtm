@@ -22,14 +22,13 @@ import json
 import os
 import uuid
 from io import BytesIO, StringIO
-from typing import Optional
+from typing import Optional, Union
 from xml.etree.ElementTree import Element, SubElement
 
 import geojson
 from defusedxml import ElementTree
 from fastapi import HTTPException
 from loguru import logger as log
-from osm_fieldwork.csvdump import CSVDump
 from osm_fieldwork.OdkCentral import OdkAppUser, OdkForm, OdkProject
 from pyxform.builder import create_survey_element_from_dict
 from pyxform.xls2json import parse_file_to_json
@@ -37,11 +36,11 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.central import central_deps
-from app.config import settings
+from app.config import encrypt_value, settings
 from app.db.postgis_utils import (
     geojson_to_javarosa_geom,
     javarosa_to_geojson_geom,
-    parse_and_filter_geojson,
+    parse_geojson_file_to_featcol,
 )
 from app.models.enums import HTTPStatus, TaskStatus, XLSFormType
 from app.projects import project_schemas
@@ -568,7 +567,7 @@ async def convert_geojson_to_odk_csv(
     Returns:
         feature_csv (StringIO): CSV of features in XLSForm format for ODK.
     """
-    parsed_geojson = parse_and_filter_geojson(input_geojson.getvalue(), filter=False)
+    parsed_geojson = parse_geojson_file_to_featcol(input_geojson.getvalue())
 
     if not parsed_geojson:
         raise HTTPException(
@@ -624,8 +623,8 @@ def flatten_json(data: dict, target: dict):
 
 
 async def convert_odk_submission_json_to_geojson(
-    input_json: BytesIO,
-) -> BytesIO:
+    input_json: Union[BytesIO, list],
+) -> geojson.FeatureCollection:
     """Convert ODK submission JSON file to GeoJSON.
 
     Used for loading into QGIS.
@@ -636,12 +635,15 @@ async def convert_odk_submission_json_to_geojson(
     Returns:
         geojson (BytesIO): GeoJSON format ODK submission.
     """
-    submission_json = json.loads(input_json.getvalue())
+    if isinstance(input_json, list):
+        submission_json = input_json
+    else:
+        submission_json = json.loads(input_json.getvalue())
 
     if not submission_json:
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail="Loading JSON submission failed",
+            detail="Project contains no submissions yet",
         )
 
     all_features = []
@@ -660,9 +662,7 @@ async def convert_odk_submission_json_to_geojson(
         feature = geojson.Feature(geometry=geojson_geom, properties=data)
         all_features.append(feature)
 
-    featcol = geojson.FeatureCollection(features=all_features)
-
-    return BytesIO(json.dumps(featcol).encode("utf-8"))
+    return geojson.FeatureCollection(features=all_features)
 
 
 async def get_entities_geojson(
@@ -914,45 +914,119 @@ def download_media(
     xform.getMedia(project_id, xform_id, filename)
 
 
-def convert_csv(
-    filespec: str,
-    data: bytes,
+# FIXME replace osm_fieldwork.CSVDump with osm_fieldwork.ODKParsers
+# def convert_csv(
+#     filespec: str,
+#     data: bytes,
+# ):
+#     """Convert ODK CSV to OSM XML and GeoJson."""
+#     csvin = CSVDump("/xforms.yaml")
+
+#     osmoutfile = f"{filespec}.osm"
+#     csvin.createOSM(osmoutfile)
+
+#     jsonoutfile = f"{filespec}.geojson"
+#     csvin.createGeoJson(jsonoutfile)
+
+#     if len(data) == 0:
+#         log.debug("Parsing csv file %r" % filespec)
+#         # The yaml file is in the package files for osm_fieldwork
+#         data = csvin.parse(filespec)
+#     else:
+#         csvdata = csvin.parse(filespec, data)
+#         for entry in csvdata:
+#             log.debug(f"Parsing csv data {entry}")
+#             if len(data) <= 1:
+#                 continue
+#             feature = csvin.createEntry(entry)
+#             # Sometimes bad entries, usually from debugging XForm design, sneak in
+#             if len(feature) > 0:
+#                 if "tags" not in feature:
+#                     log.warning("Bad record! %r" % feature)
+#                 else:
+#                     if "lat" not in feature["attrs"]:
+#                         import epdb
+
+#                         epdb.st()
+#                     csvin.writeOSM(feature)
+#                     # This GeoJson file has all the data values
+#                     csvin.writeGeoJson(feature)
+#                     pass
+
+#     csvin.finishOSM()
+#     csvin.finishGeoJson()
+
+#     return True
+
+
+async def get_appuser_token(
+    xform_id: str,
+    project_odk_id: int,
+    odk_credentials: project_schemas.ODKCentralDecrypted,
+    db: Session,
 ):
-    """Convert ODK CSV to OSM XML and GeoJson."""
-    csvin = CSVDump("/xforms.yaml")
+    """Get the app user token for a specific project.
 
-    osmoutfile = f"{filespec}.osm"
-    csvin.createOSM(osmoutfile)
+    Args:
+        db: The database session to use.
+        odk_credentials: ODK credentials for the project.
+        project_odk_id: The ODK ID of the project.
+        xform_id: The ID of the XForm.
 
-    jsonoutfile = f"{filespec}.geojson"
-    csvin.createGeoJson(jsonoutfile)
+    Returns:
+        The app user token.
+    """
+    try:
+        appuser = get_odk_app_user(odk_credentials)
+        odk_project = get_odk_project(odk_credentials)
+        odk_app_user = odk_project.listAppUsers(project_odk_id)
 
-    if len(data) == 0:
-        log.debug("Parsing csv file %r" % filespec)
-        # The yaml file is in the package files for osm_fieldwork
-        data = csvin.parse(filespec)
-    else:
-        csvdata = csvin.parse(filespec, data)
-        for entry in csvdata:
-            log.debug(f"Parsing csv data {entry}")
-            if len(data) <= 1:
-                continue
-            feature = csvin.createEntry(entry)
-            # Sometimes bad entries, usually from debugging XForm design, sneak in
-            if len(feature) > 0:
-                if "tags" not in feature:
-                    log.warning("Bad record! %r" % feature)
-                else:
-                    if "lat" not in feature["attrs"]:
-                        import epdb
+        # delete if app_user already exists
+        if odk_app_user:
+            app_user_id = odk_app_user[0].get("id")
+            appuser.delete(project_odk_id, app_user_id)
 
-                        epdb.st()
-                    csvin.writeOSM(feature)
-                    # This GeoJson file has all the data values
-                    csvin.writeGeoJson(feature)
-                    pass
+        # create new app_user
+        appuser_name = "fmtm_user"
+        log.info(
+            f"Creating ODK appuser ({appuser_name}) for ODK project ({project_odk_id})"
+        )
+        appuser_json = appuser.create(project_odk_id, appuser_name)
+        appuser_token = appuser_json.get("token")
+        appuser_id = appuser_json.get("id")
 
-    csvin.finishOSM()
-    csvin.finishGeoJson()
+        odk_url = odk_credentials.odk_central_url
 
-    return True
+        # Update the user role for the created xform
+        log.info("Updating XForm role for appuser in ODK Central")
+        response = appuser.updateRole(
+            projectId=project_odk_id,
+            xform=xform_id,
+            actorId=appuser_id,
+        )
+        if not response.ok:
+            try:
+                json_data = response.json()
+                log.error(json_data)
+            except json.decoder.JSONDecodeError:
+                log.error(
+                    "Could not parse response json during appuser update. "
+                    f"status_code={response.status_code}"
+                )
+            finally:
+                msg = f"Failed to update appuser for formId: ({xform_id})"
+                log.error(msg)
+                raise HTTPException(
+                    status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg
+                ) from None
+        odk_token = encrypt_value(
+            f"{odk_url}/v1/key/{appuser_token}/projects/{project_odk_id}"
+        )
+        return odk_token
+
+    except Exception as e:
+        log.error(f"An error occurred: {str(e)}")
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail="An error occurred while creating the app user token.",
+        ) from e

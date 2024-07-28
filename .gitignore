@@ -19,6 +19,7 @@
 .Python
 env/
 build/
+!contrib/just/build
 develop-eggs/
 dist/
 dev-dist/
@@ -93,3 +94,6 @@ envsubst
 
 # Chart dependencies
 chart/charts
+
+# Secrets / keys
+**/**/*.pem

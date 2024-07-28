@@ -32,23 +32,30 @@ Skills with the following would be beneficial:
 
 - Python
 - FastAPI
-- Javascript
+- TypeScript / JavaScript
 - React
 - Docker
 - CI/CD workflows
 
-Our latest task board can be found
-[here][2].
+Our latest task board can be found [here][2].
 
 ## Report bugs and suggest improvements
 
-The [issue queue][3] is the best way to get
-started. There are issue templates for BUGs and FEATURES that you can use, you
-could also create your own. Once you have submitted an issue, it will be
-assigned one label from the following
-[label categories][4].
+The [issue queue][3] is the best way to get started. There are issue templates
+for BUGs and FEATURES that you can use, you could also create your own.
+
+Once you have submitted an issue, it will be assigned one label from the
+following [label categories][4].
+
 If you are wondering where to start, you can filter by the
 **good first issue label**.
+
+## Report security vulnerabilities
+
+Please inform a maintainer as soon as possible, including the CVE code.
+
+Message via the [HOTOSM Slack][9] or [direct email][10] would be preferred,
+but via Github issue is also possible.
 
 ## :handshake: Thank you
 
@@ -63,20 +70,7 @@ Github, please reach out to us via our Slack **#geospatial-tech-and-innovation**
 
 We operate the "Fork & Pull" model explained at [About Pull Requests][5]
 
-You should fork the project into your own repo, create a topic branch
-there and then make one or more pull requests back to the repository.
-Your pull requests will then be reviewed and discussed by other
-developers. Don't submit a Pull Request while still developing the
-code, wait till the feature is complete and ready for review. A
-preliminary review by other developers can be requested via the
-comments for the issue on github, or via slack or email.
-
-It is preferred that all patches contain any documentation
-updates made, and for any new features, a test case is preferred when
-possible. Keep patches focused on a single feature to avoid merging
-complications with other developers. The old free software joke is
-"patches are better than bug reports" is how we contribute to the
-community of people involved with this project.
+Further details of our development workflow can be found [here][8]
 
 ### If you are reporting a problem
 
@@ -100,100 +94,35 @@ it's much easier to read.
 See a detailed guide on documentation contributions
 [here](https://docs.hotosm.org/techdoc).
 
-### Coding Style
+### Pre-Commit Hooks
 
-Python enforces a certain amount of style due to indent levels. Unlike
-C/C++, we don't have to worry about curly braces. It is preferred that
-all code follows object oriented techniques, with a minimal amount of
-code other than basic control in the main function. This allows code
-to be easily reused and run either standalone, or part of a REST API
-backend. Code that is not designed to be run standalone can have a
-main function to do simple testing during development. That test code
-should be moved to a standalone test case when possible.
-[Pytest][7] is used as the test framework for
-standalone test cases.
+[Pre-Commit Hooks][7] are used in this repo to enforce coding style:
 
-Code follows a [CamelCase][8]
-style. Classes use an Upper Case for the first word, method use a
-lower case for the first word. Variable names are all lower case with
-an underbar as a word separator. Properly naming everything makes it
-much easier to read the code and get an idea of what it is doing. This
-enables people new to this project to contribute easier.
+- Python adheres mostly to PEP8 convention, amongst others, using the
+  tool `ruff`.
+- TypeScript / JavaScript code is formatted using `prettier`.
+- Markdown files are formatted using `markdownlint`.
+- Raq SQL is formatted using `sqlfluff`.
 
-All methods should have a comment that can be used by
-[pydoc][9]. The usage of
-base classes is encouraged so functionality can be shared. Comments in
-the code are encouraged when necessary to explain code that may not be
-obvious, but avoid over commenting as well. Code should be able to be
-read like a book, with descriptive names used, no fancy tricks unless
-required. Always be conscious of performance and security.
+Please install the pre-commit hooks before contributing:
 
-## Additional Notes On Our Processes
+```bash
+pip install pre-commit
+pre-commit install
+```
 
-### Issues
+### Commit Sign-Off Policy
 
-#### Issue Labels
+- In order to commit to this repository, please read and accept our
+  [commit sign-off policy](https://developercertificate.org)
+- This is simply to verify that you are the author of the commits you make.
+- If possible, please add to your commit footer the `Signed-of-by` info:
+  `Signed-off-by: John Doe <joe.doe@example.com>`
 
-- Label issues where appropriate, for example as backend or frontend.
-- If the issue is blocking other work, add the blocker label.
-- Priorities can be assigned as 'Nice to', 'Should', or 'Must'.
-- Difficulty can be estimated using 'Effort: 1' 'Effort: 2' 'Effort: 3' labels.
-(equivalent to story points to estimate relative effort required for a dev).
+## Our Development Practices
 
-#### Issue Assignment
-
-- Assign issues to the dev who will work on it.
-
-### PRs
-
-#### PR Drafts
-
-- Create a draft PR for works in progress.
-- Push as early as possible to draft, especially if there is a chance you may get
-  sidetracked on other work (so another dev could feasibly pick up where you left
-  off).
-
-#### PR Assignment
-
-- Assign yourself if you are working on the issue.
-- Assign another dev if you need to pass off the development to them.
-- The re-assigned dev can then assign the task back to the original dev for validation.
-
-#### PR Review
-
-- Any developer can review a PR, **as long as one dev reviews** prior to merge.
-- Assign devs for review - frontend can review backend and vice versa.
-- Once review is complete and the PR is out of draft state, then any dev can merge.
-
-### Milestones
-
-- Encapsulates a set of issues into a logical bigger task, with an assigned end date.
-- Discussed in team meetings and decided on via priorities.
-- Project owner decides on priorities, tech lead decides on which tasks are required
-  to achieve that goal.
-
-### Roadmap
-
-- Higher level roadmap based on milestones.
-- A couple of milestones per release.
-- We no longer use the task board on Github, but we do manage the roadmap there.
-- The roadmap should include:
-  - Milestones spanning the work start and end date.
-  - Releases labelled over the top, showing the anticipated next release date
-    and how it relates to the milestones.
-
-### Discussions
-
-- To discuss more general topics in the public, so that anyone can contribute.
-- Partly used to document the design decisions we have taken.
-- Tag people specially for input, as it makes them more likely to add ideas.
-- We can also use these for the staging server tests on each release cycle: <https://github.com/hotosm/fmtm/discussions/1335>
-
-### Release Notes
-
-- No technical details, move those to a dropdown in markdown.
-- Higher level info on bugs fixed, new features added, things improved.
-- Add screenshots throughout.
+To see more detail on the development practices used at HOT,
+please visit [this page](https://docs.hotosm.org/dev-practices)
 
 [1]: https://docs.google.com/presentation/d/1UrBG1X4MXwVd8Ps498FDlAYvesIailjjPPJfR_B4SUs/edit#slide=id.g15c1f409958_0_0 "slides"
 [2]: https://github.com/orgs/hotosm/projects/22 "Our latest task board"
@@ -201,6 +130,7 @@ required. Always be conscious of performance and security.
 [4]: https://github.com/hotosm/fmtm/labels "label categories"
 [5]: https://help.github.com/articles/about-pull-requests/ "About Pull Requests"
 [6]: https://www.markdownguide.org/ "Markdown format"
-[7]: https://pytest.org/ "Pytest"
-[8]: https://en.wikipedia.org/wiki/Camel_case "CamelCase"
-[9]: https://docs.python.org/3/library/pydoc.html "pydoc"
+[7]: https://docs.hotosm.org/dev-guide/repo-management/pre-commit "Pre-commit"
+[8]: https://docs.hotosm.org/dev-guide/repo-management/git/#git-flow "Git Flow"
+[9]: https://slack.hotosm.org "HOT Slack"
+[10]: mailto:sysadmin@hotosm.org "Sysadmin email"

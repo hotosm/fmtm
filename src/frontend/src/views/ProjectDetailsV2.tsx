@@ -52,9 +52,10 @@ const ProjectDetailsV2 = () => {
   const [legendRef, legendToggle, handleLegendToggle] = useOutsideClick();
 
   const [mainView, setView] = useState<any>();
-  const [selectedTaskArea, setSelectedTaskArea] = useState();
+  const [selectedTaskArea, setSelectedTaskArea] = useState<Record<string, any> | null>(null);
+  console.log(selectedTaskArea, 'selectedTaskArea');
   const [selectedTaskFeature, setSelectedTaskFeature] = useState();
-  const [dataExtractUrl, setDataExtractUrl] = useState(null);
+  const [dataExtractUrl, setDataExtractUrl] = useState<string | undefined>();
   const [dataExtractExtent, setDataExtractExtent] = useState(null);
   const [taskBoundariesLayer, setTaskBoundariesLayer] = useState<null | Record<string, any>>(null);
   // Can pass a File object, or a string URL to be read by PMTiles
@@ -62,7 +63,7 @@ const ProjectDetailsV2 = () => {
   const [viewState, setViewState] = useState('project_info');
   const projectId: string = params.id;
   const defaultTheme = useAppSelector((state) => state.theme.hotTheme);
-  const state = CoreModules.useAppSelector((state) => state.project);
+  const state = useAppSelector((state) => state.project);
   const projectInfo = useAppSelector((state) => state.home.selectedProject);
   const selectedTask = useAppSelector((state) => state.task.selectedTask);
   const selectedFeatureProps = useAppSelector((state) => state.task.selectedFeatureProps);
@@ -102,7 +103,7 @@ const ProjectDetailsV2 = () => {
   //Fetch project for the first time
   useEffect(() => {
     dispatch(ProjectActions.SetNewProjectTrigger());
-    if (state.projectTaskBoundries.findIndex((project) => project.id == projectId) == -1) {
+    if (state.projectTaskBoundries.findIndex((project) => project.id.toString() === projectId) == -1) {
       dispatch(ProjectActions.SetProjectTaskBoundries([]));
       dispatch(ProjectById(state.projectTaskBoundries, projectId));
     } else {
@@ -112,7 +113,7 @@ const ProjectDetailsV2 = () => {
     if (Object.keys(state.projectInfo)?.length == 0) {
       dispatch(ProjectActions.SetProjectInfo(projectInfo));
     } else {
-      if (state.projectInfo.id != projectId) {
+      if (state.projectInfo.id?.toString() != projectId) {
         dispatch(ProjectActions.SetProjectInfo(projectInfo));
       }
     }
@@ -398,9 +399,6 @@ const ProjectDetailsV2 = () => {
                 state={state.projectTaskBoundries}
                 defaultTheme={defaultTheme}
                 map={map}
-                view={mainView}
-                mapDivPostion={y}
-                states={state}
               />
             ) : (
               <Instructions instructions={state?.projectInfo?.instructions} />
@@ -511,14 +509,14 @@ const ProjectDetailsV2 = () => {
                 popupId="locked-popup"
                 className="fmtm-w-[235px]"
               />
-              <div className="fmtm-absolute fmtm-bottom-20 sm:fmtm-bottom-5 fmtm-left-3 fmtm-z-50 fmtm-rounded-lg">
+              <div className="fmtm-absolute fmtm-bottom-20 sm:fmtm-bottom-3 fmtm-left-3 fmtm-z-50 fmtm-rounded-lg">
                 <Accordion
                   ref={legendRef}
                   body={<MapLegends defaultTheme={defaultTheme} />}
                   header={
                     <div className="fmtm-flex fmtm-items-center fmtm-gap-1 sm:fmtm-gap-2">
-                      <AssetModules.LegendToggleIcon className=" fmtm-text-primaryRed" sx={{ fontSize: '30px' }} />
-                      <p className="fmtm-text-lg fmtm-font-normal">Legend</p>
+                      <AssetModules.LegendToggleIcon className=" fmtm-text-primaryRed" sx={{ fontSize: '25px' }} />
+                      <p className="fmtm-text-base fmtm-font-normal">LEGEND</p>
                     </div>
                   }
                   onToggle={() => {
@@ -539,7 +537,7 @@ const ProjectDetailsV2 = () => {
                   className="!fmtm-text-base !fmtm-pr-2"
                 />
               </div>
-              <MapControlComponent map={map} projectName={state?.projectInfo?.title} />
+              <MapControlComponent map={map} projectName={state?.projectInfo?.title || ''} />
             </MapComponent>
             <div
               className="fmtm-absolute fmtm-top-4 fmtm-left-4 fmtm-bg-white fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-red-50 fmtm-duration-300 fmtm-border-[1px] sm:fmtm-hidden fmtm-cursor-pointer"
@@ -555,7 +553,7 @@ const ProjectDetailsV2 = () => {
             )}
             {mobileFooterSelection === 'activities' && (
               <BottomSheet
-                body={<MobileActivitiesContents map={map} view={mainView} mapDivPostion={y} />}
+                body={<MobileActivitiesContents map={map} />}
                 onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
               />
             )}
@@ -583,21 +581,19 @@ const ProjectDetailsV2 = () => {
           </div>
         )}
       </div>
-      {selectedTaskArea != undefined && selectedTaskFeature === undefined && (
+      {selectedTaskArea != undefined && selectedTaskFeature === undefined && selectedTask && (
         <TaskSelectionPopup
           taskId={selectedTask}
           feature={selectedTaskArea}
           body={
             <div>
-              <DialogTaskActions map={map} view={mainView} feature={selectedTaskArea} taskId={selectedTask} />
+              <DialogTaskActions feature={selectedTaskArea} taskId={selectedTask} />
             </div>
           }
         />
       )}
       {selectedTaskFeature != undefined && selectedTask && selectedTaskArea && (
         <FeatureSelectionPopup
-          map={map}
-          view={mainView}
           featureProperties={selectedFeatureProps}
           taskId={selectedTask}
           taskFeature={selectedTaskArea}

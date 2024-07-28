@@ -23,7 +23,6 @@ const FormUpdateTab = ({ projectId }) => {
   const dispatch = CoreModules.useAppDispatch();
 
   const [uploadForm, setUploadForm] = useState<FileType[] | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [error, setError] = useState({ formError: '', categoryError: '' });
 
   const xFormId = CoreModules.useAppSelector((state) => state.project.projectInfo.xform_id);
@@ -31,6 +30,8 @@ const FormUpdateTab = ({ projectId }) => {
   const sortedFormCategoryList = formCategoryList.slice().sort((a, b) => a.title.localeCompare(b.title));
   const customFileValidity = useAppSelector((state) => state.createproject.customFileValidity);
   const validateCustomFormLoading = useAppSelector((state) => state.createproject.validateCustomFormLoading);
+  const selectedCategory = useAppSelector((state) => state.createproject.editProjectDetails.xform_category);
+  const formUpdateLoading = useAppSelector((state) => state.createproject.formUpdateLoading);
 
   useEffect(() => {
     dispatch(FormCategoryService(`${import.meta.env.VITE_API_URL}/central/list-forms`));
@@ -41,10 +42,6 @@ const FormUpdateTab = ({ projectId }) => {
     let isValid = true;
     if (!uploadForm || (uploadForm && uploadForm?.length === 0)) {
       setError((prev) => ({ ...prev, formError: 'Form is required.' }));
-      isValid = false;
-    }
-    if (!selectedCategory) {
-      setError((prev) => ({ ...prev, categoryError: 'Category is required.' }));
       isValid = false;
     }
     if (!customFileValidity && uploadForm && uploadForm.length > 0) {
@@ -90,10 +87,8 @@ const FormUpdateTab = ({ projectId }) => {
           valueKey="title"
           label="title"
           value={selectedCategory}
-          onValueChange={(value) => {
-            setSelectedCategory(value);
-          }}
           className="fmtm-max-w-[13.5rem]"
+          disabled
         />
         {error.categoryError && <p className="fmtm-text-primaryRed fmtm-text-base">{error.categoryError}</p>}
         <p className="fmtm-text-base fmtm-mt-2">
@@ -130,7 +125,15 @@ const FormUpdateTab = ({ projectId }) => {
         {error.formError && <p className="fmtm-text-primaryRed fmtm-text-base">{error.formError}</p>}
       </div>
       <div className="fmtm-flex fmtm-justify-center">
-        <Button onClick={onSave} btnText="UPDATE" btnType="primary" className="fmtm-rounded-md" />
+        <Button
+          isLoading={formUpdateLoading}
+          disabled={validateCustomFormLoading}
+          loadingText="UPDATE"
+          onClick={onSave}
+          btnText="UPDATE"
+          btnType="primary"
+          className="fmtm-rounded-md"
+        />
       </div>
     </div>
   );

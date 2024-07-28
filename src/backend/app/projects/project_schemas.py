@@ -22,7 +22,7 @@ from datetime import datetime
 from typing import Any, List, Optional, Union
 
 from dateutil import parser
-from geojson_pydantic import Feature, FeatureCollection, Polygon
+from geojson_pydantic import Feature, FeatureCollection, MultiPolygon, Polygon
 from loguru import logger as log
 from pydantic import BaseModel, Field, computed_field
 from pydantic.functional_serializers import field_serializer
@@ -32,11 +32,12 @@ from typing_extensions import Self
 
 from app.config import HttpUrlStr, decrypt_value, encrypt_value, settings
 from app.db.postgis_utils import (
-    geojson_to_geometry,
-    geometry_to_geojson,
+    featcol_to_wkb_geom,
+    geojson_to_featcol,
     get_address_from_lat_lon,
-    merge_multipolygon,
+    merge_polygons,
     read_wkb,
+    wkb_geom_to_feature,
     write_wkb,
 )
 from app.models.enums import ProjectPriority, ProjectStatus, TaskSplitType, XLSFormType
@@ -143,12 +144,12 @@ class ProjectIn(BaseModel):
     xform_category: str
     custom_tms_url: Optional[str] = None
     organisation_id: Optional[int] = None
-    hashtags: Optional[List[str]] = None
+    hashtags: Optional[str] = None
     task_split_type: Optional[TaskSplitType] = None
     task_split_dimension: Optional[int] = None
     task_num_buildings: Optional[int] = None
     data_extract_type: Optional[str] = None
-    outline_geojson: Union[FeatureCollection, Feature, Polygon]
+    outline_geojson: Union[FeatureCollection, Feature, MultiPolygon, Polygon]
     location_str: Optional[str] = None
 
     @computed_field
@@ -157,9 +158,11 @@ class ProjectIn(BaseModel):
         """Compute WKBElement geom from geojson."""
         if not self.outline_geojson:
             return None
-        outline = merge_multipolygon(self.outline_geojson)
 
-        return geojson_to_geometry(outline)
+        outline = geojson_to_featcol(self.outline_geojson.model_dump())
+        outline_merged = merge_polygons(outline)
+
+        return featcol_to_wkb_geom(outline_merged)
 
     @computed_field
     @property
@@ -177,11 +180,24 @@ class ProjectIn(BaseModel):
 
     @field_validator("hashtags", mode="after")
     @classmethod
-    def prepend_hash_to_tags(cls, hashtags: List[str]) -> Optional[List[str]]:
-        """Add '#' to hashtag if missing. Also added default '#FMTM'."""
+    def validate_hashtags(cls, hashtags: Optional[str]) -> List[str]:
+        """Validate hashtags.
+
+        - Receives a string and parsed as a list of tags.
+        - Commas or semicolons are replaced with spaces before splitting.
+        - Add '#' to hashtag if missing.
+        - Also add default '#FMTM' tag.
+        """
+        if hashtags is None:
+            return ["#FMTM"]
+
+        hashtags = hashtags.replace(",", " ").replace(";", " ")
+        hashtags_list = hashtags.split()
+
+        # Add '#' to hashtag strings if missing
         hashtags_with_hash = [
             f"#{hashtag}" if hashtag and not hashtag.startswith("#") else hashtag
-            for hashtag in hashtags
+            for hashtag in hashtags_list
         ]
 
         if "#FMTM" not in hashtags_with_hash:
@@ -228,12 +244,14 @@ class ProjectPartialUpdate(BaseModel):
 
     @computed_field
     @property
-    def project_name_prefix(self) -> str:
+    def project_name_prefix(self) -> Optional[str]:
         """Compute project name prefix with underscores."""
+        if not self.name:
+            return None
         return self.name.replace(" ", "_").lower()
 
 
-class ProjectUpdate(ProjectIn):
+class ProjectUpdate(ProjectUpload):
     """Update project."""
 
     pass
@@ -306,6 +324,7 @@ class ProjectBase(BaseModel):
     author: User
     project_info: ProjectInfo
     status: ProjectStatus
+    created: datetime
     # location_str: str
     xform_category: Optional[XLSFormType] = None
     hashtags: Optional[List[str]] = None
@@ -319,7 +338,12 @@ class ProjectBase(BaseModel):
             return None
         geometry = wkb.loads(bytes(self.outline.data))
         bbox = geometry.bounds  # Calculate bounding box
-        return geometry_to_geojson(self.outline, {"id": self.id, "bbox": bbox}, self.id)
+        geom_geojson = wkb_geom_to_feature(
+            geometry=self.outline,
+            properties={"id": self.id, "bbox": bbox},
+            id=self.id,
+        )
+        return Feature(**geom_geojson)
 
     @computed_field
     @property
