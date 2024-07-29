@@ -35,7 +35,7 @@ from geoalchemy2.shape import to_shape
 from geojson.feature import Feature, FeatureCollection
 from loguru import logger as log
 from osm_fieldwork.basemapper import create_basemap_file
-from osm_fieldwork.xlsforms import entities_registration, xlsforms_path
+from osm_fieldwork.xlsforms import xlsforms_path
 from osm_rawdata.postgres import PostgresClient
 from shapely.geometry import shape
 from sqlalchemy import and_, column, func, select, table, text
@@ -58,7 +58,7 @@ from app.db.postgis_utils import (
 )
 from app.models.enums import HTTPStatus, ProjectRole, ProjectVisibility, XLSFormType
 from app.projects import project_deps, project_schemas
-from app.s3 import add_obj_to_bucket
+from app.s3 import add_obj_to_bucket, delete_all_objs_under_prefix
 from app.tasks import tasks_crud
 
 TILESDIR = "/opt/tiles"
@@ -219,8 +219,8 @@ async def get_project_info_by_id(db: Session, project_id: int):
     return await convert_to_app_project_info(db_project_info)
 
 
-async def delete_one_project(db: Session, db_project: db_models.DbProject) -> None:
-    """Delete a project by id."""
+async def delete_fmtm_project(db: Session, db_project: db_models.DbProject) -> None:
+    """Delete a FMTM project by id."""
     try:
         project_id = db_project.id
         db.delete(db_project)
@@ -229,6 +229,18 @@ async def delete_one_project(db: Session, db_project: db_models.DbProject) -> No
     except Exception as e:
         log.exception(e)
         raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=e) from e
+
+
+async def delete_fmtm_s3_objects(db_project: db_models.DbProject) -> None:
+    """Delete objects on S3 for an FMTM project."""
+    project_id = db_project.id
+    org_id = db_project.organisation_id
+    project_s3_path = f"/{org_id}/{project_id}/"
+
+    delete_all_objs_under_prefix(
+        settings.S3_BUCKET_NAME,
+        project_s3_path,
+    )
 
 
 async def partial_update_project_info(
@@ -828,28 +840,26 @@ async def generate_odk_central_project_content(
     xlsform: BytesIO,
     form_category: str,
     form_file_ext: str,
-    task_count: int,
+    task_extract_dict: dict,
     db: Session,
 ) -> str:
     """Populate the project in ODK Central with XForm, Appuser, Permissions."""
     project_odk_id = project.odkid
 
-    # NOTE Entity Registration form: this may be removed with future Central
-    # API changes to allow Entity creation
-    with open(entities_registration, "rb") as f:
-        registration_xlsform = BytesIO(f.read())
-    registration_xform = await central_crud.read_and_test_xform(
-        registration_xlsform, "xls", return_form_data=True
-    )
-    # Upload entity registration XForm
-    log.info("Uploading Entity registration XForm to ODK Central")
-    central_crud.create_odk_xform(
-        project_odk_id,
-        registration_xform,
-        odk_credentials,
-    )
+    # The ODK Dataset (Entity List) must exist prior to main XLSForm
+    entities_list = await task_geojson_dict_to_entity_values(task_extract_dict)
+    fields_list = project_schemas.entity_fields_to_list()
 
-    # NOTE Survey form
+    async with central_deps.get_odk_dataset(odk_credentials) as odk_central:
+        await odk_central.createDataset(
+            project_odk_id, datasetName="features", properties=fields_list
+        )
+        await odk_central.createEntities(
+            project_odk_id,
+            "features",
+            entities_list,
+        )
+
     xform = await central_crud.read_and_test_xform(
         xlsform, form_file_ext, return_form_data=True
     )
@@ -857,7 +867,7 @@ async def generate_odk_central_project_content(
     updated_xform = await central_crud.modify_xform_xml(
         xform,
         form_category,
-        task_count,
+        len(task_extract_dict.keys()),
     )
     # Upload survey XForm
     log.info("Uploading survey XForm to ODK Central")
@@ -869,13 +879,13 @@ async def generate_odk_central_project_content(
 
     sql = text(
         """
-                INSERT INTO xforms (
-                        project_id, odk_form_id, category
-                        )
-                    VALUES (
-                        :project_id, :xform_id, :category
-                        )
-                """
+        INSERT INTO xforms (
+            project_id, odk_form_id, category
+        )
+        VALUES (
+            :project_id, :xform_id, :category
+        )
+        """
     )
     db.execute(
         sql,
@@ -906,7 +916,7 @@ async def generate_project_files(
         background_task_id (uuid): the task_id of the background task.
     """
     try:
-        project = await get_project_by_id(db, project_id)
+        project = await project_deps.get_project_by_id(db, project_id)
         form_category = project.xform_category
         log.info(f"Starting generate_project_files for project {project_id}")
         odk_credentials = await project_deps.get_odk_credentials(db, project_id)
@@ -948,7 +958,7 @@ async def generate_project_files(
             xlsform,
             form_category,
             form_file_ext,
-            len(task_extract_dict.keys()),
+            task_extract_dict,
             db,
         )
         log.debug(
@@ -968,22 +978,6 @@ async def generate_project_files(
 
         # Commit all updated database records
         db.commit()
-
-        # Map geojson to entities dict
-        entities_data_dict = await task_geojson_dict_to_entity_values(task_extract_dict)
-        # Create entities
-        # TODO after Entity creation is a single API call,
-        # TODO move to generate_odk_central_project_content
-        async with central_deps.get_odk_entity(odk_credentials) as odk_central:
-            entities = await odk_central.createEntities(
-                project_odk_id,
-                "features",
-                entities_data_dict,
-            )
-            if entities:
-                log.debug(f"Wrote {len(entities)} entities for project ({project_id})")
-            else:
-                log.debug(f"No entities uploaded for project ({project_id})")
 
         if background_task_id:
             # Update background task status to COMPLETED
