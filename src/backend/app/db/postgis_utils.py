@@ -700,7 +700,7 @@ async def feature_geojson_to_entity_dict(
         msg = "'geometry' data field is mandatory"
         log.debug(msg)
         raise ValueError(msg)
-    
+
     javarosa_geom = await geojson_to_javarosa_geom(geometry)
 
     # NOTE all properties MUST be string values for Entities, convert
@@ -713,7 +713,7 @@ async def feature_geojson_to_entity_dict(
     task_id = properties.get("task_id")
     entity_label = f"Task {task_id} Feature {feature_id}"
 
-    return {"label": entity_label, "data":{"geometry": javarosa_geom, **properties}}
+    return {"label": entity_label, "data": {"geometry": javarosa_geom, **properties}}
 
 
 async def task_geojson_dict_to_entity_values(task_geojson_dict):

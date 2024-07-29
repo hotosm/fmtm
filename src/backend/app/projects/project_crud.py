@@ -35,7 +35,7 @@ from geoalchemy2.shape import to_shape
 from geojson.feature import Feature, FeatureCollection
 from loguru import logger as log
 from osm_fieldwork.basemapper import create_basemap_file
-from osm_fieldwork.xlsforms import entities_registration, xlsforms_path
+from osm_fieldwork.xlsforms import xlsforms_path
 from osm_rawdata.postgres import PostgresClient
 from shapely.geometry import shape
 from sqlalchemy import and_, column, func, select, table, text
@@ -857,17 +857,13 @@ async def generate_odk_central_project_content(
 
     async with central_deps.get_odk_entity(odk_credentials) as odk_central:
         await odk_central.createDataset(project_odk_id, project.project_name_prefix)
-        await odk_central.createProperties(
-                project_odk_id,
-                "features",
-                fields_dict_list
-            )
+        await odk_central.createProperties(project_odk_id, "features", fields_dict_list)
         entities = await odk_central.createEntities(
             project_odk_id,
             "features",
             entities_list,
         )
-        if entities["success"]==True:
+        if entities["success"] == True:
             log.debug(f"Wrote {len(entities_list)} entities for project ({project.id})")
         else:
             log.debug(f"No entities uploaded for project ({project.id})")
