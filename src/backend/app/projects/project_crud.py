@@ -867,7 +867,7 @@ async def generate_odk_central_project_content(
             "features",
             entities_list,
         )
-        if entities["success"]==True:
+        if entities["success"]:
             log.debug(f"Wrote {len(entities_list)} entities for project ({project.id})")
         else:
             log.debug(f"No entities uploaded for project ({project.id})")
