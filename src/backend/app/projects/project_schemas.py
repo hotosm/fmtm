@@ -20,7 +20,7 @@
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, List, Optional, Union
 
 from dateutil import parser
 from geojson_pydantic import Feature, FeatureCollection, MultiPolygon, Polygon
@@ -455,11 +455,11 @@ class Field:
     type: str
 
 
-def fields_to_dict() -> List[Dict[str, str]]:
-    """Converts a list of Field objects to a list of dictionaries.
+def entity_fields_to_list() -> List[str]:
+    """Converts a list of Field objects to a list of field names.
 
     Returns:
-        List[Dict[str, str]]: A list of dictionaries representing the fields.
+        List[str]: A list of fields.
     """
     fields: List[Field] = [
         Field(name="geometry", type="geopoint"),
@@ -470,5 +470,6 @@ def fields_to_dict() -> List[Dict[str, str]]:
         Field(name="version", type="string"),
         Field(name="changeset", type="string"),
         Field(name="timestamp", type="datetime"),
+        Field(name="status", type="string"),
     ]
-    return [field.__dict__ for field in fields]
+    return [field.name for field in fields]
