@@ -191,7 +191,7 @@ const TaskSubmissionsMap = () => {
     (style, feature, resolution) => {
       const stylex = { ...style };
       stylex.fillOpacity = 80;
-      const getFederal = federalWiseProjectCount?.find((d) => d.code == feature.getProperties().uid);
+      const getFederal = federalWiseProjectCount?.find((d) => d.code == feature.getProperties().fid);
       const getFederalCount = getFederal?.count;
       stylex.labelMaxResolution = 1000;
       stylex.showLabel = true;
