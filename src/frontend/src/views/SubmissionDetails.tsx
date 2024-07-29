@@ -17,7 +17,7 @@ const renderValue = (value: any, key: string = '') => {
   if (key === 'start' || key === 'end') {
     return (
       <>
-        <div className="fmtm-capitalize fmtm-text-base fmtm-font-bold fmtm-mb-1 fmtm-text-[#555]">{key}</div>
+        <div className="fmtm-capitalize fmtm-text-base fmtm-font-bold fmtm-text-[#555]">{key}</div>
         <p className="fmtm-text-sm fmtm-text-[#555]">
           {value?.split('T')[0]}, {value?.split('T')[1]}
         </p>
@@ -42,20 +42,20 @@ const renderValue = (value: any, key: string = '') => {
           onToggle={() => {}}
           hasSeperator={false}
           header={<p className="fmtm-text-xl fmtm-text-[#555]">{key}</p>}
-          body={Object.entries(value).map(([key, nestedValue]) => {
-            return (
-              <CoreModules.Box sx={{ textTransform: 'capitalize' }} key={key}>
-                {renderValue(nestedValue, key)}
-              </CoreModules.Box>
-            );
-          })}
+          body={
+            <div className="fmtm-flex fmtm-flex-col fmtm-gap-2">
+              {Object.entries(value).map(([key, nestedValue]) => {
+                return <div key={key}>{renderValue(nestedValue, key)}</div>;
+              })}
+            </div>
+          }
         />
       </ul>
     );
   } else {
     return (
       <>
-        <div className="fmtm-capitalize fmtm-text-base fmtm-font-bold fmtm-mb-1 fmtm-leading-normal fmtm-text-[#555] fmtm-break-words">
+        <div className="fmtm-capitalize fmtm-text-base fmtm-font-bold fmtm-leading-normal fmtm-text-[#555] fmtm-break-words">
           {key}
         </div>
         <span className="fmtm-text-sm fmtm-text-[#555] fmtm-break-words">{value}</span>
