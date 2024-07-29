@@ -192,11 +192,11 @@ const SubmissionDetails = () => {
               <CoreModules.Skeleton className="md:!fmtm-w-full fmtm-h-[9rem]" />
             ) : (
               <div className="fmtm-bg-white fmtm-rounded-lg fmtm-w-full fmtm-h-fit fmtm-p-2 fmtm-px-4 md:fmtm-py-5 md:fmtm-shadow-[0px_10px_20px_0px_rgba(96,96,96,0.1)] fmtm-flex fmtm-flex-col">
-                <h2 className="fmtm-text-2xl fmtm-text-[#545454] fmtm-font-bold fmtm-mb-4 fmtm-break-words">
+                <h2 className="fmtm-text-base fmtm-text-[#545454] fmtm-font-bold fmtm-mb-4 fmtm-break-words">
                   {projectDashboardDetail?.project_name_prefix}
                 </h2>
-                <h2 className="fmtm-text-xl fmtm-font-bold fmtm-text-[#545454]">Task: {taskId}</h2>
-                <h2 className="fmtm-text-lg fmtm-font-bold fmtm-text-[#545454] fmtm-break-words">
+                <h2 className="fmtm-text-base fmtm-font-bold fmtm-text-[#545454]">Task: {taskId}</h2>
+                <h2 className="fmtm-text-base fmtm-font-bold fmtm-text-[#545454] fmtm-break-words">
                   Submission Id: {paramsInstanceId}
                 </h2>
               </div>
