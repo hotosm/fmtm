@@ -19,7 +19,8 @@
 
 import uuid
 from datetime import datetime
-from typing import Any, List, Optional, Union
+from dataclasses import dataclass
+from typing import Any, List, Optional, Union, Dict
 
 from dateutil import parser
 from geojson_pydantic import Feature, FeatureCollection, MultiPolygon, Polygon
@@ -436,3 +437,37 @@ class ProjectDashboard(BaseModel):
             return f'{days_difference} day{"s" if days_difference > 1 else ""} ago'
         else:
             return last_active.strftime("%d %b %Y")
+
+@dataclass
+class Field:
+    """
+    A data class representing a field with a name and type.
+
+    Args:
+        name (str): The name of the field.
+        type (str): The type of the field.
+
+    Returns:
+        None
+    """
+    name: str
+    type: str
+
+def fields_to_dict() -> List[Dict[str, str]]:
+    """
+    Converts a list of Field objects to a list of dictionaries.
+
+    Returns:
+        List[Dict[str, str]]: A list of dictionaries representing the fields.
+    """
+    fields: List[Field] = [
+    Field(name="geometry", type="geopoint"),
+    Field(name="project_id", type="string"),
+    Field(name="task_id", type="string"),
+    Field(name="osm_id", type="string"),
+    Field(name="tags", type="string"),
+    Field(name="version", type="string"),
+    Field(name="changeset", type="string"),
+    Field(name="timestamp", type="datetime"),
+]
+    return [field.__dict__ for field in fields]

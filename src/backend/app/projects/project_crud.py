@@ -828,26 +828,11 @@ async def generate_odk_central_project_content(
     xlsform: BytesIO,
     form_category: str,
     form_file_ext: str,
-    task_count: int,
+    task_extract_dict: dict,
     db: Session,
 ) -> str:
     """Populate the project in ODK Central with XForm, Appuser, Permissions."""
     project_odk_id = project.odkid
-
-    # NOTE Entity Registration form: this may be removed with future Central
-    # API changes to allow Entity creation
-    with open(entities_registration, "rb") as f:
-        registration_xlsform = BytesIO(f.read())
-    registration_xform = await central_crud.read_and_test_xform(
-        registration_xlsform, "xls", return_form_data=True
-    )
-    # Upload entity registration XForm
-    log.info("Uploading Entity registration XForm to ODK Central")
-    central_crud.create_odk_xform(
-        project_odk_id,
-        registration_xform,
-        odk_credentials,
-    )
 
     # NOTE Survey form
     xform = await central_crud.read_and_test_xform(
@@ -857,7 +842,7 @@ async def generate_odk_central_project_content(
     updated_xform = await central_crud.modify_xform_xml(
         xform,
         form_category,
-        task_count,
+        len(task_extract_dict.keys()),
     )
     # Upload survey XForm
     log.info("Uploading survey XForm to ODK Central")
@@ -866,6 +851,26 @@ async def generate_odk_central_project_content(
         updated_xform,
         odk_credentials,
     )
+
+    entities_list = await task_geojson_dict_to_entity_values(task_extract_dict)
+    fields_dict_list = project_schemas.fields_to_dict()
+
+    async with central_deps.get_odk_entity(odk_credentials) as odk_central:
+        await odk_central.createDataset(project_odk_id, project.project_name_prefix)
+        await odk_central.createProperties(
+                project_odk_id,
+                "features",
+                fields_dict_list
+            )
+        entities = await odk_central.createEntities(
+            project_odk_id,
+            "features",
+            entities_list,
+        )
+        if entities["success"]==True:
+            log.debug(f"Wrote {len(entities_list)} entities for project ({project.id})")
+        else:
+            log.debug(f"No entities uploaded for project ({project.id})")
 
     sql = text(
         """
@@ -906,7 +911,7 @@ async def generate_project_files(
         background_task_id (uuid): the task_id of the background task.
     """
     try:
-        project = await get_project_by_id(db, project_id)
+        project = await project_deps.get_project_by_id(db, project_id)
         form_category = project.xform_category
         log.info(f"Starting generate_project_files for project {project_id}")
         odk_credentials = await project_deps.get_odk_credentials(db, project_id)
@@ -948,7 +953,7 @@ async def generate_project_files(
             xlsform,
             form_category,
             form_file_ext,
-            len(task_extract_dict.keys()),
+            task_extract_dict,
             db,
         )
         log.debug(
@@ -968,22 +973,6 @@ async def generate_project_files(
 
         # Commit all updated database records
         db.commit()
-
-        # Map geojson to entities dict
-        entities_data_dict = await task_geojson_dict_to_entity_values(task_extract_dict)
-        # Create entities
-        # TODO after Entity creation is a single API call,
-        # TODO move to generate_odk_central_project_content
-        async with central_deps.get_odk_entity(odk_credentials) as odk_central:
-            entities = await odk_central.createEntities(
-                project_odk_id,
-                "features",
-                entities_data_dict,
-            )
-            if entities:
-                log.debug(f"Wrote {len(entities)} entities for project ({project_id})")
-            else:
-                log.debug(f"No entities uploaded for project ({project_id})")
 
         if background_task_id:
             # Update background task status to COMPLETED
