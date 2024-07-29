@@ -32,7 +32,7 @@ const SubmissionComments = () => {
             </div>
           ))}
         </div>
-      ) : (
+      ) : filteredTaskCommentsList?.length > 0 ? (
         filteredTaskCommentsList?.map((comment) => (
           <div className="fmtm-py-[0.875rem] fmtm-border-b fmtm-border-[#D4D4D4] fmtm-flex fmtm-flex-col fmtm-gap-2">
             <div className="fmtm-flex fmtm-justify-between fmtm-items-center">
@@ -45,6 +45,8 @@ const SubmissionComments = () => {
             <p className="fmtm-text-[#555] fmtm-text-sm">{comment?.action_text?.split('-SUBMISSION_INST-')[1]}</p>
           </div>
         ))
+      ) : (
+        <p className="fmtm-text-center fmtm-py-5 fmtm-text-xl fmtm-text-gray-400">No Comments!</p>
       )}
     </div>
   );
