@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import environment from '@/environment';
-import ProjectTaskStatus from '@/api/ProjectTaskStatus';
+import { UpdateTaskStatus } from '@/api/ProjectTaskStatus';
 import MapStyles from '@/hooks/MapStyles';
 import CoreModules from '@/shared/CoreModules';
 import { CommonActions } from '@/store/slices/CommonSlice';
@@ -86,15 +86,15 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
     if (btnId != undefined) {
       if (authDetailsCopy.hasOwnProperty('id')) {
         await dispatch(
-          ProjectTaskStatus(
+          UpdateTaskStatus(
             `${import.meta.env.VITE_API_URL}/tasks/${currentStatus?.id}/new-status/${status}`,
-            geoStyle,
-            taskBoundaryData,
             currentProjectId,
-            feature,
             taskId,
             authDetailsCopy,
             { project_id: currentProjectId },
+            geoStyle,
+            taskBoundaryData,
+            feature,
           ),
         );
         if (btnId === 'LOCKED_FOR_VALIDATION')
