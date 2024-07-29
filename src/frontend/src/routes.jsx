@@ -16,6 +16,7 @@ import ErrorBoundary from '@/views/ErrorBoundary';
 import ProjectDetailsV2 from '@/views/ProjectDetailsV2';
 import ProjectSubmissions from '@/views/ProjectSubmissions';
 import ManageProject from '@/views/ManageProject';
+import DataConflation from '@/views/DataConflation';
 
 const Submissions = React.lazy(() => import('./views/Submissions'));
 const Tasks = React.lazy(() => import('./views/Tasks'));
@@ -236,6 +237,18 @@ const routes = createBrowserRouter([
             <Suspense fallback={<div>Loading...</div>}>
               <ErrorBoundary>
                 <ManageProject />
+              </ErrorBoundary>
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/conflate-data/:projectId/:taskId',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <ErrorBoundary>
+                <DataConflation />
               </ErrorBoundary>
             </Suspense>
           </ProtectedRoute>
