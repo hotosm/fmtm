@@ -834,7 +834,20 @@ async def generate_odk_central_project_content(
     """Populate the project in ODK Central with XForm, Appuser, Permissions."""
     project_odk_id = project.odkid
 
-    # NOTE Survey form
+    # The ODK Dataset (Entity List) must exist prior to main XLSForm
+    entities_list = await task_geojson_dict_to_entity_values(task_extract_dict)
+    fields_list = project_schemas.entity_fields_to_list()
+
+    async with central_deps.get_odk_dataset(odk_credentials) as odk_central:
+        await odk_central.createDataset(
+            project_odk_id, datasetName="features", properties=fields_list
+        )
+        await odk_central.createEntities(
+            project_odk_id,
+            "features",
+            entities_list,
+        )
+
     xform = await central_crud.read_and_test_xform(
         xlsform, form_file_ext, return_form_data=True
     )
@@ -852,31 +865,15 @@ async def generate_odk_central_project_content(
         odk_credentials,
     )
 
-    entities_list = await task_geojson_dict_to_entity_values(task_extract_dict)
-    fields_dict_list = project_schemas.fields_to_dict()
-
-    async with central_deps.get_odk_dataset(odk_credentials) as odk_central:
-        await odk_central.createDataset(project_odk_id, project.project_name_prefix)
-        await odk_central.createProperties(project_odk_id, "features", fields_dict_list)
-        entities = await odk_central.createEntities(
-            project_odk_id,
-            "features",
-            entities_list,
-        )
-        if entities["success"]:
-            log.debug(f"Wrote {len(entities_list)} entities for project ({project.id})")
-        else:
-            log.debug(f"No entities uploaded for project ({project.id})")
-
     sql = text(
         """
-                INSERT INTO xforms (
-                        project_id, odk_form_id, category
-                        )
-                    VALUES (
-                        :project_id, :xform_id, :category
-                        )
-                """
+        INSERT INTO xforms (
+            project_id, odk_form_id, category
+        )
+        VALUES (
+            :project_id, :xform_id, :category
+        )
+        """
     )
     db.execute(
         sql,
