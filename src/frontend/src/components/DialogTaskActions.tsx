@@ -77,13 +77,15 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
     }
   }, [projectTaskActivityList, taskId, feature]);
 
-  const handleOnClick = (event) => {
-    const status = taskStatusEnum[event.currentTarget.dataset.btnid];
+  const handleOnClick = async (event: React.MouseEvent<HTMLElement>) => {
+    const btnId = event.currentTarget.dataset.btnid;
+    if (!btnId) return;
+    const status = taskStatusEnum[btnId];
     const authDetailsCopy = authDetails != null ? { ...authDetails } : {};
-    const geoStyle = geojsonStyles[event.currentTarget.dataset.btnid];
-    if (event.currentTarget.dataset.btnid != undefined) {
+    const geoStyle = geojsonStyles[btnId];
+    if (btnId != undefined) {
       if (authDetailsCopy.hasOwnProperty('id')) {
-        dispatch(
+        await dispatch(
           ProjectTaskStatus(
             `${import.meta.env.VITE_API_URL}/tasks/${currentStatus?.id}/new-status/${status}`,
             geoStyle,
@@ -95,6 +97,8 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
             { project_id: currentProjectId },
           ),
         );
+        if (btnId === 'LOCKED_FOR_VALIDATION')
+          navigate(`/project-submissions/${params.id}?tab=table&task_id=${taskId}`);
       } else {
         dispatch(
           CommonActions.SetSnackBar({
