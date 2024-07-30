@@ -15,7 +15,7 @@ const TaskInfo = () => {
   const { taskId, projectId } = useParams();
 
   return (
-    <div>
+    <div className="fmtm-h-full">
       <div
         onClick={() => navigate(`/project/${projectId}`)}
         className="fmtm-flex fmtm-items-center fmtm-mb-5 fmtm-cursor-pointer hover:fmtm-text-primaryRed fmtm-duration-300"
@@ -23,24 +23,24 @@ const TaskInfo = () => {
         <AssetModules.ArrowBackIosIcon style={{ fontSize: '1.125rem' }} />
         <p className="fmtm-text-sm fmtm-font-[500]">BACK</p>
       </div>
-      <div className="fmtm-w-[15rem] fmtm-py-2 fmtm-px-3 fmtm-bg-white fmtm-h-[calc(100%-2.5rem)]">
+      <div className="fmtm-w-full fmtm-py-2 fmtm-px-3 fmtm-bg-white lg:fmtm-h-[calc(100%-2.5rem)] fmtm-flex fmtm-flex-col sm:fmtm-flex-row lg:fmtm-flex-col fmtm-gap-x-10">
         <div>
           <p className="fmtm-text-primaryRed">Task #{taskId}</p>
+
+          <div className="fmtm-mt-5 fmtm-mb-5 sm:fmtm-mb-0 lg:fmtm-mb-10">
+            <table>
+              {taskInfoConstants?.map((info) => (
+                <tr className="">
+                  <td className="fmtm-text-xs fmtm-text-[#484848] fmtm-pb-1">{info?.name}</td>
+                  <td className="fmtm-text-xs fmtm-text-[#484848] fmtm-px-2 fmtm-pb-1">:</td>
+                  <td className="fmtm-text-xs fmtm-text-[#484848] fmtm-pb-1">{info?.count}</td>
+                </tr>
+              ))}
+            </table>
+          </div>
         </div>
 
-        <div className="fmtm-mt-5 fmtm-mb-10">
-          <table>
-            {taskInfoConstants?.map((info) => (
-              <tr className="">
-                <td className="fmtm-text-xs fmtm-text-[#484848] fmtm-pb-1">{info?.name}</td>
-                <td className="fmtm-text-xs fmtm-text-[#484848] fmtm-px-2 fmtm-pb-1">:</td>
-                <td className="fmtm-text-xs fmtm-text-[#484848] fmtm-pb-1">{info?.count}</td>
-              </tr>
-            ))}
-          </table>
-        </div>
-
-        <div className="fmtm-flex fmtm-flex-col fmtm-gap-3">
+        <div className="fmtm-flex fmtm-flex-col fmtm-gap-3 fmtm-justify-end">
           <Button
             btnText="Submit Task"
             type="button"
