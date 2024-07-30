@@ -42,6 +42,7 @@ export const UpdateTaskStatus = (
               taskId,
               locked_by_uid: body?.id,
               locked_by_username: body?.username,
+              task_status: response.data.status,
             }),
           );
         }

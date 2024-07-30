@@ -68,6 +68,7 @@ const SubmissionsTable = ({ toggleView }) => {
       return task?.index === +filter.task_id;
     })?.[0],
   };
+  const taskList = projectData[projectIndex]?.taskBoundries;
 
   const [numberOfFilters, setNumberOfFilters] = useState<number>(0);
   const [paginationPage, setPaginationPage] = useState<number>(1);
@@ -467,31 +468,35 @@ const SubmissionsTable = ({ toggleView }) => {
             dataField="Actions"
             headerClassName="updatedHeader !fmtm-sticky fmtm-right-0 fmtm-shadow-[-10px_0px_20px_0px_rgba(0,0,0,0.1)] fmtm-text-center"
             rowClassName="updatedRow !fmtm-sticky fmtm-right-0 fmtm-bg-white fmtm-shadow-[-10px_0px_20px_0px_rgba(0,0,0,0.1)]"
-            dataFormat={(row) => (
-              <div className="fmtm-w-[5rem] fmtm-overflow-hidden fmtm-truncate fmtm-text-center">
-                <AssetModules.VisibilityOutlinedIcon
-                  className="fmtm-text-[#545454] hover:fmtm-text-primaryRed"
-                  onClick={() => {
-                    navigate(`/project/${projectId}/tasks/${row?.phonenumber}/submission/${row?.meta?.instanceID}`);
-                  }}
-                />{' '}
-                <span className="fmtm-text-primaryRed fmtm-border-[1px] fmtm-border-primaryRed fmtm-mx-1"></span>{' '}
-                <AssetModules.CheckOutlinedIcon
-                  className="fmtm-text-[#545454] hover:fmtm-text-primaryRed"
-                  onClick={() => {
-                    dispatch(
-                      SubmissionActions.SetUpdateReviewStatusModal({
-                        toggleModalStatus: true,
-                        instanceId: row?.meta?.instanceID,
-                        taskId: row?.task_id,
-                        projectId: projectId,
-                        reviewState: row?.__system?.reviewState,
-                      }),
-                    );
-                  }}
-                />
-              </div>
-            )}
+            dataFormat={(row) => {
+              const taskUId = taskList?.find((task) => task?.index == row?.task_id)?.id;
+              return (
+                <div className="fmtm-w-[5rem] fmtm-overflow-hidden fmtm-truncate fmtm-text-center">
+                  <AssetModules.VisibilityOutlinedIcon
+                    className="fmtm-text-[#545454] hover:fmtm-text-primaryRed"
+                    onClick={() => {
+                      navigate(`/project/${projectId}/tasks/${taskUId}/submission/${row?.meta?.instanceID}`);
+                    }}
+                  />{' '}
+                  <span className="fmtm-text-primaryRed fmtm-border-[1px] fmtm-border-primaryRed fmtm-mx-1"></span>{' '}
+                  <AssetModules.CheckOutlinedIcon
+                    className="fmtm-text-[#545454] hover:fmtm-text-primaryRed"
+                    onClick={() => {
+                      dispatch(
+                        SubmissionActions.SetUpdateReviewStatusModal({
+                          toggleModalStatus: true,
+                          instanceId: row?.meta?.instanceID,
+                          taskId: row?.task_id,
+                          projectId: projectId,
+                          reviewState: row?.__system?.reviewState,
+                          taskUId: taskUId,
+                        }),
+                      );
+                    }}
+                  />
+                </div>
+              );
+            }}
           />
         </Table>
       )}
