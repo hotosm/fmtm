@@ -19,8 +19,9 @@ jobs:
       working_dir: src/frontend
 
   e2e-tests:
-    uses: hotosm/gh-workflows/.github/workflows/test_compose.yml@2.0.0
+    uses: hotosm/gh-workflows/.github/workflows/test_compose.yml@2.0.5
     with:
+      playwright: true
       image_name: mcr.microsoft.com/playwright:v1.44.1
       build_img: false
       compose_file: docker-compose.yml -f contrib/playwright/docker-compose.yml
