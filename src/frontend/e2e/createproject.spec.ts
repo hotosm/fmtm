@@ -9,6 +9,7 @@ test('Project Creation', async ({ browserName, page }) => {
   // Run other tests in all browsers
   test.skip(browserName !== 'chromium', 'Test only for chromium!');
 
+  // 0. Temp Login
   await page.goto('/');
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page.getByText('Temporary Account').click();
@@ -21,10 +22,9 @@ test('Project Creation', async ({ browserName, page }) => {
   await expect(page.getByText('Description is Required.', { exact: true })).toBeVisible();
   await expect(page.getByText('Organization is Required.')).toBeVisible();
   await expect(page.getByText('ODK URL is Required.')).toBeVisible();
-
   await page.locator('#name').click();
   // The project name must be unique when running multiple tests
-  await page.locator('#name').fill(`Project Create Playwright ${uuid4}`);
+  await page.locator('#name').fill(`Project Create Playwright ${uuid4()}`);
   await page.locator('#short_description').click();
   await page.locator('#short_description').fill('short');
   await page.locator('#description').click();
@@ -67,7 +67,7 @@ test('Project Creation', async ({ browserName, page }) => {
   await page.getByRole('button', { name: 'NEXT' }).click();
   await expect(page.getByText('Form Category is Required.')).toBeVisible();
   await page.getByRole('combobox').click();
-  await page.getByLabel('buildings').getByText('buildings').click();
+  await page.getByLabel('buildings').click();
   await page.getByRole('button', { name: 'NEXT' }).click();
 
   // 4. Data Extract Step
@@ -78,9 +78,9 @@ test('Project Creation', async ({ browserName, page }) => {
   await page.getByRole('button', { name: 'NEXT' }).click();
 
   // 5. Split Tasks Step
-  await page.getByText('Divide on square').click();
+  await page.getByText('Task Splitting Algorithm', { exact: true }).click();
   await page.getByRole('spinbutton').click();
-  await page.getByRole('spinbutton').fill('200');
+  await page.getByRole('spinbutton').fill('3');
   await page.getByRole('button', { name: 'Click to generate task' }).click();
   await page.getByRole('button', { name: 'SUBMIT' }).click();
   await expect(page.getByText('Project Generation Completed. Redirecting...')).toBeVisible();

@@ -53,7 +53,7 @@ services:
     volumes:
       - ./src/frontend:/app
       - /tmp/.X11-unix:/tmp/.X11-unix
-    command: npm run test:e2e
+    command: npm install --legacy-peer-deps && npm run test:e2e
     ports:
       - "9323:9323"
     networks:
