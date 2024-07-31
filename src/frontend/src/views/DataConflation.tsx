@@ -3,12 +3,14 @@ import ConflationMap from '@/components/DataConflation/ConflationMap';
 import TaskInfo from '@/components/DataConflation/TaskInfo';
 import { Modal } from '@/components/common/Modal';
 import Button from '@/components/common/Button';
+import SubmissionConflation from '@/components/DataConflation/SubmissionConflation';
 
 const DataConflation = () => {
   const [openModal, setOpenModal] = useState(true);
+  const [showSubmissionConflation, setShowSubmissionConflation] = useState(true);
 
   return (
-    <div className="fmtm-bg-[#F5F5F5] fmtm-p-6 fmtm-h-full fmtm-relative">
+    <div className="fmtm-bg-[#F5F5F5] fmtm-p-6 md:fmtm-h-full fmtm-relative">
       <Modal
         title={<p className="fmtm-text-left">Merge Data With OSM</p>}
         description={
@@ -38,14 +40,23 @@ const DataConflation = () => {
             </div>
           </div>
         }
-        open={openModal}
+        open={false}
         onOpenChange={(status) => setOpenModal(status)}
         className=""
       />
 
-      <div className="fmtm-flex fmtm-gap-5 fmtm-w-full fmtm-h-full fmtm-overflow-hidden fmtm-pb-5">
-        <TaskInfo />
-        <ConflationMap />
+      <div className="fmtm-w-full fmtm-h-full fmtm-flex fmtm-gap-5 fmtm-flex-col lg:fmtm-flex-row">
+        <div className="2xl:fmtm-w-[15%] lg:fmtm-h-full">
+          <TaskInfo />
+        </div>
+        <div className="fmtm-h-full fmtm-flex fmtm-flex-col md:fmtm-flex-row fmtm-gap-5 fmtm-w-full lg:fmtm-w-[85%]">
+          <div className="fmtm-h-[50vh] fmtm-w-full md:fmtm-h-full md:fmtm-w-[60%]">
+            <ConflationMap />
+          </div>
+          <div className="fmtm-w-full fmtm-h-[60vh] md:fmtm-h-full md:fmtm-w-[40%]">
+            {showSubmissionConflation && <SubmissionConflation />}
+          </div>
+        </div>
       </div>
     </div>
   );
