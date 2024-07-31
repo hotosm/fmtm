@@ -41,7 +41,7 @@ services:
       timeout: 5s
 
   ui-test:
-    image: mcr.microsoft.com/playwright:v1.44.1
+    image: "mcr.microsoft.com/playwright:${PLAYWRIGHT_TAG:-v1.44.1}"
     depends_on:
       api:
         condition: service_healthy
@@ -53,7 +53,11 @@ services:
     volumes:
       - ./src/frontend:/app
       - /tmp/.X11-unix:/tmp/.X11-unix
-    command: npm install --legacy-peer-deps && npm run test:e2e
+    entrypoint: /bin/sh -c
+    command:
+      - |
+        npm install --legacy-peer-deps
+        npm run test:e2e
     ports:
       - "9323:9323"
     networks:
