@@ -2,7 +2,6 @@
 // such as the default XLSForm and an OSM data extract.
 
 import { test, expect } from '@playwright/test';
-import { v4 as uuid4 } from 'uuid';
 
 test('Project Creation', async ({ browserName, page }) => {
   // Specific for this large test, only run in one browser
@@ -24,7 +23,8 @@ test('Project Creation', async ({ browserName, page }) => {
   await expect(page.getByText('ODK URL is Required.')).toBeVisible();
   await page.locator('#name').click();
   // The project name must be unique when running multiple tests
-  await page.locator('#name').fill(`Project Create Playwright ${uuid4()}`);
+  const randomId = Math.random() * 10000000000000000;
+  await page.locator('#name').fill(`Project Create Playwright ${randomId}`);
   await page.locator('#short_description').click();
   await page.locator('#short_description').fill('short');
   await page.locator('#description').click();
