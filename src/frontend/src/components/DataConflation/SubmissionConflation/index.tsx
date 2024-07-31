@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Button from '@/components/common/Button';
 import AssetModules from '@/shared/AssetModules';
 import MergeAttributes from '@/components/DataConflation/SubmissionConflation/MergeAttributes';
+import CoreModules from '@/shared/CoreModules';
 
 const tags = {
   category: 'Service',
@@ -15,6 +16,17 @@ const tags = {
   window: 'Glass',
   garden: 'Yes',
 };
+
+const TagsSkeleton = () => (
+  <>
+    {Array.from({ length: 6 }).map((_, index) => (
+      <div className="fmtm-grid fmtm-grid-cols-2 fmtm-border-b fmtm-border-[#E2E2E2] fmtm-py-1">
+        <CoreModules.Skeleton key={index} className="!fmtm-w-[8rem] fmtm-h-[0.75rem]" />
+        <CoreModules.Skeleton key={index} className="!fmtm-w-[5rem] fmtm-h-[0.75rem]" />
+      </div>
+    ))}
+  </>
+);
 
 const RenderTags = ({ tag }: { tag: [string, any] }) => (
   <div className="fmtm-grid fmtm-grid-cols-2 fmtm-border-b fmtm-border-[#E2E2E2] fmtm-py-1">
@@ -39,9 +51,15 @@ const SubmissionConflation = () => {
           <div className="fmtm-flex fmtm-flex-col fmtm-gap-2 fmtm-max-h-[40vh] md:fmtm-max-h-[40%]">
             <h4>SUBMISSION #457</h4>
             <div className="fmtm-bg-white fmtm-rounded-xl fmtm-p-3 fmtm-h-[calc(100%-4.281rem)] fmtm-overflow-y-scroll scrollbar">
-              {Object.entries(tags).map((tag) => (
-                <RenderTags tag={tag} />
-              ))}
+              {false ? (
+                <TagsSkeleton />
+              ) : (
+                <>
+                  {Object.entries(tags).map((tag) => (
+                    <RenderTags tag={tag} />
+                  ))}
+                </>
+              )}
             </div>
             <Button
               btnText="Accept Submission Feature"
@@ -64,9 +82,15 @@ const SubmissionConflation = () => {
           <div className="fmtm-flex fmtm-flex-col fmtm-gap-2 fmtm-max-h-[40vh] md:fmtm-max-h-[40%]">
             <h4>OSM TAGS</h4>
             <div className="fmtm-bg-white fmtm-rounded-xl fmtm-p-3 fmtm-h-[calc(100%-4.281rem)] fmtm-overflow-y-scroll scrollbar">
-              {Object.entries(tags).map((tag) => (
-                <RenderTags tag={tag} />
-              ))}
+              {false ? (
+                <TagsSkeleton />
+              ) : (
+                <>
+                  {Object.entries(tags).map((tag) => (
+                    <RenderTags tag={tag} />
+                  ))}
+                </>
+              )}
             </div>
             <Button
               btnText="Accept OSM Features"
