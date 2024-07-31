@@ -3,8 +3,12 @@
 
 import { test, expect } from '@playwright/test';
 
-test('test', async ({ page }) => {
-  await page.goto('http://fmtm.dev.test');
+test('Project Creation', async ({ browserName, page }) => {
+  // Specific for this large test, only run in one browser
+  // Run other tests in all browsers
+  test.skip(browserName !== 'chromium', 'Test only for chromium!');
+
+  await page.goto('/');
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page.getByText('Temporary Account').click();
   await page.getByRole('button', { name: '+ Create New Project' }).click();
@@ -18,7 +22,8 @@ test('test', async ({ page }) => {
   await expect(page.getByText('ODK URL is Required.')).toBeVisible();
 
   await page.locator('#name').click();
-  await page.locator('#name').fill('Playwright Test');
+  // The project name must be unique when running multiple tests
+  await page.locator('#name').fill(`Project Create Playwright Chromium`);
   await page.locator('#short_description').click();
   await page.locator('#short_description').fill('short');
   await page.locator('#description').click();
