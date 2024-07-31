@@ -65,7 +65,9 @@ const MergeAttributes = ({ selectedConflateMethod, setSelectedConflateMethod }: 
                       className={`fmtm-flex fmtm-items-center fmtm-justify-between !fmtm-h-full fmtm-absolute fmtm-top-0 fmtm-left-0 fmtm-w-full fmtm-p-3 ${
                         chosenAttribute[row?.name] === row?.osm && 'fmtm-bg-[#9FD5C5]'
                       }`}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         setChosenAttribute((prev) => ({ ...prev, [row?.name]: row?.osm }));
                       }}
                     >
@@ -97,7 +99,9 @@ const MergeAttributes = ({ selectedConflateMethod, setSelectedConflateMethod }: 
                       className={`fmtm-flex fmtm-items-center fmtm-justify-between !fmtm-h-full fmtm-absolute fmtm-top-0 fmtm-left-0 fmtm-w-full fmtm-p-3 ${
                         chosenAttribute[row?.name] === row?.submission && 'fmtm-bg-[#9FD5C5]'
                       }`}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         setChosenAttribute((prev) => ({ ...prev, [row?.name]: row?.submission }));
                       }}
                     >
