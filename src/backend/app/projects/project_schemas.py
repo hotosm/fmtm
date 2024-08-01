@@ -249,12 +249,17 @@ class ProjectIn(BaseModel):
                 
                 if not re.match(full_pattern, custom_tms_url):
                     if re.search(r'\.\w+$', custom_tms_url):
-                        raise ValueError(f"Invalid file extension in TMS URL. Valid extensions are: {', '.join(valid_extensions)}.")
+                        raise ValueError(
+                            f"Invalid file extension in TMS URL. Valid extensions are: 
+                            {', '.join(valid_extensions)}."
+                            )
                     else:
-                        raise ValueError("Invalid TMS URL format. Please check the URL structure.")
+                        raise ValueError(
+                            "Invalid TMS URL format. Please check the URL structure."
+                            )
             return custom_tms_url
         except ValueError as e:
-                raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(e))
+                raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(e)) from e
 
 
 class ProjectUpload(ProjectIn, ODKCentralIn):
