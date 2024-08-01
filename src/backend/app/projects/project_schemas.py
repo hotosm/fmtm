@@ -258,8 +258,8 @@ class ProjectIn(BaseModel):
                 if not re.match(full_pattern, custom_tms_url):
                     if re.search(r'\.\w+$', custom_tms_url):
                         raise ValueError(
-                            f"Invalid file extension in TMS URL. Valid extensions are: 
-                            {', '.join(valid_extensions)}."
+                            "Invalid file extension in TMS URL. Valid extensions are: "
+                            f"{', '.join(valid_extensions)}."
                             )
                     else:
                         raise ValueError(
