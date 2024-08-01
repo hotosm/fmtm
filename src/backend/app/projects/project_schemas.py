@@ -17,12 +17,14 @@
 #
 """Pydantic schemas for Projects."""
 
+import re
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, List, Optional, Union
 
 from dateutil import parser
+from fastapi import HTTPException
 from geojson_pydantic import Feature, FeatureCollection, MultiPolygon, Polygon
 from loguru import logger as log
 from pydantic import BaseModel, Field, computed_field
@@ -41,7 +43,7 @@ from app.db.postgis_utils import (
     wkb_geom_to_feature,
     write_wkb,
 )
-from app.models.enums import ProjectPriority, ProjectStatus, TaskSplitType, XLSFormType
+from app.models.enums import ProjectPriority, ProjectStatus, TaskSplitType, XLSFormType, HTTPStatus
 from app.tasks import tasks_schemas
 from app.users.user_schemas import User
 
@@ -226,6 +228,33 @@ class ProjectIn(BaseModel):
         address = get_address_from_lat_lon(latitude, longitude)
         self.location_str = address if address is not None else ""
         return self
+    
+    @field_validator("custom_tms_url", mode="before")
+    @classmethod
+    def validate_custom_tms_url(cls, custom_tms_url: Optional[str]) -> Optional[str]:
+        """Validate custom TMS URL."""
+        try:
+            valid_extensions = ['png', 'jpg', 'jpeg', 'tiff', 'webp', 'pbf']
+        
+            # Pattern to check for {z}, {x}, and {y} placeholders
+            placeholders_pattern = r'.*/\{z\}/\{x\}/\{y\}'
+            if custom_tms_url:
+                # Check if the URL contains {z}, {x}, and {y}
+                if not re.search(placeholders_pattern, custom_tms_url):
+                    raise ValueError("TMS URL must contain valid placeholders {z}, {x}, and {y}.")
+
+                extension_pattern = rf'(?:\.(?:{"|".join(valid_extensions)}))?$'
+                
+                full_pattern = placeholders_pattern + extension_pattern
+                
+                if not re.match(full_pattern, custom_tms_url):
+                    if re.search(r'\.\w+$', custom_tms_url):
+                        raise ValueError(f"Invalid file extension in TMS URL. Valid extensions are: {', '.join(valid_extensions)}.")
+                    else:
+                        raise ValueError("Invalid TMS URL format. Please check the URL structure.")
+            return custom_tms_url
+        except ValueError as e:
+                raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(e))
 
 
 class ProjectUpload(ProjectIn, ODKCentralIn):
