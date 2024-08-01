@@ -56,6 +56,7 @@ def create_project(client, organisation_id, project_data):
 def test_create_project(client, organisation, project_data):
     """Test project creation endpoint."""
     response_data = create_project(client, organisation.id, project_data)
+    project_name = project_data["project_info"]["name"]
     assert "id" in response_data
 
     # Duplicate response to test error condition: project name already exists
@@ -64,8 +65,8 @@ def test_create_project(client, organisation, project_data):
     )
     assert response_duplicate.status_code == 400
     assert (
-        response_duplicate.json()["detail"] == "Project already exists with the name "
-        "{project_data['project_info']['name']}"
+        response_duplicate.json()["detail"]
+        == f"Project already exists with the name {project_name}"
     )
 
 
