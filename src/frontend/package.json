@@ -10,8 +10,9 @@
     "test": "vitest",
     "test:unit": "vitest",
     "test:coverage": "vitest --coverage",
-    "test:e2e": "CI=true playwright test",
+    "test:e2e": "CI=1 playwright test",
     "test:e2e-report": "playwright test",
+    "test:e2e-debug": "playwright test --debug",
     "test:e2e-interactive": "playwright open http://fmtm.dev.test",
     "test:e2e-install-deps": "playwright install-deps",
     "lint": "eslint --fix --ext .js,.jsx,.ts,.tsx src"
