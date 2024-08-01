@@ -1,6 +1,10 @@
 # Uses hostname fmtm.dev.test for api and ui on same domain
 # otherwise tests will not work using the cookie for auth
 
+networks:
+  fmtm-net:
+    name: fmtm-${GIT_BRANCH:-local}
+
 services:
   api:
     hostname: fmtm.dev.test
