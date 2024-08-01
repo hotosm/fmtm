@@ -49,7 +49,7 @@ services:
         condition: service_healthy
     working_dir: /app
     environment:
-      - DISPLAY=:0
+      DISPLAY: :0
     volumes:
       - ./src/frontend:/app
       - /tmp/.X11-unix:/tmp/.X11-unix

@@ -18,7 +18,7 @@ export default defineConfig({
   // Do not run parallel in CI for consistency
   fullyParallel: false,
   workers: 1,
-  reporter: [['html', { host: '0.0.0.0', port: '9323' }]],
+  reporter: [['html', { host: '0.0.0.0', port: '9323', open: 'on-failure' }]],
   use: {
     // Base URL to use in actions like `await page.goto('/')`.
     baseURL: 'http://fmtm.dev.test',

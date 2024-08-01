@@ -31,7 +31,7 @@ frontend:
   docker compose \
     -f docker-compose.yml \
     -f contrib/playwright/docker-compose.yml \
-  run --rm --service-ports ui-test
+  run --rm --service-ports ui-test 'npm run test:e2e-report'
 
 # Create Playwright tests interactively
 [no-cd]
@@ -39,7 +39,7 @@ frontend-interactive:
   docker compose \
     -f docker-compose.yml \
     -f contrib/playwright/docker-compose.yml \
-  run --rm ui-test npm run test:interactive
+  run --rm ui-test npm run test:e2e-interactive
 
 # Check coverage for backend tests
 [no-cd]
