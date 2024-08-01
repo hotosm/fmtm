@@ -43,7 +43,13 @@ from app.db.postgis_utils import (
     wkb_geom_to_feature,
     write_wkb,
 )
-from app.models.enums import ProjectPriority, ProjectStatus, TaskSplitType, XLSFormType, HTTPStatus
+from app.models.enums import (
+    HTTPStatus,
+    ProjectPriority,
+    ProjectStatus,
+    TaskSplitType,
+    XLSFormType,
+)
 from app.tasks import tasks_schemas
 from app.users.user_schemas import User
 
@@ -228,25 +234,27 @@ class ProjectIn(BaseModel):
         address = get_address_from_lat_lon(latitude, longitude)
         self.location_str = address if address is not None else ""
         return self
-    
+
     @field_validator("custom_tms_url", mode="before")
     @classmethod
     def validate_custom_tms_url(cls, custom_tms_url: Optional[str]) -> Optional[str]:
         """Validate custom TMS URL."""
         try:
-            valid_extensions = ['png', 'jpg', 'jpeg', 'tiff', 'webp', 'pbf']
-        
+            valid_extensions = ["png", "jpg", "jpeg", "tiff", "webp", "pbf"]
+
             # Pattern to check for {z}, {x}, and {y} placeholders
-            placeholders_pattern = r'.*/\{z\}/\{x\}/\{y\}'
+            placeholders_pattern = r".*/\{z\}/\{x\}/\{y\}"
             if custom_tms_url:
                 # Check if the URL contains {z}, {x}, and {y}
                 if not re.search(placeholders_pattern, custom_tms_url):
-                    raise ValueError("TMS URL must contain valid placeholders {z}, {x}, and {y}.")
+                    raise ValueError(
+                        "TMS URL must contain valid placeholders {z}, {x}, and {y}."
+                    )
 
                 extension_pattern = rf'(?:\.(?:{"|".join(valid_extensions)}))?$'
-                
+
                 full_pattern = placeholders_pattern + extension_pattern
-                
+
                 if not re.match(full_pattern, custom_tms_url):
                     if re.search(r'\.\w+$', custom_tms_url):
                         raise ValueError(
