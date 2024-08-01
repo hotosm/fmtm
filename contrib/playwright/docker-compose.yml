@@ -47,8 +47,13 @@ services:
   ui-test:
     image: "mcr.microsoft.com/playwright:${PLAYWRIGHT_TAG:-v1.44.1}"
     depends_on:
-      api:
+      # Starts the proxy and all other services
+      proxy:
         condition: service_healthy
+      api:
+        # Override: must be healthy before tests run
+        condition: service_healthy
+        # Override: must be healthy before tests run
       ui:
         condition: service_healthy
     working_dir: /app
