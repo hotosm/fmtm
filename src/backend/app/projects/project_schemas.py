@@ -256,21 +256,21 @@ class ProjectIn(BaseModel):
                 full_pattern = placeholders_pattern + extension_pattern
 
                 if not re.match(full_pattern, custom_tms_url):
-                    if re.search(r'\.\w+$', custom_tms_url):
+                    if re.search(r"\.\w+$", custom_tms_url):
                         raise ValueError(
                             "Invalid file extension in TMS URL. Valid extensions are: "
                             f"{', '.join(valid_extensions)}."
-                            )
+                        )
                     else:
                         raise ValueError(
                             "Invalid TMS URL format. Please check the URL structure."
-                            )
+                        )
             return custom_tms_url
         except ValueError as e:
                 raise HTTPException(
                     status_code=HTTPStatus.BAD_REQUEST, 
                     detail=str(e)
-                    )from e
+                ) from e
 
 
 class ProjectUpload(ProjectIn, ODKCentralIn):
