@@ -74,12 +74,12 @@ nav:
       - The Team: about/team.md
   - User Manuals:
       - Video Guides: manuals/videos.md
-      - User Types Explanation: user-breakdown.md
+      - User Types Explanation: manuals/user-breakdown.md
       - Workflow Diagrams: manuals/workflow-diagrams.md
       - Project Manager Guide: manuals/project-managers.md
       - XLSForm Design: manuals/xlsform-design.md
       - ODKCollect Offline Maps: https://docs.getodk.org/collect-offline-maps
-  - Dev:
+  - Developer Guide:
       - Dev Practices: https://docs.hotosm.org/dev-practices
       - Setup: dev/Setup.md
       - Backend: dev/Backend.md
