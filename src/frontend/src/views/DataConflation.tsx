@@ -1,13 +1,31 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ConflationMap from '@/components/DataConflation/ConflationMap';
 import TaskInfo from '@/components/DataConflation/TaskInfo';
 import { Modal } from '@/components/common/Modal';
 import Button from '@/components/common/Button';
 import SubmissionConflation from '@/components/DataConflation/SubmissionConflation';
+import { useDispatch } from 'react-redux';
+import { SubmissionConflationGeojsonService } from '@/api/DataConflation';
+import { useParams } from 'react-router-dom';
+import { useAppSelector } from '@/types/reduxTypes';
 
 const DataConflation = () => {
+  const dispatch = useDispatch();
+  const { projectId, taskId } = useParams();
   const [openModal, setOpenModal] = useState(true);
   const [showSubmissionConflation, setShowSubmissionConflation] = useState(true);
+
+  const submissionConflationGeojson = useAppSelector((state) => state.dataconflation.submissionConflationGeojson);
+
+  useEffect(() => {
+    dispatch(
+      SubmissionConflationGeojsonService(
+        `${
+          import.meta.env.VITE_API_URL
+        }/submission/conflate-submission-geojson/?project_id=${projectId}&task_id=${taskId}`,
+      ),
+    );
+  }, []);
 
   return (
     <div className="fmtm-bg-[#F5F5F5] md:fmtm-h-full fmtm-relative fmtm-p-5">
