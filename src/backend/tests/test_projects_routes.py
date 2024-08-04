@@ -215,6 +215,7 @@ def test_create_project(client, organisation, project_data):
 
 @pytest.mark.parametrize(
     "hashtag_input,expected_output",
+    "hashtag_input, expected_output",
     [
         ("tag1, tag2, tag3", ["#tag1", "#tag2", "#tag3", "#fmtm"]),
         ("tag1   tag2    tag3", ["#tag1", "#tag2", "#tag3", "#fmtm"]),
@@ -226,8 +227,10 @@ def test_hashtags(client, organisation, project_data, hashtag_input, expected_ou
     """Test hashtag parsing."""
     project_data["hashtags"] = hashtag_input
     response_data = create_project(client, organisation.id, project_data)
+    project_id = response_data["id"]
     assert "id" in response_data
     assert response_data["hashtags"][:-1] == expected_output
+    assert response_data["hashtags"][-1] == f"#{settings.FMTM_DOMAIN}-{project_id}"
 
 
 async def test_delete_project(client, admin_user, project):
