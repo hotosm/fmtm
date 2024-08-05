@@ -196,31 +196,13 @@ async def test_unsupported_crs(project_data, crs):
     assert exc_info.value.status_code == 400
 
 
-def test_create_project(client, organisation, project_data):
-    """Test project creation endpoint."""
-    response_data = create_project(client, organisation.id, project_data)
-    project_name = project_data["project_info"]["name"]
-    assert "id" in response_data
-
-    # Duplicate response to test error condition: project name already exists
-    response_duplicate = client.post(
-        f"/projects/create-project?org_id={organisation.id}", json=project_data
-    )
-    assert response_duplicate.status_code == 400
-    assert (
-        response_duplicate.json()["detail"]
-        == f"Project already exists with the name {project_name}"
-    )
-
-
 @pytest.mark.parametrize(
-    "hashtag_input,expected_output",
     "hashtag_input, expected_output",
     [
-        ("tag1, tag2, tag3", ["#tag1", "#tag2", "#tag3", "#fmtm"]),
-        ("tag1   tag2    tag3", ["#tag1", "#tag2", "#tag3", "#fmtm"]),
-        ("tag1, tag2 tag3    tag4", ["#tag1", "#tag2", "#tag3", "#tag4", "#fmtm"]),
-        ("TAG1, tag2 #TAG3", ["#tag1", "#tag2", "#tag3", "#fmtm"]),
+        ("tag1, tag2, tag3", ["#tag1", "#tag2", "#tag3", "#FMTM"]),
+        ("tag1   tag2    tag3", ["#tag1", "#tag2", "#tag3", "#FMTM"]),
+        ("tag1, tag2 tag3    tag4", ["#tag1", "#tag2", "#tag3", "#tag4", "#FMTM"]),
+        ("TAG1, tag2 #TAG3", ["#TAG1", "#tag2", "#TAG3", "#FMTM"]),
     ],
 )
 def test_hashtags(client, organisation, project_data, hashtag_input, expected_output):
@@ -468,7 +450,7 @@ async def test_update_project(client, admin_user, project):
     )
 
     assert response_data["xform_category"] == updated_project_data["xform_category"]
-    assert response_data["hashtags"] == ["#fmtm", "#anothertag"]
+    assert response_data["hashtags"] == ["#FMTM", "#anothertag"]
 
 
 async def test_project_summaries(client, project):

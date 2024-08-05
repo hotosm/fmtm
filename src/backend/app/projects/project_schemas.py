@@ -193,7 +193,7 @@ class ProjectIn(BaseModel):
             return ["#FMTM"]
 
         hashtags = hashtags.replace(",", " ").replace(";", " ")
-        hashtags_list = hashtags.lower().split()
+        hashtags_list = hashtags.split()
 
         # Add '#' to hashtag strings if missing
         hashtags_with_hash = [
@@ -201,8 +201,8 @@ class ProjectIn(BaseModel):
             for hashtag in hashtags_list
         ]
 
-        if "#fmtm" not in hashtags_with_hash:
-            hashtags_with_hash.append("#fmtm")
+        if "#FMTM" not in hashtags_with_hash:
+            hashtags_with_hash.append("#FMTM")
 
         return hashtags_with_hash
 
