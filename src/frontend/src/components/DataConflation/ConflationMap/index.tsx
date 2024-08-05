@@ -3,8 +3,12 @@ import { MapContainer as MapComponent, useOLMap } from '@/components/MapComponen
 import LayerSwitcherControl from '@/components/MapComponent/OpenLayersComponent/LayerSwitcher/index';
 import MapLegend from '@/components/DataConflation/ConflationMap/MapLegend';
 import Button from '@/components/common/Button';
+import { useAppSelector } from '@/types/reduxTypes';
+import { VectorLayer } from '@/components/MapComponent/OpenLayersComponent/Layers';
 
 const ConflationMap = () => {
+  const submissionConflationGeojson = useAppSelector((state) => state.dataconflation.submissionConflationGeojson);
+
   const { mapRef, map } = useOLMap({
     center: [0, 0],
     zoom: 4,
@@ -17,6 +21,16 @@ const ConflationMap = () => {
         mapInstance={map}
         className="map naxatw-relative naxatw-min-h-full !fmtm-h-full fmtm-w-[200px] fmtm-rounded-lg fmtm-overflow-hidden"
       >
+        <VectorLayer
+          geojson={submissionConflationGeojson}
+          viewProperties={{
+            size: map?.getSize(),
+            padding: [50, 50, 50, 50],
+            constrainResolution: true,
+            duration: 2000,
+          }}
+          zoomToLayer
+        />
         <LayerSwitcherControl visible="osm" />
         <div className="fmtm-absolute fmtm-bottom-20 sm:fmtm-bottom-3 fmtm-left-3 fmtm-z-50 fmtm-rounded-lg">
           <MapLegend />
