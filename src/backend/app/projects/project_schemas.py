@@ -267,10 +267,9 @@ class ProjectIn(BaseModel):
                         )
             return custom_tms_url
         except ValueError as e:
-                raise HTTPException(
-                    status_code=HTTPStatus.BAD_REQUEST, 
-                    detail=str(e)
-                ) from e
+            raise HTTPException(
+                status_code=HTTPStatus.BAD_REQUEST, detail=str(e)
+            ) from e
 
 
 class ProjectUpload(ProjectIn, ODKCentralIn):
