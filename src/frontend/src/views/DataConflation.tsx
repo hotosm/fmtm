@@ -64,14 +64,14 @@ const DataConflation = () => {
       />
 
       <div className="fmtm-w-full fmtm-flex fmtm-gap-5 fmtm-flex-col lg:fmtm-flex-row md:fmtm-h-full">
-        <div className="2xl:fmtm-w-[15%] lg:fmtm-h-full">
+        <div className="2xl:fmtm-w-[20%] lg:fmtm-h-full">
           <TaskInfo />
         </div>
-        <div className="md:fmtm-h-[calc(100%-205px)] lg:fmtm-h-full fmtm-flex fmtm-flex-col md:fmtm-flex-row fmtm-gap-5 fmtm-w-full lg:fmtm-w-[85%]">
-          <div className="fmtm-h-[50vh] fmtm-w-full md:fmtm-h-full md:fmtm-w-[60%]">
+        <div className="md:fmtm-h-[calc(100%-205px)] lg:fmtm-h-full fmtm-flex fmtm-flex-col md:fmtm-flex-row fmtm-gap-5 fmtm-w-full lg:fmtm-w-[80%]">
+          <div className="fmtm-h-[50vh] fmtm-w-full md:fmtm-h-full md:fmtm-w-[65%]">
             <ConflationMap />
           </div>
-          <div className="fmtm-w-full md:fmtm-h-full md:fmtm-w-[40%]">
+          <div className="fmtm-w-full md:fmtm-h-full md:fmtm-w-[35%]">
             {showSubmissionConflation && <SubmissionConflation />}
           </div>
         </div>

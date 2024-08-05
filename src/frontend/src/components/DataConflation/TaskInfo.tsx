@@ -24,7 +24,7 @@ const TaskInfo = () => {
         <AssetModules.ArrowBackIosIcon style={{ fontSize: '1.125rem' }} />
         <p className="fmtm-text-sm fmtm-font-[500]">BACK</p>
       </div>
-      <div className="fmtm-w-full fmtm-py-2 fmtm-px-3 fmtm-bg-white lg:fmtm-h-[calc(100%-2.5rem)] fmtm-flex fmtm-flex-col sm:fmtm-flex-row lg:fmtm-flex-col fmtm-gap-x-10">
+      <div className="fmtm-w-full fmtm-py-3 lg:fmtm-py-2 fmtm-px-3 fmtm-bg-white lg:fmtm-h-[calc(100%-2.5rem)] fmtm-flex fmtm-flex-col sm:fmtm-flex-row lg:fmtm-flex-col fmtm-gap-x-10">
         <div>
           <p className="fmtm-text-primaryRed">Task #{taskId}</p>
 
@@ -39,9 +39,9 @@ const TaskInfo = () => {
               <table>
                 {taskInfoConstants?.map((info) => (
                   <tr className="">
-                    <td className="fmtm-text-xs fmtm-text-[#484848] fmtm-pb-1">{info?.name}</td>
-                    <td className="fmtm-text-xs fmtm-text-[#484848] fmtm-px-2 fmtm-pb-1">:</td>
-                    <td className="fmtm-text-xs fmtm-text-[#484848] fmtm-pb-1">{info?.count}</td>
+                    <td className="fmtm-text-base fmtm-text-[#484848] fmtm-pb-1">{info?.name}</td>
+                    <td className="fmtm-text-base fmtm-text-[#484848] fmtm-px-2 fmtm-pb-1">:</td>
+                    <td className="fmtm-text-base fmtm-text-[#484848] fmtm-pb-1">{info?.count}</td>
                   </tr>
                 ))}
               </table>
