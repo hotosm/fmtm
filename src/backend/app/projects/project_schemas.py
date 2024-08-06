@@ -25,6 +25,7 @@ from typing import Any, List, Optional, Union
 from dateutil import parser
 from geojson_pydantic import Feature, FeatureCollection, MultiPolygon, Polygon
 from loguru import logger as log
+from psycopg.rows import class_row
 from pydantic import BaseModel, Field, computed_field
 from pydantic.functional_serializers import field_serializer
 from pydantic.functional_validators import field_validator, model_validator
@@ -337,7 +338,18 @@ class ProjectBase(BaseModel):
         """Compute the geojson outline from WKBElement outline."""
         if not self.outline:
             return None
-        geometry = wkb.loads(bytes(self.outline.data))
+
+        # FIXME
+        # from geoalchemy2 import WKBElement
+        if isinstance(self.outline, str):
+            # geometry = wkb.load(WKBElement(self.outline))
+            # return Feature(type="Feature", geometry=Polygon(
+            # type="Polygon", coordinates=[[45.0, 54.0], [45.0, 54.0]]),
+            # properties={})
+            return None
+        else:
+            geometry = wkb.loads(bytes(self.outline.data))
+
         bbox = geometry.bounds  # Calculate bounding box
         geom_geojson = wkb_geom_to_feature(
             geometry=self.outline,
@@ -364,7 +376,13 @@ class ProjectBase(BaseModel):
         """Compute the XForm ID from the linked DbXForm."""
         if not self.forms:
             return None
-        return self.forms[0].odk_form_id
+
+        first_form = self.forms[0]
+
+        if isinstance(first_form, dict):
+            return self.forms[0].get("odk_form_id")
+
+        return first_form.odk_form_id
 
 
 class ProjectWithTasks(ProjectBase):
@@ -395,6 +413,49 @@ class ReadProject(ProjectWithTasks):
             return ""
 
         return decrypt_value(value)
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def convert_status_to_int(cls, value: ProjectInfo) -> int:
+        """Convert projectstatus enum value to integer."""
+        if not isinstance(value, str):
+            raise ValueError(f"Could not convert the returned enum: {value}")
+        return ProjectStatus[value]
+
+    @staticmethod
+    async def by_id(conn, project_id: int):
+        """Get a specific project by it's ID, including info, tasks, user, xform."""
+        async with conn.cursor(row_factory=class_row(ReadProject)) as cur:
+            await cur.execute(
+                """
+                SELECT
+                    p.*,
+                    json_agg(t.*) AS tasks,
+                    row_to_json(u.*) AS author,
+                    row_to_json(pi.*) AS project_info,
+                    json_agg(x.*) AS forms
+                FROM
+                    projects p
+                LEFT JOIN
+                    project_info pi ON p.id = pi.project_id
+                LEFT JOIN
+                    tasks t ON p.id = t.project_id
+                LEFT JOIN
+                    users u ON p.author_id = u.id
+                LEFT JOIN
+                    xforms x ON p.id = x.project_id
+                WHERE
+                    p.id = %(project_id)s
+                GROUP BY
+                    p.id, u.id, pi.*, x.*
+                """,
+                {"project_id": project_id},
+            )
+            obj = await cur.fetchone()
+            if not obj:
+                raise KeyError(f"Project {id} not found")
+
+            return obj
 
 
 class BackgroundTaskStatus(BaseModel):

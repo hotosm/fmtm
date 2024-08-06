@@ -22,7 +22,7 @@ from typing import Any, List, Optional
 
 from geojson_pydantic import Feature
 from pydantic import BaseModel, ConfigDict, Field, computed_field
-from pydantic.functional_serializers import field_serializer
+from pydantic.functional_validators import field_validator
 
 from app.db.postgis_utils import wkb_geom_to_feature
 from app.models.enums import TaskStatus
@@ -61,8 +61,8 @@ class Task(BaseModel):
     )
 
     # Excluded
-    lock_holder: Any = Field(exclude=True)
-    outline: Any = Field(exclude=True)
+    lock_holder: Optional[Any] = Field(default=None, exclude=True)
+    outline: Optional[Any] = Field(default=None, exclude=True)
 
     id: int
     project_id: int
@@ -70,14 +70,19 @@ class Task(BaseModel):
     project_task_name: Optional[str]
     feature_count: Optional[int] = None
     task_status: TaskStatus
-    locked_by_uid: Optional[int] = None
-    locked_by_username: Optional[str] = None
     task_history: Optional[List[TaskHistoryBase]] = None
 
     @computed_field
     @property
     def outline_geojson(self) -> Optional[Feature]:
         """Compute the geojson outline from WKBElement outline."""
+        # FIXME
+
+        return None
+        # Is parsed as geojson already
+        if isinstance(self.outline, dict):
+            return self.outline
+
         if not self.outline:
             return None
         geom_geojson = wkb_geom_to_feature(
@@ -91,19 +96,29 @@ class Task(BaseModel):
         )
         return Feature(**geom_geojson)
 
-    @field_serializer("locked_by_uid")
-    def get_locked_by_uid(self, value: str) -> Optional[str]:
+    @computed_field
+    @property
+    def locked_by_uid(self) -> Optional[int]:
         """Get lock uid from lock_holder details."""
         if self.lock_holder:
             return self.lock_holder.id
         return None
 
-    @field_serializer("locked_by_username")
-    def get_locked_by_username(self, value: str) -> Optional[str]:
+    @computed_field
+    @property
+    def locked_by_username(self) -> Optional[str]:
         """Get lock username from lock_holder details."""
         if self.lock_holder:
             return self.lock_holder.username
         return None
+
+    @field_validator("task_status", mode="before")
+    @classmethod
+    def convert_status_to_int(cls, value: TaskStatus) -> int:
+        """Convert taskstatus enum value to integer."""
+        if not isinstance(value, str):
+            raise ValueError(f"Could not convert the returned enum: {value}")
+        return TaskStatus[value]
 
 
 class TaskCommentResponse(TaskHistoryOut):
