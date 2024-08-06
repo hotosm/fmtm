@@ -32,6 +32,7 @@ dependencies = [
     "python-multipart==0.0.9",
     "sqlalchemy==2.0.31",
     "psycopg2==2.9.9",
+    "psycopg[pool]>=3.2.1",
     "geoalchemy2==0.15.2",
     "geojson==3.1.0",
     "shapely==2.0.5",
