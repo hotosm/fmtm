@@ -3,30 +3,19 @@ import { Modal } from '@/components/common/Modal';
 import Button from '@/components/common/Button';
 import Table, { TableHeader } from '@/components/common/CustomTable';
 
-const osmTags = {
-  category: 'Service',
-  building_material: 'Stone',
-  building_levels: 4,
-  service: 'Beauty',
-  area: 10,
-  roof: 'Tile',
-};
-
-const submissionTags = {
-  category: 'Residential',
-  building_material: 'Brick',
-  building_levels: 5,
-  service: 'Active',
-  area: 10,
-  roof: 'Glass',
-};
-
 type mergeAttributesPropType = {
   selectedConflateMethod: 'submission_feature' | 'osm_feature' | 'merge_attributes' | '';
   setSelectedConflateMethod: (value: '') => void;
+  submissionTags: Record<string, any>;
+  osmTags: Record<string, any>;
 };
 
-const MergeAttributes = ({ selectedConflateMethod, setSelectedConflateMethod }: mergeAttributesPropType) => {
+const MergeAttributes = ({
+  selectedConflateMethod,
+  setSelectedConflateMethod,
+  submissionTags,
+  osmTags,
+}: mergeAttributesPropType) => {
   const [chosenAttribute, setChosenAttribute] = useState({});
 
   const tableData: any = [];
