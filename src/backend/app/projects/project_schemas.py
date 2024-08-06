@@ -24,6 +24,7 @@ from dateutil import parser
 from geoalchemy2 import WKBElement
 from geojson_pydantic import Feature, FeatureCollection, MultiPolygon, Polygon
 from loguru import logger as log
+from psycopg.rows import class_row
 from pydantic import BaseModel, Field, computed_field
 from pydantic.functional_serializers import field_serializer
 from pydantic.functional_validators import field_validator, model_validator
@@ -411,24 +412,24 @@ class ProjectBase(BaseModel):
         if not self.outline:
             return None
 
-        # FIXME this is a workaround until geoalchemy is removed
-        if isinstance(self.outline, WKBElement):
-            feat = wkb_geom_to_feature(
-                self.outline,
-                id=self.id,
-                properties={"id": self.id, "bbox": None},
-            )
-            return Feature(**feat)
+        # FIXME
+        # from geoalchemy2 import WKBElement
+        if isinstance(self.outline, str):
+            # geometry = wkb.load(WKBElement(self.outline))
+            # return Feature(type="Feature", geometry=Polygon(
+            # type="Polygon", coordinates=[[45.0, 54.0], [45.0, 54.0]]),
+            # properties={})
+            return None
+        else:
+            geometry = wkb.loads(bytes(self.outline.data))
 
-        # TODO refactor to remove outline_geojson
-        # TODO possibly also generate bbox for geojson in project_deps SQL?
-        feat = {
-            "type": "Feature",
-            "geometry": self.outline,
-            "id": self.id,
-            "properties": {"id": self.id, "bbox": None},
-        }
-        return Feature(**feat)
+        bbox = geometry.bounds  # Calculate bounding box
+        geom_geojson = wkb_geom_to_feature(
+            geometry=self.outline,
+            properties={"id": self.id, "bbox": bbox},
+            id=self.id,
+        )
+        return Feature(**geom_geojson)
 
     @computed_field
     @property
@@ -475,6 +476,49 @@ class ReadProject(ProjectWithTasks):
             return ""
 
         return decrypt_value(value)
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def convert_status_to_int(cls, value: ProjectInfo) -> int:
+        """Convert projectstatus enum value to integer."""
+        if not isinstance(value, str):
+            raise ValueError(f"Could not convert the returned enum: {value}")
+        return ProjectStatus[value]
+
+    @staticmethod
+    async def by_id(conn, project_id: int):
+        """Get a specific project by it's ID, including info, tasks, user, xform."""
+        async with conn.cursor(row_factory=class_row(ReadProject)) as cur:
+            await cur.execute(
+                """
+                SELECT
+                    p.*,
+                    json_agg(t.*) AS tasks,
+                    row_to_json(u.*) AS author,
+                    row_to_json(pi.*) AS project_info,
+                    json_agg(x.*) AS forms
+                FROM
+                    projects p
+                LEFT JOIN
+                    project_info pi ON p.id = pi.project_id
+                LEFT JOIN
+                    tasks t ON p.id = t.project_id
+                LEFT JOIN
+                    users u ON p.author_id = u.id
+                LEFT JOIN
+                    xforms x ON p.id = x.project_id
+                WHERE
+                    p.id = %(project_id)s
+                GROUP BY
+                    p.id, u.id, pi.*, x.*
+                """,
+                {"project_id": project_id},
+            )
+            obj = await cur.fetchone()
+            if not obj:
+                raise KeyError(f"Project {id} not found")
+
+            return obj
 
 
 class BackgroundTaskStatus(BaseModel):

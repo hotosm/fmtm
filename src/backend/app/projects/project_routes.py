@@ -416,10 +416,15 @@ async def generate_project_tiles(
 
 @router.get("/{project_id}", response_model=project_schemas.ReadProject)
 async def read_project(
-    project_user: ProjectUserDict = Depends(mapper),
+    # project_user: ProjectUserDict = Depends(mapper),
+    project_id: int,
+    # user = Depends(login_required),
+    db=Depends(database.db_conn),
 ):
     """Get a specific project by ID."""
-    return project_user.get("project")
+    # return project_user.get("project")
+    project = await project_schemas.ReadProject.by_id(db, project_id)
+    return project
 
 
 @router.delete("/{project_id}")

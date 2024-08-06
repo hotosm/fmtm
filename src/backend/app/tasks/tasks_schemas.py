@@ -80,6 +80,7 @@ class Task(BaseModel):
     # TODO check the logic in project_deps, as it doesn't check if action is locked
     locked_by_uid: Optional[int] = None
     locked_by_username: Optional[str] = None
+    task_history: Optional[List[TaskHistoryBase]] = None
 
     @computed_field
     @property
@@ -102,6 +103,14 @@ class Task(BaseModel):
     def enum_get_status_for_action(cls, value: str) -> TaskStatus:
         """Get the the int value from a string enum."""
         return get_status_for_action(TaskAction[value])
+
+    @field_validator("task_status", mode="before")
+    @classmethod
+    def convert_status_to_int(cls, value: TaskStatus) -> int:
+        """Convert taskstatus enum value to integer."""
+        if not isinstance(value, str):
+            raise ValueError(f"Could not convert the returned enum: {value}")
+        return TaskStatus[value]
 
 
 class TaskCommentResponse(TaskHistoryOut):
