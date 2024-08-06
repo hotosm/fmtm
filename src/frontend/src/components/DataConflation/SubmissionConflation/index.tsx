@@ -3,19 +3,20 @@ import Button from '@/components/common/Button';
 import AssetModules from '@/shared/AssetModules';
 import MergeAttributes from '@/components/DataConflation/SubmissionConflation/MergeAttributes';
 import CoreModules from '@/shared/CoreModules';
+import { useAppSelector } from '@/types/reduxTypes';
 
-const tags = {
-  category: 'Service',
-  name: 'Fig',
-  building_material: 'Stone',
-  building_levels: 4,
-  service: 'Beauty',
-  roof: 'Tile',
-  wall: 'Brick',
-  floor: 'Marble',
-  window: 'Glass',
-  garden: 'Yes',
-};
+// const tags = {
+//   category: 'Service',
+//   name: 'Fig',
+//   building_material: 'Stone',
+//   building_levels: 4,
+//   service: 'Beauty',
+//   roof: 'Tile',
+//   wall: 'Brick',
+//   floor: 'Marble',
+//   window: 'Glass',
+//   garden: 'Yes',
+// };
 
 const TagsSkeleton = () => (
   <>
@@ -40,11 +41,25 @@ const SubmissionConflation = () => {
     'submission_feature' | 'osm_feature' | 'merge_attributes' | ''
   >('');
 
+  const submissionConflationGeojson = useAppSelector((state) => state.dataconflation.submissionConflationGeojson);
+  const selectedFeatureOSMId = useAppSelector((state) => state.dataconflation.selectedFeatureOSMId);
+  const selectedFeature = submissionConflationGeojson?.features?.find(
+    (feature) => feature.properties?.xid === selectedFeatureOSMId,
+  );
+  const filteredSubmissionTags = {};
+  for (const [key, value] of Object.entries(selectedFeature?.properties)) {
+    if (value !== null) {
+      filteredSubmissionTags[key] = value;
+    }
+  }
+
   return (
     <>
       <MergeAttributes
         selectedConflateMethod={selectedConflateMethod}
         setSelectedConflateMethod={setSelectedConflateMethod}
+        submissionTags={filteredSubmissionTags}
+        osmTags={selectedFeature?.tags}
       />
       <div className="fmtm-w-full fmtm-h-full">
         <div className="fmtm-flex fmtm-flex-col fmtm-gap-5 fmtm-h-full fmtm-relative">
@@ -53,12 +68,15 @@ const SubmissionConflation = () => {
             <div className="fmtm-bg-white fmtm-rounded-xl fmtm-p-3 fmtm-h-[calc(100%-4.281rem)] fmtm-overflow-y-scroll scrollbar">
               {false ? (
                 <TagsSkeleton />
-              ) : (
+              ) : filteredSubmissionTags ? (
                 <>
-                  {Object.entries(tags).map((tag) => (
-                    <RenderTags tag={tag} />
-                  ))}
+                  {Object.entries(filteredSubmissionTags).map((tag) => {
+                    const [key, value] = tag;
+                    if (value) return <RenderTags tag={tag} />;
+                  })}
                 </>
+              ) : (
+                <></>
               )}
             </div>
             <Button
@@ -84,12 +102,14 @@ const SubmissionConflation = () => {
             <div className="fmtm-bg-white fmtm-rounded-xl fmtm-p-3 fmtm-h-[calc(100%-4.281rem)] fmtm-overflow-y-scroll scrollbar">
               {false ? (
                 <TagsSkeleton />
-              ) : (
+              ) : selectedFeature?.tags ? (
                 <>
-                  {Object.entries(tags).map((tag) => (
+                  {Object.entries(selectedFeature?.tags).map((tag) => (
                     <RenderTags tag={tag} />
                   ))}
                 </>
+              ) : (
+                <></>
               )}
             </div>
             <Button
