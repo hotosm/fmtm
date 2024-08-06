@@ -5,8 +5,12 @@ import MapLegend from '@/components/DataConflation/ConflationMap/MapLegend';
 import Button from '@/components/common/Button';
 import { useAppSelector } from '@/types/reduxTypes';
 import { VectorLayer } from '@/components/MapComponent/OpenLayersComponent/Layers';
+import { useDispatch } from 'react-redux';
+import { DataConflationActions } from '@/store/slices/DataConflationSlice';
 
 const ConflationMap = () => {
+  const dispatch = useDispatch();
+
   const submissionConflationGeojson = useAppSelector((state) => state.dataconflation.submissionConflationGeojson);
 
   const { mapRef, map } = useOLMap({
@@ -30,12 +34,15 @@ const ConflationMap = () => {
             duration: 2000,
           }}
           zoomToLayer
+          mapOnClick={(properties, feature) => {
+            dispatch(DataConflationActions.SetSelectedFeatureOSMId(feature.getProperties().xid));
+          }}
         />
         <LayerSwitcherControl visible="osm" />
         <div className="fmtm-absolute fmtm-bottom-20 sm:fmtm-bottom-3 fmtm-left-3 fmtm-z-50 fmtm-rounded-lg">
           <MapLegend />
         </div>
-        <div className="fmtm-absolute fmtm-bottom-20 sm:fmtm-top-3 fmtm-right-3 fmtm-z-50 fmtm-rounded-lg">
+        <div className="fmtm-absolute fmtm-bottom-20 sm:fmtm-top-3 fmtm-right-3 fmtm-z-50 fmtm-rounded-lg fmtm-h-fit">
           <Button btnText="Upload to OSM" type="button" btnType="primary" onClick={() => {}} />
         </div>
       </MapComponent>
