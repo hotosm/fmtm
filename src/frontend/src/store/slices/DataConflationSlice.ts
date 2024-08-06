@@ -3,6 +3,7 @@ import { DataConflationStateTypes } from '@/store/types/IDataConflation';
 
 const initialState: DataConflationStateTypes = {
   submissionConflationGeojson: null,
+  selectedFeatureOSMId: null,
 };
 
 const DataConflationSlice = createSlice({
@@ -11,6 +12,9 @@ const DataConflationSlice = createSlice({
   reducers: {
     SetSubmissionConflationGeojson(state, action) {
       state.submissionConflationGeojson = action.payload;
+    },
+    SetSelectedFeatureOSMId(state, action) {
+      state.selectedFeatureOSMId = action.payload;
     },
   },
 });
