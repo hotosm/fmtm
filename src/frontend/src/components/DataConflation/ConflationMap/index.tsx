@@ -35,7 +35,13 @@ const ConflationMap = () => {
           }}
           zoomToLayer
           mapOnClick={(properties, feature) => {
-            dispatch(DataConflationActions.SetSelectedFeatureOSMId(feature.getProperties().xid));
+            dispatch(
+              DataConflationActions.SetSelectedFeatureOSMId(
+                feature?.getProperties()?.xid
+                  ? feature.getProperties().xid
+                  : (feature.getProperties()?.osm_id).toString(),
+              ),
+            );
           }}
         />
         <LayerSwitcherControl visible="osm" />
