@@ -5,19 +5,6 @@ import MergeAttributes from '@/components/DataConflation/SubmissionConflation/Me
 import CoreModules from '@/shared/CoreModules';
 import { useAppSelector } from '@/types/reduxTypes';
 
-// const tags = {
-//   category: 'Service',
-//   name: 'Fig',
-//   building_material: 'Stone',
-//   building_levels: 4,
-//   service: 'Beauty',
-//   roof: 'Tile',
-//   wall: 'Brick',
-//   floor: 'Marble',
-//   window: 'Glass',
-//   garden: 'Yes',
-// };
-
 const TagsSkeleton = () => (
   <>
     {Array.from({ length: 6 }).map((_, index) => (
