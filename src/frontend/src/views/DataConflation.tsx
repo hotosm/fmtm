@@ -65,7 +65,7 @@ const DataConflation = () => {
         <div className="2xl:fmtm-w-[20%] lg:fmtm-h-full">
           <TaskInfo />
         </div>
-        <div className="md:fmtm-h-[calc(100%-205px)] lg:fmtm-h-full fmtm-flex fmtm-flex-col md:fmtm-flex-row fmtm-gap-5 fmtm-w-full lg:fmtm-w-[80%]">
+        <div className="md:fmtm-h-[calc(100%-240px)] lg:fmtm-h-full fmtm-flex fmtm-flex-col md:fmtm-flex-row fmtm-gap-5 fmtm-w-full lg:fmtm-w-[80%]">
           <div
             className={`fmtm-h-[50vh] fmtm-w-full md:fmtm-h-full fmtm-duration-200 ${
               selectedFeatureOSMId ? 'md:fmtm-w-[65%]' : 'md:fmtm-w-full'
