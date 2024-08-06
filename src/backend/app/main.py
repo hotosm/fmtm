@@ -36,7 +36,7 @@ from app.__version__ import __version__
 from app.auth import auth_routes
 from app.central import central_routes
 from app.config import MonitoringTypes, settings
-from app.db.database import get_db
+from app.db.database import get_db, get_db_connection_pool
 from app.helpers import helper_routes
 from app.models.enums import HTTPStatus
 from app.monitoring import (
@@ -91,10 +91,17 @@ async def lifespan(
     log.debug("Reading XLSForms from DB.")
     await read_and_insert_xlsforms(db_conn, xlsforms_path)
 
+    db_pool = await get_db_connection_pool()
+    await db_pool.open()
+    # Create a pooled db connection and make available in app state
+    # NOTE we can access 'request.app.state.db_pool' in endpoints
+    app.state.db_pool = db_pool
+
     yield
 
     # Shutdown events
     log.debug("Shutting down FastAPI server.")
+    await app.state.db_pool.close()
 
 
 def get_application() -> FastAPI:
