@@ -255,7 +255,7 @@ const SubmissionsTable = ({ toggleView }) => {
                     placeholder="Select"
                     data={taskInfo}
                     dataKey="value"
-                    value={filter?.task_id?.toString() || null}
+                    value={filter?.task_id?.toString() || undefined}
                     valueKey="task_id"
                     label="task_id"
                     onValueChange={(value) => value && setFilter((prev) => ({ ...prev, task_id: value.toString() }))}
@@ -268,7 +268,7 @@ const SubmissionsTable = ({ toggleView }) => {
                     placeholder="Select"
                     data={reviewStateData}
                     dataKey="value"
-                    value={filter?.review_state}
+                    value={filter?.review_state || undefined}
                     valueKey="value"
                     label="label"
                     onValueChange={(value) =>
