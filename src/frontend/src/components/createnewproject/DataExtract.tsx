@@ -105,7 +105,7 @@ const DataExtract = ({ flag, customDataExtractUpload, setCustomDataExtractUpload
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
-            message: 'Map features has no features. Please try adjusting your AOI.',
+            message: 'Map has no features. Please try adjusting the map area.',
             variant: 'error',
             duration: 2000,
           }),
