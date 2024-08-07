@@ -19,12 +19,12 @@ import { task_split_type } from '@/types/enums';
 import { dataExtractGeojsonType } from '@/store/types/ICreateProject';
 
 const dataExtractOptions = [
-  { name: 'data_extract', value: 'osm_data_extract', label: 'Use OSM data extract' },
-  { name: 'data_extract', value: 'custom_data_extract', label: 'Upload custom data extract' },
+  { name: 'data_extract', value: 'osm_data_extract', label: 'Use OSM map features' },
+  { name: 'data_extract', value: 'custom_data_extract', label: 'Upload custom map features' },
 ];
 
 const DataExtract = ({ flag, customDataExtractUpload, setCustomDataExtractUpload }) => {
-  useDocumentTitle('Create Project: Data Extract');
+  useDocumentTitle('Create Project: Map Features');
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [extractWays, setExtractWays] = useState('');
@@ -105,7 +105,7 @@ const DataExtract = ({ flag, customDataExtractUpload, setCustomDataExtractUpload
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
-            message: 'Data extract has no features. Please try adjusting your AOI.',
+            message: 'Map features has no features. Please try adjusting your AOI.',
             variant: 'error',
             duration: 2000,
           }),
@@ -116,7 +116,7 @@ const DataExtract = ({ flag, customDataExtractUpload, setCustomDataExtractUpload
       dispatch(
         CommonActions.SetSnackBar({
           open: true,
-          message: 'Error generating data extract.',
+          message: 'Error generating map features.',
           variant: 'error',
           duration: 2000,
         }),
@@ -200,7 +200,7 @@ const DataExtract = ({ flag, customDataExtractUpload, setCustomDataExtractUpload
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
-            message: 'Data extract must contain a LineString otherwise the task splitting algorithm will not work.',
+            message: 'Features must contain a LineString otherwise the task splitting algorithm will not work.',
             variant: 'warning',
             duration: 8000,
           }),
@@ -223,21 +223,21 @@ const DataExtract = ({ flag, customDataExtractUpload, setCustomDataExtractUpload
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
       <div className="fmtm-bg-white lg:fmtm-w-[20%] xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6">
-        <h6 className="fmtm-text-xl fmtm-font-[600] fmtm-pb-2 lg:fmtm-pb-6">Data Extract</h6>
+        <h6 className="fmtm-text-xl fmtm-font-[600] fmtm-pb-2 lg:fmtm-pb-6">Map Features</h6>
         <p className="fmtm-text-gray-500 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3">
           <span>
-            You may choose to use the default OSM data extracts as your feature types to perform the field survey
+            You may choose to use the default OSM map features as your feature types to perform the field survey.
           </span>
-          <span>The relevant data extracts that exist on OSM are imported based on your AOI.</span>
+          <span> The relevant map features that exist on OSM are imported based on your AOI.</span>{' '}
           <span>
-            You can use these data extracts to use the select_from_map functionality from ODK that allows you the mapper
-            to select the existing feature and conduct field mapping survey
-          </span>
+            You can use these map features to use the select_from_map functionality from ODK that allows you the mapper
+            to select the existing feature and conduct field mapping survey.
+          </span>{' '}
           <span>
-            In contrast to OSM data extracts, you can also upload custom data extracts around the AOI to conduct the
-            field mapping survey.
-          </span>
-          <span>Note: The custom data extracts shall follow the defined data standards.</span>
+            In contrast to OSM map features, you can also upload custom map features around the AOI to conduct the field
+            mapping survey.
+          </span>{' '}
+          <span>Note: The custom map features shall follow the defined data standards.</span>
         </p>
       </div>
       <div className="lg:fmtm-w-[80%] xl:fmtm-w-[83%] lg:fmtm-h-[60vh] xl:fmtm-h-[58vh] fmtm-bg-white fmtm-px-5 lg:fmtm-px-11 fmtm-py-6 lg:fmtm-overflow-y-scroll lg:scrollbar">
@@ -248,7 +248,7 @@ const DataExtract = ({ flag, customDataExtractUpload, setCustomDataExtractUpload
           >
             <div>
               <RadioButton
-                topic="You may choose to use OSM data or upload your own data extract"
+                topic="You may choose to use OSM data or upload your own map features"
                 options={dataExtractOptions}
                 direction="column"
                 value={formValues.dataExtractWays}
@@ -260,7 +260,7 @@ const DataExtract = ({ flag, customDataExtractUpload, setCustomDataExtractUpload
               />
               {extractWays === 'osm_data_extract' && (
                 <Button
-                  btnText="Generate Data Extract"
+                  btnText="Generate Map Features"
                   btnType="primary"
                   onClick={() => {
                     resetFile(setCustomDataExtractUpload);
@@ -268,7 +268,7 @@ const DataExtract = ({ flag, customDataExtractUpload, setCustomDataExtractUpload
                   }}
                   className="fmtm-mt-6"
                   isLoading={isFgbFetching}
-                  loadingText="Data extracting..."
+                  loadingText="Generating Map Features..."
                   disabled={dataExtractGeojson && customDataExtractUpload ? true : false}
                 />
               )}
@@ -284,7 +284,7 @@ const DataExtract = ({ flag, customDataExtractUpload, setCustomDataExtractUpload
                       dispatch(CreateProjectActions.setDataExtractGeojson(null));
                     }}
                     customFile={customDataExtractUpload}
-                    btnText="Upload Data Extract"
+                    btnText="Upload Map Features"
                     accept=".geojson,.json,.fgb"
                     fileDescription="*The supported file formats are .geojson, .json, .fgb"
                     errorMsg={errors.customDataExtractUpload}
@@ -305,7 +305,7 @@ const DataExtract = ({ flag, customDataExtractUpload, setCustomDataExtractUpload
                 btnType="primary"
                 type="submit"
                 className="fmtm-font-bold"
-                dataTip={`${!dataExtractGeojson ? 'Please Generate Data Extract First.' : ''}`}
+                dataTip={`${!dataExtractGeojson ? 'Please Generate Map Features First.' : ''}`}
                 disabled={
                   !dataExtractGeojson || (extractWays === 'osm_data_extract' && !dataExtractGeojson) || isFgbFetching
                     ? true
