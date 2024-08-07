@@ -2,12 +2,11 @@ import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import CoreModules from '@/shared/CoreModules';
 import { task_status } from '@/types/enums';
-import axios from 'axios';
 import { writeBinaryToOPFS } from '@/api/Files';
 
-export const ProjectById = (existingProjectList, projectId) => {
+export const ProjectById = (projectId) => {
   return async (dispatch) => {
-    const fetchProjectById = async (projectId, existingProjectList) => {
+    const fetchProjectById = async (projectId) => {
       try {
         dispatch(ProjectActions.SetProjectDetialsLoading(true));
         const project = await CoreModules.axios.get(`${import.meta.env.VITE_API_URL}/projects/${projectId}`);
@@ -65,7 +64,7 @@ export const ProjectById = (existingProjectList, projectId) => {
       }
     };
 
-    await fetchProjectById(projectId, existingProjectList);
+    await fetchProjectById(projectId);
     dispatch(ProjectActions.SetNewProjectTrigger());
   };
 };
