@@ -227,18 +227,13 @@ const DataExtract = ({ flag, customDataExtractUpload, setCustomDataExtractUpload
         <h6 className="fmtm-text-xl fmtm-font-[600] fmtm-pb-2 lg:fmtm-pb-6">Map Features</h6>
         <p className="fmtm-text-gray-500 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3">
           <span>
-            You may choose to use the default OSM map features as your feature types to perform the field survey.
+            You may either choose to use OSM data, or upload your own data for the mapping project.
           </span>
-          <span> The relevant map features that exist on OSM are imported based on your AOI.</span>{' '}
+          <span> The relevant map features that exist on OSM are imported based on the select map area.</span>{' '}
           <span>
-            You can use these map features to use the select_from_map functionality from ODK that allows you the mapper
-            to select the existing feature and conduct field mapping survey.
+            You can use these map features to use the 'select from map' functionality from ODK that allows you
+            to select the feature to collect data for.
           </span>{' '}
-          <span>
-            In contrast to OSM map features, you can also upload custom map features around the AOI to conduct the field
-            mapping survey.
-          </span>{' '}
-          <span>Note: The custom map features shall follow the defined data standards.</span>
         </p>
       </div>
       <div className="lg:fmtm-w-[80%] xl:fmtm-w-[83%] lg:fmtm-h-[60vh] xl:fmtm-h-[58vh] fmtm-bg-white fmtm-px-5 lg:fmtm-px-11 fmtm-py-6 lg:fmtm-overflow-y-scroll lg:scrollbar">
