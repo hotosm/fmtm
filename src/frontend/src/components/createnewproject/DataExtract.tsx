@@ -200,7 +200,8 @@ const DataExtract = ({ flag, customDataExtractUpload, setCustomDataExtractUpload
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
-            message: 'Features must contain line data (roads, rivers) otherwise the task splitting algorithm will not work.',
+            message:
+              'Features must contain line data (roads, rivers) otherwise the task splitting algorithm will not work.',
             variant: 'warning',
             duration: 8000,
           }),
