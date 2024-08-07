@@ -12,6 +12,9 @@ const ConflationMap = () => {
   const dispatch = useDispatch();
 
   const submissionConflationGeojson = useAppSelector((state) => state.dataconflation.submissionConflationGeojson);
+  const submissionConflationGeojsonLoading = useAppSelector(
+    (state) => state.dataconflation.submissionConflationGeojsonLoading,
+  );
 
   const { mapRef, map } = useOLMap({
     center: [0, 0],
@@ -49,7 +52,13 @@ const ConflationMap = () => {
           <MapLegend />
         </div>
         <div className="fmtm-absolute fmtm-bottom-20 sm:fmtm-top-3 fmtm-right-3 fmtm-z-50 fmtm-rounded-lg fmtm-h-fit">
-          <Button btnText="Upload to OSM" type="button" btnType="primary" onClick={() => {}} />
+          <Button
+            btnText="Upload to OSM"
+            type="button"
+            btnType="primary"
+            onClick={() => {}}
+            disabled={submissionConflationGeojsonLoading}
+          />
         </div>
       </MapComponent>
     </>

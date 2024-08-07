@@ -10,6 +10,9 @@ const TaskInfo = () => {
   const { taskId, projectId } = useParams();
 
   const submissionConflationGeojson = useAppSelector((state) => state.dataconflation.submissionConflationGeojson);
+  const submissionConflationGeojsonLoading = useAppSelector(
+    (state) => state.dataconflation.submissionConflationGeojsonLoading,
+  );
   const submissionFeatures = submissionConflationGeojson?.features;
 
   const featureCount = submissionFeatures?.length || 0;
@@ -62,7 +65,7 @@ const TaskInfo = () => {
           <p className="fmtm-text-primaryRed">Task #{taskId}</p>
 
           <div className="fmtm-mt-5 fmtm-mb-5 sm:fmtm-mb-0 lg:fmtm-mb-10">
-            {false ? (
+            {submissionConflationGeojsonLoading ? (
               <>
                 {Array.from({ length: 4 }).map((_, index) => (
                   <CoreModules.Skeleton key={index} className="!fmtm-w-[12.5rem] fmtm-h-[0.75rem]" />
@@ -89,6 +92,7 @@ const TaskInfo = () => {
             btnType="primary"
             onClick={() => {}}
             className="fmtm-text-sm !fmtm-rounded fmtm-w-full fmtm-justify-center"
+            disabled={submissionConflationGeojsonLoading}
           />
           <Button
             btnText="Request Additional Mapping"
@@ -96,6 +100,7 @@ const TaskInfo = () => {
             btnType="other"
             onClick={() => {}}
             className="fmtm-text-sm !fmtm-rounded fmtm-w-full fmtm-justify-center"
+            disabled={submissionConflationGeojsonLoading}
           />
         </div>
       </div>

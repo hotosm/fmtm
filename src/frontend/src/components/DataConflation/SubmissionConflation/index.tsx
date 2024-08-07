@@ -30,6 +30,10 @@ const SubmissionConflation = () => {
 
   const submissionConflationGeojson = useAppSelector((state) => state.dataconflation.submissionConflationGeojson);
   const selectedFeatureOSMId = useAppSelector((state) => state.dataconflation.selectedFeatureOSMId);
+  const submissionConflationGeojsonLoading = useAppSelector(
+    (state) => state.dataconflation.submissionConflationGeojsonLoading,
+  );
+
   const selectedFeature = submissionConflationGeojson?.features?.find(
     (feature) => feature.properties?.xid === selectedFeatureOSMId,
   );
@@ -53,7 +57,7 @@ const SubmissionConflation = () => {
           <div className="fmtm-flex fmtm-flex-col fmtm-gap-2 fmtm-max-h-[40vh] md:fmtm-max-h-[40%]">
             <h4>SUBMISSION #457</h4>
             <div className="fmtm-bg-white fmtm-rounded-xl fmtm-p-3 fmtm-h-[calc(100%-4.281rem)] fmtm-overflow-y-scroll scrollbar">
-              {false ? (
+              {submissionConflationGeojsonLoading ? (
                 <TagsSkeleton />
               ) : filteredSubmissionTags ? (
                 <>
@@ -87,7 +91,7 @@ const SubmissionConflation = () => {
           <div className="fmtm-flex fmtm-flex-col fmtm-gap-2 fmtm-max-h-[40vh] md:fmtm-max-h-[40%]">
             <h4>OSM TAGS</h4>
             <div className="fmtm-bg-white fmtm-rounded-xl fmtm-p-3 fmtm-h-[calc(100%-4.281rem)] fmtm-overflow-y-scroll scrollbar">
-              {false ? (
+              {submissionConflationGeojsonLoading ? (
                 <TagsSkeleton />
               ) : selectedFeature?.tags ? (
                 <>
