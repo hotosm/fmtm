@@ -43,7 +43,7 @@ const MergeAttributes = ({
                   dataField="Feature Name"
                   headerClassName="featureHeader"
                   rowClassName="featureRow"
-                  dataFormat={(row) => <div>{row?.name}</div>}
+                  dataFormat={(row) => <div title={row?.name}>{row?.name}</div>}
                 />
                 <TableHeader
                   dataField="OSM Tags"
@@ -52,13 +52,16 @@ const MergeAttributes = ({
                   dataFormat={(row) => (
                     <div
                       className={`fmtm-flex fmtm-items-center fmtm-justify-between !fmtm-h-full fmtm-absolute fmtm-top-0 fmtm-left-0 fmtm-w-full fmtm-p-3 ${
-                        chosenAttribute[row?.name] === row?.osm && 'fmtm-bg-[#9FD5C5]'
+                        chosenAttribute[row?.name] === row?.osm
+                          ? 'fmtm-bg-[#9FD5C5]'
+                          : 'hover:fmtm-bg-gray-100 fmtm-duration-200'
                       }`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         setChosenAttribute((prev) => ({ ...prev, [row?.name]: row?.osm }));
                       }}
+                      title={row?.osm}
                     >
                       <label
                         htmlFor={row?.name}
@@ -86,13 +89,16 @@ const MergeAttributes = ({
                   dataFormat={(row) => (
                     <div
                       className={`fmtm-flex fmtm-items-center fmtm-justify-between !fmtm-h-full fmtm-absolute fmtm-top-0 fmtm-left-0 fmtm-w-full fmtm-p-3 ${
-                        chosenAttribute[row?.name] === row?.submission && 'fmtm-bg-[#9FD5C5]'
+                        chosenAttribute[row?.name] === row?.submission
+                          ? 'fmtm-bg-[#9FD5C5]'
+                          : 'hover:fmtm-bg-gray-100 fmtm-duration-200'
                       }`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         setChosenAttribute((prev) => ({ ...prev, [row?.name]: row?.submission }));
                       }}
+                      title={row?.submission}
                     >
                       <label
                         htmlFor={row?.name}
@@ -130,7 +136,7 @@ const MergeAttributes = ({
         }
         open={selectedConflateMethod === 'merge_attributes'}
         onOpenChange={() => setSelectedConflateMethod('')}
-        className="fmtm-max-w-[60rem] fmtm-rounded-xl"
+        className="fmtm-max-w-[70rem] fmtm-rounded-xl"
       />
     </>
   );
