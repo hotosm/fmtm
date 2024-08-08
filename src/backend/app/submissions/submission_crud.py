@@ -33,6 +33,7 @@ from fastapi import HTTPException, Response
 from loguru import logger as log
 
 # from osm_fieldwork.json2osm import json2osm
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.central.central_crud import (
@@ -44,7 +45,7 @@ from app.config import settings
 from app.db import db_models
 from app.models.enums import HTTPStatus
 from app.projects import project_crud, project_deps
-from app.s3 import add_obj_to_bucket, get_obj_from_bucket
+from app.s3 import add_obj_to_bucket, get_obj_from_bucket, object_exists
 from app.tasks import tasks_crud
 
 # async def convert_json_to_osm(file_path):
@@ -565,3 +566,89 @@ async def get_submission_detail(
 #         all_features.append(feature)
 
 #     return geojson.FeatureCollection(features=all_features)
+
+
+async def upload_attachment_to_s3(
+        project_id: int, 
+        instance_ids: list,
+        background_task_id: uuid.UUID,
+        db: Session
+    ):
+    """
+    Uploads attachments to S3 for a given project and instance IDs.
+
+    Args:
+        project_id (int): The ID of the project.
+        instance_ids (list): List of instance IDs.
+        background_task_id (uuid.UUID): The ID of the background task.
+        db (Session): The database session.
+
+    Returns:
+        bool: True if the upload is successful.
+
+    Raises:
+        Exception: If an error occurs during the upload process.
+    """
+    try:
+        project = await project_deps.get_project_by_id(db,project_id)
+        db_xform = await project_deps.get_project_xform(db, project_id)
+        odk_central = await project_deps.get_odk_credentials(db, project_id)
+        xform = get_odk_form(odk_central)
+        s3_bucket = settings.S3_BUCKET_NAME
+
+        for instance_id in instance_ids:
+            submission_detail = await get_submission_detail(instance_id, project, db)
+            attachments = submission_detail["verification"]["image"]
+            
+            if not isinstance(attachments, list):
+                attachments = [attachments]
+            
+            for idx, filename in enumerate(attachments):
+                s3_key = f"fmtm-data/{project.organisation_id}/{project_id}/{instance_id}/{idx+1}.jpeg"
+                
+                if object_exists(s3_bucket, s3_key):
+                    log.warning(f"Object {s3_key} already exists in S3. Skipping upload.")
+                    continue
+
+                try:
+                    if attachment:= xform.getMedia(
+                        project.odkid, 
+                        str(instance_id), 
+                        db_xform.odk_form_id, 
+                        str(filename)
+                    ):
+                        # Convert the attachment to a BytesIO stream
+                        image_stream = io.BytesIO(attachment)
+
+                        # Upload the attachment to S3
+                        add_obj_to_bucket(s3_bucket, image_stream, s3_key, content_type="image/jpeg")
+
+                        # Generate the image URL
+                        img_url = f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}/{s3_key}"
+
+                        # Insert the record into submission_photos table
+                        sql = text("""
+                        INSERT INTO submission_photos (project_id, task_id, submission_id, s3_path)
+                        VALUES (:project_id, :task_id, :submission_id, :s3_path)
+                        """)
+                        db.execute(sql, {
+                            "project_id": project_id,
+                            "task_id": submission_detail["task_id"],
+                            "submission_id": instance_id,
+                            "s3_path": img_url
+                        })
+                        
+                except Exception as e:
+                    log.warning(f"Failed to process {filename} for instance {instance_id}: {e}")
+                    continue
+            
+        db.commit()
+        return True
+
+    except Exception as e:
+        log.warning(str(e))
+        # Update background task status to FAILED
+        update_bg_task_sync = async_to_sync(
+            project_crud.update_background_task_status_in_database
+        )
+        update_bg_task_sync(db, background_task_id, 2, str(e)) 
