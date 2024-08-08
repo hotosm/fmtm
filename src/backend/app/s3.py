@@ -1,11 +1,11 @@
 """Initialise the S3 buckets for FMTM to function."""
 
-from fastapi import HTTPException
 import json
 import sys
 from io import BytesIO
 from typing import Any
 
+from fastapi import HTTPException
 from loguru import logger as log
 from minio import Minio
 from minio.commonconfig import CopySource
@@ -40,6 +40,7 @@ def s3_client():
     # print(creds.access_key)
     # print(creds.secret_key)
 
+
 def object_exists(bucket_name: str, s3_path: str) -> bool:
     """Check if an object exists in an S3 bucket using stat_object.
 
@@ -57,13 +58,12 @@ def object_exists(bucket_name: str, s3_path: str) -> bool:
         client.stat_object(bucket_name, s3_path)
         return True
     except S3Error as e:
-        if e.code == 'NoSuchKey':
+        if e.code == "NoSuchKey":
             return False
         else:
             # Handle other exceptions
             raise HTTPException(
-                status_code = HTTPStatus.BAD_REQUEST, 
-                detail = str(e)
+                status_code=HTTPStatus.BAD_REQUEST, detail=str(e)
             ) from e
 
 
