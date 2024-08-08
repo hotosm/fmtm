@@ -22,13 +22,7 @@ import { useAppSelector } from '@/types/reduxTypes';
 import { camelToFlat } from '@/utilfunctions/commonUtils';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import { UpdateTaskStatus } from '@/api/ProjectTaskStatus';
-
-type filterType = {
-  task_id: string;
-  submitted_by: string | null;
-  review_state: string | null;
-  submitted_date: string | null;
-};
+import { filterType } from '@/store/types/ISubmissions';
 
 const SubmissionsTable = ({ toggleView }) => {
   useDocumentTitle('Submission Table');
@@ -226,7 +220,7 @@ const SubmissionsTable = ({ toggleView }) => {
       UpdateTaskStatus(
         `${import.meta.env.VITE_API_URL}/tasks/${currentStatus.id}/new-status/4`,
         projectId,
-        +filter?.task_id,
+        filter?.task_id || '',
         authDetails || {},
         { project_id: projectId },
       ),

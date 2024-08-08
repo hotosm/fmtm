@@ -6,7 +6,7 @@ import Button from '@/components/common/Button';
 import { useAppSelector } from '@/types/reduxTypes';
 
 type projectOptionPropTypes = {
-  projectName: string | undefined;
+  projectName: string;
 };
 
 const ProjectOptions = ({ projectName }: projectOptionPropTypes) => {
@@ -19,7 +19,7 @@ const ProjectOptions = ({ projectName }: projectOptionPropTypes) => {
 
   const projectId: string = params.id;
 
-  const handleDownload = (downloadType) => {
+  const handleDownload = (downloadType: 'form' | 'geojson') => {
     if (downloadType === 'form') {
       dispatch(
         DownloadProjectForm(
@@ -91,8 +91,8 @@ const ProjectOptions = ({ projectName }: projectOptionPropTypes) => {
         />
         <Button
           isLoading={downloadDataExtractLoading}
-          loadingText="DATA EXTRACT"
-          btnText="DATA EXTRACT"
+          loadingText="MAP FEATURES"
+          btnText="MAP FEATURES"
           btnType="other"
           className={`${
             downloadDataExtractLoading ? '' : 'hover:fmtm-text-red-700'
