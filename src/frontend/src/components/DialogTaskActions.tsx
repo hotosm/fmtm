@@ -93,7 +93,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
           UpdateTaskStatus(
             `${import.meta.env.VITE_API_URL}/tasks/${currentStatus?.id}/new-status/${status}`,
             currentProjectId,
-            taskId,
+            taskId.toString(),
             authDetailsCopy,
             { project_id: currentProjectId },
             geoStyle,

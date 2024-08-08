@@ -137,7 +137,7 @@ const TaskFeatureSelectionPopup = ({ featureProperties, taskId, taskFeature }: T
                     UpdateTaskStatus(
                       `${import.meta.env.VITE_API_URL}/tasks/${currentTaskInfo?.id}/new-status/1`,
                       currentProjectId,
-                      taskId,
+                      taskId.toString(),
                       authDetails,
                       { project_id: currentProjectId },
                       geoStyle,

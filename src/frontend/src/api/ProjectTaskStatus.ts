@@ -7,7 +7,7 @@ import { projectTaskBoundriesType } from '@/models/project/projectModel';
 export const UpdateTaskStatus = (
   url: string,
   currentProjectId: string,
-  taskId: number,
+  taskId: string,
   body: any,
   params: { project_id: string },
   style?: any,
