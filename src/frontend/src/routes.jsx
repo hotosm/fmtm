@@ -17,8 +17,6 @@ import ProjectDetailsV2 from '@/views/ProjectDetailsV2';
 import ProjectSubmissions from '@/views/ProjectSubmissions';
 import ManageProject from '@/views/ManageProject';
 
-const Submissions = React.lazy(() => import('./views/Submissions'));
-
 const routes = createBrowserRouter([
   {
     element: <MainView />,
@@ -96,18 +94,6 @@ const routes = createBrowserRouter([
             <Suspense fallback={<div></div>}>
               <ErrorBoundary>
                 <SubmissionDetails />
-              </ErrorBoundary>
-            </Suspense>
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/submissions/:id',
-        element: (
-          <ProtectedRoute>
-            <Suspense fallback={<div></div>}>
-              <ErrorBoundary>
-                <Submissions />
               </ErrorBoundary>
             </Suspense>
           </ProtectedRoute>
