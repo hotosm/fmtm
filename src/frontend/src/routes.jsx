@@ -1,7 +1,6 @@
 import React, { Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import Home from '@/views/Home';
-import Tabbed from '@/views/Tabbed';
 import MainView from '@/views/MainView';
 import ProtectedRoute from '@/utilities/ProtectedRoute';
 import NotFoundPage from '@/views/NotFound404';
@@ -67,12 +66,6 @@ const routes = createBrowserRouter([
               <ApproveOrganization />
             </ErrorBoundary>
           </ProtectedRoute>
-        ),
-        path: '/tabbed',
-        element: (
-          <ErrorBoundary>
-            <Tabbed />
-          </ErrorBoundary>
         ),
       },
       {
