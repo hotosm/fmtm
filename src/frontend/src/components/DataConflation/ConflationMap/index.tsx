@@ -42,7 +42,7 @@ const ConflationMap = () => {
               DataConflationActions.SetSelectedFeatureOSMId(
                 feature?.getProperties()?.xid
                   ? feature.getProperties().xid
-                  : (feature.getProperties()?.osm_id).toString(),
+                  : feature.getProperties()?.osm_id.toString(),
               ),
             );
           }}
