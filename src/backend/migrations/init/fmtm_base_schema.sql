@@ -155,9 +155,9 @@ SET default_table_access_method = heap;
 
 -- Tables
 
-CREATE TABLE IF NOT EXISTS public._migrations (
-    date_executed TIMESTAMP,
-    script_name TEXT
+CREATE TABLE IF NOT EXISTS public."_migrations" (
+    script_name text,
+    executed_at timestamp without time zone
 );
 ALTER TABLE public._migrations OWNER TO fmtm;
 
@@ -191,13 +191,6 @@ NO MAXVALUE
 CACHE 1;
 ALTER TABLE public.mbtiles_path_id_seq OWNER TO fmtm;
 ALTER SEQUENCE public.mbtiles_path_id_seq OWNED BY public.mbtiles_path.id;
-
-
-CREATE TABLE public._migrations (
-    script_name text,
-    date_executed timestamp without time zone
-);
-ALTER TABLE public._migrations OWNER TO fmtm;
 
 
 CREATE TABLE public.organisation_managers (
@@ -251,12 +244,10 @@ CREATE TABLE public.projects (
     organisation_id integer,
     odkid integer,
     author_id integer NOT NULL,
-    created timestamp without time zone NOT NULL DEFAULT now(),
     project_name_prefix character varying,
     task_type_prefix character varying,
     location_str character varying,
     outline public.GEOMETRY (POLYGON, 4326),
-    last_updated timestamp without time zone DEFAULT now(),
     status public.projectstatus NOT NULL DEFAULT 'DRAFT',
     total_tasks integer,
     xform_category character varying,
@@ -285,7 +276,10 @@ CREATE TABLE public.projects (
     task_split_type public.tasksplittype,
     task_split_dimension smallint,
     task_num_buildings smallint,
+    hashtags character varying [],
     custom_tms_url character varying,
+    created_at timestamp without time zone NOT NULL DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now()
 );
 ALTER TABLE public.projects OWNER TO fmtm;
 CREATE SEQUENCE public.projects_id_seq
@@ -354,8 +348,7 @@ CREATE TABLE public.users (
     tasks_validated integer NOT NULL DEFAULT 0,
     tasks_invalidated integer NOT NULL DEFAULT 0,
     projects_mapped integer [],
-    date_registered timestamp without time zone DEFAULT now(),
-    last_validation_date timestamp without time zone DEFAULT now()
+    registered_at timestamp without time zone DEFAULT now()
 );
 ALTER TABLE public.users OWNER TO fmtm;
 

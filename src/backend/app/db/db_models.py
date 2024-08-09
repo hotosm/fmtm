@@ -124,9 +124,7 @@ class DbUser(Base):
     # tasks_notifications = Column(Boolean, default=True, nullable=False)
     # tasks_comments_notifications = Column(Boolean, default=False, nullable=False)
 
-    date_registered = cast(datetime, Column(DateTime, default=timestamp))
-    # Represents the date the user last had one of their tasks validated
-    last_validation_date = cast(datetime, Column(DateTime, default=timestamp))
+    registered_at = cast(datetime, Column(DateTime, default=timestamp))
 
 
 # Secondary table defining many-to-many relationship between organisations and managers
@@ -316,7 +314,7 @@ class DbProject(Base):
         ),
     )
     author = relationship(DbUser, uselist=False, backref="user")
-    created = cast(datetime, Column(DateTime, default=timestamp, nullable=False))
+    created_at = cast(datetime, Column(DateTime, default=timestamp, nullable=False))
 
     task_split_type = Column(Enum(TaskSplitType), nullable=True)
     # split_strategy = Column(Integer)
@@ -342,7 +340,7 @@ class DbProject(Base):
     centroid = cast(WKBElement, Column(Geometry("POINT", srid=4326)))
 
     # PROJECT STATUS
-    last_updated = cast(datetime, Column(DateTime, default=timestamp))
+    updated_at = cast(datetime, Column(DateTime, default=timestamp))
     status = cast(
         ProjectStatus,
         Column(Enum(ProjectStatus), default=ProjectStatus.DRAFT, nullable=False),

@@ -322,7 +322,7 @@ class ProjectBase(BaseModel):
     author: User
     project_info: ProjectInfo
     status: ProjectStatus
-    created: datetime
+    created_at: datetime
     # location_str: str
     xform_category: Optional[XLSFormType] = None
     hashtags: Optional[List[str]] = None
@@ -410,7 +410,7 @@ class ProjectDashboard(BaseModel):
     project_name_prefix: str
     organisation_name: str
     total_tasks: int
-    created: datetime
+    created_at: datetime
     organisation_logo: Optional[str] = None
     total_submission: Optional[int] = None
     total_contributors: Optional[int] = None

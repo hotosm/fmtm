@@ -149,7 +149,7 @@ async def get_projects_featcol(
                     'name', pi.name,
                     'percentMapped', 0,
                     'percentValidated', 0,
-                    'created', p.created,
+                    'created', p.created_at,
                     'link', concat('https://', :domain, '/project/', p.id)
                 )
             ) AS feature

@@ -112,8 +112,8 @@ create_migrations_table_if_missing() {
     DO \$\$
     BEGIN
         CREATE TABLE public."_migrations" (
-            script_name TEXT,
-            date_executed TIMESTAMP,
+            script_name text,
+            executed_at timestamp without time zone,
             CONSTRAINT "_migrations_pkey" PRIMARY KEY (script_name)
         );
         ALTER TABLE IF EXISTS public."_migrations" OWNER TO fmtm;
@@ -128,7 +128,7 @@ SQL
 check_if_missing_migrations() {
     # Get the list of existing migration script names from the migrations table
     existing_scripts=$(psql -t "$db_url" -c "
-        SELECT script_name FROM public.\"_migrations\" ORDER BY date_executed ASC;
+        SELECT script_name FROM public.\"_migrations\" ORDER BY executed_at ASC;
     ")
     echo "Existing migrations: ${existing_scripts}"
 
@@ -194,7 +194,7 @@ execute_migrations() {
         && psql "$db_url" <<SQL
     DO \$\$
     BEGIN
-        INSERT INTO public."_migrations" (date_executed, script_name)
+        INSERT INTO public."_migrations" (executed_at, script_name)
         VALUES (NOW(), '$script_name');
         RAISE NOTICE 'Successfully applied migration: $script_name';
     EXCEPTION
