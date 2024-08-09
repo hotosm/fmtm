@@ -275,8 +275,8 @@ class ProjectSummary(BaseModel):
     location_str: Optional[str] = None
     description: Optional[str] = None
     total_tasks: Optional[int] = None
-    tasks_mapped: Optional[int] = None
     num_contributors: Optional[int] = None
+    tasks_mapped: Optional[int] = None
     tasks_validated: Optional[int] = None
     tasks_bad: Optional[int] = None
     hashtags: Optional[List[str]] = None

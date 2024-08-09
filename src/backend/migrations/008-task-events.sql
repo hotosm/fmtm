@@ -8,6 +8,7 @@ BEGIN;
 -- Drop default from action_date
 ALTER TABLE public.task_history ALTER COLUMN action_date DROP DEFAULT;
 
+-- Add event_id field
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'task_history' AND column_name = 'event_id') THEN
@@ -25,18 +26,6 @@ BEGIN
         ALTER TABLE public.task_history ADD CONSTRAINT task_history_pkey PRIMARY KEY (event_id);
     END IF;
 END $$;
-
--- Remove foreign keys (otherwise electric also needs project, tasks, users)
--- NOTE this violates referential integrity & is not ideal
-
-ALTER TABLE ONLY public.task_history
-DROP CONSTRAINT IF EXISTS fk_tasks;
-
-ALTER TABLE ONLY public.task_history
-DROP CONSTRAINT IF EXISTS fk_users;
-
-ALTER TABLE ONLY public.task_history
-DROP CONSTRAINT IF EXISTS task_history_project_id_fkey;
 
 -- Commit the transaction
 COMMIT;

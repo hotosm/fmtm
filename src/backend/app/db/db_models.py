@@ -45,7 +45,6 @@ from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import (
     # declarative_base,
     backref,
-    object_session,
     relationship,
 )
 
@@ -62,7 +61,6 @@ from app.models.enums import (
     ProjectVisibility,
     TaskAction,
     TaskSplitType,
-    TaskStatus,
     UserRole,
 )
 
@@ -279,25 +277,6 @@ class DbTask(Base):
     outline = cast(WKBElement, Column(Geometry("POLYGON", srid=4326)))
     geometry_geojson = cast(str, Column(String))
     feature_count = cast(int, Column(Integer))
-    task_status = cast(TaskStatus, Column(Enum(TaskStatus), default=TaskStatus.READY))
-    locked_by = cast(
-        int,
-        Column(BigInteger, ForeignKey("users.id", name="fk_users_locked"), index=True),
-    )
-    mapped_by = cast(
-        int,
-        Column(BigInteger, ForeignKey("users.id", name="fk_users_mapper"), index=True),
-    )
-    validated_by = cast(
-        int,
-        Column(
-            BigInteger, ForeignKey("users.id", name="fk_users_validator"), index=True
-        ),
-    )
-
-    # Define relationships
-    lock_holder = relationship(DbUser, foreign_keys=[locked_by])
-    mapper = relationship(DbUser, foreign_keys=[mapped_by])
 
     ## ---------------------------------------------- ##
     # FOR REFERENCE: OTHER ATTRIBUTES IN TASKING MANAGER
@@ -394,35 +373,23 @@ class DbProject(Base):
     @property
     def tasks_mapped(self):
         """Get the number of tasks mapped for a project."""
-        return (
-            object_session(self)
-            .query(DbTask)
-            .filter(DbTask.task_status == TaskStatus.MAPPED)
-            .with_parent(self)
-            .count()
-        )
+        # FIXME add to Pydantic model to extract from task_history info
+        # all non duplicate entries for MAPPED, VALIDATED, etc
+        return
 
     @property
     def tasks_validated(self):
         """Get the number of tasks validated for a project."""
-        return (
-            object_session(self)
-            .query(DbTask)
-            .filter(DbTask.task_status == TaskStatus.VALIDATED)
-            .with_parent(self)
-            .count()
-        )
+        # FIXME add to Pydantic model to extract from task_history info
+        # all non duplicate entries for MAPPED, VALIDATED, etc
+        return
 
     @property
     def tasks_bad(self):
         """Get the number of tasks marked bad for a project."""
-        return (
-            object_session(self)
-            .query(DbTask)
-            .filter(DbTask.task_status == TaskStatus.BAD)
-            .with_parent(self)
-            .count()
-        )
+        # FIXME add to Pydantic model to extract from task_history info
+        # all non duplicate entries for MAPPED, VALIDATED, etc
+        return
 
     # XForm category specified
     xform_category = cast(str, Column(String))

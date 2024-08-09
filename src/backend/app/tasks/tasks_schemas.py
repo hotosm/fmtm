@@ -62,7 +62,6 @@ class Task(BaseModel):
     )
 
     # Excluded
-    lock_holder: Any = Field(exclude=True)
     outline: Any = Field(exclude=True)
 
     id: int
@@ -70,7 +69,6 @@ class Task(BaseModel):
     project_task_index: int
     project_task_name: Optional[str]
     feature_count: Optional[int] = None
-    task_status: TaskStatus
     locked_by_uid: Optional[int] = None
     locked_by_username: Optional[str] = None
 
@@ -91,19 +89,28 @@ class Task(BaseModel):
         )
         return Feature(**geom_geojson)
 
+    # FIXME
+    # Add computed task_status field to get most recent status from events
+    task_status: TaskStatus = TaskStatus.READY
+
+    # TODO update logic to get lock holder from task events
+    # Or return none if not locked
     @field_serializer("locked_by_uid")
     def get_locked_by_uid(self, value: str) -> Optional[str]:
         """Get lock uid from lock_holder details."""
-        if self.lock_holder:
-            return self.lock_holder.id
         return None
+        # if self.lock_holder:
+        #     return self.lock_holder.id
+        # return None
 
+    # TODO update logic to get lock holder from task events
     @field_serializer("locked_by_username")
     def get_locked_by_username(self, value: str) -> Optional[str]:
         """Get lock username from lock_holder details."""
-        if self.lock_holder:
-            return self.lock_holder.username
         return None
+        # if self.lock_holder:
+        #     return self.lock_holder.username
+        # return None
 
 
 class TaskCommentResponse(TaskHistoryOut):

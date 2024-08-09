@@ -202,7 +202,7 @@ ALTER TABLE public._migrations OWNER TO fmtm;
 
 CREATE TABLE public.organisation_managers (
     organisation_id integer NOT NULL,
-    user_id bigint NOT NULL
+    user_id integer NOT NULL
 );
 ALTER TABLE public.organisation_managers OWNER TO fmtm;
 
@@ -250,7 +250,7 @@ CREATE TABLE public.projects (
     id integer NOT NULL,
     organisation_id integer,
     odkid integer,
-    author_id bigint NOT NULL,
+    author_id integer NOT NULL,
     created timestamp without time zone NOT NULL DEFAULT now(),
     project_name_prefix character varying,
     task_type_prefix character varying,
@@ -306,7 +306,7 @@ CREATE TABLE public.task_history (
     action public.taskaction NOT NULL,
     action_text character varying,
     action_date timestamp without time zone NOT NULL,
-    user_id bigint NOT NULL
+    user_id integer NOT NULL
 );
 ALTER TABLE public.task_history OWNER TO fmtm;
 
@@ -318,11 +318,7 @@ CREATE TABLE public.tasks (
     project_task_name character varying,
     outline public.GEOMETRY (POLYGON, 4326),
     geometry_geojson character varying,
-    feature_count integer,
-    task_status public.taskstatus DEFAULT 'READY',
-    locked_by bigint,
-    mapped_by bigint,
-    validated_by bigint
+    feature_count integer
 );
 ALTER TABLE public.tasks OWNER TO fmtm;
 CREATE SEQUENCE public.tasks_id_seq
@@ -337,7 +333,7 @@ ALTER SEQUENCE public.tasks_id_seq OWNED BY public.tasks.id;
 
 
 CREATE TABLE public.user_roles (
-    user_id bigint NOT NULL,
+    user_id integer NOT NULL,
     project_id integer NOT NULL,
     role public.projectrole NOT NULL DEFAULT 'MAPPER'
 );
@@ -345,7 +341,7 @@ ALTER TABLE public.user_roles OWNER TO fmtm;
 
 
 CREATE TABLE public.users (
-    id bigint NOT NULL,
+    id integer NOT NULL,
     username character varying,
     role public.userrole NOT NULL DEFAULT 'MAPPER',
     name character varying,
@@ -501,10 +497,7 @@ CREATE INDEX ix_projects_mapper_level ON public.projects USING btree (
 CREATE INDEX ix_projects_organisation_id ON public.projects USING btree (
     organisation_id
 );
-CREATE INDEX ix_tasks_locked_by ON public.tasks USING btree (locked_by);
-CREATE INDEX ix_tasks_mapped_by ON public.tasks USING btree (mapped_by);
 CREATE INDEX ix_tasks_project_id ON public.tasks USING btree (project_id);
-CREATE INDEX ix_tasks_validated_by ON public.tasks USING btree (validated_by);
 CREATE INDEX ix_users_id ON public.users USING btree (id);
 CREATE INDEX textsearch_idx ON public.project_info USING btree (
     text_searchable
@@ -525,21 +518,6 @@ ADD CONSTRAINT fk_organisations FOREIGN KEY (
 
 ALTER TABLE ONLY public.projects
 ADD CONSTRAINT fk_users FOREIGN KEY (author_id) REFERENCES public.users (id);
-
-ALTER TABLE ONLY public.tasks
-ADD CONSTRAINT fk_users_locked FOREIGN KEY (
-    locked_by
-) REFERENCES public.users (id);
-
-ALTER TABLE ONLY public.tasks
-ADD CONSTRAINT fk_users_mapper FOREIGN KEY (
-    mapped_by
-) REFERENCES public.users (id);
-
-ALTER TABLE ONLY public.tasks
-ADD CONSTRAINT fk_users_validator FOREIGN KEY (
-    validated_by
-) REFERENCES public.users (id);
 
 ALTER TABLE ONLY public.organisation_managers
 ADD CONSTRAINT organisation_managers_organisation_id_fkey FOREIGN KEY (
