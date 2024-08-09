@@ -1,21 +1,27 @@
 <script lang="ts">
 	import '@hotosm/ui/dist/components'
 	import SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.component.js' 
-	import type { PageData } from './$types';
-	import { onMount } from 'svelte';
+	import type { PageData } from '../$types';
+	import { onMount, onDestroy } from 'svelte';
 	import { writable } from 'svelte/store'
+	import { Shape, ShapeStream } from '@electric-sql/client'
 	import { MapLibre, GeoJSON, FillLayer, LineLayer, hoverStateFilter } from 'svelte-maplibre';
 	import type { FeatureCollection } from 'geojson';
 	import { polygon } from '@turf/helpers';
 	import { buffer } from '@turf/buffer';
 	import { bbox } from '@turf/bbox';
 
-	import type { ProjectData, ProjectTask, ZoomToTaskEventDetail } from '$lib/types';
-	import { type Electric } from '$lib/migrations';
-	import { mapTask, finishTask, validateTask, goodTask, commentTask } from '$lib/task-events';
-	import { createLiveQuery } from '$lib/live-query';
+	import type { 
+		ProjectData,
+		ProjectTask, 
+		ZoomToTaskEventDetail,
+	 } from '$lib/types';
+	import { statusEnumLabelToValue, statusEnumValueToLabel, actionNameFromStatus } from '$lib/task-events';
+	// import { mapTask, finishTask, validateTask, goodTask, commentTask } from '$lib/task-events';
+	// import { createLiveQuery } from '$lib/live-query';
 	import { generateQrCode, downloadQrCode } from '$lib/qrcode'
 	import EventCard from '$lib/components/event-card.svelte'; 
+	import Error from './+error.svelte';
 
 	export let data: PageData;
 	// $: ({ electric, project } = data)
@@ -27,64 +33,96 @@
 	let panelDisplay: string = 'none';
 	$: panelDisplay = selectedTab === 'map' ? 'none' : 'block';
 
-	// let electric: Electric = data.electric;
-	let electricSyncKey: string
-	const taskHistory = data.electric.db.task_history.liveMany({
-		select: { action: true, action_text: true, action_date: true, task_id: true },
-		where: { project_id: data.projectId },
-		orderBy: {
-			action_date: 'desc'
-		},
-	});
-	let history = createLiveQuery(data.electric.notifier, taskHistory)
-	$: if ($history) {
+	// *** Task history sync *** //
+	const taskFeatcolStore = writable<FeatureCollection>({ type: 'FeatureCollection', features: [] })
+	const taskHistoryStream = new ShapeStream({
+		url: "http://localhost:7055/v1/shape/task_history",
+		where: `project_id=${data.projectId}`
+	})
+	const taskHistoryEvents = new Shape(taskHistoryStream)
+	const taskEventArray = writable([]);
+	const latestEvent = writable();
+	$: if ($latestEvent) {
 		updateTaskFeatures();
 	}
 
+	async function getLatestEventForTasks() {
+		const taskEventMap = await taskHistoryEvents.value;
+		const taskEventArrayFromApi = Array.from(taskEventMap.values());
+
+		// Update the taskEventArray writable store
+		taskEventArray.set(taskEventArrayFromApi);
+
+		const latestActions = new Map();
+
+		for (const taskData of taskEventArrayFromApi) {
+			// Use the task_id as the key and action as the value
+			latestActions.set(taskData.task_id, taskData.action);
+		}
+
+		return latestActions;
+	}
+
+	async function updateTaskFeatures() {
+		const latestActions = await getLatestEventForTasks();
+
+		const features = data.project.tasks.map((x: ProjectTask) => {
+			const taskId = x.outline_geojson.id;
+			const statusString = latestActions.get(taskId)
+			const status = statusString? statusEnumLabelToValue(statusString) : '0'
+
+			return {
+				...x.outline_geojson,
+				properties: {
+					...x.outline_geojson.properties,
+					status,
+				},
+			};
+		});
+
+		taskFeatcolStore.set({
+			type: 'FeatureCollection',
+			features: features,
+		});
+	}
+
+	// *** Selected task *** //
 	$: qrCodeData = generateQrCode(data.project.project_info.name, data.project.odk_token, "TEMP");
-	let taskFeatcol: FeatureCollection = { type: 'FeatureCollection', features: [] }
-	const taskFeatcolStore = writable<FeatureCollection>(taskFeatcol)
-	let selectedTaskId = writable<number | null>(null)
-	let selectedTask = writable<any>(null);
-	$: selectedTask = data.project.tasks.find((task: ProjectTask) => task.id === $selectedTaskId)
-	let nextAction = writable<string>('');
-	$: (async() => $nextAction = await getStatusFromTaskHistory($selectedTask))();
-	// $: {(async () => {
-	// 	const task = $selectedTask;
-	// 	console.log(task)
-	// 	if (task && task.id) {
-	// 		const status = await getStatusFromTaskHistory(task.id);
-	// 		// TODO get next action in sequence here
-	// 		nextAction.set(status);
-	// 	} else {
-	// 		nextAction.set('');
-	// 	}
-	// 	})();
-	// }
 
-	async function getStatusFromTaskHistory(taskId: number) {
-		const result = await data.electric.db.task_history.findMany({
-			select: {
-				action: true
-			},
-			where: {
-				task_id: taskId, 
-			},
-			orderBy: {
-				action_date: 'desc'
-			},
-			take: 1,
-		})
+    let selectedTaskId = writable<number | null>(null);
+	let featureClicked = writable(false);
+    let selectedTask = writable<any>(null);
+    let nextAction = writable<string>('');
 
-		if (result.length === 0) {
-			return '0';
+	$: selectedTask.set(data.project.tasks.find((task: ProjectTask) => task.id === $selectedTaskId));
+
+    $: (async () => {
+        const task = $selectedTask;
+        if (task && task.id) {
+            const latestActions = await getLatestEventForTasks();
+			const statusString = latestActions.get(task.id)
+			const status = statusString? statusEnumLabelToValue(statusString, true) : '1'
+            nextAction.set(status);
+        } else {
+            nextAction.set('');
+        }
+    })();
+
+	function zoomToTask(event: CustomEvent<ZoomToTaskEventDetail>) {
+		const taskId = event.detail.taskId;
+		const taskObj = data.project.tasks.find((task: ProjectTask) => task.id === taskId);
+
+		if (!taskObj) return
+
+		const taskPolygon = polygon(taskObj.outline_geojson.geometry.coordinates);
+		const taskBuffer = buffer(taskPolygon, 5, { units: 'meters' });
+		if (taskBuffer && map) {
+			const taskBbox: [number, number, number, number] = bbox(taskBuffer) as [number, number, number, number];
+			map.fitBounds(taskBbox, { duration: 500 });
 		}
 
-		const status = result[0].action;
-		if (status === 'LOCKED_FOR_MAPPING') {
-			return '1';
-		}
-		return '0';
+		// Open the map tab
+		tabGroup.show('map')
 	}
 
 	// const mapStyle = {
@@ -108,24 +146,6 @@
 	// 			]
 	// 		}
 
-
-	function zoomToTask(event: CustomEvent<ZoomToTaskEventDetail>) {
-		const taskId = event.detail.taskId;
-		const taskObj = data.project.tasks.find((task: ProjectTask) => task.id === taskId);
-
-		if (!taskObj) return
-
-		const taskPolygon = polygon(taskObj.outline_geojson.geometry.coordinates);
-		const taskBuffer = buffer(taskPolygon, 5, { units: 'meters' });
-		if (taskBuffer && map) {
-			const taskBbox: [number, number, number, number] = bbox(taskBuffer) as [number, number, number, number];
-			map.fitBounds(taskBbox, { duration: 500 });
-		}
-
-		// Open the map tab
-		tabGroup.show('map')
-	}
-
 	onMount(async () => {
 		const projectPolygon = polygon(data.project.outline_geojson.geometry.coordinates);
 		const projectBuffer = buffer(projectPolygon, 100, { units: 'meters' });
@@ -134,72 +154,32 @@
 			map.fitBounds(projectBbox, { duration: 0 });
 		}
 
-		const { key } = await data.electric.db.task_history.sync({
-			where: {
-				project_id: data.projectId,
+		taskHistoryEvents.subscribe((taskHistoryEvent) => {
+			let newEvent; for (newEvent of taskHistoryEvent);
+			if (newEvent) {
+				latestEvent.set(newEvent[1]);
 			}
 		})
-		electricSyncKey = key
-
-		const features = await Promise.all(
-			data.project.tasks.map(async (x: ProjectTask) => {
-				const taskId = x.outline_geojson.id;
-				const status = await getStatusFromTaskHistory(taskId);
-				return {
-					...x.outline_geojson,
-					properties: {
-						...x.outline_geojson.properties,
-						status,
-					},
-				};
-			})
-		);
-
-		taskFeatcol = {
-			type: 'FeatureCollection',
-			features: features,
-		};
 	});
 
-	async function updateTaskFeatures() {
-		const features = await Promise.all(
-		data.project.tasks.map(async (x: ProjectTask) => {
-			const taskId = x.outline_geojson.id;
-			const status = await getStatusFromTaskHistory(taskId);
-			return {
-			...x.outline_geojson,
-			properties: {
-				...x.outline_geojson.properties,
-				status,
-			},
-			};
-		})
-		);
+	onDestroy(() => {
+		taskHistoryStream.unsubscribeAll()
+	})
 
-		taskFeatcolStore.set({
-		type: 'FeatureCollection',
-		features: features,
-		});
-	}
-
-	// onDestroy(() => {
-	// 	// This will delete all related rows locally
-	// 	data.electric.sync.unsubscribe([electricSyncKey])
-	// })
 </script>
 
-{#if $history}
+{#if $latestEvent}
 	<hot-card id="notification-banner" class="absolute z-10 top-18 right-0 font-sans hidden sm:flex">
-		Latest: { $history[0].action_text }
+		Latest: { $latestEvent.action_text }
 	</hot-card>
 {/if}
 
 {#if $selectedTaskId && $nextAction}
-	<sl-tooltip content={$nextAction}>
+	<sl-tooltip content={actionNameFromStatus($nextAction)}>
 		<hot-icon-button
-		name="fast-forward-circle"
-		class="fixed top-30 left-1/2 transform -translate-x-1/2 text-5xl z-10"
-		label={$nextAction}
+			name="fast-forward-circle"
+			class="fixed top-30 left-1/2 transform -translate-x-1/2 text-5xl z-10"
+			label={actionNameFromStatus($nextAction)}
 		></hot-icon-button>
 	</sl-tooltip>
 {/if}
@@ -213,6 +193,14 @@
 	center={[0, 0]}
 	zoom={2}
 	attributionControl={false}
+	on:click={(e) => {
+		featureClicked.subscribe(fClicked => {
+		if (!fClicked) {
+			selectedTaskId.set(null);
+		}
+		featureClicked.set(false);
+		});
+	}}
 >
 	<GeoJSON id="states" data={$taskFeatcolStore} promoteId="TASKS">
 			<FillLayer
@@ -231,8 +219,10 @@
 				beforeLayerType="symbol"
 				manageHoverState
 				on:click={(e) => {
-						selectedTaskId.set(e.detail.features?.[0]?.properties?.uid);
-				}}  
+					featureClicked.set(true);
+					const clickedTask = e.detail.features?.[0]?.properties?.uid;
+					selectedTaskId.set(clickedTask);
+				}}
 			/>
 			<LineLayer
 				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
@@ -258,8 +248,8 @@
 	
 	<!-- Task events tab -->
 	<sl-tab-panel name="events">
-		{#if $history}
-			{#each $history as record}
+		{#if $taskEventArray.length > 0}
+			{#each $taskEventArray as record}
 				<EventCard
 					record={record}
 					highlight={record.task_id === $selectedTaskId}
