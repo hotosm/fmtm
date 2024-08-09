@@ -595,6 +595,7 @@ async def upload_attachment_to_s3(
         odk_central = await project_deps.get_odk_credentials(db, project_id)
         xform = get_odk_form(odk_central)
         s3_bucket = settings.S3_BUCKET_NAME
+        s3_base_path = f"fmtm-data/{project.organisation_id}/{project_id}"
 
         for instance_id in instance_ids:
             submission_detail = await get_submission_detail(instance_id, project, db)
@@ -604,14 +605,14 @@ async def upload_attachment_to_s3(
                 attachments = [attachments]
             
             for idx, filename in enumerate(attachments):
-                s3_key = f"fmtm-data/{project.organisation_id}/{project_id}/{instance_id}/{idx+1}.jpeg"
+                s3_key = f"{s3_base_path}/{instance_id}/{idx+1}.jpeg"
                 
                 if object_exists(s3_bucket, s3_key):
                     log.warning(f"Object {s3_key} already exists in S3. Skipping upload.")
                     continue
 
                 try:
-                    if attachment:= xform.getMedia(
+                    if attachment:= xform.getSubmissionPhoto(
                         project.odkid, 
                         str(instance_id), 
                         db_xform.odk_form_id, 
@@ -624,11 +625,16 @@ async def upload_attachment_to_s3(
                         add_obj_to_bucket(s3_bucket, image_stream, s3_key, content_type="image/jpeg")
 
                         # Generate the image URL
-                        img_url = f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}/{s3_key}"
+                        img_url = f"{settings.S3_DOWNLOAD_ROOT}/{s3_bucket}/{s3_key}"
 
                         # Insert the record into submission_photos table
                         sql = text("""
-                        INSERT INTO submission_photos (project_id, task_id, submission_id, s3_path)
+                        INSERT INTO submission_photos (
+                                project_id, 
+                                task_id, 
+                                submission_id,
+                                s3_path
+                            )
                         VALUES (:project_id, :task_id, :submission_id, :s3_path)
                         """)
                         db.execute(sql, {
@@ -639,7 +645,9 @@ async def upload_attachment_to_s3(
                         })
                         
                 except Exception as e:
-                    log.warning(f"Failed to process {filename} for instance {instance_id}: {e}")
+                    log.warning(
+                        f"Failed to process {filename} for instance {instance_id}: {e}"
+                        )
                     continue
             
         db.commit()
