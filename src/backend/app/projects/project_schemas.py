@@ -17,7 +17,7 @@
 #
 """Pydantic schemas for Projects."""
 
-import uuid
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, List, Optional, Union
 
@@ -27,7 +27,6 @@ from loguru import logger as log
 from pydantic import BaseModel, Field, computed_field
 from pydantic.functional_serializers import field_serializer
 from pydantic.functional_validators import field_validator, model_validator
-from shapely import wkb
 from typing_extensions import Self
 
 from app.config import HttpUrlStr, decrypt_value, encrypt_value, settings
@@ -37,7 +36,6 @@ from app.db.postgis_utils import (
     get_address_from_lat_lon,
     merge_polygons,
     read_wkb,
-    wkb_geom_to_feature,
     write_wkb,
 )
 from app.models.enums import ProjectPriority, ProjectStatus, TaskSplitType, XLSFormType
@@ -330,20 +328,27 @@ class ProjectBase(BaseModel):
     hashtags: Optional[List[str]] = None
     organisation_id: Optional[int] = None
 
+    @field_validator("status", mode="before")
+    @classmethod
+    def status_enum_str_to_int(cls, value: str) -> ProjectStatus:
+        """Get the the int value from a string enum."""
+        return ProjectStatus[value]
+
     @computed_field
     @property
     def outline_geojson(self) -> Optional[Feature]:
-        """Compute the geojson outline from WKBElement outline."""
+        """TODO this is now the same as self.outline."""
         if not self.outline:
             return None
-        geometry = wkb.loads(bytes(self.outline.data))
-        bbox = geometry.bounds  # Calculate bounding box
-        geom_geojson = wkb_geom_to_feature(
-            geometry=self.outline,
-            properties={"id": self.id, "bbox": bbox},
-            id=self.id,
-        )
-        return Feature(**geom_geojson)
+        # TODO refactor to remove outline_geojson
+        # TODO possibly also generate bbox for geojson in project_deps SQL?
+        feat = {
+            "type": "Feature",
+            "geometry": self.outline,
+            "id": self.id,
+            "properties": {"id": self.id, "bbox": None},
+        }
+        return Feature(**feat)
 
     @computed_field
     @property
@@ -375,17 +380,10 @@ class ProjectWithTasks(ProjectBase):
     tasks: Optional[List[tasks_schemas.Task]]
 
 
-class ProjectOut(ProjectWithTasks):
-    """Project display to user."""
-
-    project_uuid: uuid.UUID = uuid.uuid4()
-
-
 class ReadProject(ProjectWithTasks):
     """Redundant model for refactor."""
 
     odk_token: Optional[str] = None
-    project_uuid: uuid.UUID = uuid.uuid4()
     location_str: Optional[str] = None
     data_extract_url: Optional[str] = None
     custom_tms_url: Optional[str] = None

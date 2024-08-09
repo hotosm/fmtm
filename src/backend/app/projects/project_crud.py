@@ -1120,7 +1120,7 @@ async def convert_to_app_project_info(db_project_info: db_models.DbProjectInfo):
 
 async def convert_to_app_projects(
     db_projects: List[db_models.DbProject],
-) -> List[project_schemas.ProjectOut]:
+) -> List[project_schemas.ProjectWithTasks]:
     """Legacy function to convert db models --> Pydantic.
 
     TODO refactor to use Pydantic model methods instead.

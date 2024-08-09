@@ -84,7 +84,7 @@ async def read_projects_to_featcol(
     return await project_crud.get_projects_featcol(db, bbox)
 
 
-@router.get("/", response_model=list[project_schemas.ProjectOut])
+@router.get("/", response_model=list[project_schemas.ProjectWithTasks])
 async def read_projects(
     user_id: int = None,
     skip: int = 0,
@@ -445,7 +445,7 @@ async def delete_project(
     return Response(status_code=HTTPStatus.NO_CONTENT)
 
 
-@router.post("/create-project", response_model=project_schemas.ProjectOut)
+@router.post("/create-project", response_model=project_schemas.ProjectWithTasks)
 async def create_project(
     project_info: project_schemas.ProjectUpload,
     org_user_dict: OrgUserDict = Depends(org_admin),
@@ -519,7 +519,7 @@ async def create_project(
     return project
 
 
-@router.put("/{project_id}", response_model=project_schemas.ProjectOut)
+@router.put("/{project_id}", response_model=project_schemas.ProjectWithTasks)
 async def update_project(
     project_info: project_schemas.ProjectUpdate,
     db: Session = Depends(database.get_db),
@@ -549,7 +549,7 @@ async def update_project(
     return project
 
 
-@router.patch("/{project_id}", response_model=project_schemas.ProjectOut)
+@router.patch("/{project_id}", response_model=project_schemas.ProjectWithTasks)
 async def project_partial_update(
     project_info: project_schemas.ProjectPartialUpdate,
     db: Session = Depends(database.get_db),

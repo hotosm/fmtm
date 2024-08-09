@@ -28,21 +28,90 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app.db.db_models import DbProject
 from app.models.enums import HTTPStatus
 from app.projects import project_schemas
 
 
 async def get_project_by_id(
     db: Session = Depends(get_db), project_id: Optional[int] = None
-) -> Optional[DbProject]:
+):
     """Get a single project by id."""
     if not project_id:
         # Skip if no project id passed
         # FIXME why do we need this?
         return None
 
-    db_project = db.query(DbProject).filter(DbProject.id == project_id).first()
+    query = text("""
+        WITH latest_task_history AS (
+            SELECT DISTINCT ON (th.task_id)
+                th.task_id,
+                th.action,
+                th.action_date
+            FROM
+                task_history th
+            ORDER BY
+                th.task_id, th.action_date DESC
+        )
+        SELECT
+            p.*,
+            ST_AsGeoJSON(p.outline)::jsonb AS outline,
+            ST_AsGeoJSON(p.centroid)::jsonb AS centroid,
+            JSON_BUILD_OBJECT(
+                'project_id', pi.project_id,
+                'project_id_str', pi.project_id_str,
+                'name', pi.name,
+                'short_description', pi.short_description,
+                'description', pi.description,
+                'text_searchable', pi.text_searchable,
+                'per_task_instructions', pi.per_task_instructions
+            ) AS project_info,
+            JSON_BUILD_OBJECT(
+                'id', u.id,
+                'username', u.username
+            ) AS author,
+            JSON_AGG(
+                JSON_BUILD_OBJECT(
+                    'id', x.id,
+                    'project_id', x.project_id,
+                    'odk_form_id', x.odk_form_id,
+                    'category', x.category
+                )
+            ) AS forms,
+            COALESCE(
+                JSON_AGG(
+                    JSON_BUILD_OBJECT(
+                        'id', t.id,
+                        'project_id', t.project_id,
+                        'project_task_index', t.project_task_index,
+                        'outline', ST_AsGeoJSON(t.outline)::jsonb,
+                        'feature_count', t.feature_count,
+                        'task_status', COALESCE(th.action, 'RELEASED_FOR_MAPPING'),
+                        'get_locked_by_uid', COALESCE(u.id, NULL),
+                        'get_locked_by_username', COALESCE(u.username, NULL)
+                    )
+                ) FILTER (WHERE t.id IS NOT NULL), '[]'::json
+            ) AS tasks
+        FROM
+            projects p
+        LEFT JOIN
+            project_info pi ON p.id = pi.project_id
+        LEFT JOIN
+            users u ON p.author_id = u.id
+        LEFT JOIN
+            tasks t ON p.id = t.project_id
+        LEFT JOIN
+            xforms x ON p.id = x.project_id
+        LEFT JOIN
+            latest_task_history th ON t.id = th.task_id
+        WHERE
+            p.id = :project_id
+        GROUP BY
+            p.id, pi.project_id, u.id, x.id;
+    """)
+
+    result = db.execute(query, {"project_id": project_id})
+    db_project = result.fetchone()
+
     if not db_project:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
