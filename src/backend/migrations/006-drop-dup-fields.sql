@@ -8,9 +8,9 @@
 BEGIN;
 
 -- Drop locked_by, mapped_by, validated_by
-ALTER TABLE ONLY public.tasks DROP CONSTRAINT fk_users_locked;
-ALTER TABLE ONLY public.tasks DROP CONSTRAINT fk_users_mapper;
-ALTER TABLE ONLY public.tasks DROP CONSTRAINT fk_users_validator;
+ALTER TABLE ONLY public.tasks DROP CONSTRAINT IF EXISTS fk_users_locked;
+ALTER TABLE ONLY public.tasks DROP CONSTRAINT IF EXISTS fk_users_mapper;
+ALTER TABLE ONLY public.tasks DROP CONSTRAINT IF EXISTS fk_users_validator;
 
 ALTER TABLE ONLY public.tasks DROP COLUMN IF EXISTS locked_by;
 ALTER TABLE ONLY public.tasks DROP COLUMN IF EXISTS mapped_by;
