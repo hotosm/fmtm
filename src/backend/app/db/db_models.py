@@ -273,9 +273,7 @@ class DbTask(Base):
         int, Column(Integer, ForeignKey("projects.id"), index=True, primary_key=True)
     )
     project_task_index = cast(int, Column(Integer))
-    project_task_name = cast(str, Column(String))
     outline = cast(WKBElement, Column(Geometry("POLYGON", srid=4326)))
-    geometry_geojson = cast(str, Column(String))
     feature_count = cast(int, Column(Integer))
 
     ## ---------------------------------------------- ##

@@ -315,9 +315,7 @@ CREATE TABLE public.tasks (
     id integer NOT NULL,
     project_id integer NOT NULL,
     project_task_index integer,
-    project_task_name character varying,
     outline public.GEOMETRY (POLYGON, 4326),
-    geometry_geojson character varying,
     feature_count integer
 );
 ALTER TABLE public.tasks OWNER TO fmtm;
