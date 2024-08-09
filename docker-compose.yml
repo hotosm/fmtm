@@ -118,11 +118,29 @@ services:
     volumes:
       - ./src/frontend:/app
       - /app/node_modules/
-      # - ../ui:/app/node_modules/@hotosm/ui:ro
     environment:
       - VITE_API_URL=${API_URL:-http://api.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}}
     ports:
       - "7051:7051"
+    networks:
+      - fmtm-net
+    restart: "unless-stopped"
+
+  ui-mapper:
+    image: "ghcr.io/hotosm/fmtm/frontend:mapper"
+    build:
+      context: src/mapper
+      dockerfile: debug.dockerfile
+    depends_on:
+      api:
+        condition: service_started
+    volumes:
+      - ./src/mapper:/app
+      - /app/node_modules/
+      - /app/.svelte-kit/
+      - ../ui:/app/node_modules/@hotosm/ui:ro
+    environment:
+      - VITE_API_URL=${API_URL:-http://api.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}}
     networks:
       - fmtm-net
     restart: "unless-stopped"
