@@ -602,7 +602,7 @@ async def upload_attachment_to_s3(
 
             for idx, filename in enumerate(attachments):
                 s3_key = f"{s3_base_path}/{instance_id}/{idx+1}.jpeg"
-                
+
                 if object_exists(s3_bucket, s3_key):
                     log.warning(
                         f"Object {s3_key} already exists in S3. Skipping upload."
@@ -610,11 +610,11 @@ async def upload_attachment_to_s3(
                     continue
 
                 try:
-                    if attachment:= xform.getSubmissionPhoto(
-                        project.odkid, 
-                        str(instance_id), 
-                        db_xform.odk_form_id, 
-                        str(filename)
+                    if attachment := xform.getSubmissionPhoto(
+                        project.odkid,
+                        str(instance_id),
+                        db_xform.odk_form_id,
+                        str(filename),
                     ):
                         # Convert the attachment to a BytesIO stream
                         image_stream = io.BytesIO(attachment)
@@ -650,7 +650,7 @@ async def upload_attachment_to_s3(
                 except Exception as e:
                     log.warning(
                         f"Failed to process {filename} for instance {instance_id}: {e}"
-                        )
+                    )
                     continue
 
         db.commit()
