@@ -2,10 +2,10 @@ export const prerender = false;
 export const ssr = false;
 
 import 'virtual:uno.css';
-import { initElectric } from '$lib/init-electric';
+// import { initDb } from '$lib/init-db';
 
-export async function load() {
+export function load() {
 	return {
-		electric: await initElectric(),
+		// db: initDb(),
 	};
 }

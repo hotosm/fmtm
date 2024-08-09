@@ -1,14 +1,15 @@
 import { error } from '@sveltejs/kit';
-import type { PageLoad } from './$types';
+import type { PageLoad } from '../$types';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const load: PageLoad = async ({ parent, params, fetch }) => {
-	const { electric } = await parent();
+	// const { db } = await parent();
 
 	const { projectId } = params;
-	const project = await fetch(`http://api.fmtm.localhost:7050/projects/${projectId}`);
+	const project = await fetch(`${API_URL}/projects/${projectId}`);
 
 	if (project.status == 404) {
-		console.log('hello');
 		error(404, {
 			message: `Project with ID (${projectId}) not found`,
 		});
@@ -17,6 +18,6 @@ export const load: PageLoad = async ({ parent, params, fetch }) => {
 	return {
 		project: await project.json(),
 		projectId: parseInt(projectId),
-		electric: electric,
+		// db: db,
 	};
 };

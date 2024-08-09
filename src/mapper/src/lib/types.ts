@@ -68,3 +68,15 @@ export interface ProjectData {
 export interface ZoomToTaskEventDetail {
 	taskId: number;
 }
+
+export const TaskStatus = Object.freeze({
+	READY: 0,
+	LOCKED_FOR_MAPPING: 1,
+	MAPPED: 2,
+	LOCKED_FOR_VALIDATION: 3,
+	VALIDATED: 4,
+	INVALIDATED: 5,
+	BAD: 6,
+	SPLIT: 7,
+	ARCHIVED: 8,
+});
