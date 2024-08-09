@@ -569,13 +569,9 @@ async def get_submission_detail(
 
 
 async def upload_attachment_to_s3(
-        project_id: int, 
-        instance_ids: list,
-        background_task_id: uuid.UUID,
-        db: Session
-    ):
-    """
-    Uploads attachments to S3 for a given project and instance IDs.
+    project_id: int, instance_ids: list, background_task_id: uuid.UUID, db: Session
+):
+    """Uploads attachments to S3 for a given project and instance IDs.
 
     Args:
         project_id (int): The ID of the project.
@@ -590,7 +586,7 @@ async def upload_attachment_to_s3(
         Exception: If an error occurs during the upload process.
     """
     try:
-        project = await project_deps.get_project_by_id(db,project_id)
+        project = await project_deps.get_project_by_id(db, project_id)
         db_xform = await project_deps.get_project_xform(db, project_id)
         odk_central = await project_deps.get_odk_credentials(db, project_id)
         xform = get_odk_form(odk_central)
@@ -600,15 +596,17 @@ async def upload_attachment_to_s3(
         for instance_id in instance_ids:
             submission_detail = await get_submission_detail(instance_id, project, db)
             attachments = submission_detail["verification"]["image"]
-            
+
             if not isinstance(attachments, list):
                 attachments = [attachments]
-            
+
             for idx, filename in enumerate(attachments):
                 s3_key = f"{s3_base_path}/{instance_id}/{idx+1}.jpeg"
                 
                 if object_exists(s3_bucket, s3_key):
-                    log.warning(f"Object {s3_key} already exists in S3. Skipping upload.")
+                    log.warning(
+                        f"Object {s3_key} already exists in S3. Skipping upload."
+                    )
                     continue
 
                 try:
@@ -622,7 +620,9 @@ async def upload_attachment_to_s3(
                         image_stream = io.BytesIO(attachment)
 
                         # Upload the attachment to S3
-                        add_obj_to_bucket(s3_bucket, image_stream, s3_key, content_type="image/jpeg")
+                        add_obj_to_bucket(
+                            s3_bucket, image_stream, s3_key, content_type="image/jpeg"
+                        )
 
                         # Generate the image URL
                         img_url = f"{settings.S3_DOWNLOAD_ROOT}/{s3_bucket}/{s3_key}"
@@ -637,19 +637,22 @@ async def upload_attachment_to_s3(
                             )
                         VALUES (:project_id, :task_id, :submission_id, :s3_path)
                         """)
-                        db.execute(sql, {
-                            "project_id": project_id,
-                            "task_id": submission_detail["task_id"],
-                            "submission_id": instance_id,
-                            "s3_path": img_url
-                        })
-                        
+                        db.execute(
+                            sql,
+                            {
+                                "project_id": project_id,
+                                "task_id": submission_detail["task_id"],
+                                "submission_id": instance_id,
+                                "s3_path": img_url,
+                            },
+                        )
+
                 except Exception as e:
                     log.warning(
                         f"Failed to process {filename} for instance {instance_id}: {e}"
                         )
                     continue
-            
+
         db.commit()
         return True
 
@@ -659,4 +662,4 @@ async def upload_attachment_to_s3(
         update_bg_task_sync = async_to_sync(
             project_crud.update_background_task_status_in_database
         )
-        update_bg_task_sync(db, background_task_id, 2, str(e)) 
+        update_bg_task_sync(db, background_task_id, 2, str(e))

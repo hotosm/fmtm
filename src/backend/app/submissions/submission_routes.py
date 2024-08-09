@@ -20,13 +20,13 @@
 import json
 import uuid
 from io import BytesIO
-from loguru import logger as log
 from typing import Annotated, Optional
 
 import geojson
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse, Response
+from loguru import logger as log
 from sqlalchemy.orm import Session
 
 from app.auth.auth_schemas import AuthUser, ProjectUserDict
@@ -387,14 +387,18 @@ async def submission_table(
     for submission in submissions:
         if submission["__system"]["attachmentsPresent"] != 0:
             instance_ids.append(submission["__id"])
-    
+
     if instance_ids:
         background_task_id = await project_crud.insert_background_task_into_database(
             db, "upload_submission_photos", project.id
         )
         log.info("uploading submission photos to s3")
         background_tasks.add_task(
-            submission_crud.upload_attachment_to_s3, project.id, instance_ids, background_task_id, db
+            submission_crud.upload_attachment_to_s3,
+            project.id,
+            instance_ids,
+            background_task_id,
+            db,
         )
 
     if task_id:
