@@ -285,7 +285,7 @@ CREATE TABLE public.projects (
     task_split_type public.tasksplittype,
     task_split_dimension smallint,
     task_num_buildings smallint,
-    hashtags character varying []
+    custom_tms_url character varying,
 );
 ALTER TABLE public.projects OWNER TO fmtm;
 CREATE SEQUENCE public.projects_id_seq
