@@ -16,8 +16,15 @@
 		ProjectTask, 
 		ZoomToTaskEventDetail,
 	 } from '$lib/types';
-	import { statusEnumLabelToValue, statusEnumValueToLabel, actionNameFromStatus } from '$lib/task-events';
-	// import { mapTask, finishTask, validateTask, goodTask, commentTask } from '$lib/task-events';
+	import { statusEnumLabelToValue, statusEnumValueToLabel } from '$lib/task-events';
+	import { 
+		mapTask, 
+		finishTask,
+		resetTask,
+		// validateTask, 
+		// goodTask, 
+		// commentTask,
+	} from '$lib/task-events';
 	// import { createLiveQuery } from '$lib/live-query';
 	import { generateQrCode, downloadQrCode } from '$lib/qrcode'
 	import EventCard from '$lib/components/event-card.svelte'; 
@@ -92,7 +99,7 @@
     let selectedTaskId = writable<number | null>(null);
 	let featureClicked = writable(false);
     let selectedTask = writable<any>(null);
-    let nextAction = writable<string>('');
+    let selectedTaskStatus = writable<string>('');
 
 	$: selectedTask.set(data.project.tasks.find((task: ProjectTask) => task.id === $selectedTaskId));
 
@@ -100,11 +107,10 @@
         const task = $selectedTask;
         if (task && task.id) {
             const latestActions = await getLatestEventForTasks();
-			const statusString = latestActions.get(task.id)
-			const status = statusString? statusEnumLabelToValue(statusString, true) : '1'
-            nextAction.set(status);
+			const statusLabel = latestActions.get(task.id)
+            selectedTaskStatus.set(statusLabel ? statusLabel : 'READY');
         } else {
-            nextAction.set('');
+            selectedTaskStatus.set('');
         }
     })();
 
@@ -113,6 +119,9 @@
 		const taskObj = data.project.tasks.find((task: ProjectTask) => task.id === taskId);
 
 		if (!taskObj) return
+
+		// Set as selected task for buttons
+		selectedTaskId.set(taskObj.id);
 
 		const taskPolygon = polygon(taskObj.outline_geojson.geometry.coordinates);
 		const taskBuffer = buffer(taskPolygon, 5, { units: 'meters' });
@@ -174,14 +183,35 @@
 	</hot-card>
 {/if}
 
-{#if $selectedTaskId && $nextAction}
-	<sl-tooltip content={actionNameFromStatus($nextAction)}>
-		<hot-icon-button
-			name="fast-forward-circle"
-			class="fixed top-30 left-1/2 transform -translate-x-1/2 text-5xl z-10"
-			label={actionNameFromStatus($nextAction)}
-		></hot-icon-button>
-	</sl-tooltip>
+{#if $selectedTaskId}
+	{#if $selectedTaskStatus == 'READY'}
+		<sl-tooltip content="MAP">
+			<hot-icon-button
+				name="play"
+				class="fixed top-30 left-1/2 transform -translate-x-1/2 text-5xl z-10 bg-green-500 text-white rounded-full p-1"
+				label="MAP"
+				on:click={mapTask(data.projectId, $selectedTaskId)}
+			></hot-icon-button>
+		</sl-tooltip>
+	{:else if $selectedTaskStatus == 'LOCKED_FOR_MAPPING'}
+		<sl-tooltip content="FINISH">
+			<hot-icon-button
+				name="stop"
+				class="fixed top-30 left-1/2 transform -translate-x-1/2 text-5xl z-10 bg-blue-500 text-white rounded-full p-1"
+				label="FINISH"
+				on:click={finishTask(data.projectId, $selectedTaskId)}
+			></hot-icon-button>
+		</sl-tooltip>
+	{:else if $selectedTaskStatus == 'MAPPED'}
+		<sl-tooltip content="RESET">
+			<hot-icon-button
+				name="arrow-counterclockwise"
+				class="fixed top-30 left-1/2 transform -translate-x-1/2 text-5xl z-10 bg-yellow-500 text-white rounded-full p-1"
+				label="RESET"
+				on:click={resetTask(data.projectId, $selectedTaskId)}
+			></hot-icon-button>
+		</sl-tooltip>
+	{/if}
 {/if}
 
 <MapLibre

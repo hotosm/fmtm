@@ -1,64 +1,28 @@
 import { v4 as uuidv4 } from 'uuid';
-import type { taskactionType } from '$lib/migrations';
-import { TaskStatus } from '$lib/types';
+import { TaskStatusEnum } from '$lib/types';
+import type { TaskStatus, TaskEvent } from '$lib/types';
 
-export function actionNameFromStatus(statusString: string) {
-	const statusKey = Object.keys(TaskStatus).find((key) => key === statusString);
-	if (statusKey === undefined) {
-		throw new Error(`Invalid status string: ${statusString}`);
+const API_URL = import.meta.env.VITE_API_URL;
+
+export function statusEnumLabelToValue(statusLabel: string): string {
+	console.log(statusLabel);
+	// Check if the statusLabel exists in TaskStatusEnum
+	if (!(statusLabel in TaskStatusEnum)) {
+		throw new Error(`Invalid status string: ${statusLabel}`);
 	}
+	const statusValue = TaskStatusEnum[statusLabel as keyof TaskStatus];
 
-	const statusInt = TaskStatus[statusKey];
-	let mapAction = 'MAP';
-
-	switch (statusInt) {
-		case TaskStatus.READY:
-			mapAction = 'MAP'; // Move from READY to LOCKED_FOR_MAPPING
-			break;
-		case TaskStatus.LOCKED_FOR_MAPPING:
-			mapAction = 'FINISH'; // Move from LOCKED_FOR_MAPPING to MAPPED
-			break;
-		case TaskStatus.MAPPED:
-			mapAction = 'UNLOCK'; // Move from MAPPED to READY
-			break;
-		default:
-			throw new Error(`Unknown status integer: ${statusInt}`);
-	}
-
-	return mapAction;
+	return statusValue;
 }
 
-export function statusEnumLabelToValue(statusString: string, next = false) {
-	const statusKey = Object.keys(TaskStatus).find((key) => key === statusString);
-	if (statusKey === undefined) {
-		throw new Error(`Invalid status string: ${statusString}`);
-	}
-	let statusInt = TaskStatus[statusKey];
+export function statusEnumValueToLabel(statusValue: string): keyof TaskStatus {
+	// Validate if statusValue exists in TaskStatusEnum
+	const statusEntry = Object.entries(TaskStatusEnum).find(([_, value]) => value === statusValue);
 
-	if (next) {
-		if (statusInt === TaskStatus.READY) {
-			statusInt = TaskStatus.LOCKED_FOR_MAPPING;
-		} else if (statusInt === TaskStatus.LOCKED_FOR_MAPPING) {
-			statusInt = TaskStatus.MAPPED;
-		} else if (statusInt === TaskStatus.MAPPED) {
-			statusInt = TaskStatus.READY;
-		}
-	}
-
-	return String(statusInt);
-}
-
-export function statusEnumValueToLabel(statusIntString: string) {
-	const statusInt = parseInt(statusIntString, 10);
-	if (isNaN(statusInt)) {
-		throw new Error(`Invalid status integer string: ${statusIntString}`);
-	}
-
-	const statusEntry = Object.entries(TaskStatus).find(([key, value]) => value === statusInt);
-	if (statusEntry !== undefined) {
-		return statusEntry[0];
+	if (statusEntry) {
+		return statusEntry[0] as keyof TaskStatus;
 	} else {
-		throw new Error(`Invalid status integer: ${statusInt}`);
+		throw new Error(`Invalid status value: ${statusValue}`);
 	}
 }
 
@@ -68,30 +32,54 @@ export function statusEnumValueToLabel(statusIntString: string) {
 // //   user_id: number;
 // // }
 
-// async function add_history(
-// 	db,
-// 	projectId: number,
-// 	taskId: number,
-// 	userId: number,
-// 	action: taskactionType,
-// 	action_text: string = '',
-// ): Promise<void> {
-// 	await db.task_history.create({
-// 		data: {
-// 			event_id: uuidv4(),
-// 			project_id: projectId,
-// 			task_id: taskId,
-// 			action: action,
-// 			action_text: action_text,
-// 			action_date: new Date().toISOString(),
-// 			user_id: userId,
-// 		},
-// 	});
-// }
+async function add_event(
+	// db,
+	projectId: number,
+	taskId: number,
+	// userId: number,
+	actionId: string,
+	// action_text: string = '',
+	// ): Promise<void> {
+): Promise<TaskEvent | false> {
+	// const eventId = uuidv4()
+	const resp = await fetch(`${API_URL}/tasks/${taskId}/new-status/${actionId}?project_id=${projectId}`, {
+		method: 'POST',
+		credentials: 'include',
+	});
 
-// async function mapTask(db, projectId: number, taskId: number, userId: number): Promise<void> {
-// 	await add_history(db, projectId, taskId, userId, 'LOCKED_FOR_MAPPING');
-// }
+	if (resp.status !== 200) {
+		console.error('Failed to update status in API');
+		return false;
+	}
+
+	const newEvent = await resp.json();
+	return newEvent;
+
+	// // Uncomment this for local first approach
+	// await db.task_history.create({
+	// 	data: {
+	// 		event_id: uuidv4(),
+	// 		project_id: projectId,
+	// 		task_id: taskId,
+	// 		action: action,
+	// 		action_text: action_text,
+	// 		action_date: new Date().toISOString(),
+	// 		user_id: userId,
+	// 	},
+	// });
+}
+
+export async function mapTask(/* db, */ projectId: number, taskId: number): Promise<void> {
+	await add_event(/* db, */ projectId, taskId, TaskStatusEnum.LOCKED_FOR_MAPPING);
+}
+
+export async function finishTask(/* db, */ projectId: number, taskId: number): Promise<void> {
+	await add_event(/* db, */ projectId, taskId, TaskStatusEnum.MAPPED);
+}
+
+export async function resetTask(/* db, */ projectId: number, taskId: number): Promise<void> {
+	await add_event(/* db, */ projectId, taskId, TaskStatusEnum.READY);
+}
 
 // async function finishTask(db, projectId: number, taskId: number, userId: number): Promise<void> {
 // 	// const query = `
@@ -144,19 +132,19 @@ export function statusEnumValueToLabel(statusIntString: string) {
 // 	// assert(newEvent.task_id === taskId);
 // 	// assert(newEvent.user_id === userId);
 
-// 	await add_history(db, projectId, taskId, userId, 'MARKED_MAPPED');
+// 	await add_event(db, projectId, taskId, userId, 'MARKED_MAPPED');
 // }
 
 // async function validateTask(db, projectId: number, taskId: number, userId: number): Promise<void> {
-// 	await add_history(db, projectId, taskId, userId, 'LOCKED_FOR_VALIDATION');
+// 	await add_event(db, projectId, taskId, userId, 'LOCKED_FOR_VALIDATION');
 // }
 
 // async function goodTask(db, projectId: number, taskId: number, userId: number): Promise<void> {
-// 	await add_history(db, projectId, taskId, userId, 'VALIDATED');
+// 	await add_event(db, projectId, taskId, userId, 'VALIDATED');
 // }
 
 // async function commentTask(db, projectId: number, taskId: number, userId: number, comment: string): Promise<void> {
-// 	await add_history(db, projectId, taskId, userId, 'COMMENT', comment);
+// 	await add_event(db, projectId, taskId, userId, 'COMMENT', comment);
 // }
 
 // export { mapTask, finishTask, validateTask, goodTask, commentTask };

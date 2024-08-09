@@ -14,11 +14,7 @@ export type ProjectTask = {
 	id: number;
 	project_id: number;
 	project_task_index: number;
-	project_task_name: string;
 	feature_count: number;
-	task_status: number;
-	locked_by_uid: number;
-	locked_by_username: string;
 	outline_geojson: {
 		type: string;
 		geometry: {
@@ -36,7 +32,6 @@ export type ProjectTask = {
 
 export interface ProjectData {
 	id: number;
-	project_uuid: string;
 	odkid: number;
 	project_info: ProjectInfo;
 	outline_geojson: {
@@ -69,14 +64,34 @@ export interface ZoomToTaskEventDetail {
 	taskId: number;
 }
 
-export const TaskStatus = Object.freeze({
-	READY: 0,
-	LOCKED_FOR_MAPPING: 1,
-	MAPPED: 2,
-	LOCKED_FOR_VALIDATION: 3,
-	VALIDATED: 4,
-	INVALIDATED: 5,
-	BAD: 6,
-	SPLIT: 7,
-	ARCHIVED: 8,
+export type TaskStatus = {
+	READY: string;
+	LOCKED_FOR_MAPPING: string;
+	MAPPED: string;
+	LOCKED_FOR_VALIDATION: string;
+	VALIDATED: string;
+	INVALIDATED: string;
+	BAD: string;
+	SPLIT: string;
+	ARCHIVED: string;
+};
+export const TaskStatusEnum: TaskStatus = Object.freeze({
+	READY: '0',
+	LOCKED_FOR_MAPPING: '1',
+	MAPPED: '2',
+	LOCKED_FOR_VALIDATION: '3',
+	VALIDATED: '4',
+	INVALIDATED: '5',
+	BAD: '6',
+	SPLIT: '7',
+	ARCHIVED: '8',
 });
+
+export type TaskEvent = {
+	event_id: string;
+	action_text: string;
+	action_date: string;
+	username: string;
+	profile_img: string;
+	status: TaskStatus;
+};

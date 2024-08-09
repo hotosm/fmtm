@@ -15,9 +15,18 @@ export const load: PageLoad = async ({ parent, params, fetch }) => {
 		});
 	}
 
+	const user = await fetch(`${API_URL}/auth/refresh`, { credentials: 'include' });
+	if (user.status != 200) {
+		// TODO redirect to different error page to handle login
+		error(401, {
+			message: `You must log in first`,
+		});
+	}
+
 	return {
 		project: await project.json(),
 		projectId: parseInt(projectId),
+		userId: await user.json().id,
 		// db: db,
 	};
 };
