@@ -20,20 +20,19 @@
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from loguru import logger as log
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
-from app.db import database, db_models
+from app.db import db_models
 from app.db.postgis_utils import timestamp
 from app.models.enums import (
+    HTTPStatus,
     TaskStatus,
     get_action_for_status_change,
-    verify_valid_status_update,
 )
 from app.tasks import tasks_schemas
-from app.users import user_crud
 
 
 async def get_task_count_in_project(db: Session, project_id: int):
@@ -73,6 +72,7 @@ async def get_tasks(
             .limit(limit)
             .all()
         )
+    # TODO update this logic to filter events related to user (locked_by removed)
     elif user_id:
         db_tasks = (
             db.query(db_models.DbTask)
@@ -92,84 +92,96 @@ async def get_task(db: Session, task_id: int) -> db_models.DbTask:
     return db.query(db_models.DbTask).filter(db_models.DbTask.id == task_id).first()
 
 
-async def update_task_status(
-    db: Session, user_id: int, task_id: int, new_status: TaskStatus
+async def new_task_event(
+    db: Session, project_id: int, task_id: int, user_id: int, new_status: TaskStatus
 ):
-    """Update the status of a task."""
-    log.debug(f"Updating task ID {task_id} to status {new_status}")
-    if not user_id:
-        log.error(f"User id is not present: {user_id}")
-        raise HTTPException(status_code=400, detail="User id required.")
+    """Add a new entry to the task events."""
+    log.debug(f"Checking if task ({task_id}) is already locked")
+    query = text("""
+        SELECT
+            th.action,
+            th.user_id,
+            u.username
+        FROM
+            task_history th
+        LEFT JOIN
+            users u ON th.user_id = u.id
+        WHERE
+            th.task_id = :task_id
+        ORDER BY
+            th.action_date DESC
+        LIMIT 1
+    """)
 
-    db_user = await user_crud.get_user(db, user_id)
-    if not db_user:
-        msg = f"User with id {user_id} does not exist."
-        log.error(msg)
-        raise HTTPException(status_code=400, detail=msg)
+    result = db.execute(query, {"task_id": task_id})
+    history_entry = result.fetchone()
 
-    db_task = await get_task(db, task_id)
-    log.debug(f"Returned task from db: {db_task}")
-
-    if db_task:
-        if db_task.task_status in [
-            TaskStatus.LOCKED_FOR_MAPPING,
-            TaskStatus.LOCKED_FOR_VALIDATION,
-        ]:
-            log.debug(f"Task {task_id} currently locked")
-            if user_id != db_task.locked_by:
-                msg = (
-                    f"User {user_id} with username {db_user.username} "
-                    "has not locked this task."
-                )
-                log.error(msg)
-                raise HTTPException(
-                    status_code=403,
-                    detail=msg,
-                )
-
-        if not verify_valid_status_update(db_task.task_status, new_status):
-            msg = f"{new_status} is not a valid task status"
+    if history_entry and history_entry.action in [
+        TaskStatus.LOCKED_FOR_MAPPING.value,
+        TaskStatus.LOCKED_FOR_VALIDATION.value,
+    ]:
+        if history_entry.user_id != user_id:
+            msg = f"Task is locked by user {history_entry.username}"
             log.error(msg)
-            raise HTTPException(
-                status_code=422,
-                detail=msg,
+            raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail=msg)
+
+    log.info(f"Updating task ID {task_id} to status {new_status}")
+    query = text("""
+        WITH new_history AS (
+            INSERT INTO task_history (
+                event_id,
+                project_id,
+                task_id,
+                user_id,
+                action,
+                action_text,
+                action_date
+            ) VALUES (
+                gen_random_uuid(),
+                :project_id,
+                :task_id,
+                :user_id,
+                :new_status,
+                'CHANGED TO MAPPED by svcfmtm',
+                NOW()
             )
-
-        # update history prior to updating task
-        update_history = await create_task_history_for_status_change(
-            db_task, new_status, db_user
+            RETURNING *
         )
-        db.add(update_history)
+        SELECT
+            nh.event_id,
+            nh.project_id,
+            nh.task_id,
+            nh.user_id,
+            nh.action,
+            nh.action_text,
+            nh.action_date,
+            u.username,
+            u.profile_img
+        FROM
+            new_history nh
+        LEFT JOIN
+            users u ON nh.user_id = u.id;
+    """)
 
-        db_task.task_status = new_status
+    result = db.execute(
+        query,
+        {
+            "project_id": project_id,
+            "task_id": task_id,
+            "user_id": user_id,
+            "new_status": new_status.name,
+        },
+    )
 
-        if new_status in [
-            TaskStatus.LOCKED_FOR_MAPPING,
-            TaskStatus.LOCKED_FOR_VALIDATION,
-        ]:
-            db_task.locked_by = db_user.id
-        else:
-            db_task.locked_by = None
+    history_entry = result.fetchone()
 
-        if new_status == TaskStatus.MAPPED:
-            db_task.mapped_by = db_user.id
-        if new_status == TaskStatus.VALIDATED:
-            db_task.validated_by = db_user.id
-        if new_status == TaskStatus.INVALIDATED:
-            db_task.mapped_by = None
-
-        db.commit()
-        db.refresh(db_task)
-        return update_history
-
-    else:
+    if not history_entry:
         raise HTTPException(
-            status_code=400,
-            detail=(
-                f"Not a valid status update: "
-                f"{db_task.task_status.name} to {new_status.name}"
-            ),
+            status_code=400, detail="Failed to create task history entry."
         )
+
+    db.commit()
+    return history_entry
 
 
 # ---------------------------
@@ -267,18 +279,6 @@ async def add_task_comments(
     }
 
 
-async def update_task_history(
-    task_history: db_models.DbTaskHistory, db: Session = Depends(database.get_db)
-):
-    """Update task history with username and user profile image."""
-    if user_id := task_history.user_id:
-        user = db.query(db_models.DbUser).filter_by(id=user_id).first()
-        if user:
-            task_history.username = user.username
-            task_history.profile_img = user.profile_img
-    return task_history
-
-
 async def get_project_task_history(
     task_id: int,
     comment: bool,
@@ -318,7 +318,7 @@ async def get_project_task_history(
     task_history = [
         {
             "event_id": row[0],
-            "status": None if comment else row[1],
+            "action": None if comment else row[1],
             "action_text": row[2],
             "action_date": row[3],
             "username": row[4],

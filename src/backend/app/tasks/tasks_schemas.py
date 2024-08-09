@@ -22,11 +22,10 @@ from typing import Any, Optional
 
 from geojson_pydantic import Feature
 from pydantic import BaseModel, ConfigDict, Field, computed_field
-from pydantic.functional_serializers import field_serializer
+from pydantic.functional_validators import field_validator
 from pydantic.types import UUID4
 
-from app.db.postgis_utils import wkb_geom_to_feature
-from app.models.enums import TaskStatus
+from app.models.enums import TaskAction, TaskStatus, get_status_for_action
 
 
 class TaskHistoryBase(BaseModel):
@@ -40,9 +39,18 @@ class TaskHistoryBase(BaseModel):
 class TaskHistoryOut(TaskHistoryBase):
     """Task mapping history display."""
 
+    action: Any = Field(exclude=True)
+
     username: str
     profile_img: Optional[str]
-    status: Optional[str] = None
+
+    @computed_field
+    @property
+    def status(self) -> Optional[TaskStatus]:
+        """Get the status from the recent action."""
+        if not self.action:
+            return None
+        return get_status_for_action(self.action)
 
 
 class TaskHistoryCount(BaseModel):
@@ -67,50 +75,33 @@ class Task(BaseModel):
     id: int
     project_id: int
     project_task_index: int
-    project_task_name: Optional[str]
     feature_count: Optional[int] = None
+    task_status: TaskStatus
+    # TODO check the logic in project_deps, as it doesn't check if action is lock
     locked_by_uid: Optional[int] = None
     locked_by_username: Optional[str] = None
 
     @computed_field
     @property
     def outline_geojson(self) -> Optional[Feature]:
-        """Compute the geojson outline from WKBElement outline."""
+        """TODO this is now the same as self.outline."""
         if not self.outline:
             return None
-        geom_geojson = wkb_geom_to_feature(
-            geometry=self.outline,
-            properties={
-                "fid": self.project_task_index,
-                "uid": self.id,
-                "name": self.project_task_name,
-            },
-            id=self.id,
-        )
-        return Feature(**geom_geojson)
+        # TODO refactor to remove outline_geojson
+        # TODO possibly also generate bbox for geojson in project_deps SQL?
+        feat = {
+            "type": "Feature",
+            "geometry": self.outline,
+            "id": self.id,
+            "properties": {"fid": self.project_task_index, "uid": self.id},
+        }
+        return Feature(**feat)
 
-    # FIXME
-    # Add computed task_status field to get most recent status from events
-    task_status: TaskStatus = TaskStatus.READY
-
-    # TODO update logic to get lock holder from task events
-    # Or return none if not locked
-    @field_serializer("locked_by_uid")
-    def get_locked_by_uid(self, value: str) -> Optional[str]:
-        """Get lock uid from lock_holder details."""
-        return None
-        # if self.lock_holder:
-        #     return self.lock_holder.id
-        # return None
-
-    # TODO update logic to get lock holder from task events
-    @field_serializer("locked_by_username")
-    def get_locked_by_username(self, value: str) -> Optional[str]:
-        """Get lock username from lock_holder details."""
-        return None
-        # if self.lock_holder:
-        #     return self.lock_holder.username
-        # return None
+    @field_validator("task_status", mode="before")
+    @classmethod
+    def enum_get_status_for_action(cls, value: str) -> TaskStatus:
+        """Get the the int value from a string enum."""
+        return get_status_for_action(TaskAction[value])
 
 
 class TaskCommentResponse(TaskHistoryOut):
@@ -133,10 +124,10 @@ class TaskHistory(BaseModel):
     )
 
     # Excluded
+    action: Any = Field(exclude=True)
     user: Any = Field(exclude=True)
 
     task_id: int
-    action: TaskStatus
     action_text: Optional[str]
     action_date: datetime
 
@@ -159,5 +150,7 @@ class TaskHistory(BaseModel):
     @computed_field
     @property
     def status(self) -> Optional[TaskStatus]:
-        """Alias of 'action'."""
-        return self.action
+        """Get the status from the recent action."""
+        if not self.action:
+            return None
+        return get_status_for_action(self.action)
