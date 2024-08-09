@@ -630,8 +630,8 @@ async def upload_attachment_to_s3(
                         # Insert the record into submission_photos table
                         sql = text("""
                         INSERT INTO submission_photos (
-                                project_id, 
-                                task_id, 
+                                project_id,
+                                task_id,
                                 submission_id,
                                 s3_path
                             )
