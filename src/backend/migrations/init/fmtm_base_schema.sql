@@ -14,6 +14,7 @@ SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
+SET TIME ZONE 'UTC';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
@@ -22,7 +23,6 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 ALTER SCHEMA public OWNER TO fmtm;
-
 
 -- PostGIS
 
@@ -157,7 +157,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE IF NOT EXISTS public."_migrations" (
     script_name text,
-    executed_at timestamp without time zone
+    date_executed timestamp with time zone
 );
 ALTER TABLE public._migrations OWNER TO fmtm;
 
@@ -179,7 +179,7 @@ CREATE TABLE public.mbtiles_path (
     path character varying,
     tile_source character varying,
     background_task_id character varying,
-    created_at timestamp without time zone DEFAULT now()
+    created_at timestamp with time zone DEFAULT now()
 );
 ALTER TABLE public.mbtiles_path OWNER TO fmtm;
 CREATE SEQUENCE public.mbtiles_path_id_seq
@@ -257,7 +257,7 @@ CREATE TABLE public.projects (
     mapper_level public.mappinglevel NOT NULL DEFAULT 'INTERMEDIATE',
     priority public.projectpriority DEFAULT 'MEDIUM',
     featured boolean DEFAULT false,
-    due_date timestamp without time zone,
+    due_date timestamp with time zone,
     changeset_comment character varying,
     osmcha_filter_id character varying,
     imagery character varying,
@@ -278,8 +278,8 @@ CREATE TABLE public.projects (
     task_num_buildings smallint,
     hashtags character varying [],
     custom_tms_url character varying,
-    created_at timestamp without time zone NOT NULL DEFAULT now(),
-    updated_at timestamp without time zone DEFAULT now()
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
 );
 ALTER TABLE public.projects OWNER TO fmtm;
 CREATE SEQUENCE public.projects_id_seq
@@ -299,7 +299,7 @@ CREATE TABLE public.task_history (
     task_id integer NOT NULL,
     action public.taskaction NOT NULL,
     action_text character varying,
-    action_date timestamp without time zone NOT NULL,
+    action_date timestamp with time zone NOT NULL,
     user_id integer NOT NULL
 );
 ALTER TABLE public.task_history OWNER TO fmtm;
@@ -348,7 +348,7 @@ CREATE TABLE public.users (
     tasks_validated integer NOT NULL DEFAULT 0,
     tasks_invalidated integer NOT NULL DEFAULT 0,
     projects_mapped integer [],
-    registered_at timestamp without time zone DEFAULT now()
+    registered_at timestamp with time zone DEFAULT now()
 );
 ALTER TABLE public.users OWNER TO fmtm;
 

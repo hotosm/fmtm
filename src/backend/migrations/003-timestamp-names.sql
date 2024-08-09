@@ -27,13 +27,6 @@ BEGIN
     END IF;
 END $$;
 
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = '_migrations' AND column_name = 'date_executed') THEN
-        ALTER TABLE public."_migrations" RENAME COLUMN date_executed TO executed_at;
-    END IF;
-END $$;
-
 ALTER TABLE public.users DROP COLUMN IF EXISTS last_validation_date;
 
 -- Commit the transaction
