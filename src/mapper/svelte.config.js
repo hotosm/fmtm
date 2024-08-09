@@ -20,6 +20,10 @@ const config = {
 			precompress: false,
 			strict: true,
 		}),
+		// Works in conjunction with reverse proxy to serve under /mapnow prefix
+		paths: {
+			base: '/mapnow',
+		},
 	},
 
 	alias: {
