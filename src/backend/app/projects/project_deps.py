@@ -48,14 +48,15 @@ async def get_project_by_id(
     # ST_AsGeoJSON(p.centroid)::jsonb AS centroid,
     query = text("""
         WITH latest_task_history AS (
-            SELECT DISTINCT ON (th.task_id)
-                th.task_id,
-                th.action,
-                th.action_date
+            SELECT DISTINCT ON (task_id)
+                task_id,
+                action,
+                action_date,
+                user_id
             FROM
-                task_history th
+                task_history
             ORDER BY
-                th.task_id, th.action_date DESC
+                task_id, action_date DESC
         )
         SELECT
             p.*,
@@ -71,8 +72,8 @@ async def get_project_by_id(
                 'per_task_instructions', pi.per_task_instructions
             ) AS project_info,
             JSON_BUILD_OBJECT(
-                'id', u.id,
-                'username', u.username
+                'id', project_author.id,
+                'username', project_author.username
             ) AS author,
             JSON_AGG(
                 JSON_BUILD_OBJECT(
@@ -91,8 +92,8 @@ async def get_project_by_id(
                         'outline', ST_AsGeoJSON(t.outline)::jsonb,
                         'feature_count', t.feature_count,
                         'task_status', COALESCE(th.action, 'RELEASED_FOR_MAPPING'),
-                        'locked_by_uid', COALESCE(u.id, NULL),
-                        'locked_by_username', COALESCE(u.username, NULL)
+                        'locked_by_uid', COALESCE(latest_user.id, NULL),
+                        'locked_by_username', COALESCE(latest_user.username, NULL)
                     )
                 ) FILTER (WHERE t.id IS NOT NULL), '[]'::json
             ) AS tasks
@@ -101,17 +102,19 @@ async def get_project_by_id(
         LEFT JOIN
             project_info pi ON p.id = pi.project_id
         LEFT JOIN
-            users u ON p.author_id = u.id
+            users project_author ON p.author_id = project_author.id
         LEFT JOIN
             tasks t ON p.id = t.project_id
         LEFT JOIN
             xforms x ON p.id = x.project_id
         LEFT JOIN
             latest_task_history th ON t.id = th.task_id
+        LEFT JOIN
+            users latest_user ON th.user_id = latest_user.id
         WHERE
             p.id = :project_id
         GROUP BY
-            p.id, pi.project_id, u.id, x.id;
+            p.id, pi.project_id, project_author.id, x.id;
     """)
 
     result = db.execute(query, {"project_id": project_id})
