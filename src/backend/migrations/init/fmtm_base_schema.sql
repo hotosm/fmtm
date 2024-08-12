@@ -245,7 +245,6 @@ CREATE TABLE public.projects (
     odkid integer,
     author_id integer NOT NULL,
     project_name_prefix character varying,
-    task_type_prefix character varying,
     location_str character varying,
     outline public.GEOMETRY (POLYGON, 4326),
     status public.projectstatus NOT NULL DEFAULT 'DRAFT',

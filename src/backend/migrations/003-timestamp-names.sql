@@ -2,6 +2,7 @@
 -- * Rename all timestamps to a consistent [field]_at syntax
 -- * Drop the users.last_validation_date field we no longer need 
 --    (filter task_history instead)
+-- * Drop projects.task_type_prefix
 -- * Convert timestamps to with time zone
 
 -- Start a transaction
@@ -62,7 +63,9 @@ BEGIN
     END IF;
 END $$;
 
+-- Drop some extra columns not needed
 ALTER TABLE public.users DROP COLUMN IF EXISTS last_validation_date;
+ALTER TABLE public.projects DROP COLUMN IF EXISTS task_type_prefix;
 
 -- Commit the transaction
 COMMIT;
