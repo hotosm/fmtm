@@ -100,17 +100,17 @@ const CreateNewProject = () => {
     }
   };
   return (
-    <div>
+    <div className="fmtm-h-full">
       <CreateProjectHeader />
       <Prompt when={isUnsavedChanges} message="Are you sure you want to leave, you have unsaved changes?" />
 
-      <div className="fmtm-min-h-[72vh] fmtm-bg-gray-100">
-        <div className=" fmtm-w-full">
+      <div className="fmtm-h-[calc(100%-64px)]">
+        <div className="fmtm-w-full">
           <div>
             <StepSwitcher data={createProjectSteps} flag={'create_project'} switchSteps={canSwitchCreateProjectSteps} />
           </div>
         </div>
-        <div>{(() => getCreateProjectContent())()}</div>
+        <div className="lg:fmtm-h-[calc(100%-108px)]">{(() => getCreateProjectContent())()}</div>
       </div>
     </div>
   );
