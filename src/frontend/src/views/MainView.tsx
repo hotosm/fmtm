@@ -57,11 +57,7 @@ const MainView = () => {
               </div>
             )}
             <CoreModules.Stack
-              className={`mainview ${
-                location.pathname.includes('project/')
-                  ? 'fmtm-px-0 sm:fmtm-px-[1.3rem] sm:fmtm-py-[1.3rem]'
-                  : 'fmtm-px-[1.3rem] fmtm-py-[1.3rem]'
-              }`}
+              className="fmtm-p-6 fmtm-bg-[#f5f5f5]"
               sx={{
                 height: popupInParams
                   ? '100vh'

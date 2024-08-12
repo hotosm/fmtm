@@ -105,7 +105,7 @@ const ProjectDetailsForm = ({ flag }) => {
 
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
-      <div className="fmtm-bg-white xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6">
+      <div className="fmtm-bg-white lg:fmtm-w-[20%] xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6">
         <h6 className="fmtm-text-xl fmtm-font-[600] fmtm-pb-2 lg:fmtm-pb-6">Project Details</h6>
         <div className="fmtm-text-gray-500 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3">
           <span>
