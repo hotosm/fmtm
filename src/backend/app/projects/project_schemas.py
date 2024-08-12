@@ -22,6 +22,7 @@ from datetime import datetime
 from typing import Any, List, Optional, Union
 
 from dateutil import parser
+from geoalchemy2 import WKBElement
 from geojson_pydantic import Feature, FeatureCollection, MultiPolygon, Polygon
 from loguru import logger as log
 from pydantic import BaseModel, Field, computed_field
@@ -36,6 +37,7 @@ from app.db.postgis_utils import (
     get_address_from_lat_lon,
     merge_polygons,
     read_wkb,
+    wkb_geom_to_feature,
     write_wkb,
 )
 from app.models.enums import ProjectPriority, ProjectStatus, TaskSplitType, XLSFormType
@@ -406,6 +408,15 @@ class ProjectBase(BaseModel):
         """TODO this is now the same as self.outline."""
         if not self.outline:
             return None
+
+        # FIXME this is a workaround until geoalchemy is removed
+        if isinstance(self.outline, WKBElement):
+            feat = wkb_geom_to_feature(
+                self.outline,
+                id=self.id,
+                properties={"id": self.id, "bbox": None},
+            )
+            return Feature(**feat)
 
         # TODO refactor to remove outline_geojson
         # TODO possibly also generate bbox for geojson in project_deps SQL?
