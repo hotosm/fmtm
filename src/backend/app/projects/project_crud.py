@@ -1546,12 +1546,9 @@ async def get_project_users(db: Session, project_id: int):
         ORDER BY contributions DESC
     """)
     result = db.execute(query, {"project_id": project_id}).fetchall()
-    
+
     return [
-        {
-            "user": row.username, 
-            "contributions": row.contributions
-        } for row in result
+        {"user": row.username, "contributions": row.contributions} for row in result
     ]
 
 
