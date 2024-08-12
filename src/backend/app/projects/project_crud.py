@@ -948,8 +948,8 @@ async def generate_project_files(
             task_extract_dict,
         )
         log.debug(
-            f"Setting odk token for FMTM project ({project_id}) "
-            f"ODK project {project_odk_id}"
+            f"Setting encrypted odk token for FMTM project ({project_id}) "
+            f"ODK project {project_odk_id}: {encrypted_odk_token}"
         )
 
         project.odk_token = encrypted_odk_token
