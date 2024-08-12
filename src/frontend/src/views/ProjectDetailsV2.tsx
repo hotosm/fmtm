@@ -323,7 +323,7 @@ const ProjectDetailsV2 = () => {
           </div>
           <div
             className="fmtm-flex fmtm-flex-col fmtm-gap-4 fmtm-flex-auto"
-            style={{ height: `${viewState === 'comments' ? 'calc(100% - 98px)' : 'calc(100% - 143px)'}` }}
+            style={{ height: `${viewState === 'comments' ? 'calc(100% - 63px)' : 'calc(100% - 103px)'}` }}
           >
             {projectDetailsLoading ? (
               <CoreModules.Skeleton className="!fmtm-w-[250px] fmtm-h-[25px]" />
