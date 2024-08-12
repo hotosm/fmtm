@@ -80,7 +80,7 @@ export default function PrimaryAppBar() {
             src={logo}
             alt="FMTM Logo"
             onClick={() => navigate('/')}
-            className="fmtm-w-[5.188rem] fmtm-min-w-[5.188rem]"
+            className="fmtm-w-[5.188rem] fmtm-min-w-[5.188rem] fmtm-cursor-pointer"
           />
           <div className="fmtm-hidden lg:fmtm-flex fmtm-items-center fmtm-gap-8 fmtm-ml-8">
             <Link
