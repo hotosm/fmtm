@@ -1,6 +1,6 @@
 -- ## Migration to:
 -- * Convert task_history.id from SERIAL to manual UUID field
--- * Remove DEFAULT from action_date (not supported)
+-- * Remove DEFAULT from action_date (not supported by electric)
 
 -- Start a transaction
 BEGIN;
