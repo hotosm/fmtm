@@ -439,7 +439,7 @@ async def delete_project(
     # Delete S3 resources
     await project_crud.delete_fmtm_s3_objects(project)
     # Delete FMTM project
-    await project_crud.delete_fmtm_project(db, project)
+    await project_crud.delete_fmtm_project(db, project.id)
 
     log.info(f"Deletion of project {project.id} successful")
     return Response(status_code=HTTPStatus.NO_CONTENT)

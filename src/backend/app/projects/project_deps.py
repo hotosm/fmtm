@@ -27,6 +27,7 @@ from loguru import logger as log
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.db import db_models
 from app.db.database import get_db
 from app.models.enums import HTTPStatus
 from app.projects import project_schemas
@@ -41,6 +42,10 @@ async def get_project_by_id(
         # FIXME why do we need this?
         return None
 
+    # TODO replace outline / centroid with geojson equivalent
+    # TODO when we remove SQLALchemy
+    # ST_AsGeoJSON(p.outline)::jsonb AS outline,
+    # ST_AsGeoJSON(p.centroid)::jsonb AS centroid,
     query = text("""
         WITH latest_task_history AS (
             SELECT DISTINCT ON (th.task_id)
@@ -86,8 +91,8 @@ async def get_project_by_id(
                         'outline', ST_AsGeoJSON(t.outline)::jsonb,
                         'feature_count', t.feature_count,
                         'task_status', COALESCE(th.action, 'RELEASED_FOR_MAPPING'),
-                        'get_locked_by_uid', COALESCE(u.id, NULL),
-                        'get_locked_by_username', COALESCE(u.username, NULL)
+                        'locked_by_uid', COALESCE(u.id, NULL),
+                        'locked_by_username', COALESCE(u.username, NULL)
                     )
                 ) FILTER (WHERE t.id IS NOT NULL), '[]'::json
             ) AS tasks
@@ -110,19 +115,42 @@ async def get_project_by_id(
     """)
 
     result = db.execute(query, {"project_id": project_id})
-    db_project = result.fetchone()
+    row = result.fetchone()
 
-    if not db_project:
+    # db_project = db.query(DbProject).filter(DbProject.id == project_id).first()
+    if not row:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail=f"Project with ID {project_id} does not exist",
         )
 
-    if db_project.odk_token == "":
+    if row.odk_token == "":
         log.warning(
-            f"Project ({db_project.id}) has no 'odk_token' set. "
-            "The QRCode will not work!"
+            f"Project ({row.id}) has no 'odk_token' set. " "The QRCode will not work!"
         )
+
+    # FIXME Workaround to convert back to SQLAlchemy model for now
+    # FIXME remove this once we remove SQLAlchemy
+    project_dict = {**row._mapping}
+
+    # FIXME this avoids an error as the fields do not exist on the model
+    task_status_dict = {}
+    task_lock_uid_dict = {}
+    task_lock_user_dict = {}
+    for task in project_dict["tasks"]:
+        task_status_dict[task["id"]] = task["task_status"]
+        del task["task_status"]
+        task_lock_uid_dict[task["id"]] = task["locked_by_uid"]
+        del task["locked_by_uid"]
+        task_lock_user_dict[task["id"]] = task["locked_by_username"]
+        del task["locked_by_username"]
+
+    db_project = db_models.DbProject(**project_dict)
+
+    for task in db_project.tasks:
+        task.task_status = task_status_dict[task.id]
+        task.locked_by_uid = task_lock_uid_dict[task.id]
+        task.locked_by_username = task_lock_user_dict[task.id]
 
     return db_project
 

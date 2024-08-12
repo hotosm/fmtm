@@ -135,6 +135,70 @@ class ProjectInfo(BaseModel):
     per_task_instructions: Optional[str] = None
 
 
+class DbProject(BaseModel):
+    """Project from database."""
+
+    outline: Any = Field(exclude=True)
+    forms: Any = Field(exclude=True)
+
+    id: int
+    odkid: int
+    author: User
+    project_info: ProjectInfo
+    status: ProjectStatus | str
+    created_at: datetime
+    # location_str: str
+    xform_category: Optional[XLSFormType] = None
+    hashtags: Optional[List[str]] = None
+    organisation_id: Optional[int] = None
+    tasks: Optional[List[tasks_schemas.Task]]
+
+    @field_serializer("status")
+    def status_enum_str_to_int(self, value: ProjectStatus | str) -> ProjectStatus:
+        """Get the the int value from a string enum."""
+        if isinstance(value, ProjectStatus):
+            return ProjectStatus[value.name]
+        else:
+            return ProjectStatus[value]
+
+    @computed_field
+    @property
+    def outline_geojson(self) -> Optional[Feature]:
+        """TODO this is now the same as self.outline."""
+        if not self.outline:
+            return None
+
+        # TODO refactor to remove outline_geojson
+        # TODO possibly also generate bbox for geojson in project_deps SQL?
+        feat = {
+            "type": "Feature",
+            "geometry": self.outline,
+            "id": self.id,
+            "properties": {"id": self.id, "bbox": None},
+        }
+        return Feature(**feat)
+
+    @computed_field
+    @property
+    def organisation_logo(self) -> Optional[str]:
+        """Get the organisation logo url from the S3 bucket."""
+        if not self.organisation_id:
+            return None
+
+        return (
+            f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}"
+            f"/{self.organisation_id}/logo.png"
+        )
+
+    @computed_field
+    @property
+    def xform_id(self) -> Optional[str]:
+        """Compute the XForm ID from the linked DbXForm."""
+        if not self.forms:
+            return None
+        return self.forms[0].get("odk_form_id")
+
+
 class ProjectIn(BaseModel):
     """Upload new project."""
 
@@ -321,18 +385,20 @@ class ProjectBase(BaseModel):
     odkid: int
     author: User
     project_info: ProjectInfo
-    status: ProjectStatus
+    status: ProjectStatus | str
     created_at: datetime
     # location_str: str
     xform_category: Optional[XLSFormType] = None
     hashtags: Optional[List[str]] = None
     organisation_id: Optional[int] = None
 
-    @field_validator("status", mode="before")
-    @classmethod
-    def status_enum_str_to_int(cls, value: str) -> ProjectStatus:
+    @field_serializer("status")
+    def status_enum_str_to_int(self, value: ProjectStatus | str) -> ProjectStatus:
         """Get the the int value from a string enum."""
-        return ProjectStatus[value]
+        if isinstance(value, ProjectStatus):
+            return ProjectStatus[value.name]
+        else:
+            return ProjectStatus[value]
 
     @computed_field
     @property
@@ -340,6 +406,7 @@ class ProjectBase(BaseModel):
         """TODO this is now the same as self.outline."""
         if not self.outline:
             return None
+
         # TODO refactor to remove outline_geojson
         # TODO possibly also generate bbox for geojson in project_deps SQL?
         feat = {

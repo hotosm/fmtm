@@ -39,6 +39,7 @@ from sqlalchemy import (
     String,
     Table,
     UniqueConstraint,
+    inspect,
 )
 from sqlalchemy.dialects.postgresql import ARRAY as PostgreSQLArray  # noqa: N811
 from sqlalchemy.dialects.postgresql import TSVECTOR
@@ -290,6 +291,27 @@ class DbProject(Base):
 
     __tablename__ = "projects"
 
+    def __init__(self, **kw):
+        """NOTE this is a workaround for raw SQL queries.
+
+        The raw SQL .execute returns a Row.
+        We must manually define the relationship models.
+        """
+        mapper = inspect(self).mapper
+
+        for relationship_key in mapper.relationships.keys():
+            if relationship_key in kw:
+                related_class = mapper.relationships[relationship_key].entity.class_
+                if isinstance(kw[relationship_key], dict):
+                    kw[relationship_key] = related_class(**kw[relationship_key])
+                elif isinstance(kw[relationship_key], list):
+                    kw[relationship_key] = [
+                        related_class(**item) if isinstance(item, dict) else item
+                        for item in kw[relationship_key]
+                    ]
+
+        super().__init__(**kw)
+
     # Columns
     id = cast(int, Column(Integer, primary_key=True))
     odkid = cast(int, Column(Integer))
@@ -324,7 +346,6 @@ class DbProject(Base):
 
     # PROJECT DETAILS
     project_name_prefix = cast(str, Column(String))
-    task_type_prefix = cast(str, Column(String))
     project_info = relationship(
         DbProjectInfo,
         cascade="all, delete, delete-orphan",

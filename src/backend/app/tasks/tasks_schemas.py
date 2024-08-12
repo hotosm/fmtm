@@ -77,7 +77,7 @@ class Task(BaseModel):
     project_task_index: int
     feature_count: Optional[int] = None
     task_status: TaskStatus
-    # TODO check the logic in project_deps, as it doesn't check if action is lock
+    # TODO check the logic in project_deps, as it doesn't check if action is locked
     locked_by_uid: Optional[int] = None
     locked_by_username: Optional[str] = None
 

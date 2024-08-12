@@ -22,7 +22,7 @@ import uuid
 from asyncio import gather
 from io import BytesIO
 from pathlib import Path
-from traceback import extract_tb
+from traceback import format_exc
 from typing import List, Optional, Union
 
 import geojson
@@ -112,7 +112,19 @@ async def get_projects(
         )
         project_count = db.query(db_models.DbProject).count()
 
-    filtered_projects = await convert_to_app_projects(db_projects)
+    # TODO refactor to use Pydantic model methods instead.
+    if db_projects and len(db_projects) > 0:
+
+        async def convert_project(project):
+            return await convert_to_app_project(project)
+
+        app_projects = await gather(
+            *[convert_project(project) for project in db_projects]
+        )
+        filtered_projects = [project for project in app_projects if project is not None]
+    else:
+        filtered_projects = []
+
     return project_count, filtered_projects
 
 
@@ -215,19 +227,34 @@ async def get_project_info_by_id(db: Session, project_id: int):
         .order_by(db_models.DbProjectInfo.project_id)
         .first()
     )
-    return await convert_to_app_project_info(db_project_info)
+
+    # TODO refactor to use Pydantic model methods instead.
+    if db_project_info:
+        app_project_info: project_schemas.ProjectInfo = db_project_info
+        return app_project_info
+    else:
+        return None
 
 
-async def delete_fmtm_project(db: Session, db_project: db_models.DbProject) -> None:
+async def delete_fmtm_project(db: Session, project_id: int) -> None:
     """Delete a FMTM project by id."""
     try:
-        project_id = db_project.id
-        db.delete(db_project)
+        sql = text("""
+            DELETE FROM background_tasks WHERE project_id = :project_id;
+            DELETE FROM mbtiles_path WHERE project_id = :project_id;
+            DELETE FROM user_roles WHERE project_id = :project_id;
+            DELETE FROM task_history WHERE project_id = :project_id;
+            DELETE FROM tasks WHERE project_id = :project_id;
+            DELETE FROM xforms WHERE project_id = :project_id;
+            DELETE FROM project_info WHERE project_id = :project_id;
+            DELETE FROM projects WHERE id = :project_id;
+        """)
+        db.execute(sql, {"project_id": project_id})
         db.commit()
         log.info(f"Deleted project with ID: {project_id}")
     except Exception as e:
         log.exception(e)
-        raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=e) from e
+        raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=str(e)) from e
 
 
 async def delete_fmtm_s3_objects(db_project: db_models.DbProject) -> None:
@@ -924,6 +951,7 @@ async def generate_project_files(
             f"Setting odk token for FMTM project ({project_id}) "
             f"ODK project {project_odk_id}"
         )
+
         project.odk_token = encrypted_odk_token
 
         for task in project.tasks:
@@ -945,19 +973,7 @@ async def generate_project_files(
             )  # 4 is COMPLETED
 
     except Exception as e:
-        # Get the traceback details for easier debugging
-        tb = extract_tb(e.__traceback__)
-        if tb:
-            last_entry = tb[-1]
-            function_name = last_entry.name
-            line_number = last_entry.lineno
-            file_name = last_entry.filename
-
-            log.warning(
-                f"Error occurred in function {function_name} | line {line_number}"
-                f" | file {file_name}"
-            )
-
+        log.debug(str(format_exc()))
         log.warning(str(e))
 
         if background_task_id:
@@ -1104,38 +1120,6 @@ async def convert_to_app_project(db_project: db_models.DbProject):
     app_project.tasks = db_project.tasks
 
     return app_project
-
-
-async def convert_to_app_project_info(db_project_info: db_models.DbProjectInfo):
-    """Legacy function to convert db models --> Pydantic.
-
-    TODO refactor to use Pydantic model methods instead.
-    """
-    if db_project_info:
-        app_project_info: project_schemas.ProjectInfo = db_project_info
-        return app_project_info
-    else:
-        return None
-
-
-async def convert_to_app_projects(
-    db_projects: List[db_models.DbProject],
-) -> List[project_schemas.ProjectWithTasks]:
-    """Legacy function to convert db models --> Pydantic.
-
-    TODO refactor to use Pydantic model methods instead.
-    """
-    if db_projects and len(db_projects) > 0:
-
-        async def convert_project(project):
-            return await convert_to_app_project(project)
-
-        app_projects = await gather(
-            *[convert_project(project) for project in db_projects]
-        )
-        return [project for project in app_projects if project is not None]
-    else:
-        return []
 
 
 async def convert_to_project_summary(db: Session, db_project: db_models.DbProject):
@@ -1382,6 +1366,7 @@ def get_project_tiles(
         log.info(f"Tiles generation process completed for project id {project_id}")
 
     except Exception as e:
+        log.debug(str(format_exc()))
         log.exception(str(e))
         log.error(f"Tiles generation process failed for project id {project_id}")
 
