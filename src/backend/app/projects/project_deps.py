@@ -127,7 +127,7 @@ async def get_project_by_id(
             detail=f"Project with ID {project_id} does not exist",
         )
 
-    if row.odk_token == "":
+    if row.odk_token is None:
         log.warning(
             f"Project ({row.id}) has no 'odk_token' set. " "The QRCode will not work!"
         )
