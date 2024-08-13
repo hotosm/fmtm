@@ -596,8 +596,8 @@ async def upload_attachment_to_s3(
         # Fetch existing photos from the database
         existing_photos = db.execute(
             text("""
-            SELECT submission_id, s3_path 
-            FROM submission_photos 
+            SELECT submission_id, s3_path
+            FROM submission_photos
             WHERE project_id = :project_id
             """),
             {"project_id": project_id},
@@ -622,7 +622,8 @@ async def upload_attachment_to_s3(
                 # Skip if the img_url already exists in the database
                 if img_url in existing_photos_dict.get(instance_id, []):
                     log.warning(
-                        f"Image {img_url} for instance {instance_id} already exists in DB. Skipping upload."
+                        f"Image {img_url} for instance {instance_id} "
+                        "already exists in DB. Skipping upload."
                     )
                     continue
 
