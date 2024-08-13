@@ -25,4 +25,3 @@ organisations.
 - Generated with help from firefighters from rural towns of Argentina.
 - Used for wildfire prevention and response.
 - Particular attention was paid to place names and building materials.
-
