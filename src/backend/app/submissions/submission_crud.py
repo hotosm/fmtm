@@ -45,7 +45,7 @@ from app.config import settings
 from app.db import db_models
 from app.models.enums import HTTPStatus
 from app.projects import project_crud, project_deps
-from app.s3 import add_obj_to_bucket, get_obj_from_bucket, object_exists
+from app.s3 import add_obj_to_bucket, get_obj_from_bucket
 from app.tasks import tasks_crud
 
 # async def convert_json_to_osm(file_path):
@@ -600,13 +600,13 @@ async def upload_attachment_to_s3(
             FROM submission_photos 
             WHERE project_id = :project_id
             """),
-            {"project_id": project_id}
+            {"project_id": project_id},
         ).fetchall()
 
         existing_photos_dict = {}
         for submission_id, s3_path in existing_photos:
             existing_photos_dict[submission_id] = s3_path
-        
+
         batch_insert_data = []
         for instance_id in instance_ids:
             submission_detail = await get_submission_detail(instance_id, project, db)
@@ -642,12 +642,14 @@ async def upload_attachment_to_s3(
                         )
 
                         # Collect the data for batch insert
-                        batch_insert_data.append({
-                            "project_id": project_id,
-                            "task_id": submission_detail["task_id"],
-                            "submission_id": instance_id,
-                            "s3_path": img_url,
-                        })
+                        batch_insert_data.append(
+                            {
+                                "project_id": project_id,
+                                "task_id": submission_detail["task_id"],
+                                "submission_id": instance_id,
+                                "s3_path": img_url,
+                            }
+                        )
 
                 except Exception as e:
                     log.warning(
@@ -667,7 +669,7 @@ async def upload_attachment_to_s3(
             VALUES (:project_id, :task_id, :submission_id, :s3_path)
             """)
             db.execute(sql, batch_insert_data)
-        
+
         db.commit()
         return True
 
