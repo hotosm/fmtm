@@ -591,8 +591,23 @@ async def upload_attachment_to_s3(
         odk_central = await project_deps.get_odk_credentials(db, project_id)
         xform = get_odk_form(odk_central)
         s3_bucket = settings.S3_BUCKET_NAME
-        s3_base_path = f"fmtm-data/{project.organisation_id}/{project_id}"
+        s3_base_path = f"{project.organisation_id}/{project_id}"
 
+        # Fetch existing photos from the database
+        existing_photos = db.execute(
+            text("""
+            SELECT submission_id, s3_path 
+            FROM submission_photos 
+            WHERE project_id = :project_id
+            """),
+            {"project_id": project_id}
+        ).fetchall()
+
+        existing_photos_dict = {}
+        for submission_id, s3_path in existing_photos:
+            existing_photos_dict[submission_id] = s3_path
+        
+        batch_insert_data = []
         for instance_id in instance_ids:
             submission_detail = await get_submission_detail(instance_id, project, db)
             attachments = submission_detail["verification"]["image"]
@@ -601,22 +616,24 @@ async def upload_attachment_to_s3(
                 attachments = [attachments]
 
             for idx, filename in enumerate(attachments):
-                s3_key = f"{s3_base_path}/{instance_id}/{idx+1}.jpeg"
+                s3_key = f"{s3_base_path}/{instance_id}/{idx + 1}.jpeg"
+                img_url = f"{settings.S3_DOWNLOAD_ROOT}/{s3_bucket}/{s3_key}"
 
-                if object_exists(s3_bucket, s3_key):
+                # Skip if the img_url already exists in the database
+                if img_url in existing_photos_dict.get(instance_id, []):
                     log.warning(
-                        f"Object {s3_key} already exists in S3. Skipping upload."
+                        f"Image {img_url} for instance {instance_id} already exists in DB. Skipping upload."
                     )
                     continue
 
                 try:
-                    if attachment := xform.getSubmissionPhoto(
+                    attachment = xform.getSubmissionPhoto(
                         project.odkid,
                         str(instance_id),
                         db_xform.odk_form_id,
                         str(filename),
-                    ):
-                        # Convert the attachment to a BytesIO stream
+                    )
+                    if attachment:
                         image_stream = io.BytesIO(attachment)
 
                         # Upload the attachment to S3
@@ -624,28 +641,13 @@ async def upload_attachment_to_s3(
                             s3_bucket, image_stream, s3_key, content_type="image/jpeg"
                         )
 
-                        # Generate the image URL
-                        img_url = f"{settings.S3_DOWNLOAD_ROOT}/{s3_bucket}/{s3_key}"
-
-                        # Insert the record into submission_photos table
-                        sql = text("""
-                        INSERT INTO submission_photos (
-                                project_id,
-                                task_id,
-                                submission_id,
-                                s3_path
-                            )
-                        VALUES (:project_id, :task_id, :submission_id, :s3_path)
-                        """)
-                        db.execute(
-                            sql,
-                            {
-                                "project_id": project_id,
-                                "task_id": submission_detail["task_id"],
-                                "submission_id": instance_id,
-                                "s3_path": img_url,
-                            },
-                        )
+                        # Collect the data for batch insert
+                        batch_insert_data.append({
+                            "project_id": project_id,
+                            "task_id": submission_detail["task_id"],
+                            "submission_id": instance_id,
+                            "s3_path": img_url,
+                        })
 
                 except Exception as e:
                     log.warning(
@@ -653,6 +655,19 @@ async def upload_attachment_to_s3(
                     )
                     continue
 
+        # Perform batch insert if there are new records to insert
+        if batch_insert_data:
+            sql = text("""
+            INSERT INTO submission_photos (
+                    project_id,
+                    task_id,
+                    submission_id,
+                    s3_path
+                )
+            VALUES (:project_id, :task_id, :submission_id, :s3_path)
+            """)
+            db.execute(sql, batch_insert_data)
+        
         db.commit()
         return True
 
@@ -663,3 +678,4 @@ async def upload_attachment_to_s3(
             project_crud.update_background_task_status_in_database
         )
         update_bg_task_sync(db, background_task_id, 2, str(e))
+        return False

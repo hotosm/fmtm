@@ -4,7 +4,7 @@
 -- Start a transaction
 BEGIN;
 
-CREATE TABLE submission_photos (
+CREATE TABLE IF NOT EXISTS submission_photos (
     id SERIAL PRIMARY KEY,
     project_id INTEGER NOT NULL,
     task_id INTEGER NOT NULL,
