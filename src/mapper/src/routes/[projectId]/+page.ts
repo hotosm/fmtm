@@ -22,11 +22,12 @@ export const load: PageLoad = async ({ parent, params, fetch }) => {
 			message: `You must log in first`,
 		});
 	}
+	const userObj = await user.json();
 
 	return {
 		project: await project.json(),
 		projectId: parseInt(projectId),
-		userId: await user.json().id,
+		userId: userObj.id,
 		// db: db,
 	};
 };
