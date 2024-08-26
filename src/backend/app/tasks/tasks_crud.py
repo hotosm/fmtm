@@ -240,7 +240,7 @@ async def add_task_comments(
             action_text, action_date, user_id
         )
         VALUES (
-            :event_id :project_id, :task_id, 'COMMENT',
+            gen_random_uuid(), :project_id, :task_id, 'COMMENT',
             :comment_text, :current_date, :user_id
         )
         RETURNING
@@ -254,7 +254,6 @@ async def add_task_comments(
 
     # Define a dictionary with the parameter values
     params = {
-        "event_id": uuid4(),
         "project_id": comment.project_id,
         "task_id": comment.task_id,
         "comment_text": comment.comment,
@@ -272,6 +271,7 @@ async def add_task_comments(
     # Return the details of the added comment as a dictionary
     return {
         "event_id": row[0],
+        "action": "COMMENT",
         "action_text": row[1],
         "action_date": row[2],
         "username": row[3],
@@ -318,7 +318,7 @@ async def get_project_task_history(
     task_history = [
         {
             "event_id": row[0],
-            "action": None if comment else row[1],
+            "action": "COMMENT" if comment else row[1],
             "action_text": row[2],
             "action_date": row[3],
             "username": row[4],
