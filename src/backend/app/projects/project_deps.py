@@ -55,6 +55,8 @@ async def get_project_by_id(
                 user_id
             FROM
                 task_history
+            WHERE
+                action != 'COMMENT'
             ORDER BY
                 task_id, action_date DESC
         )
