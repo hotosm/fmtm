@@ -74,11 +74,15 @@ export async function mapTask(/* db, */ projectId: number, taskId: number): Prom
 }
 
 export async function finishTask(/* db, */ projectId: number, taskId: number): Promise<void> {
-	await add_event(/* db, */ projectId, taskId, TaskStatusEnum.MAPPED);
+	// TODO the backend /new-status endpoint is actually posting TaskStatus
+	// TODO it should likely be posting TaskAction (TaskEvent) to the endpoint
+	// TODO then we handle the status of the task internally
+	// i.e. it's duplicated info!
+	await add_event(/* db, */ projectId, taskId, TaskStatusEnum.MARKED_MAPPED);
 }
 
 export async function resetTask(/* db, */ projectId: number, taskId: number): Promise<void> {
-	await add_event(/* db, */ projectId, taskId, TaskStatusEnum.READY);
+	await add_event(/* db, */ projectId, taskId, TaskStatusEnum.RELEASED_FOR_MAPPING);
 }
 
 // async function finishTask(db, projectId: number, taskId: number, userId: number): Promise<void> {

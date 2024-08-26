@@ -31,6 +31,7 @@
 	import Error from './+error.svelte';
 
 	export let data: PageData;
+
 	// $: ({ electric, project } = data)
 	let map: maplibregl.Map | undefined;
 	let loaded: boolean;
@@ -108,7 +109,7 @@
         if (task && task.id) {
             const latestActions = await getLatestEventForTasks();
 			const statusLabel = latestActions.get(task.id)
-            selectedTaskStatus.set(statusLabel ? statusLabel : 'READY');
+            selectedTaskStatus.set(statusLabel ? statusLabel : 'RELEASED_FOR_MAPPING');
         } else {
             selectedTaskStatus.set('');
         }
@@ -169,6 +170,8 @@
 				latestEvent.set(newEvent[1]);
 			}
 		})
+		// Do initial load of task features
+		await updateTaskFeatures()
 	});
 
 	onDestroy(() => {
@@ -184,7 +187,7 @@
 {/if}
 
 {#if $selectedTaskId}
-	{#if $selectedTaskStatus == 'READY'}
+	{#if $selectedTaskStatus == 'RELEASED_FOR_MAPPING'}
 		<sl-tooltip content="MAP">
 			<hot-icon-button
 				name="play"
@@ -202,7 +205,7 @@
 				on:click={finishTask(data.projectId, $selectedTaskId)}
 			></hot-icon-button>
 		</sl-tooltip>
-	{:else if $selectedTaskStatus == 'MAPPED'}
+	{:else if $selectedTaskStatus == 'MARKED_MAPPED'}
 		<sl-tooltip content="RESET">
 			<hot-icon-button
 				name="arrow-counterclockwise"

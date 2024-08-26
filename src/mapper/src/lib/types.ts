@@ -65,9 +65,9 @@ export interface ZoomToTaskEventDetail {
 }
 
 export type TaskStatus = {
-	READY: string;
+	RELEASED_FOR_MAPPING: string;
 	LOCKED_FOR_MAPPING: string;
-	MAPPED: string;
+	MARKED_MAPPED: string;
 	LOCKED_FOR_VALIDATION: string;
 	VALIDATED: string;
 	INVALIDATED: string;
@@ -76,9 +76,9 @@ export type TaskStatus = {
 	ARCHIVED: string;
 };
 export const TaskStatusEnum: TaskStatus = Object.freeze({
-	READY: '0',
+	RELEASED_FOR_MAPPING: '0',
 	LOCKED_FOR_MAPPING: '1',
-	MAPPED: '2',
+	MARKED_MAPPED: '2',
 	LOCKED_FOR_VALIDATION: '3',
 	VALIDATED: '4',
 	INVALIDATED: '5',
