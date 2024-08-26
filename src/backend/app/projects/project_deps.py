@@ -91,9 +91,18 @@ async def get_project_by_id(
                         'project_task_index', t.project_task_index,
                         'outline', ST_AsGeoJSON(t.outline)::jsonb,
                         'feature_count', t.feature_count,
-                        'task_status', COALESCE(th.action, 'RELEASED_FOR_MAPPING'),
-                        'locked_by_uid', COALESCE(latest_user.id, NULL),
-                        'locked_by_username', COALESCE(latest_user.username, NULL)
+                        'task_status', COALESCE(
+                            latest_th.action,
+                            'RELEASED_FOR_MAPPING'
+                        ),
+                        'locked_by_uid', COALESCE(
+                            latest_user.id,
+                            NULL
+                        ),
+                        'locked_by_username', COALESCE(
+                            latest_user.username,
+                            NULL
+                        )
                     )
                 ) FILTER (WHERE t.id IS NOT NULL), '[]'::json
             ) AS tasks
@@ -108,9 +117,9 @@ async def get_project_by_id(
         LEFT JOIN
             xforms x ON p.id = x.project_id
         LEFT JOIN
-            latest_task_history th ON t.id = th.task_id
+            latest_task_history latest_th ON t.id = latest_th.task_id
         LEFT JOIN
-            users latest_user ON th.user_id = latest_user.id
+            users latest_user ON latest_th.user_id = latest_user.id
         WHERE
             p.id = :project_id
         GROUP BY
@@ -129,7 +138,7 @@ async def get_project_by_id(
 
     if row.odk_token is None:
         log.warning(
-            f"Project ({row.id}) has no 'odk_token' set. " "The QRCode will not work!"
+            f"Project ({row.id}) has no 'odk_token' set. The QRCode will not work!"
         )
 
     # FIXME Workaround to convert back to SQLAlchemy model for now
@@ -161,8 +170,7 @@ async def get_project_by_id(
 @alru_cache(maxsize=32)
 async def get_odk_credentials(db: Session, project_id: int):
     """Get ODK credentials of a project, or default organization credentials."""
-    sql = text(
-        """
+    sql = text("""
     SELECT
         COALESCE(
             NULLIF(projects.odk_central_url, ''),
@@ -182,8 +190,7 @@ async def get_odk_credentials(db: Session, project_id: int):
         organisations ON projects.organisation_id = organisations.id
     WHERE
         projects.id = :project_id
-    """
-    )
+    """)
     result = db.execute(sql, {"project_id": project_id})
     creds = result.first()
 
