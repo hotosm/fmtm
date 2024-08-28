@@ -29,7 +29,7 @@ const SubmissionsTable = ({ toggleView }) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const initialFilterState: filterType = {
-    task_id: searchParams.get('task_id') ? searchParams?.get('task_id') || '' : '',
+    task_id: searchParams.get('task_id') ? searchParams?.get('task_id') || null : null,
     submitted_by: searchParams.get('submitted_by'),
     review_state: searchParams.get('review_state'),
     submitted_date: searchParams.get('submitted_date'),
