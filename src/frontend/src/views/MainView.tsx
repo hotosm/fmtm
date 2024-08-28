@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import windowDimention from '@/hooks/WindowDimension';
 import PrimaryAppBar from '@/utilities/PrimaryAppBar';
 import CoreModules from '@/shared/CoreModules';
@@ -8,15 +8,17 @@ import Loader from '@/utilities/AppLoader';
 import MappingHeader from '@/utilities/MappingHeader';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useAppSelector } from '@/types/reduxTypes';
+import ProjectNotFound from './ProjectNotFound';
 
 const MainView = () => {
   const dispatch = CoreModules.useAppDispatch();
-  const location = useLocation();
+  const { pathname } = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { windowSize } = windowDimention();
   const checkTheme = useAppSelector((state) => state.theme.hotTheme);
   const theme = CoreModules.createTheme(checkTheme);
   const stateSnackBar = useAppSelector((state) => state.common.snackbar);
+  const projectNotFound = useAppSelector((state) => state.common.projectNotFound);
 
   const handleClose = (event: React.SyntheticEvent, reason: string) => {
     if (reason === 'clickaway') {
@@ -34,6 +36,11 @@ const MainView = () => {
 
   const popupInParams = searchParams.get('popup');
 
+  useEffect(() => {
+    if (!projectNotFound) return;
+    dispatch(CommonActions.SetProjectNotFound(false));
+  }, [pathname]);
+
   return (
     <CoreModules.ThemeProvider theme={theme}>
       <CustomizedSnackbars
@@ -48,7 +55,7 @@ const MainView = () => {
       <CoreModules.Paper>
         <CoreModules.Container disableGutters={true} maxWidth={false}>
           <CoreModules.Stack sx={{ height: '100vh' }}>
-            {popupInParams === 'true' || (location.pathname.includes('/project/') && windowSize.width <= 640) ? (
+            {popupInParams === 'true' || (pathname.includes('/project/') && windowSize.width <= 640) ? (
               <div></div>
             ) : (
               <div>
@@ -56,27 +63,29 @@ const MainView = () => {
                 <PrimaryAppBar />
               </div>
             )}
-            <CoreModules.Stack
-              className={`mainview ${
-                location.pathname.includes('project/')
-                  ? 'fmtm-px-0 sm:fmtm-px-[1.3rem] sm:fmtm-py-[1.3rem]'
-                  : 'fmtm-px-[1.3rem] fmtm-py-[1.3rem]'
-              }`}
-              sx={{
-                height: popupInParams
-                  ? '100vh'
-                  : location.pathname.includes('project/') && windowSize.width <= 640
+            {projectNotFound ? (
+              <ProjectNotFound />
+            ) : (
+              <CoreModules.Stack
+                className={`${
+                  pathname.includes('/project/') && windowSize.width < 640 ? '' : 'fmtm-p-6'
+                } fmtm-bg-[#f5f5f5]`}
+                sx={{
+                  height: popupInParams
                     ? '100vh'
-                    : windowSize.width <= 599
-                      ? '90vh'
-                      : '92vh',
-                overflow: 'auto',
-                // p: '1.3rem',
-              }}
-            >
-              <CoreModules.Outlet />
-              {/* Footer */}
-            </CoreModules.Stack>
+                    : pathname.includes('project/') && windowSize.width <= 640
+                      ? '100vh'
+                      : windowSize.width <= 599
+                        ? '90vh'
+                        : '92vh',
+                  overflow: 'auto',
+                  // p: '1.3rem',
+                }}
+              >
+                <CoreModules.Outlet />
+                {/* Footer */}
+              </CoreModules.Stack>
+            )}
           </CoreModules.Stack>
         </CoreModules.Container>
       </CoreModules.Paper>

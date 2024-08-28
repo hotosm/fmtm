@@ -1,7 +1,6 @@
 import React, { Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import Home from '@/views/Home';
-import Tabbed from '@/views/Tabbed';
 import MainView from '@/views/MainView';
 import ProtectedRoute from '@/utilities/ProtectedRoute';
 import NotFoundPage from '@/views/NotFound404';
@@ -17,9 +16,6 @@ import ProjectDetailsV2 from '@/views/ProjectDetailsV2';
 import ProjectSubmissions from '@/views/ProjectSubmissions';
 import ManageProject from '@/views/ManageProject';
 import DataConflation from '@/views/DataConflation';
-
-const Submissions = React.lazy(() => import('./views/Submissions'));
-const Tasks = React.lazy(() => import('./views/Tasks'));
 
 const routes = createBrowserRouter([
   {
@@ -72,12 +68,6 @@ const routes = createBrowserRouter([
             </ErrorBoundary>
           </ProtectedRoute>
         ),
-        path: '/tabbed',
-        element: (
-          <ErrorBoundary>
-            <Tabbed />
-          </ErrorBoundary>
-        ),
       },
       {
         path: '/project-submissions/:projectId',
@@ -91,38 +81,13 @@ const routes = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-
       {
-        path: '/project/:projectId/tasks/:taskId',
-        element: (
-          <ProtectedRoute>
-            <Suspense fallback={<div></div>}>
-              <ErrorBoundary>
-                <Tasks />
-              </ErrorBoundary>
-            </Suspense>
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/project/:projectId/tasks/:taskId/submission/:instanceId',
+        path: '/project-submissions/:projectId/tasks/:taskId/submission/:instanceId',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div></div>}>
               <ErrorBoundary>
                 <SubmissionDetails />
-              </ErrorBoundary>
-            </Suspense>
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/submissions/:id',
-        element: (
-          <ProtectedRoute>
-            <Suspense fallback={<div></div>}>
-              <ErrorBoundary>
-                <Submissions />
               </ErrorBoundary>
             </Suspense>
           </ProtectedRoute>
