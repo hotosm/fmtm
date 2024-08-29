@@ -41,6 +41,7 @@ from loguru import logger as log
 from osm_fieldwork.data_models import data_models_path
 from osm_fieldwork.make_data_extract import getChoices
 from osm_fieldwork.xlsforms import xlsforms_path
+from osm_fieldwork.update_form import update_xls_form
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
@@ -676,7 +677,14 @@ async def validate_form(form: UploadFile):
         )
 
     contents = await form.read()
-    return await central_crud.read_and_test_xform(BytesIO(contents), file_ext)
+    updated_file_bytes= update_xls_form(BytesIO(contents))
+
+    form_data = await central_crud.read_and_test_xform(updated_file_bytes, file_ext, True)
+
+    return {
+        "message": "Your form is valid",
+        "xlsform": form_data
+    }
 
 
 @router.post("/{project_id}/generate-project-data")
