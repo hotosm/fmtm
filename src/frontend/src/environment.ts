@@ -36,7 +36,7 @@ export default {
         { key: 'Mapping Needed', value: 'INVALIDATED', btnBG: 'transparent' },
       ],
     },
-    { label: 'VALIDATED', action: [{ key: 'Merge data with OSM', value: 'MERGE_WITH_OSM', btnBG: 'gray' }] },
+    // { label: 'VALIDATED', action: [{ key: 'Merge data with OSM', value: 'MERGE_WITH_OSM', btnBG: 'gray' }] },
     { label: 'INVALIDATED', action: [{ key: 'Map Again', value: 'LOCKED_FOR_MAPPING', btnBG: 'gray' }] },
     { label: 'BAD', action: [] },
     // "SPLIT",

@@ -85,10 +85,10 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
     const geoStyle = geojsonStyles[btnId];
     if (btnId != undefined) {
       if (authDetailsCopy.hasOwnProperty('id')) {
-        if (btnId === 'MERGE_WITH_OSM') {
-          navigate(`/conflate-data/${currentProjectId}/${taskId}`);
-          return;
-        }
+        // if (btnId === 'MERGE_WITH_OSM') {
+        //   navigate(`/conflate-data/${currentProjectId}/${taskId}`);
+        //   return;
+        // }
         await dispatch(
           UpdateTaskStatus(
             `${import.meta.env.VITE_API_URL}/tasks/${currentStatus?.id}/new-status/${status}`,
