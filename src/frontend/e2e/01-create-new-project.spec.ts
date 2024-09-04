@@ -3,7 +3,7 @@
 
 import { test, expect } from '@playwright/test';
 
-test('Project Creation', async ({ browserName, page }) => {
+test('create new project', async ({ browserName, page }) => {
   // Specific for this large test, only run in one browser
   // Run other tests in all browsers
   test.skip(browserName !== 'chromium', 'Test only for chromium!');

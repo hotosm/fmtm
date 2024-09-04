@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('entity test', async ({ page }) => {
+test('entity update', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page

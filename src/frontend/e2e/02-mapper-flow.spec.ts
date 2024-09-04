@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Project Details Test', () => {
-  test('mapper flow test', async ({ page }) => {
+test.describe('mapper flow', () => {
+  test('mapper flow', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Sign in' }).click();
     await page
@@ -64,5 +64,5 @@ test.describe('Project Details Test', () => {
     await expect(page.getByText('Status: VALIDATED')).toBeVisible();
   });
 
-  test('comment section test', async ({ page }) => {});
+  test('comment section', async ({ page }) => {});
 });
