@@ -24,7 +24,16 @@ test.describe('mapper flow', () => {
       },
     });
     await expect(page.getByText('Status: READY')).toBeVisible();
+    await page.getByRole('alert').waitFor({ state: 'hidden' });
+    await page.getByTitle('Close').getByTestId('CloseIcon').click();
+    expect(await page.locator('canvas').screenshot()).toMatchSnapshot('ready.png');
 
+    await page.locator('canvas').click({
+      position: {
+        x: 445,
+        y: 95,
+      },
+    });
     // STATUS: READY
     await page.getByRole('button', { name: 'START MAPPING' }).waitFor({ state: 'visible' });
     await page.getByRole('button', { name: 'START MAPPING' }).click();
@@ -35,7 +44,16 @@ test.describe('mapper flow', () => {
         .filter({ hasText: /updated status to LOCKED_FOR_MAPPING/ })
         .first(),
     ).toBeVisible();
+    await page.getByRole('alert').waitFor({ state: 'hidden' });
+    await page.getByTitle('Close').getByTestId('CloseIcon').click();
+    expect(await page.locator('canvas').screenshot()).toMatchSnapshot('locked-for-mapping.png');
 
+    await page.locator('canvas').click({
+      position: {
+        x: 445,
+        y: 95,
+      },
+    });
     //STATUS: LOCKED_FOR_MAPPING
     await page.getByRole('button', { name: 'MARK AS FULLY MAPPED' }).click();
     await page.getByRole('button', { name: 'MARK AS FULLY MAPPED' }).click();
@@ -46,7 +64,16 @@ test.describe('mapper flow', () => {
         .filter({ hasText: /updated status to MAPPED/ })
         .first(),
     ).toBeVisible();
+    await page.getByRole('alert').waitFor({ state: 'hidden' });
+    await page.getByTitle('Close').getByTestId('CloseIcon').click();
+    expect(await page.locator('canvas').screenshot()).toMatchSnapshot('mapped.png');
 
+    await page.locator('canvas').click({
+      position: {
+        x: 445,
+        y: 95,
+      },
+    });
     // STATUS: MAPPED
     await page.getByRole('button', { name: 'START VALIDATION' }).click();
     await page.getByRole('button', { name: 'FULLY MAPPED' }).click();
@@ -56,6 +83,7 @@ test.describe('mapper flow', () => {
 
     // click on validated task after map renders
     await page.waitForTimeout(4000);
+    expect(await page.locator('canvas').screenshot()).toMatchSnapshot('validated.png');
     await page.locator('canvas').click({
       position: {
         x: 445,
