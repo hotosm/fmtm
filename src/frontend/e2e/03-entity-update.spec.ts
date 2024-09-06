@@ -35,6 +35,9 @@ test('entity update', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Feature:' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'MAP FEATURE IN ODK' })).toBeEnabled();
   await page.getByRole('button', { name: 'MAP FEATURE IN ODK' }).click();
+  await expect(
+    page.getByRole('alert').locator('div').filter({ hasText: 'Requires a mobile phone with ODK collect' }),
+  ).toBeVisible();
 
   // check if task status is updated to locked_for_mapping on entity map
   await page.waitForSelector('div:has-text("updated status to LOCKED_FOR_MAPPING"):nth-of-type(1)');
