@@ -682,15 +682,13 @@ async def validate_form(form: UploadFile):
     # open bytes again to avoid I/O error on closed bytes
     form_data = BytesIO(updated_file_bytes.getvalue())
 
-    await central_crud.read_and_test_xform(
-        updated_file_bytes, file_ext
-    )
+    await central_crud.read_and_test_xform(updated_file_bytes, file_ext)
 
     # Return the updated form as a StreamingResponse
     return StreamingResponse(
-        form_data, 
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
-        headers={"Content-Disposition": f"attachment; filename={form.filename}"}
+        form_data,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={form.filename}"},
     )
 
 
