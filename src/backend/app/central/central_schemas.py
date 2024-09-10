@@ -102,7 +102,7 @@ class EntityTaskID(BaseModel):
     """Map of Entity UUID to FMTM Task ID."""
 
     id: str
-    task_id: Optional[int] = None
+    task_id: int
 
 
 class EntityMappingStatus(EntityOsmID, EntityTaskID):
