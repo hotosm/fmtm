@@ -795,6 +795,13 @@ async def get_entities_data(
 
         # Rename '__id' to 'id'
         flattened_dict["id"] = flattened_dict.pop("__id")
+
+        # convert empty str task_id and osm_id to None
+        # when new entities are created task_id and osm_id will be empty
+        if "task_id" in flattened_dict and flattened_dict["task_id"] == "":
+            flattened_dict["task_id"] = None
+        if "osm_id" in flattened_dict and flattened_dict["osm_id"] == "":
+            flattened_dict["osm_id"] = None
         all_entities.append(flattened_dict)
 
     return all_entities
