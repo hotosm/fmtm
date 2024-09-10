@@ -679,11 +679,17 @@ async def validate_form(form: UploadFile):
     contents = await form.read()
     updated_file_bytes = update_xls_form(BytesIO(contents))
 
-    form_data = await central_crud.read_and_test_xform(
-        updated_file_bytes, file_ext, True
-    )
+    # open bytes again to avoid I/O error on closed bytes
+    form_data = BytesIO(updated_file_bytes.getvalue())
 
-    return {"message": "Your form is valid", "xlsform": form_data}
+    await central_crud.read_and_test_xform(updated_file_bytes, file_ext)
+
+    # Return the updated form as a StreamingResponse
+    return StreamingResponse(
+        form_data,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={form.filename}"},
+    )
 
 
 @router.post("/{project_id}/generate-project-data")
