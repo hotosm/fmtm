@@ -798,7 +798,7 @@ async def get_entities_data(
 
         # convert empty str osm_id to None
         # when new entities are created osm_id will be empty
-        if "osm_id" in flattened_dict and flattened_dict["osm_id"] == "":
+        if flattened_dict.get("osm_id", "") == "":
             flattened_dict["osm_id"] = None
 
         all_entities.append(flattened_dict)
