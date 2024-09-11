@@ -13,6 +13,7 @@ import { FormCategoryService, ValidateCustomForm } from '@/api/CreateProjectServ
 import NewDefineAreaMap from '@/views/NewDefineAreaMap';
 import { CustomCheckbox } from '../common/Checkbox';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
+import { Loader2 } from 'lucide-react';
 
 const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) => {
   useDocumentTitle('Create Project: Select Category');
@@ -21,9 +22,9 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
 
   const projectDetails = useAppSelector((state) => state.createproject.projectDetails);
   const drawnGeojson = useAppSelector((state) => state.createproject.drawnGeojson);
-  const dataExtractGeojson = useAppSelector((state) => state.createproject.dataExtractGeojson);
   const customFileValidity = useAppSelector((state) => state.createproject.customFileValidity);
   const validatedCustomForm = useAppSelector((state) => state.createproject.validatedCustomForm);
+  const validateCustomFormLoading = useAppSelector((state) => state.createproject.validateCustomFormLoading);
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
@@ -195,6 +196,12 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
                     fileDescription="*The supported file formats are .xlsx, .xls, .xml"
                     errorMsg={errors.customFormUpload}
                   />
+                  {validateCustomFormLoading && (
+                    <div className="fmtm-flex fmtm-items-center fmtm-gap-2 fmtm-mt-2">
+                      <Loader2 className="fmtm-h-4 fmtm-w-4 fmtm-animate-spin fmtm-text-primaryRed" />
+                      <p className="fmtm-text-base">Validating form...</p>
+                    </div>
+                  )}
                 </div>
               ) : null}
             </div>
@@ -209,7 +216,13 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
                 }}
                 className="fmtm-font-bold"
               />
-              <Button btnText="NEXT" btnType="primary" type="submit" className="fmtm-font-bold" />
+              <Button
+                btnText="NEXT"
+                btnType="primary"
+                type="submit"
+                className="fmtm-font-bold"
+                disabled={validateCustomFormLoading}
+              />
             </div>
           </form>
           <div className="fmtm-w-full lg:fmtm-w-[60%] fmtm-flex fmtm-flex-col fmtm-gap-6 fmtm-bg-gray-300 fmtm-h-[60vh] lg:fmtm-h-full">
