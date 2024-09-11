@@ -23,6 +23,7 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
   const drawnGeojson = useAppSelector((state) => state.createproject.drawnGeojson);
   const dataExtractGeojson = useAppSelector((state) => state.createproject.dataExtractGeojson);
   const customFileValidity = useAppSelector((state) => state.createproject.customFileValidity);
+  const validatedCustomForm = useAppSelector((state) => state.createproject.validatedCustomForm);
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
@@ -60,12 +61,12 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
     const { files } = event.target;
     // Set the selected file as the customFormFile state
     setCustomFormFile(files[0]);
-    handleCustomChange('customFormUpload', files[0]);
   };
   const resetFile = (): void => {
     handleCustomChange('customFormUpload', null);
     dispatch(CreateProjectActions.SetCustomFileValidity(false));
     setCustomFormFile(null);
+    dispatch(CreateProjectActions.SetValidatedCustomFile(null));
   };
 
   useEffect(() => {
@@ -81,10 +82,17 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
       dispatch(ValidateCustomForm(`${import.meta.env.VITE_API_URL}/projects/validate-form`, customFormFile));
     }
   }, [customFormFile]);
+
+  //add validated form to state
+  useEffect(() => {
+    if (!validatedCustomForm) return;
+    handleCustomChange('customFormUpload', validatedCustomForm);
+  }, [validatedCustomForm]);
+
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row fmtm-h-full">
       <div className="fmtm-bg-white lg:fmtm-w-[20%] xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6 lg:fmtm-h-full lg:fmtm-overflow-y-scroll lg:scrollbar">
-        <h6 className="fmtm-text-xl fmtm-font-[600] fmtm-pb-2 lg:fmtm-pb-6">Select Category</h6>
+        <h6 className="fmtm-text-xl fm  tm-font-[600] fmtm-pb-2 lg:fmtm-pb-6">Select Category</h6>
         <p className="fmtm-text-gray-500 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3">
           <span>
             You may choose a pre-configured form, or upload a custom XLS form. Click{' '}
