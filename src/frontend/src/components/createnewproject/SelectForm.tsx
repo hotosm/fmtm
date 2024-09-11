@@ -111,6 +111,10 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
             You may either download the sample XLS file and modify all fields that are not hidden, or edit the sample
             form interactively in the browser.
           </span>
+          <span>
+            <b>Note:</b> Additional questions will be incorporated into your custom form to assess the digitization
+            status.
+          </span>
         </p>
       </div>
       <div className="lg:fmtm-w-[80%] xl:fmtm-w-[83%] fmtm-bg-white fmtm-px-5 lg:fmtm-px-11 fmtm-py-6 fmtm-h-full lg:fmtm-overflow-y-scroll lg:scrollbar">
