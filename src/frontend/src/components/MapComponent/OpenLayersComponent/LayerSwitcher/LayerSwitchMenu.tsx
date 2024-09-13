@@ -3,6 +3,12 @@ import osmImg from '@/assets/images/osmLayer.png';
 import satelliteImg from '@/assets/images/satelliteLayer.png';
 import { useAppSelector } from '@/types/reduxTypes';
 import { useLocation } from 'react-router-dom';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuPortal,
+} from '@/components/common/Dropdown';
 
 export const layerIcons = {
   Satellite: satelliteImg,
@@ -51,7 +57,7 @@ const LayerCard = ({ layer, changeBaseLayerHandler, active }: layerCardPropType)
 
 const LayerSwitchMenu = ({ map, pmTileLayerData = null }: { map: any; pmTileLayerData?: any }) => {
   const { pathname } = useLocation();
-  const [baseLayers, setBaseLayers] = useState<string[]>([]);
+  const [baseLayers, setBaseLayers] = useState<string[]>(['OSM', 'Satellite', 'None']);
   const [hasPMTile, setHasPMTile] = useState(false);
   const [activeLayer, setActiveLayer] = useState('OSM');
   const [activeTileLayer, setActiveTileLayer] = useState('');
@@ -74,21 +80,6 @@ const LayerSwitchMenu = ({ map, pmTileLayerData = null }: { map: any; pmTileLaye
     setHasPMTile(true);
     setActiveTileLayer('PMTile');
   }, [pmTileLayerData]);
-
-  useEffect(() => {
-    if (!map || baseLayers.includes('OSM')) return;
-    const allLayers = map?.getLayers();
-    const filteredBaseLayers = allLayers.array_.find((layer) => layer?.values_?.title === 'Base maps');
-    const baseLayersCollection = filteredBaseLayers?.values_?.layers.array_;
-    const layers: string[] = [];
-    baseLayersCollection?.forEach((baseLayer) => {
-      layers.push(baseLayer?.values_?.title);
-      if (baseLayer.getVisible()) {
-        setActiveLayer(baseLayer?.values_?.title);
-      }
-    });
-    setBaseLayers((prev) => [...prev, ...layers]);
-  }, [map]);
 
   const changeBaseLayer = (baseLayerTitle: string) => {
     const allLayers = map.getLayers();
@@ -124,47 +115,57 @@ const LayerSwitchMenu = ({ map, pmTileLayerData = null }: { map: any; pmTileLaye
   };
 
   return (
-    <div
-      style={{
-        backgroundImage: activeLayer === 'None' ? 'none' : `url(${layerIcons[activeLayer] || satelliteImg})`,
-        backgroundColor: 'white',
-      }}
-      className={`fmtm-group fmtm-order-4 fmtm-w-10 fmtm-h-10 fmtm-border-2 fmtm-border-[#ffffff] hover:fmtm-border-[3px] fmtm-duration-75 fmtm-cursor-pointer fmtm-bg-contain fmtm-rounded-full ${
-        activeLayer === 'None' ? '!fmtm-border-primaryRed' : ''
-      }`}
-    >
-      <div
-        className={`fmtm-baselayer-container fmtm-hidden fmtm-absolute fmtm-right-full -fmtm-bottom-1 fmtm-p-2 group-hover:fmtm-block pr-2 fmtm-duration-75`}
-      >
-        <div className="fmtm-bg-white fmtm-min-w-[10rem] fmtm-max-h-[20rem] fmtm-overflow-y-scroll scrollbar fmtm-flex fmtm-flex-col fmtm-gap-3 fmtm-pt-1 fmtm-rounded-lg fmtm-p-3">
-          <div>
-            <h6 className="fmtm-text-base fmtm-mb-1">Base Maps</h6>
-            <div className="fmtm-flex fmtm-flex-wrap fmtm-justify-between fmtm-gap-y-2">
-              {baseLayers.map((layer) => (
-                <LayerCard
-                  key={layer}
-                  layer={layer}
-                  changeBaseLayerHandler={changeBaseLayer}
-                  active={layer === activeLayer}
-                />
-              ))}
-            </div>
-          </div>
-          {hasPMTile && (
-            <div>
-              <h6 className="fmtm-text-base fmtm-mb-1">Tiles</h6>
-              <div className="fmtm-flex fmtm-flex-wrap fmtm-justify-between fmtm-gap-y-2">
-                <LayerCard
-                  key="PMTile"
-                  layer="PMTile"
-                  changeBaseLayerHandler={() => toggleTileLayer('PMTile')}
-                  active={'PMTile' === activeTileLayer}
-                />
+    <div>
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger className="fmtm-outline-none">
+          <div
+            style={{
+              backgroundImage: activeLayer === 'None' ? 'none' : `url(${layerIcons[activeLayer] || satelliteImg})`,
+              backgroundColor: 'white',
+            }}
+            className={`fmtm-relative fmtm-group fmtm-order-4 fmtm-w-10 fmtm-h-10 fmtm-border-2 fmtm-border-[#ffffff] hover:fmtm-border-[3px] fmtm-duration-75 fmtm-cursor-pointer fmtm-bg-contain fmtm-rounded-full ${
+              activeLayer === 'None' ? '!fmtm-border-primaryRed' : ''
+            }`}
+          ></div>
+        </DropdownMenuTrigger>
+        <DropdownMenuPortal>
+          <DropdownMenuContent
+            className="fmtm-p-0 fmtm-border-none fmtm-z-[60px]"
+            align="end"
+            alignOffset={100}
+            sideOffset={-42}
+          >
+            <div className="fmtm-bg-white  fmtm-max-h-[20rem] fmtm-overflow-y-scroll scrollbar fmtm-flex fmtm-flex-col fmtm-gap-3 fmtm-pt-1 fmtm-rounded-lg fmtm-p-3">
+              <div>
+                <h6 className="fmtm-text-base fmtm-mb-1">Base Maps</h6>
+                <div className="fmtm-flex fmtm-flex-wrap fmtm-justify-between fmtm-gap-4">
+                  {baseLayers.map((layer) => (
+                    <LayerCard
+                      key={layer}
+                      layer={layer}
+                      changeBaseLayerHandler={changeBaseLayer}
+                      active={layer === activeLayer}
+                    />
+                  ))}
+                </div>
               </div>
+              {hasPMTile && (
+                <div>
+                  <h6 className="fmtm-text-base fmtm-mb-1">Tiles</h6>
+                  <div className="fmtm-flex fmtm-flex-wrap fmtm-justify-between fmtm-gap-y-2">
+                    <LayerCard
+                      key="PMTile"
+                      layer="PMTile"
+                      changeBaseLayerHandler={() => toggleTileLayer('PMTile')}
+                      active={'PMTile' === activeTileLayer}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </DropdownMenuContent>
+        </DropdownMenuPortal>
+      </DropdownMenu>
     </div>
   );
 };
