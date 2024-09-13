@@ -534,7 +534,11 @@ const ProjectDetailsV2 = () => {
                   className="!fmtm-text-base !fmtm-pr-2"
                 />
               </div>
-              <MapControlComponent map={map} projectName={state?.projectInfo?.title || ''} />
+              <MapControlComponent
+                map={map}
+                projectName={state?.projectInfo?.title || ''}
+                pmTileLayerData={customBasemapData}
+              />
             </MapComponent>
             <div
               className="fmtm-absolute fmtm-top-4 fmtm-left-4 fmtm-bg-white fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-red-50 fmtm-duration-300 fmtm-border-[1px] sm:fmtm-hidden fmtm-cursor-pointer"
