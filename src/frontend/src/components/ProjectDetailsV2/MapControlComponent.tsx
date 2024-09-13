@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import AssetModules from '@/shared/AssetModules';
+// @ts-ignore
 import VectorLayer from 'ol/layer/Vector';
 import CoreModules from '@/shared/CoreModules.js';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
@@ -7,13 +8,15 @@ import { useAppSelector } from '@/types/reduxTypes';
 import { useLocation } from 'react-router-dom';
 import ProjectOptions from '@/components/ProjectDetailsV2/ProjectOptions';
 import useOutsideClick from '@/hooks/useOutsideClick';
+import LayerSwitchMenu from '../MapComponent/OpenLayersComponent/LayerSwitcher/LayerSwitchMenu';
 
 type mapControlComponentType = {
   map: any;
   projectName: string;
+  pmTileLayerData: any;
 };
 
-const MapControlComponent = ({ map, projectName }: mapControlComponentType) => {
+const MapControlComponent = ({ map, projectName, pmTileLayerData }: mapControlComponentType) => {
   const btnList = [
     {
       id: 'add',
@@ -75,16 +78,17 @@ const MapControlComponent = ({ map, projectName }: mapControlComponentType) => {
       {btnList.map((btn) => (
         <div key={btn.id}>
           <div
-            className={`fmtm-bg-white fmtm-rounded-full fmtm-p-2 hover:fmtm-bg-gray-100 fmtm-cursor-pointer fmtm-duration-300 ${
+            className={`fmtm-bg-white fmtm-rounded-full hover:fmtm-bg-gray-100 fmtm-cursor-pointer fmtm-duration-300 fmtm-w-10 fmtm-h-10 fmtm-min-h-10 fmtm-min-w-10 fmtm-max-w-10 fmtm-max-h-10 fmtm-flex fmtm-justify-center fmtm-items-center ${
               geolocationStatus && btn.id === 'currentLocation' ? 'fmtm-text-primaryRed' : ''
             }`}
             onClick={() => handleOnClick(btn.id)}
             title={btn.title}
           >
-            {btn.icon}
+            <div>{btn.icon}</div>
           </div>
         </div>
       ))}
+      <LayerSwitchMenu map={map} pmTileLayerData={pmTileLayerData} />
       <div
         className={`fmtm-relative ${!pathname.includes('project/') ? 'fmtm-hidden' : 'sm:fmtm-hidden'}`}
         ref={divRef}
