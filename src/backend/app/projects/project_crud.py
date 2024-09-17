@@ -35,7 +35,6 @@ from geoalchemy2.shape import to_shape
 from geojson.feature import Feature, FeatureCollection
 from loguru import logger as log
 from osm_fieldwork.basemapper import create_basemap_file
-from osm_fieldwork.xlsforms import xlsforms_path
 from osm_rawdata.postgres import PostgresClient
 from shapely.geometry import shape
 from sqlalchemy import and_, column, func, select, table, text
@@ -839,7 +838,6 @@ async def generate_odk_central_project_content(
     odk_credentials: project_schemas.ODKCentralDecrypted,
     xlsform: BytesIO,
     form_category: str,
-    form_file_ext: str,
     task_extract_dict: dict,
     db: Session,
 ) -> str:
@@ -860,20 +858,21 @@ async def generate_odk_central_project_content(
             entities_list,
         )
 
-    xform = await central_crud.read_and_test_xform(
-        xlsform, form_file_ext, return_form_data=True
+    # TODO add here additional upload of Entities
+    additional_entities = []
+
+    xform = await central_crud.validate_and_update_user_xlsform(
+        xlsform=xlsform,
+        form_category=form_category,
+        additional_entities=additional_entities,
+        task_count=len(task_extract_dict.keys()),
     )
-    # Manually modify fields in XML specific to project (id, name, etc)
-    updated_xform = await central_crud.modify_xform_xml(
-        xform,
-        form_category,
-        len(task_extract_dict.keys()),
-    )
+
     # Upload survey XForm
     log.info("Uploading survey XForm to ODK Central")
     xform_id = central_crud.create_odk_xform(
         project_odk_id,
-        updated_xform,
+        xform,
         odk_credentials,
     )
 
@@ -900,8 +899,6 @@ async def generate_odk_central_project_content(
 async def generate_project_files(
     db: Session,
     project_id: int,
-    custom_form: Optional[BytesIO],
-    form_file_ext: str,
     background_task_id: Optional[uuid.UUID] = None,
 ) -> None:
     """Generate the files for a project.
@@ -911,8 +908,6 @@ async def generate_project_files(
     Args:
         db (Session): the database session.
         project_id(int): id of the FMTM project.
-        custom_form (BytesIO): the xls file to upload if we have a custom form
-        form_file_ext (str): weather the form is xls, xlsx or xml
         background_task_id (uuid): the task_id of the background task.
     """
     try:
@@ -920,17 +915,6 @@ async def generate_project_files(
         form_category = project.xform_category
         log.info(f"Starting generate_project_files for project {project_id}")
         odk_credentials = await project_deps.get_odk_credentials(db, project_id)
-
-        if custom_form:
-            log.debug("User provided custom XLSForm")
-            xlsform = custom_form
-        else:
-            log.debug(f"Using default XLSForm for category: '{form_category}'")
-
-            form_filename = XLSFormType(form_category).name
-            xlsform_path = f"{xlsforms_path}/{form_filename}.xls"
-            with open(xlsform_path, "rb") as f:
-                xlsform = BytesIO(f.read())
 
         # Extract data extract from flatgeobuf
         log.debug("Getting data extract geojson from flatgeobuf")
@@ -955,9 +939,8 @@ async def generate_project_files(
         encrypted_odk_token = await generate_odk_central_project_content(
             project,
             odk_credentials,
-            xlsform,
+            project.form_xls,
             form_category,
-            form_file_ext,
             task_extract_dict,
             db,
         )

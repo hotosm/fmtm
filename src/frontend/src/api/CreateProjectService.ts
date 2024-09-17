@@ -460,7 +460,7 @@ const ValidateCustomForm = (url: string, formUpload: any) => {
     const validateCustomForm = async (url: any, formUpload: any) => {
       try {
         const formUploadFormData = new FormData();
-        formUploadFormData.append('form', formUpload);
+        formUploadFormData.append('xlsform', formUpload);
 
         // response is in file format so we need to convert it to blob
         const getTaskSplittingResponse = await axios.post(url, formUploadFormData, {
