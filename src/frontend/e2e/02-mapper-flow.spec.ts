@@ -1,22 +1,21 @@
+// This file tests the mapper workflow, including changing task status
+// to locked, mapped, validated, and then commenting on the task.
+
 import { test, expect } from '@playwright/test';
 
+import { tempLogin, openFirstProject } from './helpers';
+
 test.describe('mapper flow', () => {
-  test('mapper flow', async ({ page }) => {
-    await page.goto('/');
-    // await page.goto('http://fmtm.localhost:7050/');
-    await page.getByRole('button', { name: 'Sign in' }).click();
-    await page
-      .getByLabel('', { exact: true })
-      .locator('div')
-      .filter({ hasText: "Temporary AccountIf you're" })
-      .nth(3)
-      .click();
+  test('task actions', async ({ browserName, page }) => {
+    // Specific for this large test, only run in one browser
+    // (playwright.config.ts is configured to run all browsers by default)
+    test.skip(browserName !== 'chromium', 'Test only for chromium!');
 
-    // click first project card on the home page
-    await page.locator('.MuiCardContent-root').first().click();
+    // 0. Temp Login
+    await tempLogin(page);
+    await openFirstProject(page);
 
-    // click on task
-    await page.waitForTimeout(4000);
+    // 1. Click on task area on map
     await page.locator('canvas').click({
       position: {
         x: 445,
@@ -26,16 +25,17 @@ test.describe('mapper flow', () => {
     await expect(page.getByText('Status: READY')).toBeVisible();
     await page.getByRole('alert').waitFor({ state: 'hidden' });
     await page.getByTitle('Close').getByTestId('CloseIcon').click();
-    expect(await page.locator('canvas').screenshot()).toMatchSnapshot('ready.png');
-
+    // Use maxDiffPixelRatio to avoid issues with OSM tile loading delay
+    expect(await page.locator('canvas').screenshot()).toMatchSnapshot('ready.png', { maxDiffPixelRatio: 0.05 });
     await page.locator('canvas').click({
       position: {
         x: 445,
         y: 95,
       },
     });
-    // STATUS: READY
-    await page.getByRole('button', { name: 'START MAPPING' }).waitFor({ state: 'visible' });
+
+    // 2. Lock task for mapping
+    await expect(page.getByRole('button', { name: 'START MAPPING' })).toBeVisible();
     await page.getByRole('button', { name: 'START MAPPING' }).click();
     await page.waitForSelector('div:has-text("updated status to LOCKED_FOR_MAPPING"):nth-of-type(1)');
     await expect(
@@ -46,15 +46,18 @@ test.describe('mapper flow', () => {
     ).toBeVisible();
     await page.getByRole('alert').waitFor({ state: 'hidden' });
     await page.getByTitle('Close').getByTestId('CloseIcon').click();
-    expect(await page.locator('canvas').screenshot()).toMatchSnapshot('locked-for-mapping.png');
-
+    // Use maxDiffPixelRatio to avoid issues with OSM tile loading delay
+    expect(await page.locator('canvas').screenshot()).toMatchSnapshot('locked-for-mapping.png', {
+      maxDiffPixelRatio: 0.05,
+    });
     await page.locator('canvas').click({
       position: {
         x: 445,
         y: 95,
       },
     });
-    //STATUS: LOCKED_FOR_MAPPING
+
+    // 3. Mark task as fully mapped
     await page.getByRole('button', { name: 'MARK AS FULLY MAPPED' }).click();
     await page.getByRole('button', { name: 'MARK AS FULLY MAPPED' }).click();
     await page.waitForSelector('div:has-text("updated status to MAPPED"):nth-of-type(1)');
@@ -66,24 +69,29 @@ test.describe('mapper flow', () => {
     ).toBeVisible();
     await page.getByRole('alert').waitFor({ state: 'hidden' });
     await page.getByTitle('Close').getByTestId('CloseIcon').click();
-    expect(await page.locator('canvas').screenshot()).toMatchSnapshot('mapped.png');
-
+    // Use maxDiffPixelRatio to avoid issues with OSM tile loading delay
+    expect(await page.locator('canvas').screenshot()).toMatchSnapshot('mapped.png', { maxDiffPixelRatio: 0.05 });
     await page.locator('canvas').click({
       position: {
         x: 445,
         y: 95,
       },
     });
-    // STATUS: MAPPED
+
+    // 4. Mark task as validated
     await page.getByRole('button', { name: 'START VALIDATION' }).click();
-    await page.getByRole('button', { name: 'FULLY MAPPED' }).click();
+    // Wait for redirect to validation page
+    await page.waitForTimeout(2000);
+    // Click 'Fully Mapped' button on validation page
+    await page.getByRole('button', { name: 'MARK AS VALIDATED' }).click();
 
     await page.getByText('has been updated to VALIDATED').waitFor({ state: 'visible' });
     await expect(page.getByText('has been updated to VALIDATED')).toBeVisible();
 
-    // click on validated task after map renders
+    // wait for map to render before continuing
     await page.waitForTimeout(4000);
-    expect(await page.locator('canvas').screenshot()).toMatchSnapshot('validated.png');
+    // Use maxDiffPixelRatio to avoid issues with OSM tile loading delay
+    expect(await page.locator('canvas').screenshot()).toMatchSnapshot('validated.png', { maxDiffPixelRatio: 0.05 });
     await page.locator('canvas').click({
       position: {
         x: 445,
@@ -93,21 +101,84 @@ test.describe('mapper flow', () => {
     await expect(page.getByText('Status: VALIDATED')).toBeVisible();
   });
 
-  test('comment section', async ({ page }) => {
-    await page.goto('/');
-    // await page.goto('http://fmtm.localhost:7050/');
-    await page.getByRole('button', { name: 'Sign in' }).click();
-    await page
-      .getByLabel('', { exact: true })
-      .locator('div')
-      .filter({ hasText: "Temporary AccountIf you're" })
-      .nth(3)
-      .click();
+  test('open feature (Entity) in ODK', async ({ browserName, page }) => {
+    // Specific for this large test, only run in one browser
+    // (playwright.config.ts is configured to run all browsers by default)
+    test.skip(browserName !== 'chromium', 'Test only for chromium!');
 
-    // click first project card on the home page
-    await page.locator('.MuiCardContent-root').first().click();
+    // 0. Temp Login
+    await tempLogin(page);
+    await openFirstProject(page);
 
+    // 1. Click on task area on map
+    // click on task & assert task popup visibility
+    await page.locator('canvas').click({
+      position: {
+        x: 388,
+        y: 220,
+      },
+    });
+    await expect(page.getByText('Status: READY')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'START MAPPING' })).toBeVisible();
+
+    // 2. Click on a specific feature / Entity within a task
+    // assert feature popup visibility
     await page.waitForTimeout(4000);
+    await page.locator('canvas').click({
+      position: {
+        x: 387,
+        y: 211,
+      },
+    });
+    await expect(page.getByRole('heading', { name: 'Feature:' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'MAP FEATURE IN ODK' })).toBeEnabled();
+    await page.getByRole('button', { name: 'MAP FEATURE IN ODK' }).click();
+    // Check popup shows because we are not on a mobile device
+    await expect(
+      page.getByRole('alert').locator('div').filter({ hasText: 'Requires a mobile phone with ODK collect' }),
+    ).toBeVisible();
+
+    // 3. Validate feature status updated / locked
+    // check if task status is updated to locked_for_mapping on entity map
+    await page.waitForSelector('div:has-text("updated status to LOCKED_FOR_MAPPING"):nth-of-type(1)');
+    await expect(
+      page
+        .locator('div')
+        .filter({ hasText: /updated status to LOCKED_FOR_MAPPING/ })
+        .first(),
+    ).toBeVisible();
+
+    // click on task to check if task popup has been updated
+    await page.waitForTimeout(4000);
+    await page.locator('canvas').click({
+      position: {
+        x: 411,
+        y: 171,
+      },
+    });
+
+    // await page.getByText('Status: LOCKED_FOR_MAPPING').click();
+    await expect(page.getByText('Status: LOCKED_FOR_MAPPING')).toBeVisible();
+
+    // click entity to confirm task is locked
+    await page.locator('canvas').click({
+      position: {
+        x: 387,
+        y: 211,
+      },
+    });
+    await expect(page.getByRole('button', { name: 'MAP FEATURE IN ODK' })).toBeDisabled();
+  });
+
+  test('add comment', async ({ browserName, page }) => {
+    // Specific for this large test, only run in one browser
+    // (playwright.config.ts is configured to run all browsers by default)
+    test.skip(browserName !== 'chromium', 'Test only for chromium!');
+
+    // 0. Temp Login
+    await tempLogin(page);
+    await openFirstProject(page);
+
     await page.locator('canvas').click({
       position: {
         x: 475,
