@@ -38,7 +38,7 @@ const LayerCard = ({ layer, changeBaseLayerHandler, active }: layerCardPropType)
         ></div>
       ) : (
         <img
-          className={`group-hover/layer:fmtm-border-primaryRed fmtm-w-[3.5rem] fmtm-h-[3.5rem] fmtm-cursor-default fmtm-border-[2px] fmtm-bg-contain fmtm-rounded-md ${
+          className={`group-hover/layer:fmtm-border-primaryRed fmtm-w-[3.5rem] fmtm-h-[3.5rem] fmtm-border-[2px] fmtm-bg-contain fmtm-rounded-md ${
             active ? '!fmtm-border-primaryRed fmtm-duration-200' : 'fmtm-border-grey-100'
           }`}
           src={layerIcons[layer] ? layerIcons[layer] : satelliteImg}
