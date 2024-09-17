@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuPortal,
 } from '@/components/common/Dropdown';
+import { Tooltip } from '@mui/material';
 
 export const layerIcons = {
   Satellite: satelliteImg,
@@ -61,6 +62,7 @@ const LayerSwitchMenu = ({ map, pmTileLayerData = null }: { map: any; pmTileLaye
   const [hasPMTile, setHasPMTile] = useState(false);
   const [activeLayer, setActiveLayer] = useState('OSM');
   const [activeTileLayer, setActiveTileLayer] = useState('');
+  const [isLayerMenuOpen, setIsLayerMenuOpen] = useState(false);
   const projectInfo = useAppSelector((state) => state.project.projectInfo);
 
   useEffect(() => {
@@ -116,28 +118,30 @@ const LayerSwitchMenu = ({ map, pmTileLayerData = null }: { map: any; pmTileLaye
 
   return (
     <div>
-      <DropdownMenu modal={false}>
+      <DropdownMenu modal={false} onOpenChange={(status) => setIsLayerMenuOpen(status)}>
         <DropdownMenuTrigger className="fmtm-outline-none">
-          <div
-            style={{
-              backgroundImage: activeLayer === 'None' ? 'none' : `url(${layerIcons[activeLayer] || satelliteImg})`,
-              backgroundColor: 'white',
-            }}
-            className={`fmtm-relative fmtm-group fmtm-order-4 fmtm-w-10 fmtm-h-10 fmtm-border-2 fmtm-border-[#ffffff] hover:fmtm-border-[3px] fmtm-duration-75 fmtm-cursor-pointer fmtm-bg-contain fmtm-rounded-full ${
-              activeLayer === 'None' ? '!fmtm-border-primaryRed' : ''
-            }`}
-          ></div>
+          <Tooltip title="Base Maps" placement={isLayerMenuOpen ? 'bottom' : 'left'}>
+            <div
+              style={{
+                backgroundImage: activeLayer === 'None' ? 'none' : `url(${layerIcons[activeLayer] || satelliteImg})`,
+                backgroundColor: 'white',
+              }}
+              className={`fmtm-relative fmtm-group fmtm-order-4 fmtm-w-10 fmtm-h-10 fmtm-border-[1px] fmtm-border-primaryRed hover:fmtm-border-[2px] fmtm-duration-75 fmtm-cursor-pointer fmtm-bg-contain fmtm-rounded-full ${
+                activeLayer === 'None' ? '!fmtm-border-primaryRed' : ''
+              }`}
+            ></div>
+          </Tooltip>
         </DropdownMenuTrigger>
         <DropdownMenuPortal>
           <DropdownMenuContent
-            className="fmtm-p-0 fmtm-border-none fmtm-z-[60px]"
+            className="!fmtm-p-0 fmtm-border-none fmtm-z-[60px]"
             align="end"
             alignOffset={100}
             sideOffset={-42}
           >
             <div className="fmtm-bg-white  fmtm-max-h-[20rem] fmtm-overflow-y-scroll scrollbar fmtm-flex fmtm-flex-col fmtm-gap-3 fmtm-pt-1 fmtm-rounded-lg fmtm-p-3">
               <div>
-                <h6 className="fmtm-text-base fmtm-mb-1">Base Maps</h6>
+                <h6 className="fmtm-text-base fmtm-mb-2">Base Maps</h6>
                 <div className="fmtm-flex fmtm-flex-wrap fmtm-justify-between fmtm-gap-4">
                   {baseLayers.map((layer) => (
                     <LayerCard
