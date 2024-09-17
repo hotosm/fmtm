@@ -40,6 +40,7 @@ import { readFileFromOPFS } from '@/api/Files';
 import DebugConsole from '@/utilities/DebugConsole';
 import { CustomCheckbox } from '@/components/common/Checkbox';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
+import QrcodeComponent from '@/components/QrcodeComponent';
 
 const ProjectDetailsV2 = () => {
   useDocumentTitle('Project Details');
@@ -52,7 +53,6 @@ const ProjectDetailsV2 = () => {
 
   const [mainView, setView] = useState<any>();
   const [selectedTaskArea, setSelectedTaskArea] = useState<Record<string, any> | null>(null);
-  console.log(selectedTaskArea, 'selectedTaskArea');
   const [selectedTaskFeature, setSelectedTaskFeature] = useState();
   const [dataExtractUrl, setDataExtractUrl] = useState<string | undefined>();
   const [dataExtractExtent, setDataExtractExtent] = useState(null);
@@ -533,6 +533,9 @@ const ProjectDetailsV2 = () => {
                   btnType="primary"
                   className="!fmtm-text-base !fmtm-pr-2"
                 />
+              </div>
+              <div className="fmtm-absolute fmtm-right-0 fmtm-top-0 fmtm-z-50 fmtm-hidden sm:fmtm-block">
+                <QrcodeComponent />
               </div>
               <MapControlComponent
                 map={map}
