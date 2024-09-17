@@ -27,13 +27,14 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse, Response
 from loguru import logger as log
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.auth.auth_schemas import AuthUser, ProjectUserDict
 from app.auth.osm import login_required
 from app.auth.roles import mapper, project_manager
 from app.central import central_crud
-from app.db import database, postgis_utils
+from app.db import database, db_models, postgis_utils
 from app.models.enums import HTTPStatus, ReviewStateEnum
 from app.projects import project_crud, project_deps
 from app.submissions import submission_crud, submission_schemas
@@ -593,4 +594,27 @@ async def conflate_geojson(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to process conflation: {str(e)}"
+        ) from e
+
+
+@router.get("/get-submission-photo")
+async def submission_photo(
+    submission_id: str,
+    db: Session = Depends(database.get_db),
+):
+    """Get submission photo."""
+    try:
+        sql = text("""
+            select s3_path from submission_photos where submission_id = :submission_id
+        """)
+        db_result = db.execute(sql, {"submission_id": submission_id})
+        result = db_result.first()
+        return db_models.DbSubmissionPhotos(**result._asdict())
+    except Exception as e:
+        log.warning(
+            f"Failed to get submission photo for submission {submission_id}: {e}"
+        )
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail="Failed to get submission photo",
         ) from e
