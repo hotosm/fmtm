@@ -45,9 +45,7 @@ function colorRange(data, noOfRange) {
   const actualCodes = [{ min: 0, max: 0, color: '#FF4538' }];
   const maxVal = Math.max(...data?.map((d) => d.count));
   const maxValue = maxVal <= noOfRange ? 10 : maxVal;
-  // const minValue = Math.min(...data?.map((d) => d.count)) 0;
   const minValue = 1;
-  // const firstValue = minValue;
   const colorCodesKeys = Object.keys(colorCodes);
   const interval = (maxValue - minValue) / noOfRange;
   let currentValue = minValue;
@@ -138,12 +136,9 @@ const TaskSubmissionsMap = () => {
     setDataExtractUrl(projectInfo.data_extract_url);
 
     map.getView().fit(extent, {
-      // easing: elastic,
       animate: true,
       size: map?.getSize(),
-      // maxZoom: 15,
       padding: [50, 50, 50, 50],
-      // duration: 900,
       constrainResolution: true,
       duration: 2000,
     });
