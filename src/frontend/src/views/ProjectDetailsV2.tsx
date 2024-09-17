@@ -512,7 +512,6 @@ const ProjectDetailsV2 = () => {
                   body={<MapLegends defaultTheme={defaultTheme} />}
                   header={
                     <div className="fmtm-flex fmtm-items-center fmtm-gap-1 sm:fmtm-gap-2">
-                      <AssetModules.LegendToggleIcon className=" fmtm-text-primaryRed" sx={{ fontSize: '25px' }} />
                       <p className="fmtm-text-base fmtm-font-normal">LEGEND</p>
                     </div>
                   }
