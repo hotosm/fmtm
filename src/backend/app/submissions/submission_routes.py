@@ -34,7 +34,7 @@ from app.auth.auth_schemas import AuthUser, ProjectUserDict
 from app.auth.osm import login_required
 from app.auth.roles import mapper, project_manager
 from app.central import central_crud
-from app.db import database, db_models, postgis_utils
+from app.db import database, postgis_utils
 from app.models.enums import HTTPStatus, ReviewStateEnum
 from app.projects import project_crud, project_deps
 from app.submissions import submission_crud, submission_schemas
@@ -601,15 +601,36 @@ async def conflate_geojson(
 async def submission_photo(
     submission_id: str,
     db: Session = Depends(database.get_db),
-):
-    """Get submission photo."""
+) -> dict:
+    """Get submission photo.
+
+    Retrieves the S3 path of the submission photo for the given submission ID.
+
+    Args:
+        submission_id (str): The ID of the submission.
+        db (Session): The database session.
+
+    Returns:
+        dict: A dictionary containing the S3 path of the submission photo.
+        If no photo is found,
+        the dictionary will contain a None value for the S3 path.
+
+    Raises:
+        HTTPException: If an error occurs while retrieving the submission photo.
+    """
     try:
         sql = text("""
-            select s3_path from submission_photos where submission_id = :submission_id
+            SELECT s3_path FROM submission_photos WHERE submission_id = :submission_id
         """)
-        db_result = db.execute(sql, {"submission_id": submission_id})
-        result = db_result.first()
-        return db_models.DbSubmissionPhotos(**result._asdict())
+        result = db.execute(sql, {"submission_id": submission_id}).first()
+
+        # Return None for s3_path if no result is found
+        if result is None:
+            log.info(f"Submission photo not found for submission ID: {submission_id}")
+            return {"s3_path": None}
+
+        # Return the s3_path if the result is found
+        return {"s3_path": result.s3_path}
     except Exception as e:
         log.warning(
             f"Failed to get submission photo for submission {submission_id}: {e}"
