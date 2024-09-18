@@ -75,11 +75,7 @@ const Home = () => {
   return (
     <div style={{ flex: 1, background: '#F5F5F5' }} className="fmtm-flex fmtm-flex-col fmtm-justify-between">
       <div className="fmtm-h-full">
-        <HomePageFilters
-          onSearch={handleSearch}
-          filteredProjectCount={filteredProjectCards?.length}
-          totalProjectCount={stateHome.homeProjectSummary.length}
-        />
+        <HomePageFilters onSearch={handleSearch} filteredProjectCount={filteredProjectCards?.length} />
         {stateHome.homeProjectLoading == false ? (
           <div style={{ height: 'calc(100% - 174px)' }} className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5">
             <div className={`fmtm-w-full ${showMapStatus ? 'lg:fmtm-w-[50%]' : ''} `}>
