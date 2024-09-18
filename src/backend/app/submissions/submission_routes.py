@@ -622,15 +622,12 @@ async def submission_photo(
         sql = text("""
             SELECT s3_path FROM submission_photos WHERE submission_id = :submission_id
         """)
-        result = db.execute(sql, {"submission_id": submission_id}).first()
+        results = db.execute(sql, {"submission_id": submission_id}).fetchall()
 
-        # Return None for s3_path if no result is found
-        if result is None:
-            log.info(f"Submission photo not found for submission ID: {submission_id}")
-            return {"s3_path": None}
+        # Extract the s3_path from each result and return as a list
+        s3_paths = [result.s3_path for result in results] if results else []
 
-        # Return the s3_path if the result is found
-        return {"s3_path": result.s3_path}
+        return {"image_url": s3_paths}
     except Exception as e:
         log.warning(
             f"Failed to get submission photo for submission {submission_id}: {e}"
