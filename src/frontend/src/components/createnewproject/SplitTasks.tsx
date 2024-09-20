@@ -19,7 +19,7 @@ import { task_split_type } from '@/types/enums';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import { taskSplitOptionsType } from '@/store/types/ICreateProject';
 
-const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customDataExtractUpload, customFormFile }) => {
+const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload }) => {
   useDocumentTitle('Create Project: Split Tasks');
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -59,10 +59,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customDataExtractUpload
       name: 'define_tasks',
       value: task_split_type['task_splitting_algorithm'].toString(),
       label: 'Task Splitting Algorithm',
-      disabled:
-        !projectDetails?.hasGeojsonLineString && projectDetails?.dataExtractWays === 'custom_data_extract'
-          ? true
-          : false,
+      disabled: false,
     },
   ];
 
@@ -133,7 +130,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customDataExtractUpload
         `${import.meta.env.VITE_API_URL}/projects/create-project?org_id=${projectDetails.organisation_id}`,
         projectData,
         taskAreaGeojsonFile,
-        customFormFile,
+        projectDetails.customFormUpload,
         customDataExtractUpload,
         projectDetails.dataExtractWays === 'osm_data_extract',
       ),
@@ -233,9 +230,9 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customDataExtractUpload
   const totalSteps = dividedTaskGeojson?.features ? dividedTaskGeojson?.features?.length : parsedTaskGeojsonCount;
   return (
     <>
-      <form onSubmit={handleSubmit}>
-        <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row">
-          <div className="fmtm-bg-white lg:fmtm-w-[20%] xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6">
+      <form onSubmit={handleSubmit} className="fmtm-h-full">
+        <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row fmtm-h-full">
+          <div className="fmtm-bg-white lg:fmtm-w-[20%] xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6 lg:fmtm-h-full lg:fmtm-overflow-y-scroll lg:scrollbar">
             <h6 className="fmtm-text-xl fmtm-font-[600] fmtm-pb-2 lg:fmtm-pb-6">Split Tasks</h6>
             <p className="fmtm-text-gray-500 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3">
               <span>You may choose how to divide an area into tasks for field mapping</span>
@@ -247,7 +244,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customDataExtractUpload
               </span>
             </p>
           </div>
-          <div className="lg:fmtm-w-[80%] xl:fmtm-w-[83%] lg:fmtm-h-[60vh] xl:fmtm-h-[58vh] fmtm-bg-white fmtm-px-5 lg:fmtm-px-11 fmtm-py-6 lg:fmtm-overflow-y-scroll lg:scrollbar">
+          <div className="lg:fmtm-w-[80%] xl:fmtm-w-[83%] fmtm-bg-white fmtm-px-5 lg:fmtm-px-11 fmtm-py-6 lg:fmtm-overflow-y-scroll lg:scrollbar">
             <div className="fmtm-w-full fmtm-flex fmtm-gap-6 md:fmtm-gap-14 fmtm-flex-col md:fmtm-flex-row fmtm-h-full">
               <div className="fmtm-flex fmtm-flex-col fmtm-gap-6 lg:fmtm-w-[40%] fmtm-justify-between">
                 <div>
@@ -346,7 +343,7 @@ const SplitTasks = ({ flag, geojsonFile, setGeojsonFile, customDataExtractUpload
                     type="button"
                     onClick={() => {
                       dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
-                      toggleStep(3, '/data-extract');
+                      toggleStep(3, '/map-features');
                     }}
                     className="fmtm-font-bold"
                   />

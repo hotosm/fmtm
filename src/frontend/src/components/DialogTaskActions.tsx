@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import environment from '@/environment';
-import ProjectTaskStatus from '@/api/ProjectTaskStatus';
+import { UpdateTaskStatus } from '@/api/ProjectTaskStatus';
 import MapStyles from '@/hooks/MapStyles';
 import CoreModules from '@/shared/CoreModules';
 import { CommonActions } from '@/store/slices/CommonSlice';
@@ -25,28 +25,32 @@ type taskListstatusType = {
 
 export default function Dialog({ taskId, feature }: dialogPropType) {
   const navigate = useNavigate();
-  const projectInfo = useAppSelector((state) => state.project.projectInfo);
-  const taskBoundaryData = useAppSelector((state) => state.project.projectTaskBoundries);
-  const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
-  const loading = useAppSelector((state) => state.common.loading);
-  const taskInfo = useAppSelector((state) => state.task.taskInfo);
+  const dispatch = CoreModules.useAppDispatch();
+  const params = CoreModules.useParams();
+  const geojsonStyles = MapStyles();
+
   const [list_of_task_status, set_list_of_task_status] = useState<taskListstatusType[]>([]);
   const [task_status, set_task_status] = useState('READY');
   const [currentTaskInfo, setCurrentTaskInfo] = useState<taskSubmissionInfoType>();
   const [toggleMappedConfirmationModal, setToggleMappedConfirmationModal] = useState(false);
 
-  const geojsonStyles = MapStyles();
-  const dispatch = CoreModules.useAppDispatch();
-  const params = CoreModules.useParams();
-  const currentProjectId: string = params.id;
+  const projectInfo = useAppSelector((state) => state.project.projectInfo);
+  const taskBoundaryData = useAppSelector((state) => state.project.projectTaskBoundries);
+  const loading = useAppSelector((state) => state.common.loading);
+  const taskInfo = useAppSelector((state) => state.task.taskInfo);
   const projectData = useAppSelector((state) => state.project.projectTaskBoundries);
+  const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
+  const projectTaskActivityList = useAppSelector((state) => state?.project?.projectTaskActivity);
+
+  const currentProjectId: string = params.id;
   const projectIndex = projectData.findIndex((project) => project.id == parseInt(currentProjectId));
   const currentStatus = {
     ...taskBoundaryData?.[projectIndex]?.taskBoundries?.filter((task) => {
       return task?.index == taskId;
     })?.[0],
   };
-  const projectTaskActivityList = CoreModules.useAppSelector((state) => state?.project?.projectTaskActivity);
+  const checkIfTaskAssignedOrNot =
+    currentStatus?.locked_by_username === authDetails?.username || currentStatus?.locked_by_username === null;
 
   useEffect(() => {
     if (taskId) {
@@ -77,24 +81,32 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
     }
   }, [projectTaskActivityList, taskId, feature]);
 
-  const handleOnClick = (event) => {
-    const status = taskStatusEnum[event.currentTarget.dataset.btnid];
+  const handleOnClick = async (event: React.MouseEvent<HTMLElement>) => {
+    const btnId = event.currentTarget.dataset.btnid;
+    if (!btnId) return;
+    const status = taskStatusEnum[btnId];
     const authDetailsCopy = authDetails != null ? { ...authDetails } : {};
-    const geoStyle = geojsonStyles[event.currentTarget.dataset.btnid];
-    if (event.currentTarget.dataset.btnid != undefined) {
+    const geoStyle = geojsonStyles[btnId];
+    if (btnId != undefined) {
       if (authDetailsCopy.hasOwnProperty('id')) {
-        dispatch(
-          ProjectTaskStatus(
+        // if (btnId === 'MERGE_WITH_OSM') {
+        //   navigate(`/conflate-data/${currentProjectId}/${taskId}`);
+        //   return;
+        // }
+        await dispatch(
+          UpdateTaskStatus(
             `${import.meta.env.VITE_API_URL}/tasks/${currentStatus?.id}/new-status/${status}`,
-            geoStyle,
-            taskBoundaryData,
             currentProjectId,
-            feature,
-            taskId,
+            taskId.toString(),
             authDetailsCopy,
             { project_id: currentProjectId },
+            geoStyle,
+            taskBoundaryData,
+            feature,
           ),
         );
+        if (btnId === 'LOCKED_FOR_VALIDATION')
+          navigate(`/project-submissions/${params.id}?tab=table&task_id=${taskId}`);
       } else {
         dispatch(
           CommonActions.SetSnackBar({
@@ -116,8 +128,6 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
       );
     }
   };
-  const checkIfTaskAssignedOrNot =
-    currentStatus?.locked_by_username === authDetails?.username || currentStatus?.locked_by_username === null;
 
   return (
     <div className="fmtm-flex fmtm-flex-col">

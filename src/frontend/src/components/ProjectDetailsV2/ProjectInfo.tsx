@@ -35,7 +35,7 @@ const ProjectInfo: React.FC = () => {
   ).length;
 
   return (
-    <div className="fmtm-flex fmtm-flex-col fmtm-gap-5 fmtm-mt-3  fmtm-h-[50vh] fmtm-overflow-y-scroll scrollbar fmtm-pr-1">
+    <div className="fmtm-flex fmtm-flex-col fmtm-gap-5 fmtm-mt-3  fmtm-overflow-y-scroll scrollbar fmtm-pr-1">
       <div>
         <p className="fmtm-font-bold">Description</p>
         {projectDetailsLoading ? (
@@ -101,12 +101,10 @@ const ProjectInfo: React.FC = () => {
         ) : (
           <div className="fmtm-flex fmtm-items-center fmtm-gap-4">
             <div className="fmtm-w-10 fmtm-h-10 fmtm-overflow-hidden fmtm-rounded-full fmtm-bg-white fmtm-flex fmtm-justify-center fmtm-items-center">
-              {/* <a href={`/organizations/${projectInfo.organisation_id}`}> */}
               <img
                 src={projectInfo?.organisation_logo ? projectInfo?.organisation_logo : ProjectIcon}
                 alt="Organization Photo"
               />
-              {/* </a> */}
             </div>
           </div>
         )}

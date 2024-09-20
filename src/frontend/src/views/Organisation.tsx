@@ -13,10 +13,7 @@ import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 const Organisation = () => {
   useDocumentTitle('Organizations');
   const dispatch = CoreModules.useAppDispatch();
-  //dispatch function to perform redux state mutation
-
   const { type } = windowDimention();
-  //get window dimension
 
   const [searchKeyword, setSearchKeyword] = useState<string>('');
   const [activeTab, setActiveTab] = useState<0 | 1>(0);
@@ -68,11 +65,10 @@ const Organisation = () => {
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        background: '#f0efef',
+        background: '#f5f5f5',
         flex: 1,
         gap: 2,
       }}
-      className="fmtm-p-5"
     >
       <div className="md:fmtm-hidden fmtm-border-b-white fmtm-border-b-[1px]">
         <div className="fmtm-flex fmtm-justify-between fmtm-items-center">

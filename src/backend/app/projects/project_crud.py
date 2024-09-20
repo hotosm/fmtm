@@ -35,7 +35,6 @@ from geoalchemy2.shape import to_shape
 from geojson.feature import Feature, FeatureCollection
 from loguru import logger as log
 from osm_fieldwork.basemapper import create_basemap_file
-from osm_fieldwork.xlsforms import xlsforms_path
 from osm_rawdata.postgres import PostgresClient
 from shapely.geometry import shape
 from sqlalchemy import and_, column, func, select, table, text
@@ -838,8 +837,6 @@ async def generate_odk_central_project_content(
     project: db_models.DbProject,
     odk_credentials: project_schemas.ODKCentralDecrypted,
     xlsform: BytesIO,
-    form_category: str,
-    form_file_ext: str,
     task_extract_dict: dict,
     db: Session,
 ) -> str:
@@ -860,20 +857,18 @@ async def generate_odk_central_project_content(
             entities_list,
         )
 
-    xform = await central_crud.read_and_test_xform(
-        xlsform, form_file_ext, return_form_data=True
-    )
-    # Manually modify fields in XML specific to project (id, name, etc)
-    updated_xform = await central_crud.modify_xform_xml(
-        xform,
-        form_category,
-        len(task_extract_dict.keys()),
-    )
+    # TODO add here additional upload of Entities
+    # TODO add code here
+    # additional_entities = ["roads"]
+
+    # Do final check of XLSForm validity + return parsed XForm
+    xform = await central_crud.read_and_test_xform(xlsform)
+
     # Upload survey XForm
     log.info("Uploading survey XForm to ODK Central")
     xform_id = central_crud.create_odk_xform(
         project_odk_id,
-        updated_xform,
+        xform,
         odk_credentials,
     )
 
@@ -889,7 +884,11 @@ async def generate_odk_central_project_content(
     )
     db.execute(
         sql,
-        {"project_id": project.id, "xform_id": xform_id, "category": form_category},
+        {
+            "project_id": project.id,
+            "xform_id": xform_id,
+            "category": project.xform_category,
+        },
     )
     db.commit()
     return await central_crud.get_appuser_token(
@@ -900,8 +899,6 @@ async def generate_odk_central_project_content(
 async def generate_project_files(
     db: Session,
     project_id: int,
-    custom_form: Optional[BytesIO],
-    form_file_ext: str,
     background_task_id: Optional[uuid.UUID] = None,
 ) -> None:
     """Generate the files for a project.
@@ -911,26 +908,12 @@ async def generate_project_files(
     Args:
         db (Session): the database session.
         project_id(int): id of the FMTM project.
-        custom_form (BytesIO): the xls file to upload if we have a custom form
-        form_file_ext (str): weather the form is xls, xlsx or xml
         background_task_id (uuid): the task_id of the background task.
     """
     try:
         project = await project_deps.get_project_by_id(db, project_id)
-        form_category = project.xform_category
         log.info(f"Starting generate_project_files for project {project_id}")
         odk_credentials = await project_deps.get_odk_credentials(db, project_id)
-
-        if custom_form:
-            log.debug("User provided custom XLSForm")
-            xlsform = custom_form
-        else:
-            log.debug(f"Using default XLSForm for category: '{form_category}'")
-
-            form_filename = XLSFormType(form_category).name
-            xlsform_path = f"{xlsforms_path}/{form_filename}.xls"
-            with open(xlsform_path, "rb") as f:
-                xlsform = BytesIO(f.read())
 
         # Extract data extract from flatgeobuf
         log.debug("Getting data extract geojson from flatgeobuf")
@@ -955,9 +938,7 @@ async def generate_project_files(
         encrypted_odk_token = await generate_odk_central_project_content(
             project,
             odk_credentials,
-            xlsform,
-            form_category,
-            form_file_ext,
+            BytesIO(project.form_xls),
             task_extract_dict,
             db,
         )
@@ -1525,37 +1506,31 @@ async def get_dashboard_detail(
     return project
 
 
-async def get_project_users(db: Session, project_id: int, db_user: db_models.DbUser):
+async def get_project_users(db: Session, project_id: int):
     """Get the users and their contributions for a project.
 
     Args:
         db (Session): The database session.
         project_id (int): The ID of the project.
-        db_user (DbUser): User that called the endpoint.
 
     Returns:
         List[Dict[str, Union[str, int]]]: A list of dictionaries containing
             the username and the number of contributions made by each user
             for the specified project.
     """
-    # TODO refactor this
-    # TODO it could probably just be a single raw SQL statement
-    contributors = (
-        db.query(db_models.DbTaskHistory)
-        .filter(db_models.DbTaskHistory.project_id == project_id)
-        .all()
-    )
-    unique_user_ids = {
-        user.user_id for user in contributors if user.user_id is not None
-    }
-    response = []
+    query = text("""
+        SELECT u.username, COUNT(th.user_id) as contributions
+        FROM users u
+        JOIN task_history th ON u.id = th.user_id
+        WHERE th.project_id = :project_id
+        GROUP BY u.username
+        ORDER BY contributions DESC
+    """)
+    result = db.execute(query, {"project_id": project_id}).fetchall()
 
-    for user_id in unique_user_ids:
-        contributions = count_user_contributions(db, user_id, project_id)
-        response.append({"user": db_user.username, "contributions": contributions})
-
-    response = sorted(response, key=lambda x: x["contributions"], reverse=True)
-    return response
+    return [
+        {"user": row.username, "contributions": row.contributions} for row in result
+    ]
 
 
 def count_user_contributions(db: Session, user_id: int, project_id: int) -> int:

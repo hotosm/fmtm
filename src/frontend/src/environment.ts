@@ -32,11 +32,12 @@ export default {
     {
       label: 'LOCKED_FOR_VALIDATION',
       action: [
-        { key: 'Confirm fully Mapped', value: 'VALIDATED', btnBG: 'gray' },
+        { key: 'Mark as validated', value: 'VALIDATED', btnBG: 'gray' },
         { key: 'Mapping Needed', value: 'INVALIDATED', btnBG: 'transparent' },
       ],
     },
     { label: 'VALIDATED', action: [] },
+    // { label: 'VALIDATED', action: [{ key: 'Merge data with OSM', value: 'MERGE_WITH_OSM', btnBG: 'gray' }] },
     { label: 'INVALIDATED', action: [{ key: 'Map Again', value: 'LOCKED_FOR_MAPPING', btnBG: 'gray' }] },
     { label: 'BAD', action: [] },
     // "SPLIT",
