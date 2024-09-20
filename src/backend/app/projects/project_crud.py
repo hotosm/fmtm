@@ -837,7 +837,6 @@ async def generate_odk_central_project_content(
     project: db_models.DbProject,
     odk_credentials: project_schemas.ODKCentralDecrypted,
     xlsform: BytesIO,
-    form_category: str,
     task_extract_dict: dict,
     db: Session,
 ) -> str:
@@ -859,14 +858,11 @@ async def generate_odk_central_project_content(
         )
 
     # TODO add here additional upload of Entities
-    additional_entities = []
+    # TODO add code here
+    # additional_entities = ["roads"]
 
-    xform = await central_crud.validate_and_update_user_xlsform(
-        xlsform=xlsform,
-        form_category=form_category,
-        additional_entities=additional_entities,
-        task_count=len(task_extract_dict.keys()),
-    )
+    # Do final check of XLSForm validity + return parsed XForm
+    xform = await central_crud.read_and_test_xform(xlsform)
 
     # Upload survey XForm
     log.info("Uploading survey XForm to ODK Central")
@@ -888,7 +884,11 @@ async def generate_odk_central_project_content(
     )
     db.execute(
         sql,
-        {"project_id": project.id, "xform_id": xform_id, "category": form_category},
+        {
+            "project_id": project.id,
+            "xform_id": xform_id,
+            "category": project.xform_category,
+        },
     )
     db.commit()
     return await central_crud.get_appuser_token(
@@ -912,7 +912,6 @@ async def generate_project_files(
     """
     try:
         project = await project_deps.get_project_by_id(db, project_id)
-        form_category = project.xform_category
         log.info(f"Starting generate_project_files for project {project_id}")
         odk_credentials = await project_deps.get_odk_credentials(db, project_id)
 
@@ -939,8 +938,7 @@ async def generate_project_files(
         encrypted_odk_token = await generate_odk_central_project_content(
             project,
             odk_credentials,
-            project.form_xls,
-            form_category,
+            BytesIO(project.form_xls),
             task_extract_dict,
             db,
         )

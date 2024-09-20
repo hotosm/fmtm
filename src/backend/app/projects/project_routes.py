@@ -692,6 +692,7 @@ async def validate_form(
 async def generate_files(
     background_tasks: BackgroundTasks,
     xlsform_upload: Optional[BytesIO] = Depends(central_deps.read_optional_xlsform),
+    additional_entities: list[str] = None,
     db: Session = Depends(database.get_db),
     project_user_dict: ProjectUserDict = Depends(project_manager),
 ):
@@ -716,6 +717,8 @@ async def generate_files(
         background_tasks (BackgroundTasks): FastAPI bg tasks, provided automatically.
         xlsform_upload (UploadFile, optional): A custom XLSForm to use in the project.
             A file should be provided if user wants to upload a custom xls form.
+        additional_entities (list[str]): If additional Entity lists need to be
+            created (i.e. the project form references multiple geometries).
         db (Session): Database session, provided automatically.
         project_user_dict (ProjectUserDict): Project admin role.
 
@@ -737,10 +740,8 @@ async def generate_files(
             xlsform=xlsform_upload,
             form_category=form_category,
             task_count=task_count,
+            additional_entities=additional_entities,
         )
-
-        # xlsform_upload.seek(0)
-
         xlsform = xlsform_upload
 
     else:
@@ -755,6 +756,7 @@ async def generate_files(
         xlsform=xlsform,
         form_category=form_category,
         task_count=task_count,
+        additional_entities=additional_entities,
     )
     # Write XLS form content to db
     project.form_xls = project_xlsform.getvalue()
