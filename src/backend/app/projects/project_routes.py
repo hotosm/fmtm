@@ -950,7 +950,7 @@ async def download_form(
 async def update_project_form(
     xform_id: str = Form(...),
     category: XLSFormType = Form(...),
-    upload: BytesIO = Depends(central_deps.read_xlsform),
+    xlsform: BytesIO = Depends(central_deps.read_xlsform),
     db: Session = Depends(database.get_db),
     project_user_dict: ProjectUserDict = Depends(project_manager),
 ) -> project_schemas.ProjectBase:
@@ -958,7 +958,6 @@ async def update_project_form(
 
     Also updates the category and custom XLSForm data in the database.
     """
-    # TODO migrate most logic to project_crud
     project = project_user_dict["project"]
 
     # TODO we currently do nothing with the provided category
@@ -974,17 +973,17 @@ async def update_project_form(
     # Get ODK Central credentials for project
     odk_creds = await project_deps.get_odk_credentials(db, project.id)
     # Update ODK Central form data
-    updated_xlsform = await central_crud.update_project_xform(
+    await central_crud.update_project_xform(
         xform_id,
         project.odkid,
-        upload,
+        xlsform,
         category,
         len(project.tasks),
         odk_creds,
     )
 
     # Commit changes to db
-    project.form_xls = updated_xlsform.getvalue()
+    project.form_xls = xlsform.getvalue()
     db.commit()
 
     return project

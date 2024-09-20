@@ -385,7 +385,7 @@ const PostFormUpdate = (url: string, projectData: Record<string, any>) => {
         const formFormData = new FormData();
         formFormData.append('xform_id', projectData.xformId);
         formFormData.append('category', projectData.category);
-        formFormData.append('upload', projectData.upload);
+        formFormData.append('xlsform', projectData.upload);
 
         const postFormUpdateResponse = await axios.post(url, formFormData);
         const resp: ProjectDetailsModel = postFormUpdateResponse.data;

@@ -379,7 +379,7 @@ async def update_project_xform(
     category: str,
     task_count: int,
     odk_credentials: project_schemas.ODKCentralDecrypted,
-) -> BytesIO:
+) -> None:
     """Update and publish the XForm for a project.
 
     Args:
@@ -390,23 +390,9 @@ async def update_project_xform(
         task_count (int): The number of tasks in a project.
         odk_credentials (project_schemas.ODKCentralDecrypted): ODK Central creds.
 
-    Returns:
-        BytesIO: updated XLSForm for the project.
-            NOTE this is the XLSForm, not the XForm XML.
+    Returns: None
     """
-    xform_bytesio = await validate_and_update_user_xlsform(
-        xlsform=xlsform,
-        form_category=category,
-        task_count=task_count,
-        existing_id=xform_id,
-    )
-
-    xlsform_updated = await append_fields_to_user_xlsform(
-        xlsform=xlsform,
-        form_category=category,
-        task_count=task_count,
-        existing_id=xform_id,
-    )
+    xform_bytesio = await read_and_test_xform(xlsform)
 
     xform_obj = get_odk_form(odk_credentials)
 
@@ -417,9 +403,9 @@ async def update_project_xform(
         form_name=xform_id,
     )
     # The draft form must be published after upload
+    # NOTE we can't directly publish existing forms
+    # in createForm and need 2 steps
     xform_obj.publishForm(odk_id, xform_id)
-
-    return xlsform_updated
 
 
 async def convert_geojson_to_odk_csv(
