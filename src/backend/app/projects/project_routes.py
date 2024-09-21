@@ -789,7 +789,11 @@ async def add_additional_entity_list(
     db: Session = Depends(database.get_db),
     project_user_dict: ProjectUserDict = Depends(project_manager),
 ):
-    """Add an additional Entity list for the project in ODK."""
+    """Add an additional Entity list for the project in ODK.
+
+    Note that the Entity list will be named from the filename
+    of the GeoJSON uploaded.
+    """
     project = project_user_dict.get("project")
     project_id = project.id
     project_odk_id = project.odkid
