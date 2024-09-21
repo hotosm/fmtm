@@ -785,7 +785,7 @@ async def generate_files(
 
 @router.post("/{project_id}/additional-entity")
 async def add_additional_entity_list(
-    features_geojson: UploadFile = File(...),
+    geojson: UploadFile = File(...),
     db: Session = Depends(database.get_db),
     project_user_dict: ProjectUserDict = Depends(project_manager),
 ):
@@ -795,11 +795,11 @@ async def add_additional_entity_list(
     project_odk_id = project.odkid
     odk_credentials = await project_deps.get_odk_credentials(db, project_id)
     # NOTE the Entity name is extracted from the filename (without extension)
-    entity_name = Path(features_geojson.filename).stem
+    entity_name = Path(geojson.filename).stem
 
     # Parse geojson + divide by task
     # (not technically required, but also appends properties in correct format)
-    featcol = parse_geojson_file_to_featcol(await features_geojson.read())
+    featcol = parse_geojson_file_to_featcol(await geojson.read())
     feature_split_by_task = await split_geojson_by_task_areas(db, featcol, project_id)
     entities_list = await central_crud.task_geojson_dict_to_entity_values(
         feature_split_by_task
