@@ -22,6 +22,7 @@ import uuid
 from asyncio import gather
 from io import BytesIO
 from pathlib import Path
+from traceback import extract_tb
 from typing import List, Optional, Union
 
 import geojson
@@ -847,6 +848,7 @@ async def generate_odk_central_project_content(
         task_extract_dict
     )
 
+    log.debug("Creating main ODK Entity list for project: features")
     await central_crud.create_entity_list(
         odk_credentials,
         project_odk_id,
@@ -960,6 +962,19 @@ async def generate_project_files(
             )  # 4 is COMPLETED
 
     except Exception as e:
+        # Get the traceback details for easier debugging
+        tb = extract_tb(e.__traceback__)
+        if tb:
+            last_entry = tb[-1]
+            function_name = last_entry.name
+            line_number = last_entry.lineno
+            file_name = last_entry.filename
+
+            log.warning(
+                f"Error occurred in function {function_name} | line {line_number}"
+                f" | file {file_name}"
+            )
+
         log.warning(str(e))
 
         if background_task_id:
