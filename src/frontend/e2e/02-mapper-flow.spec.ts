@@ -3,7 +3,7 @@
 
 import { test, expect } from '@playwright/test';
 
-import { tempLogin, openFirstProject } from './helpers';
+import { tempLogin, openTestProject } from './helpers';
 
 test.describe('mapper flow', () => {
   test('task actions', async ({ browserName, page }) => {
@@ -13,7 +13,7 @@ test.describe('mapper flow', () => {
 
     // 0. Temp Login
     await tempLogin(page);
-    await openFirstProject(page);
+    await openTestProject(page);
 
     // 1. Click on task area on map
     await page.locator('canvas').click({
@@ -108,7 +108,7 @@ test.describe('mapper flow', () => {
 
     // 0. Temp Login
     await tempLogin(page);
-    await openFirstProject(page);
+    await openTestProject(page);
 
     // 1. Click on task area on map
     // click on task & assert task popup visibility
@@ -177,7 +177,7 @@ test.describe('mapper flow', () => {
 
     // 0. Temp Login
     await tempLogin(page);
-    await openFirstProject(page);
+    await openTestProject(page);
 
     await page.locator('canvas').click({
       position: {
