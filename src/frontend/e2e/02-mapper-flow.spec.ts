@@ -59,6 +59,7 @@ test.describe('mapper flow', () => {
 
     // 3. Mark task as fully mapped
     await page.getByRole('button', { name: 'MARK AS FULLY MAPPED' }).click();
+    // Required again for the confirmation dialog (0/4 features mapped)
     await page.getByRole('button', { name: 'MARK AS FULLY MAPPED' }).click();
     await page.waitForSelector('div:has-text("updated status to MAPPED"):nth-of-type(1)');
     await expect(

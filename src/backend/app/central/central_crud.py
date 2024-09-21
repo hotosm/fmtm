@@ -524,6 +524,10 @@ async def feature_geojson_to_entity_dict(
     feature: geojson.Feature,
 ) -> central_schemas.EntityDict:
     """Convert a single GeoJSON to an Entity dict for upload."""
+    if not isinstance(feature, (dict, geojson.Feature)):
+        log.error(f"Feature not in correct format: {feature}")
+        raise ValueError(f"Feature not in correct format: {type(feature)}")
+
     feature_id = feature.get("id")
 
     geometry = feature.get("geometry", {})
@@ -551,6 +555,8 @@ async def task_geojson_dict_to_entity_values(
     task_geojson_dict: dict[int, geojson.Feature],
 ) -> list[central_schemas.EntityDict]:
     """Convert a dict of task GeoJSONs into data for ODK Entity upload."""
+    log.debug("Converting dict of task GeoJSONs to Entity upload format")
+
     asyncio_tasks = []
     for _, geojson_dict in task_geojson_dict.items():
         # Extract the features list and pass each Feature through
@@ -573,6 +579,7 @@ async def create_entity_list(
     if properties is None:
         # Get the default properties for FMTM project
         properties = central_schemas.entity_fields_to_list()
+        log.debug(f"Using default FMTM properties for Entity creation: {properties}")
 
     async with central_deps.get_odk_dataset(odk_creds) as odk_central:
         # Step 1: create the Entity list, with properties

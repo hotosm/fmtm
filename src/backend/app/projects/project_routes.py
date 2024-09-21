@@ -638,11 +638,7 @@ async def task_split(
 
     """
     boundary_featcol = parse_geojson_file_to_featcol(await project_geojson.read())
-    print("HERE")
-    print(boundary_featcol)
     merged_boundary = merge_polygons(boundary_featcol, False)
-    print("HERE2")
-    print(merged_boundary)
     # Validatiing Coordinate Reference Systems
     await check_crs(merged_boundary)
 

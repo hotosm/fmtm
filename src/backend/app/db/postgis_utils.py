@@ -346,7 +346,7 @@ async def split_geojson_by_task_areas(
         log.error("Attempted geojson task splitting failed")
         return None
 
-    if feature_collections:
+    if feature_collections and len(feature_collections[0]) > 1:
         # NOTE the feature collections are nested in a tuple, first remove
         task_geojson_dict = {
             record[0]: geojson.loads(json.dumps(record[1]))
@@ -636,18 +636,19 @@ async def geojson_to_javarosa_geom(geojson_geometry: dict) -> str:
     geometry_type = geojson_geometry["type"]
 
     # Normalise single geometries into the same structure as multi-geometries
+    # We end up with three levels of nesting for the processing below
     if geometry_type == "Point":
+        # Format [x, y]
+        coordinates = [[coordinates]]
+    elif geometry_type in ["LineString", "MultiPoint"]:
+        # Format [[x, y], [x, y]]
         coordinates = [coordinates]
-    elif geometry_type == "LineString":
-        coordinates = [coordinates]
-    elif geometry_type == "MultiPoint":
-        pass  # already a list of points
     elif geometry_type in ["Polygon", "MultiLineString"]:
-        # Polygons and MultiLineStrings are lists of lists of coordinates
+        # Format [[[x, y], [x, y]]]
         pass
     elif geometry_type == "MultiPolygon":
-        # Flatten the structure for MultiPolygon
-        coordinates = sum(coordinates, [])
+        # Format [[[[x, y], [x, y]]]], flatten coords
+        coordinates = [coord for poly in coordinates for coord in poly]
     else:
         raise ValueError(f"Unsupported GeoJSON geometry type: {geometry_type}")
 
