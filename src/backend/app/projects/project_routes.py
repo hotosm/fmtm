@@ -625,8 +625,7 @@ async def task_split(
     """Split a task into subtasks.
 
     Args:
-        project_geojson (UploadFile): The geojson to split.
-            Should be a FeatureCollection.
+        project_geojson (UploadFile): The geojson (AOI) to split.
         extract_geojson (UploadFile, optional): Custom data extract geojson
             containing osm features (should be a FeatureCollection).
             If not included, an extract is generated automatically.
@@ -639,7 +638,11 @@ async def task_split(
 
     """
     boundary_featcol = parse_geojson_file_to_featcol(await project_geojson.read())
+    print("HERE")
+    print(boundary_featcol)
     merged_boundary = merge_polygons(boundary_featcol, False)
+    print("HERE2")
+    print(merged_boundary)
     # Validatiing Coordinate Reference Systems
     await check_crs(merged_boundary)
 

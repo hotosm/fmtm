@@ -551,6 +551,10 @@ async def check_crs(input_geojson: Union[dict, geojson.FeatureCollection]):
             first_coordinate = coordinates
             coordinates = coordinates[0]
 
+    error_message = (
+        "ERROR: The coordinates within the GeoJSON file are not valid. "
+        "Is the file empty?"
+    )
     if not is_valid_coordinate(first_coordinate):
         log.error(error_message)
         raise HTTPException(status_code=400, detail=error_message)
