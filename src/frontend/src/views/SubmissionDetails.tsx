@@ -154,7 +154,7 @@ const SubmissionDetails = () => {
   const newFeaturePoint = {
     type: 'Feature',
     geometry: {
-      ...restSubmissionDetails?.new_feature_point,
+      ...restSubmissionDetails?.new_feature,
     },
     properties: {},
   };
@@ -246,7 +246,7 @@ const SubmissionDetails = () => {
                 featureGeojson={
                   submissionDetailsLoading
                     ? {}
-                    : restSubmissionDetails?.new_feature === 'yes'
+                    : restSubmissionDetails?.new_feature
                       ? newFeaturePoint
                       : coordinatesArray
                         ? geojsonFeature
