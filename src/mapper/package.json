@@ -44,7 +44,7 @@
 	"dependencies": {
 		"@electric-sql/client": "^0.3.1",
 		"@electric-sql/pglite": "^0.2.4",
-		"@hotosm/ui": "0.2.0-b4",
+		"@hotosm/ui": "0.2.0-b5",
 		"@prisma/client": "4.8.1",
 		"@turf/bbox": "^7.0.0",
 		"@turf/buffer": "^7.0.0",

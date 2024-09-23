@@ -15,8 +15,8 @@ importers:
         specifier: ^0.2.4
         version: 0.2.4
       '@hotosm/ui':
-        specifier: 0.2.0-b4
-        version: 0.2.0-b4
+        specifier: 0.2.0-b5
+        version: 0.2.0-b5(@types/react@18.3.3)
       '@prisma/client':
         specifier: 4.8.1
         version: 4.8.1(prisma@4.8.1)
@@ -454,8 +454,8 @@ packages:
   '@floating-ui/utils@0.2.2':
     resolution: {integrity: sha512-J4yDIIthosAsRZ5CPYP/jQvUAQtlZTTD/4suA08/FEnlxqW3sKS9iAhgsa9VYLZ6vDHn/ixJgIqRQPotoBjxIw==}
 
-  '@hotosm/ui@0.2.0-b4':
-    resolution: {integrity: sha512-dSZSg8I7YgCx01LJKDy7xEt7Frdju0P16hZiXMnhC9YxBZbCq0BFEs075gl1HioemMpdPrZ/cU7RNqs4RzR/kQ==}
+  '@hotosm/ui@0.2.0-b5':
+    resolution: {integrity: sha512-5m4z7WhSyzmDTa2g71IcVie2jUMlxnOoZtn5DHMdCjhW8OQXn63vB+j1OTAI1Np8mEWgc1oqT83GvGqLmmPx0Q==}
     engines: {node: '>=14.17'}
 
   '@humanwhocodes/config-array@0.11.14':
@@ -675,6 +675,10 @@ packages:
 
   '@shoelace-style/shoelace@2.15.1':
     resolution: {integrity: sha512-3ecUw8gRwOtcZQ8kWWkjk4FTfObYQ/XIl3aRhxprESoOYV1cYhloYPsmQY38UoL3+pwJiZb5+LzX0l3u3Zl0GA==}
+    engines: {node: '>=14.17.0'}
+
+  '@shoelace-style/shoelace@2.17.1':
+    resolution: {integrity: sha512-fB9+bPHLg5zVwPbBKEqY3ghyttkJq9RuUzFMTZKweKrNKKDMUACtI8DlMYUqNwpdZMJhf7a0xeak6vFVBSxcbQ==}
     engines: {node: '>=14.17.0'}
 
   '@sinclair/typebox@0.27.8':
@@ -1083,6 +1087,13 @@ packages:
   chokidar@3.6.0:
     resolution: {integrity: sha512-7VT13fmjotKpGipCW9JEQAusEPE+Ei8nl6/g4FBAmIm0GOOLMua9NDDo/DWp0ZAxCr3cPq5ZpBqmPAQgDda2Pw==}
     engines: {node: '>= 8.10.0'}
+
+  class-variance-authority@0.7.0:
+    resolution: {integrity: sha512-jFI8IQw4hczaL4ALINxqLEXQbWcNjoSkloa4IaufXCJr6QawJyw7tuRysRsrE8w2p/4gGaxKIt/hX3qz/IbD1A==}
+
+  clsx@2.0.0:
+    resolution: {integrity: sha512-rQ1+kcj+ttHG0MKVGBUXwayCCF1oh39BF5COIpRzuCEv8Mwjv0XucrI2ExNTOn9IlLifGClWQcU9BrZORvtw6Q==}
+    engines: {node: '>=6'}
 
   code-red@1.0.4:
     resolution: {integrity: sha512-7qJWqItLA8/VPVlKJlFXU+NBlo/qyfs39aJcuMT/2ere32ZqvF5OSxgdM5xOfJJ7O429gg2HM47y8v9P+9wrNw==}
@@ -1822,11 +1833,20 @@ packages:
   lit-element@4.0.6:
     resolution: {integrity: sha512-U4sdJ3CSQip7sLGZ/uJskO5hGiqtlpxndsLr6mt3IQIjheg93UKYeGQjWMRql1s/cXNOaRrCzC2FQwjIwSUqkg==}
 
+  lit-element@4.1.0:
+    resolution: {integrity: sha512-gSejRUQJuMQjV2Z59KAS/D4iElUhwKpIyJvZ9w+DIagIQjfJnhR20h2Q5ddpzXGS+fF0tMZ/xEYGMnKmaI/iww==}
+
   lit-html@3.1.4:
     resolution: {integrity: sha512-yKKO2uVv7zYFHlWMfZmqc+4hkmSbFp8jgjdZY9vvR9jr4J8fH6FUMXhr+ljfELgmjpvlF7Z1SJ5n5/Jeqtc9YA==}
 
+  lit-html@3.2.0:
+    resolution: {integrity: sha512-pwT/HwoxqI9FggTrYVarkBKFN9MlTUpLrDHubTmW4SrkL3kkqW5gxwbxMMUnbbRHBC0WTZnYHcjDSCM559VyfA==}
+
   lit@3.1.4:
     resolution: {integrity: sha512-q6qKnKXHy2g1kjBaNfcoLlgbI3+aSOZ9Q4tiGa9bGYXq5RBXxkVTqTIVmP2VWMp29L4GyvCFm8ZQ2o56eUAMyA==}
+
+  lit@3.2.0:
+    resolution: {integrity: sha512-s6tI33Lf6VpDu7u4YqsSX78D28bYQulM+VAzsGch4fx2H0eLZnJsUBsPWmGYSGoKDNbjtRv02rio1o+UdPVwvw==}
 
   local-pkg@0.5.0:
     resolution: {integrity: sha512-ok6z3qlYyCDS4ZEU27HaU6x/xZa9Whf8jD4ptH5UZTQYZVYeb9bnZ3ojVhiJNLiXK1Hfc0GNbLXcmZ5plLDDBg==}
@@ -2948,7 +2968,13 @@ snapshots:
 
   '@floating-ui/utils@0.2.2': {}
 
-  '@hotosm/ui@0.2.0-b4': {}
+  '@hotosm/ui@0.2.0-b5(@types/react@18.3.3)':
+    dependencies:
+      '@shoelace-style/shoelace': 2.17.1(@types/react@18.3.3)
+      class-variance-authority: 0.7.0
+      lit: 3.2.0
+    transitivePeerDependencies:
+      - '@types/react'
 
   '@humanwhocodes/config-array@0.11.14':
     dependencies:
@@ -3137,6 +3163,19 @@ snapshots:
       '@shoelace-style/localize': 3.1.2
       composed-offset-position: 0.0.4
       lit: 3.1.4
+      qr-creator: 1.0.0
+    transitivePeerDependencies:
+      - '@types/react'
+
+  '@shoelace-style/shoelace@2.17.1(@types/react@18.3.3)':
+    dependencies:
+      '@ctrl/tinycolor': 4.1.0
+      '@floating-ui/dom': 1.6.5
+      '@lit/react': 1.0.5(@types/react@18.3.3)
+      '@shoelace-style/animations': 1.1.0
+      '@shoelace-style/localize': 3.1.2
+      composed-offset-position: 0.0.4
+      lit: 3.2.0
       qr-creator: 1.0.0
     transitivePeerDependencies:
       - '@types/react'
@@ -3701,6 +3740,12 @@ snapshots:
       readdirp: 3.6.0
     optionalDependencies:
       fsevents: 2.3.3
+
+  class-variance-authority@0.7.0:
+    dependencies:
+      clsx: 2.0.0
+
+  clsx@2.0.0: {}
 
   code-red@1.0.4:
     dependencies:
@@ -4371,7 +4416,17 @@ snapshots:
       '@lit/reactive-element': 2.0.4
       lit-html: 3.1.4
 
+  lit-element@4.1.0:
+    dependencies:
+      '@lit-labs/ssr-dom-shim': 1.2.0
+      '@lit/reactive-element': 2.0.4
+      lit-html: 3.2.0
+
   lit-html@3.1.4:
+    dependencies:
+      '@types/trusted-types': 2.0.7
+
+  lit-html@3.2.0:
     dependencies:
       '@types/trusted-types': 2.0.7
 
@@ -4380,6 +4435,12 @@ snapshots:
       '@lit/reactive-element': 2.0.4
       lit-element: 4.0.6
       lit-html: 3.1.4
+
+  lit@3.2.0:
+    dependencies:
+      '@lit/reactive-element': 2.0.4
+      lit-element: 4.1.0
+      lit-html: 3.2.0
 
   local-pkg@0.5.0:
     dependencies:
