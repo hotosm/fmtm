@@ -1,5 +1,5 @@
 <script lang="ts">
-  import '@hotosm/ui/dist/components';
+  import '@hotosm/ui/dist/hotosm-ui';
   import { createEventDispatcher } from 'svelte';
   import type { Task_history } from '$lib/migrations';
 

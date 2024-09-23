@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '@hotosm/ui/dist/style.css';
-	import '@hotosm/ui/dist/components.js';
-	import { setBasePath } from '@hotosm/ui/dist/components';
+	import '@hotosm/ui/dist/hotosm-ui';
+	import { setBasePath } from '@hotosm/ui/dist/hotosm-ui';
 
 	setBasePath('/mapnow');
 

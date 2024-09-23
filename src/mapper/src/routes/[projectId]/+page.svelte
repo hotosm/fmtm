@@ -1,5 +1,5 @@
 <script lang="ts">
-	import '@hotosm/ui/dist/components'
+	import '@hotosm/ui/dist/hotosm-ui'
 	import SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.component.js' 
 	import type { PageData } from '../$types';
 	import { onMount, onDestroy } from 'svelte';
