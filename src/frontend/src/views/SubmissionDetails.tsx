@@ -94,11 +94,7 @@ const SubmissionDetails = () => {
   const projectDashboardLoading = useAppSelector((state) => state.project.projectDashboardLoading);
   const submissionDetails = useAppSelector((state) => state.submission.submissionDetails);
   const submissionDetailsLoading = useAppSelector((state) => state.submission.submissionDetailsLoading);
-  const taskId = submissionDetails?.task_id
-    ? submissionDetails?.task_id
-    : submissionDetails?.task_filter
-      ? submissionDetails?.task_filter
-      : '-';
+  const taskId = submissionDetails?.task_id ? submissionDetails?.task_id : '-';
 
   const { start, end, today, deviceid, ...restSubmissionDetails } = submissionDetails || {};
   const dateDeviceDetails = { start, end, today, deviceid };
