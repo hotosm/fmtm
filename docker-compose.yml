@@ -138,7 +138,7 @@ services:
       - ./src/mapper:/app
       - /app/node_modules/
       - /app/.svelte-kit/
-      - ../ui:/app/node_modules/@hotosm/ui:ro
+      # - ../ui:/app/node_modules/@hotosm/ui:ro
     environment:
       - VITE_API_URL=${API_URL:-http://api.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}}
     networks:
