@@ -44,7 +44,7 @@ dependencies = [
     "cryptography>=42.0.8",
     "pyjwt>=2.8.0",
     "async-lru>=2.0.4",
-    "osm-fieldwork>=0.16.5rc0",
+    "osm-fieldwork>=0.16.5",
     "osm-login-python==2.0.0",
     "osm-rawdata==0.3.2",
     "fmtm-splitter==1.3.1",
@@ -147,7 +147,7 @@ update_changelog_on_bump = true
 [tool.sqlfluff.core]
 dialect = "postgres"
 large_file_skip_byte_limit = 30000  # Required to process fmtm_base_schema.sql
-exclude_rules = "CP05"  # Avoid capitalisation of enums
+exclude_rules = "CP05, RF02"  # Avoid capitalisation of enums
 
 [tool.codespell]
 skip = "contrib/*.py,*languages_and_countries.py,*pnpm-lock.yaml,*CHANGELOG.md"
