@@ -967,6 +967,7 @@ async def generate_project_files(
         )
 
         # Add the feature counts for each task
+        # FIXME this logic could probably be better
         task_feature_counts = [
             (
                 task.id,
