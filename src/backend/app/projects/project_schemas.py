@@ -17,7 +17,6 @@
 #
 """Pydantic schemas for Projects."""
 
-from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, List, Optional, Union
 
@@ -141,7 +140,7 @@ class DbProject(BaseModel):
     """Project from database."""
 
     outline: Any = Field(exclude=True)
-    forms: Any = Field(exclude=True)
+    odk_form_id: Optional[str] = Field(exclude=True)
 
     id: int
     odkid: int
@@ -195,10 +194,13 @@ class DbProject(BaseModel):
     @computed_field
     @property
     def xform_id(self) -> Optional[str]:
-        """Compute the XForm ID from the linked DbXForm."""
-        if not self.forms:
+        """Generate from odk_form_id.
+
+        TODO this could be refactored out in future.
+        """
+        if not self.odk_form_id:
             return None
-        return self.forms[0].get("odk_form_id")
+        return self.odk_form_id
 
 
 class ProjectIn(BaseModel):

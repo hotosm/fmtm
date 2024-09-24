@@ -77,14 +77,6 @@ async def get_project_by_id(
                 'id', project_author.id,
                 'username', project_author.username
             ) AS author,
-            JSON_AGG(
-                JSON_BUILD_OBJECT(
-                    'id', x.id,
-                    'project_id', x.project_id,
-                    'odk_form_id', x.odk_form_id,
-                    'category', x.category
-                )
-            ) AS forms,
             COALESCE(
                 JSON_AGG(
                     JSON_BUILD_OBJECT(
@@ -117,15 +109,13 @@ async def get_project_by_id(
         LEFT JOIN
             tasks t ON p.id = t.project_id
         LEFT JOIN
-            xforms x ON p.id = x.project_id
-        LEFT JOIN
             latest_task_history latest_th ON t.id = latest_th.task_id
         LEFT JOIN
             users latest_user ON latest_th.user_id = latest_user.id
         WHERE
             p.id = :project_id
         GROUP BY
-            p.id, pi.project_id, project_author.id, x.id;
+            p.id, pi.project_id, project_author.id;
     """)
 
     result = db.execute(query, {"project_id": project_id})

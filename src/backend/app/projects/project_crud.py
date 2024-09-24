@@ -245,7 +245,6 @@ async def delete_fmtm_project(db: Session, project_id: int) -> None:
             DELETE FROM user_roles WHERE project_id = :project_id;
             DELETE FROM task_history WHERE project_id = :project_id;
             DELETE FROM tasks WHERE project_id = :project_id;
-            DELETE FROM xforms WHERE project_id = :project_id;
             DELETE FROM project_info WHERE project_id = :project_id;
             DELETE FROM projects WHERE id = :project_id;
         """)
