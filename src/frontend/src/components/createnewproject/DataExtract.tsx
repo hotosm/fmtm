@@ -254,7 +254,7 @@ const DataExtract = ({
                     resetFile(setCustomDataExtractUpload);
                     generateDataExtract();
                   }}
-                  className="fmtm-mt-6 fmtm-text-base"
+                  className="fmtm-mt-4 !fmtm-mb-8 fmtm-text-base"
                   isLoading={isFgbFetching}
                   loadingText="Generating Map Features..."
                   disabled={dataExtractGeojson && customDataExtractUpload ? true : false}
@@ -279,42 +279,48 @@ const DataExtract = ({
                   />
                 </>
               )}
-              <div className="fmtm-mt-4">
-                <CustomCheckbox
-                  key="uploadAdditionalFeature"
-                  label="Upload Additional Features"
-                  checked={formValues?.hasAdditionalFeature}
-                  onCheckedChange={(status) => {
-                    handleCustomChange('hasAdditionalFeature', status);
-                    setAdditionalFeature(null);
-                  }}
-                  className="fmtm-text-black"
-                  labelClickable
-                />
-                {formValues?.hasAdditionalFeature && (
-                  <>
-                    <FileInputComponent
-                      onChange={async (e) => {
-                        if (e?.target?.files) {
-                          const uploadedFile = e?.target?.files[0];
-                          setAdditionalFeature(uploadedFile);
-                          const additionalFeatureGeojson = await convertFileToFeatureCol(uploadedFile);
-                          dispatch(CreateProjectActions.SetAdditionalFeatureGeojson(additionalFeatureGeojson));
-                        }
-                      }}
-                      onResetFile={() => {
-                        resetFile(setAdditionalFeature);
-                        dispatch(CreateProjectActions.SetAdditionalFeatureGeojson(null));
-                      }}
-                      customFile={additionalFeature}
-                      btnText="Upload Additional Features"
-                      accept=".geojson"
-                      fileDescription="*The supported file formats are .geojson"
-                      errorMsg={errors.additionalFeature}
-                    />
-                  </>
-                )}
-              </div>
+              {extractWays && (
+                <div className="fmtm-mt-4">
+                  <CustomCheckbox
+                    key="uploadAdditionalFeature"
+                    label="Upload Additional Features"
+                    checked={formValues?.hasAdditionalFeature}
+                    onCheckedChange={(status) => {
+                      handleCustomChange('hasAdditionalFeature', status);
+                      handleCustomChange('additionalFeature', null);
+                      dispatch(CreateProjectActions.SetAdditionalFeatureGeojson(null));
+                      setAdditionalFeature(null);
+                    }}
+                    className="fmtm-text-black"
+                    labelClickable
+                  />
+                  {formValues?.hasAdditionalFeature && (
+                    <>
+                      <FileInputComponent
+                        onChange={async (e) => {
+                          if (e?.target?.files) {
+                            const uploadedFile = e?.target?.files[0];
+                            setAdditionalFeature(uploadedFile);
+                            handleCustomChange('additionalFeature', uploadedFile);
+                            const additionalFeatureGeojson = await convertFileToFeatureCol(uploadedFile);
+                            dispatch(CreateProjectActions.SetAdditionalFeatureGeojson(additionalFeatureGeojson));
+                          }
+                        }}
+                        onResetFile={() => {
+                          resetFile(setAdditionalFeature);
+                          dispatch(CreateProjectActions.SetAdditionalFeatureGeojson(null));
+                          handleCustomChange('additionalFeature', null);
+                        }}
+                        customFile={additionalFeature}
+                        btnText="Upload Additional Features"
+                        accept=".geojson"
+                        fileDescription="*The supported file formats are .geojson"
+                        errorMsg={errors.additionalFeature}
+                      />
+                    </>
+                  )}
+                </div>
+              )}
             </div>
             <div className="fmtm-flex fmtm-gap-5 fmtm-mx-auto fmtm-mt-10 fmtm-my-5">
               <Button
