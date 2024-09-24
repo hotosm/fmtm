@@ -762,14 +762,27 @@ async def generate_files(
     )
     # Write XLS form content to db
     xlsform_bytes = project_xlsform.getvalue()
-    if not xlsform_bytes:
+    if len(xlsform_bytes) == 0 or not xform_id:
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail="There was an error with the XLSForm!",
+            detail="There was an error modifying the XLSForm!",
         )
-    project.odk_form_id = xform_id
-    project.xlsform_content = xlsform_bytes
-    db.commit()
+    log.debug(f"Setting project XLSForm db data for xFormId: {xform_id}")
+    query = text("""
+        UPDATE public.projects
+        SET
+            odk_form_id = :odk_form_id,
+            xlsform_content = :xlsform_content
+        WHERE id = :project_id;
+    """)
+    db.execute(
+        query,
+        {
+            "project_id": project_id,
+            "odk_form_id": xform_id,
+            "xlsform_content": xlsform_bytes,
+        },
+    )
 
     # Create task in db and return uuid
     log.debug(f"Creating export background task for project ID: {project_id}")

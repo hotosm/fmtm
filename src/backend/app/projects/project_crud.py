@@ -923,6 +923,8 @@ async def generate_project_files(
 
         # Split extract by task area
         log.debug("Splitting data extract per task area")
+        # TODO in future this splitting could be removed as the task_id is
+        # no longer used in the XLSForm
         task_extract_dict = await split_geojson_by_task_areas(
             db, feature_collection, project_id
         )
@@ -934,7 +936,7 @@ async def generate_project_files(
                 detail="Failed splitting extract by tasks.",
             )
 
-        # Get ODK Project ID
+        # Get ODK Project details
         project_odk_id = project.odkid
         project_xlsform = project.xlsform_content
         project_odk_form_id = project.odk_form_id
@@ -950,20 +952,51 @@ async def generate_project_files(
             f"Setting encrypted odk token for FMTM project ({project_id}) "
             f"ODK project {project_odk_id}: {encrypted_odk_token}"
         )
+        query = text("""
+            UPDATE public.projects
+            SET
+                odk_token = :encrypted_odk_token
+            WHERE id = :project_id;
+        """)
+        db.execute(
+            query,
+            {
+                "project_id": project_id,
+                "encrypted_odk_token": encrypted_odk_token,
+            },
+        )
 
-        project.odk_token = encrypted_odk_token
-
-        for task in project.tasks:
-            # Add task feature count to task
-            task_features = task_extract_dict.get(task.project_task_index, {})
-            feature_count = len(task_features.get("features", []))
-            task.feature_count = feature_count
-            log.debug(
-                f"{feature_count} features added for task {task.project_task_index}"
+        # Add the feature counts for each task
+        task_feature_counts = [
+            (
+                task.id,
+                len(
+                    task_extract_dict.get(task.project_task_index, {}).get(
+                        "features", []
+                    )
+                ),
             )
-
-        # Commit all updated database records
-        db.commit()
+            for task in project.tasks
+        ]
+        sql = """
+            WITH task_update(id, feature_count) AS (
+                VALUES {}
+            )
+            UPDATE
+                public.tasks t
+            SET
+                feature_count = tu.feature_count
+            FROM
+                task_update tu
+            WHERE
+                t.id = tu.id;
+        """
+        value_placeholders = ", ".join(
+            f"({task_id}, {feature_count})"
+            for task_id, feature_count in task_feature_counts
+        )
+        formatted_sql = sql.format(value_placeholders)
+        db.execute(text(formatted_sql))
 
         if background_task_id:
             # Update background task status to COMPLETED

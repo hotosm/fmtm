@@ -155,7 +155,7 @@ SET default_table_access_method = heap;
 
 -- Tables
 
-CREATE TABLE IF NOT EXISTS public."_migrations" (
+CREATE TABLE IF NOT EXISTS public._migrations (
     script_name text,
     date_executed timestamp with time zone
 );
