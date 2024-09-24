@@ -329,9 +329,7 @@ async def get_submission_form_fields(
     project = project_user.get("project")
     odk_credentials = await project_deps.get_odk_credentials(db, project.id)
     odk_form = central_crud.get_odk_form(odk_credentials)
-    db_xform = await project_deps.get_project_xform(db, project.id)
-
-    return odk_form.formFields(project.odkid, db_xform.odk_form_id)
+    return odk_form.formFields(project.odkid, project.odk_form_id)
 
 
 @router.get("/submission_table")
@@ -414,20 +412,6 @@ async def submission_table(
     return response
 
 
-@router.get("/{submission_id}")
-async def submission_detail(
-    submission_id: str,
-    db: Session = Depends(database.get_db),
-    project_user: ProjectUserDict = Depends(mapper),
-) -> dict:
-    """This api returns the submission detail of individual submission."""
-    project = project_user.get("project")
-    submission_detail = await submission_crud.get_submission_detail(
-        submission_id, project, db
-    )
-    return submission_detail
-
-
 @router.post("/update_review_state")
 async def update_review_state(
     instance_id: str,
@@ -440,11 +424,10 @@ async def update_review_state(
         project = current_user.get("project")
         odk_creds = await project_deps.get_odk_credentials(db, project.id)
         odk_project = central_crud.get_odk_project(odk_creds)
-        db_xform = await project_deps.get_project_xform(db, project.id)
 
         response = odk_project.updateReviewState(
             project.odkid,
-            db_xform.odk_form_id,
+            project.odk_form_id,
             instance_id,
             {"reviewState": review_state},
         )
@@ -528,6 +511,20 @@ async def conflate_geojson(
         raise HTTPException(
             status_code=500, detail=f"Failed to process conflation: {str(e)}"
         ) from e
+
+
+@router.get("/{submission_id}")
+async def submission_detail(
+    submission_id: str,
+    db: Session = Depends(database.get_db),
+    project_user: ProjectUserDict = Depends(mapper),
+) -> dict:
+    """This api returns the submission detail of individual submission."""
+    project = project_user.get("project")
+    submission_detail = await submission_crud.get_submission_detail(
+        submission_id, project, db
+    )
+    return submission_detail
 
 
 @router.get("/{submission_id}/photos")
