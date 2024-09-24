@@ -26,7 +26,6 @@ export type CreateProjectStateTypes = {
   drawnGeojson: DrawnGeojsonTypes | null;
   drawToggle: boolean;
   validateCustomFormLoading: boolean;
-  validateCustomFormResponse: ValidateCustomFormResponse | null;
   uploadAreaSelection: string;
   totalAreaSelection: string | null;
   splitTasksSelection: task_split_type | null;
@@ -38,6 +37,8 @@ export type CreateProjectStateTypes = {
   isFgbFetching: boolean;
   toggleSplittedGeojsonEdit: boolean;
   customFileValidity: boolean;
+  validatedCustomForm: any;
+  additionalFeatureGeojson: GeoJSONFeatureTypes | null;
 };
 export type ValidateCustomFormResponse = {
   detail: { message: string; possible_reason: string };
@@ -113,7 +114,8 @@ export type ProjectDetailsTypes = {
   per_task_instructions?: string;
   custom_tms_url: string;
   hasCustomTMS: boolean;
-  hasGeojsonLineString: boolean;
+  customFormUpload: any;
+  hasAdditionalFeature: boolean;
 };
 
 export type ProjectAreaTypes = {

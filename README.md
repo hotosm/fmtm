@@ -24,7 +24,7 @@
 | **Code Style** | | [![Backend Style](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/format.json&labelColor=202235)](https://github.com/astral-sh/ruff) [![Frontend Style](https://img.shields.io/badge/code%20style-prettier-F7B93E?logo=Prettier)](https://github.com/prettier/prettier) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com) |
 | **Quality** | | [![Coverage](https://docs.fmtm.dev/coverage.svg)](https://docs.fmtm.dev/coverage.html) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9218/badge)](https://www.bestpractices.dev/projects/9218) |
 | **Community** | | [![Slack](https://img.shields.io/badge/Slack-Join%20the%20community!-d63f3f?style=for-the-badge&logo=slack&logoColor=d63f3f)](https://slack.hotosm.org) [![All Contributors](https://img.shields.io/github/all-contributors/hotosm/fmtm?color=ee8449&style=flat-square)](#contributors-) |
-| **Other Info** | | [![docs](https://github.com/hotosm/fmtm/blob/development/docs/images/docs_badge.svg?raw=true)](https://docs.fmtm.dev/) [![user-roadmap](https://github.com/hotosm/fmtm/blob/development/docs/images/user_roadmap_badge.svg?raw=true)](https://docs.fmtm.dev/user-roadmap) [![dev-roadmap](https://github.com/hotosm/fmtm/blob/development/docs/images/dev_roadmap_badge.svg?raw=true)](https://roadmap.fmtm.dev) [![timeline](https://github.com/hotosm/fmtm/blob/development/docs/images/timeline_badge.svg?raw=true)](https://docs.fmtm.dev/timeline) [![license](https://img.shields.io/github/license/hotosm/fmtm.svg)](https://github.com/hotosm/fmtm/blob/main/LICENSE.md) |
+| **Other Info** | | [![docs](https://github.com/hotosm/fmtm/blob/development/docs/images/docs_badge.svg?raw=true)](https://docs.fmtm.dev/) [![dev-roadmap](https://github.com/hotosm/fmtm/blob/development/docs/images/dev_roadmap_badge.svg?raw=true)](https://roadmap.fmtm.dev) [![timeline](https://github.com/hotosm/fmtm/blob/development/docs/images/timeline_badge.svg?raw=true)](https://docs.fmtm.dev/timeline) [![license](https://img.shields.io/github/license/hotosm/fmtm.svg)](https://github.com/hotosm/fmtm/blob/main/LICENSE.md) |
 
 </div>
 
@@ -40,9 +40,11 @@ the purpose of tagging the features with _field-verified_ information.
 While there are many excellent applications for tagging map features already,
 the FMTM aims to solve the problem of **coordinating** field mapping campaigns.
 
-> More details can be found in this
+> More details can be found here:
 > [overview](https://www.hotosm.org/updates/field-mapping-tasking-manager-fmtm),
-> [timeline](./docs/timeline.md) and the [docs](https://docs.fmtm.dev) page.
+> [timeline](https://docs.fmtm.dev/timeline),
+> [docs](https://docs.fmtm.dev) page, and the
+> [FAQ](https://docs.fmtm.dev/about/faq).
 
 ## How FMTM Works
 
@@ -103,6 +105,38 @@ curl --proto '=https' --tlsv1.2 -sSf https://get.fmtm.dev | bash
 
 Alternatively see the [docs](https://docs.fmtm.dev) for various deployment guides.
 
+## Roadmap
+
+<!-- prettier-ignore-start -->
+| Status | Feature |
+|:--:| :-- |
+|✅| 🖥️ project area splitting avoiding roads, rivers, railways |
+|✅| 🖥️ XLSForm generation in ODK Central |
+|✅| 📱 mapping of project via survey in ODK Collect mobile app |
+|✅| 📱 locking & unlocking of tasks to coordinate mapping |
+|✅| 📱 download base imagery & geolocation for in the field |
+|✅| 🖥️ view mapper submissions in the FMTM dashboard |
+|✅| 📢 Beta Release |
+|✅| 🖥️ & 📱 basic user tutorials and usage guides |
+|⚙️| 📱 open ODK Collect with feature already selected |
+|⚙️| 📱 live updates during mapping (if online) |
+| | 🖥️ export (+merge) the final data to OpenStreetMap |
+| | 🖥️ organization creation |
+| | 🖥️ simplify project creation with basic / advanced workflows |
+| | 🖥️ refinements to task splitting algorithm |
+| | 🖥️ improvements to the validation criteria and workflow |
+| | 🖥️ Field Admin role |
+| | 📱 fully offline FMTM (± small field-based device) |
+<!-- prettier-ignore-end -->
+
+> [!Note]
+> 📱 for mobile / mappers
+>
+> 🖥️ for desktop / managers / validators
+
+A more developer-facing roadmap can be found
+[here](https://roadmap.fmtm.dev).
+
 ## Contributors ✨
 
 Here's how you can contribute:
@@ -122,7 +156,7 @@ Thanks goes to these wonderful people:
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="http://ivangayton.net"><img src="https://avatars.githubusercontent.com/u/5991943?v=4?s=100" width="100px;" alt="Ivan Gayton"/><br /><sub><b>Ivan Gayton</b></sub></a><br /><a href="#projectManagement-ivangayton" title="Project Management">📆</a> <a href="https://github.com/hotosm/fmtm/commits?author=ivangayton" title="Code">💻</a> <a href="https://github.com/hotosm/fmtm/pulls?q=is%3Apr+reviewed-by%3Aivangayton" title="Reviewed Pull Requests">👀</a> <a href="#ideas-ivangayton" title="Ideas, Planning, & Feedback">🤔</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/robsavoye"><img src="https://avatars.githubusercontent.com/u/71342768?v=4?s=100" width="100px;" alt="Rob Savoye"/><br /><sub><b>Rob Savoye</b></sub></a><br /><a href="#maintenance-robsavoye" title="Maintenance">🚧</a> <a href="#mentoring-robsavoye" title="Mentoring">🧑‍🏫</a> <a href="https://github.com/hotosm/fmtm/commits?author=robsavoye" title="Code">💻</a> <a href="https://github.com/hotosm/fmtm/pulls?q=is%3Apr+reviewed-by%3Arobsavoye" title="Reviewed Pull Requests">👀</a> <a href="#ideas-robsavoye" title="Ideas, Planning, & Feedback">🤔</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ramyaragupathy"><img src="https://avatars.githubusercontent.com/u/12103383?v=4?s=100" width="100px;" alt="Ramya"/><br /><sub><b>Ramya</b></sub></a><br /><a href="https://github.com/hotosm/fmtm/issues?q=author%3Aramyaragupathy" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ramyaragupathy"><img src="https://avatars.githubusercontent.com/u/12103383?v=4?s=100" width="100px;" alt="Ramya"/><br /><sub><b>Ramya</b></sub></a><br /><a href="https://github.com/hotosm/fmtm/issues?q=author%3Aramyaragupathy" title="Bug reports">🐛</a> <a href="https://github.com/hotosm/fmtm/commits?author=ramyaragupathy" title="Documentation">📖</a> <a href="#ideas-ramyaragupathy" title="Ideas, Planning, & Feedback">🤔</a> <a href="#content-ramyaragupathy" title="Content">🖋</a> <a href="#design-ramyaragupathy" title="Design">🎨</a> <a href="#projectManagement-ramyaragupathy" title="Project Management">📆</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://spwoodcock.dev"><img src="https://avatars.githubusercontent.com/u/78538841?v=4?s=100" width="100px;" alt="Sam"/><br /><sub><b>Sam</b></sub></a><br /><a href="https://github.com/hotosm/fmtm/commits?author=spwoodcock" title="Code">💻</a> <a href="https://github.com/hotosm/fmtm/pulls?q=is%3Apr+reviewed-by%3Aspwoodcock" title="Reviewed Pull Requests">👀</a> <a href="#infra-spwoodcock" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#ideas-spwoodcock" title="Ideas, Planning, & Feedback">🤔</a> <a href="#maintenance-spwoodcock" title="Maintenance">🚧</a> <a href="#mentoring-spwoodcock" title="Mentoring">🧑‍🏫</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/susmina94"><img src="https://avatars.githubusercontent.com/u/108750444?v=4?s=100" width="100px;" alt="Susmina_Manandhar"/><br /><sub><b>Susmina_Manandhar</b></sub></a><br /><a href="https://github.com/hotosm/fmtm/commits?author=susmina94" title="Documentation">📖</a> <a href="#ideas-susmina94" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/hotosm/fmtm/issues?q=author%3Asusmina94" title="Bug reports">🐛</a> <a href="#mentoring-susmina94" title="Mentoring">🧑‍🏫</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/manjitapandey"><img src="https://avatars.githubusercontent.com/u/97273021?v=4?s=100" width="100px;" alt="Manjita Pandey"/><br /><sub><b>Manjita Pandey</b></sub></a><br /><a href="https://github.com/hotosm/fmtm/issues?q=author%3Amanjitapandey" title="Bug reports">🐛</a> <a href="https://github.com/hotosm/fmtm/commits?author=manjitapandey" title="Documentation">📖</a> <a href="#ideas-manjitapandey" title="Ideas, Planning, & Feedback">🤔</a> <a href="#content-manjitapandey" title="Content">🖋</a> <a href="#design-manjitapandey" title="Design">🎨</a> <a href="#projectManagement-manjitapandey" title="Project Management">📆</a></td>
@@ -174,6 +208,7 @@ Thanks goes to these wonderful people:
     </tr>
   </tfoot>
 </table>
+
 <!-- markdownlint-restore -->
 <!-- prettier-ignore-end -->
 

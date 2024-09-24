@@ -6,7 +6,6 @@ import ActivitiesPanel from '@/components/ProjectDetailsV2/ActivitiesPanel';
 import { ProjectById, GetEntityInfo } from '@/api/Project';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import CustomizedSnackbar from '@/utilities/CustomizedSnackbar';
-import OnScroll from '@/hooks/OnScroll';
 import { HomeActions } from '@/store/slices/HomeSlice';
 import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
@@ -41,6 +40,7 @@ import { readFileFromOPFS } from '@/api/Files';
 import DebugConsole from '@/utilities/DebugConsole';
 import { CustomCheckbox } from '@/components/common/Checkbox';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
+import QrcodeComponent from '@/components/QrcodeComponent';
 
 const ProjectDetailsV2 = () => {
   useDocumentTitle('Project Details');
@@ -53,7 +53,6 @@ const ProjectDetailsV2 = () => {
 
   const [mainView, setView] = useState<any>();
   const [selectedTaskArea, setSelectedTaskArea] = useState<Record<string, any> | null>(null);
-  console.log(selectedTaskArea, 'selectedTaskArea');
   const [selectedTaskFeature, setSelectedTaskFeature] = useState();
   const [dataExtractUrl, setDataExtractUrl] = useState<string | undefined>();
   const [dataExtractExtent, setDataExtractExtent] = useState(null);
@@ -105,10 +104,10 @@ const ProjectDetailsV2 = () => {
     dispatch(ProjectActions.SetNewProjectTrigger());
     if (state.projectTaskBoundries.findIndex((project) => project.id.toString() === projectId) == -1) {
       dispatch(ProjectActions.SetProjectTaskBoundries([]));
-      dispatch(ProjectById(state.projectTaskBoundries, projectId));
+      dispatch(ProjectById(projectId));
     } else {
       dispatch(ProjectActions.SetProjectTaskBoundries([]));
-      dispatch(ProjectById(state.projectTaskBoundries, projectId));
+      dispatch(ProjectById(projectId));
     }
     if (Object.keys(state.projectInfo)?.length == 0) {
       dispatch(ProjectActions.SetProjectInfo(projectInfo));
@@ -129,8 +128,6 @@ const ProjectDetailsV2 = () => {
     if (!map) return;
     Geolocation(map, geolocationStatus, dispatch);
   }, [geolocationStatus]);
-
-  const { y } = OnScroll(map, windowSize.width);
 
   useEffect(() => {
     if (!map) return;
@@ -305,7 +302,7 @@ const ProjectDetailsV2 = () => {
         />
       </div>
 
-      <div className="fmtm-flex fmtm-h-full sm:fmtm-p-6 fmtm-gap-6">
+      <div className="fmtm-flex fmtm-h-full fmtm-gap-6">
         <div className="fmtm-w-[22rem] fmtm-h-full sm:fmtm-block fmtm-hidden">
           <div className="fmtm-flex fmtm-justify-between fmtm-items-center fmtm-mb-4">
             {projectDetailsLoading ? (
@@ -326,7 +323,7 @@ const ProjectDetailsV2 = () => {
           </div>
           <div
             className="fmtm-flex fmtm-flex-col fmtm-gap-4 fmtm-flex-auto"
-            style={{ height: `${viewState === 'comments' ? 'calc(100% - 50px)' : 'calc(100% - 95px)'}` }}
+            style={{ height: `${viewState === 'comments' ? 'calc(100% - 63px)' : 'calc(100% - 103px)'}` }}
           >
             {projectDetailsLoading ? (
               <CoreModules.Skeleton className="!fmtm-w-[250px] fmtm-h-[25px]" />
@@ -515,7 +512,6 @@ const ProjectDetailsV2 = () => {
                   body={<MapLegends defaultTheme={defaultTheme} />}
                   header={
                     <div className="fmtm-flex fmtm-items-center fmtm-gap-1 sm:fmtm-gap-2">
-                      <AssetModules.LegendToggleIcon className=" fmtm-text-primaryRed" sx={{ fontSize: '25px' }} />
                       <p className="fmtm-text-base fmtm-font-normal">LEGEND</p>
                     </div>
                   }
@@ -537,7 +533,14 @@ const ProjectDetailsV2 = () => {
                   className="!fmtm-text-base !fmtm-pr-2"
                 />
               </div>
-              <MapControlComponent map={map} projectName={state?.projectInfo?.title || ''} />
+              <div className="fmtm-absolute fmtm-right-0 fmtm-top-0 fmtm-z-50 fmtm-hidden sm:fmtm-block">
+                <QrcodeComponent />
+              </div>
+              <MapControlComponent
+                map={map}
+                projectName={state?.projectInfo?.title || ''}
+                pmTileLayerData={customBasemapData}
+              />
             </MapComponent>
             <div
               className="fmtm-absolute fmtm-top-4 fmtm-left-4 fmtm-bg-white fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-red-50 fmtm-duration-300 fmtm-border-[1px] sm:fmtm-hidden fmtm-cursor-pointer"

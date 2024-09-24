@@ -21,8 +21,10 @@ import csv
 import json
 from io import BytesIO, StringIO
 from pathlib import Path
+from textwrap import dedent
 from uuid import uuid4
 
+import requests
 from fastapi import (
     APIRouter,
     Depends,
@@ -31,23 +33,22 @@ from fastapi import (
 )
 from fastapi.exceptions import HTTPException
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
+from loguru import logger as log
 from osm_fieldwork.xlsforms import xlsforms_path
-from requests import get
 
 from app.auth.auth_schemas import AuthUser
-from app.auth.osm import login_required
+from app.auth.osm import init_osm_auth, login_required
 from app.central import central_deps
 from app.central.central_crud import (
     convert_geojson_to_odk_csv,
     convert_odk_submission_json_to_geojson,
-    read_and_test_xform,
 )
 from app.config import settings
 from app.db.postgis_utils import (
     add_required_geojson_properties,
     featcol_keep_dominant_geom_type,
     javarosa_to_geojson_geom,
-    multipolygon_to_polygon,
+    multigeom_to_singlegeom,
     parse_geojson_file_to_featcol,
 )
 from app.models.enums import GeometryType, HTTPStatus, XLSFormType
@@ -110,31 +111,6 @@ async def append_required_geojson_properties(
         status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
         detail="Your geojson file is invalid.",
     )
-
-
-@router.post("/convert-xlsform-to-xform")
-async def convert_xlsform_to_xform(
-    xlsform: UploadFile,
-    current_user: AuthUser = Depends(login_required),
-):
-    """Convert XLSForm to XForm XML."""
-    filename = Path(xlsform.filename)
-    file_ext = filename.suffix.lower()
-
-    allowed_extensions = [".xls", ".xlsx"]
-    if file_ext not in allowed_extensions:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail="Provide a valid .xls or .xlsx file",
-        )
-
-    contents = await xlsform.read()
-    xform_data = await read_and_test_xform(
-        BytesIO(contents), file_ext, return_form_data=True
-    )
-
-    headers = {"Content-Disposition": f"attachment; filename={filename.stem}.xml"}
-    return Response(xform_data.getvalue(), headers=headers)
 
 
 @router.post("/convert-geojson-to-odk-csv")
@@ -249,7 +225,7 @@ async def get_raw_data_api_osm_token(
     The token returned by this endpoint should be used for the
     RAW_DATA_API_AUTH_TOKEN environment variable.
     """
-    response = get(f"{settings.RAW_DATA_API_URL}/auth/login")
+    response = requests.get(f"{settings.RAW_DATA_API_URL}/auth/login")
     if not response.ok:
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -288,7 +264,7 @@ async def flatten_multipolygons_to_polygons(
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail="No geometries present"
         )
-    multi_to_single_polygons = multipolygon_to_polygon(featcol)
+    multi_to_single_polygons = multigeom_to_singlegeom(featcol)
 
     if multi_to_single_polygons:
         headers = {
@@ -301,3 +277,55 @@ async def flatten_multipolygons_to_polygons(
         status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
         detail="Your geojson file is invalid.",
     )
+
+
+@router.post("/send-test-osm-message")
+async def send_test_osm_message(
+    request: Request,
+    current_user: AuthUser = Depends(login_required),
+    osm_auth=Depends(init_osm_auth),
+):
+    """Sends a test message to currently logged in OSM user."""
+    cookie_name = f"{settings.FMTM_DOMAIN.replace('.', '_')}_osm"
+    log.debug(f"Extracting OSM token from cookie {cookie_name}")
+    serialised_osm_token = request.cookies.get(cookie_name)
+    if not serialised_osm_token:
+        return HTTPException(
+            status_code=HTTPStatus.UNAUTHORIZED,
+            detail="You must be logged in to your OpenStreetMap account.",
+        )
+
+    # NOTE to get this far, the user must be logged in using OSM
+    osm_token = osm_auth.deserialize_data(serialised_osm_token)
+    # NOTE message content must be in markdown format
+    message_content = dedent("""
+        # Heading 1
+
+        ## Heading 2
+
+        Hello there!
+
+        This is a text message in markdown format.
+
+        > Notes section
+    """)
+    post_body = {
+        "recipient_id": 16289154,
+        # "recipient_id": current_user.id,
+        "title": "Test message from FMTM!",
+        "body": message_content,
+    }
+
+    email_url = f"{settings.OSM_URL}api/0.6/user/messages"
+    headers = {"Authorization": f"Bearer {osm_token}"}
+    log.debug(f"Sending message to user ({current_user.id}) via OSM API: {email_url}")
+    response = requests.post(email_url, headers=headers, data=post_body)
+
+    if response.status_code == 200:
+        log.info("Message sent successfully")
+    else:
+        msg = "Sending message via OSM failed"
+        log.error(f"{msg}: {response.text}")
+        return HTTPException(status_code=HTTPStatus.CONFLICT, detail=msg)
+
+    return Response(status_code=HTTPStatus.OK)

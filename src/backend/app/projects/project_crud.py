@@ -22,6 +22,7 @@ import uuid
 from asyncio import gather
 from io import BytesIO
 from pathlib import Path
+from traceback import extract_tb
 from typing import List, Optional, Union
 
 import geojson
@@ -35,13 +36,12 @@ from geoalchemy2.shape import to_shape
 from geojson.feature import Feature, FeatureCollection
 from loguru import logger as log
 from osm_fieldwork.basemapper import create_basemap_file
-from osm_fieldwork.xlsforms import xlsforms_path
 from osm_rawdata.postgres import PostgresClient
 from shapely.geometry import shape
 from sqlalchemy import and_, column, func, select, table, text
 from sqlalchemy.orm import Session
 
-from app.central import central_crud, central_deps
+from app.central import central_crud
 from app.config import settings
 from app.db import db_models
 from app.db.postgis_utils import (
@@ -53,7 +53,6 @@ from app.db.postgis_utils import (
     merge_polygons,
     parse_geojson_file_to_featcol,
     split_geojson_by_task_areas,
-    task_geojson_dict_to_entity_values,
     wkb_geom_to_feature,
 )
 from app.models.enums import HTTPStatus, ProjectRole, ProjectVisibility, XLSFormType
@@ -749,17 +748,17 @@ async def upload_custom_fgb_extract(
 async def get_data_extract_type(featcol: FeatureCollection) -> str:
     """Determine predominant geometry type for extract."""
     geom_type = get_featcol_dominant_geom_type(featcol)
-    if geom_type not in ["Polygon", "Polyline", "Point"]:
+    if geom_type not in ["Polygon", "LineString", "Point"]:
         msg = (
             "Extract does not contain valid geometry types, from 'Polygon' "
-            ", 'Polyline' and 'Point'."
+            ", 'LineString' and 'Point'."
         )
         log.error(msg)
         raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg)
     geom_name_map = {
         "Polygon": "polygon",
         "Point": "centroid",
-        "Polyline": "line",
+        "LineString": "line",
     }
     data_extract_type = geom_name_map.get(geom_type, "polygon")
 
@@ -835,73 +834,47 @@ def flatten_dict(d, parent_key="", sep="_"):
 
 
 async def generate_odk_central_project_content(
-    project: db_models.DbProject,
+    project_odk_id: int,
+    project_odk_form_id: str,
     odk_credentials: project_schemas.ODKCentralDecrypted,
     xlsform: BytesIO,
-    form_category: str,
-    form_file_ext: str,
-    task_extract_dict: dict,
-    db: Session,
+    task_extract_dict: dict[int, geojson.FeatureCollection],
 ) -> str:
     """Populate the project in ODK Central with XForm, Appuser, Permissions."""
-    project_odk_id = project.odkid
-
     # The ODK Dataset (Entity List) must exist prior to main XLSForm
-    entities_list = await task_geojson_dict_to_entity_values(task_extract_dict)
-    fields_list = project_schemas.entity_fields_to_list()
-
-    async with central_deps.get_odk_dataset(odk_credentials) as odk_central:
-        await odk_central.createDataset(
-            project_odk_id, datasetName="features", properties=fields_list
-        )
-        await odk_central.createEntities(
-            project_odk_id,
-            "features",
-            entities_list,
-        )
-
-    xform = await central_crud.read_and_test_xform(
-        xlsform, form_file_ext, return_form_data=True
+    entities_list = await central_crud.task_geojson_dict_to_entity_values(
+        task_extract_dict
     )
-    # Manually modify fields in XML specific to project (id, name, etc)
-    updated_xform = await central_crud.modify_xform_xml(
-        xform,
-        form_category,
-        len(task_extract_dict.keys()),
+
+    log.debug("Creating main ODK Entity list for project: features")
+    await central_crud.create_entity_list(
+        odk_credentials,
+        project_odk_id,
+        dataset_name="features",
+        entities_list=entities_list,
     )
+
+    # Do final check of XLSForm validity + return parsed XForm
+    xform = await central_crud.read_and_test_xform(xlsform)
+
     # Upload survey XForm
     log.info("Uploading survey XForm to ODK Central")
-    xform_id = central_crud.create_odk_xform(
+    central_crud.create_odk_xform(
         project_odk_id,
-        updated_xform,
+        xform,
         odk_credentials,
     )
 
-    sql = text(
-        """
-        INSERT INTO xforms (
-            project_id, odk_form_id, category
-        )
-        VALUES (
-            :project_id, :xform_id, :category
-        )
-        """
-    )
-    db.execute(
-        sql,
-        {"project_id": project.id, "xform_id": xform_id, "category": form_category},
-    )
-    db.commit()
     return await central_crud.get_appuser_token(
-        xform_id, project_odk_id, odk_credentials, db
+        project_odk_form_id,
+        project_odk_id,
+        odk_credentials,
     )
 
 
 async def generate_project_files(
     db: Session,
     project_id: int,
-    custom_form: Optional[BytesIO],
-    form_file_ext: str,
     background_task_id: Optional[uuid.UUID] = None,
 ) -> None:
     """Generate the files for a project.
@@ -911,26 +884,12 @@ async def generate_project_files(
     Args:
         db (Session): the database session.
         project_id(int): id of the FMTM project.
-        custom_form (BytesIO): the xls file to upload if we have a custom form
-        form_file_ext (str): weather the form is xls, xlsx or xml
         background_task_id (uuid): the task_id of the background task.
     """
     try:
         project = await project_deps.get_project_by_id(db, project_id)
-        form_category = project.xform_category
         log.info(f"Starting generate_project_files for project {project_id}")
         odk_credentials = await project_deps.get_odk_credentials(db, project_id)
-
-        if custom_form:
-            log.debug("User provided custom XLSForm")
-            xlsform = custom_form
-        else:
-            log.debug(f"Using default XLSForm for category: '{form_category}'")
-
-            form_filename = XLSFormType(form_category).name
-            xlsform_path = f"{xlsforms_path}/{form_filename}.xls"
-            with open(xlsform_path, "rb") as f:
-                xlsform = BytesIO(f.read())
 
         # Extract data extract from flatgeobuf
         log.debug("Getting data extract geojson from flatgeobuf")
@@ -951,15 +910,15 @@ async def generate_project_files(
 
         # Get ODK Project ID
         project_odk_id = project.odkid
+        project_xlsform = project.xlsform_content
+        project_odk_form_id = project.odk_form_id
 
         encrypted_odk_token = await generate_odk_central_project_content(
-            project,
+            project_odk_id,
+            project_odk_form_id,
             odk_credentials,
-            xlsform,
-            form_category,
-            form_file_ext,
+            BytesIO(project_xlsform),
             task_extract_dict,
-            db,
         )
         log.debug(
             f"Setting odk token for FMTM project ({project_id}) "
@@ -986,6 +945,19 @@ async def generate_project_files(
             )  # 4 is COMPLETED
 
     except Exception as e:
+        # Get the traceback details for easier debugging
+        tb = extract_tb(e.__traceback__)
+        if tb:
+            last_entry = tb[-1]
+            function_name = last_entry.name
+            line_number = last_entry.lineno
+            file_name = last_entry.filename
+
+            log.warning(
+                f"Error occurred in function {function_name} | line {line_number}"
+                f" | file {file_name}"
+            )
+
         log.warning(str(e))
 
         if background_task_id:
@@ -1499,9 +1471,8 @@ async def get_dashboard_detail(
     """Get project details for project dashboard."""
     odk_central = await project_deps.get_odk_credentials(db, project.id)
     xform = central_crud.get_odk_form(odk_central)
-    db_xform = await project_deps.get_project_xform(db, project.id)
 
-    submission_meta_data = xform.getFullDetails(project.odkid, db_xform.odk_form_id)
+    submission_meta_data = xform.getFullDetails(project.odkid, project.odk_form_id)
     project.total_submission = submission_meta_data.get("submissions", 0)
     project.last_active = submission_meta_data.get("lastSubmission")
 
@@ -1525,37 +1496,31 @@ async def get_dashboard_detail(
     return project
 
 
-async def get_project_users(db: Session, project_id: int, db_user: db_models.DbUser):
+async def get_project_users(db: Session, project_id: int):
     """Get the users and their contributions for a project.
 
     Args:
         db (Session): The database session.
         project_id (int): The ID of the project.
-        db_user (DbUser): User that called the endpoint.
 
     Returns:
         List[Dict[str, Union[str, int]]]: A list of dictionaries containing
             the username and the number of contributions made by each user
             for the specified project.
     """
-    # TODO refactor this
-    # TODO it could probably just be a single raw SQL statement
-    contributors = (
-        db.query(db_models.DbTaskHistory)
-        .filter(db_models.DbTaskHistory.project_id == project_id)
-        .all()
-    )
-    unique_user_ids = {
-        user.user_id for user in contributors if user.user_id is not None
-    }
-    response = []
+    query = text("""
+        SELECT u.username, COUNT(th.user_id) as contributions
+        FROM users u
+        JOIN task_history th ON u.id = th.user_id
+        WHERE th.project_id = :project_id
+        GROUP BY u.username
+        ORDER BY contributions DESC
+    """)
+    result = db.execute(query, {"project_id": project_id}).fetchall()
 
-    for user_id in unique_user_ids:
-        contributions = count_user_contributions(db, user_id, project_id)
-        response.append({"user": db_user.username, "contributions": contributions})
-
-    response = sorted(response, key=lambda x: x["contributions"], reverse=True)
-    return response
+    return [
+        {"user": row.username, "contributions": row.contributions} for row in result
+    ]
 
 
 def count_user_contributions(db: Session, user_id: int, project_id: int) -> int:

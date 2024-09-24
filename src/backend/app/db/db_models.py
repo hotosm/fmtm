@@ -210,23 +210,6 @@ class DbXLSForm(Base):
     xls = cast(bytes, Column(LargeBinary))
 
 
-class DbXForm(Base):
-    """XForms linked per project.
-
-    TODO eventually we will support multiple forms per project.
-    TODO So the category field a stub until then.
-    TODO currently it's maintained under projects.xform_category.
-    """
-
-    __tablename__ = "xforms"
-    id = cast(int, Column(Integer, primary_key=True, autoincrement=True))
-    project_id = cast(
-        int, Column(Integer, ForeignKey("projects.id"), name="project_id", index=True)
-    )
-    odk_form_id = cast(str, Column(String))
-    category = cast(str, Column(String))
-
-
 class DbTaskHistory(Base):
     """Describes the history associated with a task."""
 
@@ -453,10 +436,8 @@ class DbProject(Base):
 
     # XForm category specified
     xform_category = cast(str, Column(String))
-    # Linked XForms
-    forms = relationship(
-        DbXForm, backref="project_xform_link", cascade="all, delete, delete-orphan"
-    )
+    odk_form_id = cast(str, Column(String))
+    xlsform_content = cast(bytes, Column(LargeBinary))
 
     __table_args__ = (
         Index("idx_geometry", outline, postgresql_using="gist"),
@@ -485,13 +466,6 @@ class DbProject(Base):
     odk_central_user = cast(str, Column(String))
     odk_central_password = cast(str, Column(String))
     odk_token = cast(str, Column(String, nullable=True))
-
-    form_xls = cast(
-        bytes, Column(LargeBinary)
-    )  # XLSForm file if custom xls is uploaded
-    form_config_file = cast(
-        bytes, Column(LargeBinary)
-    )  # Yaml config file if custom xls is uploaded
 
     data_extract_type = cast(
         str, Column(String)
@@ -551,3 +525,18 @@ class DbTilesPath(Base):
     tile_source = cast(str, Column(String))
     background_task_id = cast(str, Column(String))
     created_at = cast(datetime, Column(DateTime, default=timestamp))
+
+
+class DbSubmissionPhotos(Base):
+    """Keeping track of submission photos for a project."""
+
+    __tablename__ = "submission_photos"
+
+    id = cast(int, Column(Integer, primary_key=True))
+    project_id = cast(
+        int, Column(Integer, ForeignKey("projects.id"), name="project_id", index=True)
+    )
+    # Note this is not a DbTask, but an ODK task_id
+    task_id = cast(int, Column(Integer))
+    submission_id = cast(str, Column(String))
+    s3_path = cast(str, Column(String))

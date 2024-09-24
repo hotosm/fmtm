@@ -5,6 +5,7 @@ import LayerSwitcherControl from '@/components/MapComponent/OpenLayersComponent/
 import { VectorLayer } from '@/components/MapComponent/OpenLayersComponent/Layers';
 import { DrawnGeojsonTypes, GeoJSONFeatureTypes } from '@/store/types/ICreateProject';
 import MapControlComponent from '@/components/createnewproject/MapControlComponent';
+import LayerSwitchMenu from '@/components/MapComponent/OpenLayersComponent/LayerSwitcher/LayerSwitchMenu';
 
 type NewDefineAreaMapProps = {
   drawToggle?: boolean;
@@ -16,7 +17,9 @@ type NewDefineAreaMapProps = {
   onModify?: ((geojson: any, area?: number) => void) | null;
   hasEditUndo?: boolean;
   getAOIArea?: ((area?: number) => void) | null;
+  additionalFeatureGeojson?: GeoJSONFeatureTypes | null;
 };
+
 const NewDefineAreaMap = ({
   drawToggle,
   uploadedOrDrawnGeojsonFile,
@@ -27,9 +30,9 @@ const NewDefineAreaMap = ({
   onModify,
   hasEditUndo,
   getAOIArea,
+  additionalFeatureGeojson,
 }: NewDefineAreaMapProps) => {
   const { mapRef, map }: { mapRef: any; map: any } = useOLMap({
-    // center: fromLonLat([85.3, 27.7]),
     center: [0, 0],
     zoom: 1,
     maxZoom: 25,
@@ -37,7 +40,7 @@ const NewDefineAreaMap = ({
   const isDrawOrGeojsonFile = drawToggle || uploadedOrDrawnGeojsonFile;
 
   return (
-    <div className="map-container" style={{ height: '600px', width: '100%' }}>
+    <div className="map-container fmtm-w-full fmtm-h-[600px] lg:fmtm-h-full">
       <MapComponent
         ref={mapRef}
         mapInstance={map}
@@ -47,6 +50,9 @@ const NewDefineAreaMap = ({
           width: '100%',
         }}
       >
+        <div className="fmtm-absolute fmtm-right-2 fmtm-top-5 fmtm-z-20">
+          <LayerSwitchMenu map={map} />
+        </div>
         <LayerSwitcherControl visible={'osm'} />
         <MapControlComponent map={map} hasEditUndo={hasEditUndo} />
         {splittedGeojson && (
@@ -77,23 +83,24 @@ const NewDefineAreaMap = ({
           />
         )}
 
+        {additionalFeatureGeojson && (
+          <VectorLayer
+            geojson={additionalFeatureGeojson}
+            viewProperties={{
+              size: map?.getSize(),
+              padding: [50, 50, 50, 50],
+              constrainResolution: true,
+              duration: 500,
+            }}
+            zoomToLayer
+          />
+        )}
         {buildingExtractedGeojson && (
           <VectorLayer
             geojson={buildingExtractedGeojson}
-            // stylestyle={{
-            //     ...getStyles,
-            //     fillOpacity: 100,
-            //     lineColor: getStyles.fillColor,
-            //     lineThickness: 7,
-            //     lineOpacity: 40,
-            // }}
             viewProperties={{
-              // easing: elastic,
-              // animate: true,
               size: map?.getSize(),
-              // maxZoom: 15,
               padding: [50, 50, 50, 50],
-              // duration: 900,
               constrainResolution: true,
               duration: 500,
             }}
@@ -103,20 +110,9 @@ const NewDefineAreaMap = ({
         {lineExtractedGeojson && (
           <VectorLayer
             geojson={lineExtractedGeojson}
-            // stylestyle={{
-            //     ...getStyles,
-            //     fillOpacity: 100,
-            //     lineColor: getStyles.fillColor,
-            //     lineThickness: 7,
-            //     lineOpacity: 40,
-            // }}
             viewProperties={{
-              // easing: elastic,
-              // animate: true,
               size: map?.getSize(),
-              // maxZoom: 15,
               padding: [50, 50, 50, 50],
-              // duration: 900,
               constrainResolution: true,
               duration: 500,
             }}

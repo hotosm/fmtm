@@ -6,7 +6,7 @@ import Button from '@/components/common/Button';
 import { useAppSelector } from '@/types/reduxTypes';
 
 type projectOptionPropTypes = {
-  projectName: string | undefined;
+  projectName: string;
 };
 
 const ProjectOptions = ({ projectName }: projectOptionPropTypes) => {
@@ -19,7 +19,7 @@ const ProjectOptions = ({ projectName }: projectOptionPropTypes) => {
 
   const projectId: string = params.id;
 
-  const handleDownload = (downloadType) => {
+  const handleDownload = (downloadType: 'form' | 'geojson' | 'extract' | 'submission') => {
     if (downloadType === 'form') {
       dispatch(
         DownloadProjectForm(
@@ -36,22 +36,21 @@ const ProjectOptions = ({ projectName }: projectOptionPropTypes) => {
           projectId,
         ),
       );
+    } else if (downloadType === 'extract') {
+      dispatch(
+        DownloadDataExtract(
+          `${import.meta.env.VITE_API_URL}/projects/features/download/?project_id=${projectId}`,
+          projectId,
+        ),
+      );
+    } else if (downloadType === 'submission') {
+      dispatch(
+        DownloadSubmissionGeojson(
+          `${import.meta.env.VITE_API_URL}/submission/download-submission-geojson?project_id=${projectId}`,
+          projectName,
+        ),
+      );
     }
-  };
-
-  const onDataExtractDownload = () => {
-    dispatch(
-      DownloadDataExtract(`${import.meta.env.VITE_API_URL}/projects/features/download/?project_id=${projectId}`),
-    );
-  };
-
-  const onSubmissionDownload = () => {
-    dispatch(
-      DownloadSubmissionGeojson(
-        `${import.meta.env.VITE_API_URL}/submission/download-submission-geojson?project_id=${projectId}`,
-        projectName,
-      ),
-    );
   };
 
   return (
@@ -91,8 +90,8 @@ const ProjectOptions = ({ projectName }: projectOptionPropTypes) => {
         />
         <Button
           isLoading={downloadDataExtractLoading}
-          loadingText="DATA EXTRACT"
-          btnText="DATA EXTRACT"
+          loadingText="MAP FEATURES"
+          btnText="MAP FEATURES"
           btnType="other"
           className={`${
             downloadDataExtractLoading ? '' : 'hover:fmtm-text-red-700'
@@ -100,7 +99,7 @@ const ProjectOptions = ({ projectName }: projectOptionPropTypes) => {
           icon={<AssetModules.FileDownloadIcon style={{ fontSize: '22px' }} />}
           onClick={(e) => {
             e.stopPropagation();
-            onDataExtractDownload();
+            handleDownload('extract');
           }}
         />
         <Button
@@ -114,7 +113,7 @@ const ProjectOptions = ({ projectName }: projectOptionPropTypes) => {
           icon={<AssetModules.FileDownloadIcon style={{ fontSize: '22px' }} />}
           onClick={(e) => {
             e.stopPropagation();
-            onSubmissionDownload();
+            handleDownload('submission');
           }}
         />
       </div>

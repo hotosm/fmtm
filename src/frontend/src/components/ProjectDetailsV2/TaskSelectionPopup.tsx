@@ -5,7 +5,6 @@ import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import environment from '@/environment';
-import { GetProjectQrCode } from '@/api/Files';
 import QrcodeComponent from '@/components/QrcodeComponent';
 import { useAppSelector } from '@/types/reduxTypes';
 
@@ -16,16 +15,15 @@ type TaskSelectionPopupPropType = {
 };
 
 const TaskSelectionPopup = ({ taskId, body, feature }: TaskSelectionPopupPropType) => {
-  const dispatch = CoreModules.useAppDispatch();
-  const [task_status, set_task_status] = useState('READY');
-  const taskModalStatus = useAppSelector((state) => state.project.taskModalStatus);
   const params = CoreModules.useParams();
+  const dispatch = CoreModules.useAppDispatch();
+
   const currentProjectId: string = params.id;
+  const [task_status, set_task_status] = useState('READY');
+
+  const taskModalStatus = useAppSelector((state) => state.project.taskModalStatus);
   const projectData = useAppSelector((state) => state.project.projectTaskBoundries);
   const projectIndex = projectData.findIndex((project) => project.id.toString() === currentProjectId);
-
-  const projectName = useAppSelector((state) => state.project.projectInfo.title);
-  const odkToken = useAppSelector((state) => state.project.projectInfo.odk_token);
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
   const selectedTask = {
     ...projectData?.[projectIndex]?.taskBoundries?.filter((indTask, i) => {
@@ -35,7 +33,6 @@ const TaskSelectionPopup = ({ taskId, body, feature }: TaskSelectionPopupPropTyp
   const checkIfTaskAssignedOrNot =
     selectedTask?.locked_by_username === authDetails?.username || selectedTask?.locked_by_username === null;
 
-  const { qrcode }: { qrcode: string } = GetProjectQrCode(odkToken, projectName, authDetails?.username);
   useEffect(() => {
     if (projectIndex != -1) {
       const currentStatus = {
@@ -56,7 +53,7 @@ const TaskSelectionPopup = ({ taskId, body, feature }: TaskSelectionPopupPropTyp
     <div
       className={`fmtm-duration-1000 fmtm-z-[10002] fmtm-h-fit ${
         taskModalStatus
-          ? 'fmtm-bottom-[4.4rem] md:fmtm-top-[50%] md:-fmtm-translate-y-[35%] fmtm-right-0 fmtm-w-[100vw] md:fmtm-w-[50vw] md:fmtm-max-w-[25rem]'
+          ? 'fmtm-bottom-[4.4rem] sm:fmtm-bottom-0 lg:fmtm-top-[50%] md:-fmtm-translate-y-[35%] fmtm-right-0 fmtm-w-[100vw] md:fmtm-w-[50vw] md:fmtm-max-w-[25rem]'
           : 'fmtm-top-[calc(100vh)] md:fmtm-top-[calc(40vh)] md:fmtm-left-[calc(100vw)] fmtm-w-[100vw]'
       } fmtm-fixed
         fmtm-rounded-t-3xl fmtm-border-opacity-50`}
@@ -100,9 +97,12 @@ const TaskSelectionPopup = ({ taskId, body, feature }: TaskSelectionPopupPropTyp
             <p className="fmtm-text-base fmtm-text-[#757575]">Locked By: {selectedTask?.locked_by_username}</p>
           )}
         </div>
-        {checkIfTaskAssignedOrNot && task_status !== 'LOCKED_FOR_MAPPING' && (
-          <QrcodeComponent qrcode={qrcode} projectId={currentProjectId} taskIndex={selectedTask.index} />
-        )}
+        {/* only display qr code component render inside taskPopup on mobile screen */}
+        <div className="sm:fmtm-hidden">
+          {checkIfTaskAssignedOrNot && task_status !== 'LOCKED_FOR_MAPPING' && (
+            <QrcodeComponent projectId={currentProjectId} taskIndex={selectedTask.index} />
+          )}
+        </div>
         {body}
       </div>
     </div>

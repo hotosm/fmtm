@@ -12,6 +12,7 @@ import { useDispatch } from 'react-redux';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import { useAppSelector } from '@/types/reduxTypes';
 import Prompt from '@/hooks/Prompt';
+
 const CreateNewProject = () => {
   const location = useLocation();
   const dispatch = useDispatch();
@@ -23,7 +24,7 @@ const CreateNewProject = () => {
   const [geojsonFile, setGeojsonFile] = useState(null);
   const [customDataExtractUpload, setCustomDataExtractUpload] = useState(null);
   const [customFormFile, setCustomFormFile] = useState(null);
-  const [dataExtractFile] = useState(null);
+  const [additionalFeature, setAdditionalFeature] = useState(null);
 
   useEffect(() => {
     if (location.pathname !== '/create-project' && !projectDetails.name && !projectDetails.odk_central_url) {
@@ -43,7 +44,7 @@ const CreateNewProject = () => {
       case '/select-category':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 3 }));
         break;
-      case '/data-extract':
+      case '/map-features':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 4 }));
         break;
       case '/split-tasks':
@@ -77,22 +78,23 @@ const CreateNewProject = () => {
             setCustomFormFile={setCustomFormFile}
           />
         );
-      case '/data-extract':
+      case '/map-features':
         return (
           <DataExtract
             flag="create_project"
             customDataExtractUpload={customDataExtractUpload}
             setCustomDataExtractUpload={setCustomDataExtractUpload}
+            additionalFeature={additionalFeature}
+            setAdditionalFeature={setAdditionalFeature}
           />
         );
       case '/split-tasks':
         return (
           <SplitTasks
             flag="create_project"
-            geojsonFile={geojsonFile}
             setGeojsonFile={setGeojsonFile}
             customDataExtractUpload={customDataExtractUpload}
-            customFormFile={customFormFile}
+            additionalFeature={additionalFeature}
           />
         );
       default:
@@ -100,17 +102,17 @@ const CreateNewProject = () => {
     }
   };
   return (
-    <div>
+    <div className="fmtm-h-full">
       <CreateProjectHeader />
       <Prompt when={isUnsavedChanges} message="Are you sure you want to leave, you have unsaved changes?" />
 
-      <div className="fmtm-min-h-[72vh] fmtm-bg-gray-100 fmtm-box-border fmtm-border-[1px] fmtm-border-t-white fmtm-border-t-[0px]">
-        <div className=" fmtm-w-full">
+      <div className="fmtm-h-[calc(100%-64px)]">
+        <div className="fmtm-w-full">
           <div>
             <StepSwitcher data={createProjectSteps} flag={'create_project'} switchSteps={canSwitchCreateProjectSteps} />
           </div>
         </div>
-        <div className="fmtm-mx-5 fmtm-mb-5">{(() => getCreateProjectContent())()}</div>
+        <div className="lg:fmtm-h-[calc(100%-108px)]">{(() => getCreateProjectContent())()}</div>
       </div>
     </div>
   );

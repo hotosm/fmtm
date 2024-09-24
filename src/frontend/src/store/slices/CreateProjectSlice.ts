@@ -19,7 +19,6 @@ export const initialState: CreateProjectStateTypes = {
     formWays: 'existing_form',
     hasCustomTMS: false,
     custom_tms_url: '',
-    hasGeojsonLineString: true,
   },
   projectDetailsResponse: null,
   projectDetailsLoading: false,
@@ -43,7 +42,6 @@ export const initialState: CreateProjectStateTypes = {
   drawnGeojson: null,
   drawToggle: false,
   validateCustomFormLoading: false,
-  validateCustomFormResponse: null,
   uploadAreaSelection: '',
   totalAreaSelection: null,
   splitTasksSelection: null,
@@ -55,6 +53,8 @@ export const initialState: CreateProjectStateTypes = {
   isFgbFetching: false,
   toggleSplittedGeojsonEdit: false,
   customFileValidity: false,
+  validatedCustomForm: null,
+  additionalFeatureGeojson: null,
 };
 
 const CreateProject = createSlice({
@@ -178,9 +178,6 @@ const CreateProject = createSlice({
     ValidateCustomFormLoading(state, action) {
       state.validateCustomFormLoading = action.payload;
     },
-    ValidateCustomForm(state, action) {
-      state.validateCustomFormResponse = action.payload;
-    },
     SetUploadAreaSelection(state, action) {
       state.uploadAreaSelection = action.payload;
     },
@@ -225,6 +222,12 @@ const CreateProject = createSlice({
     },
     SetCustomFileValidity(state, action) {
       state.customFileValidity = action.payload;
+    },
+    SetValidatedCustomFile(state, action) {
+      state.validatedCustomForm = action.payload;
+    },
+    SetAdditionalFeatureGeojson(state, action) {
+      state.additionalFeatureGeojson = action.payload;
     },
   },
 });

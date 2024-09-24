@@ -47,13 +47,14 @@ from sqlalchemy.sql import text
 from app.auth.auth_schemas import AuthUser, OrgUserDict, ProjectUserDict
 from app.auth.osm import login_required
 from app.auth.roles import mapper, org_admin, project_manager
-from app.central import central_crud, central_schemas
+from app.central import central_crud, central_deps, central_schemas
 from app.db import database, db_models
 from app.db.postgis_utils import (
     check_crs,
     flatgeobuf_to_featcol,
     merge_polygons,
     parse_geojson_file_to_featcol,
+    split_geojson_by_task_areas,
     wkb_geom_to_feature,
 )
 from app.models.enums import (
@@ -485,15 +486,13 @@ async def create_project(
         )
         odk_creds_decrypted = await organisation_deps.get_org_odk_creds(db_org)
 
-    sql = text(
-        """
-            SELECT EXISTS (
-                SELECT 1
-                FROM project_info
-                WHERE LOWER(name) = :project_name
-            )
-            """
-    )
+    sql = text("""
+        SELECT EXISTS (
+            SELECT 1
+            FROM project_info
+            WHERE LOWER(name) = :project_name
+        )
+    """)
     result = db.execute(sql, {"project_name": project_info.project_info.name.lower()})
     project_exists = result.scalar()
     if project_exists:
@@ -626,8 +625,7 @@ async def task_split(
     """Split a task into subtasks.
 
     Args:
-        project_geojson (UploadFile): The geojson to split.
-            Should be a FeatureCollection.
+        project_geojson (UploadFile): The geojson (AOI) to split.
         extract_geojson (UploadFile, optional): Custom data extract geojson
             containing osm features (should be a FeatureCollection).
             If not included, an extract is generated automatically.
@@ -662,29 +660,44 @@ async def task_split(
 
 
 @router.post("/validate-form")
-async def validate_form(form: UploadFile):
-    """Tests the validity of the xls form uploaded.
+async def validate_form(
+    xlsform: BytesIO = Depends(central_deps.read_xlsform),
+    debug: bool = False,
+):
+    """Basic validity check for uploaded XLSForm.
 
-    Parameters:
-        - form: The xls form to validate
+    Parses the form using ODK pyxform to check that it is valid.
+
+    If the `debug` param is used, the form is returned for inspection.
+    NOTE that this debug form has additional fields appended and should
+        not be used for FMTM project creation.
     """
-    file = Path(form.filename)
-    file_ext = file.suffix.lower()
-
-    allowed_extensions = [".xls", ".xlsx", ".xml"]
-    if file_ext not in allowed_extensions:
-        raise HTTPException(
-            status_code=400, detail="Provide a valid .xls,.xlsx,.xml file"
+    if debug:
+        xform_id, updated_form = await central_crud.append_fields_to_user_xlsform(
+            xlsform,
         )
-
-    contents = await form.read()
-    return await central_crud.read_and_test_xform(BytesIO(contents), file_ext)
+        return StreamingResponse(
+            updated_form,
+            media_type=(
+                "application/vnd.openxmlformats-" "officedocument.spreadsheetml.sheet"
+            ),
+            headers={"Content-Disposition": f"attachment; filename={xform_id}.xlsx"},
+        )
+    else:
+        await central_crud.validate_and_update_user_xlsform(
+            xlsform,
+        )
+        return JSONResponse(
+            status_code=HTTPStatus.OK,
+            content={"message": "Your form is valid"},
+        )
 
 
 @router.post("/{project_id}/generate-project-data")
 async def generate_files(
     background_tasks: BackgroundTasks,
-    xls_form_upload: Optional[UploadFile] = File(None),
+    xlsform_upload: Optional[BytesIO] = Depends(central_deps.read_optional_xlsform),
+    additional_entities: list[str] = None,
     db: Session = Depends(database.get_db),
     project_user_dict: ProjectUserDict = Depends(project_manager),
 ):
@@ -707,8 +720,10 @@ async def generate_files(
 
     Args:
         background_tasks (BackgroundTasks): FastAPI bg tasks, provided automatically.
-        xls_form_upload (UploadFile, optional): A custom XLSForm to use in the project.
+        xlsform_upload (UploadFile, optional): A custom XLSForm to use in the project.
             A file should be provided if user wants to upload a custom xls form.
+        additional_entities (list[str]): If additional Entity lists need to be
+            created (i.e. the project form references multiple geometries).
         db (Session): Database session, provided automatically.
         project_user_dict (ProjectUserDict): Project admin role.
 
@@ -717,28 +732,44 @@ async def generate_files(
     """
     project = project_user_dict.get("project")
     project_id = project.id
+    form_category = project.xform_category
 
-    log.debug(f"Generating media files tasks for project: {project.id}")
+    log.debug(f"Generating additional files for project: {project.id}")
 
-    custom_xls_form = None
-    file_ext = ".xls"
-    if xls_form_upload:
-        log.debug("Validating uploaded XLS form")
+    if xlsform_upload:
+        log.debug("User provided custom XLSForm")
 
-        file_path = Path(xls_form_upload.filename)
-        file_ext = file_path.suffix.lower()
-        allowed_extensions = {".xls", ".xlsx", ".xml"}
-        if file_ext not in allowed_extensions:
-            raise HTTPException(
-                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-                detail=f"Invalid file extension, must be {allowed_extensions}",
-            )
+        # Validate uploaded form
+        await central_crud.validate_and_update_user_xlsform(
+            xlsform=xlsform_upload,
+            form_category=form_category,
+            additional_entities=additional_entities,
+        )
+        xlsform = xlsform_upload
 
-        custom_xls_form = await xls_form_upload.read()
+    else:
+        log.debug(f"Using default XLSForm for category: '{form_category}'")
 
-        # Write XLS form content to db
-        project.form_xls = custom_xls_form
-        db.commit()
+        form_filename = XLSFormType(form_category).name
+        xlsform_path = f"{xlsforms_path}/{form_filename}.xls"
+        with open(xlsform_path, "rb") as f:
+            xlsform = BytesIO(f.read())
+
+    xform_id, project_xlsform = await central_crud.append_fields_to_user_xlsform(
+        xlsform=xlsform,
+        form_category=form_category,
+        additional_entities=additional_entities,
+    )
+    # Write XLS form content to db
+    xlsform_bytes = project_xlsform.getvalue()
+    if not xlsform_bytes:
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail="There was an error with the XLSForm!",
+        )
+    project.odk_form_id = xform_id
+    project.xlsform_content = xlsform_bytes
+    db.commit()
 
     # Create task in db and return uuid
     log.debug(f"Creating export background task for project ID: {project_id}")
@@ -751,8 +782,6 @@ async def generate_files(
         project_crud.generate_project_files,
         db,
         project_id,
-        BytesIO(custom_xls_form) if custom_xls_form else None,
-        file_ext,
         background_task_id,
     )
 
@@ -760,6 +789,42 @@ async def generate_files(
         status_code=200,
         content={"Message": f"{project.id}", "task_id": f"{background_task_id}"},
     )
+
+
+@router.post("/{project_id}/additional-entity")
+async def add_additional_entity_list(
+    geojson: UploadFile = File(...),
+    db: Session = Depends(database.get_db),
+    project_user_dict: ProjectUserDict = Depends(project_manager),
+):
+    """Add an additional Entity list for the project in ODK.
+
+    Note that the Entity list will be named from the filename
+    of the GeoJSON uploaded.
+    """
+    project = project_user_dict.get("project")
+    project_id = project.id
+    project_odk_id = project.odkid
+    odk_credentials = await project_deps.get_odk_credentials(db, project_id)
+    # NOTE the Entity name is extracted from the filename (without extension)
+    entity_name = Path(geojson.filename).stem
+
+    # Parse geojson + divide by task
+    # (not technically required, but also appends properties in correct format)
+    featcol = parse_geojson_file_to_featcol(await geojson.read())
+    feature_split_by_task = await split_geojson_by_task_areas(db, featcol, project_id)
+    entities_list = await central_crud.task_geojson_dict_to_entity_values(
+        feature_split_by_task
+    )
+
+    await central_crud.create_entity_list(
+        odk_credentials,
+        project_odk_id,
+        dataset_name=entity_name,
+        entities_list=entities_list,
+    )
+
+    return Response(status_code=HTTPStatus.OK)
 
 
 @router.get("/categories/")
@@ -782,7 +847,7 @@ async def get_categories(current_user: AuthUser = Depends(login_required)):
 @router.post("/preview-split-by-square/")
 async def preview_split_by_square(
     project_geojson: UploadFile = File(...),
-    extract_geojson: UploadFile = File(None),
+    extract_geojson: Optional[UploadFile] = File(None),
     dimension: int = Form(100),
 ):
     """Preview splitting by square.
@@ -920,24 +985,17 @@ async def download_form(
     project = project_user.get("project")
 
     headers = {
-        "Content-Disposition": "attachment; filename=submission_data.xls",
+        "Content-Disposition": f"attachment; filename={project.id}_xlsform.xlsx",
         "Content-Type": "application/media",
     }
-    if not project.form_xls:
-        form_filename = XLSFormType(project.xform_category).name
-        xlsform_path = f"{xlsforms_path}/{form_filename}.xls"
-        if os.path.exists(xlsform_path):
-            return FileResponse(xlsform_path, filename="form.xls")
-        else:
-            raise HTTPException(status_code=404, detail="Form not found")
-    return Response(content=project.form_xls, headers=headers)
+    return Response(content=project.xlsform_content, headers=headers)
 
 
 @router.post("/update-form")
 async def update_project_form(
     xform_id: str = Form(...),
     category: XLSFormType = Form(...),
-    upload: UploadFile = File(...),
+    xlsform: BytesIO = Depends(central_deps.read_xlsform),
     db: Session = Depends(database.get_db),
     project_user_dict: ProjectUserDict = Depends(project_manager),
 ) -> project_schemas.ProjectBase:
@@ -945,7 +1003,6 @@ async def update_project_form(
 
     Also updates the category and custom XLSForm data in the database.
     """
-    # TODO migrate most logic to project_crud
     project = project_user_dict["project"]
 
     # TODO we currently do nothing with the provided category
@@ -958,37 +1015,20 @@ async def update_project_form(
     # with open(xlsform_path, "rb") as f:
     #     new_xform_data = BytesIO(f.read())
 
-    file_ext = Path(upload.filename or "x.xls").suffix.lower()
-    allowed_extensions = [".xls", ".xlsx", ".xml"]
-    if file_ext not in allowed_extensions:
-        raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail="Provide a valid .xls, .xlsx, .xml file.",
-        )
-    new_xform_data = await upload.read()
-    # Update the XLSForm blob in the database
-    project.form_xls = new_xform_data
-    new_xform_data = BytesIO(new_xform_data)
-
-    # TODO related to above info about category updating
-    # # Update form category in database
-    # project.xform_category = category
-
-    # Commit changes to db
-    db.commit()
-
     # Get ODK Central credentials for project
     odk_creds = await project_deps.get_odk_credentials(db, project.id)
     # Update ODK Central form data
     await central_crud.update_project_xform(
         xform_id,
         project.odkid,
-        new_xform_data,
-        file_ext,
+        xlsform,
         category,
-        len(project.tasks),
         odk_creds,
     )
+
+    # Commit changes to db
+    project.xlsform_content = xlsform.getvalue()
+    db.commit()
 
     return project
 
@@ -1189,7 +1229,6 @@ async def project_dashboard(
 
 @router.get("/contributors/{project_id}")
 async def get_contributors(
-    project_id: int,
     db: Session = Depends(database.get_db),
     project_user: ProjectUserDict = Depends(mapper),
 ):
@@ -1197,9 +1236,8 @@ async def get_contributors(
 
     TODO use a pydantic model for return type
     """
-    db_user = project_user.get("user")
-    project_users = await project_crud.get_project_users(db, project_id, db_user)
-    return project_users
+    project = project_user.get("project")
+    return await project_crud.get_project_users(db, project.id)
 
 
 @router.post("/add-manager/")

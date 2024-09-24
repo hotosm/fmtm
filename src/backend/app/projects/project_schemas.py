@@ -18,7 +18,6 @@
 """Pydantic schemas for Projects."""
 
 import uuid
-from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, List, Optional, Union
 
@@ -318,7 +317,7 @@ class ProjectBase(BaseModel):
     """Base project model."""
 
     outline: Any = Field(exclude=True)
-    forms: Any = Field(exclude=True)
+    odk_form_id: Optional[str] = Field(exclude=True)
 
     id: int
     odkid: int
@@ -361,10 +360,13 @@ class ProjectBase(BaseModel):
     @computed_field
     @property
     def xform_id(self) -> Optional[str]:
-        """Compute the XForm ID from the linked DbXForm."""
-        if not self.forms:
+        """Generate from odk_form_id.
+
+        TODO this could be refactored out in future.
+        """
+        if not self.odk_form_id:
             return None
-        return self.forms[0].odk_form_id
+        return self.odk_form_id
 
 
 class ProjectWithTasks(ProjectBase):
@@ -437,39 +439,3 @@ class ProjectDashboard(BaseModel):
             return f'{days_difference} day{"s" if days_difference > 1 else ""} ago'
         else:
             return last_active.strftime("%d %b %Y")
-
-
-@dataclass
-class Field:
-    """A data class representing a field with a name and type.
-
-    Args:
-        name (str): The name of the field.
-        type (str): The type of the field.
-
-    Returns:
-        None
-    """
-
-    name: str
-    type: str
-
-
-def entity_fields_to_list() -> List[str]:
-    """Converts a list of Field objects to a list of field names.
-
-    Returns:
-        List[str]: A list of fields.
-    """
-    fields: List[Field] = [
-        Field(name="geometry", type="geopoint"),
-        Field(name="project_id", type="string"),
-        Field(name="task_id", type="string"),
-        Field(name="osm_id", type="string"),
-        Field(name="tags", type="string"),
-        Field(name="version", type="string"),
-        Field(name="changeset", type="string"),
-        Field(name="timestamp", type="datetime"),
-        Field(name="status", type="string"),
-    ]
-    return [field.name for field in fields]

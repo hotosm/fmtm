@@ -20,17 +20,17 @@ const ProjectSubmissions = () => {
   const state = useAppSelector((state) => state.project);
   const projectInfo = useAppSelector((state) => state.project.projectInfo);
   const entityList = useAppSelector((state) => state.project.entityOsmMap);
-  const updatedEntities = entityList?.filter((entity) => entity?.updated_at && entity?.status > 1);
+  const updatedEntities = entityList?.filter((entity) => entity?.status > 1);
 
   //Fetch project for the first time
   useEffect(() => {
     dispatch(ProjectActions.SetNewProjectTrigger());
     if (state.projectTaskBoundries.findIndex((project) => project.id == projectId) == -1) {
       dispatch(ProjectActions.SetProjectTaskBoundries([]));
-      dispatch(ProjectById(state.projectTaskBoundries, projectId));
+      dispatch(ProjectById(projectId));
     } else {
       dispatch(ProjectActions.SetProjectTaskBoundries([]));
-      dispatch(ProjectById(state.projectTaskBoundries, projectId));
+      dispatch(ProjectById(projectId));
     }
     if (Object.keys(state.projectInfo).length == 0) {
       dispatch(ProjectActions.SetProjectInfo(projectInfo));
@@ -85,8 +85,8 @@ const ProjectSubmissions = () => {
   );
 
   return (
-    <div className="fmtm-bg-[#F5F5F5] fmtm-px-5 sm:fmtm-px-5 lg:fmtm-px-8 xl:fmtm-px-16 fmtm-pb-5">
-      <div className="fmtm-flex fmtm-flex-col sm:fmtm-flex-row fmtm-my-4 fmtm-w-full">
+    <div className="fmtm-bg-[#F5F5F5]">
+      <div className="fmtm-flex fmtm-flex-col sm:fmtm-flex-row fmtm-mb-4 fmtm-w-full">
         <ProjectInfo entities={updatedEntities} />
       </div>
       <div className="fmtm-w-full">
