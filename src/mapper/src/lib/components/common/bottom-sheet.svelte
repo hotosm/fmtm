@@ -81,7 +81,7 @@
 		<div
 			style="border-top-left-radius: 25px; border-top-right-radius: 25px;"
 			bind:this={sheetContentRef}
-			class={`bottom-sheet-content shadow-[0px_-10px_10px_5px_rgba(0,0,0,0.05)] w-full relative bg-white max-h-[100vh] h-[50vh] max-w-[100vw] pb-6 duration-300 ease-in-out overflow-hidden md:max-w-[900px] ${
+			class={`bottom-sheet-content shadow-[0px_-10px_10px_5px_rgba(0,0,0,0.05)] w-full relative bg-white max-h-[100vh] h-[50vh] max-w-[100vw] pb-6 duration-300 ease-in-out overflow-hidden md:max-w-[580px] lg:max-w-[750px] ${
 				!show ? 'translate-y-[100%]' : 'translate-y-[0%] pointer-events-auto'
 			} ${isDragging ? 'transition-none' : ''}`}
 		>
