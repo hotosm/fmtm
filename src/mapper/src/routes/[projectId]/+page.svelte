@@ -24,7 +24,9 @@
 	// import { createLiveQuery } from '$lib/live-query';
 	import { generateQrCode, downloadQrCode } from '$lib/qrcode';
 	import EventCard from '$lib/components/event-card.svelte';
+	import BottomSheet from '$lib/components/common/bottom-sheet.svelte';
 	import Error from './+error.svelte';
+	import '../../styles/page.css';
 
 	export let data: PageData;
 
@@ -213,132 +215,141 @@
 	{/if}
 {/if}
 
-<MapLibre
-	bind:map
-	bind:loaded
-	style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-	class="flex-auto w-full sm:aspect-video sm:max-h-full"
-	standardControls
-	center={[0, 0]}
-	zoom={2}
-	attributionControl={false}
-	on:click={(e) => {
-		featureClicked.subscribe((fClicked) => {
-			if (!fClicked) {
-				selectedTaskId.set(null);
-			}
-			featureClicked.set(false);
-		});
-	}}
->
-	<GeoJSON id="states" data={$taskFeatcolStore} promoteId="TASKS">
-		<FillLayer
-			hoverCursor="pointer"
-			paint={{
-				'fill-color': [
-					'match',
-					['get', 'status'],
-					'0',
-					'#c5fbf5',
-					'1',
-					'#ff0000',
-					'2',
-					'#66ff33',
-					'3',
-					'#ff9900',
-					'#c5fbf5', // default color if no match is found
-				],
-				'fill-opacity': hoverStateFilter(0.5, 0),
+<div class="h-[calc(100vh-4.625rem)]">
+	<MapLibre
+		bind:map
+		bind:loaded
+		style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+		class="flex-auto w-full sm:aspect-video h-[calc(100%-4rem)]"
+		standardControls
+		center={[0, 0]}
+		zoom={2}
+		attributionControl={false}
+		on:click={(e) => {
+			featureClicked.subscribe((fClicked) => {
+				if (!fClicked) {
+					selectedTaskId.set(null);
+				}
+				featureClicked.set(false);
+			});
+		}}
+	>
+		<GeoJSON id="states" data={$taskFeatcolStore} promoteId="TASKS">
+			<FillLayer
+				hoverCursor="pointer"
+				paint={{
+					'fill-color': [
+						'match',
+						['get', 'status'],
+						'0',
+						'#c5fbf5',
+						'1',
+						'#ff0000',
+						'2',
+						'#66ff33',
+						'3',
+						'#ff9900',
+						'#c5fbf5', // default color if no match is found
+					],
+					'fill-opacity': hoverStateFilter(0.5, 0),
+				}}
+				beforeLayerType="symbol"
+				manageHoverState
+				on:click={(e) => {
+					featureClicked.set(true);
+					const clickedTask = e.detail.features?.[0]?.properties?.uid;
+					selectedTaskId.set(clickedTask);
+				}}
+			/>
+			<LineLayer
+				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+				paint={{
+					'line-color': hoverStateFilter('#0fffff', '#0fffff'),
+					'line-width': 3,
+				}}
+				beforeLayerType="symbol"
+				manageHoverState
+			/>
+		</GeoJSON>
+	</MapLibre>
+
+	{#if selectedTab !== 'map'}
+		<BottomSheet
+			onClose={() => {
+				tabGroup.show('map');
 			}}
-			beforeLayerType="symbol"
-			manageHoverState
-			on:click={(e) => {
-				featureClicked.set(true);
-				const clickedTask = e.detail.features?.[0]?.properties?.uid;
-				selectedTaskId.set(clickedTask);
-			}}
-		/>
-		<LineLayer
-			layout={{ 'line-cap': 'round', 'line-join': 'round' }}
-			paint={{
-				'line-color': hoverStateFilter('#0fffff', '#0fffff'),
-				'line-width': 3,
-			}}
-			beforeLayerType="symbol"
-			manageHoverState
-		/>
-	</GeoJSON>
-</MapLibre>
+		>
+			{#if selectedTab === 'events'}
+				{#if $taskEventArray.length > 0}
+					{#each $taskEventArray as record}
+						<EventCard {record} highlight={record.task_id === $selectedTaskId} on:zoomToTask={(e) => zoomToTask(e)}
+						></EventCard>
+					{/each}
+				{/if}
+			{/if}
+			{#if selectedTab === 'offline'}
+				<div>TODO stuff here</div>
+			{/if}
+			{#if selectedTab === 'qrcode'}
+				<div class="flex flex-col items-center h-full p-4 space-y-4">
+					<!-- Text above the QR code -->
+					<div class="text-center w-full">
+						<div class=" font-bold text-lg font-barlow-medium">Scan this QR Code in ODK Collect</div>
+					</div>
 
-<sl-tab-group
-	placement="bottom"
-	no-scroll-controls
-	on:sl-tab-show={(e) => (selectedTab = e.detail.name)}
-	style="--panel-display: {panelDisplay};"
-	bind:this={tabGroup}
->
-	<!-- Map tab: panel is hidden to display the map below it -->
-	<sl-tab-panel name="map"></sl-tab-panel>
+					<!-- QR Code Container -->
+					<div class="flex justify-center w-full max-w-sm">
+						<hot-qr-code value={qrCodeData} label="Scan to open ODK Collect" size="250" radius="0.5" errorCorrection="L"
+						></hot-qr-code>
+					</div>
 
-	<!-- Task events tab -->
-	<sl-tab-panel name="events">
-		{#if $taskEventArray.length > 0}
-			{#each $taskEventArray as record}
-				<EventCard {record} highlight={record.task_id === $selectedTaskId} on:zoomToTask={(e) => zoomToTask(e)}
-				></EventCard>
-			{/each}
-		{/if}
-	</sl-tab-panel>
+					<!-- Download Button -->
+					<div class="w-full max-w-sm text-center">
+						<hot-icon-button
+							name="download"
+							label="Download QRCode"
+							on:click={downloadQrCode(data.project.project_info.name, qrCodeData)}>Download</hot-icon-button
+						>
+					</div>
 
-	<!-- Offline mode tab -->
-	<sl-tab-panel name="offline"> TODO stuff here </sl-tab-panel>
+					<!-- Open ODK Button -->
+					<div class="w-full max-w-sm text-center">
+						<sl-button
+							href="odkcollect://form/{data.project.xform_id}{$selectedTaskId ? `?task_filter=${$selectedTaskId}` : ''}"
+							><span class="font-barlow-regular">Open ODK</span></sl-button
+						>
+					</div>
+				</div>
+			{/if}
+		</BottomSheet>
+	{/if}
 
-	<!-- QRCode tab -->
-	<sl-tab-panel name="qrcode">
-		<div class="flex flex-col items-center justify-center h-full p-4 space-y-4">
-			<!-- Text above the QR code -->
-			<div class="text-center w-full">
-				<div class="h-12 font-bold text-lg">Scan this QR Code in ODK Collect</div>
-			</div>
+	<sl-tab-group
+		class="z-9999 fixed bottom-0 left-0 right-0"
+		placement="bottom"
+		no-scroll-controls
+		on:sl-tab-show={(e) => {
+			selectedTab = e.detail.name;
+		}}
+		style="--panel-display: none"
+		bind:this={tabGroup}
+	>
+		<sl-tab slot="nav" panel="map">
+			<hot-icon name="map" class="!text-[1.7rem] !sm:text-[2rem]"></hot-icon>
+		</sl-tab>
+		<sl-tab slot="nav" panel="events">
+			<hot-icon name="list" class="!text-[1.7rem] !sm:text-[2rem]"></hot-icon>
+		</sl-tab>
+		<sl-tab slot="nav" panel="offline">
+			<hot-icon name="wifi-off" class="!text-[1.7rem] !sm:text-[2rem]"></hot-icon>
+		</sl-tab>
+		<sl-tab slot="nav" panel="qrcode">
+			<hot-icon name="qr-code" class="!text-[1.7rem] !sm:text-[2rem]"></hot-icon>
+		</sl-tab>
+	</sl-tab-group>
+</div>
 
-			<!-- QR Code Container -->
-			<div class="flex justify-center w-full max-w-sm">
-				<hot-qr-code value={qrCodeData} label="Scan to open ODK Collect" size="300" radius="0.5" errorCorrection="L"
-				></hot-qr-code>
-			</div>
-
-			<!-- Download Button -->
-			<div class="w-full max-w-sm text-center">
-				<hot-icon-button
-					name="download"
-					label="Download QRCode"
-					on:click={downloadQrCode(data.project.project_info.name, qrCodeData)}>Download</hot-icon-button
-				>
-			</div>
-
-			<!-- Open ODK Button -->
-			<div class="w-full max-w-sm text-center">
-				<sl-button
-					href="odkcollect://form/{data.project.xform_id}{$selectedTaskId ? `?task_filter=${$selectedTaskId}` : ''}"
-					>Open ODK</sl-button
-				>
-			</div>
-		</div>
-	</sl-tab-panel>
-
-	<sl-tab slot="nav" panel="map">
-		<hot-icon name="map"></hot-icon>
-	</sl-tab>
-	<sl-tab slot="nav" panel="events">
-		<hot-icon name="list"></hot-icon>
-	</sl-tab>
-	<sl-tab slot="nav" panel="offline">
-		<hot-icon name="wifi-off"></hot-icon>
-	</sl-tab>
-	<sl-tab slot="nav" panel="qrcode">
-		<hot-icon name="qr-code"></hot-icon>
-	</sl-tab>
-</sl-tab-group>
+<!-- </div> -->
 
 <style>
 	:root {
@@ -374,6 +385,7 @@
 		justify-content: center;
 		background-color: var(--hot-white);
 		height: var(--nav-height);
+		background-color: white;
 	}
 
 	/* The tab active indicator */
