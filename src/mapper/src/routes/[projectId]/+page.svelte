@@ -24,6 +24,8 @@
 	// import { createLiveQuery } from '$lib/live-query';
 	import { generateQrCode, downloadQrCode } from '$lib/qrcode';
 	import EventCard from '$lib/components/event-card.svelte';
+	import Legend from '$lib/components/page/legend.svelte';
+	import LayerSwitcher from '$lib/components/page/layer-switcher.svelte';
 	import BottomSheet from '$lib/components/common/bottom-sheet.svelte';
 	import Error from './+error.svelte';
 	import '../../styles/page.css';
@@ -289,6 +291,10 @@
 				}}
 			/>
 		</GeoJSON>
+		<div class="absolute right-3 bottom-3 sm:right-5 sm:bottom-5">
+			<LayerSwitcher />
+			<Legend />
+		</div>
 	</MapLibre>
 
 	{#if selectedTab !== 'map'}
@@ -307,7 +313,6 @@
 			{/if}
 			{#if selectedTab === 'offline'}
 				<div>TODO stuff here</div>
-				<img src={LockImg} alt="Lock Icon" srcset="" />
 			{/if}
 			{#if selectedTab === 'qrcode'}
 				<div class="flex flex-col items-center h-full p-4 space-y-4">
