@@ -5,7 +5,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { writable } from 'svelte/store';
 	import { Shape, ShapeStream } from '@electric-sql/client';
-	import { MapLibre, GeoJSON, FillLayer, LineLayer, hoverStateFilter } from 'svelte-maplibre';
+	import { MapLibre, GeoJSON, FillLayer, LineLayer, hoverStateFilter, SymbolLayer } from 'svelte-maplibre';
 	import type { FeatureCollection } from 'geojson';
 	import { polygon } from '@turf/helpers';
 	import { buffer } from '@turf/buffer';
@@ -27,6 +27,8 @@
 	import BottomSheet from '$lib/components/common/bottom-sheet.svelte';
 	import Error from './+error.svelte';
 	import '../../styles/page.css';
+	import BlackLockImg from '../../assets/images/black-lock.png';
+	import RedLockImg from '../../assets/images/red-lock.png';
 
 	export let data: PageData;
 
@@ -233,6 +235,10 @@
 				featureClicked.set(false);
 			});
 		}}
+		images={[
+			{ id: '1', url: BlackLockImg },
+			{ id: '3', url: RedLockImg },
+		]}
 	>
 		<GeoJSON id="states" data={$taskFeatcolStore} promoteId="TASKS">
 			<FillLayer
@@ -242,13 +248,17 @@
 						'match',
 						['get', 'status'],
 						'0',
-						'#c5fbf5',
+						'#ffffff',
 						'1',
-						'#ff0000',
+						'#008099',
 						'2',
-						'#66ff33',
+						'#ade6ef',
 						'3',
-						'#ff9900',
+						'#fceca4',
+						'4',
+						'#40ac8c',
+						'5',
+						'#d73f3e',
 						'#c5fbf5', // default color if no match is found
 					],
 					'fill-opacity': hoverStateFilter(0.5, 0),
@@ -270,6 +280,14 @@
 				beforeLayerType="symbol"
 				manageHoverState
 			/>
+			<SymbolLayer
+				applyToClusters={false}
+				hoverCursor="pointer"
+				layout={{
+					'icon-image': ['case', ['==', ['get', 'status'], '1'], '1', ['==', ['get', 'status'], '3'], '3', ''],
+					'icon-allow-overlap': true,
+				}}
+			/>
 		</GeoJSON>
 	</MapLibre>
 
@@ -289,6 +307,7 @@
 			{/if}
 			{#if selectedTab === 'offline'}
 				<div>TODO stuff here</div>
+				<img src={LockImg} alt="Lock Icon" srcset="" />
 			{/if}
 			{#if selectedTab === 'qrcode'}
 				<div class="flex flex-col items-center h-full p-4 space-y-4">
