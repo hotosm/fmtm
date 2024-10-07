@@ -119,4 +119,3 @@ In reverse chronological order, with most recent events first.
 
 <!-- markdownlint-restore -->
 
-[1]: https://docs.google.com/document/d/1adG2pXuMXI0wPbR_09ASORMx2gcVn0H6nsCNNGG7tpM/edit#heading=h.k45v77hc1cu1
