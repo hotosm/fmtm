@@ -42,6 +42,7 @@
 	let selectedTab: string = 'map';
 	let panelDisplay: string = 'none';
 	$: panelDisplay = selectedTab === 'map' ? 'none' : 'block';
+	let toggleTaskActionModal = false;
 
 	// *** Task history sync *** //
 	const taskFeatcolStore = writable<FeatureCollection>({ type: 'FeatureCollection', features: [] });
@@ -235,6 +236,7 @@
 					selectedTaskId.set(null);
 				}
 				featureClicked.set(false);
+				toggleTaskActionModal = false;
 			});
 		}}
 		images={[
@@ -271,6 +273,7 @@
 					featureClicked.set(true);
 					const clickedTask = e.detail.features?.[0]?.properties?.uid;
 					selectedTaskId.set(clickedTask);
+					toggleTaskActionModal = true;
 				}}
 			/>
 			<LineLayer
@@ -296,6 +299,53 @@
 			<Legend />
 		</div>
 	</MapLibre>
+
+	{#if $selectedTaskId && selectedTab === 'map' && toggleTaskActionModal}
+		<div class="flex justify-center !w-[100vw] absolute bottom-[4rem] left-0 pointer-events-none z-50">
+			<div
+				class="bg-white w-[100vw] h-fit font-barlow-regular w-[100vw] md:max-w-[580px] pointer-events-auto px-4 pb-3 sm:pb-4 rounded-t-3xl"
+			>
+				<div class="flex justify-between items-center">
+					<p class="text-[#333] text-xl font-barlow-semibold leading-0 pt-2">Task #{$selectedTaskId}</p>
+					<hot-icon
+						name="close"
+						class="!text-[1.5rem] text-[#52525B] cursor-pointer hover:text-red-600 duration-200"
+						on:click={() => (toggleTaskActionModal = false)}
+					></hot-icon>
+				</div>
+
+				{#if $selectedTaskStatus == 'RELEASED_FOR_MAPPING'}
+					<p class="my-4 sm:my-6">Do you want to start mapping task #{$selectedTaskId}?</p>
+					<div class="flex justify-center gap-x-2">
+						<sl-button
+							on:click={mapTask(data.projectId, $selectedTaskId)}
+							size="small"
+							variant="default"
+							class="font-barlow-semibold"
+							outline><span class="font-barlow-regular text-sm">CANCEL</span></sl-button
+						>
+						<sl-button variant="default" size="small"
+							><span class="font-barlow-regular text-sm">START MAPPING</span></sl-button
+						>
+					</div>
+				{:else if $selectedTaskStatus == 'LOCKED_FOR_MAPPING'}
+					<p class="my-4 sm:my-6">Task #{$selectedTaskId} has been locked, Is the task completely mapped?</p>
+					<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+						<sl-button on:click={resetTask(data.projectId, $selectedTaskId)} variant="default" outline size="small"
+							><span class="font-barlow-regular text-sm">CANCEL MAPPING</span></sl-button
+						>
+						<sl-button on:click={finishTask(data.projectId, $selectedTaskId)} variant="default" size="small"
+							><span class="font-barlow-regular text-sm">COMPLETE MAPPING</span></sl-button
+						>
+						<sl-button variant="default" size="small" class="col-span-2 sm:col-span-1"
+							><span class="font-barlow-regular text-sm">GO TO ODK</span></sl-button
+						>
+					</div>
+					<div class="flex justify-center gap-2"></div>
+				{/if}
+			</div>
+		</div>
+	{/if}
 
 	{#if selectedTab !== 'map'}
 		<BottomSheet
