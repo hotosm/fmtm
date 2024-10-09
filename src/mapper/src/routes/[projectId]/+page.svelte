@@ -300,7 +300,7 @@
 		</div>
 	</MapLibre>
 
-	{#if $selectedTaskId && selectedTab === 'map' && toggleTaskActionModal}
+	{#if $selectedTaskId && selectedTab === 'map' && toggleTaskActionModal && ($selectedTaskStatus === 'RELEASED_FOR_MAPPING' || $selectedTaskStatus === 'LOCKED_FOR_MAPPING')}
 		<div class="flex justify-center !w-[100vw] absolute bottom-[4rem] left-0 pointer-events-none z-50">
 			<div
 				class="bg-white w-[100vw] h-fit font-barlow-regular w-[100vw] md:max-w-[580px] pointer-events-auto px-4 pb-3 sm:pb-4 rounded-t-3xl"
