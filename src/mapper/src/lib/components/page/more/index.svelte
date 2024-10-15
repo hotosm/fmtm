@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Editor from '$lib/components/common/Editor/editor.svelte';
+
 	type stackType = '' | 'Comment' | 'Instructions' | 'Activities';
 	const stackGroup: { icon: string; title: stackType }[] = [
 		{
@@ -18,7 +20,7 @@
 	let activeStack: stackType = 'Comment';
 </script>
 
-<div class="font-barlow-medium">
+<div class="font-barlow-medium h-full">
 	{#if activeStack === ''}
 		{#each stackGroup as stack}
 			<div
@@ -36,7 +38,7 @@
 
 	<!-- header -->
 	{#if activeStack !== ''}
-		<div class="flex items-center gap-x-2">
+		<div class="flex items-center gap-x-2 sticky top-0 bg-white">
 			<hot-icon
 				name="chevron-left"
 				class="text-[1rem] hover:-translate-x-[2px] duration-200 cursor-pointer text-[1.125rem] text-black hover:text-red-600 duration-200"
@@ -47,12 +49,16 @@
 	{/if}
 	<!-- body -->
 	{#if activeStack === 'Comment'}
-		<div>
-			<p>Comment</p>
+		<div class="h-[calc(100%-2.25rem)] sm:h-[calc(100%-2.6rem)]">
+			<div class="h-[calc(100%-11.875rem)] overflow-y-scroll"></div>
+
+			<div class="">
+				<Editor />
+			</div>
 		</div>
 	{/if}
 	{#if activeStack === 'Instructions'}
-		<div>
+		<div class="">
 			<p>Instructions</p>
 		</div>
 	{/if}
