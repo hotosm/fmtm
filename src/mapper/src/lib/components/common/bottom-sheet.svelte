@@ -96,12 +96,12 @@
 				on:mouseup={dragStop}
 				on:mouseout={dragStop}
 			>
-				<span class="h-[6px] w-[3.25rem] block bg-[#d2d2d4] rounded-full pointer-events-none hover:bg-green-400"></span>
+				<span class="h-[6px] w-[3.25rem] block bg-[#d2d2d4] rounded-full pointer-events-none"></span>
 			</div>
 			<!-- </div> -->
 
 			<!-- body -->
-			<div class="overflow-y-scroll scrollbar h-[calc(100%-5rem)] sm:h-[calc(100%-6.7rem)] px-4">
+			<div class="overflow-y-scroll scrollbar h-[calc(100%-5rem)] sm:h-[calc(100%-6.7rem)] px-4 relative">
 				<slot />
 			</div>
 		</div>
