@@ -31,6 +31,7 @@
 	import '../../styles/page.css';
 	import BlackLockImg from '../../assets/images/black-lock.png';
 	import RedLockImg from '../../assets/images/red-lock.png';
+	import More from '../../lib/components/page/more/index.svelte';
 
 	export let data: PageData;
 
@@ -360,6 +361,9 @@
 						></EventCard>
 					{/each}
 				{/if}
+
+				<!-- uncomment More to view stacked component containing comment, instructions, activities -->
+				<!-- <More /> -->
 			{/if}
 			{#if selectedTab === 'offline'}
 				<div>TODO stuff here</div>
