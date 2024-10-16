@@ -320,15 +320,23 @@
 					<p class="my-4 sm:my-6">Do you want to start mapping task #{$selectedTaskId}?</p>
 					<div class="flex justify-center gap-x-2">
 						<sl-button
-							on:click={mapTask(data.projectId, $selectedTaskId)}
 							size="small"
 							variant="default"
 							class="secondary"
+							on:click={() => (toggleTaskActionModal = false)}
 							outline><span class="font-barlow-medium text-sm">CANCEL</span></sl-button
 						>
-						<sl-button variant="default" size="small" class="primary"
-							><span class="font-barlow-medium text-sm">START MAPPING</span></sl-button
+						<sl-button
+							variant="default"
+							size="small"
+							class="primary"
+							on:click={mapTask(data.projectId, $selectedTaskId)}
 						>
+							<div class="flex items-center gap-1">
+								<hot-icon name="location" class="!text-[1rem] text-white cursor-pointer duration-200"></hot-icon>
+								<p class="font-barlow-medium text-sm leading-[0]">START MAPPING</p>
+							</div>
+						</sl-button>
 					</div>
 				{:else if $selectedTaskStatus == 'LOCKED_FOR_MAPPING'}
 					<p class="my-4 sm:my-6">Task #{$selectedTaskId} has been locked, Is the task completely mapped?</p>
@@ -338,17 +346,34 @@
 							variant="default"
 							outline
 							size="small"
-							class="secondary"><span class="font-barlow-medium text-sm">CANCEL MAPPING</span></sl-button
+							class="secondary"
+						>
+							<div class="flex items-center gap-1">
+								<hot-icon
+									name="close"
+									class="!text-[1rem] text-[#d73f37] cursor-pointer duration-200 hover:text-[#b91c1c]"
+									on:click={() => (toggleTaskActionModal = false)}
+								></hot-icon>
+								<p class="font-barlow-medium text-sm leading-[0]">CANCEL MAPPING</p>
+							</div></sl-button
 						>
 						<sl-button
 							on:click={finishTask(data.projectId, $selectedTaskId)}
 							variant="default"
 							size="small"
-							class="primary"><span class="font-barlow-medium text-sm">COMPLETE MAPPING</span></sl-button
+							class="primary"
+							><div class="flex items-center gap-1">
+								<hot-icon
+									name="check"
+									class="!text-[1rem] text-white cursor-pointer duration-200"
+									on:click={() => (toggleTaskActionModal = false)}
+								></hot-icon>
+								<p class="font-barlow-medium text-sm leading-[0]">COMPLETE MAPPING</p>
+							</div></sl-button
 						>
-						<sl-button variant="default" size="small" class="gray col-span-2 sm:col-span-1"
-							><span class="font-barlow-medium text-sm">GO TO ODK</span></sl-button
-						>
+						<sl-button variant="default" size="small" class="gray col-span-2 sm:col-span-1">
+							<p class="font-barlow-medium text-sm leading-[0]">GO TO ODK</p>
+						</sl-button>
 					</div>
 					<div class="flex justify-center gap-2"></div>
 				{/if}
