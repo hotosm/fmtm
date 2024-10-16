@@ -22,7 +22,7 @@ from enum import Enum
 from typing import Optional, TypedDict
 
 from geojson_pydantic import Feature, FeatureCollection
-from pydantic import BaseModel, Field, ValidationInfo, computed_field
+from pydantic import BaseModel, Field, ValidationInfo, computed_field, validator
 from pydantic.functional_validators import field_validator
 
 from app.models.enums import TaskStatus
@@ -140,12 +140,24 @@ class EntityOsmID(BaseModel):
     id: str
     osm_id: Optional[int] = None
 
+    @validator("osm_id", pre=True, always=True)
+    def convert_osm_id(cls, value):
+        """Set osm_id to None if empty or invalid."""
+        if value in ("", " "):  # Treat empty strings as None
+            return None
+
 
 class EntityTaskID(BaseModel):
     """Map of Entity UUID to FMTM Task ID."""
 
     id: str
-    task_id: int
+    task_id: Optional[int] = None
+
+    @validator("task_id", pre=True, always=True)
+    def convert_task_id(cls, value):
+        """Set task_id to None if empty or invalid."""
+        if value in ("", " "):  # Treat empty strings as None
+            return None
 
 
 class EntityMappingStatus(EntityOsmID, EntityTaskID):
