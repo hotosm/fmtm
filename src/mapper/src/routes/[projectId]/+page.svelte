@@ -32,6 +32,7 @@
 	import BlackLockImg from '../../assets/images/black-lock.png';
 	import RedLockImg from '../../assets/images/red-lock.png';
 	import More from '../../lib/components/page/more/index.svelte';
+	import '../../styles/button.css';
 
 	export let data: PageData;
 
@@ -322,24 +323,31 @@
 							on:click={mapTask(data.projectId, $selectedTaskId)}
 							size="small"
 							variant="default"
-							class="font-barlow-semibold"
-							outline><span class="font-barlow-regular text-sm">CANCEL</span></sl-button
+							class="secondary"
+							outline><span class="font-barlow-medium text-sm">CANCEL</span></sl-button
 						>
-						<sl-button variant="default" size="small"
-							><span class="font-barlow-regular text-sm">START MAPPING</span></sl-button
+						<sl-button variant="default" size="small" class="primary"
+							><span class="font-barlow-medium text-sm">START MAPPING</span></sl-button
 						>
 					</div>
 				{:else if $selectedTaskStatus == 'LOCKED_FOR_MAPPING'}
 					<p class="my-4 sm:my-6">Task #{$selectedTaskId} has been locked, Is the task completely mapped?</p>
 					<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-						<sl-button on:click={resetTask(data.projectId, $selectedTaskId)} variant="default" outline size="small"
-							><span class="font-barlow-regular text-sm">CANCEL MAPPING</span></sl-button
+						<sl-button
+							on:click={resetTask(data.projectId, $selectedTaskId)}
+							variant="default"
+							outline
+							size="small"
+							class="secondary"><span class="font-barlow-medium text-sm">CANCEL MAPPING</span></sl-button
 						>
-						<sl-button on:click={finishTask(data.projectId, $selectedTaskId)} variant="default" size="small"
-							><span class="font-barlow-regular text-sm">COMPLETE MAPPING</span></sl-button
+						<sl-button
+							on:click={finishTask(data.projectId, $selectedTaskId)}
+							variant="default"
+							size="small"
+							class="primary"><span class="font-barlow-medium text-sm">COMPLETE MAPPING</span></sl-button
 						>
-						<sl-button variant="default" size="small" class="col-span-2 sm:col-span-1"
-							><span class="font-barlow-regular text-sm">GO TO ODK</span></sl-button
+						<sl-button variant="default" size="small" class="gray col-span-2 sm:col-span-1"
+							><span class="font-barlow-medium text-sm">GO TO ODK</span></sl-button
 						>
 					</div>
 					<div class="flex justify-center gap-2"></div>
@@ -355,21 +363,21 @@
 			}}
 		>
 			{#if selectedTab === 'events'}
-				{#if $taskEventArray.length > 0}
+				<!-- {#if $taskEventArray.length > 0}
 					{#each $taskEventArray as record}
 						<EventCard {record} highlight={record.task_id === $selectedTaskId} on:zoomToTask={(e) => zoomToTask(e)}
 						></EventCard>
 					{/each}
-				{/if}
+				{/if} -->
 
 				<!-- uncomment More to view stacked component containing comment, instructions, activities -->
-				<!-- <More /> -->
+				<More />
 			{/if}
 			{#if selectedTab === 'offline'}
 				<div>TODO stuff here</div>
 			{/if}
 			{#if selectedTab === 'qrcode'}
-				<div class="flex flex-col items-center h-full p-4 space-y-4">
+				<div class="flex flex-col items-center p-4 space-y-4">
 					<!-- Text above the QR code -->
 					<div class="text-center w-full">
 						<div class=" font-bold text-lg font-barlow-medium">Scan this QR Code in ODK Collect</div>
@@ -393,8 +401,9 @@
 					<!-- Open ODK Button -->
 					<div class="w-full max-w-sm text-center">
 						<sl-button
+							class="primary"
 							href="odkcollect://form/{data.project.xform_id}{$selectedTaskId ? `?task_filter=${$selectedTaskId}` : ''}"
-							><span class="font-barlow-regular">Open ODK</span></sl-button
+							><span class="font-barlow-medium text-base">Open ODK</span></sl-button
 						>
 					</div>
 				</div>

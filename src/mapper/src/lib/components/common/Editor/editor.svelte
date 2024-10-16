@@ -4,6 +4,7 @@
 	import StarterKit from '@tiptap/starter-kit';
 	import Toolbar from './toolbar.svelte';
 	import './editor.css';
+	import '../../../../styles/button.css';
 
 	let element;
 	let editor;
@@ -39,10 +40,10 @@
 			on:click={editor?.commands.clearContent(true)}
 			variant="default"
 			size="small"
-			class="col-span-2 sm:col-span-1"><span class="font-barlow-regular text-sm">CLEAR</span></sl-button
+			class="secondary col-span-2 sm:col-span-1"><span class="font-barlow-medium text-sm">CLEAR</span></sl-button
 		>
-		<sl-button variant="default" size="small" class="col-span-2 sm:col-span-1"
-			><span class="font-barlow-regular text-sm">COMMENT</span></sl-button
+		<sl-button variant="default" size="small" class="primary col-span-2 sm:col-span-1"
+			><span class="font-barlow-medium text-sm">COMMENT</span></sl-button
 		>
 	</div>
 </div>
