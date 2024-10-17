@@ -281,8 +281,9 @@
 			<LineLayer
 				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 				paint={{
-					'line-color': hoverStateFilter('#0fffff', '#0fffff'),
+					'line-color': ['case', ['==', ['get', 'uid'], $selectedTaskId], '#fa1100', '#0fffff'],
 					'line-width': 3,
+					'line-opacity': ['case', ['==', ['get', 'uid'], $selectedTaskId], 1, 0.35],
 				}}
 				beforeLayerType="symbol"
 				manageHoverState
