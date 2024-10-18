@@ -1,0 +1,25 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classapp_1_1models_1_1enums_1_1HTTPStatus.html" title=" " alt="" coords="5,336,231,363"/>
+<area shape="rect" id="node2" href="$classapp_1_1models_1_1enums_1_1IntEnum.html" title=" " alt="" coords="299,336,503,363"/>
+<area shape="rect" id="node3" href="$classapp_1_1models_1_1enums_1_1BackgroundTaskStatus.html" title=" " alt="" coords="593,692,820,733"/>
+<area shape="rect" id="node4" href="$classapp_1_1models_1_1enums_1_1CommunityType.html" title=" " alt="" coords="579,758,835,784"/>
+<area shape="rect" id="node5" href="$classapp_1_1models_1_1enums_1_1MappingLevel.html" title=" " alt="" coords="603,6,810,48"/>
+<area shape="rect" id="node6" href="$classapp_1_1models_1_1enums_1_1OrganisationType.html" title=" " alt="" coords="575,72,838,99"/>
+<area shape="rect" id="node7" href="$classapp_1_1models_1_1enums_1_1ProjectPriority.html" title=" " alt="" coords="609,124,804,165"/>
+<area shape="rect" id="node8" href="$classapp_1_1models_1_1enums_1_1ProjectRole.html" title=" " alt="" coords="595,190,819,216"/>
+<area shape="rect" id="node9" href="$classapp_1_1models_1_1enums_1_1ProjectSplitStrategy.html" title=" " alt="" coords="609,241,804,282"/>
+<area shape="rect" id="node10" href="$classapp_1_1models_1_1enums_1_1ProjectStatus.html" title=" " alt="" coords="609,306,804,348"/>
+<area shape="rect" id="node11" href="$classapp_1_1models_1_1enums_1_1ProjectVisibility.html" title=" " alt="" coords="609,372,804,413"/>
+<area shape="rect" id="node12" href="$classapp_1_1models_1_1enums_1_1TaskAction.html" title=" " alt="" coords="597,438,817,464"/>
+<area shape="rect" id="node13" href="$classapp_1_1models_1_1enums_1_1TaskSplitType.html" title=" " alt="" coords="587,488,826,515"/>
+<area shape="rect" id="node14" href="$classapp_1_1models_1_1enums_1_1TaskStatus.html" title=" " alt="" coords="597,539,817,566"/>
+<area shape="rect" id="node15" href="$classapp_1_1models_1_1enums_1_1TaskType.html" title=" " alt="" coords="602,590,811,616"/>
+<area shape="rect" id="node16" href="$classapp_1_1models_1_1enums_1_1UserRole.html" title=" " alt="" coords="602,640,811,667"/>
+<area shape="rect" id="node17" title=" " alt="" coords="99,919,137,946"/>
+<area shape="rect" id="node18" href="$classapp_1_1config_1_1MonitoringTypes.html" title=" " alt="" coords="301,995,501,1022"/>
+<area shape="rect" id="node19" href="$classapp_1_1models_1_1enums_1_1GeometryType.html" title=" " alt="" coords="279,843,524,870"/>
+<area shape="rect" id="node20" href="$classapp_1_1models_1_1enums_1_1StrEnum.html" title=" " alt="" coords="299,894,504,920"/>
+<area shape="rect" id="node22" href="$classapp_1_1models_1_1enums_1_1XLSFormType.html" title=" " alt="" coords="283,944,520,971"/>
+<area shape="rect" id="node21" href="$classapp_1_1models_1_1enums_1_1ReviewStateEnum.html" title=" " alt="" coords="572,851,841,878"/>
+<area shape="rect" id="node23" title=" " alt="" coords="89,514,147,540"/>
+</map>
