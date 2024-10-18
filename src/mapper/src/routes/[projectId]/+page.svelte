@@ -5,7 +5,19 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { writable } from 'svelte/store';
 	import { Shape, ShapeStream } from '@electric-sql/client';
-	import { MapLibre, GeoJSON, FillLayer, LineLayer, hoverStateFilter, SymbolLayer } from 'svelte-maplibre';
+	import {
+		MapLibre,
+		GeoJSON,
+		FillLayer,
+		LineLayer,
+		hoverStateFilter,
+		SymbolLayer,
+		NavigationControl,
+		ScaleControl,
+		Control,
+		ControlGroup,
+		ControlButton,
+	} from 'svelte-maplibre';
 	import type { FeatureCollection } from 'geojson';
 	import { polygon } from '@turf/helpers';
 	import { buffer } from '@turf/buffer';
@@ -33,6 +45,9 @@
 	import RedLockImg from '../../assets/images/red-lock.png';
 	import More from '../../lib/components/page/more/index.svelte';
 	import '../../styles/button.css';
+	import { GetDeviceRotation } from '../../utilFunctions/getDeviceRotation';
+	import LocationArcImg from '../../assets/images/locationArc.png';
+	import LocationDotImg from '../../assets/images/locationDot.png';
 
 	export let data: PageData;
 
@@ -180,6 +195,92 @@
 		await updateTaskFeatures();
 	});
 
+	// geolocation
+	let coords: [number, number];
+	let rotationDeg: number | undefined;
+	let toggleGeolocationStatus = false;
+	let watchId;
+
+	$: if (map && toggleGeolocationStatus) {
+		// zoom to user's current location
+		navigator.geolocation.getCurrentPosition((position) => {
+			const currentCoordinate = [position.coords.longitude, position.coords.latitude];
+			map.flyTo({
+				center: currentCoordinate,
+				essential: true,
+				zoom: 18,
+			});
+		});
+
+		// track users location
+		watchId = navigator.geolocation.watchPosition(
+			function (pos) {
+				coords = [pos.coords.longitude, pos.coords.latitude];
+			},
+			function (error) {
+				alert(`ERROR: ${error.message}`);
+			},
+			{
+				enableHighAccuracy: true,
+			},
+		);
+	} else {
+		// stop tracking user's location on location toggle off
+		navigator.geolocation.clearWatch(watchId);
+	}
+	const isFirefox = typeof InstallTrigger !== 'undefined';
+	const isSafari =
+		/constructor/i.test(window.HTMLElement) ||
+		(function (p) {
+			return p.toString() === '[object SafariRemoteNotification]';
+			// @ts-ignore
+		})(!window['safari'] || (typeof safari !== 'undefined' && window['safari'].pushNotification));
+
+	// locationGeojson: to display point on the map
+	let locationGeojson: FeatureCollection;
+	$: locationGeojson = {
+		type: 'FeatureCollection',
+		features: [
+			{
+				type: 'Feature',
+				geometry: {
+					type: 'Point',
+					coordinates: coords,
+				},
+				// firefox & safari doesn't support device orientation sensor, so if the browser any of the two set orientation to false
+				properties: { orientation: !(isFirefox || isSafari) },
+			},
+		],
+	};
+
+	$: if (map && toggleGeolocationStatus) {
+		if (isFirefox || isSafari) {
+			// firefox & safari doesn't support device orientation sensor
+		} else {
+			// See the API specification at: https://w3c.github.io/orientation-sensor
+			// We use referenceFrame: 'screen' because the web page will rotate when
+			// the phone switches from portrait to landscape.
+			const sensor = new AbsoluteOrientationSensor({
+				frequency: 60,
+				referenceFrame: 'screen',
+			});
+			sensor.addEventListener('reading', (event) => {
+				rotationDeg = GetDeviceRotation(sensor.quaternion);
+			});
+
+			Promise.all([
+				navigator.permissions.query({ name: 'accelerometer' }),
+				navigator.permissions.query({ name: 'magnetometer' }),
+				navigator.permissions.query({ name: 'gyroscope' }),
+			]).then((results) => {
+				if (results.every((result) => result.state === 'granted')) {
+					sensor.start();
+				} else {
+				}
+			});
+		}
+	}
+
 	onDestroy(() => {
 		taskHistoryStream.unsubscribeAll();
 	});
@@ -228,7 +329,6 @@
 		bind:loaded
 		style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
 		class="flex-auto w-full sm:aspect-video h-[calc(100%-4rem)]"
-		standardControls
 		center={[0, 0]}
 		zoom={2}
 		attributionControl={false}
@@ -244,8 +344,41 @@
 		images={[
 			{ id: '1', url: BlackLockImg },
 			{ id: '3', url: RedLockImg },
+			{ id: 'locationArc', url: LocationArcImg },
+			{ id: 'locationDot', url: LocationDotImg },
 		]}
 	>
+		<NavigationControl position="top-left" />
+		<ScaleControl />
+		<Control class="flex flex-col gap-y-2" position="top-left">
+			<ControlGroup>
+				<ControlButton on:click={() => (toggleGeolocationStatus = !toggleGeolocationStatus)}
+					><hot-icon
+						name="geolocate"
+						class={`!text-[1.2rem] cursor-pointer  duration-200 ${toggleGeolocationStatus ? 'text-red-600' : 'text-[#52525B]'}`}
+					></hot-icon></ControlButton
+				>
+			</ControlGroup></Control
+		>
+		{#if toggleGeolocationStatus}
+			<GeoJSON data={locationGeojson} id="point">
+				<SymbolLayer
+					applyToClusters={false}
+					hoverCursor="pointer"
+					layout={{
+						// if orientation true (meaning the browser supports device orientation sensor show location dot with orientation sign)
+						'icon-image': ['case', ['==', ['get', 'orientation'], true], 'locationArc', 'locationDot'],
+						'icon-allow-overlap': true,
+						'text-field': '{mag}',
+						'text-offset': [0, -2],
+						'text-size': 12,
+						'icon-rotate': rotationDeg || 0, // rotate location icon acc to device orientation
+						'icon-rotation-alignment': 'map',
+						'icon-size': 0.5,
+					}}
+				/>
+			</GeoJSON>
+		{/if}
 		<GeoJSON id="states" data={$taskFeatcolStore} promoteId="TASKS">
 			<FillLayer
 				hoverCursor="pointer"
