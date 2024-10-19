@@ -146,7 +146,6 @@ CREATE TYPE public.communitytype AS ENUM (
 );
 ALTER TYPE public.communitytype OWNER TO fmtm;
 
-
 -- Extra
 
 SET default_tablespace = '';
@@ -229,7 +228,6 @@ ALTER SEQUENCE public.organisations_id_seq OWNED BY public.organisations.id;
 
 CREATE TABLE public.project_info (
     project_id integer NOT NULL,
-    project_id_str character varying,
     name character varying(512),
     short_description character varying,
     description character varying,
@@ -258,14 +256,7 @@ CREATE TABLE public.projects (
     featured boolean DEFAULT false,
     due_date timestamp with time zone,
     changeset_comment character varying,
-    osmcha_filter_id character varying,
-    imagery character varying,
-    osm_preset character varying,
-    odk_preset character varying,
-    josm_preset character varying,
-    id_presets character varying [],
-    extra_id_params character varying,
-    centroid public.GEOMETRY (POINT, 4326),
+
     odk_central_url character varying,
     odk_central_user character varying,
     odk_central_password character varying,
@@ -465,7 +456,6 @@ ADD CONSTRAINT submission_photos_pkey PRIMARY KEY (id);
 -- Indexing
 
 CREATE INDEX idx_geometry ON public.projects USING gist (outline);
-CREATE INDEX idx_projects_centroid ON public.projects USING gist (centroid);
 CREATE INDEX idx_projects_outline ON public.projects USING gist (outline);
 CREATE INDEX idx_task_history_composite ON public.task_history USING btree (
     task_id, project_id

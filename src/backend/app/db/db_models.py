@@ -22,6 +22,8 @@ from typing import cast
 from uuid import uuid4
 
 from geoalchemy2 import Geometry, WKBElement
+
+# FIXME delete this
 from sqlalchemy import (
     ARRAY,
     UUID,
@@ -46,10 +48,10 @@ from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import (
     # declarative_base,
     backref,
+    declarative_base,
     relationship,
 )
 
-from app.db.database import Base, FmtmMetadata
 from app.db.postgis_utils import timestamp
 from app.models.enums import (
     BackgroundTaskStatus,
@@ -64,6 +66,9 @@ from app.models.enums import (
     TaskSplitType,
     UserRole,
 )
+
+Base = declarative_base()
+FmtmMetadata = Base.metadata
 
 
 class DbUserRoles(Base):
@@ -182,7 +187,6 @@ class DbProjectInfo(Base):
     __tablename__ = "project_info"
 
     project_id = cast(int, Column(Integer, ForeignKey("projects.id"), primary_key=True))
-    project_id_str = cast(str, Column(String))
     name = cast(str, Column(String(512)))
     short_description = cast(str, Column(String))
     description = cast(str, Column(String))
@@ -452,14 +456,6 @@ class DbProject(Base):
     task_num_buildings = cast(int, Column(SmallInteger, nullable=True))
 
     hashtags = cast(list, Column(ARRAY(String)))  # Project hashtag
-
-    # Other Attributes
-    imagery = cast(str, Column(String))
-    osm_preset = cast(str, Column(String))
-    odk_preset = cast(str, Column(String))
-    josm_preset = cast(str, Column(String))
-    id_presets = cast(list, Column(ARRAY(String)))
-    extra_id_params = cast(str, Column(String))
 
     # GEOMETRY
     # country = Column(ARRAY(String), default=[])
