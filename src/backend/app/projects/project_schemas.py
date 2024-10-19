@@ -18,190 +18,42 @@
 """Pydantic schemas for Projects."""
 
 from datetime import datetime
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Self, Union
 
 from dateutil import parser
-from geoalchemy2 import WKBElement
 from geojson_pydantic import Feature, FeatureCollection, MultiPolygon, Polygon
 from loguru import logger as log
-from psycopg.rows import class_row
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, ValidationInfo, computed_field
 from pydantic.functional_serializers import field_serializer
 from pydantic.functional_validators import field_validator, model_validator
-from typing_extensions import Self
 
-from app.config import HttpUrlStr, decrypt_value, encrypt_value, settings
+from app.central.central_schemas import ODKCentralIn
+from app.config import decrypt_value
 from app.db.postgis_utils import (
     featcol_to_wkb_geom,
     geojson_to_featcol,
     get_address_from_lat_lon,
     merge_polygons,
     read_wkb,
-    wkb_geom_to_feature,
     write_wkb,
 )
-from app.models.enums import ProjectPriority, ProjectStatus, TaskSplitType, XLSFormType
-from app.tasks import tasks_schemas
-from app.users.user_schemas import User
-
-
-class ODKCentral(BaseModel):
-    """ODK Central credentials."""
-
-    odk_central_url: Optional[HttpUrlStr] = None
-    odk_central_user: Optional[str] = None
-    odk_central_password: Optional[str] = None
-
-    @field_validator("odk_central_url", mode="after")
-    @classmethod
-    def remove_trailing_slash(cls, value: HttpUrlStr) -> Optional[HttpUrlStr]:
-        """Remove trailing slash from ODK Central URL."""
-        if not value:
-            return None
-        if value.endswith("/"):
-            return value[:-1]
-        return value
-
-    @model_validator(mode="after")
-    def all_odk_vars_together(self) -> Self:
-        """Ensure if one ODK variable is set, then all are."""
-        if any(
-            [
-                self.odk_central_url,
-                self.odk_central_user,
-                self.odk_central_password,
-            ]
-        ) and not all(
-            [
-                self.odk_central_url,
-                self.odk_central_user,
-                self.odk_central_password,
-            ]
-        ):
-            err = "All ODK details are required together: url, user, password"
-            log.debug(err)
-            raise ValueError(err)
-        return self
-
-
-class ODKCentralIn(ODKCentral):
-    """ODK Central credentials inserted to database."""
-
-    @field_validator("odk_central_password", mode="after")
-    @classmethod
-    def encrypt_odk_password(cls, value: str) -> Optional[str]:
-        """Encrypt the ODK Central password before db insertion."""
-        if not value:
-            return None
-        return encrypt_value(value)
-
-
-class ODKCentralDecrypted(BaseModel):
-    """ODK Central credentials extracted from database.
-
-    WARNING never return this as a response model.
-    WARNING or log to the terminal.
-    """
-
-    odk_central_url: Optional[HttpUrlStr] = None
-    odk_central_user: Optional[str] = None
-    odk_central_password: Optional[str] = None
-
-    def model_post_init(self, ctx):
-        """Run logic after model object instantiated."""
-        # Decrypt odk central password from database
-        if self.odk_central_password:
-            if isinstance(self.odk_central_password, str):
-                password = self.odk_central_password
-            else:
-                password = self.odk_central_password
-            self.odk_central_password = decrypt_value(password)
-
-    @field_validator("odk_central_url", mode="after")
-    @classmethod
-    def remove_trailing_slash(cls, value: HttpUrlStr) -> Optional[HttpUrlStr]:
-        """Remove trailing slash from ODK Central URL."""
-        if not value:
-            return None
-        if value.endswith("/"):
-            return value[:-1]
-        return value
+from app.models.enums import (
+    ProjectPriority,
+    ProjectStatus,
+    ProjectVisibility,
+    TaskSplitType,
+)
+from app.tasks.task_schemas import ReadTask
+from app.users.user_schemas import UserBasic
 
 
 class ProjectInfo(BaseModel):
     """Basic project info."""
 
-    name: str
-    short_description: str
-    description: str
+    name: Optional[str] = None
+    short_description: Optional[str] = None
+    description: Optional[str] = None
     per_task_instructions: Optional[str] = None
-
-
-class DbProject(BaseModel):
-    """Project from database."""
-
-    outline: Any = Field(exclude=True)
-    odk_form_id: Optional[str] = Field(exclude=True)
-
-    id: int
-    odkid: int
-    author: User
-    project_info: ProjectInfo
-    status: ProjectStatus | str
-    created_at: datetime
-    # location_str: str
-    xform_category: Optional[XLSFormType] = None
-    hashtags: Optional[List[str]] = None
-    organisation_id: Optional[int] = None
-    tasks: Optional[List[tasks_schemas.Task]]
-
-    @field_serializer("status")
-    def status_enum_str_to_int(self, value: ProjectStatus | str) -> ProjectStatus:
-        """Get the the int value from a string enum."""
-        if isinstance(value, ProjectStatus):
-            return ProjectStatus[value.name]
-        else:
-            return ProjectStatus[value]
-
-    @computed_field
-    @property
-    def outline_geojson(self) -> Optional[Feature]:
-        """TODO this is now the same as self.outline."""
-        if not self.outline:
-            return None
-
-        # TODO refactor to remove outline_geojson
-        # TODO possibly also generate bbox for geojson in project_deps SQL?
-        feat = {
-            "type": "Feature",
-            "geometry": self.outline,
-            "id": self.id,
-            "properties": {"id": self.id, "bbox": None},
-        }
-        return Feature(**feat)
-
-    @computed_field
-    @property
-    def organisation_logo(self) -> Optional[str]:
-        """Get the organisation logo url from the S3 bucket."""
-        if not self.organisation_id:
-            return None
-
-        return (
-            f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}"
-            f"/{self.organisation_id}/logo.png"
-        )
-
-    @computed_field
-    @property
-    def xform_id(self) -> Optional[str]:
-        """Generate from odk_form_id.
-
-        TODO this could be refactored out in future.
-        """
-        if not self.odk_form_id:
-            return None
-        return self.odk_form_id
 
 
 class ProjectIn(BaseModel):
@@ -229,6 +81,7 @@ class ProjectIn(BaseModel):
         outline = geojson_to_featcol(self.outline_geojson.model_dump())
         outline_merged = merge_polygons(outline)
 
+        # TODO SQL remove the wkb handling and convert in the SQL
         return featcol_to_wkb_geom(outline_merged)
 
     @computed_field
@@ -237,6 +90,7 @@ class ProjectIn(BaseModel):
         """Compute centroid for project outline."""
         if not self.outline:
             return None
+        # TODO SQL remove the wkb handling and convert in the SQL
         return write_wkb(read_wkb(self.outline).centroid)
 
     @computed_field
@@ -298,24 +152,6 @@ class ProjectUpload(ProjectIn, ODKCentralIn):
     """Project upload details, plus ODK credentials."""
 
     pass
-
-
-class ProjectPartialUpdate(BaseModel):
-    """Update projects metadata."""
-
-    name: Optional[str] = None
-    short_description: Optional[str] = None
-    description: Optional[str] = None
-    hashtags: Optional[List[str]] = None
-    per_task_instructions: Optional[str] = None
-
-    @computed_field
-    @property
-    def project_name_prefix(self) -> Optional[str]:
-        """Compute project name prefix with underscores."""
-        if not self.name:
-            return None
-        return self.name.replace(" ", "_").lower()
 
 
 class ProjectUpdate(ProjectUpload):
@@ -380,94 +216,77 @@ class PaginatedProjectSummaries(BaseModel):
     pagination: PaginationInfo
 
 
-class ProjectBase(BaseModel):
-    """Base project model."""
-
-    outline: Any = Field(exclude=True)
-    odk_form_id: Optional[str] = Field(exclude=True)
+class ReadProject(BaseModel):
+    """Subset of DbProject for serialising and display."""
 
     id: int
-    odkid: int
-    author: User
-    project_info: ProjectInfo
-    status: ProjectStatus | str
-    created_at: datetime
-    # location_str: str
-    xform_category: Optional[XLSFormType] = None
-    hashtags: Optional[List[str]] = None
-    organisation_id: Optional[int] = None
-
-    @field_serializer("status")
-    def status_enum_str_to_int(self, value: ProjectStatus | str) -> ProjectStatus:
-        """Get the the int value from a string enum."""
-        if isinstance(value, ProjectStatus):
-            return ProjectStatus[value.name]
-        else:
-            return ProjectStatus[value]
-
-    @computed_field
-    @property
-    def outline_geojson(self) -> Optional[Feature]:
-        """TODO this is now the same as self.outline."""
-        if not self.outline:
-            return None
-
-        # FIXME
-        # from geoalchemy2 import WKBElement
-        if isinstance(self.outline, str):
-            # geometry = wkb.load(WKBElement(self.outline))
-            # return Feature(type="Feature", geometry=Polygon(
-            # type="Polygon", coordinates=[[45.0, 54.0], [45.0, 54.0]]),
-            # properties={})
-            return None
-        else:
-            geometry = wkb.loads(bytes(self.outline.data))
-
-        bbox = geometry.bounds  # Calculate bounding box
-        geom_geojson = wkb_geom_to_feature(
-            geometry=self.outline,
-            properties={"id": self.id, "bbox": bbox},
-            id=self.id,
-        )
-        return Feature(**geom_geojson)
-
-    @computed_field
-    @property
-    def organisation_logo(self) -> Optional[str]:
-        """Get the organisation logo url from the S3 bucket."""
-        if not self.organisation_id:
-            return None
-
-        return (
-            f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}"
-            f"/{self.organisation_id}/logo.png"
-        )
-
-    @computed_field
-    @property
-    def xform_id(self) -> Optional[str]:
-        """Generate from odk_form_id.
-
-        TODO this could be refactored out in future.
-        """
-        if not self.odk_form_id:
-            return None
-        return self.odk_form_id
-
-
-class ProjectWithTasks(ProjectBase):
-    """Project plus list of tasks objects."""
-
-    tasks: Optional[List[tasks_schemas.Task]]
-
-
-class ReadProject(ProjectWithTasks):
-    """Redundant model for refactor."""
-
-    odk_token: Optional[str] = None
+    odkid: Optional[int] = None
+    author_id: int
+    organisation_id: int
+    task_split_type: Optional[TaskSplitType] = None
+    project_name_prefix: Optional[str] = None
     location_str: Optional[str] = None
-    data_extract_url: Optional[str] = None
     custom_tms_url: Optional[str] = None
+    outline: Feature
+    status: ProjectStatus
+    visibility: ProjectVisibility
+    total_tasks: Optional[int] = None
+    xform_category: Optional[str] = None
+    odk_form_id: Optional[str] = None
+    odk_token: Optional[str] = None
+    data_extract_type: Optional[str] = None
+    data_extract_url: Optional[str] = None
+    task_split_dimension: Optional[int] = None
+    task_num_buildings: Optional[int] = None
+    hashtags: Optional[list[str]] = None
+    updated_at: datetime
+    created_at: datetime
+
+    # Relationships
+    tasks: Optional[list[ReadTask]] = None
+    author: Optional[UserBasic] = None
+
+    # Calculated
+    organisation_logo: Optional[str] = None
+    centroid: Optional[Feature] = None
+    bbox: Optional[list] = None
+
+    @field_validator("outline", mode="before")
+    @classmethod
+    def outline_geojson_to_feature(
+        cls, value: dict | Feature, info: ValidationInfo
+    ) -> Feature:
+        """Parse GeoJSON from DB into Feature."""
+        if isinstance(value, Feature):
+            return
+
+        project_id = info.data.get("id")
+        return Feature(
+            **{
+                "type": "Feature",
+                "geometry": value,
+                "id": project_id,
+                "properties": {"id": project_id, "bbox": info.data.get("bbox")},
+            }
+        )
+
+    @field_validator("centroid", mode="before")
+    @classmethod
+    def centroid_geojson_to_feature(
+        cls, value: dict | Feature, info: ValidationInfo
+    ) -> Feature:
+        """Parse GeoJSON from DB into Feature."""
+        if isinstance(value, Feature):
+            return
+
+        return Feature(
+            **{
+                "type": "Feature",
+                "geometry": value,
+                "id": info.data.get("id"),
+                "properties": {},
+            }
+        )
 
     @field_serializer("odk_token")
     def decrypt_password(self, value: str) -> Optional[str]:
@@ -476,49 +295,6 @@ class ReadProject(ProjectWithTasks):
             return ""
 
         return decrypt_value(value)
-
-    @field_validator("status", mode="before")
-    @classmethod
-    def convert_status_to_int(cls, value: ProjectInfo) -> int:
-        """Convert projectstatus enum value to integer."""
-        if not isinstance(value, str):
-            raise ValueError(f"Could not convert the returned enum: {value}")
-        return ProjectStatus[value]
-
-    @staticmethod
-    async def by_id(conn, project_id: int):
-        """Get a specific project by it's ID, including info, tasks, user, xform."""
-        async with conn.cursor(row_factory=class_row(ReadProject)) as cur:
-            await cur.execute(
-                """
-                SELECT
-                    p.*,
-                    json_agg(t.*) AS tasks,
-                    row_to_json(u.*) AS author,
-                    row_to_json(pi.*) AS project_info,
-                    json_agg(x.*) AS forms
-                FROM
-                    projects p
-                LEFT JOIN
-                    project_info pi ON p.id = pi.project_id
-                LEFT JOIN
-                    tasks t ON p.id = t.project_id
-                LEFT JOIN
-                    users u ON p.author_id = u.id
-                LEFT JOIN
-                    xforms x ON p.id = x.project_id
-                WHERE
-                    p.id = %(project_id)s
-                GROUP BY
-                    p.id, u.id, pi.*, x.*
-                """,
-                {"project_id": project_id},
-            )
-            obj = await cur.fetchone()
-            if not obj:
-                raise KeyError(f"Project {id} not found")
-
-            return obj
 
 
 class BackgroundTaskStatus(BaseModel):

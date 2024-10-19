@@ -24,12 +24,9 @@ from fastapi import Form
 from pydantic import BaseModel, Field, computed_field
 from pydantic.functional_validators import field_validator
 
+from app.central.central_schemas import ODKCentralIn
 from app.config import HttpUrlStr
 from app.models.enums import CommunityType, OrganisationType
-from app.projects.project_schemas import ODKCentralIn
-
-# class OrganisationBase(BaseModel):
-#     """Base model for organisation to extend."""
 
 
 class OrganisationIn(ODKCentralIn):

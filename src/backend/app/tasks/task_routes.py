@@ -27,8 +27,9 @@ from sqlalchemy.orm import Session
 from app.auth.auth_schemas import ProjectUserDict
 from app.auth.roles import get_uid, mapper
 from app.db import database
+from app.db.db_schemas import DbTask
 from app.models.enums import TaskStatus
-from app.tasks import tasks_crud, tasks_schemas
+from app.tasks import task_crud, task_schemas
 
 router = APIRouter(
     prefix="/tasks",
@@ -37,24 +38,7 @@ router = APIRouter(
 )
 
 
-@router.get("/task-list", response_model=List[tasks_schemas.Task])
-async def read_task_list(
-    project_id: int,
-    limit: int = 1000,
-    db: Session = Depends(database.get_db),
-):
-    """Get the task list for a project.
-
-    FIXME this is broken
-    """
-    tasks = await tasks_crud.get_tasks(db, project_id, limit)
-    updated_tasks = await tasks_crud.update_task_history(tasks, db)
-    if not tasks:
-        raise HTTPException(status_code=404, detail="Tasks not found")
-    return updated_tasks
-
-
-@router.get("/", response_model=List[tasks_schemas.Task])
+@router.get("/", response_model=List[DbTask])
 async def read_tasks(
     project_id: int,
     user_id: int = None,
@@ -69,42 +53,13 @@ async def read_tasks(
             detail="Please provide either user_id OR task_id, not both.",
         )
 
-    tasks = await tasks_crud.get_tasks(db, project_id, user_id, skip, limit)
+    tasks = await task_crud.get_tasks(db, project_id, user_id, skip, limit)
     if not tasks:
         raise HTTPException(status_code=404, detail="Tasks not found")
     return tasks
 
 
-# TODO remove this? Not used anywhere
-# @router.get("/point_on_surface")
-# async def get_point_on_surface(project_id: int,
-# db: Session = Depends(database.get_db)):
-#     """Get a point on the surface of the geometry for each task of the project.
-
-#     Parameters:
-#         project_id (int): The ID of the project.
-
-#     Returns:
-#         List[Tuple[int, str]]: A list of tuples containing the task ID
-#             and the centroid as a string.
-#     """
-#     query = text(
-#         f"""
-#             SELECT id,
-#             ARRAY_AGG(ARRAY[ST_X(ST_PointOnSurface(outline)),
-#             ST_Y(ST_PointOnSurface(outline))]) AS point
-#             FROM tasks
-#             WHERE project_id = {project_id}
-#             GROUP BY id; """
-#     )
-
-#     result = db.execute(query)
-#     result_dict_list = [
-#       {"id": row[0], "point": row[1]} for row in result.fetchall()]
-#     return result_dict_list
-
-
-@router.post("/near_me", response_model=tasks_schemas.Task)
+@router.post("/near_me", response_model=DbTask)
 async def get_tasks_near_me(
     lat: float, long: float, project_id: int = None, user_id: int = None
 ):
@@ -112,17 +67,17 @@ async def get_tasks_near_me(
     return "Coming..."
 
 
-@router.get("/{task_id}", response_model=tasks_schemas.Task)
+@router.get("/{task_id}", response_model=DbTask)
 async def get_specific_task(task_id: int, db: Session = Depends(database.get_db)):
     """Get a specific task by it's ID."""
-    task = await tasks_crud.get_task(db, task_id)
+    task = await task_crud.get_task(db, task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     return task
 
 
 @router.post(
-    "/{task_id}/new-status/{new_status}", response_model=tasks_schemas.TaskHistoryOut
+    "/{task_id}/new-status/{new_status}", response_model=task_schemas.TaskHistoryOut
 )
 async def add_new_task_event(
     task_id: int,
@@ -133,12 +88,12 @@ async def add_new_task_event(
     """Add a new event to the events table / update task status."""
     project_id = project_user.get("project").id
     user_id = await get_uid(project_user.get("user"))
-    return await tasks_crud.new_task_event(db, project_id, task_id, user_id, new_status)
+    return await task_crud.new_task_event(db, project_id, task_id, user_id, new_status)
 
 
-@router.post("/task-comments/", response_model=tasks_schemas.TaskCommentResponse)
+@router.post("/task-comments/", response_model=task_schemas.TaskCommentResponse)
 async def add_task_comments(
-    comment: tasks_schemas.TaskCommentRequest,
+    comment: task_schemas.TaskCommentRequest,
     db: Session = Depends(database.get_db),
     project_user: ProjectUserDict = Depends(mapper),
 ):
@@ -153,11 +108,11 @@ async def add_task_comments(
         TaskCommentResponse: The created task comment.
     """
     user_id = await get_uid(project_user.get("user"))
-    task_comment_list = await tasks_crud.add_task_comments(db, comment, user_id)
+    task_comment_list = await task_crud.add_task_comments(db, comment, user_id)
     return task_comment_list
 
 
-@router.get("/activity/", response_model=List[tasks_schemas.TaskHistoryCount])
+@router.get("/activity/", response_model=List[task_schemas.TaskHistoryCount])
 async def task_activity(
     project_id: int, days: int = 10, db: Session = Depends(database.get_db)
 ):
@@ -174,20 +129,18 @@ async def task_activity(
 
     """
     end_date = datetime.now() - timedelta(days=days)
-    task_list = await tasks_crud.get_task_id_list(db, project_id)
+    task_list = await task_crud.get_task_id_list(db, project_id)
     tasks = []
     for task_id in task_list:
-        tasks.extend(
-            [tasks_crud.get_project_task_history(task_id, False, end_date, db)]
-        )
+        tasks.extend([task_crud.get_project_task_history(task_id, False, end_date, db)])
     task_history = await asyncio.gather(*tasks)
-    return await tasks_crud.count_validated_and_mapped_tasks(
+    return await task_crud.count_validated_and_mapped_tasks(
         task_history,
         end_date,
     )
 
 
-@router.get("/{task_id}/history/", response_model=List[tasks_schemas.TaskHistoryOut])
+@router.get("/{task_id}/history/", response_model=List[task_schemas.TaskHistoryOut])
 async def task_history(
     task_id: int,
     days: int = 10,
@@ -209,4 +162,4 @@ async def task_history(
         List[TaskHistory]: A list of task history.
     """
     end_date = datetime.now() - timedelta(days=days)
-    return await tasks_crud.get_project_task_history(task_id, comment, end_date, db)
+    return await task_crud.get_project_task_history(task_id, comment, end_date, db)

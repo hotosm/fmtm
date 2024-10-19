@@ -31,12 +31,13 @@ from geoalchemy2.elements import WKBElement
 from loguru import logger as log
 from shapely import Polygon
 
+from app.central import central_schemas
 from app.central.central_crud import create_odk_project
 from app.central.central_schemas import TaskStatus
 from app.config import encrypt_value, settings
 from app.db import db_models
 from app.db.postgis_utils import check_crs
-from app.projects import project_crud, project_schemas
+from app.projects import project_crud
 from tests.test_data import test_data_path
 
 odk_central_url = os.getenv("ODK_CENTRAL_URL")
@@ -231,7 +232,7 @@ async def test_create_odk_project():
         "odk_central_user": odk_central_user,
         "odk_central_password": odk_central_password,
     }
-    odk_credentials = project_schemas.ODKCentralDecrypted(**odk_credentials)
+    odk_credentials = central_schemas.ODKCentralDecrypted(**odk_credentials)
 
     with patch("app.central.central_crud.get_odk_project", return_value=mock_project):
         result = create_odk_project("Test Project", odk_credentials)
@@ -332,7 +333,7 @@ async def test_generate_project_files(db, client, project):
         "odk_central_user": odk_central_user,
         "odk_central_password": odk_central_password,
     }
-    odk_credentials = project_schemas.ODKCentralDecrypted(**odk_credentials)
+    odk_credentials = central_schemas.ODKCentralDecrypted(**odk_credentials)
 
     project_id = project.id
     log.debug(f"Testing project ID: {project_id}")

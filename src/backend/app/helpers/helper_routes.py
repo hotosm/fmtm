@@ -43,6 +43,7 @@ from app.central.central_crud import (
     convert_geojson_to_odk_csv,
     convert_odk_submission_json_to_geojson,
 )
+from app.central.central_schemas import ODKCentral
 from app.config import settings
 from app.db.postgis_utils import (
     add_required_geojson_properties,
@@ -52,7 +53,6 @@ from app.db.postgis_utils import (
     parse_geojson_file_to_featcol,
 )
 from app.models.enums import GeometryType, HTTPStatus, XLSFormType
-from app.projects.project_schemas import ODKCentral
 
 router = APIRouter(
     prefix="/helper",

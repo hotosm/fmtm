@@ -21,11 +21,40 @@ from datetime import datetime
 from typing import Any, Optional
 
 from geojson_pydantic import Feature
-from pydantic import BaseModel, ConfigDict, Field, computed_field
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, computed_field
 from pydantic.functional_validators import field_validator
 from pydantic.types import UUID4
 
-from app.models.enums import TaskAction, TaskStatus, get_status_for_action
+from app.models.enums import TaskStatus, get_status_for_action
+
+
+class ReadTask(BaseModel):
+    """Task for serialising and display."""
+
+    id: int
+    project_id: int
+    project_task_index: Optional[int] = None
+    outline: Feature
+    feature_count: Optional[int] = None
+
+    @field_validator("outline", mode="before")
+    @classmethod
+    def outline_to_geojson(cls, value: dict, info: ValidationInfo) -> Feature:
+        """Parse GeoJSON from DB into Feature."""
+        if isinstance(value, Feature):
+            return
+
+        task_id = info.data.get("id")
+        project_id = info.data.get("project_id")
+
+        return Feature(
+            **{
+                "type": "Feature",
+                "geometry": value,
+                "id": task_id,
+                "properties": {"id": task_id, "project_id": project_id},
+            }
+        )
 
 
 class TaskHistoryBase(BaseModel):
@@ -59,58 +88,6 @@ class TaskHistoryCount(BaseModel):
     date: str
     validated: int
     mapped: int
-
-
-class Task(BaseModel):
-    """Core fields for a Task."""
-
-    model_config = ConfigDict(
-        use_enum_values=True,
-        validate_default=True,
-    )
-
-    # Excluded
-    outline: Any = Field(exclude=True)
-
-    id: int
-    project_id: int
-    project_task_index: int
-    feature_count: Optional[int] = None
-    task_status: TaskStatus
-    # TODO check the logic in project_deps, as it doesn't check if action is locked
-    locked_by_uid: Optional[int] = None
-    locked_by_username: Optional[str] = None
-    task_history: Optional[List[TaskHistoryBase]] = None
-
-    @computed_field
-    @property
-    def outline_geojson(self) -> Optional[Feature]:
-        """TODO this is now the same as self.outline."""
-        if not self.outline:
-            return None
-        # TODO refactor to remove outline_geojson
-        # TODO possibly also generate bbox for geojson in project_deps SQL?
-        feat = {
-            "type": "Feature",
-            "geometry": self.outline,
-            "id": self.id,
-            "properties": {"fid": self.project_task_index, "uid": self.id},
-        }
-        return Feature(**feat)
-
-    @field_validator("task_status", mode="before")
-    @classmethod
-    def enum_get_status_for_action(cls, value: str) -> TaskStatus:
-        """Get the the int value from a string enum."""
-        return get_status_for_action(TaskAction[value])
-
-    @field_validator("task_status", mode="before")
-    @classmethod
-    def convert_status_to_int(cls, value: TaskStatus) -> int:
-        """Convert taskstatus enum value to integer."""
-        if not isinstance(value, str):
-            raise ValueError(f"Could not convert the returned enum: {value}")
-        return TaskStatus[value]
 
 
 class TaskCommentResponse(TaskHistoryOut):

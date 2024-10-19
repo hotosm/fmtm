@@ -85,28 +85,6 @@ async def download_submission(
     return await submission_crud.download_submission_in_json(db, project)
 
 
-@router.get("/submission-points")
-async def submission_points(
-    project_id: int,
-    task_id: Optional[int] = None,
-    db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(login_required),
-):
-    """Get submission points for a given project.
-
-    Args:
-        project_id (int): The ID of the project.
-        task_id (int, optional): The ID of the task.
-            If provided, returns the submissions made for a specific task only.
-        db (Session): The database session, automatically provided.
-        current_user (AuthUser): Check if user is logged in.
-
-    Returns:
-        File: a zip containing submission points.
-    """
-    return await submission_crud.get_submission_points(db, project_id, task_id)
-
-
 @router.get("/convert-to-osm")
 async def convert_to_osm(
     project_id: int,
@@ -204,56 +182,6 @@ async def get_submission_count(
 #         data = odk_merge.conflateData(osm)
 #         return data
 #     return []
-
-
-# TODO remove this redundant endpoint
-# @router.post("/download-submission")
-# async def download_submission_json(
-#     background_tasks: BackgroundTasks,
-#     project_id: int,
-#     background_task_id: Optional[str] = None,
-#     db: Session = Depends(database.get_db),
-#     current_user: AuthUser = Depends(mapper),
-# ):
-#     """Download submissions for a project in JSON format.
-
-#     TODO check for redundancy with submission/download endpoint and refactor.
-#     """
-#     # Get Project
-#     project = await project_crud.get_project(db, project_id)
-
-#     # Return existing export if complete
-#     if background_task_id:
-#         # Get the background task status
-#         task_status, task_message = await project_crud.get_background_task_status(
-#             background_task_id, db
-#         )
-
-#         if task_status != 4:
-#             return project_schemas.BackgroundTaskStatus(
-#                 status=task_status.name, message=task_message or ""
-#             )
-
-#         bucket_root = f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}"
-#         return JSONResponse(
-#        status_code=200,
-#        content=f"{bucket_root}/{project.organisation_id}/{project_id}/submission.zip",
-#       )
-#     # Create task in db and return uuid
-#     background_task_id = await project_crud.insert_background_task_into_database(
-#         db, "sync_submission", project_id
-#     )
-
-#     background_tasks.add_task(
-#         submission_crud.update_submission_in_s3, db, project_id, background_task_id
-#     )
-#     return JSONResponse(
-#         status_code=200,
-#         content={
-#             "Message": "Submission update process initiated",
-#             "task_id": str(background_task_id),
-#         },
-#     )
 
 
 # FIXME 07/06/2024 since osm-fieldwork update

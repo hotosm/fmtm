@@ -18,14 +18,98 @@
 """Schemas for returned ODK Central objects."""
 
 from dataclasses import dataclass
-from enum import Enum
-from typing import Optional, TypedDict
+from typing import Optional, Self, TypedDict
 
 from geojson_pydantic import Feature, FeatureCollection
+from loguru import logger as log
 from pydantic import BaseModel, Field, ValidationInfo, computed_field
-from pydantic.functional_validators import field_validator
+from pydantic.functional_validators import field_validator, model_validator
 
+from app.config import HttpUrlStr, decrypt_value, encrypt_value
 from app.models.enums import TaskStatus
+
+
+class ODKCentral(BaseModel):
+    """ODK Central credentials."""
+
+    odk_central_url: Optional[HttpUrlStr] = None
+    odk_central_user: Optional[str] = None
+    odk_central_password: Optional[str] = None
+
+    @field_validator("odk_central_url", mode="after")
+    @classmethod
+    def remove_trailing_slash(cls, value: HttpUrlStr) -> Optional[HttpUrlStr]:
+        """Remove trailing slash from ODK Central URL."""
+        if not value:
+            return None
+        if value.endswith("/"):
+            return value[:-1]
+        return value
+
+    @model_validator(mode="after")
+    def all_odk_vars_together(self) -> Self:
+        """Ensure if one ODK variable is set, then all are."""
+        if any(
+            [
+                self.odk_central_url,
+                self.odk_central_user,
+                self.odk_central_password,
+            ]
+        ) and not all(
+            [
+                self.odk_central_url,
+                self.odk_central_user,
+                self.odk_central_password,
+            ]
+        ):
+            err = "All ODK details are required together: url, user, password"
+            log.debug(err)
+            raise ValueError(err)
+        return self
+
+
+class ODKCentralIn(ODKCentral):
+    """ODK Central credentials inserted to database."""
+
+    @field_validator("odk_central_password", mode="after")
+    @classmethod
+    def encrypt_odk_password(cls, value: str) -> Optional[str]:
+        """Encrypt the ODK Central password before db insertion."""
+        if not value:
+            return None
+        return encrypt_value(value)
+
+
+class ODKCentralDecrypted(BaseModel):
+    """ODK Central credentials extracted from database.
+
+    WARNING never return this as a response model.
+    WARNING or log to the terminal.
+    """
+
+    odk_central_url: Optional[HttpUrlStr] = None
+    odk_central_user: Optional[str] = None
+    odk_central_password: Optional[str] = None
+
+    def model_post_init(self, ctx):
+        """Run logic after model object instantiated."""
+        # Decrypt odk central password from database
+        if self.odk_central_password:
+            if isinstance(self.odk_central_password, str):
+                password = self.odk_central_password
+            else:
+                password = self.odk_central_password
+            self.odk_central_password = decrypt_value(password)
+
+    @field_validator("odk_central_url", mode="after")
+    @classmethod
+    def remove_trailing_slash(cls, value: HttpUrlStr) -> Optional[HttpUrlStr]:
+        """Remove trailing slash from ODK Central URL."""
+        if not value:
+            return None
+        if value.endswith("/"):
+            return value[:-1]
+        return value
 
 
 @dataclass
@@ -68,37 +152,6 @@ class EntityDict(TypedDict):
 
     label: str
     data: EntityPropertyDict
-
-
-class CentralBase(BaseModel):
-    """ODK Central return."""
-
-    central_url: str
-
-
-class Central(CentralBase):
-    """ODK Central return, with extras."""
-
-    pass
-
-
-class CentralOut(CentralBase):
-    """ODK Central output."""
-
-    pass
-
-
-class CentralFileType(BaseModel):
-    """ODK Central file return."""
-
-    filetype: Enum("FileType", ["xform", "extract", "zip", "xlsform", "all"])
-    pass
-
-
-class CentralDetails(CentralBase):
-    """ODK Central details."""
-
-    pass
 
 
 class EntityProperties(BaseModel):

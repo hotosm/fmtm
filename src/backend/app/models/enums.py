@@ -18,6 +18,10 @@
 """Enum definitions to translate values into human enum strings."""
 
 from enum import Enum
+from typing import Literal
+
+TILES_SOURCE = Literal["esri", "bing", "google"]
+TILES_FORMATS = Literal["mbtiles", "sqlitedb", "pmtiles"]
 
 
 class StrEnum(str, Enum):
@@ -54,32 +58,32 @@ class HTTPStatus(IntEnum):
     NOT_IMPLEMENTED = 501
 
 
-class OrganisationType(IntEnum, Enum):
-    """Describes an organisation's subscription type."""
-
-    FREE = 1
-    DISCOUNTED = 2
-    FULL_FEE = 3
-
-
-class ProjectStatus(IntEnum, Enum):
+class ProjectStatus(StrEnum, Enum):
     """Enum to describes all possible states of a Mapping Project."""
 
-    ARCHIVED = 0
-    PUBLISHED = 1
-    DRAFT = 2
+    ARCHIVED = "ARCHIVED"
+    PUBLISHED = "PUBLISHED"
+    DRAFT = "DRAFT"
 
 
-class ProjectPriority(IntEnum, Enum):
+class OrganisationType(StrEnum, Enum):
+    """Describes an organisation's subscription type."""
+
+    FREE = "FREE"
+    DISCOUNTED = "DISCOUNTED"
+    FULL_FEE = "FULL_FEE"
+
+
+class ProjectPriority(StrEnum, Enum):
     """Enum to describe all possible project priority levels."""
 
-    URGENT = 0
-    HIGH = 1
-    MEDIUM = 2
-    LOW = 3
+    URGENT = "URGENT"
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
 
 
-class UserRole(IntEnum, Enum):
+class UserRole(StrEnum, Enum):
     """Available roles assigned to a user site-wide in FMTM.
 
     Can be used for global user permissions:
@@ -88,12 +92,12 @@ class UserRole(IntEnum, Enum):
         - ADMIN = super admin with access to everything
     """
 
-    READ_ONLY = -1
-    MAPPER = 0
-    ADMIN = 1
+    READ_ONLY = "READ_ONLY"
+    MAPPER = "MAPPER"
+    ADMIN = "ADMIN"
 
 
-class ProjectRole(IntEnum, Enum):
+class ProjectRole(StrEnum, Enum):
     """Available roles assigned to a user for a specific project.
 
     All roles must be assigned by someone higher in the hierarchy:
@@ -104,98 +108,134 @@ class ProjectRole(IntEnum, Enum):
         - PROJECT_MANAGER = has all permissions to manage a project, including delete
     """
 
-    MAPPER = 0
-    VALIDATOR = 1
-    FIELD_MANAGER = 2
-    ASSOCIATE_PROJECT_MANAGER = 3
-    PROJECT_MANAGER = 4
+    MAPPER = "MAPPER"
+    VALIDATOR = "VALIDATOR"
+    FIELD_MANAGER = "FIELD_MANAGER"
+    ASSOCIATE_PROJECT_MANAGER = "ASSOCIATE_PROJECT_MANAGER"
+    PROJECT_MANAGER = "PROJECT_MANAGER"
 
 
-class MappingLevel(IntEnum, Enum):
+class MappingLevel(StrEnum, Enum):
     """The mapping level the mapper has achieved."""
 
-    BEGINNER = 1
-    INTERMEDIATE = 2
-    ADVANCED = 3
+    BEGINNER = "BEGINNER"
+    INTERMEDIATE = "INTERMEDIATE"
+    ADVANCED = "ADVANCED"
 
 
-class TaskStatus(IntEnum, Enum):
+class TaskStatus(StrEnum, Enum):
     """Enum describing available Task Statuses."""
 
-    READY = 0
-    LOCKED_FOR_MAPPING = 1
-    MAPPED = 2
-    LOCKED_FOR_VALIDATION = 3
-    VALIDATED = 4
-    INVALIDATED = 5
-    BAD = 6  # Task cannot be mapped
-    SPLIT = 7  # Task has been split
-    ARCHIVED = 8  # When new replacement task has been uploaded
+    READY = "READY"
+    LOCKED_FOR_MAPPING = "LOCKED_FOR_MAPPING"
+    MAPPED = "MAPPED"
+    LOCKED_FOR_VALIDATION = "LOCKED_FOR_VALIDATION"
+    VALIDATED = "VALIDATED"
+    INVALIDATED = "INVALIDATED"
+    BAD = "BAD"  # Task cannot be mapped
+    SPLIT = "SPLIT"  # Task has been split
+    ARCHIVED = "ARCHIVED"  # When renew replacement task has been uploaded
 
 
-def verify_valid_status_update(old_status: TaskStatus, new_status: TaskStatus):
-    """Verify the status update is valid, inferred from previous state."""
-    if old_status is TaskStatus.READY:
-        return new_status in [
-            TaskStatus.LOCKED_FOR_MAPPING,
-            TaskStatus.BAD,
-            TaskStatus.SPLIT,
-        ]
-    elif old_status is TaskStatus.LOCKED_FOR_MAPPING:
-        return new_status in [
-            TaskStatus.READY,
-            TaskStatus.MAPPED,
-            TaskStatus.BAD,
-            TaskStatus.SPLIT,
-        ]
-    elif old_status is TaskStatus.MAPPED:
-        return new_status in [
-            TaskStatus.LOCKED_FOR_MAPPING,
-            TaskStatus.LOCKED_FOR_VALIDATION,
-        ]
-    elif old_status is TaskStatus.LOCKED_FOR_VALIDATION:
-        return new_status in [TaskStatus.INVALIDATED, TaskStatus.VALIDATED]
-    elif old_status is TaskStatus.VALIDATED:
-        return new_status == TaskStatus.INVALIDATED
-    elif old_status is TaskStatus.INVALIDATED:
-        return new_status in [
-            TaskStatus.LOCKED_FOR_MAPPING,
-            TaskStatus.BAD,
-            TaskStatus.SPLIT,
-        ]
-    elif old_status is TaskStatus.BAD:
-        return new_status == TaskStatus.ARCHIVED
-    elif old_status is TaskStatus.SPLIT:
-        return new_status == TaskStatus.ARCHIVED
-
-
-class TaskAction(IntEnum, Enum):
+class TaskAction(StrEnum, Enum):
     """All possible task actions, recorded in task history."""
 
-    RELEASED_FOR_MAPPING = 0
-    LOCKED_FOR_MAPPING = 1
-    MARKED_MAPPED = 2
-    LOCKED_FOR_VALIDATION = 3
-    VALIDATED = 4
-    MARKED_INVALID = 5
-    MARKED_BAD = 6  # Task cannot be mapped
-    SPLIT_NEEDED = 7  # Task needs split
-    RECREATED = 8
-    COMMENT = 9
+    RELEASED_FOR_MAPPING = "RELEASED_FOR_MAPPING"
+    LOCKED_FOR_MAPPING = "LOCKED_FOR_MAPPING"
+    MARKED_MAPPED = "MARKED_MAPPED"
+    LOCKED_FOR_VALIDATION = "LOCKED_FOR_VALIDATION"
+    VALIDATED = "VALIDATED"
+    MARKED_INVALID = "MARKED_INVALID"
+    MARKED_BAD = "MARKED_BAD"  # Task cannot be mapped
+    SPLIT_NEEDED = "SPLIT_NEEDED"  # Task needs split
+    RECREATED = "RECREATED"
+    COMMENT = "COMMENT"
 
 
-def is_status_change_action(task_action):
-    """Check if action is a valid status change type."""
-    return task_action in [
-        TaskAction.RELEASED_FOR_MAPPING,
-        TaskAction.LOCKED_FOR_MAPPING,
-        TaskAction.MARKED_MAPPED,
-        TaskAction.LOCKED_FOR_VALIDATION,
-        TaskAction.VALIDATED,
-        TaskAction.MARKED_INVALID,
-        TaskAction.MARKED_BAD,
-        TaskAction.SPLIT_NEEDED,
-    ]
+class TaskType(StrEnum, Enum):
+    """Task type."""
+
+    BUILDINGS = "BUILDINGS"
+    AMENITIES = "AMENITIES"
+    OTHER = "OTHER"
+
+
+class ProjectSplitStrategy(StrEnum, Enum):
+    """Task splitting type."""
+
+    GRID = "GRID"
+    OSM_VECTORS = "OSM_VECTORS"
+    OTHER = "OTHER"
+
+
+class BackgroundTaskStatus(StrEnum, Enum):
+    """Enum describing fast api background Task Statuses."""
+
+    PENDING = "PENDING"
+    FAILED = "FAILED"
+    RECEIVED = "RECEIVED"
+    SUCCESS = "SUCCESS"
+
+
+class TaskSplitType(StrEnum, Enum):
+    """Enum describing task splitting type."""
+
+    DIVIDE_ON_SQUARE = "DIVIDE_ON_SQUARE"
+    CHOOSE_AREA_AS_TASK = "CHOOSE_AREA_AS_TASK"
+    TASK_SPLITTING_ALGORITHM = "TASK_SPLITTING_ALGORITHM"
+
+
+class ProjectVisibility(StrEnum, Enum):
+    """Enum describing task splitting type."""
+
+    PUBLIC = "PUBLIC"
+    PRIVATE = "PRIVATE"
+    INVITE_ONLY = "INVITE_ONLY"
+
+
+class CommunityType(StrEnum, Enum):
+    """Enum describing community type."""
+
+    OSM_COMMUNITY = "OSM_COMMUNITY"
+    COMPANY = "COMPANY"
+    NON_PROFIT = "NON_PROFIT"
+    UNIVERSITY = "UNIVERSITY"
+    OTHER = "OTHER"
+
+
+class ReviewStateEnum(StrEnum, Enum):
+    """Enum describing review states of submission."""
+
+    HASISSUES = "HASISSUES"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+
+
+class GeometryType(StrEnum, Enum):
+    """Enum for GeoJSON types."""
+
+    Polygon = "Polygon"
+    LineString = "LineString"
+    Point = "Point"
+
+
+class XLSFormType(StrEnum, Enum):
+    """Enum for XLSForm categories.
+
+    The key is the name of the XLSForm file for internal use.
+    This cannot match an existing OSM tag value, so some words are replaced
+    (e.g. OSM=healthcare, XLSForm=health).
+
+    The the value is the user facing form name (e.g. healthcare).
+    """
+
+    buildings = "buildings"
+    # highways = "highways"
+    health = "healthcare"
+    # toilets = "toilets"
+    # religious = "religious"
+    # landusage = "landusage"
+    # waterways = "waterways"
 
 
 def get_action_for_status_change(task_status: TaskStatus) -> TaskAction:
@@ -242,93 +282,3 @@ def get_status_for_action(task_action: TaskAction) -> TaskStatus:
             return TaskStatus.INVALIDATED
         case _:
             return TaskStatus.READY
-
-
-class TaskType(IntEnum, Enum):
-    """Task type."""
-
-    BUILDINGS = 0
-    AMENITIES = 1
-    OTHER = 2
-
-
-class ProjectSplitStrategy(IntEnum, Enum):
-    """Task splitting type."""
-
-    GRID = 0
-    OSM_VECTORS = 1
-    OTHER = 2
-
-
-class BackgroundTaskStatus(IntEnum, Enum):
-    """Enum describing fast api background Task Statuses."""
-
-    PENDING = 1
-    FAILED = 2
-    RECEIVED = 3
-    SUCCESS = 4
-
-
-TILES_SOURCE = ["esri", "bing", "google"]
-TILES_FORMATS = ["mbtiles", "sqlitedb", "sqlite3", "sqlite", "pmtiles"]
-
-
-class TaskSplitType(IntEnum, Enum):
-    """Enum describing task splitting type."""
-
-    DIVIDE_ON_SQUARE = 0
-    CHOOSE_AREA_AS_TASK = 1
-    TASK_SPLITTING_ALGORITHM = 2
-
-
-class ProjectVisibility(IntEnum, Enum):
-    """Enum describing task splitting type."""
-
-    PUBLIC = 0
-    PRIVATE = 1
-    INVITE_ONLY = 2
-
-
-class CommunityType(IntEnum, Enum):
-    """Enum describing community type."""
-
-    OSM_COMMUNITY = 0
-    COMPANY = 1
-    NON_PROFIT = 2
-    UNIVERSITY = 3
-    OTHER = 4
-
-
-class ReviewStateEnum(StrEnum, Enum):
-    """Enum describing review states of submission."""
-
-    hasissues = "hasIssues"
-    approved = "approved"
-    rejected = "rejected"
-
-
-class GeometryType(str, Enum):
-    """Enum for GeoJSON types."""
-
-    Polygon = "Polygon"
-    LineString = "LineString"
-    Point = "Point"
-
-
-class XLSFormType(str, Enum):
-    """Enum for XLSForm categories.
-
-    The key is the name of the XLSForm file for internal use.
-    This cannot match an existing OSM tag value, so some words are replaced
-    (e.g. OSM=healthcare, XLSForm=health).
-
-    The the value is the user facing form name (e.g. healthcare).
-    """
-
-    buildings = "buildings"
-    # highways = "highways"
-    health = "healthcare"
-    # toilets = "toilets"
-    # religious = "religious"
-    # landusage = "landusage"
-    # waterways = "waterways"

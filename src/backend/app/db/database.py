@@ -19,38 +19,30 @@
 """Config for the FMTM database connection."""
 
 from fastapi import Request
+from psycopg import Connection
 from psycopg_pool import AsyncConnectionPool
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
 
 from app.config import settings
 
-engine = create_engine(
-    settings.FMTM_DB_URL.unicode_string(),
-    pool_size=20,
-    max_overflow=-1,
-)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base = declarative_base()
-FmtmMetadata = Base.metadata
+# TODO SQL refactor all usage of get_db
 
 
-def get_db():
-    """Create SQLAlchemy DB session."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_db():
+    """NOTE SQL stub delete me."""
+    pass
 
 
-async def get_db_connection_pool():
-    """Get the connection pool for psycopg."""
-    return AsyncConnectionPool(conninfo=settings.FMTM_DB_URL.unicode_string())
+def get_db_connection_pool() -> AsyncConnectionPool:
+    """Get the connection pool for psycopg.
+
+    NOTE the pool connection is opened in the FastAPI server startup (lifespan).
+    """
+    return AsyncConnectionPool(
+        conninfo=settings.FMTM_DB_URL.unicode_string(), open=False
+    )
 
 
-async def db_conn(request: Request):
+async def db_conn(request: Request) -> Connection:
     """Get a connection from the psycopg pool.
 
     Info on connections vs cursors:
@@ -84,7 +76,7 @@ async def db_conn(request: Request):
 
     from psycopg.rows import class_row
     async def get_user_by_id(db: Connection, id: int):
-        async with conn.cursor(row_factory=class_row(User)) as cur:
+        async with db.cursor(row_factory=class_row(User)) as cur:
             await cur.execute(
                 '''
                 SELECT id, first_name, last_name, dob

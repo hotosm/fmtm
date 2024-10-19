@@ -17,24 +17,25 @@
 #
 """Routes for organisation management."""
 
-from typing import Optional
+from typing import Annotated, Optional
 
 from fastapi import (
     APIRouter,
     Depends,
     File,
+    Response,
     UploadFile,
 )
-from sqlalchemy.orm import Session
+from psycopg import Connection
 
 from app.auth.auth_schemas import AuthUser, OrgUserDict
 from app.auth.osm import login_required
 from app.auth.roles import org_admin, super_admin
-from app.db import database
-from app.db.db_models import DbOrganisation, DbUser
+from app.db.database import db_conn
+from app.db.db_models import DbOrganisation
+from app.models.enums import HTTPStatus
 from app.organisations import organisation_crud, organisation_schemas
 from app.organisations.organisation_deps import org_exists
-from app.users.user_deps import user_exists_in_db
 
 router = APIRouter(
     prefix="/organisation",
@@ -45,19 +46,19 @@ router = APIRouter(
 
 @router.get("/", response_model=list[organisation_schemas.OrganisationOut])
 async def get_organisations(
-    db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(login_required),
+    db: Annotated[Connection, Depends(db_conn)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
 ) -> list[DbOrganisation]:
     """Get a list of all organisations."""
-    return await organisation_crud.get_organisations(db, current_user)
+    return await DbOrganisation.all(db, current_user.id)
 
 
 @router.get(
     "/my-organisations", response_model=list[organisation_schemas.OrganisationOut]
 )
 async def get_my_organisations(
-    db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(login_required),
+    db: Annotated[Connection, Depends(db_conn)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
 ) -> list[DbOrganisation]:
     """Get a list of all organisations."""
     return await organisation_crud.get_my_organisations(db, current_user)
@@ -65,27 +66,17 @@ async def get_my_organisations(
 
 @router.get("/unapproved/", response_model=list[organisation_schemas.OrganisationOut])
 async def list_unapproved_organisations(
-    db: Session = Depends(database.get_db),
-    current_user: DbUser = Depends(super_admin),
+    db: Annotated[Connection, Depends(db_conn)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
 ) -> list[DbOrganisation]:
-    """Get a list of all organisations."""
+    """Get a list of unapproved organisations."""
     return await organisation_crud.get_unapproved_organisations(db)
-
-
-@router.get("/unapproved/{org_id}", response_model=organisation_schemas.OrganisationOut)
-async def unapproved_org_detail(
-    org_id: int,
-    db: Session = Depends(database.get_db),
-    current_user: DbUser = Depends(super_admin),
-):
-    """Get a detail of an unapproved organisations."""
-    return await organisation_crud.get_unapproved_org_detail(db, org_id)
 
 
 @router.get("/{org_id}", response_model=organisation_schemas.OrganisationOut)
 async def get_organisation_detail(
-    organisation: DbOrganisation = Depends(org_exists),
-    current_user: AuthUser = Depends(login_required),
+    organisation: Annotated[DbOrganisation, Depends(org_exists)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
 ):
     """Get a specific organisation by id or name."""
     return organisation
@@ -93,48 +84,56 @@ async def get_organisation_detail(
 
 @router.post("/", response_model=organisation_schemas.OrganisationOut)
 async def create_organisation(
+    db: Annotated[Connection, Depends(db_conn)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
     # Depends required below to allow logo upload
     org: organisation_schemas.OrganisationIn = Depends(),
     logo: Optional[UploadFile] = File(None),
-    db: Session = Depends(database.get_db),
-    current_user: DbUser = Depends(login_required),
 ) -> organisation_schemas.OrganisationOut:
     """Create an organisation with the given details.
 
     TODO refactor to use base64 encoded logo / no upload file.
     TODO then we can use the pydantic model as intended.
     """
-    return await organisation_crud.create_organisation(db, org, current_user, logo)
+    return await organisation_crud.create_organisation(db, org, current_user.id, logo)
 
 
 @router.patch("/{org_id}/", response_model=organisation_schemas.OrganisationOut)
 async def update_organisation(
+    db: Annotated[Connection, Depends(db_conn)],
+    org_user_dict: Annotated[AuthUser, Depends(org_admin)],
     new_values: organisation_schemas.OrganisationEdit = Depends(),
     logo: UploadFile = File(None),
-    organisation: DbOrganisation = Depends(org_exists),
-    db: Session = Depends(database.get_db),
-    org_user_dict: OrgUserDict = Depends(org_admin),
 ):
     """Partial update for an existing organisation."""
-    return await organisation_crud.update_organisation(
-        db, organisation, new_values, logo
-    )
+    # TODO add this logic to db_schemas.DbOrganisation.update()
+    return None
 
 
 @router.delete("/{org_id}")
 async def delete_org(
-    db: Session = Depends(database.get_db),
-    org_user_dict: OrgUserDict = Depends(org_admin),
+    db: Annotated[Connection, Depends(db_conn)],
+    org_user_dict: Annotated[AuthUser, Depends(org_admin)],
 ):
     """Delete an organisation."""
-    return await organisation_crud.delete_organisation(db, org_user_dict["org"])
+    org = org_user_dict.get("org")
+    deleted_org_id = await DbOrganisation.delete(db, org.id)
+    if deleted_org_id:
+        return Response(
+            status_code=HTTPStatus.NO_CONTENT,
+            details=f"Deleted org {(org.deleted_org_id)}.",
+        )
+    return Response(
+        status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+        details=f"Failed deleting org {(org.name)}.",
+    )
 
 
 @router.delete("/unapproved/{org_id}")
 async def delete_unapproved_org(
     org_id: int,
-    db: Session = Depends(database.get_db),
-    current_user: DbUser = Depends(super_admin),
+    db: Annotated[Connection, Depends(db_conn)],
+    current_user: Annotated[AuthUser, Depends(super_admin)],
 ):
     """Delete an unapproved organisation.
 
@@ -147,8 +146,8 @@ async def delete_unapproved_org(
 @router.post("/approve/", response_model=organisation_schemas.OrganisationOut)
 async def approve_organisation(
     org_id: int,
-    db: Session = Depends(database.get_db),
-    current_user: DbUser = Depends(super_admin),
+    db: Annotated[Connection, Depends(db_conn)],
+    current_user: Annotated[AuthUser, Depends(super_admin)],
 ):
     """Approve the organisation request made by the user.
 
@@ -167,15 +166,18 @@ async def approve_organisation(
 
 @router.post("/add_admin/")
 async def add_new_organisation_admin(
-    db: Session = Depends(database.get_db),
-    user: DbUser = Depends(user_exists_in_db),
-    org: DbOrganisation = Depends(org_exists),
-    org_user_dict: OrgUserDict = Depends(org_admin),
+    db: Annotated[Connection, Depends(db_conn)],
+    org_user_dict: Annotated[OrgUserDict, Depends(org_admin)],
+    # user: Annotated[DbUser, Depends(get_user)],
+    # org: DbOrganisation = Depends(org_exists),
 ):
     """Add a new organisation admin.
 
     The logged in user must be either the owner of the organisation or a super admin.
     """
-    # NOTE extracting the org this way means org_id is not a mandatory URL param
-    # org_id = org_user_dict["organisation"].id
-    return await organisation_crud.add_organisation_admin(db, org.id, user.id)
+    # NOTE do we need to uncomment above so org_id is not a mandatory URL param?
+    return await organisation_crud.add_organisation_admin(
+        db,
+        org_user_dict.get("org").id,
+        org_user_dict.get("user").id,
+    )

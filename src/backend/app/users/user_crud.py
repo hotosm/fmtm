@@ -27,23 +27,6 @@ from app.users import user_schemas
 # --------------
 
 
-async def get_users(db: Session, skip: int = 0, limit: int = 100):
-    """Get all users."""
-    return db.query(db_models.DbUser).offset(skip).limit(limit).all()
-
-
-async def get_user(db: Session, user_id: int):
-    """Get a single user by user id."""
-    return db.query(db_models.DbUser).filter(db_models.DbUser.id == user_id).first()
-
-
-async def get_user_by_username(db: Session, username: str):
-    """Get a single user by username."""
-    return (
-        db.query(db_models.DbUser).filter(db_models.DbUser.username == username).first()
-    )
-
-
 async def get_user_role_by_user_id(db: Session, user_id: int):
     """Return the user role for a given user ID."""
     db_user_role = (

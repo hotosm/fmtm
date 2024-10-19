@@ -32,7 +32,7 @@ from app.models.enums import (
     TaskStatus,
     get_action_for_status_change,
 )
-from app.tasks import tasks_schemas
+from app.tasks import task_schemas
 
 
 async def get_task_count_in_project(db: Session, project_id: int):
@@ -220,7 +220,7 @@ async def create_task_history_for_status_change(
 
 
 async def add_task_comments(
-    db: Session, comment: tasks_schemas.TaskCommentRequest, user_id: int
+    db: Session, comment: task_schemas.TaskCommentRequest, user_id: int
 ):
     """Add a comment to a task.
 
@@ -332,7 +332,7 @@ async def get_project_task_history(
 
 async def count_validated_and_mapped_tasks(
     task_history: list, end_date: datetime
-) -> list[tasks_schemas.TaskHistoryCount]:
+) -> list[task_schemas.TaskHistoryCount]:
     """Counts the number of validated and mapped tasks.
 
     Args:

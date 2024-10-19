@@ -22,23 +22,24 @@ These methods use FastAPI Depends for dependency injection
 and always return an AuthUser object in a standard format.
 """
 
-from typing import Optional
+from typing import Annotated, Optional
 
 from fastapi import Depends, HTTPException
 from loguru import logger as log
-from sqlalchemy import text
-from sqlalchemy.orm import Session
+from psycopg import Connection
+from psycopg.rows import class_row
 
 from app.auth.auth_schemas import AuthUser, OrgUserDict, ProjectUserDict
 from app.auth.osm import login_required
-from app.db.database import get_db
-from app.db.db_models import DbProject, DbUser
+from app.db import db_models
+from app.db.database import db_conn
+from app.db.db_schemas import DbProject, DbUser
 from app.models.enums import HTTPStatus, ProjectRole, ProjectVisibility
-from app.organisations.organisation_deps import check_org_exists
-from app.projects.project_deps import get_project_by_id
+from app.organisations.organisation_deps import get_organisation
+from app.projects.project_deps import get_project
 
 
-async def get_uid(user_data: AuthUser | DbUser) -> int:
+async def get_uid(user_data: AuthUser | db_models.DbUser) -> int:
     """Extract user id from returned OSM user."""
     try:
         user_id = user_data.id
@@ -55,11 +56,11 @@ async def get_uid(user_data: AuthUser | DbUser) -> int:
 
 async def check_access(
     user: AuthUser,
-    db: Session,
+    db: Connection,
     org_id: Optional[int] = None,
     project_id: Optional[int] = None,
     role: Optional[ProjectRole] = None,
-) -> Optional[DbUser]:
+) -> Optional[db_models.DbUser]:
     """Check if the user has access to a project or organisation.
 
     Access is determined based on the user's role and permissions:
@@ -78,15 +79,15 @@ async def check_access(
         role (Optional[ProjectRole]): Role to check for project-specific access.
 
     Returns:
-        Optional[DbUser]: The user details if access is granted, otherwise None.
+        Optional[db_models.DbUser]: The user details if access is granted,
+            otherwise None.
     """
     user_id = await get_uid(user)
 
-    sql = text(
-        """
+    sql = """
         SELECT *
         FROM users
-        WHERE id = :user_id
+        WHERE id = %(user_id)s
             AND (
                 CASE
                     WHEN role = 'ADMIN' THEN true
@@ -94,7 +95,7 @@ async def check_access(
                     WHEN EXISTS (
                         SELECT 1
                         FROM organisations
-                        WHERE (organisations.id = :org_id
+                        WHERE (organisations.id = %(org_id)s
                             AND organisations.slug = 'hotosm')
                         OR EXISTS (
                             SELECT 1
@@ -102,53 +103,53 @@ async def check_access(
                             JOIN organisations AS org
                                 ON projects.organisation_id = org.id
                             WHERE org.slug = 'hotosm'
-                                AND projects.id = :project_id
+                                AND projects.id = %(project_id)s
                         )
                     ) THEN true
                     ELSE
                         EXISTS (
                             SELECT 1
                             FROM organisation_managers
-                            WHERE organisation_managers.user_id = :user_id
-                            AND organisation_managers.organisation_id = :org_id
+                            WHERE organisation_managers.user_id = %(user_id)s
+                            AND organisation_managers.organisation_id = %(org_id)s
                         )
                         OR EXISTS (
                             SELECT 1
                             FROM user_roles
-                            WHERE user_roles.user_id = :user_id
-                            AND user_roles.project_id = :project_id
-                            AND user_roles.role >= :role
+                            WHERE user_roles.user_id = %(user_id)s
+                            AND user_roles.project_id = %(project_id)s
+                            AND user_roles.role >= %(role)s
                         )
                 END
             );
     """
-    )
 
-    result = db.execute(
-        sql,
-        {
-            "user_id": user_id,
-            "project_id": project_id,
-            "org_id": org_id,
-            "role": getattr(role, "name", None),
-        },
-    )
-    db_user = result.first()
+    async with db.cursor(row_factory=class_row(db_models.DbUser)) as cur:
+        await cur.execute(
+            sql,
+            {
+                "user_id": user_id,
+                "project_id": project_id,
+                "org_id": org_id,
+                "role": getattr(role, "name", None),
+            },
+        )
+        db_user = await cur.fetchone()
 
     if db_user:
-        return DbUser(**db_user._asdict())
+        return db_user
 
     return None
 
 
 async def super_admin(
-    user_data: AuthUser = Depends(login_required),
-    db: Session = Depends(get_db),
-) -> DbUser:
+    user_data: Annotated[AuthUser, Depends(login_required)],
+    db: Annotated[Connection, Depends(db_conn)],
+) -> db_models.DbUser:
     """Super admin role, with access to all endpoints.
 
     Returns:
-        user_data: DbUser SQLAlchemy object.
+        user_data: db_models.DbUser SQLAlchemy object.
     """
     db_user = await check_access(user_data, db)
 
@@ -164,16 +165,16 @@ async def super_admin(
 
 
 async def check_org_admin(
-    db: Session,
+    db: Connection,
     user: AuthUser,
     org_id: int,
 ) -> OrgUserDict:
     """Database check to determine if org admin role.
 
     Returns:
-        dict: in format {'user': DbUser, 'org': DbOrganisation}.
+        dict: in format {'user': db_models.DbUser, 'org': DbOrganisation}.
     """
-    db_org = await check_org_exists(db, org_id)
+    db_org = await get_organisation(db, org_id)
 
     # Check if org admin, or super admin
     db_user = await check_access(
@@ -183,7 +184,7 @@ async def check_org_admin(
     )
 
     if db_user:
-        return {"user": db_user, "org": db_org, "project": None}
+        return {"user": db_user, "org": db_org}
 
     raise HTTPException(
         status_code=HTTPStatus.FORBIDDEN,
@@ -192,15 +193,15 @@ async def check_org_admin(
 
 
 async def org_admin(
-    project: Optional[DbProject] = Depends(get_project_by_id),
+    project: Annotated[DbProject, Depends(get_project)],
+    db: Annotated[Connection, Depends(db_conn)],
+    user_data: Annotated[AuthUser, Depends(login_required)],
     org_id: Optional[int] = None,
-    db: Session = Depends(get_db),
-    user_data: AuthUser = Depends(login_required),
 ) -> OrgUserDict:
     """Organisation admin with full permission for projects in an organisation.
 
     Returns:
-        dict: in format {'user': DbUser, 'org': DbOrganisation}.
+        dict: in format {'user': db_models.DbUser, 'org': DbOrganisation}.
     """
     if not (project or org_id):
         raise HTTPException(
@@ -240,7 +241,7 @@ async def org_admin(
 
 async def wrap_check_access(
     project: DbProject,
-    db: Session,
+    db: Connection,
     user_data: AuthUser,
     role: ProjectRole,
 ) -> ProjectUserDict:
@@ -265,9 +266,9 @@ async def wrap_check_access(
 
 
 async def project_manager(
-    project: DbProject = Depends(get_project_by_id),
-    db: Session = Depends(get_db),
-    user_data: AuthUser = Depends(login_required),
+    project: Annotated[DbProject, Depends(get_project)],
+    db: Annotated[Connection, Depends(db_conn)],
+    user_data: Annotated[AuthUser, Depends(login_required)],
 ) -> ProjectUserDict:
     """A project manager for a specific project."""
     return await wrap_check_access(
@@ -279,9 +280,9 @@ async def project_manager(
 
 
 async def associate_project_manager(
-    project: DbProject = Depends(get_project_by_id),
-    db: Session = Depends(get_db),
-    user_data: AuthUser = Depends(login_required),
+    project: Annotated[DbProject, Depends(get_project)],
+    db: Annotated[Connection, Depends(db_conn)],
+    user_data: Annotated[AuthUser, Depends(login_required)],
 ) -> ProjectUserDict:
     """An associate project manager for a specific project."""
     return await wrap_check_access(
@@ -293,9 +294,9 @@ async def associate_project_manager(
 
 
 async def field_manager(
-    project: DbProject = Depends(get_project_by_id),
-    db: Session = Depends(get_db),
-    user_data: AuthUser = Depends(login_required),
+    project: Annotated[DbProject, Depends(get_project)],
+    db: Annotated[Connection, Depends(db_conn)],
+    user_data: Annotated[AuthUser, Depends(login_required)],
 ) -> ProjectUserDict:
     """A field manager for a specific project."""
     return await wrap_check_access(
@@ -307,9 +308,9 @@ async def field_manager(
 
 
 async def validator(
-    project: DbProject = Depends(get_project_by_id),
-    db: Session = Depends(get_db),
-    user_data: AuthUser = Depends(login_required),
+    project: Annotated[DbProject, Depends(get_project)],
+    db: Annotated[Connection, Depends(db_conn)],
+    user_data: Annotated[AuthUser, Depends(login_required)],
 ) -> ProjectUserDict:
     """A validator for a specific project."""
     return await wrap_check_access(
@@ -321,26 +322,15 @@ async def validator(
 
 
 async def mapper(
-    project: DbProject = Depends(get_project_by_id),
-    db: Session = Depends(get_db),
-    user_data: AuthUser = Depends(login_required),
+    project: Annotated[DbProject, Depends(get_project)],
+    db: Annotated[Connection, Depends(db_conn)],
+    user_data: Annotated[AuthUser, Depends(login_required)],
 ) -> ProjectUserDict:
     """A mapper for a specific project."""
     # If project is public, skip permission check
     if project.visibility == ProjectVisibility.PUBLIC:
-        user_id = user_data.id
-        sql = text("SELECT * FROM users WHERE id = :user_id;")
-        result = db.execute(sql, {"user_id": user_id})
-        db_user = result.first()
-
-        if not db_user:
-            raise HTTPException(
-                status_code=HTTPStatus.NOT_FOUND,
-                detail=f"User ({user_id}) does not exist in database",
-            )
-
         return {
-            "user": DbUser(**db_user._asdict()),
+            "user": await DbUser.one(db, user_data.id),
             "project": project,
         }
 

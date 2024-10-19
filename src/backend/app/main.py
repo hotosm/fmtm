@@ -36,7 +36,7 @@ from app.__version__ import __version__
 from app.auth import auth_routes
 from app.central import central_routes
 from app.config import MonitoringTypes, settings
-from app.db.database import get_db, get_db_connection_pool
+from app.db.database import db_conn, get_db_connection_pool
 from app.helpers import helper_routes
 from app.models.enums import HTTPStatus
 from app.monitoring import (
@@ -50,7 +50,7 @@ from app.organisations.organisation_crud import init_admin_org
 from app.projects import project_routes
 from app.projects.project_crud import read_and_insert_xlsforms
 from app.submissions import submission_routes
-from app.tasks import tasks_routes
+from app.tasks import task_routes
 from app.users import user_routes
 
 
@@ -85,17 +85,17 @@ async def lifespan(
 ):
     """FastAPI startup/shutdown event."""
     log.debug("Starting up FastAPI server.")
-    db_conn = next(get_db())
-    log.debug("Initialising admin org and user in DB.")
-    await init_admin_org(db_conn)
-    log.debug("Reading XLSForms from DB.")
-    await read_and_insert_xlsforms(db_conn, xlsforms_path)
 
-    db_pool = await get_db_connection_pool()
-    await db_pool.open()
     # Create a pooled db connection and make available in app state
     # NOTE we can access 'request.app.state.db_pool' in endpoints
-    app.state.db_pool = db_pool
+    app.state.db_pool = get_db_connection_pool()
+    await app.state.db_pool.open()
+
+    async with app.state.db_pool.connection() as conn:
+        log.debug("Initialising admin org and user in DB.")
+        await init_admin_org(conn)
+        log.debug("Reading XLSForms from DB.")
+        await read_and_insert_xlsforms(conn, xlsforms_path)
 
     yield
 
@@ -133,7 +133,7 @@ def get_application() -> FastAPI:
 
     _app.include_router(user_routes.router)
     _app.include_router(project_routes.router)
-    _app.include_router(tasks_routes.router)
+    _app.include_router(task_routes.router)
     _app.include_router(central_routes.router)
     _app.include_router(auth_routes.router)
     _app.include_router(submission_routes.router)
@@ -255,7 +255,7 @@ async def deployment_details():
 
 
 @api.get("/__heartbeat__")
-async def heartbeat_plus_db(db: Session = Depends(get_db)):
+async def heartbeat_plus_db(db: Session = Depends(db_conn)):
     """Heartbeat that checks that API and DB are both up and running."""
     try:
         db.execute(text("SELECT 1"))

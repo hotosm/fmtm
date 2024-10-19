@@ -21,7 +21,7 @@ import json
 import os
 from io import BytesIO
 from pathlib import Path
-from typing import Optional
+from typing import Annotated, Optional
 
 import requests
 from fastapi import (
@@ -41,6 +41,7 @@ from loguru import logger as log
 from osm_fieldwork.data_models import data_models_path
 from osm_fieldwork.make_data_extract import getChoices
 from osm_fieldwork.xlsforms import xlsforms_path
+from psycopg import Connection
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
@@ -49,6 +50,8 @@ from app.auth.osm import login_required
 from app.auth.roles import mapper, org_admin, project_manager
 from app.central import central_crud, central_deps, central_schemas
 from app.db import database, db_models
+from app.db.database import db_conn
+from app.db.db_schemas import DbProject
 from app.db.postgis_utils import (
     check_crs,
     flatgeobuf_to_featcol,
@@ -61,12 +64,11 @@ from app.models.enums import (
     TILES_FORMATS,
     TILES_SOURCE,
     HTTPStatus,
-    ProjectVisibility,
     XLSFormType,
 )
 from app.organisations import organisation_deps
 from app.projects import project_crud, project_deps, project_schemas
-from app.tasks import tasks_crud
+from app.tasks import task_crud
 
 router = APIRouter(
     prefix="/projects",
@@ -77,25 +79,32 @@ router = APIRouter(
 
 @router.get("/features", response_model=FeatureCollection)
 async def read_projects_to_featcol(
-    db: Session = Depends(database.get_db),
+    db: Annotated[Connection, Depends(db_conn)],
     bbox: Optional[str] = None,
 ):
     """Return all projects as a single FeatureCollection."""
     return await project_crud.get_projects_featcol(db, bbox)
 
 
-@router.get("/", response_model=list[project_schemas.ProjectWithTasks])
+@router.get("/", response_model=list[project_schemas.ReadProject])
 async def read_projects(
+    db: Annotated[Connection, Depends(db_conn)],
     user_id: int = None,
     skip: int = 0,
     limit: int = 100,
-    db: Session = Depends(database.get_db),
 ):
     """Return all projects."""
-    project_count, projects = await project_crud.get_projects(
-        db, user_id=user_id, skip=skip, limit=limit
-    )
+    projects = await DbProject.all(db, skip, limit, user_id)
     return projects
+
+
+@router.post("/me", response_model=list[DbProject])
+async def get_projects_for_user(user_id: int):
+    """Get all projects the user is author of.
+
+    TODO to be implemented in future.
+    """
+    return [DbProject()]
 
 
 @router.post("/near_me", response_model=list[project_schemas.ProjectSummary])
@@ -109,94 +118,41 @@ async def get_tasks_near_me(lat: float, long: float, user_id: int = None):
 
 @router.get("/summaries", response_model=project_schemas.PaginatedProjectSummaries)
 async def read_project_summaries(
+    db: Annotated[Connection, Depends(db_conn)],
     page: int = Query(1, ge=1),  # Default to page 1, must be greater than or equal to 1
     results_per_page: int = Query(13, le=100),
     user_id: Optional[int] = None,
     hashtags: Optional[str] = None,
-    db: Session = Depends(database.get_db),
 ):
     """Get a paginated summary of projects."""
-    if hashtags:
-        hashtags = hashtags.split(",")  # create list of hashtags
-        hashtags = list(
-            filter(lambda hashtag: hashtag.startswith("#"), hashtags)
-        )  # filter hashtags that do start with #
-
-    total_project_count = (
-        db.query(db_models.DbProject)
-        .filter(
-            db_models.DbProject.visibility  # type: ignore
-            == ProjectVisibility.PUBLIC  # type: ignore
-        )
-        .count()
+    return await project_crud.get_paginated_projects(
+        db, page, results_per_page, user_id, hashtags
     )
-    skip = (page - 1) * results_per_page
-    limit = results_per_page
-
-    project_count, projects = await project_crud.get_project_summaries(
-        db, skip, limit, user_id, hashtags, None
-    )
-
-    pagination = await project_crud.get_pagination(
-        page, project_count, results_per_page, total_project_count
-    )
-
-    project_summaries = [
-        project_schemas.ProjectSummary(**project.__dict__) for project in projects
-    ]
-
-    response = project_schemas.PaginatedProjectSummaries(
-        results=project_summaries,
-        pagination=pagination,
-    )
-    return response
 
 
 @router.get(
-    "/search-projects", response_model=project_schemas.PaginatedProjectSummaries
+    "/search",
+    response_model=project_schemas.PaginatedProjectSummaries,
 )
 async def search_project(
+    db: Annotated[Connection, Depends(db_conn)],
     search: str,
     page: int = Query(1, ge=1),  # Default to page 1, must be greater than or equal to 1
     results_per_page: int = Query(13, le=100),
     user_id: Optional[int] = None,
     hashtags: Optional[str] = None,
-    db: Session = Depends(database.get_db),
 ):
     """Search projects by string, hashtag, or other criteria."""
-    if hashtags:
-        hashtags = hashtags.split(",")  # create list of hashtags
-        hashtags = list(
-            filter(lambda hashtag: hashtag.startswith("#"), hashtags)
-        )  # filter hashtags that do start with #
-
-    total_projects = db.query(db_models.DbProject).count()
-    skip = (page - 1) * results_per_page
-    limit = results_per_page
-
-    project_count, projects = await project_crud.get_project_summaries(
-        db, skip, limit, user_id, hashtags, search
+    return await project_crud.get_paginated_projects(
+        db, page, results_per_page, user_id, hashtags, search
     )
-
-    pagination = await project_crud.get_pagination(
-        page, project_count, results_per_page, total_projects
-    )
-    project_summaries = [
-        project_schemas.ProjectSummary(**project.__dict__) for project in projects
-    ]
-
-    response = project_schemas.PaginatedProjectSummaries(
-        results=project_summaries,
-        pagination=pagination,
-    )
-    return response
 
 
 @router.get(
     "/{project_id}/entities", response_model=central_schemas.EntityFeatureCollection
 )
 async def get_odk_entities_geojson(
-    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    project: db_models.DbProject = Depends(project_deps.get_project),
     minimal: bool = False,
     db: Session = Depends(database.get_db),
 ):
@@ -219,7 +175,7 @@ async def get_odk_entities_geojson(
     response_model=list[central_schemas.EntityMappingStatus],
 )
 async def get_odk_entities_mapping_statuses(
-    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    project: db_models.DbProject = Depends(project_deps.get_project),
     db: Session = Depends(database.get_db),
 ):
     """Get the ODK entities mapping statuses, i.e. in progress or complete."""
@@ -235,7 +191,7 @@ async def get_odk_entities_mapping_statuses(
     response_model=list[central_schemas.EntityOsmID],
 )
 async def get_odk_entities_osm_ids(
-    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    project: db_models.DbProject = Depends(project_deps.get_project),
     db: Session = Depends(database.get_db),
 ):
     """Get the ODK entities linked OSM IDs.
@@ -257,7 +213,7 @@ async def get_odk_entities_osm_ids(
     response_model=list[central_schemas.EntityTaskID],
 )
 async def get_odk_entities_task_ids(
-    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    project: db_models.DbProject = Depends(project_deps.get_project),
     db: Session = Depends(database.get_db),
 ):
     """Get the ODK entities linked FMTM Task IDs."""
@@ -275,7 +231,7 @@ async def get_odk_entities_task_ids(
 )
 async def get_odk_entity_mapping_status(
     entity_id: str,
-    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    project: db_models.DbProject = Depends(project_deps.get_project),
     db: Session = Depends(database.get_db),
 ):
     """Get the ODK entity mapping status, i.e. in progress or complete."""
@@ -293,7 +249,7 @@ async def get_odk_entity_mapping_status(
 )
 async def set_odk_entities_mapping_status(
     entity_details: central_schemas.EntityMappingStatusIn,
-    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    project: db_models.DbProject = Depends(project_deps.get_project),
     db: Session = Depends(database.get_db),
 ):
     """Set the ODK entities mapping status, i.e. in progress or complete.
@@ -414,23 +370,21 @@ async def generate_project_tiles(
     return {"Message": "Tile generation started"}
 
 
-@router.get("/{project_id}", response_model=project_schemas.ReadProject)
+@router.get("/{id}", response_model=project_schemas.ReadProject)
 async def read_project(
-    # project_user: ProjectUserDict = Depends(mapper),
-    project_id: int,
+    project_user: ProjectUserDict = Depends(mapper),
+    # project_id: int,
     # user = Depends(login_required),
-    db=Depends(database.db_conn),
+    # db: Connection = Depends(database.db_conn),
 ):
     """Get a specific project by ID."""
-    # return project_user.get("project")
-    project = await project_schemas.ReadProject.by_id(db, project_id)
-    return project
+    return project_user.get("project")
 
 
 @router.delete("/{project_id}")
 async def delete_project(
     db: Session = Depends(database.get_db),
-    project: db_models.DbProject = Depends(project_deps.get_project_by_id),
+    project: db_models.DbProject = Depends(project_deps.get_project),
     org_user_dict: OrgUserDict = Depends(org_admin),
 ):
     """Delete a project from both ODK Central and the local database."""
@@ -450,11 +404,11 @@ async def delete_project(
     return Response(status_code=HTTPStatus.NO_CONTENT)
 
 
-@router.post("/create-project", response_model=project_schemas.ProjectWithTasks)
+@router.post("/create-project", response_model=project_schemas.ReadProject)
 async def create_project(
     project_info: project_schemas.ProjectUpload,
-    org_user_dict: OrgUserDict = Depends(org_admin),
-    db: Session = Depends(database.get_db),
+    org_user_dict: Annotated[AuthUser, Depends(org_admin)],
+    db: Annotated[Connection, Depends(db_conn)],
 ):
     """Create a project in ODK Central and the local database.
 
@@ -465,9 +419,8 @@ async def create_project(
     TODO refactor to standard REST POST to /projects
     TODO but first check doesn't break other endpoints
     """
-    db_user = org_user_dict.get("user")
-
-    db_org = org_user_dict.get("org")
+    db_user = org_user_dict["user"]
+    db_org = org_user_dict["org"]
     project_info.organisation_id = db_org.id
 
     log.info(
@@ -478,110 +431,76 @@ async def create_project(
     # Must decrypt ODK password & connect to ODK Central before proj created
     # cannot use get_odk_credentials helper as no project id yet
     if project_info.odk_central_url:
-        odk_creds_decrypted = project_schemas.ODKCentralDecrypted(
+        odk_creds_decrypted = central_schemas.ODKCentralDecrypted(
             odk_central_url=project_info.odk_central_url,
             odk_central_user=project_info.odk_central_user,
             odk_central_password=project_info.odk_central_password,
         )
     else:
-        # Use default org credentials if none passed
+        # Else use default org credentials if none passed
         log.debug(
-            "No odk credentials passed during project creation. "
+            "No ODK credentials passed during project creation. "
             "Defaulting to organisation credentials."
         )
         odk_creds_decrypted = await organisation_deps.get_org_odk_creds(db_org)
 
-    sql = text("""
-        SELECT EXISTS (
-            SELECT 1
-            FROM project_info
-            WHERE LOWER(name) = :project_name
-        )
-    """)
-    result = db.execute(sql, {"project_name": project_info.project_info.name.lower()})
-    project_exists = result.scalar()
-    if project_exists:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Project already exists with the name "
-            f"{project_info.project_info.name}",
-        )
+    await project_deps.check_project_dup_name(
+        db, project_info.project_info.name.lower()
+    )
 
+    # Create project in ODK Central
     odkproject = central_crud.create_odk_project(
-        project_info.project_info.name,
-        odk_creds_decrypted,
+        project_info.project_info.name, odk_creds_decrypted
     )
 
-    project = await project_crud.create_project_with_project_info(
-        db,
-        project_info,
-        odkproject["id"],
-        db_user,
-    )
+    # Create the project in the local DB
+    project_info.odk_project_id = odkproject["id"]
+    project_info.author_id = db_user.id
+    project = await DbProject.create(db, project_info)
     if not project:
-        raise HTTPException(status_code=404, detail="Project creation failed")
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail="Project creation failed.",
+        )
 
     return project
 
 
-@router.put("/{project_id}", response_model=project_schemas.ProjectWithTasks)
-async def update_project(
-    project_info: project_schemas.ProjectUpdate,
-    db: Session = Depends(database.get_db),
-    project_user_dict: ProjectUserDict = Depends(project_manager),
-):
-    """Update an existing project by ID.
+# FIXME then re-enable this endpoint
+# FIXME write a method db_schemas.DbProject.update
+# @router.put("/{project_id}", response_model=DbProject)
+# async def update_project(
+#     project_info: project_schemas.ProjectUpdate,
+#     db: Session = Depends(database.get_db),
+#     project_user_dict: ProjectUserDict = Depends(project_manager),
+# ):
+#     """Update an existing project by ID.
 
-    Note: the entire project JSON must be uploaded.
-    If a partial update is required, use the PATCH method instead.
+#     Note: the entire project JSON must be uploaded.
+#     If a partial update is required, use the PATCH method instead.
 
-    Parameters:
-    - id: ID of the project to update
-    - project_info: Updated project information
-    - current_user (DbUser): Check if user is project_manager
+#     Parameters:
+#     - id: ID of the project to update
+#     - project_info: Updated project information
+#     - current_user (DbUser): Check if user is project_manager
 
-    Returns:
-    - Updated project information
+#     Returns:
+#     - Updated project information
 
-    Raises:
-    - HTTPException with 404 status code if project not found
-    """
-    project = await project_crud.update_project_with_project_info(
-        db, project_info, project_user_dict["project"], project_user_dict["user"]
-    )
-    if not project:
-        raise HTTPException(status_code=422, detail="Project could not be updated")
-    return project
+#     Raises:
+#     - HTTPException with 404 status code if project not found
+#     """
+#     project = await project_crud.update_project_with_project_info(
+#         db, project_info, project_user_dict["project"], project_user_dict["user"]
+#     )
+#     if not project:
+#         raise HTTPException(
+#             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+#             detail="Project could not be updated",
+#         )
+#     return project
 
-
-@router.patch("/{project_id}", response_model=project_schemas.ProjectWithTasks)
-async def project_partial_update(
-    project_info: project_schemas.ProjectPartialUpdate,
-    db: Session = Depends(database.get_db),
-    project_user_dict: ProjectUserDict = Depends(project_manager),
-):
-    """Partial Update an existing project by ID.
-
-    Parameters:
-    - id
-    - name
-    - short_description
-    - description
-
-    Returns:
-    - Updated project information
-
-    Raises:
-    - HTTPException with 404 status code if project not found
-    """
-    # Update project information
-    project = await project_crud.partial_update_project_info(
-        db, project_info, project_user_dict["project"]
-    )
-
-    if not project:
-        raise HTTPException(status_code=422, detail="Project could not be updated")
-    return project
+# TODO add @router.patch("/{project_id}"
 
 
 @router.post("/{project_id}/upload-task-boundaries")
@@ -611,7 +530,7 @@ async def upload_project_task_boundaries(
     await project_crud.create_tasks_from_geojson(db, project_id, tasks_featcol)
 
     # Get the number of tasks in a project
-    task_count = await tasks_crud.get_task_count_in_project(db, project_id)
+    task_count = await task_crud.get_task_count_in_project(db, project_id)
 
     return {
         "message": "Project Boundary Uploaded",
@@ -1016,7 +935,7 @@ async def update_project_form(
     xlsform: BytesIO = Depends(central_deps.read_xlsform),
     db: Session = Depends(database.get_db),
     project_user_dict: ProjectUserDict = Depends(project_manager),
-) -> project_schemas.ProjectBase:
+) -> DbProject:
     """Update the XForm data in ODK Central.
 
     Also updates the category and custom XLSForm data in the database.

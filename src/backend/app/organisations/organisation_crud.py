@@ -22,28 +22,23 @@ from typing import Optional
 
 from fastapi import File, HTTPException, Response, UploadFile
 from loguru import logger as log
-from sqlalchemy import text, update
-from sqlalchemy.orm import Session
+from psycopg import Connection
 
 from app.auth.auth_schemas import AuthUser
 from app.config import encrypt_value, settings
 from app.db import db_models
+from app.db.db_schemas import DbOrganisation
 from app.models.enums import HTTPStatus
 from app.organisations.organisation_deps import (
-    check_org_exists,
-    get_organisation_by_name,
+    get_organisation,
 )
-from app.organisations.organisation_schemas import OrganisationEdit, OrganisationIn
+from app.organisations.organisation_schemas import OrganisationIn
 from app.s3 import add_obj_to_bucket
 
 
-async def init_admin_org(db: Session):
+async def init_admin_org(db: Connection) -> None:
     """Init admin org and user at application startup."""
-    insert_org_sql = text(
-        """
-        -- Start a transaction
-        BEGIN;
-
+    sql_insert_org = """
         -- Insert HOTOSM organisation
         INSERT INTO public.organisations (
             name,
@@ -65,17 +60,15 @@ async def init_admin_org(db: Session):
             'https://hotosm.org',
             'FREE',
             true,
-            :odk_url,
-            :odk_user,
-            :odk_pass
+            %(odk_url)s,
+            %(odk_user)s,
+            %(odk_pass)s
         )
         ON CONFLICT ("name") DO NOTHING
         RETURNING id;
     """
-    )
 
-    insert_users_sql = text(
-        """
+    sql_insert_org_admin = """
         -- Insert localadmin admin user
         INSERT INTO public.users (
             id,
@@ -90,8 +83,8 @@ async def init_admin_org(db: Session):
             tasks_invalidated
         )
         VALUES (
-            :admin_user_id,
-            :admin_username,
+            %(admin_user_id)s,
+            %(admin_username)s,
             'ADMIN',
             'Admin',
             'admin@fmtm.dev',
@@ -102,16 +95,20 @@ async def init_admin_org(db: Session):
             0
         )
         ON CONFLICT ("username") DO NOTHING;
+    """
 
+    sql_set_org_admin = """
         -- Set localadmin user as org admin
         WITH org_cte AS (
             SELECT id FROM public.organisations
             WHERE name = 'HOTOSM'
         )
         INSERT INTO public.organisation_managers (organisation_id, user_id)
-        SELECT (SELECT id FROM org_cte), :admin_user_id
+        SELECT (SELECT id FROM org_cte), %(admin_user_id)s
         ON CONFLICT DO NOTHING;
+    """
 
+    insert_svc_account_sql = """
         -- Insert svcfmtm user (for temp auth)
         INSERT INTO public.users (
             id,
@@ -126,83 +123,69 @@ async def init_admin_org(db: Session):
             tasks_invalidated
         )
         VALUES (
-            :svc_user_id,
-            :svc_username,
+            %(svc_user_id)s,
+            %(svc_username)s,
             'MAPPER',
             'FMTM Service Account',
-            :odk_user,
+            %(odk_user)s,
             true,
             'BEGINNER',
             0,
             0,
             0
         )
+
         ON CONFLICT ("username") DO UPDATE
         SET
             role = EXCLUDED.role,
             mapping_level = EXCLUDED.mapping_level,
             name = EXCLUDED.name;
-
-        -- Commit the transaction
-        COMMIT;
     """
-    )
 
-    result = db.execute(
-        insert_org_sql,
-        {
-            "odk_url": settings.ODK_CENTRAL_URL,
-            "odk_user": settings.ODK_CENTRAL_USER,
-            "odk_pass": encrypt_value(settings.ODK_CENTRAL_PASSWD),
-        },
-    )
+    async with db.cursor() as cur:
+        await cur.execute(
+            sql_insert_org,
+            {
+                "odk_url": settings.ODK_CENTRAL_URL,
+                "odk_user": settings.ODK_CENTRAL_USER,
+                "odk_pass": encrypt_value(settings.ODK_CENTRAL_PASSWD),
+            },
+        )
 
-    # NOTE only upload org logo on first org creation (RETURNING statement)
-    org_id = result.scalar()
-    if org_id:
-        logo_path = "/opt/app/images/hot-org-logo.png"
-        with open(logo_path, "rb") as logo_file:
-            org_logo = UploadFile(BytesIO(logo_file.read()))
-        await upload_logo_to_s3(org_id, org_logo)
+        org_id = await cur.fetchone()
+        # NOTE only upload org logo on first org creation (RETURNING statement)
+        if org_id:
+            org_id = org_id[0]
+            logo_path = "/opt/app/images/hot-org-logo.png"
+            with open(logo_path, "rb") as logo_file:
+                org_logo = UploadFile(BytesIO(logo_file.read()))
+            await upload_logo_to_s3(db, org_id, org_logo)
 
-    result = db.execute(
-        insert_users_sql,
-        {
-            "admin_user_id": 1,
-            "admin_username": "localadmin",
-            "svc_user_id": 20386219,
-            "svc_username": "svcfmtm",
-            "odk_user": settings.ODK_CENTRAL_USER,
-        },
-    )
-
-
-async def get_organisations(
-    db: Session,
-    current_user: AuthUser,
-):
-    """Get all orgs.
-
-    Also returns unapproved orgs if admin user.
-    """
-    user_id = current_user.id
-
-    sql = text(
-        """
-        SELECT *
-        FROM organisations
-        WHERE
-            CASE
-                WHEN (SELECT role FROM users WHERE id = :user_id) = 'ADMIN' THEN TRUE
-                ELSE approved
-            END = TRUE;
-    """
-    )
-    return db.execute(sql, {"user_id": user_id}).all()
+        await cur.execute(
+            sql_insert_org_admin,
+            {
+                "admin_user_id": 1,
+                "admin_username": "localadmin",
+            },
+        )
+        await cur.execute(
+            sql_set_org_admin,
+            {
+                "admin_user_id": 1,
+            },
+        )
+        await cur.execute(
+            insert_svc_account_sql,
+            {
+                "svc_user_id": 20386219,
+                "svc_username": "svcfmtm",
+                "odk_user": settings.ODK_CENTRAL_USER,
+            },
+        )
 
 
 async def get_my_organisations(
-    db: Session,
+    db: Connection,
     current_user: AuthUser,
 ):
     """Get organisations filtered by the current user.
@@ -218,8 +201,7 @@ async def get_my_organisations(
     """
     user_id = current_user.id
 
-    sql = text(
-        """
+    sql = """
         SELECT DISTINCT org.*
         FROM organisations org
         JOIN organisation_managers managers
@@ -232,26 +214,29 @@ async def get_my_organisations(
         FROM organisations org
         JOIN projects project
             ON project.organisation_id = org.id
-        WHERE project.author_id = :user_id;
+        WHERE project.author_id = %(user_id)s;
     """
-    )
-    return db.execute(sql, {"user_id": user_id}).all()
+    async with db.cursor() as cur:
+        await cur.execute(sql, {"user_id": user_id})
+        orgs = cur.fetchall()
+    return orgs
 
 
 async def get_unapproved_organisations(
-    db: Session,
-) -> list[db_models.DbOrganisation]:
+    db: Connection,
+) -> list[DbOrganisation]:
     """Get unapproved orgs."""
-    return db.query(db_models.DbOrganisation).filter_by(approved=False)
+    return DbOrganisation.unapproved(db)
 
 
-async def upload_logo_to_s3(org_id: int, logo_file: UploadFile) -> str:
+async def upload_logo_to_s3(db: Connection, org_id: int, logo_file: UploadFile) -> str:
     """Upload logo using standardised /{org_id}/logo.png format.
 
     Browsers treat image mimetypes the same, regardless of extension,
     so it should not matter if a .jpg is renamed .png.
 
     Args:
+        db (Connection): Database connection.
         org_id (int): The organisation id in the database.
         logo_file (UploadFile): The logo image uploaded to FastAPI.
 
@@ -272,112 +257,56 @@ async def upload_logo_to_s3(org_id: int, logo_file: UploadFile) -> str:
 
     logo_url = f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}{logo_path}"
 
+    # Update db
+    async with db.cursor() as cur:
+        await cur.execute(
+            """
+            UPDATE organisations
+            SET logo = %(logo_url)s
+            WHERE id = %(org_id)s;
+        """,
+            {"org_id": org_id, "logo_url": logo_url},
+        )
+
     return logo_url
 
 
 async def create_organisation(
-    db: Session,
+    db: Connection,
     org_model: OrganisationIn,
-    current_user: AuthUser,
+    user_id: AuthUser,
     logo: Optional[UploadFile] = File(None),
-) -> db_models.DbOrganisation:
+) -> DbOrganisation:
     """Creates a new organisation with the given name, description, url, type, and logo.
 
     Saves the logo file S3 bucket under /{org_id}/logo.png.
 
     Args:
-        db (Session): database session
+        db (Connection): database connection.
         org_model (OrganisationIn): Pydantic model for organisation input.
+        user_id: User ID of requester.
         logo (UploadFile, optional): logo file of the organisation.
             Defaults to File(...).
-        current_user: logged in user.
 
     Returns:
-        DbOrganisation: SQLAlchemy Organisation model.
+        DbOrganisation: Organisation model.
     """
-    if await get_organisation_by_name(db, org_name=org_model.name):
+    if await get_organisation(db, org_model.name):
         raise HTTPException(
             status_code=HTTPStatus.CONFLICT,
             detail=f"Organisation already exists with the name ({org_model.name})",
         )
 
-    # Required to check if exists on error
-    db_organisation = None
-
-    try:
-        # Create new organisation without logo set
-        db_organisation = db_models.DbOrganisation(**org_model.model_dump())
-        db_organisation.user_id = current_user.id
-
-        db.add(db_organisation)
-        db.commit()
-        # Refresh to get the assigned org id
-        db.refresh(db_organisation)
-
-        # Update the logo field in the database with the correct path
-        if logo:
-            db_organisation.logo = await upload_logo_to_s3(db_organisation.id, logo)
-        db.commit()
-
-    except Exception as e:
-        log.exception(e)
-        log.debug("Rolling back changes to db organisation")
-        # Rollback any changes
-        db.rollback()
-        # Delete the failed organisation entry
-        if db_organisation:
-            log.debug(f"Deleting created organisation ID {db_organisation.id}")
-            db.delete(db_organisation)
-            db.commit()
-        raise HTTPException(
-            status_code=400, detail=f"Error creating organisation: {e}"
-        ) from e
-
-    return db_organisation
-
-
-async def update_organisation(
-    db: Session,
-    organisation: db_models.DbOrganisation,
-    values: OrganisationEdit,
-    logo: UploadFile(None),
-) -> db_models.DbOrganisation:
-    """Update an existing organisation database entry.
-
-    Args:
-        db (Session): database session
-        organisation (DbOrganisation): Editing database model.
-        values (OrganisationEdit): Pydantic model for organisation edit.
-        logo (UploadFile, optional): logo file of the organisation.
-            Defaults to File(...).
-
-    Returns:
-        DbOrganisation: SQLAlchemy Organisation model.
-    """
-    if not (updated_fields := values.dict(exclude_none=True)):
-        raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail=f"No values were provided to update organisation {organisation.id}",
-        )
-
-    update_cmd = (
-        update(db_models.DbOrganisation)
-        .where(db_models.DbOrganisation.id == organisation.id)
-        .values(**updated_fields)
-    )
-    db.execute(update_cmd)
-
+    db_org = DbOrganisation.create(db, org_model, user_id, logo)
+    # Update the logo field in the database with the correct path
     if logo:
-        organisation.logo = await upload_logo_to_s3(organisation.id, logo)
+        await upload_logo_to_s3(db, db_org.id, logo)
 
-    db.commit()
-    db.refresh(organisation)
-
-    return organisation
+    return db_org
 
 
 async def delete_organisation(
-    db: Session,
+    db: Connection,
     organisation: db_models.DbOrganisation,
 ) -> Response:
     """Delete an existing organisation database entry.
@@ -395,7 +324,7 @@ async def delete_organisation(
     return Response(status_code=HTTPStatus.NO_CONTENT)
 
 
-async def add_organisation_admin(db: Session, org_id: int, user_id: int):
+async def add_organisation_admin(db: Connection, org_id: int, user_id: int):
     """Adds a user as an admin to the specified organisation.
 
     Args:
@@ -407,28 +336,19 @@ async def add_organisation_admin(db: Session, org_id: int, user_id: int):
         Response: The HTTP response with status code 200.
     """
     log.info(f"Adding user ({user_id}) as org ({org_id}) admin")
-    sql = text(
-        """
+    sql = """
         INSERT INTO public.organisation_managers
-        (organisation_id, user_id) VALUES (:org_id, :user_id)
+        (organisation_id, user_id) VALUES (%(org_id)s, %(user_id)s)
         ON CONFLICT DO NOTHING;
     """
-    )
 
-    db.execute(
-        sql,
-        {
-            "org_id": org_id,
-            "user_id": user_id,
-        },
-    )
-
-    db.commit()
+    async with db.cursor() as cur:
+        await cur.execute(sql, {"org_id": org_id, "user_id": user_id})
 
     return Response(status_code=HTTPStatus.OK)
 
 
-async def approve_organisation(db, org_id: int):
+async def approve_organisation(db: Connection, org_id: int):
     """Approves an oranisation request made by the user .
 
     Args:
@@ -438,21 +358,18 @@ async def approve_organisation(db, org_id: int):
     Returns:
         Response: An HTTP response with the status code 200.
     """
-    org_obj = await check_org_exists(db, org_id, check_approved=False)
+    log.info(f"Approving organisation ({org_id}).")
 
-    org_obj.approved = True
-    db.commit()
+    async with db.cursor() as cur:
+        await cur.execute(
+            """
+            UPDATE organisations
+            SET VALUE
+                approved = true
+            WHERE
+                id = %(org_id)s;
+        """,
+            {"org_id": org_id},
+        )
 
-    return org_obj
-
-
-async def get_unapproved_org_detail(db, org_id):
-    """Returns detail of an unapproved organisation.
-
-    Args:
-        db: The database session.
-        org_id: ID of unapproved organisation.
-    """
-    return (
-        db.query(db_models.DbOrganisation).filter_by(approved=False, id=org_id).first()
-    )
+    return Response(status_code=HTTPStatus.OK)

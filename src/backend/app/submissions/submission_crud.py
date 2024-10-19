@@ -17,7 +17,6 @@
 #
 """Functions for task submissions."""
 
-import csv
 import hashlib
 import io
 import json
@@ -301,54 +300,6 @@ async def download_submission_in_json(db: Session, project: db_models.DbProject)
         "Content-Disposition": f"attachment; filename={project_name}_submissions.json"
     }
     return Response(content=json_bytes.getvalue(), headers=headers)
-
-
-async def get_submission_points(db: Session, project_id: int, task_id: Optional[int]):
-    """Get submission points for a project.
-
-    FIXME refactor to pass through project object via auth.
-    """
-    project_info = await project_crud.get_project_by_id(db, project_id)
-    if not project_info:
-        raise HTTPException(status_code=404, detail="Project not found")
-
-    odk_id = project_info.odkid
-    odk_credentials = await project_deps.get_odk_credentials(db, project_id)
-    xform = get_odk_form(odk_credentials)
-
-    response_file = xform.getSubmissionMedia(odk_id, project_info.odk_form_id)
-    response_file_bytes = response_file.content
-
-    try:
-        with zipfile.ZipFile(io.BytesIO(response_file_bytes), "r") as zip_ref:
-            csv_filenames = [f for f in zip_ref.namelist() if f.endswith(".csv")]
-            if not csv_filenames:
-                print("No CSV files found in the zip archive.")
-                return None
-
-            csv_filename = csv_filenames[0]
-            with zip_ref.open(csv_filename) as csv_file:
-                csv_reader = csv.DictReader(io.TextIOWrapper(csv_file))
-                geometry = []
-
-                for row in csv_reader:
-                    if not task_id or int(row["all-task_id"]) == task_id:
-                        latitude = row.get("warmup-Latitude")
-                        longitude = row.get("warmup-Longitude")
-                        if latitude and longitude:
-                            point = (latitude, longitude)
-                            geometry.append(
-                                {
-                                    "type": "Feature",
-                                    "geometry": {"type": "Point", "coordinates": point},
-                                }
-                            )
-
-                return geometry
-
-    except zipfile.BadZipFile:
-        print("The file is not a valid zip file.")
-        return None
 
 
 async def get_submission_count_of_a_project(db: Session, project: db_models.DbProject):

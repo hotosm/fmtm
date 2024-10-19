@@ -36,15 +36,16 @@ from sqlalchemy.orm import sessionmaker
 
 from app.auth.auth_routes import get_or_create_user
 from app.auth.auth_schemas import AuthUser, FMTMUser
-from app.central import central_crud
+from app.central import central_crud, central_schemas
+from app.central.central_schemas import ODKCentralDecrypted
 from app.config import encrypt_value, settings
 from app.db.database import Base, get_db
 from app.db.db_models import DbOrganisation, DbTaskHistory
 from app.main import get_application
 from app.models.enums import TaskStatus, UserRole
-from app.projects import project_crud, project_schemas
-from app.projects.project_schemas import ODKCentralDecrypted, ProjectInfo, ProjectUpload
-from app.users.user_crud import get_user
+from app.projects import project_crud
+from app.projects.project_schemas import ProjectInfo, ProjectUpload
+from app.users.user_deps import get_user
 from tests.test_data import test_data_path
 
 engine = create_engine(settings.FMTM_DB_URL.unicode_string())
@@ -227,7 +228,7 @@ async def tasks(project, db):
 @pytest.fixture(scope="function")
 async def task_history(db, project, tasks, admin_user):
     """A test task history using the test user, project and task."""
-    user = await get_user(db, admin_user.id)
+    user = await get_user(admin_user.id, db)
     for task in tasks:
         task_history_entry = DbTaskHistory(
             project_id=project.id,
@@ -334,7 +335,7 @@ def project_data():
         "odk_central_password": odk_central_password,
     }
 
-    odk_creds_models = project_schemas.ODKCentralDecrypted(**odk_credentials)
+    odk_creds_models = central_schemas.ODKCentralDecrypted(**odk_credentials)
 
     data.update(**odk_creds_models.model_dump())
     return data

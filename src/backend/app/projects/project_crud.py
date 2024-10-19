@@ -37,13 +37,15 @@ from geojson.feature import Feature, FeatureCollection
 from loguru import logger as log
 from osm_fieldwork.basemapper import create_basemap_file
 from osm_rawdata.postgres import PostgresClient
+from psycopg import Connection
 from shapely.geometry import shape
-from sqlalchemy import and_, column, func, select, table, text
+from sqlalchemy import column, func, select, table, text
 from sqlalchemy.orm import Session
 
-from app.central import central_crud
+from app.central import central_crud, central_schemas
 from app.config import settings
 from app.db import db_models
+from app.db.db_schemas import DbProject
 from app.db.postgis_utils import (
     check_crs,
     featcol_keep_dominant_geom_type,
@@ -53,89 +55,23 @@ from app.db.postgis_utils import (
     merge_polygons,
     parse_geojson_file_to_featcol,
     split_geojson_by_task_areas,
-    wkb_geom_to_feature,
 )
-from app.models.enums import HTTPStatus, ProjectRole, ProjectVisibility, XLSFormType
+from app.models.enums import HTTPStatus, ProjectRole, XLSFormType
 from app.projects import project_deps, project_schemas
 from app.s3 import add_obj_to_bucket, delete_all_objs_under_prefix
-from app.tasks import tasks_crud
+from app.tasks import task_crud
 
 TILESDIR = "/opt/tiles"
 
 
-async def get_projects(
-    db: Session,
-    skip: int = 0,
-    limit: int = 100,
-    user_id: Optional[int] = None,
-    hashtags: Optional[List[str]] = None,
-    search: Optional[str] = None,
-):
-    """Get all projects, or a filtered subset."""
-    filters = []
-
-    if user_id:
-        filters.append(db_models.DbProject.author_id == user_id)
-
-    if hashtags:
-        filters.append(db_models.DbProject.hashtags.op("&&")(hashtags))  # type: ignore
-
-    if search:
-        filters.append(
-            db_models.DbProject.project_info.has(
-                db_models.DbProjectInfo.name.ilike(f"%{search}%")
-            )
-        )
-
-    if len(filters) > 0:
-        db_projects = (
-            db.query(db_models.DbProject)
-            .filter(and_(*filters))
-            .order_by(db_models.DbProject.id.desc())  # type: ignore
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
-        project_count = db.query(db_models.DbProject).filter(and_(*filters)).count()
-
-    else:
-        db_projects = (
-            db.query(db_models.DbProject)
-            .filter(
-                db_models.DbProject.visibility  # type: ignore
-                == ProjectVisibility.PUBLIC  # type: ignore
-            )
-            .order_by(db_models.DbProject.id.desc())  # type: ignore
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
-        project_count = db.query(db_models.DbProject).count()
-
-    # TODO refactor to use Pydantic model methods instead.
-    if db_projects and len(db_projects) > 0:
-
-        async def convert_project(project):
-            return await convert_to_app_project(project)
-
-        app_projects = await gather(
-            *[convert_project(project) for project in db_projects]
-        )
-        filtered_projects = [project for project in app_projects if project is not None]
-    else:
-        filtered_projects = []
-
-    return project_count, filtered_projects
-
-
 async def get_projects_featcol(
-    db: Session,
+    db: Connection,
     bbox: Optional[str] = None,
 ) -> geojson.FeatureCollection:
     """Get all projects, or a filtered subset."""
     bbox_condition = (
         """AND ST_Intersects(
-            p.outline, ST_MakeEnvelope(:minx, :miny, :maxx, :maxy, 4326)
+            p.outline, ST_MakeEnvelope(%(minx)s, %(miny)s, %(maxx)s, %(maxy)s, 4326)
         )"""
         if bbox
         else ""
@@ -146,8 +82,7 @@ async def get_projects_featcol(
         minx, miny, maxx, maxy = map(float, bbox.split(","))
         bbox_params = {"minx": minx, "miny": miny, "maxx": maxx, "maxy": maxy}
 
-    query = text(
-        f"""
+    sql = f"""
         SELECT jsonb_build_object(
             'type', 'FeatureCollection',
             'features', COALESCE(jsonb_agg(feature), '[]'::jsonb)
@@ -171,69 +106,18 @@ async def get_projects_featcol(
             {bbox_condition}
         ) features;
         """
-    )
 
-    result = db.execute(query, {"domain": settings.FMTM_DOMAIN, **bbox_params})
-    featcol = result.scalar_one()
+    async with db.cursor() as cur:
+        await cur.execute(sql, {"domain": settings.FMTM_DOMAIN, **bbox_params})
+        featcol = await cur.fetchone()
 
-    return featcol
-
-
-async def get_project_summaries(
-    db: Session,
-    skip: int = 0,
-    limit: int = 100,
-    user_id: Optional[int] = None,
-    hashtags: Optional[List[str]] = None,
-    search: Optional[str] = None,
-):
-    """Get project summary details for main page."""
-    project_count, db_projects = await get_projects(
-        db, skip, limit, user_id, hashtags, search
-    )
-    return project_count, await convert_to_project_summaries(db, db_projects)
-
-
-async def get_project(db: Session, project_id: int):
-    """Get a single project."""
-    db_project = (
-        db.query(db_models.DbProject)
-        .filter(db_models.DbProject.id == project_id)
-        .first()
-    )
-    if not db_project:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail=f"Project with id {project_id} does not exist",
+    if not featcol:
+        return HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail="Failed to generate project FeatureCollection",
         )
-    return db_project
 
-
-async def get_project_by_id(db: Session, project_id: int):
-    """Get a single project by id."""
-    db_project = (
-        db.query(db_models.DbProject)
-        .filter(db_models.DbProject.id == project_id)
-        .first()
-    )
-    return await convert_to_app_project(db_project)
-
-
-async def get_project_info_by_id(db: Session, project_id: int):
-    """Get the project info only by id."""
-    db_project_info = (
-        db.query(db_models.DbProjectInfo)
-        .filter(db_models.DbProjectInfo.project_id == project_id)
-        .order_by(db_models.DbProjectInfo.project_id)
-        .first()
-    )
-
-    # TODO refactor to use Pydantic model methods instead.
-    if db_project_info:
-        app_project_info: project_schemas.ProjectInfo = db_project_info
-        return app_project_info
-    else:
-        return None
+    return featcol[0]
 
 
 async def delete_fmtm_project(db: Session, project_id: int) -> None:
@@ -266,124 +150,6 @@ async def delete_fmtm_s3_objects(db_project: db_models.DbProject) -> None:
         settings.S3_BUCKET_NAME,
         project_s3_path,
     )
-
-
-async def partial_update_project_info(
-    db: Session,
-    project_metadata: project_schemas.ProjectPartialUpdate,
-    db_project: db_models.DbProject,
-):
-    """Partial project update for PATCH."""
-    # Get project info
-    db_project_info = await get_project_info_by_id(db, db_project.id)
-
-    # Update project information
-    if db_project and db_project_info:
-        if project_metadata.name:
-            db_project.project_name_prefix = project_metadata.project_name_prefix
-            db_project_info.name = project_metadata.name
-        if project_metadata.description:
-            db_project_info.description = project_metadata.description
-        if project_metadata.short_description:
-            db_project_info.short_description = project_metadata.short_description
-        if project_metadata.per_task_instructions:
-            db_project_info.per_task_instructions = (
-                project_metadata.per_task_instructions
-            )
-        if project_metadata.hashtags:
-            db_project.hashtags = project_metadata.hashtags
-
-    db.commit()
-    db.refresh(db_project)
-
-    return await convert_to_app_project(db_project)
-
-
-async def update_project_with_project_info(
-    db: Session,
-    project_metadata: project_schemas.ProjectUpdate,
-    db_project: db_models.DbProject,
-    db_user: db_models.DbUser,
-):
-    """Full project update for PUT."""
-    project_info = project_metadata.project_info
-
-    if not project_info:
-        raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail="No project info passed in",
-        )
-
-    for key, value in project_metadata.model_dump(
-        exclude=["project_info", "outline_geojson"]
-    ).items():
-        setattr(db_project, key, value)
-
-    db_project_info = await get_project_info_by_id(db, db_project.id)
-    # Update project's meta information (name, descriptions)
-    if db_project_info:
-        for key, value in project_info.model_dump(exclude_unset=True).items():
-            setattr(db_project_info, key, value)
-
-    db.commit()
-    db.refresh(db_project)
-    db.refresh(db_project_info)
-
-    return await convert_to_app_project(db_project)
-
-
-async def create_project_with_project_info(
-    db: Session,
-    project_metadata: project_schemas.ProjectUpload,
-    odk_project_id: int,
-    current_user: db_models.DbUser,
-):
-    """Create a new project, including all associated info."""
-    if not odk_project_id:
-        raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail="ODK Central project id is missing",
-        )
-
-    log.debug(
-        "Creating project in FMTM database with vars: "
-        f"project_user: {current_user.username} | "
-        f"project_name: {project_metadata.project_info.name} | "
-        f"xform_category: {project_metadata.xform_category} | "
-        f"hashtags: {project_metadata.hashtags} | "
-        f"organisation_id: {project_metadata.organisation_id}"
-    )
-
-    # create new project
-    db_project = db_models.DbProject(
-        author_id=current_user.id,
-        odkid=odk_project_id,
-        **project_metadata.model_dump(exclude=["project_info", "outline_geojson"]),
-    )
-    db.add(db_project)
-
-    # add project info (project id needed to create project info)
-    db_project_info = db_models.DbProjectInfo(
-        project=db_project,
-        name=project_metadata.project_info.name,
-        description=project_metadata.project_info.description,
-        short_description=project_metadata.project_info.short_description,
-        per_task_instructions=project_metadata.project_info.per_task_instructions,
-    )
-    db.add(db_project_info)
-
-    db.commit()
-    db.refresh(db_project)
-
-    # Append additional hashtag with FMTM domain and project id
-    generated_project_id = db_project.id
-    if db_project.hashtags:
-        db_project.hashtags = db_project.hashtags + [
-            f"#{settings.FMTM_DOMAIN}-{generated_project_id}"
-        ]
-    db.commit()
-
-    return await convert_to_app_project(db_project)
 
 
 async def create_tasks_from_geojson(
@@ -557,59 +323,61 @@ async def split_geojson_into_tasks(
 # ---------------------------
 
 
-async def read_and_insert_xlsforms(db, directory) -> None:
-    """Read the list of XLSForms from the disk and insert to DB."""
-    # Insert new XLSForms to DB and update existing ones
-    for xls_type in XLSFormType:
-        file_name = xls_type.name
-        category = xls_type.value
-        file_path = Path(directory) / f"{file_name}.xls"
+async def read_and_insert_xlsforms(db: Connection, directory: str) -> None:
+    """Read the list of XLSForms from the disk and sync them with the database."""
+    async with db.cursor() as cur:
+        existing_db_forms = set()
 
-        if not file_path.exists():
-            log.warning(f"{file_path} does not exist!")
-            continue
-
-        if file_path.stat().st_size == 0:
-            log.warning(f"{file_path} is empty!")
-            continue
-
-        with open(file_path, "rb") as xls:
-            data = xls.read()
-
-        try:
-            insert_query = text(
-                """
-                INSERT INTO xlsforms (title, xls)
-                VALUES (:title, :xls)
-                ON CONFLICT (title) DO UPDATE SET
-                title = EXCLUDED.title, xls = EXCLUDED.xls
-            """
-            )
-            db.execute(insert_query, {"title": category, "xls": data})
-            db.commit()
-            log.info(f"XLSForm for '{category}' present in the database")
-
-        except Exception as e:
-            log.error(
-                f"Failed to insert or update {category} in the database. Error: {e}"
-            )
-
-    existing_db_forms = {
-        title for (title,) in db.query(db_models.DbXLSForm.title).all()
-    }
-    required_forms = {xls_type.value for xls_type in XLSFormType}
-    # Delete XLSForms from DB that are not found on disk
-    for title in existing_db_forms - required_forms:
-        delete_query = text(
-            """
-            DELETE FROM xlsforms WHERE title = :title
+        # Collect all existing XLSForm titles from the database
+        select_existing_query = """
+            SELECT title FROM xlsforms;
         """
-        )
-        db.execute(delete_query, {"title": title})
-        db.commit()
-        log.info(
-            f"Deleted {title} from the database as it was not present in XLSFormType."
-        )
+        await cur.execute(select_existing_query)
+        existing_db_forms = {row[0] for row in await cur.fetchall()}
+
+        # Insert or update new XLSForms from disk
+        for xls_type in XLSFormType:
+            file_name = xls_type.name
+            category = xls_type.value
+            file_path = Path(directory) / f"{file_name}.xls"
+
+            if not file_path.exists():
+                log.warning(f"{file_path} does not exist!")
+                continue
+
+            if file_path.stat().st_size == 0:
+                log.warning(f"{file_path} is empty!")
+                continue
+
+            with open(file_path, "rb") as xls:
+                data = xls.read()
+
+            try:
+                insert_query = """
+                    INSERT INTO xlsforms (title, xls)
+                    VALUES (%(title)s, %(xls)s)
+                    ON CONFLICT (title) DO UPDATE
+                    SET xls = EXCLUDED.xls
+                """
+                await cur.execute(insert_query, {"title": category, "xls": data})
+                log.info(f"XLSForm for '{category}' inserted/updated in the database")
+
+            except Exception as e:
+                log.error(
+                    f"Failed to insert or update {category} in the database. Error: {e}"
+                )
+
+        # Determine the forms that need to be deleted (those in the DB but
+        # not in the current XLSFormType)
+        required_forms = {xls_type.value for xls_type in XLSFormType}
+        forms_to_delete = existing_db_forms - required_forms
+
+        if forms_to_delete:
+            delete_query = """
+                DELETE FROM xlsforms WHERE title = ANY(%(titles)s)
+            """
+            await cur.execute(delete_query, {"titles": list(forms_to_delete)})
+            log.info(f"Deleted XLSForms from the database: {forms_to_delete}")
 
 
 async def get_odk_id_for_project(db: Session, project_id: int):
@@ -648,11 +416,7 @@ async def get_or_set_data_extract_url(
     Returns:
         str: URL to fgb file in S3.
     """
-    db_project = await get_project_by_id(db, project_id)
-    if not db_project:
-        msg = f"Project ({project_id}) not found"
-        log.error(msg)
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=msg)
+    db_project = await project_deps.get_project_by_id(db, project_id)
 
     # If url, get extract
     # If not url, get new extract / set in db
@@ -704,7 +468,7 @@ async def upload_custom_extract_to_s3(
     Returns:
         str: URL to fgb file in S3.
     """
-    project = await get_project(db, project_id)
+    project = await project_deps.get_project_by_id(db, project_id)
     log.debug(f"Uploading custom data extract for project: {project}")
 
     if not project:
@@ -807,7 +571,7 @@ async def upload_custom_geojson_extract(
     Returns:
         str: URL to fgb file in S3.
     """
-    project = await get_project(db, project_id)
+    project = await project_deps.get_project_by_id(db, project_id)
     log.debug(f"Uploading custom data extract for project: {project}")
 
     featcol = parse_geojson_file_to_featcol(geojson_raw)
@@ -863,7 +627,7 @@ def flatten_dict(d, parent_key="", sep="_"):
 async def generate_odk_central_project_content(
     project_odk_id: int,
     project_odk_form_id: str,
-    odk_credentials: project_schemas.ODKCentralDecrypted,
+    odk_credentials: central_schemas.ODKCentralDecrypted,
     xlsform: BytesIO,
     task_extract_dict: dict[int, geojson.FeatureCollection],
 ) -> str:
@@ -1030,7 +794,7 @@ async def get_task_geometry(db: Session, project_id: int):
     Returns:
         str: A geojson of the task boundaries
     """
-    db_tasks = await tasks_crud.get_tasks(db, project_id, None)
+    db_tasks = await task_crud.get_tasks(db, project_id, None)
     features = []
     for task in db_tasks:
         geom = to_shape(task.outline)
@@ -1132,30 +896,8 @@ async def get_shape_from_json_str(feature: str, error_detail: str):
 # ---- CONVERTERS ----
 # --------------------
 
-# TODO: write tests for these
 
-
-async def convert_to_app_project(db_project: db_models.DbProject):
-    """Legacy function to convert db models --> Pydantic.
-
-    TODO refactor to use Pydantic model methods instead.
-    """
-    if not db_project:
-        log.debug("convert_to_app_project called, but no project provided")
-        return None
-
-    app_project = db_project
-
-    if db_project.outline:
-        app_project.outline_geojson = wkb_geom_to_feature(
-            db_project.outline, {"id": db_project.id}, db_project.id
-        )
-
-    app_project.tasks = db_project.tasks
-
-    return app_project
-
-
+# TODO SQL replace the logic here
 async def convert_to_project_summary(db: Session, db_project: db_models.DbProject):
     """Legacy function to convert db models --> Pydantic.
 
@@ -1185,6 +927,7 @@ async def convert_to_project_summary(db: Session, db_project: db_models.DbProjec
         return None
 
 
+# TODO SQL replace the logic here
 async def convert_to_project_summaries(
     db: Session,
     db_projects: List[db_models.DbProject],
@@ -1484,6 +1227,44 @@ async def get_pagination(page: int, count: int, results_per_page: int, total: in
     return pagination
 
 
+async def get_paginated_projects(
+    db: Connection,
+    page: int,
+    results_per_page: int,
+    user_id: Optional[int] = None,
+    hashtags: Optional[str] = None,
+    search: Optional[str] = None,
+) -> project_schemas.PaginatedProjectSummaries:
+    """Helper function to fetch paginated projects with optional filters."""
+    if hashtags:
+        hashtags = hashtags.split(",")
+
+    # Calculate pagination offsets
+    skip = (page - 1) * results_per_page
+    limit = results_per_page
+
+    projects = await DbProject.all(
+        db, skip=skip, limit=limit, user_id=user_id, hashtags=hashtags, search=search
+    )
+
+    # Count total number of projects for pagination
+    total_project_count = await db.execute("SELECT COUNT(*) FROM projects")
+    total_project_count = (await total_project_count.fetchone())[0]
+
+    pagination = await get_pagination(
+        page, len(projects), results_per_page, total_project_count
+    )
+
+    project_summaries = [
+        project_schemas.ProjectSummary(**project.__dict__) for project in projects
+    ]
+
+    return project_schemas.PaginatedProjectSummaries(
+        results=project_summaries,
+        pagination=pagination,
+    )
+
+
 async def get_dashboard_detail(
     project: db_models.DbProject, db_organisation: db_models.DbOrganisation, db: Session
 ):
@@ -1505,7 +1286,7 @@ async def get_dashboard_detail(
         .count()
     )
 
-    project.total_tasks = await tasks_crud.get_task_count_in_project(db, project.id)
+    project.total_tasks = await task_crud.get_task_count_in_project(db, project.id)
     project.organisation_name, project.organisation_logo = (
         db_organisation.name,
         db_organisation.logo,

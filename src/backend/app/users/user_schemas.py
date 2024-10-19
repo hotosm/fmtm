@@ -24,19 +24,14 @@ from pydantic import BaseModel
 from app.models.enums import UserRole
 
 
-class UserBase(BaseModel):
-    """Username only."""
-
-    username: str
-
-
-class User(UserBase):
+class UserBasic(BaseModel):
     """User with ID."""
 
     id: int
+    username: str
 
 
-class UserOut(UserBase):
+class UserOut(UserBasic):
     """User with ID and role."""
 
     id: int
