@@ -225,23 +225,15 @@ CACHE 1;
 ALTER TABLE public.organisations_id_seq OWNER TO fmtm;
 ALTER SEQUENCE public.organisations_id_seq OWNED BY public.organisations.id;
 
-
-CREATE TABLE public.project_info (
-    project_id integer NOT NULL,
-    name character varying(512),
-    short_description character varying,
-    description character varying,
-    text_searchable tsvector,
-    per_task_instructions character varying
-);
-ALTER TABLE public.project_info OWNER TO fmtm;
-
-
 CREATE TABLE public.projects (
     id integer NOT NULL,
     organisation_id integer,
     odkid integer,
     author_id integer NOT NULL,
+    name character varying,
+    short_description character varying,
+    description character varying,
+    per_task_instructions character varying,
     project_name_prefix character varying,
     location_str character varying,
     outline public.GEOMETRY (POLYGON, 4326),
@@ -256,7 +248,6 @@ CREATE TABLE public.projects (
     featured boolean DEFAULT false,
     due_date timestamp with time zone,
     changeset_comment character varying,
-
     odk_central_url character varying,
     odk_central_user character varying,
     odk_central_password character varying,
@@ -423,9 +414,6 @@ ADD CONSTRAINT organisations_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.organisations
 ADD CONSTRAINT organisations_slug_key UNIQUE (slug);
 
-ALTER TABLE ONLY public.project_info
-ADD CONSTRAINT project_info_pkey PRIMARY KEY (project_id);
-
 ALTER TABLE ONLY public.projects
 ADD CONSTRAINT projects_pkey PRIMARY KEY (id);
 
@@ -479,9 +467,6 @@ CREATE INDEX ix_projects_organisation_id ON public.projects USING btree (
 );
 CREATE INDEX ix_tasks_project_id ON public.tasks USING btree (project_id);
 CREATE INDEX ix_users_id ON public.users USING btree (id);
-CREATE INDEX textsearch_idx ON public.project_info USING btree (
-    text_searchable
-);
 CREATE INDEX idx_user_roles ON public.user_roles USING btree (
     project_id, user_id
 );
@@ -508,11 +493,6 @@ ALTER TABLE ONLY public.organisation_managers
 ADD CONSTRAINT organisation_managers_user_id_fkey FOREIGN KEY (
     user_id
 ) REFERENCES public.users (id);
-
-ALTER TABLE ONLY public.project_info
-ADD CONSTRAINT project_info_project_id_fkey FOREIGN KEY (
-    project_id
-) REFERENCES public.projects (id);
 
 ALTER TABLE ONLY public.tasks
 ADD CONSTRAINT tasks_project_id_fkey FOREIGN KEY (
