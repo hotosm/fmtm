@@ -193,7 +193,7 @@ async def get_my_organisations(
     TODO add extra UNION for all associated projects to user.
 
     Args:
-        db (Session): The database session.
+        db (Connection): The database connection.
         current_user (AuthUser): The current user.
 
     Returns:
@@ -312,7 +312,7 @@ async def delete_organisation(
     """Delete an existing organisation database entry.
 
     Args:
-        db (Session): database session
+        db (Connection): database connection.
         organisation (DbOrganisation): Database model to delete.
 
     Returns:
@@ -328,7 +328,7 @@ async def add_organisation_admin(db: Connection, org_id: int, user_id: int):
     """Adds a user as an admin to the specified organisation.
 
     Args:
-        db (Session): The database session.
+        db (Connection): The database connection.
         org_id (int): The organisation ID.
         user_id (int): The user ID to add as manager.
 
@@ -352,7 +352,7 @@ async def approve_organisation(db: Connection, org_id: int):
     """Approves an oranisation request made by the user .
 
     Args:
-        db: The database session.
+        db (Connection): The database connection.
         org_id (int): The organisation ID.
 
     Returns:

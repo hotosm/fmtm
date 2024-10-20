@@ -22,6 +22,7 @@ import logging
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Annotated
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -29,8 +30,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from loguru import logger as log
 from osm_fieldwork.xlsforms import xlsforms_path
-from sqlalchemy import text
-from sqlalchemy.orm import Session
+from psycopg import Connection
 
 from app.__version__ import __version__
 from app.auth import auth_routes
@@ -255,10 +255,11 @@ async def deployment_details():
 
 
 @api.get("/__heartbeat__")
-async def heartbeat_plus_db(db: Session = Depends(db_conn)):
+async def heartbeat_plus_db(db: Annotated[Connection, Depends(db_conn)]):
     """Heartbeat that checks that API and DB are both up and running."""
     try:
-        db.execute(text("SELECT 1"))
+        async with db.cursor() as cur:
+            await cur.execute("SELECT 1")
         return Response(status_code=HTTPStatus.OK)
     except Exception as e:
         log.warning(e)

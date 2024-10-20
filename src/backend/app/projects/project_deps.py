@@ -18,15 +18,14 @@
 
 """Project dependencies for use in Depends."""
 
-from typing import Annotated, Optional
+from typing import Annotated
 
 from async_lru import alru_cache
 from fastapi import Depends
 from fastapi.exceptions import HTTPException
 from loguru import logger as log
 from psycopg import Connection
-from sqlalchemy import text
-from sqlalchemy.orm import Session
+from psycopg.rows import class_row
 
 from app.central import central_schemas
 from app.db.database import db_conn
@@ -34,18 +33,13 @@ from app.db.db_schemas import DbProject
 from app.models.enums import HTTPStatus
 
 
-async def get_project(db: Annotated[Connection, Depends(db_conn)], id: Optional[int]):
+async def get_project(db: Annotated[Connection, Depends(db_conn)], project_id: int):
     """Wrap get_project_by_id in a route Depends."""
-    return await get_project_by_id(db, id)
+    return await get_project_by_id(db, project_id)
 
 
 async def get_project_by_id(db: Connection, id: int):
     """Get a single project by it's ID."""
-    if not id:
-        # Skip if no project id passed
-        # NOTE we need this for roles.org_admin
-        return None
-
     try:
         return await DbProject.one(db, id)
     except KeyError as e:
@@ -76,9 +70,12 @@ async def check_project_dup_name(db: Connection, name: str):
 
 
 @alru_cache(maxsize=32)
-async def get_odk_credentials(db: Session, project_id: int):
+async def get_odk_credentials(
+    db: Connection,
+    project_id: int,
+) -> central_schemas.ODKCentralDecrypted:
     """Get ODK credentials of a project, or default organization credentials."""
-    sql = text("""
+    sql = """
     SELECT
         COALESCE(
             NULLIF(projects.odk_central_url, ''),
@@ -97,19 +94,14 @@ async def get_odk_credentials(db: Session, project_id: int):
     LEFT JOIN
         organisations ON projects.organisation_id = organisations.id
     WHERE
-        projects.id = :project_id
-    """)
-    result = db.execute(sql, {"project_id": project_id})
-    creds = result.first()
-
-    url = creds.odk_central_url
-    user = creds.odk_central_user
-    password = creds.odk_central_password
-
-    log.debug(f"Retrieved ODK creds for project ({project_id}): {url} | {user}")
-
-    return central_schemas.ODKCentralDecrypted(
-        odk_central_url=url,
-        odk_central_user=user,
-        odk_central_password=password,
-    )
+        projects.id = %(project_id)s
+    """
+    async with db.cursor(
+        row_factory=class_row(central_schemas.ODKCentralDecrypted)
+    ) as cur:
+        await cur.execute(sql, {"project_id": project_id})
+        creds = await cur.fetchone()
+        log.debug(
+            f"Retrieved ODK creds for project ({project_id}): "
+            f"{creds.odk_central_url} | {creds.odk_central_user}"
+        )

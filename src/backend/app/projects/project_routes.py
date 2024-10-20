@@ -42,16 +42,14 @@ from osm_fieldwork.data_models import data_models_path
 from osm_fieldwork.make_data_extract import getChoices
 from osm_fieldwork.xlsforms import xlsforms_path
 from psycopg import Connection
-from sqlalchemy.orm import Session
-from sqlalchemy.sql import text
 
 from app.auth.auth_schemas import AuthUser, OrgUserDict, ProjectUserDict
 from app.auth.osm import login_required
 from app.auth.roles import mapper, org_admin, project_manager
 from app.central import central_crud, central_deps, central_schemas
-from app.db import database, db_models
+from app.db import db_models
 from app.db.database import db_conn
-from app.db.db_schemas import DbProject
+from app.db.db_schemas import DbProject, DbTilesPath
 from app.db.postgis_utils import (
     check_crs,
     flatgeobuf_to_featcol,
@@ -68,7 +66,6 @@ from app.models.enums import (
 )
 from app.organisations import organisation_deps
 from app.projects import project_crud, project_deps, project_schemas
-from app.tasks import task_crud
 
 router = APIRouter(
     prefix="/projects",
@@ -152,9 +149,9 @@ async def search_project(
     "/{project_id}/entities", response_model=central_schemas.EntityFeatureCollection
 )
 async def get_odk_entities_geojson(
-    project: db_models.DbProject = Depends(project_deps.get_project),
+    project: Annotated[db_models.DbProject, Depends(project_deps.get_project)],
+    db: Annotated[Connection, Depends(db_conn)],
     minimal: bool = False,
-    db: Session = Depends(database.get_db),
 ):
     """Get the ODK entities for a project in GeoJSON format.
 
@@ -175,8 +172,8 @@ async def get_odk_entities_geojson(
     response_model=list[central_schemas.EntityMappingStatus],
 )
 async def get_odk_entities_mapping_statuses(
-    project: db_models.DbProject = Depends(project_deps.get_project),
-    db: Session = Depends(database.get_db),
+    project: Annotated[db_models.DbProject, Depends(project_deps.get_project)],
+    db: Annotated[Connection, Depends(db_conn)],
 ):
     """Get the ODK entities mapping statuses, i.e. in progress or complete."""
     odk_credentials = await project_deps.get_odk_credentials(db, project.id)
@@ -191,8 +188,8 @@ async def get_odk_entities_mapping_statuses(
     response_model=list[central_schemas.EntityOsmID],
 )
 async def get_odk_entities_osm_ids(
-    project: db_models.DbProject = Depends(project_deps.get_project),
-    db: Session = Depends(database.get_db),
+    project: Annotated[db_models.DbProject, Depends(project_deps.get_project)],
+    db: Annotated[Connection, Depends(db_conn)],
 ):
     """Get the ODK entities linked OSM IDs.
 
@@ -213,8 +210,8 @@ async def get_odk_entities_osm_ids(
     response_model=list[central_schemas.EntityTaskID],
 )
 async def get_odk_entities_task_ids(
-    project: db_models.DbProject = Depends(project_deps.get_project),
-    db: Session = Depends(database.get_db),
+    project: Annotated[db_models.DbProject, Depends(project_deps.get_project)],
+    db: Annotated[Connection, Depends(db_conn)],
 ):
     """Get the ODK entities linked FMTM Task IDs."""
     odk_credentials = await project_deps.get_odk_credentials(db, project.id)
@@ -231,8 +228,8 @@ async def get_odk_entities_task_ids(
 )
 async def get_odk_entity_mapping_status(
     entity_id: str,
-    project: db_models.DbProject = Depends(project_deps.get_project),
-    db: Session = Depends(database.get_db),
+    project: Annotated[db_models.DbProject, Depends(project_deps.get_project)],
+    db: Annotated[Connection, Depends(db_conn)],
 ):
     """Get the ODK entity mapping status, i.e. in progress or complete."""
     odk_credentials = await project_deps.get_odk_credentials(db, project.id)
@@ -249,8 +246,8 @@ async def get_odk_entity_mapping_status(
 )
 async def set_odk_entities_mapping_status(
     entity_details: central_schemas.EntityMappingStatusIn,
-    project: db_models.DbProject = Depends(project_deps.get_project),
-    db: Session = Depends(database.get_db),
+    project: Annotated[db_models.DbProject, Depends(project_deps.get_project)],
+    db: Annotated[Connection, Depends(db_conn)],
 ):
     """Set the ODK entities mapping status, i.e. in progress or complete.
 
@@ -273,14 +270,14 @@ async def set_odk_entities_mapping_status(
 
 @router.get("/{project_id}/tiles-list/")
 async def tiles_list(
-    db: Session = Depends(database.get_db),
-    project_user: ProjectUserDict = Depends(mapper),
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ):
     """Returns the list of tiles for a project.
 
     Parameters:
         project_id: int
-        db (Session): The database session, provided automatically.
+        db (Connection): The database connection.
         current_user (AuthUser): Check if user is logged in.
 
     Returns:
@@ -292,24 +289,22 @@ async def tiles_list(
 @router.get("/{project_id}/download-tiles/")
 async def download_tiles(
     tile_id: int,
-    db: Session = Depends(database.get_db),
-    project_user: ProjectUserDict = Depends(mapper),
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ):
     """Download the basemap tile archive for a project."""
     log.debug("Getting tile archive path from DB")
-    dbtile_obj = (
-        db.query(db_models.DbTilesPath)
-        .filter(db_models.DbTilesPath.id == str(tile_id))
-        .first()
-    )
-    if not dbtile_obj:
+    try:
+        db_tiles = await DbTilesPath.one(db, tile_id)
+    except KeyError as e:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail="Basemap ID does not exist!"
-        )
-    log.info(f"User requested download for tiles: {dbtile_obj.path}")
+        ) from e
+
+    log.info(f"User requested download for tiles: {db_tiles.path}")
 
     project = project_user.get("project")
-    filename = Path(dbtile_obj.path).name.replace(
+    filename = Path(db_tiles.path).name.replace(
         f"{project.id}_", f"{project.project_name_prefix}_"
     )
     log.debug(f"Sending tile archive to user: {filename}")
@@ -322,7 +317,7 @@ async def download_tiles(
         tiles_mime_type = "application/vnd.sqlite3"
 
     return FileResponse(
-        dbtile_obj.path,
+        db_tiles.path,
         headers={
             "Content-Disposition": f"attachment; filename={filename}",
             "Content-Type": tiles_mime_type,
@@ -334,6 +329,8 @@ async def download_tiles(
 async def generate_project_tiles(
     background_tasks: BackgroundTasks,
     project_id: int,
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
     source: str = Query(
         ..., description="Select a source for tiles", enum=TILES_SOURCE
     ),
@@ -344,8 +341,6 @@ async def generate_project_tiles(
         None,
         description="Provide a custom TMS URL, optional",
     ),
-    db: Session = Depends(database.get_db),
-    project_user: ProjectUserDict = Depends(mapper),
 ):
     """Returns basemap tiles for a project."""
     # Create task in db and return uuid
@@ -372,7 +367,7 @@ async def generate_project_tiles(
 
 @router.get("/{id}", response_model=project_schemas.ReadProject)
 async def read_project(
-    project_user: ProjectUserDict = Depends(mapper),
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
     # project_id: int,
     # user = Depends(login_required),
     # db: Connection = Depends(database.db_conn),
@@ -383,9 +378,9 @@ async def read_project(
 
 @router.delete("/{project_id}")
 async def delete_project(
-    db: Session = Depends(database.get_db),
-    project: db_models.DbProject = Depends(project_deps.get_project),
-    org_user_dict: OrgUserDict = Depends(org_admin),
+    db: Annotated[Connection, Depends(db_conn)],
+    project: Annotated[db_models.DbProject, Depends(project_deps.get_project)],
+    org_user_dict: Annotated[OrgUserDict, Depends(org_admin)],
 ):
     """Delete a project from both ODK Central and the local database."""
     log.info(
@@ -406,7 +401,7 @@ async def delete_project(
 
 @router.post("/create-project", response_model=project_schemas.ReadProject)
 async def create_project(
-    project_info: project_schemas.ProjectUpload,
+    project_info: project_schemas.ProjectIn,
     org_user_dict: Annotated[AuthUser, Depends(org_admin)],
     db: Annotated[Connection, Depends(db_conn)],
 ):
@@ -425,7 +420,7 @@ async def create_project(
 
     log.info(
         f"User {db_user.username} attempting creation of project "
-        f"{project_info.project_info.name} in organisation ({db_org.id})"
+        f"{project_info.name} in organisation ({db_org.id})"
     )
 
     # Must decrypt ODK password & connect to ODK Central before proj created
@@ -444,14 +439,10 @@ async def create_project(
         )
         odk_creds_decrypted = await organisation_deps.get_org_odk_creds(db_org)
 
-    await project_deps.check_project_dup_name(
-        db, project_info.project_info.name.lower()
-    )
+    await project_deps.check_project_dup_name(db, project_info.name.lower())
 
     # Create project in ODK Central
-    odkproject = central_crud.create_odk_project(
-        project_info.project_info.name, odk_creds_decrypted
-    )
+    odkproject = central_crud.create_odk_project(project_info.name, odk_creds_decrypted)
 
     # Create the project in the local DB
     project_info.odk_project_id = odkproject["id"]
@@ -471,8 +462,8 @@ async def create_project(
 # @router.put("/{project_id}", response_model=DbProject)
 # async def update_project(
 #     project_info: project_schemas.ProjectUpdate,
-#     db: Session = Depends(database.get_db),
-#     project_user_dict: ProjectUserDict = Depends(project_manager),
+#     db: Annotated[Connection, Depends(db_conn)],
+#     project_user_dict: Annotated[ProjectUserDict , Depends(project_manager)],
 # ):
 #     """Update an existing project by ID.
 
@@ -506,9 +497,9 @@ async def create_project(
 @router.post("/{project_id}/upload-task-boundaries")
 async def upload_project_task_boundaries(
     project_id: int,
+    db: Annotated[Connection, Depends(db_conn)],
+    org_user_dict: Annotated[OrgUserDict, Depends(org_admin)],
     task_geojson: UploadFile = File(...),
-    db: Session = Depends(database.get_db),
-    org_user_dict: OrgUserDict = Depends(org_admin),
 ):
     """Set project task boundaries using split GeoJSON from frontend.
 
@@ -529,22 +520,15 @@ async def upload_project_task_boundaries(
     log.debug("Creating tasks for each polygon in project")
     await project_crud.create_tasks_from_geojson(db, project_id, tasks_featcol)
 
-    # Get the number of tasks in a project
-    task_count = await task_crud.get_task_count_in_project(db, project_id)
-
-    return {
-        "message": "Project Boundary Uploaded",
-        "project_id": f"{project_id}",
-        "task_count": task_count,
-    }
+    return JSONResponse(contents={"message": "success"})
 
 
 @router.post("/task-split")
 async def task_split(
+    db: Annotated[Connection, Depends(db_conn)],
     project_geojson: UploadFile = File(...),
     extract_geojson: Optional[UploadFile] = File(None),
     no_of_buildings: int = Form(50),
-    db: Session = Depends(database.get_db),
 ):
     """Split a task into subtasks.
 
@@ -555,7 +539,7 @@ async def task_split(
             If not included, an extract is generated automatically.
         no_of_buildings (int, optional): The number of buildings per subtask.
             Defaults to 50.
-        db (Session, optional): The database session. Injected by FastAPI.
+        db (Connection): The database connection.
 
     Returns:
         The result of splitting the task into subtasks.
@@ -620,10 +604,12 @@ async def validate_form(
 @router.post("/{project_id}/generate-project-data")
 async def generate_files(
     background_tasks: BackgroundTasks,
-    xlsform_upload: Optional[BytesIO] = Depends(central_deps.read_optional_xlsform),
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
+    xlsform_upload: Annotated[
+        Optional[BytesIO], Depends(central_deps.read_optional_xlsform)
+    ],
     additional_entities: list[str] = None,
-    db: Session = Depends(database.get_db),
-    project_user_dict: ProjectUserDict = Depends(project_manager),
 ):
     """Generate additional content to initialise the project.
 
@@ -648,7 +634,7 @@ async def generate_files(
             A file should be provided if user wants to upload a custom xls form.
         additional_entities (list[str]): If additional Entity lists need to be
             created (i.e. the project form references multiple geometries).
-        db (Session): Database session, provided automatically.
+        db (Connection): The database connection.
         project_user_dict (ProjectUserDict): Project admin role.
 
     Returns:
@@ -692,21 +678,22 @@ async def generate_files(
             detail="There was an error modifying the XLSForm!",
         )
     log.debug(f"Setting project XLSForm db data for xFormId: {xform_id}")
-    query = text("""
+    sql = """
         UPDATE public.projects
         SET
-            odk_form_id = :odk_form_id,
-            xlsform_content = :xlsform_content
-        WHERE id = :project_id;
-    """)
-    db.execute(
-        query,
-        {
-            "project_id": project_id,
-            "odk_form_id": xform_id,
-            "xlsform_content": xlsform_bytes,
-        },
-    )
+            odk_form_id = %(odk_form_id)s,
+            xlsform_content = %(xlsform_content)s
+        WHERE id = %(project_id)s;
+    """
+    async with db.cursor() as cur:
+        await cur.execute(
+            sql,
+            {
+                "project_id": project_id,
+                "odk_form_id": xform_id,
+                "xlsform_content": xlsform_bytes,
+            },
+        )
 
     # Create task in db and return uuid
     log.debug(f"Creating export background task for project ID: {project_id}")
@@ -730,9 +717,9 @@ async def generate_files(
 
 @router.post("/{project_id}/additional-entity")
 async def add_additional_entity_list(
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
     geojson: UploadFile = File(...),
-    db: Session = Depends(database.get_db),
-    project_user_dict: ProjectUserDict = Depends(project_manager),
 ):
     """Add an additional Entity list for the project in ODK.
 
@@ -765,7 +752,7 @@ async def add_additional_entity_list(
 
 
 @router.get("/categories/")
-async def get_categories(current_user: AuthUser = Depends(login_required)):
+async def get_categories(current_user: Annotated[AuthUser, Depends(login_required)]):
     """Get api for fetching all the categories.
 
     This endpoint fetches all the categories from osm_fieldwork.
@@ -818,10 +805,10 @@ async def preview_split_by_square(
 
 @router.post("/generate-data-extract/")
 async def get_data_extract(
+    # config_file: Optional[str] = Form(None),
+    current_user: Annotated[AuthUser, Depends(login_required)],
     geojson_file: UploadFile = File(...),
     form_category: Optional[XLSFormType] = Form(None),
-    # config_file: Optional[str] = Form(None),
-    current_user: AuthUser = Depends(login_required),
 ):
     """Get a new data extract for a given project AOI.
 
@@ -849,10 +836,10 @@ async def get_data_extract(
 
 @router.get("/data-extract-url/")
 async def get_or_set_data_extract(
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
     url: Optional[str] = None,
     project_id: int = Query(..., description="Project ID"),
-    db: Session = Depends(database.get_db),
-    project_user_dict: ProjectUserDict = Depends(project_manager),
 ):
     """Get or set the data extract URL for a project."""
     fgb_url = await project_crud.get_or_set_data_extract_url(
@@ -866,10 +853,9 @@ async def get_or_set_data_extract(
 
 @router.post("/upload-custom-extract/")
 async def upload_custom_extract(
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
     custom_extract_file: UploadFile = File(...),
-    project_id: int = Query(..., description="Project ID"),
-    db: Session = Depends(database.get_db),
-    project_user_dict: ProjectUserDict = Depends(project_manager),
 ):
     """Upload a custom data extract geojson for a project.
 
@@ -891,6 +877,8 @@ async def upload_custom_extract(
     Query Params:
     - 'project_id' (int): the project's id. Required.
     """
+    project_id = project_user_dict.get("project").id
+
     # Validating for .geojson File.
     file_name = os.path.splitext(custom_extract_file.filename)
     file_ext = file_name[1]
@@ -916,7 +904,7 @@ async def upload_custom_extract(
 
 @router.get("/download-form/{project_id}/")
 async def download_form(
-    project_user: ProjectUserDict = Depends(mapper),
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ):
     """Download the XLSForm for a project."""
     project = project_user.get("project")
@@ -930,11 +918,11 @@ async def download_form(
 
 @router.post("/update-form")
 async def update_project_form(
+    xlsform: Annotated[BytesIO, Depends(central_deps.read_xlsform)],
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
     xform_id: str = Form(...),
     category: XLSFormType = Form(...),
-    xlsform: BytesIO = Depends(central_deps.read_xlsform),
-    db: Session = Depends(database.get_db),
-    project_user_dict: ProjectUserDict = Depends(project_manager),
 ) -> DbProject:
     """Update the XForm data in ODK Central.
 
@@ -963,16 +951,22 @@ async def update_project_form(
         odk_creds,
     )
 
-    # Commit changes to db
-    project.xlsform_content = xlsform.getvalue()
-    db.commit()
+    sql = """
+        INSERT INTO projects
+            (xlsform_content)
+        VALUES
+            (%(xls_data)s)
+        RETURNING id, hashtags;
+    """
+    async with db.cursor() as cur:
+        await cur.execute(sql, {"xls_data": xlsform.getvalue()})
 
     return project
 
 
 @router.get("/{project_id}/download")
 async def download_project_boundary(
-    project_user: ProjectUserDict = Depends(mapper),
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ) -> StreamingResponse:
     """Downloads the boundary of a project as a GeoJSON file."""
     project = project_user.get("project")
@@ -991,19 +985,20 @@ async def download_project_boundary(
 @router.get("/{project_id}/download_tasks")
 async def download_task_boundaries(
     project_id: int,
-    db: Session = Depends(database.get_db),
-    current_user: Session = Depends(mapper),
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ):
     """Downloads the boundary of the tasks for a project as a GeoJSON file.
 
     Args:
-        project_id (int): The id of the project.
-        db (Session): The database session, provided automatically.
-        current_user (AuthUser): Check if user has MAPPER permission.
+        project_id (int): Project ID path param.
+        db (Connection): The database connection.
+        project_user (ProjectUserDict): Check if user has MAPPER permission.
 
     Returns:
         Response: The HTTP response object containing the downloaded file.
     """
+    project_id = project_user.get("project").id
     out = await project_crud.get_task_geometry(db, project_id)
 
     headers = {
@@ -1016,9 +1011,9 @@ async def download_task_boundaries(
 
 @router.get("/features/download/")
 async def download_features(
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
     task_id: Optional[int] = None,
-    db: Session = Depends(database.get_db),
-    project_user: ProjectUserDict = Depends(mapper),
 ):
     """Downloads the features of a project as a GeoJSON file.
 
@@ -1042,8 +1037,8 @@ async def download_features(
 @router.get("/convert-fgb-to-geojson/")
 async def convert_fgb_to_geojson(
     url: str,
-    db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(login_required),
+    db: Annotated[Connection, Depends(db_conn)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
 ):
     """Convert flatgeobuf to GeoJSON format, extracting GeometryCollection.
 
@@ -1053,7 +1048,7 @@ async def convert_fgb_to_geojson(
 
     Args:
         url (str): URL to the flatgeobuf file.
-        db (Session): The database session, provided automatically.
+        db (Connection): The database connection.
         current_user (AuthUser): Check if user is logged in.
 
     Returns:
@@ -1081,46 +1076,15 @@ async def convert_fgb_to_geojson(
     return Response(content=json.dumps(data_extract_geojson), headers=headers)
 
 
-# @router.get("/boundary_in_osm/{project_id}/")
-# async def download_task_boundary_osm(
-#     project_id: int,
-#     db: Session = Depends(database.get_db),
-#     project_user: ProjectUserDict = Depends(mapper),
-# ):
-#     """Downloads the boundary of a task as a OSM file.
-
-#     Args:
-#         project_id (int): The id of the project.
-#         db (Session): The database session, provided automatically.
-#         current_user (AuthUser): Check if user has MAPPER permission.
-
-#     Returns:
-#         Response: The HTTP response object containing the downloaded file.
-#     """
-#     out = await project_crud.get_task_geometry(db, project_id)
-#     file_path = f"/tmp/{project_id}_task_boundary.geojson"
-
-#     # Write the response content to the file
-#     with open(file_path, "w") as f:
-#         f.write(out)
-#     result = await project_crud.convert_geojson_to_osm(file_path)
-
-#     with open(result, "r") as f:
-#         content = f.read()
-
-#     response = Response(content=content, media_type="application/xml")
-#     return response
-
-
 @router.get("/centroid/")
 async def project_centroid(
-    project_user: ProjectUserDict = Depends(mapper),
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ) -> Feature:
     """Get a centroid of each projects.
 
     Parameters:
         project_id (int): The ID of the project.
-        db (Session): The database session, provided automatically.
+        db (Connection): The database connection.
 
     Returns:
         list[tuple[int, str]]: A list of tuples containing the task ID and
@@ -1135,7 +1099,7 @@ async def project_centroid(
 async def get_task_status(
     task_uuid: str,
     background_tasks: BackgroundTasks,
-    db: Session = Depends(database.get_db),
+    db: Annotated[Connection, Depends(db_conn)],
 ):
     """Get the background task status by passing the task UUID."""
     # Get the background task status
@@ -1153,21 +1117,18 @@ async def get_task_status(
     "/project_dashboard/{project_id}", response_model=project_schemas.ProjectDashboard
 )
 async def project_dashboard(
-    db_organisation: db_models.DbOrganisation = Depends(
-        organisation_deps.org_from_project
-    ),
-    project_user: ProjectUserDict = Depends(mapper),
-    db: Session = Depends(database.get_db),
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
+    db: Annotated[Connection, Depends(db_conn)],
 ):
     """Get the project dashboard details."""
     project = project_user.get("project")
-    return await project_crud.get_dashboard_detail(project, db_organisation, db)
+    return await project_crud.get_dashboard_detail(db, project)
 
 
 @router.get("/contributors/{project_id}")
 async def get_contributors(
-    db: Session = Depends(database.get_db),
-    project_user: ProjectUserDict = Depends(mapper),
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ):
     """Get contributors of a project.
 
@@ -1179,8 +1140,8 @@ async def get_contributors(
 
 @router.post("/add-manager/")
 async def add_new_project_manager(
-    db: Session = Depends(database.get_db),
-    project_user_dict: ProjectUserDict = Depends(project_manager),
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
 ):
     """Add a new project manager.
 

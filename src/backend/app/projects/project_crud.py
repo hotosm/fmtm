@@ -45,7 +45,7 @@ from sqlalchemy.orm import Session
 from app.central import central_crud, central_schemas
 from app.config import settings
 from app.db import db_models
-from app.db.db_schemas import DbProject
+from app.db.db_schemas import DbProject, DbTask
 from app.db.postgis_utils import (
     check_crs,
     featcol_keep_dominant_geom_type,
@@ -59,7 +59,6 @@ from app.db.postgis_utils import (
 from app.models.enums import HTTPStatus, ProjectRole, XLSFormType
 from app.projects import project_deps, project_schemas
 from app.s3 import add_obj_to_bucket, delete_all_objs_under_prefix
-from app.tasks import task_crud
 
 TILESDIR = "/opt/tiles"
 
@@ -673,7 +672,7 @@ async def generate_project_files(
     QR code (appuser), ODK XForm, ODK Entities from OSM data extract.
 
     Args:
-        db (Session): the database session.
+        db (Connection): The database connection.
         project_id(int): id of the FMTM project.
         background_task_id (uuid): the task_id of the background task.
     """
@@ -788,13 +787,13 @@ async def get_task_geometry(db: Session, project_id: int):
     """Retrieves the geometry of tasks associated with a project.
 
     Args:
-        db (Session): The database session.
+        db (Connection): The database connection.
         project_id (int): The ID of the project.
 
     Returns:
         str: A geojson of the task boundaries
     """
-    db_tasks = await task_crud.get_tasks(db, project_id, None)
+    db_tasks = await DbTask.all(db, project_id)
     features = []
     for task in db_tasks:
         geom = to_shape(task.outline)
@@ -1265,9 +1264,7 @@ async def get_paginated_projects(
     )
 
 
-async def get_dashboard_detail(
-    project: db_models.DbProject, db_organisation: db_models.DbOrganisation, db: Session
-):
+async def get_dashboard_detail(db: Session, project: db_models.DbProject):
     """Get project details for project dashboard."""
     odk_central = await project_deps.get_odk_credentials(db, project.id)
     xform = central_crud.get_odk_form(odk_central)
@@ -1286,11 +1283,7 @@ async def get_dashboard_detail(
         .count()
     )
 
-    project.total_tasks = await task_crud.get_task_count_in_project(db, project.id)
-    project.organisation_name, project.organisation_logo = (
-        db_organisation.name,
-        db_organisation.logo,
-    )
+    project.total_tasks = len(project.tasks)
     project.total_contributors = contributors
 
     return project
@@ -1300,7 +1293,7 @@ async def get_project_users(db: Session, project_id: int):
     """Get the users and their contributions for a project.
 
     Args:
-        db (Session): The database session.
+        db (Connection): The database connection.
         project_id (int): The ID of the project.
 
     Returns:
@@ -1327,7 +1320,7 @@ def count_user_contributions(db: Session, user_id: int, project_id: int) -> int:
     """Count contributions for a specific user.
 
     Args:
-        db (Session): The database session.
+        db (Connection): The database connection.
         user_id (int): The ID of the user.
         project_id (int): The ID of the project.
 
@@ -1353,7 +1346,7 @@ async def add_project_manager(
     """Adds a user as an manager to the specified project.
 
     Args:
-        db (Session): The database session.
+        db (Connection): The database connection.
         user (int): The ID of the user to be added as an admin.
         project (DbOrganisation): The Project model instance.
 

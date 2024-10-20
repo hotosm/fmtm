@@ -18,10 +18,9 @@
 """Enum definitions to translate values into human enum strings."""
 
 from enum import Enum
-from typing import Literal
 
-TILES_SOURCE = Literal["esri", "bing", "google"]
-TILES_FORMATS = Literal["mbtiles", "sqlitedb", "pmtiles"]
+TILES_SOURCE = ["esri", "bing", "google"]
+TILES_FORMATS = ["mbtiles", "sqlitedb", "pmtiles"]
 
 
 class StrEnum(str, Enum):

@@ -36,7 +36,7 @@ from app.db.database import db_conn
 from app.db.db_schemas import DbProject, DbUser
 from app.models.enums import HTTPStatus, ProjectRole, ProjectVisibility
 from app.organisations.organisation_deps import get_organisation
-from app.projects.project_deps import get_project
+from app.projects.project_deps import get_project, get_project_by_id
 
 
 async def get_uid(user_data: AuthUser | db_models.DbUser) -> int:
@@ -73,7 +73,7 @@ async def check_access(
 
     Args:
         user (AuthUser, int): AuthUser object, or user ID.
-        db (Session): SQLAlchemy database session.
+        db (Connection): The database connection.
         org_id (Optional[int]): Org ID for organisation-specific access.
         project_id (Optional[int]): Project ID for project-specific access.
         role (Optional[ProjectRole]): Role to check for project-specific access.
@@ -143,21 +143,21 @@ async def check_access(
 
 
 async def super_admin(
-    user_data: Annotated[AuthUser, Depends(login_required)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
     db: Annotated[Connection, Depends(db_conn)],
 ) -> db_models.DbUser:
     """Super admin role, with access to all endpoints.
 
     Returns:
-        user_data: db_models.DbUser SQLAlchemy object.
+        current_user: db_models.DbUser SQLAlchemy object.
     """
-    db_user = await check_access(user_data, db)
+    db_user = await check_access(current_user, db)
 
     if db_user:
         return db_user
 
     log.error(
-        f"User {user_data.username} requested an admin endpoint, but is not admin"
+        f"User {current_user.username} requested an admin endpoint, but is not admin"
     )
     raise HTTPException(
         status_code=HTTPStatus.FORBIDDEN, detail="User must be an administrator"
@@ -193,9 +193,9 @@ async def check_org_admin(
 
 
 async def org_admin(
-    project: Annotated[DbProject, Depends(get_project)],
     db: Annotated[Connection, Depends(db_conn)],
-    user_data: Annotated[AuthUser, Depends(login_required)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
+    project_id: Optional[int] = None,
     org_id: Optional[int] = None,
 ) -> OrgUserDict:
     """Organisation admin with full permission for projects in an organisation.
@@ -203,13 +203,13 @@ async def org_admin(
     Returns:
         dict: in format {'user': db_models.DbUser, 'org': DbOrganisation}.
     """
-    if not (project or org_id):
+    if not (project_id or org_id):
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
             detail="Either org_id or project_id must be provided",
         )
 
-    if project and org_id:
+    if project_id and org_id:
         log.error("Both org_id and project_id cannot be passed at the same time")
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
@@ -217,7 +217,9 @@ async def org_admin(
         )
 
     # Extract org id from project if passed
-    if project:
+    project = None
+    if project_id:
+        project = await get_project_by_id(db, project_id)
         org_id = project.organisation_id
 
     # Ensure org_id is provided, raise an exception otherwise
@@ -229,7 +231,7 @@ async def org_admin(
 
     org_user_dict = await check_org_admin(
         db,
-        user_data,
+        current_user,
         org_id=org_id,
     )
 
@@ -268,13 +270,13 @@ async def wrap_check_access(
 async def project_manager(
     project: Annotated[DbProject, Depends(get_project)],
     db: Annotated[Connection, Depends(db_conn)],
-    user_data: Annotated[AuthUser, Depends(login_required)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
 ) -> ProjectUserDict:
     """A project manager for a specific project."""
     return await wrap_check_access(
         project,
         db,
-        user_data,
+        current_user,
         ProjectRole.PROJECT_MANAGER,
     )
 
@@ -282,13 +284,13 @@ async def project_manager(
 async def associate_project_manager(
     project: Annotated[DbProject, Depends(get_project)],
     db: Annotated[Connection, Depends(db_conn)],
-    user_data: Annotated[AuthUser, Depends(login_required)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
 ) -> ProjectUserDict:
     """An associate project manager for a specific project."""
     return await wrap_check_access(
         project,
         db,
-        user_data,
+        current_user,
         ProjectRole.ASSOCIATE_PROJECT_MANAGER,
     )
 
@@ -296,13 +298,13 @@ async def associate_project_manager(
 async def field_manager(
     project: Annotated[DbProject, Depends(get_project)],
     db: Annotated[Connection, Depends(db_conn)],
-    user_data: Annotated[AuthUser, Depends(login_required)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
 ) -> ProjectUserDict:
     """A field manager for a specific project."""
     return await wrap_check_access(
         project,
         db,
-        user_data,
+        current_user,
         ProjectRole.FIELD_MANAGER,
     )
 
@@ -310,13 +312,13 @@ async def field_manager(
 async def validator(
     project: Annotated[DbProject, Depends(get_project)],
     db: Annotated[Connection, Depends(db_conn)],
-    user_data: Annotated[AuthUser, Depends(login_required)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
 ) -> ProjectUserDict:
     """A validator for a specific project."""
     return await wrap_check_access(
         project,
         db,
-        user_data,
+        current_user,
         ProjectRole.VALIDATOR,
     )
 
@@ -324,19 +326,25 @@ async def validator(
 async def mapper(
     project: Annotated[DbProject, Depends(get_project)],
     db: Annotated[Connection, Depends(db_conn)],
-    user_data: Annotated[AuthUser, Depends(login_required)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
 ) -> ProjectUserDict:
-    """A mapper for a specific project."""
+    """A mapper for a specific project.
+
+    FIXME is this approach flawed?
+    FIXME if the user accesses a /tasks/ endpoint but provides a
+    FIXME ?project_id=xxx for another project, then won't this
+    FIXME given them permission when they shouldn't have it?
+    """
     # If project is public, skip permission check
     if project.visibility == ProjectVisibility.PUBLIC:
         return {
-            "user": await DbUser.one(db, user_data.id),
+            "user": await DbUser.one(db, current_user.id),
             "project": project,
         }
 
     return await wrap_check_access(
         project,
         db,
-        user_data,
+        current_user,
         ProjectRole.MAPPER,
     )

@@ -35,10 +35,11 @@ from app.auth.osm import login_required
 from app.auth.roles import mapper, project_manager
 from app.central import central_crud
 from app.db import database, postgis_utils
+from app.db.db_schemas import DbTask
 from app.models.enums import HTTPStatus, ReviewStateEnum
 from app.projects import project_crud, project_deps
 from app.submissions import submission_crud, submission_schemas
-from app.tasks.task_deps import get_task_by_id
+from app.tasks.task_deps import get_task
 
 router = APIRouter(
     prefix="/submission",
@@ -49,8 +50,8 @@ router = APIRouter(
 
 @router.get("/")
 async def read_submissions(
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
     db: Session = Depends(database.get_db),
-    project_user: ProjectUserDict = Depends(mapper),
 ) -> list[dict]:
     """Get all submissions made for a project.
 
@@ -64,9 +65,9 @@ async def read_submissions(
 
 @router.get("/download")
 async def download_submission(
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
     export_json: bool = True,
     db: Session = Depends(database.get_db),
-    project_user: ProjectUserDict = Depends(mapper),
 ):
     """Download the submissions for a given project.
 
@@ -87,10 +88,10 @@ async def download_submission(
 
 @router.get("/convert-to-osm")
 async def convert_to_osm(
+    current_user: Annotated[AuthUser, Depends(login_required)],
     project_id: int,
     task_id: Optional[int] = None,
     db: Session = Depends(database.get_db),
-    current_user: AuthUser = Depends(login_required),
 ):
     """Convert JSON submissions to OSM XML for a project.
 
@@ -114,8 +115,8 @@ async def convert_to_osm(
 
 @router.get("/get-submission-count")
 async def get_submission_count(
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
     db: Session = Depends(database.get_db),
-    project_user: ProjectUserDict = Depends(mapper),
 ):
     """Get the submission count for a project."""
     project = project_user.get("project")
@@ -127,7 +128,7 @@ async def get_submission_count(
 # async def conflate_osm_data(
 #     project_id: int,
 #     db: Session = Depends(database.get_db),
-#     current_user: AuthUser = Depends(login_required),
+#     current_user: Annotated[AuthUser, Depends(login_required)],
 # ):
 #     """Conflate submission data against existing OSM data."""
 #     # All Submissions JSON
@@ -189,7 +190,7 @@ async def get_submission_count(
 # async def get_osm_xml(
 #     project_id: int,
 #     db: Session = Depends(database.get_db),
-#     current_user: AuthUser = Depends(login_required),
+#     current_user: Annotated[AuthUser, Depends(login_required)],
 # ):
 #     """Get the submissions in OSM XML format for a project.
 
@@ -226,10 +227,10 @@ async def get_submission_count(
 
 @router.get("/submission_page")
 async def get_submission_page(
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
     days: int,
     planned_task: Optional[int] = None,
     db: Session = Depends(database.get_db),
-    project_user: ProjectUserDict = Depends(mapper),
 ):
     """Summary submissison details for submission page.
 
@@ -246,8 +247,8 @@ async def get_submission_page(
 
 @router.get("/submission_form_fields")
 async def get_submission_form_fields(
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
     db: Session = Depends(database.get_db),
-    project_user: ProjectUserDict = Depends(mapper),
 ):
     """Retrieves the submission form for a specific project.
 
@@ -262,6 +263,7 @@ async def get_submission_form_fields(
 
 @router.get("/submission_table")
 async def submission_table(
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
     background_tasks: BackgroundTasks,
     page: int = Query(1, ge=1),
     results_per_page: int = Query(13, le=100),
@@ -273,7 +275,6 @@ async def submission_table(
         None, title="Submitted Date", description="Date in format (e.g., 'YYYY-MM-DD')"
     ),
     db: Session = Depends(database.get_db),
-    project_user: ProjectUserDict = Depends(mapper),
 ):
     """This api returns the submission table of a project.
 
@@ -344,7 +345,7 @@ async def submission_table(
 async def update_review_state(
     instance_id: str,
     review_state: ReviewStateEnum,
-    current_user: ProjectUserDict = Depends(project_manager),
+    current_user: Annotated[ProjectUserDict, Depends(project_manager)],
     db: Session = Depends(database.get_db),
 ):
     """Updates the review state of a project submission."""
@@ -366,8 +367,8 @@ async def update_review_state(
 
 @router.get("/download-submission-geojson")
 async def download_submission_geojson(
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
     db: Session = Depends(database.get_db),
-    project_user: ProjectUserDict = Depends(mapper),
 ):
     """Download submission geojson for a specific project."""
     project = project_user.get("project")
@@ -387,8 +388,8 @@ async def download_submission_geojson(
 
 @router.get("/conflate-submission-geojson/")
 async def conflate_geojson(
-    task_id: int,
-    project_user: ProjectUserDict = Depends(mapper),  # FIXME change this to validator
+    db_task: Annotated[DbTask, Depends(get_task)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
     remove_conflated: Annotated[
         bool,
         Query(
@@ -404,20 +405,19 @@ async def conflate_geojson(
     """
     try:
         project = project_user.get("project")
-        db_task = await get_task_by_id(project.id, task_id, db)
         task_aoi = postgis_utils.wkb_geom_to_feature(db_task.outline)
         task_geojson = geojson.dumps(task_aoi, indent=2)
 
         data = await submission_crud.get_submission_by_project(project, {}, db)
         submission_json = data.get("value", [])
         task_submission = [
-            sub for sub in submission_json if sub["task_id"] == str(task_id)
+            sub for sub in submission_json if sub["task_id"] == str(db_task.id)
         ]
 
         if not task_submission:
             return JSONResponse(
                 status_code=HTTPStatus.NOT_FOUND,
-                content=f"No Submissions found within the task {task_id}",
+                content=f"No Submissions found within the task {db_task.id}",
             )
 
         submission_geojson = await central_crud.convert_odk_submission_json_to_geojson(
@@ -444,8 +444,8 @@ async def conflate_geojson(
 @router.get("/{submission_id}")
 async def submission_detail(
     submission_id: str,
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
     db: Session = Depends(database.get_db),
-    project_user: ProjectUserDict = Depends(mapper),
 ) -> dict:
     """This api returns the submission detail of individual submission."""
     project = project_user.get("project")
@@ -466,7 +466,7 @@ async def submission_photo(
 
     Args:
         submission_id (str): The ID of the submission.
-        db (Session): The database session.
+        db (Connection): The database connection.
 
     Returns:
         dict: A dictionary containing the S3 path of the submission photo.

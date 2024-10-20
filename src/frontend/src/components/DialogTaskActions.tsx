@@ -55,7 +55,9 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
   useEffect(() => {
     if (taskId) {
       dispatch(
-        GetProjectTaskActivity(`${import.meta.env.VITE_API_URL}/tasks/${currentStatus?.id}/history/?comment=false`),
+        GetProjectTaskActivity(
+          `${import.meta.env.VITE_API_URL}/tasks/${currentStatus?.id}/history/?project_id=${currentProjectId}&comment=false`,
+        ),
       );
     }
   }, [taskId]);

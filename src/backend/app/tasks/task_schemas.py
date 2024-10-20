@@ -39,13 +39,15 @@ class ReadTask(BaseModel):
 
     @field_validator("outline", mode="before")
     @classmethod
-    def outline_to_geojson(cls, value: dict, info: ValidationInfo) -> Feature:
+    def outline_geojson_to_feature(
+        cls, value: dict | Feature, info: ValidationInfo
+    ) -> Feature:
         """Parse GeoJSON from DB into Feature."""
         if isinstance(value, Feature):
             return
 
-        task_id = info.data.get("id")
-        project_id = info.data.get("project_id")
+        task_id = info.data.get("task_id")
+        project_id = info.data.get("id")
 
         return Feature(
             **{
@@ -76,10 +78,17 @@ class TaskHistoryOut(TaskHistoryBase):
     @computed_field
     @property
     def status(self) -> Optional[TaskStatus]:
-        """Get the status from the recent action."""
+        """Get the status from the recent action.
+
+        TODO refactor this out and use 'action'?
+        """
         if not self.action:
             return None
         return get_status_for_action(self.action)
+
+
+class TaskCommentResponse(TaskHistoryOut):
+    """Wrapper Class for comment."""
 
 
 class TaskHistoryCount(BaseModel):
@@ -88,18 +97,6 @@ class TaskHistoryCount(BaseModel):
     date: str
     validated: int
     mapped: int
-
-
-class TaskCommentResponse(TaskHistoryOut):
-    """Wrapper Class for comment."""
-
-
-class TaskCommentRequest(BaseModel):
-    """Task comment form."""
-
-    task_id: int
-    project_id: int
-    comment: str
 
 
 class TaskHistory(BaseModel):

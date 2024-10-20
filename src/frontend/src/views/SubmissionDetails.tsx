@@ -111,7 +111,11 @@ const SubmissionDetails = () => {
 
   useEffect(() => {
     if (!taskUId) return;
-    dispatch(GetProjectComments(`${import.meta.env.VITE_API_URL}/tasks/${parseInt(taskUId)}/history/?comment=true`));
+    dispatch(
+      GetProjectComments(
+        `${import.meta.env.VITE_API_URL}/tasks/${parseInt(taskUId)}/history/?project_id=${projectId}&comment=true`,
+      ),
+    );
   }, [taskUId]);
 
   const filteredData = restSubmissionDetails ? removeNullValues(restSubmissionDetails) : {};

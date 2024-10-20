@@ -28,18 +28,18 @@ from fastapi import HTTPException
 from loguru import logger as log
 from osm_fieldwork.OdkCentral import OdkAppUser, OdkForm, OdkProject
 from osm_fieldwork.update_xlsform import append_mandatory_fields
+from psycopg import Connection
 from pyxform.xls2xform import convert as xform_convert
-from sqlalchemy import text
-from sqlalchemy.orm import Session
 
 from app.central import central_deps, central_schemas
 from app.config import encrypt_value, settings
+from app.db.db_schemas import DbXLSForm
 from app.db.postgis_utils import (
     geojson_to_javarosa_geom,
     javarosa_to_geojson_geom,
     parse_geojson_file_to_featcol,
 )
-from app.models.enums import HTTPStatus, TaskStatus, XLSFormType
+from app.models.enums import HTTPStatus, TaskStatus
 
 
 def get_odk_project(odk_central: Optional[central_schemas.ODKCentralDecrypted] = None):
@@ -267,23 +267,10 @@ def list_submissions(
     return submissions
 
 
-async def get_form_list(db: Session) -> list:
+async def get_form_list(db: Connection) -> list:
     """Returns the list of {id:title} for XLSForms in the database."""
     try:
-        include_categories = [category.value for category in XLSFormType]
-
-        sql_query = text(
-            """
-            SELECT id, title FROM xlsforms
-            WHERE title IN
-                (SELECT UNNEST(:categories));
-            """
-        )
-
-        result = db.execute(sql_query, {"categories": include_categories}).fetchall()
-        result_list = [{"id": row.id, "title": row.title} for row in result]
-        return result_list
-
+        return await DbXLSForm.all(db)
     except Exception as e:
         log.error(e)
         raise HTTPException(

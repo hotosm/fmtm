@@ -70,7 +70,9 @@ async def login_url(osm_auth=Depends(init_osm_auth)):
 
 
 @router.get("/callback/")
-async def callback(request: Request, osm_auth=Depends(init_osm_auth)) -> JSONResponse:
+async def callback(
+    request: Request, osm_auth: Annotated[AuthUser, Depends(init_osm_auth)]
+) -> JSONResponse:
     """Performs oauth token exchange with OpenStreetMap.
 
     Provides an access token that can be used for authenticating other endpoints.
@@ -136,7 +138,7 @@ async def callback(request: Request, osm_auth=Depends(init_osm_auth)) -> JSONRes
 @router.get("/logout/")
 async def logout():
     """Reset httpOnly cookie to sign out user."""
-    response = Response(status_code=200)
+    response = Response(status_code=HTTPStatus.OK)
     # Reset all cookies (logout)
     fmtm_cookie_name = settings.FMTM_DOMAIN.replace(".", "_")
     refresh_cookie_name = f"{fmtm_cookie_name}_refresh"
@@ -231,23 +233,24 @@ async def get_or_create_user(
 @router.get("/me/", response_model=FMTMUser)
 async def my_data(
     db: Annotated[Connection, Depends(db_conn)],
-    user_data: AuthUser = Depends(login_required),
+    current_user: Annotated[AuthUser, Depends(login_required)],
 ):
     """Read access token and get user details from OSM.
 
     Args:
-        db: The db session.
-        user_data: User data provided by osm-login-python Auth.
+        db (Connection): The db connection.
+        current_user (AuthUser): User data provided by osm-login-python Auth.
 
     Returns:
-        user_data(dict): The dict of user data.
+        FMTMUser: The dict of user data.
     """
-    return await get_or_create_user(db, user_data)
+    return await get_or_create_user(db, current_user)
 
 
 @router.get("/refresh", response_model=AuthUserWithToken)
 async def refresh_token(
-    request: Request, user_data: AuthUser = Depends(login_required)
+    request: Request,
+    current_user: Annotated[AuthUser, Depends(login_required)],
 ):
     """Uses the refresh token to generate a new access token."""
     if settings.DEBUG:
@@ -255,7 +258,7 @@ async def refresh_token(
             status_code=HTTPStatus.OK,
             content={
                 "token": "debugtoken",
-                **user_data.model_dump(),
+                **current_user.model_dump(),
             },
         )
     try:
@@ -270,7 +273,7 @@ async def refresh_token(
             status_code=HTTPStatus.OK,
             content={
                 "token": access_token,
-                **user_data.model_dump(),
+                **current_user.model_dump(),
             },
         )
         cookie_name = settings.FMTM_DOMAIN.replace(".", "_")

@@ -42,9 +42,10 @@ from app.models.enums import (
     TaskAction,
     TaskSplitType,
     UserRole,
+    XLSFormType,
 )
 from app.organisations.organisation_schemas import OrganisationIn
-from app.projects.project_schemas import ProjectUpload
+from app.projects.project_schemas import ProjectIn, ProjectUpdate
 from app.users.user_schemas import UserBasic
 
 
@@ -339,7 +340,31 @@ class DbXLSForm(BaseModel):
 
     id: int
     title: str
-    xls: bytes
+    xls: Optional[bytes] = None
+
+    @classmethod
+    async def all(
+        cls,
+        db: Connection,
+    ) -> Optional[list[Self]]:
+        """Fetch all XLSForms."""
+        include_categories = [category.value for category in XLSFormType]
+
+        sql = """
+            SELECT
+                id, title
+            FROM xlsforms
+            WHERE title IN (
+                SELECT UNNEST(%(categories)s::text[])
+            );
+            """
+
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(sql, {"categories": include_categories})
+            forms = await cur.fetchall()
+
+        # Don't include 'xls' field in the response
+        return [{"id": form.id, "title": form.title} for form in forms]
 
 
 class DbTaskHistory(BaseModel):
@@ -349,12 +374,83 @@ class DbTaskHistory(BaseModel):
     """
 
     event_id: UUID
-    project_id: int
-    task_id: int
     action: TaskAction
-    action_text: Optional[str] = None
     action_date: datetime
-    user_id: int
+    action_text: Optional[str] = None
+    project_id: Optional[int] = None
+    task_id: Optional[int] = None
+    user_id: Optional[int] = None
+
+    # Computed
+    username: Optional[str] = None
+    profile_img: Optional[str] = None
+
+    @classmethod
+    async def all(
+        cls,
+        db: Connection,
+        project_id: int,
+        days: int,
+    ) -> Optional[list[Self]]:
+        """Fetch all task history entries for a project."""
+        sql = """
+            SELECT * FROM task_history
+            WHERE project_id = %(project_id)s;
+        """
+
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(sql, {"project_id": project_id})
+            return await cur.fetchall()
+
+    @classmethod
+    async def comment(
+        cls,
+        db: Connection,
+        task_id: int,
+        user_id: int,
+        comment: str,
+    ) -> Optional[list[Self]]:
+        """Create a new comment for a task."""
+        sql = """
+            WITH inserted AS (
+                INSERT INTO public.task_history (
+                    event_id,
+                    project_id,
+                    task_id,
+                    action,
+                    action_text,
+                    user_id,
+                    action_date
+                )
+                VALUES (
+                    gen_random_uuid(),
+                    (SELECT project_id FROM tasks WHERE id = %(task_id)s),
+                    %(task_id)s,
+                    'COMMENT',
+                    %(comment_text)s,
+                    %(user_id)s,
+                    NOW()
+                )
+                RETURNING *
+            )
+            SELECT
+                inserted.*,
+                u.username,
+                u.profile_img
+            FROM inserted
+            JOIN users u ON u.id = inserted.user_id;
+        """
+
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(
+                sql,
+                {
+                    "task_id": task_id,
+                    "user_id": user_id,
+                    "comment_text": comment,
+                },
+            )
+            return await cur.fetchone()
 
 
 class DbTask(BaseModel):
@@ -367,50 +463,61 @@ class DbTask(BaseModel):
     feature_count: Optional[int] = None
 
     @classmethod
-    async def one(cls, db: Connection, org_identifier: int | str) -> Self:
-        """Fetch a single organisation by name or ID."""
+    async def one(cls, db: Connection, task_id: int) -> Self:
+        """Fetch a single task by it's ID."""
         async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(
-                f"""
-                SELECT * FROM organisations
-                WHERE {
-                    'name' if isinstance(org_identifier, str)
-                    else 'id'
-                } = %(org_identifier)s;
+                """
+                    SELECT
+                        *,
+                        ST_AsGeoJSON(outline)::jsonb AS outline
+                    FROM tasks
+                    WHERE id = %(task_id)s;
                 """,
-                {"org_identifier": org_identifier},
+                {"task_id": task_id},
             )
-            db_org = await cur.fetchone()
+            db_task = await cur.fetchone()
 
-            if not db_org:
-                raise KeyError(f"Organisation ({org_identifier}) not found.")
+            if not db_task:
+                raise KeyError(f"Task ({task_id}) not found.")
 
-            return db_org
+            return db_task
+
+    @classmethod
+    async def all(
+        cls,
+        db: Connection,
+        project_id: int,
+    ) -> Optional[list[Self]]:
+        """Fetch all tasks for a project."""
+        sql = """
+            SELECT
+                *,
+                ST_AsGeoJSON(outline)::jsonb AS outline
+            FROM tasks
+            WHERE project_id = %(project_id)s;
+        """
+
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(sql, {"project_id": project_id})
+            return await cur.fetchall()
 
 
-class DbProjectInfo(BaseModel):
-    """Table project_info.
-
-    TODO SQL refactor all usage of .project_info throughout app...
-    This should be refactored in future?
-    We simply do an SQL JOIN to include in the project fields.
-    """
-
-    name: Optional[str] = None
-    short_description: Optional[str] = None
-    description: Optional[str] = None
-    per_task_instructions: Optional[str] = None
-
-
-class DbProject(DbProjectInfo):
+class DbProject(BaseModel):
     """Table projects."""
 
     id: int
     odkid: Optional[int] = None
     author_id: int
     organisation_id: int
-    task_split_type: Optional[TaskSplitType] = None
+    # TODO SQL we need to remove all references to projects.project_info
+    name: Optional[str] = None
+    short_description: Optional[str] = None
+    description: Optional[str] = None
+    per_task_instructions: Optional[str] = None
+    # TODO SQL the project_name_prefix is basically a slug no? Rename?
     project_name_prefix: Optional[str] = None
+    task_split_type: Optional[TaskSplitType] = None
     location_str: Optional[str] = None
     custom_tms_url: Optional[str] = None
     # TODO SQL need to update outline_geojson references
@@ -440,10 +547,9 @@ class DbProject(DbProjectInfo):
     # Relationships
     tasks: Optional[list[DbTask]] = None
     author: Optional[UserBasic] = None
-    # TODO SQL replace usage of projects.organisation_logo with
-    # projects.organisation.logo
 
     # Calculated
+    organisation_name: Optional[str] = None
     organisation_logo: Optional[str] = None
     centroid: Optional[dict] = None
     bbox: Optional[list] = None
@@ -516,7 +622,6 @@ class DbProject(DbProjectInfo):
                 )
                 SELECT
                     p.*,
-                    pi.*,
                     ST_AsGeoJSON(p.outline)::jsonb AS outline,
                     ST_AsGeoJSON(ST_Centroid(p.outline))::jsonb AS centroid,
                     ST_Extent(p.outline)::text AS bbox,
@@ -525,6 +630,7 @@ class DbProject(DbProjectInfo):
                         'username', project_author.username,
                         'role', project_author.role
                     ) AS author,
+                    project_org.name as organisation_name,
                     project_org.logo as organisation_logo,
                     COALESCE(
                         JSON_AGG(
@@ -552,8 +658,6 @@ class DbProject(DbProjectInfo):
                 FROM
                     projects p
                 LEFT JOIN
-                    project_info pi ON p.id = pi.project_id
-                LEFT JOIN
                     users project_author ON p.author_id = project_author.id
                 LEFT JOIN
                     organisations project_org ON p.organisation_id = project_org.id
@@ -566,7 +670,7 @@ class DbProject(DbProjectInfo):
                 WHERE
                     p.id = %(project_id)s
                 GROUP BY
-                    p.id, pi.project_id, project_author.id, project_org.id;
+                    p.id, project_author.id, project_org.id;
             """
 
             await cur.execute(
@@ -619,21 +723,18 @@ class DbProject(DbProjectInfo):
         sql = f"""
             SELECT
                 p.*,
-                pi.*,
                 ST_AsGeoJSON(p.outline)::jsonb AS outline,
                 project_org.logo as organisation_logo,
                 COUNT(t.id) AS task_count
             FROM
                 projects p
             LEFT JOIN
-                project_info pi ON p.id = pi.project_id
-            LEFT JOIN
                 organisations project_org ON p.organisation_id = project_org.id
             LEFT JOIN
                 tasks t ON p.id = t.project_id
             {'WHERE ' + ' AND '.join(filters) if filters else ''}
             GROUP BY
-                p.id, pi.project_id, project_org.id
+                p.id, project_org.id
             ORDER BY
                 p.id DESC
             OFFSET %(offset)s
@@ -645,7 +746,7 @@ class DbProject(DbProjectInfo):
             return await cur.fetchall()
 
     @classmethod
-    async def create(cls, db: Connection, project_in: ProjectUpload) -> Self:
+    async def create(cls, db: Connection, project_in: ProjectIn) -> Self:
         """Create a new project in the database."""
         model_dump = project_in.model_dump(exclude_none=True)
 
@@ -659,19 +760,16 @@ class DbProject(DbProjectInfo):
             f"Creating project in the database with the following data: {model_dump}"
         )
 
-        columns = ", ".join(model_dump.keys())
-        value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
-
-        sql = f"""
+        sql_insert = f"""
             INSERT INTO projects
-                (created_at, {columns})
+                (created_at, {", ".join(model_dump.keys())})
             VALUES
-                (NOW(), {value_placeholders})
-            RETURNING *;
+                (NOW(), {", ".join(f"%({key})s" for key in model_dump.keys())})
+            RETURNING id, hashtags;
         """
 
         async with db.cursor(row_factory=class_row(cls)) as cur:
-            await cur.execute(sql, model_dump)
+            await cur.execute(sql_insert, model_dump)
             new_project = await cur.fetchone()
 
             if not new_project:
@@ -682,22 +780,62 @@ class DbProject(DbProjectInfo):
                 )
 
             new_project_id = new_project.id
+            current_hashtags = new_project.hashtags or []
 
-            # Append hashtag to the project
-            extra_hashtag = f"#{settings.FMTM_DOMAIN}-{new_project_id}"
-            await cur.execute(
-                """
+            # NOTE we want a trackable hashtag DOMAIN-PROJECT_ID
+            hashtags = current_hashtags + [f"#{settings.FMTM_DOMAIN}-{new_project_id}"]
+
+            sql_update = """
                 UPDATE projects
-                SET hashtags = CONCAT(COALESCE(hashtags, ''), ' ', %(extra_hashtag)s)
-                WHERE id = %(project_id)s;
-                """,
-                {
-                    "project_id": new_project_id,
-                    "extra_hashtag": extra_hashtag,
-                },
-            )
+                SET hashtags = %(hashtags)s
+                WHERE id = %(project_id)s
+                RETURNING *;
+            """
 
-        return new_project
+            await cur.execute(
+                sql_update,
+                {"hashtags": hashtags, "project_id": new_project_id},
+            )
+            updated_project = await cur.fetchone()
+
+            if not updated_project:
+                msg = f"Failed to update hashtags for project ID: {new_project_id}"
+                log.error(msg)
+                raise HTTPException(
+                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+                )
+
+        return updated_project
+
+    @classmethod
+    async def update(
+        cls,
+        db: Connection,
+        project_id: int,
+        project_update: ProjectUpdate,
+    ) -> Self:
+        """Update values for project."""
+        model_dump = project_update.model_dump(exclude_none=True)
+        placeholders = [f"{key} = %({key})s" for key in model_dump.keys()]
+        sql = f"""
+            UPDATE projects
+            SET {', '.join(placeholders)}
+            WHERE id = %(project_id)s
+            RETURNING *;
+        """
+
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(sql, {"project_id": project_id, **model_dump})
+            updated_project = await cur.fetchone()
+
+            if not updated_project:
+                msg = f"Failed to update project with ID: {project_id}"
+                log.error(msg)
+                raise HTTPException(
+                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+                )
+
+        return updated_project
 
 
 class BackgroundTask(BaseModel):
@@ -725,6 +863,27 @@ class DbTilesPath(BaseModel):
     tile_source: str
     background_task_id: str
     created_at: datetime
+
+    @classmethod
+    async def one(cls, db: Connection, tiles_id: int | str) -> Self:
+        """Get a tile archive file DB record."""
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            sql = """
+                SELECT *
+                FROM mbtiles_path
+                WHERE id = %(tiles_id)s;
+            """
+
+            await cur.execute(
+                sql,
+                {"tiles_id": tiles_id},
+            )
+
+            db_tiles = await cur.fetchone()
+            if not db_tiles:
+                raise KeyError(f"Tiles with ID ({db_tiles}) not found.")
+
+            return db_tiles
 
 
 class DbSubmissionPhoto(BaseModel):

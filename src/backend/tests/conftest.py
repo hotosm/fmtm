@@ -44,7 +44,7 @@ from app.db.db_models import DbOrganisation, DbTaskHistory
 from app.main import get_application
 from app.models.enums import TaskStatus, UserRole
 from app.projects import project_crud
-from app.projects.project_schemas import ProjectInfo, ProjectUpload
+from app.projects.project_schemas import ProjectIn, ProjectInfo
 from app.users.user_deps import get_user
 from tests.test_data import test_data_path
 
@@ -123,7 +123,7 @@ def organisation(db):
 @pytest.fixture(scope="function")
 async def project(db, admin_user, organisation):
     """A test project, using the test user and org."""
-    project_metadata = ProjectUpload(
+    project_metadata = ProjectIn(
         project_info=ProjectInfo(
             name="test project",
             short_description="test",

@@ -17,19 +17,18 @@
 #
 """Routes for FMTM tasks."""
 
-import asyncio
-from datetime import datetime, timedelta
-from typing import List
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from psycopg import Connection
 
 from app.auth.auth_schemas import ProjectUserDict
 from app.auth.roles import get_uid, mapper
-from app.db import database
-from app.db.db_schemas import DbTask
-from app.models.enums import TaskStatus
+from app.db.database import db_conn
+from app.db.db_schemas import DbTask, DbTaskHistory
+from app.models.enums import HTTPStatus, TaskStatus
 from app.tasks import task_crud, task_schemas
+from app.tasks.task_deps import get_task
 
 router = APIRouter(
     prefix="/tasks",
@@ -38,28 +37,17 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=List[DbTask])
+@router.get("/", response_model=list[task_schemas.ReadTask])
 async def read_tasks(
     project_id: int,
-    user_id: int = None,
-    skip: int = 0,
-    limit: int = 1000,
-    db: Session = Depends(database.get_db),
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ):
-    """Get all task details, either for a project or user."""
-    if user_id:
-        raise HTTPException(
-            status_code=300,
-            detail="Please provide either user_id OR task_id, not both.",
-        )
-
-    tasks = await task_crud.get_tasks(db, project_id, user_id, skip, limit)
-    if not tasks:
-        raise HTTPException(status_code=404, detail="Tasks not found")
-    return tasks
+    """Get all task details for a project."""
+    return await DbTask.all(db, project_id)
 
 
-@router.post("/near_me", response_model=DbTask)
+@router.post("/near_me", response_model=task_schemas.ReadTask)
 async def get_tasks_near_me(
     lat: float, long: float, project_id: int = None, user_id: int = None
 ):
@@ -67,99 +55,93 @@ async def get_tasks_near_me(
     return "Coming..."
 
 
-@router.get("/{task_id}", response_model=DbTask)
-async def get_specific_task(task_id: int, db: Session = Depends(database.get_db)):
+@router.get("/{task_id}", response_model=task_schemas.ReadTask)
+async def get_specific_task(
+    task_id: int,
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
+):
     """Get a specific task by it's ID."""
-    task = await task_crud.get_task(db, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    return task
+    try:
+        return await DbTask.one(db, task_id)
+    except KeyError as e:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(e)) from e
 
 
+# TODO SQL update this to be something like /next
 @router.post(
     "/{task_id}/new-status/{new_status}", response_model=task_schemas.TaskHistoryOut
 )
 async def add_new_task_event(
-    task_id: int,
+    db_task: Annotated[DbTask, Depends(get_task)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
     new_status: TaskStatus,
-    db: Session = Depends(database.get_db),
-    project_user: ProjectUserDict = Depends(mapper),
+    db: Annotated[Connection, Depends(db_conn)],
 ):
     """Add a new event to the events table / update task status."""
     project_id = project_user.get("project").id
     user_id = await get_uid(project_user.get("user"))
-    return await task_crud.new_task_event(db, project_id, task_id, user_id, new_status)
+    return await task_crud.new_task_event(
+        db,
+        project_id,
+        db_task.id,
+        user_id,
+        new_status,
+    )
 
 
-@router.post("/task-comments/", response_model=task_schemas.TaskCommentResponse)
-async def add_task_comments(
-    comment: task_schemas.TaskCommentRequest,
-    db: Session = Depends(database.get_db),
-    project_user: ProjectUserDict = Depends(mapper),
+@router.post("/{task_id}/comment/", response_model=task_schemas.TaskCommentResponse)
+async def add_task_comment(
+    comment: str,
+    db_task: Annotated[DbTask, Depends(get_task)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
+    db: Annotated[Connection, Depends(db_conn)],
 ):
     """Create a new task comment.
 
     Parameters:
-        comment (TaskCommentRequest): The task comment to be created.
-        db (Session): The database session.
-        user_data (ProjectUserDict): The authenticated user.
+        comment (str): The task comment to add.
+        db_task (DbTask): The database task entry.
+            Retrieving this ensures the task exists before updating.
+        project_user (ProjectUserDict): The authenticated user.
+        db (Connection): The database connection.
 
     Returns:
         TaskCommentResponse: The created task comment.
     """
     user_id = await get_uid(project_user.get("user"))
-    task_comment_list = await task_crud.add_task_comments(db, comment, user_id)
-    return task_comment_list
+    return await DbTaskHistory.comment(db, db_task.id, user_id, comment)
 
 
-@router.get("/activity/", response_model=List[task_schemas.TaskHistoryCount])
+# NOTE this endpoint isn't used?
+@router.get("/activity/", response_model=list[task_schemas.TaskHistoryCount])
 async def task_activity(
-    project_id: int, days: int = 10, db: Session = Depends(database.get_db)
-):
-    """Retrieves the validate and mapped task count for a specific project.
-
-    Args:
-        project_id (int): The ID of the project.
-        days (int): The number of days to consider for the
-            task activity (default: 10).
-        db (Session): The database session.
-
-    Returns:
-        list[TaskHistoryCount]: A list of task history counts.
-
-    """
-    end_date = datetime.now() - timedelta(days=days)
-    task_list = await task_crud.get_task_id_list(db, project_id)
-    tasks = []
-    for task_id in task_list:
-        tasks.extend([task_crud.get_project_task_history(task_id, False, end_date, db)])
-    task_history = await asyncio.gather(*tasks)
-    return await task_crud.count_validated_and_mapped_tasks(
-        task_history,
-        end_date,
-    )
-
-
-@router.get("/{task_id}/history/", response_model=List[task_schemas.TaskHistoryOut])
-async def task_history(
-    task_id: int,
+    project_id: int,
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
     days: int = 10,
-    comment: bool = False,
-    db: Session = Depends(database.get_db),
 ):
-    """Get the detailed task history for a project.
+    """Get the number of mapped or validated tasks on each day.
 
-    Args:
-        task_id (int): The unique task ID in the database.
-        days (int): The number of days to consider for the
-            task activity (default: 10).
-        comment (bool): True or False, True to get comments
-            from the project tasks and False by default for
-            entire task status history.
-        db (Session): The database session.
-
-    Returns:
-        List[TaskHistory]: A list of task history.
+    Return format:
+    [
+        {
+            date: DD/MM/YYYY,
+            validated: int,
+            mapped: int,
+        }
+    ]
     """
-    end_date = datetime.now() - timedelta(days=days)
-    return await task_crud.get_project_task_history(task_id, comment, end_date, db)
+    return await task_crud.get_project_task_activity(db, project_id, days)
+
+
+@router.get("/{task_id}/history/", response_model=list[task_schemas.TaskHistoryOut])
+async def task_history(
+    db: Annotated[Connection, Depends(db_conn)],
+    db_task: Annotated[DbTask, Depends(get_task)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
+    days: int = 10,
+    comments_only: bool = False,
+):
+    """Get the detailed history for a task."""
+    return await task_crud.get_task_history(db, db_task.id, days, comments_only)

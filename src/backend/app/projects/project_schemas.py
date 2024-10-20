@@ -15,27 +15,25 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
-"""Pydantic schemas for Projects."""
+"""Pydantic schemas for Projects for usage in endpoints."""
 
 from datetime import datetime
-from typing import Any, List, Optional, Self, Union
+from typing import Any, List, Optional, Union
 
 from dateutil import parser
 from geojson_pydantic import Feature, FeatureCollection, MultiPolygon, Polygon
-from loguru import logger as log
 from pydantic import BaseModel, ValidationInfo, computed_field
 from pydantic.functional_serializers import field_serializer
-from pydantic.functional_validators import field_validator, model_validator
+from pydantic.functional_validators import field_validator
 
 from app.central.central_schemas import ODKCentralIn
 from app.config import decrypt_value
 from app.db.postgis_utils import (
-    featcol_to_wkb_geom,
+    featcol_to_shapely_geom,
     geojson_to_featcol,
     get_address_from_lat_lon,
     merge_polygons,
     read_wkb,
-    write_wkb,
 )
 from app.models.enums import (
     ProjectPriority,
@@ -47,20 +45,12 @@ from app.tasks.task_schemas import ReadTask
 from app.users.user_schemas import UserBasic
 
 
-class ProjectInfo(BaseModel):
-    """Basic project info."""
+class ProjectInBase(BaseModel):
+    """Base model for project insert / update (validators)."""
 
-    name: Optional[str] = None
     short_description: Optional[str] = None
     description: Optional[str] = None
     per_task_instructions: Optional[str] = None
-
-
-class ProjectIn(BaseModel):
-    """Upload new project."""
-
-    project_info: ProjectInfo
-    xform_category: str
     custom_tms_url: Optional[str] = None
     organisation_id: Optional[int] = None
     hashtags: Optional[str] = None
@@ -68,36 +58,12 @@ class ProjectIn(BaseModel):
     task_split_dimension: Optional[int] = None
     task_num_buildings: Optional[int] = None
     data_extract_type: Optional[str] = None
-    outline_geojson: Union[FeatureCollection, Feature, MultiPolygon, Polygon]
-    location_str: Optional[str] = None
-
-    @computed_field
-    @property
-    def outline(self) -> Optional[Any]:
-        """Compute WKBElement geom from geojson."""
-        if not self.outline_geojson:
-            return None
-
-        outline = geojson_to_featcol(self.outline_geojson.model_dump())
-        outline_merged = merge_polygons(outline)
-
-        # TODO SQL remove the wkb handling and convert in the SQL
-        return featcol_to_wkb_geom(outline_merged)
-
-    @computed_field
-    @property
-    def centroid(self) -> Optional[Any]:
-        """Compute centroid for project outline."""
-        if not self.outline:
-            return None
-        # TODO SQL remove the wkb handling and convert in the SQL
-        return write_wkb(read_wkb(self.outline).centroid)
 
     @computed_field
     @property
     def project_name_prefix(self) -> str:
         """Compute project name prefix with underscores."""
-        return self.project_info.name.replace(" ", "_").lower()
+        return self.name.replace(" ", "_").lower()
 
     @field_validator("hashtags", mode="after")
     @classmethod
@@ -126,38 +92,58 @@ class ProjectIn(BaseModel):
 
         return hashtags_with_hash
 
-    @model_validator(mode="after")
-    def generate_location_str(self) -> Self:
-        """Generate location string after centroid is generated.
 
-        NOTE chaining computed_field didn't seem to work here so a
-        model_validator was used for final stage validation.
-        """
-        if not self.centroid:
-            log.warning("Project has no centroid, location string not determined")
-            return self
+class ProjectIn(ProjectInBase, ODKCentralIn):
+    """Upload new project."""
 
+    name: str
+    xform_category: str
+    outline: FeatureCollection
+
+    @field_validator("outline", mode="before")
+    @classmethod
+    def outline_geojson_to_featcol(
+        cls,
+        value: FeatureCollection | Feature | MultiPolygon | Polygon,
+    ) -> list[FeatureCollection]:
+        """Convert input geojson to FeatureCollection for consistency."""
+        featcol = geojson_to_featcol(value.model_dump())
+        return merge_polygons(featcol)
+
+    @computed_field
+    @property
+    def location_str(self) -> Optional[str]:
+        """Generate location string from project centroid."""
         if self.location_str is not None:
             # Prevent running triggering multiple times if already set
-            return self
+            return ""
 
-        geom = read_wkb(self.centroid)
-        latitude, longitude = geom.y, geom.x
+        geom = featcol_to_shapely_geom(self.outline)
+        centroid = geom.centroid
+        latitude, longitude = centroid.y, centroid.x
         address = get_address_from_lat_lon(latitude, longitude)
-        self.location_str = address if address is not None else ""
-        return self
+        return address if address is not None else ""
 
 
-class ProjectUpload(ProjectIn, ODKCentralIn):
-    """Project upload details, plus ODK credentials."""
+class ProjectUpdate(ProjectInBase, ODKCentralIn):
+    """Update a project, where all fields are optional."""
 
-    pass
+    name: Optional[str] = None
+    xform_category: Optional[str] = None
+    outline: Optional[FeatureCollection] = None
+    location_str: Optional[str] = None
 
-
-class ProjectUpdate(ProjectUpload):
-    """Update project."""
-
-    pass
+    @field_validator("outline", mode="before")
+    @classmethod
+    def outline_geojson_to_featcol(
+        cls,
+        value: FeatureCollection | Feature | MultiPolygon | Polygon,
+    ) -> list[FeatureCollection]:
+        """Convert input geojson to FeatureCollection for consistency."""
+        if not value:
+            return None
+        featcol = geojson_to_featcol(value.model_dump())
+        return merge_polygons(featcol)
 
 
 class GeojsonFeature(BaseModel):

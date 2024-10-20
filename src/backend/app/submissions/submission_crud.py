@@ -325,7 +325,7 @@ async def get_submissions_by_date(
     Fetches the submissions for a given project within a specified number of days.
 
     Args:
-        db (Session): The database session.
+        db (Connection): The database connection.
         project (DbProject): The database project object.
         days (int): The number of days to consider for fetching submissions.
         planned_task (int): Associated task id.
@@ -383,7 +383,7 @@ async def get_submission_by_project(
         project (DbProject): The database project object.
         filters (dict): The filters to apply directly to submissions
             in odk central.
-        db (Session): The database session.
+        db (Connection): The database connection.
 
     Returns:
         Tuple[int, List]: A tuple containing the total number of submissions and
@@ -440,7 +440,7 @@ async def get_submission_detail(
 
 #     Args:
 #         project_id (int): The ID of the project.
-#         db (Session): The database session.
+#         db (Connection): The database connection.
 
 #     Returns:
 #         FeatCol: A GeoJSON FeatCol containing the submission features.
@@ -482,7 +482,7 @@ async def upload_attachment_to_s3(
         project_id (int): The ID of the project.
         instance_ids (list): List of instance IDs.
         background_task_id (uuid.UUID): The ID of the background task.
-        db (Session): The database session.
+        db (Connection): The database connection.
 
     Returns:
         bool: True if the upload is successful.
