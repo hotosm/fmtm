@@ -210,7 +210,7 @@ services:
     restart: "on-failure:2"
 
   s3:
-    image: "docker.io/minio/minio:${MINIO_TAG:-RELEASE.2024-06-06T09-36-42Z}"
+    image: "docker.io/minio/minio:${MINIO_TAG:-RELEASE.2024-10-13T13-34-11Z}"
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY:-fmtm}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-somelongpassword}
@@ -258,14 +258,14 @@ services:
       retries: 3
 
   electric:
-    image: "electricsql/electric:${ELECTRIC_TAG:-0.3.4}"
+    image: "electricsql/electric:${ELECTRIC_TAG:-0.7.6}"
     depends_on:
       fmtm-db:
         condition: service_healthy
       migrations:
         condition: service_completed_successfully
     environment:
-      DATABASE_URL: postgresql://${FMTM_DB_USER:-fmtm}:${FMTM_DB_PASSWORD:-fmtm}@${FMTM_DB_HOST:-fmtm-db}/${FMTM_DB_NAME:-fmtm}
+      DATABASE_URL: postgresql://${FMTM_DB_USER:-fmtm}:${FMTM_DB_PASSWORD:-fmtm}@${FMTM_DB_HOST:-fmtm-db}/${FMTM_DB_NAME:-fmtm}?sslmode=disable
       # OTEL_EXPORT: otlp
       # OTLP_ENDPOINT: https://...
 
