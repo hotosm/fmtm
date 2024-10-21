@@ -74,7 +74,7 @@
 	{/if}
 	{#if activeStack === 'Instructions'}
 		<div>
-			<Editor editable={false} content={`${instructions} ${instructions}`} />
+			<Editor editable={false} content={instructions} />
 		</div>
 	{/if}
 	{#if activeStack === 'Activities'}
