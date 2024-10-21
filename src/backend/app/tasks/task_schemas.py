@@ -20,43 +20,19 @@
 from datetime import datetime
 from typing import Any, Optional
 
-from geojson_pydantic import Feature
-from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, computed_field
-from pydantic.functional_validators import field_validator
+from geojson_pydantic import Polygon
+from pydantic import BaseModel, Field, computed_field
 from pydantic.types import UUID4
 
-from app.models.enums import TaskStatus, get_status_for_action
+from app.db.enums import TaskStatus, get_status_for_action
+from app.db.models import DbTask, DbTaskHistory
 
 
-class ReadTask(BaseModel):
+class TaskOut(DbTask):
     """Task for serialising and display."""
 
-    id: int
-    project_id: int
-    project_task_index: Optional[int] = None
-    outline: Feature
-    feature_count: Optional[int] = None
-
-    @field_validator("outline", mode="before")
-    @classmethod
-    def outline_geojson_to_feature(
-        cls, value: dict | Feature, info: ValidationInfo
-    ) -> Feature:
-        """Parse GeoJSON from DB into Feature."""
-        if isinstance(value, Feature):
-            return
-
-        task_id = info.data.get("task_id")
-        project_id = info.data.get("id")
-
-        return Feature(
-            **{
-                "type": "Feature",
-                "geometry": value,
-                "id": task_id,
-                "properties": {"id": task_id, "project_id": project_id},
-            }
-        )
+    # Parse as geojson_pydantic.Polygon
+    outline: Polygon
 
 
 class TaskHistoryBase(BaseModel):
@@ -67,73 +43,28 @@ class TaskHistoryBase(BaseModel):
     action_date: datetime
 
 
-class TaskHistoryOut(TaskHistoryBase):
+class TaskHistoryOut(DbTaskHistory):
     """Task mapping history display."""
 
     action: Any = Field(exclude=True)
 
-    username: str
-    profile_img: Optional[str]
+    event_id: UUID4
 
     @computed_field
     @property
     def status(self) -> Optional[TaskStatus]:
         """Get the status from the recent action.
 
-        TODO refactor this out and use 'action'?
+        TODO SQL refactor this out and use 'action' or similar?
         """
         if not self.action:
             return None
         return get_status_for_action(self.action)
 
 
-class TaskCommentResponse(TaskHistoryOut):
-    """Wrapper Class for comment."""
-
-
 class TaskHistoryCount(BaseModel):
-    """Task mapping history display."""
+    """Task mapping history status counts per day."""
 
     date: str
     validated: int
     mapped: int
-
-
-class TaskHistory(BaseModel):
-    """Task history details."""
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
-    # Excluded
-    action: Any = Field(exclude=True)
-    user: Any = Field(exclude=True)
-
-    task_id: int
-    action_text: Optional[str]
-    action_date: datetime
-
-    @computed_field
-    @property
-    def username(self) -> Optional[str]:
-        """Get username from user db obj."""
-        if self.user:
-            return self.user.username
-        return None
-
-    @computed_field
-    @property
-    def profile_img(self) -> Optional[str]:
-        """Get profile_img from user db obj."""
-        if self.user:
-            return self.user.profile_img
-        return None
-
-    @computed_field
-    @property
-    def status(self) -> Optional[TaskStatus]:
-        """Get the status from the recent action."""
-        if not self.action:
-            return None
-        return get_status_for_action(self.action)

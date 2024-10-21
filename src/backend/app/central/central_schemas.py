@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field, ValidationInfo, computed_field
 from pydantic.functional_validators import field_validator, model_validator
 
 from app.config import HttpUrlStr, decrypt_value, encrypt_value
-from app.models.enums import TaskStatus
+from app.db.enums import TaskStatus
 
 
 class ODKCentral(BaseModel):

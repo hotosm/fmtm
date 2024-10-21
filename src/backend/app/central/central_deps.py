@@ -28,7 +28,7 @@ from fastapi.exceptions import HTTPException
 from osm_fieldwork.OdkCentralAsync import OdkDataset
 
 from app.central.central_schemas import ODKCentralDecrypted
-from app.models.enums import HTTPStatus
+from app.db.enums import HTTPStatus
 
 
 @asynccontextmanager

@@ -26,8 +26,8 @@ from psycopg import Connection
 
 from app.central import central_schemas
 from app.db.database import db_conn
-from app.db.db_schemas import DbOrganisation, DbProject
-from app.models.enums import HTTPStatus
+from app.db.enums import HTTPStatus
+from app.db.models import DbOrganisation, DbProject
 from app.projects.project_deps import get_project
 
 
@@ -58,14 +58,16 @@ async def get_organisation(
             pass
         db_org = await DbOrganisation.one(db, id)
 
-        if check_approved and db_org.approved is False:
-            raise HTTPException(
-                status_code=HTTPStatus.FORBIDDEN,
-                detail=f"Organisation ({id}) is not approved yet.",
-            )
-
     except KeyError as e:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(e)) from e
+
+    if check_approved and db_org.approved is False:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail=f"Organisation ({id}) is not approved yet.",
+        )
+
+    return db_org
 
 
 async def get_org_odk_creds(

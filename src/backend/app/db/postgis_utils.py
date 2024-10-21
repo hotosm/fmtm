@@ -41,7 +41,7 @@ from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.models.enums import XLSFormType
+from app.db.enums import XLSFormType
 
 log = logging.getLogger(__name__)
 API_URL = settings.RAW_DATA_API_URL

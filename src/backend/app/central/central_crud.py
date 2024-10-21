@@ -33,13 +33,13 @@ from pyxform.xls2xform import convert as xform_convert
 
 from app.central import central_deps, central_schemas
 from app.config import encrypt_value, settings
-from app.db.db_schemas import DbXLSForm
+from app.db.enums import HTTPStatus, TaskStatus
+from app.db.models import DbXLSForm
 from app.db.postgis_utils import (
     geojson_to_javarosa_geom,
     javarosa_to_geojson_geom,
     parse_geojson_file_to_featcol,
 )
-from app.models.enums import HTTPStatus, TaskStatus
 
 
 def get_odk_project(odk_central: Optional[central_schemas.ODKCentralDecrypted] = None):

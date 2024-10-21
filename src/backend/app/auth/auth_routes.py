@@ -39,8 +39,8 @@ from app.auth.osm import (
 )
 from app.config import settings
 from app.db.database import db_conn
-from app.db.db_schemas import DbUser
-from app.models.enums import HTTPStatus, UserRole
+from app.db.enums import HTTPStatus, UserRole
+from app.db.models import DbUser
 
 router = APIRouter(
     prefix="/auth",

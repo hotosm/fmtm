@@ -35,8 +35,8 @@ from app.auth.osm import login_required
 from app.auth.roles import mapper, project_manager
 from app.central import central_crud
 from app.db import database, postgis_utils
-from app.db.db_schemas import DbTask
-from app.models.enums import HTTPStatus, ReviewStateEnum
+from app.db.enums import HTTPStatus, ReviewStateEnum
+from app.db.models import DbTask
 from app.projects import project_crud, project_deps
 from app.submissions import submission_crud, submission_schemas
 from app.tasks.task_deps import get_task

@@ -37,8 +37,8 @@ from app.auth import auth_routes
 from app.central import central_routes
 from app.config import MonitoringTypes, settings
 from app.db.database import db_conn, get_db_connection_pool
+from app.db.enums import HTTPStatus
 from app.helpers import helper_routes
-from app.models.enums import HTTPStatus
 from app.monitoring import (
     add_endpoint_profiler,
     instrument_app_otel,

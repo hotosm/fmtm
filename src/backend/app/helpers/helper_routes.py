@@ -47,6 +47,7 @@ from app.central.central_crud import (
 )
 from app.central.central_schemas import ODKCentral
 from app.config import settings
+from app.db.enums import GeometryType, HTTPStatus, XLSFormType
 from app.db.postgis_utils import (
     add_required_geojson_properties,
     featcol_keep_dominant_geom_type,
@@ -54,7 +55,6 @@ from app.db.postgis_utils import (
     multigeom_to_singlegeom,
     parse_geojson_file_to_featcol,
 )
-from app.models.enums import GeometryType, HTTPStatus, XLSFormType
 
 router = APIRouter(
     prefix="/helper",

@@ -41,8 +41,8 @@ from app.central.central_schemas import ODKCentralDecrypted
 from app.config import encrypt_value, settings
 from app.db.database import Base, get_db
 from app.db.db_models import DbOrganisation, DbTaskHistory
+from app.db.enums import TaskStatus, UserRole
 from app.main import get_application
-from app.models.enums import TaskStatus, UserRole
 from app.projects import project_crud
 from app.projects.project_schemas import ProjectIn, ProjectInfo
 from app.users.user_deps import get_user

@@ -41,7 +41,7 @@ from app.central.central_crud import (
 )
 from app.config import settings
 from app.db import db_models
-from app.models.enums import HTTPStatus
+from app.db.enums import HTTPStatus
 from app.projects import project_crud, project_deps
 from app.s3 import add_obj_to_bucket, get_obj_from_bucket
 

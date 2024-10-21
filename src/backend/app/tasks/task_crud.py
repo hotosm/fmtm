@@ -24,11 +24,11 @@ from loguru import logger as log
 from psycopg import Connection
 from psycopg.rows import class_row
 
-from app.db.db_schemas import DbTaskHistory
-from app.models.enums import (
+from app.db.enums import (
     HTTPStatus,
     TaskStatus,
 )
+from app.db.models import DbTaskHistory
 from app.tasks import task_schemas
 
 
@@ -78,16 +78,14 @@ async def new_task_event(
                 task_id,
                 user_id,
                 action,
-                action_text,
-                action_date
+                action_text
             ) VALUES (
                 gen_random_uuid(),
                 %(project_id)s,
                 %(task_id)s,
                 %(user_id)s,
                 %(new_status)s,
-                'CHANGED TO MAPPED by svcfmtm',
-                NOW()
+                'CHANGED TO MAPPED by svcfmtm'
             )
             RETURNING *
         )
@@ -183,7 +181,7 @@ async def get_task_history(
         db (Connection): The database connection.
 
     Returns:
-        list[TaskHistory]: A list of task history.
+        list[DbTaskHistory]: A list of task history.
     """
     end_date = datetime.now() - timedelta(days=days)
 

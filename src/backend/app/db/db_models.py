@@ -52,8 +52,7 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from app.db.postgis_utils import timestamp
-from app.models.enums import (
+from app.db.enums import (
     BackgroundTaskStatus,
     CommunityType,
     MappingLevel,
@@ -66,6 +65,7 @@ from app.models.enums import (
     TaskSplitType,
     UserRole,
 )
+from app.db.postgis_utils import timestamp
 
 Base = declarative_base()
 FmtmMetadata = Base.metadata

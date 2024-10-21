@@ -24,8 +24,8 @@ from psycopg import Connection
 
 from app.auth.roles import mapper, super_admin
 from app.db.database import db_conn
-from app.db.db_schemas import DbUser
-from app.models.enums import UserRole as UserRoleEnum
+from app.db.enums import UserRole as UserRoleEnum
+from app.db.models import DbUser
 from app.users import user_schemas
 from app.users.user_deps import get_user
 

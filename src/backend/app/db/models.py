@@ -15,13 +15,18 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
-"""Pydantic models for parsing database rows."""
+"""Pydantic models for parsing database rows.
+
+Most fields are defined as Optional to allow for flexibility in the returned data
+from SQL statements. Sometimes we only need a subset of the fields.
+"""
 
 from datetime import datetime
-from typing import Optional, Self
+from io import BytesIO
+from typing import TYPE_CHECKING, Optional, Self
 from uuid import UUID
 
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
 from loguru import logger as log
 from psycopg import Connection
 from psycopg.rows import class_row
@@ -29,7 +34,7 @@ from pydantic import BaseModel
 from pydantic.functional_validators import field_validator
 
 from app.config import settings
-from app.models.enums import (
+from app.db.enums import (
     BackgroundTaskStatus,
     CommunityType,
     HTTPStatus,
@@ -44,60 +49,49 @@ from app.models.enums import (
     UserRole,
     XLSFormType,
 )
-from app.organisations.organisation_schemas import OrganisationIn
-from app.projects.project_schemas import ProjectIn, ProjectUpdate
-from app.users.user_schemas import UserBasic
+from app.s3 import add_obj_to_bucket
+
+# Avoid cyclical dependencies when only type checking
+if TYPE_CHECKING:
+    from app.organisations.organisation_schemas import (
+        OrganisationIn,
+        OrganisationUpdate,
+    )
+    from app.projects.project_schemas import ProjectIn, ProjectUpdate
+    from app.users.user_schemas import UserIn
 
 
 class DbUserRole(BaseModel):
     """Table user_roles."""
 
-    user_id: Optional[int]
+    user_id: int
     project_id: int
     role: ProjectRole
 
 
-class DbUser(UserBasic):
+class DbUser(BaseModel):
     """Table users."""
 
-    id: int
+    id: int  # NOTE normally the OSM ID
     username: str
-    role: UserRole
+    role: Optional[UserRole] = None
     profile_img: Optional[str] = None
     name: Optional[str] = None
     city: Optional[str] = None
     country: Optional[str] = None
     email_address: Optional[str] = None
-    is_email_verified: bool = False
-    is_expert: bool = False
-    mapping_level: Optional[MappingLevel] = MappingLevel.BEGINNER
-    tasks_mapped: Optional[int] = 0
-    tasks_validated: Optional[int] = 0
-    tasks_invalidated: Optional[int] = 0
+    is_email_verified: Optional[bool] = False
+    is_expert: Optional[bool] = False
+    mapping_level: Optional[MappingLevel] = None
+    tasks_mapped: Optional[int] = None
+    tasks_validated: Optional[int] = None
+    tasks_invalidated: Optional[int] = None
     projects_mapped: Optional[list[int]] = None
-    registered_at: datetime
+    registered_at: Optional[datetime] = None
 
     # Relationships
     project_roles: Optional[list[DbUserRole]] = None
     orgs_managed: Optional[list[int]] = None
-
-    # @field_validator("role", mode="before")
-    # @classmethod
-    # def role_enum_str_to_int(cls, value: UserRole | str) -> int:
-    #     """Get the the int value from a string enum."""
-    #     if isinstance(value, UserRole):
-    #         return UserRole[value.name]
-    #     else:
-    #         return UserRole[value]
-
-    # @field_validator("mapping_level", mode="before")
-    # @classmethod
-    # def mapping_level_enum_str_to_int(cls, value: MappingLevel | str) -> int:
-    #     """Get the the int value from a string enum."""
-    #     if isinstance(value, MappingLevel):
-    #         return MappingLevel[value.name]
-    #     else:
-    #         return MappingLevel[value]
 
     @classmethod
     async def one(cls, db: Connection, user_identifier: int | str) -> Self:
@@ -138,7 +132,7 @@ class DbUser(UserBasic):
             )
 
             db_project = await cur.fetchone()
-            if not db_project:
+            if db_project is None:
                 raise KeyError(f"User ({user_identifier}) not found.")
 
             return db_project
@@ -159,44 +153,103 @@ class DbUser(UserBasic):
             )
             return await cur.fetchall()
 
+    @classmethod
+    async def create(
+        cls,
+        db: Connection,
+        user_in: "UserIn",
+        ignore_conflict: bool = False,
+    ) -> Self:
+        """Create a new user."""
+        if not ignore_conflict and cls.one(db, user_in.username):
+            msg = f"Username ({user_in.username}) already exists!"
+            log.warning(f"Failed to create new user: {msg}")
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=msg)
+
+        model_dump = user_in.model_dump(exclude_none=True)
+        columns = ", ".join(model_dump.keys())
+        value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
+        conflict_statement = """
+            ON CONFLICT ("username") DO UPDATE
+            SET
+                role = EXCLUDED.role,
+                mapping_level = EXCLUDED.mapping_level,
+                name = EXCLUDED.name
+        """
+
+        sql = f"""
+            INSERT INTO users
+                ({columns})
+            VALUES
+                ({value_placeholders})
+            {conflict_statement if ignore_conflict else ''}
+            RETURNING *;
+        """
+
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(sql, model_dump)
+            new_user = await cur.fetchone()
+
+            if new_user is None:
+                msg = f"Unknown SQL error for data: {model_dump}"
+                log.error(f"Failed user creation: {model_dump}")
+                raise HTTPException(
+                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+                )
+
+        return new_user
+
 
 class DbOrganisation(BaseModel):
     """Table organisations."""
 
+    # NOTE this kind of approach is possible for extra metadata in the openapi spec
+    # description: Annotated[
+    #     Optional[str],
+    #     Field(description="Organisation description"),
+    # ] = None
+
     id: int
     name: str
-    slug: str
+    slug: Optional[str] = None
     logo: Optional[str] = None
     description: Optional[str] = None
     url: Optional[str] = None
-    type: OrganisationType
-    approved: bool = False
+    type: Optional[OrganisationType] = None
+    approved: Optional[bool] = None
     created_by: Optional[int] = None
     odk_central_url: Optional[str] = None
     odk_central_user: Optional[str] = None
     odk_central_password: Optional[str] = None
-    community_type: CommunityType
+    community_type: Optional[CommunityType] = None
 
     # Relationships
-    managers: list[UserBasic]
+    managers: Optional[list[DbUser]] = None
 
     @classmethod
     async def one(cls, db: Connection, org_identifier: int | str) -> Self:
         """Fetch a single organisation by name or ID."""
         async with db.cursor(row_factory=class_row(cls)) as cur:
-            await cur.execute(
-                f"""
-                SELECT * FROM organisations
-                WHERE {
-                    'name' if isinstance(org_identifier, str)
-                    else 'id'
-                } = %(org_identifier)s;
-                """,
-                {"org_identifier": org_identifier},
-            )
-            db_org = await cur.fetchone()
+            if isinstance(org_identifier, str):
+                await cur.execute(
+                    """
+                    SELECT * FROM organisations
+                    WHERE LOWER(name) = %(org_identifier)s;
+                    """,
+                    {"org_identifier": org_identifier.lower()},
+                )
+            else:
+                await cur.execute(
+                    """
+                    SELECT * FROM organisations
+                    WHERE id = %(org_identifier)s;
+                    """,
+                    {"org_identifier": org_identifier},
+                )
 
-            if not db_org:
+                db_org = await cur.fetchone()
+
+            if db_org is None:
                 raise KeyError(f"Organisation ({org_identifier}) not found.")
 
             return db_org
@@ -229,37 +282,33 @@ class DbOrganisation(BaseModel):
 
     @classmethod
     async def create(
-        cls, db: Connection, org_in: OrganisationIn, user_id: int
+        cls,
+        db: Connection,
+        org_in: "OrganisationIn",
+        user_id: int,
+        new_logo: UploadFile,
+        ignore_conflict: bool = False,
     ) -> Optional[Self]:
         """Create a new organisation."""
-        org_in["created_by"] = user_id
+        # Set requesting user to the org owner
+        org_in.created_by = user_id
 
-        async with db.cursor() as cur:
-            sql = """
-                SELECT EXISTS (
-                    SELECT 1
-                    FROM organisations
-                    WHERE LOWER(name) = %(name)s
-                )
-            """
-            await cur.execute(sql, {"name": org_in.name.lower()})
-            org_exists = await cur.fetchone()
-            if org_exists[0]:
-                msg = f"Organisation named ({org_in.name}) already exists!"
-                log.warning(f"User ({user_id}) failed organisation creation: {msg}")
-                raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=msg)
+        if not ignore_conflict and cls.one(db, org_in.name):
+            msg = f"Organisation named ({org_in.name}) already exists!"
+            log.warning(f"User ({user_id}) failed organisation creation: {msg}")
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=msg)
 
-        # NOTE: exclude_none is used over exclude_unset to ensure default
-        # values are included
+        # NOTE exclude_none ensure defaults are included from model
         model_dump = org_in.model_dump(exclude_none=True)
         columns = ", ".join(model_dump.keys())
         value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
 
         sql = f"""
             INSERT INTO organisations
-                (created_at, {columns})
+                ({columns})
             VALUES
-                (NOW(), {value_placeholders})
+                ({value_placeholders})
+            {'ON CONFLICT ("name") DO NOTHING' if ignore_conflict else ''}
             RETURNING *;
         """
 
@@ -267,14 +316,78 @@ class DbOrganisation(BaseModel):
             await cur.execute(sql, model_dump)
             new_org = await cur.fetchone()
 
-            if not new_org:
+            if new_org is None and not ignore_conflict:
                 msg = f"Unknown SQL error for data: {model_dump}"
                 log.error(f"User ({user_id}) failed organisation creation: {msg}")
                 raise HTTPException(
                     status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
                 )
+        if new_org and new_org.logo is None and new_logo:
+            org_in.logo = await cls.upload_logo(new_org.id, new_logo)
 
-            return new_org
+        return new_org
+
+    @classmethod
+    async def upload_logo(cls, org_id: "OrganisationIn", logo_file: UploadFile) -> str:
+        """Upload logo using standardised /{org_id}/logo.png format.
+
+        Browsers treat image mimetypes the same, regardless of extension,
+        so it should not matter if a .jpg is renamed .png.
+
+        Args:
+            org_id (int): The organisation id in the database.
+            logo_file (UploadFile): The logo bytes from FastAPI UploadFile.
+
+        Returns:
+            logo_url (str): The S3 URL for the logo file.
+        """
+        logo_path = f"/{org_id}/logo.png"
+
+        file_bytes = await logo_file.read()
+        file_obj = BytesIO(file_bytes)
+
+        add_obj_to_bucket(
+            settings.S3_BUCKET_NAME,
+            file_obj,
+            logo_path,
+            content_type=logo_file.content_type,
+        )
+
+        return f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}{logo_path}"
+
+    @classmethod
+    async def update(
+        cls,
+        db: Connection,
+        org_id: int,
+        org_update: "OrganisationUpdate",
+        logo: UploadFile,
+    ) -> Self:
+        """Update values for organisation."""
+        if logo:
+            org_update.logo_url = cls.upload_logo(org_id, logo)
+
+        model_dump = org_update.model_dump(exclude_none=True)
+        placeholders = [f"{key} = %({key})s" for key in model_dump.keys()]
+        sql = f"""
+            UPDATE organisations
+            SET {', '.join(placeholders)}
+            WHERE id = %(org_id)s
+            RETURNING *;
+        """
+
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(sql, {"org_id": org_id, **model_dump})
+            updated_org = await cur.fetchone()
+
+            if updated_org is None:
+                msg = f"Failed to update org with ID: {org_id}"
+                log.error(msg)
+                raise HTTPException(
+                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+                )
+
+        return updated_org
 
     @classmethod
     async def delete(cls, db: Connection, org_id: int) -> bool:
@@ -306,15 +419,7 @@ class DbOrganisation(BaseModel):
 
         async with db.cursor() as cur:
             await cur.execute(sql, {"org_id": org_id})
-            deleted_org_id = await cur.fetchone()
-
-            if not deleted_org_id:
-                log.warning(f"Failed to delete organisation ({org_id})")
-                raise HTTPException(
-                    status_code=HTTPStatus.FORBIDDEN,
-                    detail="User not authorized to delete this organisation.",
-                )
-            return deleted_org_id
+            return await cur.fetchone()
 
     @classmethod
     async def unapproved(cls, db: Connection) -> Optional[list[Self]]:
@@ -328,6 +433,46 @@ class DbOrganisation(BaseModel):
         async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(sql)
             return await cur.fetchall()
+
+
+class DbOrganisationManagers(BaseModel):
+    """Table organisation_managers."""
+
+    organisation_id: int
+    user_id: int
+
+    @classmethod
+    async def create(
+        cls,
+        db: Connection,
+        org_id: int,
+        user_id: int,
+    ) -> Self:
+        """Add a new organisation manager.
+
+        Args:
+            db (Connection): The database connection.
+            org_id (int): The organisation ID.
+            user_id (int): The user ID to add as manager.
+
+        Returns:
+            Self: An instance of DbOrganisationManagers.
+        """
+        log.info(f"Adding user ({user_id}) as org ({org_id}) admin")
+        sql = """
+            INSERT INTO public.organisation_managers
+                (organisation_id, user_id)
+            VALUES
+                (%(org_id)s, %(user_id)s)
+            ON CONFLICT (organisation_id, user_id) DO NOTHING;
+        """
+
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            data = {
+                "org_id": org_id,
+                "user_id": user_id,
+            }
+            await cur.execute(sql, data)
 
 
 class DbXLSForm(BaseModel):
@@ -375,7 +520,7 @@ class DbTaskHistory(BaseModel):
 
     event_id: UUID
     action: TaskAction
-    action_date: datetime
+    action_date: Optional[datetime] = None
     action_text: Optional[str] = None
     project_id: Optional[int] = None
     task_id: Optional[int] = None
@@ -419,8 +564,7 @@ class DbTaskHistory(BaseModel):
                     task_id,
                     action,
                     action_text,
-                    user_id,
-                    action_date
+                    user_id
                 )
                 VALUES (
                     gen_random_uuid(),
@@ -428,8 +572,7 @@ class DbTaskHistory(BaseModel):
                     %(task_id)s,
                     'COMMENT',
                     %(comment_text)s,
-                    %(user_id)s,
-                    NOW()
+                    %(user_id)s
                 )
                 RETURNING *
             )
@@ -457,9 +600,9 @@ class DbTask(BaseModel):
     """Table tasks."""
 
     id: int
-    project_id: int
+    outline: Optional[dict] = None
+    project_id: Optional[int] = None
     project_task_index: Optional[int] = None
-    outline: dict
     feature_count: Optional[int] = None
 
     @classmethod
@@ -478,7 +621,7 @@ class DbTask(BaseModel):
             )
             db_task = await cur.fetchone()
 
-            if not db_task:
+            if db_task is None:
                 raise KeyError(f"Task ({task_id}) not found.")
 
             return db_task
@@ -507,11 +650,13 @@ class DbProject(BaseModel):
     """Table projects."""
 
     id: int
+    name: str
+    # TODO SQL need to update outline_geojson references
+    outline: Optional[dict] = None
     odkid: Optional[int] = None
-    author_id: int
-    organisation_id: int
+    author_id: Optional[int] = None
+    organisation_id: Optional[int] = None
     # TODO SQL we need to remove all references to projects.project_info
-    name: Optional[str] = None
     short_description: Optional[str] = None
     description: Optional[str] = None
     per_task_instructions: Optional[str] = None
@@ -520,16 +665,14 @@ class DbProject(BaseModel):
     task_split_type: Optional[TaskSplitType] = None
     location_str: Optional[str] = None
     custom_tms_url: Optional[str] = None
-    # TODO SQL need to update outline_geojson references
-    outline: dict
-    status: ProjectStatus
-    visibility: ProjectVisibility
+    status: Optional[ProjectStatus] = None
+    visibility: Optional[ProjectVisibility] = None
     total_tasks: Optional[int] = None
     xform_category: Optional[str] = None
     odk_form_id: Optional[str] = None  # TODO SQL need to update references to xform_id
     xlsform_content: Optional[bytes] = None  # TODO SQL this was LargeBinary previously
-    mapper_level: MappingLevel
-    priority: ProjectPriority
+    mapper_level: Optional[MappingLevel] = None
+    priority: Optional[ProjectPriority] = None
     featured: Optional[bool] = None
     odk_central_url: Optional[str] = None
     odk_central_user: Optional[str] = None
@@ -541,12 +684,12 @@ class DbProject(BaseModel):
     task_num_buildings: Optional[int] = None
     hashtags: Optional[list[str]] = None
     due_date: Optional[datetime] = None
-    updated_at: datetime
-    created_at: datetime
+    updated_at: Optional[datetime] = None
+    created_at: Optional[datetime] = None
 
     # Relationships
     tasks: Optional[list[DbTask]] = None
-    author: Optional[UserBasic] = None
+    author: Optional[DbUser] = None
 
     # Calculated
     organisation_name: Optional[str] = None
@@ -561,46 +704,9 @@ class DbProject(BaseModel):
 
         Format: [xmin, ymin, xmax, ymax].
         """
-        if not value:
-            return None
+        if value is None or isinstance(value, list):
+            return value
         return value[4:-1].replace(",", " ").split(" ")
-
-    # @field_validator("status", mode="before")
-    # @classmethod
-    # def project_status_enum_str_to_int(cls, value: ProjectStatus | str) -> int:
-    #     """Get the the int value from a string enum."""
-    #     if isinstance(value, ProjectStatus):
-    #         return ProjectStatus[value.name]
-    #     else:
-    #         return ProjectStatus[value]
-
-    # @field_validator("visibility", mode="before")
-    # @classmethod
-    # def project_visibility_enum_str_to_int(
-    # cls, value: ProjectVisibility | str) -> int:
-    #     """Get the the int value from a string enum."""
-    #     if isinstance(value, ProjectVisibility):
-    #         return ProjectVisibility[value.name]
-    #     else:
-    #         return ProjectVisibility[value]
-
-    # @field_validator("mapper_level", mode="before")
-    # @classmethod
-    # def mapper_level_enum_str_to_int(cls, value: MappingLevel | str) -> int:
-    #     """Get the the int value from a string enum."""
-    #     if isinstance(value, MappingLevel):
-    #         return MappingLevel[value.name]
-    #     else:
-    #         return MappingLevel[value]
-
-    # @field_validator("priority", mode="before")
-    # @classmethod
-    # def project_priority_enum_str_to_int(cls, value: ProjectPriority | str) -> int:
-    #     """Get the the int value from a string enum."""
-    #     if isinstance(value, ProjectPriority):
-    #         return ProjectPriority[value.name]
-    #     else:
-    #         return ProjectPriority[value]
 
     @classmethod
     async def one(cls, db: Connection, project_id: int) -> Self:
@@ -678,17 +784,17 @@ class DbProject(BaseModel):
                 {"project_id": project_id},
             )
 
-            obj = await cur.fetchone()
-            if not obj:
+            db_project = await cur.fetchone()
+            if db_project is None:
                 raise KeyError(f"Project ({project_id}) not found.")
 
-            if obj.odk_token is None:
+            if db_project.odk_token is None:
                 log.warning(
-                    f"Project ({obj.id}) has no 'odk_token' set. "
+                    f"Project ({db_project.id}) has no 'odk_token' set. "
                     "The QRCode will not work!"
                 )
 
-            return obj
+            return db_project
 
     @classmethod
     async def all(
@@ -724,6 +830,7 @@ class DbProject(BaseModel):
             SELECT
                 p.*,
                 ST_AsGeoJSON(p.outline)::jsonb AS outline,
+                ST_AsGeoJSON(ST_Centroid(p.outline))::jsonb AS centroid,
                 project_org.logo as organisation_logo,
                 COUNT(t.id) AS task_count
             FROM
@@ -746,11 +853,11 @@ class DbProject(BaseModel):
             return await cur.fetchall()
 
     @classmethod
-    async def create(cls, db: Connection, project_in: ProjectIn) -> Self:
+    async def create(cls, db: Connection, project_in: "ProjectIn") -> Self:
         """Create a new project in the database."""
         model_dump = project_in.model_dump(exclude_none=True)
 
-        if not model_dump:
+        if model_dump is None:
             log.error("Attempted to create a project with no data.")
             raise HTTPException(
                 status_code=HTTPStatus.BAD_REQUEST, detail="No project data provided"
@@ -762,9 +869,10 @@ class DbProject(BaseModel):
 
         sql_insert = f"""
             INSERT INTO projects
-                (created_at, {", ".join(model_dump.keys())})
+                as outline
+                ({", ".join(model_dump.keys())})
             VALUES
-                (NOW(), {", ".join(f"%({key})s" for key in model_dump.keys())})
+                ({", ".join(f"%({key})s" for key in model_dump.keys())})
             RETURNING id, hashtags;
         """
 
@@ -772,7 +880,7 @@ class DbProject(BaseModel):
             await cur.execute(sql_insert, model_dump)
             new_project = await cur.fetchone()
 
-            if not new_project:
+            if new_project is None:
                 msg = f"Unknown SQL error for data: {model_dump}"
                 log.error(f"Project creation failed: {msg}")
                 raise HTTPException(
@@ -798,7 +906,7 @@ class DbProject(BaseModel):
             )
             updated_project = await cur.fetchone()
 
-            if not updated_project:
+            if updated_project is None:
                 msg = f"Failed to update hashtags for project ID: {new_project_id}"
                 log.error(msg)
                 raise HTTPException(
@@ -812,7 +920,7 @@ class DbProject(BaseModel):
         cls,
         db: Connection,
         project_id: int,
-        project_update: ProjectUpdate,
+        project_update: "ProjectUpdate",
     ) -> Self:
         """Update values for project."""
         model_dump = project_update.model_dump(exclude_none=True)
@@ -828,7 +936,7 @@ class DbProject(BaseModel):
             await cur.execute(sql, {"project_id": project_id, **model_dump})
             updated_project = await cur.fetchone()
 
-            if not updated_project:
+            if updated_project is None:
                 msg = f"Failed to update project with ID: {project_id}"
                 log.error(msg)
                 raise HTTPException(
@@ -847,9 +955,9 @@ class BackgroundTask(BaseModel):
     """
 
     id: str
-    name: str
-    project_id: Optional[int] = None
     status: BackgroundTaskStatus
+    name: Optional[str] = None
+    project_id: Optional[int] = None
     message: Optional[str] = None
 
 
@@ -857,12 +965,12 @@ class DbTilesPath(BaseModel):
     """Table tiles_path."""
 
     id: int
-    project_id: int
-    status: BackgroundTaskStatus
-    path: str
-    tile_source: str
-    background_task_id: str
-    created_at: datetime
+    project_id: Optional[int] = None
+    status: Optional[BackgroundTaskStatus] = None
+    path: Optional[str] = None
+    tile_source: Optional[str] = None
+    background_task_id: Optional[str] = None
+    created_at: Optional[datetime] = None
 
     @classmethod
     async def one(cls, db: Connection, tiles_id: int | str) -> Self:
@@ -880,7 +988,7 @@ class DbTilesPath(BaseModel):
             )
 
             db_tiles = await cur.fetchone()
-            if not db_tiles:
+            if db_tiles is None:
                 raise KeyError(f"Tiles with ID ({db_tiles}) not found.")
 
             return db_tiles
@@ -893,7 +1001,7 @@ class DbSubmissionPhoto(BaseModel):
     """
 
     id: int
-    project_id: int
-    task_id: int  # Note this is not a DbTask, but an ODK task_id
-    submission_id: str
-    s3_path: str
+    project_id: Optional[int] = None
+    task_id: Optional[int] = None  # Note this is not a DbTask, but an ODK task_id
+    submission_id: Optional[str] = None
+    s3_path: Optional[str] = None

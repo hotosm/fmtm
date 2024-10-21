@@ -29,7 +29,7 @@ from osm_login_python.core import Auth
 
 from app.auth.auth_schemas import AuthUser
 from app.config import settings
-from app.models.enums import HTTPStatus, UserRole
+from app.db.enums import HTTPStatus, UserRole
 
 if settings.DEBUG:
     # Required as callback url is http during dev

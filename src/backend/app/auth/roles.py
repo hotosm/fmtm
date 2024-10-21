@@ -31,15 +31,14 @@ from psycopg.rows import class_row
 
 from app.auth.auth_schemas import AuthUser, OrgUserDict, ProjectUserDict
 from app.auth.osm import login_required
-from app.db import db_models
 from app.db.database import db_conn
-from app.db.db_schemas import DbProject, DbUser
-from app.models.enums import HTTPStatus, ProjectRole, ProjectVisibility
+from app.db.enums import HTTPStatus, ProjectRole, ProjectVisibility
+from app.db.models import DbProject, DbUser
 from app.organisations.organisation_deps import get_organisation
 from app.projects.project_deps import get_project, get_project_by_id
 
 
-async def get_uid(user_data: AuthUser | db_models.DbUser) -> int:
+async def get_uid(user_data: AuthUser | DbUser) -> int:
     """Extract user id from returned OSM user."""
     try:
         user_id = user_data.id
@@ -60,7 +59,7 @@ async def check_access(
     org_id: Optional[int] = None,
     project_id: Optional[int] = None,
     role: Optional[ProjectRole] = None,
-) -> Optional[db_models.DbUser]:
+) -> Optional[DbUser]:
     """Check if the user has access to a project or organisation.
 
     Access is determined based on the user's role and permissions:
@@ -79,7 +78,7 @@ async def check_access(
         role (Optional[ProjectRole]): Role to check for project-specific access.
 
     Returns:
-        Optional[db_models.DbUser]: The user details if access is granted,
+        Optional[DbUser]: The user details if access is granted,
             otherwise None.
     """
     user_id = await get_uid(user)
@@ -124,7 +123,7 @@ async def check_access(
             );
     """
 
-    async with db.cursor(row_factory=class_row(db_models.DbUser)) as cur:
+    async with db.cursor(row_factory=class_row(DbUser)) as cur:
         await cur.execute(
             sql,
             {
@@ -145,11 +144,11 @@ async def check_access(
 async def super_admin(
     current_user: Annotated[AuthUser, Depends(login_required)],
     db: Annotated[Connection, Depends(db_conn)],
-) -> db_models.DbUser:
+) -> DbUser:
     """Super admin role, with access to all endpoints.
 
     Returns:
-        current_user: db_models.DbUser SQLAlchemy object.
+        current_user: DbUser Pydantic model.
     """
     db_user = await check_access(current_user, db)
 
@@ -172,7 +171,7 @@ async def check_org_admin(
     """Database check to determine if org admin role.
 
     Returns:
-        dict: in format {'user': db_models.DbUser, 'org': DbOrganisation}.
+        dict: in format {'user': DbUser, 'org': DbOrganisation}.
     """
     db_org = await get_organisation(db, org_id)
 
@@ -183,13 +182,13 @@ async def check_org_admin(
         org_id=org_id,
     )
 
-    if db_user:
-        return {"user": db_user, "org": db_org}
+    if not db_user:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail="User is not organisation admin",
+        )
 
-    raise HTTPException(
-        status_code=HTTPStatus.FORBIDDEN,
-        detail="User is not organisation admin",
-    )
+    return {"user": db_user, "org": db_org}
 
 
 async def org_admin(
@@ -201,7 +200,7 @@ async def org_admin(
     """Organisation admin with full permission for projects in an organisation.
 
     Returns:
-        dict: in format {'user': db_models.DbUser, 'org': DbOrganisation}.
+        dict: in format {'user': DbUser, 'org': DbOrganisation}.
     """
     if not (project_id or org_id):
         raise HTTPException(
@@ -219,6 +218,7 @@ async def org_admin(
     # Extract org id from project if passed
     project = None
     if project_id:
+        # NOTE this is a wrapper around DbProject.one with error handling
         project = await get_project_by_id(db, project_id)
         org_id = project.organisation_id
 

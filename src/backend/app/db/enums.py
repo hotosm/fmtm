@@ -58,7 +58,7 @@ class HTTPStatus(IntEnum):
 
 
 class ProjectStatus(StrEnum, Enum):
-    """Enum to describes all possible states of a Mapping Project."""
+    """All possible states of a Mapping Project."""
 
     ARCHIVED = "ARCHIVED"
     PUBLISHED = "PUBLISHED"
@@ -66,7 +66,7 @@ class ProjectStatus(StrEnum, Enum):
 
 
 class OrganisationType(StrEnum, Enum):
-    """Describes an organisation's subscription type."""
+    """An organisation's subscription type."""
 
     FREE = "FREE"
     DISCOUNTED = "DISCOUNTED"
@@ -74,7 +74,7 @@ class OrganisationType(StrEnum, Enum):
 
 
 class ProjectPriority(StrEnum, Enum):
-    """Enum to describe all possible project priority levels."""
+    """All possible project priority levels."""
 
     URGENT = "URGENT"
     HIGH = "HIGH"
@@ -123,7 +123,7 @@ class MappingLevel(StrEnum, Enum):
 
 
 class TaskStatus(StrEnum, Enum):
-    """Enum describing available Task Statuses."""
+    """Available Task Statuses."""
 
     READY = "READY"
     LOCKED_FOR_MAPPING = "LOCKED_FOR_MAPPING"
@@ -168,7 +168,7 @@ class ProjectSplitStrategy(StrEnum, Enum):
 
 
 class BackgroundTaskStatus(StrEnum, Enum):
-    """Enum describing fast api background Task Statuses."""
+    """FastAPI background Task Statuses."""
 
     PENDING = "PENDING"
     FAILED = "FAILED"
@@ -177,7 +177,7 @@ class BackgroundTaskStatus(StrEnum, Enum):
 
 
 class TaskSplitType(StrEnum, Enum):
-    """Enum describing task splitting type."""
+    """Task splitting type for fmtm-splitter."""
 
     DIVIDE_ON_SQUARE = "DIVIDE_ON_SQUARE"
     CHOOSE_AREA_AS_TASK = "CHOOSE_AREA_AS_TASK"
@@ -185,7 +185,7 @@ class TaskSplitType(StrEnum, Enum):
 
 
 class ProjectVisibility(StrEnum, Enum):
-    """Enum describing task splitting type."""
+    """Project visibility to end users."""
 
     PUBLIC = "PUBLIC"
     PRIVATE = "PRIVATE"
@@ -193,7 +193,7 @@ class ProjectVisibility(StrEnum, Enum):
 
 
 class CommunityType(StrEnum, Enum):
-    """Enum describing community type."""
+    """Community type."""
 
     OSM_COMMUNITY = "OSM_COMMUNITY"
     COMPANY = "COMPANY"
@@ -203,7 +203,7 @@ class CommunityType(StrEnum, Enum):
 
 
 class ReviewStateEnum(StrEnum, Enum):
-    """Enum describing review states of submission."""
+    """Review states of submission."""
 
     HASISSUES = "HASISSUES"
     APPROVED = "APPROVED"
@@ -211,7 +211,7 @@ class ReviewStateEnum(StrEnum, Enum):
 
 
 class GeometryType(StrEnum, Enum):
-    """Enum for GeoJSON types."""
+    """GeoJSON geometry types."""
 
     Polygon = "Polygon"
     LineString = "LineString"
@@ -219,7 +219,7 @@ class GeometryType(StrEnum, Enum):
 
 
 class XLSFormType(StrEnum, Enum):
-    """Enum for XLSForm categories.
+    """XLSForm categories bundled by default.
 
     The key is the name of the XLSForm file for internal use.
     This cannot match an existing OSM tag value, so some words are replaced

@@ -22,7 +22,7 @@ from pydantic import BaseModel, ConfigDict, PrivateAttr, computed_field
 from pydantic.functional_validators import field_validator
 
 from app.db.db_models import DbOrganisation, DbProject, DbUser
-from app.models.enums import ProjectRole, UserRole
+from app.db.enums import ProjectRole, UserRole
 
 
 class OrgUserDict(TypedDict):

@@ -19,7 +19,7 @@
 
 import pytest
 
-from app.models.enums import XLSFormType
+from app.db.enums import XLSFormType
 
 
 async def test_list_forms(client):

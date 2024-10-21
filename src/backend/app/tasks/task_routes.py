@@ -25,8 +25,8 @@ from psycopg import Connection
 from app.auth.auth_schemas import ProjectUserDict
 from app.auth.roles import get_uid, mapper
 from app.db.database import db_conn
-from app.db.db_schemas import DbTask, DbTaskHistory
-from app.models.enums import HTTPStatus, TaskStatus
+from app.db.enums import HTTPStatus, TaskStatus
+from app.db.models import DbTask, DbTaskHistory
 from app.tasks import task_crud, task_schemas
 from app.tasks.task_deps import get_task
 
@@ -37,7 +37,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[task_schemas.ReadTask])
+@router.get("/", response_model=list[task_schemas.TaskOut])
 async def read_tasks(
     project_id: int,
     db: Annotated[Connection, Depends(db_conn)],
@@ -47,7 +47,7 @@ async def read_tasks(
     return await DbTask.all(db, project_id)
 
 
-@router.post("/near_me", response_model=task_schemas.ReadTask)
+@router.post("/near_me", response_model=task_schemas.TaskOut)
 async def get_tasks_near_me(
     lat: float, long: float, project_id: int = None, user_id: int = None
 ):
@@ -55,7 +55,7 @@ async def get_tasks_near_me(
     return "Coming..."
 
 
-@router.get("/{task_id}", response_model=task_schemas.ReadTask)
+@router.get("/{task_id}", response_model=task_schemas.TaskOut)
 async def get_specific_task(
     task_id: int,
     db: Annotated[Connection, Depends(db_conn)],
@@ -90,7 +90,7 @@ async def add_new_task_event(
     )
 
 
-@router.post("/{task_id}/comment/", response_model=task_schemas.TaskCommentResponse)
+@router.post("/{task_id}/comment/", response_model=task_schemas.TaskHistoryOut)
 async def add_task_comment(
     comment: str,
     db_task: Annotated[DbTask, Depends(get_task)],
@@ -107,7 +107,7 @@ async def add_task_comment(
         db (Connection): The database connection.
 
     Returns:
-        TaskCommentResponse: The created task comment.
+        TaskHistoryOut: The created task comment.
     """
     user_id = await get_uid(project_user.get("user"))
     return await DbTaskHistory.comment(db, db_task.id, user_id, comment)

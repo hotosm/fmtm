@@ -13,7 +13,7 @@ from minio.deleteobjects import DeleteObject
 from minio.error import S3Error
 
 from app.config import settings
-from app.models.enums import HTTPStatus
+from app.db.enums import HTTPStatus
 
 
 def s3_client():

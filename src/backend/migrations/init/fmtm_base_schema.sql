@@ -275,6 +275,8 @@ ALTER TABLE public.projects_id_seq OWNER TO fmtm;
 ALTER SEQUENCE public.projects_id_seq OWNED BY public.projects.id;
 
 
+-- TODO SQL rename this table & add foreign keys back in
+-- TODO SQL Also ensure we have an index
 CREATE TABLE public.task_history (
     event_id UUID NOT NULL,
     project_id integer,

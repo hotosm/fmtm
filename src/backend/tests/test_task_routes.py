@@ -19,7 +19,7 @@
 
 import pytest
 
-from app.models.enums import TaskStatus
+from app.db.enums import TaskStatus
 
 
 def test_read_task_history(client, task_history):

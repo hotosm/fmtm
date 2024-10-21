@@ -19,11 +19,10 @@
 
 import json
 import uuid
-from asyncio import gather
 from io import BytesIO
 from pathlib import Path
 from traceback import format_exc
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import geojson
 import requests
@@ -45,7 +44,8 @@ from sqlalchemy.orm import Session
 from app.central import central_crud, central_schemas
 from app.config import settings
 from app.db import db_models
-from app.db.db_schemas import DbProject, DbTask
+from app.db.enums import HTTPStatus, ProjectRole, XLSFormType
+from app.db.models import DbProject, DbTask
 from app.db.postgis_utils import (
     check_crs,
     featcol_keep_dominant_geom_type,
@@ -56,7 +56,6 @@ from app.db.postgis_utils import (
     parse_geojson_file_to_featcol,
     split_geojson_by_task_areas,
 )
-from app.models.enums import HTTPStatus, ProjectRole, XLSFormType
 from app.projects import project_deps, project_schemas
 from app.s3 import add_obj_to_bucket, delete_all_objs_under_prefix
 
@@ -891,63 +890,7 @@ async def get_shape_from_json_str(feature: str, error_detail: str):
         ) from e
 
 
-# --------------------
-# ---- CONVERTERS ----
-# --------------------
-
-
-# TODO SQL replace the logic here
-async def convert_to_project_summary(db: Session, db_project: db_models.DbProject):
-    """Legacy function to convert db models --> Pydantic.
-
-    TODO refactor to use Pydantic model methods instead.
-    """
-    if db_project:
-        summary: project_schemas.ProjectSummary = db_project
-
-        if db_project.project_info:
-            summary.title = db_project.project_info.name
-            summary.description = db_project.project_info.short_description
-        summary.num_contributors = (
-            db.query(db_models.DbTaskHistory.user_id)
-            .filter(
-                db_models.DbTaskHistory.project_id == db_project.id,
-                db_models.DbTaskHistory.user_id is not None,
-            )
-            .distinct()
-            .count()
-        )
-        summary.organisation_logo = (
-            db_project.organisation.logo if db_project.organisation else None
-        )
-
-        return summary
-    else:
-        return None
-
-
-# TODO SQL replace the logic here
-async def convert_to_project_summaries(
-    db: Session,
-    db_projects: List[db_models.DbProject],
-) -> List[project_schemas.ProjectSummary]:
-    """Legacy function to convert db models --> Pydantic.
-
-    TODO refactor to use Pydantic model methods instead.
-    """
-    if db_projects and len(db_projects) > 0:
-
-        async def convert_summary(db, project):
-            return await convert_to_project_summary(db, project)
-
-        project_summaries = await gather(
-            *[convert_summary(db, project) for project in db_projects]
-        )
-        return [summary for summary in project_summaries if summary is not None]
-    else:
-        return []
-
-
+# TODO SQL add this to model (or refactor out completely)
 async def get_background_task_status(task_id: uuid.UUID, db: Session):
     """Get the status of a background task."""
     task = (
@@ -961,6 +904,7 @@ async def get_background_task_status(task_id: uuid.UUID, db: Session):
     return task.status, task.message
 
 
+# TODO SQL add this to model (or refactor out completely)
 async def insert_background_task_into_database(
     db: Session, name: Optional[str] = None, project_id: Optional[int] = None
 ) -> uuid.UUID:
@@ -987,6 +931,7 @@ async def insert_background_task_into_database(
     return task_id
 
 
+# TODO SQL add this to model (or refactor out completely)
 async def update_background_task_status_in_database(
     db: Session, task_id: uuid.UUID, status: int, message: str = None
 ) -> None:
@@ -1206,7 +1151,7 @@ async def get_mbtiles_list(db: Session, project_id: int):
 #     return json2osm(geojson_file)
 
 
-async def get_pagination(page: int, count: int, results_per_page: int, total: int):
+def get_pagination(page: int, count: int, results_per_page: int, total: int):
     """Pagination result for splash page."""
     total_pages = (count + results_per_page - 1) // results_per_page
     has_next = (page * results_per_page) < count  # noqa: N806
@@ -1242,24 +1187,22 @@ async def get_paginated_projects(
     skip = (page - 1) * results_per_page
     limit = results_per_page
 
+    # Get subset of projects
     projects = await DbProject.all(
         db, skip=skip, limit=limit, user_id=user_id, hashtags=hashtags, search=search
     )
 
     # Count total number of projects for pagination
-    total_project_count = await db.execute("SELECT COUNT(*) FROM projects")
-    total_project_count = (await total_project_count.fetchone())[0]
+    async with db.cursor() as cur:
+        await cur.execute("SELECT COUNT(*) FROM projects")
+        total_project_count = await cur.fetchone()[0]
 
     pagination = await get_pagination(
         page, len(projects), results_per_page, total_project_count
     )
 
-    project_summaries = [
-        project_schemas.ProjectSummary(**project.__dict__) for project in projects
-    ]
-
     return project_schemas.PaginatedProjectSummaries(
-        results=project_summaries,
+        results=projects,
         pagination=pagination,
     )
 

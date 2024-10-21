@@ -29,8 +29,8 @@ from psycopg.rows import class_row
 
 from app.central import central_schemas
 from app.db.database import db_conn
-from app.db.db_schemas import DbProject
-from app.models.enums import HTTPStatus
+from app.db.enums import HTTPStatus
+from app.db.models import DbProject
 
 
 async def get_project(db: Annotated[Connection, Depends(db_conn)], project_id: int):
@@ -53,7 +53,7 @@ async def check_project_dup_name(db: Connection, name: str):
         SELECT EXISTS (
             SELECT 1
             FROM project_info
-            WHERE LOWER(name) = :project_name
+            WHERE LOWER(name) = %(project_name)s
         )
     """
     async with db.cursor() as cur:

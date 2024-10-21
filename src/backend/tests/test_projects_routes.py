@@ -47,9 +47,7 @@ odk_central_password = encrypt_value(os.getenv("ODK_CENTRAL_PASSWD", ""))
 
 def create_project(client, organisation_id, project_data):
     """Create a new project."""
-    response = client.post(
-        f"/projects/create-project?org_id={organisation_id}", json=project_data
-    )
+    response = client.post(f"/projects?org_id={organisation_id}", json=project_data)
     assert response.status_code == 200
     return response.json()
 
@@ -62,7 +60,7 @@ def test_create_project(client, organisation, project_data):
 
     # Duplicate response to test error condition: project name already exists
     response_duplicate = client.post(
-        f"/projects/create-project?org_id={organisation.id}", json=project_data
+        f"/projects?org_id={organisation.id}", json=project_data
     )
     assert response_duplicate.status_code == 400
     assert (
@@ -175,9 +173,7 @@ def test_valid_geojson_types(client, organisation, project_data, geojson_type):
 def test_invalid_geojson_types(client, organisation, project_data, geojson_type):
     """Test invalid geojson types."""
     project_data["outline_geojson"] = geojson_type
-    response = client.post(
-        f"/projects/create-project?org_id={organisation.id}", json=project_data
-    )
+    response = client.post(f"/projects?org_id={organisation.id}", json=project_data)
     assert response.status_code == 422
 
 

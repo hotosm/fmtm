@@ -25,8 +25,8 @@ from fastapi.exceptions import HTTPException
 from psycopg import Connection
 
 from app.db.database import db_conn
-from app.db.db_schemas import DbUser
-from app.models.enums import HTTPStatus
+from app.db.enums import HTTPStatus
+from app.db.models import DbUser
 
 
 async def get_user(
