@@ -40,14 +40,14 @@
 	import LayerSwitcher from '$lib/components/page/layer-switcher.svelte';
 	import BottomSheet from '$lib/components/common/bottom-sheet.svelte';
 	import Error from './+error.svelte';
-	import '../../styles/page.css';
-	import BlackLockImg from '../../assets/images/black-lock.png';
-	import RedLockImg from '../../assets/images/red-lock.png';
-	import More from '../../lib/components/page/more/index.svelte';
-	import '../../styles/button.css';
-	import { GetDeviceRotation } from '../../utilFunctions/getDeviceRotation';
-	import LocationArcImg from '../../assets/images/locationArc.png';
-	import LocationDotImg from '../../assets/images/locationDot.png';
+	import '$styles/page.css';
+	import BlackLockImg from '$assets/images/black-lock.png';
+	import RedLockImg from '$assets/images/red-lock.png';
+	import More from '$lib/components/page/more/index.svelte';
+	import '$styles/button.css';
+	import { GetDeviceRotation } from '$utilFunctions/getDeviceRotation';
+	import LocationArcImg from '$assets/images/locationArc.png';
+	import LocationDotImg from '$assets/images/locationDot.png';
 	import { setAlert } from '$store/common';
 
 	export let data: PageData;
