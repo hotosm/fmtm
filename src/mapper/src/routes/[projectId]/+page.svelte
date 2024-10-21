@@ -530,7 +530,7 @@
 				{/if} -->
 
 				<!-- uncomment More to view stacked component containing comment, instructions, activities -->
-				<More />
+				<More instructions={data?.project?.project_info?.per_task_instructions} />
 			{/if}
 			{#if selectedTab === 'offline'}
 				<div>TODO stuff here</div>
