@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setAlert } from '$store/page';
+	import { setAlert } from '$store/common';
 
 	let alertRef;
 	let alertInfo;
