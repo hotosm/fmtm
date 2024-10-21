@@ -48,6 +48,7 @@
 	import { GetDeviceRotation } from '../../utilFunctions/getDeviceRotation';
 	import LocationArcImg from '../../assets/images/locationArc.png';
 	import LocationDotImg from '../../assets/images/locationDot.png';
+	import { setAlert } from '$store/common';
 
 	export let data: PageData;
 
@@ -256,6 +257,10 @@
 	$: if (map && toggleGeolocationStatus) {
 		if (isFirefox || isSafari) {
 			// firefox & safari doesn't support device orientation sensor
+			setAlert.set({
+				variant: 'warning',
+				message: "Unable to handle device orientation. Your browser doesn't support device orientation sensors.",
+			});
 		} else {
 			// See the API specification at: https://w3c.github.io/orientation-sensor
 			// We use referenceFrame: 'screen' because the web page will rotate when
