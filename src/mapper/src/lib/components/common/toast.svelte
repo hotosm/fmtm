@@ -27,8 +27,8 @@
 </script>
 
 <div>
-	<sl-alert bind:this={alertRef} variant={variantMap[alertInfo?.variant]} duration="Infinity" closable>
-		<sl-icon slot="icon" name={iconName[alertInfo?.variant]}></sl-icon>
+	<sl-alert bind:this={alertRef} variant={variantMap?.[alertInfo?.variant]} duration="4000" closable>
+		<sl-icon slot="icon" name={iconName?.[alertInfo?.variant]}></sl-icon>
 		{alertInfo?.message}
 	</sl-alert>
 </div>
