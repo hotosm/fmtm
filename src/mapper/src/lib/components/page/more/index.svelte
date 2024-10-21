@@ -18,6 +18,7 @@
 	];
 
 	let activeStack: stackType = 'Comment';
+	export let instructions;
 </script>
 
 <div class="font-barlow-medium h-full">
@@ -53,13 +54,27 @@
 			<div class="h-[calc(100%-11.875rem)] overflow-y-scroll"></div>
 
 			<div class="">
-				<Editor />
+				<Editor
+					editable={true}
+					content=""
+					setEditorHtmlContent={(editorText) => {
+						// to-do: store state to post comment
+					}}
+				/>
+				<div class="w-full flex justify-end my-2 gap-2">
+					<sl-button variant="default" size="small" class="secondary col-span-2 sm:col-span-1"
+						><span class="font-barlow-medium text-sm">CLEAR</span></sl-button
+					>
+					<sl-button variant="default" size="small" class="primary col-span-2 sm:col-span-1"
+						><span class="font-barlow-medium text-sm">COMMENT</span></sl-button
+					>
+				</div>
 			</div>
 		</div>
 	{/if}
 	{#if activeStack === 'Instructions'}
-		<div class="">
-			<p>Instructions</p>
+		<div>
+			<Editor editable={false} content={`${instructions} ${instructions}`} />
 		</div>
 	{/if}
 	{#if activeStack === 'Activities'}
