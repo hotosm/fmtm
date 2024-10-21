@@ -212,7 +212,8 @@ CREATE TABLE public.organisations (
     approved BOOLEAN DEFAULT false,
     odk_central_url character varying,
     odk_central_user character varying,
-    odk_central_password character varying
+    odk_central_password character varying,
+    created_at timestamp with time zone NOT NULL DEFAULT now()
 );
 ALTER TABLE public.organisations OWNER TO fmtm;
 CREATE SEQUENCE public.organisations_id_seq
@@ -280,7 +281,7 @@ CREATE TABLE public.task_history (
     task_id integer NOT NULL,
     action public.taskaction NOT NULL,
     action_text character varying,
-    action_date timestamp with time zone NOT NULL,
+    action_date timestamp with time zone NOT NULL DEFAULT now(),
     user_id integer NOT NULL
 );
 ALTER TABLE public.task_history OWNER TO fmtm;

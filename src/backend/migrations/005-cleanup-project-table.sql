@@ -2,6 +2,7 @@
 -- * Remove the projects.centroid field, as we can generate this dynamically.
 -- * Remove long overdue unused fields from public.projects.
 -- * Merge contents of project_info into projects & delete project_info.
+-- * Add default timestamps to organisations & task_history table.
 
 -- Start a transaction
 BEGIN;
@@ -53,6 +54,36 @@ END $$;
 
 -- Drop project_info table
 DROP TABLE IF EXISTS public.project_info;
+
+-- Check if the column 'action_date' already exists and has no default value
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'task_history' 
+          AND column_name = 'action_date'
+          AND column_default IS NULL
+    ) THEN
+        ALTER TABLE task_history 
+        ALTER COLUMN action_date SET DEFAULT NOW();
+    END IF;
+END $$;
+
+-- Check if the column 'created_at' exists in 'organisations',
+-- and create it if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'organisations' 
+          AND column_name = 'created_at'
+    ) THEN
+        ALTER TABLE organisations 
+        ADD COLUMN created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+    END IF;
+END $$;
 
 -- Commit the transaction
 COMMIT;
