@@ -22,6 +22,7 @@ import os
 from io import BytesIO
 from pathlib import Path
 from typing import Annotated, Optional
+from uuid import UUID
 
 import requests
 from fastapi import (
@@ -56,7 +57,7 @@ from app.db.enums import (
     HTTPStatus,
     XLSFormType,
 )
-from app.db.models import DbProject, DbTilesPath
+from app.db.models import DbBackgroundTask, DbBasemap, DbProject
 from app.db.postgis_utils import (
     check_crs,
     flatgeobuf_to_featcol,
@@ -269,7 +270,10 @@ async def set_odk_entities_mapping_status(
     )
 
 
-@router.get("/{project_id}/tiles-list/")
+@router.get(
+    "/{project_id}/tiles/",
+    response_model=list[project_schemas.BasemapOut],
+)
 async def tiles_list(
     db: Annotated[Connection, Depends(db_conn)],
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
@@ -284,50 +288,51 @@ async def tiles_list(
     Returns:
         Response: List of generated tiles for a project.
     """
-    return await project_crud.get_mbtiles_list(db, project_user.get("project").id)
+    return await DbBasemap.all(db, project_user.get("project").id)
 
 
-@router.get("/{project_id}/download-tiles/")
+@router.get(
+    "/{project_id}/tiles/{tile_id}/",
+    response_model=project_schemas.BasemapOut,
+)
 async def download_tiles(
-    tile_id: int,
+    tile_id: UUID,
     db: Annotated[Connection, Depends(db_conn)],
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ):
     """Download the basemap tile archive for a project."""
-    log.debug("Getting tile archive path from DB")
+    log.debug("Getting basemap path from DB")
     try:
-        db_tiles = await DbTilesPath.one(db, tile_id)
+        db_basemap = await DbBasemap.one(db, tile_id)
     except KeyError as e:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail="Basemap ID does not exist!"
-        ) from e
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(e)) from e
 
-    log.info(f"User requested download for tiles: {db_tiles.path}")
+    log.info(f"User requested download for tiles: {db_basemap.url}")
 
     project = project_user.get("project")
-    filename = Path(db_tiles.path).name.replace(
+    filename = Path(db_basemap.url).name.replace(
         f"{project.id}_", f"{project.project_name_prefix}_"
     )
     log.debug(f"Sending tile archive to user: {filename}")
 
-    if (tiles_path := Path(filename).suffix) == ".mbtiles":
-        tiles_mime_type = "application/vnd.mapbox-vector-tile"
-    elif tiles_path == ".pmtiles":
-        tiles_mime_type = "application/vnd.pmtiles"
+    if db_basemap.format == "mbtiles":
+        mimetype = "application/vnd.mapbox-vector-tile"
+    elif db_basemap.format == "pmtiles":
+        mimetype = "application/vnd.pmtiles"
     else:
-        tiles_mime_type = "application/vnd.sqlite3"
+        mimetype = "application/vnd.sqlite3"
 
     return FileResponse(
-        db_tiles.path,
+        db_basemap.url,
         headers={
             "Content-Disposition": f"attachment; filename={filename}",
-            "Content-Type": tiles_mime_type,
+            "Content-Type": mimetype,
         },
     )
 
 
-@router.get("/{project_id}/tiles")
-async def generate_project_tiles(
+@router.get("/{project_id}/tiles-generate")
+async def generate_project_basemap(
     background_tasks: BackgroundTasks,
     project_id: int,
     db: Annotated[Connection, Depends(db_conn)],
@@ -346,15 +351,29 @@ async def generate_project_tiles(
     """Returns basemap tiles for a project."""
     # Create task in db and return uuid
     log.debug(
-        "Creating generate_project_tiles background task "
+        "Creating generate_project_basemap background task "
         f"for project ID: {project_id}"
     )
-    background_task_id = await project_crud.insert_background_task_into_database(
-        db, project_id=project_id
+    background_task_id = await DbBackgroundTask.create(
+        db,
+        project_schemas.BackgroundTaskIn(
+            project_id=project_id,
+            name="generate_basemap",
+        ),
     )
 
+    # # FIXME delete this
+    # project_crud.generate_project_basemap(
+    #     db,
+    #     project_id,
+    #     background_task_id,
+    #     source,
+    #     format,
+    #     tms
+    # )
+
     background_tasks.add_task(
-        project_crud.get_project_tiles,
+        project_crud.generate_project_basemap,
         db,
         project_id,
         background_task_id,
@@ -642,8 +661,12 @@ async def generate_files(
 
     # Create task in db and return uuid
     log.debug(f"Creating export background task for project ID: {project_id}")
-    background_task_id = await project_crud.insert_background_task_into_database(
-        db, project_id=project_id
+    background_task_id = await DbBackgroundTask.create(
+        db,
+        project_schemas.BackgroundTaskIn(
+            project_id=project_id,
+            name="generate_project",
+        ),
     )
 
     log.debug(f"Submitting {background_task_id} to background tasks stack")
@@ -1040,22 +1063,20 @@ async def project_centroid(
     return wkb_geom_to_feature(centroid)
 
 
-@router.get("/task-status/{uuid}", response_model=project_schemas.BackgroundTaskStatus)
+@router.get(
+    "/task-status/{task_id}",
+    response_model=project_schemas.BackgroundTaskStatus,
+)
 async def get_task_status(
-    task_uuid: str,
-    background_tasks: BackgroundTasks,
+    task_id: str,
     db: Annotated[Connection, Depends(db_conn)],
 ):
-    """Get the background task status by passing the task UUID."""
-    # Get the background task status
-    task_status, task_message = await project_crud.get_background_task_status(
-        task_uuid, db
-    )
-    return project_schemas.BackgroundTaskStatus(
-        status=task_status.name,
-        message=task_message or None,
-        # progress=some_func_to_get_progress,
-    )
+    """Get the background task status by passing the task ID."""
+    try:
+        return await DbBackgroundTask.one(db, task_id)
+    except KeyError as e:
+        log.warning(str(e))
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(e)) from e
 
 
 @router.get(

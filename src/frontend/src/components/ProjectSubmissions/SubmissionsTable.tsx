@@ -111,7 +111,7 @@ const SubmissionsTable = ({ toggleView }) => {
 
   useEffect(() => {
     dispatch(
-      SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table?project_id=${projectId}`, {
+      SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission-table?project_id=${projectId}`, {
         page: paginationPage,
         ...filter,
       }),
@@ -130,7 +130,7 @@ const SubmissionsTable = ({ toggleView }) => {
     );
     dispatch(SubmissionActions.SetSubmissionTableRefreshing(true));
     dispatch(
-      SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table?project_id=${projectId}`, {
+      SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission-table?project_id=${projectId}`, {
         page: paginationPage,
         ...filter,
       }),

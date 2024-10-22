@@ -18,7 +18,9 @@
 """Pydantic schemas for Projects for usage in endpoints."""
 
 from datetime import datetime
+from pathlib import Path
 from typing import Annotated, Optional, Self
+from uuid import UUID, uuid4
 
 from dateutil import parser
 from geojson_pydantic import Feature, FeatureCollection, MultiPolygon, Point, Polygon
@@ -26,6 +28,7 @@ from pydantic import (
     BaseModel,
     Field,
     FieldValidationInfo,
+    computed_field,
 )
 from pydantic.functional_serializers import field_serializer
 from pydantic.functional_validators import field_validator, model_validator
@@ -33,9 +36,10 @@ from pydantic.functional_validators import field_validator, model_validator
 from app.central.central_schemas import ODKCentralIn
 from app.config import decrypt_value, encrypt_value
 from app.db.enums import (
+    BackgroundTaskStatus,
     ProjectPriority,
 )
-from app.db.models import DbProject
+from app.db.models import DbBackgroundTask, DbBasemap, DbProject
 from app.db.postgis_utils import (
     geojson_to_featcol,
     get_address_from_lat_lon,
@@ -174,17 +178,23 @@ class ProjectOut(DbProject):
     outline: Polygon
     # Parse as geojson_pydantic.Point (sometimes not present, e.g. during create)
     centroid: Optional[Point] = None
+    bbox: Optional[list[str]] = None
 
     @field_validator("bbox", mode="before")
     @classmethod
-    def bbox_string_to_list(cls, value: str) -> Optional[list]:
+    def bbox_string_to_list(cls, value: str) -> Optional[list[float]]:
         """Parse PostGIS BOX2D format to BBOX list.
 
+        Converts to a list of floats.
         Format: [xmin, ymin, xmax, ymax].
         """
         if value is None or isinstance(value, list):
             return value
-        return value[4:-1].replace(",", " ").split(" ")
+        split_string = value[4:-1].replace(",", " ").split(" ")
+        try:
+            return [float(num) for num in split_string]
+        except Exception:
+            return []
 
     @field_serializer("odk_token")
     def decrypt_token(self, value: str) -> Optional[str]:
@@ -271,6 +281,83 @@ class ProjectDashboard(BaseModel):
             return f'{days_difference} day{"s" if days_difference > 1 else ""} ago'
         else:
             return last_active.strftime("%d %b %Y")
+
+
+class BasemapIn(DbBasemap):
+    """Basemap tile creation."""
+
+    # Force running validation to set value
+    id: Annotated[UUID, Field(validate_default=True)] = None
+    project_id: int
+    tile_source: str
+    url: str
+    background_task_id: UUID
+    status: BackgroundTaskStatus
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def generate_uuid(cls, value: None) -> UUID:
+        """Generate a uuid4 for insert."""
+        return uuid4()
+
+
+class BasemapUpdate(DbBasemap):
+    """Update a background task."""
+
+    id: Annotated[Optional[int], Field(exclude=True)] = None
+
+
+class BasemapOut(DbBasemap):
+    """Basemap tile list for a project."""
+
+    # project_id not needed as called for a specific project
+    project_id: Annotated[Optional[int], Field(exclude=True)] = None
+
+    @computed_field
+    @property
+    def format(self) -> Optional[str]:
+        """Get the basemap format from file extension."""
+        if not self.url:
+            return None
+        return Path(self.url).suffix[1:]
+
+    @computed_field
+    @property
+    def mimetype(self) -> Optional[str]:
+        """Set the mimetype based on the extension."""
+        if not self.url:
+            return None
+
+        file_format = Path(self.url).suffix[1:]
+        if file_format == "mbtiles":
+            return "application/vnd.mapbox-vector-tile"
+        elif file_format == "pmtiles":
+            return "application/vnd.pmtiles"
+        else:
+            return "application/vnd.sqlite3"
+
+
+class BackgroundTaskIn(DbBackgroundTask):
+    """Insert a background task."""
+
+    # Force running validation to set value
+    id: Annotated[UUID, Field(validate_default=True)] = None
+    # Make related project_id mandatory, while id is already required (UUID)
+    project_id: int
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def generate_uuid(cls, value: None) -> UUID:
+        """Generate a uuid4 for insert."""
+        return uuid4()
+
+
+class BackgroundTaskUpdate(DbBackgroundTask):
+    """Update a background task."""
+
+    id: Annotated[Optional[int], Field(exclude=True)] = None
+    # Make status update mandatory
+    status: BackgroundTaskStatus
 
 
 class BackgroundTaskStatus(BaseModel):

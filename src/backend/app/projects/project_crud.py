@@ -25,6 +25,7 @@ from traceback import format_exc
 from typing import Optional, Union
 
 import geojson
+import geojson_pydantic
 import requests
 import shapely.wkb as wkblib
 from asgiref.sync import async_to_sync
@@ -32,11 +33,11 @@ from fastapi import HTTPException, Response
 from fastapi.concurrency import run_in_threadpool
 from fmtm_splitter.splitter import split_by_sql, split_by_square
 from geoalchemy2.shape import to_shape
-from geojson.feature import Feature, FeatureCollection
 from loguru import logger as log
 from osm_fieldwork.basemapper import create_basemap_file
 from osm_rawdata.postgres import PostgresClient
 from psycopg import Connection
+from psycopg.rows import class_row
 from shapely.geometry import shape
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
@@ -44,8 +45,8 @@ from sqlalchemy.orm import Session
 from app.central import central_crud, central_schemas
 from app.config import settings
 from app.db import db_models
-from app.db.enums import HTTPStatus, ProjectRole, XLSFormType
-from app.db.models import DbProject, DbTask
+from app.db.enums import BackgroundTaskStatus, HTTPStatus, ProjectRole, XLSFormType
+from app.db.models import DbBackgroundTask, DbBasemap, DbProject, DbTask
 from app.db.postgis_utils import (
     check_crs,
     featcol_keep_dominant_geom_type,
@@ -70,7 +71,6 @@ async def get_projects_featcol(
     bbox_condition = ""
     bbox_params = {}
 
-    # Only apply bounding box condition when provided
     if bbox:
         minx, miny, maxx, maxy = map(float, bbox.split(","))
         bbox_condition = """
@@ -81,31 +81,40 @@ async def get_projects_featcol(
         bbox_params = {"minx": minx, "miny": miny, "maxx": maxx, "maxy": maxy}
 
     # FIXME add logic for percentMapped and percentValidated
-    sql = f"""
+    # NOTE alternative logic to build a FeatureCollection
+    """
         SELECT jsonb_build_object(
             'type', 'FeatureCollection',
             'features', COALESCE(jsonb_agg(feature), '[]'::jsonb)
         ) AS featcol
-        FROM (
-            SELECT jsonb_build_object(
-                'type', 'Feature',
-                'id', p.id,
-                'geometry', ST_AsGeoJSON(p.outline)::jsonb,
-                'properties', jsonb_build_object(
-                    'name', p.name,
-                    'percentMapped', 0,
-                    'percentValidated', 0,
-                    'created', p.created_at,
-                    'link', concat('https://', %(domain)s, '/project/', p.id)
-                )
-            ) AS feature
-            FROM projects p
-            WHERE p.visibility = 'PUBLIC'
-            {bbox_condition}
-        ) features;
+        FROM (...
+    """
+    sql = f"""
+            SELECT
+                'FeatureCollection' as type,
+                COALESCE(jsonb_agg(feature), '[]'::jsonb) AS features
+            FROM (
+                SELECT jsonb_build_object(
+                    'type', 'Feature',
+                    'id', p.id,
+                    'geometry', ST_AsGeoJSON(p.outline)::jsonb,
+                    'properties', jsonb_build_object(
+                        'name', p.name,
+                        'percentMapped', 0,
+                        'percentValidated', 0,
+                        'created', p.created_at,
+                        'link', concat('https://', %(domain)s::text, '/project/', p.id)
+                    )
+                ) AS feature
+                FROM projects p
+                WHERE p.visibility = 'PUBLIC'
+                {bbox_condition}
+            ) features;
         """
 
-    async with db.cursor() as cur:
+    async with db.cursor(
+        row_factory=class_row(geojson_pydantic.FeatureCollection)
+    ) as cur:
         query_params = {"domain": settings.FMTM_DOMAIN}
         if bbox:
             query_params.update(bbox_params)
@@ -201,9 +210,9 @@ async def create_tasks_from_geojson(
 
 
 async def preview_split_by_square(
-    boundary: FeatureCollection,
+    boundary: geojson.FeatureCollection,
     meters: int,
-    extract_geojson: Optional[FeatureCollection] = None,
+    extract_geojson: Optional[geojson.FeatureCollection] = None,
 ):
     """Preview split by square for a project boundary.
 
@@ -223,7 +232,7 @@ async def preview_split_by_square(
 
 
 async def generate_data_extract(
-    aoi: Union[FeatureCollection, Feature, dict],
+    aoi: geojson.FeatureCollection | geojson.Feature | dict,
     extract_config: Optional[BytesIO] = None,
 ) -> str:
     """Request a new data extract in flatgeobuf format.
@@ -231,7 +240,7 @@ async def generate_data_extract(
     Args:
         db (Session):
             Database session.
-        aoi (Union[FeatureCollection, Feature, dict]):
+        aoi (geojson.FeatureCollection | geojson.Feature | dict]):
             Area of interest for data extraction.
         extract_config (Optional[BytesIO], optional):
             Configuration for data extraction. Defaults to None.
@@ -285,19 +294,19 @@ async def generate_data_extract(
 
 async def split_geojson_into_tasks(
     db: Session,
-    project_geojson: FeatureCollection,
+    project_geojson: geojson.FeatureCollection,
     no_of_buildings: int,
-    extract_geojson: Optional[FeatureCollection] = None,
+    extract_geojson: Optional[geojson.FeatureCollection] = None,
 ):
     """Splits a project into tasks.
 
     Args:
         db (Session): A database session.
-        project_geojson (FeatureCollection): A FeatureCollection containing a
+        project_geojson (geojson.FeatureCollection): A FeatureCollection containing a
             single project boundary geometry.
-        extract_geojson (Union[dict, FeatureCollection]): A GeoJSON of the project
+        extract_geojson (dict | geojson.FeatureCollection): A GeoJSON of the project
             boundary osm data extract (features).
-        extract_geojson (FeatureCollection): A GeoJSON of the project
+        extract_geojson (geojson.FeatureCollection): A GeoJSON of the project
             boundary osm data extract (features).
             If not included, an extract is generated automatically.
         no_of_buildings (int): The number of buildings to include in each task.
@@ -516,7 +525,7 @@ async def upload_custom_fgb_extract(
     )
 
 
-async def get_data_extract_type(featcol: FeatureCollection) -> str:
+async def get_data_extract_type(featcol: geojson.FeatureCollection) -> str:
     """Determine predominant geometry type for extract."""
     geom_type = get_featcol_dominant_geom_type(featcol)
     if geom_type not in ["Polygon", "LineString", "Point"]:
@@ -739,20 +748,27 @@ async def generate_project_files(
         db.execute(text(formatted_sql))
 
         if background_task_id:
-            # Update background task status to COMPLETED
-            await update_background_task_status_in_database(
-                db, background_task_id, 4
-            )  # 4 is COMPLETED
+            await DbBackgroundTask.update(
+                db,
+                background_task_id,
+                project_schemas.BackgroundTaskUpdate(
+                    status=BackgroundTaskStatus.SUCCESS
+                ),
+            )
 
     except Exception as e:
         log.debug(str(format_exc()))
         log.warning(str(e))
 
         if background_task_id:
-            # Update background task status to FAILED
-            await update_background_task_status_in_database(
-                db, background_task_id, 2, str(e)
-            )  # 2 is FAILED
+            await DbBackgroundTask.update(
+                db,
+                background_task_id,
+                project_schemas.BackgroundTaskUpdate(
+                    status=BackgroundTaskStatus.FAILED,
+                    message=str(e),
+                ),
+            )
         else:
             # Raise original error if not running in background
             raise e
@@ -788,7 +804,7 @@ async def get_project_features_geojson(
     db: Session,
     db_project: db_models.DbProject,
     task_id: Optional[int] = None,
-) -> FeatureCollection:
+) -> geojson.FeatureCollection:
     """Get a geojson of all features for a task."""
     project_id = db_project.id
 
@@ -866,75 +882,6 @@ async def get_shape_from_json_str(feature: str, error_detail: str):
         ) from e
 
 
-# TODO SQL add this to model (or refactor out completely)
-async def get_background_task_status(task_id: uuid.UUID, db: Session):
-    """Get the status of a background task."""
-    task = (
-        db.query(db_models.BackgroundTasks)
-        .filter(db_models.BackgroundTasks.id == str(task_id))
-        .first()
-    )
-    if not task:
-        log.warning(f"No background task with found with UUID: {task_id}")
-        raise HTTPException(status_code=404, detail="Task not found")
-    return task.status, task.message
-
-
-# TODO SQL add this to model (or refactor out completely)
-async def insert_background_task_into_database(
-    db: Session, name: Optional[str] = None, project_id: Optional[int] = None
-) -> uuid.UUID:
-    """Inserts a new task into the database.
-
-    Args:
-        db (Session): database session
-        name (int): name of the task.
-        project_id (str): associated project id
-
-    Returns:
-        task_id (uuid.uuid4): The background task uuid for tracking.
-    """
-    task_id = uuid.uuid4()
-
-    task = db_models.BackgroundTasks(
-        id=str(task_id), name=name, status=1, project_id=project_id
-    )  # 1 = running
-
-    db.add(task)
-    db.commit()
-    db.refresh(task)
-
-    return task_id
-
-
-# TODO SQL add this to model (or refactor out completely)
-async def update_background_task_status_in_database(
-    db: Session, task_id: uuid.UUID, status: int, message: str = None
-) -> None:
-    """Updates the status of a task in the database.
-
-    Args:
-        db (Session): database session.
-        task_id (uuid.UUID): uuid of the task.
-        status (int): status of the task.
-        message (str): optional message to add to the db task.
-
-    Returns:
-        None
-    """
-    db.query(db_models.BackgroundTasks).filter(
-        db_models.BackgroundTasks.id == str(task_id)
-    ).update(
-        {
-            db_models.BackgroundTasks.status: status,
-            db_models.BackgroundTasks.message: message,
-        }
-    )
-    db.commit()
-
-    return True
-
-
 async def get_extracted_data_from_db(db: Session, project_id: int, outfile: str):
     """Get the geojson of those features for this project."""
     query = text(
@@ -965,8 +912,8 @@ async def get_extracted_data_from_db(db: Session, project_id: int, outfile: str)
 
 
 # NOTE defined as non-async to run in separate thread
-def get_project_tiles(
-    db: Session,
+def generate_project_basemap(
+    db: Connection,
     project_id: int,
     background_task_id: uuid.UUID,
     source: str,
@@ -984,6 +931,8 @@ def get_project_tiles(
             Other options: "pmtiles", "sqlite3".
         tms (str, optional): Default None. Custom TMS provider URL.
     """
+    new_basemap = None
+
     # TODO update this for user input or automatic
     # maxzoom can be determined from OAM: https://tiles.openaerialmap.org/663
     # c76196049ef00013b8494/0/663c76196049ef00013b8495
@@ -991,41 +940,30 @@ def get_project_tiles(
     # NOTE mbtile max supported zoom level is 22 (in GDAL at least)
     zooms = "12-22" if tms else "12-19"
     tiles_dir = f"{TILESDIR}/{project_id}"
+    # FIXME for now this is still a location on disk and we do not upload to S3
+    # FIXME waiting on basemap-api project to replace this with URL
     outfile = f"{tiles_dir}/{project_id}_{source}tiles.{output_format}"
 
-    tile_path_instance = db_models.DbTilesPath(
-        project_id=project_id,
-        background_task_id=str(background_task_id),
-        status=1,
-        tile_source=source,
-        path=outfile,
-    )
+    # NOTE here we put the connection in autocommit mode to ensure we get
+    # background task db entries if there is an exception.
+    # The default behaviour is to rollback on exception.
+    autocommit_update_sync = async_to_sync(db.set_autocommit)
+    autocommit_update_sync(True)
 
     try:
-        db.add(tile_path_instance)
-        db.commit()
-
-        # Project Outline
-        log.debug(f"Getting bbox for project: {project_id}")
-        query = text(
-            f"""SELECT ST_XMin(ST_Envelope(outline)) AS min_lon,
-                        ST_YMin(ST_Envelope(outline)) AS min_lat,
-                        ST_XMax(ST_Envelope(outline)) AS max_lon,
-                        ST_YMax(ST_Envelope(outline)) AS max_lat
-                FROM projects
-                WHERE id = {project_id};"""
+        sync_basemap_create = async_to_sync(DbBasemap.create)
+        new_basemap = sync_basemap_create(
+            db,
+            project_schemas.BasemapIn(
+                project_id=project_id,
+                background_task_id=background_task_id,
+                status=BackgroundTaskStatus.PENDING,
+                tile_source=source,
+                url=outfile,
+            ),
         )
 
-        result = db.execute(query)
-        project_bbox = result.fetchone()
-        log.debug(f"Extracted project bbox: {project_bbox}")
-
-        if project_bbox:
-            min_lon, min_lat, max_lon, max_lat = project_bbox
-        else:
-            msg = f"Failed to get bbox from project: {project_id}"
-            log.error(msg)
-            raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg)
+        min_lon, min_lat, max_lon, max_lat = new_basemap.bbox
 
         # Overwrite source with OAM provider
         if tms and "openaerialmap" in tms:
@@ -1050,15 +988,21 @@ def get_project_tiles(
             source=source,
             tms=tms,
         )
-
         log.info(f"Basemap created for project ID {project_id}: {outfile}")
 
-        tile_path_instance.status = 4
-        db.commit()
+        update_basemap_sync = async_to_sync(DbBasemap.update)
+        update_basemap_sync(
+            db,
+            new_basemap.id,
+            project_schemas.BasemapUpdate(status=BackgroundTaskStatus.SUCCESS),
+        )
 
-        # Update background task status to COMPLETED
-        update_bg_task_sync = async_to_sync(update_background_task_status_in_database)
-        update_bg_task_sync(db, background_task_id, 4)  # 4 is COMPLETED
+        update_bg_task_sync = async_to_sync(DbBackgroundTask.update)
+        update_bg_task_sync(
+            db,
+            background_task_id,
+            project_schemas.BackgroundTaskUpdate(status=BackgroundTaskStatus.SUCCESS),
+        )
 
         log.info(f"Tiles generation process completed for project id {project_id}")
 
@@ -1067,45 +1011,23 @@ def get_project_tiles(
         log.exception(str(e))
         log.error(f"Tiles generation process failed for project id {project_id}")
 
-        tile_path_instance.status = 2
-        db.commit()
-
-        # Update background task status to FAILED
-        update_bg_task_sync = async_to_sync(update_background_task_status_in_database)
-        update_bg_task_sync(db, background_task_id, 2, str(e))  # 2 is FAILED
-
-
-async def get_mbtiles_list(db: Session, project_id: int):
-    """List mbtiles in database for a project."""
-    try:
-        tiles_list = (
-            db.query(
-                db_models.DbTilesPath.id,
-                db_models.DbTilesPath.project_id,
-                db_models.DbTilesPath.status,
-                db_models.DbTilesPath.path,
-                db_models.DbTilesPath.tile_source,
+        if new_basemap:
+            update_basemap_sync = async_to_sync(DbBasemap.update)
+            update_basemap_sync(
+                db,
+                new_basemap.id,
+                project_schemas.BasemapUpdate(status=BackgroundTaskStatus.FAILED),
             )
-            .filter(db_models.DbTilesPath.project_id == str(project_id))
-            .all()
+
+        update_bg_task_sync = async_to_sync(DbBackgroundTask.update)
+        update_bg_task_sync(
+            db,
+            background_task_id,
+            project_schemas.BackgroundTaskUpdate(
+                status=BackgroundTaskStatus.FAILED,
+                message=str(e),
+            ),
         )
-
-        processed_tiles_list = [
-            {
-                "id": x.id,
-                "project_id": x.project_id,
-                "status": x.status.name,
-                "source": x.tile_source,
-                "format": Path(x.path).suffix[1:],
-            }
-            for x in tiles_list
-        ]
-
-        return processed_tiles_list
-
-    except Exception as e:
-        log.exception(e)
-        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 # async def convert_geojson_to_osm(geojson_file: str):

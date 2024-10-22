@@ -41,8 +41,9 @@ from app.central.central_crud import (
 )
 from app.config import settings
 from app.db import db_models
-from app.db.enums import HTTPStatus
-from app.projects import project_crud, project_deps
+from app.db.enums import BackgroundTaskStatus, HTTPStatus
+from app.db.models import DbBackgroundTask
+from app.projects import project_crud, project_deps, project_schemas
 from app.s3 import add_obj_to_bucket, get_obj_from_bucket
 
 # async def convert_json_to_osm(file_path):
@@ -224,11 +225,14 @@ def update_submission_in_s3(
                 last_submission <= zip_file_last_submission
                 and odk_review_state_hash == s3_review_state_hash
             ):
-                # Update background task status to COMPLETED
-                update_bg_task_sync = async_to_sync(
-                    project_crud.update_background_task_status_in_database
+                update_bg_task_sync = async_to_sync(DbBackgroundTask.update)
+                update_bg_task_sync(
+                    db,
+                    background_task_id,
+                    project_schemas.BackgroundTaskUpdate(
+                        status=BackgroundTaskStatus.SUCCESS
+                    ),
                 )
-                update_bg_task_sync(db, background_task_id, 4)  # 4 is COMPLETED
                 return
 
         except Exception as e:
@@ -269,21 +273,25 @@ def update_submission_in_s3(
             metadata_s3_path,
         )
 
-        # Update background task status to COMPLETED
-        update_bg_task_sync = async_to_sync(
-            project_crud.update_background_task_status_in_database
+        update_bg_task_sync = async_to_sync(DbBackgroundTask.update)
+        update_bg_task_sync(
+            db,
+            background_task_id,
+            project_schemas.BackgroundTaskUpdate(status=BackgroundTaskStatus.SUCCESS),
         )
-        update_bg_task_sync(db, background_task_id, 4)  # 4 is COMPLETED
-
         return True
 
     except Exception as e:
         log.warning(str(e))
-        # Update background task status to FAILED
-        update_bg_task_sync = async_to_sync(
-            project_crud.update_background_task_status_in_database
+        update_bg_task_sync = async_to_sync(DbBackgroundTask.update)
+        update_bg_task_sync(
+            db,
+            background_task_id,
+            project_schemas.BackgroundTaskUpdate(
+                status=BackgroundTaskStatus.FAILED,
+                message=str(e),
+            ),
         )
-        update_bg_task_sync(db, background_task_id, 2, str(e))  # 2 is FAILED
 
 
 async def download_submission_in_json(db: Session, project: db_models.DbProject):
@@ -580,8 +588,12 @@ async def upload_attachment_to_s3(
 
     except Exception as e:
         log.warning(str(e))
-        # Update background task status to FAILED
-        await project_crud.update_background_task_status_in_database(
-            db, background_task_id, 2, str(e)
+        await DbBackgroundTask.update(
+            db,
+            background_task_id,
+            project_schemas.BackgroundTaskUpdate(
+                status=BackgroundTaskStatus.FAILED,
+                message=str(e),
+            ),
         )
         return False

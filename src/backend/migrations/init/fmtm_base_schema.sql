@@ -162,34 +162,25 @@ ALTER TABLE public._migrations OWNER TO fmtm;
 
 
 CREATE TABLE public.background_tasks (
-    id character varying NOT NULL,
+    id UUID NOT NULL,
     name character varying,
     project_id integer,
-    status public.backgroundtaskstatus NOT NULL,
+    status public.backgroundtaskstatus NOT NULL DEFAULT 'PENDING',
     message character varying
 );
 ALTER TABLE public.background_tasks OWNER TO fmtm;
 
 
-CREATE TABLE public.mbtiles_path (
-    id integer NOT NULL,
+CREATE TABLE public.basemaps (
+    id UUID NOT NULL,
     project_id integer,
     status public.backgroundtaskstatus NOT NULL,
-    path character varying,
+    url character varying,
     tile_source character varying,
     background_task_id character varying,
     created_at timestamp with time zone DEFAULT now()
 );
-ALTER TABLE public.mbtiles_path OWNER TO fmtm;
-CREATE SEQUENCE public.mbtiles_path_id_seq
-AS integer
-START WITH 1
-INCREMENT BY 1
-NO MINVALUE
-NO MAXVALUE
-CACHE 1;
-ALTER TABLE public.mbtiles_path_id_seq OWNER TO fmtm;
-ALTER SEQUENCE public.mbtiles_path_id_seq OWNED BY public.mbtiles_path.id;
+ALTER TABLE public.basemaps OWNER TO fmtm;
 
 
 CREATE TABLE public.organisation_managers (
@@ -374,9 +365,6 @@ OWNED BY public.submission_photos.id;
 
 -- nextval for primary keys (autoincrement)
 
-ALTER TABLE ONLY public.mbtiles_path ALTER COLUMN id SET DEFAULT nextval(
-    'public.mbtiles_path_id_seq'::regclass
-);
 ALTER TABLE ONLY public.organisations ALTER COLUMN id SET DEFAULT nextval(
     'public.organisations_id_seq'::regclass
 );
@@ -402,8 +390,8 @@ ADD CONSTRAINT _migrations_pkey PRIMARY KEY (script_name);
 ALTER TABLE ONLY public.background_tasks
 ADD CONSTRAINT background_tasks_pkey PRIMARY KEY (id);
 
-ALTER TABLE ONLY public.mbtiles_path
-ADD CONSTRAINT mbtiles_path_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.basemaps
+ADD CONSTRAINT basemaps_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY public.organisation_managers
 ADD CONSTRAINT organisation_user_key UNIQUE (organisation_id, user_id);

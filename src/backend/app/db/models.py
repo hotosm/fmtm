@@ -57,7 +57,14 @@ if TYPE_CHECKING:
         OrganisationIn,
         OrganisationUpdate,
     )
-    from app.projects.project_schemas import ProjectIn, ProjectUpdate
+    from app.projects.project_schemas import (
+        BackgroundTaskIn,
+        BackgroundTaskUpdate,
+        BasemapIn,
+        BasemapUpdate,
+        ProjectIn,
+        ProjectUpdate,
+    )
     from app.users.user_schemas import UserIn
 
 
@@ -366,7 +373,7 @@ class DbOrganisation(BaseModel):
         if logo:
             org_update.logo_url = cls.upload_logo(org_id, logo)
 
-        model_dump = org_update.model_dump(exclude_none=True)
+        model_dump = org_update.model_dump(exclude_none=True, exclude_unset=True)
         placeholders = [f"{key} = %({key})s" for key in model_dump.keys()]
         sql = f"""
             UPDATE organisations
@@ -694,7 +701,7 @@ class DbProject(BaseModel):
     organisation_name: Optional[str] = None
     organisation_logo: Optional[str] = None
     centroid: Optional[dict] = None
-    bbox: Optional[list] = None
+    bbox: Optional[str] = None
 
     @classmethod
     async def one(cls, db: Connection, project_id: int) -> Self:
@@ -944,52 +951,232 @@ class DbProject(BaseModel):
         return updated_project
 
 
-class BackgroundTask(BaseModel):
+class DbBackgroundTask(BaseModel):
     """Table background_tasks.
 
     For managing long-running background tasks.
 
-    TODO SQL this will eventually be removed.
+    NOTE: This may eventually be removed.
     """
 
-    id: str
-    status: BackgroundTaskStatus
+    id: UUID
+    status: Optional[BackgroundTaskStatus] = None
     name: Optional[str] = None
     project_id: Optional[int] = None
     message: Optional[str] = None
 
+    @classmethod
+    async def one(cls, db: Connection, task_id: int) -> Self:
+        """Fetch a single background task by its ID."""
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(
+                """
+                    SELECT * FROM background_tasks
+                    WHERE id = %(task_id)s;
+                """,
+                {"task_id": task_id},
+            )
+            db_task = await cur.fetchone()
 
-class DbTilesPath(BaseModel):
-    """Table tiles_path."""
+            if db_task is None:
+                raise KeyError(f"Background task ({task_id}) not found.")
 
-    id: int
-    project_id: Optional[int] = None
-    status: Optional[BackgroundTaskStatus] = None
-    path: Optional[str] = None
-    tile_source: Optional[str] = None
-    background_task_id: Optional[str] = None
-    created_at: Optional[datetime] = None
+            return db_task
 
     @classmethod
-    async def one(cls, db: Connection, tiles_id: int | str) -> Self:
-        """Get a tile archive file DB record."""
+    async def create(
+        cls,
+        db: Connection,
+        task_in: "BackgroundTaskIn",
+    ) -> int:
+        """Create a new background task.
+
+        Return the task ID only.
+        """
+        # NOTE here we cannot use exclude_unset=True as the id will be omitted
+        # NOTE it is a uuid4() that is generated dynamically on field_validator
+        model_dump = task_in.model_dump(exclude_none=True)
+        columns = ", ".join(model_dump.keys())
+        value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
+
+        sql = f"""
+            INSERT INTO background_tasks
+                ({columns})
+            VALUES
+                ({value_placeholders})
+            RETURNING id;
+        """
+
         async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(sql, model_dump)
+            bg_task = await cur.fetchone()
+
+            if bg_task is None:
+                msg = f"Unknown SQL error for data: {model_dump}"
+                log.error(f"Failed background task creation: {model_dump}")
+                raise HTTPException(
+                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+                )
+
+        return bg_task.id
+
+    @classmethod
+    async def update(
+        cls,
+        db: Connection,
+        task_id: int,
+        task_update: "BackgroundTaskUpdate",
+    ) -> Self:
+        """Update values for a background task."""
+        model_dump = task_update.model_dump(exclude_none=True, exclude_unset=True)
+        placeholders = [f"{key} = %({key})s" for key in model_dump.keys()]
+        sql = f"""
+            UPDATE background_tasks
+            SET {', '.join(placeholders)}
+            WHERE id = %(task_id)s
+            RETURNING *;
+        """
+
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(sql, {"task_id": task_id, **model_dump})
+            updated_task = await cur.fetchone()
+
+            if updated_task is None:
+                msg = f"Failed to update background task with ID: {task_id}"
+                log.error(msg)
+                raise HTTPException(
+                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+                )
+
+        return updated_task
+
+
+class DbBasemap(BaseModel):
+    """Table tiles_path."""
+
+    id: UUID
+    project_id: Optional[int] = None
+    url: Optional[str] = None
+    tile_source: Optional[str] = None
+    background_task_id: Optional[UUID] = None
+    status: Optional[BackgroundTaskStatus] = None
+    created_at: Optional[datetime] = None
+
+    # Calculated
+    bbox: Optional[list[float]] = None
+
+    @classmethod
+    async def one(cls, db: Connection, basemap_id: UUID) -> Self:
+        """Get a tile archive file DB record."""
+        # NOTE we must import here to prevent cyclical import
+        from app.projects.project_schemas import BasemapOut
+
+        async with db.cursor(row_factory=class_row(BasemapOut)) as cur:
             sql = """
                 SELECT *
-                FROM mbtiles_path
-                WHERE id = %(tiles_id)s;
+                FROM basemaps
+                WHERE id = %(basemap_id)s;
             """
+            await cur.execute(sql, {"basemap_id": basemap_id})
 
+            db_basemap = await cur.fetchone()
+            if db_basemap is None:
+                raise KeyError(f"Basemap with ID ({db_basemap}) not found.")
+
+            return db_basemap
+
+    @classmethod
+    async def all(cls, db: Connection, project_id: int) -> Optional[list[Self]]:
+        """Fetch all basemaps for a specific project."""
+        async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(
-                sql,
-                {"tiles_id": tiles_id},
+                """
+                    SELECT * FROM basemaps
+                    WHERE project_id = %(project_id)s;
+                """,
+                {"project_id": project_id},
             )
+            basemaps = await cur.fetchall()
+            return basemaps
 
-            db_tiles = await cur.fetchone()
-            if db_tiles is None:
-                raise KeyError(f"Tiles with ID ({db_tiles}) not found.")
+    @classmethod
+    async def create(
+        cls,
+        db: Connection,
+        basemap_in: "BasemapIn",
+    ) -> Self:
+        """Create a new basemap and return its bounding box."""
+        # NOTE here we cannot use exclude_unset=True as the id will be omitted
+        # NOTE it is a uuid4() that is generated dynamically on field_validator
+        model_dump = basemap_in.model_dump(exclude_none=True)
+        columns = ", ".join(model_dump.keys())
+        value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
 
-            return db_tiles
+        sql = f"""
+            WITH inserted_basemap AS (
+                INSERT INTO basemaps ({columns})
+                VALUES ({value_placeholders})
+                RETURNING *
+            ),
+            project_outline AS (
+                SELECT ST_Envelope(outline) AS bbox
+                FROM projects
+                WHERE id = (SELECT project_id FROM inserted_basemap)
+            )
+            SELECT
+                inserted_basemap.*,
+                ARRAY[
+                    ST_XMin(project_outline.bbox),
+                    ST_YMin(project_outline.bbox),
+                    ST_XMax(project_outline.bbox),
+                    ST_YMax(project_outline.bbox)
+                ] AS bbox
+            FROM inserted_basemap
+            JOIN project_outline ON project_outline IS NOT NULL;
+        """
+
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(sql, model_dump)
+            new_basemap = await cur.fetchone()
+
+            if new_basemap is None:
+                msg = f"Unknown SQL error for data: {model_dump}"
+                log.error(f"Failed basemap creation: {model_dump}")
+                raise HTTPException(
+                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+                )
+
+        return new_basemap
+
+    @classmethod
+    async def update(
+        cls,
+        db: Connection,
+        basemap_id: int,
+        basemap_update: "BasemapUpdate",
+    ) -> Self:
+        """Update values for a basemap."""
+        model_dump = basemap_update.model_dump(exclude_none=True)
+        placeholders = [f"{key} = %({key})s" for key in model_dump.keys()]
+        sql = f"""
+            UPDATE basemaps
+            SET {', '.join(placeholders)}
+            WHERE id = %(basemap_id)s
+            RETURNING *;
+        """
+
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(sql, {"basemap_id": basemap_id, **model_dump})
+            updated_basemap = await cur.fetchone()
+
+            if updated_basemap is None:
+                msg = f"Failed to update basemap with ID: {basemap_id}"
+                log.error(msg)
+                raise HTTPException(
+                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+                )
+
+        return updated_basemap
 
 
 class DbSubmissionPhoto(BaseModel):

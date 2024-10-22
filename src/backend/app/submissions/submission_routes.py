@@ -36,8 +36,8 @@ from app.auth.roles import mapper, project_manager
 from app.central import central_crud
 from app.db import database, postgis_utils
 from app.db.enums import HTTPStatus, ReviewStateEnum
-from app.db.models import DbTask
-from app.projects import project_crud, project_deps
+from app.db.models import DbBackgroundTask, DbTask
+from app.projects import project_crud, project_deps, project_schemas
 from app.submissions import submission_crud, submission_schemas
 from app.tasks.task_deps import get_task
 
@@ -261,7 +261,7 @@ async def get_submission_form_fields(
     return odk_form.formFields(project.odkid, project.odk_form_id)
 
 
-@router.get("/submission_table")
+@router.get("/submission-table")
 async def submission_table(
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
     background_tasks: BackgroundTasks,
@@ -317,8 +317,12 @@ async def submission_table(
             instance_ids.append(submission["__id"])
 
     if instance_ids:
-        background_task_id = await project_crud.insert_background_task_into_database(
-            db, "upload_submission_photos", project.id
+        background_task_id = await DbBackgroundTask.create(
+            db,
+            project_schemas.BackgroundTaskIn(
+                project_id=project.id,
+                name="upload_submission_photos",
+            ),
         )
         log.info("uploading submission photos to s3")
         background_tasks.add_task(

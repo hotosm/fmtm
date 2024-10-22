@@ -155,7 +155,7 @@ export const GenerateProjectTiles = (url: string, payload: string) => {
     const generateProjectTiles = async (url: string, payload: string) => {
       try {
         const response = await CoreModules.axios.get(url);
-        dispatch(GetTilesList(`${import.meta.env.VITE_API_URL}/projects/${payload}/tiles-list/`));
+        dispatch(GetTilesList(`${import.meta.env.VITE_API_URL}/projects/${payload}/tiles/`));
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));
       } catch (error) {
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));
