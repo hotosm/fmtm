@@ -581,8 +581,7 @@ async def upload_attachment_to_s3(
     except Exception as e:
         log.warning(str(e))
         # Update background task status to FAILED
-        update_bg_task_sync = async_to_sync(
-            project_crud.update_background_task_status_in_database
+        await project_crud.update_background_task_status_in_database(
+            db, background_task_id, 2, str(e)
         )
-        update_bg_task_sync(db, background_task_id, 2, str(e))
         return False
