@@ -30,7 +30,9 @@ from app.auth.osm import login_required
 from app.auth.roles import project_manager
 from app.central import central_crud
 from app.db.database import db_conn
-from app.projects import project_deps
+from app.db.models import DbProject
+from app.projects.project_deps import get_odk_credentials
+from app.projects.project_schemas import ProjectUpdate
 
 router = APIRouter(
     prefix="/central",
@@ -83,23 +85,17 @@ async def refresh_appuser_token(
     project_xform_id = project.odk_form_id
 
     try:
-        odk_credentials = await project_deps.get_odk_credentials(db, project_id)
+        odk_credentials = await get_odk_credentials(db, project_id)
         odk_token = await central_crud.get_appuser_token(
             project_xform_id, project_odk_id, odk_credentials, db
         )
-
-        async with db.cursor() as cur:
-            await cur.execute(
-                """
-                UPDATE projects
-                SET odk_token = %(odk_token)s
-                WHERE id = %(project_id)s
-            """,
-                {
-                    "project_id": project_id,
-                    "odk_token": odk_token,
-                },
-            )
+        await DbProject.update(
+            db,
+            project_id,
+            ProjectUpdate(
+                odk_token=odk_token,
+            ),
+        )
 
         return JSONResponse(
             content={

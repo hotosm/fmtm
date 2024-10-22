@@ -51,8 +51,7 @@ async def check_project_dup_name(db: Connection, name: str):
     # Check if the project name already exists
     sql = """
         SELECT EXISTS (
-            SELECT 1
-            FROM project_info
+            SELECT 1 FROM projects
             WHERE LOWER(name) = %(project_name)s
         )
     """

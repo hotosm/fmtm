@@ -34,7 +34,7 @@ class OrganisationInBase(ODKCentralIn, DbOrganisation):
     This mode includes ODK credential variables, plug a generated slug.
     """
 
-    slug: Annotated[Optional[str], Field(exclude=True, validate_default=True)] = None
+    slug: Annotated[Optional[str], Field(validate_default=True)] = None
 
     @field_validator("slug", mode="after")
     @classmethod

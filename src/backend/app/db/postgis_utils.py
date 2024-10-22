@@ -78,26 +78,11 @@ def wkb_geom_to_feature(
     }
 
 
-def featcol_to_shapely_geom(
-    featcol: geojson.FeatureCollection,
+def polygon_to_centroid(
+    polygon: geojson.Polygon,
 ) -> shape:
     """Convert GeoJSON to shapely geometry."""
-    features = featcol.get("features", [])
-
-    if len(features) > 1 and features[0].get("type") == "MultiPolygon":
-        featcol = multigeom_to_singlegeom(featcol)
-        features = featcol.get("features", [])
-
-    geometry = features[0].get("geometry")
-    return shape(geometry)
-
-
-def featcol_to_wkb_geom(
-    featcol: geojson.FeatureCollection,
-) -> Optional[WKBElement]:
-    """Convert GeoJSON to SQLAlchemy geometry."""
-    shapely_geom = featcol_to_shapely_geom(featcol)
-    return write_wkb(shapely_geom)
+    return shape(polygon).centroid
 
 
 async def featcol_to_flatgeobuf(

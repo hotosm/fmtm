@@ -21,6 +21,7 @@ Most fields are defined as Optional to allow for flexibility in the returned dat
 from SQL statements. Sometimes we only need a subset of the fields.
 """
 
+import json
 from datetime import datetime
 from io import BytesIO
 from typing import TYPE_CHECKING, Optional, Self
@@ -31,7 +32,6 @@ from loguru import logger as log
 from psycopg import Connection
 from psycopg.rows import class_row
 from pydantic import BaseModel
-from pydantic.functional_validators import field_validator
 
 from app.config import settings
 from app.db.enums import (
@@ -166,7 +166,7 @@ class DbUser(BaseModel):
             log.warning(f"Failed to create new user: {msg}")
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=msg)
 
-        model_dump = user_in.model_dump(exclude_none=True)
+        model_dump = user_in.model_dump(exclude_none=True, exclude_unset=True)
         columns = ", ".join(model_dump.keys())
         value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
         conflict_statement = """
@@ -298,8 +298,7 @@ class DbOrganisation(BaseModel):
             log.warning(f"User ({user_id}) failed organisation creation: {msg}")
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=msg)
 
-        # NOTE exclude_none ensure defaults are included from model
-        model_dump = org_in.model_dump(exclude_none=True)
+        model_dump = org_in.model_dump(exclude_none=True, exclude_unset=True)
         columns = ", ".join(model_dump.keys())
         value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
 
@@ -697,17 +696,6 @@ class DbProject(BaseModel):
     centroid: Optional[dict] = None
     bbox: Optional[list] = None
 
-    @field_validator("bbox", mode="before")
-    @classmethod
-    def bbox_string_to_list(cls, value: str) -> Optional[list]:
-        """Parse PostGIS BOX2D format to BBOX list.
-
-        Format: [xmin, ymin, xmax, ymax].
-        """
-        if value is None or isinstance(value, list):
-            return value
-        return value[4:-1].replace(",", " ").split(" ")
-
     @classmethod
     async def one(cls, db: Connection, project_id: int) -> Self:
         """Get project by ID, including all tasks and other details."""
@@ -855,7 +843,7 @@ class DbProject(BaseModel):
     @classmethod
     async def create(cls, db: Connection, project_in: "ProjectIn") -> Self:
         """Create a new project in the database."""
-        model_dump = project_in.model_dump(exclude_none=True)
+        model_dump = project_in.model_dump(exclude_none=True, exclude_unset=True)
 
         if model_dump is None:
             log.error("Attempted to create a project with no data.")
@@ -863,21 +851,31 @@ class DbProject(BaseModel):
                 status_code=HTTPStatus.BAD_REQUEST, detail="No project data provided"
             )
 
-        log.debug(
-            f"Creating project in the database with the following data: {model_dump}"
-        )
+        columns = []
+        values = []
 
-        sql_insert = f"""
-            INSERT INTO projects
-                as outline
-                ({", ".join(model_dump.keys())})
-            VALUES
-                ({", ".join(f"%({key})s" for key in model_dump.keys())})
-            RETURNING id, hashtags;
-        """
+        for key in model_dump.keys():
+            columns.append(key)
+            if key == "outline":
+                values.append(f"ST_GeomFromGeoJSON(%({key})s)")
+                # Must be string json for db input
+                model_dump[key] = json.dumps(model_dump[key])
+            else:
+                values.append(f"%({key})s")
 
         async with db.cursor(row_factory=class_row(cls)) as cur:
-            await cur.execute(sql_insert, model_dump)
+            await cur.execute(
+                f"""
+                INSERT INTO projects
+                    ({", ".join(columns)})
+                VALUES
+                    ({", ".join(values)})
+                RETURNING
+                    *,
+                    ST_AsGeoJSON(outline)::jsonb AS outline;
+            """,
+                model_dump,
+            )
             new_project = await cur.fetchone()
 
             if new_project is None:
@@ -893,15 +891,15 @@ class DbProject(BaseModel):
             # NOTE we want a trackable hashtag DOMAIN-PROJECT_ID
             hashtags = current_hashtags + [f"#{settings.FMTM_DOMAIN}-{new_project_id}"]
 
-            sql_update = """
-                UPDATE projects
-                SET hashtags = %(hashtags)s
-                WHERE id = %(project_id)s
-                RETURNING *;
-            """
-
             await cur.execute(
-                sql_update,
+                """
+                    UPDATE projects
+                    SET hashtags = %(hashtags)s
+                    WHERE id = %(project_id)s
+                    RETURNING
+                        *,
+                        ST_AsGeoJSON(outline)::jsonb AS outline;
+                """,
                 {"hashtags": hashtags, "project_id": new_project_id},
             )
             updated_project = await cur.fetchone()
@@ -923,7 +921,7 @@ class DbProject(BaseModel):
         project_update: "ProjectUpdate",
     ) -> Self:
         """Update values for project."""
-        model_dump = project_update.model_dump(exclude_none=True)
+        model_dump = project_update.model_dump(exclude_none=True, exclude_unset=True)
         placeholders = [f"{key} = %({key})s" for key in model_dump.keys()]
         sql = f"""
             UPDATE projects

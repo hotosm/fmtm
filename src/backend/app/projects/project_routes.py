@@ -1097,7 +1097,7 @@ async def add_new_project_manager(
     )
 
 
-@router.post("/", response_model=project_schemas.ReadProject)
+@router.post("/", response_model=project_schemas.ProjectOut)
 async def create_project(
     project_info: project_schemas.ProjectIn,
     org_user_dict: Annotated[AuthUser, Depends(org_admin)],

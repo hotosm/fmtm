@@ -38,7 +38,7 @@ from osm_fieldwork.basemapper import create_basemap_file
 from osm_rawdata.postgres import PostgresClient
 from psycopg import Connection
 from shapely.geometry import shape
-from sqlalchemy import column, func, select, table, text
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
 from app.central import central_crud, central_schemas
@@ -91,7 +91,7 @@ async def get_projects_featcol(
                 'id', p.id,
                 'geometry', ST_AsGeoJSON(p.outline)::jsonb,
                 'properties', jsonb_build_object(
-                    'name', pi.name,
+                    'name', p.name,
                     'percentMapped', 0,
                     'percentValidated', 0,
                     'created', p.created_at,
@@ -99,7 +99,6 @@ async def get_projects_featcol(
                 )
             ) AS feature
             FROM projects p
-            LEFT JOIN project_info pi ON p.id = pi.project_id
             WHERE p.visibility = 'PUBLIC'
             {bbox_condition}
         ) features;
@@ -127,7 +126,6 @@ async def delete_fmtm_project(db: Session, project_id: int) -> None:
             DELETE FROM user_roles WHERE project_id = :project_id;
             DELETE FROM task_history WHERE project_id = :project_id;
             DELETE FROM tasks WHERE project_id = :project_id;
-            DELETE FROM project_info WHERE project_id = :project_id;
             DELETE FROM projects WHERE id = :project_id;
         """)
         db.execute(sql, {"project_id": project_id})
@@ -376,26 +374,6 @@ async def read_and_insert_xlsforms(db: Connection, directory: str) -> None:
             """
             await cur.execute(delete_query, {"titles": list(forms_to_delete)})
             log.info(f"Deleted XLSForms from the database: {forms_to_delete}")
-
-
-async def get_odk_id_for_project(db: Session, project_id: int):
-    """Get the odk project id for the fmtm project id."""
-    project = table(
-        "projects",
-        column("odkid"),
-    )
-
-    where = f"id={project_id}"
-    sql = select(project).where(text(where))
-    log.info(str(sql))
-    result = db.execute(sql)
-
-    # There should only be one match
-    if result.rowcount != 1:
-        log.warning(str(sql))
-        return False
-    project_info = result.first()
-    return project_info.odkid
 
 
 async def get_or_set_data_extract_url(
@@ -704,7 +682,7 @@ async def generate_project_files(
         project_xlsform = project.xlsform_content
         project_odk_form_id = project.odk_form_id
 
-        encrypted_odk_token = await generate_odk_central_project_content(
+        odk_token = await generate_odk_central_project_content(
             project_odk_id,
             project_odk_form_id,
             odk_credentials,
@@ -713,20 +691,14 @@ async def generate_project_files(
         )
         log.debug(
             f"Setting encrypted odk token for FMTM project ({project_id}) "
-            f"ODK project {project_odk_id}: {encrypted_odk_token}"
+            f"ODK project {project_odk_id}: {odk_token[:3]}..."
         )
-        query = text("""
-            UPDATE public.projects
-            SET
-                odk_token = :encrypted_odk_token
-            WHERE id = :project_id;
-        """)
-        db.execute(
-            query,
-            {
-                "project_id": project_id,
-                "encrypted_odk_token": encrypted_odk_token,
-            },
+        await DbProject.update(
+            db,
+            project_id,
+            project_schemas.ProjectUpdate(
+                odk_token=odk_token,
+            ),
         )
 
         # Add the feature counts for each task
@@ -1178,7 +1150,7 @@ async def get_paginated_projects(
     user_id: Optional[int] = None,
     hashtags: Optional[str] = None,
     search: Optional[str] = None,
-) -> project_schemas.PaginatedProjectSummaries:
+) -> dict:
     """Helper function to fetch paginated projects with optional filters."""
     if hashtags:
         hashtags = hashtags.split(",")
@@ -1195,16 +1167,14 @@ async def get_paginated_projects(
     # Count total number of projects for pagination
     async with db.cursor() as cur:
         await cur.execute("SELECT COUNT(*) FROM projects")
-        total_project_count = await cur.fetchone()[0]
+        total_project_count = await cur.fetchone()
+        total_project_count = total_project_count[0]
 
-    pagination = await get_pagination(
+    pagination = get_pagination(
         page, len(projects), results_per_page, total_project_count
     )
 
-    return project_schemas.PaginatedProjectSummaries(
-        results=projects,
-        pagination=pagination,
-    )
+    return {"results": projects, "pagination": pagination}
 
 
 async def get_dashboard_detail(db: Session, project: db_models.DbProject):
