@@ -102,7 +102,7 @@ async def get_projects_for_user(user_id: int):
 
     TODO to be implemented in future.
     """
-    return [DbProject()]
+    return None
 
 
 @router.post("/near_me", response_model=list[project_schemas.ProjectSummary])

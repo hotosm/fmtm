@@ -67,19 +67,20 @@ async def get_projects_featcol(
     bbox: Optional[str] = None,
 ) -> geojson.FeatureCollection:
     """Get all projects, or a filtered subset."""
-    bbox_condition = (
-        """AND ST_Intersects(
-            p.outline, ST_MakeEnvelope(%(minx)s, %(miny)s, %(maxx)s, %(maxy)s, 4326)
-        )"""
-        if bbox
-        else ""
-    )
-
+    bbox_condition = ""
     bbox_params = {}
+
+    # Only apply bounding box condition when provided
     if bbox:
         minx, miny, maxx, maxy = map(float, bbox.split(","))
+        bbox_condition = """
+            AND ST_Intersects(
+                p.outline, ST_MakeEnvelope(%(minx)s, %(miny)s, %(maxx)s, %(maxy)s, 4326)
+            )
+        """
         bbox_params = {"minx": minx, "miny": miny, "maxx": maxx, "maxy": maxy}
 
+    # FIXME add logic for percentMapped and percentValidated
     sql = f"""
         SELECT jsonb_build_object(
             'type', 'FeatureCollection',
@@ -95,7 +96,7 @@ async def get_projects_featcol(
                     'percentMapped', 0,
                     'percentValidated', 0,
                     'created', p.created_at,
-                    'link', concat('https://', :domain, '/project/', p.id)
+                    'link', concat('https://', %(domain)s, '/project/', p.id)
                 )
             ) AS feature
             FROM projects p
@@ -105,7 +106,10 @@ async def get_projects_featcol(
         """
 
     async with db.cursor() as cur:
-        await cur.execute(sql, {"domain": settings.FMTM_DOMAIN, **bbox_params})
+        query_params = {"domain": settings.FMTM_DOMAIN}
+        if bbox:
+            query_params.update(bbox_params)
+        await cur.execute(sql, query_params)
         featcol = await cur.fetchone()
 
     if not featcol:
@@ -114,7 +118,7 @@ async def get_projects_featcol(
             detail="Failed to generate project FeatureCollection",
         )
 
-    return featcol[0]
+    return featcol
 
 
 async def delete_fmtm_project(db: Session, project_id: int) -> None:

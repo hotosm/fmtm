@@ -194,6 +194,9 @@ class ProjectOut(DbProject):
         return decrypt_value(value)
 
 
+# Models for specific endpoints
+
+
 class ProjectSummary(BaseModel):
     """Project summaries."""
 
@@ -235,13 +238,6 @@ class PaginatedProjectSummaries(BaseModel):
     pagination: PaginationInfo
 
 
-class BackgroundTaskStatus(BaseModel):
-    """Background task status for project related tasks."""
-
-    status: str
-    message: Optional[str] = None
-
-
 class ProjectDashboard(BaseModel):
     """Project details dashboard."""
 
@@ -275,3 +271,10 @@ class ProjectDashboard(BaseModel):
             return f'{days_difference} day{"s" if days_difference > 1 else ""} ago'
         else:
             return last_active.strftime("%d %b %Y")
+
+
+class BackgroundTaskStatus(BaseModel):
+    """Background task status for project related tasks."""
+
+    status: str
+    message: Optional[str] = None
