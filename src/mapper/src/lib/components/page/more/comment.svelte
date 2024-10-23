@@ -1,34 +1,13 @@
 <script>
 	import Editor from '$lib/components/common/Editor/editor.svelte';
+	import CommentSkeleton from '$lib/components/skeleton/comment.svelte';
 </script>
 
 <div class="h-[calc(100%-2.25rem)] sm:h-[calc(100%-2.6rem)]">
 	<div class="h-[calc(100%-11.875rem)] overflow-y-scroll overflow-x-hidden flex flex-col gap-2">
 		{#if false}
 			{#each Array.from({ length: 5 }) as _, index}
-				<div class="bg-[#F6F5F5] rounded-md p-3">
-					<div class="flex gap-4">
-						<hot-skeleton
-							style="--color: #e3e1e1; --sheen-color: #fafafa;"
-							effect="sheen"
-							class="w-[2.063rem] h-[2.063rem]"
-						></hot-skeleton>
-						<div class="flex-1">
-							<hot-skeleton style="--color: #e3e1e1; --sheen-color: #fafafa;" effect="sheen" class="w-[8rem] mb-2"
-							></hot-skeleton>
-							<div class="flex justify-between flex-1">
-								<hot-skeleton style="--color: #e3e1e1; --sheen-color: #fafafa;" effect="sheen" class="w-[1rem]"
-								></hot-skeleton>
-								<hot-skeleton style="--color: #e3e1e1; --sheen-color: #fafafa;" effect="sheen" class="w-[7.75rem]"
-								></hot-skeleton>
-							</div>
-						</div>
-					</div>
-					<hot-skeleton style="--color: #e3e1e1; --sheen-color: #fafafa;" effect="sheen" class="w-full mt-3"
-					></hot-skeleton>
-					<hot-skeleton style="--color: #e3e1e1; --sheen-color: #fafafa;" effect="sheen" class="w-[8rem] mt-3"
-					></hot-skeleton>
-				</div>
+				<CommentSkeleton />
 			{/each}
 		{:else}
 			{#each Array.from({ length: 5 }) as _, index}
