@@ -27,6 +27,7 @@ from io import BytesIO
 from typing import TYPE_CHECKING, Annotated, Optional, Self
 from uuid import UUID
 
+import geojson
 from fastapi import HTTPException, UploadFile
 from loguru import logger as log
 from psycopg import Connection
@@ -76,6 +77,42 @@ class DbUserRole(BaseModel):
     user_id: int
     project_id: int
     role: ProjectRole
+
+    @classmethod
+    async def create(
+        cls,
+        db: Connection,
+        project_id: int,
+        user_id: int,
+        role: ProjectRole,
+    ) -> Self:
+        """Create a new user role."""
+        async with db.cursor() as cur:
+            params = {
+                "project_id": project_id,
+                "user_id": user_id,
+                "role": role.name,
+            }
+            await cur.execute(
+                """
+                INSERT INTO user_roles
+                    (user_id, project_id, role)
+                VALUES
+                    (%(user_id)s, %(project_id)s, %(role)s)
+                RETURNING *;
+            """,
+                params,
+            )
+            new_role = await cur.fetchone()
+
+            if new_role is None:
+                msg = f"Unknown SQL error for data: {params}"
+                log.error(f"Failed user role creation: {params}")
+                raise HTTPException(
+                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+                )
+
+        return new_role
 
 
 class DbUser(BaseModel):
@@ -658,6 +695,55 @@ class DbTask(BaseModel):
         async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(sql, {"project_id": project_id})
             return await cur.fetchall()
+
+    @classmethod
+    async def create(
+        cls,
+        db: Connection,
+        project_id: int,
+        tasks: geojson.FeatureCollection,
+    ) -> bool:
+        """Create a set of new tasks for a project.
+
+        Args:
+            db (Connection): The database connection.
+            project_id (int): The organisation ID.
+            tasks (geojson.FeatureCollection): FeatureCollection of task areas.
+
+        Returns:
+            bool: Success or failure.
+        """
+        features = tasks.get("features")
+        log.info(f"Adding ({len(features)}) tasks to project ({project_id})")
+
+        sql = """
+            INSERT INTO public.tasks
+                (project_id, project_task_index, outline)
+            VALUES
+        """
+
+        # Prepare data for bulk insert
+        values = []
+        data = {}
+        for index, feature in enumerate(features):
+            feature_index = f"geom_{index}"
+            values.append(
+                "(%(project_id)s,"
+                f"{index + 1},"
+                f"ST_GeomFromGeoJSON(%({feature_index})s))"
+            )
+            # Must be string json for db input
+            data[feature_index] = json.dumps(feature["geometry"])
+        data["project_id"] = project_id
+
+        # Join the values list into the SQL statement
+        sql += ", ".join(values) + " RETURNING True;"
+
+        async with db.cursor() as cur:
+            await cur.execute(sql, data)
+            result = await cur.fetchall()
+
+        return bool(result)
 
 
 class DbProject(BaseModel):

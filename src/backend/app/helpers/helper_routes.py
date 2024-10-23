@@ -50,7 +50,7 @@ from app.config import settings
 from app.db.enums import GeometryType, HTTPStatus, XLSFormType
 from app.db.postgis_utils import (
     add_required_geojson_properties,
-    featcol_keep_dominant_geom_type,
+    featcol_keep_single_geom_type,
     javarosa_to_geojson_geom,
     multigeom_to_singlegeom,
     parse_geojson_file_to_featcol,
@@ -99,7 +99,7 @@ async def append_required_geojson_properties(
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail="No geometries present"
         )
-    featcol_single_geom_type = featcol_keep_dominant_geom_type(featcol)
+    featcol_single_geom_type = featcol_keep_single_geom_type(featcol)
 
     if featcol_single_geom_type:
         processed_featcol = add_required_geojson_properties(featcol_single_geom_type)

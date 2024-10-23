@@ -99,7 +99,7 @@ async def convert_to_osm(
         project_id (int): The ID of the project.
         task_id (int, optional): The ID of the task.
             If provided, returns the submissions made for a specific task only.
-        db (Session): The database session, automatically provided.
+        db (Connection): The database connection.
         current_user (AuthUser): Check if user is logged in.
 
     Returns:

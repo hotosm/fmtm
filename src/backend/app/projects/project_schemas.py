@@ -273,6 +273,13 @@ class ProjectDashboard(BaseModel):
             return last_active.strftime("%d %b %Y")
 
 
+class ProjectUserContributions(BaseModel):
+    """Users for a project, plus contribution count."""
+
+    user: str
+    contributions: int
+
+
 class BasemapIn(DbBasemap):
     """Basemap tile creation."""
 

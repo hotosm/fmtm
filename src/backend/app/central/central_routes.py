@@ -30,8 +30,8 @@ from app.auth.osm import login_required
 from app.auth.roles import project_manager
 from app.central import central_crud
 from app.db.database import db_conn
+from app.db.enums import HTTPStatus
 from app.db.models import DbProject
-from app.enums import HTTPStatus
 from app.projects.project_schemas import ProjectUpdate
 
 router = APIRouter(

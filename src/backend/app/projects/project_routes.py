@@ -56,11 +56,13 @@ from app.db.enums import (
     TILES_FORMATS,
     TILES_SOURCE,
     HTTPStatus,
+    ProjectRole,
     XLSFormType,
 )
-from app.db.models import DbBackgroundTask, DbBasemap, DbProject
+from app.db.models import DbBackgroundTask, DbBasemap, DbProject, DbTask, DbUserRole
 from app.db.postgis_utils import (
     check_crs,
+    featcol_keep_single_geom_type,
     flatgeobuf_to_featcol,
     merge_polygons,
     parse_geojson_file_to_featcol,
@@ -469,19 +471,19 @@ async def upload_project_task_boundaries(
         task_geojson (UploadFile): Multi-polygon GeoJSON file.
 
     Returns:
-        dict: JSON containing success message, project ID, and number of tasks.
+        JSONResponse: JSON containing success message.
     """
-    # TODO SQL replace with a method on DbTask.bulk_crease
-    # TODO add a TaskIn schema to support this
-    log.debug(f"Uploading project boundary multipolygon for project ID: {project_id}")
     tasks_featcol = parse_geojson_file_to_featcol(await task_geojson.read())
-    # Validatiing Coordinate Reference System
     await check_crs(tasks_featcol)
-
-    log.debug("Creating tasks for each polygon in project")
-    await project_crud.create_tasks_from_geojson(db, project_id, tasks_featcol)
-
-    return JSONResponse(contents={"message": "success"})
+    # We only want to allow polygon geometries
+    featcol_single_geom_type = featcol_keep_single_geom_type(
+        tasks_featcol,
+        geom_type="Polygon",
+    )
+    success = await DbTask.create(db, project_id, featcol_single_geom_type)
+    if not success:
+        return JSONResponse(content={"message": "failure"})
+    return JSONResponse(content={"message": "success"})
 
 
 @router.post("/task-split")
@@ -1099,7 +1101,7 @@ async def get_contributors(
     TODO use a pydantic model for return type
     """
     project = project_user.get("project")
-    return await project_crud.get_project_users(db, project.id)
+    return await project_crud.get_project_users_plus_contributions(db, project.id)
 
 
 @router.post("/add-manager/")
@@ -1111,9 +1113,13 @@ async def add_new_project_manager(
 
     The logged in user must be either the admin of the organisation or a super admin.
     """
-    return await project_crud.add_project_manager(
-        db, project_user_dict["user"], project_user_dict["project"]
+    await DbUserRole.create(
+        db,
+        project_user_dict["project"].id,
+        project_user_dict["user"].id,
+        ProjectRole.PROJECT_MANAGER,
     )
+    return Response(status_code=HTTPStatus.OK)
 
 
 @router.post("/", response_model=project_schemas.ProjectOut)

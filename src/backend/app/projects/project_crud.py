@@ -27,9 +27,8 @@ from typing import Optional, Union
 import geojson
 import geojson_pydantic
 import requests
-import shapely.wkb as wkblib
 from asgiref.sync import async_to_sync
-from fastapi import HTTPException, Response
+from fastapi import HTTPException
 from fastapi.concurrency import run_in_threadpool
 from fmtm_splitter.splitter import split_by_sql, split_by_square
 from geoalchemy2.shape import to_shape
@@ -45,11 +44,11 @@ from sqlalchemy.orm import Session
 from app.central import central_crud, central_schemas
 from app.config import settings
 from app.db import db_models
-from app.db.enums import BackgroundTaskStatus, HTTPStatus, ProjectRole, XLSFormType
+from app.db.enums import BackgroundTaskStatus, HTTPStatus, XLSFormType
 from app.db.models import DbBackgroundTask, DbBasemap, DbProject, DbTask
 from app.db.postgis_utils import (
     check_crs,
-    featcol_keep_dominant_geom_type,
+    featcol_keep_single_geom_type,
     featcol_to_flatgeobuf,
     flatgeobuf_to_featcol,
     get_featcol_dominant_geom_type,
@@ -130,54 +129,6 @@ async def get_projects_featcol(
     return featcol
 
 
-async def create_tasks_from_geojson(
-    db: Session,
-    project_id: int,
-    boundaries: str,
-):
-    """Create tasks for a project, from provided task boundaries."""
-    try:
-        if isinstance(boundaries, str):
-            boundaries = json.loads(boundaries)
-
-        # Update the boundary polyon on the database.
-        if boundaries["type"] == "Feature":
-            polygons = [boundaries]
-        else:
-            polygons = boundaries["features"]
-        log.debug(f"Processing {len(polygons)} task geometries")
-        for index, polygon in enumerate(polygons):
-            # If the polygon is a MultiPolygon, convert it to a Polygon
-            if polygon["geometry"]["type"] == "MultiPolygon":
-                log.debug("Converting MultiPolygon to Polygon")
-                polygon["geometry"]["type"] = "Polygon"
-                polygon["geometry"]["coordinates"] = polygon["geometry"]["coordinates"][
-                    0
-                ]
-
-            db_task = db_models.DbTask(
-                project_id=project_id,
-                outline=wkblib.dumps(shape(polygon["geometry"]), hex=True),
-                project_task_index=index + 1,
-            )
-            db.add(db_task)
-            log.debug(
-                "Created database task | "
-                f"Project ID {project_id} | "
-                f"Task index {index}"
-            )
-
-        # Commit all tasks and update project location in db
-        db.commit()
-
-        log.debug("COMPLETE: creating project boundary, based on task boundaries")
-
-        return True
-    except Exception as e:
-        log.exception(e)
-        raise HTTPException(HTTPStatus.UNPROCESSABLE_ENTITY, detail=e) from e
-
-
 async def preview_split_by_square(
     boundary: geojson.FeatureCollection,
     meters: int,
@@ -191,7 +142,7 @@ async def preview_split_by_square(
     if len(boundary["features"]) == 0:
         boundary = merge_polygons(boundary)
 
-    return await split_by_square(
+    return split_by_square(
         boundary,
         osm_extract=extract_geojson,
         meters=meters,
@@ -205,8 +156,7 @@ async def generate_data_extract(
     """Request a new data extract in flatgeobuf format.
 
     Args:
-        db (Session):
-            Database session.
+        db (Connection): The database connection.
         aoi (geojson.FeatureCollection | geojson.Feature | dict]):
             Area of interest for data extraction.
         extract_config (Optional[BytesIO], optional):
@@ -260,7 +210,7 @@ async def generate_data_extract(
 
 
 async def split_geojson_into_tasks(
-    db: Session,
+    db: Connection,
     project_geojson: geojson.FeatureCollection,
     no_of_buildings: int,
     extract_geojson: Optional[geojson.FeatureCollection] = None,
@@ -268,7 +218,7 @@ async def split_geojson_into_tasks(
     """Splits a project into tasks.
 
     Args:
-        db (Session): A database session.
+        db (Connection): The database connection.
         project_geojson (geojson.FeatureCollection): A FeatureCollection containing a
             single project boundary geometry.
         extract_geojson (dict | geojson.FeatureCollection): A GeoJSON of the project
@@ -364,7 +314,7 @@ async def get_or_set_data_extract_url(
     """Get or set the data extract URL for a project.
 
     Args:
-        db (Session): SQLAlchemy database session.
+        db (Connection): The database connection.
         project_id (int): The ID of the project.
         url (str): URL to the streamable flatgeobuf data extract.
             If not passed, a new extract is generated.
@@ -416,7 +366,7 @@ async def upload_custom_extract_to_s3(
     """Uploads custom data extracts to S3.
 
     Args:
-        db (Session): SQLAlchemy database session.
+        db (Connection): The database connection.
         project_id (int): The ID of the project.
         fgb_content (bytes): Content of read flatgeobuf file.
         data_extract_type (str): centroid/polygon/line for database.
@@ -465,7 +415,7 @@ async def upload_custom_fgb_extract(
         "timestamp"
 
     Args:
-        db (Session): SQLAlchemy database session.
+        db (Connection): The database connection.
         project_id (int): The ID of the project.
         fgb_content (bytes): Content of read flatgeobuf file.
 
@@ -517,7 +467,7 @@ async def upload_custom_geojson_extract(
     """Upload a geojson data extract.
 
     Args:
-        db (Session): SQLAlchemy database session.
+        db (Connection): The database connection.
         project_id (int): The ID of the project.
         geojson_raw (str): The custom data extracts contents.
 
@@ -528,7 +478,7 @@ async def upload_custom_geojson_extract(
     log.debug(f"Uploading custom data extract for project: {project}")
 
     featcol = parse_geojson_file_to_featcol(geojson_raw)
-    featcol_single_geom_type = featcol_keep_dominant_geom_type(featcol)
+    featcol_single_geom_type = featcol_keep_single_geom_type(featcol)
 
     if not featcol_single_geom_type:
         raise HTTPException(
@@ -709,7 +659,8 @@ async def generate_project_files(
             for task_id, feature_count in task_feature_counts
         )
         formatted_sql = sql.format(value_placeholders)
-        db.execute(text(formatted_sql))
+        async with db.cursor() as cur:
+            await cur.execute(formatted_sql)
 
         if background_task_id:
             await DbBackgroundTask.update(
@@ -887,7 +838,7 @@ def generate_project_basemap(
     """Get the tiles for a project.
 
     Args:
-        db (Session): SQLAlchemy db session.
+        db (Connection): The database connection.
         project_id (int): ID of project to create tiles for.
         background_task_id (uuid.UUID): UUID of background task to track.
         source (str): Tile source ("esri", "bing", "google", "custom" (tms)).
@@ -1091,7 +1042,7 @@ async def get_dashboard_detail(db: Session, project: DbProject):
     return project
 
 
-async def get_project_users(db: Session, project_id: int):
+async def get_project_users_plus_contributions(db: Connection, project_id: int):
     """Get the users and their contributions for a project.
 
     Args:
@@ -1103,57 +1054,21 @@ async def get_project_users(db: Session, project_id: int):
             the username and the number of contributions made by each user
             for the specified project.
     """
-    query = text("""
-        SELECT u.username, COUNT(th.user_id) as contributions
-        FROM users u
-        JOIN task_history th ON u.id = th.user_id
-        WHERE th.project_id = %(project_id)s
+    query = """
+        SELECT
+            u.username,
+            COUNT(th.user_id) as contributions
+        FROM
+            users u
+        JOIN
+            task_history th ON u.id = th.user_id
+        WHERE
+            th.project_id = %(project_id)s
         GROUP BY u.username
         ORDER BY contributions DESC
-    """)
-    result = db.execute(query, {"project_id": project_id}).fetchall()
-
-    return [
-        {"user": row.username, "contributions": row.contributions} for row in result
-    ]
-
-
-# TODO write me to count user contributions API
-# def count_user_contributions(db: Connection, user_id: int, project_id: int) -> int:
-#     """Count contributions for a specific user.
-
-#     Args:
-#         db (Connection): The database connection.
-#         user_id (int): The ID of the user.
-#         project_id (int): The ID of the project.
-
-#     Returns:
-#         int: The number of contributions made by the user for the specified
-#             project.
-#     """
-
-
-async def add_project_manager(
-    db: Session, user: db_models.DbUser, project: db_models.DbProject
-):
-    """Adds a user as an manager to the specified project.
-
-    Args:
-        db (Connection): The database connection.
-        user (int): The ID of the user to be added as an admin.
-        project (DbOrganisation): The Project model instance.
-
-    Returns:
-        Response: The HTTP response with status code 200.
     """
-    new_user_role = db_models.DbUserRoles(
-        user_id=user.id,
-        project_id=project.id,
-        role=ProjectRole.PROJECT_MANAGER,
-    )
-
-    # add data to the managers field in organisation model
-    project.roles.append(new_user_role)
-    db.commit()
-
-    return Response(status_code=HTTPStatus.OK)
+    async with db.cursor(
+        row_factory=class_row(project_schemas.ProjectUserContributions)
+    ) as cur:
+        await cur.execute(query, {"project_id": project_id})
+        return await cur.fetchall()

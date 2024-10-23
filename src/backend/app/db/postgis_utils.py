@@ -441,12 +441,16 @@ def parse_geojson_file_to_featcol(
     return featcol
 
 
-def featcol_keep_dominant_geom_type(
+def featcol_keep_single_geom_type(
     featcol: geojson.FeatureCollection,
+    geom_type: Optional[str] = None,
 ) -> geojson.FeatureCollection:
     """Strip out any geometries not matching the dominant geometry type."""
     features = featcol.get("features", [])
-    geom_type = get_featcol_dominant_geom_type(featcol)
+
+    if not geom_type:
+        # Default to keep the predominant geometry type
+        geom_type = get_featcol_dominant_geom_type(featcol)
 
     features_filtered = [
         feature
