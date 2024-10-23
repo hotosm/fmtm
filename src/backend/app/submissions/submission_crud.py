@@ -28,6 +28,7 @@ from typing import Optional
 from fastapi import HTTPException, Response
 from loguru import logger as log
 from psycopg import Connection
+from psycopg.rows import class_row
 
 # from osm_fieldwork.json2osm import json2osm
 from app.central.central_crud import (
@@ -35,7 +36,7 @@ from app.central.central_crud import (
 )
 from app.config import settings
 from app.db.enums import BackgroundTaskStatus, HTTPStatus
-from app.db.models import DbBackgroundTask, DbProject
+from app.db.models import DbBackgroundTask, DbProject, DbSubmissionPhoto
 from app.projects import project_deps, project_schemas
 from app.s3 import add_obj_to_bucket
 
@@ -271,18 +272,19 @@ async def upload_attachment_to_s3(
         s3_bucket = settings.S3_BUCKET_NAME
         s3_base_path = f"{project.organisation_id}/{project_id}"
 
-        # Fetch existing photos from the database
-        existing_photos = db.execute(
-            """
-                SELECT
-                    submission_id, s3_path
-                FROM
-                    submission_photos
-                WHERE
-                    project_id = %(project_id)s
-            """,
-            {"project_id": project_id},
-        ).fetchall()
+        async with db.cursor(row_factory=class_row(DbSubmissionPhoto)) as cur:
+            await cur.execute(
+                """
+                    SELECT
+                        submission_id, s3_path
+                    FROM
+                        submission_photos
+                    WHERE
+                        project_id = %(project_id)s;
+                """,
+                {"project_id": project_id},
+            )
+            existing_photos = await cur.fetchall()
 
         existing_photos_dict = {}
         for submission_id, s3_path in existing_photos:
@@ -340,19 +342,21 @@ async def upload_attachment_to_s3(
                     continue
 
         # Perform batch insert if there are new records to insert
-        if batch_insert_data:
-            sql = """
-            INSERT INTO submission_photos (
-                    project_id,
-                    task_id,
-                    submission_id,
-                    s3_path
-                )
-            VALUES (%(project_id)s, %(task_id)s, %(submission_id)s, %(s3_path)s)
-            """
-            db.execute(sql, batch_insert_data)
-
-        db.commit()
+        async with db.cursor() as cur:
+            await cur.execute(
+                """
+                    INSERT INTO submission_photos (
+                        project_id,
+                        task_id,
+                        submission_id,
+                        s3_path
+                    )
+                    VALUES (
+                        %(project_id)s, %(task_id)s,
+                        %(submission_id)s, %(s3_path)s);
+                """,
+                batch_insert_data,
+            )
         return True
 
     except Exception as e:

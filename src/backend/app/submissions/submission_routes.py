@@ -482,7 +482,7 @@ async def submission_photo(
                 """,
                 {"submission_id": submission_id},
             )
-            submission_photos = await cur.fetchone()
+            submission_photos = await cur.fetchall()
 
         s3_paths = (
             [photo.s3_path for photo in submission_photos] if submission_photos else []
