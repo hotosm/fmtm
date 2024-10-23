@@ -36,7 +36,7 @@ async def get_user(
 
     Args:
         id (str | int): The user ID (integer) or username (string) to check.
-        db (Connection): The SQLAlchemy database session.
+        db (Connection): The database connection.
 
     Returns:
         DbUser: The user if found.

@@ -29,7 +29,6 @@ import geojson_pydantic
 import requests
 from asgiref.sync import async_to_sync
 from fastapi import HTTPException
-from geoalchemy2.shape import to_shape
 from loguru import logger as log
 from osm_fieldwork.basemapper import create_basemap_file
 from osm_rawdata.postgres import PostgresClient
@@ -616,13 +615,14 @@ async def get_task_geometry(db: Connection, project_id: int):
     db_tasks = await DbTask.all(db, project_id)
     features = []
     for task in db_tasks:
-        geom = to_shape(task.outline)
-        # Convert the shapely geometry object to GeoJSON
-        geometry = geom.__geo_interface__
         properties = {
             "task_id": task.id,
         }
-        feature = {"type": "Feature", "geometry": geometry, "properties": properties}
+        feature = {
+            "type": "Feature",
+            "geometry": task.outline,
+            "properties": properties,
+        }
         features.append(feature)
 
     feature_collection = {"type": "FeatureCollection", "features": features}
@@ -663,7 +663,7 @@ async def get_project_features_geojson(
         data_extract_geojson = await flatgeobuf_to_featcol(db, response.content)
 
     if not data_extract_geojson:
-        msg = "Failed to convert flatgeobuf --> geojson for " f"project ({project_id})"
+        msg = f"Failed to convert flatgeobuf --> geojson for project ({project_id})"
         log.error(msg)
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,

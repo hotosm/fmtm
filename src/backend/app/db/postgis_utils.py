@@ -28,8 +28,6 @@ import geojson
 import geojson_pydantic
 import requests
 from fastapi import HTTPException
-from geoalchemy2 import WKBElement
-from geoalchemy2.shape import from_shape, to_shape
 from osm_fieldwork.data_models import data_models_path
 from osm_rawdata.postgres import PostgresClient
 from psycopg import Connection, ProgrammingError
@@ -51,29 +49,6 @@ def timestamp():
     Used to insert a current timestamp into Pydantic models.
     """
     return datetime.now(timezone.utc)
-
-
-def read_wkb(wkb: WKBElement):
-    """Load a WKBElement and return a shapely geometry."""
-    return to_shape(wkb)
-
-
-def write_wkb(shape):
-    """Load shapely geometry and output WKBElement."""
-    return from_shape(shape)
-
-
-def wkb_geom_to_feature(
-    geometry: WKBElement, properties: Optional[dict] = None, id: Optional[int] = None
-) -> dict:
-    """Convert SQLAlchemy geometry to GeoJSON Feature dict."""
-    return {
-        "type": "Feature",
-        "geometry": mapping(read_wkb(geometry)),
-        "properties": properties,
-        "id": id,
-        # bbox=shape.bounds,
-    }
 
 
 def polygon_to_centroid(

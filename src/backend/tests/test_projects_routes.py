@@ -27,7 +27,6 @@ from uuid import uuid4
 import pytest
 import requests
 from fastapi import HTTPException
-from geoalchemy2.elements import WKBElement
 from loguru import logger as log
 from shapely import Polygon
 
@@ -250,11 +249,9 @@ async def test_convert_to_app_project():
         ]
     )
 
-    # Get the WKB representation of the Polygon
-    wkb_outline = WKBElement(polygon.wkb, srid=4326)
     mock_db_project = db_models.DbProject(
         id=1,
-        outline=wkb_outline,
+        outline=polygon.__geo_interface__,
     )
 
     result = await project_crud.convert_to_app_project(mock_db_project)

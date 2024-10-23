@@ -18,7 +18,6 @@
 """Configuration and fixtures for PyTest."""
 
 import json
-import logging
 import os
 from io import BytesIO
 from pathlib import Path
@@ -31,15 +30,14 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from geojson_pydantic import Polygon
 from loguru import logger as log
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from psycopg import Connection
 
 from app.auth.auth_routes import get_or_create_user
 from app.auth.auth_schemas import AuthUser, FMTMUser
 from app.central import central_crud, central_schemas
 from app.central.central_schemas import ODKCentralDecrypted
 from app.config import encrypt_value, settings
-from app.db.database import Base, get_db
+from app.db.database import get_conn
 from app.db.db_models import DbOrganisation, DbTaskHistory
 from app.db.enums import TaskStatus, UserRole
 from app.main import get_application
@@ -48,10 +46,6 @@ from app.projects.project_schemas import ProjectIn
 from app.users.user_deps import get_user
 from tests.test_data import test_data_path
 
-engine = create_engine(settings.FMTM_DB_URL.unicode_string())
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base.metadata.create_all(bind=engine)
-
 odk_central_url = os.getenv("ODK_CENTRAL_URL")
 odk_central_user = os.getenv("ODK_CENTRAL_USER")
 odk_central_password = encrypt_value(os.getenv("ODK_CENTRAL_PASSWD", ""))
@@ -59,9 +53,9 @@ odk_central_password = encrypt_value(os.getenv("ODK_CENTRAL_PASSWD", ""))
 
 def pytest_configure(config):
     """Configure pytest runs."""
-    # Stop sqlalchemy logs
-    sqlalchemy_log = logging.getLogger("sqlalchemy")
-    sqlalchemy_log.propagate = False
+    # Example of stopping sqlalchemy logs
+    # sqlalchemy_log = logging.getLogger("sqlalchemy")
+    # sqlalchemy_log.propagate = False
 
 
 @pytest.fixture(autouse=True)
@@ -70,28 +64,13 @@ def app() -> Generator[FastAPI, Any, None]:
     yield get_application()
 
 
-@pytest.fixture(scope="session")
-def db_engine():
-    """The SQLAlchemy database engine to init."""
-    engine = create_engine(settings.FMTM_DB_URL.unicode_string())
-    yield engine
-
-
 @pytest.fixture(scope="function")
 def db(db_engine):
-    """Database session using db_engine."""
-    connection = db_engine.connect()
-
-    # begin a non-ORM transaction
-    connection.begin()
-
-    # bind an individual Session to the connection
-    db = TestingSessionLocal(bind=connection)
-
-    yield db
-
-    db.rollback()
-    connection.close()
+    """The psycopg database connection."""
+    db_conn = Connection(settings.FMTM_DB_URL.unicode_string())
+    db_conn.connect()
+    yield db_conn
+    db_conn.close()
 
 
 @pytest.fixture(scope="function")
@@ -361,7 +340,7 @@ def project_data():
 @pytest.fixture(scope="function")
 def client(app, db):
     """The FastAPI test server."""
-    app.dependency_overrides[get_db] = lambda: db
+    app.dependency_overrides[get_conn] = lambda: db
 
     with TestClient(app) as c:
         yield c

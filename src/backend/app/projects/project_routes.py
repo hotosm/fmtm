@@ -39,7 +39,7 @@ from fastapi import (
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fmtm_splitter.splitter import split_by_sql, split_by_square
-from geojson_pydantic import Feature, FeatureCollection
+from geojson_pydantic import FeatureCollection
 from loguru import logger as log
 from osm_fieldwork.data_models import data_models_path
 from osm_fieldwork.make_data_extract import getChoices
@@ -68,7 +68,6 @@ from app.db.postgis_utils import (
     merge_polygons,
     parse_geojson_file_to_featcol,
     split_geojson_by_task_areas,
-    wkb_geom_to_feature,
 )
 from app.organisations import organisation_deps
 from app.projects import project_crud, project_deps, project_schemas
@@ -904,9 +903,9 @@ async def download_project_boundary(
 ) -> StreamingResponse:
     """Downloads the boundary of a project as a GeoJSON file."""
     project = project_user.get("project")
-    geojson = wkb_geom_to_feature(project.outline, id=project.id)
+    geojson = json.dumps(project.outline).encode("utf-8")
     return StreamingResponse(
-        BytesIO(json.dumps(geojson).encode("utf-8")),
+        BytesIO(geojson),
         headers={
             "Content-Disposition": (f"attachment; filename={project.slug}.geojson"),
             "Content-Type": "application/media",
@@ -1006,25 +1005,6 @@ async def convert_fgb_to_geojson(
     }
 
     return Response(content=json.dumps(data_extract_geojson), headers=headers)
-
-
-@router.get("/centroid/")
-async def project_centroid(
-    project_user: Annotated[ProjectUserDict, Depends(mapper)],
-) -> Feature:
-    """Get a centroid of each projects.
-
-    Parameters:
-        project_id (int): The ID of the project.
-        db (Connection): The database connection.
-
-    Returns:
-        list[tuple[int, str]]: A list of tuples containing the task ID and
-            the centroid as a string.
-    """
-    project = project_user.get("project")
-    centroid = project.centroid
-    return wkb_geom_to_feature(centroid)
 
 
 @router.get(

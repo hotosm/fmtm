@@ -162,9 +162,6 @@ def get_logger():
     for logger_name in logger_name_list:
         logging.getLogger(logger_name).setLevel(settings.LOG_LEVEL)
         logging.getLogger(logger_name).handlers = []
-        if logger_name == "sqlalchemy":
-            # Don't hook sqlalchemy, very verbose
-            continue
         if logger_name == "urllib3":
             # Don't hook urllib3, called on each OTEL trace
             continue

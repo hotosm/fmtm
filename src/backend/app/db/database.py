@@ -24,13 +24,6 @@ from psycopg_pool import AsyncConnectionPool
 
 from app.config import settings
 
-# TODO SQL refactor all usage of get_db
-
-
-async def get_db():
-    """NOTE SQL stub delete me."""
-    pass
-
 
 def get_db_connection_pool() -> AsyncConnectionPool:
     """Get the connection pool for psycopg.
