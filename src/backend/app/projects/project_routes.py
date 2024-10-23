@@ -51,7 +51,6 @@ from app.auth.osm import login_required
 from app.auth.roles import mapper, org_admin, project_manager
 from app.central import central_crud, central_deps, central_schemas
 from app.config import settings
-from app.db import db_models
 from app.db.database import db_conn
 from app.db.enums import (
     TILES_FORMATS,
@@ -155,7 +154,7 @@ async def search_project(
     "/{project_id}/entities", response_model=central_schemas.EntityFeatureCollection
 )
 async def get_odk_entities_geojson(
-    project: Annotated[db_models.DbProject, Depends(project_deps.get_project)],
+    project: Annotated[DbProject, Depends(project_deps.get_project)],
     db: Annotated[Connection, Depends(db_conn)],
     minimal: bool = False,
 ):
@@ -177,7 +176,7 @@ async def get_odk_entities_geojson(
     response_model=list[central_schemas.EntityMappingStatus],
 )
 async def get_odk_entities_mapping_statuses(
-    project: Annotated[db_models.DbProject, Depends(project_deps.get_project)],
+    project: Annotated[DbProject, Depends(project_deps.get_project)],
     db: Annotated[Connection, Depends(db_conn)],
 ):
     """Get the ODK entities mapping statuses, i.e. in progress or complete."""
@@ -192,7 +191,7 @@ async def get_odk_entities_mapping_statuses(
     response_model=list[central_schemas.EntityOsmID],
 )
 async def get_odk_entities_osm_ids(
-    project: Annotated[db_models.DbProject, Depends(project_deps.get_project)],
+    project: Annotated[DbProject, Depends(project_deps.get_project)],
     db: Annotated[Connection, Depends(db_conn)],
 ):
     """Get the ODK entities linked OSM IDs.
@@ -213,7 +212,7 @@ async def get_odk_entities_osm_ids(
     response_model=list[central_schemas.EntityTaskID],
 )
 async def get_odk_entities_task_ids(
-    project: Annotated[db_models.DbProject, Depends(project_deps.get_project)],
+    project: Annotated[DbProject, Depends(project_deps.get_project)],
     db: Annotated[Connection, Depends(db_conn)],
 ):
     """Get the ODK entities linked FMTM Task IDs."""
@@ -230,7 +229,7 @@ async def get_odk_entities_task_ids(
 )
 async def get_odk_entity_mapping_status(
     entity_id: str,
-    project: Annotated[db_models.DbProject, Depends(project_deps.get_project)],
+    project: Annotated[DbProject, Depends(project_deps.get_project)],
     db: Annotated[Connection, Depends(db_conn)],
 ):
     """Get the ODK entity mapping status, i.e. in progress or complete."""
@@ -247,7 +246,7 @@ async def get_odk_entity_mapping_status(
 )
 async def set_odk_entities_mapping_status(
     entity_details: central_schemas.EntityMappingStatusIn,
-    project: Annotated[db_models.DbProject, Depends(project_deps.get_project)],
+    project: Annotated[DbProject, Depends(project_deps.get_project)],
     db: Annotated[Connection, Depends(db_conn)],
 ):
     """Set the ODK entities mapping status, i.e. in progress or complete.
@@ -392,7 +391,7 @@ async def read_project(
 @router.delete("/{project_id}")
 async def delete_project(
     db: Annotated[Connection, Depends(db_conn)],
-    project: Annotated[db_models.DbProject, Depends(project_deps.get_project)],
+    project: Annotated[DbProject, Depends(project_deps.get_project)],
     org_user_dict: Annotated[OrgUserDict, Depends(org_admin)],
 ):
     """Delete a project from both ODK Central and the local database."""

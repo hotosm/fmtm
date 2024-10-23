@@ -37,7 +37,6 @@ from psycopg.rows import class_row
 
 from app.central import central_crud, central_schemas
 from app.config import settings
-from app.db import db_models
 from app.db.enums import BackgroundTaskStatus, HTTPStatus, XLSFormType
 from app.db.models import DbBackgroundTask, DbBasemap, DbProject, DbTask
 from app.db.postgis_utils import (
@@ -631,7 +630,7 @@ async def get_task_geometry(db: Connection, project_id: int):
 
 async def get_project_features_geojson(
     db: Connection,
-    db_project: db_models.DbProject,
+    db_project: DbProject,
     task_id: Optional[int] = None,
 ) -> geojson.FeatureCollection:
     """Get a geojson of all features for a task."""

@@ -34,7 +34,7 @@ from app.central import central_schemas
 from app.central.central_crud import create_odk_project
 from app.central.central_schemas import TaskStatus
 from app.config import encrypt_value, settings
-from app.db import db_models
+from app.db.models import DbProject
 from app.db.postgis_utils import check_crs
 from app.projects import project_crud
 from tests.test_data import test_data_path
@@ -249,7 +249,7 @@ async def test_convert_to_app_project():
         ]
     )
 
-    mock_db_project = db_models.DbProject(
+    mock_db_project = DbProject(
         id=1,
         outline=polygon.__geo_interface__,
     )
@@ -257,7 +257,7 @@ async def test_convert_to_app_project():
     result = await project_crud.convert_to_app_project(mock_db_project)
 
     assert result is not None
-    assert isinstance(result, db_models.DbProject)
+    assert isinstance(result, DbProject)
 
     assert result.outline is not None
 

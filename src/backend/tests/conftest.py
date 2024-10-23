@@ -30,16 +30,16 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from geojson_pydantic import Polygon
 from loguru import logger as log
-from psycopg import Connection
+from psycopg import connect
 
 from app.auth.auth_routes import get_or_create_user
 from app.auth.auth_schemas import AuthUser, FMTMUser
 from app.central import central_crud, central_schemas
 from app.central.central_schemas import ODKCentralDecrypted
 from app.config import encrypt_value, settings
-from app.db.database import get_conn
-from app.db.db_models import DbOrganisation, DbTaskHistory
+from app.db.database import db_conn
 from app.db.enums import TaskStatus, UserRole
+from app.db.models import DbOrganisation, DbTaskHistory
 from app.main import get_application
 from app.projects import project_crud
 from app.projects.project_schemas import ProjectIn
@@ -65,12 +65,13 @@ def app() -> Generator[FastAPI, Any, None]:
 
 
 @pytest.fixture(scope="function")
-def db(db_engine):
-    """The psycopg database connection."""
-    db_conn = Connection(settings.FMTM_DB_URL.unicode_string())
-    db_conn.connect()
-    yield db_conn
-    db_conn.close()
+def db():
+    """The psycopg database connection using psycopg3."""
+    db_conn = connect(settings.FMTM_DB_URL.unicode_string())
+    try:
+        yield db_conn
+    finally:
+        db_conn.close()
 
 
 @pytest.fixture(scope="function")
@@ -340,7 +341,7 @@ def project_data():
 @pytest.fixture(scope="function")
 def client(app, db):
     """The FastAPI test server."""
-    app.dependency_overrides[get_conn] = lambda: db
+    app.dependency_overrides[db_conn] = lambda: db
 
     with TestClient(app) as c:
         yield c
