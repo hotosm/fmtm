@@ -96,10 +96,8 @@ class ODKCentralDecrypted(BaseModel):
         # Decrypt odk central password from database
         if self.odk_central_password:
             if isinstance(self.odk_central_password, str):
-                password = self.odk_central_password
-            else:
-                password = self.odk_central_password
-            self.odk_central_password = decrypt_value(password)
+                encrypted_pass = self.odk_central_password
+                self.odk_central_password = decrypt_value(encrypted_pass)
 
     @field_validator("odk_central_url", mode="after")
     @classmethod

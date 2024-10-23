@@ -25,20 +25,18 @@ from random import getrandbits
 from typing import Optional, Union
 
 import geojson
+import geojson_pydantic
 import requests
 from fastapi import HTTPException
 from geoalchemy2 import WKBElement
 from geoalchemy2.shape import from_shape, to_shape
 from osm_fieldwork.data_models import data_models_path
 from osm_rawdata.postgres import PostgresClient
+from psycopg import Connection, ProgrammingError
+from psycopg.rows import class_row
 from shapely.geometry import mapping, shape
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
-from sqlalchemy import text
-from sqlalchemy.exc import ProgrammingError
-
-# TODO SQL replace all usage here
-from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.db.enums import XLSFormType
@@ -86,7 +84,7 @@ def polygon_to_centroid(
 
 
 async def featcol_to_flatgeobuf(
-    db: Session, geojson: geojson.FeatureCollection
+    db: Connection, geojson: geojson.FeatureCollection
 ) -> Optional[bytes]:
     """From a given FeatureCollection, return a memory flatgeobuf obj.
 
@@ -94,7 +92,7 @@ async def featcol_to_flatgeobuf(
     NOTE ogr2ogr would generate datetime, but parsing does not seem to work.
 
     Args:
-        db (Session): SQLAlchemy db session.
+        db (Connection): Database connection.
         geojson (geojson.FeatureCollection): a FeatureCollection object.
 
     Returns:
@@ -102,8 +100,7 @@ async def featcol_to_flatgeobuf(
     """
     geojson_with_props = add_required_geojson_properties(geojson)
 
-    sql = text(
-        """
+    sql = """
         DROP TABLE IF EXISTS temp_features CASCADE;
 
         -- Wrap geometries in GeometryCollection
@@ -134,44 +131,40 @@ async def featcol_to_flatgeobuf(
         SELECT ST_AsFlatGeobuf(geoms, true)
         FROM (SELECT * FROM temp_features) AS geoms;
     """
-    )
-
-    # Run the SQL
-    result = db.execute(sql, {"geojson": json.dumps(geojson_with_props)})
-    # Get a memoryview object, then extract to Bytes
-    flatgeobuf = result.first()
+    async with db.cursor() as cur:
+        await cur.execute(sql, {"geojson": json.dumps(geojson_with_props)})
+        # Get a memoryview object, then extract to Bytes
+        flatgeobuf = await cur.fetchone()
 
     if flatgeobuf:
-        return flatgeobuf[0].tobytes()
+        return bytes(flatgeobuf)
 
     # Nothing returned (either no features passed, or failed)
     return None
 
 
 async def flatgeobuf_to_featcol(
-    db: Session, flatgeobuf: bytes
+    db: Connection, flatgeobuf: bytes
 ) -> Optional[geojson.FeatureCollection]:
     """Converts FlatGeobuf data to GeoJSON.
 
     Extracts single geometries from wrapped GeometryCollection if used.
 
     Args:
-        db (Session): SQLAlchemy db session.
+        db (Connection): Database connection.
         flatgeobuf (bytes): FlatGeobuf data in bytes format.
 
     Returns:
         geojson.FeatureCollection: A FeatureCollection object.
     """
-    sql = text(
-        """
+    sql = """
         DROP TABLE IF EXISTS public.temp_fgb CASCADE;
 
         SELECT ST_FromFlatGeobufToTable('public', 'temp_fgb', :fgb_bytes);
 
-        SELECT jsonb_build_object(
-            'type', 'FeatureCollection',
-            'features', jsonb_agg(feature)
-        ) AS feature_collection
+        SELECT
+            'FeatureCollection' as type,
+            COALESCE(jsonb_agg(feature), '[]'::jsonb) AS features
         FROM (
             SELECT jsonb_build_object(
                 'type', 'Feature',
@@ -197,11 +190,13 @@ async def flatgeobuf_to_featcol(
             ) AS fgb_data
         ) AS features;
     """
-    )
 
     try:
-        result = db.execute(sql, {"fgb_bytes": flatgeobuf})
-        feature_collection = result.first()
+        async with db.cursor(
+            row_factory=class_row(geojson_pydantic.FeatureCollection)
+        ) as cur:
+            await cur.execute(sql, {"fgb_bytes": flatgeobuf})
+            featcol = await cur.fetchone()
     except ProgrammingError as e:
         log.error(e)
         log.error(
@@ -210,14 +205,12 @@ async def flatgeobuf_to_featcol(
         )
         return None
 
-    if feature_collection:
-        return geojson.loads(json.dumps(feature_collection[0]))
-
-    return None
+    if featcol:
+        return geojson.loads(json.dumps(featcol))
 
 
 async def split_geojson_by_task_areas(
-    db: Session,
+    db: Connection,
     featcol: geojson.FeatureCollection,
     project_id: int,
 ) -> Optional[dict[int, geojson.FeatureCollection]]:
@@ -227,15 +220,14 @@ async def split_geojson_by_task_areas(
     NOTE ST_Within used on polygon centroids to correctly capture the geoms per task.
 
     Args:
-        db (Session): SQLAlchemy db session.
+        db (Connection): Database connection.
         featcol (bytes): Data extract feature collection.
         project_id (int): The project ID for associated tasks.
 
     Returns:
         dict[int, geojson.FeatureCollection]: {task_id: FeatureCollection} mapping.
     """
-    sql = text(
-        """
+    sql = """
         -- Drop table if already exists
         DROP TABLE IF EXISTS temp_features CASCADE;
 
@@ -300,28 +292,27 @@ async def split_geojson_by_task_areas(
         GROUP BY
             tasks.project_task_index;
         """
-    )
 
     try:
-        result = db.execute(
-            sql,
-            {
-                "geojson_featcol": json.dumps(featcol),
-                "project_id": project_id,
-            },
-        )
-        feature_collections = result.all()
+        async with db.cursor() as cur:
+            await cur.execute(
+                sql,
+                {
+                    "geojson_featcol": json.dumps(featcol),
+                    "project_id": project_id,
+                },
+            )
+            featcol = await cur.fetchall()
 
     except ProgrammingError as e:
         log.error(e)
         log.error("Attempted geojson task splitting failed")
         return None
 
-    if feature_collections and len(feature_collections[0]) > 1:
+    if featcol and len(featcol[0]) > 1:
         # NOTE the feature collections are nested in a tuple, first remove
         task_geojson_dict = {
-            record[0]: geojson.loads(json.dumps(record[1]))
-            for record in feature_collections
+            record[0]: geojson.loads(json.dumps(record[1])) for record in featcol
         }
         return task_geojson_dict
 

@@ -49,6 +49,7 @@ from app.auth.auth_schemas import AuthUser, OrgUserDict, ProjectUserDict
 from app.auth.osm import login_required
 from app.auth.roles import mapper, org_admin, project_manager
 from app.central import central_crud, central_deps, central_schemas
+from app.config import settings
 from app.db import db_models
 from app.db.database import db_conn
 from app.db.enums import (
@@ -68,6 +69,7 @@ from app.db.postgis_utils import (
 )
 from app.organisations import organisation_deps
 from app.projects import project_crud, project_deps, project_schemas
+from app.s3 import delete_all_objs_under_prefix
 
 router = APIRouter(
     prefix="/projects",
@@ -161,9 +163,8 @@ async def get_odk_entities_geojson(
     Rendering multiple GeoJSONs if inefficient.
     This is done by the flatgeobuf by filtering the task area bbox.
     """
-    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
     return await central_crud.get_entities_geojson(
-        odk_credentials,
+        project.odk_credentials,
         project.odkid,
         minimal=minimal,
     )
@@ -178,9 +179,8 @@ async def get_odk_entities_mapping_statuses(
     db: Annotated[Connection, Depends(db_conn)],
 ):
     """Get the ODK entities mapping statuses, i.e. in progress or complete."""
-    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
     return await central_crud.get_entities_data(
-        odk_credentials,
+        project.odk_credentials,
         project.odkid,
     )
 
@@ -199,9 +199,8 @@ async def get_odk_entities_osm_ids(
     when generated via raw-data-api.
     We need to link Entity UUIDs to OSM/Feature IDs.
     """
-    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
     return await central_crud.get_entities_data(
-        odk_credentials,
+        project.odk_credentials,
         project.odkid,
         fields="osm_id",
     )
@@ -216,9 +215,8 @@ async def get_odk_entities_task_ids(
     db: Annotated[Connection, Depends(db_conn)],
 ):
     """Get the ODK entities linked FMTM Task IDs."""
-    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
     return await central_crud.get_entities_data(
-        odk_credentials,
+        project.odk_credentials,
         project.odkid,
         fields="task_id",
     )
@@ -234,9 +232,8 @@ async def get_odk_entity_mapping_status(
     db: Annotated[Connection, Depends(db_conn)],
 ):
     """Get the ODK entity mapping status, i.e. in progress or complete."""
-    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
     return await central_crud.get_entity_mapping_status(
-        odk_credentials,
+        project.odk_credentials,
         project.odkid,
         entity_id,
     )
@@ -260,9 +257,8 @@ async def set_odk_entities_mapping_status(
         "status": 0
     }
     """
-    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
     return await central_crud.update_entity_mapping_status(
-        odk_credentials,
+        project.odk_credentials,
         project.odkid,
         entity_details.entity_id,
         entity_details.label,
@@ -388,11 +384,10 @@ async def generate_project_basemap(
 @router.get("/{id}", response_model=project_schemas.ProjectOut)
 async def read_project(
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
-    # project_id: int,
-    # user = Depends(login_required),
-    # db: Connection = Depends(database.db_conn),
 ):
     """Get a specific project by ID."""
+    log.warning(project_user.get("project"))
+    log.warning(project_user.get("project").odk_credentials)
     return project_user.get("project")
 
 
@@ -407,13 +402,15 @@ async def delete_project(
         f"User {org_user_dict.get('user').username} attempting "
         f"deletion of project {project.id}"
     )
-    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
     # Delete ODK Central project
-    await central_crud.delete_odk_project(project.odkid, odk_credentials)
+    await central_crud.delete_odk_project(project.odkid, project.odk_credentials)
     # Delete S3 resources
+    await delete_all_objs_under_prefix(
+        settings.S3_BUCKET_NAME, f"/{project.organisation_id}/{project.id}/"
+    )
     await project_crud.delete_fmtm_s3_objects(project)
     # Delete FMTM project
-    await project_crud.delete_fmtm_project(db, project.id)
+    await DbProject.delete(db, project.id)
 
     log.info(f"Deletion of project {project.id} successful")
     return Response(status_code=HTTPStatus.NO_CONTENT)
@@ -697,7 +694,7 @@ async def add_additional_entity_list(
     project = project_user_dict.get("project")
     project_id = project.id
     project_odk_id = project.odkid
-    odk_credentials = await project_deps.get_odk_credentials(db, project_id)
+    project_odk_creds = project.odk_credentials
     # NOTE the Entity name is extracted from the filename (without extension)
     entity_name = Path(geojson.filename).stem
 
@@ -710,7 +707,7 @@ async def add_additional_entity_list(
     )
 
     await central_crud.create_entity_list(
-        odk_credentials,
+        project_odk_creds,
         project_odk_id,
         dataset_name=entity_name,
         entities_list=entities_list,
@@ -736,7 +733,7 @@ async def get_categories(current_user: Annotated[AuthUser, Depends(login_require
     return categories
 
 
-@router.post("/preview-split-by-square/")
+@router.post("/preview-split-by-square/", response_model=FeatureCollection)
 async def preview_split_by_square(
     project_geojson: UploadFile = File(...),
     extract_geojson: Optional[UploadFile] = File(None),
@@ -908,15 +905,13 @@ async def update_project_form(
     # with open(xlsform_path, "rb") as f:
     #     new_xform_data = BytesIO(f.read())
 
-    # Get ODK Central credentials for project
-    odk_creds = await project_deps.get_odk_credentials(db, project.id)
     # Update ODK Central form data
     await central_crud.update_project_xform(
         xform_id,
         project.odkid,
         xlsform,
         category,
-        odk_creds,
+        project.odk_credentials,
     )
 
     sql = """
@@ -1140,7 +1135,8 @@ async def create_project(
     )
 
     # Must decrypt ODK password & connect to ODK Central before proj created
-    # cannot use get_odk_credentials helper as no project id yet
+    # cannot use project.odk_credentials helper as no project set yet
+    # FIXME this can be updated once we have incremental project creation
     if project_info.odk_central_url:
         odk_creds_decrypted = central_schemas.ODKCentralDecrypted(
             odk_central_url=project_info.odk_central_url,

@@ -20,14 +20,10 @@
 
 from typing import Annotated
 
-from async_lru import alru_cache
 from fastapi import Depends
 from fastapi.exceptions import HTTPException
-from loguru import logger as log
 from psycopg import Connection
-from psycopg.rows import class_row
 
-from app.central import central_schemas
 from app.db.database import db_conn
 from app.db.enums import HTTPStatus
 from app.db.models import DbProject
@@ -65,42 +61,4 @@ async def check_project_dup_name(db: Connection, name: str):
         raise HTTPException(
             status_code=HTTPStatus.CONFLICT,
             detail=f"Project with name '{name}' already exists.",
-        )
-
-
-@alru_cache(maxsize=32)
-async def get_odk_credentials(
-    db: Connection,
-    project_id: int,
-) -> central_schemas.ODKCentralDecrypted:
-    """Get ODK credentials of a project, or default organization credentials."""
-    sql = """
-    SELECT
-        COALESCE(
-            NULLIF(projects.odk_central_url, ''),
-            organisations.odk_central_url)
-        AS odk_central_url,
-        COALESCE(
-            NULLIF(projects.odk_central_user, ''),
-            organisations.odk_central_user)
-        AS odk_central_user,
-        COALESCE(
-            NULLIF(projects.odk_central_password, ''),
-            organisations.odk_central_password
-        ) AS odk_central_password
-    FROM
-        projects
-    LEFT JOIN
-        organisations ON projects.organisation_id = organisations.id
-    WHERE
-        projects.id = %(project_id)s
-    """
-    async with db.cursor(
-        row_factory=class_row(central_schemas.ODKCentralDecrypted)
-    ) as cur:
-        await cur.execute(sql, {"project_id": project_id})
-        creds = await cur.fetchone()
-        log.debug(
-            f"Retrieved ODK creds for project ({project_id}): "
-            f"{creds.odk_central_url} | {creds.odk_central_user}"
         )

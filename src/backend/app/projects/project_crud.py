@@ -39,7 +39,7 @@ from osm_rawdata.postgres import PostgresClient
 from psycopg import Connection
 from psycopg.rows import class_row
 from shapely.geometry import shape
-from sqlalchemy import func, text
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.central import central_crud, central_schemas
@@ -58,7 +58,7 @@ from app.db.postgis_utils import (
     split_geojson_by_task_areas,
 )
 from app.projects import project_deps, project_schemas
-from app.s3 import add_obj_to_bucket, delete_all_objs_under_prefix
+from app.s3 import add_obj_to_bucket
 
 TILESDIR = "/opt/tiles"
 
@@ -109,7 +109,7 @@ async def get_projects_featcol(
                 FROM projects p
                 WHERE p.visibility = 'PUBLIC'
                 {bbox_condition}
-            ) features;
+            ) AS features;
         """
 
     async with db.cursor(
@@ -128,37 +128,6 @@ async def get_projects_featcol(
         )
 
     return featcol
-
-
-async def delete_fmtm_project(db: Session, project_id: int) -> None:
-    """Delete a FMTM project by id."""
-    try:
-        sql = text("""
-            DELETE FROM background_tasks WHERE project_id = :project_id;
-            DELETE FROM mbtiles_path WHERE project_id = :project_id;
-            DELETE FROM user_roles WHERE project_id = :project_id;
-            DELETE FROM task_history WHERE project_id = :project_id;
-            DELETE FROM tasks WHERE project_id = :project_id;
-            DELETE FROM projects WHERE id = :project_id;
-        """)
-        db.execute(sql, {"project_id": project_id})
-        db.commit()
-        log.info(f"Deleted project with ID: {project_id}")
-    except Exception as e:
-        log.exception(e)
-        raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=str(e)) from e
-
-
-async def delete_fmtm_s3_objects(db_project: db_models.DbProject) -> None:
-    """Delete objects on S3 for an FMTM project."""
-    project_id = db_project.id
-    org_id = db_project.organisation_id
-    project_s3_path = f"/{org_id}/{project_id}/"
-
-    delete_all_objs_under_prefix(
-        settings.S3_BUCKET_NAME,
-        project_s3_path,
-    )
 
 
 async def create_tasks_from_geojson(
@@ -222,12 +191,10 @@ async def preview_split_by_square(
     if len(boundary["features"]) == 0:
         boundary = merge_polygons(boundary)
 
-    return await run_in_threadpool(
-        lambda: split_by_square(
-            boundary,
-            osm_extract=extract_geojson,
-            meters=meters,
-        )
+    return await split_by_square(
+        boundary,
+        osm_extract=extract_geojson,
+        meters=meters,
     )
 
 
@@ -669,7 +636,6 @@ async def generate_project_files(
     try:
         project = await project_deps.get_project_by_id(db, project_id)
         log.info(f"Starting generate_project_files for project {project_id}")
-        odk_credentials = await project_deps.get_odk_credentials(db, project_id)
 
         # Extract data extract from flatgeobuf
         log.debug("Getting data extract geojson from flatgeobuf")
@@ -694,11 +660,12 @@ async def generate_project_files(
         project_odk_id = project.odkid
         project_xlsform = project.xlsform_content
         project_odk_form_id = project.odk_form_id
+        project_odk_creds = project.odk_credentials
 
         odk_token = await generate_odk_central_project_content(
             project_odk_id,
             project_odk_form_id,
-            odk_credentials,
+            project_odk_creds,
             BytesIO(project_xlsform),
             task_extract_dict,
         )
@@ -1103,10 +1070,9 @@ async def get_paginated_projects(
     return {"results": projects, "pagination": pagination}
 
 
-async def get_dashboard_detail(db: Session, project: db_models.DbProject):
+async def get_dashboard_detail(db: Session, project: DbProject):
     """Get project details for project dashboard."""
-    odk_central = await project_deps.get_odk_credentials(db, project.id)
-    xform = central_crud.get_odk_form(odk_central)
+    xform = central_crud.get_odk_form(project.odk_credentials)
 
     submission_meta_data = xform.getFullDetails(project.odkid, project.odk_form_id)
     project.total_submission = submission_meta_data.get("submissions", 0)
@@ -1144,7 +1110,7 @@ async def get_project_users(db: Session, project_id: int):
         SELECT u.username, COUNT(th.user_id) as contributions
         FROM users u
         JOIN task_history th ON u.id = th.user_id
-        WHERE th.project_id = :project_id
+        WHERE th.project_id = %(project_id)s
         GROUP BY u.username
         ORDER BY contributions DESC
     """)
@@ -1155,28 +1121,19 @@ async def get_project_users(db: Session, project_id: int):
     ]
 
 
-def count_user_contributions(db: Session, user_id: int, project_id: int) -> int:
-    """Count contributions for a specific user.
+# TODO write me to count user contributions API
+# def count_user_contributions(db: Connection, user_id: int, project_id: int) -> int:
+#     """Count contributions for a specific user.
 
-    Args:
-        db (Connection): The database connection.
-        user_id (int): The ID of the user.
-        project_id (int): The ID of the project.
+#     Args:
+#         db (Connection): The database connection.
+#         user_id (int): The ID of the user.
+#         project_id (int): The ID of the project.
 
-    Returns:
-        int: The number of contributions made by the user for the specified
-            project.
-    """
-    contributions_count = (
-        db.query(func.count(db_models.DbTaskHistory.user_id))
-        .filter(
-            db_models.DbTaskHistory.user_id == user_id,
-            db_models.DbTaskHistory.project_id == project_id,
-        )
-        .scalar()
-    )
-
-    return contributions_count
+#     Returns:
+#         int: The number of contributions made by the user for the specified
+#             project.
+#     """
 
 
 async def add_project_manager(

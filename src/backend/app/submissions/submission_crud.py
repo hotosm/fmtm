@@ -42,7 +42,7 @@ from app.central.central_crud import (
 from app.config import settings
 from app.db import db_models
 from app.db.enums import BackgroundTaskStatus, HTTPStatus
-from app.db.models import DbBackgroundTask
+from app.db.models import DbBackgroundTask, DbProject
 from app.projects import project_crud, project_deps, project_schemas
 from app.s3 import add_obj_to_bucket, get_obj_from_bucket
 
@@ -137,12 +137,8 @@ async def gather_all_submission_csvs(db: Session, project: db_models.DbProject):
     Generate a single zip with all submissions.
     """
     log.info(f"Downloading all CSV submissions for project {project.id}")
-
-    odkid = project.odkid
-
-    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
-    xform = get_odk_form(odk_credentials)
-    file = xform.getSubmissionMedia(odkid, project.odk_form_id)
+    xform = get_odk_form(project.odk_credentials)
+    file = xform.getSubmissionMedia(project.odkid, project.odk_form_id)
     return file.content
 
 
@@ -155,11 +151,7 @@ def update_submission_in_s3(
         # Get Project
         get_project_sync = async_to_sync(project_crud.get_project)
         project = get_project_sync(db, project_id)
-
-        # Gather metadata
-        odk_sync = async_to_sync(project_deps.get_odk_credentials)
-        odk_credentials = odk_sync(db, project_id)
-        odk_forms = list_odk_xforms(project.odkid, odk_credentials, True)
+        odk_forms = list_odk_xforms(project.odkid, project.odk_credentials, True)
 
         if not odk_forms:
             msg = f"No odk forms returned for project ({project_id})"
@@ -310,13 +302,10 @@ async def download_submission_in_json(db: Session, project: db_models.DbProject)
     return Response(content=json_bytes.getvalue(), headers=headers)
 
 
-async def get_submission_count_of_a_project(db: Session, project: db_models.DbProject):
+async def get_submission_count_of_a_project(db: Session, project: DbProject):
     """Return the total number of submissions made for a project."""
-    # ODK Credentials
-    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
-
     # Get ODK Form with odk credentials from the project.
-    xform = get_odk_form(odk_credentials)
+    xform = get_odk_form(project.odk_credentials)
 
     data = xform.listSubmissions(project.odkid, project.odk_form_id, {})
     return len(data["value"])
@@ -401,9 +390,7 @@ async def get_submission_by_project(
         ValueError: If the submission file cannot be found.
 
     """
-    odk_central = await project_deps.get_odk_credentials(db, project.id)
-
-    xform = get_odk_form(odk_central)
+    xform = get_odk_form(project.odk_credentials)
     return xform.listSubmissions(project.odkid, project.odk_form_id, filters)
 
 
@@ -422,8 +409,7 @@ async def get_submission_detail(
     Returns:
         The details of the submission as a JSON object.
     """
-    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
-    odk_form = get_odk_form(odk_credentials)
+    odk_form = get_odk_form(project.odk_credentials)
 
     project_submissions = odk_form.getSubmissions(
         project.odkid, project.odk_form_id, submission_id
@@ -500,8 +486,7 @@ async def upload_attachment_to_s3(
     """
     try:
         project = await project_deps.get_project_by_id(db, project_id)
-        odk_central = await project_deps.get_odk_credentials(db, project_id)
-        xform = get_odk_form(odk_central)
+        xform = get_odk_form(project.odk_credentials)
         s3_bucket = settings.S3_BUCKET_NAME
         s3_base_path = f"{project.organisation_id}/{project_id}"
 

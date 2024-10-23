@@ -37,7 +37,7 @@ from app.central import central_crud
 from app.db import database, postgis_utils
 from app.db.enums import HTTPStatus, ReviewStateEnum
 from app.db.models import DbBackgroundTask, DbTask
-from app.projects import project_crud, project_deps, project_schemas
+from app.projects import project_crud, project_schemas
 from app.submissions import submission_crud, submission_schemas
 from app.tasks.task_deps import get_task
 
@@ -256,8 +256,7 @@ async def get_submission_form_fields(
         Any: The response from the submission form API.
     """
     project = project_user.get("project")
-    odk_credentials = await project_deps.get_odk_credentials(db, project.id)
-    odk_form = central_crud.get_odk_form(odk_credentials)
+    odk_form = central_crud.get_odk_form(project.odk_credentials)
     return odk_form.formFields(project.odkid, project.odk_form_id)
 
 
@@ -355,8 +354,7 @@ async def update_review_state(
     """Updates the review state of a project submission."""
     try:
         project = current_user.get("project")
-        odk_creds = await project_deps.get_odk_credentials(db, project.id)
-        odk_project = central_crud.get_odk_project(odk_creds)
+        odk_project = central_crud.get_odk_project(project.odk_credentials)
 
         response = odk_project.updateReviewState(
             project.odkid,

@@ -24,15 +24,17 @@ from SQL statements. Sometimes we only need a subset of the fields.
 import json
 from datetime import datetime
 from io import BytesIO
-from typing import TYPE_CHECKING, Optional, Self
+from typing import TYPE_CHECKING, Annotated, Optional, Self
 from uuid import UUID
 
 from fastapi import HTTPException, UploadFile
 from loguru import logger as log
 from psycopg import Connection
 from psycopg.rows import class_row
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ValidationInfo
+from pydantic.functional_validators import field_validator
 
+from app.central.central_schemas import ODKCentralDecrypted
 from app.config import settings
 from app.db.enums import (
     BackgroundTaskStatus,
@@ -49,7 +51,7 @@ from app.db.enums import (
     UserRole,
     XLSFormType,
 )
-from app.s3 import add_obj_to_bucket
+from app.s3 import add_obj_to_bucket, delete_all_objs_under_prefix
 
 # Avoid cyclical dependencies when only type checking
 if TYPE_CHECKING:
@@ -399,33 +401,39 @@ class DbOrganisation(BaseModel):
     async def delete(cls, db: Connection, org_id: int) -> bool:
         """Delete an organisation and its related data."""
         sql = """
-        WITH deleted_task_events AS (
-            DELETE FROM task_events
-            WHERE project_id IN (
-                SELECT id FROM projects WHERE organisation_id = %(org_id)s
+            WITH deleted_task_events AS (
+                DELETE FROM task_events
+                WHERE project_id IN (
+                    SELECT id FROM projects WHERE organisation_id = %(org_id)s
+                )
+                RETURNING project_id
+            ), deleted_tasks AS (
+                DELETE FROM tasks
+                WHERE project_id IN (
+                    SELECT id FROM projects WHERE organisation_id = %(org_id)s
+                )
+                RETURNING project_id
+            ), deleted_projects AS (
+                DELETE FROM projects
+                WHERE organisation_id = %(org_id)s
+                RETURNING organisation_id
+            ), deleted_org AS (
+                DELETE FROM organisations
+                WHERE id = %(org_id)s
+                RETURNING id
             )
-            RETURNING project_id
-        ), deleted_tasks AS (
-            DELETE FROM tasks
-            WHERE project_id IN (
-                SELECT id FROM projects WHERE organisation_id = %(org_id)s
-            )
-            RETURNING project_id
-        ), deleted_projects AS (
-            DELETE FROM projects
-            WHERE organisation_id = %(org_id)s
-            RETURNING organisation_id
-        ), deleted_org AS (
-            DELETE FROM organisations
-            WHERE id = %(org_id)s
-            RETURNING id
-        )
-        SELECT id FROM deleted_org;
+            SELECT id FROM deleted_org;
         """
 
         async with db.cursor() as cur:
             await cur.execute(sql, {"org_id": org_id})
-            return await cur.fetchone()
+            success = await cur.fetchone()
+
+        if success:
+            await delete_all_objs_under_prefix(
+                settings.S3_BUCKET_NAME,
+                f"/{org_id}/",
+            )
 
     @classmethod
     async def unapproved(cls, db: Connection) -> Optional[list[Self]]:
@@ -701,7 +709,28 @@ class DbProject(BaseModel):
     organisation_name: Optional[str] = None
     organisation_logo: Optional[str] = None
     centroid: Optional[dict] = None
-    bbox: Optional[str] = None
+    bbox: Optional[list[float]] = None
+    odk_credentials: Annotated[
+        Optional["ODKCentralDecrypted"],
+        Field(validate_default=True),
+    ] = None
+
+    @field_validator("odk_credentials", mode="before")
+    @classmethod
+    def set_odk_credentials_on_project(
+        cls,
+        value: None,
+        info: ValidationInfo,
+    ) -> Optional["ODKCentralDecrypted"]:
+        """Set the odk_credentials object on the project.
+
+        Defaults to organisation credentials if none are set.
+        """
+        return ODKCentralDecrypted(
+            odk_central_url=info.data.get("odk_central_url"),
+            odk_central_user=info.data.get("odk_central_user"),
+            odk_central_password=info.data.get("odk_central_password"),
+        )
 
     @classmethod
     async def one(cls, db: Connection, project_id: int) -> Self:
@@ -720,12 +749,21 @@ class DbProject(BaseModel):
                         action != 'COMMENT'
                     ORDER BY
                         task_id, action_date DESC
+                ),
+                project_bbox AS (
+                    SELECT ST_Envelope(p.outline) AS bbox
+                    FROM projects p
                 )
                 SELECT
                     p.*,
                     ST_AsGeoJSON(p.outline)::jsonb AS outline,
                     ST_AsGeoJSON(ST_Centroid(p.outline))::jsonb AS centroid,
-                    ST_Extent(p.outline)::text AS bbox,
+                    ARRAY[
+                        ST_XMin(project_bbox.bbox),
+                        ST_YMin(project_bbox.bbox),
+                        ST_XMax(project_bbox.bbox),
+                        ST_YMax(project_bbox.bbox)
+                    ] AS bbox,
                     JSON_BUILD_OBJECT(
                         'id', project_author.id,
                         'username', project_author.username,
@@ -733,6 +771,18 @@ class DbProject(BaseModel):
                     ) AS author,
                     project_org.name as organisation_name,
                     project_org.logo as organisation_logo,
+                    COALESCE(
+                        NULLIF(p.odk_central_url, ''),
+                        project_org.odk_central_url)
+                    AS odk_central_url,
+                    COALESCE(
+                        NULLIF(p.odk_central_user, ''),
+                        project_org.odk_central_user)
+                    AS odk_central_user,
+                    COALESCE(
+                        NULLIF(p.odk_central_password, ''),
+                        project_org.odk_central_password
+                    ) AS odk_central_password,
                     COALESCE(
                         JSON_AGG(
                             JSON_BUILD_OBJECT(
@@ -768,10 +818,12 @@ class DbProject(BaseModel):
                     latest_task_history latest_th ON t.id = latest_th.task_id
                 LEFT JOIN
                     users latest_user ON latest_th.user_id = latest_user.id
+                JOIN
+                    project_bbox ON project_bbox.bbox IS NOT NULL
                 WHERE
                     p.id = %(project_id)s
                 GROUP BY
-                    p.id, project_author.id, project_org.id;
+                    p.id, project_author.id, project_org.id, project_bbox.bbox;
             """
 
             await cur.execute(
@@ -950,6 +1002,22 @@ class DbProject(BaseModel):
 
         return updated_project
 
+    @classmethod
+    async def delete(cls, db: Connection, project_id: int) -> bool:
+        """Delete a project and its related data."""
+        sql = """
+            DELETE FROM background_tasks WHERE project_id = %(project_id)s;
+            DELETE FROM basemaps WHERE project_id = %(project_id)s;
+            DELETE FROM user_roles WHERE project_id = %(project_id)s;
+            DELETE FROM task_history WHERE project_id = %(project_id)s;
+            DELETE FROM tasks WHERE project_id = %(project_id)s;
+            DELETE FROM projects WHERE id = %(project_id)s;
+        """
+
+        async with db.cursor() as cur:
+            await cur.execute(sql, {"project_id": project_id})
+            await cur.fetchone()
+
 
 class DbBackgroundTask(BaseModel):
     """Table background_tasks.
@@ -1118,7 +1186,7 @@ class DbBasemap(BaseModel):
                 VALUES ({value_placeholders})
                 RETURNING *
             ),
-            project_outline AS (
+            project_bbox AS (
                 SELECT ST_Envelope(outline) AS bbox
                 FROM projects
                 WHERE id = (SELECT project_id FROM inserted_basemap)
@@ -1126,13 +1194,13 @@ class DbBasemap(BaseModel):
             SELECT
                 inserted_basemap.*,
                 ARRAY[
-                    ST_XMin(project_outline.bbox),
-                    ST_YMin(project_outline.bbox),
-                    ST_XMax(project_outline.bbox),
-                    ST_YMax(project_outline.bbox)
+                    ST_XMin(project_bbox.bbox),
+                    ST_YMin(project_bbox.bbox),
+                    ST_XMax(project_bbox.bbox),
+                    ST_YMax(project_bbox.bbox)
                 ] AS bbox
             FROM inserted_basemap
-            JOIN project_outline ON project_outline IS NOT NULL;
+            JOIN project_bbox ON project_bbox.bbox IS NOT NULL;
         """
 
         async with db.cursor(row_factory=class_row(cls)) as cur:

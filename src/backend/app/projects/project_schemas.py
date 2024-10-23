@@ -33,7 +33,7 @@ from pydantic import (
 from pydantic.functional_serializers import field_serializer
 from pydantic.functional_validators import field_validator, model_validator
 
-from app.central.central_schemas import ODKCentralIn
+from app.central.central_schemas import ODKCentralDecrypted, ODKCentralIn
 from app.config import decrypt_value, encrypt_value
 from app.db.enums import (
     BackgroundTaskStatus,
@@ -69,7 +69,7 @@ class ProjectInBase(DbProject):
     author: Annotated[Optional[dict], Field(exclude=True)] = None
     organisation_name: Annotated[Optional[str], Field(exclude=True)] = None
     organisation_logo: Annotated[Optional[str], Field(exclude=True)] = None
-    bbox: Annotated[Optional[list], Field(exclude=True)] = None
+    bbox: Annotated[Optional[list[float]], Field(exclude=True)] = None
 
     @field_validator("project_name_prefix", mode="after")
     @classmethod
@@ -178,23 +178,13 @@ class ProjectOut(DbProject):
     outline: Polygon
     # Parse as geojson_pydantic.Point (sometimes not present, e.g. during create)
     centroid: Optional[Point] = None
-    bbox: Optional[list[str]] = None
-
-    @field_validator("bbox", mode="before")
-    @classmethod
-    def bbox_string_to_list(cls, value: str) -> Optional[list[float]]:
-        """Parse PostGIS BOX2D format to BBOX list.
-
-        Converts to a list of floats.
-        Format: [xmin, ymin, xmax, ymax].
-        """
-        if value is None or isinstance(value, list):
-            return value
-        split_string = value[4:-1].replace(",", " ").split(" ")
-        try:
-            return [float(num) for num in split_string]
-        except Exception:
-            return []
+    bbox: Optional[list[float]] = None
+    # Ensure the ODK password is omitted
+    odk_central_password: Annotated[Optional[str], Field(exclude=True)] = None
+    odk_credentials: Annotated[
+        Optional[ODKCentralDecrypted],
+        Field(exclude=True),
+    ] = None
 
     @field_serializer("odk_token")
     def decrypt_token(self, value: str) -> Optional[str]:
