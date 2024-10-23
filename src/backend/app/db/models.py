@@ -789,8 +789,8 @@ class DbProject(BaseModel):
     visibility: Optional[ProjectVisibility] = None
     total_tasks: Optional[int] = None
     xform_category: Optional[str] = None
-    odk_form_id: Optional[str] = None  # TODO SQL need to update references to xform_id
-    xlsform_content: Optional[bytes] = None  # TODO SQL this was LargeBinary previously
+    odk_form_id: Optional[str] = None
+    xlsform_content: Optional[bytes] = None
     mapper_level: Optional[MappingLevel] = None
     priority: Optional[ProjectPriority] = None
     featured: Optional[bool] = None

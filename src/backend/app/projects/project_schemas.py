@@ -137,9 +137,9 @@ class ProjectInBase(DbProject):
         """
         if value is None:
             return None
-        # TODO SQL also handle geometry collection type here
+        # FIXME also handle geometry collection type here
         # geojson_pydantic.GeometryCollection
-        # TODO SQL update this to remove the Featcol parsing at some point
+        # FIXME update this to remove the Featcol parsing at some point
         featcol = geojson_to_featcol(value)
         merged = merge_polygons(featcol)
         return merged.get("features")[0].get("geometry")

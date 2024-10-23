@@ -566,7 +566,7 @@
 					<div class="w-full max-w-sm text-center">
 						<sl-button
 							class="primary"
-							href="odkcollect://form/{data.project.xform_id}{$selectedTaskId ? `?task_filter=${$selectedTaskId}` : ''}"
+							href="odkcollect://form/{data.project.odk_form_id}{$selectedTaskId ? `?task_filter=${$selectedTaskId}` : ''}"
 							><span class="font-barlow-medium text-base">Open ODK</span></sl-button
 						>
 					</div>

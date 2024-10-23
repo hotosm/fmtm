@@ -44,7 +44,7 @@ export interface ProjectData {
 	};
 	location_str: string;
 	xform_category: string;
-	xform_id: string;
+	odk_form_id: string;
 	data_extract_url: string;
 	odk_token: string;
 	organisation_id: number;
