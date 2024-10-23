@@ -31,6 +31,7 @@ from app.auth.roles import project_manager
 from app.central import central_crud
 from app.db.database import db_conn
 from app.db.models import DbProject
+from app.enums import HTTPStatus
 from app.projects.project_schemas import ProjectUpdate
 
 router = APIRouter(
@@ -105,4 +106,7 @@ async def refresh_appuser_token(
     except Exception as e:
         msg = f"failed to refresh the appuser token for project {project_id}"
         log.error(msg)
-        raise HTTPException(status_code=400, detail=msg) from e
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail=msg,
+        ) from e

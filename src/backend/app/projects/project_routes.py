@@ -675,7 +675,7 @@ async def generate_files(
     )
 
     return JSONResponse(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         content={"Message": f"{project.id}", "task_id": f"{background_task_id}"},
     )
 
@@ -748,7 +748,10 @@ async def preview_split_by_square(
     file_ext = file_name[1]
     allowed_extensions = [".geojson", ".json"]
     if file_ext not in allowed_extensions:
-        raise HTTPException(status_code=400, detail="Provide a valid .geojson file")
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST,
+            detail="Provide a valid .geojson file",
+        )
 
     # read entire file
     boundary_featcol = parse_geojson_file_to_featcol(await project_geojson.read())
@@ -796,7 +799,7 @@ async def get_data_extract(
         extract_config,
     )
 
-    return JSONResponse(status_code=200, content={"url": fgb_url})
+    return JSONResponse(status_code=HTTPStatus.OK, content={"url": fgb_url})
 
 
 @router.get("/data-extract-url/")
@@ -813,7 +816,7 @@ async def get_or_set_data_extract(
         url,
     )
 
-    return JSONResponse(status_code=200, content={"url": fgb_url})
+    return JSONResponse(status_code=HTTPStatus.OK, content={"url": fgb_url})
 
 
 @router.post("/upload-custom-extract/")
@@ -850,7 +853,7 @@ async def upload_custom_extract(
     allowed_extensions = [".geojson", ".json", ".fgb"]
     if file_ext not in allowed_extensions:
         raise HTTPException(
-            status_code=400, detail="Provide a valid .geojson or .fgb file"
+            HTTPStatus.BAD_REQUEST, detail="Provide a valid .geojson or .fgb file"
         )
 
     # read entire file
@@ -864,7 +867,7 @@ async def upload_custom_extract(
         fgb_url = await project_crud.upload_custom_geojson_extract(
             db, project_id, extract_data
         )
-    return JSONResponse(status_code=200, content={"url": fgb_url})
+    return JSONResponse(status_code=HTTPStatus.OK, content={"url": fgb_url})
 
 
 @router.get("/download-form/{project_id}/")

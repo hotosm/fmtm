@@ -62,15 +62,17 @@ def get_odk_project(odk_central: Optional[central_schemas.ODKCentralDecrypted] =
     except ValueError as e:
         log.error(e)
         raise HTTPException(
-            status_code=401,
-            detail="""
-            ODK credentials are invalid, or may have been updated. Please update them.
-            """,
+            status_code=HTTPStatus.UNAUTHORIZED,
+            detail=(
+                "ODK credentials are invalid, or may have been updated. "
+                "Please update them."
+            ),
         ) from e
     except Exception as e:
         log.exception(e)
         raise HTTPException(
-            status_code=500, detail=f"Error creating project on ODK Central: {e}"
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail=f"Error creating project on ODK Central: {e}",
         ) from e
 
     return project
@@ -88,7 +90,8 @@ def get_odk_form(odk_central: central_schemas.ODKCentralDecrypted):
     except Exception as e:
         log.error(e)
         raise HTTPException(
-            status_code=500, detail=f"Error creating project on ODK Central: {e}"
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail=f"Error creating project on ODK Central: {e}",
         ) from e
 
     return form
@@ -113,7 +116,8 @@ def get_odk_app_user(odk_central: Optional[central_schemas.ODKCentralDecrypted] 
     except Exception as e:
         log.error(e)
         raise HTTPException(
-            status_code=500, detail=f"Error creating project on ODK Central: {e}"
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail=f"Error creating project on ODK Central: {e}",
         ) from e
 
     return form
@@ -144,7 +148,7 @@ def create_odk_project(
         if isinstance(result, dict):
             if result.get("code") == 401.2:
                 raise HTTPException(
-                    status_code=500,
+                    HTTPStatus.INTERNAL_SERVER_ERROR,
                     detail="Could not authenticate to odk central.",
                 )
 
@@ -154,7 +158,8 @@ def create_odk_project(
     except Exception as e:
         log.error(e)
         raise HTTPException(
-            status_code=500, detail=f"Error creating project on ODK Central: {e}"
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail=f"Error creating project on ODK Central: {e}",
         ) from e
 
 
@@ -203,7 +208,8 @@ def create_odk_xform(
     except Exception as e:
         log.error(e)
         raise HTTPException(
-            status_code=500, detail={"message": "Connection failed to odk central"}
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail={"message": "Connection failed to odk central"},
         ) from e
 
     xform.createForm(odk_id, xform_data, publish=True)

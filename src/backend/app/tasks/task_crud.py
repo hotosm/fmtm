@@ -118,7 +118,8 @@ async def new_task_event(
 
     if not history_entry:
         raise HTTPException(
-            status_code=400, detail="Failed to create task history entry."
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail="Failed to create task history entry.",
         )
 
     return history_entry

@@ -66,7 +66,7 @@ async def login_url(osm_auth=Depends(init_osm_auth)):
     """
     login_url = osm_auth.login()
     log.debug(f"Login URL returned: {login_url}")
-    return JSONResponse(content=login_url, status_code=200)
+    return JSONResponse(content=login_url, status_code=HTTPStatus.OK)
 
 
 @router.get("/callback/")
@@ -264,7 +264,10 @@ async def refresh_token(
     try:
         refresh_token = extract_refresh_token_from_cookie(request)
         if not refresh_token:
-            raise HTTPException(status_code=401, detail="No refresh token provided")
+            raise HTTPException(
+                status_code=HTTPStatus.UNAUTHORIZED,
+                detail="No refresh token provided",
+            )
 
         token_data = verify_token(refresh_token)
         access_token = refresh_access_token(token_data)

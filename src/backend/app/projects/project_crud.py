@@ -427,9 +427,6 @@ async def upload_custom_extract_to_s3(
     project = await project_deps.get_project_by_id(db, project_id)
     log.debug(f"Uploading custom data extract for project: {project}")
 
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-
     fgb_obj = BytesIO(fgb_content)
     s3_fgb_path = f"{project.organisation_id}/{project_id}/custom_extract.fgb"
 
@@ -832,7 +829,7 @@ async def get_json_from_zip(zip, filename: str, error_detail: str):
     except Exception as e:
         log.exception(e)
         raise HTTPException(
-            status_code=400, detail=f"{error_detail} ----- Error: {e}"
+            HTTPStatus.BAD_REQUEST, detail=f"{error_detail} ----- Error: {e}"
         ) from e
 
 
@@ -844,7 +841,7 @@ async def get_shape_from_json_str(feature: str, error_detail: str):
     except Exception as e:
         log.exception(e)
         raise HTTPException(
-            status_code=400,
+            HTTPStatus.BAD_REQUEST,
             detail=f"{error_detail} ----- Error: {e} ---- Json: {feature}",
         ) from e
 

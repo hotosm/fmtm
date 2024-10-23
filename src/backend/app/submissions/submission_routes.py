@@ -364,7 +364,10 @@ async def update_review_state(
         )
         return response
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail=str(e),
+        ) from e
 
 
 @router.get("/download-submission-geojson")
@@ -439,7 +442,8 @@ async def conflate_geojson(
         raise e
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to process conflation: {str(e)}"
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process conflation: {str(e)}",
         ) from e
 
 

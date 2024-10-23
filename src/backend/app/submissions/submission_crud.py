@@ -98,7 +98,9 @@ from app.s3 import add_obj_to_bucket, get_obj_from_bucket
 #         ]
 
 #     if not submissions:
-#         raise HTTPException(status_code=404, detail="Submission not found")
+#         raise HTTPException(
+#              status_code=HTTPStatus.NOT_FOUND,
+#              detail="Submission not found")
 
 #     # JSON FILE PATH
 #     jsoninfile = "/tmp/json_infile.json"

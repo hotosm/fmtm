@@ -39,7 +39,7 @@ from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
 from app.config import settings
-from app.db.enums import XLSFormType
+from app.db.enums import HTTPStatus, XLSFormType
 
 log = logging.getLogger(__name__)
 API_URL = settings.RAW_DATA_API_URL
@@ -494,7 +494,10 @@ async def check_crs(input_geojson: Union[dict, geojson.FeatureCollection]):
         crs = input_geojson.get("crs", {}).get("properties", {}).get("name")
         if not is_valid_crs(crs):
             log.error(error_message)
-            raise HTTPException(status_code=400, detail=error_message)
+            raise HTTPException(
+                status_code=HTTPStatus.BAD_REQUEST,
+                detail=error_message,
+            )
         return
 
     if (input_geojson_type := input_geojson.get("type")) == "FeatureCollection":
@@ -519,7 +522,7 @@ async def check_crs(input_geojson: Union[dict, geojson.FeatureCollection]):
     )
     if not is_valid_coordinate(first_coordinate):
         log.error(error_message)
-        raise HTTPException(status_code=400, detail=error_message)
+        raise HTTPException(HTTPStatus.BAD_REQUEST, detail=error_message)
 
 
 def get_address_from_lat_lon(latitude, longitude):
@@ -741,7 +744,7 @@ def merge_polygons(
         return geojson.FeatureCollection([geojson.Feature(geometry=merged_geojson)])
     except Exception as e:
         raise HTTPException(
-            status_code=400,
+            HTTPStatus.BAD_REQUEST,
             detail=f"Couldn't merge the multipolygon to polygon: {str(e)}",
         ) from e
 
