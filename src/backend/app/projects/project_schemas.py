@@ -52,7 +52,7 @@ class ProjectInBase(DbProject):
     """Base model for project insert / update (validators)."""
 
     # Force running validation to set value
-    project_name_prefix: Annotated[
+    slug: Annotated[
         Optional[str],
         Field(validate_default=True),
     ] = None
@@ -75,14 +75,14 @@ class ProjectInBase(DbProject):
         Field(exclude=True, validate_default=True),
     ] = None
 
-    @field_validator("project_name_prefix", mode="after")
+    @field_validator("slug", mode="after")
     @classmethod
-    def set_project_name_prefix(
+    def set_project_slug(
         cls,
         value: Optional[str],
         info: FieldValidationInfo,
     ) -> str:
-        """Set the project name prefix attribute from the name.
+        """Set the slug attribute from the name.
 
         NOTE this is a bit of a hack.
         """
@@ -215,11 +215,11 @@ class ProjectSummary(BaseModel):
     """Project summaries."""
 
     id: int
+    name: str
     organisation_id: int
     priority: ProjectPriority
     hashtags: list[str]
 
-    title: Optional[str] = None
     location_str: Optional[str] = None
     description: Optional[str] = None
 
@@ -256,7 +256,7 @@ class PaginatedProjectSummaries(BaseModel):
 class ProjectDashboard(BaseModel):
     """Project details dashboard."""
 
-    project_name_prefix: str
+    slug: str
     organisation_name: str
     total_tasks: int
     created_at: datetime

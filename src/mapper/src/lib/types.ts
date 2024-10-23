@@ -1,10 +1,3 @@
-type ProjectInfo = {
-	name: string;
-	short_description: string;
-	description: string;
-	per_task_instructions: string;
-};
-
 type ProjectAuthor = {
 	username: string;
 	id: number;
@@ -15,7 +8,7 @@ export type ProjectTask = {
 	project_id: number;
 	project_task_index: number;
 	feature_count: number;
-	outline_geojson: {
+	outline: {
 		type: string;
 		geometry: {
 			type: string;
@@ -33,8 +26,11 @@ export type ProjectTask = {
 export interface ProjectData {
 	id: number;
 	odkid: number;
-	project_info: ProjectInfo;
-	outline_geojson: {
+	name: string;
+	short_description: string;
+	description: string;
+	per_task_instructions: string;
+	outline: {
 		type: string;
 		geometry: {
 			type: string;

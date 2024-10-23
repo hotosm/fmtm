@@ -77,12 +77,12 @@ const ProjectDetailsV2 = () => {
   const entityOsmMap = useAppSelector((state) => state?.project?.entityOsmMap);
 
   useEffect(() => {
-    if (state.projectInfo.title) {
-      document.title = `${state.projectInfo.title} - HOT Field Mapping Tasking Manager`;
+    if (state.projectInfo.name) {
+      document.title = `${state.projectInfo.name} - HOT Field Mapping Tasking Manager`;
     } else {
       document.title = 'HOT Field Mapping Tasking Manager';
     }
-  }, [state.projectInfo.title]);
+  }, [state.projectInfo.name]);
 
   //snackbar handle close function
   const handleClose = (event, reason) => {
@@ -134,9 +134,9 @@ const ProjectDetailsV2 = () => {
 
     const features = state.projectTaskBoundries[0]?.taskBoundries?.map((taskObj) => ({
       type: 'Feature',
-      geometry: { ...taskObj.outline_geojson.geometry },
+      geometry: { ...taskObj.outline.geometry },
       properties: {
-        ...taskObj.outline_geojson.properties,
+        ...taskObj.outline.properties,
         locked_by_user: taskObj?.locked_by_uid,
       },
       id: `${taskObj.id}_${taskObj.task_status}`,
@@ -331,9 +331,9 @@ const ProjectDetailsV2 = () => {
               <div className="fmtm-relative">
                 <p
                   className="fmtm-text-xl fmtm-font-archivo fmtm-line-clamp-3 fmtm-mr-4"
-                  title={state.projectInfo.title}
+                  title={state.projectInfo.name}
                 >
-                  {state.projectInfo.title}
+                  {state.projectInfo.name}
                 </p>
               </div>
             )}
@@ -424,7 +424,7 @@ const ProjectDetailsV2 = () => {
                       : '-fmtm-left-[60rem] fmtm-bottom-0 lg:fmtm-top-0'
                   }`}
                 >
-                  <ProjectOptions projectName={state?.projectInfo?.title} />
+                  <ProjectOptions projectName={state?.projectInfo?.name} />
                 </div>
               </div>
             </div>
@@ -538,7 +538,7 @@ const ProjectDetailsV2 = () => {
               </div>
               <MapControlComponent
                 map={map}
-                projectName={state?.projectInfo?.title || ''}
+                projectName={state?.projectInfo?.name || ''}
                 pmTileLayerData={customBasemapData}
               />
             </MapComponent>

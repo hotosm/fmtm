@@ -2,18 +2,15 @@ export interface ProjectDetailsModel {
   id: number;
   odkid: number;
   default_locale: string;
-  project_info: {
-    locale: string;
-    name: string;
-    short_description: string;
-    description: string;
-    instructions: string;
-    per_task_instructions: string;
-  };
+  name: string;
+  short_description: string;
+  description: string;
+  instructions: string;
+  per_task_instructions: string;
   status: number;
   xform_category: string;
   location_str: string;
-  outline_geojson: {
+  outline: {
     type: string;
     geometry: {
       coordinates: [string, string];
@@ -27,7 +24,7 @@ export interface ProjectDetailsModel {
     id: number;
     project_id: number;
     index: number;
-    outline_geojson: {
+    outline: {
       type: string;
       geometry: {
         coordinates: [string, string];

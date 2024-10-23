@@ -44,7 +44,7 @@ from app.db.db_models import DbOrganisation, DbTaskHistory
 from app.db.enums import TaskStatus, UserRole
 from app.main import get_application
 from app.projects import project_crud
-from app.projects.project_schemas import ProjectIn, ProjectInfo
+from app.projects.project_schemas import ProjectIn
 from app.users.user_deps import get_user
 from tests.test_data import test_data_path
 
@@ -124,17 +124,15 @@ def organisation(db):
 async def project(db, admin_user, organisation):
     """A test project, using the test user and org."""
     project_metadata = ProjectIn(
-        project_info=ProjectInfo(
-            name="test project",
-            short_description="test",
-            description="test",
-        ),
+        name="test project",
+        short_description="test",
+        description="test",
         xform_category="buildings",
         odk_central_url=os.getenv("ODK_CENTRAL_URL"),
         odk_central_user=os.getenv("ODK_CENTRAL_USER"),
         odk_central_password=os.getenv("ODK_CENTRAL_PASSWD"),
         hashtags="hashtag1 hashtag2",
-        outline_geojson=Polygon(
+        outline=Polygon(
             type="Polygon",
             coordinates=[
                 [
@@ -158,7 +156,7 @@ async def project(db, admin_user, organisation):
     # Create ODK Central Project
     try:
         odkproject = central_crud.create_odk_project(
-            project_metadata.project_info.name,
+            project_metadata.name,
             odk_creds_decrypted,
         )
         log.debug(f"ODK project returned: {odkproject}")
@@ -309,14 +307,12 @@ def project_data():
     """Sample data for creating a project."""
     project_name = f"Test Project {uuid4()}"
     data = {
-        "project_info": {
-            "name": project_name,
-            "short_description": "test",
-            "description": "test",
-        },
+        "name": project_name,
+        "short_description": "test",
+        "description": "test",
         "xform_category": "buildings",
         "hashtags": "#FMTM",
-        "outline_geojson": {
+        "outline": {
             "coordinates": [
                 [
                     [85.317028828, 27.7052522097],

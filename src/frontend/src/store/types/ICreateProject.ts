@@ -61,7 +61,7 @@ export type ProjectTaskTypes = {
   id: number;
   index: number;
   project_id: number;
-  outline_geojson: GeoJSONFeatureTypes;
+  outline: GeoJSONFeatureTypes;
   task_status: number;
   locked_by_uid: number | null;
   locked_by_username: string | null;
@@ -70,18 +70,14 @@ export type ProjectTaskTypes = {
   task_status_str: string;
 };
 
-export type ProjectInfoTypes = {
-  name: string;
-  short_description: string;
-  description: string;
-};
-
 type EditProjectResponseTypes = {
   id: number;
   odkid: number;
-  project_info: ProjectInfoTypes[];
+  name: string;
+  short_description: string;
+  description: string;
   status: number;
-  outline_geojson: GeoJSONFeatureTypes;
+  outline: GeoJSONFeatureTypes;
   tasks: ProjectTaskTypes[];
   xform_category: string;
   hashtags: string;

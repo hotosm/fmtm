@@ -349,7 +349,7 @@ class DbProject(Base):
     # target_number_of_features = Column(Integer)
 
     # PROJECT DETAILS
-    project_name_prefix = cast(str, Column(String))
+    slug = cast(str, Column(String))
     project_info = relationship(
         DbProjectInfo,
         cascade="all, delete, delete-orphan",

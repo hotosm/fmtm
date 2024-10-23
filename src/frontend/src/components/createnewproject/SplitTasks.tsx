@@ -93,14 +93,12 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
     // Project POST data
     let projectData = {
-      project_info: {
-        name: projectDetails.name,
-        short_description: projectDetails.short_description,
-        description: projectDetails.description,
-        per_task_instructions: projectDetails.per_task_instructions,
-      },
+      name: projectDetails.name,
+      short_description: projectDetails.short_description,
+      description: projectDetails.description,
+      per_task_instructions: projectDetails.per_task_instructions,
       // Use split task areas, or project area if no task splitting
-      outline_geojson: drawnGeojson,
+      outline: drawnGeojson,
       odk_central_url: projectDetails.odk_central_url,
       odk_central_user: projectDetails.odk_central_user,
       odk_central_password: projectDetails.odk_central_password,

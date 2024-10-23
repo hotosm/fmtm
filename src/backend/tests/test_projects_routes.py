@@ -55,7 +55,7 @@ def create_project(client, organisation_id, project_data):
 def test_create_project(client, organisation, project_data):
     """Test project creation endpoint."""
     response_data = create_project(client, organisation.id, project_data)
-    project_name = project_data["project_info"]["name"]
+    project_name = project_data["name"]
     assert "id" in response_data
 
     # Duplicate response to test error condition: project name already exists
@@ -139,7 +139,7 @@ def test_create_project(client, organisation, project_data):
 )
 def test_valid_geojson_types(client, organisation, project_data, geojson_type):
     """Test valid geojson types."""
-    project_data["outline_geojson"] = geojson_type
+    project_data["outline"] = geojson_type
     response_data = create_project(client, organisation.id, project_data)
     assert "id" in response_data
 
@@ -172,7 +172,7 @@ def test_valid_geojson_types(client, organisation, project_data, geojson_type):
 )
 def test_invalid_geojson_types(client, organisation, project_data, geojson_type):
     """Test invalid geojson types."""
-    project_data["outline_geojson"] = geojson_type
+    project_data["outline"] = geojson_type
     response = client.post(f"/projects?org_id={organisation.id}", json=project_data)
     assert response.status_code == 422
 
@@ -187,9 +187,9 @@ def test_invalid_geojson_types(client, organisation, project_data, geojson_type)
 )
 async def test_unsupported_crs(project_data, crs):
     """Test unsupported CRS in GeoJSON."""
-    project_data["outline_geojson"]["crs"] = crs
+    project_data["outline"]["crs"] = crs
     with pytest.raises(HTTPException) as exc_info:
-        await check_crs(project_data["outline_geojson"])
+        await check_crs(project_data["outline"])
     assert exc_info.value.status_code == 400
 
 
@@ -262,7 +262,7 @@ async def test_convert_to_app_project():
     assert result is not None
     assert isinstance(result, db_models.DbProject)
 
-    assert result.outline_geojson is not None
+    assert result.outline is not None
 
     assert result.tasks is not None
     assert isinstance(result.tasks, list)
@@ -271,7 +271,7 @@ async def test_convert_to_app_project():
 async def test_create_project_with_project_info(db, project):
     """Test creating a project with all project info."""
     assert isinstance(project.id, int)
-    assert isinstance(project.project_name_prefix, str)
+    assert isinstance(project.slug, str)
 
 
 async def test_upload_data_extracts(client, project):
@@ -404,14 +404,12 @@ async def test_generate_project_files(db, client, project):
 async def test_update_project(client, admin_user, project):
     """Test update project metadata."""
     updated_project_data = {
-        "project_info": {
-            "name": f"Updated Test Project {uuid4()}",
-            "short_description": "updated short description",
-            "description": "updated description",
-        },
+        "name": f"Updated Test Project {uuid4()}",
+        "short_description": "updated short description",
+        "description": "updated description",
         "xform_category": "healthcare",
         "hashtags": "#FMTM anothertag",
-        "outline_geojson": {
+        "outline": {
             "coordinates": [
                 [
                     [85.317028828, 27.7052522097],
@@ -432,19 +430,11 @@ async def test_update_project(client, admin_user, project):
     assert response.status_code == 200
 
     response_data = response.json()
-    # Assert that project_info in response_data matches updated_project_data
+    assert response_data["name"] == updated_project_data["name"]
     assert (
-        response_data["project_info"]["name"]
-        == updated_project_data["project_info"]["name"]
+        response_data["short_description"] == updated_project_data["short_description"]
     )
-    assert (
-        response_data["project_info"]["short_description"]
-        == updated_project_data["project_info"]["short_description"]
-    )
-    assert (
-        response_data["project_info"]["description"]
-        == updated_project_data["project_info"]["description"]
-    )
+    assert response_data["description"] == updated_project_data["description"]
 
     assert response_data["xform_category"] == updated_project_data["xform_category"]
     assert response_data["hashtags"] == ["#FMTM", "#anothertag"]
@@ -460,7 +450,7 @@ async def test_project_summaries(client, project):
     result = results[0]
 
     assert result["id"] == project.id
-    assert result["title"] == project.title
+    assert result["name"] == project.name
     assert result["description"] == project.description
     assert result["hashtags"] == project.hashtags
     assert result["organisation_id"] == project.organisation_id
@@ -477,16 +467,10 @@ async def test_project_by_id(client, project):
     assert data["odkid"] == project.odkid
     assert data["author"]["username"] == project.author.username
     assert data["author"]["id"] == project.author.id
-    assert data["project_info"]["name"] == project.project_info.name
-    assert (
-        data["project_info"]["short_description"]
-        == project.project_info.short_description
-    )
-    assert data["project_info"]["description"] == project.project_info.description
-    assert (
-        data["project_info"]["per_task_instructions"]
-        == project.project_info.per_task_instructions
-    )
+    assert data["name"] == project.name
+    assert data["short_description"] == project.short_description
+    assert data["description"] == project.description
+    assert data["per_task_instructions"] == project.per_task_instructions
     assert data["status"] == project.status
     assert data["xform_category"] == project.xform_category
     assert data["hashtags"] == project.hashtags

@@ -309,9 +309,7 @@ async def download_tiles(
     log.info(f"User requested download for tiles: {db_basemap.url}")
 
     project = project_user.get("project")
-    filename = Path(db_basemap.url).name.replace(
-        f"{project.id}_", f"{project.project_name_prefix}_"
-    )
+    filename = Path(db_basemap.url).name.replace(f"{project.id}_", f"{project.slug}_")
     log.debug(f"Sending tile archive to user: {filename}")
 
     if db_basemap.format == "mbtiles":
@@ -916,9 +914,7 @@ async def download_project_boundary(
     return StreamingResponse(
         BytesIO(json.dumps(geojson).encode("utf-8")),
         headers={
-            "Content-Disposition": (
-                f"attachment; filename={project.project_name_prefix}.geojson"
-            ),
+            "Content-Disposition": (f"attachment; filename={project.slug}.geojson"),
             "Content-Type": "application/media",
         },
     )
@@ -1063,7 +1059,7 @@ async def project_dashboard(
     """Get the project dashboard details."""
     project = project_user.get("project")
     details = await project_crud.get_dashboard_detail(db, project)
-    details["project_name_prefix"] = project.project_name_prefix
+    details["slug"] = project.slug
     details["organisation_name"] = project.organisation_name
     details["created_at"] = project.created_at
     details["organisation_logo"] = project.organisation_logo

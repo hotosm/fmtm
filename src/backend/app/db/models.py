@@ -774,17 +774,14 @@ class DbProject(BaseModel):
 
     id: int
     name: str
-    # TODO SQL need to update outline_geojson references
     outline: Optional[dict] = None
     odkid: Optional[int] = None
     author_id: Optional[int] = None
     organisation_id: Optional[int] = None
-    # TODO SQL we need to remove all references to projects.project_info
     short_description: Optional[str] = None
     description: Optional[str] = None
     per_task_instructions: Optional[str] = None
-    # TODO SQL the project_name_prefix is basically a slug no? Rename?
-    project_name_prefix: Optional[str] = None
+    slug: Optional[str] = None
     task_split_type: Optional[TaskSplitType] = None
     location_str: Optional[str] = None
     custom_tms_url: Optional[str] = None
@@ -981,7 +978,7 @@ class DbProject(BaseModel):
 
         # Filter by search term (project name using ILIKE for case-insensitive match)
         if search:
-            filters.append("project_name_prefix ILIKE %(search)s")
+            filters.append("slug ILIKE %(search)s")
             params["search"] = f"%{search}%"
 
         # Base query with optional filtering

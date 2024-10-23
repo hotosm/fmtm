@@ -226,7 +226,7 @@ CREATE TABLE public.projects (
     short_description character varying,
     description character varying,
     per_task_instructions character varying,
-    project_name_prefix character varying,
+    slug character varying,
     location_str character varying,
     outline public.GEOMETRY (POLYGON, 4326),
     status public.projectstatus NOT NULL DEFAULT 'DRAFT',

@@ -17,7 +17,7 @@ ALTER TABLE ONLY public.projects DROP COLUMN IF EXISTS josm_preset;
 ALTER TABLE ONLY public.projects DROP COLUMN IF EXISTS id_presets;
 ALTER TABLE ONLY public.projects DROP COLUMN IF EXISTS extra_id_params;
 
--- Add columns to projects (idempotent)
+-- Add columns to projects
 ALTER TABLE ONLY public.projects
 ADD COLUMN IF NOT EXISTS name character varying;
 ALTER TABLE ONLY public.projects
@@ -26,6 +26,7 @@ ALTER TABLE ONLY public.projects
 ADD COLUMN IF NOT EXISTS description character varying;
 ALTER TABLE ONLY public.projects
 ADD COLUMN IF NOT EXISTS per_task_instructions character varying;
+
 
 -- Merge contents of project_info into projects (avoid duplicates)
 DO $$
@@ -54,6 +55,14 @@ END $$;
 
 -- Drop project_info table
 DROP TABLE IF EXISTS public.project_info;
+
+-- Rename projects.project_name_prefix --> projects.slug
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'projects' AND column_name = 'project_name_prefix') THEN
+        ALTER TABLE public.projects RENAME COLUMN project_name_prefix TO slug;
+    END IF;
+END $$;
 
 -- Check if the column 'action_date' already exists and has no default value
 DO $$

@@ -77,10 +77,9 @@ async def download_submission(
         Union[list[dict], File]: JSON of submissions, or submission file.
     """
     project = project_user.get("project")
-    project_name = project.project_name_prefix
     if not export_json:
         file_content = await submission_crud.gather_all_submission_csvs(db, project)
-        headers = {"Content-Disposition": f"attachment; filename={project_name}.zip"}
+        headers = {"Content-Disposition": f"attachment; filename={project.slug}.zip"}
         return Response(file_content, headers=headers)
 
     return await submission_crud.download_submission_in_json(db, project)
@@ -384,7 +383,7 @@ async def download_submission_geojson(
         submission_json
     )
     submission_data = BytesIO(json.dumps(submission_geojson).encode("utf-8"))
-    filename = project.project_name_prefix
+    filename = project.slug
 
     headers = {"Content-Disposition": f"attachment; filename={filename}.geojson"}
 

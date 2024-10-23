@@ -47,7 +47,7 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map }: activitiesPanelTy
     if (index != -1) {
       const taskIndex = state[index]?.taskBoundries.findIndex((task) => task?.index == taskId);
       if (index != -1) {
-        geojson = state[index]?.taskBoundries[taskIndex]?.outline_geojson;
+        geojson = state[index]?.taskBoundries[taskIndex]?.outline;
       }
     }
 

@@ -41,7 +41,8 @@ export type taskHistoryListType = {
 
 export type projectInfoType = {
   id: number;
-  outline_geojson: {
+  name: string;
+  outline: {
     type: string;
     geometry: {
       type: string;
@@ -55,7 +56,6 @@ export type projectInfoType = {
     bbox: null | number[];
   };
   priority: number;
-  title: string;
   location_str: string;
   description: string;
   short_description: string;
@@ -78,7 +78,8 @@ export type projectInfoType = {
 export type downloadProjectFormLoadingType = { type: 'form' | 'geojson' | 'csv' | 'json'; loading: boolean };
 
 export type projectDashboardDetailTypes = {
-  project_name_prefix: string;
+  name: string;
+  slug: string;
   organisation_name: string;
   total_tasks: number | null;
   created_at: string;
@@ -98,7 +99,7 @@ export type taskBoundriesTypes = {
   project_task_index: number;
   locked_by_uid: null | string;
   locked_by_username: null | string;
-  outline_geojson: {
+  outline: {
     type: string;
     geometry: {
       coordinates: [string, string];
@@ -115,7 +116,7 @@ export type taskBoundriesTypes = {
 
 export type taskBoundriesGeojson = {
   id: number;
-  outline_geojson: {
+  outline: {
     type: string;
     geometry: {
       coordinates: [];

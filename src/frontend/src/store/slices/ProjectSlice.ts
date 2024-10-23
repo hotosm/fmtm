@@ -21,7 +21,7 @@ const initialState: ProjectStateTypes = {
   mobileFooterSelection: 'explore',
   projectDetailsLoading: true,
   projectDashboardDetail: {
-    project_name_prefix: '',
+    slug: '',
     organisation_name: '',
     total_tasks: null,
     created_at: '',

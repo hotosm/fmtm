@@ -96,14 +96,14 @@
 		const latestActions = await getLatestEventForTasks();
 
 		const features = data.project.tasks.map((x: ProjectTask) => {
-			const taskId = x.outline_geojson.id;
+			const taskId = x.outline.id;
 			const statusString = latestActions.get(taskId);
 			const status = statusString ? statusEnumLabelToValue(statusString) : '0';
 
 			return {
-				...x.outline_geojson,
+				...x.outline,
 				properties: {
-					...x.outline_geojson.properties,
+					...x.outline.properties,
 					status,
 				},
 			};
@@ -116,7 +116,7 @@
 	}
 
 	// *** Selected task *** //
-	$: qrCodeData = generateQrCode(data.project.project_info.name, data.project.odk_token, 'TEMP');
+	$: qrCodeData = generateQrCode(data.project.name, data.project.odk_token, 'TEMP');
 
 	let selectedTaskId = writable<number | null>(null);
 	let featureClicked = writable(false);
@@ -145,7 +145,7 @@
 		// Set as selected task for buttons
 		selectedTaskId.set(taskObj.id);
 
-		const taskPolygon = polygon(taskObj.outline_geojson.geometry.coordinates);
+		const taskPolygon = polygon(taskObj.outline.geometry.coordinates);
 		const taskBuffer = buffer(taskPolygon, 5, { units: 'meters' });
 		if (taskBuffer && map) {
 			const taskBbox: [number, number, number, number] = bbox(taskBuffer) as [number, number, number, number];
@@ -178,7 +178,7 @@
 	// 		}
 
 	onMount(async () => {
-		const projectPolygon = polygon(data.project.outline_geojson.geometry.coordinates);
+		const projectPolygon = polygon(data.project.outline.geometry.coordinates);
 		const projectBuffer = buffer(projectPolygon, 100, { units: 'meters' });
 		if (projectBuffer && map) {
 			const projectBbox: [number, number, number, number] = bbox(projectBuffer) as [number, number, number, number];
@@ -558,7 +558,7 @@
 						<hot-icon-button
 							name="download"
 							label="Download QRCode"
-							on:click={downloadQrCode(data.project.project_info.name, qrCodeData)}>Download</hot-icon-button
+							on:click={downloadQrCode(data.project.name, qrCodeData)}>Download</hot-icon-button
 						>
 					</div>
 

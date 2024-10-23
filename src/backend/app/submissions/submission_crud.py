@@ -83,7 +83,7 @@ from app.s3 import add_obj_to_bucket, get_obj_from_bucket
 #     submissions = data.get("value", [])
 
 #     # Create a new ZIP file for the extracted files
-#     final_zip_file_path = f"/tmp/{project.project_name_prefix}_osm.zip"
+#     final_zip_file_path = f"/tmp/{project.slug}_osm.zip"
 
 #     # Remove the ZIP file if it already exists
 #     if os.path.exists(final_zip_file_path):
@@ -123,7 +123,7 @@ from app.s3 import add_obj_to_bucket, get_obj_from_bucket
 #         with open(osm_file_path, "w") as osm_file:
 #             osm_file.write(processed_xml_string)
 
-#         final_zip_file_path = f"/tmp/{project.project_name_prefix}_osm.zip"
+#         final_zip_file_path = f"/tmp/{project.slug}_osm.zip"
 #         if os.path.exists(final_zip_file_path):
 #             os.remove(final_zip_file_path)
 
@@ -290,8 +290,6 @@ def update_submission_in_s3(
 
 async def download_submission_in_json(db: Session, project: db_models.DbProject):
     """Download submission data from ODK Central."""
-    project_name = project.project_name_prefix
-
     if data := await get_submission_by_project(project, {}, db):
         json_data = data
     else:
@@ -299,7 +297,7 @@ async def download_submission_in_json(db: Session, project: db_models.DbProject)
 
     json_bytes = BytesIO(json.dumps(json_data).encode("utf-8"))
     headers = {
-        "Content-Disposition": f"attachment; filename={project_name}_submissions.json"
+        "Content-Disposition": f"attachment; filename={project.slug}_submissions.json"
     }
     return Response(content=json_bytes.getvalue(), headers=headers)
 
