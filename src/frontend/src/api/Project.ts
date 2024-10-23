@@ -10,7 +10,9 @@ export const ProjectById = (projectId: string) => {
     const fetchProjectById = async (projectId: string) => {
       try {
         dispatch(ProjectActions.SetProjectDetialsLoading(true));
-        const project = await CoreModules.axios.get(`${import.meta.env.VITE_API_URL}/projects/${projectId}`);
+        const project = await CoreModules.axios.get(
+          `${import.meta.env.VITE_API_URL}/projects/${projectId}?project_id=${projectId}`,
+        );
         const projectResp: Record<string, any> = project.data;
         const persistingValues: Record<string, any> = projectResp.tasks.map((data) => {
           return {
