@@ -71,6 +71,22 @@ if TYPE_CHECKING:
     from app.users.user_schemas import UserIn
 
 
+def dump_and_check_model(db_model: BaseModel):
+    """Dump the Pydantic model, removing None and default values.
+
+    Also validates to check the model is not empty for insert / update.
+    """
+    model_dump = db_model.model_dump(exclude_none=True, exclude_unset=True)
+
+    if not model_dump:
+        log.error("Attempted create or update with no data.")
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail="No data provided."
+        )
+
+    return model_dump
+
+
 class DbUserRole(BaseModel):
     """Table user_roles."""
 
@@ -212,7 +228,7 @@ class DbUser(BaseModel):
             log.warning(f"Failed to create new user: {msg}")
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=msg)
 
-        model_dump = user_in.model_dump(exclude_none=True, exclude_unset=True)
+        model_dump = dump_and_check_model(user_in)
         columns = ", ".join(model_dump.keys())
         value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
         conflict_statement = """
@@ -256,7 +272,7 @@ class DbOrganisation(BaseModel):
     # ] = None
 
     id: int
-    name: str
+    name: Optional[str] = None
     slug: Optional[str] = None
     logo: Optional[str] = None
     description: Optional[str] = None
@@ -344,7 +360,7 @@ class DbOrganisation(BaseModel):
             log.warning(f"User ({user_id}) failed organisation creation: {msg}")
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=msg)
 
-        model_dump = org_in.model_dump(exclude_none=True, exclude_unset=True)
+        model_dump = dump_and_check_model(org_in)
         columns = ", ".join(model_dump.keys())
         value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
 
@@ -367,13 +383,21 @@ class DbOrganisation(BaseModel):
                 raise HTTPException(
                     status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
                 )
+
         if new_org and new_org.logo is None and new_logo:
-            org_in.logo = await cls.upload_logo(new_org.id, new_logo)
+            from app.organisations.organisation_schemas import OrganisationUpdate
+
+            logo_url = await cls.upload_logo(new_org.id, new_logo)
+            await cls.update(db, new_org.id, OrganisationUpdate(logo=logo_url))
 
         return new_org
 
     @classmethod
-    async def upload_logo(cls, org_id: "OrganisationIn", logo_file: UploadFile) -> str:
+    async def upload_logo(
+        cls,
+        org_id: int,
+        logo_file: UploadFile,
+    ) -> str:
         """Upload logo using standardised /{org_id}/logo.png format.
 
         Browsers treat image mimetypes the same, regardless of extension,
@@ -387,9 +411,8 @@ class DbOrganisation(BaseModel):
             logo_url (str): The S3 URL for the logo file.
         """
         logo_path = f"/{org_id}/logo.png"
-
-        file_bytes = await logo_file.read()
-        file_obj = BytesIO(file_bytes)
+        logo_bytes = await logo_file.read()
+        file_obj = BytesIO(logo_bytes)
 
         add_obj_to_bucket(
             settings.S3_BUCKET_NAME,
@@ -406,13 +429,13 @@ class DbOrganisation(BaseModel):
         db: Connection,
         org_id: int,
         org_update: "OrganisationUpdate",
-        logo: UploadFile,
+        new_logo: Optional[UploadFile] = None,
     ) -> Self:
         """Update values for organisation."""
-        if logo:
-            org_update.logo_url = cls.upload_logo(org_id, logo)
+        if new_logo:
+            org_update.logo = await cls.upload_logo(org_id, new_logo)
 
-        model_dump = org_update.model_dump(exclude_none=True, exclude_unset=True)
+        model_dump = dump_and_check_model(org_update)
         placeholders = [f"{key} = %({key})s" for key in model_dump.keys()]
         sql = f"""
             UPDATE organisations
@@ -796,6 +819,7 @@ class DbProject(BaseModel):
     organisation_logo: Optional[str] = None
     centroid: Optional[dict] = None
     bbox: Optional[list[float]] = None
+    last_active: Optional[datetime] = None
     odk_credentials: Annotated[
         Optional["ODKCentralDecrypted"],
         Field(validate_default=True),
@@ -857,6 +881,7 @@ class DbProject(BaseModel):
                     ) AS author,
                     project_org.name as organisation_name,
                     project_org.logo as organisation_logo,
+                    latest_th.action_date as last_active,
                     COALESCE(
                         NULLIF(p.odk_central_url, ''),
                         project_org.odk_central_url)
@@ -909,7 +934,8 @@ class DbProject(BaseModel):
                 WHERE
                     p.id = %(project_id)s
                 GROUP BY
-                    p.id, project_author.id, project_org.id, project_bbox.bbox;
+                    p.id, project_author.id, project_org.id,
+                    project_bbox.bbox, latest_th.action_date;
             """
 
             await cur.execute(
@@ -988,14 +1014,7 @@ class DbProject(BaseModel):
     @classmethod
     async def create(cls, db: Connection, project_in: "ProjectIn") -> Self:
         """Create a new project in the database."""
-        model_dump = project_in.model_dump(exclude_none=True, exclude_unset=True)
-
-        if model_dump is None:
-            log.error("Attempted to create a project with no data.")
-            raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST, detail="No project data provided"
-            )
-
+        model_dump = dump_and_check_model(project_in)
         columns = []
         values = []
 
@@ -1031,10 +1050,11 @@ class DbProject(BaseModel):
                 )
 
             new_project_id = new_project.id
-            current_hashtags = new_project.hashtags or []
 
             # NOTE we want a trackable hashtag DOMAIN-PROJECT_ID
-            hashtags = current_hashtags + [f"#{settings.FMTM_DOMAIN}-{new_project_id}"]
+            hashtags = new_project.hashtags.append(
+                f"#{settings.FMTM_DOMAIN}-{new_project_id}"
+            )
 
             await cur.execute(
                 """
@@ -1066,13 +1086,22 @@ class DbProject(BaseModel):
         project_update: "ProjectUpdate",
     ) -> Self:
         """Update values for project."""
-        model_dump = project_update.model_dump(exclude_none=True, exclude_unset=True)
+        model_dump = dump_and_check_model(project_update)
         placeholders = [f"{key} = %({key})s" for key in model_dump.keys()]
+
+        # NOTE we want a trackable hashtag DOMAIN-PROJECT_ID
+        if "hashtags" in model_dump:
+            fmtm_hashtag = f"#{settings.FMTM_DOMAIN}-{project_id}"
+            if fmtm_hashtag not in model_dump["hashtags"]:
+                model_dump["hashtags"].append(fmtm_hashtag)
+
         sql = f"""
             UPDATE projects
             SET {', '.join(placeholders)}
             WHERE id = %(project_id)s
-            RETURNING *;
+            RETURNING
+                *,
+                ST_AsGeoJSON(outline)::jsonb AS outline;
         """
 
         async with db.cursor(row_factory=class_row(cls)) as cur:
@@ -1182,7 +1211,7 @@ class DbBackgroundTask(BaseModel):
         task_update: "BackgroundTaskUpdate",
     ) -> Self:
         """Update values for a background task."""
-        model_dump = task_update.model_dump(exclude_none=True, exclude_unset=True)
+        model_dump = dump_and_check_model(task_update)
         placeholders = [f"{key} = %({key})s" for key in model_dump.keys()]
         sql = f"""
             UPDATE background_tasks
@@ -1310,7 +1339,7 @@ class DbBasemap(BaseModel):
         basemap_update: "BasemapUpdate",
     ) -> Self:
         """Update values for a basemap."""
-        model_dump = basemap_update.model_dump(exclude_none=True)
+        model_dump = dump_and_check_model(basemap_update)
         placeholders = [f"{key} = %({key})s" for key in model_dump.keys()]
         sql = f"""
             UPDATE basemaps

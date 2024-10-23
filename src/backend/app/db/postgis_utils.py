@@ -100,44 +100,52 @@ async def featcol_to_flatgeobuf(
     """
     geojson_with_props = add_required_geojson_properties(geojson)
 
-    sql = """
-        DROP TABLE IF EXISTS temp_features CASCADE;
-
-        -- Wrap geometries in GeometryCollection
-        CREATE TEMP TABLE IF NOT EXISTS temp_features(
-            geom geometry(GeometryCollection, 4326),
-            osm_id integer,
-            tags text,
-            version integer,
-            changeset integer,
-            timestamp text
-        );
-
-        WITH data AS (SELECT CAST(:geojson AS json) AS fc)
-        INSERT INTO temp_features
-            (geom, osm_id, tags, version, changeset, timestamp)
-        SELECT
-            ST_ForceCollection(ST_GeomFromGeoJSON(feat->>'geometry')) AS geom,
-            regexp_replace(
-                (feat->'properties'->>'osm_id')::text, '[^0-9]', '', 'g'
-            )::integer as osm_id,
-            (feat->'properties'->>'tags')::text as tags,
-            (feat->'properties'->>'version')::integer as version,
-            (feat->'properties'->>'changeset')::integer as changeset,
-            (feat->'properties'->>'timestamp')::text as timestamp
-        FROM json_array_elements((SELECT fc->'features' FROM data)) AS f(feat);
-
-        -- Second param = generate with spatial index
-        SELECT ST_AsFlatGeobuf(geoms, true)
-        FROM (SELECT * FROM temp_features) AS geoms;
-    """
     async with db.cursor() as cur:
-        await cur.execute(sql, {"geojson": json.dumps(geojson_with_props)})
+        await cur.execute("""
+            DROP TABLE IF EXISTS temp_features CASCADE;
+        """)
+
+        await cur.execute("""
+            -- Wrap geometries in GeometryCollection
+            CREATE TEMP TABLE IF NOT EXISTS temp_features(
+                geom geometry(GeometryCollection, 4326),
+                osm_id integer,
+                tags text,
+                version integer,
+                changeset integer,
+                timestamp text
+            );
+        """)
+
+        await cur.execute(
+            """
+            WITH data AS (SELECT CAST(%(geojson)s AS json) AS fc)
+            INSERT INTO temp_features
+                (geom, osm_id, tags, version, changeset, timestamp)
+            SELECT
+                ST_ForceCollection(ST_GeomFromGeoJSON(feat->>'geometry')) AS geom,
+                regexp_replace(
+                    (feat->'properties'->>'osm_id')::text, '[^0-9]', '', 'g'
+                )::integer as osm_id,
+                (feat->'properties'->>'tags')::text as tags,
+                (feat->'properties'->>'version')::integer as version,
+                (feat->'properties'->>'changeset')::integer as changeset,
+                (feat->'properties'->>'timestamp')::text as timestamp
+            FROM json_array_elements((SELECT fc->'features' FROM data)) AS f(feat);
+        """,
+            {"geojson": json.dumps(geojson_with_props)},
+        )
+
+        await cur.execute("""
+            -- Second param = generate with spatial index
+            SELECT ST_AsFlatGeobuf(geoms, true)
+            FROM (SELECT * FROM temp_features) AS geoms;
+        """)
         # Get a memoryview object, then extract to Bytes
         flatgeobuf = await cur.fetchone()
 
     if flatgeobuf:
-        return bytes(flatgeobuf)
+        return flatgeobuf[0]
 
     # Nothing returned (either no features passed, or failed)
     return None
@@ -157,46 +165,58 @@ async def flatgeobuf_to_featcol(
     Returns:
         geojson.FeatureCollection: A FeatureCollection object.
     """
-    sql = """
-        DROP TABLE IF EXISTS public.temp_fgb CASCADE;
-
-        SELECT ST_FromFlatGeobufToTable('public', 'temp_fgb', :fgb_bytes);
-
-        SELECT
-            'FeatureCollection' as type,
-            COALESCE(jsonb_agg(feature), '[]'::jsonb) AS features
-        FROM (
-            SELECT jsonb_build_object(
-                'type', 'Feature',
-                'geometry', ST_AsGeoJSON(ST_GeometryN(fgb_data.geom, 1))::jsonb,
-                'id', fgb_data.osm_id::VARCHAR,
-                'properties', jsonb_build_object(
-                    'osm_id', fgb_data.osm_id,
-                    'tags', fgb_data.tags,
-                    'version', fgb_data.version,
-                    'changeset', fgb_data.changeset,
-                    'timestamp', fgb_data.timestamp
-                )::jsonb
-            ) AS feature
-            FROM (
-                SELECT
-                    geom,
-                    osm_id,
-                    tags,
-                    version,
-                    changeset,
-                    timestamp
-                FROM ST_FromFlatGeobuf(null::temp_fgb, :fgb_bytes)
-            ) AS fgb_data
-        ) AS features;
-    """
-
     try:
-        async with db.cursor(
-            row_factory=class_row(geojson_pydantic.FeatureCollection)
-        ) as cur:
-            await cur.execute(sql, {"fgb_bytes": flatgeobuf})
+        async with db.cursor() as cur:
+            await cur.execute("""
+                DROP TABLE IF EXISTS public.temp_fgb CASCADE;
+            """)
+
+            await cur.execute(
+                """
+                SELECT ST_FromFlatGeobufToTable('public', 'temp_fgb', %(fgb_bytes)s);
+            """,
+                {"fgb_bytes": flatgeobuf},
+            )
+
+            # Set row_factory to parse geojson
+            cur.row_factory = class_row(geojson_pydantic.FeatureCollection)
+            await cur.execute(
+                """
+                SELECT
+                    'FeatureCollection' as type,
+                    COALESCE(jsonb_agg(feature), '[]'::jsonb) AS features
+                FROM (
+                    SELECT jsonb_build_object(
+                        'type', 'Feature',
+                        'geometry', ST_AsGeoJSON(ST_GeometryN(fgb_data.geom, 1))::jsonb,
+                        'id', fgb_data.osm_id::VARCHAR,
+                        'properties', jsonb_build_object(
+                            'osm_id', fgb_data.osm_id,
+                            'tags', fgb_data.tags,
+                            'version', fgb_data.version,
+                            'changeset', fgb_data.changeset,
+                            'timestamp', fgb_data.timestamp
+                        )::jsonb
+                    ) AS feature
+                    FROM (
+                        SELECT
+                            geom,
+                            osm_id,
+                            tags,
+                            version,
+                            changeset,
+                            timestamp
+                        FROM ST_FromFlatGeobuf(null::temp_fgb, %(fgb_bytes)s)
+                    ) AS fgb_data
+                ) AS features;
+            """,
+                {"fgb_bytes": flatgeobuf},
+            )
             featcol = await cur.fetchone()
+
+            await cur.execute("""
+                DROP TABLE IF EXISTS public.temp_fgb CASCADE;
+            """)
     except ProgrammingError as e:
         log.error(e)
         log.error(
@@ -206,7 +226,7 @@ async def flatgeobuf_to_featcol(
         return None
 
     if featcol:
-        return geojson.loads(json.dumps(featcol))
+        return geojson.loads(featcol.model_dump_json())
 
 
 async def split_geojson_by_task_areas(
@@ -251,7 +271,7 @@ async def split_geojson_by_task_areas(
                 '{project_id}', to_jsonb(tasks.project_id), true
             ) AS properties
         FROM (
-            SELECT jsonb_array_elements(CAST(:geojson_featcol AS jsonb)->'features')
+            SELECT jsonb_array_elements(CAST(%(geojson_featcol)s AS jsonb)->'features')
             AS feature
         ) AS features
         JOIN tasks ON tasks.project_id = :project_id

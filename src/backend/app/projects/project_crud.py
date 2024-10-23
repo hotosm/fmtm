@@ -29,17 +29,12 @@ import geojson_pydantic
 import requests
 from asgiref.sync import async_to_sync
 from fastapi import HTTPException
-from fastapi.concurrency import run_in_threadpool
-from fmtm_splitter.splitter import split_by_sql, split_by_square
 from geoalchemy2.shape import to_shape
 from loguru import logger as log
 from osm_fieldwork.basemapper import create_basemap_file
 from osm_rawdata.postgres import PostgresClient
 from psycopg import Connection
 from psycopg.rows import class_row
-from shapely.geometry import shape
-from sqlalchemy import text
-from sqlalchemy.orm import Session
 
 from app.central import central_crud, central_schemas
 from app.config import settings
@@ -52,7 +47,6 @@ from app.db.postgis_utils import (
     featcol_to_flatgeobuf,
     flatgeobuf_to_featcol,
     get_featcol_dominant_geom_type,
-    merge_polygons,
     parse_geojson_file_to_featcol,
     split_geojson_by_task_areas,
 )
@@ -129,26 +123,6 @@ async def get_projects_featcol(
     return featcol
 
 
-async def preview_split_by_square(
-    boundary: geojson.FeatureCollection,
-    meters: int,
-    extract_geojson: Optional[geojson.FeatureCollection] = None,
-):
-    """Preview split by square for a project boundary.
-
-    Use a lambda function to remove the "z" dimension from each
-    coordinate in the feature's geometry.
-    """
-    if len(boundary["features"]) == 0:
-        boundary = merge_polygons(boundary)
-
-    return split_by_square(
-        boundary,
-        osm_extract=extract_geojson,
-        meters=meters,
-    )
-
-
 async def generate_data_extract(
     aoi: geojson.FeatureCollection | geojson.Feature | dict,
     extract_config: Optional[BytesIO] = None,
@@ -207,41 +181,6 @@ async def generate_data_extract(
         )
 
     return fgb_url
-
-
-async def split_geojson_into_tasks(
-    db: Connection,
-    project_geojson: geojson.FeatureCollection,
-    no_of_buildings: int,
-    extract_geojson: Optional[geojson.FeatureCollection] = None,
-):
-    """Splits a project into tasks.
-
-    Args:
-        db (Connection): The database connection.
-        project_geojson (geojson.FeatureCollection): A FeatureCollection containing a
-            single project boundary geometry.
-        extract_geojson (dict | geojson.FeatureCollection): A GeoJSON of the project
-            boundary osm data extract (features).
-        extract_geojson (geojson.FeatureCollection): A GeoJSON of the project
-            boundary osm data extract (features).
-            If not included, an extract is generated automatically.
-        no_of_buildings (int): The number of buildings to include in each task.
-
-    Returns:
-        Any: A GeoJSON object containing the tasks for the specified project.
-    """
-    log.debug("STARTED task splitting using provided boundary and data extract")
-    features = await run_in_threadpool(
-        lambda: split_by_sql(
-            project_geojson,
-            db,
-            num_buildings=no_of_buildings,
-            osm_extract=extract_geojson,
-        )
-    )
-    log.debug("COMPLETE task splitting")
-    return features
 
 
 # ---------------------------
@@ -307,23 +246,22 @@ async def read_and_insert_xlsforms(db: Connection, directory: str) -> None:
 
 
 async def get_or_set_data_extract_url(
-    db: Session,
-    project_id: int,
+    db: Connection,
+    db_project: DbProject,
     url: Optional[str],
 ) -> str:
     """Get or set the data extract URL for a project.
 
     Args:
         db (Connection): The database connection.
-        project_id (int): The ID of the project.
+        db_project (DbProject): The project object.
         url (str): URL to the streamable flatgeobuf data extract.
             If not passed, a new extract is generated.
 
     Returns:
         str: URL to fgb file in S3.
     """
-    db_project = await project_deps.get_project_by_id(db, project_id)
-
+    project_id = db_project.id
     # If url, get extract
     # If not url, get new extract / set in db
     if not url:
@@ -338,27 +276,25 @@ async def get_or_set_data_extract_url(
             raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg)
         return existing_url
 
-    # FIXME Identify data extract type from form type
-    # FIXME use mapping e.g. building=polygon, waterways=line, etc
+    # FIXME determine this using get_featcol_dominant_geom_type ?
+    # FIXME would have to download extract first though
+    # Perhaps we do this via generate-data-extract URL
     extract_type = "polygon"
 
-    await update_data_extract_url_in_db(db, db_project, url, extract_type)
+    await DbProject.update(
+        db,
+        project_id,
+        project_schemas.ProjectUpdate(
+            data_extract_url=url,
+            data_extract_type=extract_type,
+        ),
+    )
 
     return url
 
 
-async def update_data_extract_url_in_db(
-    db: Session, project: db_models.DbProject, url: str, extract_type: str
-):
-    """Update the data extract params in the database for a project."""
-    log.debug(f"Setting data extract URL for project ({project.id}): {url}")
-    project.data_extract_url = url
-    project.data_extract_type = extract_type
-    db.commit()
-
-
 async def upload_custom_extract_to_s3(
-    db: Session,
+    db: Connection,
     project_id: int,
     fgb_content: bytes,
     data_extract_type: str,
@@ -375,7 +311,7 @@ async def upload_custom_extract_to_s3(
         str: URL to fgb file in S3.
     """
     project = await project_deps.get_project_by_id(db, project_id)
-    log.debug(f"Uploading custom data extract for project: {project}")
+    log.debug(f"Uploading custom data extract for project ({project.id})")
 
     fgb_obj = BytesIO(fgb_content)
     s3_fgb_path = f"{project.organisation_id}/{project_id}/custom_extract.fgb"
@@ -393,13 +329,20 @@ async def upload_custom_extract_to_s3(
         f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}/{s3_fgb_path}"
     )
 
-    await update_data_extract_url_in_db(db, project, s3_fgb_full_url, data_extract_type)
+    await DbProject.update(
+        db,
+        project_id,
+        project_schemas.ProjectUpdate(
+            data_extract_url=s3_fgb_full_url,
+            data_extract_type=data_extract_type,
+        ),
+    )
 
     return s3_fgb_full_url
 
 
 async def upload_custom_fgb_extract(
-    db: Session,
+    db: Connection,
     project_id: int,
     fgb_content: bytes,
 ) -> str:
@@ -460,7 +403,7 @@ async def get_data_extract_type(featcol: geojson.FeatureCollection) -> str:
 
 
 async def upload_custom_geojson_extract(
-    db: Session,
+    db: Connection,
     project_id: int,
     geojson_raw: Union[str, bytes],
 ) -> str:
@@ -567,7 +510,7 @@ async def generate_odk_central_project_content(
 
 
 async def generate_project_files(
-    db: Session,
+    db: Connection,
     project_id: int,
     background_task_id: Optional[uuid.UUID] = None,
 ) -> None:
@@ -689,7 +632,7 @@ async def generate_project_files(
             raise e
 
 
-async def get_task_geometry(db: Session, project_id: int):
+async def get_task_geometry(db: Connection, project_id: int):
     """Retrieves the geometry of tasks associated with a project.
 
     Args:
@@ -716,7 +659,7 @@ async def get_task_geometry(db: Session, project_id: int):
 
 
 async def get_project_features_geojson(
-    db: Session,
+    db: Connection,
     db_project: db_models.DbProject,
     task_id: Optional[int] = None,
 ) -> geojson.FeatureCollection:
@@ -769,61 +712,6 @@ async def get_project_features_geojson(
         return split_extract_dict[task_id]
 
     return data_extract_geojson
-
-
-async def get_json_from_zip(zip, filename: str, error_detail: str):
-    """Extract json file from zip."""
-    try:
-        with zip.open(filename) as file:
-            data = file.read()
-            return json.loads(data)
-    except Exception as e:
-        log.exception(e)
-        raise HTTPException(
-            HTTPStatus.BAD_REQUEST, detail=f"{error_detail} ----- Error: {e}"
-        ) from e
-
-
-async def get_shape_from_json_str(feature: str, error_detail: str):
-    """Parse geojson outline within a zip to shapely geom."""
-    try:
-        geom = feature["geometry"]
-        return shape(geom)
-    except Exception as e:
-        log.exception(e)
-        raise HTTPException(
-            HTTPStatus.BAD_REQUEST,
-            detail=f"{error_detail} ----- Error: {e} ---- Json: {feature}",
-        ) from e
-
-
-async def get_extracted_data_from_db(db: Session, project_id: int, outfile: str):
-    """Get the geojson of those features for this project."""
-    query = text(
-        f"""SELECT jsonb_build_object(
-                'type', 'FeatureCollection',
-                'features', jsonb_agg(feature)
-                )
-                FROM (
-                SELECT jsonb_build_object(
-                    'type', 'Feature',
-                    'id', id,
-                    'geometry', ST_AsGeoJSON(geometry)::jsonb,
-                    'properties', properties
-                ) AS feature
-                FROM features
-                WHERE project_id={project_id}
-                ) features;"""
-    )
-
-    result = db.execute(query)
-    features = result.fetchone()[0]
-
-    # Update outfile containing osm extracts with the new geojson contents
-    # containing title in the properties.
-    with open(outfile, "w") as jsonfile:
-        jsonfile.truncate(0)
-        geojson.dump(features, jsonfile)
 
 
 # NOTE defined as non-async to run in separate thread
@@ -1018,28 +906,18 @@ async def get_paginated_projects(
     return {"results": projects, "pagination": pagination}
 
 
-async def get_dashboard_detail(db: Session, project: DbProject):
+async def get_dashboard_detail(db: Connection, project: DbProject):
     """Get project details for project dashboard."""
     xform = central_crud.get_odk_form(project.odk_credentials)
-
     submission_meta_data = xform.getFullDetails(project.odkid, project.odk_form_id)
-    project.total_submission = submission_meta_data.get("submissions", 0)
-    project.last_active = submission_meta_data.get("lastSubmission")
 
-    contributors = (
-        db.query(db_models.DbTaskHistory.user_id)
-        .filter(
-            db_models.DbTaskHistory.project_id == project.id,
-            db_models.DbTaskHistory.user_id is not None,
-        )
-        .distinct()
-        .count()
-    )
-
-    project.total_tasks = len(project.tasks)
-    project.total_contributors = contributors
-
-    return project
+    contributors_dict = await get_project_users_plus_contributions(db, project.id)
+    return {
+        "total_submission": submission_meta_data.get("submissions", 0),
+        "last_active": submission_meta_data.get("lastSubmission"),
+        "total_tasks": len(project.tasks),
+        "total_contributors": len(contributors_dict),
+    }
 
 
 async def get_project_users_plus_contributions(db: Connection, project_id: int):
@@ -1056,7 +934,7 @@ async def get_project_users_plus_contributions(db: Connection, project_id: int):
     """
     query = """
         SELECT
-            u.username,
+            u.username as user,
             COUNT(th.user_id) as contributions
         FROM
             users u

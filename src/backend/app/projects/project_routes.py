@@ -38,6 +38,7 @@ from fastapi import (
 )
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from fmtm_splitter.splitter import split_by_sql, split_by_square
 from geojson_pydantic import Feature, FeatureCollection
 from loguru import logger as log
 from osm_fieldwork.data_models import data_models_path
@@ -418,43 +419,6 @@ async def delete_project(
     return Response(status_code=HTTPStatus.NO_CONTENT)
 
 
-# FIXME then re-enable this endpoint
-# FIXME write a method db_schemas.DbProject.update
-# @router.put("/{project_id}", response_model=DbProject)
-# async def update_project(
-#     project_info: project_schemas.ProjectUpdate,
-#     db: Annotated[Connection, Depends(db_conn)],
-#     project_user_dict: Annotated[ProjectUserDict , Depends(project_manager)],
-# ):
-#     """Update an existing project by ID.
-
-#     Note: the entire project JSON must be uploaded.
-#     If a partial update is required, use the PATCH method instead.
-
-#     Parameters:
-#     - id: ID of the project to update
-#     - project_info: Updated project information
-#     - current_user (DbUser): Check if user is project_manager
-
-#     Returns:
-#     - Updated project information
-
-#     Raises:
-#     - HTTPException with 404 status code if project not found
-#     """
-#     project = await project_crud.update_project_with_project_info(
-#         db, project_info, project_user_dict["project"], project_user_dict["user"]
-#     )
-#     if not project:
-#         raise HTTPException(
-#             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-#             detail="Project could not be updated",
-#         )
-#     return project
-
-# TODO add @router.patch("/{project_id}"
-
-
 @router.post("/{project_id}/upload-task-boundaries")
 async def upload_project_task_boundaries(
     project_id: int,
@@ -488,12 +452,13 @@ async def upload_project_task_boundaries(
 
 @router.post("/task-split")
 async def task_split(
-    db: Annotated[Connection, Depends(db_conn)],
     project_geojson: UploadFile = File(...),
     extract_geojson: Optional[UploadFile] = File(None),
     no_of_buildings: int = Form(50),
 ):
     """Split a task into subtasks.
+
+    NOTE we pass a connection
 
     Args:
         project_geojson (UploadFile): The geojson (AOI) to split.
@@ -502,11 +467,9 @@ async def task_split(
             If not included, an extract is generated automatically.
         no_of_buildings (int, optional): The number of buildings per subtask.
             Defaults to 50.
-        db (Connection): The database connection.
 
     Returns:
         The result of splitting the task into subtasks.
-
     """
     boundary_featcol = parse_geojson_file_to_featcol(await project_geojson.read())
     merged_boundary = merge_polygons(boundary_featcol, False)
@@ -522,12 +485,19 @@ async def task_split(
         else:
             log.warning("Parsed geojson file contained no geometries")
 
-    return await project_crud.split_geojson_into_tasks(
-        db,
-        merged_boundary,
-        no_of_buildings,
-        parsed_extract,
+    log.debug("STARTED task splitting using provided boundary and data extract")
+    # NOTE here we pass the connection string and allow fmtm-splitter to
+    # a use psycopg2 connection (not async)
+    features = await run_in_threadpool(
+        lambda: split_by_sql(
+            merged_boundary,
+            settings.FMTM_DB_URL.unicode_string(),
+            num_buildings=no_of_buildings,
+            osm_extract=parsed_extract,
+        )
     )
+    log.debug("COMPLETE task splitting")
+    return features
 
 
 @router.post("/validate-form")
@@ -739,7 +709,7 @@ async def get_categories(current_user: Annotated[AuthUser, Depends(login_require
 async def preview_split_by_square(
     project_geojson: UploadFile = File(...),
     extract_geojson: Optional[UploadFile] = File(None),
-    dimension: int = Form(100),
+    dimension_meters: int = Form(100),
 ):
     """Preview splitting by square.
 
@@ -768,8 +738,13 @@ async def preview_split_by_square(
         else:
             log.warning("Parsed geojson file contained no geometries")
 
-    return await project_crud.preview_split_by_square(
-        boundary_featcol, dimension, parsed_extract
+    if len(boundary_featcol["features"]) == 0:
+        boundary_featcol = merge_polygons(boundary_featcol)
+
+    return split_by_square(
+        boundary_featcol,
+        osm_extract=parsed_extract,
+        meters=dimension_meters,
     )
 
 
@@ -809,15 +784,14 @@ async def get_or_set_data_extract(
     db: Annotated[Connection, Depends(db_conn)],
     project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
     url: Optional[str] = None,
-    project_id: int = Query(..., description="Project ID"),
 ):
     """Get or set the data extract URL for a project."""
+    db_project = project_user_dict.get("project")
     fgb_url = await project_crud.get_or_set_data_extract_url(
         db,
-        project_id,
+        db_project,
         url,
     )
-
     return JSONResponse(status_code=HTTPStatus.OK, content={"url": fgb_url})
 
 
@@ -1088,7 +1062,13 @@ async def project_dashboard(
 ):
     """Get the project dashboard details."""
     project = project_user.get("project")
-    return await project_crud.get_dashboard_detail(db, project)
+    details = await project_crud.get_dashboard_detail(db, project)
+    details["project_name_prefix"] = project.project_name_prefix
+    details["organisation_name"] = project.organisation_name
+    details["created_at"] = project.created_at
+    details["organisation_logo"] = project.organisation_logo
+    details["last_active"] = project.last_active
+    return details
 
 
 @router.get("/contributors/{project_id}")
@@ -1179,3 +1159,14 @@ async def create_project(
         )
 
     return project
+
+
+@router.patch("/{project_id}", response_model=project_schemas.ProjectOut)
+async def update_project(
+    new_data: project_schemas.ProjectUpdate,
+    org_user_dict: Annotated[AuthUser, Depends(org_admin)],
+    db: Annotated[Connection, Depends(db_conn)],
+):
+    """Partial update an existing project."""
+    # NOTE this does not including updating the ODK project name
+    return await DbProject.update(db, org_user_dict.get("project").id, new_data)

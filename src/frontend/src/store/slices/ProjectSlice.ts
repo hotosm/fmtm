@@ -26,7 +26,7 @@ const initialState: ProjectStateTypes = {
     total_tasks: null,
     created_at: '',
     organisation_logo: '',
-    total_submission: null,
+    total_submissions: null,
     total_contributors: null,
     last_active: '',
   },

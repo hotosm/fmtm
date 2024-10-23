@@ -17,8 +17,6 @@
 #
 """Logic for organisation management."""
 
-from io import BytesIO
-
 from fastapi import UploadFile
 from psycopg import Connection
 
@@ -66,14 +64,19 @@ async def init_admin_org(db: Connection) -> None:
         approved=True,
     )
     with open("/opt/app/images/hot-org-logo.png", "rb") as logo_file:
-        org_logo = UploadFile(BytesIO(logo_file.read()))
-    hotosm_org = await DbOrganisation.create(
-        db,
-        org_in,
-        admin_user.id,
-        org_logo,
-        ignore_conflict=True,
-    )
+        org_logo = UploadFile(
+            file=logo_file,
+            filename="hot-org-logo.png",
+            headers={"Content-Type": "image/png"},
+        )
+
+        hotosm_org = await DbOrganisation.create(
+            db,
+            org_in,
+            admin_user.id,
+            org_logo,
+            ignore_conflict=True,
+        )
 
     # Make admin user manager of HOTOSM
     if hotosm_org:

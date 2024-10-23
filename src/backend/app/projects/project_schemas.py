@@ -22,7 +22,6 @@ from pathlib import Path
 from typing import Annotated, Optional, Self
 from uuid import UUID, uuid4
 
-from dateutil import parser
 from geojson_pydantic import Feature, FeatureCollection, MultiPolygon, Point, Polygon
 from pydantic import (
     BaseModel,
@@ -45,6 +44,7 @@ from app.db.postgis_utils import (
     get_address_from_lat_lon,
     merge_polygons,
     polygon_to_centroid,
+    timestamp,
 )
 
 
@@ -56,9 +56,9 @@ class ProjectInBase(DbProject):
         Optional[str],
         Field(validate_default=True),
     ] = None
-    # Override hashtag input to simply be a single string
+    # Override hashtag input to allow a single string input
     hashtags: Annotated[
-        list[str] | str,
+        Optional[list[str] | str],
         Field(validate_default=True),
     ] = None
 
@@ -70,6 +70,10 @@ class ProjectInBase(DbProject):
     organisation_name: Annotated[Optional[str], Field(exclude=True)] = None
     organisation_logo: Annotated[Optional[str], Field(exclude=True)] = None
     bbox: Annotated[Optional[list[float]], Field(exclude=True)] = None
+    odk_credentials: Annotated[
+        Optional[ODKCentralDecrypted],
+        Field(exclude=True, validate_default=True),
+    ] = None
 
     @field_validator("project_name_prefix", mode="after")
     @classmethod
@@ -82,20 +86,24 @@ class ProjectInBase(DbProject):
 
         NOTE this is a bit of a hack.
         """
-        return info.data.get("name").replace(" ", "_").lower()
+        if (name := info.data.get("name")) is None:
+            return None
+        return name.replace(" ", "_").lower()
 
     @field_validator("hashtags", mode="before")
     @classmethod
-    def validate_hashtags(cls, hashtags: Optional[str]) -> list[str]:
+    def validate_hashtags(
+        cls,
+        hashtags: Optional[str | list[str]],
+    ) -> Optional[list[str]]:
         """Validate hashtags.
 
         - Receives a string and parsed as a list of tags.
         - Commas or semicolons are replaced with spaces before splitting.
         - Add '#' to hashtag if missing.
-        - Also add default '#FMTM' tag.
         """
         if hashtags is None:
-            return ["#FMTM"]
+            return None
 
         if isinstance(hashtags, str):
             hashtags = hashtags.replace(",", " ").replace(";", " ")
@@ -104,22 +112,17 @@ class ProjectInBase(DbProject):
             hashtags_list = hashtags
 
         # Add '#' to hashtag strings if missing
-        hashtags_with_hash = [
+        return [
             f"#{hashtag}" if hashtag and not hashtag.startswith("#") else hashtag
             for hashtag in hashtags_list
         ]
 
-        if "#FMTM" not in hashtags_with_hash:
-            hashtags_with_hash.append("#FMTM")
-
-        return hashtags_with_hash
-
     @field_validator("odk_token", mode="after")
     @classmethod
-    def encrypt_token(cls, value: str) -> str:
+    def encrypt_token(cls, value: str) -> Optional[str]:
         """Encrypt the ODK Token for insertion into the db."""
         if not value:
-            return ""
+            return None
         return encrypt_value(value)
 
     @field_validator("outline", mode="before")
@@ -127,17 +130,26 @@ class ProjectInBase(DbProject):
     def parse_input_geojson(
         cls,
         value: FeatureCollection | Feature | MultiPolygon | Polygon,
-    ) -> FeatureCollection:
+    ) -> Optional[FeatureCollection]:
         """Parse any format geojson into a single Polygon.
 
         NOTE we run this in mode='before' to allow parsing as Feature first.
         """
+        if value is None:
+            return None
         # TODO SQL also handle geometry collection type here
         # geojson_pydantic.GeometryCollection
         # TODO SQL update this to remove the Featcol parsing at some point
         featcol = geojson_to_featcol(value)
         merged = merge_polygons(featcol)
         return merged.get("features")[0].get("geometry")
+
+    @model_validator(mode="after")
+    def append_fmtm_hashtag(self) -> Self:
+        """Append the #FMTM hashtag."""
+        if self.hashtags and "#FMTM" not in self.hashtags:
+            self.hashtags.append("#FMTM")
+        return self
 
 
 class ProjectIn(ProjectInBase, ODKCentralIn):
@@ -168,6 +180,7 @@ class ProjectUpdate(ProjectInBase, ODKCentralIn):
 
     # Allow updating the name field
     name: Optional[str] = None
+    # Override dict type to parse as Polygon
     outline: Optional[Polygon] = None
 
 
@@ -181,9 +194,10 @@ class ProjectOut(DbProject):
     bbox: Optional[list[float]] = None
     # Ensure the ODK password is omitted
     odk_central_password: Annotated[Optional[str], Field(exclude=True)] = None
+    # We need validate_default to run the validator and set to None
     odk_credentials: Annotated[
         Optional[ODKCentralDecrypted],
-        Field(exclude=True),
+        Field(exclude=True, validate_default=True),
     ] = None
 
     @field_serializer("odk_token")
@@ -203,10 +217,11 @@ class ProjectSummary(BaseModel):
     id: int
     organisation_id: int
     priority: ProjectPriority
+    hashtags: list[str]
+
     title: Optional[str] = None
     location_str: Optional[str] = None
     description: Optional[str] = None
-    hashtags: Optional[list[str]] = None
 
     # Calculated
     outline: Optional[Polygon]
@@ -246,21 +261,18 @@ class ProjectDashboard(BaseModel):
     total_tasks: int
     created_at: datetime
     organisation_logo: Optional[str] = None
-    total_submission: Optional[int] = None
+    total_submissions: Optional[int] = None
     total_contributors: Optional[int] = None
     last_active: Optional[str | datetime] = None
 
     @field_serializer("last_active")
-    def get_last_active(self, value, values):
+    def get_last_active(self, last_active: Optional[str | datetime]):
         """Date of last activity on project."""
-        if value is None:
+        if last_active is None:
             return None
 
-        last_active = parser.parse(value).replace(tzinfo=None)
-        current_date = datetime.now()
-
+        current_date = timestamp()
         time_difference = current_date - last_active
-
         days_difference = time_difference.days
 
         if days_difference == 0:
