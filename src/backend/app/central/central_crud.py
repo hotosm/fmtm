@@ -680,12 +680,20 @@ async def get_entities_data(
         list: JSON list containing Entity info. If updated_at is included,
             the format is string 2022-01-31T23:59:59.999Z.
     """
-    async with central_deps.get_odk_dataset(odk_creds) as odk_central:
-        entities = await odk_central.getEntityData(
-            odk_id,
-            dataset_name,
-            url_params=f"$select=__id{',' if fields else ''} {fields}",
-        )
+    try:
+        async with central_deps.get_odk_dataset(odk_creds) as odk_central:
+            entities = await odk_central.getEntityData(
+                odk_id,
+                dataset_name,
+                url_params=f"$select=__id{',' if fields else ''} {fields}",
+            )
+    except Exception as e:
+        msg = f"Getting entity data failed for ODK project ({odk_id})"
+        log.error(msg)
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail=msg,
+        ) from e
 
     all_entities = []
     for entity in entities:

@@ -108,7 +108,7 @@ async def get_projects_for_user(user_id: int):
 
     TODO to be implemented in future.
     """
-    return None
+    raise HTTPException(status_code=HTTPStatus.NOT_IMPLEMENTED)
 
 
 @router.post("/near_me", response_model=list[project_schemas.ProjectSummary])
@@ -117,7 +117,7 @@ async def get_tasks_near_me(lat: float, long: float, user_id: int = None):
 
     TODO to be implemented in future.
     """
-    return None
+    raise HTTPException(status_code=HTTPStatus.NOT_IMPLEMENTED)
 
 
 @router.get("/summaries", response_model=project_schemas.PaginatedProjectSummaries)
