@@ -88,7 +88,7 @@ async def lifespan(
 
     # Create a pooled db connection and make available in app state
     # NOTE we can access 'request.app.state.db_pool' in endpoints
-    app.state.db_pool = get_db_connection_pool()
+    app.state.db_pool = await get_db_connection_pool()
     await app.state.db_pool.open()
 
     async with app.state.db_pool.connection() as conn:

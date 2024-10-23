@@ -32,8 +32,8 @@ from psycopg import Connection
 from pyxform.xls2xform import convert as xform_convert
 
 from app.central import central_deps, central_schemas
-from app.config import encrypt_value, settings
-from app.db.enums import HTTPStatus, TaskStatus
+from app.config import settings
+from app.db.enums import EntityStatus, HTTPStatus
 from app.db.models import DbXLSForm
 from app.db.postgis_utils import (
     geojson_to_javarosa_geom,
@@ -769,7 +769,7 @@ async def update_entity_mapping_status(
     odk_id: int,
     entity_uuid: str,
     label: str,
-    status: TaskStatus,
+    status: EntityStatus,
     dataset_name: str = "features",
 ) -> dict:
     """Update the Entity mapping status.
@@ -781,7 +781,7 @@ async def update_entity_mapping_status(
         odk_id (str): The project ID in ODK Central.
         entity_uuid (str): The unique entity UUID for ODK Central.
         label (str): New label, with emoji prepended for status.
-        status (TaskStatus): New TaskStatus to assign, in string form.
+        status (EntityStatus): New EntityStatus to assign, in string form.
         dataset_name (str): Override the default dataset / Entity list name 'features'.
 
     Returns:
@@ -925,10 +925,7 @@ async def get_appuser_token(
                 raise HTTPException(
                     status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg
                 ) from None
-        odk_token = encrypt_value(
-            f"{odk_url}/v1/key/{appuser_token}/projects/{project_odk_id}"
-        )
-        return odk_token
+        return f"{odk_url}/v1/key/{appuser_token}/projects/{project_odk_id}"
 
     except Exception as e:
         log.error(f"An error occurred: {str(e)}")

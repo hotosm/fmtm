@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field, ValidationInfo, computed_field
 from pydantic.functional_validators import field_validator, model_validator
 
 from app.config import HttpUrlStr, decrypt_value, encrypt_value
-from app.db.enums import TaskStatus
+from app.db.enums import EntityStatus
 
 
 class ODKCentral(BaseModel):
@@ -225,7 +225,7 @@ class EntityMappingStatus(EntityOsmID, EntityTaskID):
     """The status for mapping an Entity/feature."""
 
     updatedAt: Optional[str] = Field(exclude=True)  # noqa: N815
-    status: Optional[TaskStatus] = None
+    status: Optional[EntityStatus] = None
 
     @computed_field
     @property
@@ -238,19 +238,18 @@ class EntityMappingStatusIn(BaseModel):
     """Update the mapping status for an Entity."""
 
     entity_id: str
-    status: TaskStatus
+    status: EntityStatus
     label: str
 
     @field_validator("label", mode="before")
     @classmethod
     def append_status_emoji(cls, value: str, info: ValidationInfo) -> str:
         """Add 🔒 (locked), ✅ (complete) or ❌ (invalid) emojis."""
-        status = info.data.get("status", TaskStatus.READY.value)
+        status = info.data.get("status", EntityStatus.READY.value)
         emojis = {
-            str(TaskStatus.LOCKED_FOR_MAPPING.value): "🔒",
-            str(TaskStatus.MAPPED.value): "✅",
-            str(TaskStatus.INVALIDATED.value): "❌",
-            str(TaskStatus.BAD.value): "❌",
+            str(EntityStatus.LOCKED_FOR_MAPPING.value): "🔒",
+            str(EntityStatus.MAPPED.value): "✅",
+            str(EntityStatus.BAD.value): "❌",
         }
 
         # Remove any existing emoji at the start of the label
@@ -266,6 +265,6 @@ class EntityMappingStatusIn(BaseModel):
 
     @field_validator("status", mode="after")
     @classmethod
-    def integer_status_to_string(cls, value: TaskStatus) -> str:
+    def integer_status_to_string(cls, value: EntityStatus) -> str:
         """Convert integer status to string for ODK Entity data."""
         return str(value.value)

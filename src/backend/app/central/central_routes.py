@@ -87,7 +87,9 @@ async def refresh_appuser_token(
 
     try:
         odk_token = await central_crud.get_appuser_token(
-            project_xform_id, project_odk_id, project_odk_creds, db
+            project_xform_id,
+            project_odk_id,
+            project_odk_creds,
         )
         await DbProject.update(
             db,
@@ -104,6 +106,7 @@ async def refresh_appuser_token(
         )
 
     except Exception as e:
+        log.error(e)
         msg = f"failed to refresh the appuser token for project {project_id}"
         log.error(msg)
         raise HTTPException(

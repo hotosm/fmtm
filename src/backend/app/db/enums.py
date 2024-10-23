@@ -151,6 +151,24 @@ class TaskAction(StrEnum, Enum):
     COMMENT = "COMMENT"
 
 
+class EntityStatus(IntEnum, Enum):
+    """Statuses for Entities in ODK.
+
+    NOTE here we started with int enums and it's hard to migrate.
+    NOTE we will continue to use int values in the form.
+    """
+
+    UNLOCKED = 0
+    LOCKED = 1
+    MAPPED = 2
+    BAD = 6
+    # Should we also add extra statuses?
+    # LUMPED
+    # SPLIT
+    # VALIDATED
+    # INVALIDATED
+
+
 class TaskType(StrEnum, Enum):
     """Task type."""
 

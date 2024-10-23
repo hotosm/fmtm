@@ -211,7 +211,6 @@ async def get_or_create_user(
                 detail=f"User ID ({user_data.id}) could not be inserted in db",
             )
 
-        print(db_user_details)
         return db_user_details
 
     except Exception as e:
