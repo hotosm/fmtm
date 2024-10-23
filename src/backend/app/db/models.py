@@ -208,6 +208,7 @@ class DbUser(BaseModel):
             await cur.execute(
                 """
                 SELECT * FROM users
+                ORDER BY registered_at DESC
                 OFFSET %(offset)s
                 LIMIT %(limit)s;
                 """,
@@ -335,7 +336,8 @@ class DbOrganisation(BaseModel):
                         WHERE id = %(user_id)s) = 'ADMIN'
                         THEN TRUE
                     ELSE approved
-                END = TRUE;
+                END = TRUE
+            ORDER BY created_at DESC;
         """
 
         async with db.cursor(row_factory=class_row(cls)) as cur:
@@ -614,7 +616,8 @@ class DbTaskHistory(BaseModel):
         """Fetch all task history entries for a project."""
         sql = """
             SELECT * FROM task_history
-            WHERE project_id = %(project_id)s;
+            WHERE project_id = %(project_id)s
+            ORDER BY action_date DESC;
         """
 
         async with db.cursor(row_factory=class_row(cls)) as cur:
@@ -999,7 +1002,7 @@ class DbProject(BaseModel):
             GROUP BY
                 p.id, project_org.id
             ORDER BY
-                p.id DESC
+                p.created_at DESC
             OFFSET %(offset)s
             LIMIT %(limit)s;
         """
@@ -1272,7 +1275,8 @@ class DbBasemap(BaseModel):
             await cur.execute(
                 """
                     SELECT * FROM basemaps
-                    WHERE project_id = %(project_id)s;
+                    WHERE project_id = %(project_id)s
+                    ORDER BY created_at DESC;
                 """,
                 {"project_id": project_id},
             )
