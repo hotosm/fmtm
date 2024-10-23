@@ -132,14 +132,17 @@ const ProjectDetailsV2 = () => {
   useEffect(() => {
     if (!map) return;
 
+    // FIXME should the feature id be an int, not a string?
     const features = state.projectTaskBoundries[0]?.taskBoundries?.map((taskObj) => ({
       type: 'Feature',
-      geometry: { ...taskObj.outline.geometry },
+      id: `${taskObj.id}_${taskObj.task_status}`,
+      geometry: { ...taskObj.outline },
       properties: {
         ...taskObj.outline.properties,
-        locked_by_user: taskObj?.locked_by_uid,
+        task_status: taskObj?.task_status,
+        locked_by_uid: taskObj?.locked_by_uid,
+        locked_by_username: taskObj?.locked_by_username,
       },
-      id: `${taskObj.id}_${taskObj.task_status}`,
     }));
 
     const taskBoundariesFeatcol = {

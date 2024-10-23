@@ -145,7 +145,7 @@
 		// Set as selected task for buttons
 		selectedTaskId.set(taskObj.id);
 
-		const taskPolygon = polygon(taskObj.outline.geometry.coordinates);
+		const taskPolygon = polygon(taskObj.outline.coordinates);
 		const taskBuffer = buffer(taskPolygon, 5, { units: 'meters' });
 		if (taskBuffer && map) {
 			const taskBbox: [number, number, number, number] = bbox(taskBuffer) as [number, number, number, number];
@@ -178,7 +178,7 @@
 	// 		}
 
 	onMount(async () => {
-		const projectPolygon = polygon(data.project.outline.geometry.coordinates);
+		const projectPolygon = polygon(data.project.outline.coordinates);
 		const projectBuffer = buffer(projectPolygon, 100, { units: 'meters' });
 		if (projectBuffer && map) {
 			const projectBbox: [number, number, number, number] = bbox(projectBuffer) as [number, number, number, number];
