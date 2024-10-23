@@ -418,7 +418,7 @@ async def upload_custom_geojson_extract(
         str: URL to fgb file in S3.
     """
     project = await project_deps.get_project_by_id(db, project_id)
-    log.debug(f"Uploading custom data extract for project: {project}")
+    log.debug(f"Uploading custom data extract for project ({project.id})")
 
     featcol = parse_geojson_file_to_featcol(geojson_raw)
     featcol_single_geom_type = featcol_keep_single_geom_type(featcol)
@@ -512,124 +512,95 @@ async def generate_odk_central_project_content(
 async def generate_project_files(
     db: Connection,
     project_id: int,
-    background_task_id: Optional[uuid.UUID] = None,
-) -> None:
+) -> bool:
     """Generate the files for a project.
 
     QR code (appuser), ODK XForm, ODK Entities from OSM data extract.
 
     Args:
-        db (Connection): The database connection.
         project_id(int): id of the FMTM project.
         background_task_id (uuid): the task_id of the background task.
+        db (Connection): The database connection, newly generated.
+
+    Returns:
+        bool: True if success.
     """
-    try:
-        project = await project_deps.get_project_by_id(db, project_id)
-        log.info(f"Starting generate_project_files for project {project_id}")
+    project = await project_deps.get_project_by_id(db, project_id)
+    log.info(f"Starting generate_project_files for project {project_id}")
 
-        # Extract data extract from flatgeobuf
-        log.debug("Getting data extract geojson from flatgeobuf")
-        feature_collection = await get_project_features_geojson(db, project)
+    # Extract data extract from flatgeobuf
+    log.debug("Getting data extract geojson from flatgeobuf")
+    feature_collection = await get_project_features_geojson(db, project)
 
-        # Split extract by task area
-        log.debug("Splitting data extract per task area")
-        # TODO in future this splitting could be removed as the task_id is
-        # no longer used in the XLSForm
-        task_extract_dict = await split_geojson_by_task_areas(
-            db, feature_collection, project_id
+    # Split extract by task area
+    log.debug("Splitting data extract per task area")
+    # TODO in future this splitting could be removed as the task_id is
+    # no longer used in the XLSForm
+    task_extract_dict = await split_geojson_by_task_areas(
+        db, feature_collection, project_id
+    )
+
+    if not task_extract_dict:
+        log.warning(f"Project ({project_id}) failed splitting tasks")
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail="Failed splitting extract by tasks.",
         )
 
-        if not task_extract_dict:
-            log.warning(f"Project ({project_id}) failed splitting tasks")
-            raise HTTPException(
-                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-                detail="Failed splitting extract by tasks.",
-            )
+    # Get ODK Project details
+    project_odk_id = project.odkid
+    project_xlsform = project.xlsform_content
+    project_odk_form_id = project.odk_form_id
+    project_odk_creds = project.odk_credentials
 
-        # Get ODK Project details
-        project_odk_id = project.odkid
-        project_xlsform = project.xlsform_content
-        project_odk_form_id = project.odk_form_id
-        project_odk_creds = project.odk_credentials
+    odk_token = await generate_odk_central_project_content(
+        project_odk_id,
+        project_odk_form_id,
+        project_odk_creds,
+        BytesIO(project_xlsform),
+        task_extract_dict,
+    )
+    log.debug(
+        f"Setting encrypted odk token for FMTM project ({project_id}) "
+        f"ODK project {project_odk_id}: {type(odk_token)} ({odk_token[:15]}...)"
+    )
+    await DbProject.update(
+        db,
+        project_id,
+        project_schemas.ProjectUpdate(
+            odk_token=odk_token,
+        ),
+    )
 
-        odk_token = await generate_odk_central_project_content(
-            project_odk_id,
-            project_odk_form_id,
-            project_odk_creds,
-            BytesIO(project_xlsform),
-            task_extract_dict,
+    task_feature_counts = [
+        (
+            task.id,
+            len(task_extract_dict.get(task.project_task_index, {}).get("features", [])),
         )
-        log.debug(
-            f"Setting encrypted odk token for FMTM project ({project_id}) "
-            f"ODK project {project_odk_id}: {odk_token[:3]}..."
+        for task in project.tasks
+    ]
+    sql = """
+        WITH task_update(id, feature_count) AS (
+            VALUES {}
         )
-        await DbProject.update(
-            db,
-            project_id,
-            project_schemas.ProjectUpdate(
-                odk_token=odk_token,
-            ),
-        )
+        UPDATE
+            public.tasks t
+        SET
+            feature_count = tu.feature_count
+        FROM
+            task_update tu
+        WHERE
+            t.id = tu.id;
+    """
+    value_placeholders = ", ".join(
+        f"({task_id}, {feature_count})"
+        for task_id, feature_count in task_feature_counts
+    )
+    formatted_sql = sql.format(value_placeholders)
+    async with db.cursor() as cur:
+        await cur.execute(formatted_sql)
 
-        # Add the feature counts for each task
-        # FIXME this logic could probably be better
-        task_feature_counts = [
-            (
-                task.id,
-                len(
-                    task_extract_dict.get(task.project_task_index, {}).get(
-                        "features", []
-                    )
-                ),
-            )
-            for task in project.tasks
-        ]
-        sql = """
-            WITH task_update(id, feature_count) AS (
-                VALUES {}
-            )
-            UPDATE
-                public.tasks t
-            SET
-                feature_count = tu.feature_count
-            FROM
-                task_update tu
-            WHERE
-                t.id = tu.id;
-        """
-        value_placeholders = ", ".join(
-            f"({task_id}, {feature_count})"
-            for task_id, feature_count in task_feature_counts
-        )
-        formatted_sql = sql.format(value_placeholders)
-        async with db.cursor() as cur:
-            await cur.execute(formatted_sql)
-
-        if background_task_id:
-            await DbBackgroundTask.update(
-                db,
-                background_task_id,
-                project_schemas.BackgroundTaskUpdate(
-                    status=BackgroundTaskStatus.SUCCESS
-                ),
-            )
-
-    except Exception as e:
-        log.debug(str(format_exc()))
-        log.warning(str(e))
-
-        if background_task_id:
-            await DbBackgroundTask.update(
-                db,
-                background_task_id,
-                project_schemas.BackgroundTaskUpdate(
-                    status=BackgroundTaskStatus.FAILED,
-                    message=str(e),
-                ),
-            )
-        else:
-            # Raise original error if not running in background
-            raise e
+    return True
 
 
 async def get_task_geometry(db: Connection, project_id: int):

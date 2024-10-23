@@ -498,7 +498,7 @@ async def task_split(
 
 @router.post("/validate-form")
 async def validate_form(
-    xlsform: BytesIO = Depends(central_deps.read_xlsform),
+    xlsform: Annotated[BytesIO, Depends(central_deps.read_xlsform)],
     debug: bool = False,
 ):
     """Basic validity check for uploaded XLSForm.
@@ -532,7 +532,6 @@ async def validate_form(
 
 @router.post("/{project_id}/generate-project-data")
 async def generate_files(
-    background_tasks: BackgroundTasks,
     db: Annotated[Connection, Depends(db_conn)],
     project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
     xlsform_upload: Annotated[
@@ -558,7 +557,6 @@ async def generate_files(
     The edit project endpoint can have project manager permissions.
 
     Args:
-        background_tasks (BackgroundTasks): FastAPI bg tasks, provided automatically.
         xlsform_upload (UploadFile, optional): A custom XLSForm to use in the project.
             A file should be provided if user wants to upload a custom xls form.
         additional_entities (list[str]): If additional Entity lists need to be
@@ -624,27 +622,25 @@ async def generate_files(
             },
         )
 
-    # Create task in db and return uuid
-    log.debug(f"Creating export background task for project ID: {project_id}")
-    background_task_id = await DbBackgroundTask.create(
-        db,
-        project_schemas.BackgroundTaskIn(
-            project_id=project_id,
-            name="generate_project",
-        ),
-    )
-
-    log.debug(f"Submitting {background_task_id} to background tasks stack")
-    background_tasks.add_task(
-        project_crud.generate_project_files,
+    success = await project_crud.generate_project_files(
         db,
         project_id,
-        background_task_id,
     )
+
+    if not success:
+        return JSONResponse(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            content={
+                "message": (
+                    f"Failed project ({project_id}) creation. "
+                    "Please contact the server admin."
+                )
+            },
+        )
 
     return JSONResponse(
         status_code=HTTPStatus.OK,
-        content={"Message": f"{project.id}", "task_id": f"{background_task_id}"},
+        content={"message": "success"},
     )
 
 

@@ -199,12 +199,14 @@ class ProjectOut(DbProject):
         Optional[ODKCentralDecrypted],
         Field(exclude=True, validate_default=True),
     ] = None
+    # We shouldn't attempt to serialise the xlsform_content bytes
+    xlsform_content: Annotated[Optional[bytes], Field(exclude=True)] = None
 
     @field_serializer("odk_token")
     def decrypt_token(self, value: str) -> Optional[str]:
         """Decrypt the ODK Token extracted from the db."""
         if not value:
-            return ""
+            return None
         return decrypt_value(value)
 
 
