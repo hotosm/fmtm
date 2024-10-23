@@ -17,22 +17,10 @@
 #
 """Enum definitions to translate values into human enum strings."""
 
-from enum import Enum
+from enum import Enum, IntEnum, StrEnum
 
 TILES_SOURCE = ["esri", "bing", "google"]
 TILES_FORMATS = ["mbtiles", "sqlitedb", "pmtiles"]
-
-
-class StrEnum(str, Enum):
-    """Wrapper for string enums, until Python 3.11 upgrade."""
-
-    pass
-
-
-class IntEnum(int, Enum):
-    """Wrapper for string enums, until Python 3.11 upgrade."""
-
-    pass
 
 
 class HTTPStatus(IntEnum):
