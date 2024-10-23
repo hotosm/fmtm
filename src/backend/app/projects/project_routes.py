@@ -387,8 +387,6 @@ async def read_project(
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ):
     """Get a specific project by ID."""
-    log.warning(project_user.get("project"))
-    log.warning(project_user.get("project").odk_credentials)
     return project_user.get("project")
 
 

@@ -247,94 +247,116 @@ async def split_geojson_by_task_areas(
     Returns:
         dict[int, geojson.FeatureCollection]: {task_id: FeatureCollection} mapping.
     """
-    sql = """
-        -- Drop table if already exists
-        DROP TABLE IF EXISTS temp_features CASCADE;
-
-        -- Create a temporary table to store the parsed GeoJSON features
-        CREATE TEMP TABLE temp_features (
-            id VARCHAR,
-            geometry GEOMETRY,
-            properties JSONB
-        );
-
-        -- Insert parsed geometries and properties into the temporary table
-        INSERT INTO temp_features (id, geometry, properties)
-        SELECT
-            (feature->'properties'->>'osm_id')::VARCHAR AS id,
-            ST_SetSRID(ST_GeomFromGeoJSON(feature->>'geometry'), 4326) AS geometry,
-            jsonb_set(
-                jsonb_set(
-                    feature->'properties',
-                    '{task_id}', to_jsonb(tasks.project_task_index), true
-                ),
-                '{project_id}', to_jsonb(tasks.project_id), true
-            ) AS properties
-        FROM (
-            SELECT jsonb_array_elements(CAST(%(geojson_featcol)s AS jsonb)->'features')
-            AS feature
-        ) AS features
-        JOIN tasks ON tasks.project_id = :project_id
-        WHERE
-            ST_Within(
-                ST_Centroid(ST_SetSRID(ST_GeomFromGeoJSON(feature->>'geometry'), 4326)
-                ), tasks.outline);
-
-        -- Retrieve task outlines based on the provided project_id
-        SELECT
-            tasks.project_task_index AS task_id,
-            jsonb_build_object(
-                'type', 'FeatureCollection',
-                'features', jsonb_agg(feature)
-            ) AS task_features
-        FROM
-            tasks
-        LEFT JOIN LATERAL (
-            SELECT
-                jsonb_build_object(
-                    'type', 'Feature',
-                    'geometry', ST_AsGeoJSON(temp_features.geometry)::jsonb,
-                    'id', temp_features.id::VARCHAR,
-                    'properties', temp_features.properties
-                ) AS feature
-            FROM (
-                SELECT DISTINCT ON (geometry)
-                    id,
-                    geometry,
-                    properties
-                FROM temp_features
-            ) AS temp_features
-            WHERE
-                ST_Within(ST_Centroid(temp_features.geometry), tasks.outline)
-        ) AS feature ON true
-        WHERE
-            tasks.project_id = :project_id
-        GROUP BY
-            tasks.project_task_index;
-        """
-
     try:
         async with db.cursor() as cur:
+            await cur.execute("""
+                -- Drop table if already exists
+                DROP TABLE IF EXISTS temp_features CASCADE;
+            """)
+
+            await cur.execute("""
+                -- Create a temporary table to store the parsed GeoJSON features
+                CREATE TEMP TABLE temp_features (
+                    id VARCHAR,
+                    geometry GEOMETRY,
+                    properties JSONB
+                );
+            """)
+
             await cur.execute(
-                sql,
+                """
+                -- Insert parsed geometries and properties into the temporary table
+                INSERT INTO temp_features (id, geometry, properties)
+                SELECT
+                    (feature->'properties'->>'osm_id')::VARCHAR AS id,
+                    ST_SetSRID(
+                        ST_GeomFromGeoJSON(feature->>'geometry'),
+                        4326
+                    ) AS geometry,
+                    jsonb_set(
+                        jsonb_set(
+                            feature->'properties',
+                            '{task_id}', to_jsonb(tasks.project_task_index), true
+                        ),
+                        '{project_id}', to_jsonb(tasks.project_id), true
+                    ) AS properties
+                FROM (
+                    SELECT jsonb_array_elements(
+                        CAST(%(geojson_featcol)s AS jsonb
+                    )->'features')
+                    AS feature
+                ) AS features
+                JOIN tasks ON tasks.project_id = %(project_id)s
+                WHERE
+                    ST_Within(
+                        ST_Centroid(ST_SetSRID(
+                            ST_GeomFromGeoJSON(feature->>'geometry'
+                        ), 4326)
+                    ), tasks.outline);
+            """,
                 {
-                    "geojson_featcol": json.dumps(featcol),
                     "project_id": project_id,
+                    "geojson_featcol": json.dumps(featcol),
                 },
             )
-            featcol = await cur.fetchall()
+
+            # Set row_factory to output task_id:task_featcol dict
+            cur.row_factory = class_row(dict[int, geojson_pydantic.FeatureCollection])
+            await cur.execute(
+                """
+                -- Retrieve task outlines based on the provided project_id
+                SELECT
+                    tasks.project_task_index AS task_id,
+                    jsonb_build_object(
+                        'type', 'FeatureCollection',
+                        'features', jsonb_agg(feature)
+                    ) AS task_featcol
+                FROM
+                    tasks
+                LEFT JOIN LATERAL (
+                    SELECT
+                        jsonb_build_object(
+                            'type', 'Feature',
+                            'geometry', ST_AsGeoJSON(temp_features.geometry)::jsonb,
+                            'id', temp_features.id::VARCHAR,
+                            'properties', temp_features.properties
+                        ) AS feature
+                    FROM (
+                        SELECT DISTINCT ON (geometry)
+                            id,
+                            geometry,
+                            properties
+                        FROM temp_features
+                    ) AS temp_features
+                    WHERE
+                        ST_Within(ST_Centroid(temp_features.geometry), tasks.outline)
+                ) AS feature ON true
+                WHERE
+                    tasks.project_id = %(project_id)s
+                GROUP BY
+                    tasks.project_task_index;
+
+            """,
+                {"project_id": project_id},
+            )
+            task_featcol_dict = await cur.fetchall()
+
+            await cur.execute("""
+                -- Drop table at the end
+                DROP TABLE IF EXISTS temp_features CASCADE;
+            """)
 
     except ProgrammingError as e:
         log.error(e)
         log.error("Attempted geojson task splitting failed")
         return None
 
-    if featcol and len(featcol[0]) > 1:
-        # NOTE the feature collections are nested in a tuple, first remove
-        task_geojson_dict = {
-            record[0]: geojson.loads(json.dumps(record[1])) for record in featcol
+    if task_featcol_dict and len(task_featcol_dict) > 1:
+        # Update to be a dict of repeating task_id:task_featcol pairs
+        return {
+            record["task_id"]: record["task_featcol"] for record in task_featcol_dict
         }
-        return task_geojson_dict
+        return task_featcol_dict
 
     return None
 
