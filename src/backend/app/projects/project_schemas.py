@@ -218,8 +218,8 @@ class ProjectSummary(BaseModel):
     name: str
     organisation_id: int
     priority: ProjectPriority
-    hashtags: list[str]
 
+    hashtags: Optional[list[str]]
     location_str: Optional[str] = None
     description: Optional[str] = None
 
