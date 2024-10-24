@@ -449,6 +449,9 @@ CREATE INDEX ix_task_history_project_id ON public.task_history USING btree (
 CREATE INDEX ix_task_history_user_id ON public.task_history USING btree (
     user_id
 );
+CREATE INDEX idx_task_history_date ON public.task_history USING btree (
+    task_id, action_date
+);
 CREATE INDEX idx_tasks_outline ON public.tasks USING gist (outline);
 CREATE INDEX ix_projects_mapper_level ON public.projects USING btree (
     mapper_level
