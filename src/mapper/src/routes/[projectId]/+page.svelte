@@ -49,6 +49,7 @@
 	import LocationArcImg from '$assets/images/locationArc.png';
 	import LocationDotImg from '$assets/images/locationDot.png';
 	import { setAlert } from '$store/common';
+	import { baseLayers } from '$constants/baseLayers.ts';
 
 	export let data: PageData;
 
@@ -355,6 +356,10 @@
 	>
 		<NavigationControl position="top-left" />
 		<ScaleControl />
+		<Control class="flex flex-col gap-2" position="bottom-right">
+			<LayerSwitcher {map} position="bottom-right" expandDirection="right" extraStyles={baseLayers} />
+			<Legend />
+		</Control>
 		<Control class="flex flex-col gap-y-2" position="top-left">
 			<ControlGroup>
 				<ControlButton on:click={() => (toggleGeolocationStatus = !toggleGeolocationStatus)}
@@ -363,8 +368,8 @@
 						class={`!text-[1.2rem] cursor-pointer  duration-200 ${toggleGeolocationStatus ? 'text-red-600' : 'text-[#52525B]'}`}
 					></hot-icon></ControlButton
 				>
-			</ControlGroup></Control
-		>
+			</ControlGroup>
+		</Control>
 		{#if toggleGeolocationStatus}
 			<GeoJSON data={locationGeojson} id="point">
 				<SymbolLayer
@@ -435,10 +440,6 @@
 				}}
 			/>
 		</GeoJSON>
-		<div class="absolute right-3 bottom-3 sm:right-5 sm:bottom-5">
-			<LayerSwitcher />
-			<Legend />
-		</div>
 	</MapLibre>
 
 	{#if $selectedTaskId && selectedTab === 'map' && toggleTaskActionModal && ($selectedTaskStatus === 'RELEASED_FOR_MAPPING' || $selectedTaskStatus === 'LOCKED_FOR_MAPPING')}
