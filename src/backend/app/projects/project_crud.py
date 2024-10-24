@@ -538,13 +538,6 @@ async def generate_project_files(
         db, feature_collection, project_id
     )
 
-    if not task_extract_dict:
-        log.warning(f"Project ({project_id}) failed splitting tasks")
-        raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail="Failed splitting extract by tasks.",
-        )
-
     # Get ODK Project details
     project_odk_id = project.odkid
     project_xlsform = project.xlsform_content
@@ -674,11 +667,6 @@ async def get_project_features_geojson(
         split_extract_dict = await split_geojson_by_task_areas(
             db, data_extract_geojson, project_id
         )
-        if not split_extract_dict:
-            raise HTTPException(
-                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-                detail=(f"Failed to extract geojson for task ({task_id})"),
-            )
         return split_extract_dict[task_id]
 
     return data_extract_geojson

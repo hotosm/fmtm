@@ -326,14 +326,25 @@ async def split_geojson_by_task_areas(
         log.error("Attempted geojson task splitting failed")
         return None
 
-    if task_featcol_dict and len(task_featcol_dict) > 1:
-        # Update to be a dict of repeating task_id:task_featcol pairs
-        return {
-            record["task_id"]: record["task_featcol"] for record in task_featcol_dict
-        }
-        return task_featcol_dict
+    if not task_featcol_dict:
+        msg = f"Failed to split project ({project_id}) geojson by task areas."
+        log.exception(msg)
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail=msg,
+        )
 
-    return None
+    if len(task_featcol_dict) < 1:
+        msg = (
+            f"Attempted splitting project ({project_id}) geojson by task areas, "
+            "but no data was returned."
+        )
+        log.warning(msg)
+        return None
+
+    # Update to be a dict of repeating task_id:task_featcol pairs
+    return {record["task_id"]: record["task_featcol"] for record in task_featcol_dict}
+    return task_featcol_dict
 
 
 def add_required_geojson_properties(
