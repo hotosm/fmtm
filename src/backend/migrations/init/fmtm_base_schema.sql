@@ -66,10 +66,10 @@ CREATE TYPE public.organisationtype AS ENUM (
 ALTER TYPE public.organisationtype OWNER TO fmtm;
 
 CREATE TYPE public.projectpriority AS ENUM (
-    'URGENT',
-    'HIGH',
     'MEDIUM',
-    'LOW'
+    'LOW',
+    'HIGH',
+    'URGENT'
 );
 ALTER TYPE public.projectpriority OWNER TO fmtm;
 

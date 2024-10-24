@@ -48,9 +48,9 @@ class HTTPStatus(IntEnum):
 class ProjectStatus(StrEnum, Enum):
     """All possible states of a Mapping Project."""
 
-    ARCHIVED = "ARCHIVED"
-    PUBLISHED = "PUBLISHED"
     DRAFT = "DRAFT"
+    PUBLISHED = "PUBLISHED"
+    ARCHIVED = "ARCHIVED"
 
 
 class OrganisationType(StrEnum, Enum):
@@ -64,10 +64,10 @@ class OrganisationType(StrEnum, Enum):
 class ProjectPriority(StrEnum, Enum):
     """All possible project priority levels."""
 
-    URGENT = "URGENT"
-    HIGH = "HIGH"
     MEDIUM = "MEDIUM"
     LOW = "LOW"
+    HIGH = "HIGH"
+    URGENT = "URGENT"
 
 
 class UserRole(StrEnum, Enum):

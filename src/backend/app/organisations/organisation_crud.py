@@ -55,7 +55,6 @@ async def init_admin_org(db: Connection) -> None:
     # Create HOTOSM org
     org_in = OrganisationIn(
         name="HOTOSM",
-        slug="hotosm",
         description="Humanitarian OpenStreetMap Team.",
         url="https://hotosm.org",
         odk_central_url=settings.ODK_CENTRAL_URL,

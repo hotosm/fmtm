@@ -26,7 +26,6 @@ from geojson_pydantic import Feature, FeatureCollection, MultiPolygon, Point, Po
 from pydantic import (
     BaseModel,
     Field,
-    ValidationInfo,
     computed_field,
 )
 from pydantic.functional_serializers import field_serializer
@@ -38,7 +37,7 @@ from app.db.enums import (
     BackgroundTaskStatus,
     ProjectPriority,
 )
-from app.db.models import DbBackgroundTask, DbBasemap, DbProject
+from app.db.models import DbBackgroundTask, DbBasemap, DbProject, slugify
 from app.db.postgis_utils import (
     geojson_to_featcol,
     get_address_from_lat_lon,
@@ -51,11 +50,6 @@ from app.db.postgis_utils import (
 class ProjectInBase(DbProject):
     """Base model for project insert / update (validators)."""
 
-    # Force running validation to set value
-    slug: Annotated[
-        Optional[str],
-        Field(validate_default=True),
-    ] = None
     # Override hashtag input to allow a single string input
     hashtags: Annotated[
         Optional[list[str] | str],
@@ -75,20 +69,20 @@ class ProjectInBase(DbProject):
         Field(exclude=True, validate_default=True),
     ] = None
 
-    @field_validator("slug", mode="after")
-    @classmethod
-    def set_project_slug(
-        cls,
-        value: Optional[str],
-        info: ValidationInfo,
-    ) -> str:
-        """Set the slug attribute from the name.
+    # @field_validator("slug", mode="after")
+    # @classmethod
+    # def set_project_slug(
+    #     cls,
+    #     value: Optional[str],
+    #     info: ValidationInfo,
+    # ) -> str:
+    #     """Set the slug attribute from the name.
 
-        NOTE this is a bit of a hack.
-        """
-        if (name := info.data.get("name")) is None:
-            return None
-        return name.replace(" ", "_").lower()
+    #     NOTE this is a bit of a hack.
+    #     """
+    #     if (name := info.data.get("name")) is None:
+    #         return None
+    #     return name.replace(" ", "_").lower()
 
     @field_validator("hashtags", mode="before")
     @classmethod
@@ -145,8 +139,12 @@ class ProjectInBase(DbProject):
         return merged.get("features")[0].get("geometry")
 
     @model_validator(mode="after")
-    def append_fmtm_hashtag(self) -> Self:
-        """Append the #FMTM hashtag."""
+    def append_fmtm_hashtag_and_slug(self) -> Self:
+        """Append the #FMTM hashtag and add URL slug."""
+        # NOTE the slug is set here as the field_validator above
+        # does not seem to work?
+        self.slug = slugify(self.name)
+
         if self.hashtags and "#FMTM" not in self.hashtags:
             self.hashtags.append("#FMTM")
         return self

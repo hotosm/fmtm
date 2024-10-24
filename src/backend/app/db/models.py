@@ -24,6 +24,7 @@ from SQL statements. Sometimes we only need a subset of the fields.
 import json
 from datetime import datetime
 from io import BytesIO
+from re import sub
 from typing import TYPE_CHECKING, Annotated, Optional, Self
 from uuid import UUID
 
@@ -1436,3 +1437,14 @@ class DbSubmissionPhoto(BaseModel):
     task_id: Optional[int] = None  # Note this is not a DbTask, but an ODK task_id
     submission_id: Optional[str] = None
     s3_path: Optional[str] = None
+
+
+def slugify(name: Optional[str]) -> Optional[str]:
+    """Return a sanitised URL slug from a name."""
+    if name is None:
+        return None
+    # Remove special characters and replace spaces with hyphens
+    slug = sub(r"[^\w\s-]", "", name).strip().lower().replace(" ", "-")
+    # Remove consecutive hyphens
+    slug = sub(r"[-\s]+", "-", slug)
+    return slug
