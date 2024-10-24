@@ -69,6 +69,7 @@ class ProjectInBase(DbProject):
     organisation_name: Annotated[Optional[str], Field(exclude=True)] = None
     organisation_logo: Annotated[Optional[str], Field(exclude=True)] = None
     bbox: Annotated[Optional[list[float]], Field(exclude=True)] = None
+    last_active: Annotated[Optional[datetime], Field(exclude=True)] = None
     odk_credentials: Annotated[
         Optional[ODKCentralDecrypted],
         Field(exclude=True, validate_default=True),
