@@ -24,6 +24,7 @@ map = new Map({
 
 <script lang="ts">
 	import { onDestroy } from 'svelte';
+	import { clickOutside } from '$utilFunctions/clickOutside.ts';
 
 	export let position: maplibregl.ControlPosition = 'top-right';
 	export let expandDirection: 'top' | 'bottom' | 'left' | 'right' = 'bottom';
@@ -31,7 +32,6 @@ map = new Map({
 	export let map;
 
 	let allStyles: MapLibreStylePlusMetadata[] | [] = [];
-	$: console.log(allStyles, 'allStyles');
 	let selectedStyleUrl: string | undefined = undefined;
 	let isClosed = true;
 
@@ -127,7 +127,13 @@ map = new Map({
 	});
 </script>
 
-<div tabindex="-1" role="button" class={`style-control ${expandDirection} ${isClosed ? 'closed' : 'open'}`}>
+<div
+	use:clickOutside
+	on:click_outside={() => (isClosed = true)}
+	tabindex="-1"
+	role="button"
+	class={`style-control ${expandDirection} ${isClosed ? 'closed' : 'open'}`}
+>
 	{#each allStyles as style, _}
 		<button
 			class="style-selector {selectedStyleUrl === style.metadata.thumbnail ? 'active' : ''}"
