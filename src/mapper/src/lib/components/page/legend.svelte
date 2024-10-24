@@ -18,8 +18,8 @@
 	];
 </script>
 
-<div use:clickOutside on:click_outside={() => (isOpen = false)} class="relative">
-	<div class="group absolute bottom-0 right-0 text-nowrap cursor-pointer" on:click={() => (isOpen = !isOpen)}>
+<div use:clickOutside on:click_outside={() => (isOpen = false)} class="relative w-fit ml-auto">
+	<div class="group text-nowrap cursor-pointer w-fit" on:click={() => (isOpen = !isOpen)}>
 		<hot-icon
 			style="border: 1px solid #D7D7D7;"
 			name="legend-toggle"
