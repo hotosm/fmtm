@@ -32,7 +32,7 @@ from loguru import logger as log
 from app.central import central_schemas
 from app.central.central_crud import create_odk_project
 from app.config import encrypt_value, settings
-from app.db.enums import TaskStatus
+from app.db.enums import HTTPStatus, TaskStatus
 from app.db.postgis_utils import check_crs
 from app.projects import project_crud
 from tests.test_data import test_data_path
@@ -47,24 +47,57 @@ async def create_project(client, organisation_id, project_data):
     response = await client.post(
         f"/projects?org_id={organisation_id}", json=project_data
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     return response.json()
 
 
-async def test_create_project(client, organisation, project_data):
-    """Test project creation endpoint."""
+async def test_create_project_invalid(client, organisation, project_data):
+    """Test project creation endpoint, duplicate checker."""
+    project_data["task_split_type"] = "invalid"
+    project_data["priority"] = "invalid"
+    response_invalid = await client.post(
+        f"/projects?org_id={organisation.id}", json=project_data
+    )
+    assert response_invalid.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    response_data = response_invalid.json()
+
+    expected_errors = {
+        "task_split_type": (
+            "'DIVIDE_ON_SQUARE', 'CHOOSE_AREA_AS_TASK' or 'TASK_SPLITTING_ALGORITHM'"
+        ),
+        "priority": "'URGENT', 'HIGH', 'MEDIUM' or 'LOW'",
+    }
+
+    for error in response_data["detail"]:
+        # Get the field name from the last element of the 'loc' list
+        field_name = error["loc"][-1]
+        if field_name in expected_errors:
+            assert error["ctx"]["expected"] == expected_errors[field_name]
+
+
+async def test_create_project_with_dup(client, organisation, project_data):
+    """Test project creation endpoint, duplicate checker."""
     response_data = await create_project(client, organisation.id, project_data)
+    print("")
+    print("")
+    print(response_data)
+    print("")
+
     project_name = project_data["name"]
     assert "id" in response_data
+    assert isinstance(response_data["id"], int)
+    assert isinstance(response_data["slug"], str)
+    assert response_data["slug"] == project_name.replace(" ", "_").lower()
 
     # Duplicate response to test error condition: project name already exists
     response_duplicate = await client.post(
         f"/projects?org_id={organisation.id}", json=project_data
     )
-    assert response_duplicate.status_code == 400
+
+    assert response_duplicate.status_code == HTTPStatus.CONFLICT
     assert (
         response_duplicate.json()["detail"]
-        == f"Project already exists with the name {project_name}"
+        == f"Project with name '{project_name}' already exists."
     )
 
 
@@ -203,7 +236,9 @@ async def test_unsupported_crs(project_data, crs):
         ("TAG1, tag2 #TAG3", ["#TAG1", "#tag2", "#TAG3", "#FMTM"]),
     ],
 )
-def test_hashtags(client, organisation, project_data, hashtag_input, expected_output):
+async def test_hashtags(
+    client, organisation, project_data, hashtag_input, expected_output
+):
     """Test hashtag parsing."""
     project_data["hashtags"] = hashtag_input
     response_data = create_project(client, organisation.id, project_data)
@@ -237,12 +272,6 @@ async def test_create_odk_project():
     assert result == {"status": "success"}
     # FMTM gets appended to project name by default
     mock_project.createProject.assert_called_once_with("FMTM Test Project")
-
-
-async def test_create_project_with_project_info(db, project):
-    """Test creating a project with all project info."""
-    assert isinstance(project.id, int)
-    assert isinstance(project.slug, str)
 
 
 async def test_upload_data_extracts(client, project):

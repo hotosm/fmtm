@@ -107,7 +107,7 @@ async def organisation(db):
 async def project(db, admin_user, organisation):
     """A test project, using the test user and org."""
     project_metadata = ProjectIn(
-        name="test project",
+        name=f"test project {uuid4()}",
         short_description="test",
         description="test",
         xform_category="buildings",
@@ -339,5 +339,6 @@ async def client(app, db):
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://testserver",
+        follow_redirects=True,
     ) as ac:
         yield ac
