@@ -21,16 +21,16 @@ import json
 import os
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any, AsyncGenerator
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 import requests
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
-from geojson_pydantic import Polygon
+from httpx import ASGITransport, AsyncClient
 from loguru import logger as log
-from psycopg import connect
+from psycopg import AsyncConnection
 
 from app.auth.auth_routes import get_or_create_user
 from app.auth.auth_schemas import AuthUser, FMTMUser
@@ -39,8 +39,9 @@ from app.central.central_schemas import ODKCentralDecrypted
 from app.config import encrypt_value, settings
 from app.db.database import db_conn
 from app.db.enums import TaskStatus, UserRole
-from app.db.models import DbOrganisation, DbTaskHistory
+from app.db.models import DbProject, DbTask, DbTaskHistory
 from app.main import get_application
+from app.organisations.organisation_deps import get_organisation
 from app.projects import project_crud
 from app.projects.project_schemas import ProjectIn
 from app.users.user_deps import get_user
@@ -58,23 +59,25 @@ def pytest_configure(config):
     # sqlalchemy_log.propagate = False
 
 
-@pytest.fixture(autouse=True)
-def app() -> Generator[FastAPI, Any, None]:
+@pytest_asyncio.fixture(autouse=True)
+async def app() -> AsyncGenerator[FastAPI, Any]:
     """Get the FastAPI test server."""
     yield get_application()
 
 
-@pytest.fixture(scope="function")
-def db():
-    """The psycopg database connection using psycopg3."""
-    db_conn = connect(settings.FMTM_DB_URL.unicode_string())
+@pytest_asyncio.fixture(scope="function")
+async def db():
+    """The psycopg async database connection using psycopg3."""
+    db_conn = await AsyncConnection.connect(
+        settings.FMTM_DB_URL.unicode_string(),
+    )
     try:
         yield db_conn
     finally:
-        db_conn.close()
+        await db_conn.close()
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def admin_user(db):
     """A test user."""
     db_user = await get_or_create_user(
@@ -94,13 +97,13 @@ async def admin_user(db):
     )
 
 
-@pytest.fixture(scope="function")
-def organisation(db):
+@pytest_asyncio.fixture(scope="function")
+async def organisation(db):
     """A test organisation."""
-    return db.query(DbOrganisation).filter(DbOrganisation.name == "HOTOSM").first()
+    return await get_organisation(db, "HOTOSM")
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def project(db, admin_user, organisation):
     """A test project, using the test user and org."""
     project_metadata = ProjectIn(
@@ -112,9 +115,9 @@ async def project(db, admin_user, organisation):
         odk_central_user=os.getenv("ODK_CENTRAL_USER"),
         odk_central_password=os.getenv("ODK_CENTRAL_PASSWD"),
         hashtags="hashtag1 hashtag2",
-        outline=Polygon(
-            type="Polygon",
-            coordinates=[
+        outline={
+            "type": "Polygon",
+            "coordinates": [
                 [
                     [85.299989110, 27.7140080437],
                     [85.299989110, 27.7108923499],
@@ -123,7 +126,8 @@ async def project(db, admin_user, organisation):
                     [85.299989110, 27.7140080437],
                 ]
             ],
-        ),
+        },
+        author_id=admin_user.id,
         organisation_id=organisation.id,
     )
 
@@ -147,13 +151,8 @@ async def project(db, admin_user, organisation):
 
     # Create FMTM Project
     try:
-        new_project = await project_crud.create_project_with_project_info(
-            db,
-            project_metadata,
-            odkproject["id"],
-            admin_user,
-        )
-        log.debug(f"Project returned: {new_project.__dict__}")
+        new_project = await DbProject.create(db, project_metadata)
+        log.debug(f"Project returned: {new_project}")
         assert new_project is not None
     except Exception as e:
         log.exception(e)
@@ -162,7 +161,7 @@ async def project(db, admin_user, organisation):
     return new_project
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def tasks(project, db):
     """Test tasks, using the test project."""
     boundaries = {
@@ -188,22 +187,18 @@ async def tasks(project, db):
             "timestamp": "2021-02-11T17:21:06",
         },
     }
+
     try:
-        tasks = await project_crud.create_tasks_from_geojson(
-            db=db, project_id=project.id, boundaries=boundaries
-        )
-
+        tasks = await DbTask.create(db, project.id, boundaries)
         assert tasks is True
-
-        # Refresh the project to include the tasks
-        db.refresh(project)
     except Exception as e:
         log.exception(e)
         pytest.fail(f"Test failed with exception: {str(e)}")
-    return project.tasks
+
+    return tasks
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def task_history(db, project, tasks, admin_user):
     """A test task history using the test user, project and task."""
     user = await get_user(admin_user.id, db)
@@ -217,13 +212,11 @@ async def task_history(db, project, tasks, admin_user):
             actioned_by=user,
             user_id=user.id,
         )
-        db.add(task_history_entry)
-        db.commit()
-        db.refresh(task_history_entry)
-    return task_history_entry
+        db_task_history = await DbTaskHistory.create(db, task_history_entry)
+    return db_task_history
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def odk_project(db, client, project, tasks):
     """Create ODK Central resources for a project and generate the necessary files."""
     with open(f"{test_data_path}/data_extract_kathmandu.geojson", "rb") as f:
@@ -253,7 +246,7 @@ async def odk_project(db, client, project, tasks):
         )
     }
     try:
-        response = client.post(
+        response = await client.post(
             f"/projects/{project.id}/generate-project-data",
             files=xform_file,
         )
@@ -265,7 +258,7 @@ async def odk_project(db, client, project, tasks):
     yield project
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def entities(odk_project):
     """Get entities data."""
     odk_credentials = {
@@ -282,8 +275,8 @@ async def entities(odk_project):
     yield entities
 
 
-@pytest.fixture(scope="function")
-def project_data():
+@pytest_asyncio.fixture(scope="function")
+async def project_data():
     """Sample data for creating a project."""
     project_name = f"Test Project {uuid4()}"
     data = {
@@ -317,7 +310,7 @@ def project_data():
     return data
 
 
-# @pytest.fixture(scope="function")
+# @pytest_asyncio.fixture(scope="function")
 # def get_ids(db, project):
 #     user_id_query = text(f"SELECT id FROM {DbUser.__table__.name} LIMIT 1")
 #     organisation_id_query = text(
@@ -338,10 +331,13 @@ def project_data():
 #     return data
 
 
-@pytest.fixture(scope="function")
-def client(app, db):
+@pytest_asyncio.fixture(scope="function")
+async def client(app, db):
     """The FastAPI test server."""
     app.dependency_overrides[db_conn] = lambda: db
 
-    with TestClient(app) as c:
-        yield c
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://testserver",
+    ) as ac:
+        yield ac

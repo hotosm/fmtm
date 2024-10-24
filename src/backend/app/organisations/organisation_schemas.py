@@ -20,7 +20,7 @@
 from re import sub
 from typing import Annotated, Optional
 
-from pydantic import BaseModel, Field, FieldValidationInfo
+from pydantic import BaseModel, Field, ValidationInfo
 from pydantic.functional_validators import field_validator
 
 from app.central.central_schemas import ODKCentralIn
@@ -41,7 +41,7 @@ class OrganisationInBase(ODKCentralIn, DbOrganisation):
 
     @field_validator("slug", mode="after")
     @classmethod
-    def set_slug(cls, value: Optional[str], info: FieldValidationInfo) -> str:
+    def set_slug(cls, value: Optional[str], info: ValidationInfo) -> str:
         """Set the slug attribute from the name.
 
         NOTE this is a bit of a hack.

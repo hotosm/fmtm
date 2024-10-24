@@ -22,13 +22,13 @@ import pytest
 from app.db.enums import TaskStatus
 
 
-def test_read_task_history(client, task_history):
+async def test_read_task_history(client, task_history):
     """Test task history for a project."""
     task_id = task_history.task_id
 
     assert task_id is not None
 
-    response = client.get(f"/tasks/{task_id}/history/")
+    response = await client.get(f"/tasks/{task_id}/history/")
     data = response.json()[0]
 
     assert response.status_code == 200
@@ -36,13 +36,13 @@ def test_read_task_history(client, task_history):
     assert data["username"] == task_history.actioned_by.username
 
 
-def test_update_task_status(client, tasks):
+async def test_update_task_status(client, tasks):
     """Test update the task status."""
     task_id = tasks[0].id
     project_id = tasks[0].project_id
     new_status = TaskStatus.LOCKED_FOR_MAPPING
 
-    response = client.post(
+    response = await client.post(
         f"tasks/{task_id}/new-status/{new_status.value}?project_id={project_id}"
     )
 

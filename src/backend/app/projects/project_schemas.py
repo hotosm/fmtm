@@ -26,7 +26,7 @@ from geojson_pydantic import Feature, FeatureCollection, MultiPolygon, Point, Po
 from pydantic import (
     BaseModel,
     Field,
-    FieldValidationInfo,
+    ValidationInfo,
     computed_field,
 )
 from pydantic.functional_serializers import field_serializer
@@ -80,7 +80,7 @@ class ProjectInBase(DbProject):
     def set_project_slug(
         cls,
         value: Optional[str],
-        info: FieldValidationInfo,
+        info: ValidationInfo,
     ) -> str:
         """Set the slug attribute from the name.
 
