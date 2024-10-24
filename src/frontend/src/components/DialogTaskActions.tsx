@@ -50,12 +50,14 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
     })?.[0],
   };
   const checkIfTaskAssignedOrNot =
-    currentStatus?.locked_by_username === authDetails?.username || currentStatus?.locked_by_username === null;
+    currentStatus?.actioned_by_username === authDetails?.username || currentStatus?.actioned_by_username === null;
 
   useEffect(() => {
     if (taskId) {
       dispatch(
-        GetProjectTaskActivity(`${import.meta.env.VITE_API_URL}/tasks/${currentStatus?.id}/history/?comment=false`),
+        GetProjectTaskActivity(
+          `${import.meta.env.VITE_API_URL}/tasks/${currentStatus?.id}/history/?project_id=${currentProjectId}&comment=false`,
+        ),
       );
     }
   }, [taskId]);
@@ -232,7 +234,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
               );
 
               if (isMobile) {
-                document.location.href = `odkcollect://form/${projectInfo.xform_id}?task_filter=${taskId}`;
+                document.location.href = `odkcollect://form/${projectInfo.odk_form_id}?task_filter=${taskId}`;
               } else {
                 dispatch(
                   CommonActions.SetSnackBar({

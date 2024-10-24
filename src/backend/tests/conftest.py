@@ -18,38 +18,34 @@
 """Configuration and fixtures for PyTest."""
 
 import json
-import logging
 import os
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any, AsyncGenerator
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 import requests
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
-from geojson_pydantic import Polygon
+from httpx import ASGITransport, AsyncClient
 from loguru import logger as log
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from psycopg import AsyncConnection
 
 from app.auth.auth_routes import get_or_create_user
 from app.auth.auth_schemas import AuthUser, FMTMUser
-from app.central import central_crud
+from app.central import central_crud, central_schemas
+from app.central.central_schemas import ODKCentralDecrypted, ODKCentralIn
 from app.config import encrypt_value, settings
-from app.db.database import Base, get_db
-from app.db.db_models import DbOrganisation, DbTaskHistory
+from app.db.database import db_conn
+from app.db.enums import TaskStatus, UserRole
+from app.db.models import DbProject, DbTask, DbTaskHistory
 from app.main import get_application
-from app.models.enums import TaskStatus, UserRole
-from app.projects import project_crud, project_schemas
-from app.projects.project_schemas import ODKCentralDecrypted, ProjectInfo, ProjectUpload
-from app.users.user_crud import get_user
+from app.organisations.organisation_deps import get_organisation
+from app.projects import project_crud
+from app.projects.project_schemas import ProjectIn
+from app.users.user_deps import get_user
 from tests.test_data import test_data_path
-
-engine = create_engine(settings.FMTM_DB_URL.unicode_string())
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base.metadata.create_all(bind=engine)
 
 odk_central_url = os.getenv("ODK_CENTRAL_URL")
 odk_central_user = os.getenv("ODK_CENTRAL_USER")
@@ -58,42 +54,30 @@ odk_central_password = encrypt_value(os.getenv("ODK_CENTRAL_PASSWD", ""))
 
 def pytest_configure(config):
     """Configure pytest runs."""
-    # Stop sqlalchemy logs
-    sqlalchemy_log = logging.getLogger("sqlalchemy")
-    sqlalchemy_log.propagate = False
+    # Example of stopping sqlalchemy logs
+    # sqlalchemy_log = logging.getLogger("sqlalchemy")
+    # sqlalchemy_log.propagate = False
 
 
-@pytest.fixture(autouse=True)
-def app() -> Generator[FastAPI, Any, None]:
+@pytest_asyncio.fixture(autouse=True)
+async def app() -> AsyncGenerator[FastAPI, Any]:
     """Get the FastAPI test server."""
     yield get_application()
 
 
-@pytest.fixture(scope="session")
-def db_engine():
-    """The SQLAlchemy database engine to init."""
-    engine = create_engine(settings.FMTM_DB_URL.unicode_string())
-    yield engine
+@pytest_asyncio.fixture(scope="function")
+async def db():
+    """The psycopg async database connection using psycopg3."""
+    db_conn = await AsyncConnection.connect(
+        settings.FMTM_DB_URL.unicode_string(),
+    )
+    try:
+        yield db_conn
+    finally:
+        await db_conn.close()
 
 
-@pytest.fixture(scope="function")
-def db(db_engine):
-    """Database session using db_engine."""
-    connection = db_engine.connect()
-
-    # begin a non-ORM transaction
-    connection.begin()
-
-    # bind an individual Session to the connection
-    db = TestingSessionLocal(bind=connection)
-
-    yield db
-
-    db.rollback()
-    connection.close()
-
-
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def admin_user(db):
     """A test user."""
     db_user = await get_or_create_user(
@@ -113,29 +97,52 @@ async def admin_user(db):
     )
 
 
-@pytest.fixture(scope="function")
-def organisation(db):
+@pytest_asyncio.fixture(scope="function")
+async def organisation(db):
     """A test organisation."""
-    return db.query(DbOrganisation).filter(DbOrganisation.name == "HOTOSM").first()
+    return await get_organisation(db, "HOTOSM")
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def project(db, admin_user, organisation):
     """A test project, using the test user and org."""
-    project_metadata = ProjectUpload(
-        project_info=ProjectInfo(
-            name="test project",
-            short_description="test",
-            description="test",
-        ),
+    odk_creds_encrypted = ODKCentralIn(
+        odk_central_url=os.getenv("ODK_CENTRAL_URL"),
+        odk_central_user=os.getenv("ODK_CENTRAL_USER"),
+        odk_central_password=os.getenv("ODK_CENTRAL_PASSWD"),
+    )
+    odk_creds_decrypted = ODKCentralDecrypted(
+        odk_central_url=odk_creds_encrypted.odk_central_url,
+        odk_central_user=odk_creds_encrypted.odk_central_password,
+        odk_central_password=odk_creds_encrypted.odk_central_url,
+    )
+
+    project_name = f"test project {uuid4()}"
+    # Create ODK Central Project
+    try:
+        odkproject = central_crud.create_odk_project(
+            project_name,
+            odk_creds_decrypted,
+        )
+        log.debug(f"ODK project returned: {odkproject}")
+        assert odkproject is not None
+        assert odkproject.get("id") is not None
+    except Exception as e:
+        log.exception(e)
+        pytest.fail(f"Test failed with exception: {str(e)}")
+
+    project_metadata = ProjectIn(
+        name=project_name,
+        short_description="test",
+        description="test",
         xform_category="buildings",
         odk_central_url=os.getenv("ODK_CENTRAL_URL"),
         odk_central_user=os.getenv("ODK_CENTRAL_USER"),
         odk_central_password=os.getenv("ODK_CENTRAL_PASSWD"),
         hashtags="hashtag1 hashtag2",
-        outline_geojson=Polygon(
-            type="Polygon",
-            coordinates=[
+        outline={
+            "type": "Polygon",
+            "coordinates": [
                 [
                     [85.299989110, 27.7140080437],
                     [85.299989110, 27.7108923499],
@@ -144,46 +151,26 @@ async def project(db, admin_user, organisation):
                     [85.299989110, 27.7140080437],
                 ]
             ],
-        ),
+        },
+        author_id=admin_user.id,
         organisation_id=organisation.id,
+        odkid=odkproject.get("id"),
     )
-
-    odk_creds_decrypted = ODKCentralDecrypted(
-        odk_central_url=project_metadata.odk_central_url,
-        odk_central_user=project_metadata.odk_central_user,
-        odk_central_password=project_metadata.odk_central_password,
-    )
-
-    # Create ODK Central Project
-    try:
-        odkproject = central_crud.create_odk_project(
-            project_metadata.project_info.name,
-            odk_creds_decrypted,
-        )
-        log.debug(f"ODK project returned: {odkproject}")
-        assert odkproject is not None
-    except Exception as e:
-        log.exception(e)
-        pytest.fail(f"Test failed with exception: {str(e)}")
 
     # Create FMTM Project
     try:
-        new_project = await project_crud.create_project_with_project_info(
-            db,
-            project_metadata,
-            odkproject["id"],
-            admin_user,
-        )
-        log.debug(f"Project returned: {new_project.__dict__}")
+        new_project = await DbProject.create(db, project_metadata)
+        log.debug(f"Project returned: {new_project}")
         assert new_project is not None
     except Exception as e:
         log.exception(e)
         pytest.fail(f"Test failed with exception: {str(e)}")
 
-    return new_project
+    # Get project, including all calculated fields
+    return await DbProject.one(db, new_project.id)
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def tasks(project, db):
     """Test tasks, using the test project."""
     boundaries = {
@@ -209,25 +196,21 @@ async def tasks(project, db):
             "timestamp": "2021-02-11T17:21:06",
         },
     }
+
     try:
-        tasks = await project_crud.create_tasks_from_geojson(
-            db=db, project_id=project.id, boundaries=boundaries
-        )
-
+        tasks = await DbTask.create(db, project.id, boundaries)
         assert tasks is True
-
-        # Refresh the project to include the tasks
-        db.refresh(project)
     except Exception as e:
         log.exception(e)
         pytest.fail(f"Test failed with exception: {str(e)}")
-    return project.tasks
+
+    return tasks
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def task_history(db, project, tasks, admin_user):
     """A test task history using the test user, project and task."""
-    user = await get_user(db, admin_user.id)
+    user = await get_user(admin_user.id, db)
     for task in tasks:
         task_history_entry = DbTaskHistory(
             project_id=project.id,
@@ -238,13 +221,11 @@ async def task_history(db, project, tasks, admin_user):
             actioned_by=user,
             user_id=user.id,
         )
-        db.add(task_history_entry)
-        db.commit()
-        db.refresh(task_history_entry)
-    return task_history_entry
+        db_task_history = await DbTaskHistory.create(db, task_history_entry)
+    return db_task_history
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def odk_project(db, client, project, tasks):
     """Create ODK Central resources for a project and generate the necessary files."""
     with open(f"{test_data_path}/data_extract_kathmandu.geojson", "rb") as f:
@@ -274,7 +255,7 @@ async def odk_project(db, client, project, tasks):
         )
     }
     try:
-        response = client.post(
+        response = await client.post(
             f"/projects/{project.id}/generate-project-data",
             files=xform_file,
         )
@@ -286,7 +267,7 @@ async def odk_project(db, client, project, tasks):
     yield project
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def entities(odk_project):
     """Get entities data."""
     odk_credentials = {
@@ -303,19 +284,17 @@ async def entities(odk_project):
     yield entities
 
 
-@pytest.fixture(scope="function")
-def project_data():
+@pytest_asyncio.fixture(scope="function")
+async def project_data():
     """Sample data for creating a project."""
     project_name = f"Test Project {uuid4()}"
     data = {
-        "project_info": {
-            "name": project_name,
-            "short_description": "test",
-            "description": "test",
-        },
+        "name": project_name,
+        "short_description": "test",
+        "description": "test",
         "xform_category": "buildings",
         "hashtags": "#FMTM",
-        "outline_geojson": {
+        "outline": {
             "coordinates": [
                 [
                     [85.317028828, 27.7052522097],
@@ -334,37 +313,20 @@ def project_data():
         "odk_central_password": odk_central_password,
     }
 
-    odk_creds_models = project_schemas.ODKCentralDecrypted(**odk_credentials)
+    odk_creds_models = central_schemas.ODKCentralDecrypted(**odk_credentials)
 
     data.update(**odk_creds_models.model_dump())
     return data
 
 
-# @pytest.fixture(scope="function")
-# def get_ids(db, project):
-#     user_id_query = text(f"SELECT id FROM {DbUser.__table__.name} LIMIT 1")
-#     organisation_id_query = text(
-#         f"SELECT id FROM {DbOrganisation.__table__.name} LIMIT 1"
-#     )
-#     project_id_query = text(f"SELECT id FROM {DbProject.__table__.name} LIMIT 1")
-
-#     user_id = db.execute(user_id_query).scalar()
-#     organisation_id = db.execute(organisation_id_query).scalar()
-#     project_id = db.execute(project_id_query).scalar()
-
-#     data = {
-#         "user_id": user_id,
-#         "organisation_id": organisation_id,
-#         "project_id": project_id,
-#     }
-#     log.debug(f"get_ids return: {data}")
-#     return data
-
-
-@pytest.fixture(scope="function")
-def client(app, db):
+@pytest_asyncio.fixture(scope="function")
+async def client(app, db):
     """The FastAPI test server."""
-    app.dependency_overrides[get_db] = lambda: db
+    app.dependency_overrides[db_conn] = lambda: db
 
-    with TestClient(app) as c:
-        yield c
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://testserver",
+        follow_redirects=True,
+    ) as ac:
+        yield ac

@@ -77,12 +77,12 @@ const ProjectDetailsV2 = () => {
   const entityOsmMap = useAppSelector((state) => state?.project?.entityOsmMap);
 
   useEffect(() => {
-    if (state.projectInfo.title) {
-      document.title = `${state.projectInfo.title} - HOT Field Mapping Tasking Manager`;
+    if (state.projectInfo.name) {
+      document.title = `${state.projectInfo.name} - HOT Field Mapping Tasking Manager`;
     } else {
       document.title = 'HOT Field Mapping Tasking Manager';
     }
-  }, [state.projectInfo.title]);
+  }, [state.projectInfo.name]);
 
   //snackbar handle close function
   const handleClose = (event, reason) => {
@@ -132,14 +132,17 @@ const ProjectDetailsV2 = () => {
   useEffect(() => {
     if (!map) return;
 
+    // FIXME should the feature id be an int, not a string?
     const features = state.projectTaskBoundries[0]?.taskBoundries?.map((taskObj) => ({
       type: 'Feature',
-      geometry: { ...taskObj.outline_geojson.geometry },
-      properties: {
-        ...taskObj.outline_geojson.properties,
-        locked_by_user: taskObj?.locked_by_uid,
-      },
       id: `${taskObj.id}_${taskObj.task_status}`,
+      geometry: { ...taskObj.outline },
+      properties: {
+        ...taskObj.outline.properties,
+        task_status: taskObj?.task_status,
+        actioned_by_uid: taskObj?.actioned_by_uid,
+        actioned_by_username: taskObj?.actioned_by_username,
+      },
     }));
 
     const taskBoundariesFeatcol = {
@@ -331,9 +334,9 @@ const ProjectDetailsV2 = () => {
               <div className="fmtm-relative">
                 <p
                   className="fmtm-text-xl fmtm-font-archivo fmtm-line-clamp-3 fmtm-mr-4"
-                  title={state.projectInfo.title}
+                  title={state.projectInfo.name}
                 >
-                  {state.projectInfo.title}
+                  {state.projectInfo.name}
                 </p>
               </div>
             )}
@@ -424,7 +427,7 @@ const ProjectDetailsV2 = () => {
                       : '-fmtm-left-[60rem] fmtm-bottom-0 lg:fmtm-top-0'
                   }`}
                 >
-                  <ProjectOptions projectName={state?.projectInfo?.title} />
+                  <ProjectOptions projectName={state?.projectInfo?.name} />
                 </div>
               </div>
             </div>
@@ -538,7 +541,7 @@ const ProjectDetailsV2 = () => {
               </div>
               <MapControlComponent
                 map={map}
-                projectName={state?.projectInfo?.title || ''}
+                projectName={state?.projectInfo?.name || ''}
                 pmTileLayerData={customBasemapData}
               />
             </MapComponent>

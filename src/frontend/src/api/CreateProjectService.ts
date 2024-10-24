@@ -323,14 +323,14 @@ const GetIndividualProjectDetails = (url: string) => {
       try {
         const getIndividualProjectDetailsResponse = await axios.get(url);
         const resp: ProjectDetailsModel = getIndividualProjectDetailsResponse.data;
-        const formattedOutlineGeojson = { type: 'FeatureCollection', features: [{ ...resp.outline_geojson, id: 1 }] };
+        const formattedOutlineGeojson = { type: 'FeatureCollection', features: [{ ...resp.outline, id: 1 }] };
         const modifiedResponse = {
           ...resp,
-          name: resp.project_info?.name,
-          description: resp.project_info?.description,
-          short_description: resp.project_info?.short_description,
-          outline_geojson: formattedOutlineGeojson,
-          per_task_instructions: resp.project_info?.per_task_instructions,
+          name: resp.name,
+          description: resp.description,
+          short_description: resp.short_description,
+          outline: formattedOutlineGeojson,
+          per_task_instructions: resp.per_task_instructions,
         };
 
         dispatch(CreateProjectActions.SetIndividualProjectDetails(modifiedResponse));

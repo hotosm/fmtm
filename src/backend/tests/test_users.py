@@ -31,28 +31,31 @@ def test_nothing():
 # from app.users.user_crud import create_user
 
 
-# @pytest.fixture
+# @pytest_asyncio.fixture
 # def users(db):
 #     create_user(db, user_schemas.UserIn(username="admin", password="admin"))
 #     create_user(db, user_schemas.UserIn(username="niraj", password="niraj"))
 #     create_user(db, user_schemas.UserIn(username="test", password="test"))
 
 
-# def test_list_users(users, client):
-#     response = client.get("/users")
+# async def test_list_users(users, client):
+#     response = await client.get("/users")
 #     assert len(response.json()) == 3
 
 
-# def test_create_users(client):
-#     response = client.post("/users/", json={"username": "test3", "password": "test1"})
+# async def test_create_users(client):
+#     response = await client.post("/users/", json={
+# "username": "test3", "password": "test1"})
 #     assert response.status_code == status.HTTP_200_OK
 
-#     response = client.post("/users/", json={"username": "niraj", "password": "niraj"})
+#     response = await client.post("/users/", json={
+# "username": "niraj", "password": "niraj"})
 #     assert response.status_code == status.HTTP_200_OK
 
-#     response = client.post("/users/", json={"username": "niraj"})
+#     response = await client.post("/users/", json={"username": "niraj"})
 #     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-#     response = client.post("/users/", json={"username": "niraj", "password": "niraj"})
+#     response = await client.post("/users/", json={
+# "username": "niraj", "password": "niraj"})
 #     assert response.status_code == status.HTTP_400_BAD_REQUEST
 #     assert response.json() == {"detail": "Username already registered"}

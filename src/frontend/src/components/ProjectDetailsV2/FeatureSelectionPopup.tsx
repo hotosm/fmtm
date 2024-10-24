@@ -116,7 +116,7 @@ const TaskFeatureSelectionPopup = ({ featureProperties, taskId, taskFeature }: T
               disabled={entity?.status !== 0}
               isLoading={updateEntityStatusLoading}
               onClick={() => {
-                const xformId = projectInfo.xform_id;
+                const xformId = projectInfo.odk_form_id;
                 const entity = entityOsmMap.find((x) => x.osm_id === featureProperties?.osm_id);
                 const entityUuid = entity ? entity.id : null;
 

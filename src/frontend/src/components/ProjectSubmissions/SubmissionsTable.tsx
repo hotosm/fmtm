@@ -111,7 +111,7 @@ const SubmissionsTable = ({ toggleView }) => {
 
   useEffect(() => {
     dispatch(
-      SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table?project_id=${projectId}`, {
+      SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission-table?project_id=${projectId}`, {
         page: paginationPage,
         ...filter,
       }),
@@ -130,7 +130,7 @@ const SubmissionsTable = ({ toggleView }) => {
     );
     dispatch(SubmissionActions.SetSubmissionTableRefreshing(true));
     dispatch(
-      SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission_table?project_id=${projectId}`, {
+      SubmissionTableService(`${import.meta.env.VITE_API_URL}/submission/submission-table?project_id=${projectId}`, {
         page: paginationPage,
         ...filter,
       }),
@@ -192,7 +192,7 @@ const SubmissionsTable = ({ toggleView }) => {
     dispatch(
       ConvertXMLToJOSM(
         `${import.meta.env.VITE_API_URL}/submission/get_osm_xml/${projectId}`,
-        projectInfo?.outline_geojson?.bbox,
+        projectInfo?.outline?.bbox,
       ),
     );
   };
@@ -202,14 +202,14 @@ const SubmissionsTable = ({ toggleView }) => {
       dispatch(
         getDownloadProjectSubmission(
           `${import.meta.env.VITE_API_URL}/submission/download?project_id=${projectId}&export_json=false`,
-          projectInfo?.title,
+          projectInfo.name,
         ),
       );
     } else if (downloadType === 'json') {
       dispatch(
         getDownloadProjectSubmission(
           `${import.meta.env.VITE_API_URL}/submission/download?project_id=${projectId}&export_json=true`,
-          projectInfo?.title,
+          projectInfo.name,
         ),
       );
     }
