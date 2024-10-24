@@ -97,8 +97,8 @@ export type projectTaskBoundriesType = {
 export type taskBoundriesTypes = {
   id: number;
   project_task_index: number;
-  locked_by_uid: null | string;
-  locked_by_username: null | string;
+  actioned_by_uid: null | string;
+  actioned_by_username: null | string;
   outline: {
     type: string;
     geometry: {

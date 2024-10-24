@@ -35,8 +35,8 @@ export interface ProjectDetailsModel {
       bbox: null | number[];
     };
     task_status: number;
-    locked_by_uid: number;
-    locked_by_username: string;
+    actioned_by_uid: number;
+    actioned_by_username: string;
     task_history: {
       event_id: string;
       action_text: string;

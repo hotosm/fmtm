@@ -20,8 +20,8 @@ export const ProjectById = (projectId: string) => {
             index: data.project_task_index,
             outline: data.outline,
             task_status: task_status[data.task_status],
-            locked_by_uid: data.locked_by_uid,
-            locked_by_username: data.locked_by_username,
+            actioned_by_uid: data.actioned_by_uid,
+            actioned_by_username: data.actioned_by_username,
             task_history: data.task_history,
           };
         });

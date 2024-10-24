@@ -163,8 +163,8 @@ const ProjectSlice = createSlice({
               return {
                 ...taskBoundary,
                 task_status: action.payload.task_status,
-                locked_by_uid: action.payload.locked_by_uid,
-                locked_by_username: action.payload.locked_by_username,
+                actioned_by_uid: action.payload.actioned_by_uid,
+                actioned_by_username: action.payload.actioned_by_username,
               };
             }
             return taskBoundary;

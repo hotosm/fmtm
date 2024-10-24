@@ -682,6 +682,11 @@ class DbTask(BaseModel):
     project_task_index: Optional[int] = None
     feature_count: Optional[int] = None
 
+    # Calculated
+    task_status: Optional[TaskAction] = None
+    actioned_by_uid: Optional[int] = None
+    actioned_by_username: Optional[str] = None
+
     @classmethod
     async def one(cls, db: Connection, task_id: int) -> Self:
         """Fetch a single task by it's ID."""
@@ -846,23 +851,29 @@ class DbProject(BaseModel):
         """Get project by ID, including all tasks and other details."""
         async with db.cursor(row_factory=class_row(cls)) as cur:
             sql = """
-                WITH latest_task_history AS (
+                WITH latest_event_per_task AS (
                     SELECT DISTINCT ON (task_id)
-                        task_id,
-                        action,
-                        action_date,
-                        user_id
+                        th.task_id,
+                        th.action,
+                        th.action_date,
+                        th.user_id,
+                        u.username AS username
                     FROM
-                        task_history
+                        task_history th
+                    LEFT JOIN
+                        users u ON u.id = th.user_id
                     WHERE
-                        action != 'COMMENT'
+                        th.action != 'COMMENT'
                     ORDER BY
-                        task_id, action_date DESC
+                        th.task_id, th.action_date DESC
                 ),
+
                 project_bbox AS (
                     SELECT ST_Envelope(p.outline) AS bbox
                     FROM projects p
+                    WHERE p.id = %(project_id)s
                 )
+
                 SELECT
                     p.*,
                     ST_AsGeoJSON(p.outline)::jsonb AS outline,
@@ -873,17 +884,17 @@ class DbProject(BaseModel):
                         ST_XMax(project_bbox.bbox),
                         ST_YMax(project_bbox.bbox)
                     ] AS bbox,
-                    project_org.name as organisation_name,
-                    project_org.logo as organisation_logo,
-                    latest_th.action_date as last_active,
+                    project_org.name AS organisation_name,
+                    project_org.logo AS organisation_logo,
+                    latest_event_per_task.action_date AS last_active,
                     COALESCE(
                         NULLIF(p.odk_central_url, ''),
-                        project_org.odk_central_url)
-                    AS odk_central_url,
+                        project_org.odk_central_url
+                    ) AS odk_central_url,
                     COALESCE(
                         NULLIF(p.odk_central_user, ''),
-                        project_org.odk_central_user)
-                    AS odk_central_user,
+                        project_org.odk_central_user
+                    ) AS odk_central_user,
                     COALESCE(
                         NULLIF(p.odk_central_password, ''),
                         project_org.odk_central_password
@@ -891,47 +902,78 @@ class DbProject(BaseModel):
                     COALESCE(
                         JSON_AGG(
                             JSON_BUILD_OBJECT(
-                                'id', t.id,
-                                'project_id', t.project_id,
-                                'project_task_index', t.project_task_index,
-                                'outline', ST_AsGeoJSON(t.outline)::jsonb,
-                                'feature_count', t.feature_count,
+                                'id', tasks.id,
+                                'project_id', tasks.project_id,
+                                'project_task_index', tasks.project_task_index,
+                                'outline', ST_AsGeoJSON(tasks.outline)::jsonb,
+                                'feature_count', tasks.feature_count,
                                 'task_status', COALESCE(
-                                    latest_th.action,
+                                    latest_event_per_task.action,
                                     'RELEASED_FOR_MAPPING'
                                 ),
-                                'locked_by_uid', COALESCE(
-                                    latest_user.id,
+                                'actioned_by_uid', COALESCE(
+                                    latest_event_per_task.user_id,
                                     NULL
                                 ),
-                                'locked_by_username', COALESCE(
-                                    latest_user.username,
+                                'actioned_by_username', COALESCE(
+                                    latest_event_per_task.username,
                                     NULL
                                 )
                             )
-                        ) FILTER (WHERE t.id IS NOT NULL), '[]'::json
+                        -- Required filter if the task array is empty
+                        ) FILTER (WHERE tasks.id IS NOT NULL), '[]'::json
                     ) AS tasks
                 FROM
                     projects p
+                -- For org name, logo, and ODK credentials
                 LEFT JOIN
                     organisations project_org ON p.organisation_id = project_org.id
+                -- Get tasks for the project
                 LEFT JOIN
-                    tasks t ON p.id = t.project_id AND t.project_id = %(project_id)s
+                    tasks ON tasks.project_id = p.id
+                -- Link latest event per task with project tasks
                 LEFT JOIN
-                    latest_task_history latest_th ON t.id = latest_th.task_id
-                LEFT JOIN
-                    users latest_user ON latest_th.user_id = latest_user.id
+                    latest_event_per_task ON
+                        tasks.id = latest_event_per_task.task_id
+                -- Required to get the BBOX object
                 JOIN
                     project_bbox ON project_bbox.bbox IS NOT NULL
                 WHERE
-                    p.id = %(project_id)s AND (
-                        t.project_id = %(project_id)s
-                            -- Also required to return a project with if tasks
-                            OR t.project_id IS NULL
-                    )
+                    p.id = %(project_id)s
                 GROUP BY
-                    p.id, project_org.id, project_bbox.bbox, latest_th.action_date;
+                    p.id, project_org.id, project_bbox.bbox,
+                    latest_event_per_task.action_date;
             """
+
+            # Simpler query without additional metadata
+            # sql = """
+            #     SELECT
+            #         p.*,
+            #         ST_AsGeoJSON(p.outline)::jsonb AS outline,
+            #         ST_AsGeoJSON(ST_Centroid(p.outline))::jsonb AS centroid,
+            #         COALESCE(
+            #             JSON_AGG(
+            #                 JSON_BUILD_OBJECT(
+            #                     'id', t.id,
+            #                     'project_id', t.project_id,
+            #                     'project_task_index', t.project_task_index,
+            #                     'outline', ST_AsGeoJSON(t.outline)::jsonb,
+            #                     'feature_count', t.feature_count
+            #                 )
+            #             ) FILTER (WHERE t.id IS NOT NULL), '[]'::json
+            #         ) AS tasks
+            #     FROM
+            #         projects p
+            #     LEFT JOIN
+            #         tasks t ON t.project_id = %(project_id)s
+            #     WHERE
+            #         p.id = %(project_id)s AND (
+            #             t.project_id = %(project_id)s
+            #                 -- Also required to return a project with if tasks
+            #                 OR t.project_id IS NULL
+            #         )
+            #     GROUP BY p.id;
+            # """
 
             await cur.execute(
                 sql,

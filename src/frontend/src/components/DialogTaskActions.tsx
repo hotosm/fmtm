@@ -50,7 +50,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
     })?.[0],
   };
   const checkIfTaskAssignedOrNot =
-    currentStatus?.locked_by_username === authDetails?.username || currentStatus?.locked_by_username === null;
+    currentStatus?.actioned_by_username === authDetails?.username || currentStatus?.actioned_by_username === null;
 
   useEffect(() => {
     if (taskId) {

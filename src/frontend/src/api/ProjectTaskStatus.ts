@@ -40,8 +40,8 @@ export const UpdateTaskStatus = (
             ProjectActions.UpdateProjectTaskBoundries({
               projectId: currentProjectId,
               taskId,
-              locked_by_uid: body?.id,
-              locked_by_username: body?.username,
+              actioned_by_uid: body?.id,
+              actioned_by_username: body?.username,
               task_status: response.data.status,
             }),
           );

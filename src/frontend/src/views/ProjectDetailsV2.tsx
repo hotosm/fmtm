@@ -140,8 +140,8 @@ const ProjectDetailsV2 = () => {
       properties: {
         ...taskObj.outline.properties,
         task_status: taskObj?.task_status,
-        locked_by_uid: taskObj?.locked_by_uid,
-        locked_by_username: taskObj?.locked_by_username,
+        actioned_by_uid: taskObj?.actioned_by_uid,
+        actioned_by_username: taskObj?.actioned_by_username,
       },
     }));
 

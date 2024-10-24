@@ -63,8 +63,8 @@ export type ProjectTaskTypes = {
   project_id: number;
   outline: GeoJSONFeatureTypes;
   task_status: number;
-  locked_by_uid: number | null;
-  locked_by_username: string | null;
+  actioned_by_uid: number | null;
+  actioned_by_username: string | null;
   task_history: any[];
   qr_code_base64: string;
   task_status_str: string;
