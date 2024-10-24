@@ -22,7 +22,7 @@ import os
 import time
 
 import jwt
-from fastapi import Header, HTTPException, Request
+from fastapi import Depends, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
 from loguru import logger as log
 from osm_login_python.core import Auth
@@ -74,6 +74,18 @@ async def login_required(
         raise HTTPException(status_code=401, detail="Access token not valid") from e
 
     return AuthUser(**token_data)
+
+
+async def osm_login_required(
+    request: Request, auth_user: AuthUser = Depends(login_required)
+) -> AuthUser:
+    cookie_name = settings.FMTM_DOMAIN.replace(".", "_")
+    osm_cookie_name = f"{cookie_name}_osm"
+
+    if osm_cookie_name not in request.cookies:
+        raise HTTPException(status_code=401, detail="OSM login required")
+
+    return auth_user
 
 
 def extract_token_from_cookie(request: Request) -> str:
