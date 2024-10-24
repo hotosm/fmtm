@@ -33,6 +33,7 @@ from app.central import central_schemas
 from app.central.central_crud import create_odk_project
 from app.config import encrypt_value, settings
 from app.db.enums import HTTPStatus, TaskStatus
+from app.db.models import slugify
 from app.db.postgis_utils import check_crs
 from app.projects import project_crud
 from tests.test_data import test_data_path
@@ -65,7 +66,7 @@ async def test_create_project_invalid(client, organisation, project_data):
         "task_split_type": (
             "'DIVIDE_ON_SQUARE', 'CHOOSE_AREA_AS_TASK' or 'TASK_SPLITTING_ALGORITHM'"
         ),
-        "priority": "'URGENT', 'HIGH', 'MEDIUM' or 'LOW'",
+        "priority": "'MEDIUM', 'LOW', 'HIGH' or 'URGENT'",
     }
 
     for error in response_data["detail"]:
@@ -78,16 +79,11 @@ async def test_create_project_invalid(client, organisation, project_data):
 async def test_create_project_with_dup(client, organisation, project_data):
     """Test project creation endpoint, duplicate checker."""
     response_data = await create_project(client, organisation.id, project_data)
-    print("")
-    print("")
-    print(response_data)
-    print("")
-
     project_name = project_data["name"]
     assert "id" in response_data
     assert isinstance(response_data["id"], int)
     assert isinstance(response_data["slug"], str)
-    assert response_data["slug"] == project_name.replace(" ", "_").lower()
+    assert response_data["slug"] == slugify(project_name)
 
     # Duplicate response to test error condition: project name already exists
     response_duplicate = await client.post(
@@ -172,7 +168,7 @@ async def test_create_project_with_dup(client, organisation, project_data):
 async def test_valid_geojson_types(client, organisation, project_data, geojson_type):
     """Test valid geojson types."""
     project_data["outline"] = geojson_type
-    response_data = create_project(client, organisation.id, project_data)
+    response_data = await create_project(client, organisation.id, project_data)
     assert "id" in response_data
 
 
@@ -241,7 +237,7 @@ async def test_hashtags(
 ):
     """Test hashtag parsing."""
     project_data["hashtags"] = hashtag_input
-    response_data = create_project(client, organisation.id, project_data)
+    response_data = await create_project(client, organisation.id, project_data)
     project_id = response_data["id"]
     assert "id" in response_data
     assert response_data["hashtags"][:-1] == expected_output
@@ -409,21 +405,9 @@ async def test_update_project(client, admin_user, project):
         "description": "updated description",
         "xform_category": "healthcare",
         "hashtags": "#FMTM anothertag",
-        "outline": {
-            "coordinates": [
-                [
-                    [85.317028828, 27.7052522097],
-                    [85.317028828, 27.7041424888],
-                    [85.318844411, 27.7041424888],
-                    [85.318844411, 27.7052522097],
-                    [85.317028828, 27.7052522097],
-                ]
-            ],
-            "type": "Polygon",
-        },
     }
 
-    response = await client.put(f"/projects/{project.id}", json=updated_project_data)
+    response = await client.patch(f"/projects/{project.id}", json=updated_project_data)
 
     if response.status_code != 200:
         log.error(response.json())
@@ -437,7 +421,13 @@ async def test_update_project(client, admin_user, project):
     assert response_data["description"] == updated_project_data["description"]
 
     assert response_data["xform_category"] == updated_project_data["xform_category"]
-    assert response_data["hashtags"] == ["#FMTM", "#anothertag"]
+    assert sorted(response_data["hashtags"]) == sorted(
+        [
+            "#FMTM",
+            f"#{settings.FMTM_DOMAIN}-{response_data["id"]}",
+            "#anothertag",
+        ]
+    )
 
 
 async def test_project_summaries(client, project):
@@ -474,7 +464,7 @@ async def test_project_by_id(client, project):
     assert data["xform_category"] == project.xform_category
     assert data["hashtags"] == project.hashtags
     assert data["organisation_id"] == project.organisation_id
-    assert data["tasks"] == project.tasks
+    assert data["tasks"] == []
 
 
 async def test_set_entity_mapping_status(client, odk_project, entities):

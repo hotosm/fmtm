@@ -35,7 +35,7 @@ from psycopg import AsyncConnection
 from app.auth.auth_routes import get_or_create_user
 from app.auth.auth_schemas import AuthUser, FMTMUser
 from app.central import central_crud, central_schemas
-from app.central.central_schemas import ODKCentralDecrypted
+from app.central.central_schemas import ODKCentralDecrypted, ODKCentralIn
 from app.config import encrypt_value, settings
 from app.db.database import db_conn
 from app.db.enums import TaskStatus, UserRole
@@ -106,8 +106,33 @@ async def organisation(db):
 @pytest_asyncio.fixture(scope="function")
 async def project(db, admin_user, organisation):
     """A test project, using the test user and org."""
+    odk_creds_encrypted = ODKCentralIn(
+        odk_central_url=os.getenv("ODK_CENTRAL_URL"),
+        odk_central_user=os.getenv("ODK_CENTRAL_USER"),
+        odk_central_password=os.getenv("ODK_CENTRAL_PASSWD"),
+    )
+    odk_creds_decrypted = ODKCentralDecrypted(
+        odk_central_url=odk_creds_encrypted.odk_central_url,
+        odk_central_user=odk_creds_encrypted.odk_central_password,
+        odk_central_password=odk_creds_encrypted.odk_central_url,
+    )
+
+    project_name = f"test project {uuid4()}"
+    # Create ODK Central Project
+    try:
+        odkproject = central_crud.create_odk_project(
+            project_name,
+            odk_creds_decrypted,
+        )
+        log.debug(f"ODK project returned: {odkproject}")
+        assert odkproject is not None
+        assert odkproject.get("id") is not None
+    except Exception as e:
+        log.exception(e)
+        pytest.fail(f"Test failed with exception: {str(e)}")
+
     project_metadata = ProjectIn(
-        name=f"test project {uuid4()}",
+        name=project_name,
         short_description="test",
         description="test",
         xform_category="buildings",
@@ -129,25 +154,8 @@ async def project(db, admin_user, organisation):
         },
         author_id=admin_user.id,
         organisation_id=organisation.id,
+        odkid=odkproject.get("id"),
     )
-
-    odk_creds_decrypted = ODKCentralDecrypted(
-        odk_central_url=project_metadata.odk_central_url,
-        odk_central_user=project_metadata.odk_central_user,
-        odk_central_password=project_metadata.odk_central_password,
-    )
-
-    # Create ODK Central Project
-    try:
-        odkproject = central_crud.create_odk_project(
-            project_metadata.name,
-            odk_creds_decrypted,
-        )
-        log.debug(f"ODK project returned: {odkproject}")
-        assert odkproject is not None
-    except Exception as e:
-        log.exception(e)
-        pytest.fail(f"Test failed with exception: {str(e)}")
 
     # Create FMTM Project
     try:
@@ -158,7 +166,8 @@ async def project(db, admin_user, organisation):
         log.exception(e)
         pytest.fail(f"Test failed with exception: {str(e)}")
 
-    return new_project
+    # Get project, including all calculated fields
+    return await DbProject.one(db, new_project.id)
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -308,27 +317,6 @@ async def project_data():
 
     data.update(**odk_creds_models.model_dump())
     return data
-
-
-# @pytest_asyncio.fixture(scope="function")
-# def get_ids(db, project):
-#     user_id_query = text(f"SELECT id FROM {DbUser.__table__.name} LIMIT 1")
-#     organisation_id_query = text(
-#         f"SELECT id FROM {DbOrganisation.__table__.name} LIMIT 1"
-#     )
-#     project_id_query = text(f"SELECT id FROM {DbProject.__table__.name} LIMIT 1")
-
-#     user_id = db.execute(user_id_query).scalar()
-#     organisation_id = db.execute(organisation_id_query).scalar()
-#     project_id = db.execute(project_id_query).scalar()
-
-#     data = {
-#         "user_id": user_id,
-#         "organisation_id": organisation_id,
-#         "project_id": project_id,
-#     }
-#     log.debug(f"get_ids return: {data}")
-#     return data
 
 
 @pytest_asyncio.fixture(scope="function")
