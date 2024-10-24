@@ -45,7 +45,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
 from app.auth.auth_schemas import AuthUser, OrgUserDict, ProjectUserDict
-from app.auth.osm import login_required
+from app.auth.osm import login_required, osm_login_required
 from app.auth.roles import mapper, org_admin, project_manager
 from app.central import central_crud, central_deps, central_schemas
 from app.db import database, db_models
@@ -450,6 +450,7 @@ async def create_project(
     project_info: project_schemas.ProjectUpload,
     org_user_dict: OrgUserDict = Depends(org_admin),
     db: Session = Depends(database.get_db),
+    user_data: AuthUser = Depends(osm_login_required),
 ):
     """Create a project in ODK Central and the local database.
 
