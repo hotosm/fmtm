@@ -301,6 +301,7 @@ class DbOrganisation(BaseModel):
                     """,
                     {"org_identifier": org_identifier.lower()},
                 )
+                db_org = await cur.fetchone()
             else:
                 await cur.execute(
                     """
@@ -309,7 +310,6 @@ class DbOrganisation(BaseModel):
                     """,
                     {"org_identifier": org_identifier},
                 )
-
                 db_org = await cur.fetchone()
 
             if db_org is None:
