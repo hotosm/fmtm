@@ -66,7 +66,6 @@ class ProjectInBase(DbProject):
     id: Annotated[Optional[int], Field(exclude=True)] = None
     centroid: Annotated[Optional[dict], Field(exclude=True)] = None
     tasks: Annotated[Optional[list], Field(exclude=True)] = None
-    author: Annotated[Optional[dict], Field(exclude=True)] = None
     organisation_name: Annotated[Optional[str], Field(exclude=True)] = None
     organisation_logo: Annotated[Optional[str], Field(exclude=True)] = None
     bbox: Annotated[Optional[list[float]], Field(exclude=True)] = None

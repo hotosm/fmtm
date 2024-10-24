@@ -1,8 +1,3 @@
-type ProjectAuthor = {
-	username: string;
-	id: number;
-};
-
 export type ProjectTask = {
 	id: number;
 	project_id: number;
@@ -49,8 +44,8 @@ export interface ProjectData {
 	odk_token: string;
 	organisation_id: number;
 	organisation_logo: string;
+	author_id: number;
 	custom_tms_url: string;
-	author: ProjectAuthor;
 	status: number;
 	hashtags: string[];
 	tasks: ProjectTask[];

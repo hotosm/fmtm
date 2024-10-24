@@ -465,8 +465,7 @@ async def test_project_by_id(client, project):
 
     assert data["id"] == project.id
     assert data["odkid"] == project.odkid
-    assert data["author"]["username"] == project.author.username
-    assert data["author"]["id"] == project.author.id
+    assert data["author_id"] == project.author_id
     assert data["name"] == project.name
     assert data["short_description"] == project.short_description
     assert data["description"] == project.description

@@ -812,7 +812,6 @@ class DbProject(BaseModel):
 
     # Relationships
     tasks: Optional[list[DbTask]] = None
-    author: Optional[DbUser] = None
 
     # Calculated
     organisation_name: Optional[str] = None
@@ -874,11 +873,6 @@ class DbProject(BaseModel):
                         ST_XMax(project_bbox.bbox),
                         ST_YMax(project_bbox.bbox)
                     ] AS bbox,
-                    JSON_BUILD_OBJECT(
-                        'id', project_author.id,
-                        'username', project_author.username,
-                        'role', project_author.role
-                    ) AS author,
                     project_org.name as organisation_name,
                     project_org.logo as organisation_logo,
                     latest_th.action_date as last_active,
@@ -920,11 +914,9 @@ class DbProject(BaseModel):
                 FROM
                     projects p
                 LEFT JOIN
-                    users project_author ON p.author_id = project_author.id
-                LEFT JOIN
                     organisations project_org ON p.organisation_id = project_org.id
                 LEFT JOIN
-                    tasks t ON p.id = t.project_id
+                    tasks t ON p.id = t.project_id AND t.project_id = %(project_id)s
                 LEFT JOIN
                     latest_task_history latest_th ON t.id = latest_th.task_id
                 LEFT JOIN
@@ -932,10 +924,13 @@ class DbProject(BaseModel):
                 JOIN
                     project_bbox ON project_bbox.bbox IS NOT NULL
                 WHERE
-                    p.id = %(project_id)s
+                    p.id = %(project_id)s AND (
+                        t.project_id = %(project_id)s
+                            -- Also required to return a project with if tasks
+                            OR t.project_id IS NULL
+                    )
                 GROUP BY
-                    p.id, project_author.id, project_org.id,
-                    project_bbox.bbox, latest_th.action_date;
+                    p.id, project_org.id, project_bbox.bbox, latest_th.action_date;
             """
 
             await cur.execute(
