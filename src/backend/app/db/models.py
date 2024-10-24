@@ -1120,18 +1120,43 @@ class DbProject(BaseModel):
     @classmethod
     async def delete(cls, db: Connection, project_id: int) -> bool:
         """Delete a project and its related data."""
-        sql = """
-            DELETE FROM background_tasks WHERE project_id = %(project_id)s;
-            DELETE FROM basemaps WHERE project_id = %(project_id)s;
-            DELETE FROM user_roles WHERE project_id = %(project_id)s;
-            DELETE FROM task_history WHERE project_id = %(project_id)s;
-            DELETE FROM tasks WHERE project_id = %(project_id)s;
-            DELETE FROM projects WHERE id = %(project_id)s;
-        """
-
         async with db.cursor() as cur:
-            await cur.execute(sql, {"project_id": project_id})
-            await cur.fetchone()
+            await cur.execute(
+                """
+                DELETE FROM background_tasks WHERE project_id = %(project_id)s;
+            """,
+                {"project_id": project_id},
+            )
+            await cur.execute(
+                """
+                DELETE FROM basemaps WHERE project_id = %(project_id)s;
+            """,
+                {"project_id": project_id},
+            )
+            await cur.execute(
+                """
+                DELETE FROM user_roles WHERE project_id = %(project_id)s;
+            """,
+                {"project_id": project_id},
+            )
+            await cur.execute(
+                """
+                DELETE FROM task_history WHERE project_id = %(project_id)s;
+            """,
+                {"project_id": project_id},
+            )
+            await cur.execute(
+                """
+                DELETE FROM tasks WHERE project_id = %(project_id)s;
+            """,
+                {"project_id": project_id},
+            )
+            await cur.execute(
+                """
+                DELETE FROM projects WHERE id = %(project_id)s;
+            """,
+                {"project_id": project_id},
+            )
 
 
 class DbBackgroundTask(BaseModel):

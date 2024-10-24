@@ -405,7 +405,6 @@ async def delete_project(
     await delete_all_objs_under_prefix(
         settings.S3_BUCKET_NAME, f"/{project.organisation_id}/{project.id}/"
     )
-    await project_crud.delete_fmtm_s3_objects(project)
     # Delete FMTM project
     await DbProject.delete(db, project.id)
 
@@ -1109,7 +1108,7 @@ async def create_project(
         )
         odk_creds_decrypted = await organisation_deps.get_org_odk_creds(db_org)
 
-    await project_deps.check_project_dup_name(db, project_info.name.lower())
+    await project_deps.check_project_dup_name(db, project_info.name)
 
     # Create project in ODK Central
     # NOTE runs in separate thread using run_in_threadpool
@@ -1117,13 +1116,13 @@ async def create_project(
         lambda: central_crud.create_odk_project(project_info.name, odk_creds_decrypted)
     )
 
-    # Create the project in the local DB
+    # Create the project in the FMTM DB
     project_info.odkid = odkproject["id"]
     project_info.author_id = db_user.id
     project = await DbProject.create(db, project_info)
     if not project:
         raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            status_code=HTTPStatus.CONFLICT,
             detail="Project creation failed.",
         )
 

@@ -52,7 +52,7 @@ async def check_project_dup_name(db: Connection, name: str):
         )
     """
     async with db.cursor() as cur:
-        await cur.execute(sql, {"project_name": name})
+        await cur.execute(sql, {"project_name": name.lower()})
         project_exists = await cur.fetchone()
     if project_exists:
         project_exists = project_exists[0]
