@@ -56,8 +56,10 @@ class ProjectInBase(DbProject):
         Field(validate_default=True),
     ] = None
 
-    # Exclude
+    # Exclude (do not allow update)
     id: Annotated[Optional[int], Field(exclude=True)] = None
+    outline: Annotated[Optional[dict], Field(exclude=True)] = None
+    # Exclude (calculated fields)
     centroid: Annotated[Optional[dict], Field(exclude=True)] = None
     tasks: Annotated[Optional[list], Field(exclude=True)] = None
     organisation_name: Annotated[Optional[str], Field(exclude=True)] = None
