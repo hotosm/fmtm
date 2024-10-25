@@ -53,8 +53,8 @@ services:
       api:
         # Override: must be healthy before tests run
         condition: service_healthy
-        # Override: must be healthy before tests run
       ui:
+        # Override: must be healthy before tests run
         condition: service_healthy
     working_dir: /app
     environment:
