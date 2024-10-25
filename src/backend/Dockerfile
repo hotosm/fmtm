@@ -140,9 +140,6 @@ VOLUME /opt/logs
 VOLUME /opt/tiles
 # Change to non-root user
 USER appuser
-# Add Healthcheck
-HEALTHCHECK --start-period=10s --interval=5s --retries=20 --timeout=5s \
-    CMD curl --fail http://localhost:8000/__lbheartbeat__ || exit 1
 
 
 # Add certificates to use ODK Central over SSL (HTTPS, required)
