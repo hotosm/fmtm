@@ -16,7 +16,7 @@ let stamenStyle = {
 	},
 	layers: [
 		{
-			id: 'background',
+			id: 'stamen',
 			type: 'raster',
 			source: 'stamen',
 			layout: {
@@ -41,7 +41,7 @@ let esriStyle = {
 	},
 	layers: [
 		{
-			id: 'background',
+			id: 'esri',
 			type: 'raster',
 			source: 'esri',
 			layout: {
