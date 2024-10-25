@@ -145,9 +145,8 @@ const FormCategoryService = (url: string) => {
   };
 };
 
-const UploadTaskAreasService = (url: string, filePayload: any, projectData: any) => {
+const UploadTaskAreasService = (url: string, filePayload: any) => {
   return async (dispatch) => {
-    dispatch(CreateProjectActions.UploadAreaLoading(true));
     const postUploadArea = async (url: string, filePayload: any) => {
       let isAPISuccess = true;
       try {
@@ -160,10 +159,7 @@ const UploadTaskAreasService = (url: string, filePayload: any, projectData: any)
         });
         isAPISuccess = isStatusSuccess(postNewProjectDetails.status);
 
-        if (isAPISuccess) {
-          await dispatch(CreateProjectActions.UploadAreaLoading(false));
-          await dispatch(CreateProjectActions.PostUploadAreaSuccess(postNewProjectDetails.data));
-        } else {
+        if (!isAPISuccess) {
           throw new Error(`Request failed with status ${postNewProjectDetails.status}`);
         }
       } catch (error: any) {
@@ -177,7 +173,6 @@ const UploadTaskAreasService = (url: string, filePayload: any, projectData: any)
             duration: 2000,
           }),
         );
-        dispatch(CreateProjectActions.UploadAreaLoading(false));
       }
       return isAPISuccess;
     };

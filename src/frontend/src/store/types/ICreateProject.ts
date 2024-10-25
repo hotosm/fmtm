@@ -7,8 +7,6 @@ export type CreateProjectStateTypes = {
   projectDetailsResponse: EditProjectResponseTypes | null;
   projectDetailsLoading: boolean;
   editProjectDetailsLoading: boolean;
-  projectArea: ProjectAreaTypes | null;
-  projectAreaLoading: boolean;
   formCategoryList: FormCategoryListTypes[] | [];
   formCategoryLoading: boolean;
   generateProjectLoading: boolean;
@@ -111,10 +109,6 @@ export type ProjectDetailsTypes = {
   hasCustomTMS: boolean;
   customFormUpload: any;
   hasAdditionalFeature: boolean;
-};
-
-export type ProjectAreaTypes = {
-  // Define properties related to the project area here
 };
 
 export type FormCategoryListTypes = {
