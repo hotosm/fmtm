@@ -135,7 +135,7 @@ const ProjectDetailsV2 = () => {
     // FIXME should the feature id be an int, not a string?
     const features = state.projectTaskBoundries[0]?.taskBoundries?.map((taskObj) => ({
       type: 'Feature',
-      id: `${taskObj.id}_${taskObj.task_status}`,
+      id: `project_${projectId}_task_${taskObj.id}`,
       geometry: { ...taskObj.outline },
       properties: {
         ...taskObj.outline.properties,
@@ -149,6 +149,7 @@ const ProjectDetailsV2 = () => {
       ...geojsonObjectModel,
       features: features,
     };
+    console.log(taskBoundariesFeatcol);
     setTaskBoundariesLayer(taskBoundariesFeatcol);
   }, [state.projectTaskBoundries[0]?.taskBoundries?.length]);
 

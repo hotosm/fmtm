@@ -1,3 +1,5 @@
+import { task_status as taskStatusEnum } from '@/types/enums';
+
 export interface ProjectDetailsModel {
   id: number;
   odkid: number;
@@ -34,7 +36,7 @@ export interface ProjectDetailsModel {
       id: string;
       bbox: null | number[];
     };
-    task_status: number;
+    task_status: taskStatusEnum;
     actioned_by_uid: number;
     actioned_by_username: string;
     task_history: {
@@ -43,7 +45,6 @@ export interface ProjectDetailsModel {
       action_date: string;
     }[];
     qr_code_base64: string;
-    task_status_str: string;
   }[];
 }
 

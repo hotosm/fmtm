@@ -65,7 +65,6 @@ export type ProjectTaskTypes = {
   actioned_by_username: string | null;
   task_history: any[];
   qr_code_base64: string;
-  task_status_str: string;
 };
 
 type EditProjectResponseTypes = {
