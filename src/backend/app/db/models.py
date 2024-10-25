@@ -1054,16 +1054,16 @@ class DbProject(BaseModel):
         """Create a new project in the database."""
         model_dump = dump_and_check_model(project_in)
         columns = []
-        values = []
+        value_placeholders = []
 
         for key in model_dump.keys():
             columns.append(key)
             if key == "outline":
-                values.append(f"ST_GeomFromGeoJSON(%({key})s)")
+                value_placeholders.append(f"ST_GeomFromGeoJSON(%({key})s)")
                 # Must be string json for db input
                 model_dump[key] = json.dumps(model_dump[key])
             else:
-                values.append(f"%({key})s")
+                value_placeholders.append(f"%({key})s")
 
         async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(
@@ -1071,7 +1071,7 @@ class DbProject(BaseModel):
                 INSERT INTO projects
                     ({", ".join(columns)})
                 VALUES
-                    ({", ".join(values)})
+                    ({", ".join(value_placeholders)})
                 RETURNING
                     *,
                     ST_AsGeoJSON(outline)::jsonb AS outline;
@@ -1087,12 +1087,8 @@ class DbProject(BaseModel):
                     status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
                 )
 
-            new_project_id = new_project.id
-
             # NOTE we want a trackable hashtag DOMAIN-PROJECT_ID
-            hashtags = new_project.hashtags.append(
-                f"#{settings.FMTM_DOMAIN}-{new_project_id}"
-            )
+            new_project.hashtags.append(f"#{settings.FMTM_DOMAIN}-{new_project.id}")
 
             await cur.execute(
                 """
@@ -1103,12 +1099,12 @@ class DbProject(BaseModel):
                         *,
                         ST_AsGeoJSON(outline)::jsonb AS outline;
                 """,
-                {"hashtags": hashtags, "project_id": new_project_id},
+                {"hashtags": new_project.hashtags, "project_id": new_project.id},
             )
             updated_project = await cur.fetchone()
 
             if updated_project is None:
-                msg = f"Failed to update hashtags for project ID: {new_project_id}"
+                msg = f"Failed to update hashtags for project ID: {new_project.id}"
                 log.error(msg)
                 raise HTTPException(
                     status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
