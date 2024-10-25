@@ -380,7 +380,7 @@ async def generate_project_basemap(
     return {"Message": "Tile generation started"}
 
 
-@router.get("/{id}", response_model=project_schemas.ProjectOut)
+@router.get("/{project_id}", response_model=project_schemas.ProjectOut)
 async def read_project(
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ):

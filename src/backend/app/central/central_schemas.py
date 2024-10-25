@@ -245,9 +245,9 @@ class EntityMappingStatusIn(BaseModel):
     @classmethod
     def append_status_emoji(cls, value: str, info: ValidationInfo) -> str:
         """Add 🔒 (locked), ✅ (complete) or ❌ (invalid) emojis."""
-        status = info.data.get("status", EntityStatus.READY.value)
+        status = info.data.get("status", EntityStatus.UNLOCKED.value)
         emojis = {
-            str(EntityStatus.LOCKED_FOR_MAPPING.value): "🔒",
+            str(EntityStatus.LOCKED.value): "🔒",
             str(EntityStatus.MAPPED.value): "✅",
             str(EntityStatus.BAD.value): "❌",
         }

@@ -20,7 +20,7 @@
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated, Optional, Self
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from geojson_pydantic import Feature, FeatureCollection, MultiPolygon, Point, Polygon
 from pydantic import (
@@ -147,7 +147,9 @@ class ProjectInBase(DbProject):
         # does not seem to work?
         self.slug = slugify(self.name)
 
-        if self.hashtags and "#FMTM" not in self.hashtags:
+        if not self.hashtags:
+            self.hashtags = ["#FMTM"]
+        elif "#FMTM" not in self.hashtags:
             self.hashtags.append("#FMTM")
         return self
 
@@ -302,19 +304,13 @@ class ProjectUserContributions(BaseModel):
 class BasemapIn(DbBasemap):
     """Basemap tile creation."""
 
-    # Force running validation to set value
-    id: Annotated[UUID, Field(validate_default=True)] = None
+    # Exclude, as the uuid is generated in the database
+    id: Annotated[Optional[UUID], Field(exclude=True)] = None
     project_id: int
     tile_source: str
     url: str
     background_task_id: UUID
     status: BackgroundTaskStatus
-
-    @field_validator("id", mode="before")
-    @classmethod
-    def generate_uuid(cls, value: None) -> UUID:
-        """Generate a uuid4 for insert."""
-        return uuid4()
 
 
 class BasemapUpdate(DbBasemap):
@@ -356,16 +352,10 @@ class BasemapOut(DbBasemap):
 class BackgroundTaskIn(DbBackgroundTask):
     """Insert a background task."""
 
-    # Force running validation to set value
-    id: Annotated[UUID, Field(validate_default=True)] = None
-    # Make related project_id mandatory, while id is already required (UUID)
+    # Exclude, as the uuid is generated in the database
+    id: Annotated[Optional[UUID], Field(exclude=True)] = None
+    # Make related project_id mandatory
     project_id: int
-
-    @field_validator("id", mode="before")
-    @classmethod
-    def generate_uuid(cls, value: None) -> UUID:
-        """Generate a uuid4 for insert."""
-        return uuid4()
 
 
 class BackgroundTaskUpdate(DbBackgroundTask):

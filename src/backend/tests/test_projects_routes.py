@@ -29,18 +29,13 @@ import requests
 from fastapi import HTTPException
 from loguru import logger as log
 
-from app.central import central_schemas
 from app.central.central_crud import create_odk_project
-from app.config import encrypt_value, settings
-from app.db.enums import HTTPStatus, TaskStatus
-from app.db.models import slugify
+from app.config import settings
+from app.db.enums import EntityStatus, HTTPStatus, TaskAction
+from app.db.models import DbProject, slugify
 from app.db.postgis_utils import check_crs
 from app.projects import project_crud
 from tests.test_data import test_data_path
-
-odk_central_url = os.getenv("ODK_CENTRAL_URL")
-odk_central_user = os.getenv("ODK_CENTRAL_USER")
-odk_central_password = encrypt_value(os.getenv("ODK_CENTRAL_PASSWD", ""))
 
 
 async def create_project(client, organisation_id, project_data):
@@ -78,12 +73,13 @@ async def test_create_project_invalid(client, organisation, project_data):
 
 async def test_create_project_with_dup(client, organisation, project_data):
     """Test project creation endpoint, duplicate checker."""
-    response_data = await create_project(client, organisation.id, project_data)
     project_name = project_data["name"]
-    assert "id" in response_data
-    assert isinstance(response_data["id"], int)
-    assert isinstance(response_data["slug"], str)
-    assert response_data["slug"] == slugify(project_name)
+
+    new_project = await create_project(client, organisation.id, project_data)
+    assert "id" in new_project
+    assert isinstance(new_project["id"], int)
+    assert isinstance(new_project["slug"], str)
+    assert new_project["slug"] == slugify(project_name)
 
     # Duplicate response to test error condition: project name already exists
     response_duplicate = await client.post(
@@ -232,7 +228,7 @@ async def test_unsupported_crs(project_data, crs):
         ("TAG1, tag2 #TAG3", ["#TAG1", "#tag2", "#TAG3", "#FMTM"]),
     ],
 )
-async def test_hashtags(
+async def test_project_hashtags(
     client, organisation, project_data, hashtag_input, expected_output
 ):
     """Test hashtag parsing."""
@@ -256,11 +252,10 @@ async def test_create_odk_project():
     mock_project.createProject.return_value = {"status": "success"}
 
     odk_credentials = {
-        "odk_central_url": odk_central_url,
-        "odk_central_user": odk_central_user,
-        "odk_central_password": odk_central_password,
+        "odk_central_url": os.getenv("ODK_CENTRAL_URL"),
+        "odk_central_user": os.getenv("ODK_CENTRAL_USER"),
+        "odk_central_password": os.getenv("ODK_CENTRAL_PASSWD"),
     }
-    odk_credentials = central_schemas.ODKCentralDecrypted(**odk_credentials)
 
     with patch("app.central.central_crud.get_odk_project", return_value=mock_project):
         result = create_odk_project("Test Project", odk_credentials)
@@ -320,13 +315,6 @@ async def test_upload_data_extracts(client, project):
 
 async def test_generate_project_files(db, client, project):
     """Test generate all appuser files (during creation)."""
-    odk_credentials = {
-        "odk_central_url": odk_central_url,
-        "odk_central_user": odk_central_user,
-        "odk_central_password": odk_central_password,
-    }
-    odk_credentials = central_schemas.ODKCentralDecrypted(**odk_credentials)
-
     project_id = project.id
     log.debug(f"Testing project ID: {project_id}")
 
@@ -396,6 +384,12 @@ async def test_generate_project_files(db, client, project):
     )
     assert response.status_code == 200
 
+    # Now check required values were added to project
+    new_project = await DbProject.one(db, project_id)
+    assert len(new_project.tasks) == 1
+    assert new_project.tasks[0].task_status == TaskAction.RELEASED_FOR_MAPPING
+    assert isinstance(new_project.odk_token, str)
+
 
 async def test_update_project(client, admin_user, project):
     """Test update project metadata."""
@@ -436,14 +430,13 @@ async def test_project_summaries(client, project):
     assert response.status_code == 200
     assert "results" in response.json()
 
-    results = response.json()["results"]
-    result = results[0]
+    first_project = response.json()["results"][0]
 
-    assert result["id"] == project.id
-    assert result["name"] == project.name
-    assert result["description"] == project.description
-    assert result["hashtags"] == project.hashtags
-    assert result["organisation_id"] == project.organisation_id
+    assert first_project["id"] == project.id
+    assert first_project["name"] == project.name
+    assert first_project["description"] == project.description
+    assert first_project["hashtags"] == project.hashtags
+    assert first_project["organisation_id"] == project.organisation_id
 
 
 async def test_project_by_id(client, project):
@@ -470,22 +463,22 @@ async def test_project_by_id(client, project):
 async def test_set_entity_mapping_status(client, odk_project, entities):
     """Test set the ODK entity mapping status."""
     entity = entities[0]
-    expected_status = TaskStatus.LOCKED_FOR_MAPPING
+    new_status = EntityStatus.LOCKED
 
     response = await client.post(
         f"/projects/{odk_project.id}/entity/status",
         json={
             "entity_id": entity["id"],
-            "status": expected_status,
+            "status": new_status,
             "label": f"Task {entity['task_id']} Feature {entity['osm_id']}",
         },
     )
     response_entity = response.json()
 
-    expected_entity = entity
-    expected_entity["status"] = expected_status.value
+    # Here we update the original entity status for the comparison
+    entity["status"] = new_status.value
     assert response.status_code == 200
-    compare_entities(response_entity, expected_entity)
+    compare_entities(response_entity, entity)
 
 
 async def test_get_entity_mapping_status(client, odk_project, entities):

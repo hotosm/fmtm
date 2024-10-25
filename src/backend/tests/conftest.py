@@ -38,12 +38,13 @@ from app.central import central_crud, central_schemas
 from app.central.central_schemas import ODKCentralDecrypted, ODKCentralIn
 from app.config import encrypt_value, settings
 from app.db.database import db_conn
-from app.db.enums import TaskStatus, UserRole
+from app.db.enums import TaskStatus, UserRole, get_action_for_status_change
 from app.db.models import DbProject, DbTask, DbTaskHistory
 from app.main import get_application
 from app.organisations.organisation_deps import get_organisation
 from app.projects import project_crud
 from app.projects.project_schemas import ProjectIn
+from app.tasks.task_schemas import TaskHistoryIn
 from app.users.user_deps import get_user
 from tests.test_data import test_data_path
 
@@ -113,8 +114,8 @@ async def project(db, admin_user, organisation):
     )
     odk_creds_decrypted = ODKCentralDecrypted(
         odk_central_url=odk_creds_encrypted.odk_central_url,
-        odk_central_user=odk_creds_encrypted.odk_central_password,
-        odk_central_password=odk_creds_encrypted.odk_central_url,
+        odk_central_user=odk_creds_encrypted.odk_central_user,
+        odk_central_password=odk_creds_encrypted.odk_central_password,
     )
 
     project_name = f"test project {uuid4()}"
@@ -167,62 +168,68 @@ async def project(db, admin_user, organisation):
         pytest.fail(f"Test failed with exception: {str(e)}")
 
     # Get project, including all calculated fields
-    return await DbProject.one(db, new_project.id)
+    project_all_data = await DbProject.one(db, new_project.id)
+    assert isinstance(project_all_data.organisation_logo, str)
+    assert isinstance(project_all_data.bbox, list)
+    assert isinstance(project_all_data.bbox[0], float)
+    return project_all_data
 
 
 @pytest_asyncio.fixture(scope="function")
 async def tasks(project, db):
     """Test tasks, using the test project."""
     boundaries = {
-        "type": "Feature",
-        "geometry": {
-            "type": "Polygon",
-            "coordinates": [
-                [
-                    [85.3012091, 27.7122369],
-                    [85.3012129, 27.7121403],
-                    [85.3013408, 27.7121442],
-                    [85.3013371, 27.7122408],
-                    [85.3012441, 27.712238],
-                    [85.3012091, 27.7122369],
-                ]
-            ],
-        },
-        "properties": {
-            "osm_id": 650958368,
-            "version": 2,
-            "tags": {"building": "yes"},
-            "changeset": 99124278,
-            "timestamp": "2021-02-11T17:21:06",
-        },
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [85.3012091, 27.7122369],
+                            [85.3012129, 27.7121403],
+                            [85.3013408, 27.7121442],
+                            [85.3013371, 27.7122408],
+                            [85.3012441, 27.712238],
+                            [85.3012091, 27.7122369],
+                        ]
+                    ],
+                },
+                "properties": {
+                    "osm_id": 650958368,
+                    "version": 2,
+                    "tags": {"building": "yes"},
+                    "changeset": 99124278,
+                    "timestamp": "2021-02-11T17:21:06",
+                },
+            }
+        ],
     }
 
     try:
-        tasks = await DbTask.create(db, project.id, boundaries)
-        assert tasks is True
+        success = await DbTask.create(db, project.id, boundaries)
+        assert success
     except Exception as e:
         log.exception(e)
         pytest.fail(f"Test failed with exception: {str(e)}")
 
-    return tasks
+    return await DbTask.all(db, project.id)
 
 
 @pytest_asyncio.fixture(scope="function")
-async def task_history(db, project, tasks, admin_user):
-    """A test task history using the test user, project and task."""
+async def task_event(db, project, tasks, admin_user):
+    """Create a new task event in the database."""
     user = await get_user(admin_user.id, db)
     for task in tasks:
-        task_history_entry = DbTaskHistory(
-            project_id=project.id,
+        new_event = TaskHistoryIn(
             task_id=task.id,
-            action=TaskStatus.READY,
-            action_text=f"Task created with action {TaskStatus.READY}"
-            "by {user.username}",
-            actioned_by=user,
             user_id=user.id,
+            action=get_action_for_status_change(TaskStatus.READY),
+            action_text="We added a comment!",
         )
-        db_task_history = await DbTaskHistory.create(db, task_history_entry)
-    return db_task_history
+        db_task_event = await DbTaskHistory.create(db, new_event)
+    return db_task_event
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -293,7 +300,7 @@ async def project_data():
         "short_description": "test",
         "description": "test",
         "xform_category": "buildings",
-        "hashtags": "#FMTM",
+        "hashtags": "testtag",
         "outline": {
             "coordinates": [
                 [
@@ -307,15 +314,15 @@ async def project_data():
             "type": "Polygon",
         },
     }
+
     odk_credentials = {
         "odk_central_url": odk_central_url,
         "odk_central_user": odk_central_user,
         "odk_central_password": odk_central_password,
     }
+    odk_creds_decrypted = central_schemas.ODKCentralDecrypted(**odk_credentials)
+    data.update(**odk_creds_decrypted.model_dump())
 
-    odk_creds_models = central_schemas.ODKCentralDecrypted(**odk_credentials)
-
-    data.update(**odk_creds_models.model_dump())
     return data
 
 

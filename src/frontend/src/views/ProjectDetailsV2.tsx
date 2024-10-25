@@ -160,7 +160,7 @@ const ProjectDetailsV2 = () => {
   }, [state.projectInfo.data_extract_url]);
 
   const lockedPopup = (properties: Record<string, any>) => {
-    if (properties.locked_by_user === authDetails?.id) {
+    if (properties.actioned_by_uid === authDetails?.id) {
       return <p>This task was locked by you</p>;
     }
     return null;
@@ -477,7 +477,7 @@ const ProjectDetailsV2 = () => {
                     return getTaskStatusStyle(
                       feature,
                       mapTheme,
-                      feature.getProperties()?.locked_by_user == authDetails?.id,
+                      feature.getProperties()?.actioned_by_uid == authDetails?.id,
                     );
                   }}
                 />
@@ -504,7 +504,7 @@ const ProjectDetailsV2 = () => {
               <AsyncPopup
                 map={map}
                 popupUI={lockedPopup}
-                primaryKey={'locked_by_user'}
+                primaryKey={'actioned_by_uid'}
                 showOnHover="pointermove"
                 popupId="locked-popup"
                 className="fmtm-w-[235px]"

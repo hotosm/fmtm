@@ -25,7 +25,7 @@ from psycopg import Connection
 from app.auth.auth_schemas import ProjectUserDict
 from app.auth.roles import get_uid, mapper
 from app.db.database import db_conn
-from app.db.enums import HTTPStatus, TaskStatus
+from app.db.enums import HTTPStatus, TaskAction, TaskStatus
 from app.db.models import DbTask, DbTaskHistory
 from app.tasks import task_crud, task_schemas
 from app.tasks.task_deps import get_task
@@ -79,11 +79,9 @@ async def add_new_task_event(
     db: Annotated[Connection, Depends(db_conn)],
 ):
     """Add a new event to the events table / update task status."""
-    project_id = project_user.get("project").id
     user_id = await get_uid(project_user.get("user"))
     return await task_crud.new_task_event(
         db,
-        project_id,
         db_task.id,
         user_id,
         new_status,
@@ -110,7 +108,13 @@ async def add_task_comment(
         TaskHistoryOut: The created task comment.
     """
     user_id = await get_uid(project_user.get("user"))
-    return await DbTaskHistory.comment(db, db_task.id, user_id, comment)
+    new_comment = task_schemas.TaskHistoryIn(
+        task_id=db_task.id,
+        user_id=user_id,
+        action=TaskAction.COMMENT,
+        action_text=comment,
+    )
+    return await DbTaskHistory.create(db, new_comment)
 
 
 # NOTE this endpoint isn't used?
@@ -141,7 +145,7 @@ async def task_history(
     db_task: Annotated[DbTask, Depends(get_task)],
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
     days: int = 10,
-    comments_only: bool = False,
+    comments: bool = False,
 ):
     """Get the detailed history for a task."""
-    return await task_crud.get_task_history(db, db_task.id, days, comments_only)
+    return await DbTaskHistory.all(db, task_id=db_task.id, days=days, comments=comments)

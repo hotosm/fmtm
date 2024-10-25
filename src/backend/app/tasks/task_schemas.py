@@ -17,15 +17,16 @@
 #
 """Pydantic schemas for FMTM task areas."""
 
-from datetime import datetime
-from typing import Any, Optional
+from typing import Annotated, Optional
+from uuid import UUID
 
 from geojson_pydantic import Polygon
 from pydantic import BaseModel, Field, computed_field
-from pydantic.types import UUID4
 
-from app.db.enums import TaskStatus, get_status_for_action
+from app.db.enums import TaskAction, TaskStatus, get_status_for_action
 from app.db.models import DbTask, DbTaskHistory
+
+# NOTE we don't have a TaskIn as tasks are only generated once during project creation
 
 
 class TaskOut(DbTask):
@@ -35,27 +36,33 @@ class TaskOut(DbTask):
     outline: Polygon
 
 
-class TaskHistoryBase(BaseModel):
-    """Task mapping history."""
+class TaskHistoryIn(DbTaskHistory):
+    """Create a new task event."""
 
-    event_id: UUID4
-    action_text: Optional[str]
-    action_date: datetime
+    # Exclude, as the uuid is generated in the database
+    event_id: Annotated[Optional[UUID], Field(exclude=True)] = None
+    # Exclude, as we get the project_id in the db from the task id
+    project_id: Annotated[Optional[int], Field(exclude=True)] = None
+
+    # Omit computed fields
+    username: Annotated[Optional[str], Field(exclude=True)] = None
+    profile_img: Annotated[Optional[str], Field(exclude=True)] = None
 
 
 class TaskHistoryOut(DbTaskHistory):
-    """Task mapping history display."""
+    """A task event to display to the user."""
 
-    action: Any = Field(exclude=True)
-
-    event_id: UUID4
+    # Ensure project_id is removed, as we only use this to query for tasks
+    project_id: Annotated[Optional[int], Field(exclude=True)] = None
+    # We calculate the 'status' field in place of the action enum
+    action: Annotated[Optional[TaskAction], Field(exclude=True)] = None
 
     @computed_field
     @property
     def status(self) -> Optional[TaskStatus]:
         """Get the status from the recent action.
 
-        TODO SQL refactor this out and use 'action' or similar?
+        TODO remove this, replace with 'action' or similar?
         """
         if not self.action:
             return None

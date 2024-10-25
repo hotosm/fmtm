@@ -22,7 +22,7 @@ from SQL statements. Sometimes we only need a subset of the fields.
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import BytesIO
 from re import sub
 from typing import TYPE_CHECKING, Annotated, Optional, Self
@@ -69,6 +69,7 @@ if TYPE_CHECKING:
         ProjectIn,
         ProjectUpdate,
     )
+    from app.tasks.task_schemas import TaskHistoryIn
     from app.users.user_schemas import UserIn
 
 
@@ -122,12 +123,12 @@ class DbUserRole(BaseModel):
             )
             new_role = await cur.fetchone()
 
-            if new_role is None:
-                msg = f"Unknown SQL error for data: {params}"
-                log.error(f"Failed user role creation: {params}")
-                raise HTTPException(
-                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
-                )
+        if new_role is None:
+            msg = f"Unknown SQL error for data: {params}"
+            log.error(f"Failed user role creation: {params}")
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+            )
 
         return new_role
 
@@ -193,12 +194,12 @@ class DbUser(BaseModel):
                 sql,
                 {"user_identifier": user_identifier},
             )
-
             db_project = await cur.fetchone()
-            if db_project is None:
-                raise KeyError(f"User ({user_identifier}) not found.")
 
-            return db_project
+        if db_project is None:
+            raise KeyError(f"User ({user_identifier}) not found.")
+
+        return db_project
 
     @classmethod
     async def all(
@@ -254,12 +255,12 @@ class DbUser(BaseModel):
             await cur.execute(sql, model_dump)
             new_user = await cur.fetchone()
 
-            if new_user is None:
-                msg = f"Unknown SQL error for data: {model_dump}"
-                log.error(f"Failed user creation: {model_dump}")
-                raise HTTPException(
-                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
-                )
+        if new_user is None:
+            msg = f"Unknown SQL error for data: {model_dump}"
+            log.error(f"Failed user creation: {model_dump}")
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+            )
 
         return new_user
 
@@ -313,10 +314,10 @@ class DbOrganisation(BaseModel):
                 )
                 db_org = await cur.fetchone()
 
-            if db_org is None:
-                raise KeyError(f"Organisation ({org_identifier}) not found.")
+        if db_org is None:
+            raise KeyError(f"Organisation ({org_identifier}) not found.")
 
-            return db_org
+        return db_org
 
     @classmethod
     async def all(
@@ -380,12 +381,12 @@ class DbOrganisation(BaseModel):
             await cur.execute(sql, model_dump)
             new_org = await cur.fetchone()
 
-            if new_org is None and not ignore_conflict:
-                msg = f"Unknown SQL error for data: {model_dump}"
-                log.error(f"User ({user_id}) failed organisation creation: {msg}")
-                raise HTTPException(
-                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
-                )
+        if new_org is None and not ignore_conflict:
+            msg = f"Unknown SQL error for data: {model_dump}"
+            log.error(f"User ({user_id}) failed organisation creation: {msg}")
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+            )
 
         if new_org and new_org.logo is None and new_logo:
             from app.organisations.organisation_schemas import OrganisationUpdate
@@ -451,12 +452,12 @@ class DbOrganisation(BaseModel):
             await cur.execute(sql, {"org_id": org_id, **model_dump})
             updated_org = await cur.fetchone()
 
-            if updated_org is None:
-                msg = f"Failed to update org with ID: {org_id}"
-                log.error(msg)
-                raise HTTPException(
-                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
-                )
+        if updated_org is None:
+            msg = f"Failed to update org with ID: {org_id}"
+            log.error(msg)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+            )
 
         return updated_org
 
@@ -596,12 +597,13 @@ class DbTaskHistory(BaseModel):
     """
 
     event_id: UUID
-    action: TaskAction
-    action_date: Optional[datetime] = None
-    action_text: Optional[str] = None
+    task_id: int
     project_id: Optional[int] = None
-    task_id: Optional[int] = None
     user_id: Optional[int] = None
+
+    action: TaskAction
+    action_text: Optional[str] = None
+    action_date: Optional[datetime] = None
 
     # Computed
     username: Optional[str] = None
@@ -611,67 +613,111 @@ class DbTaskHistory(BaseModel):
     async def all(
         cls,
         db: Connection,
-        project_id: int,
-        days: int,
+        project_id: Optional[int] = None,
+        task_id: Optional[int] = None,
+        days: Optional[int] = None,
+        comments: Optional[bool] = None,
     ) -> Optional[list[Self]]:
-        """Fetch all task history entries for a project."""
-        sql = """
-            SELECT * FROM task_history
-            WHERE project_id = %(project_id)s
+        """Fetch all task history entries for a project.
+
+        Args:
+            db (Connection): the database connection.
+            project_id (int): return all events for a project.
+            task_id (Connection): return all events for a task.
+            days (int): filter to only include events since X days ago.
+            comments (bool): show comments rather than events.
+
+        Returns:
+            list[DbTaskHistory]: list of task event objects.
+        """
+        if project_id and task_id:
+            raise ValueError("Specify either project_id or task_id, not both.")
+        if not project_id and not task_id:
+            raise ValueError("Either project_id or task_id must be provided.")
+
+        filters = []
+        params = {}
+
+        if project_id:
+            filters.append("project_id = %(project_id)s")
+            params["project_id"] = project_id
+        if task_id:
+            filters.append("task_id = %(task_id)s")
+            params["task_id"] = task_id
+        if days is not None:
+            end_date = datetime.now() - timedelta(days=days)
+            filters.append("action_date >= %(end_date)s")
+            params["end_date"] = end_date
+        if comments:
+            filters.append("action = 'COMMENT'")
+        else:
+            filters.append("action != 'COMMENT'")
+
+        filters_joined = " AND ".join(filters)
+
+        sql = f"""
+            SELECT
+                *,
+                u.username,
+                u.profile_img
+            FROM
+                public.task_history
+            JOIN
+                users u ON u.id = task_history.user_id
+            WHERE {filters_joined}
             ORDER BY action_date DESC;
         """
 
         async with db.cursor(row_factory=class_row(cls)) as cur:
-            await cur.execute(sql, {"project_id": project_id})
+            await cur.execute(sql, params)
             return await cur.fetchall()
 
     @classmethod
-    async def comment(
+    async def create(
         cls,
         db: Connection,
-        task_id: int,
-        user_id: int,
-        comment: str,
-    ) -> Optional[list[Self]]:
-        """Create a new comment for a task."""
-        sql = """
-            WITH inserted AS (
-                INSERT INTO public.task_history (
-                    event_id,
-                    project_id,
-                    task_id,
-                    action,
-                    action_text,
-                    user_id
-                )
-                VALUES (
-                    gen_random_uuid(),
-                    (SELECT project_id FROM tasks WHERE id = %(task_id)s),
-                    %(task_id)s,
-                    'COMMENT',
-                    %(comment_text)s,
-                    %(user_id)s
-                )
-                RETURNING *
-            )
-            SELECT
-                inserted.*,
-                u.username,
-                u.profile_img
-            FROM inserted
-            JOIN users u ON u.id = inserted.user_id;
-        """
+        task_in: "TaskHistoryIn",
+    ) -> Self:
+        """Create a new task event."""
+        model_dump = dump_and_check_model(task_in)
+        columns = ", ".join(model_dump.keys())
+        value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
 
         async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(
-                sql,
-                {
-                    "task_id": task_id,
-                    "user_id": user_id,
-                    "comment_text": comment,
-                },
+                f"""
+                    WITH inserted AS (
+                        INSERT INTO public.task_history (
+                            event_id,
+                            project_id,
+                            {columns}
+                        )
+                        VALUES (
+                            gen_random_uuid(),
+                            (SELECT project_id FROM tasks WHERE id = %(task_id)s),
+                            {value_placeholders}
+                        )
+                        RETURNING *
+                    )
+                    SELECT
+                        inserted.*,
+                        u.username,
+                        u.profile_img
+                    FROM inserted
+                    JOIN users u ON u.id = inserted.user_id;
+            """,
+                model_dump,
             )
-            return await cur.fetchone()
+            new_task_event = await cur.fetchone()
+
+        if new_task_event is None:
+            msg = f"Unknown SQL error for data: {model_dump}"
+            log.error(f"Failed task event creation: {model_dump}")
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+            )
+
+        return new_task_event
 
 
 class DbTask(BaseModel):
@@ -690,24 +736,50 @@ class DbTask(BaseModel):
 
     @classmethod
     async def one(cls, db: Connection, task_id: int) -> Self:
-        """Fetch a single task by it's ID."""
+        """Fetch a single task by it's ID.
+
+        Also returns the current task status, and user that actioned the task.
+        """
         async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(
                 """
                     SELECT
-                        *,
-                        ST_AsGeoJSON(outline)::jsonb AS outline
-                    FROM tasks
-                    WHERE id = %(task_id)s;
+                        tasks.*,
+                        ST_AsGeoJSON(tasks.outline)::jsonb AS outline,
+                        COALESCE(
+                            latest_event.action, 'RELEASED_FOR_MAPPING'
+                        ) AS task_status,
+                        COALESCE(latest_event.user_id, NULL) AS actioned_by_uid,
+                        COALESCE(latest_event.username, NULL) AS actioned_by_username
+                    FROM
+                        tasks
+                    LEFT JOIN LATERAL (
+                        SELECT
+                            th.action,
+                            th.user_id,
+                            u.username
+                        FROM
+                            task_history th
+                        LEFT JOIN
+                            users u ON u.id = th.user_id
+                        WHERE
+                            th.task_id = tasks.id
+                            AND th.action != 'COMMENT'
+                        ORDER BY
+                            th.action_date DESC
+                        LIMIT 1
+                    ) latest_event ON true
+                    WHERE
+                        tasks.id = %(task_id)s;
                 """,
                 {"task_id": task_id},
             )
             db_task = await cur.fetchone()
 
-            if db_task is None:
-                raise KeyError(f"Task ({task_id}) not found.")
+        if db_task is None:
+            raise KeyError(f"Task ({task_id}) not found.")
 
-            return db_task
+        return db_task
 
     @classmethod
     async def all(
@@ -715,13 +787,37 @@ class DbTask(BaseModel):
         db: Connection,
         project_id: int,
     ) -> Optional[list[Self]]:
-        """Fetch all tasks for a project."""
+        """Fetch all tasks for a project.
+
+        Also returns the current task status, and user that actioned the task.
+        """
         sql = """
             SELECT
-                *,
-                ST_AsGeoJSON(outline)::jsonb AS outline
-            FROM tasks
-            WHERE project_id = %(project_id)s;
+                tasks.*,
+                ST_AsGeoJSON(tasks.outline)::jsonb AS outline,
+                COALESCE(latest_event.action, 'RELEASED_FOR_MAPPING') AS task_status,
+                COALESCE(latest_event.user_id, NULL) AS actioned_by_uid,
+                COALESCE(latest_event.username, NULL) AS actioned_by_username
+            FROM
+                tasks
+            LEFT JOIN LATERAL (
+                SELECT
+                    th.action,
+                    th.user_id,
+                    u.username
+                FROM
+                    task_history th
+                LEFT JOIN
+                    users u ON u.id = th.user_id
+                WHERE
+                    th.task_id = tasks.id
+                    AND th.action != 'COMMENT'
+                ORDER BY
+                    th.action_date DESC
+                LIMIT 1
+            ) latest_event ON true
+            WHERE
+                tasks.project_id = %(project_id)s;
         """
 
         async with db.cursor(row_factory=class_row(cls)) as cur:
@@ -980,18 +1076,18 @@ class DbProject(BaseModel):
                 sql,
                 {"project_id": project_id},
             )
-
             db_project = await cur.fetchone()
-            if db_project is None:
-                raise KeyError(f"Project ({project_id}) not found.")
 
-            if db_project.odk_token is None:
-                log.warning(
-                    f"Project ({db_project.id}) has no 'odk_token' set. "
-                    "The QRCode will not work!"
-                )
+        if db_project is None:
+            raise KeyError(f"Project ({project_id}) not found.")
 
-            return db_project
+        if db_project.odk_token is None:
+            log.warning(
+                f"Project ({db_project.id}) has no 'odk_token' set. "
+                "The QRCode will not work!"
+            )
+
+        return db_project
 
     @classmethod
     async def all(
@@ -1103,12 +1199,12 @@ class DbProject(BaseModel):
             )
             updated_project = await cur.fetchone()
 
-            if updated_project is None:
-                msg = f"Failed to update hashtags for project ID: {new_project.id}"
-                log.error(msg)
-                raise HTTPException(
-                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
-                )
+        if updated_project is None:
+            msg = f"Failed to update hashtags for project ID: {new_project.id}"
+            log.error(msg)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+            )
 
         return updated_project
 
@@ -1142,12 +1238,12 @@ class DbProject(BaseModel):
             await cur.execute(sql, {"project_id": project_id, **model_dump})
             updated_project = await cur.fetchone()
 
-            if updated_project is None:
-                msg = f"Failed to update project with ID: {project_id}"
-                log.error(msg)
-                raise HTTPException(
-                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
-                )
+        if updated_project is None:
+            msg = f"Failed to update project with ID: {project_id}"
+            log.error(msg)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+            )
 
         return updated_project
 
@@ -1220,10 +1316,10 @@ class DbBackgroundTask(BaseModel):
             )
             db_task = await cur.fetchone()
 
-            if db_task is None:
-                raise KeyError(f"Background task ({task_id}) not found.")
+        if db_task is None:
+            raise KeyError(f"Background task ({task_id}) not found.")
 
-            return db_task
+        return db_task
 
     @classmethod
     async def create(
@@ -1235,30 +1331,35 @@ class DbBackgroundTask(BaseModel):
 
         Return the task ID only.
         """
-        # NOTE here we cannot use exclude_unset=True as the id will be omitted
-        # NOTE it is a uuid4() that is generated dynamically on field_validator
-        model_dump = task_in.model_dump(exclude_none=True)
+        model_dump = dump_and_check_model(task_in)
         columns = ", ".join(model_dump.keys())
         value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
 
-        sql = f"""
-            INSERT INTO background_tasks
-                ({columns})
-            VALUES
-                ({value_placeholders})
-            RETURNING id;
-        """
-
         async with db.cursor(row_factory=class_row(cls)) as cur:
-            await cur.execute(sql, model_dump)
+            await cur.execute(
+                f"""
+                INSERT INTO background_tasks
+                    (
+                        id,
+                        {", ".join(columns)}
+                    )
+                VALUES
+                    (
+                        gen_random_uuid(),
+                        {", ".join(value_placeholders)}
+                    )
+                RETURNING id;
+            """,
+                model_dump,
+            )
             bg_task = await cur.fetchone()
 
-            if bg_task is None:
-                msg = f"Unknown SQL error for data: {model_dump}"
-                log.error(f"Failed background task creation: {model_dump}")
-                raise HTTPException(
-                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
-                )
+        if bg_task is None:
+            msg = f"Unknown SQL error for data: {model_dump}"
+            log.error(f"Failed background task creation: {model_dump}")
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+            )
 
         return bg_task.id
 
@@ -1283,18 +1384,24 @@ class DbBackgroundTask(BaseModel):
             await cur.execute(sql, {"task_id": task_id, **model_dump})
             updated_task = await cur.fetchone()
 
-            if updated_task is None:
-                msg = f"Failed to update background task with ID: {task_id}"
-                log.error(msg)
-                raise HTTPException(
-                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
-                )
+        if updated_task is None:
+            msg = f"Failed to update background task with ID: {task_id}"
+            log.error(msg)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+            )
 
         return updated_task
 
 
 class DbBasemap(BaseModel):
-    """Table tiles_path."""
+    """Table tiles_path.
+
+    TODO for now we generate the basemap entry in FMTM.
+    TODO In future we will use a basemap generator microservice
+    TODO that will handle the basemap generation db entries.
+    TODO https://github.com/hotosm/basemap-api
+    """
 
     id: UUID
     project_id: Optional[int] = None
@@ -1320,12 +1427,12 @@ class DbBasemap(BaseModel):
                 WHERE id = %(basemap_id)s;
             """
             await cur.execute(sql, {"basemap_id": basemap_id})
-
             db_basemap = await cur.fetchone()
-            if db_basemap is None:
-                raise KeyError(f"Basemap with ID ({db_basemap}) not found.")
 
-            return db_basemap
+        if db_basemap is None:
+            raise KeyError(f"Basemap with ID ({db_basemap}) not found.")
+
+        return db_basemap
 
     @classmethod
     async def all(cls, db: Connection, project_id: int) -> Optional[list[Self]]:
@@ -1349,16 +1456,20 @@ class DbBasemap(BaseModel):
         basemap_in: "BasemapIn",
     ) -> Self:
         """Create a new basemap and return its bounding box."""
-        # NOTE here we cannot use exclude_unset=True as the id will be omitted
-        # NOTE it is a uuid4() that is generated dynamically on field_validator
-        model_dump = basemap_in.model_dump(exclude_none=True)
+        model_dump = dump_and_check_model(basemap_in)
         columns = ", ".join(model_dump.keys())
         value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
 
         sql = f"""
             WITH inserted_basemap AS (
-                INSERT INTO basemaps ({columns})
-                VALUES ({value_placeholders})
+                INSERT INTO basemaps (
+                    id,
+                    {columns}
+                )
+                VALUES (
+                    gen_random_uuid(),
+                    {value_placeholders}
+                )
                 RETURNING *
             ),
             project_bbox AS (
@@ -1382,12 +1493,12 @@ class DbBasemap(BaseModel):
             await cur.execute(sql, model_dump)
             new_basemap = await cur.fetchone()
 
-            if new_basemap is None:
-                msg = f"Unknown SQL error for data: {model_dump}"
-                log.error(f"Failed basemap creation: {model_dump}")
-                raise HTTPException(
-                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
-                )
+        if new_basemap is None:
+            msg = f"Unknown SQL error for data: {model_dump}"
+            log.error(f"Failed basemap creation: {model_dump}")
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+            )
 
         return new_basemap
 
@@ -1412,12 +1523,12 @@ class DbBasemap(BaseModel):
             await cur.execute(sql, {"basemap_id": basemap_id, **model_dump})
             updated_basemap = await cur.fetchone()
 
-            if updated_basemap is None:
-                msg = f"Failed to update basemap with ID: {basemap_id}"
-                log.error(msg)
-                raise HTTPException(
-                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
-                )
+        if updated_basemap is None:
+            msg = f"Failed to update basemap with ID: {basemap_id}"
+            log.error(msg)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+            )
 
         return updated_basemap
 

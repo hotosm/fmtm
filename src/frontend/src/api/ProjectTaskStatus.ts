@@ -30,10 +30,10 @@ export const UpdateTaskStatus = (
         if (feature && style) {
           await feature.setStyle(style);
 
-          // assign userId to locked_by_user if status is locked_for_mapping or locked_for_validation
+          // assign userId to actioned_by_uid if status is locked_for_mapping or locked_for_validation
           const prevProperties = feature.getProperties();
           const isTaskLocked = ['LOCKED_FOR_MAPPING', 'LOCKED_FOR_VALIDATION'].includes(response.data.status);
-          const updatedProperties = { ...prevProperties, locked_by_user: isTaskLocked ? body.id : null };
+          const updatedProperties = { ...prevProperties, actioned_by_uid: isTaskLocked ? body.id : null };
           feature.setProperties(updatedProperties);
 
           dispatch(
