@@ -333,7 +333,7 @@ async def client(app, db):
 
     async with AsyncClient(
         transport=ASGITransport(app=app),
-        base_url="http://testserver",
+        base_url=f"http://{settings.FMTM_DOMAIN}",
         follow_redirects=True,
     ) as ac:
         yield ac
