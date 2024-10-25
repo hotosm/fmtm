@@ -19,7 +19,7 @@
 """Tests for user / auth endpoints."""
 
 
-def test_nothing():
+async def test_nothing():
     """Dummy test to stop exit code 5."""
     assert True
 
@@ -32,7 +32,7 @@ def test_nothing():
 
 
 # @pytest_asyncio.fixture
-# def users(db):
+# async def users(db):
 #     create_user(db, user_schemas.UserIn(username="admin", password="admin"))
 #     create_user(db, user_schemas.UserIn(username="niraj", password="niraj"))
 #     create_user(db, user_schemas.UserIn(username="test", password="test"))

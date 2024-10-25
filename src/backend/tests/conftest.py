@@ -27,6 +27,7 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 import requests
+from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from loguru import logger as log
@@ -329,11 +330,12 @@ async def project_data():
 @pytest_asyncio.fixture(scope="function")
 async def client(app, db):
     """The FastAPI test server."""
-    app.dependency_overrides[db_conn] = lambda: db
+    async with LifespanManager(app) as manager:
+        manager.app.dependency_overrides[db_conn] = lambda: db
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url=f"http://{settings.FMTM_DOMAIN}",
-        follow_redirects=True,
-    ) as ac:
-        yield ac
+        async with AsyncClient(
+            transport=ASGITransport(app=manager.app),
+            base_url=f"http://{settings.FMTM_DOMAIN}",
+            follow_redirects=True,
+        ) as ac:
+            yield ac
