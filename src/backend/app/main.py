@@ -22,7 +22,7 @@ import logging
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, AsyncIterator
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -82,26 +82,30 @@ def get_api() -> FastAPI:
 @asynccontextmanager
 async def lifespan(
     app: FastAPI,  # dead: disable
-):
+) -> AsyncIterator[None]:
     """FastAPI startup/shutdown event."""
     log.debug("Starting up FastAPI server.")
 
-    # Create a pooled db connection and make available in app state
-    # NOTE we can access 'request.app.state.db_pool' in endpoints
-    app.state.db_pool = get_db_connection_pool()
-    await app.state.db_pool.open()
+    # Create a pooled db connection and make available in lifespan state
+    # https://asgi.readthedocs.io/en/latest/specs/lifespan.html#lifespan-state
+    # NOTE to use within a request (this is wrapped in database.py already):
+    # from typing import cast
+    # db_pool = cast(AsyncConnectionPool, request.state.db_pool)
+    # async with db_pool.connection() as conn:
+    db_pool = get_db_connection_pool()
+    await db_pool.open()
 
-    async with app.state.db_pool.connection() as conn:
+    async with db_pool.connection() as conn:
         log.debug("Initialising admin org and user in DB.")
         await init_admin_org(conn)
         log.debug("Reading XLSForms from DB.")
         await read_and_insert_xlsforms(conn, xlsforms_path)
 
-    yield
+    yield {"db_pool": db_pool}
 
     # Shutdown events
     log.debug("Shutting down FastAPI server.")
-    await app.state.db_pool.close()
+    await db_pool.close()
 
 
 def get_application() -> FastAPI:

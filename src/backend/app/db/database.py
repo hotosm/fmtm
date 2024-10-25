@@ -18,6 +18,8 @@
 
 """Config for the FMTM database connection."""
 
+from typing import cast
+
 from fastapi import Request
 from psycopg import Connection
 from psycopg_pool import AsyncConnectionPool
@@ -92,5 +94,6 @@ async def db_conn(request: Request) -> Connection:
 
             return obj
     """
-    async with request.app.state.db_pool.connection() as conn:
+    db_pool = cast(AsyncConnectionPool, request.state.db_pool)
+    async with db_pool.connection() as conn:
         yield conn
