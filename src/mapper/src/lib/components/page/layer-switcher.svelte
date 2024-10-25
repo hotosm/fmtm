@@ -29,7 +29,8 @@ map = new Map({
 	export let position: maplibregl.ControlPosition = 'top-right';
 	export let expandDirection: 'top' | 'bottom' | 'left' | 'right' = 'bottom';
 	export let extraStyles: maplibregl.StyleSpecification[] = [];
-	export let map;
+	export let map: maplibregl.Map | undefined;
+	export let sourcesIdToReAdd: string[] = []; // source id and layer source that needs to be preserved
 
 	let allStyles: MapLibreStylePlusMetadata[] | [] = [];
 	let selectedStyleUrl: string | undefined = undefined;
@@ -115,9 +116,40 @@ map = new Map({
 	}
 
 	function selectStyle(style: MapLibreStylePlusMetadata) {
+		// returns all the map style i.e. all layers, sources
+		const currentMapStyle = map?.getStyle();
+		console.log(currentMapStyle, 'currentMapStyle');
+
+		// reAddLayers: user defined layers that needs to be preserved
+		const reAddLayers = currentMapStyle?.layers?.filter((layer) => {
+			return sourcesIdToReAdd?.includes(layer?.source);
+		});
+
+		// reAddSources: user defined sources that needs to be preserved
+		const reAddSources = Object?.entries(currentMapStyle?.sources)
+			?.filter(([key]) => sourcesIdToReAdd?.includes(key))
+			?.map(([key, value]) => ({ [key]: value }));
+
 		selectedStyleUrl = style.metadata.thumbnail;
+
+		// changes to selected base layer (note: user defined layer and sources are lost)
 		map?.setStyle(style);
 		isClosed = !isClosed;
+
+		// reapply user defined source
+		if (reAddSources?.length > 0) {
+			for (const reAddSource of reAddSources) {
+				for (const [id, source] of Object.entries(reAddSource)) {
+					map?.addSource(id, source);
+				}
+			}
+		}
+		// reapply user defined layers
+		if (reAddLayers?.length > 0) {
+			for (const layer of reAddLayers) {
+				map?.addLayer(layer);
+			}
+		}
 	}
 
 	onDestroy(() => {

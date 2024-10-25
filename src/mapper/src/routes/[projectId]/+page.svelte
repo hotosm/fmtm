@@ -357,7 +357,13 @@
 		<NavigationControl position="top-left" />
 		<ScaleControl />
 		<Control class="flex flex-col gap-2" position="bottom-right">
-			<LayerSwitcher {map} position="bottom-right" expandDirection="right" extraStyles={baseLayers} />
+			<LayerSwitcher
+				{map}
+				position="bottom-right"
+				expandDirection="right"
+				extraStyles={baseLayers}
+				sourcesIdToReAdd={['states', 'geolocation']}
+			/>
 			<Legend />
 		</Control>
 		<Control class="flex flex-col gap-y-2" position="top-left">
@@ -371,7 +377,7 @@
 			</ControlGroup>
 		</Control>
 		{#if toggleGeolocationStatus}
-			<GeoJSON data={locationGeojson} id="point">
+			<GeoJSON data={locationGeojson} id="geolocation">
 				<SymbolLayer
 					applyToClusters={false}
 					hoverCursor="pointer"
