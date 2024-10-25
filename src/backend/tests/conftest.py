@@ -38,7 +38,6 @@ from app.auth.auth_schemas import AuthUser, FMTMUser
 from app.central import central_crud, central_schemas
 from app.central.central_schemas import ODKCentralDecrypted, ODKCentralIn
 from app.config import encrypt_value, settings
-from app.db.database import db_conn
 from app.db.enums import TaskStatus, UserRole, get_action_for_status_change
 from app.db.models import DbProject, DbTask, DbTaskHistory
 from app.main import get_application
@@ -68,7 +67,7 @@ async def app() -> AsyncGenerator[FastAPI, Any]:
 
 
 @pytest_asyncio.fixture(scope="function")
-async def db():
+async def db() -> AsyncConnection:
     """The psycopg async database connection using psycopg3."""
     db_conn = await AsyncConnection.connect(
         settings.FMTM_DB_URL.unicode_string(),
@@ -328,11 +327,9 @@ async def project_data():
 
 
 @pytest_asyncio.fixture(scope="function")
-async def client(app, db):
+async def client(app: FastAPI, db: AsyncConnection):
     """The FastAPI test server."""
     async with LifespanManager(app) as manager:
-        manager.app.dependency_overrides[db_conn] = lambda: db
-
         async with AsyncClient(
             transport=ASGITransport(app=manager.app),
             base_url=f"http://{settings.FMTM_DOMAIN}",
