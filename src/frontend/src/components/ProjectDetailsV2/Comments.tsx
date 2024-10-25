@@ -26,7 +26,7 @@ const Comments = () => {
   const taskBoundaryData = useAppSelector((state) => state.project.projectTaskBoundries);
   const currentStatus = {
     ...taskBoundaryData?.[projectIndex]?.taskBoundries?.filter((task) => {
-      return task?.index == selectedTask;
+      return task?.id == selectedTask;
     })?.[0],
   };
   const filteredProjectCommentsList = projectCommentsList?.filter(
@@ -34,6 +34,7 @@ const Comments = () => {
   );
 
   useEffect(() => {
+    console.log(currentStatus);
     dispatch(
       GetProjectComments(
         `${import.meta.env.VITE_API_URL}/tasks/${currentStatus?.id}/history/?project_id=${projectId}&comment=true`,

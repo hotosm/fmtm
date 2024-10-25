@@ -96,6 +96,7 @@ export type projectTaskBoundriesType = {
 
 export type taskBoundriesTypes = {
   id: number;
+  index: number;
   project_task_index: number;
   actioned_by_uid: null | string;
   actioned_by_username: null | string;
@@ -111,7 +112,6 @@ export type taskBoundriesTypes = {
   };
   task_history: taskHistoryTypes[];
   task_status: string;
-  index: number;
 };
 
 export type taskBoundriesGeojson = {

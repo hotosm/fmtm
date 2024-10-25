@@ -30,7 +30,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
   const geojsonStyles = MapStyles();
 
   const [list_of_task_status, set_list_of_task_status] = useState<taskListstatusType[]>([]);
-  const [task_status, set_task_status] = useState('READY');
+  const [task_status, set_task_status] = useState('RELEASED_FOR_MAPPING');
   const [currentTaskInfo, setCurrentTaskInfo] = useState<taskSubmissionInfoType>();
   const [toggleMappedConfirmationModal, setToggleMappedConfirmationModal] = useState(false);
 
@@ -46,7 +46,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
   const projectIndex = projectData.findIndex((project) => project.id == parseInt(currentProjectId));
   const currentStatus = {
     ...taskBoundaryData?.[projectIndex]?.taskBoundries?.filter((task) => {
-      return task?.index == taskId;
+      return task?.id == taskId;
     })?.[0],
   };
   const checkIfTaskAssignedOrNot =
@@ -64,7 +64,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
 
   useEffect(() => {
     if (taskInfo?.length === 0) return;
-    const currentTaskInfo = taskInfo?.filter((task) => taskId.toString() === task?.index);
+    const currentTaskInfo = taskInfo?.filter((task) => taskId.toString() === task?.task_id);
     if (currentTaskInfo?.[0]) {
       setCurrentTaskInfo(currentTaskInfo?.[0]);
     }
@@ -72,7 +72,8 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
 
   useEffect(() => {
     if (projectIndex != -1) {
-      const currentStatus = projectTaskActivityList.length > 0 ? projectTaskActivityList[0].status : 'READY';
+      const currentStatus =
+        projectTaskActivityList.length > 0 ? projectTaskActivityList[0].status : 'RELEASED_FOR_MAPPING';
       const findCorrectTaskStatusIndex = environment.tasksStatus.findIndex((data) => data.label == currentStatus);
       const tasksStatus =
         feature.id_ != undefined ? environment.tasksStatus[findCorrectTaskStatusIndex]?.['label'] : '';
@@ -210,7 +211,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
           })}
         </div>
       )}
-      {task_status !== 'READY' && task_status !== 'LOCKED_FOR_MAPPING' && (
+      {task_status !== 'RELEASED_FOR_MAPPING' && task_status !== 'LOCKED_FOR_MAPPING' && (
         <div className="fmtm-p-2 sm:fmtm-p-5 fmtm-border-t">
           <Button
             btnText="GO TO TASK SUBMISSION"

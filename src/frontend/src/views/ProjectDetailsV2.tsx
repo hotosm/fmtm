@@ -41,6 +41,7 @@ import DebugConsole from '@/utilities/DebugConsole';
 import { CustomCheckbox } from '@/components/common/Checkbox';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import QrcodeComponent from '@/components/QrcodeComponent';
+import { createDropdownMenuScope } from '@radix-ui/react-dropdown-menu';
 
 const ProjectDetailsV2 = () => {
   useDocumentTitle('Project Details');
@@ -135,7 +136,7 @@ const ProjectDetailsV2 = () => {
     // FIXME should the feature id be an int, not a string?
     const features = state.projectTaskBoundries[0]?.taskBoundries?.map((taskObj) => ({
       type: 'Feature',
-      id: `project_${projectId}_task_${taskObj.id}`,
+      id: taskObj.id,
       geometry: { ...taskObj.outline },
       properties: {
         ...taskObj.outline.properties,
@@ -149,7 +150,6 @@ const ProjectDetailsV2 = () => {
       ...geojsonObjectModel,
       features: features,
     };
-    console.log(taskBoundariesFeatcol);
     setTaskBoundariesLayer(taskBoundariesFeatcol);
   }, [state.projectTaskBoundries[0]?.taskBoundries?.length]);
 
@@ -186,7 +186,7 @@ const ProjectDetailsV2 = () => {
       behavior: 'smooth',
     });
 
-    dispatch(CoreModules.TaskActions.SetSelectedTask(properties?.fid));
+    dispatch(CoreModules.TaskActions.SetSelectedTask(feature.getId()));
     dispatch(ProjectActions.ToggleTaskModalStatus(true));
 
     // Fit the map view to the clicked feature's extent based on the window size

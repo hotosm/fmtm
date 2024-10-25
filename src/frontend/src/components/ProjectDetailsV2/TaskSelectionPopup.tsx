@@ -19,7 +19,7 @@ const TaskSelectionPopup = ({ taskId, body, feature }: TaskSelectionPopupPropTyp
   const dispatch = CoreModules.useAppDispatch();
 
   const currentProjectId: string = params.id;
-  const [task_status, set_task_status] = useState('READY');
+  const [task_status, set_task_status] = useState('RELEASED_FOR_MAPPING');
 
   const taskModalStatus = useAppSelector((state) => state.project.taskModalStatus);
   const projectData = useAppSelector((state) => state.project.projectTaskBoundries);
@@ -37,12 +37,12 @@ const TaskSelectionPopup = ({ taskId, body, feature }: TaskSelectionPopupPropTyp
     if (projectIndex != -1) {
       const currentStatus = {
         ...projectData[projectIndex].taskBoundries.filter((task) => {
-          return task?.index == taskId;
+          return task?.id == taskId;
         })[0],
       };
-      const findCorrectTaskStatusIndex = environment.tasksStatus.findIndex(
-        (data) => data.label == currentStatus.task_status,
-      );
+      const findCorrectTaskStatusIndex = environment.tasksStatus.findIndex((data) => {
+        return data.label == currentStatus.task_status;
+      });
       const tasksStatus =
         feature.id_ != undefined ? environment.tasksStatus[findCorrectTaskStatusIndex]?.['label'] : '';
       set_task_status(tasksStatus);
