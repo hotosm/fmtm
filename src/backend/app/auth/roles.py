@@ -28,6 +28,7 @@ from fastapi import Depends, HTTPException
 from loguru import logger as log
 from psycopg import Connection
 from psycopg.rows import class_row
+from pydantic import Field
 
 from app.auth.auth_schemas import AuthUser, OrgUserDict, ProjectUserDict
 from app.auth.osm import login_required
@@ -194,8 +195,8 @@ async def check_org_admin(
 async def org_admin(
     db: Annotated[Connection, Depends(db_conn)],
     current_user: Annotated[AuthUser, Depends(login_required)],
-    project_id: Optional[int] = None,
-    org_id: Optional[int] = None,
+    project_id: Annotated[Optional[int], Field(gt=0)] = None,
+    org_id: Annotated[Optional[int], Field(gt=0)] = None,
 ) -> OrgUserDict:
     """Organisation admin with full permission for projects in an organisation.
 

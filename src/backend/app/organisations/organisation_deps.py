@@ -18,7 +18,7 @@
 
 """Organisation dependencies for use in Depends."""
 
-from typing import Annotated, Union
+from typing import Annotated
 
 from fastapi import Depends
 from fastapi.exceptions import HTTPException
@@ -92,7 +92,7 @@ async def get_org_odk_creds(
 
 
 async def org_exists(
-    org_id: Union[str, int],
+    org_id: int | str,
     db: Annotated[Connection, Depends(db_conn)],
 ) -> DbOrganisation:
     """Wrapper for to check an org exists in a route dependency.

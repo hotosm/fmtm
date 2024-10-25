@@ -23,21 +23,25 @@ from typing import Annotated
 from fastapi import Depends
 from fastapi.exceptions import HTTPException
 from psycopg import Connection
+from pydantic import Field
 
 from app.db.database import db_conn
 from app.db.enums import HTTPStatus
 from app.db.models import DbProject
 
 
-async def get_project(db: Annotated[Connection, Depends(db_conn)], project_id: int):
+async def get_project(
+    db: Annotated[Connection, Depends(db_conn)],
+    project_id: Annotated[int, Field(gt=0)],
+):
     """Wrap get_project_by_id in a route Depends."""
     return await get_project_by_id(db, project_id)
 
 
-async def get_project_by_id(db: Connection, id: int):
+async def get_project_by_id(db: Connection, project_id: int):
     """Get a single project by it's ID."""
     try:
-        return await DbProject.one(db, id)
+        return await DbProject.one(db, project_id)
     except KeyError as e:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(e)) from e
 
