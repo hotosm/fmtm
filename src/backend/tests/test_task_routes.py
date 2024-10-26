@@ -21,7 +21,7 @@ from uuid import UUID
 
 import pytest
 
-from app.db.enums import TaskStatus
+from app.db.enums import MappingState
 
 
 async def test_read_task_history(client, task_event):
@@ -40,15 +40,15 @@ async def test_read_task_history(client, task_event):
     assert UUID(data["event_id"]) == task_event.event_id
     assert data["username"] == task_event.username
     assert data["profile_img"] == task_event.profile_img
-    assert data["action_text"] == task_event.action_text
-    assert data["status"] == TaskStatus.READY
+    assert data["comment"] == task_event.comment
+    assert data["status"] == MappingState.READY
 
 
 async def test_update_task_status(client, tasks):
     """Test update the task status."""
     task_id = tasks[0].id
     project_id = tasks[0].project_id
-    new_status = TaskStatus.LOCKED_FOR_MAPPING
+    new_status = MappingState.LOCKED_FOR_MAPPING
 
     response = await client.post(
         f"tasks/{task_id}/new-status/{new_status.value}?project_id={project_id}"

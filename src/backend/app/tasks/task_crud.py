@@ -26,24 +26,24 @@ from psycopg.rows import class_row
 
 from app.db.enums import (
     HTTPStatus,
-    TaskStatus,
+    MappingState,
     get_action_for_status_change,
 )
-from app.db.models import DbTask, DbTaskHistory
+from app.db.models import DbTask, DbTaskEvent
 from app.tasks import task_schemas
 
 
 # TODO SQL refactor this to use case statements on /next
 async def new_task_event(
-    db: Connection, task_id: int, user_id: int, new_status: TaskStatus
+    db: Connection, task_id: int, user_id: int, new_status: MappingState
 ):
     """Add a new entry to the task events."""
     log.debug(f"Checking if task ({task_id}) is already locked")
     task_entry = await DbTask.one(db, task_id)
 
-    if task_entry and task_entry.task_status in [
-        TaskStatus.LOCKED_FOR_MAPPING,
-        TaskStatus.LOCKED_FOR_VALIDATION,
+    if task_entry and task_entry.task_state in [
+        MappingState.LOCKED_FOR_MAPPING,
+        MappingState.LOCKED_FOR_VALIDATION,
     ]:
         if task_entry.actioned_by_uid != user_id:
             msg = f"Task is locked by user {task_entry.username}"
@@ -57,7 +57,7 @@ async def new_task_event(
         action=get_action_for_status_change(new_status),
         # NOTE we don't include a comment unless necessary
     )
-    new_task_event = await DbTaskHistory.create(db, new_event)
+    new_task_event = await DbTaskEvent.create(db, new_event)
     return new_task_event
 
 
@@ -81,18 +81,18 @@ async def get_project_task_activity(
 
     sql = """
         SELECT
-            to_char(action_date::date, 'dd/mm/yyyy') as date,
+            to_char(created_at::date, 'dd/mm/yyyy') as date,
             COUNT(*) FILTER (WHERE action = 'VALIDATED') AS validated,
             COUNT(*) FILTER (WHERE action = 'MARKED_MAPPED') AS mapped
         FROM
-            task_history
+            task_events
         WHERE
             project_id = %(project_id)s
-            AND action_date >= %(end_date)s
+            AND created_at >= %(end_date)s
         GROUP BY
-            action_date::date
+            created_at::date
         ORDER BY
-            action_date::date;
+            created_at::date;
     """
 
     async with db.cursor(row_factory=class_row(task_schemas.TaskHistoryCount)) as cur:

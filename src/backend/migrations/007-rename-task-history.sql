@@ -23,7 +23,7 @@ BEGIN
         'GOOD',
         'BAD',
         'SPLIT',
-        'GROUP',
+        'MERGE',
         'ASSIGN',
         'COMMENT'
     );

@@ -43,12 +43,13 @@ from app.db.enums import (
     CommunityType,
     HTTPStatus,
     MappingLevel,
+    MappingState,
     OrganisationType,
     ProjectPriority,
     ProjectRole,
     ProjectStatus,
     ProjectVisibility,
-    TaskAction,
+    TaskEvent,
     TaskSplitType,
     UserRole,
     XLSFormType,
@@ -590,20 +591,21 @@ class DbXLSForm(BaseModel):
         return [{"id": form.id, "title": form.title} for form in forms]
 
 
-class DbTaskHistory(BaseModel):
-    """Table task_history.
+class DbTaskEvent(BaseModel):
+    """Table task_events.
 
     Task events such as locking, marking mapped, and comments.
     """
 
     event_id: UUID
     task_id: int
+    event: TaskEvent
+    state: MappingState
+
     project_id: Optional[int] = None
     user_id: Optional[int] = None
-
-    action: TaskAction
-    action_text: Optional[str] = None
-    action_date: Optional[datetime] = None
+    comment: Optional[str] = None
+    created_at: Optional[datetime] = None
 
     # Computed
     username: Optional[str] = None
@@ -628,7 +630,7 @@ class DbTaskHistory(BaseModel):
             comments (bool): show comments rather than events.
 
         Returns:
-            list[DbTaskHistory]: list of task event objects.
+            list[DbTaskEvent]: list of task event objects.
         """
         if project_id and task_id:
             raise ValueError("Specify either project_id or task_id, not both.")
@@ -646,7 +648,7 @@ class DbTaskHistory(BaseModel):
             params["task_id"] = task_id
         if days is not None:
             end_date = datetime.now() - timedelta(days=days)
-            filters.append("action_date >= %(end_date)s")
+            filters.append("created_at >= %(end_date)s")
             params["end_date"] = end_date
         if comments:
             filters.append("action = 'COMMENT'")
@@ -661,11 +663,11 @@ class DbTaskHistory(BaseModel):
                 u.username,
                 u.profile_img
             FROM
-                public.task_history
+                public.task_events
             JOIN
-                users u ON u.id = task_history.user_id
+                users u ON u.id = task_events.user_id
             WHERE {filters_joined}
-            ORDER BY action_date DESC;
+            ORDER BY created_at DESC;
         """
 
         async with db.cursor(row_factory=class_row(cls)) as cur:
@@ -687,7 +689,7 @@ class DbTaskHistory(BaseModel):
             await cur.execute(
                 f"""
                     WITH inserted AS (
-                        INSERT INTO public.task_history (
+                        INSERT INTO public.task_events (
                             event_id,
                             project_id,
                             {columns}
@@ -730,7 +732,7 @@ class DbTask(BaseModel):
     feature_count: Optional[int] = None
 
     # Calculated
-    task_status: Optional[TaskAction] = None
+    task_state: Optional[TaskEvent] = None
     actioned_by_uid: Optional[int] = None
     actioned_by_username: Optional[str] = None
 
@@ -748,7 +750,7 @@ class DbTask(BaseModel):
                         ST_AsGeoJSON(tasks.outline)::jsonb AS outline,
                         COALESCE(
                             latest_event.action, 'RELEASED_FOR_MAPPING'
-                        ) AS task_status,
+                        ) AS task_state,
                         COALESCE(latest_event.user_id, NULL) AS actioned_by_uid,
                         COALESCE(latest_event.username, NULL) AS actioned_by_username
                     FROM
@@ -759,14 +761,14 @@ class DbTask(BaseModel):
                             th.user_id,
                             u.username
                         FROM
-                            task_history th
+                            task_events th
                         LEFT JOIN
                             users u ON u.id = th.user_id
                         WHERE
                             th.task_id = tasks.id
                             AND th.action != 'COMMENT'
                         ORDER BY
-                            th.action_date DESC
+                            th.created_at DESC
                         LIMIT 1
                     ) latest_event ON true
                     WHERE
@@ -795,7 +797,7 @@ class DbTask(BaseModel):
             SELECT
                 tasks.*,
                 ST_AsGeoJSON(tasks.outline)::jsonb AS outline,
-                COALESCE(latest_event.action, 'RELEASED_FOR_MAPPING') AS task_status,
+                COALESCE(latest_event.action, 'RELEASED_FOR_MAPPING') AS task_state,
                 COALESCE(latest_event.user_id, NULL) AS actioned_by_uid,
                 COALESCE(latest_event.username, NULL) AS actioned_by_username
             FROM
@@ -806,14 +808,14 @@ class DbTask(BaseModel):
                     th.user_id,
                     u.username
                 FROM
-                    task_history th
+                    task_events th
                 LEFT JOIN
                     users u ON u.id = th.user_id
                 WHERE
                     th.task_id = tasks.id
                     AND th.action != 'COMMENT'
                 ORDER BY
-                    th.action_date DESC
+                    th.created_at DESC
                 LIMIT 1
             ) latest_event ON true
             WHERE
@@ -952,17 +954,17 @@ class DbProject(BaseModel):
                     SELECT DISTINCT ON (task_id)
                         th.task_id,
                         th.action,
-                        th.action_date,
+                        th.created_at,
                         th.user_id,
                         u.username AS username
                     FROM
-                        task_history th
+                        task_events th
                     LEFT JOIN
                         users u ON u.id = th.user_id
                     WHERE
                         th.action != 'COMMENT'
                     ORDER BY
-                        th.task_id, th.action_date DESC
+                        th.task_id, th.created_at DESC
                 ),
 
                 project_bbox AS (
@@ -983,7 +985,7 @@ class DbProject(BaseModel):
                     ] AS bbox,
                     project_org.name AS organisation_name,
                     project_org.logo AS organisation_logo,
-                    latest_event_per_task.action_date AS last_active,
+                    latest_event_per_task.created_at AS last_active,
                     COALESCE(
                         NULLIF(p.odk_central_url, ''),
                         project_org.odk_central_url
@@ -1004,7 +1006,7 @@ class DbProject(BaseModel):
                                 'project_task_index', tasks.project_task_index,
                                 'outline', ST_AsGeoJSON(tasks.outline)::jsonb,
                                 'feature_count', tasks.feature_count,
-                                'task_status', COALESCE(
+                                'task_state', COALESCE(
                                     latest_event_per_task.action,
                                     'RELEASED_FOR_MAPPING'
                                 ),
@@ -1039,7 +1041,7 @@ class DbProject(BaseModel):
                     p.id = %(project_id)s
                 GROUP BY
                     p.id, project_org.id, project_bbox.bbox,
-                    latest_event_per_task.action_date;
+                    latest_event_per_task.created_at;
             """
 
             # Simpler query without additional metadata
@@ -1271,7 +1273,7 @@ class DbProject(BaseModel):
             )
             await cur.execute(
                 """
-                DELETE FROM task_history WHERE project_id = %(project_id)s;
+                DELETE FROM task_events WHERE project_id = %(project_id)s;
             """,
                 {"project_id": project_id},
             )
