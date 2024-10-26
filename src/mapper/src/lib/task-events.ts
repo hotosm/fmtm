@@ -82,7 +82,7 @@ export async function finishTask(/* db, */ projectId: number, taskId: number): P
 }
 
 export async function resetTask(/* db, */ projectId: number, taskId: number): Promise<void> {
-	await add_event(/* db, */ projectId, taskId, TaskStatusEnum.RELEASED_FOR_MAPPING);
+	await add_event(/* db, */ projectId, taskId, TaskStatusEnum.UNLOCKED_TO_MAP);
 }
 
 // async function finishTask(db, projectId: number, taskId: number, userId: number): Promise<void> {

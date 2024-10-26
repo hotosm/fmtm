@@ -55,7 +55,7 @@ const getTaskStatusStyle = (feature: Record<string, any>, mapTheme: Record<strin
   const redIconStyle = createIconStyle(AssetModules.RedLockPng);
 
   const geojsonStyles = {
-    RELEASED_FOR_MAPPING: new Style({
+    UNLOCKED_TO_MAP: new Style({
       stroke: new Stroke({
         color: borderStrokeColor,
         width: 3,
@@ -75,8 +75,7 @@ const getTaskStatusStyle = (feature: Record<string, any>, mapTheme: Record<strin
       }),
     }),
     LOCKED_FOR_VALIDATION: [lockedValidationStyle, redIconStyle],
-
-    VALIDATED: new Style({
+    UNLOCKED_DONE: new Style({
       stroke: new Stroke({
         color: borderStrokeColor,
         width: 3,
@@ -85,33 +84,24 @@ const getTaskStatusStyle = (feature: Record<string, any>, mapTheme: Record<strin
         color: mapTheme.palette.mapFeatureColors.validated_rgb,
       }),
     }),
-    MARKED_INVALID: new Style({
-      stroke: new Stroke({
-        color: borderStrokeColor,
-        width: 3,
-      }),
-      fill: new Fill({
-        color: mapTheme.palette.mapFeatureColors.invalidated_rgb,
-      }),
-    }),
-    MARKED_BAD: new Style({
-      stroke: new Stroke({
-        color: borderStrokeColor,
-        width: 3,
-      }),
-      fill: new Fill({
-        color: mapTheme.palette.mapFeatureColors.bad_rgb,
-      }),
-    }),
-    SPLIT_NEEDED: new Style({
-      stroke: new Stroke({
-        color: borderStrokeColor,
-        width: 3,
-      }),
-      fill: new Fill({
-        color: mapTheme.palette.mapFeatureColors.split_rgb,
-      }),
-    }),
+    // MARKED_INVALID: new Style({
+    //   stroke: new Stroke({
+    //     color: borderStrokeColor,
+    //     width: 3,
+    //   }),
+    //   fill: new Fill({
+    //     color: mapTheme.palette.mapFeatureColors.invalidated_rgb,
+    //   }),
+    // }),
+    // MARKED_BAD: new Style({
+    //   stroke: new Stroke({
+    //     color: borderStrokeColor,
+    //     width: 3,
+    //   }),
+    //   fill: new Fill({
+    //     color: mapTheme.palette.mapFeatureColors.bad_rgb,
+    //   }),
+    // }),
   };
   return geojsonStyles[status];
 };
