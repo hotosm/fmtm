@@ -30,7 +30,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
   const geojsonStyles = MapStyles();
 
   const [list_of_task_status, set_list_of_task_status] = useState<taskListstatusType[]>([]);
-  const [task_state, set_task_state] = useState('RELEASED_FOR_MAPPING');
+  const [task_state, set_task_state] = useState('UNLOCKED_TO_MAP');
   const [currentTaskInfo, setCurrentTaskInfo] = useState<taskSubmissionInfoType>();
   const [toggleMappedConfirmationModal, setToggleMappedConfirmationModal] = useState(false);
 
@@ -72,8 +72,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
 
   useEffect(() => {
     if (projectIndex != -1) {
-      const currentStatus =
-        projectTaskActivityList.length > 0 ? projectTaskActivityList[0].status : 'RELEASED_FOR_MAPPING';
+      const currentStatus = projectTaskActivityList.length > 0 ? projectTaskActivityList[0].state : 'UNLOCKED_TO_MAP';
       const findCorrectTaskStatusIndex = environment.tasksStatus.findIndex((data) => data.label == currentStatus);
       const tasksStatus =
         feature.id_ != undefined ? environment.tasksStatus[findCorrectTaskStatusIndex]?.['label'] : '';
@@ -211,7 +210,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
           })}
         </div>
       )}
-      {task_state !== 'RELEASED_FOR_MAPPING' && task_state !== 'LOCKED_FOR_MAPPING' && (
+      {task_state !== 'UNLOCKED_TO_MAP' && task_state !== 'LOCKED_FOR_MAPPING' && (
         <div className="fmtm-p-2 sm:fmtm-p-5 fmtm-border-t">
           <Button
             btnText="GO TO TASK SUBMISSION"

@@ -27,7 +27,7 @@ from psycopg.rows import class_row
 from app.db.enums import (
     HTTPStatus,
     MappingState,
-    get_action_for_status_change,
+    TaskEvent,
 )
 from app.db.models import DbTask, DbTaskEvent
 from app.tasks import task_schemas
@@ -35,7 +35,7 @@ from app.tasks import task_schemas
 
 # TODO SQL refactor this to use case statements on /next
 async def new_task_event(
-    db: Connection, task_id: int, user_id: int, new_status: MappingState
+    db: Connection, task_id: int, user_id: int, new_event: TaskEvent
 ):
     """Add a new entry to the task events."""
     log.debug(f"Checking if task ({task_id}) is already locked")
@@ -50,22 +50,22 @@ async def new_task_event(
             log.error(msg)
             raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail=msg)
 
-    log.info(f"Updating task ID {task_id} to status {new_status}")
-    new_event = task_schemas.TaskHistoryIn(
+    log.info(f"Updating task ID {task_id} to status {new_event}")
+    event_in = task_schemas.TaskEventIn(
         task_id=task_id,
         user_id=user_id,
-        action=get_action_for_status_change(new_status),
+        event=new_event,
         # NOTE we don't include a comment unless necessary
     )
-    new_task_event = await DbTaskEvent.create(db, new_event)
-    return new_task_event
+    created_task_event = await DbTaskEvent.create(db, event_in)
+    return created_task_event
 
 
 async def get_project_task_activity(
     db: Connection,
     project_id: int,
     days: int,
-) -> task_schemas.TaskHistoryCount:
+) -> task_schemas.TaskEventCount:
     """Get number of tasks mapped and validated for project.
 
     Args:
@@ -75,15 +75,15 @@ async def get_project_task_activity(
         db (Connection): The database connection.
 
     Returns:
-        list[task_schemas.TaskHistoryCount]: A list of task history counts.
+        list[task_schemas.TaskEventCount]: A list of task event counts.
     """
     end_date = datetime.now() - timedelta(days=days)
 
     sql = """
         SELECT
             to_char(created_at::date, 'dd/mm/yyyy') as date,
-            COUNT(*) FILTER (WHERE action = 'VALIDATED') AS validated,
-            COUNT(*) FILTER (WHERE action = 'MARKED_MAPPED') AS mapped
+            COUNT(*) FILTER (WHERE state = 'UNLOCKED_DONE') AS validated,
+            COUNT(*) FILTER (WHERE state = 'UNLOCKED_TO_VALIDATE') AS mapped
         FROM
             task_events
         WHERE
@@ -95,6 +95,6 @@ async def get_project_task_activity(
             created_at::date;
     """
 
-    async with db.cursor(row_factory=class_row(task_schemas.TaskHistoryCount)) as cur:
+    async with db.cursor(row_factory=class_row(task_schemas.TaskEventCount)) as cur:
         await cur.execute(sql, {"project_id": project_id, "end_date": end_date})
         return await cur.fetchall()

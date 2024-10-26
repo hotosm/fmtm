@@ -19,7 +19,7 @@ const TaskSelectionPopup = ({ taskId, body, feature }: TaskSelectionPopupPropTyp
   const dispatch = CoreModules.useAppDispatch();
 
   const currentProjectId: string = params.id;
-  const [task_state, set_task_state] = useState('RELEASED_FOR_MAPPING');
+  const [task_state, set_task_state] = useState('UNLOCKED_TO_MAP');
 
   const taskModalStatus = useAppSelector((state) => state.project.taskModalStatus);
   const projectData = useAppSelector((state) => state.project.projectTaskBoundries);
