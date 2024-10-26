@@ -60,12 +60,56 @@ ALTER TYPE public.mappingstate OWNER TO fmtm;
 
 
 
--- Update task_events field names and types
+-- Update task_event fields prior to trigger addition
 
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'task_events' AND column_name = 'action') THEN
+        ALTER TABLE public.task_events ADD COLUMN state public.mappingstate;
         ALTER TABLE public.task_events RENAME COLUMN action TO event;
+        ALTER TABLE public.task_events RENAME COLUMN action_text TO comment;
+        ALTER TABLE public.task_events RENAME COLUMN action_date TO created_at;
+    END IF;
+END $$;
+
+-- Create trigger function to set task state automatically
+
+CREATE OR REPLACE FUNCTION set_task_state()
+RETURNS TRIGGER AS $$
+BEGIN
+    CASE NEW.event
+        WHEN 'MAP' THEN
+            NEW.state := 'LOCKED_FOR_MAPPING';
+        WHEN 'FINISH' THEN
+            NEW.state := 'UNLOCKED_TO_VALIDATE';
+        WHEN 'GOOD' THEN
+            NEW.state := 'UNLOCKED_DONE';
+        WHEN 'BAD' THEN
+            NEW.state := 'UNLOCKED_TO_MAP';
+        WHEN 'SPLIT' THEN
+            NEW.state := 'UNLOCKED_DONE';
+        WHEN 'MERGE' THEN
+            NEW.state := 'UNLOCKED_DONE';
+        WHEN 'ASSIGN' THEN
+            NEW.state := 'LOCKED_FOR_MAPPING';
+        ELSE
+            RAISE EXCEPTION 'Unknown task event type: %', NEW.event;
+    END CASE;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Apply trigger to task_events table
+CREATE TRIGGER task_event_state_trigger
+BEFORE INSERT ON public.task_events
+FOR EACH ROW
+EXECUTE FUNCTION set_task_state();
+
+-- Update action field values --> taskevent enum
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'task_events' AND column_name = 'action') THEN
         -- Change from taskaction --> taskevent
         ALTER TABLE task_events
             ALTER COLUMN event TYPE public.taskevent
@@ -82,8 +126,6 @@ BEGIN
                 WHEN 'COMMENT' THEN 'COMMENT'::public.taskevent
                 ELSE NULL
             END;
-        ALTER TABLE public.task_events RENAME COLUMN action_text TO comment;
-        ALTER TABLE public.task_events RENAME COLUMN action_date TO created_at;
     END IF;
 END $$;
 
@@ -119,6 +161,7 @@ BEGIN
             REFERENCES public.users (id);
     END IF;
 END $$;
+
 
 -- Commit the transaction
 COMMIT;
