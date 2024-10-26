@@ -80,33 +80,6 @@ CREATE TYPE public.projectstatus AS ENUM (
 );
 ALTER TYPE public.projectstatus OWNER TO fmtm;
 
-CREATE TYPE public.taskaction AS ENUM (
-    'RELEASED_FOR_MAPPING',
-    'LOCKED_FOR_MAPPING',
-    'MARKED_MAPPED',
-    'LOCKED_FOR_VALIDATION',
-    'VALIDATED',
-    'MARKED_INVALID',
-    'MARKED_BAD',
-    'SPLIT_NEEDED',
-    'RECREATED',
-    'COMMENT'
-);
-ALTER TYPE public.taskaction OWNER TO fmtm;
-
-CREATE TYPE public.taskstatus AS ENUM (
-    'READY',
-    'LOCKED_FOR_MAPPING',
-    'MAPPED',
-    'LOCKED_FOR_VALIDATION',
-    'VALIDATED',
-    'INVALIDATED',
-    'BAD',
-    'SPLIT',
-    'ARCHIVED'
-);
-ALTER TYPE public.taskstatus OWNER TO fmtm;
-
 CREATE TYPE public.userrole AS ENUM (
     'READ_ONLY',
     'MAPPER',
@@ -145,6 +118,37 @@ CREATE TYPE public.communitytype AS ENUM (
     'OTHER'
 );
 ALTER TYPE public.communitytype OWNER TO fmtm;
+
+CREATE TYPE public.taskevent AS ENUM (
+    'MAP',
+    'FINISH',
+    'VALIDATE',
+    'GOOD',
+    'BAD',
+    'SPLIT',
+    'GROUP',
+    'ASSIGN',
+    'COMMENT'
+);
+ALTER TYPE public.taskevent OWNER TO fmtm;
+
+CREATE TYPE public.mappingstate AS ENUM (
+    'UNLOCKED_TO_MAP',
+    'LOCKED_FOR_MAPPING',
+    'UNLOCKED_TO_VALIDATE',
+    'LOCKED_FOR_VALIDATION',
+    'UNLOCKED_DONE'
+);
+ALTER TYPE public.mappingstate OWNER TO fmtm;
+
+CREATE TYPE public.entitystate AS ENUM (
+    'READY',
+    'OPEN_IN_ODK',
+    'SURVEY_SUBMITTED',
+    'MARKED_BAD'
+);
+ALTER TYPE public.entitystate OWNER TO fmtm;
+
 
 -- Extra
 
@@ -217,6 +221,7 @@ CACHE 1;
 ALTER TABLE public.organisations_id_seq OWNER TO fmtm;
 ALTER SEQUENCE public.organisations_id_seq OWNED BY public.organisations.id;
 
+
 CREATE TABLE public.projects (
     id integer NOT NULL,
     organisation_id integer,
@@ -266,18 +271,17 @@ ALTER TABLE public.projects_id_seq OWNER TO fmtm;
 ALTER SEQUENCE public.projects_id_seq OWNED BY public.projects.id;
 
 
--- TODO SQL rename this table & add foreign keys back in
--- TODO SQL Also ensure we have an index
-CREATE TABLE public.task_history (
-    event_id UUID NOT NULL,
+CREATE TABLE public.task_events (
+    event_id UUID,
     project_id integer,
-    task_id integer NOT NULL,
-    action public.taskaction NOT NULL,
-    action_text character varying,
-    action_date timestamp with time zone NOT NULL DEFAULT now(),
-    user_id integer NOT NULL
+    task_id integer,
+    user_id integer,
+    event public.taskevent,
+    state public.mappingstate,
+    comment text,
+    created_at timestamp without time zone NOT NULL DEFAULT now()
 );
-ALTER TABLE public.task_history OWNER TO fmtm;
+ALTER TABLE public.task_events OWNER TO fmtm;
 
 
 CREATE TABLE public.tasks (
@@ -408,8 +412,8 @@ ADD CONSTRAINT organisations_slug_key UNIQUE (slug);
 ALTER TABLE ONLY public.projects
 ADD CONSTRAINT projects_pkey PRIMARY KEY (id);
 
-ALTER TABLE ONLY public.task_history
-ADD CONSTRAINT task_history_pkey PRIMARY KEY (event_id);
+ALTER TABLE ONLY public.task_events
+ADD CONSTRAINT task_events_pkey PRIMARY KEY (event_id);
 
 ALTER TABLE ONLY public.tasks
 ADD CONSTRAINT tasks_pkey PRIMARY KEY (id, project_id);
@@ -434,38 +438,45 @@ ADD CONSTRAINT submission_photos_pkey PRIMARY KEY (id);
 
 -- Indexing
 
-CREATE INDEX idx_geometry ON public.projects USING gist (outline);
 CREATE INDEX idx_projects_outline ON public.projects USING gist (outline);
-CREATE INDEX idx_task_history_composite ON public.task_history USING btree (
-    task_id, project_id
-);
-CREATE INDEX idx_task_history_project_id_user_id ON public.task_history
-USING btree (
-    user_id, project_id
-);
-CREATE INDEX ix_task_history_project_id ON public.task_history USING btree (
-    project_id
-);
-CREATE INDEX ix_task_history_user_id ON public.task_history USING btree (
-    user_id
-);
-CREATE INDEX idx_task_history_date ON public.task_history USING btree (
-    task_id, action_date
-);
-CREATE INDEX idx_tasks_outline ON public.tasks USING gist (outline);
-CREATE INDEX ix_projects_mapper_level ON public.projects USING btree (
+CREATE INDEX IF NOT EXISTS idx_projects_mapper_level
+ON public.projects USING btree (
     mapper_level
 );
-CREATE INDEX ix_projects_organisation_id ON public.projects USING btree (
+CREATE INDEX IF NOT EXISTS idx_projects_organisation_id
+ON public.projects USING btree (
     organisation_id
 );
-CREATE INDEX ix_tasks_project_id ON public.tasks USING btree (project_id);
-CREATE INDEX ix_users_id ON public.users USING btree (id);
+CREATE INDEX idx_tasks_outline ON public.tasks USING gist (outline);
+CREATE INDEX IF NOT EXISTS idx_tasks_composite
+ON public.tasks USING btree (
+    id, project_id
+);
 CREATE INDEX idx_user_roles ON public.user_roles USING btree (
     project_id, user_id
 );
 CREATE INDEX idx_org_managers ON public.organisation_managers USING btree (
     user_id, organisation_id
+);
+CREATE INDEX IF NOT EXISTS idx_task_event_composite
+ON public.task_events USING btree (
+    task_id, project_id
+);
+CREATE INDEX IF NOT EXISTS idx_task_event_project_user
+ON public.task_events USING btree (
+    user_id, project_id
+);
+CREATE INDEX IF NOT EXISTS idx_task_event_project_id
+ON public.task_events USING btree (
+    task_id, project_id
+);
+CREATE INDEX IF NOT EXISTS idx_task_event_user_id
+ON public.task_events USING btree (
+    task_id, user_id
+);
+CREATE INDEX IF NOT EXISTS idx_task_history_date
+ON public.task_history USING btree (
+    task_id, created_at
 );
 
 -- Foreign keys
@@ -492,6 +503,21 @@ ALTER TABLE ONLY public.tasks
 ADD CONSTRAINT tasks_project_id_fkey FOREIGN KEY (
     project_id
 ) REFERENCES public.projects (id);
+
+ALTER TABLE ONLY public.task_events
+ADD CONSTRAINT fk_projects FOREIGN KEY (
+    project_id
+) REFERENCES public.projects (id);
+
+ALTER TABLE ONLY public.task_events
+ADD CONSTRAINT fk_project_task_id FOREIGN KEY (
+    task_id, project_id
+) REFERENCES public.tasks (id, project_id);
+
+ALTER TABLE ONLY public.task_events
+ADD CONSTRAINT fk_users FOREIGN KEY (
+    user_id
+) REFERENCES public.users (id);
 
 ALTER TABLE ONLY public.user_roles
 ADD CONSTRAINT user_roles_project_id_fkey FOREIGN KEY (
