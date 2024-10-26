@@ -4,7 +4,7 @@ import ProjectIcon from '@/assets/images/project_icon.png';
 import CoreModules from '@/shared/CoreModules';
 import { useAppSelector } from '@/types/reduxTypes';
 import { EntityOsmMap } from '@/store/types/IProject';
-import { task_status } from '@/types/enums';
+import { task_state } from '@/types/enums';
 
 const ProjectInfo: React.FC = () => {
   const paraRef = useRef<HTMLParagraphElement>(null);
@@ -32,7 +32,7 @@ const ProjectInfo: React.FC = () => {
 
   const projectMappedFeatures: number = projectEntities.filter(
     // FIXME this needs updating as entity status is numerical
-    (entity: EntityOsmMap) => entity.status === task_status.MAPPED,
+    (entity: EntityOsmMap) => entity.status === task_state.MAPPED,
   ).length;
 
   return (

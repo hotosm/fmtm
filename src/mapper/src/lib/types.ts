@@ -78,10 +78,11 @@ export const TaskStatusEnum: TaskStatus = Object.freeze({
 	ARCHIVED: '8',
 });
 
+// TODO fix me
 export type TaskEvent = {
 	event_id: string;
-	action_text: string;
-	action_date: string;
+	comment: string;
+	created_at: string;
 	username: string;
 	profile_img: string;
 	status: TaskStatus;

@@ -19,7 +19,7 @@ const TaskSelectionPopup = ({ taskId, body, feature }: TaskSelectionPopupPropTyp
   const dispatch = CoreModules.useAppDispatch();
 
   const currentProjectId: string = params.id;
-  const [task_status, set_task_status] = useState('RELEASED_FOR_MAPPING');
+  const [task_state, set_task_state] = useState('RELEASED_FOR_MAPPING');
 
   const taskModalStatus = useAppSelector((state) => state.project.taskModalStatus);
   const projectData = useAppSelector((state) => state.project.projectTaskBoundries);
@@ -41,11 +41,11 @@ const TaskSelectionPopup = ({ taskId, body, feature }: TaskSelectionPopupPropTyp
         })[0],
       };
       const findCorrectTaskStatusIndex = environment.tasksStatus.findIndex((data) => {
-        return data.label == currentStatus.task_status;
+        return data.label == currentStatus.task_state;
       });
       const tasksStatus =
         feature.id_ != undefined ? environment.tasksStatus[findCorrectTaskStatusIndex]?.['label'] : '';
-      set_task_status(tasksStatus);
+      set_task_state(tasksStatus);
     }
   }, [projectData, taskId, feature]);
 
@@ -92,14 +92,14 @@ const TaskSelectionPopup = ({ taskId, body, feature }: TaskSelectionPopupPropTyp
       >
         <div className="fmtm-flex fmtm-flex-col fmtm-gap-2 fmtm-p-3 sm:fmtm-p-5">
           <h4 className="fmtm-text-lg fmtm-font-bold">Task: {selectedTask.index}</h4>
-          <p className="fmtm-text-base fmtm-text-[#757575]">Status: {task_status}</p>
+          <p className="fmtm-text-base fmtm-text-[#757575]">Status: {task_state}</p>
           {selectedTask?.actioned_by_username && (
             <p className="fmtm-text-base fmtm-text-[#757575]">Locked By: {selectedTask?.actioned_by_username}</p>
           )}
         </div>
         {/* only display qr code component render inside taskPopup on mobile screen */}
         <div className="sm:fmtm-hidden">
-          {checkIfTaskAssignedOrNot && task_status !== 'LOCKED_FOR_MAPPING' && (
+          {checkIfTaskAssignedOrNot && task_state !== 'LOCKED_FOR_MAPPING' && (
             <QrcodeComponent projectId={currentProjectId} taskIndex={selectedTask.index} />
           )}
         </div>

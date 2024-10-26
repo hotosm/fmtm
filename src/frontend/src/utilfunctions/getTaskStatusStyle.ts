@@ -2,7 +2,7 @@ import { Fill, Icon, Stroke, Style } from 'ol/style';
 import { getCenter } from 'ol/extent';
 import { Point } from 'ol/geom';
 import AssetModules from '@/shared/AssetModules';
-import { task_status } from '@/types/enums';
+import { task_state } from '@/types/enums';
 import { EntityOsmMap } from '@/store/types/IProject';
 
 function createPolygonStyle(fillColor: string, strokeColor: string) {
@@ -38,7 +38,7 @@ const strokeColor = 'rgb(0,0,0,0.3)';
 const secondaryStrokeColor = 'rgb(0,0,0,1)';
 
 const getTaskStatusStyle = (feature: Record<string, any>, mapTheme: Record<string, any>, taskLockedByUser: boolean) => {
-  const status = feature.getProperties().task_status;
+  const status = feature.getProperties().task_state;
 
   const isTaskStatusLocked = ['LOCKED_FOR_MAPPING', 'LOCKED_FOR_VALIDATION'].includes(status);
   const borderStrokeColor = isTaskStatusLocked && taskLockedByUser ? secondaryStrokeColor : strokeColor;
@@ -118,7 +118,7 @@ const getTaskStatusStyle = (feature: Record<string, any>, mapTheme: Record<strin
 
 export const getFeatureStatusStyle = (osmId: string, mapTheme: Record<string, any>, entityOsmMap: EntityOsmMap[]) => {
   const entity = entityOsmMap?.find((entity) => entity?.osm_id === osmId) as EntityOsmMap;
-  let status = task_status[entity?.status];
+  let status = task_state[entity?.status];
 
   const borderStrokeColor = '#FF0000';
 

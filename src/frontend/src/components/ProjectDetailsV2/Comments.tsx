@@ -30,7 +30,7 @@ const Comments = () => {
     })?.[0],
   };
   const filteredProjectCommentsList = projectCommentsList?.filter(
-    (comment) => !comment?.action_text?.includes('-SUBMISSION_INST-'),
+    (entry) => !entry?.comment?.includes('-SUBMISSION_INST-'),
   );
 
   useEffect(() => {
@@ -63,6 +63,7 @@ const Comments = () => {
       PostProjectComments(
         `${import.meta.env.VITE_API_URL}/tasks/${currentStatus?.id}/comment/?project_id=${projectId}`,
         {
+          task_id: selectedTask.id,
           comment,
         },
       ),
@@ -83,7 +84,7 @@ const Comments = () => {
           <div>
             {filteredProjectCommentsList?.length > 0 ? (
               <div className="fmtm-flex fmtm-flex-col fmtm-gap-4 fmtm-mb-1">
-                {filteredProjectCommentsList?.map((projectComment, i) => (
+                {filteredProjectCommentsList?.map((commentEvent, i) => (
                   <div
                     key={i}
                     className="fmtm-flex fmtm-w-full fmtm-gap-4 fmtm-px-2 fmtm-border-b fmtm-border-[#e9e9e9] sm:fmtm-border-white fmtm-pb-3"
@@ -93,11 +94,11 @@ const Comments = () => {
                     </div>
                     <div className="fmtm-flex-1 fmtm-flex fmtm-flex-col fmtm-gap-1">
                       <div className="fmtm-flex fmtm-gap-3 fmtm-items-center">
-                        <p>{projectComment?.username}</p>
+                        <p>{commentEvent?.username}</p>
                       </div>
                       <div>
                         <RichTextEditor
-                          editorHtmlContent={projectComment?.action_text}
+                          editorHtmlContent={commentEvent?.comment}
                           editable={false}
                           className="sm:!fmtm-bg-[#f5f5f5] !fmtm-rounded-none !fmtm-border-none"
                         />
@@ -112,10 +113,10 @@ const Comments = () => {
                             />
                           </div>
                           <p className="fmtm-font-archivo fmtm-text-sm fmtm-text-[#7A7676] fmtm-flex fmtm-gap-2">
-                            <span>{projectComment?.action_date?.split('T')[0]}</span>
+                            <span>{commentEvent?.created_at?.split('T')[0]}</span>
                             <span>
-                              {projectComment?.action_date?.split('T')[1].split(':')[0]}:
-                              {projectComment?.action_date?.split('T')[1].split(':')[1]}
+                              {commentEvent?.created_at?.split('T')[1].split(':')[0]}:
+                              {commentEvent?.created_at?.split('T')[1].split(':')[1]}
                             </span>
                           </p>
                         </div>
