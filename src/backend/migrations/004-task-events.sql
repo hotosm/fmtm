@@ -6,7 +6,7 @@
 BEGIN;
 
 -- Drop default from action_date
-ALTER TABLE public.task_history ALTER COLUMN action_date DROP DEFAULT;
+ALTER TABLE IF EXISTS public.task_history ALTER COLUMN action_date DROP DEFAULT;
 
 -- Add event_id field
 DO $$
