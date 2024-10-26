@@ -749,7 +749,7 @@ class DbTask(BaseModel):
                         tasks.*,
                         ST_AsGeoJSON(tasks.outline)::jsonb AS outline,
                         COALESCE(
-                            latest_event.event, 'UNLOCKED_TO_MAP'
+                            latest_event.state, 'UNLOCKED_TO_MAP'
                         ) AS task_state,
                         COALESCE(latest_event.user_id, NULL) AS actioned_by_uid,
                         COALESCE(latest_event.username, NULL) AS actioned_by_username
@@ -758,6 +758,7 @@ class DbTask(BaseModel):
                     LEFT JOIN LATERAL (
                         SELECT
                             th.event,
+                            th.state,
                             th.user_id,
                             u.username
                         FROM
@@ -797,7 +798,7 @@ class DbTask(BaseModel):
             SELECT
                 tasks.*,
                 ST_AsGeoJSON(tasks.outline)::jsonb AS outline,
-                COALESCE(latest_event.event, 'UNLOCKED_TO_MAP') AS task_state,
+                COALESCE(latest_event.state, 'UNLOCKED_TO_MAP') AS task_state,
                 COALESCE(latest_event.user_id, NULL) AS actioned_by_uid,
                 COALESCE(latest_event.username, NULL) AS actioned_by_username
             FROM
@@ -805,6 +806,7 @@ class DbTask(BaseModel):
             LEFT JOIN LATERAL (
                 SELECT
                     th.event,
+                    th.state,
                     th.user_id,
                     u.username
                 FROM
@@ -950,10 +952,11 @@ class DbProject(BaseModel):
         """Get project by ID, including all tasks and other details."""
         async with db.cursor(row_factory=class_row(cls)) as cur:
             sql = """
-                WITH latest_event_per_task AS (
+                WITH latest_status_per_task AS (
                     SELECT DISTINCT ON (task_id)
                         th.task_id,
                         th.event,
+                        th.state,
                         th.created_at,
                         th.user_id,
                         u.username AS username
@@ -985,7 +988,7 @@ class DbProject(BaseModel):
                     ] AS bbox,
                     project_org.name AS organisation_name,
                     project_org.logo AS organisation_logo,
-                    latest_event_per_task.created_at AS last_active,
+                    latest_status_per_task.created_at AS last_active,
                     COALESCE(
                         NULLIF(p.odk_central_url, ''),
                         project_org.odk_central_url
@@ -1007,15 +1010,15 @@ class DbProject(BaseModel):
                                 'outline', ST_AsGeoJSON(tasks.outline)::jsonb,
                                 'feature_count', tasks.feature_count,
                                 'task_state', COALESCE(
-                                    latest_event_per_task.event,
+                                    latest_status_per_task.state,
                                     'UNLOCKED_TO_MAP'
                                 ),
                                 'actioned_by_uid', COALESCE(
-                                    latest_event_per_task.user_id,
+                                    latest_status_per_task.user_id,
                                     NULL
                                 ),
                                 'actioned_by_username', COALESCE(
-                                    latest_event_per_task.username,
+                                    latest_status_per_task.username,
                                     NULL
                                 )
                             )
@@ -1032,8 +1035,8 @@ class DbProject(BaseModel):
                     tasks ON tasks.project_id = p.id
                 -- Link latest event per task with project tasks
                 LEFT JOIN
-                    latest_event_per_task ON
-                        tasks.id = latest_event_per_task.task_id
+                    latest_status_per_task ON
+                        tasks.id = latest_status_per_task.task_id
                 -- Required to get the BBOX object
                 JOIN
                     project_bbox ON project_bbox.bbox IS NOT NULL
@@ -1041,7 +1044,7 @@ class DbProject(BaseModel):
                     p.id = %(project_id)s
                 GROUP BY
                     p.id, project_org.id, project_bbox.bbox,
-                    latest_event_per_task.created_at;
+                    latest_status_per_task.created_at;
             """
 
             # Simpler query without additional metadata
