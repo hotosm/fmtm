@@ -404,7 +404,7 @@ const SubmissionsTable = ({ toggleView }) => {
         <div className="fmtm-w-full fmtm-flex fmtm-justify-end xl:fmtm-w-fit fmtm-gap-3">
           {filter?.task_id &&
             taskBoundaryData?.[projectIndex]?.taskBoundries?.find((task) => task?.id === +filter?.task_id)
-              ?.task_status === 'LOCKED_FOR_VALIDATION' && (
+              ?.task_state === 'LOCKED_FOR_VALIDATION' && (
               <Button
                 isLoading={updateTaskStatusLoading}
                 loadingText="MARK AS VALIDATED"

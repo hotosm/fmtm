@@ -4,7 +4,7 @@ import { UpdateTaskStatus } from '@/api/ProjectTaskStatus';
 import MapStyles from '@/hooks/MapStyles';
 import CoreModules from '@/shared/CoreModules';
 import { CommonActions } from '@/store/slices/CommonSlice';
-import { task_status as taskStatusEnum } from '@/types/enums';
+import { task_state as taskStateEnum } from '@/types/enums';
 import Button from '@/components/common/Button';
 import { useNavigate } from 'react-router-dom';
 import { GetProjectTaskActivity } from '@/api/Project';
@@ -30,7 +30,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
   const geojsonStyles = MapStyles();
 
   const [list_of_task_status, set_list_of_task_status] = useState<taskListstatusType[]>([]);
-  const [task_status, set_task_status] = useState('RELEASED_FOR_MAPPING');
+  const [task_state, set_task_state] = useState('RELEASED_FOR_MAPPING');
   const [currentTaskInfo, setCurrentTaskInfo] = useState<taskSubmissionInfoType>();
   const [toggleMappedConfirmationModal, setToggleMappedConfirmationModal] = useState(false);
 
@@ -77,7 +77,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
       const findCorrectTaskStatusIndex = environment.tasksStatus.findIndex((data) => data.label == currentStatus);
       const tasksStatus =
         feature.id_ != undefined ? environment.tasksStatus[findCorrectTaskStatusIndex]?.['label'] : '';
-      set_task_status(tasksStatus);
+      set_task_state(tasksStatus);
       const tasksStatusList =
         feature.id_ != undefined ? environment.tasksStatus[findCorrectTaskStatusIndex]?.['action'] : [];
       set_list_of_task_status(tasksStatusList);
@@ -87,7 +87,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
   const handleOnClick = async (event: React.MouseEvent<HTMLElement>) => {
     const btnId = event.currentTarget.dataset.btnid;
     if (!btnId) return;
-    const status = taskStatusEnum[btnId];
+    const status = taskStateEnum[btnId];
     const authDetailsCopy = authDetails != null ? { ...authDetails } : {};
     const geoStyle = geojsonStyles[btnId];
     if (btnId != undefined) {
@@ -211,7 +211,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
           })}
         </div>
       )}
-      {task_status !== 'RELEASED_FOR_MAPPING' && task_status !== 'LOCKED_FOR_MAPPING' && (
+      {task_state !== 'RELEASED_FOR_MAPPING' && task_state !== 'LOCKED_FOR_MAPPING' && (
         <div className="fmtm-p-2 sm:fmtm-p-5 fmtm-border-t">
           <Button
             btnText="GO TO TASK SUBMISSION"
@@ -222,7 +222,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
           />
         </div>
       )}
-      {task_status === 'LOCKED_FOR_MAPPING' && (
+      {task_state === 'LOCKED_FOR_MAPPING' && (
         <div className="fmtm-p-2 sm:fmtm-p-5 fmtm-border-t">
           <Button
             btnText="GO TO ODK"

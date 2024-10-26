@@ -4,7 +4,7 @@ export enum task_split_type {
   task_splitting_algorithm = 'TASK_SPLITTING_ALGORITHM',
 }
 
-export enum task_status {
+export enum task_state {
   RELEASED_FOR_MAPPING = 'RELEASED_FOR_MAPPING',
   LOCKED_FOR_MAPPING = 'LOCKED_FOR_MAPPING',
   MARKED_MAPPED = 'MARKED_MAPPED',

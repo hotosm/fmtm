@@ -42,7 +42,7 @@ export const UpdateTaskStatus = (
               taskId,
               actioned_by_uid: body?.id,
               actioned_by_username: body?.username,
-              task_status: response.data.status,
+              task_state: response.data.status,
             }),
           );
         }

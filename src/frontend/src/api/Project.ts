@@ -1,7 +1,7 @@
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import CoreModules from '@/shared/CoreModules';
-import { task_status } from '@/types/enums';
+import { task_state } from '@/types/enums';
 import { writeBinaryToOPFS } from '@/api/Files';
 import { projectInfoType } from '@/models/project/projectModel';
 
@@ -19,7 +19,7 @@ export const ProjectById = (projectId: string) => {
             id: data.id,
             index: data.project_task_index,
             outline: data.outline,
-            task_status: task_status[data.task_status],
+            task_state: task_state[data.task_state],
             actioned_by_uid: data.actioned_by_uid,
             actioned_by_username: data.actioned_by_username,
             task_history: data.task_history,
@@ -278,7 +278,7 @@ export const GetProjectComments = (url: string) => {
   };
 };
 
-export const PostProjectComments = (url: string, payload: { task_id: number; project_id: any; comment: string }) => {
+export const PostProjectComments = (url: string, payload: { task_id: number; comment: string }) => {
   return async (dispatch) => {
     const postProjectComments = async (url: string) => {
       try {
@@ -314,19 +314,19 @@ export const GetProjectTaskActivity = (url: string) => {
   };
 };
 
-export const UpdateEntityStatus = (url: string, payload: { entity_id: string; status: number; label: string }) => {
+export const UpdateEntityState = (url: string, payload: { entity_id: string; status: number; label: string }) => {
   return async (dispatch) => {
-    const updateEntityStatus = async (url: string, payload: { entity_id: string; status: number; label: string }) => {
+    const updateEntityState = async (url: string, payload: { entity_id: string; status: number; label: string }) => {
       try {
-        dispatch(ProjectActions.UpdateEntityStatusLoading(true));
+        dispatch(ProjectActions.UpdateEntityStateLoading(true));
         const response = await CoreModules.axios.post(url, payload);
-        dispatch(ProjectActions.UpdateEntityStatus(response.data));
-        dispatch(ProjectActions.UpdateEntityStatusLoading(false));
+        dispatch(ProjectActions.UpdateEntityState(response.data));
+        dispatch(ProjectActions.UpdateEntityStateLoading(false));
       } catch (error) {
-        dispatch(ProjectActions.UpdateEntityStatusLoading(false));
+        dispatch(ProjectActions.UpdateEntityStateLoading(false));
       }
     };
-    await updateEntityStatus(url, payload);
+    await updateEntityState(url, payload);
   };
 };
 

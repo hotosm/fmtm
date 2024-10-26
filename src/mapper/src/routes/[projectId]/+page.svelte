@@ -65,7 +65,7 @@
 	// *** Task history sync *** //
 	const taskFeatcolStore = writable<FeatureCollection>({ type: 'FeatureCollection', features: [] });
 	const taskHistoryStream = new ShapeStream({
-		url: 'http://localhost:7055/v1/shape/task_history',
+		url: 'http://localhost:7055/v1/shape/task_events',
 		where: `project_id=${data.projectId}`,
 	});
 	const taskHistoryEvents = new Shape(taskHistoryStream);
@@ -293,7 +293,7 @@
 
 {#if $latestEvent}
 	<hot-card id="notification-banner" class="absolute z-10 top-18 right-0 font-sans hidden sm:flex">
-		Latest: {$latestEvent.action_text}
+		Latest: {$latestEvent.comment}
 	</hot-card>
 {/if}
 
