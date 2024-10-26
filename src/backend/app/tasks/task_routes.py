@@ -111,7 +111,7 @@ async def add_task_comment(
     new_comment = task_schemas.TaskEventIn(
         task_id=db_task.id,
         user_id=user_id,
-        action=TaskEvent.COMMENT,
+        event=TaskEvent.COMMENT,
         comment=comment,
     )
     return await DbTaskEvent.create(db, new_comment)

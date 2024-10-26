@@ -651,9 +651,9 @@ class DbTaskEvent(BaseModel):
             filters.append("created_at >= %(end_date)s")
             params["end_date"] = end_date
         if comments:
-            filters.append("action = 'COMMENT'")
+            filters.append("event = 'COMMENT'")
         else:
-            filters.append("action != 'COMMENT'")
+            filters.append("event != 'COMMENT'")
 
         filters_joined = " AND ".join(filters)
 
@@ -732,7 +732,7 @@ class DbTask(BaseModel):
     feature_count: Optional[int] = None
 
     # Calculated
-    task_state: Optional[TaskEvent] = None
+    task_state: Optional[MappingState] = None
     actioned_by_uid: Optional[int] = None
     actioned_by_username: Optional[str] = None
 
