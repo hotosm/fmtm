@@ -5,41 +5,45 @@ export default {
     return parseInt(binary, 2);
   },
   encode: (dec) => {
-    const desimaal = (dec >>> 0).toString(2);
-    return window.btoa(desimaal);
+    const decimal = (dec >>> 0).toString(2);
+    return window.btoa(decimal);
   },
   matomoTrackingId: '28',
   tasksStatus: [
     {
       label: 'UNLOCKED_TO_MAP',
-      action: [{ key: 'Start Mapping', value: 'LOCKED_FOR_MAPPING', btnBG: 'red' }],
+      action: [{ key: 'Start Mapping', value: 'MAP', btnBG: 'red' }],
       btnBG: 'red',
     },
     {
       label: 'LOCKED_FOR_MAPPING',
       action: [
-        { key: 'Mark as fully mapped', value: 'UNLOCKED_TO_VALIDATE', btnBG: 'gray' },
-        { key: 'Stop Mapping', value: 'UNLOCKED_TO_MAP', btnBG: 'transparent' },
+        { key: 'Mark as fully mapped', value: 'FINISH', btnBG: 'gray' },
+        { key: 'Stop Mapping', value: 'BAD', btnBG: 'transparent' },
       ],
     },
     {
       label: 'UNLOCKED_TO_VALIDATE',
       action: [
-        { key: 'Start Validation', value: 'LOCKED_FOR_VALIDATION', btnBG: 'gray' },
-        { key: 'Reset', value: 'UNLOCKED_TO_MAP' },
+        { key: 'Start Validation', value: 'VALIDATE', btnBG: 'gray' },
+        { key: 'Reset', value: 'BAD' },
       ],
     },
     {
       label: 'LOCKED_FOR_VALIDATION',
       action: [
-        { key: 'Mark As Validated', value: 'UNLOCKED_DONE', btnBG: 'gray' },
-        { key: 'Mapping Needed', value: 'UNLOCKED_TO_MAP', btnBG: 'transparent' },
+        { key: 'Mark As Validated', value: 'GOOD', btnBG: 'gray' },
+        { key: 'Mapping Needed', value: 'BAD', btnBG: 'transparent' },
       ],
     },
-    { label: 'UNLOCKED_DONE', action: [{ key: 'Reset', value: 'UNLOCKED_TO_MAP', btnBG: 'gray' }] },
-    // { label: 'VALIDATED', action: [{ key: 'Merge data with OSM', value: 'MERGE_WITH_OSM', btnBG: 'gray' }] },
-    // "SPLIT",
-    // "ARCHIVED",
+    {
+      label: 'UNLOCKED_DONE',
+      action: [
+        { key: 'Reset', value: 'BAD', btnBG: 'gray' },
+        // { key: 'Merge data with OSM', value: 'CONFLATE', btnBG: 'gray' },
+      ],
+    },
+    // TODO add SPLIT, MERGE, ASSIGN
   ],
   baseMapProviders: [
     { id: 1, label: 'ESRI', value: 'esri' },

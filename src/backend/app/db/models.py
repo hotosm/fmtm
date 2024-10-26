@@ -678,10 +678,10 @@ class DbTaskEvent(BaseModel):
     async def create(
         cls,
         db: Connection,
-        task_in: "TaskEventIn",
+        event_in: "TaskEventIn",
     ) -> Self:
         """Create a new task event."""
-        model_dump = dump_and_check_model(task_in)
+        model_dump = dump_and_check_model(event_in)
         columns = ", ".join(model_dump.keys())
         value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
 

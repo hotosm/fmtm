@@ -25,7 +25,7 @@ from psycopg import Connection
 from app.auth.auth_schemas import ProjectUserDict
 from app.auth.roles import get_uid, mapper
 from app.db.database import db_conn
-from app.db.enums import HTTPStatus, MappingState, TaskEvent
+from app.db.enums import HTTPStatus, TaskEvent
 from app.db.models import DbTask, DbTaskEvent
 from app.tasks import task_crud, task_schemas
 from app.tasks.task_deps import get_task
@@ -70,12 +70,12 @@ async def get_specific_task(
 
 # TODO update this to be POST /project/{pid}/events ?
 @router.post(
-    "/{task_id}/new-status/{new_status}", response_model=task_schemas.TaskEventOut
+    "/{task_id}/new-status/{new_event}", response_model=task_schemas.TaskEventOut
 )
 async def add_new_task_event(
     db_task: Annotated[DbTask, Depends(get_task)],
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
-    new_status: MappingState,
+    new_event: TaskEvent,
     db: Annotated[Connection, Depends(db_conn)],
 ):
     """Add a new event to the events table / update task status."""
@@ -84,7 +84,7 @@ async def add_new_task_event(
         db,
         db_task.id,
         user_id,
-        new_status,
+        new_event,
     )
 
 
@@ -117,26 +117,26 @@ async def add_task_comment(
     return await DbTaskEvent.create(db, new_comment)
 
 
-# NOTE this endpoint isn't used?
-@router.get("/activity/", response_model=list[task_schemas.TaskEventCount])
-async def task_activity(
-    project_id: int,
-    db: Annotated[Connection, Depends(db_conn)],
-    project_user: Annotated[ProjectUserDict, Depends(mapper)],
-    days: int = 10,
-):
-    """Get the number of mapped or validated tasks on each day.
+# FIXME this endpoint isn't used?
+# @router.get("/activity/", response_model=list[task_schemas.TaskEventCount])
+# async def task_activity(
+#     project_id: int,
+#     db: Annotated[Connection, Depends(db_conn)],
+#     project_user: Annotated[ProjectUserDict, Depends(mapper)],
+#     days: int = 10,
+# ):
+#     """Get the number of mapped or validated tasks on each day.
 
-    Return format:
-    [
-        {
-            date: DD/MM/YYYY,
-            validated: int,
-            mapped: int,
-        }
-    ]
-    """
-    return await task_crud.get_project_task_activity(db, project_id, days)
+#     Return format:
+#     [
+#         {
+#             date: DD/MM/YYYY,
+#             validated: int,
+#             mapped: int,
+#         }
+#     ]
+#     """
+#     return await task_crud.get_project_task_activity(db, project_id, days)
 
 
 @router.get("/{task_id}/history/", response_model=list[task_schemas.TaskEventOut])
