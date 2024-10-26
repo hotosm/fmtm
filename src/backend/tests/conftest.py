@@ -39,8 +39,8 @@ from app.central import central_crud, central_schemas
 from app.central.central_schemas import ODKCentralDecrypted, ODKCentralIn
 from app.config import encrypt_value, settings
 from app.db.database import db_conn
-from app.db.enums import TaskStatus, UserRole, get_action_for_status_change
-from app.db.models import DbProject, DbTask, DbTaskHistory
+from app.db.enums import MappingState, UserRole, get_action_for_status_change
+from app.db.models import DbProject, DbTask, DbTaskEvent
 from app.main import get_application
 from app.organisations.organisation_deps import get_organisation
 from app.projects import project_crud
@@ -226,10 +226,10 @@ async def task_event(db, project, tasks, admin_user):
         new_event = TaskHistoryIn(
             task_id=task.id,
             user_id=user.id,
-            action=get_action_for_status_change(TaskStatus.READY),
-            action_text="We added a comment!",
+            action=get_action_for_status_change(MappingState.READY),
+            comment="We added a comment!",
         )
-        db_task_event = await DbTaskHistory.create(db, new_event)
+        db_task_event = await DbTaskEvent.create(db, new_event)
     return db_task_event
 
 

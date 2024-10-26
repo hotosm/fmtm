@@ -110,51 +110,57 @@ class MappingLevel(StrEnum, Enum):
     ADVANCED = "ADVANCED"
 
 
-class TaskStatus(StrEnum, Enum):
-    """Available Task Statuses."""
+class TaskEvent(StrEnum, Enum):
+    """Task events via API.
 
-    READY = "READY"
-    LOCKED_FOR_MAPPING = "LOCKED_FOR_MAPPING"
-    MAPPED = "MAPPED"
-    LOCKED_FOR_VALIDATION = "LOCKED_FOR_VALIDATION"
-    VALIDATED = "VALIDATED"
-    INVALIDATED = "INVALIDATED"
-    BAD = "BAD"  # Task cannot be mapped
-    SPLIT = "SPLIT"  # Task has been split
-    ARCHIVED = "ARCHIVED"  # When renew replacement task has been uploaded
+    `map` -- Set to *locked for mapping*, i.e. mapping in progress.
+    `finish` -- Set to *unlocked to validate*, i.e. is mapped.
+    `validate` -- Request recent task ready to be validate.
+    `good` -- Set the state to *unlocked done*.
+    `bad` -- Set the state *unlocked to map* again, to be mapped once again.
+    `split` -- Set the state *unlocked done* then generate additional
+        subdivided task areas.
+    `merge` -- Set the state *unlocked done* then generate additional
+        merged task area.
+    `assign` -- For a requester user to assign a task to another user.
+        Set the state *locked for mapping* passing in the required user id.
+        Also notify the user they should map the area.
+    `comment` -- Keep the state the same, but simply add a comment.
+    """
 
-
-class TaskAction(StrEnum, Enum):
-    """All possible task actions, recorded in task history."""
-
-    RELEASED_FOR_MAPPING = "RELEASED_FOR_MAPPING"
-    LOCKED_FOR_MAPPING = "LOCKED_FOR_MAPPING"
-    MARKED_MAPPED = "MARKED_MAPPED"
-    LOCKED_FOR_VALIDATION = "LOCKED_FOR_VALIDATION"
-    VALIDATED = "VALIDATED"
-    MARKED_INVALID = "MARKED_INVALID"
-    MARKED_BAD = "MARKED_BAD"  # Task cannot be mapped
-    SPLIT_NEEDED = "SPLIT_NEEDED"  # Task needs split
-    RECREATED = "RECREATED"
+    MAP = "MAP"
+    FINISH = "FINISH"
+    VALIDATE = "VALIDATE"
+    GOOD = "GOOD"
+    BAD = "BAD"
+    SPLIT = "SPLIT"
+    MERGE = "MERGE"
+    ASSIGN = "ASSIGN"
     COMMENT = "COMMENT"
 
 
-class EntityStatus(IntEnum, Enum):
-    """Statuses for Entities in ODK.
+class MappingState(StrEnum, Enum):
+    """State options for tasks in FMTM."""
+
+    UNLOCKED_TO_MAP = "UNLOCKED_TO_MAP"
+    LOCKED_FOR_MAPPING = "LOCKED_FOR_MAPPING"
+    UNLOCKED_TO_VALIDATE = "UNLOCKED_TO_VALIDATE"
+    LOCKED_FOR_VALIDATION = "LOCKED_FOR_VALIDATION"
+    UNLOCKED_DONE = "UNLOCKED_DONE"
+
+
+class EntityState(IntEnum, Enum):
+    """State options for Entities in ODK.
 
     NOTE here we started with int enums and it's hard to migrate.
     NOTE we will continue to use int values in the form.
+    NOTE we keep BAD=6 for legacy reasons too.
     """
 
-    UNLOCKED = 0
-    LOCKED = 1
-    MAPPED = 2
-    BAD = 6
-    # Should we also add extra statuses?
-    # LUMPED
-    # SPLIT
-    # VALIDATED
-    # INVALIDATED
+    READY = 0
+    OPEN_IN_ODK = 1
+    SURVEY_SUBMITTED = 2
+    MARKED_BAD = 6
 
 
 class TaskType(StrEnum, Enum):
@@ -243,47 +249,47 @@ class XLSFormType(StrEnum, Enum):
     # waterways = "waterways"
 
 
-def get_action_for_status_change(task_status: TaskStatus) -> TaskAction:
+def get_action_for_status_change(task_state: MappingState) -> TaskEvent:
     """Update task action inferred from previous state."""
-    match task_status:
-        case TaskStatus.READY:
-            return TaskAction.RELEASED_FOR_MAPPING
-        case TaskStatus.LOCKED_FOR_MAPPING:
-            return TaskAction.LOCKED_FOR_MAPPING
-        case TaskStatus.MAPPED:
-            return TaskAction.MARKED_MAPPED
-        case TaskStatus.LOCKED_FOR_VALIDATION:
-            return TaskAction.LOCKED_FOR_VALIDATION
-        case TaskStatus.VALIDATED:
-            return TaskAction.VALIDATED
-        case TaskStatus.BAD:
-            return TaskAction.MARKED_BAD
-        case TaskStatus.SPLIT:
-            return TaskAction.SPLIT_NEEDED
-        case TaskStatus.INVALIDATED:
-            return TaskAction.MARKED_INVALID
+    match task_state:
+        case MappingState.READY:
+            return TaskEvent.RELEASED_FOR_MAPPING
+        case MappingState.LOCKED_FOR_MAPPING:
+            return TaskEvent.LOCKED_FOR_MAPPING
+        case MappingState.MAPPED:
+            return TaskEvent.MARKED_MAPPED
+        case MappingState.LOCKED_FOR_VALIDATION:
+            return TaskEvent.LOCKED_FOR_VALIDATION
+        case MappingState.VALIDATED:
+            return TaskEvent.VALIDATED
+        case MappingState.BAD:
+            return TaskEvent.MARKED_BAD
+        case MappingState.SPLIT:
+            return TaskEvent.SPLIT_NEEDED
+        case MappingState.INVALIDATED:
+            return TaskEvent.MARKED_INVALID
         case _:
-            return TaskAction.RELEASED_FOR_MAPPING
+            return TaskEvent.RELEASED_FOR_MAPPING
 
 
-def get_status_for_action(task_action: TaskAction) -> TaskStatus:
+def get_status_for_action(task_action: TaskEvent) -> MappingState:
     """Get the task status inferred from the action."""
     match task_action:
-        case TaskAction.RELEASED_FOR_MAPPING:
-            return TaskStatus.READY
-        case TaskAction.LOCKED_FOR_MAPPING:
-            return TaskStatus.LOCKED_FOR_MAPPING
-        case TaskAction.MARKED_MAPPED:
-            return TaskStatus.MAPPED
-        case TaskAction.LOCKED_FOR_VALIDATION:
-            return TaskStatus.LOCKED_FOR_VALIDATION
-        case TaskAction.VALIDATED:
-            return TaskStatus.VALIDATED
-        case TaskAction.MARKED_BAD:
-            return TaskStatus.BAD
-        case TaskAction.SPLIT_NEEDED:
-            return TaskStatus.SPLIT
-        case TaskAction.MARKED_INVALID:
-            return TaskStatus.INVALIDATED
+        case TaskEvent.RELEASED_FOR_MAPPING:
+            return MappingState.READY
+        case TaskEvent.LOCKED_FOR_MAPPING:
+            return MappingState.LOCKED_FOR_MAPPING
+        case TaskEvent.MARKED_MAPPED:
+            return MappingState.MAPPED
+        case TaskEvent.LOCKED_FOR_VALIDATION:
+            return MappingState.LOCKED_FOR_VALIDATION
+        case TaskEvent.VALIDATED:
+            return MappingState.VALIDATED
+        case TaskEvent.MARKED_BAD:
+            return MappingState.BAD
+        case TaskEvent.SPLIT_NEEDED:
+            return MappingState.SPLIT
+        case TaskEvent.MARKED_INVALID:
+            return MappingState.INVALIDATED
         case _:
-            return TaskStatus.READY
+            return MappingState.READY

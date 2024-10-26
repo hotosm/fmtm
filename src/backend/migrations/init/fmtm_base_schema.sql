@@ -126,7 +126,7 @@ CREATE TYPE public.taskevent AS ENUM (
     'GOOD',
     'BAD',
     'SPLIT',
-    'GROUP',
+    'MERGE',
     'ASSIGN',
     'COMMENT'
 );

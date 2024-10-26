@@ -897,7 +897,7 @@ async def get_project_users_plus_contributions(db: Connection, project_id: int):
         FROM
             users u
         JOIN
-            task_history th ON u.id = th.user_id
+            task_events th ON u.id = th.user_id
         WHERE
             th.project_id = %(project_id)s
         GROUP BY u.username

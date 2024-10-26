@@ -21,10 +21,9 @@ from typing import Annotated, Optional
 from uuid import UUID
 
 from geojson_pydantic import Polygon
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, Field
 
-from app.db.enums import TaskAction, TaskStatus, get_status_for_action
-from app.db.models import DbTask, DbTaskHistory
+from app.db.models import DbTask, DbTaskEvent
 
 # NOTE we don't have a TaskIn as tasks are only generated once during project creation
 
@@ -36,7 +35,7 @@ class TaskOut(DbTask):
     outline: Polygon
 
 
-class TaskHistoryIn(DbTaskHistory):
+class TaskHistoryIn(DbTaskEvent):
     """Create a new task event."""
 
     # Exclude, as the uuid is generated in the database
@@ -49,29 +48,16 @@ class TaskHistoryIn(DbTaskHistory):
     profile_img: Annotated[Optional[str], Field(exclude=True)] = None
 
 
-class TaskHistoryOut(DbTaskHistory):
+class TaskHistoryOut(DbTaskEvent):
     """A task event to display to the user."""
 
     # Ensure project_id is removed, as we only use this to query for tasks
     project_id: Annotated[Optional[int], Field(exclude=True)] = None
-    # We calculate the 'status' field in place of the action enum
-    action: Annotated[Optional[TaskAction], Field(exclude=True)] = None
-
-    @computed_field
-    @property
-    def status(self) -> Optional[TaskStatus]:
-        """Get the status from the recent action.
-
-        TODO remove this, replace with 'action' or similar?
-        """
-        if not self.action:
-            return None
-        return get_status_for_action(self.action)
 
 
 class TaskHistoryCount(BaseModel):
     """Task mapping history status counts per day."""
 
     date: str
-    validated: int
     mapped: int
+    validated: int
