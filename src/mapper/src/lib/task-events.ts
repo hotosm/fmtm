@@ -78,7 +78,7 @@ export async function finishTask(/* db, */ projectId: number, taskId: number): P
 	// TODO it should likely be posting TaskEvent (TaskEvent) to the endpoint
 	// TODO then we handle the status of the task internally
 	// i.e. it's duplicated info!
-	await add_event(/* db, */ projectId, taskId, TaskStatusEnum.MARKED_MAPPED);
+	await add_event(/* db, */ projectId, taskId, TaskStatusEnum.UNLOCKED_TO_VALIDATE);
 }
 
 export async function resetTask(/* db, */ projectId: number, taskId: number): Promise<void> {
@@ -107,7 +107,7 @@ export async function resetTask(/* db, */ projectId: number, taskId: number): Pr
 // 	//         ?, -- event_id
 // 	//         ?, -- project_id
 // 	//         ?, -- task_id
-// 	//         'MARKED_MAPPED',
+// 	//         'UNLOCKED_TO_VALIDATE',
 // 	//         'Note: Mapping finished',
 // 	//         ?
 // 	//         user_id
@@ -136,7 +136,7 @@ export async function resetTask(/* db, */ projectId: number, taskId: number): Pr
 // 	// assert(newEvent.task_id === taskId);
 // 	// assert(newEvent.user_id === userId);
 
-// 	await add_event(db, projectId, taskId, userId, 'MARKED_MAPPED');
+// 	await add_event(db, projectId, taskId, userId, 'UNLOCKED_TO_VALIDATE');
 // }
 
 // async function validateTask(db, projectId: number, taskId: number, userId: number): Promise<void> {

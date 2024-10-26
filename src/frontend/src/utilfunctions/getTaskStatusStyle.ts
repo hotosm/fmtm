@@ -65,7 +65,7 @@ const getTaskStatusStyle = (feature: Record<string, any>, mapTheme: Record<strin
       }),
     }),
     LOCKED_FOR_MAPPING: [lockedPolygonStyle, iconStyle],
-    MARKED_MAPPED: new Style({
+    UNLOCKED_TO_VALIDATE: new Style({
       stroke: new Stroke({
         color: borderStrokeColor,
         width: 3,

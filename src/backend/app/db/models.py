@@ -70,7 +70,7 @@ if TYPE_CHECKING:
         ProjectIn,
         ProjectUpdate,
     )
-    from app.tasks.task_schemas import TaskHistoryIn
+    from app.tasks.task_schemas import TaskEventIn
     from app.users.user_schemas import UserIn
 
 
@@ -598,12 +598,12 @@ class DbTaskEvent(BaseModel):
     """
 
     event_id: UUID
-    task_id: int
+    task_id: Annotated[Optional[int], Field(gt=0)] = None
     event: TaskEvent
     state: MappingState
 
-    project_id: Optional[int] = None
-    user_id: Optional[int] = None
+    project_id: Annotated[Optional[int], Field(gt=0)] = None
+    user_id: Annotated[Optional[int], Field(gt=0)] = None
     comment: Optional[str] = None
     created_at: Optional[datetime] = None
 
@@ -620,7 +620,7 @@ class DbTaskEvent(BaseModel):
         days: Optional[int] = None,
         comments: Optional[bool] = None,
     ) -> Optional[list[Self]]:
-        """Fetch all task history entries for a project.
+        """Fetch all task event entries for a project.
 
         Args:
             db (Connection): the database connection.
@@ -678,7 +678,7 @@ class DbTaskEvent(BaseModel):
     async def create(
         cls,
         db: Connection,
-        task_in: "TaskHistoryIn",
+        task_in: "TaskEventIn",
     ) -> Self:
         """Create a new task event."""
         model_dump = dump_and_check_model(task_in)
@@ -749,7 +749,7 @@ class DbTask(BaseModel):
                         tasks.*,
                         ST_AsGeoJSON(tasks.outline)::jsonb AS outline,
                         COALESCE(
-                            latest_event.action, 'RELEASED_FOR_MAPPING'
+                            latest_event.event, 'UNLOCKED_TO_MAP'
                         ) AS task_state,
                         COALESCE(latest_event.user_id, NULL) AS actioned_by_uid,
                         COALESCE(latest_event.username, NULL) AS actioned_by_username
@@ -757,7 +757,7 @@ class DbTask(BaseModel):
                         tasks
                     LEFT JOIN LATERAL (
                         SELECT
-                            th.action,
+                            th.event,
                             th.user_id,
                             u.username
                         FROM
@@ -766,7 +766,7 @@ class DbTask(BaseModel):
                             users u ON u.id = th.user_id
                         WHERE
                             th.task_id = tasks.id
-                            AND th.action != 'COMMENT'
+                            AND th.event != 'COMMENT'
                         ORDER BY
                             th.created_at DESC
                         LIMIT 1
@@ -797,14 +797,14 @@ class DbTask(BaseModel):
             SELECT
                 tasks.*,
                 ST_AsGeoJSON(tasks.outline)::jsonb AS outline,
-                COALESCE(latest_event.action, 'RELEASED_FOR_MAPPING') AS task_state,
+                COALESCE(latest_event.event, 'UNLOCKED_TO_MAP') AS task_state,
                 COALESCE(latest_event.user_id, NULL) AS actioned_by_uid,
                 COALESCE(latest_event.username, NULL) AS actioned_by_username
             FROM
                 tasks
             LEFT JOIN LATERAL (
                 SELECT
-                    th.action,
+                    th.event,
                     th.user_id,
                     u.username
                 FROM
@@ -813,7 +813,7 @@ class DbTask(BaseModel):
                     users u ON u.id = th.user_id
                 WHERE
                     th.task_id = tasks.id
-                    AND th.action != 'COMMENT'
+                    AND th.event != 'COMMENT'
                 ORDER BY
                     th.created_at DESC
                 LIMIT 1
@@ -953,7 +953,7 @@ class DbProject(BaseModel):
                 WITH latest_event_per_task AS (
                     SELECT DISTINCT ON (task_id)
                         th.task_id,
-                        th.action,
+                        th.event,
                         th.created_at,
                         th.user_id,
                         u.username AS username
@@ -962,7 +962,7 @@ class DbProject(BaseModel):
                     LEFT JOIN
                         users u ON u.id = th.user_id
                     WHERE
-                        th.action != 'COMMENT'
+                        th.event != 'COMMENT'
                     ORDER BY
                         th.task_id, th.created_at DESC
                 ),
@@ -1007,8 +1007,8 @@ class DbProject(BaseModel):
                                 'outline', ST_AsGeoJSON(tasks.outline)::jsonb,
                                 'feature_count', tasks.feature_count,
                                 'task_state', COALESCE(
-                                    latest_event_per_task.action,
-                                    'RELEASED_FOR_MAPPING'
+                                    latest_event_per_task.event,
+                                    'UNLOCKED_TO_MAP'
                                 ),
                                 'actioned_by_uid', COALESCE(
                                     latest_event_per_task.user_id,

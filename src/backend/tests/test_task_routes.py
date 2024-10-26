@@ -25,7 +25,7 @@ from app.db.enums import MappingState
 
 
 async def test_read_task_history(client, task_event):
-    """Test task history for a project."""
+    """Test task events for a project."""
     task_id = task_event.task_id
 
     assert task_id is not None

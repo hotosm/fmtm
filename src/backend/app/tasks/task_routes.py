@@ -68,9 +68,9 @@ async def get_specific_task(
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(e)) from e
 
 
-# TODO SQL update this to be something like /next
+# TODO update this to be POST /project/{pid}/events ?
 @router.post(
-    "/{task_id}/new-status/{new_status}", response_model=task_schemas.TaskHistoryOut
+    "/{task_id}/new-status/{new_status}", response_model=task_schemas.TaskEventOut
 )
 async def add_new_task_event(
     db_task: Annotated[DbTask, Depends(get_task)],
@@ -88,7 +88,7 @@ async def add_new_task_event(
     )
 
 
-@router.post("/{task_id}/comment/", response_model=task_schemas.TaskHistoryOut)
+@router.post("/{task_id}/comment/", response_model=task_schemas.TaskEventOut)
 async def add_task_comment(
     comment: str,
     db_task: Annotated[DbTask, Depends(get_task)],
@@ -105,10 +105,10 @@ async def add_task_comment(
         db (Connection): The database connection.
 
     Returns:
-        TaskHistoryOut: The created task comment.
+        TaskEventOut: The created task comment.
     """
     user_id = await get_uid(project_user.get("user"))
-    new_comment = task_schemas.TaskHistoryIn(
+    new_comment = task_schemas.TaskEventIn(
         task_id=db_task.id,
         user_id=user_id,
         action=TaskEvent.COMMENT,
@@ -118,7 +118,7 @@ async def add_task_comment(
 
 
 # NOTE this endpoint isn't used?
-@router.get("/activity/", response_model=list[task_schemas.TaskHistoryCount])
+@router.get("/activity/", response_model=list[task_schemas.TaskEventCount])
 async def task_activity(
     project_id: int,
     db: Annotated[Connection, Depends(db_conn)],
@@ -139,7 +139,7 @@ async def task_activity(
     return await task_crud.get_project_task_activity(db, project_id, days)
 
 
-@router.get("/{task_id}/history/", response_model=list[task_schemas.TaskHistoryOut])
+@router.get("/{task_id}/history/", response_model=list[task_schemas.TaskEventOut])
 async def get_task_event_history(
     db: Annotated[Connection, Depends(db_conn)],
     db_task: Annotated[DbTask, Depends(get_task)],

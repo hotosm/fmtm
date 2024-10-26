@@ -113,19 +113,19 @@ class MappingLevel(StrEnum, Enum):
 class TaskEvent(StrEnum, Enum):
     """Task events via API.
 
-    `map` -- Set to *locked for mapping*, i.e. mapping in progress.
-    `finish` -- Set to *unlocked to validate*, i.e. is mapped.
-    `validate` -- Request recent task ready to be validate.
-    `good` -- Set the state to *unlocked done*.
-    `bad` -- Set the state *unlocked to map* again, to be mapped once again.
-    `split` -- Set the state *unlocked done* then generate additional
+    `MAP` -- Set to *locked for mapping*, i.e. mapping in progress.
+    `FINISH` -- Set to *unlocked to validate*, i.e. is mapped.
+    `FINISH` -- Request recent task ready to be validate.
+    `GOOD` -- Set the state to *unlocked done*.
+    `BAD` -- Set the state *unlocked to map* again, to be mapped once again.
+    `SPLIT` -- Set the state *unlocked done* then generate additional
         subdivided task areas.
-    `merge` -- Set the state *unlocked done* then generate additional
+    `MERGE` -- Set the state *unlocked done* then generate additional
         merged task area.
-    `assign` -- For a requester user to assign a task to another user.
+    `ASSIGN` -- For a requester user to assign a task to another user.
         Set the state *locked for mapping* passing in the required user id.
         Also notify the user they should map the area.
-    `comment` -- Keep the state the same, but simply add a comment.
+    `COMMENT` -- Keep the state the same, but simply add a comment.
     """
 
     MAP = "MAP"
@@ -247,49 +247,3 @@ class XLSFormType(StrEnum, Enum):
     # religious = "religious"
     # landusage = "landusage"
     # waterways = "waterways"
-
-
-def get_action_for_status_change(task_state: MappingState) -> TaskEvent:
-    """Update task action inferred from previous state."""
-    match task_state:
-        case MappingState.READY:
-            return TaskEvent.RELEASED_FOR_MAPPING
-        case MappingState.LOCKED_FOR_MAPPING:
-            return TaskEvent.LOCKED_FOR_MAPPING
-        case MappingState.MAPPED:
-            return TaskEvent.MARKED_MAPPED
-        case MappingState.LOCKED_FOR_VALIDATION:
-            return TaskEvent.LOCKED_FOR_VALIDATION
-        case MappingState.VALIDATED:
-            return TaskEvent.VALIDATED
-        case MappingState.BAD:
-            return TaskEvent.MARKED_BAD
-        case MappingState.SPLIT:
-            return TaskEvent.SPLIT_NEEDED
-        case MappingState.INVALIDATED:
-            return TaskEvent.MARKED_INVALID
-        case _:
-            return TaskEvent.RELEASED_FOR_MAPPING
-
-
-def get_status_for_action(task_action: TaskEvent) -> MappingState:
-    """Get the task status inferred from the action."""
-    match task_action:
-        case TaskEvent.RELEASED_FOR_MAPPING:
-            return MappingState.READY
-        case TaskEvent.LOCKED_FOR_MAPPING:
-            return MappingState.LOCKED_FOR_MAPPING
-        case TaskEvent.MARKED_MAPPED:
-            return MappingState.MAPPED
-        case TaskEvent.LOCKED_FOR_VALIDATION:
-            return MappingState.LOCKED_FOR_VALIDATION
-        case TaskEvent.VALIDATED:
-            return MappingState.VALIDATED
-        case TaskEvent.MARKED_BAD:
-            return MappingState.BAD
-        case TaskEvent.SPLIT_NEEDED:
-            return MappingState.SPLIT
-        case TaskEvent.MARKED_INVALID:
-            return MappingState.INVALIDATED
-        case _:
-            return MappingState.READY

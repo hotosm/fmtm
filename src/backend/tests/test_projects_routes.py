@@ -31,7 +31,7 @@ from loguru import logger as log
 
 from app.central.central_crud import create_odk_project
 from app.config import settings
-from app.db.enums import EntityState, HTTPStatus, TaskEvent
+from app.db.enums import EntityState, HTTPStatus, MappingState
 from app.db.models import DbProject, slugify
 from app.db.postgis_utils import check_crs
 from app.projects import project_crud
@@ -387,7 +387,7 @@ async def test_generate_project_files(db, client, project):
     # Now check required values were added to project
     new_project = await DbProject.one(db, project_id)
     assert len(new_project.tasks) == 1
-    assert new_project.tasks[0].task_state == TaskEvent.RELEASED_FOR_MAPPING
+    assert new_project.tasks[0].task_state == MappingState.UNLOCKED_TO_MAP
     assert isinstance(new_project.odk_token, str)
 
 
