@@ -125,6 +125,7 @@ CREATE TYPE public.taskevent AS ENUM (
     'VALIDATE',
     'GOOD',
     'BAD',
+    'CONFLATE',
     'SPLIT',
     'MERGE',
     'ASSIGN',
@@ -137,7 +138,8 @@ CREATE TYPE public.mappingstate AS ENUM (
     'LOCKED_FOR_MAPPING',
     'UNLOCKED_TO_VALIDATE',
     'LOCKED_FOR_VALIDATION',
-    'UNLOCKED_DONE'
+    'UNLOCKED_DONE',
+    'CONFLATED'
 );
 ALTER TYPE public.mappingstate OWNER TO fmtm;
 

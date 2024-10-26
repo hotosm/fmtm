@@ -22,6 +22,7 @@ BEGIN
         'VALIDATE',
         'GOOD',
         'BAD',
+        'CONFLATE',
         'SPLIT',
         'MERGE',
         'ASSIGN',
@@ -52,7 +53,8 @@ BEGIN
         'LOCKED_FOR_MAPPING',
         'UNLOCKED_TO_VALIDATE',
         'LOCKED_FOR_VALIDATION',
-        'UNLOCKED_DONE'
+        'UNLOCKED_DONE',
+        'CONFLATED'
     );
   END IF;
 END $$;
