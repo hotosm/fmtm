@@ -41,7 +41,7 @@ async def test_read_task_history(client, task_event):
     assert data["username"] == task_event.username
     assert data["profile_img"] == task_event.profile_img
     assert data["comment"] == task_event.comment
-    assert data["status"] == MappingState.READY
+    assert data["status"] == MappingState.UNLOCKED_TO_MAP
 
 
 async def test_update_task_status(client, tasks):

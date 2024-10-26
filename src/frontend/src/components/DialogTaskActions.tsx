@@ -70,6 +70,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
     }
   }, [taskId, taskInfo]);
 
+  // TODO need to set the TaskEvent here, not MappingStatus?
   useEffect(() => {
     if (projectIndex != -1) {
       const currentStatus = projectTaskActivityList.length > 0 ? projectTaskActivityList[0].state : 'UNLOCKED_TO_MAP';

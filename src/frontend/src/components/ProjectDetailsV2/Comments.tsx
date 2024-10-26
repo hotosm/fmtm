@@ -34,7 +34,6 @@ const Comments = () => {
   );
 
   useEffect(() => {
-    console.log(currentStatus);
     dispatch(
       GetProjectComments(
         `${import.meta.env.VITE_API_URL}/tasks/${currentStatus?.id}/history/?project_id=${projectId}&comment=true`,

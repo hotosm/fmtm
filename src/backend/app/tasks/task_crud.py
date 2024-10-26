@@ -17,12 +17,9 @@
 #
 """Logic for FMTM tasks."""
 
-from datetime import datetime, timedelta
-
 from fastapi import HTTPException
 from loguru import logger as log
 from psycopg import Connection
-from psycopg.rows import class_row
 
 from app.db.enums import (
     HTTPStatus,
@@ -61,40 +58,41 @@ async def new_task_event(
     return created_task_event
 
 
-async def get_project_task_activity(
-    db: Connection,
-    project_id: int,
-    days: int,
-) -> task_schemas.TaskEventCount:
-    """Get number of tasks mapped and validated for project.
+# FIXME the endpoint that calls this isn't used?
+# async def get_project_task_activity(
+#     db: Connection,
+#     project_id: int,
+#     days: int,
+# ) -> task_schemas.TaskEventCount:
+#     """Get number of tasks mapped and validated for project.
 
-    Args:
-        project_id (int): The ID of the project.
-        days (int): The number of days to consider for the
-            task activity (default: 10).
-        db (Connection): The database connection.
+#     Args:
+#         project_id (int): The ID of the project.
+#         days (int): The number of days to consider for the
+#             task activity (default: 10).
+#         db (Connection): The database connection.
 
-    Returns:
-        list[task_schemas.TaskEventCount]: A list of task event counts.
-    """
-    end_date = datetime.now() - timedelta(days=days)
+#     Returns:
+#         list[task_schemas.TaskEventCount]: A list of task event counts.
+#     """
+#     end_date = datetime.now() - timedelta(days=days)
 
-    sql = """
-        SELECT
-            to_char(created_at::date, 'dd/mm/yyyy') as date,
-            COUNT(*) FILTER (WHERE state = 'UNLOCKED_DONE') AS validated,
-            COUNT(*) FILTER (WHERE state = 'UNLOCKED_TO_VALIDATE') AS mapped
-        FROM
-            task_events
-        WHERE
-            project_id = %(project_id)s
-            AND created_at >= %(end_date)s
-        GROUP BY
-            created_at::date
-        ORDER BY
-            created_at::date;
-    """
+#     sql = """
+#         SELECT
+#             to_char(created_at::date, 'dd/mm/yyyy') as date,
+#             COUNT(*) FILTER (WHERE state = 'UNLOCKED_DONE') AS validated,
+#             COUNT(*) FILTER (WHERE state = 'UNLOCKED_TO_VALIDATE') AS mapped
+#         FROM
+#             task_events
+#         WHERE
+#             project_id = %(project_id)s
+#             AND created_at >= %(end_date)s
+#         GROUP BY
+#             created_at::date
+#         ORDER BY
+#             created_at::date;
+#     """
 
-    async with db.cursor(row_factory=class_row(task_schemas.TaskEventCount)) as cur:
-        await cur.execute(sql, {"project_id": project_id, "end_date": end_date})
-        return await cur.fetchall()
+#     async with db.cursor(row_factory=class_row(task_schemas.TaskEventCount)) as cur:
+#         await cur.execute(sql, {"project_id": project_id, "end_date": end_date})
+#         return await cur.fetchall()

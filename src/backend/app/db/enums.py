@@ -140,7 +140,11 @@ class TaskEvent(StrEnum, Enum):
 
 
 class MappingState(StrEnum, Enum):
-    """State options for tasks in FMTM."""
+    """State options for tasks in FMTM.
+
+    NOTE We no longer have states invalidated / bad, and instead rely on the
+    EntityState.MARKED_BAD buildings to display red on the map.
+    """
 
     UNLOCKED_TO_MAP = "UNLOCKED_TO_MAP"
     LOCKED_FOR_MAPPING = "LOCKED_FOR_MAPPING"

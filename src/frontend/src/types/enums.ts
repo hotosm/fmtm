@@ -4,6 +4,18 @@ export enum task_split_type {
   task_splitting_algorithm = 'TASK_SPLITTING_ALGORITHM',
 }
 
+export enum task_actions {
+  MAP = 'MAP',
+  FINISH = 'FINISH',
+  VALIDATE = 'VALIDATE',
+  GOOD = 'GOOD',
+  BAD = 'BAD',
+  SPLIT = 'SPLIT',
+  MERGE = 'MERGE',
+  ASSIGN = 'ASSIGN',
+  COMMENT = 'COMMENT',
+}
+
 export enum task_state {
   UNLOCKED_TO_MAP = 'UNLOCKED_TO_MAP',
   LOCKED_FOR_MAPPING = 'LOCKED_FOR_MAPPING',

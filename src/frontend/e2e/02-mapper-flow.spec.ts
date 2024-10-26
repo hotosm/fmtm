@@ -22,7 +22,7 @@ test.describe('mapper flow', () => {
         y: 95,
       },
     });
-    await expect(page.getByText('Status: READY')).toBeVisible();
+    await expect(page.getByText('Status: UNLOCKED_TO_MAP')).toBeVisible();
     await page.getByRole('alert').waitFor({ state: 'hidden' });
     await page.getByTitle('Close').getByTestId('CloseIcon').click();
     // Use maxDiffPixelRatio to avoid issues with OSM tile loading delay
@@ -119,7 +119,7 @@ test.describe('mapper flow', () => {
         y: 220,
       },
     });
-    await expect(page.getByText('Status: READY')).toBeVisible();
+    await expect(page.getByText('Status: UNLOCKED_TO_MAP')).toBeVisible();
     await expect(page.getByRole('button', { name: 'START MAPPING' })).toBeVisible();
 
     // 2. Click on a specific feature / Entity within a task
