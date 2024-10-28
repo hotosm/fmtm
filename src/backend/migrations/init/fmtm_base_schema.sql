@@ -552,6 +552,8 @@ BEGIN
             NEW.state := 'LOCKED_FOR_MAPPING';
         WHEN 'FINISH' THEN
             NEW.state := 'UNLOCKED_TO_VALIDATE';
+        WHEN 'VALIDATE' THEN
+            NEW.state := 'LOCKED_FOR_VALIDATION';
         WHEN 'GOOD' THEN
             NEW.state := 'UNLOCKED_DONE';
         WHEN 'BAD' THEN
@@ -562,6 +564,8 @@ BEGIN
             NEW.state := 'UNLOCKED_DONE';
         WHEN 'ASSIGN' THEN
             NEW.state := 'LOCKED_FOR_MAPPING';
+        WHEN 'COMMENT' THEN
+            NEW.state := OLD.state;
         ELSE
             RAISE EXCEPTION 'Unknown task event type: %', NEW.event;
     END CASE;
