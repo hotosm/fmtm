@@ -237,7 +237,7 @@ services:
     image: "postgis/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
     # Temp workaround until https://github.com/postgis/docker-postgis/issues/216
     build:
-      context: https://github.com/postgis/docker-postgis.git#master:14-3.4/alpine
+      context: https://github.com/postgis/docker-postgis.git#master:14-3.5/alpine
     command: -c 'max_connections=300' -c 'wal_level=logical'
     volumes:
       - fmtm_db_data:/var/lib/postgresql/data/
