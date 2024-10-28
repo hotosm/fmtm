@@ -23,7 +23,7 @@ import { camelToFlat } from '@/utilfunctions/commonUtils';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import { CreateTaskEvent } from '@/api/TaskEvent';
 import { filterType } from '@/store/types/ISubmissions';
-import { task_state as taskStateEnum } from '@/types/enums';
+import { task_state, task_event } from '@/types/enums';
 
 const SubmissionsTable = ({ toggleView }) => {
   useDocumentTitle('Submission Table');
@@ -220,7 +220,8 @@ const SubmissionsTable = ({ toggleView }) => {
     await dispatch(
       CreateTaskEvent(
         `${import.meta.env.VITE_API_URL}/tasks/${currentStatus.id}/event`,
-        taskStateEnum.UNLOCKED_DONE,
+        // FIXME what action should we submit here?
+        task_event.MAP,
         projectId,
         filter?.task_id || '',
         authDetails || {},
@@ -406,7 +407,7 @@ const SubmissionsTable = ({ toggleView }) => {
         <div className="fmtm-w-full fmtm-flex fmtm-justify-end xl:fmtm-w-fit fmtm-gap-3">
           {filter?.task_id &&
             taskBoundaryData?.[projectIndex]?.taskBoundries?.find((task) => task?.id === +filter?.task_id)
-              ?.task_state === taskStateEnum.LOCKED_FOR_VALIDATION && (
+              ?.task_state === task_state.LOCKED_FOR_VALIDATION && (
               <Button
                 isLoading={updateTaskStatusLoading}
                 loadingText="MARK AS VALIDATED"

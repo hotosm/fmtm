@@ -4,28 +4,28 @@ import CoreModules from '@/shared/CoreModules';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import { task_event as taskEventEnum, task_state as taskStateEnum } from '@/types/enums';
 
-function getActionFromState(state: taskStateEnum): taskEventEnum {
-  switch (state) {
-    case taskStateEnum.UNLOCKED_TO_MAP:
-      return taskEventEnum.MAP;
-    case taskStateEnum.LOCKED_FOR_MAPPING:
-      return taskEventEnum.FINISH;
-    case taskStateEnum.UNLOCKED_TO_VALIDATE:
-      return taskEventEnum.VALIDATE;
-    case taskStateEnum.LOCKED_FOR_VALIDATION:
-      return taskEventEnum.GOOD;
-    // NOTE we also need to handle taskEventEnum.BAD somehow
-    // case taskStateEnum.LOCKED_FOR_VALIDATION:
-    //   return taskEventEnum.BAD;
+// function getActionFromState(state: taskStateEnum): taskEventEnum {
+//   switch (state) {
+//     case taskStateEnum.UNLOCKED_TO_MAP:
+//       return taskEventEnum.MAP;
+//     case taskStateEnum.LOCKED_FOR_MAPPING:
+//       return taskEventEnum.FINISH;
+//     case taskStateEnum.UNLOCKED_TO_VALIDATE:
+//       return taskEventEnum.VALIDATE;
+//     case taskStateEnum.LOCKED_FOR_VALIDATION:
+//       return taskEventEnum.GOOD;
+//     // NOTE we also need to handle taskEventEnum.BAD somehow
+//     // case taskStateEnum.LOCKED_FOR_VALIDATION:
+//     //   return taskEventEnum.BAD;
 
-    default:
-      throw new Error(`Unhandled state: ${state}`);
-  }
-}
+//     default:
+//       throw new Error(`Unhandled state: ${state}`);
+//   }
+// }
 
 export const CreateTaskEvent = (
   url: string,
-  currentState: taskStateEnum,
+  action: taskEventEnum,
   currentProjectId: string,
   taskId: string,
   body: any,
@@ -43,8 +43,6 @@ export const CreateTaskEvent = (
       try {
         dispatch(CommonActions.SetLoading(true));
 
-        // Get next action given current state
-        const action = getActionFromState(currentState);
         body = {
           event: action,
           ...body,

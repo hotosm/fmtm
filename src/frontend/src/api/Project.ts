@@ -1,7 +1,7 @@
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import CoreModules from '@/shared/CoreModules';
-import { task_state } from '@/types/enums';
+import { task_state, task_event } from '@/types/enums';
 import { writeBinaryToOPFS } from '@/api/Files';
 import { projectInfoType } from '@/models/project/projectModel';
 
@@ -278,11 +278,17 @@ export const GetProjectComments = (url: string) => {
   };
 };
 
-export const PostProjectComments = (url: string, payload: { task_id: number; comment: string }) => {
+export const PostProjectComments = (
+  url: string,
+  payload: { event: task_event.COMMENT; task_id: number; comment: string },
+) => {
   return async (dispatch) => {
     const postProjectComments = async (url: string) => {
       try {
         dispatch(ProjectActions.SetPostProjectCommentsLoading(true));
+        if (!('event' in payload)) {
+          payload = { event: task_event.COMMENT, ...payload };
+        }
         const response = await CoreModules.axios.post(url, payload);
         dispatch(ProjectActions.UpdateProjectCommentsList(response.data));
         dispatch(ProjectActions.SetPostProjectCommentsLoading(false));

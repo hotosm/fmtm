@@ -12,7 +12,7 @@ import { UpdateEntityState } from '@/api/Project';
 import { TaskFeatureSelectionProperties } from '@/store/types/ITask';
 import { CreateTaskEvent } from '@/api/TaskEvent';
 import MapStyles from '@/hooks/MapStyles';
-import { task_state as taskStateEnum } from '@/types/enums';
+import { task_event } from '@/types/enums';
 
 type TaskFeatureSelectionPopupPropType = {
   taskId: number;
@@ -45,7 +45,6 @@ const TaskFeatureSelectionPopup = ({ featureProperties, taskId, taskFeature }: T
   const entity = entityOsmMap.find((x) => x.osm_id === featureProperties?.osm_id);
 
   useEffect(() => {
-    console.log(currentTaskInfo);
     if (projectIndex != -1) {
       const currentStatus =
         projectTaskActivityList.length > 0 ? projectTaskActivityList[0].state : taskStateEnum.UNLOCKED_TO_MAP;
@@ -139,7 +138,7 @@ const TaskFeatureSelectionPopup = ({ featureProperties, taskId, taskFeature }: T
                   dispatch(
                     CreateTaskEvent(
                       `${import.meta.env.VITE_API_URL}/tasks/${currentTaskInfo?.id}/event`,
-                      taskStateEnum.UNLOCKED_TO_MAP,
+                      task_event.MAP,
                       currentProjectId,
                       taskId.toString(),
                       authDetails,
