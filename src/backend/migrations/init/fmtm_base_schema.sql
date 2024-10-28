@@ -170,7 +170,7 @@ ALTER TABLE public._migrations OWNER TO fmtm;
 -- Note we use UUID for interoperability with external databases,
 -- such as PGLite or other microservices
 CREATE TABLE public.background_tasks (
-    id UUID NOT NULL DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid(),
     name character varying,
     project_id integer,
     status public.backgroundtaskstatus NOT NULL DEFAULT 'PENDING',
@@ -182,7 +182,7 @@ ALTER TABLE public.background_tasks OWNER TO fmtm;
 -- Note we use UUID for interoperability with external databases,
 -- such as PGLite or other microservices
 CREATE TABLE public.basemaps (
-    id UUID NOT NULL DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid(),
     project_id integer,
     status public.backgroundtaskstatus NOT NULL,
     url character varying,
@@ -280,7 +280,7 @@ ALTER SEQUENCE public.projects_id_seq OWNED BY public.projects.id;
 -- Note we use UUID for interoperability with external databases,
 -- such as PGLite or other microservices
 CREATE TABLE public.task_events (
-    event_id UUID NOT NULL DEFAULT gen_random_uuid(),
+    event_id UUID DEFAULT gen_random_uuid(),
     project_id integer,
     task_id integer,
     user_id integer,
