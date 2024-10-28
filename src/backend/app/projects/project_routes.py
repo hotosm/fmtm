@@ -53,8 +53,6 @@ from app.central import central_crud, central_deps, central_schemas
 from app.config import settings
 from app.db.database import db_conn
 from app.db.enums import (
-    TILES_FORMATS,
-    TILES_SOURCE,
     HTTPStatus,
     ProjectRole,
     XLSFormType,
@@ -326,24 +324,16 @@ async def download_tiles(
     )
 
 
-@router.get("/{project_id}/tiles-generate")
+@router.post("/{project_id}/tiles-generate")
 async def generate_project_basemap(
     background_tasks: BackgroundTasks,
-    project_id: int,
     db: Annotated[Connection, Depends(db_conn)],
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
-    source: str = Query(
-        ..., description="Select a source for tiles", enum=TILES_SOURCE
-    ),
-    format: str = Query(
-        "mbtiles", description="Select an output format", enum=TILES_FORMATS
-    ),
-    tms: str = Query(
-        None,
-        description="Provide a custom TMS URL, optional",
-    ),
+    basemap_in: project_schemas.BasemapGenerate,
 ):
     """Returns basemap tiles for a project."""
+    project_id = project_user.get("project").id
+
     # Create task in db and return uuid
     log.debug(
         "Creating generate_project_basemap background task "
@@ -357,24 +347,14 @@ async def generate_project_basemap(
         ),
     )
 
-    # # FIXME delete this
-    # project_crud.generate_project_basemap(
-    #     db,
-    #     project_id,
-    #     background_task_id,
-    #     source,
-    #     format,
-    #     tms
-    # )
-
     background_tasks.add_task(
         project_crud.generate_project_basemap,
         db,
         project_id,
         background_task_id,
-        source,
-        format,
-        tms,
+        basemap_in.tile_source,
+        basemap_in.file_format,
+        basemap_in.tms_url,
     )
 
     return {"Message": "Tile generation started"}

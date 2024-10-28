@@ -19,7 +19,7 @@
 
 from datetime import datetime
 from pathlib import Path
-from typing import Annotated, Optional, Self
+from typing import Annotated, Literal, Optional, Self
 from uuid import UUID
 
 from geojson_pydantic import Feature, FeatureCollection, MultiPolygon, Point, Polygon
@@ -299,6 +299,17 @@ class ProjectUserContributions(BaseModel):
 
     user: str
     contributions: int
+
+
+class BasemapGenerate(BaseModel):
+    """Params to generate a new basemap."""
+
+    tile_source: Annotated[Literal["esri", "bing", "google"], Field(default="esri")]
+    file_format: Annotated[
+        Literal["mbtiles", "sqlitedb", "pmtiles"],
+        Field(default="mbtiles"),
+    ]
+    tms_url: Optional[str] = None
 
 
 class BasemapIn(DbBasemap):

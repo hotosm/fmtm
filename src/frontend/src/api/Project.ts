@@ -150,14 +150,14 @@ export const GetTilesList = (url: string) => {
   };
 };
 
-export const GenerateProjectTiles = (url: string, payload: string) => {
+export const GenerateProjectTiles = (url: string, projectId: string, data: object) => {
   return async (dispatch) => {
     dispatch(ProjectActions.SetGenerateProjectTilesLoading(true));
 
-    const generateProjectTiles = async (url: string, payload: string) => {
+    const generateProjectTiles = async (url: string, projectId: string) => {
       try {
-        const response = await CoreModules.axios.get(url);
-        dispatch(GetTilesList(`${import.meta.env.VITE_API_URL}/projects/${payload}/tiles/`));
+        await CoreModules.axios.post(url, data);
+        dispatch(GetTilesList(`${import.meta.env.VITE_API_URL}/projects/${projectId}/tiles/`));
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));
       } catch (error) {
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));
@@ -165,7 +165,7 @@ export const GenerateProjectTiles = (url: string, payload: string) => {
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));
       }
     };
-    await generateProjectTiles(url, payload);
+    await generateProjectTiles(url, projectId);
   };
 };
 

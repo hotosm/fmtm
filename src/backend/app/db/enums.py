@@ -19,9 +19,6 @@
 
 from enum import Enum, IntEnum, StrEnum
 
-TILES_SOURCE = ["esri", "bing", "google"]
-TILES_FORMATS = ["mbtiles", "sqlitedb", "pmtiles"]
-
 
 class HTTPStatus(IntEnum):
     """All HTTP status codes used in endpoints."""
