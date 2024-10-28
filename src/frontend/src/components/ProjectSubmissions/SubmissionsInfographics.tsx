@@ -41,7 +41,7 @@ const SubmissionsInfographics = ({ toggleView, entities }) => {
     const projectIndex = projectTaskList.findIndex((project) => project.id == +projectId);
     // task activities history list
     const taskActivities = projectTaskList?.[projectIndex]?.taskBoundries?.reduce((acc: taskHistoryTypes[], task) => {
-      return [...acc, ...task?.task_history];
+      return [...acc, ...(task?.task_history ?? [])];
     }, []);
 
     // filter activities for last 30 days
