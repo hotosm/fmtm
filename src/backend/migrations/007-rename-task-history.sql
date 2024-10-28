@@ -37,7 +37,7 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'entityevent') THEN
     CREATE TYPE public.entitystate AS ENUM (
         'READY',
-        'OPEN_IN_ODK',
+        'OPENED_IN_ODK',
         'SURVEY_SUBMITTED',
         'MARKED_BAD'
     );
@@ -163,6 +163,18 @@ BEGIN
             REFERENCES public.users (id);
     END IF;
 END $$;
+
+
+-- Add default values for UUID fields
+ALTER TABLE public.task_events ALTER COLUMN event_id SET NOT NULL;
+ALTER TABLE public.task_events ALTER COLUMN event_id
+SET DEFAULT gen_random_uuid();
+
+ALTER TABLE public.basemaps ALTER COLUMN id SET DEFAULT gen_random_uuid();
+
+ALTER TABLE public.background_tasks ALTER COLUMN id
+SET DEFAULT gen_random_uuid();
+
 
 
 -- Commit the transaction

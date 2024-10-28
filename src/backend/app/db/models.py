@@ -685,17 +685,16 @@ class DbTaskEvent(BaseModel):
         columns = ", ".join(model_dump.keys())
         value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
 
+        # NOTE the project_id need not be passed, as it's extracted from the task
         async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(
                 f"""
                     WITH inserted AS (
                         INSERT INTO public.task_events (
-                            event_id,
                             project_id,
                             {columns}
                         )
                         VALUES (
-                            gen_random_uuid(),
                             (SELECT project_id FROM tasks WHERE id = %(task_id)s),
                             {value_placeholders}
                         )
@@ -1344,15 +1343,9 @@ class DbBackgroundTask(BaseModel):
             await cur.execute(
                 f"""
                 INSERT INTO background_tasks
-                    (
-                        id,
-                        {", ".join(columns)}
-                    )
+                ({columns})
                 VALUES
-                    (
-                        gen_random_uuid(),
-                        {", ".join(value_placeholders)}
-                    )
+                ({value_placeholders})
                 RETURNING id;
             """,
                 model_dump,
@@ -1467,14 +1460,10 @@ class DbBasemap(BaseModel):
 
         sql = f"""
             WITH inserted_basemap AS (
-                INSERT INTO basemaps (
-                    id,
-                    {columns}
-                )
-                VALUES (
-                    gen_random_uuid(),
-                    {value_placeholders}
-                )
+                INSERT INTO basemaps
+                ({columns})
+                VALUES
+                ({value_placeholders})
                 RETURNING *
             ),
             project_bbox AS (
