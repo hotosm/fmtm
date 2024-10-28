@@ -17,7 +17,7 @@ type dialogPropType = {
   feature: Record<string, any>;
 };
 
-type taskListstatusType = {
+type taskListStateType = {
   value: string;
   key: string;
   btnBG: string;
@@ -29,7 +29,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
   const params = CoreModules.useParams();
   const geojsonStyles = MapStyles();
 
-  const [list_of_task_status, set_list_of_task_status] = useState<taskListstatusType[]>([]);
+  const [list_of_task_states, set_list_of_task_states] = useState<taskListStateType[]>([]);
   const [task_state, set_task_state] = useState('UNLOCKED_TO_MAP');
   const [currentTaskInfo, setCurrentTaskInfo] = useState<taskSubmissionInfoType>();
   const [toggleMappedConfirmationModal, setToggleMappedConfirmationModal] = useState(false);
@@ -80,7 +80,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
       set_task_state(tasksStatus);
       const tasksStatusList =
         feature.id_ != undefined ? environment.tasksStatus[findCorrectTaskStatusIndex]?.['action'] : [];
-      set_list_of_task_status(tasksStatusList);
+      set_list_of_task_states(tasksStatusList);
     }
   }, [projectTaskActivityList, taskId, feature]);
 
@@ -174,14 +174,14 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
         }
         className=""
       />
-      {list_of_task_status?.length > 0 && checkIfTaskAssignedOrNot && (
+      {list_of_task_states?.length > 0 && checkIfTaskAssignedOrNot && (
         <div
           className={`fmtm-grid fmtm-border-t-[1px] fmtm-p-2 sm:fmtm-p-5 ${
-            list_of_task_status?.length === 1 ? 'fmtm-grid-cols-1' : 'fmtm-grid-cols-2'
+            list_of_task_states?.length === 1 ? 'fmtm-grid-cols-1' : 'fmtm-grid-cols-2'
           }`}
         >
-          {list_of_task_status?.map((data, index) => {
-            return list_of_task_status?.length != 0 ? (
+          {list_of_task_states?.map((data, index) => {
+            return list_of_task_states?.length != 0 ? (
               <Button
                 btnId={data.value}
                 key={index}
