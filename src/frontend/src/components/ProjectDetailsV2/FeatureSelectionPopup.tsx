@@ -10,8 +10,9 @@ import environment from '@/environment';
 import { useParams } from 'react-router-dom';
 import { UpdateEntityState } from '@/api/Project';
 import { TaskFeatureSelectionProperties } from '@/store/types/ITask';
-import { UpdateTaskStatus } from '@/api/ProjectTaskStatus';
+import { CreateTaskEvent } from '@/api/TaskEvent';
 import MapStyles from '@/hooks/MapStyles';
+import { task_state as taskStateEnum } from '@/types/enums';
 
 type TaskFeatureSelectionPopupPropType = {
   taskId: number;
@@ -29,7 +30,7 @@ const TaskFeatureSelectionPopup = ({ featureProperties, taskId, taskFeature }: T
 
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
   const currentProjectId = params.id || '';
-  const [task_state, set_task_state] = useState('UNLOCKED_TO_MAP');
+  const [task_state, set_task_state] = useState(taskStateEnum.UNLOCKED_TO_MAP);
   const projectData = CoreModules.useAppSelector((state) => state.project.projectTaskBoundries);
   const projectIndex = projectData.findIndex((project) => project.id == currentProjectId);
   const projectTaskActivityList = CoreModules.useAppSelector((state) => state?.project?.projectTaskActivity);
@@ -40,13 +41,14 @@ const TaskFeatureSelectionPopup = ({ featureProperties, taskId, taskFeature }: T
       return task?.id == taskId;
     })?.[0],
   };
-  const geoStyle = geojsonStyles['LOCKED_FOR_MAPPING'];
+  const geoStyle = geojsonStyles[taskStateEnum.LOCKED_FOR_MAPPING];
   const entity = entityOsmMap.find((x) => x.osm_id === featureProperties?.osm_id);
 
   useEffect(() => {
     console.log(currentTaskInfo);
     if (projectIndex != -1) {
-      const currentStatus = projectTaskActivityList.length > 0 ? projectTaskActivityList[0].state : 'UNLOCKED_TO_MAP';
+      const currentStatus =
+        projectTaskActivityList.length > 0 ? projectTaskActivityList[0].state : taskStateEnum.UNLOCKED_TO_MAP;
       const findCorrectTaskStatusIndex = environment.tasksStatus.findIndex((data) => data?.label == currentStatus);
       const tasksStatus =
         taskFeature?.id_ != undefined ? environment?.tasksStatus[findCorrectTaskStatusIndex]?.['label'] : '';
@@ -107,7 +109,7 @@ const TaskFeatureSelectionPopup = ({ featureProperties, taskId, taskFeature }: T
             </p>
           </div>
         </div>
-        {(task_state === 'UNLOCKED_TO_MAP' || task_state === 'LOCKED_FOR_MAPPING') && (
+        {(task_state === taskStateEnum.UNLOCKED_TO_MAP || task_state === taskStateEnum.LOCKED_FOR_MAPPING) && (
           <div className="fmtm-p-2 sm:fmtm-p-5 fmtm-border-t">
             <Button
               btnText="MAP FEATURE IN ODK"
@@ -133,16 +135,16 @@ const TaskFeatureSelectionPopup = ({ featureProperties, taskId, taskFeature }: T
                   }),
                 );
 
-                if (task_state === 'UNLOCKED_TO_MAP') {
+                if (task_state === taskStateEnum.UNLOCKED_TO_MAP) {
                   dispatch(
-                    UpdateTaskStatus(
-                      `${import.meta.env.VITE_API_URL}/tasks/${currentTaskInfo?.id}/new-status/1`,
+                    CreateTaskEvent(
+                      `${import.meta.env.VITE_API_URL}/tasks/${currentTaskInfo?.id}/event`,
+                      taskStateEnum.UNLOCKED_TO_MAP,
                       currentProjectId,
                       taskId.toString(),
                       authDetails,
                       { project_id: currentProjectId },
                       geoStyle,
-                      taskBoundaryData,
                       taskFeature,
                     ),
                   );

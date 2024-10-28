@@ -4,7 +4,7 @@ export enum task_split_type {
   TASK_SPLITTING_ALGORITHM = 'TASK_SPLITTING_ALGORITHM',
 }
 
-export enum task_actions {
+export enum task_event {
   MAP = 'MAP',
   FINISH = 'FINISH',
   VALIDATE = 'VALIDATE',

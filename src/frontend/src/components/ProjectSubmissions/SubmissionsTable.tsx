@@ -21,8 +21,9 @@ import UpdateReviewStatusModal from '@/components/ProjectSubmissions/UpdateRevie
 import { useAppSelector } from '@/types/reduxTypes';
 import { camelToFlat } from '@/utilfunctions/commonUtils';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
-import { UpdateTaskStatus } from '@/api/ProjectTaskStatus';
+import { CreateTaskEvent } from '@/api/TaskEvent';
 import { filterType } from '@/store/types/ISubmissions';
+import { task_state as taskStateEnum } from '@/types/enums';
 
 const SubmissionsTable = ({ toggleView }) => {
   useDocumentTitle('Submission Table');
@@ -217,8 +218,9 @@ const SubmissionsTable = ({ toggleView }) => {
 
   const handleTaskMap = async () => {
     await dispatch(
-      UpdateTaskStatus(
-        `${import.meta.env.VITE_API_URL}/tasks/${currentStatus.id}/new-status/4`,
+      CreateTaskEvent(
+        `${import.meta.env.VITE_API_URL}/tasks/${currentStatus.id}/event`,
+        taskStateEnum.UNLOCKED_DONE,
         projectId,
         filter?.task_id || '',
         authDetails || {},
@@ -404,7 +406,7 @@ const SubmissionsTable = ({ toggleView }) => {
         <div className="fmtm-w-full fmtm-flex fmtm-justify-end xl:fmtm-w-fit fmtm-gap-3">
           {filter?.task_id &&
             taskBoundaryData?.[projectIndex]?.taskBoundries?.find((task) => task?.id === +filter?.task_id)
-              ?.task_state === 'LOCKED_FOR_VALIDATION' && (
+              ?.task_state === taskStateEnum.LOCKED_FOR_VALIDATION && (
               <Button
                 isLoading={updateTaskStatusLoading}
                 loadingText="MARK AS VALIDATED"
