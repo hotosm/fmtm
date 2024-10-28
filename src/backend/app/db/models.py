@@ -600,7 +600,6 @@ class DbTaskEvent(BaseModel):
     event_id: UUID
     task_id: Annotated[Optional[int], Field(gt=0)] = None
     event: TaskEvent
-    state: MappingState
 
     project_id: Annotated[Optional[int], Field(gt=0)] = None
     user_id: Annotated[Optional[int], Field(gt=0)] = None
@@ -610,6 +609,8 @@ class DbTaskEvent(BaseModel):
     # Computed
     username: Optional[str] = None
     profile_img: Optional[str] = None
+    # Computed via database trigger
+    state: Optional[MappingState] = None
 
     @classmethod
     async def all(
@@ -691,10 +692,12 @@ class DbTaskEvent(BaseModel):
                 f"""
                     WITH inserted AS (
                         INSERT INTO public.task_events (
+                            event_id,
                             project_id,
                             {columns}
                         )
                         VALUES (
+                            gen_random_uuid(),
                             (SELECT project_id FROM tasks WHERE id = %(task_id)s),
                             {value_placeholders}
                         )
@@ -1343,9 +1346,15 @@ class DbBackgroundTask(BaseModel):
             await cur.execute(
                 f"""
                 INSERT INTO background_tasks
-                ({columns})
+                    (
+                        id,
+                        {columns}
+                    )
                 VALUES
-                ({value_placeholders})
+                    (
+                        gen_random_uuid(),
+                        {value_placeholders}
+                    )
                 RETURNING id;
             """,
                 model_dump,
@@ -1460,10 +1469,14 @@ class DbBasemap(BaseModel):
 
         sql = f"""
             WITH inserted_basemap AS (
-                INSERT INTO basemaps
-                ({columns})
-                VALUES
-                ({value_placeholders})
+                INSERT INTO basemaps (
+                    id,
+                    {columns}
+                )
+                VALUES (
+                    gen_random_uuid(),
+                    {value_placeholders}
+                )
                 RETURNING *
             ),
             project_bbox AS (
