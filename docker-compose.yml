@@ -43,6 +43,8 @@ services:
         condition: service_started
       ui:
         condition: service_started
+      ui-mapper:
+        condition: service_started
       central:
         condition: service_started
         required: false
@@ -280,7 +282,7 @@ services:
       # AUTH_JWT_KEY: ${ENCRYPTION_KEY}
       # AUTH_JWT_AUD: ${FMTM_DOMAIN}
     ports:
-      - "7055:3000"
+      - "7055:7055"
     networks:
       - fmtm-net
     restart: "unless-stopped"
