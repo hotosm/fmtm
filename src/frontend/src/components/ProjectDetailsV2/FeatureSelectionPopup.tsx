@@ -34,10 +34,9 @@ const TaskFeatureSelectionPopup = ({ featureProperties, taskId, taskFeature }: T
   const projectData = CoreModules.useAppSelector((state) => state.project.projectTaskBoundries);
   const projectIndex = projectData.findIndex((project) => project.id == currentProjectId);
   const projectTaskActivityList = CoreModules.useAppSelector((state) => state?.project?.projectTaskActivity);
-  const taskBoundaryData = CoreModules.useAppSelector((state) => state.project.projectTaskBoundries);
   const updateEntityStateLoading = CoreModules.useAppSelector((state) => state.project.updateEntityStateLoading);
   const currentTaskInfo = {
-    ...taskBoundaryData?.[projectIndex]?.taskBoundries?.filter((task) => {
+    ...projectData?.[projectIndex]?.taskBoundries?.filter((task) => {
       return task?.id == taskId;
     })?.[0],
   };

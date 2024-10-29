@@ -35,7 +35,6 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
   const [toggleMappedConfirmationModal, setToggleMappedConfirmationModal] = useState(false);
 
   const projectInfo = useAppSelector((state) => state.project.projectInfo);
-  const taskBoundaryData = useAppSelector((state) => state.project.projectTaskBoundries);
   const loading = useAppSelector((state) => state.common.loading);
   const taskInfo = useAppSelector((state) => state.task.taskInfo);
   const projectData = useAppSelector((state) => state.project.projectTaskBoundries);
@@ -45,7 +44,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
   const currentProjectId: string = params.id;
   const projectIndex = projectData.findIndex((project) => project.id == parseInt(currentProjectId));
   const selectedTask = {
-    ...taskBoundaryData?.[projectIndex]?.taskBoundries?.filter((task) => {
+    ...projectData?.[projectIndex]?.taskBoundries?.filter((task) => {
       return task?.id == taskId;
     })?.[0],
   };
@@ -70,7 +69,6 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
     }
   }, [taskId, taskInfo]);
 
-  // TODO need to set the TaskEvent here, not MappingStatus?
   useEffect(() => {
     if (projectIndex != -1) {
       // Get current state of task

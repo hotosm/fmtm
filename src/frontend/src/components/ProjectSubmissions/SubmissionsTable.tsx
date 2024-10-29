@@ -57,9 +57,8 @@ const SubmissionsTable = ({ toggleView }) => {
 
   const projectData = useAppSelector((state) => state.project.projectTaskBoundries);
   const projectIndex = projectData.findIndex((project) => project.id == +projectId);
-  const taskBoundaryData = useAppSelector((state) => state.project.projectTaskBoundries);
   const currentStatus = {
-    ...taskBoundaryData?.[projectIndex]?.taskBoundries?.filter((task) => {
+    ...projectData?.[projectIndex]?.taskBoundries?.filter((task) => {
       return filter.task_id && task?.id === +filter.task_id;
     })?.[0],
   };
@@ -406,8 +405,8 @@ const SubmissionsTable = ({ toggleView }) => {
         </div>
         <div className="fmtm-w-full fmtm-flex fmtm-justify-end xl:fmtm-w-fit fmtm-gap-3">
           {filter?.task_id &&
-            taskBoundaryData?.[projectIndex]?.taskBoundries?.find((task) => task?.id === +filter?.task_id)
-              ?.task_state === task_state.LOCKED_FOR_VALIDATION && (
+            projectData?.[projectIndex]?.taskBoundries?.find((task) => task?.id === +filter?.task_id)?.task_state ===
+              task_state.LOCKED_FOR_VALIDATION && (
               <Button
                 isLoading={updateTaskStatusLoading}
                 loadingText="MARK AS VALIDATED"

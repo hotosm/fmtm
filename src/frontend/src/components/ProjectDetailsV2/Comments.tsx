@@ -23,9 +23,8 @@ const Comments = () => {
   const selectedTask = useAppSelector((state) => state.task.selectedTask);
   const projectData = useAppSelector((state) => state.project.projectTaskBoundries);
   const projectIndex = projectData.findIndex((project) => project.id == +projectId);
-  const taskBoundaryData = useAppSelector((state) => state.project.projectTaskBoundries);
   const currentStatus = {
-    ...taskBoundaryData?.[projectIndex]?.taskBoundries?.filter((task) => {
+    ...projectData?.[projectIndex]?.taskBoundries?.filter((task) => {
       return task?.id == selectedTask;
     })?.[0],
   };
