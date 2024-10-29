@@ -28,8 +28,7 @@ from app.auth.roles import mapper
 from app.db.database import db_conn
 from app.db.enums import HTTPStatus
 from app.db.models import DbTask, DbTaskEvent
-from app.tasks import task_schemas
-from app.tasks.task_deps import get_task
+from app.tasks import task_crud, task_schemas
 
 router = APIRouter(
     prefix="/tasks",
@@ -85,35 +84,34 @@ async def add_new_task_event(
     return await DbTaskEvent.create(db, new_event)
 
 
-# FIXME this endpoint isn't used?
-# @router.get("/activity/", response_model=list[task_schemas.TaskEventCount])
-# async def task_activity(
-#     project_id: int,
-#     db: Annotated[Connection, Depends(db_conn)],
-#     project_user: Annotated[ProjectUserDict, Depends(mapper)],
-#     days: int = 10,
-# ):
-#     """Get the number of mapped or validated tasks on each day.
+@router.get("/activity/", response_model=list[task_schemas.TaskEventCount])
+async def task_activity(
+    project_id: int,
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
+    days: int = 10,
+):
+    """Get the number of mapped or validated tasks on each day.
 
-#     Return format:
-#     [
-#         {
-#             date: DD/MM/YYYY,
-#             validated: int,
-#             mapped: int,
-#         }
-#     ]
-#     """
-#     return await task_crud.get_project_task_activity(db, project_id, days)
+    Return format:
+    [
+        {
+            date: DD/MM/YYYY,
+            validated: int,
+            mapped: int,
+        }
+    ]
+    """
+    return await task_crud.get_project_task_activity(db, project_id, days)
 
 
 @router.get("/{task_id}/history/", response_model=list[task_schemas.TaskEventOut])
 async def get_task_event_history(
+    task_id: int,
     db: Annotated[Connection, Depends(db_conn)],
-    db_task: Annotated[DbTask, Depends(get_task)],
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
     days: int = 10,
     comments: bool = False,
 ):
     """Get the detailed history for a task."""
-    return await DbTaskEvent.all(db, task_id=db_task.id, days=days, comments=comments)
+    return await DbTaskEvent.all(db, task_id=task_id, days=days, comments=comments)
