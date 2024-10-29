@@ -78,7 +78,7 @@ async def add_new_task_event(
 ):
     """Add a new event to the events table / update task status."""
     user_id = project_user.get("user").id
-    log.info(f"Task {new_event.task_id} event: {new_event.event.name} by {user_id}")
+    log.info(f"Task {task_id} event: {new_event.event.name} (by user {user_id})")
 
     new_event.user_id = user_id
     new_event.task_id = task_id
