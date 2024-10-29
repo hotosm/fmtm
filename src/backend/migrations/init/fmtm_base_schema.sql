@@ -287,7 +287,7 @@ CREATE TABLE public.task_events (
     user_id integer,
     state public.mappingstate,
     comment text,
-    created_at timestamp without time zone NOT NULL DEFAULT now()
+    created_at timestamp with time zone NOT NULL DEFAULT now()
 );
 ALTER TABLE public.task_events OWNER TO fmtm;
 

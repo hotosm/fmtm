@@ -187,7 +187,8 @@ ALTER TABLE public.task_events
 ALTER COLUMN event_id SET DEFAULT gen_random_uuid(),
 ALTER COLUMN event_id SET NOT NULL,
 ALTER COLUMN task_id SET NOT NULL,
-ALTER COLUMN event SET NOT NULL;
+ALTER COLUMN event SET NOT NULL,
+ALTER COLUMN created_at SET DATA TYPE timestamp with time zone;
 
 ALTER TABLE public.basemaps
 ALTER COLUMN id SET DEFAULT gen_random_uuid(),
