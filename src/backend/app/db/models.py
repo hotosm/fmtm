@@ -22,7 +22,7 @@ from SQL statements. Sometimes we only need a subset of the fields.
 """
 
 import json
-from datetime import datetime, timedelta
+from datetime import timedelta
 from io import BytesIO
 from re import sub
 from typing import TYPE_CHECKING, Annotated, Optional, Self
@@ -33,7 +33,7 @@ from fastapi import HTTPException, UploadFile
 from loguru import logger as log
 from psycopg import Connection
 from psycopg.rows import class_row
-from pydantic import BaseModel, Field, ValidationInfo
+from pydantic import AwareDatetime, BaseModel, Field, ValidationInfo
 from pydantic.functional_validators import field_validator
 
 from app.central.central_schemas import ODKCentralDecrypted
@@ -54,6 +54,7 @@ from app.db.enums import (
     UserRole,
     XLSFormType,
 )
+from app.db.postgis_utils import timestamp
 from app.s3 import add_obj_to_bucket, delete_all_objs_under_prefix
 
 # Avoid cyclical dependencies when only type checking
@@ -152,7 +153,7 @@ class DbUser(BaseModel):
     tasks_validated: Optional[int] = None
     tasks_invalidated: Optional[int] = None
     projects_mapped: Optional[list[int]] = None
-    registered_at: Optional[datetime] = None
+    registered_at: Optional[AwareDatetime] = None
 
     # Relationships
     project_roles: Optional[list[DbUserRole]] = None
@@ -604,7 +605,7 @@ class DbTaskEvent(BaseModel):
     project_id: Annotated[Optional[int], Field(gt=0)] = None
     user_id: Annotated[Optional[int], Field(gt=0)] = None
     comment: Optional[str] = None
-    created_at: Optional[datetime] = None
+    created_at: Optional[AwareDatetime] = None
 
     # Computed
     username: Optional[str] = None
@@ -648,7 +649,7 @@ class DbTaskEvent(BaseModel):
             filters.append("task_id = %(task_id)s")
             params["task_id"] = task_id
         if days is not None:
-            end_date = datetime.now() - timedelta(days=days)
+            end_date = timestamp() - timedelta(days=days)
             filters.append("created_at >= %(end_date)s")
             params["end_date"] = end_date
         if comments:
@@ -914,9 +915,9 @@ class DbProject(BaseModel):
     task_split_dimension: Optional[int] = None
     task_num_buildings: Optional[int] = None
     hashtags: Optional[list[str]] = None
-    due_date: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-    created_at: Optional[datetime] = None
+    due_date: Optional[AwareDatetime] = None
+    updated_at: Optional[AwareDatetime] = None
+    created_at: Optional[AwareDatetime] = None
 
     # Relationships
     tasks: Optional[list[DbTask]] = None
@@ -926,7 +927,7 @@ class DbProject(BaseModel):
     organisation_logo: Optional[str] = None
     centroid: Optional[dict] = None
     bbox: Optional[list[float]] = None
-    last_active: Optional[datetime] = None
+    last_active: Optional[AwareDatetime] = None
     odk_credentials: Annotated[
         Optional["ODKCentralDecrypted"],
         Field(validate_default=True),
@@ -990,7 +991,7 @@ class DbProject(BaseModel):
                     ] AS bbox,
                     project_org.name AS organisation_name,
                     project_org.logo AS organisation_logo,
-                    MAX(latest_status_per_task.created_at) AS last_active,
+                    MAX(latest_status_per_task.created_at)::timestamptz AS last_active,
                     COALESCE(
                         NULLIF(p.odk_central_url, ''),
                         project_org.odk_central_url
@@ -1415,7 +1416,7 @@ class DbBasemap(BaseModel):
     tile_source: Optional[str] = None
     background_task_id: Optional[UUID] = None
     status: Optional[BackgroundTaskStatus] = None
-    created_at: Optional[datetime] = None
+    created_at: Optional[AwareDatetime] = None
 
     # Calculated
     bbox: Optional[list[float]] = None

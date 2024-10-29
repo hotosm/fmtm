@@ -17,11 +17,12 @@
 #
 """Logic for FMTM tasks."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from psycopg import Connection
 from psycopg.rows import class_row
 
+from app.db.postgis_utils import timestamp
 from app.tasks import task_schemas
 
 
@@ -41,7 +42,7 @@ async def get_project_task_activity(
     Returns:
         list[task_schemas.TaskEventCount]: A list of task event counts.
     """
-    end_date = datetime.now() - timedelta(days=days)
+    end_date = timestamp() - timedelta(days=days)
 
     sql = """
         SELECT

@@ -2,7 +2,7 @@ import CoreModules from '@/shared/CoreModules.js';
 import React, { useEffect } from 'react';
 import { SubmissionService } from '@/api/Submission';
 import SubmissionInstanceMap from '@/components/SubmissionMap/SubmissionInstanceMap';
-import { GetProjectDashboard } from '@/api/Project';
+import { GetSubmissionDashboard } from '@/api/Project';
 import Button from '@/components/common/Button';
 import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 import UpdateReviewStatusModal from '@/components/ProjectSubmissions/UpdateReviewStatusModal';
@@ -100,7 +100,7 @@ const SubmissionDetails = () => {
   const dateDeviceDetails = { start, end, today, deviceid };
 
   useEffect(() => {
-    dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${projectId}`));
+    dispatch(GetSubmissionDashboard(`${import.meta.env.VITE_API_URL}/submission/${projectId}/dashboard`));
   }, []);
 
   useEffect(() => {

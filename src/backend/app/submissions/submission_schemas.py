@@ -18,9 +18,14 @@
 
 """Pydantic models for data submissions."""
 
-from typing import List, Optional
+from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import AwareDatetime, BaseModel
+from pydantic.functional_serializers import field_serializer
+
+from app.db.postgis_utils import (
+    timestamp,
+)
 
 
 class PaginationInfo(BaseModel):
@@ -39,5 +44,39 @@ class PaginationInfo(BaseModel):
 class PaginatedSubmissions(BaseModel):
     """Paginated Submissions."""
 
-    results: List
+    results: list
     pagination: PaginationInfo
+
+
+class SubmissionDashboard(BaseModel):
+    """Submission details dashboard for a project."""
+
+    slug: str
+    organisation_name: str
+    total_tasks: int
+    created_at: AwareDatetime
+    organisation_logo: Optional[str] = None
+    total_submissions: Optional[int] = None
+    total_contributors: Optional[int] = None
+    last_active: Optional[AwareDatetime] = None
+
+    @field_serializer("last_active")
+    def get_last_active(self, last_active: Optional[AwareDatetime]) -> str:
+        """Date of last activity on project."""
+        if last_active is None:
+            return None
+        if isinstance(last_active, str):
+            return last_active
+
+        current_date = timestamp()
+        time_difference = current_date - last_active
+        days_difference = time_difference.days
+
+        if days_difference == 0:
+            return "today"
+        elif days_difference == 1:
+            return "yesterday"
+        elif days_difference < 7:
+            return f'{days_difference} day{"s" if days_difference > 1 else ""} ago'
+        else:
+            return last_active.strftime("%d %b %Y")

@@ -43,7 +43,6 @@ from app.db.postgis_utils import (
     get_address_from_lat_lon,
     merge_polygons,
     polygon_to_centroid,
-    timestamp,
 )
 
 
@@ -260,38 +259,6 @@ class PaginatedProjectSummaries(BaseModel):
 
     results: list[ProjectSummary]
     pagination: PaginationInfo
-
-
-class ProjectDashboard(BaseModel):
-    """Project details dashboard."""
-
-    slug: str
-    organisation_name: str
-    total_tasks: int
-    created_at: datetime
-    organisation_logo: Optional[str] = None
-    total_submissions: Optional[int] = None
-    total_contributors: Optional[int] = None
-    last_active: Optional[str | datetime] = None
-
-    @field_serializer("last_active")
-    def get_last_active(self, last_active: Optional[str | datetime]):
-        """Date of last activity on project."""
-        if last_active is None:
-            return None
-
-        current_date = timestamp()
-        time_difference = current_date - last_active
-        days_difference = time_difference.days
-
-        if days_difference == 0:
-            return "today"
-        elif days_difference == 1:
-            return "yesterday"
-        elif days_difference < 7:
-            return f'{days_difference} day{"s" if days_difference > 1 else ""} ago'
-        else:
-            return last_active.strftime("%d %b %Y")
 
 
 class ProjectUserContributions(BaseModel):

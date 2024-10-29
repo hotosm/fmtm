@@ -434,20 +434,6 @@ async def conflate_geojson(
         ) from e
 
 
-@router.get("/{submission_id}")
-async def submission_detail(
-    submission_id: str,
-    project_user: Annotated[ProjectUserDict, Depends(mapper)],
-) -> dict:
-    """This api returns the submission detail of individual submission."""
-    project = project_user.get("project")
-    submission_detail = await submission_crud.get_submission_detail(
-        submission_id,
-        project,
-    )
-    return submission_detail
-
-
 @router.get("/{submission_id}/photos")
 async def submission_photo(
     db: Annotated[Connection, Depends(db_conn)],
@@ -498,3 +484,35 @@ async def submission_photo(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail="Failed to get submission photos",
         ) from e
+
+
+@router.get(
+    "/{project_id}/dashboard", response_model=submission_schemas.SubmissionDashboard
+)
+async def project_dashboard(
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
+    db: Annotated[Connection, Depends(db_conn)],
+):
+    """Get the project dashboard details."""
+    project = project_user.get("project")
+    details = await submission_crud.get_dashboard_detail(db, project)
+    details["slug"] = project.slug
+    details["organisation_name"] = project.organisation_name
+    details["created_at"] = project.created_at
+    details["organisation_logo"] = project.organisation_logo
+    details["last_active"] = project.last_active
+    return details
+
+
+@router.get("/{submission_id}")
+async def submission_detail(
+    submission_id: str,
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
+) -> dict:
+    """This api returns the submission detail of individual submission."""
+    project = project_user.get("project")
+    submission_detail = await submission_crud.get_submission_detail(
+        submission_id,
+        project,
+    )
+    return submission_detail

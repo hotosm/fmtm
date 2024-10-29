@@ -217,9 +217,9 @@ export const DownloadTile = (url: string, payload: Partial<projectInfoType>, toO
   };
 };
 
-export const GetProjectDashboard = (url: string) => {
+export const GetSubmissionDashboard = (url: string) => {
   return async (dispatch) => {
-    const getProjectDashboard = async (url: string) => {
+    const GetSubmissionDashboard = async (url: string) => {
       try {
         dispatch(ProjectActions.SetProjectDashboardLoading(true));
         const response = await CoreModules.axios.get(url);
@@ -234,7 +234,7 @@ export const GetProjectDashboard = (url: string) => {
         dispatch(ProjectActions.SetProjectDashboardLoading(false));
       }
     };
-    await getProjectDashboard(url);
+    await GetSubmissionDashboard(url);
   };
 };
 

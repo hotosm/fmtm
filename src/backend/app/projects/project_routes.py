@@ -986,37 +986,19 @@ async def convert_fgb_to_geojson(
 
 
 @router.get(
-    "/task-status/{task_id}",
+    "/task-status/{bg_task_id}",
     response_model=project_schemas.BackgroundTaskStatus,
 )
 async def get_task_status(
-    task_id: str,
+    bg_task_id: str,
     db: Annotated[Connection, Depends(db_conn)],
 ):
     """Get the background task status by passing the task ID."""
     try:
-        return await DbBackgroundTask.one(db, task_id)
+        return await DbBackgroundTask.one(db, bg_task_id)
     except KeyError as e:
         log.warning(str(e))
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(e)) from e
-
-
-@router.get(
-    "/project_dashboard/{project_id}", response_model=project_schemas.ProjectDashboard
-)
-async def project_dashboard(
-    project_user: Annotated[ProjectUserDict, Depends(mapper)],
-    db: Annotated[Connection, Depends(db_conn)],
-):
-    """Get the project dashboard details."""
-    project = project_user.get("project")
-    details = await project_crud.get_dashboard_detail(db, project)
-    details["slug"] = project.slug
-    details["organisation_name"] = project.organisation_name
-    details["created_at"] = project.created_at
-    details["organisation_logo"] = project.organisation_logo
-    details["last_active"] = project.last_active
-    return details
 
 
 @router.get("/contributors/{project_id}")
