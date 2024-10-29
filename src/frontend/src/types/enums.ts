@@ -1,10 +1,10 @@
 export enum task_split_type {
-  divide_on_square = 'DIVIDE_ON_SQUARE',
-  choose_area_as_task = 'CHOOSE_AREA_AS_TASK',
-  task_splitting_algorithm = 'TASK_SPLITTING_ALGORITHM',
+  DIVIDE_ON_SQUARE = 'DIVIDE_ON_SQUARE',
+  CHOOSE_AREA_AS_TASK = 'CHOOSE_AREA_AS_TASK',
+  TASK_SPLITTING_ALGORITHM = 'TASK_SPLITTING_ALGORITHM',
 }
 
-export enum task_actions {
+export enum task_event {
   MAP = 'MAP',
   FINISH = 'FINISH',
   VALIDATE = 'VALIDATE',
@@ -22,6 +22,13 @@ export enum task_state {
   UNLOCKED_TO_VALIDATE = 'UNLOCKED_TO_VALIDATE',
   LOCKED_FOR_VALIDATION = 'LOCKED_FOR_VALIDATION',
   UNLOCKED_DONE = 'UNLOCKED_DONE',
+}
+
+export enum entity_state {
+  READY = 0,
+  OPENED_IN_ODK = 1,
+  SURVEY_SUBMITTED = 2,
+  MARKED_BAD = 6,
 }
 
 export enum user_roles {

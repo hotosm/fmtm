@@ -34,10 +34,10 @@ ALTER TYPE public.taskevent OWNER TO fmtm;
 
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'entityevent') THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'entitystate') THEN
     CREATE TYPE public.entitystate AS ENUM (
         'READY',
-        'OPEN_IN_ODK',
+        'OPENED_IN_ODK',
         'SURVEY_SUBMITTED',
         'MARKED_BAD'
     );
@@ -74,6 +74,8 @@ BEGIN
     END IF;
 END $$;
 
+
+
 -- Create trigger function to set task state automatically
 
 CREATE OR REPLACE FUNCTION set_task_state()
@@ -84,6 +86,8 @@ BEGIN
             NEW.state := 'LOCKED_FOR_MAPPING';
         WHEN 'FINISH' THEN
             NEW.state := 'UNLOCKED_TO_VALIDATE';
+        WHEN 'VALIDATE' THEN
+            NEW.state := 'LOCKED_FOR_VALIDATION';
         WHEN 'GOOD' THEN
             NEW.state := 'UNLOCKED_DONE';
         WHEN 'BAD' THEN
@@ -94,6 +98,8 @@ BEGIN
             NEW.state := 'UNLOCKED_DONE';
         WHEN 'ASSIGN' THEN
             NEW.state := 'LOCKED_FOR_MAPPING';
+        WHEN 'COMMENT' THEN
+            NEW.state := OLD.state;
         ELSE
             RAISE EXCEPTION 'Unknown task event type: %', NEW.event;
     END CASE;
@@ -101,11 +107,22 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+
 -- Apply trigger to task_events table
-CREATE TRIGGER task_event_state_trigger
-BEFORE INSERT ON public.task_events
-FOR EACH ROW
-EXECUTE FUNCTION set_task_state();
+DO $$
+BEGIN
+    CREATE TRIGGER task_event_state_trigger
+    BEFORE INSERT ON public.task_events
+    FOR EACH ROW
+    EXECUTE FUNCTION set_task_state();
+EXCEPTION   
+    WHEN duplicate_object THEN
+        RAISE NOTICE 'Trigger task_event_state_trigger already exists. Ignoring...';
+END$$;
+
+
+
 
 -- Update action field values --> taskevent enum
 
@@ -163,6 +180,17 @@ BEGIN
             REFERENCES public.users (id);
     END IF;
 END $$;
+
+
+-- Add default values for UUID fields
+ALTER TABLE public.task_events ALTER COLUMN event_id
+SET DEFAULT gen_random_uuid();
+
+ALTER TABLE public.basemaps ALTER COLUMN id SET DEFAULT gen_random_uuid();
+
+ALTER TABLE public.background_tasks ALTER COLUMN id
+SET DEFAULT gen_random_uuid();
+
 
 
 -- Commit the transaction

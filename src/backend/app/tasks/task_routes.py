@@ -20,14 +20,15 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from loguru import logger as log
 from psycopg import Connection
 
 from app.auth.auth_schemas import ProjectUserDict
-from app.auth.roles import get_uid, mapper
+from app.auth.roles import mapper
 from app.db.database import db_conn
-from app.db.enums import HTTPStatus, TaskEvent
+from app.db.enums import HTTPStatus
 from app.db.models import DbTask, DbTaskEvent
-from app.tasks import task_crud, task_schemas
+from app.tasks import task_schemas
 from app.tasks.task_deps import get_task
 
 router = APIRouter(
@@ -68,53 +69,20 @@ async def get_specific_task(
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(e)) from e
 
 
-# TODO update this to be POST /project/{pid}/events ?
-@router.post(
-    "/{task_id}/new-status/{new_event}", response_model=task_schemas.TaskEventOut
-)
+@router.post("/{task_id}/event", response_model=task_schemas.TaskEventOut)
 async def add_new_task_event(
-    db_task: Annotated[DbTask, Depends(get_task)],
+    task_id: int,
+    new_event: task_schemas.TaskEventIn,
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
-    new_event: TaskEvent,
     db: Annotated[Connection, Depends(db_conn)],
 ):
     """Add a new event to the events table / update task status."""
-    user_id = await get_uid(project_user.get("user"))
-    return await task_crud.new_task_event(
-        db,
-        db_task.id,
-        user_id,
-        new_event,
-    )
+    user_id = project_user.get("user").id
+    log.info(f"Task {new_event.task_id} event: {new_event.event.name} by {user_id}")
 
-
-@router.post("/{task_id}/comment/", response_model=task_schemas.TaskEventOut)
-async def add_task_comment(
-    comment: str,
-    db_task: Annotated[DbTask, Depends(get_task)],
-    project_user: Annotated[ProjectUserDict, Depends(mapper)],
-    db: Annotated[Connection, Depends(db_conn)],
-):
-    """Create a new task comment.
-
-    Parameters:
-        comment (str): The task comment to add.
-        db_task (DbTask): The database task entry.
-            Retrieving this ensures the task exists before updating.
-        project_user (ProjectUserDict): The authenticated user.
-        db (Connection): The database connection.
-
-    Returns:
-        TaskEventOut: The created task comment.
-    """
-    user_id = await get_uid(project_user.get("user"))
-    new_comment = task_schemas.TaskEventIn(
-        task_id=db_task.id,
-        user_id=user_id,
-        event=TaskEvent.COMMENT,
-        comment=comment,
-    )
-    return await DbTaskEvent.create(db, new_comment)
+    new_event.user_id = user_id
+    new_event.task_id = task_id
+    return await DbTaskEvent.create(db, new_event)
 
 
 # FIXME this endpoint isn't used?

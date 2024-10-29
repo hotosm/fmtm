@@ -600,7 +600,6 @@ class DbTaskEvent(BaseModel):
     event_id: UUID
     task_id: Annotated[Optional[int], Field(gt=0)] = None
     event: TaskEvent
-    state: MappingState
 
     project_id: Annotated[Optional[int], Field(gt=0)] = None
     user_id: Annotated[Optional[int], Field(gt=0)] = None
@@ -610,6 +609,8 @@ class DbTaskEvent(BaseModel):
     # Computed
     username: Optional[str] = None
     profile_img: Optional[str] = None
+    # Computed via database trigger
+    state: Optional[MappingState] = None
 
     @classmethod
     async def all(
@@ -685,6 +686,7 @@ class DbTaskEvent(BaseModel):
         columns = ", ".join(model_dump.keys())
         value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
 
+        # NOTE the project_id need not be passed, as it's extracted from the task
         async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(
                 f"""
@@ -1346,12 +1348,12 @@ class DbBackgroundTask(BaseModel):
                 INSERT INTO background_tasks
                     (
                         id,
-                        {", ".join(columns)}
+                        {columns}
                     )
                 VALUES
                     (
                         gen_random_uuid(),
-                        {", ".join(value_placeholders)}
+                        {value_placeholders}
                     )
                 RETURNING id;
             """,

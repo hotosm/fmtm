@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import environment from '@/environment';
-import { UpdateTaskStatus } from '@/api/ProjectTaskStatus';
+import { CreateTaskEvent } from '@/api/TaskEvent';
 import MapStyles from '@/hooks/MapStyles';
 import CoreModules from '@/shared/CoreModules';
 import { CommonActions } from '@/store/slices/CommonSlice';
-import { task_state as taskStateEnum } from '@/types/enums';
+import { task_event as taskEventEnum, task_state as taskStateEnum } from '@/types/enums';
 import Button from '@/components/common/Button';
 import { useNavigate } from 'react-router-dom';
 import { GetProjectTaskActivity } from '@/api/Project';
@@ -17,7 +17,7 @@ type dialogPropType = {
   feature: Record<string, any>;
 };
 
-type taskListstatusType = {
+type taskListStateType = {
   value: string;
   key: string;
   btnBG: string;
@@ -29,8 +29,8 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
   const params = CoreModules.useParams();
   const geojsonStyles = MapStyles();
 
-  const [list_of_task_status, set_list_of_task_status] = useState<taskListstatusType[]>([]);
-  const [task_state, set_task_state] = useState('UNLOCKED_TO_MAP');
+  const [list_of_task_actions, set_list_of_task_actions] = useState<taskListStateType[]>([]);
+  const [task_state, set_task_state] = useState(taskStateEnum.UNLOCKED_TO_MAP);
   const [currentTaskInfo, setCurrentTaskInfo] = useState<taskSubmissionInfoType>();
   const [toggleMappedConfirmationModal, setToggleMappedConfirmationModal] = useState(false);
 
@@ -44,19 +44,19 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
 
   const currentProjectId: string = params.id;
   const projectIndex = projectData.findIndex((project) => project.id == parseInt(currentProjectId));
-  const currentStatus = {
+  const selectedTask = {
     ...taskBoundaryData?.[projectIndex]?.taskBoundries?.filter((task) => {
       return task?.id == taskId;
     })?.[0],
   };
   const checkIfTaskAssignedOrNot =
-    currentStatus?.actioned_by_username === authDetails?.username || currentStatus?.actioned_by_username === null;
+    selectedTask?.actioned_by_username === authDetails?.username || selectedTask?.actioned_by_username === null;
 
   useEffect(() => {
     if (taskId) {
       dispatch(
         GetProjectTaskActivity(
-          `${import.meta.env.VITE_API_URL}/tasks/${currentStatus?.id}/history/?project_id=${currentProjectId}&comment=false`,
+          `${import.meta.env.VITE_API_URL}/tasks/${selectedTask?.id}/history/?project_id=${currentProjectId}&comment=false`,
         ),
       );
     }
@@ -73,21 +73,24 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
   // TODO need to set the TaskEvent here, not MappingStatus?
   useEffect(() => {
     if (projectIndex != -1) {
-      const currentStatus = projectTaskActivityList.length > 0 ? projectTaskActivityList[0].state : 'UNLOCKED_TO_MAP';
-      const findCorrectTaskStatusIndex = environment.tasksStatus.findIndex((data) => data.label == currentStatus);
-      const tasksStatus =
-        feature.id_ != undefined ? environment.tasksStatus[findCorrectTaskStatusIndex]?.['label'] : '';
-      set_task_state(tasksStatus);
-      const tasksStatusList =
-        feature.id_ != undefined ? environment.tasksStatus[findCorrectTaskStatusIndex]?.['action'] : [];
-      set_list_of_task_status(tasksStatusList);
+      // Get current state of task
+      const selectedTask =
+        projectTaskActivityList.length > 0 ? projectTaskActivityList[0].state : taskStateEnum.UNLOCKED_TO_MAP;
+      const findCorrectTaskStateIndex = environment.tasksStatus.findIndex((data) => data.label == selectedTask);
+      const taskState = feature.id_ != undefined ? environment.tasksStatus[findCorrectTaskStateIndex]?.['label'] : '';
+      set_task_state(taskState);
+
+      // Get all available actions given current state
+      const taskActionsList =
+        feature.id_ != undefined ? environment.tasksStatus[findCorrectTaskStateIndex]?.['action'] : [];
+      set_list_of_task_actions(taskActionsList);
     }
   }, [projectTaskActivityList, taskId, feature]);
 
   const handleOnClick = async (event: React.MouseEvent<HTMLElement>) => {
     const btnId = event.currentTarget.dataset.btnid;
     if (!btnId) return;
-    const status = taskStateEnum[btnId];
+    const selectedAction = taskEventEnum[btnId];
     const authDetailsCopy = authDetails != null ? { ...authDetails } : {};
     const geoStyle = geojsonStyles[btnId];
     if (btnId != undefined) {
@@ -97,8 +100,9 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
         //   return;
         // }
         await dispatch(
-          UpdateTaskStatus(
-            `${import.meta.env.VITE_API_URL}/tasks/${currentStatus?.id}/new-status/${status}`,
+          CreateTaskEvent(
+            `${import.meta.env.VITE_API_URL}/tasks/${selectedTask?.id}/event`,
+            selectedAction,
             currentProjectId,
             taskId.toString(),
             authDetailsCopy,
@@ -108,7 +112,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
             feature,
           ),
         );
-        if (btnId === 'LOCKED_FOR_VALIDATION')
+        if (btnId === taskStateEnum.LOCKED_FOR_VALIDATION)
           navigate(`/project-submissions/${params.id}?tab=table&task_id=${taskId}`);
       } else {
         dispatch(
@@ -159,7 +163,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
                 }}
               />
               <Button
-                btnId="MAPPED"
+                btnId="UNLOCKED_TO_VALIDATE"
                 onClick={(e) => {
                   handleOnClick(e);
                   setToggleMappedConfirmationModal(false);
@@ -174,14 +178,14 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
         }
         className=""
       />
-      {list_of_task_status?.length > 0 && checkIfTaskAssignedOrNot && (
+      {list_of_task_actions?.length > 0 && checkIfTaskAssignedOrNot && (
         <div
           className={`fmtm-grid fmtm-border-t-[1px] fmtm-p-2 sm:fmtm-p-5 ${
-            list_of_task_status?.length === 1 ? 'fmtm-grid-cols-1' : 'fmtm-grid-cols-2'
+            list_of_task_actions?.length === 1 ? 'fmtm-grid-cols-1' : 'fmtm-grid-cols-2'
           }`}
         >
-          {list_of_task_status?.map((data, index) => {
-            return list_of_task_status?.length != 0 ? (
+          {list_of_task_actions?.map((data, index) => {
+            return list_of_task_actions?.length != 0 ? (
               <Button
                 btnId={data.value}
                 key={index}
@@ -211,7 +215,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
           })}
         </div>
       )}
-      {task_state !== 'UNLOCKED_TO_MAP' && task_state !== 'LOCKED_FOR_MAPPING' && (
+      {task_state !== taskStateEnum.UNLOCKED_TO_MAP && task_state !== taskStateEnum.LOCKED_FOR_MAPPING && (
         <div className="fmtm-p-2 sm:fmtm-p-5 fmtm-border-t">
           <Button
             btnText="GO TO TASK SUBMISSION"
@@ -222,7 +226,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
           />
         </div>
       )}
-      {task_state === 'LOCKED_FOR_MAPPING' && (
+      {task_state === taskStateEnum.LOCKED_FOR_MAPPING && (
         <div className="fmtm-p-2 sm:fmtm-p-5 fmtm-border-t">
           <Button
             btnText="GO TO ODK"

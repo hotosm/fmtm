@@ -21,7 +21,7 @@ from uuid import UUID
 
 import pytest
 
-from app.db.enums import MappingState
+from app.db.enums import MappingState, TaskEvent
 
 
 async def test_read_task_history(client, task_event):
@@ -41,23 +41,64 @@ async def test_read_task_history(client, task_event):
     assert data["username"] == task_event.username
     assert data["profile_img"] == task_event.profile_img
     assert data["comment"] == task_event.comment
-    assert data["status"] == MappingState.UNLOCKED_TO_MAP
+    assert data["state"] == MappingState.LOCKED_FOR_MAPPING
 
 
-async def test_update_task_status(client, tasks):
+async def test_submit_task_events(client, tasks):
     """Test update the task status."""
     task_id = tasks[0].id
     project_id = tasks[0].project_id
-    new_status = MappingState.LOCKED_FOR_MAPPING
 
+    # LOCK MAP
     response = await client.post(
-        f"tasks/{task_id}/new-status/{new_status.value}?project_id={project_id}"
+        f"tasks/{task_id}/event?project_id={project_id}",
+        json={"event": TaskEvent.MAP},
     )
     assert response.status_code == 200
-
     data = response.json()
-    assert "status" in data
-    assert data["status"] == new_status.name
+    assert data["event"] == TaskEvent.MAP
+    assert data["state"] == MappingState.LOCKED_FOR_MAPPING
+
+    # FINISH
+    response = await client.post(
+        f"tasks/{task_id}/event?project_id={project_id}",
+        json={"event": TaskEvent.FINISH},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["event"] == TaskEvent.FINISH
+    assert data["state"] == MappingState.UNLOCKED_TO_VALIDATE
+
+    # LOCK VALIDATE
+    response = await client.post(
+        f"tasks/{task_id}/event?project_id={project_id}",
+        json={"event": TaskEvent.VALIDATE},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["event"] == TaskEvent.VALIDATE
+    assert data["state"] == MappingState.LOCKED_FOR_VALIDATION
+
+    # MARK GOOD / VALIDATED
+    response = await client.post(
+        f"tasks/{task_id}/event?project_id={project_id}",
+        json={"event": TaskEvent.GOOD},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["event"] == TaskEvent.GOOD
+    assert data["state"] == MappingState.UNLOCKED_DONE
+
+    # COMMENT
+    response = await client.post(
+        f"tasks/{task_id}/event?project_id={project_id}",
+        json={"event": TaskEvent.COMMENT, "comment": "Hello!"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["event"] == TaskEvent.COMMENT
+    assert data["state"] is None
+    assert data["comment"] == "Hello!"
 
 
 if __name__ == "__main__":

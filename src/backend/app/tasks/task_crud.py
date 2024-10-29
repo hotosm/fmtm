@@ -17,46 +17,6 @@
 #
 """Logic for FMTM tasks."""
 
-from fastapi import HTTPException
-from loguru import logger as log
-from psycopg import Connection
-
-from app.db.enums import (
-    HTTPStatus,
-    MappingState,
-    TaskEvent,
-)
-from app.db.models import DbTask, DbTaskEvent
-from app.tasks import task_schemas
-
-
-# TODO SQL refactor this to use case statements on /next
-async def new_task_event(
-    db: Connection, task_id: int, user_id: int, new_event: TaskEvent
-):
-    """Add a new entry to the task events."""
-    log.debug(f"Checking if task ({task_id}) is already locked")
-    task_entry = await DbTask.one(db, task_id)
-
-    if task_entry and task_entry.task_state in [
-        MappingState.LOCKED_FOR_MAPPING,
-        MappingState.LOCKED_FOR_VALIDATION,
-    ]:
-        if task_entry.actioned_by_uid != user_id:
-            msg = f"Task is locked by user {task_entry.username}"
-            log.error(msg)
-            raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail=msg)
-
-    log.info(f"Updating task ID {task_id} to status {new_event}")
-    event_in = task_schemas.TaskEventIn(
-        task_id=task_id,
-        user_id=user_id,
-        event=new_event,
-        # NOTE we don't include a comment unless necessary
-    )
-    created_task_event = await DbTaskEvent.create(db, event_in)
-    return created_task_event
-
 
 # FIXME the endpoint that calls this isn't used?
 # async def get_project_task_activity(

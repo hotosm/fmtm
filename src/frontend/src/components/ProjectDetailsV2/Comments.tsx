@@ -59,13 +59,10 @@ const Comments = () => {
       return;
     }
     dispatch(
-      PostProjectComments(
-        `${import.meta.env.VITE_API_URL}/tasks/${currentStatus?.id}/comment/?project_id=${projectId}`,
-        {
-          task_id: selectedTask.id,
-          comment,
-        },
-      ),
+      PostProjectComments(`${import.meta.env.VITE_API_URL}/tasks/${currentStatus?.id}/event/?project_id=${projectId}`, {
+        task_id: selectedTask.id,
+        comment,
+      }),
     );
     clearComment();
   };

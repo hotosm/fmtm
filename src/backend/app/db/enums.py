@@ -19,9 +19,6 @@
 
 from enum import Enum, IntEnum, StrEnum
 
-TILES_SOURCE = ["esri", "bing", "google"]
-TILES_FORMATS = ["mbtiles", "sqlitedb", "pmtiles"]
-
 
 class HTTPStatus(IntEnum):
     """All HTTP status codes used in endpoints."""
@@ -115,7 +112,7 @@ class TaskEvent(StrEnum, Enum):
 
     `MAP` -- Set to *locked for mapping*, i.e. mapping in progress.
     `FINISH` -- Set to *unlocked to validate*, i.e. is mapped.
-    `FINISH` -- Request recent task ready to be validate.
+    `VALIDATE` -- Set to *locked for validation*, i.e. validation in progress.
     `GOOD` -- Set the state to *unlocked done*.
     `BAD` -- Set the state *unlocked to map* again, to be mapped once again.
     `SPLIT` -- Set the state *unlocked done* then generate additional
@@ -162,7 +159,7 @@ class EntityState(IntEnum, Enum):
     """
 
     READY = 0
-    OPEN_IN_ODK = 1
+    OPENED_IN_ODK = 1
     SURVEY_SUBMITTED = 2
     MARKED_BAD = 6
 

@@ -463,7 +463,7 @@ async def test_project_by_id(client, project):
 async def test_set_entity_mapping_status(client, odk_project, entities):
     """Test set the ODK entity mapping status."""
     entity = entities[0]
-    new_status = EntityState.OPEN_IN_ODK
+    new_status = EntityState.OPENED_IN_ODK
 
     response = await client.post(
         f"/projects/{odk_project.id}/entity/status",

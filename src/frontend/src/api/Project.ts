@@ -1,7 +1,7 @@
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import CoreModules from '@/shared/CoreModules';
-import { task_state } from '@/types/enums';
+import { task_state, task_event } from '@/types/enums';
 import { writeBinaryToOPFS } from '@/api/Files';
 import { projectInfoType } from '@/models/project/projectModel';
 
@@ -150,14 +150,14 @@ export const GetTilesList = (url: string) => {
   };
 };
 
-export const GenerateProjectTiles = (url: string, payload: string) => {
+export const GenerateProjectTiles = (url: string, projectId: string, data: object) => {
   return async (dispatch) => {
     dispatch(ProjectActions.SetGenerateProjectTilesLoading(true));
 
-    const generateProjectTiles = async (url: string, payload: string) => {
+    const generateProjectTiles = async (url: string, projectId: string) => {
       try {
-        const response = await CoreModules.axios.get(url);
-        dispatch(GetTilesList(`${import.meta.env.VITE_API_URL}/projects/${payload}/tiles/`));
+        await CoreModules.axios.post(url, data);
+        dispatch(GetTilesList(`${import.meta.env.VITE_API_URL}/projects/${projectId}/tiles/`));
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));
       } catch (error) {
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));
@@ -165,7 +165,7 @@ export const GenerateProjectTiles = (url: string, payload: string) => {
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));
       }
     };
-    await generateProjectTiles(url, payload);
+    await generateProjectTiles(url, projectId);
   };
 };
 
@@ -278,11 +278,17 @@ export const GetProjectComments = (url: string) => {
   };
 };
 
-export const PostProjectComments = (url: string, payload: { task_id: number; comment: string }) => {
+export const PostProjectComments = (
+  url: string,
+  payload: { event: task_event.COMMENT; task_id: number; comment: string },
+) => {
   return async (dispatch) => {
     const postProjectComments = async (url: string) => {
       try {
         dispatch(ProjectActions.SetPostProjectCommentsLoading(true));
+        if (!('event' in payload)) {
+          payload = { event: task_event.COMMENT, ...payload };
+        }
         const response = await CoreModules.axios.post(url, payload);
         dispatch(ProjectActions.UpdateProjectCommentsList(response.data));
         dispatch(ProjectActions.SetPostProjectCommentsLoading(false));

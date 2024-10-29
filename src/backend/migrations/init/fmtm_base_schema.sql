@@ -145,7 +145,7 @@ ALTER TYPE public.mappingstate OWNER TO fmtm;
 
 CREATE TYPE public.entitystate AS ENUM (
     'READY',
-    'OPEN_IN_ODK',
+    'OPENED_IN_ODK',
     'SURVEY_SUBMITTED',
     'MARKED_BAD'
 );
@@ -167,8 +167,10 @@ CREATE TABLE IF NOT EXISTS public._migrations (
 ALTER TABLE public._migrations OWNER TO fmtm;
 
 
+-- Note we use UUID for interoperability with external databases,
+-- such as PGLite or other microservices
 CREATE TABLE public.background_tasks (
-    id UUID NOT NULL,
+    id UUID DEFAULT gen_random_uuid(),
     name character varying,
     project_id integer,
     status public.backgroundtaskstatus NOT NULL DEFAULT 'PENDING',
@@ -177,8 +179,10 @@ CREATE TABLE public.background_tasks (
 ALTER TABLE public.background_tasks OWNER TO fmtm;
 
 
+-- Note we use UUID for interoperability with external databases,
+-- such as PGLite or other microservices
 CREATE TABLE public.basemaps (
-    id UUID NOT NULL,
+    id UUID DEFAULT gen_random_uuid(),
     project_id integer,
     status public.backgroundtaskstatus NOT NULL,
     url character varying,
@@ -273,8 +277,10 @@ ALTER TABLE public.projects_id_seq OWNER TO fmtm;
 ALTER SEQUENCE public.projects_id_seq OWNED BY public.projects.id;
 
 
+-- Note we use UUID for interoperability with external databases,
+-- such as PGLite or other microservices
 CREATE TABLE public.task_events (
-    event_id UUID,
+    event_id UUID DEFAULT gen_random_uuid(),
     project_id integer,
     task_id integer,
     user_id integer,
@@ -546,6 +552,8 @@ BEGIN
             NEW.state := 'LOCKED_FOR_MAPPING';
         WHEN 'FINISH' THEN
             NEW.state := 'UNLOCKED_TO_VALIDATE';
+        WHEN 'VALIDATE' THEN
+            NEW.state := 'LOCKED_FOR_VALIDATION';
         WHEN 'GOOD' THEN
             NEW.state := 'UNLOCKED_DONE';
         WHEN 'BAD' THEN
@@ -556,6 +564,8 @@ BEGIN
             NEW.state := 'UNLOCKED_DONE';
         WHEN 'ASSIGN' THEN
             NEW.state := 'LOCKED_FOR_MAPPING';
+        WHEN 'COMMENT' THEN
+            NEW.state := OLD.state;
         ELSE
             RAISE EXCEPTION 'Unknown task event type: %', NEW.event;
     END CASE;

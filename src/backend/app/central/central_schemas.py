@@ -247,7 +247,7 @@ class EntityMappingStatusIn(BaseModel):
         """Add 🔒 (locked), ✅ (complete) or ❌ (invalid) emojis."""
         status = info.data.get("status", EntityState.READY.value)
         emojis = {
-            str(EntityState.OPEN_IN_ODK.value): "🔒",
+            str(EntityState.OPENED_IN_ODK.value): "🔒",
             str(EntityState.SURVEY_SUBMITTED.value): "✅",
             str(EntityState.MARKED_BAD.value): "❌",
         }
