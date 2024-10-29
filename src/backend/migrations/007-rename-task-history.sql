@@ -183,13 +183,19 @@ END $$;
 
 
 -- Add default values for UUID fields
-ALTER TABLE public.task_events ALTER COLUMN event_id
-SET DEFAULT gen_random_uuid();
+ALTER TABLE public.task_events
+ALTER COLUMN event_id SET DEFAULT gen_random_uuid(),
+ALTER COLUMN event_id SET NOT NULL,
+ALTER COLUMN task_id SET NOT NULL,
+ALTER COLUMN event SET NOT NULL;
 
-ALTER TABLE public.basemaps ALTER COLUMN id SET DEFAULT gen_random_uuid();
+ALTER TABLE public.basemaps
+ALTER COLUMN id SET DEFAULT gen_random_uuid(),
+ALTER COLUMN id SET NOT NULL;
 
-ALTER TABLE public.background_tasks ALTER COLUMN id
-SET DEFAULT gen_random_uuid();
+ALTER TABLE public.background_tasks
+ALTER COLUMN id SET DEFAULT gen_random_uuid(),
+ALTER COLUMN id SET NOT NULL;
 
 
 
