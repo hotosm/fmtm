@@ -61,11 +61,11 @@ test.describe('mapper flow', () => {
     await page.getByRole('button', { name: 'MARK AS FULLY MAPPED' }).click();
     // Required again for the confirmation dialog (0/4 features mapped)
     await page.getByRole('button', { name: 'MARK AS FULLY MAPPED' }).click();
-    await page.waitForSelector('div:has-text("updated status to MAPPED"):nth-of-type(1)');
+    await page.waitForSelector('div:has-text("updated status to UNLOCKED_TO_VALIDATE"):nth-of-type(1)');
     await expect(
       page
         .locator('div')
-        .filter({ hasText: /updated status to MAPPED/ })
+        .filter({ hasText: /updated status to UNLOCKED_TO_VALIDATE/ })
         .first(),
     ).toBeVisible();
     await page.getByRole('alert').waitFor({ state: 'hidden' });
