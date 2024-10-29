@@ -11,19 +11,19 @@ import { PostProjectComments } from '@/api/Project';
 
 const reviewList: reviewListType[] = [
   {
-    id: 'approved',
+    id: 'APPROVED',
     title: 'Approved',
     className: 'fmtm-bg-[#E7F3E8] fmtm-text-[#40B449] fmtm-border-[#40B449]',
     hoverClass: 'hover:fmtm-text-[#40B449] hover:fmtm-border-[#40B449]',
   },
   {
-    id: 'hasIssues',
+    id: 'HASISSUES',
     title: 'Has Issue',
     className: 'fmtm-bg-[#E9DFCF] fmtm-text-[#D99F00] fmtm-border-[#D99F00]',
     hoverClass: 'hover:fmtm-text-[#D99F00] hover:fmtm-border-[#D99F00]',
   },
   {
-    id: 'rejected',
+    id: 'REJECTED',
     title: 'Rejected',
     className: 'fmtm-bg-[#E8D5D5] fmtm-text-[#D73F37] fmtm-border-[#D73F37]',
     hoverClass: 'hover:fmtm-text-[#D73F37] hover:fmtm-border-[#D73F37]',
@@ -60,10 +60,11 @@ const UpdateReviewStatusModal = () => {
     if (noteComments.trim().length > 0) {
       dispatch(
         PostProjectComments(
-          `${import.meta.env.VITE_API_URL}/tasks/${updateReviewStatusModal?.taskUId}/comment/?project_id=${updateReviewStatusModal?.projectId}`,
+          `${import.meta.env.VITE_API_URL}/tasks/${updateReviewStatusModal?.taskUId}/event/?project_id=${updateReviewStatusModal?.projectId}`,
           {
             task_id: updateReviewStatusModal?.taskUId,
             comment: `${updateReviewStatusModal?.instanceId}-SUBMISSION_INST-${noteComments}`,
+            event: 'COMMENT',
           },
         ),
       );

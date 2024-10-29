@@ -2,7 +2,7 @@ import { Fill, Icon, Stroke, Style } from 'ol/style';
 import { getCenter } from 'ol/extent';
 import { Point } from 'ol/geom';
 import AssetModules from '@/shared/AssetModules';
-import { task_state } from '@/types/enums';
+import { entity_state } from '@/types/enums';
 import { EntityOsmMap } from '@/store/types/IProject';
 
 function createPolygonStyle(fillColor: string, strokeColor: string) {
@@ -108,7 +108,8 @@ const getTaskStatusStyle = (feature: Record<string, any>, mapTheme: Record<strin
 
 export const getFeatureStatusStyle = (osmId: string, mapTheme: Record<string, any>, entityOsmMap: EntityOsmMap[]) => {
   const entity = entityOsmMap?.find((entity) => entity?.osm_id === osmId) as EntityOsmMap;
-  let status = task_state[entity?.status];
+
+  let status = entity_state[entity?.status];
 
   const borderStrokeColor = '#FF0000';
 
@@ -124,7 +125,7 @@ export const getFeatureStatusStyle = (osmId: string, mapTheme: Record<string, an
   const redIconStyle = createIconStyle(AssetModules.RedLockPng);
 
   const geojsonStyles = {
-    UNLOCKED_TO_MAP: new Style({
+    READY: new Style({
       stroke: new Stroke({
         color: borderStrokeColor,
         width: 1,
@@ -133,18 +134,18 @@ export const getFeatureStatusStyle = (osmId: string, mapTheme: Record<string, an
         color: mapTheme.palette.mapFeatureColors.ready_rgb,
       }),
     }),
-    LOCKED_FOR_MAPPING: [lockedPolygonStyle, iconStyle],
-    UNLOCKED_TO_VALIDATE: new Style({
-      stroke: new Stroke({
-        color: borderStrokeColor,
-        width: 1,
-      }),
-      fill: new Fill({
-        color: mapTheme.palette.mapFeatureColors.mapped_rgb,
-      }),
-    }),
-    LOCKED_FOR_VALIDATION: [lockedValidationStyle, redIconStyle],
-    UNLOCKED_DONE: new Style({
+    OPENED_IN_ODK: [lockedPolygonStyle, iconStyle],
+    // UNLOCKED_TO_VALIDATE: new Style({
+    //   stroke: new Stroke({
+    //     color: borderStrokeColor,
+    //     width: 1,
+    //   }),
+    //   fill: new Fill({
+    //     color: mapTheme.palette.mapFeatureColors.mapped_rgb,
+    //   }),
+    // }),
+    // LOCKED_FOR_VALIDATION: [lockedValidationStyle, redIconStyle],
+    SURVEY_SUBMITTED: new Style({
       stroke: new Stroke({
         color: borderStrokeColor,
         width: 1,
@@ -162,15 +163,15 @@ export const getFeatureStatusStyle = (osmId: string, mapTheme: Record<string, an
     //     color: mapTheme.palette.mapFeatureColors.invalidated_rgb,
     //   }),
     // }),
-    // BAD: new Style({
-    //   stroke: new Stroke({
-    //     color: borderStrokeColor,
-    //     width: 1,
-    //   }),
-    //   fill: new Fill({
-    //     color: mapTheme.palette.mapFeatureColors.bad_rgb,
-    //   }),
-    // }),
+    MARKED_BAD: new Style({
+      stroke: new Stroke({
+        color: borderStrokeColor,
+        width: 1,
+      }),
+      fill: new Fill({
+        color: mapTheme.palette.mapFeatureColors.bad_rgb,
+      }),
+    }),
   };
   return geojsonStyles[status];
 };

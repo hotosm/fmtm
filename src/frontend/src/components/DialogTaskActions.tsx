@@ -70,6 +70,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
     }
   }, [taskId, taskInfo]);
 
+  // TODO need to set the TaskEvent here, not MappingStatus?
   useEffect(() => {
     if (projectIndex != -1) {
       // Get current state of task
@@ -91,7 +92,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
     if (!btnId) return;
     const selectedAction = taskEventEnum[btnId];
     const authDetailsCopy = authDetails != null ? { ...authDetails } : {};
-    const geoStyle = geojsonStyles[btnId];
+
     if (btnId != undefined) {
       if (authDetailsCopy.hasOwnProperty('id')) {
         // if (btnId === 'MERGE_WITH_OSM') {
@@ -106,8 +107,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
             taskId.toString(),
             authDetailsCopy,
             { project_id: currentProjectId },
-            geoStyle,
-            taskBoundaryData,
+            geojsonStyles,
             feature,
           ),
         );

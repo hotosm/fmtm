@@ -49,9 +49,9 @@ export const CreateTaskEvent = (
         };
         const response = await CoreModules.axios.post(url, body, { params });
         dispatch(ProjectActions.UpdateProjectTaskActivity(response.data));
-
         if (feature && style) {
-          await feature.setStyle(style);
+          // update task color based on current state
+          await feature.setStyle(style[response?.data?.state]);
 
           // assign userId to actioned_by_uid if state is locked_for_mapping or locked_for_validation
           const prevProperties = feature.getProperties();

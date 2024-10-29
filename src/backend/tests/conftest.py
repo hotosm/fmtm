@@ -230,7 +230,6 @@ async def task_event(db, project, tasks, admin_user):
             comment="We added a comment!",
         )
         db_task_event = await DbTaskEvent.create(db, new_event)
-
     return db_task_event
 
 

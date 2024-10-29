@@ -113,7 +113,7 @@ const SubmissionDetails = () => {
     if (!taskUId) return;
     dispatch(
       GetProjectComments(
-        `${import.meta.env.VITE_API_URL}/tasks/${parseInt(taskUId)}/history/?project_id=${projectId}&comment=true`,
+        `${import.meta.env.VITE_API_URL}/tasks/${parseInt(taskUId)}/history/?project_id=${projectId}&comments=true`,
       ),
     );
   }, [taskUId]);

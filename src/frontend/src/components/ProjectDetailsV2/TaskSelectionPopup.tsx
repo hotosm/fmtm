@@ -27,7 +27,7 @@ const TaskSelectionPopup = ({ taskId, body, feature }: TaskSelectionPopupPropTyp
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
   const selectedTask = {
     ...projectData?.[projectIndex]?.taskBoundries?.filter((indTask, i) => {
-      return indTask?.index == taskId;
+      return indTask?.id == taskId;
     })?.[0],
   };
   const checkIfTaskAssignedOrNot =

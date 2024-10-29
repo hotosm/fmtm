@@ -12,7 +12,7 @@ import { UpdateEntityState } from '@/api/Project';
 import { TaskFeatureSelectionProperties } from '@/store/types/ITask';
 import { CreateTaskEvent } from '@/api/TaskEvent';
 import MapStyles from '@/hooks/MapStyles';
-import { task_event } from '@/types/enums';
+import { task_event, task_state as taskStateEnum } from '@/types/enums';
 
 type TaskFeatureSelectionPopupPropType = {
   taskId: number;
