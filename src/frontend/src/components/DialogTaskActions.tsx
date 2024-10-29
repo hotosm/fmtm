@@ -162,7 +162,7 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
                 }}
               />
               <Button
-                btnId="UNLOCKED_TO_VALIDATE"
+                btnId="FINISH"
                 onClick={(e) => {
                   handleOnClick(e);
                   setToggleMappedConfirmationModal(false);
