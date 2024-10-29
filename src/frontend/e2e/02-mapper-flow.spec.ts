@@ -86,8 +86,8 @@ test.describe('mapper flow', () => {
     // Click 'Fully Mapped' button on validation page
     await page.getByRole('button', { name: 'MARK AS VALIDATED' }).click();
 
-    await page.getByText('has been updated to VALIDATED').waitFor({ state: 'visible' });
-    await expect(page.getByText('has been updated to VALIDATED')).toBeVisible();
+    await page.getByText('has been updated to UNLOCKED_DONE').waitFor({ state: 'visible' });
+    await expect(page.getByText('has been updated to UNLOCKED_DONE')).toBeVisible();
 
     // wait for map to render before continuing
     await page.waitForTimeout(4000);
@@ -99,7 +99,7 @@ test.describe('mapper flow', () => {
         y: 95,
       },
     });
-    await expect(page.getByText('Status: VALIDATED')).toBeVisible();
+    await expect(page.getByText('Status: UNLOCKED_DONE')).toBeVisible();
   });
 
   test('open feature (Entity) in ODK', async ({ browserName, page }) => {
