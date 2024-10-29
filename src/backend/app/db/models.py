@@ -990,7 +990,7 @@ class DbProject(BaseModel):
                     ] AS bbox,
                     project_org.name AS organisation_name,
                     project_org.logo AS organisation_logo,
-                    latest_status_per_task.created_at AS last_active,
+                    MAX(latest_status_per_task.created_at) AS last_active,
                     COALESCE(
                         NULLIF(p.odk_central_url, ''),
                         project_org.odk_central_url
@@ -1045,8 +1045,7 @@ class DbProject(BaseModel):
                 WHERE
                     p.id = %(project_id)s
                 GROUP BY
-                    p.id, project_org.id, project_bbox.bbox,
-                    latest_status_per_task.created_at;
+                    p.id, project_org.id, project_bbox.bbox;
             """
 
             # Simpler query without additional metadata
