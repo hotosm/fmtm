@@ -219,7 +219,6 @@ const SubmissionsTable = ({ toggleView }) => {
     await dispatch(
       CreateTaskEvent(
         `${import.meta.env.VITE_API_URL}/tasks/${currentStatus.id}/event`,
-        // FIXME what action should we submit here?
         task_event.MAP,
         projectId,
         filter?.task_id || '',
@@ -465,14 +464,14 @@ const SubmissionsTable = ({ toggleView }) => {
             headerClassName="updatedHeader !fmtm-sticky fmtm-right-0 fmtm-shadow-[-10px_0px_20px_0px_rgba(0,0,0,0.1)] fmtm-text-center"
             rowClassName="updatedRow !fmtm-sticky fmtm-right-0 fmtm-bg-white fmtm-shadow-[-10px_0px_20px_0px_rgba(0,0,0,0.1)]"
             dataFormat={(row) => {
-              const taskUId = taskList?.find((task) => task?.id == row?.task_id)?.id;
+              const taskUid = taskList?.find((task) => task?.id == row?.task_id)?.id;
               return (
                 <div className="fmtm-w-[5rem] fmtm-overflow-hidden fmtm-truncate fmtm-text-center">
                   <AssetModules.VisibilityOutlinedIcon
                     className="fmtm-text-[#545454] hover:fmtm-text-primaryRed"
                     onClick={() => {
                       navigate(
-                        `/project-submissions/${projectId}/tasks/${taskUId}/submission/${row?.meta?.instanceID}`,
+                        `/project-submissions/${projectId}/tasks/${taskUid}/submission/${row?.meta?.instanceID}`,
                       );
                     }}
                   />{' '}
@@ -487,7 +486,7 @@ const SubmissionsTable = ({ toggleView }) => {
                           taskId: row?.task_id,
                           projectId: projectId,
                           reviewState: row?.__system?.reviewState,
-                          taskUId: taskUId,
+                          taskUid: taskUid,
                         }),
                       );
                     }}

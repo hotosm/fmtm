@@ -34,7 +34,7 @@ from app.auth.roles import mapper, project_manager
 from app.central import central_crud
 from app.db import postgis_utils
 from app.db.database import db_conn
-from app.db.enums import HTTPStatus, ReviewStateEnum
+from app.db.enums import HTTPStatus
 from app.db.models import DbBackgroundTask, DbSubmissionPhoto, DbTask
 from app.projects import project_crud, project_schemas
 from app.submissions import submission_crud, submission_schemas
@@ -335,10 +335,12 @@ async def submission_table(
     return response
 
 
-@router.post("/update_review_state")
+@router.post(
+    "/update-review-state",
+    response_model=submission_schemas.ReviewStateOut,
+)
 async def update_review_state(
-    instance_id: str,
-    review_state: ReviewStateEnum,
+    post_data: submission_schemas.ReviewStateIn,
     current_user: Annotated[ProjectUserDict, Depends(project_manager)],
 ):
     """Updates the review state of a project submission."""
@@ -349,8 +351,8 @@ async def update_review_state(
         response = odk_project.updateReviewState(
             project.odkid,
             project.odk_form_id,
-            instance_id,
-            {"reviewState": review_state},
+            post_data.instance_id,
+            {"reviewState": post_data.review_state},
         )
         return response
     except Exception as e:

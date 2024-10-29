@@ -23,9 +23,8 @@ from typing import Optional
 from pydantic import AwareDatetime, BaseModel
 from pydantic.functional_serializers import field_serializer
 
-from app.db.postgis_utils import (
-    timestamp,
-)
+from app.db.enums import ReviewStateEnum
+from app.db.postgis_utils import timestamp
 
 
 class PaginationInfo(BaseModel):
@@ -46,6 +45,24 @@ class PaginatedSubmissions(BaseModel):
 
     results: list
     pagination: PaginationInfo
+
+
+class ReviewStateIn(BaseModel):
+    """Update to the review state of a submission."""
+
+    instance_id: str
+    review_state: ReviewStateEnum
+
+
+class ReviewStateOut(BaseModel):
+    """The response from ODK Central on review state update."""
+
+    instanceId: str  # noqa: N815
+    submitterId: int  # noqa: N815
+    deviceId: str  # noqa: N815
+    createdAt: str  # noqa: N815
+    updatedAt: str  # noqa: N815
+    reviewState: str  # noqa: N815
 
 
 class SubmissionDashboard(BaseModel):

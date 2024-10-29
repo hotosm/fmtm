@@ -216,11 +216,14 @@ class CommunityType(StrEnum, Enum):
 
 
 class ReviewStateEnum(StrEnum, Enum):
-    """Review states of submission."""
+    """Review states of submission.
 
-    HASISSUES = "HASISSUES"
-    APPROVED = "APPROVED"
-    REJECTED = "REJECTED"
+    NOTE that these values must be camelCase to match what ODK Central requires.
+    """
+
+    HASISSUES = "hasIssues"
+    APPROVED = "approved"
+    REJECTED = "rejected"
 
 
 class GeometryType(StrEnum, Enum):

@@ -9,21 +9,22 @@ import Button from '../common/Button';
 import { useAppSelector } from '@/types/reduxTypes';
 import { PostProjectComments } from '@/api/Project';
 
+// Note these id values must be camelCase to match what ODK Central requires
 const reviewList: reviewListType[] = [
   {
-    id: 'APPROVED',
+    id: 'approved',
     title: 'Approved',
     className: 'fmtm-bg-[#E7F3E8] fmtm-text-[#40B449] fmtm-border-[#40B449]',
     hoverClass: 'hover:fmtm-text-[#40B449] hover:fmtm-border-[#40B449]',
   },
   {
-    id: 'HASISSUES',
+    id: 'hasIssues',
     title: 'Has Issue',
     className: 'fmtm-bg-[#E9DFCF] fmtm-text-[#D99F00] fmtm-border-[#D99F00]',
     hoverClass: 'hover:fmtm-text-[#D99F00] hover:fmtm-border-[#D99F00]',
   },
   {
-    id: 'REJECTED',
+    id: 'rejected',
     title: 'Rejected',
     className: 'fmtm-bg-[#E8D5D5] fmtm-text-[#D73F37] fmtm-border-[#D73F37]',
     hoverClass: 'hover:fmtm-text-[#D73F37] hover:fmtm-border-[#D73F37]',
@@ -49,20 +50,20 @@ const UpdateReviewStatusModal = () => {
     if (updateReviewStatusModal.reviewState !== reviewStatus) {
       await dispatch(
         UpdateReviewStateService(
-          `${import.meta.env.VITE_API_URL}/submission/update_review_state?project_id=${
-            updateReviewStatusModal.projectId
-          }&task_id=${parseInt(updateReviewStatusModal.taskId)}&instance_id=${
-            updateReviewStatusModal.instanceId
-          }&review_state=${reviewStatus}`,
+          `${import.meta.env.VITE_API_URL}/submission/update-review-state?project_id=${updateReviewStatusModal.projectId}`,
+          {
+            instance_id: updateReviewStatusModal.instanceId,
+            review_state: reviewStatus,
+          },
         ),
       );
     }
     if (noteComments.trim().length > 0) {
       dispatch(
         PostProjectComments(
-          `${import.meta.env.VITE_API_URL}/tasks/${updateReviewStatusModal?.taskUId}/event/?project_id=${updateReviewStatusModal?.projectId}`,
+          `${import.meta.env.VITE_API_URL}/tasks/${updateReviewStatusModal?.taskUid}/event/?project_id=${updateReviewStatusModal?.projectId}`,
           {
-            task_id: updateReviewStatusModal?.taskUId,
+            task_id: updateReviewStatusModal?.taskUid,
             comment: `${updateReviewStatusModal?.instanceId}-SUBMISSION_INST-${noteComments}`,
             event: 'COMMENT',
           },
@@ -77,7 +78,7 @@ const UpdateReviewStatusModal = () => {
         instanceId: null,
         taskId: null,
         reviewState: '',
-        taskUId: null,
+        taskUid: null,
       }),
     );
     dispatch(SubmissionActions.UpdateReviewStateLoading(false));
@@ -129,7 +130,7 @@ const UpdateReviewStatusModal = () => {
                     instanceId: null,
                     taskId: null,
                     reviewState: '',
-                    taskUId: null,
+                    taskUid: null,
                   }),
                 );
               }}
@@ -155,7 +156,7 @@ const UpdateReviewStatusModal = () => {
             instanceId: null,
             taskId: null,
             reviewState: '',
-            taskUId: null,
+            taskUid: null,
           }),
         );
       }}
