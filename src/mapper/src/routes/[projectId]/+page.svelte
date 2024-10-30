@@ -49,6 +49,7 @@
 	import LocationDotImg from '$assets/images/locationDot.png';
 	import { setAlert } from '$store/common';
 	import { convertDateToTimeAgo } from '$lib/utils/datetime';
+	import TaskActionDialog from '$lib/components/task-action-dialog.svelte'
 
 	export let data: PageData;
 
@@ -313,34 +314,7 @@
 {/if}
 
 {#if $selectedTaskId}
-	{#if $selectedTaskState == 'UNLOCKED_TO_MAP'}
-		<sl-tooltip content="MAP">
-			<hot-icon-button
-				name="play"
-				class="fixed top-30 left-1/2 transform -translate-x-1/2 text-5xl z-10 bg-green-500 text-white rounded-full p-1"
-				label="MAP"
-				on:click={mapTask(data.projectId, $selectedTaskId)}
-			></hot-icon-button>
-		</sl-tooltip>
-	{:else if $selectedTaskState == 'LOCKED_FOR_MAPPING'}
-		<sl-tooltip content="FINISH">
-			<hot-icon-button
-				name="stop"
-				class="fixed top-30 left-1/2 transform -translate-x-1/2 text-5xl z-10 bg-blue-500 text-white rounded-full p-1"
-				label="FINISH"
-				on:click={finishTask(data.projectId, $selectedTaskId)}
-			></hot-icon-button>
-		</sl-tooltip>
-	{:else if $selectedTaskState == 'UNLOCKED_TO_VALIDATE'}
-		<sl-tooltip content="RESET">
-			<hot-icon-button
-				name="arrow-counterclockwise"
-				class="fixed top-30 left-1/2 transform -translate-x-1/2 text-5xl z-10 bg-yellow-500 text-white rounded-full p-1"
-				label="RESET"
-				on:click={resetTask(data.projectId, $selectedTaskId)}
-			></hot-icon-button>
-		</sl-tooltip>
-	{/if}
+	<TaskActionDialog state={$selectedTaskState} projectId={data.projectId} taskId={$selectedTaskId} />
 {/if}
 
 <div class="h-[calc(100vh-4.625rem)]">
