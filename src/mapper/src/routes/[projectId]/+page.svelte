@@ -106,9 +106,11 @@
 			};
 			return {
 				type: 'Feature',
-				id: taskId,
 				geometry: x.outline,
-				properties: taskDetails
+				properties: {
+					...taskDetails,
+					fid: taskId,
+				}
 			};
 		});
 
@@ -158,27 +160,6 @@
 		// Open the map tab
 		tabGroup.show('map');
 	}
-
-	// const mapStyle = {
-	// 			"version": 8,
-	// 			"name": "OpenStreetMap",
-	// 			"sources": {
-	// 			"osm": {
-	// 				"type": "raster",
-	// 				"tiles": ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"],
-	// 				"tileSize": 256,
-	// 				"attribution": "&copy; OpenStreetMap Contributors",
-	// 				"maxzoom": 19
-	// 			}
-	// 			},
-	// 			"layers": [
-	// 			{
-	// 				"id": "osm",
-	// 				"type": "raster",
-	// 				"source": "osm"
-	// 			}
-	// 			]
-	// 		}
 
 	onMount(async () => {
 		const projectPolygon = polygon(data.project.outline.coordinates);
@@ -289,6 +270,36 @@
 		}
 	}
 
+	const osmStyle = {
+		id: 'OSM Raster',
+		version: 8,
+		name: 'OpenStreetMap',
+		sources: {
+		osm: {
+			type: 'raster',
+			tiles: [
+			'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+			'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+			'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
+			],
+			minzoom: 0,
+			maxzoom: 19,
+			attribution:
+			'© <a target="_blank" rel="noopener" href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>',
+		},
+		},
+		layers: [
+		{
+			id: 'osm',
+			type: 'raster',
+			source: 'osm',
+			layout: {
+			visibility: 'visible',
+			},
+		},
+		],
+	};
+
 	onDestroy(() => {
 		taskHistoryStream.unsubscribeAll();
 	});
@@ -335,7 +346,7 @@
 	<MapLibre
 		bind:map
 		bind:loaded
-		style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+		style={osmStyle}
 		class="flex-auto w-full sm:aspect-video h-[calc(100%-4rem)]"
 		center={[0, 0]}
 		zoom={2}
@@ -406,13 +417,13 @@
 						'#40ac8c',
 						'#c5fbf5', // default color if no match is found
 					],
-					'fill-opacity': hoverStateFilter(0.5, 0),
+					'fill-opacity': hoverStateFilter(0.1, 0),
 				}}
 				beforeLayerType="symbol"
 				manageHoverState
 				on:click={(e) => {
 					featureClicked.set(true);
-					const clickedTask = e.detail.features?.[0]?.properties?.uid;
+					const clickedTask = e.detail.features?.[0]?.properties?.fid;
 					selectedTaskId.set(clickedTask);
 					toggleTaskActionModal = true;
 				}}
@@ -420,9 +431,9 @@
 			<LineLayer
 				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 				paint={{
-					'line-color': ['case', ['==', ['get', 'uid'], $selectedTaskId], '#fa1100', '#0fffff'],
+					'line-color': ['case', ['==', ['get', 'fid'], $selectedTaskId], '#fa1100', '#0fffff'],
 					'line-width': 3,
-					'line-opacity': ['case', ['==', ['get', 'uid'], $selectedTaskId], 1, 0.35],
+					'line-opacity': ['case', ['==', ['get', 'fid'], $selectedTaskId], 1, 0.35],
 				}}
 				beforeLayerType="symbol"
 				manageHoverState
