@@ -50,6 +50,7 @@
 	import { setAlert } from '$store/common';
 	import { convertDateToTimeAgo } from '$lib/utils/datetime';
 	import TaskActionDialog from '$lib/components/task-action-dialog.svelte'
+	import { taskFeatcolStore, latestEventStore, taskEventStore, getTaskEventStream, subscribeToTaskEvents, appendStatesToTaskFeatures, getLatestStatePerTask } from '$store/task-events';
 
 	export let data: PageData;
 
@@ -63,63 +64,9 @@
 	$: panelDisplay = selectedTab === 'map' ? 'none' : 'block';
 	let toggleTaskActionModal = false;
 
-	// *** Task history sync *** //
-	const taskFeatcolStore = writable<FeatureCollection>({ type: 'FeatureCollection', features: [] });
-	const taskHistoryStream = new ShapeStream({
-		url: 'http://localhost:7055/v1/shape/task_events',
-		where: `project_id=${data.projectId}`,
-	});
-
-	const taskHistoryEvents = new Shape(taskHistoryStream);
-	const taskEventArray = writable([]);
-	const latestEvent = writable();
-	$: if ($latestEvent) {
-		updateTaskFeatures();
-	}
-
-	async function getLatestStatePerTask() {
-		const taskEventMap = await taskHistoryEvents.value;
-		const taskEventArrayFromApi = Array.from(taskEventMap.values());
-
-		// Update the taskEventArray writable store
-		taskEventArray.set(taskEventArrayFromApi);
-
-		const currentTaskStates = new Map();
-
-		for (const taskData of taskEventArrayFromApi) {
-			// Use the task_id as the key and state as the value
-			currentTaskStates.set(taskData.task_id, {
-				state: taskData.state || 'UNLOCKED_TO_MAP',
-				actioned_by_uid: taskData.user_id || null,
-			});
-		}
-
-		return currentTaskStates;
-	}
-
-	async function updateTaskFeatures() {
-		const latestTaskStates = await getLatestStatePerTask();
-
-		const features = data.project.tasks.map((x: ProjectTask) => {
-			const taskId = x.id;
-			const taskDetails = latestTaskStates.get(taskId) || {
-				state: 'UNLOCKED_TO_MAP',
-				actioned_by_uid: null,
-			};
-			return {
-				type: 'Feature',
-				geometry: x.outline,
-				properties: {
-					...taskDetails,
-					fid: taskId,
-				}
-			};
-		});
-
-		taskFeatcolStore.set({
-			type: 'FeatureCollection',
-			features: features,
-		});
+	const taskEventStream = getTaskEventStream(data.projectId);
+	$: if ($latestEventStore) {
+		appendStatesToTaskFeatures(data.project.tasks);
 	}
 
 	// *** Selected task *** //
@@ -164,22 +111,15 @@
 	}
 
 	onMount(async () => {
+		await subscribeToTaskEvents(taskEventStream);
+		await appendStatesToTaskFeatures(data.project.tasks);
+
 		const projectPolygon = polygon(data.project.outline.coordinates);
 		const projectBuffer = buffer(projectPolygon, 100, { units: 'meters' });
 		if (projectBuffer && map) {
 			const projectBbox: [number, number, number, number] = bbox(projectBuffer) as [number, number, number, number];
 			map.fitBounds(projectBbox, { duration: 0 });
 		}
-
-		taskHistoryEvents.subscribe((taskHistoryEvent) => {
-			let newEvent;
-			for (newEvent of taskHistoryEvent);
-			if (newEvent) {
-				latestEvent.set(newEvent[1]);
-			}
-		});
-		// Do initial load of task features
-		await updateTaskFeatures();
 	});
 
 	// geolocation
@@ -303,13 +243,13 @@
 	};
 
 	onDestroy(() => {
-		taskHistoryStream.unsubscribeAll();
+		taskEventStream.unsubscribeAll();
 	});
 </script>
 
-{#if $latestEvent}
+{#if $latestEventStore}
 	<hot-card id="notification-banner" class="absolute z-10 top-18 right-0 font-sans hidden sm:flex">
-		{convertDateToTimeAgo($latestEvent.created_at)}: {$latestEvent.event} on task {$latestEvent.task_id} by {$latestEvent.username}
+		{convertDateToTimeAgo($latestEventStore.created_at)}: {$latestEventStore.event} on task {$latestEventStore.task_id} by {$latestEventStore.username}
 	</hot-card>
 {/if}
 
@@ -516,8 +456,8 @@
 			}}
 		>
 			{#if selectedTab === 'events'}
-				{#if $taskEventArray.length > 0}
-					{#each $taskEventArray as record}
+				{#if $taskEventStore.length > 0}
+					{#each $taskEventStore as record}
 						<EventCard {record} highlight={record.task_id === $selectedTaskId} on:zoomToTask={(e) => zoomToTask(e)}
 						></EventCard>
 					{/each}
