@@ -90,6 +90,7 @@
 
 	onMount(async () => {
 		// In components/map-component.svelte
+		// FIXME refactor this to probably use a prop instead...
 		await mapComponent.addProjectPolygonToMap(data.project.outline.coordinates);
 
 		// In store/task-events.ts
@@ -117,11 +118,10 @@
 <!-- The main page -->
 <div class="h-[calc(100vh-4.625rem)]">
 	<MapComponent bind:this={mapComponent} bind:toggleTaskActionModal={toggleTaskActionModal} />
+
 	{#if $selectedTaskId && selectedTab === 'map' && toggleTaskActionModal && ($selectedTaskState === 'UNLOCKED_TO_MAP' || $selectedTaskState === 'LOCKED_FOR_MAPPING')}
 		<div class="flex justify-center !w-[100vw] absolute bottom-[4rem] left-0 pointer-events-none z-50">
-			<div
-				class="bg-white w-[100vw] h-fit font-barlow-regular w-[100vw] md:max-w-[580px] pointer-events-auto px-4 pb-3 sm:pb-4 rounded-t-3xl"
-			>
+			<div class="bg-white w-fit font-barlow-regular md:max-w-[580px] pointer-events-auto px-4 pb-3 sm:pb-4 rounded-t-3xl">
 				<div class="flex justify-between items-center">
 					<p class="text-[#333] text-xl font-barlow-semibold leading-0 pt-2">Task #{$selectedTaskId}</p>
 					<hot-icon
@@ -131,82 +131,49 @@
 					></hot-icon>
 				</div>
 
-				{#if $selectedTaskState == 'UNLOCKED_TO_MAP'}
+				{#if $selectedTaskState === 'UNLOCKED_TO_MAP'}
 					<p class="my-4 sm:my-6">Do you want to start mapping task #{$selectedTaskId}?</p>
 					<div class="flex justify-center gap-x-2">
-						<sl-button
-							size="small"
-							variant="default"
-							class="secondary"
-							on:click={() => (toggleTaskActionModal = false)}
-							outline><span class="font-barlow-medium text-sm">CANCEL</span></sl-button
-						>
-						<sl-button
-							variant="default"
-							size="small"
-							class="primary"
-							on:click={mapTask(data.projectId, $selectedTaskId)}
-						>
+						<sl-button size="small" variant="default" class="secondary" on:click={() => (toggleTaskActionModal = false)} outline>
+							<span class="font-barlow-medium text-sm">CANCEL</span>
+						</sl-button>
+						<sl-button variant="default" size="small" class="primary" on:click={() => mapTask(data.projectId, $selectedTaskId)}>
 							<div class="flex items-center gap-1">
-								<hot-icon name="location" class="!text-[1rem] text-white cursor-pointer duration-200"></hot-icon>
+								<hot-icon name="location" class="!text-[1rem] text-white cursor-pointer duration-200" />
 								<p class="font-barlow-medium text-sm leading-[0]">START MAPPING</p>
 							</div>
 						</sl-button>
 					</div>
-				{:else if $selectedTaskState == 'LOCKED_FOR_MAPPING'}
-					<p class="my-4 sm:my-6">Task #{$selectedTaskId} has been locked, Is the task completely mapped?</p>
+				{:else if $selectedTaskState === 'LOCKED_FOR_MAPPING'}
+					<p class="my-4 sm:my-6">Task #{$selectedTaskId} has been locked. Is the task completely mapped?</p>
 					<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-						<sl-button
-							on:click={resetTask(data.projectId, $selectedTaskId)}
-							variant="default"
-							outline
-							size="small"
-							class="secondary"
-						>
+						<sl-button on:click={() => resetTask(data.projectId, $selectedTaskId)} variant="default" outline size="small" class="secondary">
 							<div class="flex items-center gap-1">
-								<hot-icon
-									name="close"
-									class="!text-[1rem] text-[#d73f37] cursor-pointer duration-200 hover:text-[#b91c1c]"
-									on:click={() => (toggleTaskActionModal = false)}
-								></hot-icon>
+								<hot-icon name="close" class="!text-[1rem] text-[#d73f37] cursor-pointer duration-200 hover:text-[#b91c1c]" />
 								<p class="font-barlow-medium text-sm leading-[0]">CANCEL MAPPING</p>
-							</div></sl-button
-						>
-						<sl-button
-							on:click={finishTask(data.projectId, $selectedTaskId)}
-							variant="default"
-							size="small"
-							class="primary"
-							><div class="flex items-center gap-1">
-								<hot-icon
-									name="check"
-									class="!text-[1rem] text-white cursor-pointer duration-200"
-									on:click={() => (toggleTaskActionModal = false)}
-								></hot-icon>
+							</div>
+						</sl-button>
+						<sl-button on:click={() => finishTask(data.projectId, $selectedTaskId)} variant="default" size="small" class="primary">
+							<div class="flex items-center gap-1">
+								<hot-icon name="check" class="!text-[1rem] text-white cursor-pointer duration-200" />
 								<p class="font-barlow-medium text-sm leading-[0]">COMPLETE MAPPING</p>
-							</div></sl-button
-						>
+							</div>
+						</sl-button>
 						<sl-button variant="default" size="small" class="gray col-span-2 sm:col-span-1">
 							<p class="font-barlow-medium text-sm leading-[0]">GO TO ODK</p>
 						</sl-button>
 					</div>
-					<div class="flex justify-center gap-2"></div>
 				{/if}
 			</div>
 		</div>
 	{/if}
 
 	{#if selectedTab !== 'map'}
-		<BottomSheet
-			onClose={() => {
-				tabGroup.show('map');
-			}}
-		>
+		<BottomSheet onClose={() => tabGroup.show('map')}>
 			{#if selectedTab === 'events'}
 				{#if $taskEventStore.length > 0}
 					{#each $taskEventStore as record}
-						<EventCard {record} highlight={record.task_id === $selectedTaskId} on:zoomToTask={(e) => zoomToTask(e)}
-						></EventCard>
+						<EventCard {record} highlight={record.task_id === $selectedTaskId} on:zoomToTask={(e) => zoomToTask(e)} />
 					{/each}
 				{/if}
 
@@ -214,38 +181,31 @@
 				<!-- <More instructions={data?.project?.project_info?.per_task_instructions} /> -->
 			{/if}
 			{#if selectedTab === 'offline'}
-				<div>TODO stuff here</div>
+				<span class="font-barlow-medium text-base">Coming soon!</span>
 			{/if}
 			{#if selectedTab === 'qrcode'}
 				<div class="flex flex-col items-center p-4 space-y-4">
 					<!-- Text above the QR code -->
 					<div class="text-center w-full">
-						<div class=" font-bold text-lg font-barlow-medium">Scan this QR Code in ODK Collect</div>
+						<div class="font-bold text-lg font-barlow-medium">Scan this QR Code in ODK Collect</div>
 					</div>
 
 					<!-- QR Code Container -->
 					<div class="flex justify-center w-full max-w-sm">
-						<hot-qr-code value={qrCodeData} label="Scan to open ODK Collect" size="250" radius="0.5" errorCorrection="L"
-						></hot-qr-code>
+						<hot-qr-code value={qrCodeData} label="Scan to open ODK Collect" size="250" />
 					</div>
 
 					<!-- Download Button -->
-					<div class="w-full max-w-sm text-center">
-						<hot-icon-button
-							name="download"
-							label="Download QRCode"
-							on:click={downloadQrCode(data.project.name, qrCodeData)}>Download</hot-icon-button
-						>
-					</div>
+					<sl-button on:click={downloadQrCode} size="small" class="primary w-full max-w-[200px]">
+						<span class="font-barlow-medium text-base">Download QR Code</span>
+					</sl-button>
 
 					<!-- Open ODK Button -->
-					<div class="w-full max-w-sm text-center">
-						<sl-button
-							class="primary"
-							href="odkcollect://form/{data.project.odk_form_id}{$selectedTaskId ? `?task_filter=${$selectedTaskId}` : ''}"
-							><span class="font-barlow-medium text-base">Open ODK</span></sl-button
-						>
-					</div>
+					<sl-button size="small" class="primary w-full max-w-[200px]"
+						href="odkcollect://form/{data.project.odk_form_id}{$selectedTaskId ? `?task_filter=${$selectedTaskId}` : ''}"
+					>
+						<span class="font-barlow-medium text-base">Open ODK</span></sl-button
+					>
 				</div>
 			{/if}
 		</BottomSheet>
