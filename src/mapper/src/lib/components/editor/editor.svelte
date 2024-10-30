@@ -1,10 +1,10 @@
 <script>
+	import '$styles/button.css';
 	import { onMount, onDestroy } from 'svelte';
 	import { Editor } from '@tiptap/core';
 	import StarterKit from '@tiptap/starter-kit';
 	import Toolbar from './toolbar.svelte';
 	import './editor.css';
-	import '../../../../styles/button.css';
 
 	let element;
 	let editor;

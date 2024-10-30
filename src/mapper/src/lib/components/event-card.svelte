@@ -1,6 +1,7 @@
 <script lang="ts">
   import '@hotosm/ui/dist/hotosm-ui';
   import { createEventDispatcher } from 'svelte';
+  // FIXME this no longer exists!
   import type { Task_history } from '$lib/migrations';
 
   export let record: Task_history;

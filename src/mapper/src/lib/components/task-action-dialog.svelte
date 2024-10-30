@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { mapTask, finishTask, resetTask } from '$lib/task-events';
+    import { mapTask, finishTask, resetTask } from '$lib/db/events';
     export let state: string;
     export let projectId: number;
     export let taskId: number;

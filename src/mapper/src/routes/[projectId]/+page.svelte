@@ -5,16 +5,15 @@
 	import SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.component.js';
 	import type { PageData } from '../$types';
 	import { onMount, onDestroy } from 'svelte';
-	import { writable } from 'svelte/store';
 	import { polygon } from '@turf/helpers';
 	import { buffer } from '@turf/buffer';
 	import { bbox } from '@turf/bbox';
 
 	import Error from './+error.svelte';
 	import EventCard from '$lib/components/event-card.svelte';
-	import BottomSheet from '$lib/components/common/bottom-sheet.svelte';
+	import BottomSheet from '$lib/components/bottom-sheet.svelte';
 	import TaskActionDialog from '$lib/components/task-action-dialog.svelte';
-	import MapComponent from '$lib/components/map-component.svelte';
+	import MapComponent from '$lib/components/map/main.svelte';
 
 	import type { ProjectData, ProjectTask, ZoomToTaskEventDetail } from '$lib/types';
 	import {
@@ -24,8 +23,8 @@
 		// validateTask,
 		// goodTask,
 		// commentTask,
-	} from '$lib/task-events';
-	import { generateQrCode, downloadQrCode } from '$lib/qrcode';
+	} from '$lib/db/events';
+	import { generateQrCode, downloadQrCode } from '$lib/utils/qrcode';
 	import { convertDateToTimeAgo } from '$lib/utils/datetime';
 	import { 
 		latestEventStore,
@@ -37,7 +36,7 @@
 		subscribeToTaskEvents,
 		appendStatesToTaskFeatures,
 		getLatestStatePerTask
-	} from '$store/task-events';
+	} from '$store/tasks';
 
 	export let data: PageData;
 
@@ -89,11 +88,11 @@
 	}
 
 	onMount(async () => {
-		// In components/map-component.svelte
+		// In components/map/main.svelte
 		// FIXME refactor this to probably use a prop instead...
 		await mapComponent.addProjectPolygonToMap(data.project.outline.coordinates);
 
-		// In store/task-events.ts
+		// In store/tasks.ts
 		await subscribeToTaskEvents(taskEventStream);
 		await appendStatesToTaskFeatures(data.project.tasks);
 	});

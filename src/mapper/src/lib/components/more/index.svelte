@@ -1,7 +1,7 @@
 <script lang="ts">
-	import Editor from '$lib/components/common/Editor/editor.svelte';
-	import Comment from '$lib/components/page/more/comment.svelte';
-	import Activities from '$lib/components/page/more/activities.svelte';
+	import Editor from '$lib/components/editor/editor.svelte';
+	import Comment from '$lib/components/more/comment.svelte';
+	import Activities from '$lib/components/more/activities.svelte';
 
 	type stackType = '' | 'Comment' | 'Instructions' | 'Activities';
 	const stackGroup: { icon: string; title: stackType }[] = [

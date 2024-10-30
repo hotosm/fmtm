@@ -21,15 +21,15 @@
     import { buffer } from '@turf/buffer';
     import { bbox } from '@turf/bbox';
 
-    import Legend from '$lib/components/page/legend.svelte';
-    import LayerSwitcher from '$lib/components/page/layer-switcher.svelte';
+    import Legend from '$lib/components/map/legend.svelte';
+    import LayerSwitcher from '$lib/components/map/layer-switcher.svelte';
     import { GetDeviceRotation } from '$lib/utils/getDeviceRotation';
     import LocationArcImg from '$assets/images/locationArc.png';
     import LocationDotImg from '$assets/images/locationDot.png';
     import BlackLockImg from '$assets/images/black-lock.png';
     import RedLockImg from '$assets/images/red-lock.png';
     import { setAlert } from '$store/common';
-	import { taskFeatcolStore, selectedTaskId } from '$store/task-events';
+	import { taskFeatcolStore, selectedTaskId } from '$store/tasks';
 
     export let toggleTaskActionModal: boolean;
 
