@@ -14,8 +14,7 @@
 		"lint": "prettier --plugin prettier-plugin-svelte --check . && eslint .",
 		"format": "prettier --plugin prettier-plugin-svelte --write .",
 		"test:integration": "playwright test",
-		"test:unit": "vitest",
-		"electric:migrations": "electric-sql generate"
+		"test:unit": "vitest"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.48.1",
@@ -42,7 +41,7 @@
 		"vitest": "^1.6.0"
 	},
 	"dependencies": {
-		"@electric-sql/client": "^0.6.4",
+		"@electric-sql/client": "^0.6.5",
 		"@electric-sql/pglite": "^0.2.12",
 		"@hotosm/ui": "0.2.0-b5",
 		"@tiptap/core": "^2.8.0",
