@@ -35,8 +35,14 @@
 		selectedTaskState,
 		subscribeToTaskEvents,
 		appendStatesToTaskFeatures,
-		getLatestStatePerTask
+		getLatestStatePerTask,
 	} from '$store/tasks';
+	import { 
+		entitiesStatusStore,
+		selectedEntity,
+		getEntityStatusStream,
+		subscribeToEntityStatusUpdates,
+	} from '$store/entities';
 
 	export let data: PageData;
 
@@ -46,16 +52,21 @@
 	let selectedTab: string = 'map';
 	let toggleTaskActionModal = false;
 
+	console.log(data.project.data_extract_url)
 	const taskEventStream = getTaskEventStream(data.projectId);
 	$: if ($latestEventStore) {
 		appendStatesToTaskFeatures(data.project.tasks);
 	}
+	const entityStatusStream = getEntityStatusStream(data.projectId);
+	$: if ($entitiesStatusStore) {
+		// TODO replace this with updating the entities geojson
+		console.log($entitiesStatusStore)
+	}
+
+	$: qrCodeData = generateQrCode(data.project.name, data.project.odk_token, 'REPLACE_ME_WITH_A_USERNAME');
 
 	// *** Selected task *** //
-	$: qrCodeData = generateQrCode(data.project.name, data.project.odk_token, 'TEMP');
-
 	$: selectedTask.set(data.project.tasks.find((task: ProjectTask) => task.id === $selectedTaskId));
-
 	$: (async () => {
 		const task = $selectedTask;
 		if (task && task.id) {
@@ -64,6 +75,11 @@
 			selectedTaskState.set(latestTaskDetails?.state || 'UNLOCKED_TO_MAP');
 		} else {
 			selectedTaskState.set('');
+		}
+	})();
+	$: (() => {
+		const task = $selectedTask;
+		if (task && task.outline) {
 		}
 	})();
 
@@ -95,6 +111,8 @@
 		// In store/tasks.ts
 		await subscribeToTaskEvents(taskEventStream);
 		await appendStatesToTaskFeatures(data.project.tasks);
+		// In store/entities.ts
+		await subscribeToEntityStatusUpdates(entityStatusStream);
 	});
 
 	onDestroy(() => {

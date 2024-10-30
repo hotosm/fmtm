@@ -16,19 +16,18 @@
         ControlGroup,
         ControlButton,
     } from 'svelte-maplibre';
-    import type { FeatureCollection } from 'geojson';
     import { polygon } from '@turf/helpers';
     import { buffer } from '@turf/buffer';
     import { bbox } from '@turf/bbox';
 
-    import Legend from '$lib/components/map/legend.svelte';
-    import LayerSwitcher from '$lib/components/map/layer-switcher.svelte';
-    import { GetDeviceRotation } from '$lib/utils/getDeviceRotation';
     import LocationArcImg from '$assets/images/locationArc.png';
     import LocationDotImg from '$assets/images/locationDot.png';
     import BlackLockImg from '$assets/images/black-lock.png';
     import RedLockImg from '$assets/images/red-lock.png';
-    import { setAlert } from '$store/common';
+
+    import Legend from '$lib/components/map/legend.svelte';
+    import LayerSwitcher from '$lib/components/map/layer-switcher.svelte';
+    import Geolocation from '$lib/components/map/geolocation.svelte';
 	import { taskFeatcolStore, selectedTaskId } from '$store/tasks';
 
     export let toggleTaskActionModal: boolean;
@@ -36,6 +35,7 @@
 	let map: maplibregl.Map | undefined;
 	let loaded: boolean;
 	let featureClicked = writable(false);
+	let toggleGeolocationStatus = false;
 
 	const osmStyle = {
 		id: 'OSM Raster',
@@ -75,96 +75,6 @@
 			map.fitBounds(projectBbox, { duration: 0 });
 		}
     }
-
-	// geolocation
-	let coords: [number, number];
-	let rotationDeg: number | undefined;
-	let toggleGeolocationStatus = false;
-	let watchId: number;
-
-	$: if (map && toggleGeolocationStatus) {
-		// zoom to user's current location
-		navigator.geolocation.getCurrentPosition((position) => {
-			const currentCoordinate = [position.coords.longitude, position.coords.latitude];
-			map.flyTo({
-				center: currentCoordinate,
-				essential: true,
-				zoom: 18,
-			});
-		});
-
-		// track users location
-		watchId = navigator.geolocation.watchPosition(
-			function (pos) {
-				coords = [pos.coords.longitude, pos.coords.latitude];
-			},
-			function (error) {
-				alert(`ERROR: ${error.message}`);
-			},
-			{
-				enableHighAccuracy: true,
-			},
-		);
-	} else {
-		// stop tracking user's location on location toggle off
-		navigator.geolocation.clearWatch(watchId);
-	}
-	const isFirefox = typeof InstallTrigger !== 'undefined';
-	const isSafari =
-		/constructor/i.test(window.HTMLElement) ||
-		(function (p) {
-			return p.toString() === '[object SafariRemoteNotification]';
-			// @ts-ignore
-		})(!window['safari'] || (typeof safari !== 'undefined' && window['safari'].pushNotification));
-
-	// locationGeojson: to display point on the map
-	let locationGeojson: FeatureCollection;
-	$: locationGeojson = {
-		type: 'FeatureCollection',
-		features: [
-			{
-				type: 'Feature',
-				geometry: {
-					type: 'Point',
-					coordinates: coords,
-				},
-				// firefox & safari doesn't support device orientation sensor, so if the browser any of the two set orientation to false
-				properties: { orientation: !(isFirefox || isSafari) },
-			},
-		],
-	};
-
-	$: if (map && toggleGeolocationStatus) {
-		if (isFirefox || isSafari) {
-			// firefox & safari doesn't support device orientation sensor
-			setAlert.set({
-				variant: 'warning',
-				message: "Unable to handle device orientation. Your browser doesn't support device orientation sensors.",
-			});
-		} else {
-			// See the API specification at: https://w3c.github.io/orientation-sensor
-			// We use referenceFrame: 'screen' because the web page will rotate when
-			// the phone switches from portrait to landscape.
-			const sensor = new AbsoluteOrientationSensor({
-				frequency: 60,
-				referenceFrame: 'screen',
-			});
-			sensor.addEventListener('reading', (event) => {
-				rotationDeg = GetDeviceRotation(sensor.quaternion);
-			});
-
-			Promise.all([
-				navigator.permissions.query({ name: 'accelerometer' }),
-				navigator.permissions.query({ name: 'magnetometer' }),
-				navigator.permissions.query({ name: 'gyroscope' }),
-			]).then((results) => {
-				if (results.every((result) => result.state === 'granted')) {
-					sensor.start();
-				} else {
-				}
-			});
-		}
-	}
 </script>
 
 <MapLibre
@@ -203,24 +113,9 @@
             >
         </ControlGroup></Control
     >
+    <!-- Add the Geolocation GeoJSON layer to the map -->
     {#if toggleGeolocationStatus}
-        <GeoJSON data={locationGeojson} id="point">
-            <SymbolLayer
-                applyToClusters={false}
-                hoverCursor="pointer"
-                layout={{
-                    // if orientation true (meaning the browser supports device orientation sensor show location dot with orientation sign)
-                    'icon-image': ['case', ['==', ['get', 'orientation'], true], 'locationArc', 'locationDot'],
-                    'icon-allow-overlap': true,
-                    'text-field': '{mag}',
-                    'text-offset': [0, -2],
-                    'text-size': 12,
-                    'icon-rotate': rotationDeg || 0, // rotate location icon acc to device orientation
-                    'icon-rotation-alignment': 'map',
-                    'icon-size': 0.5,
-                }}
-            />
-        </GeoJSON>
+        <Geolocation bind:map={map} bind:toggleGeolocationStatus={toggleGeolocationStatus}></Geolocation>
     {/if}
     <GeoJSON id="states" data={$taskFeatcolStore} promoteId="TASKS">
         <FillLayer
