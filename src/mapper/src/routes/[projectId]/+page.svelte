@@ -48,6 +48,7 @@
 	import LocationArcImg from '$assets/images/locationArc.png';
 	import LocationDotImg from '$assets/images/locationDot.png';
 	import { setAlert } from '$store/common';
+	import { convertDateToTimeAgo } from '$lib/utils/datetime';
 
 	export let data: PageData;
 
@@ -307,7 +308,7 @@
 
 {#if $latestEvent}
 	<hot-card id="notification-banner" class="absolute z-10 top-18 right-0 font-sans hidden sm:flex">
-		Latest: {$latestEvent.comment}
+		{convertDateToTimeAgo($latestEvent.created_at)}: {$latestEvent.event} on task {$latestEvent.task_id} by {$latestEvent.username}
 	</hot-card>
 {/if}
 
