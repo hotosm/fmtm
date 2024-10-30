@@ -31,8 +31,9 @@
     import { setAlert } from '$store/common';
 	import { taskFeatcolStore, selectedTaskId } from '$store/task-events';
 
-	export let map: maplibregl.Map | undefined;
     export let toggleTaskActionModal: boolean;
+
+	let map: maplibregl.Map | undefined;
 	let loaded: boolean;
 	let featureClicked = writable(false);
 

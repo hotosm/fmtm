@@ -44,10 +44,7 @@
 	// $: ({ electric, project } = data)
 	let mapComponent
 	let tabGroup: SlTabGroup;
-
 	let selectedTab: string = 'map';
-	let panelDisplay: string = 'none';
-	$: panelDisplay = selectedTab === 'map' ? 'none' : 'block';
 	let toggleTaskActionModal = false;
 
 	const taskEventStream = getTaskEventStream(data.projectId);
@@ -105,16 +102,19 @@
 	});
 </script>
 
+<!-- There is a new event to display in the top right corner -->
 {#if $latestEventStore}
 	<hot-card id="notification-banner" class="absolute z-10 top-18 right-0 font-sans hidden sm:flex">
 		{convertDateToTimeAgo($latestEventStore.created_at)}: {$latestEventStore.event} on task {$latestEventStore.task_id} by {$latestEventStore.username}
 	</hot-card>
 {/if}
 
+<!-- The dialog should overlay with actions for a task -->
 {#if $selectedTaskId}
 	<TaskActionDialog state={$selectedTaskState} projectId={data.projectId} taskId={$selectedTaskId} />
 {/if}
 
+<!-- The main page -->
 <div class="h-[calc(100vh-4.625rem)]">
 	<MapComponent bind:this={mapComponent} bind:toggleTaskActionModal={toggleTaskActionModal} />
 	{#if $selectedTaskId && selectedTab === 'map' && toggleTaskActionModal && ($selectedTaskState === 'UNLOCKED_TO_MAP' || $selectedTaskState === 'LOCKED_FOR_MAPPING')}
