@@ -45,7 +45,7 @@
     <!-- Action Text and Task ID -->
     <div class="text-base">
       <span class="text-[#555555] font-medium font-archivo">
-        {record?.event} by {record.comment?.split(' ').at(-1)}
+        {record?.event} by {record.username}
       </span>
 
       <!-- Date and Time -->

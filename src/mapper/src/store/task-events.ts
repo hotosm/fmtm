@@ -10,6 +10,10 @@ const taskEventStore = writable([]);
 
 let taskEventShape: Shape;
 
+let selectedTaskId = writable<number | null>(null);
+let selectedTask = writable<any>(null);
+let selectedTaskState = writable<string>('');
+
 function getTaskEventStream(projectId: number): ShapeStream | undefined {
 	if (!projectId) {
 		return;
@@ -74,6 +78,9 @@ export {
 	taskFeatcolStore,
 	latestEventStore,
 	taskEventStore,
+	selectedTaskId,
+	selectedTask,
+	selectedTaskState,
 	getTaskEventStream,
 	subscribeToTaskEvents,
 	appendStatesToTaskFeatures,
