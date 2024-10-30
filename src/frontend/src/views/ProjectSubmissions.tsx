@@ -55,7 +55,7 @@ const ProjectSubmissions = () => {
     dispatch(
       MappedVsValidatedTaskService(`${import.meta.env.VITE_API_URL}/tasks/activity/?project_id=${projectId}&days=30`),
     );
-  });
+  }, []);
 
   useEffect(() => {
     if (!searchParams.get('tab')) {
