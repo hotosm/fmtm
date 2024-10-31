@@ -6,11 +6,9 @@
 	import Toolbar from './toolbar.svelte';
 	import './editor.css';
 
-	let element;
-	let editor;
-	export let editable;
-	export let content;
-	export let setEditorHtmlContent;
+	let element = $state();
+	let editor = $state();
+	let { editable, content, setEditorHtmlContent } = $props();
 
 	onMount(() => {
 		editor = new Editor({

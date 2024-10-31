@@ -1,8 +1,12 @@
 <script lang="ts">
     import { mapTask, finishTask, resetTask } from '$lib/db/events';
-    export let state: string;
-    export let projectId: number;
-    export let taskId: number;
+    interface Props {
+        state: string;
+        projectId: number;
+        taskId: number;
+    }
+
+    let { state, projectId, taskId }: Props = $props();
 
     const actions = {
         UNLOCKED_TO_MAP: { label: 'MAP', color: 'green', icon: 'play', action: () => mapTask(projectId, taskId) },
@@ -17,7 +21,7 @@
             name={actions[state].icon}
             class="fixed top-30 left-1/2 transform -translate-x-1/2 text-5xl z-10 bg-{actions[state].color}-500 text-white rounded-full p-1"
             label={actions[state].label}
-            on:click={actions[state].action}
+            onclick={actions[state].action}
         ></hot-icon-button>
     </sl-tooltip>
 {/if}

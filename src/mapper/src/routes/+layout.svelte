@@ -6,11 +6,11 @@
 
 	setBasePath('/mapnow');
 
-	export let data;
+	let { data, children } = $props();
 </script>
 
 <main class="flex flex-col h-screen overflow-hidden">
 	<hot-header></hot-header>
 	<Toast />
-	<slot {data}></slot>
+	{@render children?.({ data, })}
 </main>

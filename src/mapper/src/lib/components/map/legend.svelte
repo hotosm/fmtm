@@ -5,7 +5,7 @@
 
 	type taskStatusesType = { status: string; color?: string; icon?: string };
 
-	let isOpen = false;
+	let isOpen = $state(false);
 
 	const taskStatuses: taskStatusesType[] = [
 		{ status: 'Ready', color: '#ffffff' },
@@ -18,8 +18,8 @@
 	];
 </script>
 
-<div use:clickOutside on:click_outside={() => (isOpen = false)} class="relative">
-	<div class="group absolute bottom-0 right-0 text-nowrap cursor-pointer" on:click={() => (isOpen = !isOpen)}>
+<div use:clickOutside onclick_outside={() => (isOpen = false)} class="relative">
+	<div class="group absolute bottom-0 right-0 text-nowrap cursor-pointer" onclick={() => (isOpen = !isOpen)}>
 		<hot-icon
 			style="border: 1px solid #D7D7D7;"
 			name="legend-toggle"

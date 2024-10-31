@@ -2,7 +2,6 @@
     import '$styles/page.css';
     import '$styles/button.css';
     import '@hotosm/ui/dist/hotosm-ui';
-    import { writable } from 'svelte/store';
     import {
         MapLibre,
         GeoJSON,
@@ -19,6 +18,7 @@
     import { polygon } from '@turf/helpers';
     import { buffer } from '@turf/buffer';
     import { bbox } from '@turf/bbox';
+    import type { Position, Polygon, FeatureCollection } from 'geojson';
 
     import LocationArcImg from '$assets/images/locationArc.png';
     import LocationDotImg from '$assets/images/locationDot.png';
@@ -28,15 +28,35 @@
     import Legend from '$lib/components/map/legend.svelte';
     import LayerSwitcher from '$lib/components/map/layer-switcher.svelte';
     import Geolocation from '$lib/components/map/geolocation.svelte';
-	import { taskFeatcolStore, selectedTaskId } from '$store/tasks';
-	// import { entityFeatcolStore, selectedEntityId } from '$store/entities';
+	import { getTaskStore } from '$store/tasks.svelte.ts';
+    // import { entityFeatcolStore, selectedEntityId } from '$store/entities';
 
-    export let toggleTaskActionModal: boolean;
+    interface Props {
+        projectOutlineCoords: Position[][],
+        toggleTaskActionModal: boolean;
+    }
 
-	let map: maplibregl.Map | undefined;
-	let loaded: boolean;
-	let taskAreaClicked = writable(false);
-	let toggleGeolocationStatus = false;
+    let {
+        projectOutlineCoords,
+        toggleTaskActionModal = $bindable(),
+     }: Props = $props();
+
+    const taskStore = getTaskStore();
+
+	let map: maplibregl.Map | undefined = $state();
+	let loaded: boolean = $state(false);
+	let taskAreaClicked = $state(false);
+	let toggleGeolocationStatus = $state(false);
+
+    // Fit the map bounds to the project area
+	$effect(() => {
+		if (map && projectOutlineCoords) {
+            const projectPolygon = polygon(projectOutlineCoords);
+            const projectBuffer = buffer(projectPolygon, 100, { units: 'meters' });
+            const projectBbox: [number, number, number, number] = bbox(projectBuffer) as [number, number, number, number];
+            map.fitBounds(projectBbox, { duration: 0 });
+		}
+	});
 
 	const osmStyle = {
 		id: 'OSM Raster',
@@ -67,17 +87,9 @@
 		},
 		],
 	};
-
-    export async function addProjectPolygonToMap(projectOutlineCoords) {
-		const projectPolygon = polygon(projectOutlineCoords);
-		const projectBuffer = buffer(projectPolygon, 100, { units: 'meters' });
-		if (projectBuffer && map) {
-			const projectBbox: [number, number, number, number] = bbox(projectBuffer) as [number, number, number, number];
-			map.fitBounds(projectBbox, { duration: 0 });
-		}
-    }
 </script>
 
+<!-- Note here we still use Svelte 4 on:click until svelte-maplibre migrates -->
 <MapLibre
     bind:map
     bind:loaded
@@ -86,14 +98,12 @@
     center={[0, 0]}
     zoom={2}
     attributionControl={false}
-    on:click={(e) => {
-        taskAreaClicked.subscribe((fClicked) => {
-            if (!fClicked) {
-                selectedTaskId.set(null);
-            }
-            taskAreaClicked.set(false);
-            toggleTaskActionModal = false;
-        });
+    on:click={(_e) => {
+        // deselect everything on click, to allow for re-selection
+        // if the user clicks on a feature layer directly (on:click)
+        taskStore.setSelectedTaskId(null);
+        taskAreaClicked = false;
+        toggleTaskActionModal = false;
     }}
     images={[
         { id: 'LOCKED_FOR_MAPPING', url: BlackLockImg },
@@ -119,7 +129,7 @@
         <Geolocation bind:map bind:toggleGeolocationStatus></Geolocation>
     {/if}
     <!-- The task area geojson -->
-    <GeoJSON id="states" data={$taskFeatcolStore} promoteId="TASKS">
+    <GeoJSON id="states" data={taskStore.featcol} promoteId="TASKS">
         <FillLayer
             hoverCursor="pointer"
             paint={{
@@ -143,18 +153,18 @@
             beforeLayerType="symbol"
             manageHoverState
             on:click={(e) => {
-                taskAreaClicked.set(true);
-                const clickedTask = e.detail.features?.[0]?.properties?.fid;
-                selectedTaskId.set(clickedTask);
+                taskAreaClicked = true;
+                const clickedTaskId = e.detail.features?.[0]?.properties?.fid;
+                taskStore.setSelectedTaskId(clickedTaskId);
                 toggleTaskActionModal = true;
             }}
         />
         <LineLayer
             layout={{ 'line-cap': 'round', 'line-join': 'round' }}
             paint={{
-                'line-color': ['case', ['==', ['get', 'fid'], $selectedTaskId], '#fa1100', '#0fffff'],
+                'line-color': ['case', ['==', ['get', 'fid'], taskStore.selectedTaskId], '#fa1100', '#0fffff'],
                 'line-width': 3,
-                'line-opacity': ['case', ['==', ['get', 'fid'], $selectedTaskId], 1, 0.35],
+                'line-opacity': ['case', ['==', ['get', 'fid'], taskStore.selectedTaskId], 1, 0.35],
             }}
             beforeLayerType="symbol"
             manageHoverState
@@ -193,9 +203,9 @@
             beforeLayerType="symbol"
             manageHoverState
             on:click={(e) => {
-                // taskAreaClicked.set(true);
-                // const clickedTask = e.detail.features?.[0]?.properties?.fid;
-                // selectedEntityId.set(clickedTask);
+                // taskAreaClicked = true;
+                // const clickedEntityId = e.detail.features?.[0]?.properties?.fid;
+                // entityStore.selectedEntityId = clickedEntityId;
                 // toggleTaskActionModal = true;
             }}
         />

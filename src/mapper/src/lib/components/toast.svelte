@@ -1,13 +1,16 @@
 <script lang="ts">
-	import { setAlert } from '$store/common';
+	import SlAlert from '@shoelace-style/shoelace/dist/components/alert/alert.js';
+	import { getAlertStore } from '$store/common.svelte.ts';
 
-	let alertRef;
-	let alertInfo;
+	const alertStore = getAlertStore();
+	let alertRef: SlAlert | undefined = $state();
 
-	setAlert.subscribe((value) => {
-		if (!value?.message) return;
-		alertInfo = value;
-		alertRef?.toast();
+	$effect(() => {
+		if (alertStore.alert) {
+			if (!alertStore.alert?.message) return;
+			// Display the alert
+			alertRef?.toast();
+		}
 	});
 
 	const iconName = {
@@ -27,9 +30,9 @@
 </script>
 
 <div>
-	<sl-alert bind:this={alertRef} variant={variantMap?.[alertInfo?.variant]} duration="4000" closable>
-		<sl-icon slot="icon" name={iconName?.[alertInfo?.variant]}></sl-icon>
-		{alertInfo?.message}
+	<sl-alert bind:this={alertRef} variant={variantMap?.[alertStore.alert?.variant]} duration="4000" closable>
+		<sl-icon slot="icon" name={iconName?.[alertStore.alert?.variant]}></sl-icon>
+		{alertStore.alert?.message}
 	</sl-alert>
 </div>
 

@@ -4,8 +4,12 @@
   // FIXME this no longer exists!
   import type { Task_history } from '$lib/migrations';
 
-  export let record: Task_history;
-  export let highlight: boolean;
+  interface Props {
+    record: Task_history;
+    highlight: boolean;
+  }
+
+  let { record, highlight }: Props = $props();
 
   const dispatch = createEventDispatcher();
 
@@ -65,7 +69,7 @@
     </div>
 
     <!-- Zoom to Task Icon -->
-    <div title="Zoom to Task" on:click={(e) => { e.stopPropagation(); handleZoomToTask() }}>
+    <div title="Zoom to Task" onclick={(e) => { e.stopPropagation(); handleZoomToTask() }}>
       <sl-icon name="map" class="text-[#9B9999] hover:text-[#555555] cursor-pointer text-[20px]"></sl-icon>
     </div>
 </sl-card>
