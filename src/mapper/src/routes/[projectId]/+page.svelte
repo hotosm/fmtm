@@ -156,7 +156,7 @@
 						</sl-button>
 						<sl-button variant="default" size="small" class="primary" on:click={() => mapTask(data.projectId, $selectedTaskId)}>
 							<div class="flex items-center gap-1">
-								<hot-icon name="location" class="!text-[1rem] text-white cursor-pointer duration-200" />
+								<hot-icon name="location" class="!text-[1rem] text-white cursor-pointer duration-200"></hot-icon>
 								<p class="font-barlow-medium text-sm leading-[0]">START MAPPING</p>
 							</div>
 						</sl-button>
@@ -166,13 +166,13 @@
 					<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
 						<sl-button on:click={() => resetTask(data.projectId, $selectedTaskId)} variant="default" outline size="small" class="secondary">
 							<div class="flex items-center gap-1">
-								<hot-icon name="close" class="!text-[1rem] text-[#d73f37] cursor-pointer duration-200 hover:text-[#b91c1c]" />
+								<hot-icon name="close" class="!text-[1rem] text-[#d73f37] cursor-pointer duration-200 hover:text-[#b91c1c]"></hot-icon>
 								<p class="font-barlow-medium text-sm leading-[0]">CANCEL MAPPING</p>
 							</div>
 						</sl-button>
 						<sl-button on:click={() => finishTask(data.projectId, $selectedTaskId)} variant="default" size="small" class="primary">
 							<div class="flex items-center gap-1">
-								<hot-icon name="check" class="!text-[1rem] text-white cursor-pointer duration-200" />
+								<hot-icon name="check" class="!text-[1rem] text-white cursor-pointer duration-200"></hot-icon>
 								<p class="font-barlow-medium text-sm leading-[0]">COMPLETE MAPPING</p>
 							</div>
 						</sl-button>
@@ -209,7 +209,7 @@
 
 					<!-- QR Code Container -->
 					<div class="flex justify-center w-full max-w-sm">
-						<hot-qr-code value={qrCodeData} label="Scan to open ODK Collect" size="250" />
+						<hot-qr-code value={qrCodeData} label="Scan to open ODK Collect" size="250"></hot-qr-code>
 					</div>
 
 					<!-- Download Button -->

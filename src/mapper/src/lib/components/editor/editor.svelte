@@ -41,7 +41,7 @@
 		{/if}
 
 		<div class={`${editable ? 'h-[80px]' : 'h-full'}`}>
-			<div bind:this={element} />
+			<div bind:this={element}></div>
 		</div>
 	</div>
 </div>

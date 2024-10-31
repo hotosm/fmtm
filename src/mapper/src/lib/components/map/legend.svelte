@@ -37,7 +37,7 @@
 						<img src={taskStatus.icon} class="w-4" />
 					</div>
 				{:else}
-					<div style="background-color: {taskStatus.color}; border: 1px solid #D0D0D0;" class={`w-5 h-5 opacity-40`} />
+					<div style="background-color: {taskStatus.color}; border: 1px solid #D0D0D0;" class={`w-5 h-5 opacity-40`}></div>
 				{/if}
 				<p class="font-barlow-regular text-[#494949] text-nowrap leading-0">{taskStatus?.status}</p>
 			</div>
