@@ -29,12 +29,13 @@
     import LayerSwitcher from '$lib/components/map/layer-switcher.svelte';
     import Geolocation from '$lib/components/map/geolocation.svelte';
 	import { taskFeatcolStore, selectedTaskId } from '$store/tasks';
+	// import { entityFeatcolStore, selectedEntityId } from '$store/entities';
 
     export let toggleTaskActionModal: boolean;
 
 	let map: maplibregl.Map | undefined;
 	let loaded: boolean;
-	let featureClicked = writable(false);
+	let taskAreaClicked = writable(false);
 	let toggleGeolocationStatus = false;
 
 	const osmStyle = {
@@ -86,11 +87,11 @@
     zoom={2}
     attributionControl={false}
     on:click={(e) => {
-        featureClicked.subscribe((fClicked) => {
+        taskAreaClicked.subscribe((fClicked) => {
             if (!fClicked) {
                 selectedTaskId.set(null);
             }
-            featureClicked.set(false);
+            taskAreaClicked.set(false);
             toggleTaskActionModal = false;
         });
     }}
@@ -115,8 +116,9 @@
     >
     <!-- Add the Geolocation GeoJSON layer to the map -->
     {#if toggleGeolocationStatus}
-        <Geolocation bind:map={map} bind:toggleGeolocationStatus={toggleGeolocationStatus}></Geolocation>
+        <Geolocation bind:map bind:toggleGeolocationStatus></Geolocation>
     {/if}
+    <!-- The task area geojson -->
     <GeoJSON id="states" data={$taskFeatcolStore} promoteId="TASKS">
         <FillLayer
             hoverCursor="pointer"
@@ -141,7 +143,7 @@
             beforeLayerType="symbol"
             manageHoverState
             on:click={(e) => {
-                featureClicked.set(true);
+                taskAreaClicked.set(true);
                 const clickedTask = e.detail.features?.[0]?.properties?.fid;
                 selectedTaskId.set(clickedTask);
                 toggleTaskActionModal = true;
@@ -168,6 +170,46 @@
             }}
         />
     </GeoJSON>
+    <!-- The features / entities geojson
+    <GeoJSON id="states" data={$entityFeatcolStore} promoteId="ENTITIES">
+        <FillLayer
+            hoverCursor="pointer"
+            paint={{
+                'fill-color': [
+                    'match',
+                    ['get', 'status'],
+                    'READY',
+                    '#ffffff',
+                    'OPENED_IN_ODK',
+                    '#008099',
+                    'SURVEY_SUBMITTED',
+                    '#ade6ef',
+                    'MARKED_BAD',
+                    '#fceca4',
+                    '#c5fbf5', // default color if no match is found
+                ],
+                'fill-opacity': hoverStateFilter(0.1, 0),
+            }}
+            beforeLayerType="symbol"
+            manageHoverState
+            on:click={(e) => {
+                // taskAreaClicked.set(true);
+                // const clickedTask = e.detail.features?.[0]?.properties?.fid;
+                // selectedEntityId.set(clickedTask);
+                // toggleTaskActionModal = true;
+            }}
+        />
+        <LineLayer
+            layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+            paint={{
+                'line-color': ['case', ['==', ['get', 'fid'], $selectedEntityId], '#fa1100', '#0fffff'],
+                'line-width': 3,
+                'line-opacity': ['case', ['==', ['get', 'fid'], $selectedEntityId], 1, 0.35],
+            }}
+            beforeLayerType="symbol"
+            manageHoverState
+        />
+    </GeoJSON> -->
     <div class="absolute right-3 bottom-3 sm:right-5 sm:bottom-5">
         <LayerSwitcher />
         <Legend />
