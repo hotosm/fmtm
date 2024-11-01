@@ -129,7 +129,7 @@
         <Geolocation bind:map bind:toggleGeolocationStatus></Geolocation>
     {/if}
     <!-- The task area geojson -->
-    <GeoJSON id="states" data={taskStore.featcol} promoteId="TASKS">
+    <GeoJSON id="tasks" data={taskStore.featcol} promoteId="fid">
         <FillLayer
             hoverCursor="pointer"
             paint={{
