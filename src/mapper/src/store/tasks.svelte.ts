@@ -78,11 +78,13 @@ function getTaskStore() {
 	}
 
 	return {
+		// The task areas / status colours displayed on the map
 		appendTaskStatesToFeatcol: appendTaskStatesToFeatcol,
 		get featcol() {
 			return featcol;
 		},
 
+		// The latest event to display in notifications bar
 		subscribeToEvents: subscribeToTaskEvents,
 		get latestEvent() {
 			return latestEvent;
@@ -91,6 +93,7 @@ function getTaskStore() {
 			return events;
 		},
 
+		// The selected task to display mapping dialog
 		setSelectedTaskId: setSelectedTaskId,
 		get selectedTaskId() {
 			return selectedTaskId;
