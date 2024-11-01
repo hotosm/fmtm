@@ -107,7 +107,8 @@
 <!-- There is a new event to display in the top right corner -->
 {#if taskStore.latestEvent}
 	<hot-card id="notification-banner" class="absolute z-10 top-18 right-0 font-sans hidden sm:flex">
-		{convertDateToTimeAgo(taskStore.latestEvent.created_at)}: {taskStore.latestEvent.event} on task {taskStore.latestEvent.task_id} by {taskStore.latestEvent.username}
+		<b>{convertDateToTimeAgo(taskStore.latestEvent.created_at)}</b> | {taskStore.latestEvent.event} 
+		on task {taskStore.latestEvent.task_id} by {taskStore.latestEvent.username || 'anon'}
 	</hot-card>
 {/if}
 
