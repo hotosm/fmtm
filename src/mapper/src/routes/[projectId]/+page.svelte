@@ -52,7 +52,6 @@
 	let toggleTaskActionModal = $state(false);
 
 	const taskStore = getTaskStore();
-	console.log(data.project.data_extract_url)
 	const taskEventStream = getTaskEventStream(data.projectId);
 	// Update the geojson task states when a new event is added
 	$effect(() => {
@@ -123,6 +122,7 @@
 		bind:this={mapComponent}
 		bind:toggleTaskActionModal={toggleTaskActionModal}
 		projectOutlineCoords={data.project.outline.coordinates}
+		entitiesUrl={data.project.data_extract_url}
 	/>
 
 	{#if taskStore.selectedTaskId && selectedTab === 'map' && toggleTaskActionModal && (taskStore.selectedTaskState === 'UNLOCKED_TO_MAP' || taskStore.selectedTaskState === 'LOCKED_FOR_MAPPING')}

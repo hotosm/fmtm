@@ -18,6 +18,7 @@
     import { polygon } from '@turf/helpers';
     import { buffer } from '@turf/buffer';
     import { bbox } from '@turf/bbox';
+    import type { Rect } from 'flatgeobuf';
     import type { Position, Polygon, FeatureCollection } from 'geojson';
 
     import LocationArcImg from '$assets/images/locationArc.png';
@@ -28,16 +29,19 @@
     import Legend from '$lib/components/map/legend.svelte';
     import LayerSwitcher from '$lib/components/map/layer-switcher.svelte';
     import Geolocation from '$lib/components/map/geolocation.svelte';
+    import FlatGeobuf from '$lib/components/map/flatgeobuf-layer.svelte';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
     // import { entityFeatcolStore, selectedEntityId } from '$store/entities';
 
     interface Props {
         projectOutlineCoords: Position[][],
+        entitiesUrl: string,
         toggleTaskActionModal: boolean;
     }
 
     let {
         projectOutlineCoords,
+        entitiesUrl,
         toggleTaskActionModal = $bindable(),
      }: Props = $props();
 
@@ -45,16 +49,36 @@
 
 	let map: maplibregl.Map | undefined = $state();
 	let loaded: boolean = $state(false);
-	let taskAreaClicked = $state(false);
-	let toggleGeolocationStatus = $state(false);
+	let taskAreaClicked: boolean = $state(false);
+    let selectedTaskBbox: Rect | null = $state(null)
+	let toggleGeolocationStatus: boolean = $state(false);
 
     // Fit the map bounds to the project area
 	$effect(() => {
 		if (map && projectOutlineCoords) {
             const projectPolygon = polygon(projectOutlineCoords);
             const projectBuffer = buffer(projectPolygon, 100, { units: 'meters' });
-            const projectBbox: [number, number, number, number] = bbox(projectBuffer) as [number, number, number, number];
-            map.fitBounds(projectBbox, { duration: 0 });
+            if (projectBuffer) {
+                const projectBbox: [number, number, number, number] = bbox(projectBuffer) as [number, number, number, number];
+                map.fitBounds(projectBbox, { duration: 0 });
+            }
+		}
+	});
+
+    // Get the bbox of the selected task area
+	$effect(() => {
+		if (taskStore.selectedTaskGeom) {
+            const taskPolygon = polygon(taskStore.selectedTaskGeom.coordinates);
+            const taskBuffer = buffer(taskPolygon, 50, { units: 'meters' });
+            if (taskBuffer) {
+                const selectedTaskBboxArray  = bbox(taskBuffer) as [number, number, number, number];
+                selectedTaskBbox = {
+                    minX: selectedTaskBboxArray[0],
+                    minY: selectedTaskBboxArray[1],
+                    maxX: selectedTaskBboxArray[2],
+                    maxY: selectedTaskBboxArray[3],
+                } as Rect;
+            }
 		}
 	});
 
@@ -180,46 +204,22 @@
             }}
         />
     </GeoJSON>
-    <!-- The features / entities geojson
-    <GeoJSON id="states" data={$entityFeatcolStore} promoteId="ENTITIES">
+    <!-- The features / entities -->
+    <FlatGeobuf id="entities" url={entitiesUrl} bbox={selectedTaskBbox} promoteId="id">
         <FillLayer
-            hoverCursor="pointer"
             paint={{
-                'fill-color': [
-                    'match',
-                    ['get', 'status'],
-                    'READY',
-                    '#ffffff',
-                    'OPENED_IN_ODK',
-                    '#008099',
-                    'SURVEY_SUBMITTED',
-                    '#ade6ef',
-                    'MARKED_BAD',
-                    '#fceca4',
-                    '#c5fbf5', // default color if no match is found
-                ],
-                'fill-opacity': hoverStateFilter(0.1, 0),
+            'fill-color': '#006600',
+            'fill-opacity': 0.5,
             }}
             beforeLayerType="symbol"
             manageHoverState
-            on:click={(e) => {
-                // taskAreaClicked = true;
-                // const clickedEntityId = e.detail.features?.[0]?.properties?.fid;
-                // entityStore.selectedEntityId = clickedEntityId;
-                // toggleTaskActionModal = true;
-            }}
         />
         <LineLayer
             layout={{ 'line-cap': 'round', 'line-join': 'round' }}
-            paint={{
-                'line-color': ['case', ['==', ['get', 'fid'], $selectedEntityId], '#fa1100', '#0fffff'],
-                'line-width': 3,
-                'line-opacity': ['case', ['==', ['get', 'fid'], $selectedEntityId], 1, 0.35],
-            }}
+            paint={{ 'line-color': '#003300', 'line-width': 3 }}
             beforeLayerType="symbol"
-            manageHoverState
         />
-    </GeoJSON> -->
+    </FlatGeobuf>
     <div class="absolute right-3 bottom-3 sm:right-5 sm:bottom-5">
         <LayerSwitcher />
         <Legend />
