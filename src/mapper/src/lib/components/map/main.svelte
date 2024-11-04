@@ -18,7 +18,6 @@
     import { polygon } from '@turf/helpers';
     import { buffer } from '@turf/buffer';
     import { bbox } from '@turf/bbox';
-    import type { Rect } from 'flatgeobuf';
     import type { Position, Polygon, FeatureCollection } from 'geojson';
 
     import LocationArcImg from '$assets/images/locationArc.png';
@@ -32,6 +31,8 @@
     import FlatGeobuf from '$lib/components/map/flatgeobuf-layer.svelte';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
     // import { entityFeatcolStore, selectedEntityId } from '$store/entities';
+
+    type bboxType = [number, number, number, number];
 
     interface Props {
         projectOutlineCoords: Position[][],
@@ -50,7 +51,6 @@
 	let map: maplibregl.Map | undefined = $state();
 	let loaded: boolean = $state(false);
 	let taskAreaClicked: boolean = $state(false);
-    let selectedTaskBbox: Rect | null = $state(null)
 	let toggleGeolocationStatus: boolean = $state(false);
 
     // Fit the map bounds to the project area
@@ -59,25 +59,8 @@
             const projectPolygon = polygon(projectOutlineCoords);
             const projectBuffer = buffer(projectPolygon, 100, { units: 'meters' });
             if (projectBuffer) {
-                const projectBbox: [number, number, number, number] = bbox(projectBuffer) as [number, number, number, number];
+                const projectBbox: bboxType = bbox(projectBuffer) as bboxType;
                 map.fitBounds(projectBbox, { duration: 0 });
-            }
-		}
-	});
-
-    // Get the bbox of the selected task area
-	$effect(() => {
-		if (taskStore.selectedTaskGeom) {
-            const taskPolygon = polygon(taskStore.selectedTaskGeom.coordinates);
-            const taskBuffer = buffer(taskPolygon, 50, { units: 'meters' });
-            if (taskBuffer) {
-                const selectedTaskBboxArray  = bbox(taskBuffer) as [number, number, number, number];
-                selectedTaskBbox = {
-                    minX: selectedTaskBboxArray[0],
-                    minY: selectedTaskBboxArray[1],
-                    maxX: selectedTaskBboxArray[2],
-                    maxY: selectedTaskBboxArray[3],
-                } as Rect;
             }
 		}
 	});
@@ -205,7 +188,13 @@
         />
     </GeoJSON>
     <!-- The features / entities -->
-    <FlatGeobuf id="entities" url={entitiesUrl} bbox={selectedTaskBbox} promoteId="id">
+    <FlatGeobuf
+        id="entities"
+        url={entitiesUrl}
+        extent={taskStore.selectedTaskGeom}
+        extractGeomCols={true}
+        promoteId="id"
+    >
         <FillLayer
             paint={{
             'fill-color': '#006600',
@@ -213,11 +202,6 @@
             }}
             beforeLayerType="symbol"
             manageHoverState
-        />
-        <LineLayer
-            layout={{ 'line-cap': 'round', 'line-join': 'round' }}
-            paint={{ 'line-color': '#003300', 'line-width': 3 }}
-            beforeLayerType="symbol"
         />
     </FlatGeobuf>
     <div class="absolute right-3 bottom-3 sm:right-5 sm:bottom-5">

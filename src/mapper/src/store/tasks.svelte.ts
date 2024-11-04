@@ -77,7 +77,7 @@ function getTaskStore() {
 		const allTasksCurrentStates = await getLatestStatePerTask();
 		selectedTask = allTasksCurrentStates.get(newId);
 		selectedTaskState = selectedTask?.state || 'UNLOCKED_TO_MAP';
-		selectedTaskGeom = featcol.features.find((x) => x.properties.fid === newId)?.geometry;
+		selectedTaskGeom = featcol.features.find((x) => x.properties.fid === newId)?.geometry || null;
 	}
 
 	return {
