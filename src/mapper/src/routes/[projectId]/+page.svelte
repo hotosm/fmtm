@@ -28,16 +28,14 @@
 	} from '$lib/db/events';
 	import { generateQrCode, downloadQrCode } from '$lib/utils/qrcode';
 	import { convertDateToTimeAgo } from '$lib/utils/datetime';
+	import { getTaskStore, getTaskEventStream } from '$store/tasks.svelte.ts';
 	import {
-		getTaskStore,
-		getTaskEventStream,
-	} from '$store/tasks.svelte.ts';
-	import { 
 		entitiesStatusStore,
 		selectedEntity,
 		getEntityStatusStream,
 		subscribeToEntityStatusUpdates,
 	} from '$store/entities.svelte.ts';
+	import More from '$lib/components/more/index.svelte';
 
 	interface Props {
 		data: PageData;
@@ -52,7 +50,6 @@
 	let toggleTaskActionModal = $state(false);
 
 	const taskStore = getTaskStore();
-	console.log(data.project.data_extract_url)
 	const taskEventStream = getTaskEventStream(data.projectId);
 	// Update the geojson task states when a new event is added
 	$effect(() => {
@@ -107,7 +104,8 @@
 <!-- There is a new event to display in the top right corner -->
 {#if taskStore.latestEvent}
 	<hot-card id="notification-banner" class="absolute z-10 top-18 right-0 font-sans hidden sm:flex">
-		{convertDateToTimeAgo(taskStore.latestEvent.created_at)}: {taskStore.latestEvent.event} on task {taskStore.latestEvent.task_id} by {taskStore.latestEvent.username}
+		{convertDateToTimeAgo(taskStore.latestEvent.created_at)}: {taskStore.latestEvent.event} on task {taskStore
+			.latestEvent.task_id} by {taskStore.latestEvent.username}
 	</hot-card>
 {/if}
 
@@ -120,13 +118,15 @@
 <div class="h-[calc(100vh-4.625rem)]">
 	<MapComponent
 		bind:this={mapComponent}
-		bind:toggleTaskActionModal={toggleTaskActionModal}
+		bind:toggleTaskActionModal
 		projectOutlineCoords={data.project.outline.coordinates}
 	/>
 
 	{#if taskStore.selectedTaskId && selectedTab === 'map' && toggleTaskActionModal && (taskStore.selectedTaskState === 'UNLOCKED_TO_MAP' || taskStore.selectedTaskState === 'LOCKED_FOR_MAPPING')}
 		<div class="flex justify-center !w-[100vw] absolute bottom-[4rem] left-0 pointer-events-none z-50">
-			<div class="bg-white w-fit font-barlow-regular md:max-w-[580px] pointer-events-auto px-4 pb-3 sm:pb-4 rounded-t-3xl">
+			<div
+				class="bg-white w-fit font-barlow-regular md:max-w-[580px] pointer-events-auto px-4 pb-3 sm:pb-4 rounded-t-3xl"
+			>
 				<div class="flex justify-between items-center">
 					<p class="text-[#333] text-xl font-barlow-semibold leading-0 pt-2">Task #{taskStore.selectedTaskId}</p>
 					<hot-icon
@@ -139,10 +139,21 @@
 				{#if taskStore.selectedTaskState === 'UNLOCKED_TO_MAP'}
 					<p class="my-4 sm:my-6">Do you want to start mapping task #{taskStore.selectedTaskId}?</p>
 					<div class="flex justify-center gap-x-2">
-						<sl-button size="small" variant="default" class="secondary" onclick={() => (toggleTaskActionModal = false)} outline>
+						<sl-button
+							size="small"
+							variant="default"
+							class="secondary"
+							onclick={() => (toggleTaskActionModal = false)}
+							outline
+						>
 							<span class="font-barlow-medium text-sm">CANCEL</span>
 						</sl-button>
-						<sl-button variant="default" size="small" class="primary" onclick={() => mapTask(data.projectId, taskStore.selectedTaskId)}>
+						<sl-button
+							variant="default"
+							size="small"
+							class="primary"
+							onclick={() => mapTask(data.projectId, taskStore.selectedTaskId)}
+						>
 							<div class="flex items-center gap-1">
 								<hot-icon name="location" class="!text-[1rem] text-white cursor-pointer duration-200"></hot-icon>
 								<p class="font-barlow-medium text-sm leading-[0]">START MAPPING</p>
@@ -152,13 +163,27 @@
 				{:else if taskStore.selectedTaskState === 'LOCKED_FOR_MAPPING'}
 					<p class="my-4 sm:my-6">Task #{taskStore.selectedTaskId} has been locked. Is the task completely mapped?</p>
 					<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-						<sl-button onclick={() => resetTask(data.projectId, taskStore.selectedTaskId)} variant="default" outline size="small" class="secondary">
+						<sl-button
+							onclick={() => resetTask(data.projectId, taskStore.selectedTaskId)}
+							variant="default"
+							outline
+							size="small"
+							class="secondary"
+						>
 							<div class="flex items-center gap-1">
-								<hot-icon name="close" class="!text-[1rem] text-[#d73f37] cursor-pointer duration-200 hover:text-[#b91c1c]"></hot-icon>
+								<hot-icon
+									name="close"
+									class="!text-[1rem] text-[#d73f37] cursor-pointer duration-200 hover:text-[#b91c1c]"
+								></hot-icon>
 								<p class="font-barlow-medium text-sm leading-[0]">CANCEL MAPPING</p>
 							</div>
 						</sl-button>
-						<sl-button onclick={() => finishTask(data.projectId, taskStore.selectedTaskId)} variant="default" size="small" class="primary">
+						<sl-button
+							onclick={() => finishTask(data.projectId, taskStore.selectedTaskId)}
+							variant="default"
+							size="small"
+							class="primary"
+						>
 							<div class="flex items-center gap-1">
 								<hot-icon name="check" class="!text-[1rem] text-white cursor-pointer duration-200"></hot-icon>
 								<p class="font-barlow-medium text-sm leading-[0]">COMPLETE MAPPING</p>
@@ -178,12 +203,16 @@
 			{#if selectedTab === 'events'}
 				{#if taskStore.events.length > 0}
 					{#each taskStore.events as record}
-						<EventCard {record} highlight={record.task_id === taskStore.selectedTaskId} on:zoomToTask={(e) => zoomToTask(e)} />
+						<EventCard
+							{record}
+							highlight={record.task_id === taskStore.selectedTaskId}
+							on:zoomToTask={(e) => zoomToTask(e)}
+						/>
 					{/each}
 				{/if}
 
 				<!-- uncomment More to view stacked component containing comment, instructions, activities -->
-				<!-- <More instructions={data?.project?.project_info?.per_task_instructions} /> -->
+				<!-- <More instructions={data?.project?.per_task_instructions} /> -->
 			{/if}
 			{#if selectedTab === 'offline'}
 				<span class="font-barlow-medium text-base">Coming soon!</span>
@@ -206,8 +235,12 @@
 					</sl-button>
 
 					<!-- Open ODK Button -->
-					<sl-button size="small" class="primary w-full max-w-[200px]"
-						href="odkcollect://form/{data.project.odk_form_id}{taskStore.selectedTaskId ? `?task_filter=${taskStore.selectedTaskId}` : ''}"
+					<sl-button
+						size="small"
+						class="primary w-full max-w-[200px]"
+						href="odkcollect://form/{data.project.odk_form_id}{taskStore.selectedTaskId
+							? `?task_filter=${taskStore.selectedTaskId}`
+							: ''}"
 					>
 						<span class="font-barlow-medium text-base">Open ODK</span></sl-button
 					>
