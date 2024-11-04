@@ -31,7 +31,7 @@
     const { map, self: sourceId } = updatedSourceContext();
     let sourceObj: maplibregl.GeoJSONSource | undefined = $state();
     let first = $state(true);
-    let geojsonData: GeoJSON = $state();
+    let geojsonData: GeoJSON = $state({type: 'FeatureCollection', features: []});
 
     // Set currentSourceId as reactive property once determined from context
     let currentSourceId: string | undefined = $state();
@@ -67,10 +67,10 @@
     function addSourceToMap() {
         if (!$map) return;
 
-        const initialData = {
+        const initialData: maplibregl.SourceSpecification = {
             type: 'geojson',
             data: geojsonData,
-            promoteId
+            promoteId,
         };
 
         // Use the currentSourceId in addSource

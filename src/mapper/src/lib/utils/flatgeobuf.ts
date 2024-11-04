@@ -1,8 +1,15 @@
 import { geojson as fgbGeojson } from 'flatgeobuf';
 import type { Rect, HeaderMeta } from 'flatgeobuf';
-import type { FeatureCollection, Feature, Polygon, Geometry, GeoJsonProperties } from 'geojson';
+import type { FeatureCollection, Feature, Polygon, Geometry, GeoJsonProperties, Position } from 'geojson';
 
 type bboxType = [number, number, number, number];
+
+/**
+ * Type guard to check if extent is a Polygon.
+ */
+function isPolygon(extent: bboxType | Polygon): extent is Polygon {
+	return (extent as Polygon).type === 'Polygon' && Array.isArray((extent as Polygon).coordinates);
+}
 
 /**
  * Converts a bounding box array or GeoJSON Polygon to a Rect format required by FlatGeobuf.
@@ -24,10 +31,10 @@ function extentToFgbRect(extent: bboxType | Polygon): Rect {
 		};
 	}
 	// Check if extent is a Polygon and calculate Rect
-	else if (extent?.type === 'Polygon' && Array.isArray(extent.coordinates)) {
+	else if (isPolygon(extent)) {
 		const [firstRing] = extent.coordinates;
-		const xCoords = firstRing.map((coord) => coord[0]);
-		const yCoords = firstRing.map((coord) => coord[1]);
+		const xCoords = firstRing.map((coord: Position) => coord[0]);
+		const yCoords = firstRing.map((coord: Position) => coord[1]);
 
 		return {
 			minX: Math.min(...xCoords),
