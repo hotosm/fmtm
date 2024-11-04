@@ -154,10 +154,9 @@
 							class="primary"
 							onclick={() => mapTask(data.projectId, taskStore.selectedTaskId)}
 						>
-							<div class="flex items-center gap-1">
-								<hot-icon name="location" class="!text-[1rem] text-white cursor-pointer duration-200"></hot-icon>
-								<p class="font-barlow-medium text-sm leading-[0]">START MAPPING</p>
-							</div>
+							<hot-icon slot="prefix" name="location" class="!text-[1rem] text-white cursor-pointer duration-200"
+							></hot-icon>
+							<span class="font-barlow-medium text-sm">START MAPPING</span>
 						</sl-button>
 					</div>
 				{:else if taskStore.selectedTaskState === 'LOCKED_FOR_MAPPING'}
@@ -170,27 +169,25 @@
 							size="small"
 							class="secondary"
 						>
-							<div class="flex items-center gap-1">
-								<hot-icon
-									name="close"
-									class="!text-[1rem] text-[#d73f37] cursor-pointer duration-200 hover:text-[#b91c1c]"
-								></hot-icon>
-								<p class="font-barlow-medium text-sm leading-[0]">CANCEL MAPPING</p>
-							</div>
+							<hot-icon
+								slot="prefix"
+								name="close"
+								class="!text-[1rem] text-[#d73f37] cursor-pointer duration-200 hover:text-[#b91c1c]"
+							></hot-icon>
+							<span class="font-barlow-medium text-sm">CANCEL MAPPING</span>
 						</sl-button>
 						<sl-button
 							onclick={() => finishTask(data.projectId, taskStore.selectedTaskId)}
 							variant="default"
 							size="small"
-							class="primary"
+							class="green"
 						>
-							<div class="flex items-center gap-1">
-								<hot-icon name="check" class="!text-[1rem] text-white cursor-pointer duration-200"></hot-icon>
-								<p class="font-barlow-medium text-sm leading-[0]">COMPLETE MAPPING</p>
-							</div>
+							<hot-icon slot="prefix" name="check" class="!text-[1rem] text-white cursor-pointer duration-200"
+							></hot-icon>
+							<span class="font-barlow-medium text-sm">COMPLETE MAPPING</span>
 						</sl-button>
-						<sl-button variant="default" size="small" class="gray col-span-2 sm:col-span-1">
-							<p class="font-barlow-medium text-sm leading-[0]">GO TO ODK</p>
+						<sl-button variant="default" size="small" class="primary col-span-2 sm:col-span-1">
+							<span class="font-barlow-medium text-sm">GO TO ODK</span>
 						</sl-button>
 					</div>
 				{/if}
@@ -262,14 +259,14 @@
 		<sl-tab slot="nav" panel="map">
 			<hot-icon name="map" class="!text-[1.7rem] !sm:text-[2rem]"></hot-icon>
 		</sl-tab>
-		<sl-tab slot="nav" panel="events">
-			<hot-icon name="list" class="!text-[1.7rem] !sm:text-[2rem]"></hot-icon>
-		</sl-tab>
 		<sl-tab slot="nav" panel="offline">
 			<hot-icon name="wifi-off" class="!text-[1.7rem] !sm:text-[2rem]"></hot-icon>
 		</sl-tab>
 		<sl-tab slot="nav" panel="qrcode">
 			<hot-icon name="qr-code" class="!text-[1.7rem] !sm:text-[2rem]"></hot-icon>
+		</sl-tab>
+		<sl-tab slot="nav" panel="events">
+			<hot-icon name="three-dots" class="!text-[1.7rem] !sm:text-[2rem]"></hot-icon>
 		</sl-tab>
 	</sl-tab-group>
 </div>
