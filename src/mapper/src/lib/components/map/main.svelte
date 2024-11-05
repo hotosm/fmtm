@@ -101,12 +101,6 @@
 	};
 </script>
 
-<!-- onclick wala -->
-<!-- if (+projectSetupStepStore.projectSetupStep === projectSetupStepEnum['task_selection']) {
-	localStorage.setItem(`project-${projectId}-setup`, projectSetupStepEnum['complete_setup']);
-	projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['complete_setup']);
-} -->
-
 <!-- Note here we still use Svelte 4 on:click until svelte-maplibre migrates -->
 <MapLibre
 	bind:map
@@ -228,10 +222,3 @@
 		</div>
 	{/if}
 </MapLibre>
-
-<!-- last wala -->
-<!-- {#if projectSetupStep === projectSetupStepEnum['task_selection']}
-		<div class="absolute top-5 w-fit bg-[#F097334D] z-10 left-[50%] translate-x-[-50%] p-1">
-			<p class="uppercase font-barlow-medium text-base">please select a task / feature for mapping</p>
-		</div>
-	{/if} -->
