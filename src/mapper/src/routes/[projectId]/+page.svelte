@@ -166,8 +166,10 @@
 					</div>
 
 					<!-- Download Button -->
-					<sl-button onclick={downloadQrCode} size="small" class="primary w-full max-w-[200px]">
-						<span class="font-barlow-medium text-base">Download QR Code</span>
+					<sl-button onclick={downloadQrCode} size="small" class="secondary w-full max-w-[200px]">
+						<hot-icon slot="prefix" name="download" class="!text-[1rem] text-[#b91c1c] cursor-pointer duration-200"
+						></hot-icon>
+						<span class="font-barlow-medium text-base uppercase">Download QR</span>
 					</sl-button>
 
 					<!-- Open ODK Button -->
@@ -178,7 +180,7 @@
 							? `?task_filter=${taskStore.selectedTaskId}`
 							: ''}"
 					>
-						<span class="font-barlow-medium text-base">Open ODK</span></sl-button
+						<span class="font-barlow-medium text-base uppercase">Open ODK</span></sl-button
 					>
 				</div>
 			{/if}
