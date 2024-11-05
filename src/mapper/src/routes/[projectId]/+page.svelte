@@ -37,6 +37,7 @@
 		subscribeToEntityStatusUpdates,
 	} from '$store/entities.svelte.ts';
 	import More from '$lib/components/more/index.svelte';
+	import { getProjectSetupStepStore } from '$store/common.svelte.ts';
 
 	interface Props {
 		data: PageData;
@@ -100,6 +101,24 @@
 	onDestroy(() => {
 		taskEventStream.unsubscribeAll();
 	});
+
+	const projectSetupStepStore = getProjectSetupStepStore();
+
+	$effect(() => {
+		// if project loaded for the first time, set projectSetupStep to 1 else get it from localStorage
+		if (!localStorage.getItem(`project-${data.projectId}-setup`)) {
+			localStorage.setItem(`project-${data.projectId}-setup`, '1');
+			projectSetupStepStore.setProjectSetupStep('1');
+		} else {
+			projectSetupStepStore.setProjectSetupStep(localStorage.getItem(`project-${data.projectId}-setup`));
+		}
+		// if project loaded for the first time then show qrcode tab
+		if (projectSetupStepStore.projectSetupStep === '1') {
+			tabGroup.updateComplete.then(() => {
+				tabGroup.show('qrcode');
+			});
+		}
+	});
 </script>
 
 <!-- There is a new event to display in the top right corner -->
@@ -123,6 +142,7 @@
 			isTaskActionModalOpen = value;
 		}}
 		projectOutlineCoords={data.project.outline.coordinates}
+		projectId={data.projectId}
 	/>
 	<!-- task action buttons popup -->
 	<DialogTaskActions
@@ -193,6 +213,10 @@
 		no-scroll-controls
 		onsl-tab-show={(e) => {
 			selectedTab = e.detail.name;
+			if (e.detail.name !== 'qrcode' && projectSetupStepStore.projectSetupStep === '1') {
+				localStorage.setItem(`project-${data.projectId}-setup`, '2');
+				projectSetupStepStore.setProjectSetupStep('2');
+			}
 		}}
 		style="--panel-display: none"
 		bind:this={tabGroup}

@@ -29,22 +29,28 @@
 	import LayerSwitcher from '$lib/components/map/layer-switcher.svelte';
 	import Geolocation from '$lib/components/map/geolocation.svelte';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
+	import { getProjectSetupStepStore } from '$store/common.svelte.ts';
 	// import { entityFeatcolStore, selectedEntityId } from '$store/entities';
 
 	interface Props {
 		projectOutlineCoords: Position[][];
 		toggleTaskActionModal: (value: boolean) => {};
+		projectId: number;
 	}
 
-	let { projectOutlineCoords, toggleTaskActionModal }: Props = $props();
+	let { projectOutlineCoords, toggleTaskActionModal, projectId }: Props = $props();
 
 	const taskStore = getTaskStore();
+	const projectSetupStepStore = getProjectSetupStepStore();
 
 	let map: maplibregl.Map | undefined = $state();
 	let loaded: boolean = $state(false);
 	let taskAreaClicked = $state(false);
 	let toggleGeolocationStatus = $state(false);
-
+	let projectSetupStep = $state(null);
+	$effect(() => {
+		projectSetupStep = projectSetupStepStore.projectSetupStep;
+	});
 	// Fit the map bounds to the project area
 	$effect(() => {
 		if (map && projectOutlineCoords) {
@@ -154,6 +160,8 @@
 				const clickedTaskId = e.detail.features?.[0]?.properties?.fid;
 				taskStore.setSelectedTaskId(clickedTaskId);
 				toggleTaskActionModal(true);
+				localStorage.setItem(`project-${projectId}-setup`, '3');
+				projectSetupStepStore.setProjectSetupStep('3');
 			}}
 		/>
 		<LineLayer
@@ -226,4 +234,9 @@
 		<LayerSwitcher />
 		<Legend />
 	</div>
+	{#if projectSetupStep === '2'}
+		<div class="absolute top-5 w-fit bg-[#F097334D] z-10 left-[50%] translate-x-[-50%] p-1">
+			<p class="uppercase font-barlow-medium text-base">please select a task / feature for mapping</p>
+		</div>
+	{/if}
 </MapLibre>
