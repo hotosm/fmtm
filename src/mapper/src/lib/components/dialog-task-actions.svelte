@@ -16,10 +16,10 @@
 {#if taskStore.selectedTaskId && selectedTab === 'map' && isTaskActionModalOpen && (taskStore.selectedTaskState === 'UNLOCKED_TO_MAP' || taskStore.selectedTaskState === 'LOCKED_FOR_MAPPING')}
 	<div class="flex justify-center !w-[100vw] absolute bottom-[4rem] left-0 pointer-events-none z-50">
 		<div
-			class="bg-white w-fit font-barlow-regular md:max-w-[580px] pointer-events-auto px-4 pb-3 sm:pb-4 rounded-t-3xl"
+			class="bg-white w-full font-barlow-regular md:max-w-[580px] pointer-events-auto px-4 py-3 sm:py-4 rounded-t-3xl"
 		>
 			<div class="flex justify-between items-center">
-				<p class="text-[#333] text-xl font-barlow-semibold leading-0 pt-2">Task #{taskStore.selectedTaskId}</p>
+				<p class="text-[#333] text-xl font-barlow-semibold">Task #{taskStore.selectedTaskId}</p>
 				<hot-icon
 					name="close"
 					class="!text-[1.5rem] text-[#52525B] cursor-pointer hover:text-red-600 duration-200"
