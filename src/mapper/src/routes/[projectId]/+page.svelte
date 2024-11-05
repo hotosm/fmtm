@@ -38,6 +38,7 @@
 	} from '$store/entities.svelte.ts';
 	import More from '$lib/components/more/index.svelte';
 	import { getProjectSetupStepStore } from '$store/common.svelte.ts';
+	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
 
 	interface Props {
 		data: PageData;
@@ -107,13 +108,13 @@
 	$effect(() => {
 		// if project loaded for the first time, set projectSetupStep to 1 else get it from localStorage
 		if (!localStorage.getItem(`project-${data.projectId}-setup`)) {
-			localStorage.setItem(`project-${data.projectId}-setup`, 1);
-			projectSetupStepStore.setProjectSetupStep(1);
+			localStorage.setItem(`project-${data.projectId}-setup`, projectSetupStepEnum['odk_project_load']);
+			projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['odk_project_load']);
 		} else {
 			projectSetupStepStore.setProjectSetupStep(localStorage.getItem(`project-${data.projectId}-setup`));
 		}
 		// if project loaded for the first time then show qrcode tab
-		if (+projectSetupStepStore.projectSetupStep === 1) {
+		if (+projectSetupStepStore.projectSetupStep === projectSetupStepEnum['odk_project_load']) {
 			tabGroup.updateComplete.then(() => {
 				tabGroup.show('qrcode');
 			});
@@ -213,9 +214,12 @@
 		no-scroll-controls
 		onsl-tab-show={(e) => {
 			selectedTab = e.detail.name;
-			if (e.detail.name !== 'qrcode' && +projectSetupStepStore.projectSetupStep === 1) {
-				localStorage.setItem(`project-${data.projectId}-setup`, 2);
-				projectSetupStepStore.setProjectSetupStep(2);
+			if (
+				e.detail.name !== 'qrcode' &&
+				+projectSetupStepStore.projectSetupStep === projectSetupStepEnum['odk_project_load']
+			) {
+				localStorage.setItem(`project-${data.projectId}-setup`, projectSetupStepEnum['task_selection']);
+				projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['task_selection']);
 			}
 		}}
 		style="--panel-display: none"
