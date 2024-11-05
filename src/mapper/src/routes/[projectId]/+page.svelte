@@ -16,6 +16,7 @@
 	import BottomSheet from '$lib/components/bottom-sheet.svelte';
 	import TaskActionDialog from '$lib/components/task-action-dialog.svelte';
 	import MapComponent from '$lib/components/map/main.svelte';
+	import DialogTaskActions from '$lib/components/dialog-task-actions.svelte';
 
 	import type { ProjectData, ProjectTask, ZoomToTaskEventDetail } from '$lib/types';
 	import {
@@ -47,7 +48,7 @@
 	let mapComponent: MapLibre;
 	let tabGroup: SlTabGroup;
 	let selectedTab: string = $state('map');
-	let toggleTaskActionModal = $state(false);
+	let isTaskActionModalOpen = $state(false);
 
 	const taskStore = getTaskStore();
 	const taskEventStream = getTaskEventStream(data.projectId);
@@ -118,82 +119,20 @@
 <div class="h-[calc(100vh-4.625rem)]">
 	<MapComponent
 		bind:this={mapComponent}
-		bind:toggleTaskActionModal
+		toggleTaskActionModal={(value) => {
+			isTaskActionModalOpen = value;
+		}}
 		projectOutlineCoords={data.project.outline.coordinates}
 	/>
-
-	{#if taskStore.selectedTaskId && selectedTab === 'map' && toggleTaskActionModal && (taskStore.selectedTaskState === 'UNLOCKED_TO_MAP' || taskStore.selectedTaskState === 'LOCKED_FOR_MAPPING')}
-		<div class="flex justify-center !w-[100vw] absolute bottom-[4rem] left-0 pointer-events-none z-50">
-			<div
-				class="bg-white w-fit font-barlow-regular md:max-w-[580px] pointer-events-auto px-4 pb-3 sm:pb-4 rounded-t-3xl"
-			>
-				<div class="flex justify-between items-center">
-					<p class="text-[#333] text-xl font-barlow-semibold leading-0 pt-2">Task #{taskStore.selectedTaskId}</p>
-					<hot-icon
-						name="close"
-						class="!text-[1.5rem] text-[#52525B] cursor-pointer hover:text-red-600 duration-200"
-						onclick={() => (toggleTaskActionModal = false)}
-					></hot-icon>
-				</div>
-
-				{#if taskStore.selectedTaskState === 'UNLOCKED_TO_MAP'}
-					<p class="my-4 sm:my-6">Do you want to start mapping task #{taskStore.selectedTaskId}?</p>
-					<div class="flex justify-center gap-x-2">
-						<sl-button
-							size="small"
-							variant="default"
-							class="secondary"
-							onclick={() => (toggleTaskActionModal = false)}
-							outline
-						>
-							<span class="font-barlow-medium text-sm">CANCEL</span>
-						</sl-button>
-						<sl-button
-							variant="default"
-							size="small"
-							class="primary"
-							onclick={() => mapTask(data.projectId, taskStore.selectedTaskId)}
-						>
-							<hot-icon slot="prefix" name="location" class="!text-[1rem] text-white cursor-pointer duration-200"
-							></hot-icon>
-							<span class="font-barlow-medium text-sm">START MAPPING</span>
-						</sl-button>
-					</div>
-				{:else if taskStore.selectedTaskState === 'LOCKED_FOR_MAPPING'}
-					<p class="my-4 sm:my-6">Task #{taskStore.selectedTaskId} has been locked. Is the task completely mapped?</p>
-					<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-						<sl-button
-							onclick={() => resetTask(data.projectId, taskStore.selectedTaskId)}
-							variant="default"
-							outline
-							size="small"
-							class="secondary"
-						>
-							<hot-icon
-								slot="prefix"
-								name="close"
-								class="!text-[1rem] text-[#d73f37] cursor-pointer duration-200 hover:text-[#b91c1c]"
-							></hot-icon>
-							<span class="font-barlow-medium text-sm">CANCEL MAPPING</span>
-						</sl-button>
-						<sl-button
-							onclick={() => finishTask(data.projectId, taskStore.selectedTaskId)}
-							variant="default"
-							size="small"
-							class="green"
-						>
-							<hot-icon slot="prefix" name="check" class="!text-[1rem] text-white cursor-pointer duration-200"
-							></hot-icon>
-							<span class="font-barlow-medium text-sm">COMPLETE MAPPING</span>
-						</sl-button>
-						<sl-button variant="default" size="small" class="primary col-span-2 sm:col-span-1">
-							<span class="font-barlow-medium text-sm">GO TO ODK</span>
-						</sl-button>
-					</div>
-				{/if}
-			</div>
-		</div>
-	{/if}
+	<!-- task action buttons popup -->
+	<DialogTaskActions
+		{isTaskActionModalOpen}
+		toggleTaskActionModal={(value) => {
+			isTaskActionModalOpen = value;
+		}}
+		{selectedTab}
+		projectId={data.projectId}
+	/>
 
 	{#if selectedTab !== 'map'}
 		<BottomSheet onClose={() => tabGroup.show('map')}>
