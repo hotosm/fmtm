@@ -48,9 +48,11 @@
 	let taskAreaClicked = $state(false);
 	let toggleGeolocationStatus = $state(false);
 	let projectSetupStep = $state(null);
+
 	$effect(() => {
-		projectSetupStep = projectSetupStepStore.projectSetupStep;
+		projectSetupStep = +projectSetupStepStore.projectSetupStep;
 	});
+
 	// Fit the map bounds to the project area
 	$effect(() => {
 		if (map && projectOutlineCoords) {
@@ -160,8 +162,10 @@
 				const clickedTaskId = e.detail.features?.[0]?.properties?.fid;
 				taskStore.setSelectedTaskId(clickedTaskId);
 				toggleTaskActionModal(true);
-				localStorage.setItem(`project-${projectId}-setup`, '3');
-				projectSetupStepStore.setProjectSetupStep('3');
+				if (+projectSetupStepStore.projectSetupStep === 2) {
+					localStorage.setItem(`project-${projectId}-setup`, 3);
+					projectSetupStepStore.setProjectSetupStep(3);
+				}
 			}}
 		/>
 		<LineLayer
@@ -234,7 +238,7 @@
 		<LayerSwitcher />
 		<Legend />
 	</div>
-	{#if projectSetupStep === '2'}
+	{#if projectSetupStep === 2}
 		<div class="absolute top-5 w-fit bg-[#F097334D] z-10 left-[50%] translate-x-[-50%] p-1">
 			<p class="uppercase font-barlow-medium text-base">please select a task / feature for mapping</p>
 		</div>

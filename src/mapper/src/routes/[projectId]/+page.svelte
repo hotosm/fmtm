@@ -107,13 +107,13 @@
 	$effect(() => {
 		// if project loaded for the first time, set projectSetupStep to 1 else get it from localStorage
 		if (!localStorage.getItem(`project-${data.projectId}-setup`)) {
-			localStorage.setItem(`project-${data.projectId}-setup`, '1');
-			projectSetupStepStore.setProjectSetupStep('1');
+			localStorage.setItem(`project-${data.projectId}-setup`, 1);
+			projectSetupStepStore.setProjectSetupStep(1);
 		} else {
 			projectSetupStepStore.setProjectSetupStep(localStorage.getItem(`project-${data.projectId}-setup`));
 		}
 		// if project loaded for the first time then show qrcode tab
-		if (projectSetupStepStore.projectSetupStep === '1') {
+		if (+projectSetupStepStore.projectSetupStep === 1) {
 			tabGroup.updateComplete.then(() => {
 				tabGroup.show('qrcode');
 			});
@@ -213,9 +213,9 @@
 		no-scroll-controls
 		onsl-tab-show={(e) => {
 			selectedTab = e.detail.name;
-			if (e.detail.name !== 'qrcode' && projectSetupStepStore.projectSetupStep === '1') {
-				localStorage.setItem(`project-${data.projectId}-setup`, '2');
-				projectSetupStepStore.setProjectSetupStep('2');
+			if (e.detail.name !== 'qrcode' && +projectSetupStepStore.projectSetupStep === 1) {
+				localStorage.setItem(`project-${data.projectId}-setup`, 2);
+				projectSetupStepStore.setProjectSetupStep(2);
 			}
 		}}
 		style="--panel-display: none"
