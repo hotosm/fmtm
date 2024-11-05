@@ -33,10 +33,10 @@
 
 	interface Props {
 		projectOutlineCoords: Position[][];
-		toggleTaskActionModal: boolean;
+		toggleTaskActionModal: (value: boolean) => {};
 	}
 
-	let { projectOutlineCoords, toggleTaskActionModal = $bindable() }: Props = $props();
+	let { projectOutlineCoords, toggleTaskActionModal }: Props = $props();
 
 	const taskStore = getTaskStore();
 
@@ -100,7 +100,7 @@
 		// if the user clicks on a feature layer directly (on:click)
 		taskStore.setSelectedTaskId(null);
 		taskAreaClicked = false;
-		toggleTaskActionModal = false;
+		toggleTaskActionModal(false);
 	}}
 	images={[
 		{ id: 'LOCKED_FOR_MAPPING', url: BlackLockImg },
@@ -153,7 +153,7 @@
 				taskAreaClicked = true;
 				const clickedTaskId = e.detail.features?.[0]?.properties?.fid;
 				taskStore.setSelectedTaskId(clickedTaskId);
-				toggleTaskActionModal = true;
+				toggleTaskActionModal(true);
 			}}
 		/>
 		<LineLayer
