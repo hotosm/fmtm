@@ -296,7 +296,7 @@ const SubmissionDetails = () => {
         </div>
         {/* submission photos */}
         {submissionPhotosLoading ? (
-          <div className="fmtm-flex fmtm-gap-x-3 fmtm-overflow-x-scroll scrollbar">
+          <div className="fmtm-flex fmtm-gap-x-3 fmtm-overflow-x-scroll scrollbar fmtm-bg-white fmtm-p-6 fmtm-rounded-xl">
             {Array.from({ length: 5 }).map((_, i) => (
               <CoreModules.Skeleton
                 key={i}
@@ -306,7 +306,10 @@ const SubmissionDetails = () => {
             ))}
           </div>
         ) : submissionPhotos?.length > 0 ? (
-          <ImageSlider images={submissionPhotos || []} />
+          <div className="fmtm-bg-white fmtm-rounded-xl fmtm-p-6">
+            <p className="fmtm-text-base fmtm-font-bold fmtm-text-[#555] fmtm-mb-2">Images</p>
+            <ImageSlider images={submissionPhotos || []} />
+          </div>
         ) : null}
       </div>
     </>
