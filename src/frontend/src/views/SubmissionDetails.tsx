@@ -1,6 +1,6 @@
 import CoreModules from '@/shared/CoreModules.js';
 import React, { useEffect } from 'react';
-import { SubmissionService } from '@/api/Submission';
+import { SubmissionService, GetSubmissionPhotosService } from '@/api/Submission';
 import SubmissionInstanceMap from '@/components/SubmissionMap/SubmissionInstanceMap';
 import { GetSubmissionDashboard } from '@/api/Project';
 import Button from '@/components/common/Button';
@@ -95,6 +95,8 @@ const SubmissionDetails = () => {
   const submissionDetails = useAppSelector((state) => state.submission.submissionDetails);
   const submissionDetailsLoading = useAppSelector((state) => state.submission.submissionDetailsLoading);
   const taskId = submissionDetails?.task_id ? submissionDetails?.task_id : '-';
+  const submissionPhotosLoading = useAppSelector((state) => state.submission.submissionPhotosLoading);
+  const submissionPhotos = useAppSelector((state) => state.submission.submissionPhotos);
 
   const { start, end, today, deviceid, ...restSubmissionDetails } = submissionDetails || {};
   const dateDeviceDetails = { start, end, today, deviceid };
@@ -118,6 +120,12 @@ const SubmissionDetails = () => {
       ),
     );
   }, [taskUid]);
+
+  useEffect(() => {
+    if (paramsInstanceId) {
+      dispatch(GetSubmissionPhotosService(`${import.meta.env.VITE_API_URL}/submission/${paramsInstanceId}/photos`));
+    }
+  }, [paramsInstanceId]);
 
   const filteredData = restSubmissionDetails ? removeNullValues(restSubmissionDetails) : {};
 
@@ -263,7 +271,7 @@ const SubmissionDetails = () => {
             </div>
           </div>
         </div>
-        <div className="fmtm-grid fmtm-grid-cols-1 md:fmtm-grid-cols-2 fmtm-gap-x-8 fmtm-mt-10 fmtm-gap-y-10">
+        <div className="fmtm-grid fmtm-grid-cols-1 md:fmtm-grid-cols-2 fmtm-gap-x-8 fmtm-mt-10 fmtm-gap-y-10 fmtm-mb-5">
           {submissionDetailsLoading ? (
             <div className="fmtm-flex fmtm-flex-col fmtm-gap-3 fmtm-mt-5">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -285,6 +293,8 @@ const SubmissionDetails = () => {
             <SubmissionComments />
           </div>
         </div>
+        {/* submission photos */}
+        <div></div>
       </div>
     </>
   );
