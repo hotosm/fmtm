@@ -12,6 +12,7 @@ import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import Accordion from '@/components/common/Accordion';
 import { GetProjectComments } from '@/api/Project';
 import SubmissionComments from '@/components/SubmissionInstance/SubmissionComments';
+import ImageSlider from '@/components/common/ImageSlider';
 
 const renderValue = (value: any, key: string = '') => {
   if (key === 'start' || key === 'end') {
@@ -294,7 +295,19 @@ const SubmissionDetails = () => {
           </div>
         </div>
         {/* submission photos */}
-        <div></div>
+        {submissionPhotosLoading ? (
+          <div className="fmtm-flex fmtm-gap-x-3 fmtm-overflow-x-scroll scrollbar">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <CoreModules.Skeleton
+                key={i}
+                style={{ width: '9.688rem', height: '10.313rem' }}
+                className="!fmtm-rounded-lg"
+              />
+            ))}
+          </div>
+        ) : submissionPhotos?.length > 0 ? (
+          <ImageSlider images={submissionPhotos || []} />
+        ) : null}
       </div>
     </>
   );
