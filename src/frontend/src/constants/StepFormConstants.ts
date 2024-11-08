@@ -22,7 +22,7 @@ export const createProjectSteps: ICreateProjectSteps[] = [
     url: '/select-category',
     step: 3,
     label: '03',
-    name: 'Select Category',
+    name: 'Select Form',
   },
   {
     url: '/map-features',
