@@ -206,9 +206,10 @@ const GenerateProjectFilesService = (url: string, projectData: any, formUpload: 
           });
         } else {
           const generateApiFormData = new FormData();
-          if (additional_entities?.length > 0) {
-            generateApiFormData.append('additional_entities', additional_entities);
-          }
+          generateApiFormData.append(
+            'additional_entities',
+            additional_entities?.length > 0 ? additional_entities : null,
+          );
           response = await axios.post(url, generateApiFormData, {
             headers: {
               'Content-Type': 'multipart/form-data',
