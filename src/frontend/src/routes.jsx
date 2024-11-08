@@ -154,7 +154,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/select-category',
+        path: '/select-form',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>

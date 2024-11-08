@@ -41,7 +41,7 @@ const CreateNewProject = () => {
       case '/upload-area':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 2 }));
         break;
-      case '/select-category':
+      case '/select-form':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 3 }));
         break;
       case '/map-features':
@@ -69,7 +69,7 @@ const CreateNewProject = () => {
             setCustomDataExtractUpload={setCustomDataExtractUpload}
           />
         );
-      case '/select-category':
+      case '/select-form':
         return (
           <SelectForm
             flag="create_project"

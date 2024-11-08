@@ -140,7 +140,7 @@ const DataExtract = ({
   }, [formValues?.dataExtractWays]);
 
   const toggleStep = (step, url) => {
-    if (url === '/select-category') {
+    if (url === '/select-form') {
       dispatch(
         CreateProjectActions.SetIndividualProjectDetailsData({
           ...formValues,
@@ -327,7 +327,7 @@ const DataExtract = ({
                 btnText="PREVIOUS"
                 btnType="secondary"
                 type="button"
-                onClick={() => toggleStep(3, '/select-category')}
+                onClick={() => toggleStep(3, '/select-form')}
                 className="fmtm-font-bold"
               />
               <Button
