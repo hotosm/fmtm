@@ -352,9 +352,6 @@ class DbOrganisation(BaseModel):
                 )
                 db_org = await cur.fetchone()
 
-        if db_org is None:
-            raise KeyError(f"Organisation ({org_identifier}) not found.")
-
         return db_org
 
     @classmethod
@@ -397,7 +394,7 @@ class DbOrganisation(BaseModel):
         # Set requesting user to the org owner
         org_in.created_by = user_id
 
-        if not ignore_conflict and cls.one(db, org_in.name):
+        if not ignore_conflict and await cls.one(db, org_in.name):
             msg = f"Organisation named ({org_in.name}) already exists!"
             log.warning(f"User ({user_id}) failed organisation creation: {msg}")
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=msg)
@@ -536,6 +533,7 @@ class DbOrganisation(BaseModel):
                 settings.S3_BUCKET_NAME,
                 f"/{org_id}/",
             )
+            return True
 
     @classmethod
     async def unapproved(cls, db: Connection) -> Optional[list[Self]]:
