@@ -121,12 +121,13 @@ async def delete_org(
     org_user_dict: Annotated[AuthUser, Depends(org_admin)],
 ):
     """Delete an organisation."""
-    org_deleted = await DbOrganisation.delete(db, org_user_dict.id)
+    org = org_user_dict.get("org")
+    org_deleted = await DbOrganisation.delete(db, org.id)
     if not org_deleted:
-        log.error(f"Failed deleting org ({org_user_dict.name}).")
+        log.error(f"Failed deleting org ({org.name}).")
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail=f"Failed deleting org ({org_user_dict.name}).",
+            detail=f"Failed deleting org ({org.name}).",
         )
     return Response(status_code=HTTPStatus.NO_CONTENT)
 

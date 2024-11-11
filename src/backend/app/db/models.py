@@ -516,7 +516,11 @@ class DbOrganisation(BaseModel):
                 DELETE FROM projects
                 WHERE organisation_id = %(org_id)s
                 RETURNING organisation_id
-            ), deleted_org AS (
+            ), deleted_org_managers AS (
+                DELETE FROM organisation_managers
+                WHERE organisation_id = %(org_id)s
+                RETURNING organisation_id
+            ),deleted_org AS (
                 DELETE FROM organisations
                 WHERE id = %(org_id)s
                 RETURNING id
