@@ -1,14 +1,20 @@
-<script>
-	import '$styles/button.css';
+<script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import '$styles/button.css';
 	import { Editor } from '@tiptap/core';
 	import StarterKit from '@tiptap/starter-kit';
-	import Toolbar from './toolbar.svelte';
-	import './editor.css';
+	import Toolbar from '$lib/components/editor/toolbar.svelte';
+	import '$lib/components/editor/editor.css';
 
-	let element = $state();
-	let editor = $state();
-	let { editable, content, setEditorHtmlContent } = $props();
+	type Props = {
+		editable: boolean;
+		content: string;
+		setEditorHtmlContent?: (content: string) => any;
+	};
+
+	let element: Element | undefined = $state();
+	let editor: Editor | undefined = $state();
+	let { editable, content, setEditorHtmlContent }: Props = $props();
 
 	onMount(() => {
 		editor = new Editor({
@@ -27,7 +33,7 @@
 
 	onDestroy(() => {
 		if (editor) {
-			editor.destroy();
+			editor?.destroy();
 		}
 	});
 </script>
