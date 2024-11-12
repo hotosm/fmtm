@@ -90,6 +90,7 @@ const CreateProjectService = (
       }
 
       // Generate project files
+      console.log('additional entity', [additionalFeature?.name?.split('.')?.[0]]);
       const generateProjectFile = await dispatch(
         GenerateProjectFilesService(
           `${import.meta.env.VITE_API_URL}/projects/${projectId}/generate-project-data`,
@@ -448,14 +449,14 @@ const PostFormUpdate = (url: string, projectData: Record<string, any>) => {
         formFormData.append('xlsform', projectData.upload);
 
         const postFormUpdateResponse = await axios.post(url, formFormData);
-        const resp: ProjectDetailsModel = postFormUpdateResponse.data;
+        const resp: { message: string } = postFormUpdateResponse.data;
         // dispatch(CreateProjectActions.SetIndividualProjectDetails(modifiedResponse));
         // dispatch(CreateProjectActions.SetPostFormUpdate(resp));
         dispatch(CreateProjectActions.SetPostFormUpdateLoading(false));
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
-            message: 'Form Successfully Updated',
+            message: resp.message,
             variant: 'success',
             duration: 2000,
           }),

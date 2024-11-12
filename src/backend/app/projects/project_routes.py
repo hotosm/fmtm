@@ -524,7 +524,7 @@ async def generate_files(
     xlsform_upload: Annotated[
         Optional[BytesIO], Depends(central_deps.read_optional_xlsform)
     ],
-    additional_entities: list[str] = None,
+    additional_entities: Optional[list[str]] = None,
 ):
     """Generate additional content to initialise the project.
 
@@ -849,12 +849,13 @@ async def update_project_form(
     project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
     xform_id: str = Form(...),
     category: XLSFormType = Form(...),
-) -> DbProject:
+):
     """Update the XForm data in ODK Central.
 
     Also updates the category and custom XLSForm data in the database.
     """
     project = project_user_dict["project"]
+    user = project_user_dict["user"]
 
     # TODO we currently do nothing with the provided category
     # TODO allowing for category updates is disabled due to complexity
@@ -876,16 +877,30 @@ async def update_project_form(
     )
 
     sql = """
-        INSERT INTO projects
-            (xlsform_content)
-        VALUES
-            (%(xls_data)s)
+        UPDATE projects
+        SET
+            xlsform_content = %(xls_data)s,
+            author_id = %(author_id)s,
+            short_description = %(text)s
+        WHERE
+            id = %(project_id)s
         RETURNING id, hashtags;
     """
     async with db.cursor() as cur:
-        await cur.execute(sql, {"xls_data": xlsform.getvalue()})
+        await cur.execute(
+            sql,
+            {
+                "xls_data": xlsform.getvalue(),
+                "author_id": user.id,
+                "project_id": project.id,
+            },
+        )
+        db.commit()
 
-    return project
+    return JSONResponse(
+        status_code=HTTPStatus.OK,
+        content={"message": f"Successfully updated the form for project {project.id}"},
+    )
 
 
 @router.get("/{project_id}/download")
