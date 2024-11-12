@@ -10,11 +10,12 @@
 		editable: boolean;
 		content: string;
 		setEditorHtmlContent?: (content: string) => any;
+		setEditorRef?: (editor: any) => void;
 	};
 
 	let element: Element | undefined = $state();
 	let editor: Editor | undefined = $state();
-	let { editable, content, setEditorHtmlContent }: Props = $props();
+	let { editable, content, setEditorHtmlContent, setEditorRef }: Props = $props();
 
 	onMount(() => {
 		editor = new Editor({
@@ -29,6 +30,7 @@
 				setEditorHtmlContent && setEditorHtmlContent(editor.getHTML());
 			},
 		});
+		setEditorRef && setEditorRef(editor);
 	});
 
 	onDestroy(() => {
