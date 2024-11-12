@@ -10,23 +10,13 @@
 
 	import type { MapLibre } from 'svelte-maplibre';
 	import SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.component.js';
-	import Error from './+error.svelte';
-
-	import EventCard from '$lib/components/event-card.svelte';
+	// import EventCard from '$lib/components/event-card.svelte';
 	import BottomSheet from '$lib/components/bottom-sheet.svelte';
 	import TaskActionDialog from '$lib/components/task-action-dialog.svelte';
 	import MapComponent from '$lib/components/map/main.svelte';
 	import DialogTaskActions from '$lib/components/dialog-task-actions.svelte';
 
-	import type { ProjectData, ProjectTask, ZoomToTaskEventDetail } from '$lib/types';
-	import {
-		mapTask,
-		finishTask,
-		resetTask,
-		// validateTask,
-		// goodTask,
-		// commentTask,
-	} from '$lib/db/events';
+	import type { ProjectTask, ZoomToTaskEventDetail } from '$lib/types';
 	import { generateQrCode, downloadQrCode } from '$lib/utils/qrcode';
 	import { convertDateToTimeAgo } from '$lib/utils/datetime';
 	import { getTaskStore, getTaskEventStream } from '$store/tasks.svelte.ts';
@@ -159,7 +149,7 @@
 	{#if selectedTab !== 'map'}
 		<BottomSheet onClose={() => tabGroup.show('map')}>
 			{#if selectedTab === 'events'}
-				{#if taskStore.events.length > 0}
+				<!-- {#if taskStore.events.length > 0}
 					{#each taskStore.events as record}
 						<EventCard
 							{record}
@@ -167,10 +157,9 @@
 							on:zoomToTask={(e) => zoomToTask(e)}
 						/>
 					{/each}
-				{/if}
+				{/if} -->
 
-				<!-- uncomment More to view stacked component containing comment, instructions, activities -->
-				<!-- <More instructions={data?.project?.per_task_instructions} /> -->
+				<More projectData={data?.project} />
 			{/if}
 			{#if selectedTab === 'offline'}
 				<span class="font-barlow-medium text-base">Coming soon!</span>
