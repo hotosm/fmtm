@@ -3,6 +3,7 @@
 	import Comment from '$lib/components/more/comment.svelte';
 	import Activities from '$lib/components/more/activities.svelte';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
+	import type { ProjectData } from '$lib/types';
 
 	type stackType = '' | 'Comment' | 'Instructions' | 'Activities';
 	const stackGroup: { icon: string; title: stackType }[] = [
@@ -20,7 +21,12 @@
 		},
 	];
 
-	let { projectData } = $props();
+	type Props = {
+		projectData: ProjectData;
+		zoomToTask: (taskId: number) => void;
+	}
+
+	let { projectData, zoomToTask }: Props = $props();
 	const taskStore = getTaskStore();
 
 	let activeStack: stackType = $state('');
@@ -91,6 +97,6 @@
 		<Editor editable={false} content={projectData?.per_task_instructions} />
 	{/if}
 	{#if activeStack === 'Activities'}
-		<Activities {taskEvents} />
+		<Activities {taskEvents} zoomToTask={zoomToTask} />
 	{/if}
 </div>

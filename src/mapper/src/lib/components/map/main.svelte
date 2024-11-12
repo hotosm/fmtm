@@ -41,9 +41,10 @@
 		entitiesUrl: string;
 		toggleTaskActionModal: (value: boolean) => {};
 		projectId: number;
+		setMapRef: (map: maplibregl.Map | undefined) => void;
 	}
 
-	let { projectOutlineCoords, entitiesUrl, toggleTaskActionModal, projectId }: Props = $props();
+	let { projectOutlineCoords, entitiesUrl, toggleTaskActionModal, projectId, setMapRef }: Props = $props();
 
 	const taskStore = getTaskStore();
 	const projectSetupStepStore = getProjectSetupStepStore();
@@ -56,6 +57,13 @@
 
 	$effect(() => {
 		projectSetupStep = +projectSetupStepStore.projectSetupStep;
+	});
+
+	// set the map ref to parent component
+	$effect(() => {
+		if (map) {
+			setMapRef(map);
+		}
 	});
 
 	// Fit the map bounds to the project area

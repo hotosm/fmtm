@@ -3,9 +3,10 @@
 
 	interface Props {
 		taskEvents: any;
+		zoomToTask: (taskId: number) => void;
 	}
 
-	let { taskEvents }: Props = $props();
+	let { taskEvents, zoomToTask }: Props = $props();
 </script>
 
 <div class="overflow-y-scroll overflow-x-hidden flex flex-col gap-2 pb-2">
@@ -44,7 +45,17 @@
 					<p class="font-normal text-[#484848] flex-1">
 						<span class="capitalize">{event?.username}</span> updated status to <span>{event?.state}</span>
 					</p>
-					<hot-icon name="map" class="!text-[1rem] text-[#484848] hover:text-red-600 cursor-pointer duration-200"
+					<hot-icon
+						onkeydown={(e: KeyboardEvent) => {
+							if (e.key === 'Enter') {
+								zoomToTask(event?.task_id);
+							}
+						}}
+						role="button"
+						tabindex="0"
+						onclick={() => zoomToTask(event?.task_id)}
+						name="map"
+						class="!text-[1rem] text-[#484848] hover:text-red-600 cursor-pointer duration-200"
 					></hot-icon>
 				</div>
 			</div>

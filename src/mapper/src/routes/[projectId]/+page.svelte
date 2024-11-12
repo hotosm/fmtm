@@ -37,7 +37,7 @@
 	let { data }: Props = $props();
 	// $effect: ({ electric, project } = data)
 
-	let mapComponent: MapLibre;
+	let mapComponent: maplibregl.Map | undefined = $state(undefined);
 	let tabGroup: SlTabGroup;
 	let selectedTab: string = $state('map');
 	let isTaskActionModalOpen = $state(false);
@@ -60,8 +60,7 @@
 
 	let qrCodeData = $derived(generateQrCode(data.project.name, data.project.odk_token, 'REPLACE_ME_WITH_A_USERNAME'));
 
-	function zoomToTask(event: CustomEvent<ZoomToTaskEventDetail>) {
-		const taskId = event.detail.taskId;
+	function zoomToTask(taskId: number) {
 		const taskObj = data.project.tasks.find((task: ProjectTask) => task.id === taskId);
 
 		if (!taskObj) return;
@@ -71,9 +70,9 @@
 
 		const taskPolygon = polygon(taskObj.outline.coordinates);
 		const taskBuffer = buffer(taskPolygon, 5, { units: 'meters' });
-		if (taskBuffer && mapComponent.map) {
+		if (taskBuffer && mapComponent) {
 			const taskBbox: [number, number, number, number] = bbox(taskBuffer) as [number, number, number, number];
-			mapComponent.map.fitBounds(taskBbox, { duration: 500 });
+			mapComponent.fitBounds(taskBbox, { duration: 500 });
 		}
 
 		// Open the map tab
@@ -128,7 +127,9 @@
 <!-- The main page -->
 <div class="h-[calc(100vh-4.625rem)]">
 	<MapComponent
-		bind:this={mapComponent}
+		setMapRef={(map) => {
+			mapComponent = map;
+		}}
 		toggleTaskActionModal={(value) => {
 			isTaskActionModalOpen = value;
 		}}
@@ -159,7 +160,7 @@
 					{/each}
 				{/if} -->
 
-				<More projectData={data?.project} />
+				<More projectData={data?.project} zoomToTask={(taskId) => zoomToTask(taskId)} />
 			{/if}
 			{#if selectedTab === 'offline'}
 				<span class="font-barlow-medium text-base">Coming soon!</span>
