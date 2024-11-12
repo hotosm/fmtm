@@ -15,7 +15,7 @@
 </script>
 
 <div class="h-[calc(100%-2.25rem)] sm:h-[calc(100%-2.6rem)]">
-	<div class="h-[calc(100%-11.875rem)] overflow-y-scroll overflow-x-hidden flex flex-col gap-2">
+	<div class={`overflow-y-scroll overflow-x-hidden flex flex-col gap-2 ${taskStore.selectedTaskId ? 'h-[calc(100%-11.875rem)]' : 'h-[100%]'}`}>
 		{#if false}
 			{#each Array.from({ length: 5 }) as _, index}
 				<CommentSkeleton />
@@ -53,28 +53,29 @@
 			{/each}
 		{/if}
 	</div>
-
-	<div class="mt-2">
-		<Editor
-			editable={true}
-			content=""
-			setEditorHtmlContent={(editorText: string) => {
-				currentComment = editorText;
-			}}
-		/>
-		<div class="w-full flex justify-end my-2 gap-2">
-			<sl-button onclick={() => {}} onkeydown={() => {}} role='button' tabindex="0" variant="default" size="small" class="secondary col-span-2 sm:col-span-1"
-				><span class="font-barlow-medium text-sm">CLEAR</span></sl-button
-			>
-			<sl-button
-				variant="default"
-				size="small"
-				class="primary col-span-2 sm:col-span-1"
-				onclick={() => {commentTask(projectId, taskStore.selectedTaskId, currentComment)}} 
-				onkeydown={() => {}} 
-				role='button' tabindex="0"><span class="font-barlow-medium text-sm">COMMENT</span></sl-button
-				
-			>
+	{#if taskStore.selectedTaskId}
+		<div class="mt-2">
+			<Editor
+				editable={true}
+				content=""
+				setEditorHtmlContent={(editorText: string) => {
+					currentComment = editorText;
+				}}
+			/>
+			<div class="w-full flex justify-end my-2 gap-2">
+				<sl-button onclick={() => {}} onkeydown={() => {}} role='button' tabindex="0" variant="default" size="small" class="secondary col-span-2 sm:col-span-1"
+					><span class="font-barlow-medium text-sm">CLEAR</span></sl-button
+				>
+				<sl-button
+					variant="default"
+					size="small"
+					class="primary col-span-2 sm:col-span-1"
+					onclick={() => {commentTask(projectId, taskStore.selectedTaskId, currentComment)}} 
+					onkeydown={() => {}} 
+					role='button' tabindex="0"><span class="font-barlow-medium text-sm">COMMENT</span></sl-button
+					
+				>
+			</div>
 		</div>
-	</div>
+	{/if}
 </div>
