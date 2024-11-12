@@ -168,7 +168,7 @@
 					'#40ac8c',
 					'#c5fbf5', // default color if no match is found
 				],
-				'fill-opacity': hoverStateFilter(0.1, 0),
+				'fill-opacity': hoverStateFilter(0.3, 0),
 			}}
 			beforeLayerType="symbol"
 			manageHoverState
@@ -201,7 +201,7 @@
 					'case',
 					['==', ['get', 'state'], 'LOCKED_FOR_MAPPING'],
 					'LOCKED_FOR_MAPPING',
-					['==', ['get', 'status'], 'LOCKED_FOR_VALIDATION'],
+					['==', ['get', 'state'], 'LOCKED_FOR_VALIDATION'],
 					'LOCKED_FOR_VALIDATION',
 					'',
 				],
