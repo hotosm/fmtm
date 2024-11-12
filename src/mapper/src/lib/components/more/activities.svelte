@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ActivitiesSkeleton from '$lib/components/more/skeleton/activities.svelte';
 	import type { TaskEventType } from '$lib/types';
+	import { getTaskStore } from '$store/tasks.svelte.ts';
 
 	interface Props {
 		taskEvents: TaskEventType[];
@@ -8,6 +9,8 @@
 	}
 
 	let { taskEvents, zoomToTask }: Props = $props();
+
+	const taskStore = getTaskStore();
 </script>
 
 <div class="overflow-y-scroll overflow-x-hidden flex flex-col gap-2 pb-2">
@@ -15,6 +18,12 @@
 		{#each Array.from({ length: 5 }) as _, index}
 			<ActivitiesSkeleton />
 		{/each}
+	{:else if taskEvents?.length === 0}
+		<div class="flex justify-center mt-10">
+			<p class="text-[#484848] text-base">
+				{taskStore?.selectedTaskId ? `No activities yet on task ${taskStore?.selectedTaskId}` : 'No activities yet'}
+			</p>
+		</div>
 	{:else}
 		{#each taskEvents as event}
 			<div class="flex flex-col gap-2 py-3 bg-[#F6F5F5] rounded-md mr-1">
@@ -54,8 +63,9 @@
 						}}
 						role="button"
 						tabindex="0"
-						onclick={() => {							
-							zoomToTask(event?.task_id)}}
+						onclick={() => {
+							zoomToTask(event?.task_id);
+						}}
 						name="map"
 						class="!text-[1rem] text-[#484848] hover:text-red-600 cursor-pointer duration-200"
 					></hot-icon>

@@ -26,6 +26,12 @@
 			{#each Array.from({ length: 5 }) as _, index}
 				<CommentSkeleton />
 			{/each}
+		{:else if comments?.length === 0}
+			<div class="flex justify-center mt-10">
+				<p class="text-[#484848] text-base">
+					{taskStore?.selectedTaskId ? `No comments yet on task ${taskStore?.selectedTaskId}` : 'No comments yet'}
+				</p>
+			</div>
 		{:else}
 			{#each comments as comment}
 				<div class="flex flex-col gap-2 py-3 bg-[#F6F5F5] rounded-md">
