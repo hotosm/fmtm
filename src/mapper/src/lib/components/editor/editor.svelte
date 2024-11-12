@@ -44,7 +44,7 @@
 			<Toolbar {editor} />
 		{/if}
 
-		<div class={`${editable ? 'h-[80px]' : 'h-full'}`}>
+		<div class={`${editable ? 'h-[80px] overflow-y-scroll pt-[3px]' : 'h-full'}`}>
 			<div bind:this={element}></div>
 		</div>
 	</div>

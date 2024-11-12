@@ -45,7 +45,7 @@
 	});
 </script>
 
-<div class="font-barlow-medium h-full">
+<div class={`font-barlow-medium ${activeStack === 'Comment' ? 'h-full' : 'h-fit'}`}>
 	{#if activeStack === ''}
 		{#each stackGroup as stack}
 			<div
@@ -68,7 +68,7 @@
 
 	<!-- header -->
 	{#if activeStack !== ''}
-		<div class="flex items-center gap-x-2 sticky top-0 bg-white pb-2 z-50">
+		<div class="flex items-center gap-x-2 sticky -top-1 bg-white pb-2 z-50">
 			<hot-icon
 				name="chevron-left"
 				class="text-[1rem] hover:-translate-x-[2px] duration-200 cursor-pointer text-[1.125rem] text-black hover:text-red-600 duration-200"
