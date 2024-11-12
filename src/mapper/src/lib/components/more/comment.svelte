@@ -5,17 +5,23 @@
 	import type { TaskEventType } from '$lib/types';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
 
-	interface Props {comments: TaskEventType[], projectId: any}
+	interface Props {
+		comments: TaskEventType[];
+		projectId: any;
+	}
 
 	let { comments, projectId }: Props = $props();
 
 	let currentComment: string = $state('');
+	let editorRef: any = $state(undefined);
 
 	const taskStore = getTaskStore();
 </script>
 
 <div class="h-[calc(100%-2.25rem)] sm:h-[calc(100%-2.6rem)]">
-	<div class={`overflow-y-scroll overflow-x-hidden flex flex-col gap-2 ${taskStore.selectedTaskId ? 'h-[calc(100%-11.875rem)]' : 'h-[100%]'}`}>
+	<div
+		class={`overflow-y-scroll overflow-x-hidden flex flex-col gap-2 ${taskStore.selectedTaskId ? 'h-[calc(100%-11.875rem)]' : 'h-[100%]'}`}
+	>
 		{#if false}
 			{#each Array.from({ length: 5 }) as _, index}
 				<CommentSkeleton />
@@ -61,19 +67,33 @@
 				setEditorHtmlContent={(editorText: string) => {
 					currentComment = editorText;
 				}}
+				setEditorRef={(editor) => {
+					editorRef = editor;
+				}}
 			/>
 			<div class="w-full flex justify-end my-2 gap-2">
-				<sl-button onclick={() => {}} onkeydown={() => {}} role='button' tabindex="0" variant="default" size="small" class="secondary col-span-2 sm:col-span-1"
-					><span class="font-barlow-medium text-sm">CLEAR</span></sl-button
+				<sl-button
+					onclick={() => {
+						editorRef?.commands.clearContent(true);
+					}}
+					onkeydown={() => {}}
+					role="button"
+					tabindex="0"
+					variant="default"
+					size="small"
+					class="secondary col-span-2 sm:col-span-1"><span class="font-barlow-medium text-sm">CLEAR</span></sl-button
 				>
 				<sl-button
 					variant="default"
 					size="small"
 					class="primary col-span-2 sm:col-span-1"
-					onclick={() => {commentTask(projectId, taskStore.selectedTaskId, currentComment)}} 
-					onkeydown={() => {}} 
-					role='button' tabindex="0"><span class="font-barlow-medium text-sm">COMMENT</span></sl-button
-					
+					onclick={() => {
+						commentTask(projectId, taskStore.selectedTaskId, currentComment);
+						editorRef?.commands.clearContent(true);
+					}}
+					onkeydown={() => {}}
+					role="button"
+					tabindex="0"><span class="font-barlow-medium text-sm">COMMENT</span></sl-button
 				>
 			</div>
 		</div>
