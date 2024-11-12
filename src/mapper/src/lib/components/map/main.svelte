@@ -39,7 +39,7 @@
 	interface Props {
 		projectOutlineCoords: Position[][];
 		entitiesUrl: string;
-		toggleTaskActionModal: (value: boolean) => {};
+		toggleTaskActionModal: (value: boolean) => void;
 		projectId: number;
 		setMapRef: (map: maplibregl.Map | undefined) => void;
 	}

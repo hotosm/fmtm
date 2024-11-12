@@ -2,9 +2,10 @@
 	import Editor from '$lib/components/editor/editor.svelte';
 	import CommentSkeleton from '$lib/components/more/skeleton/comment.svelte';
 	import { commentTask } from '$lib/db/events';
+	import type { TaskEventType } from '$lib/types';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
 
-	interface Props {comments: any, projectId: any}
+	interface Props {comments: TaskEventType[], projectId: any}
 
 	let { comments, projectId }: Props = $props();
 
@@ -47,7 +48,7 @@
 							</div>
 						</div>
 					</div>
-					<Editor editable={false} content={comment?.comment} />
+					<Editor editable={false} content={comment?.comment as string} />
 				</div>
 			{/each}
 		{/if}
@@ -77,5 +78,3 @@
 		</div>
 	</div>
 </div>
-
-<style></style>

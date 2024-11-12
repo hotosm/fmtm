@@ -3,7 +3,7 @@
 	import Comment from '$lib/components/more/comment.svelte';
 	import Activities from '$lib/components/more/activities.svelte';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
-	import type { ProjectData } from '$lib/types';
+	import type { ProjectData, TaskEventType } from '$lib/types';
 
 	type stackType = '' | 'Comment' | 'Instructions' | 'Activities';
 	const stackGroup: { icon: string; title: stackType }[] = [
@@ -30,8 +30,8 @@
 	const taskStore = getTaskStore();
 
 	let activeStack: stackType = $state('');
-	let taskEvents = $state([]);
-	let comments = $state([]);
+	let taskEvents: TaskEventType[] = $state([]);
+	let comments: TaskEventType[] = $state([]);
 
 	$effect(() => {
 		if (!(taskStore?.events?.length > 0)) return;
@@ -39,14 +39,14 @@
 		// if a task is selected, then apply filter to the events list
 		if (taskStore?.selectedTaskId) {
 			taskEvents = taskStore?.events?.filter(
-				(event) => event.event !== 'COMMENT' && event.task_id === taskStore?.selectedTaskId,
+				(event: TaskEventType) => event.event !== 'COMMENT' && event.task_id === taskStore?.selectedTaskId,
 			);
 			comments = taskStore?.events?.filter(
-				(event) => event.event === 'COMMENT' && event.task_id === taskStore?.selectedTaskId,
+				(event: TaskEventType) => event.event === 'COMMENT' && event.task_id === taskStore?.selectedTaskId,
 			);
 		} else {
-			taskEvents = taskStore?.events?.filter((event) => event.event !== 'COMMENT');
-			comments = taskStore?.events?.filter((event) => event.event === 'COMMENT');
+			taskEvents = taskStore?.events?.filter((event: TaskEventType) => event.event !== 'COMMENT');
+			comments = taskStore?.events?.filter((event: TaskEventType) => event.event === 'COMMENT');
 		}
 	});
 </script>

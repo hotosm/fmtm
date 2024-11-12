@@ -1,8 +1,9 @@
 <script lang="ts">
 	import ActivitiesSkeleton from '$lib/components/more/skeleton/activities.svelte';
+	import type { TaskEventType } from '$lib/types';
 
 	interface Props {
-		taskEvents: any;
+		taskEvents: TaskEventType[];
 		zoomToTask: (taskId: number) => void;
 	}
 
@@ -53,7 +54,8 @@
 						}}
 						role="button"
 						tabindex="0"
-						onclick={() => zoomToTask(event?.task_id)}
+						onclick={() => {							
+							zoomToTask(event?.task_id)}}
 						name="map"
 						class="!text-[1rem] text-[#484848] hover:text-red-600 cursor-pointer duration-200"
 					></hot-icon>
@@ -62,5 +64,3 @@
 		{/each}
 	{/if}
 </div>
-
-<style></style>
