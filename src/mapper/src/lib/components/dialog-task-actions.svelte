@@ -24,6 +24,13 @@
 					name="close"
 					class="!text-[1.5rem] text-[#52525B] cursor-pointer hover:text-red-600 duration-200"
 					onclick={() => toggleTaskActionModal(false)}
+					onkeydown={(e: KeyboardEvent) => {
+						if (e.key === 'Enter') {
+							toggleTaskActionModal(false);
+						}
+					}}
+					role="button"
+					tabindex="0"
 				></hot-icon>
 			</div>
 
@@ -36,6 +43,13 @@
 						class="secondary"
 						onclick={() => toggleTaskActionModal(false)}
 						outline
+						onkeydown={(e: KeyboardEvent) => {
+							if (e.key === 'Enter') {
+								toggleTaskActionModal(false);
+							}
+						}}
+						role="button"
+						tabindex="0"
 					>
 						<span class="font-barlow-medium text-sm">CANCEL</span>
 					</sl-button>
@@ -44,6 +58,13 @@
 						size="small"
 						class="primary"
 						onclick={() => mapTask(projectId, taskStore.selectedTaskId)}
+						onkeydown={(e: KeyboardEvent) => {
+							if (e.key === 'Enter') {
+								mapTask(projectId, taskStore.selectedTaskId);
+							}
+						}}
+						role="button"
+						tabindex="0"
 					>
 						<hot-icon slot="prefix" name="location" class="!text-[1rem] text-white cursor-pointer duration-200"
 						></hot-icon>
@@ -59,6 +80,13 @@
 						outline
 						size="small"
 						class="secondary"
+						onkeydown={(e: KeyboardEvent) => {
+							if (e.key === 'Enter') {
+								resetTask(projectId, taskStore.selectedTaskId);
+							}
+						}}
+						role="button"
+						tabindex="0"
 					>
 						<hot-icon
 							slot="prefix"
@@ -72,6 +100,13 @@
 						variant="default"
 						size="small"
 						class="green"
+						onkeydown={(e: KeyboardEvent) => {
+							if (e.key === 'Enter') {
+								finishTask(projectId, taskStore.selectedTaskId);
+							}
+						}}
+						role="button"
+						tabindex="0"
 					>
 						<hot-icon slot="prefix" name="check" class="!text-[1rem] text-white cursor-pointer duration-200"></hot-icon>
 						<span class="font-barlow-medium text-sm">COMPLETE MAPPING</span>
