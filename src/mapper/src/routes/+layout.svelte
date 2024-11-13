@@ -7,10 +7,20 @@
 	setBasePath('/mapnow');
 
 	let { data, children } = $props();
+
+	document.addEventListener(
+		'touchstart',
+		(e) => {
+			if (window.scrollY === 0) {
+				e.preventDefault(); // Prevents mobile browsers from pull-to-refresh
+			}
+		},
+		{ passive: false },
+	);
 </script>
 
 <main class="flex flex-col h-screen overflow-hidden">
 	<hot-header></hot-header>
 	<Toast />
-	{@render children?.({ data, })}
+	{@render children?.({ data })}
 </main>
