@@ -855,7 +855,6 @@ async def update_project_form(
     Also updates the category and custom XLSForm data in the database.
     """
     project = project_user_dict["project"]
-    user = project_user_dict["user"]
 
     # TODO we currently do nothing with the provided category
     # TODO allowing for category updates is disabled due to complexity
@@ -879,9 +878,7 @@ async def update_project_form(
     sql = """
         UPDATE projects
         SET
-            xlsform_content = %(xls_data)s,
-            author_id = %(author_id)s,
-            short_description = %(text)s
+            xlsform_content = %(xls_data)s
         WHERE
             id = %(project_id)s
         RETURNING id, hashtags;
@@ -891,7 +888,6 @@ async def update_project_form(
             sql,
             {
                 "xls_data": xlsform.getvalue(),
-                "author_id": user.id,
                 "project_id": project.id,
             },
         )
