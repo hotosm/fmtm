@@ -90,7 +90,6 @@ const CreateProjectService = (
       }
 
       // Generate project files
-      console.log('additional entity', [additionalFeature?.name?.split('.')?.[0]]);
       const generateProjectFile = await dispatch(
         GenerateProjectFilesService(
           `${import.meta.env.VITE_API_URL}/projects/${projectId}/generate-project-data`,
