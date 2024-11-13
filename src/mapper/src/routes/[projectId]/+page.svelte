@@ -144,7 +144,7 @@
 			isTaskActionModalOpen = value;
 		}}
 		{selectedTab}
-		projectId={data.projectId}
+		projectData={data?.project}
 	/>
 
 	{#if selectedTab !== 'map'}
@@ -203,7 +203,7 @@
 		class="z-9999 fixed bottom-0 left-0 right-0"
 		placement="bottom"
 		no-scroll-controls
-		onsl-tab-show={(e:  CustomEvent<{ name: string }>) => {
+		onsl-tab-show={(e: CustomEvent<{ name: string }>) => {
 			selectedTab = e.detail.name;
 			if (
 				e.detail.name !== 'qrcode' &&
