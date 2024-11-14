@@ -32,8 +32,8 @@ import geojson
 from fastapi import HTTPException, UploadFile
 from loguru import logger as log
 from psycopg import Connection
-from psycopg.rows import class_row
 from psycopg.errors import UniqueViolation
+from psycopg.rows import class_row
 from pydantic import AwareDatetime, BaseModel, Field, ValidationInfo
 from pydantic.functional_validators import field_validator
 
@@ -409,12 +409,12 @@ class DbOrganisation(BaseModel):
             {'ON CONFLICT ("name") DO NOTHING' if ignore_conflict else ''}
             RETURNING *;
         """
-        
+
         try:
             async with db.cursor(row_factory=class_row(cls)) as cur:
                 await cur.execute(sql, model_dump)
                 new_org = await cur.fetchone()
-            
+
             if new_org and new_org.logo is None and new_logo:
                 from app.organisations.organisation_schemas import OrganisationUpdate
 
@@ -427,7 +427,7 @@ class DbOrganisation(BaseModel):
             log.error(f"Organisation named ({org_in.name}) already exists!")
             raise HTTPException(
                 status_code=HTTPStatus.CONFLICT,
-                detail=f"Organisation named ({org_in.name}) already exists!"
+                detail=f"Organisation named ({org_in.name}) already exists!",
             ) from e
 
         except Exception as e:
