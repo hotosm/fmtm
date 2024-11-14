@@ -390,5 +390,5 @@ async def project_contributors(
 
     raise HTTPException(
         status_code=HTTPStatus.FORBIDDEN,
-        detail="You do not have permission to access this resource.",
+        detail="You must be a project contributor to access this resource.",
     )
