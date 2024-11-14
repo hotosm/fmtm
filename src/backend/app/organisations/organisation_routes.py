@@ -101,6 +101,11 @@ async def create_organisation(
     Either a logo can be uploaded, or a link to the logo provided
     in the Organisation JSON ('logo': 'https://your.link.to.logo.png').
     """
+    if org_in.name is None:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="The `name` is required to create an organisation.",
+        )
     return await DbOrganisation.create(db, org_in, current_user.id, logo)
 
 
@@ -108,12 +113,12 @@ async def create_organisation(
 async def update_organisation(
     db: Annotated[Connection, Depends(db_conn)],
     org_user_dict: Annotated[AuthUser, Depends(org_admin)],
-    new_values: OrganisationUpdate = Depends(),
+    new_values: OrganisationUpdate = Depends(parse_organisation_input),
     logo: UploadFile = File(None),
 ):
     """Partial update for an existing organisation."""
     org_id = org_user_dict.get("org").id
-    return DbOrganisation.update(db, org_id, new_values, logo)
+    return await DbOrganisation.update(db, org_id, new_values, logo)
 
 
 @router.delete("/{org_id}")

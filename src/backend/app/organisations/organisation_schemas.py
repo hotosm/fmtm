@@ -23,9 +23,10 @@ from fastapi import Form
 from pydantic import BaseModel, Field
 from pydantic.functional_validators import model_validator
 
-from app.central.central_schemas import  ODKCentralIn
-from app.db.enums import OrganisationType, CommunityType
+from app.central.central_schemas import ODKCentralIn
+from app.db.enums import CommunityType, OrganisationType
 from app.db.models import DbOrganisation, slugify
+
 
 class OrganisationInBase(ODKCentralIn, DbOrganisation):
     """Base model for project insert / update (validators).
@@ -51,18 +52,25 @@ class OrganisationIn(OrganisationInBase):
     # Name is mandatory
     name: str
 
+
+class OrganisationUpdate(OrganisationInBase):
+    """Edit an org from user input."""
+
+    # Allow the name field to be omitted / not updated
+    name: Optional[str] = None
+
+
 def parse_organisation_input(
-    name: str = Form(...),
+    name: Optional[str] = Form(None),
     slug: Optional[str] = Form(None),
     created_by: Optional[int] = Form(None),
     community_type: CommunityType = Form(None),
     type: OrganisationType = Form(None, alias="type"),
     odk_central_url: Optional[str] = Form(None),
     odk_central_user: Optional[str] = Form(None),
-    odk_central_password: Optional[str] = Form(None)
-) -> OrganisationIn:
-    """
-    Parse organisation input data from a FastAPI Form.
+    odk_central_password: Optional[str] = Form(None),
+) -> OrganisationUpdate:
+    """Parse organisation input data from a FastAPI Form.
 
     The organisation fields are passed as keyword arguments. The
     ODKCentralIn model is used to parse the ODK credential fields, and
@@ -76,21 +84,15 @@ def parse_organisation_input(
         odk_central_user=odk_central_user,
         odk_central_password=odk_central_password,
     )
-    org_data = OrganisationIn(
+    org_data = OrganisationUpdate(
         name=name,
         slug=slug,
         created_by=created_by,
         community_type=community_type,
         type=type,
-        **odk_central_data.dict(exclude_unset=True)
+        **odk_central_data.dict(exclude_unset=True),
     )
     return org_data
-
-class OrganisationUpdate(OrganisationInBase):
-    """Edit an org from user input."""
-
-    # Allow the name field to be omitted / not updated
-    name: Optional[str] = None
 
 
 class OrganisationOut(BaseModel):
