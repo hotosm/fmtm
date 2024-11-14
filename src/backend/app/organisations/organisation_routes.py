@@ -42,6 +42,7 @@ from app.organisations.organisation_schemas import (
     OrganisationIn,
     OrganisationOut,
     OrganisationUpdate,
+    parse_organisation_input,
 )
 
 router = APIRouter(
@@ -92,7 +93,7 @@ async def create_organisation(
     db: Annotated[Connection, Depends(db_conn)],
     current_user: Annotated[AuthUser, Depends(login_required)],
     # Depends required below to allow logo upload
-    org_in: OrganisationIn = Depends(),
+    org_in: OrganisationIn = Depends(parse_organisation_input),
     logo: Optional[UploadFile] = File(None),
 ) -> OrganisationOut:
     """Create an organisation with the given details.

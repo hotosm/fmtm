@@ -19,13 +19,13 @@
 
 from typing import Annotated, Optional, Self
 
+from fastapi import Form
 from pydantic import BaseModel, Field
 from pydantic.functional_validators import model_validator
 
-from app.central.central_schemas import ODKCentralIn
-from app.db.enums import OrganisationType
+from app.central.central_schemas import  ODKCentralIn
+from app.db.enums import OrganisationType, CommunityType
 from app.db.models import DbOrganisation, slugify
-
 
 class OrganisationInBase(ODKCentralIn, DbOrganisation):
     """Base model for project insert / update (validators).
@@ -51,6 +51,40 @@ class OrganisationIn(OrganisationInBase):
     # Name is mandatory
     name: str
 
+def parse_organisation_input(
+    name: str = Form(...),
+    slug: Optional[str] = Form(None),
+    created_by: Optional[int] = Form(None),
+    community_type: CommunityType = Form(None),
+    type: OrganisationType = Form(None, alias="type"),
+    odk_central_url: Optional[str] = Form(None),
+    odk_central_user: Optional[str] = Form(None),
+    odk_central_password: Optional[str] = Form(None)
+) -> OrganisationIn:
+    """
+    Parse organisation input data from a FastAPI Form.
+
+    The organisation fields are passed as keyword arguments. The
+    ODKCentralIn model is used to parse the ODK credential fields, and
+    the OrganisationIn model is used to parse the organisation fields.
+
+    The parsed data is returned as an OrganisationIn instance, with the
+    ODKCentralIn fields merged in.
+    """
+    odk_central_data = ODKCentralIn(
+        odk_central_url=odk_central_url,
+        odk_central_user=odk_central_user,
+        odk_central_password=odk_central_password,
+    )
+    org_data = OrganisationIn(
+        name=name,
+        slug=slug,
+        created_by=created_by,
+        community_type=community_type,
+        type=type,
+        **odk_central_data.dict(exclude_unset=True)
+    )
+    return org_data
 
 class OrganisationUpdate(OrganisationInBase):
     """Edit an org from user input."""

@@ -58,8 +58,6 @@ async def get_organisation(
             pass
         db_org = await DbOrganisation.one(db, id)
 
-        if db_org is None:
-            raise KeyError(f"Organisation ({id}) not found.")
     except KeyError as e:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(e)) from e
 
