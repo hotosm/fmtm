@@ -14,7 +14,7 @@
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
-ARG PYTHON_IMG_TAG=3.11
+ARG PYTHON_IMG_TAG=3.12
 ARG MINIO_TAG=${MINIO_TAG:-RELEASE.2024-10-13T13-34-11Z}
 FROM docker.io/minio/minio:${MINIO_TAG} AS minio
 
@@ -49,7 +49,7 @@ FROM base AS extract-deps
 WORKDIR /opt/python
 COPY pyproject.toml pdm.lock /opt/python/
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir pdm==2.6.1
+    && pip install --no-cache-dir pdm==2.19.3
 RUN pdm export --prod > requirements.txt \
     # Export with default deps, as we install one or the other
     && pdm export -G monitoring \
@@ -140,9 +140,6 @@ VOLUME /opt/logs
 VOLUME /opt/tiles
 # Change to non-root user
 USER appuser
-# Add Healthcheck
-HEALTHCHECK --start-period=10s --interval=5s --retries=20 --timeout=5s \
-    CMD curl --fail http://localhost:8000/__lbheartbeat__ || exit 1
 
 
 # Add certificates to use ODK Central over SSL (HTTPS, required)

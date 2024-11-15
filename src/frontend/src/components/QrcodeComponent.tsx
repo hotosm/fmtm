@@ -6,20 +6,20 @@ import { GetProjectQrCode } from '@/api/Files';
 
 type tasksComponentType = {
   projectId?: string;
-  taskIndex?: number;
 };
 
-const QrcodeComponent = ({ projectId, taskIndex }: tasksComponentType) => {
+const QrcodeComponent = ({ projectId }: tasksComponentType) => {
   const downloadQR = () => {
     const downloadLink = document.createElement('a');
     downloadLink.href = qrcode;
-    downloadLink.download = `Project_${projectId}_Task_${taskIndex}`;
+    downloadLink.download = `Project_${projectId}`;
     downloadLink.click();
   };
 
-  const projectName = useAppSelector((state) => state.project.projectInfo.title);
+  const projectName = useAppSelector((state) => state.project.projectInfo.name);
   const odkToken = useAppSelector((state) => state.project.projectInfo.odk_token);
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
+
   const { qrcode }: { qrcode: string } = GetProjectQrCode(odkToken, projectName, authDetails?.username);
 
   return (

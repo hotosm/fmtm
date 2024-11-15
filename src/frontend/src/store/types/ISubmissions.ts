@@ -16,6 +16,10 @@ export type SubmissionStateTypes = {
   submissionTableRefreshing: boolean;
   updateReviewStatusModal: updateReviewStatusModal;
   updateReviewStateLoading: boolean;
+  mappedVsValidatedTask: mappedVsValidatedTaskType[];
+  mappedVsValidatedTaskLoading: boolean;
+  submissionPhotos: string[];
+  submissionPhotosLoading: boolean;
 };
 
 type updateReviewStatusModal = {
@@ -24,7 +28,7 @@ type updateReviewStatusModal = {
   taskId: string | null;
   projectId: number | null;
   reviewState: string;
-  taskUId: string | null;
+  taskUid: string | null;
 };
 
 export type filterType = {
@@ -32,4 +36,11 @@ export type filterType = {
   submitted_by: string | null;
   review_state: string | null;
   submitted_date: string | null;
+};
+
+type mappedVsValidatedTaskType = {
+  date: string;
+  mapped: number;
+  validated: number;
+  label: string;
 };

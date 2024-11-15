@@ -1,4 +1,4 @@
-import adapter from '@sveltejs/adapter-auto';
+import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('@sveltejs/kit').Config} */
@@ -16,7 +16,9 @@ const config = {
 			// these options are set automatically — see below
 			pages: 'build',
 			assets: 'build',
-			fallback: undefined,
+			// This fallback is required to compile as SPA
+			// as we don't have any server side rendering here
+			fallback: 'index.html',
 			precompress: false,
 			strict: true,
 		}),
@@ -27,8 +29,13 @@ const config = {
 	},
 
 	alias: {
+		$lib: 'src/lib',
 		$components: 'src/components',
 		$static: 'static',
+		$store: 'src/store',
+		$routes: 'src/routes',
+		$styles: 'styles',
+		$assets: 'assets',
 	},
 };
 

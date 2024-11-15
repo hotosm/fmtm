@@ -2,7 +2,7 @@ import { Fill, Icon, Stroke, Style } from 'ol/style';
 import { getCenter } from 'ol/extent';
 import { Point } from 'ol/geom';
 import AssetModules from '@/shared/AssetModules';
-import { task_status } from '@/types/enums';
+import { entity_state } from '@/types/enums';
 import { EntityOsmMap } from '@/store/types/IProject';
 
 function createPolygonStyle(fillColor: string, strokeColor: string) {
@@ -38,8 +38,7 @@ const strokeColor = 'rgb(0,0,0,0.3)';
 const secondaryStrokeColor = 'rgb(0,0,0,1)';
 
 const getTaskStatusStyle = (feature: Record<string, any>, mapTheme: Record<string, any>, taskLockedByUser: boolean) => {
-  let id = feature.getId().toString().replace('_', ',');
-  const status = id.split(',')[1];
+  const status = feature.getProperties().task_state;
 
   const isTaskStatusLocked = ['LOCKED_FOR_MAPPING', 'LOCKED_FOR_VALIDATION'].includes(status);
   const borderStrokeColor = isTaskStatusLocked && taskLockedByUser ? secondaryStrokeColor : strokeColor;
@@ -56,7 +55,7 @@ const getTaskStatusStyle = (feature: Record<string, any>, mapTheme: Record<strin
   const redIconStyle = createIconStyle(AssetModules.RedLockPng);
 
   const geojsonStyles = {
-    READY: new Style({
+    UNLOCKED_TO_MAP: new Style({
       stroke: new Stroke({
         color: borderStrokeColor,
         width: 3,
@@ -66,7 +65,7 @@ const getTaskStatusStyle = (feature: Record<string, any>, mapTheme: Record<strin
       }),
     }),
     LOCKED_FOR_MAPPING: [lockedPolygonStyle, iconStyle],
-    MAPPED: new Style({
+    UNLOCKED_TO_VALIDATE: new Style({
       stroke: new Stroke({
         color: borderStrokeColor,
         width: 3,
@@ -76,8 +75,7 @@ const getTaskStatusStyle = (feature: Record<string, any>, mapTheme: Record<strin
       }),
     }),
     LOCKED_FOR_VALIDATION: [lockedValidationStyle, redIconStyle],
-
-    VALIDATED: new Style({
+    UNLOCKED_DONE: new Style({
       stroke: new Stroke({
         color: borderStrokeColor,
         width: 3,
@@ -86,40 +84,32 @@ const getTaskStatusStyle = (feature: Record<string, any>, mapTheme: Record<strin
         color: mapTheme.palette.mapFeatureColors.validated_rgb,
       }),
     }),
-    INVALIDATED: new Style({
-      stroke: new Stroke({
-        color: borderStrokeColor,
-        width: 3,
-      }),
-      fill: new Fill({
-        color: mapTheme.palette.mapFeatureColors.invalidated_rgb,
-      }),
-    }),
-    BAD: new Style({
-      stroke: new Stroke({
-        color: borderStrokeColor,
-        width: 3,
-      }),
-      fill: new Fill({
-        color: mapTheme.palette.mapFeatureColors.bad_rgb,
-      }),
-    }),
-    SPLIT: new Style({
-      stroke: new Stroke({
-        color: borderStrokeColor,
-        width: 3,
-      }),
-      fill: new Fill({
-        color: mapTheme.palette.mapFeatureColors.split_rgb,
-      }),
-    }),
+    // MARKED_INVALID: new Style({
+    //   stroke: new Stroke({
+    //     color: borderStrokeColor,
+    //     width: 3,
+    //   }),
+    //   fill: new Fill({
+    //     color: mapTheme.palette.mapFeatureColors.invalidated_rgb,
+    //   }),
+    // }),
+    // MARKED_BAD: new Style({
+    //   stroke: new Stroke({
+    //     color: borderStrokeColor,
+    //     width: 3,
+    //   }),
+    //   fill: new Fill({
+    //     color: mapTheme.palette.mapFeatureColors.bad_rgb,
+    //   }),
+    // }),
   };
   return geojsonStyles[status];
 };
 
 export const getFeatureStatusStyle = (osmId: string, mapTheme: Record<string, any>, entityOsmMap: EntityOsmMap[]) => {
   const entity = entityOsmMap?.find((entity) => entity?.osm_id === osmId) as EntityOsmMap;
-  let status = task_status[entity?.status];
+
+  let status = entity_state[entity?.status];
 
   const borderStrokeColor = '#FF0000';
 
@@ -144,19 +134,18 @@ export const getFeatureStatusStyle = (osmId: string, mapTheme: Record<string, an
         color: mapTheme.palette.mapFeatureColors.ready_rgb,
       }),
     }),
-    LOCKED_FOR_MAPPING: [lockedPolygonStyle, iconStyle],
-    MAPPED: new Style({
-      stroke: new Stroke({
-        color: borderStrokeColor,
-        width: 1,
-      }),
-      fill: new Fill({
-        color: mapTheme.palette.mapFeatureColors.mapped_rgb,
-      }),
-    }),
-    LOCKED_FOR_VALIDATION: [lockedValidationStyle, redIconStyle],
-
-    VALIDATED: new Style({
+    OPENED_IN_ODK: [lockedPolygonStyle, iconStyle],
+    // UNLOCKED_TO_VALIDATE: new Style({
+    //   stroke: new Stroke({
+    //     color: borderStrokeColor,
+    //     width: 1,
+    //   }),
+    //   fill: new Fill({
+    //     color: mapTheme.palette.mapFeatureColors.mapped_rgb,
+    //   }),
+    // }),
+    // LOCKED_FOR_VALIDATION: [lockedValidationStyle, redIconStyle],
+    SURVEY_SUBMITTED: new Style({
       stroke: new Stroke({
         color: borderStrokeColor,
         width: 1,
@@ -165,31 +154,22 @@ export const getFeatureStatusStyle = (osmId: string, mapTheme: Record<string, an
         color: mapTheme.palette.mapFeatureColors.validated_rgb,
       }),
     }),
-    INVALIDATED: new Style({
-      stroke: new Stroke({
-        color: borderStrokeColor,
-        width: 1,
-      }),
-      fill: new Fill({
-        color: mapTheme.palette.mapFeatureColors.invalidated_rgb,
-      }),
-    }),
-    BAD: new Style({
+    // INVALIDATED: new Style({
+    //   stroke: new Stroke({
+    //     color: borderStrokeColor,
+    //     width: 1,
+    //   }),
+    //   fill: new Fill({
+    //     color: mapTheme.palette.mapFeatureColors.invalidated_rgb,
+    //   }),
+    // }),
+    MARKED_BAD: new Style({
       stroke: new Stroke({
         color: borderStrokeColor,
         width: 1,
       }),
       fill: new Fill({
         color: mapTheme.palette.mapFeatureColors.bad_rgb,
-      }),
-    }),
-    SPLIT: new Style({
-      stroke: new Stroke({
-        color: borderStrokeColor,
-        width: 1,
-      }),
-      fill: new Fill({
-        color: mapTheme.palette.mapFeatureColors.split_rgb,
       }),
     }),
   };

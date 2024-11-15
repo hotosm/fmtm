@@ -1,10 +1,15 @@
 <script lang="ts">
   import '@hotosm/ui/dist/hotosm-ui';
   import { createEventDispatcher } from 'svelte';
+  // FIXME this no longer exists!
   import type { Task_history } from '$lib/migrations';
 
-  export let record: Task_history;
-  export let highlight: boolean;
+  interface Props {
+    record: Task_history;
+    highlight: boolean;
+  }
+
+  let { record, highlight }: Props = $props();
 
   const dispatch = createEventDispatcher();
 
@@ -31,8 +36,7 @@
 
 <sl-card class={`flex gap-2 items-center justify-between px-1 border-b-[2px] border-white py-3 ${highlightedStyle}`}>
   <!-- Profile Image or Default Icon -->
-  <div class="flex items-center">
-    <div class="w-[2.81rem] h-[2.81rem] border rounded-full overflow-hidden mr-4">
+    <div class="w-[2.81rem] h-[2.81rem] border rounded-full overflow-hidden">
       {#if record?.profile_img}
         <img src={record.profile_img} alt="Profile Picture" />
       {:else}
@@ -43,18 +47,18 @@
     </div>
 
     <!-- Action Text and Task ID -->
-    <div class="text-base">
+    <div class="text-base mr-4">
       <span class="text-[#555555] font-medium font-archivo">
-        {record?.action} by {record.action_text?.split(' ').at(-1)}
+        {record?.event} by {record.username || 'anon'}
       </span>
-      
+
       <!-- Date and Time -->
       <div class="flex items-center justify-between mt-2">
         <p class="font-archivo text-sm text-[#7A7676]">#{record?.task_id}</p>
         <div class="flex items-center font-archivo text-sm text-[#7A7676] ml-2">
           <sl-icon name="clock" class="text-[20px] mr-2"></sl-icon>
-          {#if record?.action_date}
-            {@const formattedDate = formatDate(record.action_date)}
+          {#if record?.created_at}
+            {@const formattedDate = formatDate(record.created_at)}
             <span class="mr-2">{formattedDate.date}</span>
             <span>{formattedDate.time}</span>
           {:else}
@@ -65,10 +69,9 @@
     </div>
 
     <!-- Zoom to Task Icon -->
-    <div title="Zoom to Task" on:click={(e) => { e.stopPropagation(); handleZoomToTask() }}>
+    <div title="Zoom to Task" onclick={(e) => { e.stopPropagation(); handleZoomToTask() }}>
       <sl-icon name="map" class="text-[#9B9999] hover:text-[#555555] cursor-pointer text-[20px]"></sl-icon>
     </div>
-  </div>
 </sl-card>
 
 <style>

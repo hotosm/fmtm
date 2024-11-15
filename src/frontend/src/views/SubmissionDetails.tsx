@@ -1,8 +1,8 @@
 import CoreModules from '@/shared/CoreModules.js';
 import React, { useEffect } from 'react';
-import { SubmissionService } from '@/api/Submission';
+import { SubmissionService, GetSubmissionPhotosService } from '@/api/Submission';
 import SubmissionInstanceMap from '@/components/SubmissionMap/SubmissionInstanceMap';
-import { GetProjectDashboard } from '@/api/Project';
+import { GetSubmissionDashboard } from '@/api/Project';
 import Button from '@/components/common/Button';
 import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 import UpdateReviewStatusModal from '@/components/ProjectSubmissions/UpdateReviewStatusModal';
@@ -12,6 +12,7 @@ import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import Accordion from '@/components/common/Accordion';
 import { GetProjectComments } from '@/api/Project';
 import SubmissionComments from '@/components/SubmissionInstance/SubmissionComments';
+import ImageSlider from '@/components/common/ImageSlider';
 
 const renderValue = (value: any, key: string = '') => {
   if (key === 'start' || key === 'end') {
@@ -89,18 +90,20 @@ const SubmissionDetails = () => {
 
   const projectId = params.projectId;
   const paramsInstanceId = params.instanceId;
-  const taskUId = params.taskId;
+  const taskUid = params.taskId;
   const projectDashboardDetail = useAppSelector((state) => state.project.projectDashboardDetail);
   const projectDashboardLoading = useAppSelector((state) => state.project.projectDashboardLoading);
   const submissionDetails = useAppSelector((state) => state.submission.submissionDetails);
   const submissionDetailsLoading = useAppSelector((state) => state.submission.submissionDetailsLoading);
   const taskId = submissionDetails?.task_id ? submissionDetails?.task_id : '-';
+  const submissionPhotosLoading = useAppSelector((state) => state.submission.submissionPhotosLoading);
+  const submissionPhotos = useAppSelector((state) => state.submission.submissionPhotos);
 
   const { start, end, today, deviceid, ...restSubmissionDetails } = submissionDetails || {};
   const dateDeviceDetails = { start, end, today, deviceid };
 
   useEffect(() => {
-    dispatch(GetProjectDashboard(`${import.meta.env.VITE_API_URL}/projects/project_dashboard/${projectId}`));
+    dispatch(GetSubmissionDashboard(`${import.meta.env.VITE_API_URL}/submission/${projectId}/dashboard`));
   }, []);
 
   useEffect(() => {
@@ -110,9 +113,20 @@ const SubmissionDetails = () => {
   }, [projectId, paramsInstanceId]);
 
   useEffect(() => {
-    if (!taskUId) return;
-    dispatch(GetProjectComments(`${import.meta.env.VITE_API_URL}/tasks/${parseInt(taskUId)}/history/?comment=true`));
-  }, [taskUId]);
+    // Note here taskUid is coerced to string so we have to check that
+    if (taskUid == 'undefined') return;
+    dispatch(
+      GetProjectComments(
+        `${import.meta.env.VITE_API_URL}/tasks/${parseInt(taskUid)}/history/?project_id=${projectId}&comments=true`,
+      ),
+    );
+  }, [taskUid]);
+
+  useEffect(() => {
+    if (paramsInstanceId) {
+      dispatch(GetSubmissionPhotosService(`${import.meta.env.VITE_API_URL}/submission/${paramsInstanceId}/photos`));
+    }
+  }, [paramsInstanceId]);
 
   const filteredData = restSubmissionDetails ? removeNullValues(restSubmissionDetails) : {};
 
@@ -172,7 +186,7 @@ const SubmissionDetails = () => {
                 className="hover:fmtm-text-primaryRed fmtm-cursor-pointer fmtm-duration-200"
                 onClick={() => navigate(`/project/${projectId}`)}
               >
-                {projectDashboardDetail?.project_name_prefix}
+                {projectDashboardDetail?.slug}
               </span>
               <span> &gt; </span>
               <span
@@ -194,7 +208,7 @@ const SubmissionDetails = () => {
               ) : (
                 <div className="fmtm-bg-white fmtm-rounded-lg fmtm-w-full fmtm-h-fit fmtm-p-2 fmtm-px-4 md:fmtm-py-5 md:fmtm-shadow-[0px_10px_20px_0px_rgba(96,96,96,0.1)] fmtm-flex fmtm-flex-col">
                   <h2 className="fmtm-text-base fmtm-text-[#545454] fmtm-font-bold fmtm-mb-4 fmtm-break-words">
-                    {projectDashboardDetail?.project_name_prefix}
+                    {projectDashboardDetail?.slug}
                   </h2>
                   <h2 className="fmtm-text-base fmtm-font-bold fmtm-text-[#545454]">Task: {taskId}</h2>
                   <h2 className="fmtm-text-base fmtm-font-bold fmtm-text-[#545454] fmtm-break-words">
@@ -215,7 +229,7 @@ const SubmissionDetails = () => {
                       projectId: projectId,
                       taskId: taskId,
                       reviewState: restSubmissionDetails?.__system?.reviewState,
-                      taskUId: taskUId,
+                      taskUid: taskUid,
                     }),
                   );
                 }}
@@ -258,7 +272,7 @@ const SubmissionDetails = () => {
             </div>
           </div>
         </div>
-        <div className="fmtm-grid fmtm-grid-cols-1 md:fmtm-grid-cols-2 fmtm-gap-x-8 fmtm-mt-10 fmtm-gap-y-10">
+        <div className="fmtm-grid fmtm-grid-cols-1 md:fmtm-grid-cols-2 fmtm-gap-x-8 fmtm-mt-10 fmtm-gap-y-10 fmtm-mb-5">
           {submissionDetailsLoading ? (
             <div className="fmtm-flex fmtm-flex-col fmtm-gap-3 fmtm-mt-5">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -280,6 +294,23 @@ const SubmissionDetails = () => {
             <SubmissionComments />
           </div>
         </div>
+        {/* submission photos */}
+        {submissionPhotosLoading ? (
+          <div className="fmtm-flex fmtm-gap-x-3 fmtm-overflow-x-scroll scrollbar fmtm-bg-white fmtm-p-6 fmtm-rounded-xl">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <CoreModules.Skeleton
+                key={i}
+                style={{ width: '9.688rem', height: '10.313rem' }}
+                className="!fmtm-rounded-lg"
+              />
+            ))}
+          </div>
+        ) : submissionPhotos?.length > 0 ? (
+          <div className="fmtm-bg-white fmtm-rounded-xl fmtm-p-6">
+            <p className="fmtm-text-base fmtm-font-bold fmtm-text-[#555] fmtm-mb-2">Images</p>
+            <ImageSlider images={submissionPhotos || []} />
+          </div>
+        ) : null}
       </div>
     </>
   );

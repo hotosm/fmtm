@@ -145,9 +145,8 @@ const FormCategoryService = (url: string) => {
   };
 };
 
-const UploadTaskAreasService = (url: string, filePayload: any, projectData: any) => {
+const UploadTaskAreasService = (url: string, filePayload: any) => {
   return async (dispatch) => {
-    dispatch(CreateProjectActions.UploadAreaLoading(true));
     const postUploadArea = async (url: string, filePayload: any) => {
       let isAPISuccess = true;
       try {
@@ -160,10 +159,7 @@ const UploadTaskAreasService = (url: string, filePayload: any, projectData: any)
         });
         isAPISuccess = isStatusSuccess(postNewProjectDetails.status);
 
-        if (isAPISuccess) {
-          await dispatch(CreateProjectActions.UploadAreaLoading(false));
-          await dispatch(CreateProjectActions.PostUploadAreaSuccess(postNewProjectDetails.data));
-        } else {
+        if (!isAPISuccess) {
           throw new Error(`Request failed with status ${postNewProjectDetails.status}`);
         }
       } catch (error: any) {
@@ -177,7 +173,6 @@ const UploadTaskAreasService = (url: string, filePayload: any, projectData: any)
             duration: 2000,
           }),
         );
-        dispatch(CreateProjectActions.UploadAreaLoading(false));
       }
       return isAPISuccess;
     };
@@ -195,18 +190,33 @@ const GenerateProjectFilesService = (url: string, projectData: any, formUpload: 
       let isAPISuccess = true;
       try {
         let response;
-
+        const additional_entities: string[] =
+          projectData?.additional_entities?.length > 0
+            ? [projectData?.additional_entities?.[0]?.replaceAll(' ', '_')]
+            : [];
         if (projectData.form_ways === 'custom_form') {
           // TODO move form upload to a separate service / endpoint?
           const generateApiFormData = new FormData();
           generateApiFormData.append('xlsform', formUpload);
+          if (additional_entities?.length > 0) {
+            generateApiFormData.append('additional_entities', additional_entities);
+          }
           response = await axios.post(url, generateApiFormData, {
             headers: {
               'Content-Type': 'multipart/form-data',
             },
           });
         } else {
-          response = await axios.post(url, {});
+          const generateApiFormData = new FormData();
+          generateApiFormData.append(
+            'additional_entities',
+            additional_entities?.length > 0 ? additional_entities : null,
+          );
+          response = await axios.post(url, generateApiFormData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
         }
         isAPISuccess = isStatusSuccess(response.status);
         if (!isAPISuccess) {
@@ -297,7 +307,7 @@ const GetDividedTaskFromGeojson = (url: string, projectData: Record<string, any>
       try {
         const dividedTaskFormData = new FormData();
         dividedTaskFormData.append('project_geojson', projectData.geojson);
-        dividedTaskFormData.append('dimension', projectData.dimension);
+        dividedTaskFormData.append('dimension_meters', projectData.dimension);
         const getGetDividedTaskFromGeojsonResponse = await axios.post(url, dividedTaskFormData);
         const resp: OrganisationListModel = getGetDividedTaskFromGeojsonResponse.data;
         dispatch(CreateProjectActions.SetIsTasksGenerated({ key: 'divide_on_square', value: true }));
@@ -323,14 +333,14 @@ const GetIndividualProjectDetails = (url: string) => {
       try {
         const getIndividualProjectDetailsResponse = await axios.get(url);
         const resp: ProjectDetailsModel = getIndividualProjectDetailsResponse.data;
-        const formattedOutlineGeojson = { type: 'FeatureCollection', features: [{ ...resp.outline_geojson, id: 1 }] };
+        const formattedOutlineGeojson = { type: 'FeatureCollection', features: [{ ...resp.outline, id: 1 }] };
         const modifiedResponse = {
           ...resp,
-          name: resp.project_info?.name,
-          description: resp.project_info?.description,
-          short_description: resp.project_info?.short_description,
-          outline_geojson: formattedOutlineGeojson,
-          per_task_instructions: resp.project_info?.per_task_instructions,
+          name: resp.name,
+          description: resp.description,
+          short_description: resp.short_description,
+          outline: formattedOutlineGeojson,
+          per_task_instructions: resp.per_task_instructions,
         };
 
         dispatch(CreateProjectActions.SetIndividualProjectDetails(modifiedResponse));
@@ -438,14 +448,14 @@ const PostFormUpdate = (url: string, projectData: Record<string, any>) => {
         formFormData.append('xlsform', projectData.upload);
 
         const postFormUpdateResponse = await axios.post(url, formFormData);
-        const resp: ProjectDetailsModel = postFormUpdateResponse.data;
+        const resp: { message: string } = postFormUpdateResponse.data;
         // dispatch(CreateProjectActions.SetIndividualProjectDetails(modifiedResponse));
         // dispatch(CreateProjectActions.SetPostFormUpdate(resp));
         dispatch(CreateProjectActions.SetPostFormUpdateLoading(false));
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
-            message: 'Form Successfully Updated',
+            message: resp.message,
             variant: 'success',
             duration: 2000,
           }),

@@ -1,21 +1,11 @@
-type ProjectInfo = {
-	name: string;
-	short_description: string;
-	description: string;
-	per_task_instructions: string;
-};
-
-type ProjectAuthor = {
-	username: string;
-	id: number;
-};
+import type { UUID } from 'crypto';
 
 export type ProjectTask = {
 	id: number;
 	project_id: number;
 	project_task_index: number;
 	feature_count: number;
-	outline_geojson: {
+	outline: {
 		type: string;
 		geometry: {
 			type: string;
@@ -33,8 +23,11 @@ export type ProjectTask = {
 export interface ProjectData {
 	id: number;
 	odkid: number;
-	project_info: ProjectInfo;
-	outline_geojson: {
+	name: string;
+	short_description: string;
+	description: string;
+	per_task_instructions: string;
+	outline: {
 		type: string;
 		geometry: {
 			type: string;
@@ -48,13 +41,13 @@ export interface ProjectData {
 	};
 	location_str: string;
 	xform_category: string;
-	xform_id: string;
+	odk_form_id: string;
 	data_extract_url: string;
 	odk_token: string;
 	organisation_id: number;
 	organisation_logo: string;
+	author_id: number;
 	custom_tms_url: string;
-	author: ProjectAuthor;
 	status: number;
 	hashtags: string[];
 	tasks: ProjectTask[];
@@ -65,33 +58,69 @@ export interface ZoomToTaskEventDetail {
 }
 
 export type TaskStatus = {
-	RELEASED_FOR_MAPPING: string;
+	UNLOCKED_TO_MAP: string;
 	LOCKED_FOR_MAPPING: string;
-	MARKED_MAPPED: string;
+	UNLOCKED_TO_VALIDATE: string;
 	LOCKED_FOR_VALIDATION: string;
-	VALIDATED: string;
-	INVALIDATED: string;
-	BAD: string;
-	SPLIT: string;
-	ARCHIVED: string;
+	UNLOCKED_DONE: string;
+	// INVALIDATED: string;
+	// BAD: string;
+	// SPLIT: string;
+	// ARCHIVED: string;
 };
 export const TaskStatusEnum: TaskStatus = Object.freeze({
-	RELEASED_FOR_MAPPING: '0',
-	LOCKED_FOR_MAPPING: '1',
-	MARKED_MAPPED: '2',
-	LOCKED_FOR_VALIDATION: '3',
-	VALIDATED: '4',
-	INVALIDATED: '5',
-	BAD: '6',
-	SPLIT: '7',
-	ARCHIVED: '8',
+	UNLOCKED_TO_MAP: 'UNLOCKED_TO_MAP',
+	LOCKED_FOR_MAPPING: 'LOCKED_FOR_MAPPING',
+	UNLOCKED_TO_VALIDATE: 'UNLOCKED_TO_VALIDATE',
+	LOCKED_FOR_VALIDATION: 'LOCKED_FOR_VALIDATION',
+	UNLOCKED_DONE: 'UNLOCKED_DONE',
 });
 
 export type TaskEvent = {
+	MAP: string;
+	FINISH: string;
+	VALIDATE: string;
+	GOOD: string;
+	BAD: string;
+	// SPLIT: string;
+	// MERGE: string;
+	// ASSIGN: string;
+	// COMMENT: string;
+};
+export const TaskEventEnum: TaskEvent = Object.freeze({
+	MAP: 'MAP',
+	FINISH: 'FINISH',
+	VALIDATE: 'VALIDATE',
+	GOOD: 'GOOD',
+	BAD: 'BAD',
+});
+
+export type TaskEventResponse = {
 	event_id: string;
-	action_text: string;
-	action_date: string;
+	event: TaskEvent;
+	task_id: number;
+	comment: string;
+	created_at: string;
 	username: string;
 	profile_img: string;
 	status: TaskStatus;
+};
+
+export type NewEvent = {
+	event_id: UUID;
+	event: TaskEvent;
+	task_id: number;
+	comment?: string | null;
+};
+
+export type TaskEventType = {
+	comment: string | null;
+	created_at: string;
+	event: TaskEvent | 'COMMENT';
+	event_id: string;
+	project_id: number;
+	state: TaskStatus | null;
+	task_id: number;
+	user_id: number;
+	username: string;
 };

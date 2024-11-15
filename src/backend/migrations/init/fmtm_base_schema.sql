@@ -66,10 +66,10 @@ CREATE TYPE public.organisationtype AS ENUM (
 ALTER TYPE public.organisationtype OWNER TO fmtm;
 
 CREATE TYPE public.projectpriority AS ENUM (
-    'URGENT',
-    'HIGH',
     'MEDIUM',
-    'LOW'
+    'LOW',
+    'HIGH',
+    'URGENT'
 );
 ALTER TYPE public.projectpriority OWNER TO fmtm;
 
@@ -79,33 +79,6 @@ CREATE TYPE public.projectstatus AS ENUM (
     'DRAFT'
 );
 ALTER TYPE public.projectstatus OWNER TO fmtm;
-
-CREATE TYPE public.taskaction AS ENUM (
-    'RELEASED_FOR_MAPPING',
-    'LOCKED_FOR_MAPPING',
-    'MARKED_MAPPED',
-    'LOCKED_FOR_VALIDATION',
-    'VALIDATED',
-    'MARKED_INVALID',
-    'MARKED_BAD',
-    'SPLIT_NEEDED',
-    'RECREATED',
-    'COMMENT'
-);
-ALTER TYPE public.taskaction OWNER TO fmtm;
-
-CREATE TYPE public.taskstatus AS ENUM (
-    'READY',
-    'LOCKED_FOR_MAPPING',
-    'MAPPED',
-    'LOCKED_FOR_VALIDATION',
-    'VALIDATED',
-    'INVALIDATED',
-    'BAD',
-    'SPLIT',
-    'ARCHIVED'
-);
-ALTER TYPE public.taskstatus OWNER TO fmtm;
 
 CREATE TYPE public.userrole AS ENUM (
     'READ_ONLY',
@@ -146,6 +119,38 @@ CREATE TYPE public.communitytype AS ENUM (
 );
 ALTER TYPE public.communitytype OWNER TO fmtm;
 
+CREATE TYPE public.taskevent AS ENUM (
+    'MAP',
+    'FINISH',
+    'VALIDATE',
+    'GOOD',
+    'BAD',
+    'CONFLATE',
+    'SPLIT',
+    'MERGE',
+    'ASSIGN',
+    'COMMENT'
+);
+ALTER TYPE public.taskevent OWNER TO fmtm;
+
+CREATE TYPE public.mappingstate AS ENUM (
+    'UNLOCKED_TO_MAP',
+    'LOCKED_FOR_MAPPING',
+    'UNLOCKED_TO_VALIDATE',
+    'LOCKED_FOR_VALIDATION',
+    'UNLOCKED_DONE',
+    'CONFLATED'
+);
+ALTER TYPE public.mappingstate OWNER TO fmtm;
+
+CREATE TYPE public.entitystate AS ENUM (
+    'READY',
+    'OPENED_IN_ODK',
+    'SURVEY_SUBMITTED',
+    'MARKED_BAD'
+);
+ALTER TYPE public.entitystate OWNER TO fmtm;
+
 
 -- Extra
 
@@ -155,42 +160,37 @@ SET default_table_access_method = heap;
 
 -- Tables
 
-CREATE TABLE IF NOT EXISTS public._migrations (
+CREATE TABLE public._migrations (
     script_name text,
     date_executed timestamp with time zone
 );
 ALTER TABLE public._migrations OWNER TO fmtm;
 
 
+-- Note we use UUID for interoperability with external databases,
+-- such as PGLite or other microservices
 CREATE TABLE public.background_tasks (
-    id character varying NOT NULL,
+    id UUID NOT NULL DEFAULT gen_random_uuid(),
     name character varying,
     project_id integer,
-    status public.backgroundtaskstatus NOT NULL,
+    status public.backgroundtaskstatus NOT NULL DEFAULT 'PENDING',
     message character varying
 );
 ALTER TABLE public.background_tasks OWNER TO fmtm;
 
 
-CREATE TABLE public.mbtiles_path (
-    id integer NOT NULL,
+-- Note we use UUID for interoperability with external databases,
+-- such as PGLite or other microservices
+CREATE TABLE public.basemaps (
+    id UUID NOT NULL DEFAULT gen_random_uuid(),
     project_id integer,
     status public.backgroundtaskstatus NOT NULL,
-    path character varying,
+    url character varying,
     tile_source character varying,
     background_task_id character varying,
     created_at timestamp with time zone DEFAULT now()
 );
-ALTER TABLE public.mbtiles_path OWNER TO fmtm;
-CREATE SEQUENCE public.mbtiles_path_id_seq
-AS integer
-START WITH 1
-INCREMENT BY 1
-NO MINVALUE
-NO MAXVALUE
-CACHE 1;
-ALTER TABLE public.mbtiles_path_id_seq OWNER TO fmtm;
-ALTER SEQUENCE public.mbtiles_path_id_seq OWNED BY public.mbtiles_path.id;
+ALTER TABLE public.basemaps OWNER TO fmtm;
 
 
 CREATE TABLE public.organisation_managers (
@@ -213,7 +213,8 @@ CREATE TABLE public.organisations (
     approved BOOLEAN DEFAULT false,
     odk_central_url character varying,
     odk_central_user character varying,
-    odk_central_password character varying
+    odk_central_password character varying,
+    created_at timestamp with time zone NOT NULL DEFAULT now()
 );
 ALTER TABLE public.organisations OWNER TO fmtm;
 CREATE SEQUENCE public.organisations_id_seq
@@ -227,24 +228,16 @@ ALTER TABLE public.organisations_id_seq OWNER TO fmtm;
 ALTER SEQUENCE public.organisations_id_seq OWNED BY public.organisations.id;
 
 
-CREATE TABLE public.project_info (
-    project_id integer NOT NULL,
-    project_id_str character varying,
-    name character varying(512),
-    short_description character varying,
-    description character varying,
-    text_searchable tsvector,
-    per_task_instructions character varying
-);
-ALTER TABLE public.project_info OWNER TO fmtm;
-
-
 CREATE TABLE public.projects (
     id integer NOT NULL,
     organisation_id integer,
     odkid integer,
     author_id integer NOT NULL,
-    project_name_prefix character varying,
+    name character varying,
+    short_description character varying,
+    description character varying,
+    per_task_instructions character varying,
+    slug character varying,
     location_str character varying,
     outline public.GEOMETRY (POLYGON, 4326),
     status public.projectstatus NOT NULL DEFAULT 'DRAFT',
@@ -258,14 +251,6 @@ CREATE TABLE public.projects (
     featured boolean DEFAULT false,
     due_date timestamp with time zone,
     changeset_comment character varying,
-    osmcha_filter_id character varying,
-    imagery character varying,
-    osm_preset character varying,
-    odk_preset character varying,
-    josm_preset character varying,
-    id_presets character varying [],
-    extra_id_params character varying,
-    centroid public.GEOMETRY (POINT, 4326),
     odk_central_url character varying,
     odk_central_user character varying,
     odk_central_password character varying,
@@ -292,16 +277,19 @@ ALTER TABLE public.projects_id_seq OWNER TO fmtm;
 ALTER SEQUENCE public.projects_id_seq OWNED BY public.projects.id;
 
 
-CREATE TABLE public.task_history (
-    event_id UUID NOT NULL,
-    project_id integer,
+-- Note we use UUID for interoperability with external databases,
+-- such as PGLite or other microservices
+CREATE TABLE public.task_events (
+    event_id UUID NOT NULL DEFAULT gen_random_uuid(),
+    event public.taskevent NOT NULL,
     task_id integer NOT NULL,
-    action public.taskaction NOT NULL,
-    action_text character varying,
-    action_date timestamp with time zone NOT NULL,
-    user_id integer NOT NULL
+    project_id integer,
+    user_id integer,
+    state public.mappingstate,
+    comment text,
+    created_at timestamp with time zone NOT NULL DEFAULT now()
 );
-ALTER TABLE public.task_history OWNER TO fmtm;
+ALTER TABLE public.task_events OWNER TO fmtm;
 
 
 CREATE TABLE public.tasks (
@@ -351,6 +339,14 @@ CREATE TABLE public.users (
 );
 ALTER TABLE public.users OWNER TO fmtm;
 
+CREATE TABLE public.odk_entities (
+    entity_id UUID NOT NULL,
+    status entitystate NOT NULL,
+    project_id integer NOT NULL,
+    task_id integer
+);
+ALTER TABLE public.odk_entities OWNER TO fmtm;
+
 CREATE TABLE public.xlsforms (
     id integer NOT NULL,
     title character varying,
@@ -389,9 +385,6 @@ OWNED BY public.submission_photos.id;
 
 -- nextval for primary keys (autoincrement)
 
-ALTER TABLE ONLY public.mbtiles_path ALTER COLUMN id SET DEFAULT nextval(
-    'public.mbtiles_path_id_seq'::regclass
-);
 ALTER TABLE ONLY public.organisations ALTER COLUMN id SET DEFAULT nextval(
     'public.organisations_id_seq'::regclass
 );
@@ -417,8 +410,8 @@ ADD CONSTRAINT _migrations_pkey PRIMARY KEY (script_name);
 ALTER TABLE ONLY public.background_tasks
 ADD CONSTRAINT background_tasks_pkey PRIMARY KEY (id);
 
-ALTER TABLE ONLY public.mbtiles_path
-ADD CONSTRAINT mbtiles_path_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.basemaps
+ADD CONSTRAINT basemaps_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY public.organisation_managers
 ADD CONSTRAINT organisation_user_key UNIQUE (organisation_id, user_id);
@@ -432,14 +425,11 @@ ADD CONSTRAINT organisations_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.organisations
 ADD CONSTRAINT organisations_slug_key UNIQUE (slug);
 
-ALTER TABLE ONLY public.project_info
-ADD CONSTRAINT project_info_pkey PRIMARY KEY (project_id);
-
 ALTER TABLE ONLY public.projects
 ADD CONSTRAINT projects_pkey PRIMARY KEY (id);
 
-ALTER TABLE ONLY public.task_history
-ADD CONSTRAINT task_history_pkey PRIMARY KEY (event_id);
+ALTER TABLE ONLY public.task_events
+ADD CONSTRAINT task_events_pkey PRIMARY KEY (event_id);
 
 ALTER TABLE ONLY public.tasks
 ADD CONSTRAINT tasks_pkey PRIMARY KEY (id, project_id);
@@ -453,6 +443,9 @@ ADD CONSTRAINT users_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.users
 ADD CONSTRAINT users_username_key UNIQUE (username);
 
+ALTER TABLE ONLY public.odk_entities
+ADD CONSTRAINT odk_entities_pkey PRIMARY KEY (entity_id);
+
 ALTER TABLE ONLY public.xlsforms
 ADD CONSTRAINT xlsforms_pkey PRIMARY KEY (id);
 
@@ -464,39 +457,53 @@ ADD CONSTRAINT submission_photos_pkey PRIMARY KEY (id);
 
 -- Indexing
 
-CREATE INDEX idx_geometry ON public.projects USING gist (outline);
-CREATE INDEX idx_projects_centroid ON public.projects USING gist (centroid);
 CREATE INDEX idx_projects_outline ON public.projects USING gist (outline);
-CREATE INDEX idx_task_history_composite ON public.task_history USING btree (
-    task_id, project_id
-);
-CREATE INDEX idx_task_history_project_id_user_id ON public.task_history
-USING btree (
-    user_id, project_id
-);
-CREATE INDEX ix_task_history_project_id ON public.task_history USING btree (
-    project_id
-);
-CREATE INDEX ix_task_history_user_id ON public.task_history USING btree (
-    user_id
-);
-CREATE INDEX idx_tasks_outline ON public.tasks USING gist (outline);
-CREATE INDEX ix_projects_mapper_level ON public.projects USING btree (
+CREATE INDEX idx_projects_mapper_level
+ON public.projects USING btree (
     mapper_level
 );
-CREATE INDEX ix_projects_organisation_id ON public.projects USING btree (
+CREATE INDEX idx_projects_organisation_id
+ON public.projects USING btree (
     organisation_id
 );
-CREATE INDEX ix_tasks_project_id ON public.tasks USING btree (project_id);
-CREATE INDEX ix_users_id ON public.users USING btree (id);
-CREATE INDEX textsearch_idx ON public.project_info USING btree (
-    text_searchable
+CREATE INDEX idx_tasks_outline ON public.tasks USING gist (outline);
+CREATE INDEX idx_tasks_composite
+ON public.tasks USING btree (
+    id, project_id
 );
 CREATE INDEX idx_user_roles ON public.user_roles USING btree (
     project_id, user_id
 );
 CREATE INDEX idx_org_managers ON public.organisation_managers USING btree (
     user_id, organisation_id
+);
+CREATE INDEX idx_task_event_composite
+ON public.task_events USING btree (
+    task_id, project_id
+);
+CREATE INDEX idx_task_event_project_user
+ON public.task_events USING btree (
+    user_id, project_id
+);
+CREATE INDEX idx_task_event_project_id
+ON public.task_events USING btree (
+    task_id, project_id
+);
+CREATE INDEX idx_task_event_user_id
+ON public.task_events USING btree (
+    task_id, user_id
+);
+CREATE INDEX idx_task_history_date
+ON public.task_history USING btree (
+    task_id, created_at
+);
+CREATE INDEX idx_entities_project_id
+ON public.odk_entities USING btree (
+    entity_id, project_id
+);
+CREATE INDEX idx_entities_task_id
+ON public.odk_entities USING btree (
+    entity_id, task_id
 );
 
 -- Foreign keys
@@ -519,15 +526,25 @@ ADD CONSTRAINT organisation_managers_user_id_fkey FOREIGN KEY (
     user_id
 ) REFERENCES public.users (id);
 
-ALTER TABLE ONLY public.project_info
-ADD CONSTRAINT project_info_project_id_fkey FOREIGN KEY (
-    project_id
-) REFERENCES public.projects (id);
-
 ALTER TABLE ONLY public.tasks
 ADD CONSTRAINT tasks_project_id_fkey FOREIGN KEY (
     project_id
 ) REFERENCES public.projects (id);
+
+ALTER TABLE ONLY public.task_events
+ADD CONSTRAINT fk_projects FOREIGN KEY (
+    project_id
+) REFERENCES public.projects (id);
+
+ALTER TABLE ONLY public.task_events
+ADD CONSTRAINT fk_project_task_id FOREIGN KEY (
+    task_id, project_id
+) REFERENCES public.tasks (id, project_id);
+
+ALTER TABLE ONLY public.task_events
+ADD CONSTRAINT fk_users FOREIGN KEY (
+    user_id
+) REFERENCES public.users (id);
 
 ALTER TABLE ONLY public.user_roles
 ADD CONSTRAINT user_roles_project_id_fkey FOREIGN KEY (
@@ -543,6 +560,42 @@ ALTER TABLE ONLY public.submission_photos
 ADD CONSTRAINT fk_project_id FOREIGN KEY (
     project_id
 ) REFERENCES public.projects (id);
+
+-- Triggers
+
+CREATE OR REPLACE FUNCTION set_task_state()
+RETURNS TRIGGER AS $$
+BEGIN
+    CASE NEW.event
+        WHEN 'MAP' THEN
+            NEW.state := 'LOCKED_FOR_MAPPING';
+        WHEN 'FINISH' THEN
+            NEW.state := 'UNLOCKED_TO_VALIDATE';
+        WHEN 'VALIDATE' THEN
+            NEW.state := 'LOCKED_FOR_VALIDATION';
+        WHEN 'GOOD' THEN
+            NEW.state := 'UNLOCKED_DONE';
+        WHEN 'BAD' THEN
+            NEW.state := 'UNLOCKED_TO_MAP';
+        WHEN 'SPLIT' THEN
+            NEW.state := 'UNLOCKED_DONE';
+        WHEN 'MERGE' THEN
+            NEW.state := 'UNLOCKED_DONE';
+        WHEN 'ASSIGN' THEN
+            NEW.state := 'LOCKED_FOR_MAPPING';
+        WHEN 'COMMENT' THEN
+            NEW.state := OLD.state;
+        ELSE
+            RAISE EXCEPTION 'Unknown task event type: %', NEW.event;
+    END CASE;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER task_event_state_trigger
+BEFORE INSERT ON public.task_events
+FOR EACH ROW
+EXECUTE FUNCTION set_task_state();
 
 -- Finalise
 

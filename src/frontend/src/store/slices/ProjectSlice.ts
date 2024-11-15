@@ -21,18 +21,18 @@ const initialState: ProjectStateTypes = {
   mobileFooterSelection: 'explore',
   projectDetailsLoading: true,
   projectDashboardDetail: {
-    project_name_prefix: '',
+    slug: '',
     organisation_name: '',
     total_tasks: null,
     created_at: '',
     organisation_logo: '',
-    total_submission: null,
+    total_submissions: null,
     total_contributors: null,
     last_active: '',
   },
   entityOsmMap: [],
   entityOsmMapLoading: false,
-  updateEntityStatusLoading: false,
+  updateEntityStateLoading: false,
   projectDashboardLoading: false,
   geolocationStatus: false,
   projectCommentsList: [],
@@ -143,10 +143,10 @@ const ProjectSlice = createSlice({
     UpdateProjectTaskActivity(state, action) {
       state.projectTaskActivity = [action.payload, ...state.projectTaskActivity];
     },
-    UpdateEntityStatusLoading(state, action) {
-      state.updateEntityStatusLoading = action.payload;
+    UpdateEntityStateLoading(state, action) {
+      state.updateEntityStateLoading = action.payload;
     },
-    UpdateEntityStatus(state, action) {
+    UpdateEntityState(state, action) {
       const updatedEntityOsmMap = state.entityOsmMap?.map((entity) => {
         if (entity.id === action.payload.id) {
           return action.payload;
@@ -159,12 +159,12 @@ const ProjectSlice = createSlice({
       const updatedProjectTaskBoundries = state.projectTaskBoundries?.map((boundary) => {
         if (boundary.id == action.payload.projectId) {
           const updatedBoundary = boundary?.taskBoundries?.map((taskBoundary) => {
-            if (taskBoundary?.index === +action.payload.taskId) {
+            if (taskBoundary?.id === +action.payload.taskId) {
               return {
                 ...taskBoundary,
-                task_status: action.payload.task_status,
-                locked_by_uid: action.payload.locked_by_uid,
-                locked_by_username: action.payload.locked_by_username,
+                task_state: action.payload.task_state,
+                actioned_by_uid: action.payload.actioned_by_uid,
+                actioned_by_username: action.payload.actioned_by_username,
               };
             }
             return taskBoundary;

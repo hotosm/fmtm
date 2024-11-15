@@ -43,6 +43,8 @@ services:
         condition: service_started
       ui:
         condition: service_started
+      ui-mapper:
+        condition: service_started
       central:
         condition: service_started
         required: false
@@ -50,6 +52,8 @@ services:
         condition: service_completed_successfully
         required: false
       s3:
+        condition: service_started
+      electric:
         condition: service_started
     volumes:
       - central_frontend:/usr/share/nginx/html/central
@@ -97,6 +101,12 @@ services:
     networks:
       - fmtm-net
     restart: "unless-stopped"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/__lbheartbeat__"]
+      start_period: 60s
+      interval: 10s
+      timeout: 5s
+      retries: 10
     deploy:
       replicas: ${API_REPLICAS:-1}
       resources:
@@ -110,8 +120,10 @@ services:
   ui:
     image: "ghcr.io/hotosm/fmtm/frontend:debug"
     build:
-      context: src/frontend
-      dockerfile: debug.dockerfile
+      context: src
+      additional_contexts:
+        - code=src/frontend
+      dockerfile: Dockerfile.ui.debug
     depends_on:
       api:
         condition: service_started
@@ -129,8 +141,10 @@ services:
   ui-mapper:
     image: "ghcr.io/hotosm/fmtm/frontend:mapper"
     build:
-      context: src/mapper
-      dockerfile: debug.dockerfile
+      context: src
+      additional_contexts:
+        - code=src/mapper
+      dockerfile: Dockerfile.ui.debug
     depends_on:
       api:
         condition: service_started
@@ -141,17 +155,18 @@ services:
       # - ../ui:/app/node_modules/@hotosm/ui:ro
     environment:
       - VITE_API_URL=${API_URL:-http://api.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}}
+      - VITE_SYNC_URL=http://sync.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}
     networks:
       - fmtm-net
     restart: "unless-stopped"
 
   central:
     profiles: ["", "central"]
-    image: "ghcr.io/hotosm/fmtm/odkcentral:${ODK_CENTRAL_TAG:-v2024.1.0}"
+    image: "ghcr.io/hotosm/fmtm/odkcentral:${ODK_CENTRAL_TAG:-v2024.2.1}"
     build:
       context: odkcentral/api
       args:
-        ODK_CENTRAL_TAG: ${ODK_CENTRAL_TAG:-v2024.1.0}
+        ODK_CENTRAL_TAG: ${ODK_CENTRAL_TAG:-v2024.2.1}
     depends_on:
       central-db:
         condition: service_healthy
@@ -199,11 +214,11 @@ services:
     # This service simply builds the frontend to a volume
     # accessible to the proxy, then shuts down
     profiles: ["", "central"]
-    image: "ghcr.io/hotosm/fmtm/odkcentral-ui:${ODK_CENTRAL_TAG:-v2024.1.0}"
+    image: "ghcr.io/hotosm/fmtm/odkcentral-ui:${ODK_CENTRAL_TAG:-v2024.2.1}"
     build:
       context: odkcentral/ui
       args:
-        ODK_CENTRAL_TAG: ${ODK_CENTRAL_TAG:-v2024.1.0}
+        ODK_CENTRAL_TAG: ${ODK_CENTRAL_TAG:-v2024.2.1}
     volumes:
       - central_frontend:/frontend
     network_mode: none
@@ -234,10 +249,10 @@ services:
       timeout: 5s
 
   fmtm-db:
-    image: "postgis/postgis:${POSTGIS_TAG:-14-3.4-alpine}"
+    image: "postgis/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
     # Temp workaround until https://github.com/postgis/docker-postgis/issues/216
     build:
-      context: https://github.com/postgis/docker-postgis.git#master:14-3.4/alpine
+      context: https://github.com/postgis/docker-postgis.git#master:14-3.5/alpine
     command: -c 'max_connections=300' -c 'wal_level=logical'
     volumes:
       - fmtm_db_data:/var/lib/postgresql/data/
@@ -258,7 +273,7 @@ services:
       retries: 3
 
   electric:
-    image: "electricsql/electric:${ELECTRIC_TAG:-0.7.6}"
+    image: "electricsql/electric:${ELECTRIC_TAG:-0.8.1}"
     depends_on:
       fmtm-db:
         condition: service_healthy
@@ -268,20 +283,14 @@ services:
       DATABASE_URL: postgresql://${FMTM_DB_USER:-fmtm}:${FMTM_DB_PASSWORD:-fmtm}@${FMTM_DB_HOST:-fmtm-db}/${FMTM_DB_NAME:-fmtm}?sslmode=disable
       # OTEL_EXPORT: otlp
       # OTLP_ENDPOINT: https://...
-
       # ELECTRIC_WRITE_TO_PG_MODE: direct_writes
-      # AUTH_JWT_ALG: HS384
-      # AUTH_JWT_KEY: ${ENCRYPTION_KEY}
-      # AUTH_JWT_AUD: ${FMTM_DOMAIN}
-    ports:
-      - "7055:3000"
     networks:
       - fmtm-net
     restart: "unless-stopped"
 
   central-db:
     profiles: ["", "central"]
-    image: "postgis/postgis:${POSTGIS_TAG:-14-3.4-alpine}"
+    image: "postgis/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
     volumes:
       - central_db_data:/var/lib/postgresql/data/
     environment:

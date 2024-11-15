@@ -13,10 +13,10 @@ export default defineConfig({
 	],
 	server: {
 		host: true,
-		port: 3000,
+		port: 7055,
 	},
 	preview: {
-		port: 3001,
+		port: 7055,
 	},
 	resolve: {
 		alias: {
@@ -24,6 +24,7 @@ export default defineConfig({
 			$components: path.resolve('./src/components'),
 			$static: path.resolve('./static'),
 			$store: path.resolve('./src/store'),
+			$routes: path.resolve('./src/routes'),
 			$styles: path.resolve('./src/styles'),
 			$assets: path.resolve('./src/assets'),
 			$utilFunctions: path.resolve('./src/utilFunctions'),

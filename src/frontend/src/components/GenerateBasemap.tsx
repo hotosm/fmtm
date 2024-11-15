@@ -32,17 +32,11 @@ const GenerateBasemap = ({ projectInfo }: { projectInfo: Partial<projectInfoType
     maxWidth: '1000px',
   });
   const downloadBasemap = (tileId, toOpfs = false) => {
-    dispatch(
-      DownloadTile(
-        `${import.meta.env.VITE_API_URL}/projects/${id}/download-tiles/?tile_id=${tileId}`,
-        projectInfo,
-        toOpfs,
-      ),
-    );
+    dispatch(DownloadTile(`${import.meta.env.VITE_API_URL}/projects/${id}/tiles/${tileId}`, projectInfo, toOpfs));
   };
 
   const getTilesList = () => {
-    dispatch(GetTilesList(`${import.meta.env.VITE_API_URL}/projects/${id}/tiles-list/`));
+    dispatch(GetTilesList(`${import.meta.env.VITE_API_URL}/projects/${id}/tiles/`));
   };
 
   useEffect(() => {
@@ -90,12 +84,11 @@ const GenerateBasemap = ({ projectInfo }: { projectInfo: Partial<projectInfoType
     const currentErrors = generateProjectTilesValidation();
     if (currentErrors.length === 0) {
       dispatch(
-        GenerateProjectTiles(
-          `${
-            import.meta.env.VITE_API_URL
-          }/projects/${id}/tiles?source=${selectedTileSource}&format=${selectedOutputFormat}&tms=${tmsUrl}`,
-          id,
-        ),
+        GenerateProjectTiles(`${import.meta.env.VITE_API_URL}/projects/${id}/tiles-generate`, id, {
+          tile_source: selectedTileSource,
+          file_format: selectedOutputFormat,
+          tms_url: tmsUrl,
+        }),
       );
     }
   };
@@ -284,7 +277,7 @@ const GenerateBasemap = ({ projectInfo }: { projectInfo: Partial<projectInfoType
                   <CoreModules.TableRow key={list.id}>
                     <CoreModules.TableCell align="center">
                       <div className="fmtm-text-primaryRed fmtm-border-primaryRed fmtm-border-[1px] fmtm-rounded-full fmtm-px-4 fmtm-py-1 fmtm-w-fit fmtm-mx-auto">
-                        {list.source}
+                        {list.tile_source}
                       </div>
                     </CoreModules.TableCell>
                     <CoreModules.TableCell align="center">

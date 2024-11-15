@@ -11,37 +11,19 @@ export type dataExtractPropertyType = {
 };
 
 export type taskHistoryTypes = {
-  action_date: string;
-  action_text: string;
-  id: number;
-  profile_img: null | string;
-  status: string;
+  event_id: string;
+  event: number;
+  state: string;
+  comment: string;
   username: string;
-};
-
-export type taskHistoryListType = {
-  action: string;
-  action_date: string;
-  action_text: string;
-  project_id: number;
-  outlineGeojson: {
-    type: string;
-    geometry: {
-      coordinates: [];
-      type: string;
-    };
-    properties: Record<string, any>;
-    id: string;
-  };
   profile_img: null | string;
-  status: string;
-  task_id: number;
-  username: string;
+  created_at: string;
 };
 
 export type projectInfoType = {
   id: number;
-  outline_geojson: {
+  name: string;
+  outline: {
     type: string;
     geometry: {
       type: string;
@@ -55,12 +37,11 @@ export type projectInfoType = {
     bbox: null | number[];
   };
   priority: number;
-  title: string;
   location_str: string;
   description: string;
   short_description: string;
   xform_category: string;
-  xform_id: string;
+  odk_form_id: string;
   data_extract_url: string;
   odk_token: string;
   num_contributors: any;
@@ -78,12 +59,13 @@ export type projectInfoType = {
 export type downloadProjectFormLoadingType = { type: 'form' | 'geojson' | 'csv' | 'json'; loading: boolean };
 
 export type projectDashboardDetailTypes = {
-  project_name_prefix: string;
+  name: string;
+  slug: string;
   organisation_name: string;
   total_tasks: number | null;
   created_at: string;
   organisation_logo: string;
-  total_submission: number | null;
+  total_submissions: number | null;
   total_contributors: number | null;
   last_active: string;
 };
@@ -95,10 +77,11 @@ export type projectTaskBoundriesType = {
 
 export type taskBoundriesTypes = {
   id: number;
+  index: number;
   project_task_index: number;
-  locked_by_uid: null | string;
-  locked_by_username: null | string;
-  outline_geojson: {
+  actioned_by_uid: null | string;
+  actioned_by_username: null | string;
+  outline: {
     type: string;
     geometry: {
       coordinates: [string, string];
@@ -109,13 +92,12 @@ export type taskBoundriesTypes = {
     bbox: null | number[];
   };
   task_history: taskHistoryTypes[];
-  task_status: string;
-  index: number;
+  task_state: string;
 };
 
 export type taskBoundriesGeojson = {
   id: number;
-  outline_geojson: {
+  outline: {
     type: string;
     geometry: {
       coordinates: [];

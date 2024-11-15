@@ -81,12 +81,12 @@ export const SubmissionTableService: Function = (url: string, payload: filterTyp
   };
 };
 
-export const UpdateReviewStateService: Function = (url: string) => {
+export const UpdateReviewStateService: Function = (url: string, payload: object) => {
   return async (dispatch) => {
     const UpdateReviewState = async (url: string) => {
       try {
         dispatch(SubmissionActions.UpdateReviewStateLoading(true));
-        const response = await CoreModules.axios.post(url);
+        const response = await CoreModules.axios.post(url, payload);
         dispatch(SubmissionActions.UpdateSubmissionTableDataReview(response.data));
       } catch (error) {
         dispatch(
@@ -102,5 +102,22 @@ export const UpdateReviewStateService: Function = (url: string) => {
     };
 
     await UpdateReviewState(url);
+  };
+};
+
+export const MappedVsValidatedTaskService: Function = (url: string) => {
+  return async (dispatch) => {
+    const MappedVsValidatedTask = async (url: string) => {
+      try {
+        dispatch(SubmissionActions.SetMappedVsValidatedTaskLoading(true));
+        const response = await CoreModules.axios.get(url);
+        dispatch(SubmissionActions.SetMappedVsValidatedTask(response.data));
+        dispatch(SubmissionActions.SetMappedVsValidatedTaskLoading(false));
+      } catch (error) {
+        dispatch(SubmissionActions.SetMappedVsValidatedTaskLoading(false));
+      }
+    };
+
+    await MappedVsValidatedTask(url);
   };
 };

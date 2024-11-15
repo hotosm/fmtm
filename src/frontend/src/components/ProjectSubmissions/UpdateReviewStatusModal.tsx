@@ -9,6 +9,7 @@ import Button from '../common/Button';
 import { useAppSelector } from '@/types/reduxTypes';
 import { PostProjectComments } from '@/api/Project';
 
+// Note these id values must be camelCase to match what ODK Central requires
 const reviewList: reviewListType[] = [
   {
     id: 'approved',
@@ -49,22 +50,22 @@ const UpdateReviewStatusModal = () => {
     if (updateReviewStatusModal.reviewState !== reviewStatus) {
       await dispatch(
         UpdateReviewStateService(
-          `${import.meta.env.VITE_API_URL}/submission/update_review_state?project_id=${
-            updateReviewStatusModal.projectId
-          }&task_id=${parseInt(updateReviewStatusModal.taskId)}&instance_id=${
-            updateReviewStatusModal.instanceId
-          }&review_state=${reviewStatus}`,
+          `${import.meta.env.VITE_API_URL}/submission/update-review-state?project_id=${updateReviewStatusModal.projectId}`,
+          {
+            instance_id: updateReviewStatusModal.instanceId,
+            review_state: reviewStatus,
+          },
         ),
       );
     }
     if (noteComments.trim().length > 0) {
-      await dispatch(
+      dispatch(
         PostProjectComments(
-          `${import.meta.env.VITE_API_URL}/tasks/task-comments/?project_id=${updateReviewStatusModal?.projectId}`,
+          `${import.meta.env.VITE_API_URL}/tasks/${updateReviewStatusModal?.taskUid}/event/?project_id=${updateReviewStatusModal?.projectId}`,
           {
-            task_id: updateReviewStatusModal?.taskUId,
-            project_id: updateReviewStatusModal?.projectId,
+            task_id: updateReviewStatusModal?.taskUid,
             comment: `${updateReviewStatusModal?.instanceId}-SUBMISSION_INST-${noteComments}`,
+            event: 'COMMENT',
           },
         ),
       );
@@ -77,7 +78,7 @@ const UpdateReviewStatusModal = () => {
         instanceId: null,
         taskId: null,
         reviewState: '',
-        taskUId: null,
+        taskUid: null,
       }),
     );
     dispatch(SubmissionActions.UpdateReviewStateLoading(false));
@@ -129,7 +130,7 @@ const UpdateReviewStatusModal = () => {
                     instanceId: null,
                     taskId: null,
                     reviewState: '',
-                    taskUId: null,
+                    taskUid: null,
                   }),
                 );
               }}
@@ -155,7 +156,7 @@ const UpdateReviewStatusModal = () => {
             instanceId: null,
             taskId: null,
             reviewState: '',
-            taskUId: null,
+            taskUid: null,
           }),
         );
       }}
