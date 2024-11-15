@@ -52,7 +52,7 @@ services:
         condition: service_completed_successfully
         required: false
       s3:
-        condition: service_started
+        condition: service_healthy
       electric:
         condition: service_started
     volumes:

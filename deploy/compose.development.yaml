@@ -54,7 +54,7 @@ services:
       central-ui:
         condition: service_completed_successfully
       s3:
-        condition: service_started
+        condition: service_healthy
       certbot:
         condition: service_completed_successfully
       ui:
