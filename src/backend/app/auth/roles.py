@@ -66,7 +66,6 @@ async def check_access(
     Access is determined based on the user's role and permissions:
     - If the user has an 'ADMIN' role, access is granted.
     - If the user has a 'READ_ONLY' role, access is denied.
-    - If the organisation is HOTOSM, then grant access.
     - For other roles, access is granted if the user is an organisation manager
       for the specified organisation (org_id) or has the specified role
       in the specified project (project_id).
@@ -92,20 +91,6 @@ async def check_access(
                 CASE
                     WHEN role = 'ADMIN' THEN true
                     WHEN role = 'READ_ONLY' THEN false
-                    WHEN EXISTS (
-                        SELECT 1
-                        FROM organisations
-                        WHERE (organisations.id = %(org_id)s
-                            AND organisations.slug = 'hotosm')
-                        OR EXISTS (
-                            SELECT 1
-                            FROM projects
-                            JOIN organisations AS org
-                                ON projects.organisation_id = org.id
-                            WHERE org.slug = 'hotosm'
-                                AND projects.id = %(project_id)s
-                        )
-                    ) THEN true
                     ELSE
                         EXISTS (
                             SELECT 1
@@ -348,4 +333,62 @@ async def mapper(
         db,
         current_user,
         ProjectRole.MAPPER,
+    )
+
+
+async def project_contributors(
+    project: Annotated[DbProject, Depends(get_project)],
+    db: Annotated[Connection, Depends(db_conn)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
+) -> ProjectUserDict:
+    """A contributor to a specific project."""
+    user_id = current_user.id
+    project_id = project.id
+    org_id = project.organisation_id
+
+    query = """
+        SELECT * FROM users
+        WHERE id = %(user_id)s
+            AND (
+                CASE WHEN role = 'ADMIN' THEN true
+                ELSE
+                    EXISTS (
+                        SELECT 1 FROM organisation_managers
+                        WHERE organisation_managers.user_id = %(user_id)s
+                          AND organisation_managers.organisation_id = %(org_id)s
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM user_roles
+                        WHERE user_roles.user_id = %(user_id)s
+                          AND user_roles.project_id = %(project_id)s
+                          AND user_roles.role = 'PROJECT_MANAGER'
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM projects
+                        WHERE projects.author_id = %(user_id)s
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM task_events
+                        WHERE task_events.user_id = %(user_id)s
+                          AND task_events.project_id = %(project_id)s
+                    )
+                END
+            );
+    """
+    async with db.cursor() as cur:
+        await cur.execute(
+            query,
+            {"user_id": user_id, "project_id": project_id, "org_id": org_id},
+        )
+        db_user = await cur.fetchone()
+
+    if db_user:
+        return {
+            "user": db_user,
+            "project": project,
+        }
+
+    raise HTTPException(
+        status_code=HTTPStatus.FORBIDDEN,
+        detail="You must be a project contributor to access this resource.",
     )

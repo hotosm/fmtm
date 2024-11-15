@@ -2,12 +2,12 @@ import { ShapeStream, Shape } from '@electric-sql/client';
 import type { ShapeData, Row } from '@electric-sql/client';
 import type { GeoJSON } from 'geosjon';
 
-import type { ProjectTask } from '$lib/types';
+import type { ProjectTask, TaskEventType } from '$lib/types';
 
 let taskEventShape: Shape;
 let featcol = $state({ type: 'FeatureCollection', features: [] });
 let latestEvent = $state(null);
-let events = $state([]);
+let events: TaskEventType[] = $state([]);
 let selectedTaskId: number | null = $state(null);
 let selectedTask: any = $state(null);
 let selectedTaskState: string = $state('');
@@ -18,7 +18,8 @@ function getTaskEventStream(projectId: number): ShapeStream | undefined {
 		return;
 	}
 	return new ShapeStream({
-		url: 'http://localhost:7055/v1/shape/task_events',
+		url: `${import.meta.env.VITE_SYNC_URL}/v1/shape`,
+		table: 'task_events',
 		where: `project_id=${projectId}`,
 	});
 }
@@ -28,13 +29,16 @@ function getTaskStore() {
 		taskEventShape = new Shape(taskEventStream);
 
 		taskEventShape.subscribe((taskEvent: ShapeData) => {
-			let newEvent: Row;
-			for (newEvent of taskEvent);
-			if (newEvent) {
-				latestEvent = newEvent[1];
-			}
-			if (newEvent?.[1]?.task_id === selectedTaskId) {
-				selectedTaskState = newEvent[1].state;
+			const rows: Row[] = taskEvent.rows;
+			if (rows && Array.isArray(rows)) {
+				for (const newEvent of rows) {
+					if (newEvent) {
+						latestEvent = newEvent;
+					}
+					if (newEvent.task_id === selectedTaskId) {
+						selectedTaskState = newEvent.state;
+					}
+				}
 			}
 		});
 	}
@@ -57,8 +61,7 @@ function getTaskStore() {
 
 	async function getLatestStatePerTask() {
 		const taskEventData: ShapeData = await taskEventShape.value;
-		const taskEventRows = Array.from(taskEventData.values());
-
+		const taskEventRows = Array.from(taskEventData.values()) as TaskEventType[];
 		// Update the events in taskStore
 		events = taskEventRows;
 

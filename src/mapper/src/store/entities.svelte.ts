@@ -11,7 +11,8 @@ function getEntityStatusStream(projectId: number): ShapeStream | undefined {
 		return;
 	}
 	return new ShapeStream({
-		url: 'http://localhost:7055/v1/shape/odk_entities',
+		url: `${import.meta.env.VITE_SYNC_URL}/v1/shape`,
+		table: 'odk_entities',
 		where: `project_id=${projectId}`,
 	});
 }
@@ -19,11 +20,15 @@ function getEntityStatusStream(projectId: number): ShapeStream | undefined {
 async function subscribeToEntityStatusUpdates(taskEventStream: ShapeStream) {
 	entitiesShape = new Shape(taskEventStream);
 
-	entitiesShape.subscribe((taskEvent: ShapeData) => {
-		let newStatus: Row;
-		for (newStatus of taskEvent);
-		if (newStatus) {
-			entitiesStatusStore.set(newStatus[1]);
+	entitiesShape.subscribe((entities: ShapeData) => {
+		const rows: Row[] = entities.rows;
+		if (rows && Array.isArray(rows)) {
+			for (const newStatus of rows) {
+				if (newStatus) {
+					// fixme
+					entitiesStatusStore.set(newStatus);
+				}
+			}
 		}
 	});
 }

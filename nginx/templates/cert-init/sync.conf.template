@@ -1,4 +1,5 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
+#
 # This file is part of FMTM.
 #
 #     FMTM is free software: you can redistribute it and/or modify
@@ -15,15 +16,11 @@
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
-# NOTE this dockerfile simply extends the official image
-# to init an admin user at startup
-
-ARG ODK_CENTRAL_TAG
-
-
-FROM ghcr.io/getodk/central-service:${ODK_CENTRAL_TAG}
-COPY init-user-and-start.sh /
-RUN chmod +x /init-user-and-start.sh
-ENTRYPOINT ["/init-user-and-start.sh"]
-HEALTHCHECK --start-period=10s --interval=5s --retries=10 \
-    CMD nc -z localhost 8383 || exit 1
+server {
+    listen 80;
+    server_name ${FMTM_SYNC_DOMAIN};
+    
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+}

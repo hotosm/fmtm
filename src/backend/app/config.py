@@ -158,48 +158,46 @@ class Settings(BaseSettings):
     FMTM_DOMAIN: str
     FMTM_DEV_PORT: Optional[str] = "7050"
 
-    EXTRA_CORS_ORIGINS: Optional[str | list[str]] = []
+    EXTRA_CORS_ORIGINS: Optional[str | list[str]] = None
 
     @field_validator("EXTRA_CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(
         cls,
-        val: Optional[str | list[str]],
+        extra_origins: Optional[Union[str, list[str]]],
         info: ValidationInfo,
-    ) -> Union[list[str], str]:
-        """Build and validate CORS origins list.
+    ) -> list[str]:
+        """Build and validate CORS origins list."""
+        # Initialize default origins
+        default_origins = ["https://xlsforms.fmtm.dev"]
 
-        By default, the provided frontend URLs are included in the origins list.
-        If this variable used, the provided urls are appended to the list.
-        """
-        # Build default origins from env vars
-        if info.data.get("DEBUG"):
-            url_scheme = "http"
-            dev_port = info.data.get("FMTM_DEV_PORT", "false")
-            if dev_port.lower() in ("0", "no", "false"):
-                local_server_port = ""
-            else:
-                local_server_port = f":{dev_port}"
+        # Handle localhost/testing scenario
+        domain = info.data.get("FMTM_DOMAIN", "fmtm.localhost")
+        dev_port = info.data.get("FMTM_DEV_PORT", "")
+        # NOTE fmtm.dev.test is used as the Playwright test domain
+        if "localhost" in domain or "fmtm.dev.test" in domain:
+            local_server_port = (
+                f":{dev_port}"
+                if dev_port and dev_port.lower() not in ("0", "no", "false")
+                else ""
+            )
+            default_origins.append(f"http://{domain}{local_server_port}")
         else:
-            url_scheme = "https"
-            local_server_port = ""
+            # Add the main FMTM domain
+            default_origins.append(f"https://{domain}")
 
-        default_origins = [
-            f"{url_scheme}://{info.data.get('FMTM_DOMAIN')}{local_server_port}",
-            # Also add the xlsform-editor url
-            "https://xlsforms.fmtm.dev",
-        ]
+        # Process `extra_origins` if provided
+        if isinstance(extra_origins, str):
+            # Split by comma and strip whitespace
+            extra_origins_list = [
+                i.strip() for i in extra_origins.split(",") if i.strip()
+            ]
+            default_origins.extend(extra_origins_list)
+        elif isinstance(extra_origins, list):
+            default_origins.extend(extra_origins)
 
-        if val is None:
-            return default_origins
-
-        if isinstance(val, str):
-            default_origins += [i.strip() for i in val.split(",")]
-            return default_origins
-
-        elif isinstance(val, list):
-            default_origins += val
-            return default_origins
+        # Ensure uniqueness and return (remove dups)
+        return list(dict.fromkeys(default_origins))
 
     API_PREFIX: str = ""
 
