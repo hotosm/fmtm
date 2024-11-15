@@ -214,7 +214,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
           </div>
           <span>The total area of the AOI is also calculated and displayed on the screen.</span>
           <span>
-            <b>Note:</b> Uploaded geojson should be in EPSG:4326 coordinate system.
+            <b>Note:</b> The uploaded geojson should be in EPSG:4326 coordinate system.
           </span>
         </div>
       </div>
