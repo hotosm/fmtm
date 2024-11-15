@@ -33,6 +33,7 @@
 	import { getProjectSetupStepStore } from '$store/common.svelte.ts';
 	// import { entityFeatcolStore, selectedEntityId } from '$store/entities';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
+	import { baseLayers } from '$constants/baseLayers.ts';
 
 	type bboxType = [number, number, number, number];
 
@@ -220,8 +221,14 @@
 			manageHoverState
 		/>
 	</FlatGeobuf>
-	<div class="absolute right-3 bottom-3 sm:right-5 sm:bottom-5">
-		<LayerSwitcher />
+	<div class="absolute right-3 bottom-3 sm:right-5 sm:bottom-5 z-50">
+		<LayerSwitcher
+			{map}
+			position="bottom-right"
+			expandDirection="right"
+			extraStyles={baseLayers}
+			sourcesIdToReAdd={['states', 'geolocation']}
+		/>
 		<Legend />
 	</div>
 	{#if projectSetupStep === projectSetupStepEnum['task_selection']}
