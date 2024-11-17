@@ -53,7 +53,7 @@ dependencies = [
 readme = "../../README.md"
 license = {text = "GPL-3.0-only"}
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pre-commit>=4.0.1",
     "commitizen>=3.30.0",

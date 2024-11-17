@@ -66,11 +66,11 @@ just start without-central
   - The database must have the Postgis extension installed.
 - After starting the database, from the command line:
 
-1. Navigate to the top level directory of the FMTM project.
-2. Install PDM with: `pip install pdm`
-3. Install backend dependencies with PDM: `pdm install`
+1. Navigate to the backend directory under `src/backend`.
+2. Install `uv` [via the official docs](https://docs.astral.sh/uv/getting-started/installation/)
+3. Install backend dependencies with `uv`: `uv sync`
 4. Run the Fast API backend with:
-   `pdm run uvicorn app.main:api --host 0.0.0.0 --port 8000`
+   `uv run uvicorn app.main:api --host 0.0.0.0 --port 8000`
 
 The API should now be accessible at: <http://api.fmtm.localhost:7050/docs>
 

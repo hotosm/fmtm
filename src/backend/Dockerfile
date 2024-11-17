@@ -33,7 +33,7 @@ LABEL org.hotosm.fmtm.app-name="backend" \
 RUN set -ex \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install \
-    -y --no-install-recommends "locales" "ca-certificates" \
+    -y --no-install-recommends "locales" "ca-certificates" "curl" \
     && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/* \
     && update-ca-certificates
@@ -44,20 +44,18 @@ ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
 
 
-# Extract dependencies from PDM lock to standard requirements.txt
+# Extract dependencies from uv lock to standard requirements.txt
 FROM base AS extract-deps
 WORKDIR /opt/python
-COPY pyproject.toml pdm.lock /opt/python/
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir pdm==2.19.3
-RUN pdm export --prod > requirements.txt \
-    # Export with default deps, as we install one or the other
-    && pdm export -G monitoring \
-    --without-hashes > requirements-monitoring.txt \
-    && pdm export -G debug \
-    --no-default --without-hashes > requirements-debug.txt \
-    && pdm export -G test -G docs -G dev \
-    --no-default --without-hashes > requirements-ci.txt
+COPY pyproject.toml uv.lock /opt/python/
+# Required to make the uv command available on the system
+ENV PATH=$PATH:/root/.local/bin
+RUN curl -LsSf https://astral.sh/uv/0.5.2/install.sh | sh
+RUN uv export --no-dev > requirements.txt \
+    # Export group dependencies independently
+    && uv export --no-hashes --only-group monitoring > requirements-monitoring.txt \
+    && uv export --no-hashes --only-group debug > requirements-debug.txt \
+    && uv export --no-hashes --only-group test --only-group docs --only-group dev > requirements-ci.txt
 
 
 # Build stage will all dependencies required to build Python wheels
@@ -108,7 +106,6 @@ RUN set -ex \
     && DEBIAN_FRONTEND=noninteractive apt-get install \
     -y --no-install-recommends \
         "nano" \
-        "curl" \
         "gettext-base" \
         "libpcre3" \
         "mime-support" \
