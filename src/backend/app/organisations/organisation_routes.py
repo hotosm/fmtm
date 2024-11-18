@@ -23,6 +23,7 @@ from fastapi import (
     APIRouter,
     Depends,
     File,
+    HTTPException,
     Response,
     UploadFile,
 )
@@ -41,6 +42,7 @@ from app.organisations.organisation_schemas import (
     OrganisationIn,
     OrganisationOut,
     OrganisationUpdate,
+    parse_organisation_input,
 )
 
 router = APIRouter(
@@ -50,13 +52,34 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[OrganisationOut])
+@router.get("", response_model=list[OrganisationOut])
 async def get_organisations(
     db: Annotated[Connection, Depends(db_conn)],
     current_user: Annotated[AuthUser, Depends(login_required)],
 ) -> list[DbOrganisation]:
     """Get a list of all organisations."""
     return await DbOrganisation.all(db, current_user.id)
+
+
+@router.post("", response_model=OrganisationOut)
+async def create_organisation(
+    db: Annotated[Connection, Depends(db_conn)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
+    # Depends required below to allow logo upload
+    org_in: OrganisationIn = Depends(parse_organisation_input),
+    logo: Optional[UploadFile] = File(None),
+) -> OrganisationOut:
+    """Create an organisation with the given details.
+
+    Either a logo can be uploaded, or a link to the logo provided
+    in the Organisation JSON ('logo': 'https://your.link.to.logo.png').
+    """
+    if org_in.name is None:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="The `name` is required to create an organisation.",
+        )
+    return await DbOrganisation.create(db, org_in, current_user.id, logo)
 
 
 @router.get("/my-organisations", response_model=list[OrganisationOut])
@@ -68,71 +91,13 @@ async def get_my_organisations(
     return await organisation_crud.get_my_organisations(db, current_user)
 
 
-@router.get("/unapproved/", response_model=list[OrganisationOut])
+@router.get("/unapproved", response_model=list[OrganisationOut])
 async def list_unapproved_organisations(
     db: Annotated[Connection, Depends(db_conn)],
     current_user: Annotated[AuthUser, Depends(login_required)],
 ) -> list[DbOrganisation]:
     """Get a list of unapproved organisations."""
     return await DbOrganisation.unapproved(db)
-
-
-@router.get("/{org_id}", response_model=OrganisationOut)
-async def get_organisation_detail(
-    organisation: Annotated[DbOrganisation, Depends(org_exists)],
-    current_user: Annotated[AuthUser, Depends(login_required)],
-):
-    """Get a specific organisation by id or name."""
-    return organisation
-
-
-@router.post("/", response_model=OrganisationOut)
-async def create_organisation(
-    db: Annotated[Connection, Depends(db_conn)],
-    current_user: Annotated[AuthUser, Depends(login_required)],
-    # Depends required below to allow logo upload
-    org_in: OrganisationIn = Depends(),
-    logo: Optional[UploadFile] = File(None),
-) -> OrganisationOut:
-    """Create an organisation with the given details.
-
-    Either a logo can be uploaded, or a link to the logo provided
-    in the Organisation JSON ('logo': 'https://your.link.to.logo.png').
-    """
-    return DbOrganisation.create(db, org_in, current_user.id, logo)
-
-
-@router.patch("/{org_id}/", response_model=OrganisationOut)
-async def update_organisation(
-    db: Annotated[Connection, Depends(db_conn)],
-    org_user_dict: Annotated[AuthUser, Depends(org_admin)],
-    new_values: OrganisationUpdate = Depends(),
-    logo: UploadFile = File(None),
-):
-    """Partial update for an existing organisation."""
-    org_id = org_user_dict.get("org").id
-    return DbOrganisation.update(db, org_id, new_values, logo)
-
-
-@router.delete("/{org_id}")
-async def delete_org(
-    db: Annotated[Connection, Depends(db_conn)],
-    org_user_dict: Annotated[AuthUser, Depends(org_admin)],
-):
-    """Delete an organisation."""
-    org = org_user_dict.get("org")
-    deleted_org_id = await DbOrganisation.delete(db, org.id)
-
-    if not deleted_org_id:
-        return Response(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            details=f"Failed deleting org {(org.name)}.",
-        )
-
-    return Response(
-        status_code=HTTPStatus.NO_CONTENT,
-        details=f"Deleted org {(org.deleted_org_id)}.",
-    )
 
 
 @router.delete("/unapproved/{org_id}")
@@ -148,14 +113,20 @@ async def delete_unapproved_org(
     will also check if the organisation is approved and error if it's not.
     This is an ADMIN-only endpoint for deleting unapproved orgs.
     """
-    await DbOrganisation.delete(db, org_id)
-    return Response(
-        status_code=HTTPStatus.NO_CONTENT,
-        detail=f"Deleted org ({org_id}).",
-    )
+    org_deleted = await DbOrganisation.delete(db, org_id)
+
+    if not org_deleted:
+        log.error(f"Failed deleting org ({org_id}).")
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail=f"Failed deleting org ({org_id}).",
+        )
+
+    log.info(f"Successfully deleted org ({org_id}).")
+    return Response(status_code=HTTPStatus.NO_CONTENT)
 
 
-@router.post("/approve/", response_model=OrganisationOut)
+@router.post("/approve", response_model=OrganisationOut)
 async def approve_organisation(
     org_id: int,
     db: Annotated[Connection, Depends(db_conn)],
@@ -180,7 +151,7 @@ async def approve_organisation(
     return approved_org
 
 
-@router.post("/new-admin/")
+@router.post("/new-admin")
 async def add_new_organisation_admin(
     db: Annotated[Connection, Depends(db_conn)],
     org_user_dict: Annotated[OrgUserDict, Depends(org_admin)],
@@ -195,3 +166,41 @@ async def add_new_organisation_admin(
         org_user_dict.get("org").id,
         user_id,
     )
+
+
+@router.get("/{org_id}", response_model=OrganisationOut)
+async def get_organisation_detail(
+    organisation: Annotated[DbOrganisation, Depends(org_exists)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
+):
+    """Get a specific organisation by id or name."""
+    return organisation
+
+
+@router.patch("/{org_id}", response_model=OrganisationOut)
+async def update_organisation(
+    db: Annotated[Connection, Depends(db_conn)],
+    org_user_dict: Annotated[AuthUser, Depends(org_admin)],
+    new_values: OrganisationUpdate = Depends(parse_organisation_input),
+    logo: UploadFile = File(None),
+):
+    """Partial update for an existing organisation."""
+    org_id = org_user_dict.get("org").id
+    return await DbOrganisation.update(db, org_id, new_values, logo)
+
+
+@router.delete("/{org_id}")
+async def delete_org(
+    db: Annotated[Connection, Depends(db_conn)],
+    org_user_dict: Annotated[AuthUser, Depends(org_admin)],
+):
+    """Delete an organisation."""
+    org = org_user_dict.get("org")
+    org_deleted = await DbOrganisation.delete(db, org.id)
+    if not org_deleted:
+        log.error(f"Failed deleting org ({org.name}).")
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail=f"Failed deleting org ({org.name}).",
+        )
+    return Response(status_code=HTTPStatus.NO_CONTENT)
