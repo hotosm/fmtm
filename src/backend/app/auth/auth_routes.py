@@ -178,15 +178,21 @@ async def get_or_create_user(
                     profile_img = EXCLUDED.profile_img
                 RETURNING id, username, profile_img, role
             )
+
             SELECT
                 u.id, u.username, u.profile_img, u.role,
+
+                -- Aggregate the organisation IDs managed by the user
                 array_agg(
                     DISTINCT om.organisation_id
-                ) FILTER (WHERE om.organisation_id IS NOT NULL) as orgs_managed,
+                ) FILTER (WHERE om.organisation_id IS NOT NULL) AS orgs_managed,
+
+                -- Aggregate project roles for the user, as project:role pairs
                 jsonb_object_agg(
                     ur.project_id,
                     COALESCE(ur.role, 'MAPPER')
-                ) FILTER (WHERE ur.project_id IS NOT NULL) as project_roles
+                ) FILTER (WHERE ur.project_id IS NOT NULL) AS project_roles
+
             FROM upserted_user u
             LEFT JOIN user_roles ur ON u.id = ur.user_id
             LEFT JOIN organisation_managers om ON u.id = om.user_id
