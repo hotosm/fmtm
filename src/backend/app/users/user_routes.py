@@ -38,7 +38,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=List[user_schemas.UserOut])
+@router.get("", response_model=List[user_schemas.UserOut])
 async def get_users(
     db: Annotated[Connection, Depends(db_conn)],
     current_user: Annotated[DbUser, Depends(super_admin)],
@@ -61,7 +61,7 @@ async def get_user_by_identifier(
     return user
 
 
-@router.get("/user-role-options/")
+@router.get("/user-role-options")
 async def get_user_roles(current_user: Annotated[DbUser, Depends(mapper)]):
     """Check for available user role options."""
     user_roles = {}

@@ -49,7 +49,7 @@ router = APIRouter(
 )
 
 
-@router.get("/osm-login/")
+@router.get("/osm-login")
 async def login_url(osm_auth=Depends(init_osm_auth)):
     """Get Login URL for OSM Oauth Application.
 
@@ -69,7 +69,7 @@ async def login_url(osm_auth=Depends(init_osm_auth)):
     return JSONResponse(content=login_url, status_code=HTTPStatus.OK)
 
 
-@router.get("/callback/")
+@router.get("/callback")
 async def callback(
     request: Request, osm_auth: Annotated[AuthUser, Depends(init_osm_auth)]
 ) -> JSONResponse:
@@ -135,7 +135,7 @@ async def callback(
         ) from e
 
 
-@router.get("/logout/")
+@router.get("/logout")
 async def logout():
     """Reset httpOnly cookie to sign out user."""
     response = Response(status_code=HTTPStatus.OK)
@@ -229,7 +229,7 @@ async def get_or_create_user(
             ) from e
 
 
-@router.get("/me/", response_model=FMTMUser)
+@router.get("/me", response_model=FMTMUser)
 async def my_data(
     db: Annotated[Connection, Depends(db_conn)],
     current_user: Annotated[AuthUser, Depends(login_required)],

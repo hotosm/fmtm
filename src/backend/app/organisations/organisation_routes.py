@@ -52,7 +52,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[OrganisationOut])
+@router.get("", response_model=list[OrganisationOut])
 async def get_organisations(
     db: Annotated[Connection, Depends(db_conn)],
     current_user: Annotated[AuthUser, Depends(login_required)],
@@ -70,7 +70,7 @@ async def get_my_organisations(
     return await organisation_crud.get_my_organisations(db, current_user)
 
 
-@router.get("/unapproved/", response_model=list[OrganisationOut])
+@router.get("/unapproved", response_model=list[OrganisationOut])
 async def list_unapproved_organisations(
     db: Annotated[Connection, Depends(db_conn)],
     current_user: Annotated[AuthUser, Depends(login_required)],
@@ -88,7 +88,7 @@ async def get_organisation_detail(
     return organisation
 
 
-@router.post("/", response_model=OrganisationOut)
+@router.post("", response_model=OrganisationOut)
 async def create_organisation(
     db: Annotated[Connection, Depends(db_conn)],
     current_user: Annotated[AuthUser, Depends(login_required)],
@@ -109,7 +109,7 @@ async def create_organisation(
     return await DbOrganisation.create(db, org_in, current_user.id, logo)
 
 
-@router.patch("/{org_id}/", response_model=OrganisationOut)
+@router.patch("/{org_id}", response_model=OrganisationOut)
 async def update_organisation(
     db: Annotated[Connection, Depends(db_conn)],
     org_user_dict: Annotated[AuthUser, Depends(org_admin)],
@@ -164,7 +164,7 @@ async def delete_unapproved_org(
     return Response(status_code=HTTPStatus.NO_CONTENT)
 
 
-@router.post("/approve/", response_model=OrganisationOut)
+@router.post("/approve", response_model=OrganisationOut)
 async def approve_organisation(
     org_id: int,
     db: Annotated[Connection, Depends(db_conn)],
@@ -189,7 +189,7 @@ async def approve_organisation(
     return approved_org
 
 
-@router.post("/new-admin/")
+@router.post("/new-admin")
 async def add_new_organisation_admin(
     db: Annotated[Connection, Depends(db_conn)],
     org_user_dict: Annotated[OrgUserDict, Depends(org_admin)],
