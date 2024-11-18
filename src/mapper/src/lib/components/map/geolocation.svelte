@@ -108,7 +108,7 @@
 	});
 </script>
 
-<GeoJSON data={locationGeojson} id="point">
+<GeoJSON data={locationGeojson} id="geolocation">
 	<SymbolLayer
 		applyToClusters={false}
 		hoverCursor="pointer"
