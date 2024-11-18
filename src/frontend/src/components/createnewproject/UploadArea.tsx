@@ -63,7 +63,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
     }
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 3 }));
-    navigate('/select-form');
+    navigate('/upload-survey');
     dispatch(CreateProjectActions.SetToggleSplittedGeojsonEdit(false));
   };
   const {
