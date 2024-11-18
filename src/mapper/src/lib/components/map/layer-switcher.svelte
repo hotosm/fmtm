@@ -26,21 +26,26 @@ map = new Map({
 	import { onDestroy } from 'svelte';
 	import { clickOutside } from '$lib/utils/clickOutside';
 
-	export let position: maplibregl.ControlPosition = 'top-right';
-	export let expandDirection: 'top' | 'bottom' | 'left' | 'right' = 'bottom';
-	export let extraStyles: maplibregl.StyleSpecification[] = [];
-	export let map: maplibregl.Map | undefined;
-	export let sourcesIdToReAdd: string[] = []; // source id and layer source that needs to be preserved
+	type Props = {
+		extraStyles: maplibregl.StyleSpecification[];
+		map: maplibregl.Map | undefined;
+		sourcesIdToReAdd: string[];
+	};
 
-	let allStyles: MapLibreStylePlusMetadata[] | [] = [];
-	let selectedStyleUrl: string | undefined = undefined;
-	let isClosed = true;
+	const { extraStyles, map, sourcesIdToReAdd }: Props = $props();
 
-	$: if (extraStyles.length > 0) {
-		fetchStyleInfo();
-	} else {
-		allStyles = [];
-	}
+	let allStyles: MapLibreStylePlusMetadata[] | [] = $state([]);
+	let selectedStyleUrl: string | undefined = $state(undefined);
+	let isClosed = $state(true);
+	let isOpen = $state(true);
+
+	$effect(() => {
+		if (extraStyles.length > 0) {
+			fetchStyleInfo();
+		} else {
+			allStyles = [];
+		}
+	});
 
 	type MapLibreStylePlusMetadata = maplibregl.StyleSpecification & {
 		metadata: {
@@ -118,7 +123,6 @@ map = new Map({
 	function selectStyle(style: MapLibreStylePlusMetadata) {
 		// returns all the map style i.e. all layers, sources
 		const currentMapStyle = map?.getStyle();
-		console.log(currentMapStyle, 'currentMapStyle');
 
 		// reAddLayers: user defined layers that needs to be preserved
 		const reAddLayers = currentMapStyle?.layers?.filter((layer) => {
@@ -159,112 +163,56 @@ map = new Map({
 	});
 </script>
 
-<div
-	use:clickOutside
-	on:click_outside={() => (isClosed = true)}
-	tabindex="-1"
-	role="button"
-	class={`style-control ${expandDirection} ${isClosed ? 'closed' : 'open'}`}
->
-	{#each allStyles as style, _}
-		<button
-			class="style-selector {selectedStyleUrl === style.metadata.thumbnail ? 'active' : ''}"
-			on:click={() => selectStyle(style)}
-		>
-			<img src={style.metadata.thumbnail} alt="Style Thumbnail" class="basemap" />
-			<span class="tooltip {position.includes('top') ? 'tooltip-bottom' : 'tooltip-top'}">
-				{style.name}
-			</span>
-		</button>
-	{/each}
+<div class="relative" use:clickOutside onclick_outside={() => (isOpen = false)}>
+	<div
+		onclick={() => (isOpen = !isOpen)}
+		role="button"
+		onkeydown={(e) => {
+			if (e.key === 'Enter') {
+				isOpen = !isOpen;
+			}
+		}}
+		tabindex="0"
+	>
+		<img
+			style="border: 1px solid #d73f3f;"
+			class="w-[2.824rem] h-[2.824rem] rounded-full"
+			src={selectedStyleUrl}
+			alt="Basemap Icon"
+		/>
+	</div>
+	<div
+		class={`absolute bottom-0 right-14 bg-white rounded-md p-4 duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+	>
+		<p class="font-barlow-semibold text-lg mb-2">Base Maps</p>
+		<div class="grid grid-cols-2 w-[212px] gap-3">
+			{#each allStyles as style, _}
+				<div
+					class={`layer-card ${selectedStyleUrl === style.metadata.thumbnail ? 'active' : ''} h-[3.75rem] relative overflow-hidden rounded-md cursor-pointer hover:border-red-600`}
+					onclick={() => selectStyle(style)}
+					role="button"
+					onkeydown={(e) => {
+						if (e.key === 'Enter') selectStyle(style);
+					}}
+					tabindex="0"
+				>
+					<img src={style.metadata.thumbnail} alt="Style Thumbnail" class="w-full h-full object-cover" />
+					<span class="absolute top-0 left-0 bg-white bg-opacity-80 px-1 rounded-br">{style.name}</span>
+				</div>{/each}
+		</div>
+	</div>
 </div>
 
 <style>
-	.style-control {
-		display: flex;
-		position: relative;
-		animation-duration: 200ms;
-		gap: 5px;
+	.layer-card {
+		border: 2px solid white;
 	}
-
-	.style-control.right {
-		flex-direction: row;
-	}
-
-	.style-control.left {
-		flex-direction: row-reverse;
-	}
-
-	.style-control.bottom {
-		flex-direction: column;
-	}
-
-	.style-control.top {
-		flex-direction: column-reverse;
-	}
-
-	.style-selector {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		cursor: pointer;
-		border: 0;
-		position: relative;
-		background-color: transparent;
-		padding: 0;
-	}
-
-	.style-selector:hover {
-		background-color: transparent;
-	}
-
-	.style-selector .basemap {
-		width: 2.7rem;
-		height: 2.7rem;
-		border-radius: 50%;
-		border: 1px solid #ccc;
-		background-color: white;
-	}
-
-	.style-selector.active .basemap {
+	.layer-card:hover {
 		border-color: #d73f3f;
-	}
-
-	.style-selector:hover .tooltip {
-		opacity: 1;
-	}
-
-	.style-selector .tooltip {
-		opacity: 0;
-		transition: opacity 0.3s ease;
-		position: absolute;
-		left: 50%;
-		transform: translateX(-50%);
-		background-color: rgb(104, 104, 104);
-		color: white;
-		box-shadow: 0.0625rem 0.0625rem 0.0625rem #ddd;
-		border-radius: 0.25rem;
-		padding: 0.25rem;
-		z-index: 100;
-		pointer-events: none;
-		text-wrap: nowrap;
-	}
-
-	.tooltip-top {
-		bottom: 110%;
-	}
-
-	.tooltip-bottom {
-		top: 110%;
-	}
-
-	.style-control.closed .style-selector:not(.active) {
-		display: none;
 		transition-duration: 200ms;
 	}
 
-	.style-control.open .style-selector {
-		display: flex;
-		transition-duration: 200ms;
+	.active {
+		border-color: #d73f3f;
 	}
 </style>
