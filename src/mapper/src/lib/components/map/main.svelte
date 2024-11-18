@@ -136,7 +136,15 @@
 	<ScaleControl />
 	<Control class="flex flex-col gap-y-2" position="top-left">
 		<ControlGroup>
-			<ControlButton on:click={() => (toggleGeolocationStatus = !toggleGeolocationStatus)}
+			<ControlButton
+				on:click={() => {
+					toggleGeolocationStatus = !toggleGeolocationStatus;
+					if (toggleGeolocationStatus) {
+						map?.setPitch(45);
+					} else {
+						map?.setPitch(0);
+					}
+				}}
 				><hot-icon
 					name="geolocate"
 					class={`!text-[1.2rem] cursor-pointer  duration-200 ${toggleGeolocationStatus ? 'text-red-600' : 'text-[#52525B]'}`}
