@@ -221,16 +221,10 @@
 			manageHoverState
 		/>
 	</FlatGeobuf>
-	<div class="absolute right-3 bottom-3 sm:right-5 sm:bottom-5 z-50">
-		<LayerSwitcher
-			{map}
-			position="bottom-right"
-			expandDirection="right"
-			extraStyles={baseLayers}
-			sourcesIdToReAdd={['states', 'geolocation']}
-		/>
+	<Control class="flex flex-col gap-y-2" position="bottom-right">
+		<LayerSwitcher {map} extraStyles={baseLayers} sourcesIdToReAdd={['tasks', 'entities', 'geolocation']} />
 		<Legend />
-	</div>
+	</Control>
 	{#if projectSetupStep === projectSetupStepEnum['task_selection']}
 		<div class="absolute top-5 w-fit bg-[#F097334D] z-10 left-[50%] translate-x-[-50%] p-1">
 			<p class="uppercase font-barlow-medium text-base">please select a task / feature for mapping</p>
