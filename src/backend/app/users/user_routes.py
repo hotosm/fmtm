@@ -47,6 +47,15 @@ async def get_users(
     return await DbUser.all(db)
 
 
+@router.get("/user-role-options")
+async def get_user_roles(current_user: Annotated[DbUser, Depends(mapper)]):
+    """Check for available user role options."""
+    user_roles = {}
+    for role in UserRoleEnum:
+        user_roles[role.name] = role.value
+    return user_roles
+
+
 @router.get("/{id}", response_model=user_schemas.UserOut)
 async def get_user_by_identifier(
     user: Annotated[DbUser, Depends(get_user)],
@@ -59,15 +68,6 @@ async def get_user_by_identifier(
     for the username.
     """
     return user
-
-
-@router.get("/user-role-options")
-async def get_user_roles(current_user: Annotated[DbUser, Depends(mapper)]):
-    """Check for available user role options."""
-    user_roles = {}
-    for role in UserRoleEnum:
-        user_roles[role.name] = role.value
-    return user_roles
 
 
 @router.delete("/{id}")
