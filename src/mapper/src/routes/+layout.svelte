@@ -3,6 +3,7 @@
 	import '@hotosm/ui/dist/hotosm-ui';
 	import { setBasePath } from '@hotosm/ui/dist/hotosm-ui';
 	import Toast from '$lib/components/toast.svelte';
+	import Header from '$lib/components/header.svelte';
 
 	setBasePath('/mapnow');
 
@@ -10,7 +11,7 @@
 </script>
 
 <main class="flex flex-col h-screen overflow-hidden">
-	<hot-header></hot-header>
+	<Header />
 	<Toast />
 	{@render children?.({ data })}
 </main>
