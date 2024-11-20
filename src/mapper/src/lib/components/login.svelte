@@ -39,6 +39,8 @@
 
 	const handleSignIn = async (selectedOption: string) => {
 		if (selectedOption === 'osm_account') {
+			// store current url in local storage so that the user can be redirected to current page after login
+			localStorage.setItem('requestedPath', window.location.pathname);
 			osmLoginRedirect();
 		} else {
 			const userDetailResp = await TemporaryLoginService(`${import.meta.env.VITE_API_URL}/auth/temp-login`);
