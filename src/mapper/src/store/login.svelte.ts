@@ -7,15 +7,22 @@ type authDetailsType = {
 	orgs_managed: number[];
 };
 
-let authDetails: authDetailsType | null = null;
+let authDetails: authDetailsType | null = $state(null);
+let isLoginModalOpen: boolean = $state(false);
 
 function getLoginStore() {
 	return {
 		get getAuthDetails() {
 			return authDetails;
 		},
+		get isLoginModalOpen() {
+			return isLoginModalOpen;
+		},
 		setAuthDetails: (authData: authDetailsType) => {
 			authDetails = authData;
+		},
+		toggleLoginModal: (status: boolean) => {
+			isLoginModalOpen = status;
 		},
 	};
 }
