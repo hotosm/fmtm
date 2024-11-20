@@ -33,7 +33,6 @@
 	];
 
 	let dialogRef;
-	let { open, toggleOpen }: Props = $props();
 	const loginStore = getLoginStore();
 	const alertStore = getAlertStore();
 
@@ -67,9 +66,9 @@
 <hot-dialog
 	bind:this={dialogRef}
 	class="dialog-overview z-50 font-barlow-regular"
-	{open}
+	open={loginStore.isLoginModalOpen}
 	onsl-hide={() => {
-		toggleOpen(false);
+		loginStore.toggleLoginModal(false);
 	}}
 	noHeader
 >
@@ -78,12 +77,12 @@
 			<p class="text-2xl font-bold mb-1">Sign In</p>
 			<hot-icon
 				name="close"
-				class="text-[1.5rem] text-gray-500"
-				onclick={() => toggleOpen(false)}
+				class="text-[1.5rem] text-gray-500 cursor-pointer"
+				onclick={() => loginStore.toggleLoginModal(false)}
 				role="button"
 				tabindex="0"
 				onkeydown={(e: KeyboardEvent) => {
-					if (e.key === 'Enter') toggleOpen(false);
+					if (e.key === 'Enter') loginStore.toggleLoginModal(false);
 				}}
 			></hot-icon>
 		</div>
