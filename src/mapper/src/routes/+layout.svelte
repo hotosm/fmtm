@@ -10,7 +10,7 @@
 	let { data, children } = $props();
 </script>
 
-<main class="flex flex-col h-screen overflow-hidden">
+<main class="flex flex-col h-screen overflow-hidden font-barlow-regular">
 	<Header />
 	<Toast />
 	{@render children?.({ data })}
