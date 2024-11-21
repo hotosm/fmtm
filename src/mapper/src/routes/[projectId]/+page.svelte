@@ -173,26 +173,38 @@
 
 					<!-- QR Code Container -->
 					<div class="flex justify-center w-full max-w-sm">
-						<hot-qr-code value={qrCodeData} label="Scan to open ODK Collect" size="250"></hot-qr-code>
+						<hot-qr-code value={qrCodeData} label="Scan to open ODK Collect" size="250" class="p-4 bg-white m-4"
+						></hot-qr-code>
 					</div>
 
 					<!-- Download Button -->
-					<sl-button onclick={downloadQrCode} size="small" class="secondary w-full max-w-[200px]">
+					<sl-button
+						onclick={() => downloadQrCode(data?.project?.name)}
+						onkeydown={(e: KeyboardEvent) => {
+							e.key === 'Enter' && downloadQrCode(data?.project?.name);
+						}}
+						role="button"
+						tabindex="0"
+						size="small"
+						class="secondary w-full max-w-[200px]"
+					>
 						<hot-icon slot="prefix" name="download" class="!text-[1rem] text-[#b91c1c] cursor-pointer duration-200"
 						></hot-icon>
 						<span class="font-barlow-medium text-base uppercase">Download QR</span>
 					</sl-button>
 
-					<!-- Open ODK Button -->
-					<sl-button
-						size="small"
-						class="primary w-full max-w-[200px]"
-						href="odkcollect://form/{data.project.odk_form_id}{taskStore.selectedTaskId
-							? `?task_filter=${taskStore.selectedTaskId}`
-							: ''}"
-					>
-						<span class="font-barlow-medium text-base uppercase">Open ODK</span></sl-button
-					>
+					<!-- Open ODK Button (Hide if it's project walkthrough step) -->
+					{#if +projectSetupStepStore.projectSetupStep !== projectSetupStepEnum['odk_project_load']}
+						<sl-button
+							size="small"
+							class="primary w-full max-w-[200px]"
+							href="odkcollect://form/{data.project.odk_form_id}{taskStore.selectedTaskId
+								? `?task_filter=${taskStore.selectedTaskId}`
+								: ''}"
+						>
+							<span class="font-barlow-medium text-base uppercase">Open ODK</span></sl-button
+						>
+					{/if}
 				</div>
 			{/if}
 		</BottomSheet>
