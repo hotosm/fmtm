@@ -11,7 +11,6 @@
 	import SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.component.js';
 	// import EventCard from '$lib/components/event-card.svelte';
 	import BottomSheet from '$lib/components/bottom-sheet.svelte';
-	import TaskActionDialog from '$lib/components/task-action-dialog.svelte';
 	import MapComponent from '$lib/components/map/main.svelte';
 	import DialogTaskActions from '$lib/components/dialog-task-actions.svelte';
 
@@ -116,11 +115,6 @@
 		<b>{convertDateToTimeAgo(taskStore.latestEvent.created_at)}</b> | {taskStore.latestEvent.event}
 		on task {taskStore.latestEvent.task_id} by {taskStore.latestEvent.username || 'anon'}
 	</hot-card>
-{/if}
-
-<!-- The dialog should overlay with actions for a task -->
-{#if taskStore.selectedTaskId}
-	<TaskActionDialog state={taskStore.selectedTaskState} projectId={data.projectId} taskId={taskStore.selectedTaskId} />
 {/if}
 
 <!-- The main page -->
