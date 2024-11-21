@@ -4,8 +4,13 @@
 	import HotLogoText from '$assets/images/hot-logo-text.svg';
 	import Login from '$lib/components/login.svelte';
 	import { getLoginStore } from '$store/login.svelte.ts';
+	import { drawerItems as menuItems } from '$constants/drawerItems.ts';
+	import { revokeCookie } from '$lib/utils/login';
+	import { getAlertStore } from '$store/common.svelte';
 
+	let drawerRef: any = $state();
 	const loginStore = getLoginStore();
+	const alertStore = getAlertStore();
 
 	onMount(() => {
 		// retrieve persisted auth details from local storage and set  auth details to store
@@ -13,6 +18,16 @@
 		if (!persistedAuth) return;
 		loginStore.setAuthDetails(JSON.parse(JSON.parse(persistedAuth).authDetails));
 	});
+
+	const handleSignOut = async () => {
+		try {
+			await revokeCookie();
+			loginStore.signOut();
+			window.location.href = window.location.origin;
+		} catch (error) {
+			alertStore.setAlert({ variant: 'danger', message: 'Sign Out Failed' });
+		}
+	};
 </script>
 
 <div class="p-3 flex items-center justify-between">
@@ -21,6 +36,7 @@
 		<img src={HotLogoText} alt="hot-logo" />
 	</div>
 	<div class="flex items-center gap-4">
+		<!-- profile image and username display -->
 		{#if loginStore?.getAuthDetails}
 			<div class="flex items-center gap-2">
 				{#if !loginStore?.getAuthDetails?.profile_img}
@@ -60,14 +76,47 @@
 				<span class="font-barlow-medium text-base">SIGN IN</span>
 			</sl-button>
 		{/if}
+
+		<!-- drawer component toggle trigger -->
 		<hot-icon
 			name="list"
 			class="!text-[1.8rem] text-[#52525B] leading-0 cursor-pointer hover:text-red-600 duration-200"
-			onclick={() => {}}
-			onkeydown={() => {}}
+			onclick={() => {
+				drawerRef.show();
+			}}
+			onkeydown={() => {
+				drawerRef.show();
+			}}
 			role="button"
 			tabindex="0"
 		></hot-icon>
 	</div>
 </div>
 <Login />
+<hot-drawer bind:this={drawerRef} class="drawer-overview">
+	<div class="flex flex-col gap-8 px-4">
+		{#each menuItems as menu}
+			<a
+				target="_blank"
+				rel="noopener noreferrer"
+				href={menu.path}
+				class="hover:text-red-600 cursor-pointer duration-200 decoration-none text-black">{menu.name}</a
+			>
+		{/each}
+		<sl-button
+			class="primary rounded"
+			variant="primary"
+			size="small"
+			onclick={handleSignOut}
+			onkeydown={(e: KeyboardEvent) => {
+				if (e.key === 'Enter') {
+					handleSignOut();
+				}
+			}}
+			role="button"
+			tabindex="0"
+		>
+			<span class="font-barlow-medium text-base">SIGN OUT</span>
+		</sl-button>
+	</div>
+</hot-drawer>
