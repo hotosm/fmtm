@@ -24,6 +24,10 @@ function getLoginStore() {
 		toggleLoginModal: (status: boolean) => {
 			isLoginModalOpen = status;
 		},
+		signOut: () => {
+			localStorage.removeItem('persist:login');
+			authDetails = null;
+		},
 	};
 }
 
