@@ -7,6 +7,7 @@
 	import { polygon } from '@turf/helpers';
 	import { buffer } from '@turf/buffer';
 	import { bbox } from '@turf/bbox';
+	import ImportQrGif from '$assets/images/importQr.gif';
 
 	import SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.component.js';
 	// import EventCard from '$lib/components/event-card.svelte';
@@ -37,8 +38,9 @@
 
 	let mapComponent: maplibregl.Map | undefined = $state(undefined);
 	let tabGroup: SlTabGroup;
-	let selectedTab: string = $state('map');
+	let selectedTab: string = $state('qrcode');
 	let isTaskActionModalOpen = $state(false);
+	let infoDialogRef: any = $state(null);
 
 	const taskStore = getTaskStore();
 	const taskEventStream = getTaskEventStream(data.projectId);
@@ -162,7 +164,27 @@
 				<div class="flex flex-col items-center p-4 space-y-4">
 					<!-- Text above the QR code -->
 					<div class="text-center w-full">
-						<div class="font-bold text-lg font-barlow-medium">Scan this QR Code in ODK Collect</div>
+						<div class="font-bold text-lg font-barlow-medium">
+							<span class="mr-1"
+								>Scan this QR code in ODK Collect from another users phone, or download and import it manually</span
+							>
+							<sl-tooltip content="More information on manually importing qr code" placement="bottom">
+								<hot-icon
+									onclick={() => {
+										if (infoDialogRef) infoDialogRef?.show();
+									}}
+									onkeydown={(e: KeyboardEvent) => {
+										if (e.key === 'Enter') {
+											if (infoDialogRef) infoDialogRef?.show();
+										}
+									}}
+									role="button"
+									tabindex="0"
+									name="info-circle-fill"
+									class="!text-[14px] text-[#b91c1c] cursor-pointer duration-200 scale-[1.5]"
+								></hot-icon>
+							</sl-tooltip>
+						</div>
 					</div>
 
 					<!-- QR Code Container -->
@@ -202,6 +224,34 @@
 				</div>
 			{/if}
 		</BottomSheet>
+		<hot-dialog
+			bind:this={infoDialogRef}
+			class="dialog-overview"
+			open
+			style="--width: fit; --body-spacing: 0.5rem"
+			no-header
+		>
+			<div class="flex flex-col gap-[0.5rem]">
+				<img
+					src={ImportQrGif}
+					alt="manual process of importing qr code gif"
+					style="border: 1px solid #ededed;"
+					class="h-[70vh]"
+				/>
+				<sl-button
+					onclick={() => infoDialogRef.close()}
+					onkeydown={(e: KeyboardEvent) => {
+						e.key === 'Enter' && infoDialogRef.close();
+					}}
+					role="button"
+					tabindex="0"
+					size="small"
+					class="primary w-fit ml-auto"
+				>
+					<span class="font-barlow-medium text-SM uppercase">CLOSE</span>
+				</sl-button>
+			</div>
+		</hot-dialog>
 	{/if}
 
 	<sl-tab-group
