@@ -227,7 +227,6 @@
 		<hot-dialog
 			bind:this={infoDialogRef}
 			class="dialog-overview"
-			open
 			style="--width: fit; --body-spacing: 0.5rem"
 			no-header
 		>
