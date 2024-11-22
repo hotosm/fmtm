@@ -3,7 +3,7 @@
 
 import { test, expect } from '@playwright/test';
 
-import { tempLogin, openTestProject } from './helpers';
+import { openTestProject } from './helpers';
 
 test.describe('mapper flow', () => {
   test('task actions', async ({ browserName, page }) => {
@@ -11,11 +11,8 @@ test.describe('mapper flow', () => {
     // (playwright.config.ts is configured to run all browsers by default)
     test.skip(browserName !== 'chromium', 'Test only for chromium!');
 
-    // 0. Temp Login
-    await tempLogin(page);
-    await openTestProject(page);
-
     // 1. Click on task area on map
+    await openTestProject(page);
     await page.locator('canvas').click({
       position: {
         x: 445,
