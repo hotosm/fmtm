@@ -285,20 +285,10 @@
 	</sl-tab-group>
 </div>
 
-<!-- </div> -->
-
 <style>
 	:root {
 		--nav-height: 4rem;
 	}
-	/* sl-tab-group {
-		bottom: 0;
-		width: 100%;
-	} */
-
-	/* sl-tab-group::part(base) {
-		position: relative;
-	} */
 
 	sl-tab-group::part(body) {
 		display: var(--panel-display);
@@ -324,10 +314,6 @@
 		background-color: white;
 	}
 
-	/* The tab active indicator */
-	/* sl-tab-group::part(active-tab-indicator) {
-	} */
-
 	/* Each tab item (icon) container */
 	sl-tab {
 		padding-left: 3vw;
@@ -338,11 +324,6 @@
 	hot-icon {
 		font-size: 2rem;
 	}
-
-	/* Floating map buttons
-	hot-icon-button {
-		font-size: 2rem;
-	} */
 
 	#notification-banner {
 		--padding: 0.3rem;
