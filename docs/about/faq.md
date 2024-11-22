@@ -229,12 +229,12 @@ or projects.
 
 ---
 
-## For Contributors
+## For Repository Contributors
 
 ### How can I become a contributor to the FMTM?
 
 To become a contributor to the FMTM, you can create an account on
-the platform and join a mapping project.
+Github and contribute to issues, discussions, or pull requests.
 
 ---
 
@@ -355,3 +355,68 @@ project managers or experienced contributors for additional feedback.
 The FMTM provides training and resources to help you improve your
 mapping skills. You can also join mapping communities and forums to
 connect with other contributors and learn from their experiences.
+
+## Advanced Use Cases
+
+### How can I work with an offline basemap?
+
+- Download MBTiles from FMTM.
+- Load MBTiles into ODK Collect via
+  [this guide](https://docs.getodk.org/collect-offline-maps)
+
+### Can I edit my XLSForm after I create a project?
+
+- XLSForms can be updated!
+- Go to the 'Manage Project' section.
+- Edit --> Form Update.
+- You can download the existing form from here.
+- Edit the form, then upload and click the 'Update' button.
+- This will update the form in ODK also.
+
+### Can I record features that don't exist on the map yet?
+
+Yes!
+
+- Click on a task area.
+- Then click to 'Add new feature'.
+- This will open the Form to collect data.
+- One of the form questions will ask you to record a geopoint of the
+  feature location.
+
+### Can I lock multiple tasks as once for mapping or validation?
+
+Yes!
+
+- There should be no issue doing this.
+- However, note that if there is no activity on a locked task
+  after a period of time, the task may auto-unlock, allowing
+  other mappers to lock and contribute.
+
+### What is the custom ODK Collect app?
+
+- ODK Collect is an excellent mobile application.
+- We need a slightly modified functionality of the app, so have created
+  a custom version for you to use with FMTM.
+- We maintain a good relationship with the ODK developers and would like
+  to get this functionality into the map app (meaning no custom app is required).
+- However, this will take time!
+
+### Why do I need the custom ODK Collect app?
+
+- Ideally when we open ODK Collect, we want our feature / building to be
+  selected already, avoiding the need to open the map and select it manually.
+- We created the custom ODK Collect for exactly this purpose!
+- It also opens the possibility of more advanced map capabilities in FMTM,
+  such as navigation to your chosen feature and directions.
+- Hopefully it provides a more seamless user experience of FMTM, that we
+  can't provide with the default Collect.
+
+### How do I install the custom ODK Collect app?
+
+- First, open the sidebar on FMTM and click the button to download the
+  custom ODK Collect `.apk` file.
+- If you don't have ODK Collect installed already, then you should be able to
+  click this file and install as normal.
+- If you already have ODK Collect installed, then you **may** have to uninstall
+  this version first, prior to installing the custom version. This is to avoid
+  version conflicts.
