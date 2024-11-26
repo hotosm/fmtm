@@ -42,6 +42,57 @@ async def test_read_submissions(client, submission):
     ), "Submitter ID mismatch"
 
 
+async def test_download_submission_json(client, submission):
+    """Test downloading submissions as JSON."""
+    odk_project = submission["project"]
+
+    response = await client.get(
+        f"/submission/download?project_id={odk_project.id}&export_json=true"
+    )
+
+    assert response.status_code == 200, (
+        f"Failed to download JSON submissions. " f"Response: {response.text}"
+    )
+    assert (
+        "Content-Disposition" in response.headers
+    ), "Missing Content-Disposition header"
+
+    expected_filename = f"{odk_project.slug}_submissions.json"
+
+    assert response.headers["Content-Disposition"].endswith(
+        expected_filename
+    ), f"Expected file name to end with {expected_filename}"
+
+    submissions = response.json()
+    assert isinstance(submissions, dict), "Expected JSON response to be a dictionary"
+    assert "value" in submissions, "Missing 'value' key in JSON response"
+    assert isinstance(submissions["value"], list), "Expected 'value' to be a list"
+    assert len(submissions["value"]) > 0, "Expected at least one submission in 'value'"
+
+
+async def test_download_submission_file(client, submission):
+    """Test downloading submissions as a ZIP file."""
+    odk_project = submission["project"]
+
+    response = await client.get(
+        f"/submission/download?project_id={odk_project.id}&export_json=false"
+    )
+
+    assert response.status_code == 200, (
+        f"Failed to download submissions as file. " f"Response: {response.text}"
+    )
+    assert (
+        "Content-Disposition" in response.headers
+    ), "Missing Content-Disposition header"
+
+    expected_filename = f"{odk_project.slug}.zip"
+
+    assert response.headers["Content-Disposition"].endswith(
+        expected_filename
+    ), f"Expected file name to end with {expected_filename}"
+    assert len(response.content) > 0, "Expected non-empty ZIP file content"
+
+
 if __name__ == "__main__":
     """Main func if file invoked directly."""
     pytest.main()
