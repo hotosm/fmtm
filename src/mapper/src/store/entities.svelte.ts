@@ -1,10 +1,32 @@
-import { writable } from 'svelte/store';
 import { ShapeStream, Shape } from '@electric-sql/client';
 import type { ShapeData, Row } from '@electric-sql/client';
 
-const entitiesStatusStore = writable([]);
-let selectedEntity = writable<any>(null);
+type entitiesStatusListType = {
+	osmid: number | undefined;
+	entity_id: string;
+	project_id: number;
+	status: string;
+	task_id: number;
+};
+
+type entitiesListType = {
+	id: string;
+	task_id: number;
+	osm_id: number;
+	status: number;
+	updated_at: string | null;
+};
+
+type entitiesShapeType = {
+	entity_id: string;
+	status: string;
+	project_id: number;
+	task_id: number;
+};
+
+let selectedEntity = $state(null);
 let entitiesShape: Shape;
+let entitiesStatusList: entitiesStatusListType[] = $state([]);
 
 function getEntityStatusStream(projectId: number): ShapeStream | undefined {
 	if (!projectId) {
@@ -17,20 +39,32 @@ function getEntityStatusStream(projectId: number): ShapeStream | undefined {
 	});
 }
 
-async function subscribeToEntityStatusUpdates(taskEventStream: ShapeStream) {
-	entitiesShape = new Shape(taskEventStream);
+function getEntitiesStatusStore() {
+	async function subscribeToEntityStatusUpdates(entitiesStream: ShapeStream, entitiesList: entitiesListType[]) {
+		entitiesShape = new Shape(entitiesStream);
 
-	entitiesShape.subscribe((entities: ShapeData) => {
-		const rows: Row[] = entities.rows;
-		if (rows && Array.isArray(rows)) {
-			for (const newStatus of rows) {
-				if (newStatus) {
-					// fixme
-					entitiesStatusStore.set(newStatus);
-				}
+		entitiesShape.subscribe((entities: ShapeData) => {
+			const rows: entitiesShapeType[] = entities.rows;
+			if (rows && Array.isArray(rows)) {
+				entitiesStatusList = rows?.map((entity) => {
+					return {
+						...entity,
+						osmid: entitiesList?.find((entityx) => entityx.id === entity.entity_id)?.osm_id,
+					};
+				});
 			}
-		}
-	});
+		});
+	}
+
+	return {
+		subscribeToEntityStatusUpdates: subscribeToEntityStatusUpdates,
+		get selectedEntity() {
+			return selectedEntity;
+		},
+		get entitiesStatusList() {
+			return entitiesStatusList;
+		},
+	};
 }
 
-export { entitiesStatusStore, selectedEntity, getEntityStatusStream, subscribeToEntityStatusUpdates };
+export { getEntityStatusStream, getEntitiesStatusStore };
