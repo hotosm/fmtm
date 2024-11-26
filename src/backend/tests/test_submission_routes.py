@@ -17,6 +17,8 @@
 #
 """Tests for submission routes."""
 
+import json
+
 import pytest
 
 
@@ -109,6 +111,43 @@ async def test_get_submission_count(client, submission):
         submission_count, int
     ), "Expected submission count to be an integer"
     assert submission_count > 0, "Submission count should be greater than zero"
+
+
+async def test_download_submission_geojson(client, submission):
+    """Test downloading submissions as a GeoJSON file."""
+    odk_project = submission["project"]
+
+    response = await client.get(
+        f"/submission/download-submission-geojson?project_id={odk_project.id}"
+    )
+
+    assert (
+        response.status_code == 200
+    ), f"Failed to download GeoJSON submissions. Response: {response.text}"
+
+    assert (
+        "Content-Disposition" in response.headers
+    ), "Missing Content-Disposition header"
+    expected_filename = f"{odk_project.slug}.geojson"
+    assert response.headers["Content-Disposition"].endswith(
+        expected_filename
+    ), f"Expected file name to end with {expected_filename}"
+
+    submission_geojson = json.loads(response.content)
+    assert isinstance(
+        submission_geojson, dict
+    ), "Expected GeoJSON content to be a dictionary"
+    assert "type" in submission_geojson, "Missing 'type' key in GeoJSON"
+    assert (
+        submission_geojson["type"] == "FeatureCollection"
+    ), "GeoJSON type must be 'FeatureCollection'"
+    assert "features" in submission_geojson, "Missing 'features' key in GeoJSON"
+    assert isinstance(
+        submission_geojson["features"], list
+    ), "Expected 'features' to be a list"
+    assert (
+        len(submission_geojson["features"]) > 0
+    ), "Expected at least one feature in 'features'"
 
 
 if __name__ == "__main__":
