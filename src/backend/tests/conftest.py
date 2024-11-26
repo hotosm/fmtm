@@ -19,6 +19,7 @@
 
 import json
 import os
+import uuid
 from io import BytesIO
 from pathlib import Path
 from typing import Any, AsyncGenerator
@@ -273,6 +274,97 @@ async def odk_project(db, client, project, tasks):
         pytest.fail(f"Test failed with exception: {str(e)}")
 
     yield project
+
+
+@pytest_asyncio.fixture(scope="function")
+async def submission(client, odk_project):
+    """Set up a submission for a project in ODK Central."""
+    odk_project_id = odk_project.odkid
+    odk_credentials = odk_project.odk_credentials
+    odk_creds = odk_credentials.__dict__
+    base_url = odk_credentials.__dict__["odk_central_url"]
+    auth = (
+        odk_creds["odk_central_user"],
+        odk_creds["odk_central_password"],
+    )
+
+    def forms(base_url, aut, pid):
+        """Fetch a list of forms in a project."""
+        url = f"{base_url}/v1/projects/{pid}/forms"
+        return requests.get(url, auth=aut)
+
+    forms_response = forms(base_url, auth, odk_project_id)
+    assert forms_response.status_code == 200, "Failed to fetch forms from ODK Central"
+    forms = forms_response.json()
+    assert forms, "No forms found in ODK Central project"
+    odk_form_id = forms[0]["xmlFormId"]
+    odk_form_version = forms[0]["version"]
+
+    submission_id = uuid.uuid4()
+    submission_xml = f"""
+        <data id="{odk_form_id}" version="{odk_form_version}">
+        <meta>
+            <instanceID>uuid:{submission_id}</instanceID>
+        </meta>
+        <start>2024-11-15T12:28:23.641Z</start>
+        <end>2024-11-15T12:29:00.876Z</end>
+        <today>2024-11-15</today>
+        <phonenumber/>
+        <deviceid>collect:OOYOOcNu8uOA2G4b</deviceid>
+        <username>testuser</username>
+        <instructions/>
+        <warmup/>
+        <feature/>
+        <null/>
+        <new_feature>12.750577838121643 -24.776785714285722 0.0 0.0</new_feature>
+        <form_category>building</form_category>
+        <xid/>
+        <xlocation>12.750577838121643 -24.776785714285722 0.0 0.0</xlocation>
+        <task_id/>
+        <status>2</status>
+        <survey_questions>
+            <buildings>
+            <category>housing</category>
+            <name/>
+            <building_material/>
+            <building_levels/>
+            <housing/>
+            <provider/>
+            </buildings>
+            <details>
+            <power/>
+            <water/>
+            <age/>
+            <building_prefab/>
+            <building_floor/>
+            <building_roof/>
+            <condition/>
+            <access_roof/>
+            <levels_underground/>
+            </details>
+            <comment/>
+        </survey_questions>
+        </data>
+    """
+    submission_url = (
+        f"{base_url}/v1/projects/{odk_project_id}/forms/{odk_form_id}/submissions"
+    )
+
+    submission_response = requests.post(
+        submission_url,
+        data=submission_xml,
+        headers={"Content-Type": "application/xml"},
+        auth=auth,
+    )
+    assert (
+        submission_response.status_code == 200
+    ), "Failed to create a submission in ODK Central"
+
+    yield {
+        "project": odk_project,
+        "odk_form_id": odk_form_id,
+        "submission_data": submission_response.json(),
+    }
 
 
 @pytest_asyncio.fixture(scope="function")
