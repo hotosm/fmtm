@@ -282,7 +282,7 @@ async def submission(client, odk_project):
     odk_project_id = odk_project.odkid
     odk_credentials = odk_project.odk_credentials
     odk_creds = odk_credentials.__dict__
-    base_url = odk_credentials.__dict__["odk_central_url"]
+    base_url = odk_creds["odk_central_url"]
     auth = (
         odk_creds["odk_central_user"],
         odk_creds["odk_central_password"],
