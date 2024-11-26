@@ -19,12 +19,7 @@
 	import { generateQrCode, downloadQrCode } from '$lib/utils/qrcode';
 	import { convertDateToTimeAgo } from '$lib/utils/datetime';
 	import { getTaskStore, getTaskEventStream } from '$store/tasks.svelte.ts';
-	import {
-		entitiesStatusStore,
-		selectedEntity,
-		getEntityStatusStream,
-		subscribeToEntityStatusUpdates,
-	} from '$store/entities.svelte.ts';
+	import { getEntitiesStatusStore, getEntityStatusStream } from '$store/entities.svelte.ts';
 	import More from '$lib/components/more/index.svelte';
 	import { getProjectSetupStepStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
@@ -43,20 +38,16 @@
 	let infoDialogRef: any = $state(null);
 
 	const taskStore = getTaskStore();
+	const entitiesStore = getEntitiesStatusStore();
 	const taskEventStream = getTaskEventStream(data.projectId);
+	const entityStatusStream = getEntityStatusStream(data.projectId);
+
 	// Update the geojson task states when a new event is added
 	$effect(() => {
 		if (taskStore.latestEvent) {
 			taskStore.appendTaskStatesToFeatcol(data.project.tasks);
 		}
 	});
-	// const entityStatusStream = getEntityStatusStream(data.projectId);
-	// $effect(() => {
-	// 	if ($entitiesStatusStore) {
-	// 		// TODO replace this with updating the entities geojson
-	// 		console.log($entitiesStatusStore)
-	// 	}
-	// });
 
 	let qrCodeData = $derived(generateQrCode(data.project.name, data.project.odk_token, 'REPLACE_ME_WITH_A_USERNAME'));
 
@@ -80,16 +71,17 @@
 	}
 
 	onMount(async () => {
+		// In store/entities.ts
+		await entitiesStore.subscribeToEntityStatusUpdates(entityStatusStream, data.entityStatus);
+
 		// In store/tasks.svelte.ts
 		await taskStore.subscribeToEvents(taskEventStream);
 		await taskStore.appendTaskStatesToFeatcol(data.project.tasks);
-
-		// In store/entities.ts
-		// await subscribeToEntityStatusUpdates(entityStatusStream);
 	});
 
 	onDestroy(() => {
 		taskEventStream.unsubscribeAll();
+		entityStatusStream.unsubscribeAll();
 	});
 
 	const projectSetupStepStore = getProjectSetupStepStore();
