@@ -281,17 +281,17 @@ async def submission(client, odk_project):
     """Set up a submission for a project in ODK Central."""
     odk_project_id = odk_project.odkid
     odk_credentials = odk_project.odk_credentials
-    odk_creds = odk_credentials.__dict__
+    odk_creds = odk_credentials.model_dump()
     base_url = odk_creds["odk_central_url"]
     auth = (
         odk_creds["odk_central_user"],
         odk_creds["odk_central_password"],
     )
 
-    def forms(base_url, aut, pid):
+    def forms(base_url, auth, pid):
         """Fetch a list of forms in a project."""
         url = f"{base_url}/v1/projects/{pid}/forms"
-        return requests.get(url, auth=aut)
+        return requests.get(url, auth=auth)
 
     forms_response = forms(base_url, auth, odk_project_id)
     assert forms_response.status_code == 200, "Failed to fetch forms from ODK Central"
