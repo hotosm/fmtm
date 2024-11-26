@@ -93,6 +93,24 @@ async def test_download_submission_file(client, submission):
     assert len(response.content) > 0, "Expected non-empty ZIP file content"
 
 
+async def test_get_submission_count(client, submission):
+    """Test fetching the submission count for a project."""
+    odk_project = submission["project"]
+
+    response = await client.get(
+        f"/submission/get-submission-count?project_id={odk_project.id}"
+    )
+    assert (
+        response.status_code == 200
+    ), f"Failed to fetch submission count. Response: {response.text}"
+
+    submission_count = response.json()
+    assert isinstance(
+        submission_count, int
+    ), "Expected submission count to be an integer"
+    assert submission_count > 0, "Submission count should be greater than zero"
+
+
 if __name__ == "__main__":
     """Main func if file invoked directly."""
     pytest.main()
