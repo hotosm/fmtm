@@ -58,7 +58,24 @@
 				></hot-icon>
 			</div>
 			<div class="flex flex-col gap-4">
-				<p class="text-[#333] text-xl font-barlow-semibold">Feature {selectedEntity?.osmid}</p>
+				<div class="flex items-center justify-between">
+					<p class="text-[#333] text-xl font-barlow-semibold">Feature {selectedEntity?.osmid}</p>
+					<sl-button
+						loading={entitiesStore.syncEntityStatusLoading}
+						onclick={async () => {
+							await entitiesStore.syncEntityStatus(projectData?.id);
+						}}
+						onkeydown={(e: KeyboardEvent) => {
+							e.key === 'Enter' && {};
+						}}
+						role="button"
+						tabindex="0"
+						size="small"
+						class="secondary w-fit ml-auto"
+					>
+						<span class="font-barlow-medium text-SM uppercase">SYNC STATUS</span>
+					</sl-button>
+				</div>
 				<div class="flex flex-col gap-1">
 					<p><span class="font-medium">Task Id:</span> {selectedEntity?.task_id}</p>
 					<p><span class="font-medium">Entity Uuid:</span> {selectedEntity?.entity_id}</p>
