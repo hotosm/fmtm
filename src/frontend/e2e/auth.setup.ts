@@ -1,24 +1,15 @@
-import { test as setup, expect } from '@playwright/test';
+import { test as setup } from '@playwright/test';
 import path from 'path';
 
 const authFile = path.join(__dirname, './.auth/user.json');
 
 setup('authenticate', async ({ page }) => {
-  // Navigate to the app's base URL
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  // Note this sets a token so we can proceed, but the login will be
+  // overwritten by svcfmtm localadmin user (as DEBUG=True)
+  await page.goto('/playwright-temp-login/');
 
-  // Select OSM login
-  await page.getByText('Personal OSM Account').click();
-  await page.waitForSelector('text=Log in to OpenStreetMap');
-
-  // OSM Login page
-  await page.getByLabel('Email Address or Username').fill(process.env.OSM_USERNAME || 'username');
-  await page.getByLabel('Password').fill(process.env.OSM_PASSWORD || 'password');
-  await page.getByRole('button', { name: 'Log in' }).click();
-
-  // Wait for redirect and valid login (sign out button)
-  await page.waitForSelector('text=Sign Out');
+  // Now check we are signed in as localadmin
+  await page.waitForSelector('text=localadmin');
 
   // Save authentication state
   await page.context().storageState({ path: authFile });
