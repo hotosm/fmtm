@@ -32,8 +32,8 @@ test.describe('mapper flow', () => {
     });
 
     // 2. Lock task for mapping
-    await expect(page.getByRole('button', { name: 'START MAPPING' })).toBeVisible();
-    await page.getByRole('button', { name: 'START MAPPING' }).click();
+    await expect(page.getByTestId('StartMapping')).toBeVisible();
+    await page.getByTestId('StartMapping').click();
     await page.waitForSelector('div:has-text("updated to LOCKED_FOR_MAPPING"):nth-of-type(1)');
     await expect(
       page
@@ -114,7 +114,7 @@ test.describe('mapper flow', () => {
       },
     });
     await expect(page.getByText('Status: UNLOCKED_TO_MAP')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'START MAPPING' })).toBeVisible();
+    await expect(page.getByTestId('StartMapping')).toBeVisible();
 
     // 2. Click on a specific feature / Entity within a task
     // assert feature popup visibility
