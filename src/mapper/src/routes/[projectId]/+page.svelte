@@ -14,8 +14,9 @@
 	import BottomSheet from '$lib/components/bottom-sheet.svelte';
 	import MapComponent from '$lib/components/map/main.svelte';
 	import DialogTaskActions from '$lib/components/dialog-task-actions.svelte';
+	import DialogEntityActions from '$lib/components/dialog-entities-actions.svelte';
 
-	import type { ProjectTask, ZoomToTaskEventDetail } from '$lib/types';
+	import type { ProjectTask } from '$lib/types';
 	import { generateQrCode, downloadQrCode } from '$lib/utils/qrcode';
 	import { convertDateToTimeAgo } from '$lib/utils/datetime';
 	import { getTaskStore, getTaskEventStream } from '$store/tasks.svelte.ts';
@@ -34,7 +35,7 @@
 	let mapComponent: maplibregl.Map | undefined = $state(undefined);
 	let tabGroup: SlTabGroup;
 	let selectedTab: string = $state('map');
-	let isTaskActionModalOpen = $state(false);
+	let openedActionModal: 'entity-modal' | 'task-modal' | null = $state(null);
 	let infoDialogRef: any = $state(null);
 
 	const taskStore = getTaskStore();
@@ -117,8 +118,8 @@
 		setMapRef={(map) => {
 			mapComponent = map;
 		}}
-		toggleTaskActionModal={(value) => {
-			isTaskActionModalOpen = value;
+		toggleActionModal={(value) => {
+			openedActionModal = value;
 		}}
 		projectOutlineCoords={data.project.outline.coordinates}
 		projectId={data.projectId}
@@ -126,14 +127,21 @@
 	/>
 	<!-- task action buttons popup -->
 	<DialogTaskActions
-		{isTaskActionModalOpen}
+		isTaskActionModalOpen={openedActionModal === 'task-modal'}
 		toggleTaskActionModal={(value) => {
-			isTaskActionModalOpen = value;
+			openedActionModal = value ? 'task-modal' : null;
 		}}
 		{selectedTab}
 		projectData={data?.project}
 	/>
-
+	<DialogEntityActions
+		isTaskActionModalOpen={openedActionModal === 'entity-modal'}
+		toggleTaskActionModal={(value) => {
+			openedActionModal = value ? 'entity-modal' : null;
+		}}
+		{selectedTab}
+		projectData={data?.project}
+	/>
 	{#if selectedTab !== 'map'}
 		<BottomSheet onClose={() => tabGroup.show('map')}>
 			{#if selectedTab === 'events'}
