@@ -31,9 +31,10 @@
 	import FlatGeobuf from '$lib/components/map/flatgeobuf-layer.svelte';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
 	import { getProjectSetupStepStore } from '$store/common.svelte.ts';
-	// import { entityFeatcolStore, selectedEntityId } from '$store/entities';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
 	import { baseLayers, osmStyle } from '$constants/baseLayers.ts';
+	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
+	import type { GeoJSON as GeoJSONType } from 'geojson';
 
 	type bboxType = [number, number, number, number];
 
@@ -49,12 +50,55 @@
 
 	const taskStore = getTaskStore();
 	const projectSetupStepStore = getProjectSetupStepStore();
+	const entitiesStore = getEntitiesStatusStore();
 
 	let map: maplibregl.Map | undefined = $state();
 	let loaded: boolean = $state(false);
 	let taskAreaClicked: boolean = $state(false);
 	let toggleGeolocationStatus: boolean = $state(false);
 	let projectSetupStep = $state(null);
+
+	// using this function since outside click of entity layer couldn't be tracked via FillLayer
+	function handleMapClick(e: maplibregl.MapMouseEvent) {
+		// returns list of features of entity layer present on that clicked point
+		const clickedEntityFeature = map?.queryRenderedFeatures(e.point, {
+			layers: ['entity-fill-layer'],
+		});
+		// returns list of features of task layer present on that clicked point
+		const clickedTaskFeature = map?.queryRenderedFeatures(e.point, {
+			layers: ['task-fill-layer'],
+		});
+
+		// if clicked point contains entity then set it's osm id else set null to store
+		if (clickedEntityFeature && clickedEntityFeature?.length > 0) {
+			const clickedEntityId = clickedEntityFeature[0]?.properties?.osm_id;
+			entitiesStore.setSelectedEntity(clickedEntityId);
+		} else {
+			entitiesStore.setSelectedEntity(null);
+		}
+
+		// if clicked point contians task layer
+		if (clickedTaskFeature && clickedTaskFeature?.length > 0) {
+			taskAreaClicked = true;
+			const clickedTaskId = clickedTaskFeature[0]?.properties?.fid;
+			taskStore.setSelectedTaskId(clickedTaskId);
+			toggleTaskActionModal(true);
+			if (+projectSetupStepStore.projectSetupStep === projectSetupStepEnum['task_selection']) {
+				localStorage.setItem(`project-${projectId}-setup`, projectSetupStepEnum['complete_setup']);
+				projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['complete_setup']);
+			}
+		}
+	}
+
+	$effect(() => {
+		if (map) {
+			map.on('click', handleMapClick);
+			// Cleanup on component unmount
+			return () => {
+				map?.off('click', handleMapClick);
+			};
+		}
+	});
 
 	$effect(() => {
 		projectSetupStep = +projectSetupStepStore.projectSetupStep;
@@ -78,6 +122,23 @@
 			}
 		}
 	});
+
+	function addStatusToGeojsonProperty(geojsonData: GeoJSONType) {
+		return {
+			...geojsonData,
+			features: geojsonData.features.map((feature) => {
+				const entity = entitiesStore.entitiesStatusList.find((entity) => entity.osmid === feature.properties.osm_id);
+				return {
+					...feature,
+					properties: {
+						...feature.properties,
+						status: entity?.status,
+						entity_id: entity?.entity_id,
+					},
+				};
+			}),
+		};
+	}
 </script>
 
 <!-- Note here we still use Svelte 4 on:click until svelte-maplibre migrates -->
@@ -95,6 +156,7 @@
 		taskStore.setSelectedTaskId(null);
 		taskAreaClicked = false;
 		toggleTaskActionModal(false);
+		entitiesStore.setSelectedEntity(null);
 	}}
 	images={[
 		{ id: 'LOCKED_FOR_MAPPING', url: BlackLockImg },
@@ -122,6 +184,7 @@
 	<!-- The task area geojson -->
 	<GeoJSON id="tasks" data={taskStore.featcol} promoteId="fid">
 		<FillLayer
+			id="task-fill-layer"
 			hoverCursor="pointer"
 			paint={{
 				'fill-color': [
@@ -143,16 +206,6 @@
 			}}
 			beforeLayerType="symbol"
 			manageHoverState
-			on:click={(e) => {
-				taskAreaClicked = true;
-				const clickedTaskId = e.detail.features?.[0]?.properties?.fid;
-				taskStore.setSelectedTaskId(clickedTaskId);
-				toggleTaskActionModal(true);
-				if (+projectSetupStepStore.projectSetupStep === projectSetupStepEnum['task_selection']) {
-					localStorage.setItem(`project-${projectId}-setup`, projectSetupStepEnum['complete_setup']);
-					projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['complete_setup']);
-				}
-			}}
 		/>
 		<LineLayer
 			layout={{ 'line-cap': 'round', 'line-join': 'round' }}
@@ -181,11 +234,29 @@
 		/>
 	</GeoJSON>
 	<!-- The features / entities -->
-	<FlatGeobuf id="entities" url={entitiesUrl} extent={taskStore.selectedTaskGeom} extractGeomCols={true} promoteId="id">
+	<FlatGeobuf
+		id="entities"
+		url={entitiesUrl}
+		extent={taskStore.selectedTaskGeom}
+		extractGeomCols={true}
+		promoteId="id"
+		processGeojson={(geojsonData) => addStatusToGeojsonProperty(geojsonData)}
+	>
 		<FillLayer
+			id="entity-fill-layer"
 			paint={{
-				'fill-color': '#006600',
 				'fill-opacity': 0.5,
+				'fill-color': [
+					'match',
+					['get', 'status'],
+					'READY',
+					'#d62822',
+					'OPENED_IN_ODK',
+					'#fad30a',
+					'SURVEY_SUBMITTED',
+					'#32a852',
+					'#c5fbf5', // default color if no match is found
+				],
 			}}
 			beforeLayerType="symbol"
 			manageHoverState
