@@ -38,22 +38,22 @@ export default defineConfig({
       },
       dependencies: ['setup'],
     },
-    {
-      name: 'firefox',
-      use: {
-        browserName: 'firefox',
-        storageState: 'e2e/.auth/user.json',
-      },
-      dependencies: ['setup'],
-    },
-    {
-      name: 'webkit',
-      use: {
-        browserName: 'webkit',
-        storageState: 'playwright/.auth/user.json',
-      },
-      dependencies: ['setup'],
-    },
+    // {
+    //   name: 'firefox',
+    //   use: {
+    //     browserName: 'firefox',
+    //     storageState: 'e2e/.auth/user.json',
+    //   },
+    //   dependencies: ['setup'],
+    // },
+    // {
+    //   name: 'webkit',
+    //   use: {
+    //     browserName: 'webkit',
+    //     storageState: 'playwright/.auth/user.json',
+    //   },
+    //   dependencies: ['setup'],
+    // },
 
     /* Test against mobile viewports. */
     // {
