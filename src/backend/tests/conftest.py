@@ -33,6 +33,7 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from loguru import logger as log
 from psycopg import AsyncConnection
+from pyodk.client import Client
 
 from app.auth.auth_routes import get_or_create_user
 from app.auth.auth_schemas import AuthUser, FMTMUser
@@ -53,6 +54,7 @@ from tests.test_data import test_data_path
 odk_central_url = os.getenv("ODK_CENTRAL_URL")
 odk_central_user = os.getenv("ODK_CENTRAL_USER")
 odk_central_password = encrypt_value(os.getenv("ODK_CENTRAL_PASSWD", ""))
+odk_config_file = str(Path(__file__).parent / ".pyodk_config.toml")
 
 
 def pytest_configure(config):
@@ -300,11 +302,12 @@ async def submission(client, odk_project):
     odk_form_id = forms[0]["xmlFormId"]
     odk_form_version = forms[0]["version"]
 
-    submission_id = uuid.uuid4()
+    submission_id = str(uuid.uuid4())
+
     submission_xml = f"""
         <data id="{odk_form_id}" version="{odk_form_version}">
         <meta>
-            <instanceID>uuid:{submission_id}</instanceID>
+            <instanceID>{submission_id}</instanceID>
         </meta>
         <start>2024-11-15T12:28:23.641Z</start>
         <end>2024-11-15T12:29:00.876Z</end>
@@ -346,24 +349,25 @@ async def submission(client, odk_project):
         </survey_questions>
         </data>
     """
-    submission_url = (
-        f"{base_url}/v1/projects/{odk_project_id}/forms/{odk_form_id}/submissions"
-    )
 
-    submission_response = requests.post(
-        submission_url,
-        data=submission_xml,
-        headers={"Content-Type": "application/xml"},
-        auth=auth,
-    )
-    assert (
-        submission_response.status_code == 200
-    ), "Failed to create a submission in ODK Central"
+    with Client(config_path=odk_config_file) as client:
+        client.submissions.create(
+            project_id=odk_project_id,
+            form_id=odk_form_id,
+            xml=submission_xml,
+            device_id=None,
+            encoding="utf-8",
+        )
+        submission_data = client.submissions.get(
+            project_id=odk_project_id,
+            form_id=odk_form_id,
+            instance_id=submission_id,
+        )
 
     yield {
         "project": odk_project,
         "odk_form_id": odk_form_id,
-        "submission_data": submission_response.json(),
+        "submission_data": submission_data,
     }
 
 

@@ -34,13 +34,13 @@ async def test_read_submissions(client, submission):
     assert isinstance(submission_list, list), "Expected a list of submissions"
 
     first_submission = submission_list[0]
-    test_instance_id = submission_data["instanceId"]
+    test_instance_id = submission_data.instanceId
     assert first_submission["__id"] == test_instance_id, "Instance ID mismatch"
     assert (
         first_submission["meta"]["instanceID"] == test_instance_id
     ), "Meta instanceID mismatch"
     assert first_submission["__system"]["submitterId"] == str(
-        submission_data["submitterId"]
+        submission_data.submitterId
     ), "Submitter ID mismatch"
 
 
