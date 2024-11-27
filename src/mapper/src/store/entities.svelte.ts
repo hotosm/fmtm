@@ -24,7 +24,7 @@ type entitiesShapeType = {
 	task_id: number;
 };
 
-let selectedEntity = $state(null);
+let selectedEntity: number | null = $state(null);
 let entitiesShape: Shape;
 let entitiesStatusList: entitiesStatusListType[] = $state([]);
 
@@ -56,8 +56,13 @@ function getEntitiesStatusStore() {
 		});
 	}
 
+	async function setSelectedEntity(entityOsmId: number | null) {
+		selectedEntity = entityOsmId;
+	}
+
 	return {
 		subscribeToEntityStatusUpdates: subscribeToEntityStatusUpdates,
+		setSelectedEntity: setSelectedEntity,
 		get selectedEntity() {
 			return selectedEntity;
 		},
