@@ -30,6 +30,7 @@ let selectedEntity: number | null = $state(null);
 let entitiesShape: Shape;
 let entitiesStatusList: entitiesStatusListType[] = $state([]);
 let syncEntityStatusLoading: boolean = $state(false);
+let updateEntityStatusLoading: boolean = $state(false);
 
 function getEntityStatusStream(projectId: number): ShapeStream | undefined {
 	if (!projectId) {
@@ -75,10 +76,28 @@ function getEntitiesStatusStore() {
 		}
 	}
 
+	async function updateEntityStatus(projectId: number, payload: Record<string, any>) {
+		try {
+			updateEntityStatusLoading = true;
+			await fetch(`${import.meta.env.VITE_API_URL}/projects/${projectId}/entity/status`, {
+				method: 'POST',
+				body: JSON.stringify(payload),
+				headers: {
+					'Content-type': 'application/json',
+				},
+				credentials: 'include',
+			});
+			updateEntityStatusLoading = false;
+		} catch (error) {
+			updateEntityStatusLoading = false;
+		}
+	}
+
 	return {
 		subscribeToEntityStatusUpdates: subscribeToEntityStatusUpdates,
 		setSelectedEntity: setSelectedEntity,
 		syncEntityStatus: syncEntityStatus,
+		updateEntityStatus: updateEntityStatus,
 		get selectedEntity() {
 			return selectedEntity;
 		},
@@ -87,6 +106,9 @@ function getEntitiesStatusStore() {
 		},
 		get syncEntityStatusLoading() {
 			return syncEntityStatusLoading;
+		},
+		get updateEntityStatusLoading() {
+			return updateEntityStatusLoading;
 		},
 	};
 }
