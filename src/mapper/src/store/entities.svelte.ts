@@ -1,5 +1,7 @@
 import { ShapeStream, Shape } from '@electric-sql/client';
-import type { ShapeData, Row } from '@electric-sql/client';
+import type { ShapeData } from '@electric-sql/client';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 type entitiesStatusListType = {
 	osmid: number | undefined;
@@ -27,6 +29,7 @@ type entitiesShapeType = {
 let selectedEntity: number | null = $state(null);
 let entitiesShape: Shape;
 let entitiesStatusList: entitiesStatusListType[] = $state([]);
+let syncEntityStatusLoading: boolean = $state(false);
 
 function getEntityStatusStream(projectId: number): ShapeStream | undefined {
 	if (!projectId) {
@@ -60,14 +63,30 @@ function getEntitiesStatusStore() {
 		selectedEntity = entityOsmId;
 	}
 
+	async function syncEntityStatus(projectId: number) {
+		try {
+			syncEntityStatusLoading = true;
+			await fetch(`${API_URL}/projects/${projectId}/entities/statuses`, {
+				credentials: 'include',
+			});
+			syncEntityStatusLoading = false;
+		} catch (error) {
+			syncEntityStatusLoading = false;
+		}
+	}
+
 	return {
 		subscribeToEntityStatusUpdates: subscribeToEntityStatusUpdates,
 		setSelectedEntity: setSelectedEntity,
+		syncEntityStatus: syncEntityStatus,
 		get selectedEntity() {
 			return selectedEntity;
 		},
 		get entitiesStatusList() {
 			return entitiesStatusList;
+		},
+		get syncEntityStatusLoading() {
+			return syncEntityStatusLoading;
 		},
 	};
 }
