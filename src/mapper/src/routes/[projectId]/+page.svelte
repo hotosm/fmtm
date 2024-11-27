@@ -33,7 +33,7 @@
 
 	let mapComponent: maplibregl.Map | undefined = $state(undefined);
 	let tabGroup: SlTabGroup;
-	let selectedTab: string = $state('qrcode');
+	let selectedTab: string = $state('map');
 	let isTaskActionModalOpen = $state(false);
 	let infoDialogRef: any = $state(null);
 
