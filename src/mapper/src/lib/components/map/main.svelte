@@ -41,12 +41,12 @@
 	interface Props {
 		projectOutlineCoords: Position[][];
 		entitiesUrl: string;
-		toggleTaskActionModal: (value: boolean) => void;
+		toggleActionModal: (value: 'task-modal' | 'entity-modal' | null) => void;
 		projectId: number;
 		setMapRef: (map: maplibregl.Map | undefined) => void;
 	}
 
-	let { projectOutlineCoords, entitiesUrl, toggleTaskActionModal, projectId, setMapRef }: Props = $props();
+	let { projectOutlineCoords, entitiesUrl, toggleActionModal, projectId, setMapRef }: Props = $props();
 
 	const taskStore = getTaskStore();
 	const projectSetupStepStore = getProjectSetupStepStore();
@@ -82,11 +82,18 @@
 			taskAreaClicked = true;
 			const clickedTaskId = clickedTaskFeature[0]?.properties?.fid;
 			taskStore.setSelectedTaskId(clickedTaskId);
-			toggleTaskActionModal(true);
 			if (+projectSetupStepStore.projectSetupStep === projectSetupStepEnum['task_selection']) {
 				localStorage.setItem(`project-${projectId}-setup`, projectSetupStepEnum['complete_setup']);
 				projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['complete_setup']);
 			}
+		}
+
+		if (clickedEntityFeature && clickedEntityFeature?.length > 0) {
+			toggleActionModal('entity-modal');
+		} else if (clickedTaskFeature && clickedTaskFeature?.length > 0) {
+			toggleActionModal('task-modal');
+		} else {
+			toggleActionModal(null);
 		}
 	}
 
@@ -155,7 +162,7 @@
 		// if the user clicks on a feature layer directly (on:click)
 		taskStore.setSelectedTaskId(null);
 		taskAreaClicked = false;
-		toggleTaskActionModal(false);
+		toggleActionModal(null);
 		entitiesStore.setSelectedEntity(null);
 	}}
 	images={[
