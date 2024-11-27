@@ -50,6 +50,10 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 7051,
       host: '0.0.0.0',
+      https: {
+        cert: '/cert/cert.crt',
+        key: '/cert/cert.key',
+      },
     },
     build: {
       minify: mode === 'development' ? false : 'esbuild',

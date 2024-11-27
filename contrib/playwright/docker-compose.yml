@@ -6,6 +6,9 @@ networks:
     name: fmtm-${GIT_BRANCH:-local}
 
 services:
+  proxy:
+    hostname: fmtm.dev.test
+
   api:
     hostname: fmtm.dev.test
     environment:
@@ -13,6 +16,8 @@ services:
       FMTM_DOMAIN: "fmtm.dev.test"
       # Do not use dev port, use port 80
       FMTM_DEV_PORT: "false"
+      # Override OSM redirect URL to allow login
+      OSM_LOGIN_REDIRECT_URI: http://fmtm.dev.test/osmauth
     # The ci image has overrides for CMD and ENTRYPOINT, so re-apply
     entrypoint: ["/app-entrypoint.sh"]
     # API_REPLICAS can be increased via CI env vars
@@ -36,9 +41,12 @@ services:
     hostname: fmtm.dev.test
     environment:
       VITE_API_URL: "http://fmtm.dev.test:8000"
-    command: --port 80
+    volumes:
+      - ./contrib/playwright/fmtm.dev.test.crt:/cert/cert.crt
+      - ./contrib/playwright/fmtm.dev.test.key:/cert/cert.key
+    command: --port 443
     healthcheck:
-      test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/80' || exit 1
+      test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/443' || exit 1
       interval: 5s
       retries: 3
       start_period: 5s
@@ -75,6 +83,7 @@ services:
     volumes:
       - ./src/frontend:/app
       - /tmp/.X11-unix:/tmp/.X11-unix
+      # - ./contrib/playwright/rootCA.crt:/usr/local/share/ca-certificates/cert.crt:ro
     entrypoint: /bin/sh -c
     command:
       - |

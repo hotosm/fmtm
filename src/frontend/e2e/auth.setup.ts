@@ -13,13 +13,13 @@ setup('authenticate', async ({ page }) => {
   await page.waitForSelector('text=Log in to OpenStreetMap');
 
   // OSM Login page
-  await page.getByLabel('Email Address or Username').fill(process.env.OSM_USERNAME || 'username');
-  await page.getByLabel('Password').fill(process.env.OSM_PASSWORD || 'password');
+  await page.getByLabel('Email Address or Username').fill('FMTM Playwright');
+  await page.getByLabel('Password').fill('Boondocks County Send6 Slingshot Villain Vocalist');
   await page.getByRole('button', { name: 'Log in' }).click();
-
-  // Wait for redirect and valid login (sign out button)
-  await page.waitForSelector('text=Sign Out');
 
   // Save authentication state
   await page.context().storageState({ path: authFile });
+
+  // Wait for redirect and valid login (sign out button)
+  await page.waitForSelector('text=Sign Out');
 });

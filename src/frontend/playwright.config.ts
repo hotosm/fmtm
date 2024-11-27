@@ -24,6 +24,11 @@ export default defineConfig({
     baseURL: 'http://fmtm.dev.test',
     // Record a trace for each test, but remove it from successful test runs
     trace: 'retain-on-failure',
+    // Simplify access over HTTPS, ignore errors
+    // Alternatively rootCA.crt can be installed in the Playwright container
+    // but specific config to make Chrome work is also required
+    // as it does not use the system CA store
+    ignoreHTTPSErrors: true,
   },
 
   /* Configure projects for major browsers */
