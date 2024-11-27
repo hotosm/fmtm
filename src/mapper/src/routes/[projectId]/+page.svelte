@@ -14,6 +14,7 @@
 	import BottomSheet from '$lib/components/bottom-sheet.svelte';
 	import MapComponent from '$lib/components/map/main.svelte';
 	import QRCodeComponent from '$lib/components/qrcode.svelte';
+	import BasemapComponent from '$lib/components/offline/basemaps.svelte';
 	import DialogTaskActions from '$lib/components/dialog-task-actions.svelte';
 
 	import type { ProjectTask, ZoomToTaskEventDetail } from '$lib/types';
@@ -146,7 +147,7 @@
 				<More projectData={data?.project} zoomToTask={(taskId) => zoomToTask(taskId)} ></More>
 			{/if}
 			{#if selectedTab === 'offline'}
-				<span class="font-barlow-medium text-base">Coming soon!</span>
+				<BasemapComponent projectId={data.project.id}></BasemapComponent>
 			{/if}
 			{#if selectedTab === 'qrcode'}
 				<QRCodeComponent
