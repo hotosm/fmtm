@@ -77,7 +77,7 @@
 			entitiesStore.setSelectedEntity(null);
 		}
 
-		// if clicked point contians task layer
+		// if clicked point contains task layer
 		if (clickedTaskFeature && clickedTaskFeature?.length > 0) {
 			taskAreaClicked = true;
 			const clickedTaskId = clickedTaskFeature[0]?.properties?.fid;

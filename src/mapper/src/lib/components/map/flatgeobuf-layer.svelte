@@ -27,7 +27,7 @@
 		promoteId = undefined,
 		metadataFunc,
 		children,
-		// not an ideal solution for mapping entites with their osm/entity id (need to look on this)
+		// not an ideal solution for mapping entities with their osm/entity id (need to look on this)
 		processGeojson,
 	}: Props = $props();
 
