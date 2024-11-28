@@ -84,7 +84,7 @@ async def add_new_task_event(
     return await DbTaskEvent.create(db, new_event)
 
 
-@router.get("/activity", response_model=list[task_schemas.TaskEventCount])
+@router.get("/activity/", response_model=list[task_schemas.TaskEventCount])
 async def task_activity(
     project_id: int,
     db: Annotated[Connection, Depends(db_conn)],
