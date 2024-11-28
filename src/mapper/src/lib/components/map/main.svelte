@@ -18,7 +18,7 @@
 	import { polygon } from '@turf/helpers';
 	import { buffer } from '@turf/buffer';
 	import { bbox } from '@turf/bbox';
-	import type { Position, Polygon, FeatureCollection } from 'geojson';
+	import type { Position } from 'geojson';
 
 	import LocationArcImg from '$assets/images/locationArc.png';
 	import LocationDotImg from '$assets/images/locationDot.png';
@@ -248,6 +248,7 @@
 		extractGeomCols={true}
 		promoteId="id"
 		processGeojson={(geojsonData) => addStatusToGeojsonProperty(geojsonData)}
+		geojsonUpdateDependency={entitiesStore.entitiesStatusList}
 	>
 		<FillLayer
 			id="entity-fill-layer"

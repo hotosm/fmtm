@@ -17,6 +17,7 @@
 		promoteId?: string;
 		children?: Snippet;
 		processGeojson?: (geojson: GeoJSON) => GeoJSON;
+		geojsonUpdateDependency?: any;
 	}
 
 	let {
@@ -27,8 +28,8 @@
 		promoteId = undefined,
 		metadataFunc,
 		children,
-		// not an ideal solution for mapping entities with their osm/entity id (need to look on this)
 		processGeojson,
+		geojsonUpdateDependency = '',
 	}: Props = $props();
 
 	const { map, self: sourceId } = updatedSourceContext();
@@ -73,6 +74,7 @@
 	}
 
 	$effect(() => {
+		geojsonUpdateDependency;
 		updateGeoJSONData();
 	});
 
