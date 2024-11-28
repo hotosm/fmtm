@@ -53,6 +53,7 @@ type tilesListTypes = {
   status: string;
   source: string;
   format: string;
+  url: string;
 };
 
 type projectCommentsListTypes = {

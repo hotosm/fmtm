@@ -3,7 +3,7 @@ import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import environment from '@/environment';
-import { DownloadTile, GenerateProjectTiles, GetTilesList } from '@/api/Project';
+import { DownloadTile, GenerateProjectTiles, GetTilesList, ProjectById } from '@/api/Project';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { projectInfoType } from '@/models/project/projectModel';
 import { useAppSelector } from '@/types/reduxTypes';
@@ -31,8 +31,8 @@ const GenerateBasemap = ({ projectInfo }: { projectInfo: Partial<projectInfoType
     padding: '16px 32px 24px 32px',
     maxWidth: '1000px',
   });
-  const downloadBasemap = (tileId, toOpfs = false) => {
-    dispatch(DownloadTile(`${import.meta.env.VITE_API_URL}/projects/${id}/tiles/${tileId}`, projectInfo, toOpfs));
+  const downloadBasemap = (url, toOpfs = false) => {
+    dispatch(DownloadTile(url, toOpfs ? id : null));
   };
 
   const getTilesList = () => {
@@ -308,14 +308,14 @@ const GenerateBasemap = ({ projectInfo }: { projectInfo: Partial<projectInfoType
                         {list.status === 'SUCCESS' && list.format === 'pmtiles' && (
                           <AssetModules.BoltIcon
                             sx={{ cursor: 'pointer', fontSize: '22px' }}
-                            onClick={() => downloadBasemap(list.id, true)}
+                            onClick={() => downloadBasemap(list.url, true)}
                             className="fmtm-text-red-500 hover:fmtm-text-red-700"
                           />
                         )}
                         {list.status === 'SUCCESS' && (
                           <AssetModules.FileDownloadIcon
                             sx={{ cursor: 'pointer', fontSize: '22px' }}
-                            onClick={() => downloadBasemap(list.id)}
+                            onClick={() => downloadBasemap(list.url)}
                             className="fmtm-text-gray-500 hover:fmtm-text-blue-500"
                           />
                         )}

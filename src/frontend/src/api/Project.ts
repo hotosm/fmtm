@@ -169,22 +169,18 @@ export const GenerateProjectTiles = (url: string, projectId: string, data: objec
   };
 };
 
-export const DownloadTile = (url: string, payload: Partial<projectInfoType>, toOpfs: boolean = false) => {
+export const DownloadTile = (url: string, projectId: string | null) => {
   return async (dispatch) => {
-    dispatch(ProjectActions.SetDownloadTileLoading({ type: payload, loading: true }));
+    dispatch(ProjectActions.SetDownloadTileLoading({ loading: true }));
 
-    const getDownloadTile = async (url: string, payload: Partial<projectInfoType>, toOpfs: boolean) => {
+    const getDownloadTile = async (url: string, projectId: string | null) => {
       try {
-        const response = await CoreModules.axios.get(url, {
-          responseType: 'arraybuffer',
-        });
-
-        // Get filename from Content-Disposition header
-        const tileData = response.data;
-
-        if (toOpfs) {
+        if (projectId) {
+          const response = await CoreModules.axios.get(url, {
+            responseType: 'arraybuffer',
+          });
+          const tileData = response.data;
           // Copy to OPFS filesystem for offline use
-          const projectId = payload.id;
           const filePath = `${projectId}/all.pmtiles`;
           await writeBinaryToOPFS(filePath, tileData);
           // Set the OPFS file path to project state
@@ -192,28 +188,17 @@ export const DownloadTile = (url: string, payload: Partial<projectInfoType>, toO
           return;
         }
 
-        const filename = response.headers['content-disposition'].split('filename=')[1];
-        console.log(filename);
-        // Create Blob from ArrayBuffer
-        const blob = new Blob([tileData], { type: response.headers['content-type'] });
-        const downloadUrl = URL.createObjectURL(blob);
+        // Open S3 url directly
+        window.open(url);
 
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        a.download = filename;
-        a.click();
-
-        // Clean up object URL
-        URL.revokeObjectURL(downloadUrl);
-
-        dispatch(ProjectActions.SetDownloadTileLoading({ type: payload, loading: false }));
+        dispatch(ProjectActions.SetDownloadTileLoading({ loading: false }));
       } catch (error) {
-        dispatch(ProjectActions.SetDownloadTileLoading({ type: payload, loading: false }));
+        dispatch(ProjectActions.SetDownloadTileLoading({ loading: false }));
       } finally {
-        dispatch(ProjectActions.SetDownloadTileLoading({ type: payload, loading: false }));
+        dispatch(ProjectActions.SetDownloadTileLoading({ loading: false }));
       }
     };
-    await getDownloadTile(url, payload, toOpfs);
+    await getDownloadTile(url, projectId);
   };
 };
 
