@@ -253,7 +253,7 @@
 		<FillLayer
 			id="entity-fill-layer"
 			paint={{
-				'fill-opacity': 0.5,
+				'fill-opacity': 0.3,
 				'fill-color': [
 					'match',
 					['get', 'status'],
@@ -265,6 +265,16 @@
 					'#32a852',
 					'#c5fbf5', // default color if no match is found
 				],
+			}}
+			beforeLayerType="symbol"
+			manageHoverState
+		/>
+		<LineLayer
+			layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+			paint={{
+				'line-color': '#fa1100',
+				'line-width': ['case', ['==', ['get', 'osm_id'], entitiesStore.selectedEntity], 1, 0],
+				'line-opacity': ['case', ['==', ['get', 'osm_id'], entitiesStore.selectedEntity], 1, 0.35],
 			}}
 			beforeLayerType="symbol"
 			manageHoverState
