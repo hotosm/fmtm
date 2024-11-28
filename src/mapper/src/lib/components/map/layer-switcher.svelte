@@ -37,7 +37,7 @@ map = new Map({
 	let allStyles: MapLibreStylePlusMetadata[] | [] = $state([]);
 	let selectedStyleUrl: string | undefined = $state(undefined);
 	let isClosed = $state(true);
-	let isOpen = $state(true);
+	let isOpen = $state(false);
 
 	$effect(() => {
 		if (extraStyles.length > 0) {
@@ -84,7 +84,7 @@ map = new Map({
 	 * Process the style to add metadata and return it.
 	 */
 	function processStyle(style: maplibregl.StyleSpecification): MapLibreStylePlusMetadata {
-		const thumbnailUrl = getRasterThumbnailUrl(style);
+		const thumbnailUrl = style?.metadata?.thumbnail || getRasterThumbnailUrl(style);
 		return {
 			...style,
 			metadata: {
