@@ -351,17 +351,12 @@ async def submission(client, odk_project):
     """
 
     with Client(config_path=odk_config_file) as client:
-        client.submissions.create(
+        submission_data = client.submissions.create(
             project_id=odk_project_id,
             form_id=odk_form_id,
             xml=submission_xml,
             device_id=None,
             encoding="utf-8",
-        )
-        submission_data = client.submissions.get(
-            project_id=odk_project_id,
-            form_id=odk_form_id,
-            instance_id=submission_id,
         )
 
     yield {
