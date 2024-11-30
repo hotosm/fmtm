@@ -167,11 +167,11 @@ export const GenerateProjectTiles = (url: string, projectId: string, data: objec
   };
 };
 
-export const DownloadTile = (url: string) => {
+export const DownloadBasemapFile = (url: string) => {
   return async (dispatch) => {
     dispatch(ProjectActions.SetDownloadTileLoading({ loading: true }));
 
-    const getDownloadTile = async (url: string) => {
+    const downloadBasemapFromAPI = async (url: string) => {
       try {
         // Open S3 url directly
         window.open(url);
@@ -183,7 +183,7 @@ export const DownloadTile = (url: string) => {
         dispatch(ProjectActions.SetDownloadTileLoading({ loading: false }));
       }
     };
-    await getDownloadTile(url);
+    await downloadBasemapFromAPI(url);
   };
 };
 

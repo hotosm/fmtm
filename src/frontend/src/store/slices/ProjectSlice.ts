@@ -15,6 +15,7 @@ const initialState: ProjectStateTypes = {
   tilesList: [],
   tilesListLoading: false,
   downloadTilesLoading: false,
+  customBasemapUrl: null,
   downloadDataExtractLoading: false,
   taskModalStatus: false,
   toggleGenerateMbTilesModal: false,
@@ -84,6 +85,9 @@ const ProjectSlice = createSlice({
     },
     SetDownloadTileLoading(state, action) {
       state.downloadTilesLoading = action.payload;
+    },
+    SetPmtileBasemapUrl(state, action) {
+      state.customBasemapUrl = action.payload;
     },
     SetDownloadDataExtractLoading(state, action) {
       state.downloadDataExtractLoading = action.payload;

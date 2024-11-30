@@ -78,9 +78,9 @@ const LayerSwitchMenu = ({ map, pmTileLayerUrl = null }: { map: any; pmTileLayer
   }, [projectInfo, pathname, map]);
 
   useEffect(() => {
-    if (!pmTileLayerUrl || baseLayers.includes('PMTile')) return;
+    if (!pmTileLayerUrl || baseLayers.includes('Custom')) return;
     setHasPMTile(true);
-    setActiveTileLayer('PMTile');
+    setActiveTileLayer('Custom');
   }, [pmTileLayerUrl]);
 
   const changeBaseLayer = (baseLayerTitle: string) => {
@@ -90,7 +90,7 @@ const LayerSwitchMenu = ({ map, pmTileLayerUrl = null }: { map: any; pmTileLayer
     );
     const baseLayersCollection: Record<string, any>[] = filteredBaseLayers?.values_?.layers.array_;
     baseLayersCollection
-      ?.filter((bLayer) => bLayer?.values_?.title !== 'PMTile')
+      ?.filter((bLayer) => bLayer?.values_?.title !== 'Custom')
       ?.forEach((baseLayer) => {
         if (baseLayer?.values_?.title === baseLayerTitle) {
           baseLayer.setVisible(true);
@@ -158,10 +158,10 @@ const LayerSwitchMenu = ({ map, pmTileLayerUrl = null }: { map: any; pmTileLayer
                   <h6 className="fmtm-text-base fmtm-mb-1">Tiles</h6>
                   <div className="fmtm-flex fmtm-flex-wrap fmtm-justify-between fmtm-gap-y-2">
                     <LayerCard
-                      key="PMTile"
-                      layer="PMTile"
-                      changeBaseLayerHandler={() => toggleTileLayer('PMTile')}
-                      active={'PMTile' === activeTileLayer}
+                      key="Custom"
+                      layer="Custom"
+                      changeBaseLayerHandler={() => toggleTileLayer('Custom')}
+                      active={'Custom' === activeTileLayer}
                     />
                   </div>
                 </div>

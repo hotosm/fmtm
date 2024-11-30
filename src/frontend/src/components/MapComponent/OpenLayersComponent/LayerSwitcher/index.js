@@ -8,8 +8,7 @@ import LayerSwitcher from 'ol-layerswitcher';
 import React, { useEffect, useState } from 'react';
 import { XYZ } from 'ol/source';
 import { useLocation } from 'react-router-dom';
-import DataTile from 'ol/source/DataTile.js';
-import TileLayer from 'ol/layer/WebGLTile.js';
+import WebGLTile from 'ol/layer/WebGLTile.js';
 import { PMTilesRasterSource } from 'ol-pmtiles';
 import windowDimention from '@/hooks/WindowDimension';
 import { useAppSelector } from '@/types/reduxTypes';
@@ -136,8 +135,8 @@ const monochromeMidNight = (visible = false) =>
 
 const pmTileLayer = (pmTileLayerUrl, visible = true) => {
   return new WebGLTile({
-    title: `PMTile`,
-    type: 'raster pm tiles',
+    title: 'Custom',
+    type: 'custom',
     visible: visible,
     source: new PMTilesRasterSource({
       url: pmTileLayerUrl,

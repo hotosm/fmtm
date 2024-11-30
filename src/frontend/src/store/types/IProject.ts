@@ -18,6 +18,7 @@ export type ProjectStateTypes = {
   tilesList: tilesListTypes[];
   tilesListLoading: boolean;
   downloadTilesLoading: boolean;
+  customBasemapUrl: string | null;
   downloadDataExtractLoading: boolean;
   taskModalStatus: boolean;
   toggleGenerateMbTilesModal: boolean;

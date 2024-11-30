@@ -52,11 +52,7 @@ const ProjectDetailsV2 = () => {
   const [dataExtractUrl, setDataExtractUrl] = useState<string | undefined>();
   const [dataExtractExtent, setDataExtractExtent] = useState(null);
   const [taskBoundariesLayer, setTaskBoundariesLayer] = useState<null | Record<string, any>>(null);
-  // FIXME currently we have no logic to retrieve the PMTiles for a project and pass
-  // FIXME as the customBasemapUrl.
-  // FIXME This should probably be triggered based on project customTmsUrl being set.
-  // FIXME If set, then we search for the first PMTiles archive available?
-  const [customBasemapUrl, setcustomBasemapUrl] = useState<File | string | null>();
+  const customBasemapUrl = useAppSelector((state) => state.project.customBasemapUrl);
   const [viewState, setViewState] = useState('project_info');
   const projectId: string = params.id;
   const defaultTheme = useAppSelector((state) => state.theme.hotTheme);
