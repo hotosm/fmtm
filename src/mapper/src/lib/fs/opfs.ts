@@ -6,7 +6,7 @@ export async function readFileFromOPFS(filePath: string): Promise<File | null> {
 
 	// Iterate dirs and get directory handles
 	for (const directory of directories.slice(0, -1)) {
-		console.log(`Reading OPFS dir: ${directory}`);
+		// console.log(`Reading OPFS dir: ${directory}`);
 		try {
 			currentDirectoryHandle = await currentDirectoryHandle.getDirectoryHandle(directory);
 		} catch {
