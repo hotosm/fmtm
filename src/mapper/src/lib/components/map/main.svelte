@@ -61,6 +61,7 @@
 
 	let map: maplibregl.Map | undefined = $state();
 	let loaded: boolean = $state(false);
+	let selectedBaselayer: string = $state('OSM');
 	let taskAreaClicked: boolean = $state(false);
 	let toggleGeolocationStatus: boolean = $state(false);
 	let projectSetupStep = $state(null);
@@ -153,10 +154,6 @@
 		}
 	});
 
-	let taskAreaClicked: boolean = $state(false);
-	let toggleGeolocationStatus: boolean = $state(false);
-	let projectSetupStep = $state(null);
-
 	$effect(() => {
 		projectSetupStep = +projectSetupStepStore.projectSetupStep;
 	});
@@ -209,6 +206,7 @@
 		const offlineBasemapFile = await readFileFromOPFS(`${projectId}/basemap.pmtiles`);
 		if (offlineBasemapFile) {
 			await loadOfflinePmtiles(projectId);
+			selectedBaselayer = 'PMTiles';
 		}
 	});
 </script>
@@ -255,7 +253,7 @@
 			{map}
 			styles={allBaseLayers}
 			sourcesIdToReAdd={['tasks', 'entities', 'geolocation']}
-			switchToNewestStyle={true}
+			selectedStyleName={selectedBaselayer}
 		></LayerSwitcher>
 		<Legend />
 	</Control>

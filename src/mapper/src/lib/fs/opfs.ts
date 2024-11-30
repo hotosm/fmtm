@@ -20,7 +20,7 @@ export async function readFileFromOPFS(filePath: string): Promise<File | null> {
 		if (!filename) {
 			return null; // Invalid path
 		}
-		console.log(`Getting OPFS file: ${filename}`);
+		// console.log(`Getting OPFS file: ${filename}`);
 		const fileHandle = await currentDirectoryHandle.getFileHandle(filename);
 		const fileData = await fileHandle.getFile(); // Read the file
 		return fileData;

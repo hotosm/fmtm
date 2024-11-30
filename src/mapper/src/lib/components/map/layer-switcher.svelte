@@ -26,34 +26,49 @@ map = new Map({
 	import { onDestroy } from 'svelte';
 	import { clickOutside } from '$lib/utils/clickOutside';
 
-	type Props = {
-		styles: maplibregl.StyleSpecification[];
-		map: maplibregl.Map | undefined;
-		sourcesIdToReAdd: string[];
-		switchToNewestStyle: boolean;
+	type MapLibreStylePlusMetadata = maplibregl.StyleSpecification & {
+		metadata: {
+			thumbnail?: string;
+		};
 	};
 
-	const { styles, map, sourcesIdToReAdd, switchToNewestStyle = false }: Props = $props();
+	type Props = {
+		styles: maplibregl.StyleSpecification[];
+		selectedStyleName?: string | undefined;
+		map: maplibregl.Map | undefined;
+		sourcesIdToReAdd: string[];
+	};
+
+	const { styles, selectedStyleName, map, sourcesIdToReAdd }: Props = $props();
 
 	let allStyles: MapLibreStylePlusMetadata[] | [] = $state([]);
 	let selectedStyleUrl: string | undefined = $state(undefined);
-	let isClosed = $state(true);
+	// This variable is used for updating the prop selectedStyleName dynamically
+	let reactiveStyleSelection: MapLibreStylePlusMetadata | undefined = $state(undefined);
 	let isOpen = $state(false);
-	let isFirstLoad = true;
 
+	// Get style info when styles are updated
 	$effect(() => {
 		if (styles.length > 0) {
+			// We do not await this to avoid complicating reactive logic
 			fetchStyleInfo();
 		} else {
 			allStyles = [];
 		}
 	});
 
-	type MapLibreStylePlusMetadata = maplibregl.StyleSpecification & {
-		metadata: {
-			thumbnail?: string;
-		};
-	};
+	$effect(() => {
+		// Set initial selected style
+		reactiveStyleSelection = allStyles.find((style) => style.name === selectedStyleName) || allStyles[0];
+		selectedStyleUrl = reactiveStyleSelection?.metadata?.thumbnail;
+	});
+
+	// Update the map when a new style is selected
+	$effect(() => {
+		if (reactiveStyleSelection) {
+			selectStyle(reactiveStyleSelection);
+		}
+	});
 
 	/**
 	 * Extract the raster thumbnail root tile, or return an empty string.
@@ -105,9 +120,7 @@ map = new Map({
 		// Process the current map style
 		const currentMapStyle = map?.getStyle();
 		if (currentMapStyle) {
-			const processedStyle = processStyle(currentMapStyle);
-			selectedStyleUrl = processedStyle?.metadata?.thumbnail || undefined;
-			processedStyles.push(processedStyle);
+			processedStyles.push(processStyle(currentMapStyle));
 		}
 
 		// Process additional styles (download first if style is URL)
@@ -121,77 +134,48 @@ map = new Map({
 			}
 		}
 
-		// Filter out duplicate styles based on `name` field
-		const deduplicatedStyles = [...processedStyles].filter(
+		// Deduplicate styles by `name`
+		allStyles = processedStyles.filter(
 			(style, index, self) => self.findIndex((s) => s.name === style.name) === index,
 		);
-
-		// If a new style is added later, we automatically switch
-		// to that style, if switchToNewestStyle is true
-		if (switchToNewestStyle && !isFirstLoad) {
-			// Determine new styles only on subsequent updates
-			const newStyles = deduplicatedStyles.filter(
-				style => !allStyles.find(existingStyle => existingStyle.name === style.name)
-			);
-
-			// Handle new styles (e.g., auto-switch to the newest style)
-			if (newStyles.length > 0) {
-				selectStyle(newStyles[newStyles.length - 1]);
-			}
-		}
-
-		// Update allStyles only if there are changes
-		if (JSON.stringify(allStyles) !== JSON.stringify(deduplicatedStyles)) {
-			allStyles = deduplicatedStyles;
-		}
-
-		isFirstLoad = false;
 	}
 
 	function selectStyle(style: MapLibreStylePlusMetadata) {
-		// returns all the map style i.e. all layers, sources
 		const currentMapStyle = map?.getStyle();
 
-		// reAddLayers: user defined layers that needs to be preserved
-		const reAddLayers = currentMapStyle?.layers?.filter((layer) => {
-			return sourcesIdToReAdd?.includes(layer?.source);
-		});
-
-		// reAddSources: user defined sources that needs to be preserved
-		const reAddSources = Object?.entries(currentMapStyle?.sources)
-			?.filter(([key]) => sourcesIdToReAdd?.includes(key))
-			?.map(([key, value]) => ({ [key]: value }));
+		if (style.name === currentMapStyle.name) return;
 
 		selectedStyleUrl = style.metadata.thumbnail;
 
-		// changes to selected base layer (note: user defined layer and sources are lost)
-		map?.setStyle(style);
-		isClosed = !isClosed;
+		// Apply the selected style to the map
+		// being sure to save sources and layers to add back on top
+		const reAddLayers = currentMapStyle?.layers?.filter((layer) => sourcesIdToReAdd.includes(layer.source));
+		const reAddSources = Object.entries(currentMapStyle?.sources || {})
+			.filter(([key]) => sourcesIdToReAdd.includes(key))
+			.reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
 
-		// reapply user defined source
-		if (reAddSources?.length > 0) {
-			for (const reAddSource of reAddSources) {
-				for (const [id, source] of Object.entries(reAddSource)) {
-					if (!map?.getStyle().sources[id]) {
-						map?.addSource(id, source);
-					}
+		map?.setStyle(style);
+
+		// Re-add sources and layers
+		if (reAddSources) {
+			Object.entries(reAddSources).forEach(([id, source]) => {
+				if (!map?.getStyle().sources[id]) {
+					map?.addSource(id, source);
 				}
-			}
+			});
 		}
-		// reapply user defined layers
-		if (reAddLayers?.length > 0) {
-			for (const layer of reAddLayers) {
-				if (!map?.getStyle().layers.find((layerx) => layerx?.id === layer.id)) {
+
+		if (reAddLayers) {
+			reAddLayers.forEach((layer) => {
+				if (!map?.getStyle().layers.find((l) => l.id === layer.id)) {
 					map?.addLayer(layer);
 				}
-			}
+			});
 		}
 	}
-
 	onDestroy(() => {
 		allStyles = [];
 		selectedStyleUrl = undefined;
-		isClosed = true;
 	});
 </script>
 
