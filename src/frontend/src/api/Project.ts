@@ -2,8 +2,6 @@ import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import CoreModules from '@/shared/CoreModules';
 import { task_state, task_event } from '@/types/enums';
-import { writeBinaryToOPFS } from '@/api/Files';
-import { projectInfoType } from '@/models/project/projectModel';
 
 export const ProjectById = (projectId: string) => {
   return async (dispatch) => {
@@ -169,25 +167,12 @@ export const GenerateProjectTiles = (url: string, projectId: string, data: objec
   };
 };
 
-export const DownloadTile = (url: string, projectId: string | null) => {
+export const DownloadTile = (url: string) => {
   return async (dispatch) => {
     dispatch(ProjectActions.SetDownloadTileLoading({ loading: true }));
 
-    const getDownloadTile = async (url: string, projectId: string | null) => {
+    const getDownloadTile = async (url: string) => {
       try {
-        if (projectId) {
-          const response = await CoreModules.axios.get(url, {
-            responseType: 'arraybuffer',
-          });
-          const tileData = response.data;
-          // Copy to OPFS filesystem for offline use
-          const filePath = `${projectId}/all.pmtiles`;
-          await writeBinaryToOPFS(filePath, tileData);
-          // Set the OPFS file path to project state
-          dispatch(ProjectActions.SetProjectOpfsBasemapPath(filePath));
-          return;
-        }
-
         // Open S3 url directly
         window.open(url);
 
@@ -198,7 +183,7 @@ export const DownloadTile = (url: string, projectId: string | null) => {
         dispatch(ProjectActions.SetDownloadTileLoading({ loading: false }));
       }
     };
-    await getDownloadTile(url, projectId);
+    await getDownloadTile(url);
   };
 };
 

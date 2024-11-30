@@ -33,7 +33,6 @@ export type ProjectStateTypes = {
   projectPostCommentsLoading: boolean;
   projectGetCommentsLoading: boolean;
   clearEditorContent: boolean;
-  projectOpfsBasemapPath: string | null;
   projectTaskActivity: projectTaskActivity[];
   projectActivityLoading: boolean;
   downloadSubmissionLoading: boolean;

@@ -39,7 +39,6 @@ const initialState: ProjectStateTypes = {
   projectPostCommentsLoading: false,
   projectGetCommentsLoading: false,
   clearEditorContent: false,
-  projectOpfsBasemapPath: null,
   projectTaskActivity: [],
   projectActivityLoading: false,
   downloadSubmissionLoading: false,
@@ -130,9 +129,6 @@ const ProjectSlice = createSlice({
     },
     UpdateProjectCommentsList(state, action) {
       state.projectCommentsList = [...state.projectCommentsList, action.payload];
-    },
-    SetProjectOpfsBasemapPath(state, action) {
-      state.projectOpfsBasemapPath = action.payload;
     },
     SetProjectTaskActivity(state, action) {
       state.projectTaskActivity = action.payload;

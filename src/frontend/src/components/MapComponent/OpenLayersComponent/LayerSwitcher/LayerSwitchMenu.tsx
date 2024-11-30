@@ -56,7 +56,7 @@ const LayerCard = ({ layer, changeBaseLayerHandler, active }: layerCardPropType)
   );
 };
 
-const LayerSwitchMenu = ({ map, pmTileLayerData = null }: { map: any; pmTileLayerData?: any }) => {
+const LayerSwitchMenu = ({ map, pmTileLayerUrl = null }: { map: any; pmTileLayerUrl?: any }) => {
   const { pathname } = useLocation();
   const [baseLayers, setBaseLayers] = useState<string[]>(['OSM', 'Satellite', 'None']);
   const [hasPMTile, setHasPMTile] = useState(false);
@@ -78,10 +78,10 @@ const LayerSwitchMenu = ({ map, pmTileLayerData = null }: { map: any; pmTileLaye
   }, [projectInfo, pathname, map]);
 
   useEffect(() => {
-    if (!pmTileLayerData || baseLayers.includes('PMTile')) return;
+    if (!pmTileLayerUrl || baseLayers.includes('PMTile')) return;
     setHasPMTile(true);
     setActiveTileLayer('PMTile');
-  }, [pmTileLayerData]);
+  }, [pmTileLayerUrl]);
 
   const changeBaseLayer = (baseLayerTitle: string) => {
     const allLayers = map.getLayers();

@@ -31,8 +31,8 @@ const GenerateBasemap = ({ projectInfo }: { projectInfo: Partial<projectInfoType
     padding: '16px 32px 24px 32px',
     maxWidth: '1000px',
   });
-  const downloadBasemap = (url, toOpfs = false) => {
-    dispatch(DownloadTile(url, toOpfs ? id : null));
+  const downloadBasemap = (url) => {
+    dispatch(DownloadTile(url));
   };
 
   const getTilesList = () => {
