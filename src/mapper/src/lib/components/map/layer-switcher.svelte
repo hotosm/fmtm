@@ -27,20 +27,22 @@ map = new Map({
 	import { clickOutside } from '$lib/utils/clickOutside';
 
 	type Props = {
-		extraStyles: maplibregl.StyleSpecification[];
+		styles: maplibregl.StyleSpecification[];
 		map: maplibregl.Map | undefined;
 		sourcesIdToReAdd: string[];
+		switchToNewestStyle: boolean;
 	};
 
-	const { extraStyles, map, sourcesIdToReAdd }: Props = $props();
+	const { styles, map, sourcesIdToReAdd, switchToNewestStyle = false }: Props = $props();
 
 	let allStyles: MapLibreStylePlusMetadata[] | [] = $state([]);
 	let selectedStyleUrl: string | undefined = $state(undefined);
 	let isClosed = $state(true);
 	let isOpen = $state(false);
+	let isFirstLoad = true;
 
 	$effect(() => {
-		if (extraStyles.length > 0) {
+		if (styles.length > 0) {
 			fetchStyleInfo();
 		} else {
 			allStyles = [];
@@ -98,26 +100,52 @@ map = new Map({
 	 * Fetch styles and prepare them with thumbnails.
 	 */
 	async function fetchStyleInfo() {
+		let processedStyles: MapLibreStylePlusMetadata[] = [];
+
+		// Process the current map style
 		const currentMapStyle = map?.getStyle();
 		if (currentMapStyle) {
 			const processedStyle = processStyle(currentMapStyle);
 			selectedStyleUrl = processedStyle?.metadata?.thumbnail || undefined;
-			allStyles = [processedStyle];
+			processedStyles.push(processedStyle);
 		}
 
-		const extraProcessedStyles = await Promise.all(
-			extraStyles.map(async (style) => {
-				if (typeof style === 'string') {
-					const styleResponse = await fetch(style);
-					const styleJson = await styleResponse.json();
-					return processStyle(styleJson);
-				} else {
-					return processStyle(style);
-				}
-			}),
+		// Process additional styles (download first if style is URL)
+		for (const style of styles) {
+			if (typeof style === 'string') {
+				const response = await fetch(style);
+				const styleJson = await response.json();
+				processedStyles.push(processStyle(styleJson));
+			} else {
+				processedStyles.push(processStyle(style));
+			}
+		}
+
+		// Filter out duplicate styles based on `name` field
+		const deduplicatedStyles = [...processedStyles].filter(
+			(style, index, self) => self.findIndex((s) => s.name === style.name) === index,
 		);
 
-		allStyles = allStyles.concat(extraProcessedStyles);
+		// If a new style is added later, we automatically switch
+		// to that style, if switchToNewestStyle is true
+		if (switchToNewestStyle && !isFirstLoad) {
+			// Determine new styles only on subsequent updates
+			const newStyles = deduplicatedStyles.filter(
+				style => !allStyles.find(existingStyle => existingStyle.name === style.name)
+			);
+
+			// Handle new styles (e.g., auto-switch to the newest style)
+			if (newStyles.length > 0) {
+				selectStyle(newStyles[newStyles.length - 1]);
+			}
+		}
+
+		// Update allStyles only if there are changes
+		if (JSON.stringify(allStyles) !== JSON.stringify(deduplicatedStyles)) {
+			allStyles = deduplicatedStyles;
+		}
+
+		isFirstLoad = false;
 	}
 
 	function selectStyle(style: MapLibreStylePlusMetadata) {
@@ -202,7 +230,8 @@ map = new Map({
 				>
 					<img src={style.metadata.thumbnail} alt="Style Thumbnail" class="w-full h-full object-cover" />
 					<span class="absolute top-0 left-0 bg-white bg-opacity-80 px-1 rounded-br">{style.name}</span>
-				</div>{/each}
+				</div>
+			{/each}
 		</div>
 	</div>
 </div>

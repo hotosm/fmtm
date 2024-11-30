@@ -46,7 +46,7 @@ export async function loadOnlinePmtiles(url: string | null) {
 }
 
 export async function loadOfflinePmtiles(projectId: number) {
-	const filePath = `${projectId}/all.pmtiles`;
+	const filePath = `${projectId}/basemap.pmtiles`;
 
 	// Read file from OPFS and display on map
 	const opfsPmtilesData = await readFileFromOPFS(filePath);
@@ -91,7 +91,7 @@ export async function writeOfflinePmtiles(projectId: number, url: string | null)
 	const data = await downloadBasemap(url);
 
 	// Copy to OPFS filesystem for offline use
-	const filePath = `${projectId}/all.pmtiles`;
+	const filePath = `${projectId}/basemap.pmtiles`;
 	await writeBinaryToOPFS(filePath, data);
 
 	await loadOfflinePmtiles(projectId);
