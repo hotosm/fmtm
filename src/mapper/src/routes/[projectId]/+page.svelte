@@ -181,9 +181,9 @@
 					class="h-[70vh]"
 				/>
 				<sl-button
-					onclick={() => infoDialogRef?.close()}
+					onclick={() => infoDialogRef?.hide()}
 					onkeydown={(e: KeyboardEvent) => {
-						e.key === 'Enter' && infoDialogRef?.close();
+						e.key === 'Enter' && infoDialogRef?.hide();
 					}}
 					role="button"
 					tabindex="0"
