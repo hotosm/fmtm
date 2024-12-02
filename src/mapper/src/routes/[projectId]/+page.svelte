@@ -111,7 +111,7 @@
 {/if}
 
 <!-- The main page -->
-<div class="h-[calc(100svh-4.625rem)]">
+<div class="h-[calc(100svh-3.699rem)] sm:h-[calc(100svh-4.625rem)]">
 	<MapComponent
 		setMapRef={(map) => {
 			mapComponent = map;
