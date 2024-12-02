@@ -103,20 +103,22 @@
 				class="hover:text-red-600 cursor-pointer duration-200 decoration-none text-black">{menu.name}</a
 			>
 		{/each}
-		<sl-button
-			class="primary rounded"
-			variant="primary"
-			size="small"
-			onclick={handleSignOut}
-			onkeydown={(e: KeyboardEvent) => {
-				if (e.key === 'Enter') {
-					handleSignOut();
-				}
-			}}
-			role="button"
-			tabindex="0"
-		>
-			<span class="font-barlow-medium text-base">SIGN OUT</span>
-		</sl-button>
+		{#if loginStore?.getAuthDetails}
+			<sl-button
+				class="primary rounded"
+				variant="primary"
+				size="small"
+				onclick={handleSignOut}
+				onkeydown={(e: KeyboardEvent) => {
+					if (e.key === 'Enter') {
+						handleSignOut();
+					}
+				}}
+				role="button"
+				tabindex="0"
+			>
+				<span class="font-barlow-medium text-base">SIGN OUT</span>
+			</sl-button>
+		{/if}
 	</div>
 </hot-drawer>
