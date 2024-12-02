@@ -8,7 +8,7 @@ const convertCoordinateStringToFeature = (coordinateString: string) => {
     properties: {},
   };
 
-  // if feature is LineString in JavaRosa format it contains string of array seperated by ';'
+  // if feature is LineString in JavaRosa format it contains string of array separated by ';'
   if (coordinateString?.includes(';')) {
     let coordinates = coordinateString?.split(';')?.map((coord) => {
       let coordinate = coord
@@ -68,7 +68,7 @@ export function extractGeojsonFromObject(data: Record<string, any>) {
           traverse(value);
         }
         // check if value is JavaRosa LineString
-        // the JavaRosa LineString is seperated by ';'
+        // the JavaRosa LineString is separated by ';'
         else if (
           value &&
           typeof value === 'string' &&
