@@ -1,0 +1,28 @@
+# Mapper Frontend Documentation
+
+The **Mapper Frontend** is developed to provide a simpler, more intuitive mapping experience.  
+Users can log in directly via URL or access the Mapper Frontend from the project details page.
+
+## How to Start Mapping
+
+### Step 1: Access the Mapper Frontend  
+- **Option 1:** Click the **Start Mapping** button on the project details page.  
+- **Option 2:** Go to `fmtm.hotosm.org/mapnow/<project_id>` to open the Mapper Frontend for a specific project.  
+
+*Note: This functionality is designed for mappers in the field, so it is recommended to use mobile browsers.*
+
+---
+
+### Step 2: Set Up ODK Collect  
+
+- **Option 1:** Scan the QR code displayed on the Mapper Frontend using the custom ODK Collect mobile application.  
+
+- **Option 2:** Download the QR code and import it into ODK Collect to load the project. Follow the steps below:  
+  1. Open ODK Collect.  
+  2. Click the project name in the top right corner.  
+  3. Tap the **menu** icon (three horizontal dots).  
+  4. Select **Import QR Code**.  
+  5. Browse to the downloaded QR image and load the project.
+
+--- 
+For a step-by-step guide, click the **info icon** on the Mapper Frontend to watch a video tutorial on how to load the QR code.
