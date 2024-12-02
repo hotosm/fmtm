@@ -2,6 +2,7 @@
 	import '$styles/page.css';
 	import '$styles/button.css';
 	import '@hotosm/ui/dist/hotosm-ui';
+	import { onMount, tick } from 'svelte';
 	import {
 		MapLibre,
 		GeoJSON,
@@ -20,7 +21,7 @@
 	import { polygon } from '@turf/helpers';
 	import { buffer } from '@turf/buffer';
 	import { bbox } from '@turf/bbox';
-	import type { Position, Polygon, FeatureCollection } from 'geojson';
+	import type { Position } from 'geojson';
 
 	import LocationArcImg from '$assets/images/locationArc.png';
 	import LocationDotImg from '$assets/images/locationDot.png';
@@ -34,48 +35,124 @@
 	import { getTaskStore } from '$store/tasks.svelte.ts';
 	import { getProjectSetupStepStore, getProjectBasemapStore } from '$store/common.svelte.ts';
 	// import { entityFeatcolStore, selectedEntityId } from '$store/entities';
+	import { readFileFromOPFS } from '$lib/fs/opfs.ts';
+	import { loadOfflinePmtiles } from '$lib/utils/basemaps.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
-	import { baseLayers, osmStyle, customStyle } from '$constants/baseLayers.ts';
+	import { baseLayers, osmStyle, pmtilesStyle } from '$constants/baseLayers.ts';
+	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
+	import type { GeoJSON as GeoJSONType } from 'geojson';
 
 	type bboxType = [number, number, number, number];
 
 	interface Props {
 		projectOutlineCoords: Position[][];
 		entitiesUrl: string;
-		toggleTaskActionModal: (value: boolean) => void;
+		toggleActionModal: (value: 'task-modal' | 'entity-modal' | null) => void;
 		projectId: number;
 		setMapRef: (map: maplibregl.Map | undefined) => void;
 	}
 
-	let { projectOutlineCoords, entitiesUrl, toggleTaskActionModal, projectId, setMapRef }: Props = $props();
+	let { projectOutlineCoords, entitiesUrl, toggleActionModal, projectId, setMapRef }: Props = $props();
 
 	const taskStore = getTaskStore();
 	const projectSetupStepStore = getProjectSetupStepStore();
+	const entitiesStore = getEntitiesStatusStore();
 	const projectBasemapStore = getProjectBasemapStore();
 
 	let map: maplibregl.Map | undefined = $state();
 	let loaded: boolean = $state(false);
+	let selectedBaselayer: string = $state('OSM');
 	let taskAreaClicked: boolean = $state(false);
 	let toggleGeolocationStatus: boolean = $state(false);
 	let projectSetupStep = $state(null);
-	// If no custom layer URL, omit, else set URL from projectPmtilesUrl
-	let processedBaseLayers = $derived([
-		...baseLayers,
-		...(projectBasemapStore.projectPmtilesUrl
+	// Trigger adding the PMTiles layer to baselayers, if PmtilesUrl is set
+	let allBaseLayers: maplibregl.StyleSpecification[] = $derived(
+		projectBasemapStore.projectPmtilesUrl
 			? [
+					...baseLayers,
 					{
-						...customStyle,
+						...pmtilesStyle,
 						sources: {
-							...customStyle.sources,
-							custom: {
-								...customStyle.sources.custom,
+							...pmtilesStyle.sources,
+							pmtiles: {
+								...pmtilesStyle.sources.pmtiles,
 								url: projectBasemapStore.projectPmtilesUrl,
 							},
 						},
 					},
 				]
-			: []),
-	]);
+			: baseLayers,
+	);
+	// // This does not work! Infinite looping
+	// // Trigger adding the PMTiles layer to baselayers, if PmtilesUrl is set
+	// $effect(() => {
+	// 	if (projectBasemapStore.projectPmtilesUrl) {
+	// 		const layers = allBaseLayers
+	// 		.filter((layer) => layer.name !== "PMTiles")
+	// 		.push(
+	// 			{
+	// 				...pmtilesStyle,
+	// 				sources: {
+	// 					...pmtilesStyle.sources,
+	// 					pmtiles: {
+	// 						...pmtilesStyle.sources.pmtiles,
+	// 						url: projectBasemapStore.projectPmtilesUrl,
+	// 					},
+	// 				},
+	// 			},
+	// 		)
+	// 		allBaseLayers = layers;
+	// 	}
+	// })
+
+	// using this function since outside click of entity layer couldn't be tracked via FillLayer
+	function handleMapClick(e: maplibregl.MapMouseEvent) {
+		// returns list of features of entity layer present on that clicked point
+		const clickedEntityFeature = map?.queryRenderedFeatures(e.point, {
+			layers: ['entity-fill-layer'],
+		});
+		// returns list of features of task layer present on that clicked point
+		const clickedTaskFeature = map?.queryRenderedFeatures(e.point, {
+			layers: ['task-fill-layer'],
+		});
+
+		// if clicked point contains entity then set it's osm id else set null to store
+		if (clickedEntityFeature && clickedEntityFeature?.length > 0) {
+			const clickedEntityId = clickedEntityFeature[0]?.properties?.osm_id;
+			entitiesStore.setSelectedEntity(clickedEntityId);
+		} else {
+			entitiesStore.setSelectedEntity(null);
+		}
+
+		// if clicked point contains task layer
+		if (clickedTaskFeature && clickedTaskFeature?.length > 0) {
+			taskAreaClicked = true;
+			const clickedTaskId = clickedTaskFeature[0]?.properties?.fid;
+			taskStore.setSelectedTaskId(clickedTaskId);
+			if (+projectSetupStepStore.projectSetupStep === projectSetupStepEnum['task_selection']) {
+				localStorage.setItem(`project-${projectId}-setup`, projectSetupStepEnum['complete_setup']);
+				projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['complete_setup']);
+			}
+		}
+
+		if (clickedEntityFeature && clickedEntityFeature?.length > 0) {
+			toggleActionModal('entity-modal');
+		} else if (clickedTaskFeature && clickedTaskFeature?.length > 0) {
+			toggleActionModal('task-modal');
+		} else {
+			toggleActionModal(null);
+		}
+	}
+
+	$effect(() => {
+		if (map) {
+			map.on('click', handleMapClick);
+			// Cleanup on component unmount
+			return () => {
+				map?.off('click', handleMapClick);
+			};
+		}
+	});
 
 	$effect(() => {
 		projectSetupStep = +projectSetupStepStore.projectSetupStep;
@@ -85,11 +162,6 @@
 	$effect(() => {
 		if (map) {
 			setMapRef(map);
-			// Register pmtiles protocol
-			if (!maplibre.config.REGISTERED_PROTOCOLS.hasOwnProperty('pmtiles')) {
-				let protocol = new Protocol();
-				maplibre.addProtocol('pmtiles', protocol.tile);
-			}
 		}
 	});
 
@@ -102,6 +174,39 @@
 				const projectBbox: bboxType = bbox(projectBuffer) as bboxType;
 				map.fitBounds(projectBbox, { duration: 0 });
 			}
+		}
+	});
+
+	function addStatusToGeojsonProperty(geojsonData: GeoJSONType) {
+		return {
+			...geojsonData,
+			features: geojsonData.features.map((feature) => {
+				const entity = entitiesStore.entitiesStatusList.find((entity) => entity.osmid === feature.properties.osm_id);
+				return {
+					...feature,
+					properties: {
+						...feature.properties,
+						status: entity?.status,
+						entity_id: entity?.entity_id,
+					},
+				};
+			}),
+		};
+	}
+
+	onMount(async () => {
+		// Register pmtiles protocol
+		if (!maplibre.config.REGISTERED_PROTOCOLS.hasOwnProperty('pmtiles')) {
+			let protocol = new Protocol();
+			maplibre.addProtocol('pmtiles', protocol.tile);
+		}
+
+		// Attempt loading OPFS PMTiles layers on first load
+		// note that this sets projectBasemapStore.projectPmtilesUrl
+		const offlineBasemapFile = await readFileFromOPFS(`${projectId}/basemap.pmtiles`);
+		if (offlineBasemapFile) {
+			await loadOfflinePmtiles(projectId);
+			selectedBaselayer = 'PMTiles';
 		}
 	});
 </script>
@@ -120,7 +225,8 @@
 		// if the user clicks on a feature layer directly (on:click)
 		taskStore.setSelectedTaskId(null);
 		taskAreaClicked = false;
-		toggleTaskActionModal(false);
+		toggleActionModal(null);
+		entitiesStore.setSelectedEntity(null);
 	}}
 	images={[
 		{ id: 'LOCKED_FOR_MAPPING', url: BlackLockImg },
@@ -143,7 +249,12 @@
 		</ControlGroup></Control
 	>
 	<Control class="flex flex-col gap-y-2" position="bottom-right">
-		<LayerSwitcher {map} extraStyles={processedBaseLayers} sourcesIdToReAdd={['tasks', 'entities', 'geolocation']} />
+		<LayerSwitcher
+			{map}
+			styles={allBaseLayers}
+			sourcesIdToReAdd={['tasks', 'entities', 'geolocation']}
+			selectedStyleName={selectedBaselayer}
+		></LayerSwitcher>
 		<Legend />
 	</Control>
 	<!-- Add the Geolocation GeoJSON layer to the map -->
@@ -153,6 +264,7 @@
 	<!-- The task area geojson -->
 	<GeoJSON id="tasks" data={taskStore.featcol} promoteId="fid">
 		<FillLayer
+			id="task-fill-layer"
 			hoverCursor="pointer"
 			paint={{
 				'fill-color': [
@@ -174,16 +286,6 @@
 			}}
 			beforeLayerType="symbol"
 			manageHoverState
-			on:click={(e) => {
-				taskAreaClicked = true;
-				const clickedTaskId = e.detail.features?.[0]?.properties?.fid;
-				taskStore.setSelectedTaskId(clickedTaskId);
-				toggleTaskActionModal(true);
-				if (+projectSetupStepStore.projectSetupStep === projectSetupStepEnum['task_selection']) {
-					localStorage.setItem(`project-${projectId}-setup`, projectSetupStepEnum['complete_setup']);
-					projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['complete_setup']);
-				}
-			}}
 		/>
 		<LineLayer
 			layout={{ 'line-cap': 'round', 'line-join': 'round' }}
@@ -212,11 +314,40 @@
 		/>
 	</GeoJSON>
 	<!-- The features / entities -->
-	<FlatGeobuf id="entities" url={entitiesUrl} extent={taskStore.selectedTaskGeom} extractGeomCols={true} promoteId="id">
+	<FlatGeobuf
+		id="entities"
+		url={entitiesUrl}
+		extent={taskStore.selectedTaskGeom}
+		extractGeomCols={true}
+		promoteId="id"
+		processGeojson={(geojsonData) => addStatusToGeojsonProperty(geojsonData)}
+		geojsonUpdateDependency={entitiesStore.entitiesStatusList}
+	>
 		<FillLayer
+			id="entity-fill-layer"
 			paint={{
-				'fill-color': '#006600',
-				'fill-opacity': 0.5,
+				'fill-opacity': 0.3,
+				'fill-color': [
+					'match',
+					['get', 'status'],
+					'READY',
+					'#d62822',
+					'OPENED_IN_ODK',
+					'#fad30a',
+					'SURVEY_SUBMITTED',
+					'#32a852',
+					'#c5fbf5', // default color if no match is found
+				],
+			}}
+			beforeLayerType="symbol"
+			manageHoverState
+		/>
+		<LineLayer
+			layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+			paint={{
+				'line-color': '#fa1100',
+				'line-width': ['case', ['==', ['get', 'osm_id'], entitiesStore.selectedEntity], 1, 0],
+				'line-opacity': ['case', ['==', ['get', 'osm_id'], entitiesStore.selectedEntity], 1, 0.35],
 			}}
 			beforeLayerType="symbol"
 			manageHoverState
