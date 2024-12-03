@@ -5,7 +5,7 @@ Users can log in directly via URL or access the Mapper Frontend from the project
 
 ## How to Start Mapping
 
-### Step 1: Access the Mapper Frontend  
+Step 1: Access the Mapper Frontend  
 - **Option 1:** Click the **Start Mapping** button on the project details page.  
 - **Option 2:** Go to `fmtm.hotosm.org/mapnow/<project_id>` to open the Mapper Frontend for a specific project.  
 
@@ -13,7 +13,7 @@ Users can log in directly via URL or access the Mapper Frontend from the project
 
 ---
 
-### Step 2: Set Up ODK Collect  
+Step 2: Set Up ODK Collect  
 
 - **Option 1:** Scan the QR code displayed on the Mapper Frontend using the custom ODK Collect mobile application.  
 
@@ -24,5 +24,15 @@ Users can log in directly via URL or access the Mapper Frontend from the project
   4. Select **Import QR Code**.  
   5. Browse to the downloaded QR image and load the project.
 
---- 
-For a step-by-step guide, click the **info icon** on the Mapper Frontend to watch a video tutorial on how to load the QR code.
+For a video guide, click the **info icon** on the Mapper Frontend to watch a video tutorial on how to load the QR code.
+You can load the reference base imagery by clicking on offline mode option (second tab on bottom navigation bar). Choose the layer you want to load and click on *Load layer* to visualise the layer on map.
+
+Step 3: On mapper frontend, lock the feature you want to map by clicking on the feature. This automatically locks the project but mappers in the field won't realise the task is locked. Then, click on 'Go to ODK' to redirect to ODK.
+It prefils the building geometry and surveyors can fill up other details and submit the form. 
+
+Step 4: Once the form is submitted, you have to get back to FMTM and select the another feature for mapping. Also sync the data to see the latest updates.
+And repeat.
+
+**Note:** You need internet access to update the feature status in real time but you can download or load base imagery without internet connection. 
+
+
