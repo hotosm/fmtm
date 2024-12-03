@@ -66,7 +66,7 @@ const NewDefineAreaMap = ({
               duration: 500,
             }}
             onModify={onModify}
-            style={{ ...defaultStyles, lineColor: '#0fffff', lineThickness: 2 }}
+            style={{ ...defaultStyles, lineColor: '#0fffff', lineThickness: 2, fillOpacity: 10, fillColor: '#000000' }}
           />
         )}
         {isDrawOrGeojsonFile && !splittedGeojson && (
@@ -82,7 +82,7 @@ const NewDefineAreaMap = ({
             onModify={onModify}
             zoomToLayer
             getAOIArea={getAOIArea}
-            style={{ ...defaultStyles, lineColor: '#0fffff', lineThickness: 2 }}
+            style={{ ...defaultStyles, lineColor: '#0fffff', lineThickness: 2, fillOpacity: 10, fillColor: '#000000' }}
           />
         )}
 
@@ -96,7 +96,7 @@ const NewDefineAreaMap = ({
               duration: 500,
             }}
             zoomToLayer
-            style={{ ...defaultStyles, lineColor: '#D73F37', lineThickness: 1, fillColor: '#D73F37' }}
+            style={{ ...defaultStyles, lineColor: '#D73F37', lineThickness: 1.5, fillColor: '#D73F37' }}
           />
         )}
         {buildingExtractedGeojson && (
@@ -109,6 +109,7 @@ const NewDefineAreaMap = ({
               duration: 500,
             }}
             zoomToLayer
+            style={{ ...defaultStyles, lineColor: '#1a2fa2', fillOpacity: 30, lineOpacity: 50 }}
           />
         )}
         {lineExtractedGeojson && (
