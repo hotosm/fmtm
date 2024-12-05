@@ -31,7 +31,7 @@ const uploadAreaOptions = [
   },
 ];
 
-const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpload }) => {
+const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpload, setAdditionalFeature }) => {
   useDocumentTitle('Create Project: Upload Area');
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -168,11 +168,14 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
 
   const resetFile = () => {
     setGeojsonFile(null);
+    setCustomDataExtractUpload(null);
     handleCustomChange('uploadedAreaFile', null);
     handleCustomChange('drawnGeojson', null);
+    setAdditionalFeature(null);
     dispatch(CreateProjectActions.SetDrawnGeojson(null));
     dispatch(CreateProjectActions.SetTotalAreaSelection(null));
-    dispatch(CreateProjectActions.ClearProjectStepState(formValues));
+    dispatch(CreateProjectActions.SetAdditionalFeatureGeojson(null));
+    dispatch(CreateProjectActions.ClearProjectStepState({ ...formValues, uploadedAreaFile: null, drawnGeojson: null }));
   };
 
   useEffect(() => {
