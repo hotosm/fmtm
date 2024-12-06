@@ -385,7 +385,10 @@ async def project_contributors(
         SELECT * FROM users
         WHERE id = %(user_id)s
             AND (
-                CASE WHEN role = 'ADMIN' THEN true
+                CASE
+                    -- Simple check to see if ADMIN or blocked (READ_ONLY)
+                    WHEN role = 'ADMIN'::public.userrole THEN true
+                    WHEN role = 'READ_ONLY'::public.userrole THEN false
                 ELSE
                     EXISTS (
                         SELECT 1 FROM organisation_managers

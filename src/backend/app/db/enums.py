@@ -198,11 +198,26 @@ class TaskSplitType(StrEnum, Enum):
 
 
 class ProjectVisibility(StrEnum, Enum):
-    """Project visibility to end users."""
+    """Project visibility to end users.
+
+    When:
+        - Contribution = making new submissions, updating data.
+        - Download = downloading submissions, viewing data.
+        - Restricted = requires user role / permission.
+        - Open = is fully open for the public, with no roles.
+
+    +-------------------------+---------------------+----------------+
+    |                         | Download Restricted |  Download Open |
+    +-------------------------+---------------------+----------------+
+    | Contribution Restricted |       Private       |   Sensitive    |
+    | Contribution Open       |     Invite Only     |     Public     |
+    +-------------------------+---------------------+----------------+
+    """
 
     PUBLIC = "PUBLIC"
     PRIVATE = "PRIVATE"
     INVITE_ONLY = "INVITE_ONLY"
+    SENSITIVE = "SENSITIVE"
 
 
 class CommunityType(StrEnum, Enum):
