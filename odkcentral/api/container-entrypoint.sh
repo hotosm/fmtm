@@ -3,8 +3,8 @@
 set -eo pipefail
 
 check_all_s3_vars_present() {
-    if [ -z "${S3_ENDPOINT}" ]; then
-        echo "Environment variable S3_ENDPOINT is not set."
+    if [ -z "${S3_SERVER}" ]; then
+        echo "Environment variable S3_SERVER is not set."
         exit 1
     fi
     if [ -z "${S3_ACCESS_KEY}" ]; then
@@ -15,16 +15,16 @@ check_all_s3_vars_present() {
         echo "Environment variable S3_SECRET_KEY is not set."
         exit 1
     fi
-    if [ -z "${S3_ODK_BUCKET_NAME}" ]; then
-        echo "Environment variable S3_ODK_BUCKET_NAME is not set."
+    if [ -z "${S3_BUCKET_NAME}" ]; then
+        echo "Environment variable S3_BUCKET_NAME is not set."
         exit 1
     fi
 
     # Strip any extra unrequired "quotes"
-    export S3_ENDPOINT="${S3_ENDPOINT//\"/}"
+    export S3_SERVER="${S3_SERVER//\"/}"
     export S3_ACCESS_KEY="${S3_ACCESS_KEY//\"/}"
     export S3_SECRET_KEY="${S3_SECRET_KEY//\"/}"
-    export S3_ODK_BUCKET_NAME="${S3_ODK_BUCKET_NAME//\"/}"
+    export S3_BUCKET_NAME="${S3_BUCKET_NAME//\"/}"
 }
 
 # Check env vars + strip extra quotes on vars
@@ -50,11 +50,11 @@ echo "Elevating user to admin"
 odk-cmd --email "${SYSADMIN_EMAIL}" user-promote || true
 
 ### Create S3 bucket for submission photo storage ###
-BUCKET_NAME="${S3_ODK_BUCKET_NAME}"
-echo "Creating S3 bucket ${BUCKET_NAME} to store submission media"
-mc alias set s3 "$S3_ENDPOINT" "$S3_ACCESS_KEY" "$S3_SECRET_KEY"
-mc mb "s3/${BUCKET_NAME}" --ignore-existing
-mc anonymous set download "s3/${BUCKET_NAME}"
+echo "Creating S3 bucket ${S3_BUCKET_NAME} to store submission media"
+mc alias set s3 "$S3_SERVER" "$S3_ACCESS_KEY" "$S3_SECRET_KEY"
+mc mb "s3/${S3_BUCKET_NAME}" --ignore-existing
+# Prevent anonymous access (pre-signed URL download only)
+mc anonymous set none "s3/${S3_BUCKET_NAME}"
 
 ### Run server (hardcode WORKER_COUNT=1 for dev) ###
 export WORKER_COUNT=1
