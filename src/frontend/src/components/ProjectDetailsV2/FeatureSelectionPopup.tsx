@@ -7,12 +7,12 @@ import { CommonActions } from '@/store/slices/CommonSlice';
 import Button from '@/components/common/Button';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import environment from '@/environment';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { UpdateEntityState } from '@/api/Project';
 import { TaskFeatureSelectionProperties } from '@/store/types/ITask';
 import { CreateTaskEvent } from '@/api/TaskEvent';
 import MapStyles from '@/hooks/MapStyles';
-import { task_event, task_state as taskStateEnum } from '@/types/enums';
+import { entity_state, task_event, task_state as taskStateEnum } from '@/types/enums';
 
 type TaskFeatureSelectionPopupPropType = {
   taskId: number;
@@ -23,18 +23,21 @@ type TaskFeatureSelectionPopupPropType = {
 const TaskFeatureSelectionPopup = ({ featureProperties, taskId, taskFeature }: TaskFeatureSelectionPopupPropType) => {
   const dispatch = CoreModules.useAppDispatch();
   const params = useParams();
+  const navigate = useNavigate();
   const geojsonStyles = MapStyles();
+
+  const currentProjectId = params.id || '';
+  const [task_state, set_task_state] = useState<taskStateEnum | string>(taskStateEnum.UNLOCKED_TO_MAP);
+
   const taskModalStatus = CoreModules.useAppSelector((state) => state.project.taskModalStatus);
   const projectInfo = CoreModules.useAppSelector((state) => state.project.projectInfo);
   const entityOsmMap = CoreModules.useAppSelector((state) => state.project.entityOsmMap);
-
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
-  const currentProjectId = params.id || '';
-  const [task_state, set_task_state] = useState(taskStateEnum.UNLOCKED_TO_MAP);
   const projectData = CoreModules.useAppSelector((state) => state.project.projectTaskBoundries);
   const projectIndex = projectData.findIndex((project) => project.id == currentProjectId);
   const projectTaskActivityList = CoreModules.useAppSelector((state) => state?.project?.projectTaskActivity);
   const updateEntityStateLoading = CoreModules.useAppSelector((state) => state.project.updateEntityStateLoading);
+
   const currentTaskInfo = {
     ...projectData?.[projectIndex]?.taskBoundries?.filter((task) => {
       return task?.id == taskId;
@@ -52,6 +55,62 @@ const TaskFeatureSelectionPopup = ({ featureProperties, taskId, taskFeature }: T
       set_task_state(tasksStatus);
     }
   }, [projectTaskActivityList, taskId, taskFeature, entityOsmMap]);
+
+  const entityAction = (action: 'feature_map' | 'feature_validate'): void => {
+    const entity = entityOsmMap.find((x) => x.osm_id === featureProperties?.osm_id);
+    const entityId = entity ? entity.id : null;
+    switch (action) {
+      case 'feature_map':
+        const xformId = projectInfo.odk_form_id;
+
+        if (!xformId || !entityId) {
+          return;
+        }
+
+        if (entity?.status === entity_state['READY']) {
+          dispatch(
+            UpdateEntityState(`${import.meta.env.VITE_API_URL}/projects/${currentProjectId}/entity/status`, {
+              entity_id: entityId,
+              status: entity_state['OPENED_IN_ODK'],
+              label: `Task ${taskId} Feature ${entity.osm_id}`,
+            }),
+          );
+
+          if (task_state === taskStateEnum.UNLOCKED_TO_MAP) {
+            dispatch(
+              CreateTaskEvent(
+                `${import.meta.env.VITE_API_URL}/tasks/${currentTaskInfo?.id}/event`,
+                task_event.MAP,
+                currentProjectId,
+                taskId.toString(),
+                authDetails,
+                { project_id: currentProjectId },
+                geojsonStyles,
+                taskFeature,
+              ),
+            );
+          }
+        }
+
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        if (isMobile) {
+          // Load entity in ODK Collect by intent
+          document.location.href = `odkcollect://form/${xformId}?feature=${entityId}`;
+        } else {
+          dispatch(
+            CommonActions.SetSnackBar({
+              open: true,
+              message: 'Requires a mobile phone with ODK Collect.',
+              variant: 'warning',
+              duration: 3000,
+            }),
+          );
+        }
+      case 'feature_validate':
+      // navigate(`/project-submissions/${currentProjectId}/tasks/${taskId}/submission/uuid:${entityUuid}`);
+    }
+  };
 
   return (
     <div
@@ -106,68 +165,29 @@ const TaskFeatureSelectionPopup = ({ featureProperties, taskId, taskFeature }: T
             </p>
           </div>
         </div>
-        {(task_state === taskStateEnum.UNLOCKED_TO_MAP || task_state === taskStateEnum.LOCKED_FOR_MAPPING) && (
-          <div className="fmtm-p-2 sm:fmtm-p-5 fmtm-border-t">
+        <div className="fmtm-p-2 sm:fmtm-p-5 fmtm-border-t">
+          {(task_state === taskStateEnum.UNLOCKED_TO_MAP || task_state === taskStateEnum.LOCKED_FOR_MAPPING) &&
+            (entity?.status === entity_state['READY'] || entity?.status === entity_state['OPENED_IN_ODK']) && (
+              <Button
+                btnText="MAP FEATURE IN ODK"
+                btnType="primary"
+                type="submit"
+                className="fmtm-font-bold !fmtm-rounded fmtm-text-sm !fmtm-py-2 !fmtm-w-full fmtm-flex fmtm-justify-center"
+                isLoading={updateEntityStateLoading}
+                onClick={() => entityAction('feature_map')}
+              />
+            )}
+          {entity?.status === entity_state['SURVEY_SUBMITTED'] && (
             <Button
-              btnText="MAP FEATURE IN ODK"
+              btnText="VALIDATE FEATURE"
               btnType="primary"
               type="submit"
               className="fmtm-font-bold !fmtm-rounded fmtm-text-sm !fmtm-py-2 !fmtm-w-full fmtm-flex fmtm-justify-center"
-              disabled={entity?.status !== 0}
               isLoading={updateEntityStateLoading}
-              onClick={() => {
-                const xformId = projectInfo.odk_form_id;
-                const entity = entityOsmMap.find((x) => x.osm_id === featureProperties?.osm_id);
-                const entityUuid = entity ? entity.id : null;
-
-                if (!xformId || !entityUuid) {
-                  return;
-                }
-
-                dispatch(
-                  UpdateEntityState(`${import.meta.env.VITE_API_URL}/projects/${currentProjectId}/entity/status`, {
-                    entity_id: entityUuid,
-                    status: 1,
-                    label: `Task ${taskId} Feature ${entity.osm_id}`,
-                  }),
-                );
-
-                if (task_state === taskStateEnum.UNLOCKED_TO_MAP) {
-                  dispatch(
-                    CreateTaskEvent(
-                      `${import.meta.env.VITE_API_URL}/tasks/${currentTaskInfo?.id}/event`,
-                      task_event.MAP,
-                      currentProjectId,
-                      taskId.toString(),
-                      authDetails,
-                      { project_id: currentProjectId },
-                      geojsonStyles,
-                      taskFeature,
-                    ),
-                  );
-                }
-
-                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-                  navigator.userAgent,
-                );
-
-                if (isMobile) {
-                  // Load entity in ODK Collect by intent
-                  document.location.href = `odkcollect://form/${xformId}?feature=${entityUuid}`;
-                } else {
-                  dispatch(
-                    CommonActions.SetSnackBar({
-                      open: true,
-                      message: 'Requires a mobile phone with ODK Collect.',
-                      variant: 'warning',
-                      duration: 3000,
-                    }),
-                  );
-                }
-              }}
+              onClick={() => entityAction('feature_validate')}
             />
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
