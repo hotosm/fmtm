@@ -31,6 +31,7 @@ let entitiesShape: Shape;
 let entitiesStatusList: entitiesStatusListType[] = $state([]);
 let syncEntityStatusLoading: boolean = $state(false);
 let updateEntityStatusLoading: boolean = $state(false);
+let selectedEntityCoordinate: [number, number] | null = $state(null);
 
 function getEntityStatusStream(projectId: number): ShapeStream | undefined {
 	if (!projectId) {
@@ -62,6 +63,10 @@ function getEntitiesStatusStore() {
 
 	async function setSelectedEntity(entityOsmId: number | null) {
 		selectedEntity = entityOsmId;
+	}
+
+	async function setSelectedEntityCoordinate(entityCoordinate: [number, number] | null) {
+		selectedEntityCoordinate = entityCoordinate;
 	}
 
 	async function syncEntityStatus(projectId: number) {
@@ -98,6 +103,7 @@ function getEntitiesStatusStore() {
 		setSelectedEntity: setSelectedEntity,
 		syncEntityStatus: syncEntityStatus,
 		updateEntityStatus: updateEntityStatus,
+		setSelectedEntityCoordinate: setSelectedEntityCoordinate,
 		get selectedEntity() {
 			return selectedEntity;
 		},
@@ -109,6 +115,9 @@ function getEntitiesStatusStore() {
 		},
 		get updateEntityStatusLoading() {
 			return updateEntityStatusLoading;
+		},
+		get selectedEntityCoordinate() {
+			return selectedEntityCoordinate;
 		},
 	};
 }
