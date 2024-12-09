@@ -823,7 +823,7 @@ def merge_polygons(
         )
     except Exception as e:
         raise HTTPException(
-            HTTPStatus.BAD_REQUEST,
+            HTTPStatus.UNPROCESSABLE_ENTITY,
             detail=f"Couldn't merge the multipolygon to polygon: {str(e)}",
         ) from e
 
