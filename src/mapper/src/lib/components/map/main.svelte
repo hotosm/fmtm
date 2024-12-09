@@ -120,8 +120,10 @@
 		if (clickedEntityFeature && clickedEntityFeature?.length > 0) {
 			const clickedEntityId = clickedEntityFeature[0]?.properties?.osm_id;
 			entitiesStore.setSelectedEntity(clickedEntityId);
+			entitiesStore.setSelectedEntityCoordinate([e.lngLat.lng, e.lngLat.lat]);
 		} else {
 			entitiesStore.setSelectedEntity(null);
+			entitiesStore.setSelectedEntityCoordinate(null);
 		}
 
 		// if clicked point contains task layer
