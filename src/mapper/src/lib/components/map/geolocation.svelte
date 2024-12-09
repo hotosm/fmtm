@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { GeoJSON, SymbolLayer } from 'svelte-maplibre';
 	import type { FeatureCollection } from 'geojson';
+	import MapLibreGlDirections, { LoadingIndicatorControl } from '@maplibre/maplibre-gl-directions';
 
 	import { GetDeviceRotation } from '$lib/utils/getDeviceRotation';
 	import { getAlertStore } from '$store/common.svelte.ts';
+	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
 
 	const alertStore = getAlertStore();
 
@@ -17,6 +19,33 @@
 	let coords: [number, number] | undefined = $state();
 	let rotationDeg: number | undefined = $state();
 	let watchId: number | undefined = $state();
+	let directions: MapLibreGlDirections = $state();
+
+	const entitiesStore = getEntitiesStatusStore();
+	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
+
+	// initialize MapLibreGlDirections
+	$effect(() => {
+		if (map) {
+			directions = new MapLibreGlDirections(map);
+			directions.interactive = false;
+			map.addControl(new LoadingIndicatorControl(directions));
+			directions.clear();
+		}
+	});
+
+	function setWaypoints(geolocationCoord: [number, number], entityCoord: [number, number]) {
+		const wayPointList = [geolocationCoord, entityCoord];
+		if (directions) {
+			directions?.setWaypoints(wayPointList);
+		}
+	}
+
+	$effect(() => {
+		if (coords && selectedEntityCoordinate) {
+			setWaypoints(coords, selectedEntityCoordinate);
+		}
+	});
 
 	$effect(() => {
 		if (map && toggleGeolocationStatus) {
