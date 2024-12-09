@@ -263,7 +263,7 @@ async def my_data(
     return await get_or_create_user(db, current_user)
 
 
-@router.get("/refresh/mgmt", response_model=AuthUserWithToken)
+@router.get("/refresh/management", response_model=AuthUserWithToken)
 async def refresh_mgmt_token(
     request: Request,
     current_user: Annotated[AuthUser, Depends(login_required)],
