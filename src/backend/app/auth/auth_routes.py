@@ -249,7 +249,7 @@ async def get_or_create_user(
 @router.get("/me", response_model=FMTMUser)
 async def my_data(
     db: Annotated[Connection, Depends(db_conn)],
-    current_user: Annotated[AuthUser, Depends(login_required)],
+    current_user: Annotated[AuthUser, Depends(mapper_login_required)],
 ):
     """Read access token and get user details from OSM.
 
