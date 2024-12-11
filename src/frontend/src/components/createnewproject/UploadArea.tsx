@@ -257,8 +257,8 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
                 <div>
                   <p className="fmtm-text-gray-700 fmtm-pt-5 fmtm-pb-5">Draw a polygon on the map to plot the area</p>
                   <Button
-                    btnText="Click to Reset"
-                    btnType="primary"
+                    btnText="Reset"
+                    btnType="secondary"
                     type="button"
                     onClick={() => resetFile()}
                     className=""
