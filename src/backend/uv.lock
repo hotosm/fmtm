@@ -568,9 +568,9 @@ requires-dist = [
     { name = "httptools", specifier = "==0.6.4" },
     { name = "loguru", specifier = "==0.7.2" },
     { name = "minio", specifier = "==7.2.9" },
-    { name = "osm-fieldwork", specifier = "==0.16.11" },
+    { name = "osm-fieldwork", specifier = "==0.16.12" },
     { name = "osm-login-python", specifier = "==2.0.0" },
-    { name = "osm-rawdata", specifier = "==0.4.0" },
+    { name = "osm-rawdata", specifier = "==0.4.1" },
     { name = "psycopg", extras = ["pool"], specifier = ">=3.2.3" },
     { name = "pydantic", specifier = "==2.9.2" },
     { name = "pydantic-settings", specifier = "==2.6.0" },
@@ -1435,7 +1435,7 @@ wheels = [
 
 [[package]]
 name = "osm-fieldwork"
-version = "0.16.11"
+version = "0.16.12"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -1459,9 +1459,9 @@ dependencies = [
     { name = "shapely" },
     { name = "xmltodict" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/43/dd/c2f8c8f4d4da4ba0fc6a2e6b34c17b09fbf5db68673b3a7c047c452433ef/osm-fieldwork-0.16.11.tar.gz", hash = "sha256:9279a1b678b380cc13954b976d892d5a9e1790de5922409710b49954d169d32f", size = 1481731 }
+sdist = { url = "https://files.pythonhosted.org/packages/07/ee/9d8428bd8155b9fa44e54056f17cf45a1c35659cba62fd25dedb898eb479/osm-fieldwork-0.16.12.tar.gz", hash = "sha256:1b4115cc51a9c5f5d66f93734413e444bcfb349e6dff2b908f812635fb00d1d6", size = 1485409 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9e/47/efdde3c157e6f86ab10bdffc990034d9c390480b4f4309917eb450bf1fc8/osm_fieldwork-0.16.11-py3-none-any.whl", hash = "sha256:bcf90b8676f978c40e63f1cc6f39acd6b34c861d5ef27ac63141dd1261a3b747", size = 1507428 },
+    { url = "https://files.pythonhosted.org/packages/b9/c0/1eed86313a2d624d7722cbea6991587287beefde5bd3d9f104212f5cd96f/osm_fieldwork-0.16.12-py3-none-any.whl", hash = "sha256:4543083e408055acb9c2488563090a904dc942737d5f7aa177d31319838f5ed4", size = 1513698 },
 ]
 
 [[package]]
@@ -1480,7 +1480,7 @@ wheels = [
 
 [[package]]
 name = "osm-rawdata"
-version = "0.4.0"
+version = "0.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "flatdict" },
@@ -1490,9 +1490,9 @@ dependencies = [
     { name = "requests" },
     { name = "shapely" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/49/d6/1d0edbd6bb5773bdbe49d282f83de44c8602fd57eb738f54f29e6f9f25d1/osm-rawdata-0.4.0.tar.gz", hash = "sha256:4f3a3f09f4693da91a14fb781efa97ae4dc4d7df74a507c29b73d3fff73a10de", size = 43117 }
+sdist = { url = "https://files.pythonhosted.org/packages/57/bd/1b565b702635b25bcd951f6ec83a63eaf1feab08ade65c97983ae7948179/osm-rawdata-0.4.1.tar.gz", hash = "sha256:47aadecf78ff13ae80779778e2e6ebcd7d5b71452c1787633e92a2d60527b977", size = 43163 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/be/7f/5cdfaa4b9af1cc021b9ab8bbeb8a197e2d206b7191238efbaed5bf1bca30/osm_rawdata-0.4.0-py3-none-any.whl", hash = "sha256:a07b00a761ee5533ed511c80ce8960b37253068bcfac149bade22a9137a7e308", size = 54866 },
+    { url = "https://files.pythonhosted.org/packages/d6/70/dc9fa7c7da182bf51e3faf7d44dff29b647aa2835e1c70f8b1f5b5f2d278/osm_rawdata-0.4.1-py3-none-any.whl", hash = "sha256:5a1dfda1fed66e41a9f9a8853af6e08e868d43d5e0855470cd84f27e9731eddc", size = 54890 },
 ]
 
 [[package]]

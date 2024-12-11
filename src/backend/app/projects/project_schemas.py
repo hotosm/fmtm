@@ -136,8 +136,8 @@ class ProjectInBase(DbProject):
         # geojson_pydantic.GeometryCollection
         # FIXME update this to remove the Featcol parsing at some point
         featcol = geojson_to_featcol(value)
-        merged = merge_polygons(featcol)
-        return merged.get("features")[0].get("geometry")
+        merged_geojson = merge_polygons(featcol, True)
+        return merged_geojson.get("features")[0].get("geometry")
 
     @model_validator(mode="after")
     def append_fmtm_hashtag_and_slug(self) -> Self:
@@ -227,19 +227,21 @@ class ProjectSummary(BaseModel):
     organisation_id: int
     priority: ProjectPriority
 
+    outline: Optional[Polygon]
     hashtags: Optional[list[str]]
     location_str: Optional[str] = None
     description: Optional[str] = None
 
     # Calculated
-    outline: Optional[Polygon]
-    centroid: Optional[Point]
-    total_tasks: Optional[int] = None
-    num_contributors: Optional[int] = None
-    tasks_mapped: Optional[int] = None
-    tasks_validated: Optional[int] = None
-    tasks_bad: Optional[int] = None
     organisation_logo: Optional[str] = None
+    centroid: Optional[Point]
+    total_tasks: Optional[int] = 0
+    num_contributors: Optional[int] = 0
+    # FIXME we could add the following to the project summary cards
+    # Also required uncommenting of the DbProject fields
+    # tasks_mapped: Optional[int] = 0
+    # tasks_validated: Optional[int] = 0
+    # tasks_bad: Optional[int] = 0
 
 
 class PaginationInfo(BaseModel):

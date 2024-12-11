@@ -38,8 +38,9 @@ from loguru import logger as log
 from osm_fieldwork.xlsforms import xlsforms_path
 from osm_login_python.core import Auth
 
+from app.auth.auth_deps import login_required
 from app.auth.auth_schemas import AuthUser
-from app.auth.osm import init_osm_auth, login_required
+from app.auth.providers.osm import init_osm_auth
 from app.central import central_deps
 from app.central.central_crud import (
     convert_geojson_to_odk_csv,
@@ -248,7 +249,7 @@ async def view_user_oauth_token(
     The token is encrypted with a secret key and only usable via
     this FMTM instance and the osm-login-python module.
     """
-    cookie_name = settings.FMTM_DOMAIN.replace(".", "_")
+    cookie_name = settings.cookie_name
     return JSONResponse(
         status_code=HTTPStatus.OK,
         content={"access_token": request.cookies.get(cookie_name)},
@@ -289,7 +290,7 @@ async def send_test_osm_message(
     osm_auth: Annotated[Auth, Depends(init_osm_auth)],
 ):
     """Sends a test message to currently logged in OSM user."""
-    cookie_name = f"{settings.FMTM_DOMAIN.replace('.', '_')}_osm"
+    cookie_name = f"{settings.cookie_name}_osm"
     log.debug(f"Extracting OSM token from cookie {cookie_name}")
     serialised_osm_token = request.cookies.get(cookie_name)
     if not serialised_osm_token:

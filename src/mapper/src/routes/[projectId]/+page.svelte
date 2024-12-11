@@ -18,11 +18,12 @@
 	import DialogTaskActions from '$lib/components/dialog-task-actions.svelte';
 	import DialogEntityActions from '$lib/components/dialog-entities-actions.svelte';
 	import type { ProjectTask } from '$lib/types';
+	import { openOdkCollectNewFeature } from '$lib/odk/collect';
 	import { convertDateToTimeAgo } from '$lib/utils/datetime';
 	import { getTaskStore, getTaskEventStream } from '$store/tasks.svelte.ts';
 	import { getEntitiesStatusStore, getEntityStatusStream } from '$store/entities.svelte.ts';
 	import More from '$lib/components/more/index.svelte';
-	import { getProjectSetupStepStore } from '$store/common.svelte.ts';
+	import { getProjectSetupStepStore, getCommonStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
 
 	interface Props {
@@ -31,15 +32,17 @@
 
 	let { data }: Props = $props();
 
-	let mapComponent: maplibregl.Map | undefined = $state(undefined);
+	let maplibreMap: maplibregl.Map | undefined = $state(undefined);
 	let tabGroup: SlTabGroup;
-	let selectedTab: string = $state('map');
 	let openedActionModal: 'entity-modal' | 'task-modal' | null = $state(null);
-	let isTaskActionModalOpen = $state(false);
+	let isTaskActionModalOpen: boolean = $state(false);
 	let infoDialogRef: SlDialog | null = $state(null);
+	let isDrawEnabled: boolean = $state(false);
 
 	const taskStore = getTaskStore();
 	const entitiesStore = getEntitiesStatusStore();
+	const commonStore = getCommonStore();
+
 	const taskEventStream = getTaskEventStream(data.projectId);
 	const entityStatusStream = getEntityStatusStream(data.projectId);
 
@@ -60,9 +63,9 @@
 
 		const taskPolygon = polygon(taskObj.outline.coordinates);
 		const taskBuffer = buffer(taskPolygon, 5, { units: 'meters' });
-		if (taskBuffer && mapComponent) {
+		if (taskBuffer && maplibreMap) {
 			const taskBbox: [number, number, number, number] = bbox(taskBuffer) as [number, number, number, number];
-			mapComponent.fitBounds(taskBbox, { duration: 500 });
+			maplibreMap.fitBounds(taskBbox, { duration: 500 });
 		}
 
 		// Open the map tab
@@ -114,7 +117,7 @@
 <div class="h-[calc(100svh-3.699rem)] sm:h-[calc(100svh-4.625rem)]">
 	<MapComponent
 		setMapRef={(map) => {
-			mapComponent = map;
+			maplibreMap = map;
 		}}
 		toggleActionModal={(value) => {
 			openedActionModal = value;
@@ -122,6 +125,11 @@
 		projectOutlineCoords={data.project.outline.coordinates}
 		projectId={data.projectId}
 		entitiesUrl={data.project.data_extract_url}
+		draw={isDrawEnabled}
+		handleDrawnGeom={(geom) => {
+			isDrawEnabled = false;
+			openOdkCollectNewFeature(data?.project?.odk_form_id, geom);
+		}}
 	></MapComponent>
 	<!-- task action buttons popup -->
 	<DialogTaskActions
@@ -129,26 +137,30 @@
 		toggleTaskActionModal={(value) => {
 			openedActionModal = value ? 'task-modal' : null;
 		}}
-		{selectedTab}
+		selectedTab={commonStore.selectedTab}
 		projectData={data?.project}
+		clickMapNewFeature={() => {
+			openedActionModal = null;
+			isDrawEnabled = true;
+		}}
 	/>
 	<DialogEntityActions
 		isTaskActionModalOpen={openedActionModal === 'entity-modal'}
 		toggleTaskActionModal={(value) => {
 			openedActionModal = value ? 'entity-modal' : null;
 		}}
-		{selectedTab}
+		selectedTab={commonStore.selectedTab}
 		projectData={data?.project}
 	/>
-	{#if selectedTab !== 'map'}
+	{#if commonStore.selectedTab !== 'map'}
 		<BottomSheet onClose={() => tabGroup.show('map')}>
-			{#if selectedTab === 'events'}
+			{#if commonStore.selectedTab === 'events'}
 				<More projectData={data?.project} zoomToTask={(taskId) => zoomToTask(taskId)}></More>
 			{/if}
-			{#if selectedTab === 'offline'}
+			{#if commonStore.selectedTab === 'offline'}
 				<BasemapComponent projectId={data.project.id}></BasemapComponent>
 			{/if}
-			{#if selectedTab === 'qrcode'}
+			{#if commonStore.selectedTab === 'qrcode'}
 				<QRCodeComponent {infoDialogRef} projectName={data.project.name} projectOdkToken={data.project.odk_token}>
 					<!-- Open ODK Button (Hide if it's project walkthrough step) -->
 					{#if +projectSetupStepStore.projectSetupStep !== projectSetupStepEnum['odk_project_load']}
@@ -199,7 +211,7 @@
 		placement="bottom"
 		no-scroll-controls
 		onsl-tab-show={(e: CustomEvent<{ name: string }>) => {
-			selectedTab = e.detail.name;
+			commonStore.setSelectedTab(e.detail.name);
 			if (
 				e.detail.name !== 'qrcode' &&
 				+projectSetupStepStore.projectSetupStep === projectSetupStepEnum['odk_project_load']

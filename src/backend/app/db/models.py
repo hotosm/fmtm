@@ -982,6 +982,13 @@ class DbProject(BaseModel):
         Optional["ODKCentralDecrypted"],
         Field(validate_default=True),
     ] = None
+    total_tasks: Optional[int] = None
+    num_contributors: Optional[int] = None
+    # FIXME we could add the following to the project summary cards
+    # Also required uncommenting of the ProjectSummary fields
+    # tasks_mapped: Optional[int] = 0
+    # tasks_validated: Optional[int] = 0
+    # tasks_bad: Optional[int] = 0
 
     @field_validator("odk_credentials", mode="before")
     @classmethod
@@ -1001,9 +1008,41 @@ class DbProject(BaseModel):
         )
 
     @classmethod
-    async def one(cls, db: Connection, project_id: int) -> Self:
+    async def one(cls, db: Connection, project_id: int, minimal: bool = False) -> Self:
         """Get project by ID, including all tasks and other details."""
-        async with db.cursor(row_factory=class_row(cls)) as cur:
+        # Simpler query without additional metadata
+        if minimal:
+            sql = """
+                SELECT
+                    p.*,
+                    ST_AsGeoJSON(p.outline)::jsonb AS outline,
+                    ST_AsGeoJSON(ST_Centroid(p.outline))::jsonb AS centroid,
+                    COALESCE(
+                        JSON_AGG(
+                            JSON_BUILD_OBJECT(
+                                'id', t.id,
+                                'project_id', t.project_id,
+                                'project_task_index', t.project_task_index,
+                                'outline', ST_AsGeoJSON(t.outline)::jsonb,
+                                'feature_count', t.feature_count
+                            )
+                        ) FILTER (WHERE t.id IS NOT NULL), '[]'::json
+                    ) AS tasks
+                FROM
+                    projects p
+                LEFT JOIN
+                    tasks t ON t.project_id = %(project_id)s
+                WHERE
+                    p.id = %(project_id)s AND (
+                        t.project_id = %(project_id)s
+                            -- Also required to return a project with if tasks
+                            OR t.project_id IS NULL
+                    )
+                GROUP BY p.id;
+            """
+
+        # Full query with all additional calculated fields
+        else:
             sql = """
                 WITH latest_status_per_task AS (
                     SELECT DISTINCT ON (task_id)
@@ -1099,36 +1138,7 @@ class DbProject(BaseModel):
                     p.id, project_org.id, project_bbox.bbox;
             """
 
-            # Simpler query without additional metadata
-            # sql = """
-            #     SELECT
-            #         p.*,
-            #         ST_AsGeoJSON(p.outline)::jsonb AS outline,
-            #         ST_AsGeoJSON(ST_Centroid(p.outline))::jsonb AS centroid,
-            #         COALESCE(
-            #             JSON_AGG(
-            #                 JSON_BUILD_OBJECT(
-            #                     'id', t.id,
-            #                     'project_id', t.project_id,
-            #                     'project_task_index', t.project_task_index,
-            #                     'outline', ST_AsGeoJSON(t.outline)::jsonb,
-            #                     'feature_count', t.feature_count
-            #                 )
-            #             ) FILTER (WHERE t.id IS NOT NULL), '[]'::json
-            #         ) AS tasks
-            #     FROM
-            #         projects p
-            #     LEFT JOIN
-            #         tasks t ON t.project_id = %(project_id)s
-            #     WHERE
-            #         p.id = %(project_id)s AND (
-            #             t.project_id = %(project_id)s
-            #                 -- Also required to return a project with if tasks
-            #                 OR t.project_id IS NULL
-            #         )
-            #     GROUP BY p.id;
-            # """
-
+        async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(
                 sql,
                 {"project_id": project_id},
@@ -1182,13 +1192,16 @@ class DbProject(BaseModel):
                 ST_AsGeoJSON(p.outline)::jsonb AS outline,
                 ST_AsGeoJSON(ST_Centroid(p.outline))::jsonb AS centroid,
                 project_org.logo as organisation_logo,
-                COUNT(t.id) AS task_count
+                COUNT(t.id) AS total_tasks,
+                COUNT(DISTINCT task_events.user_id) AS num_contributors
             FROM
                 projects p
             LEFT JOIN
                 organisations project_org ON p.organisation_id = project_org.id
             LEFT JOIN
                 tasks t ON p.id = t.project_id
+            LEFT JOIN
+                task_events ON p.id = task_events.project_id
             {'WHERE ' + ' AND '.join(filters) if filters else ''}
             GROUP BY
                 p.id, project_org.id

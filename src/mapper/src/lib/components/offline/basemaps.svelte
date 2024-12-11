@@ -7,6 +7,7 @@
     // TODO should raise an issue in hotosm/ui about this / test further
 	import '@shoelace-style/shoelace/dist/components/select/select.js';
 	import '@shoelace-style/shoelace/dist/components/option/option.js';
+	import '@shoelace-style/shoelace/dist/components/button/button.js';
 
     import type { Basemap } from '$lib/utils/basemaps';
     import { getProjectBasemapStore } from '$store/common.svelte.ts';
@@ -70,8 +71,8 @@
     </div>
 
     <!-- Load baselayer & download to OPFS buttons -->
-    {#if selectedBasemap && selectedBasemap?.format === 'pmtiles' }
-        <sl-button
+    {#if selectedBasemap && selectedBasemap.format === 'pmtiles' }
+        <hot-button
             onclick={() => loadOnlinePmtiles(selectedBasemap.url)}
             onkeydown={(e: KeyboardEvent) => {
                 e.key === 'Enter' && loadOnlinePmtiles(selectedBasemap.url);
@@ -84,9 +85,9 @@
             <hot-icon slot="prefix" name="download" class="!text-[1rem] text-[#b91c1c] cursor-pointer duration-200"
             ></hot-icon>
             <span class="font-barlow-medium text-base uppercase">Show On Map</span>
-        </sl-button>
+        </hot-button>
 
-        <sl-button
+        <hot-button
             onclick={() => writeOfflinePmtiles(projectId, selectedBasemap.url)}
             onkeydown={(e: KeyboardEvent) => {
                 e.key === 'Enter' && writeOfflinePmtiles(projectId, selectedBasemap.url);
@@ -99,11 +100,11 @@
             <hot-icon slot="prefix" name="download" class="!text-[1rem] text-[#b91c1c] cursor-pointer duration-200"
             ></hot-icon>
             <span class="font-barlow-medium text-base uppercase">Store Offline</span>
-        </sl-button>
+        </hot-button>
 
     <!-- Download Mbtiles Button -->
-    {:else if selectedBasemap && selectedBasemap?.format === 'mbtiles' }
-        <sl-button
+    {:else if selectedBasemap && selectedBasemap.format === 'mbtiles' }
+        <hot-button
             onclick={() => window.open(selectedBasemap.url)}
             onkeydown={(e: KeyboardEvent) => {
                 e.key === 'Enter' && window.open(selectedBasemap.url);
@@ -116,7 +117,7 @@
             <hot-icon slot="prefix" name="download" class="!text-[1rem] text-[#b91c1c] cursor-pointer duration-200"
             ></hot-icon>
             <span class="font-barlow-medium text-base uppercase">Download MBTiles</span>
-        </sl-button>
+        </hot-button>
     {/if}
 
     {@render children?.()}

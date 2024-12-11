@@ -2,7 +2,8 @@
 	import type { Snippet } from 'svelte';
 	import SlDialog from '@shoelace-style/shoelace/dist/components/dialog/dialog.component.js';
 
-	import { generateQrCode, downloadQrCode } from '$lib/utils/qrcode';
+	import { getLoginStore } from '$store/login.svelte.ts';
+	import { generateQrCode, downloadQrCode } from '$lib/odk/qrcode';
 
 	interface Props {
 		infoDialogRef: SlDialog | null;
@@ -13,7 +14,9 @@
 
 	let { infoDialogRef, projectName, projectOdkToken, children }: Props = $props();
 
-	let qrCodeData = $derived(generateQrCode(projectName, projectOdkToken, 'REPLACE_ME_WITH_A_USERNAME'));
+	const loginStore = getLoginStore();
+
+	let qrCodeData = $derived(generateQrCode(projectName, projectOdkToken, loginStore.getAuthDetails?.username || 'fmtm user'));
 </script>
 
 <div class="flex flex-col items-center p-4 space-y-4">
