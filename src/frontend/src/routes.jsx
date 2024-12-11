@@ -131,7 +131,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/map-features',
+        path: '/map-data',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>

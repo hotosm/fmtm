@@ -44,7 +44,7 @@ const CreateNewProject = () => {
       case '/upload-survey':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 3 }));
         break;
-      case '/map-features':
+      case '/map-data':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 4 }));
         break;
       case '/split-tasks':
@@ -79,7 +79,7 @@ const CreateNewProject = () => {
             setCustomFormFile={setCustomFormFile}
           />
         );
-      case '/map-features':
+      case '/map-data':
         return (
           <DataExtract
             flag="create_project"
