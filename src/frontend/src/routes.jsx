@@ -119,7 +119,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/upload-area',
+        path: '/project-area',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>

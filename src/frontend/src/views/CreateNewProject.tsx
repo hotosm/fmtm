@@ -38,7 +38,7 @@ const CreateNewProject = () => {
       case '/create-project':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 1 }));
         break;
-      case '/upload-area':
+      case '/project-area':
         dispatch(CommonActions.SetCurrentStepFormStep({ flag: 'create_project', step: 2 }));
         break;
       case '/upload-survey':
@@ -60,7 +60,7 @@ const CreateNewProject = () => {
     switch (location.pathname) {
       case '/create-project':
         return <ProjectDetailsForm flag="create_project" />;
-      case '/upload-area':
+      case '/project-area':
         return (
           <UploadArea
             flag="create_project"

@@ -209,7 +209,7 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
                 type="button"
                 onClick={() => {
                   dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
-                  toggleStep(2, '/upload-area');
+                  toggleStep(2, '/project-area');
                 }}
                 className="fmtm-font-bold"
               />

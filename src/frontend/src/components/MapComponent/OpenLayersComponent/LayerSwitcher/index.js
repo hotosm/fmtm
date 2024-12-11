@@ -201,7 +201,7 @@ const LayerSwitcherControl = ({ map, visible = 'osm', pmTileLayerUrl = null }) =
     layerSwitcher.style.display = 'none';
     if (
       location.pathname.includes('project/') ||
-      location.pathname.includes('upload-area') ||
+      location.pathname.includes('project-area') ||
       location.pathname.includes('upload-survey') ||
       location.pathname.includes('map-features') ||
       location.pathname.includes('split-tasks') ||
