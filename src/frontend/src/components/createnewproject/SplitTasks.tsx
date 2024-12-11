@@ -47,7 +47,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
     {
       name: 'define_tasks',
       value: task_split_type.DIVIDE_ON_SQUARE,
-      label: 'Divide on square',
+      label: 'Divide into square tasks',
       disabled: false,
     },
     {
