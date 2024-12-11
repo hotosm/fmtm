@@ -8,7 +8,6 @@ import { revokeCookie } from '@/utilfunctions/login';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import { LoginActions } from '@/store/slices/LoginSlice';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
-import DebugConsole from '@/utilities/DebugConsole';
 import { useAppSelector } from '@/types/reduxTypes';
 
 type customDrawerType = {
@@ -74,7 +73,6 @@ export default function CustomDrawer({ open, size, type, onClose, setOpen }: cus
   const dispatch = CoreModules.useAppDispatch();
 
   const defaultTheme = useAppSelector((state) => state.theme.hotTheme);
-  const [showDebugConsole, setShowDebugConsole] = useState(false);
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
 
   const onMouseEnter = (event: React.MouseEvent<HTMLElement>) => {
@@ -129,7 +127,6 @@ export default function CustomDrawer({ open, size, type, onClose, setOpen }: cus
 
   return (
     <div>
-      <DebugConsole showDebugConsole={showDebugConsole} setShowDebugConsole={setShowDebugConsole} />
       <React.Fragment>
         <SwipeableDrawer swipeAreaWidth={0} onOpen={onClose} anchor={'right'} open={open} onClose={onClose}>
           <CoreModules.Stack sx={{ display: 'flex', flexDirection: 'column', padding: 3 }}>
@@ -222,9 +219,6 @@ export default function CustomDrawer({ open, size, type, onClose, setOpen }: cus
                     </CoreModules.ListItem>
                   </NavLink>
                 ),
-              )}
-              {import.meta.env.MODE === 'development' && (
-                <Button onClick={() => setShowDebugConsole(true)} btnText="Open Console" btnType="secondary" />
               )}
               <div className="fmtm-ml-4 fmtm-mt-2 lg:fmtm-hidden">
                 {authDetails ? (
