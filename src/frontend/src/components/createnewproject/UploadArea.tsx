@@ -275,15 +275,20 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
                 </div>
               )}
               {uploadAreaSelection === 'upload_file' && (
-                <FileInputComponent
-                  customFile={geojsonFile}
-                  onChange={changeFileHandler}
-                  onResetFile={resetFile}
-                  accept=".geojson, .json"
-                  fileDescription="*The supported file format is geojson file."
-                  btnText="Upload a Geojson"
-                  errorMsg={errors.uploadedAreaFile}
-                />
+                <>
+                  <FileInputComponent
+                    customFile={geojsonFile}
+                    onChange={changeFileHandler}
+                    onResetFile={resetFile}
+                    accept=".geojson, .json"
+                    fileDescription="*The supported file format is geojson file."
+                    btnText="Upload a Geojson"
+                    errorMsg={errors.uploadedAreaFile}
+                  />
+                  <p className="fmtm-text-gray-700">
+                    Total Area: <span className="fmtm-font-bold">{totalAreaSelection}</span>
+                  </p>
+                </>
               )}
             </div>
             <div className="fmtm-flex fmtm-gap-5 fmtm-mx-auto fmtm-mt-10 fmtm-my-5">
