@@ -68,7 +68,6 @@
 				<div class="flex items-center justify-between">
 					<p class="text-[#333] text-xl font-barlow-semibold">Feature {selectedEntity?.osmid}</p>
 					<sl-button
-						loading={entitiesStore.syncEntityStatusLoading}
 						onclick={async () => {
 							await entitiesStore.syncEntityStatus(projectData?.id);
 						}}
@@ -78,8 +77,14 @@
 						role="button"
 						tabindex="0"
 						size="small"
-						class="secondary w-fit ml-auto"
+						class="link w-fit ml-auto"
+						disabled={entitiesStore.syncEntityStatusLoading}
 					>
+						<hot-icon
+							slot="prefix"
+							name="arrow-repeat"
+							class={`!text-[1rem] cursor-pointer duration-200 ${entitiesStore.syncEntityStatusLoading && 'animate-spin'}`}
+						></hot-icon>
 						<span class="font-barlow-medium text-SM uppercase">SYNC STATUS</span>
 					</sl-button>
 				</div>
@@ -92,24 +97,46 @@
 					</p>
 				</div>
 				{#if selectedEntity?.status !== 'SURVEY_SUBMITTED'}
-					<sl-button
-						loading={entitiesStore.updateEntityStatusLoading}
-						variant="default"
-						size="small"
-						class="primary"
-						onclick={() => {
-							mapFeature();
-						}}
-						onkeydown={(e: KeyboardEvent) => {
-							if (e.key === 'Enter') {
+					<div class="flex gap-2">
+						<sl-button
+							variant="default"
+							size="small"
+							class="secondary flex-grow"
+							onclick={() => {
+								// todo: navigate to feature
+							}}
+							onkeydown={(e: KeyboardEvent) => {
+								if (e.key === 'Enter') {
+									// todo: navigate to feature
+								}
+							}}
+							role="button"
+							tabindex="0"
+						>
+							<hot-icon slot="prefix" name="direction" class="!text-[1rem] cursor-pointer duration-200"></hot-icon>
+							<span class="font-barlow-medium text-sm">NAVIGATE HERE</span>
+						</sl-button>
+						<sl-button
+							loading={entitiesStore.updateEntityStatusLoading}
+							variant="default"
+							size="small"
+							class="primary flex-grow"
+							onclick={() => {
 								mapFeature();
-							}
-						}}
-						role="button"
-						tabindex="0"
-					>
-						<span class="font-barlow-medium text-sm">MAP FEATURE IN ODK</span>
-					</sl-button>
+							}}
+							onkeydown={(e: KeyboardEvent) => {
+								if (e.key === 'Enter') {
+									mapFeature();
+								}
+							}}
+							role="button"
+							tabindex="0"
+						>
+							<hot-icon slot="prefix" name="location" class="!text-[1rem] text-white cursor-pointer duration-200"
+							></hot-icon>
+							<span class="font-barlow-medium text-sm">MAP FEATURE IN ODK</span>
+						</sl-button>
+					</div>
 				{/if}
 			</div>
 		</div>
