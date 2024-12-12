@@ -75,8 +75,6 @@
 	let loaded: boolean = $state(false);
 	let selectedBaselayer: string = $state('OSM');
 	let taskAreaClicked: boolean = $state(false);
-	let toggleGeolocationStatus: boolean = $state(false);
-	let toggleNavigationMode: boolean = $state(false);
 	let projectSetupStep = $state(null);
 	// Trigger adding the PMTiles layer to baselayers, if PmtilesUrl is set
 	let allBaseLayers: maplibregl.StyleSpecification[] = $derived(
@@ -151,12 +149,14 @@
 		const clickedTaskFeature = map?.queryRenderedFeatures(e.point, {
 			layers: ['task-fill-layer'],
 		});
-
 		// if clicked point contains entity then set it's osm id else set null to store
 		if (clickedEntityFeature && clickedEntityFeature?.length > 0) {
 			const clickedEntityId = clickedEntityFeature[0]?.properties?.osm_id;
 			entitiesStore.setSelectedEntity(clickedEntityId);
-			entitiesStore.setSelectedEntityCoordinate([e.lngLat.lng, e.lngLat.lat]);
+			entitiesStore.setSelectedEntityCoordinate({
+				entityId: clickedEntityId,
+				coordinate: [e.lngLat.lng, e.lngLat.lat],
+			});
 		} else {
 			entitiesStore.setSelectedEntity(null);
 			entitiesStore.setSelectedEntityCoordinate(null);
@@ -281,20 +281,6 @@
 		}
 	}
 
-	// if navigation mode on, tilt map by 50 degrees
-	$effect(() => {
-		if (toggleNavigationMode && toggleGeolocationStatus) {
-			map?.setPitch(50);
-		} else {
-			map?.setPitch(0);
-		}
-	});
-
-	// if map loaded, turn on geolocation by default
-	$effect(() => {
-		if (loaded) toggleGeolocationStatus = true;
-	});
-
 	onMount(async () => {
 		// Register pmtiles protocol
 		if (!maplibre.config.REGISTERED_PROTOCOLS.hasOwnProperty('pmtiles')) {
@@ -342,32 +328,8 @@
 	<ScaleControl />
 	<Control class="flex flex-col gap-y-2" position="top-left">
 		<ControlGroup>
-			<ControlButton
-				on:click={() => {
-					toggleGeolocationStatus = !toggleGeolocationStatus;
-					toggleNavigationMode = false;
-				}}
-				><hot-icon
-					name="geolocate"
-					class={`!text-[1.2rem] cursor-pointer  duration-200 ${toggleGeolocationStatus ? 'text-red-600' : 'text-[#52525B]'}`}
-				></hot-icon></ControlButton
-			>
-		</ControlGroup></Control
-	>
-	<Control class="flex flex-col gap-y-2" position="top-left">
-		<ControlGroup>
 			<ControlButton on:click={zoomToProject}
 				><hot-icon name="crop-free" class={`!text-[1.2rem] cursor-pointer duration-200 text-black`}
-				></hot-icon></ControlButton
-			>
-		</ControlGroup></Control
-	>
-	<Control class="flex flex-col gap-y-2" position="top-left">
-		<ControlGroup>
-			<ControlButton on:click={() => (toggleNavigationMode = !toggleNavigationMode)}
-				><hot-icon
-					name="send"
-					class={`!text-[1.2rem] cursor-pointer duration-200 ${toggleNavigationMode ? 'text-red-600' : 'text-[#52525B]'}`}
 				></hot-icon></ControlButton
 			>
 		</ControlGroup></Control
@@ -382,9 +344,7 @@
 		<Legend />
 	</Control>
 	<!-- Add the Geolocation GeoJSON layer to the map -->
-	{#if toggleGeolocationStatus}
-		<Geolocation {map} {toggleGeolocationStatus} {toggleNavigationMode}></Geolocation>
-	{/if}
+	<Geolocation {map}></Geolocation>
 	<!-- The task area geojson -->
 	<GeoJSON id="tasks" data={taskStore.featcol} promoteId="fid">
 		<FillLayer
