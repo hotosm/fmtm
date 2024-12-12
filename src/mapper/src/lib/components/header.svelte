@@ -100,7 +100,7 @@
 		{#if isFirstLoad}
 		<hot-tooltip
 			bind:this={drawerOpenButtonRef}
-			content="Download the custom ODK Collect app here"
+			content="First download the custom ODK Collect app here"
 			open={true}
 			placement="bottom"
 			onsl-after-hide={() => {
