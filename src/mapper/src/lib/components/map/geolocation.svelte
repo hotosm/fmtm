@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { GeoJSON, SymbolLayer, type LngLatLike } from 'svelte-maplibre';
+	import { Control, ControlButton, ControlGroup, GeoJSON, SymbolLayer, type LngLatLike } from 'svelte-maplibre';
 	import type { FeatureCollection } from 'geojson';
 	import MapLibreGlDirections, { LoadingIndicatorControl } from '@maplibre/maplibre-gl-directions';
 
@@ -10,22 +10,21 @@
 
 	interface Props {
 		map: maplibregl.Map | undefined;
-		toggleGeolocationStatus: boolean;
-		toggleNavigationMode: boolean;
 	}
 
 	const alertStore = getAlertStore();
 	const commonStore = getCommonStore();
+	const entitiesStore = getEntitiesStatusStore();
 
-	let { map, toggleGeolocationStatus, toggleNavigationMode }: Props = $props();
+	let { map }: Props = $props();
 
 	let coords: LngLatLike | undefined = $state();
 	let rotationDeg: number | undefined = $state();
 	let watchId: number | undefined = $state();
 	let directions: MapLibreGlDirections = $state();
+	let entityDistance: number = $state(0);
 
-	const entitiesStore = getEntitiesStatusStore();
-	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
+	const entityToNavigate = $derived(entitiesStore.entityToNavigate);
 
 	// initialize MapLibreGlDirections
 	$effect(() => {
@@ -34,6 +33,16 @@
 			directions.interactive = false;
 			map.addControl(new LoadingIndicatorControl(directions));
 			directions.clear();
+
+			directions.on('fetchroutesend', (ev) => {
+				entityDistance = ev.data?.routes[0].distance as number;
+			});
+
+			directions.on('removewaypoint', () => {
+				if (directions.waypoints.length < 2) {
+					entityDistance = 0;
+				}
+			});
 		}
 	});
 
@@ -45,8 +54,17 @@
 	}
 
 	$effect(() => {
-		if (coords && selectedEntityCoordinate) {
-			setWaypoints(coords as [number, number], selectedEntityCoordinate);
+		if (coords && entityToNavigate) {
+			setWaypoints(coords as [number, number], entityToNavigate?.coordinate);
+		}
+	});
+
+	// if navigation mode on, tilt map by 50 degrees
+	$effect(() => {
+		if (entityToNavigate && entitiesStore.toggleGeolocation) {
+			map?.setPitch(50);
+		} else {
+			map?.setPitch(0);
 		}
 	});
 
@@ -61,14 +79,14 @@
 
 	// zoom to user's current location
 	$effect(() => {
-		if (toggleNavigationMode) {
+		if (entityToNavigate) {
 			map?.setCenter(coords as LngLatLike);
 			map?.setZoom(18);
 		}
 	});
 
 	$effect(() => {
-		if (map && toggleGeolocationStatus) {
+		if (map && entitiesStore.toggleGeolocation) {
 			// zoom to user's current location
 			navigator.geolocation.getCurrentPosition((position) => {
 				const currentCoordinate: maplibregl.LngLatLike = [position.coords.longitude, position.coords.latitude];
@@ -83,7 +101,7 @@
 			watchId = navigator.geolocation.watchPosition(
 				function (pos) {
 					coords = [pos.coords.longitude, pos.coords.latitude];
-					if (toggleNavigationMode) {
+					if (entityToNavigate) {
 						// if user is in navigation mode, update the map center according to user's live location since swiping map isn't possible
 						map?.setCenter(coords);
 					}
@@ -127,7 +145,7 @@
 	});
 
 	$effect(() => {
-		if (map && toggleGeolocationStatus) {
+		if (map && entitiesStore.toggleGeolocation) {
 			if (isFirefox || isSafari) {
 				// firefox & safari doesn't support device orientation sensor
 				alertStore.setAlert({
@@ -146,7 +164,7 @@
 					rotationDeg = GetDeviceRotation(sensor.quaternion);
 
 					// rotate map according to device orientation
-					if (toggleNavigationMode) map.rotateTo(rotationDeg || 0, { duration: 0 });
+					if (entityToNavigate) map.rotateTo(rotationDeg || 0, { duration: 0 });
 				});
 
 				Promise.all([
@@ -162,23 +180,70 @@
 			}
 		}
 	});
+
+	function exitNavigationMode() {
+		entitiesStore.setSelectedEntity(null);
+		entitiesStore.setSelectedEntityCoordinate(null);
+		entitiesStore.setEntityToNavigate(null);
+		directions.clear();
+	}
 </script>
 
-<GeoJSON data={locationGeojson} id="geolocation">
-	<SymbolLayer
-		applyToClusters={false}
-		hoverCursor="pointer"
-		layout={{
-			// if orientation true (meaning the browser supports device orientation sensor show location dot with orientation sign)
-			'icon-image': !toggleNavigationMode
-				? ['case', ['==', ['get', 'orientation'], true], 'locationArc', 'locationDot']
-				: ['case', ['==', ['get', 'orientation'], true], 'arrow', 'locationDot'],
-			'icon-allow-overlap': true,
-			'text-offset': [0, -2],
-			'text-size': 12,
-			'icon-rotate': rotationDeg || 0, // rotate location icon acc to device orientation
-			'icon-rotation-alignment': 'map',
-			'icon-size': 0.5,
-		}}
-	/>
-</GeoJSON>
+<Control class="flex flex-col gap-y-2" position="top-left">
+	<ControlGroup>
+		<ControlButton
+			on:click={() => {
+				entitiesStore.setToggleGeolocation(!entitiesStore.toggleGeolocation);
+				if (!entitiesStore.toggleGeolocation) {
+					exitNavigationMode();
+				}
+			}}
+			><hot-icon
+				name="geolocate"
+				class={`!text-[1.2rem] cursor-pointer  duration-200 ${entitiesStore.toggleGeolocation ? 'text-red-600' : 'text-[#52525B]'}`}
+			></hot-icon></ControlButton
+		>
+	</ControlGroup></Control
+>
+
+{#if entitiesStore.toggleGeolocation}
+	<GeoJSON data={locationGeojson} id="geolocation">
+		<SymbolLayer
+			applyToClusters={false}
+			hoverCursor="pointer"
+			layout={{
+				// if orientation true (meaning the browser supports device orientation sensor show location dot with orientation sign)
+				'icon-image': !entityToNavigate
+					? ['case', ['==', ['get', 'orientation'], true], 'locationArc', 'locationDot']
+					: ['case', ['==', ['get', 'orientation'], true], 'arrow', 'locationDot'],
+				'icon-allow-overlap': true,
+				'text-offset': [0, -2],
+				'text-size': 12,
+				'icon-rotate': rotationDeg || 0, // rotate location icon acc to device orientation
+				'icon-rotation-alignment': 'map',
+				'icon-size': 0.5,
+			}}
+		/>
+	</GeoJSON>
+{/if}
+
+{#if entitiesStore.toggleGeolocation && entityToNavigate}
+	<div class="w-full flex justify-center absolute z-10 bottom-2 pointer-events-none">
+		<div class="bg-white rounded-md py-2 px-4 flex items-center gap-6 pointer-events-auto shadow-md z-10">
+			<p class="text-black text-base font-barlow-medium">Distance: {entityDistance}m</p>
+			<sl-button
+				onclick={exitNavigationMode}
+				onkeydown={(e: KeyboardEvent) => {
+					e.key === 'Enter' && exitNavigationMode();
+				}}
+				role="button"
+				tabindex="0"
+				size="small"
+				class="secondary"
+				disabled={entitiesStore.syncEntityStatusLoading}
+			>
+				<span class="text-sm">Exit Navigation</span>
+			</sl-button>
+		</div>
+	</div>
+{/if}
