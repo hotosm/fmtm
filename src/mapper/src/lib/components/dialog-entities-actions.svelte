@@ -19,6 +19,8 @@
 	const selectedEntity = $derived(
 		entitiesStore.entitiesStatusList?.find((entity) => entity.osmid === selectedEntityOsmId),
 	);
+	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
+	const entityToNavigate = $derived(entitiesStore.entityToNavigate);
 
 	const mapFeature = () => {
 		const xformId = projectData?.odk_form_id;
@@ -42,6 +44,13 @@
 		} else {
 			alertStore.setAlert({ message: 'Requires a mobile phone with ODK Collect.', variant: 'warning' });
 		}
+	};
+
+	const navigateToEntity = () => {
+		if (!entitiesStore.toggleGeolocation) {
+			entitiesStore.setToggleGeolocation(true);
+		}
+		entitiesStore.setEntityToNavigate(selectedEntityCoordinate);
 	};
 </script>
 
@@ -99,15 +108,16 @@
 				{#if selectedEntity?.status !== 'SURVEY_SUBMITTED'}
 					<div class="flex gap-2">
 						<sl-button
+							disabled={entityToNavigate?.entityId === selectedEntity?.osmid}
 							variant="default"
 							size="small"
 							class="secondary flex-grow"
 							onclick={() => {
-								// todo: navigate to feature
+								navigateToEntity();
 							}}
 							onkeydown={(e: KeyboardEvent) => {
 								if (e.key === 'Enter') {
-									// todo: navigate to feature
+									navigateToEntity();
 								}
 							}}
 							role="button"
