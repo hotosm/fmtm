@@ -46,7 +46,7 @@
 
 	$effect(() => {
 		if (coords && selectedEntityCoordinate) {
-			setWaypoints(coords, selectedEntityCoordinate);
+			setWaypoints(coords as [number, number], selectedEntityCoordinate);
 		}
 	});
 
@@ -118,7 +118,7 @@
 				type: 'Feature',
 				geometry: {
 					type: 'Point',
-					coordinates: coords,
+					coordinates: coords as number[],
 				},
 				// firefox & safari doesn't support device orientation sensor, so if the browser any of the two set orientation to false
 				properties: { orientation: !(isFirefox || isSafari) },
@@ -150,9 +150,9 @@
 				});
 
 				Promise.all([
-					navigator.permissions.query({ name: 'accelerometer' }),
-					navigator.permissions.query({ name: 'magnetometer' }),
-					navigator.permissions.query({ name: 'gyroscope' }),
+					navigator.permissions.query({ name: 'accelerometer' as PermissionName }),
+					navigator.permissions.query({ name: 'magnetometer' as PermissionName }),
+					navigator.permissions.query({ name: 'gyroscope' as PermissionName }),
 				]).then((results) => {
 					if (results.every((result) => result.state === 'granted')) {
 						sensor.start();
