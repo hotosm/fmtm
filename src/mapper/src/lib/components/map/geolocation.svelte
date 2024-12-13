@@ -7,6 +7,8 @@
 	import { getAlertStore } from '$store/common.svelte.ts';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
 	import { getCommonStore } from '$store/common.svelte.ts';
+	import { layers } from '$assets/maplibre-directions.ts';
+	import locationUrl from '$assets/images/location.png';
 
 	interface Props {
 		map: maplibregl.Map | undefined;
@@ -29,7 +31,20 @@
 	// initialize MapLibreGlDirections
 	$effect(() => {
 		if (map) {
-			directions = new MapLibreGlDirections(map);
+			// load location image for destination
+			map.loadImage(locationUrl).then((image) => {
+				if (image) {
+					map.addImage('location', image.data);
+				}
+			});
+			directions = new MapLibreGlDirections(map, {
+				// custom styled direction layer
+				layers,
+				sensitiveWaypointLayers: ['maplibre-gl-directions-waypoint'],
+				sensitiveSnappointLayers: ['maplibre-gl-directions-snappoint'],
+				sensitiveRoutelineLayers: ['maplibre-gl-directions-routeline'],
+				sensitiveAltRoutelineLayers: ['maplibre-gl-directions-alt-routeline'],
+			});
 			directions.interactive = false;
 			map.addControl(new LoadingIndicatorControl(directions));
 			directions.clear();
