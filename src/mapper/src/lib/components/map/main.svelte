@@ -410,17 +410,28 @@
 		<FillLayer
 			id="entity-fill-layer"
 			paint={{
-				'fill-opacity': 0.3,
+				'fill-opacity': 0.6,
 				'fill-color': [
 					'match',
 					['get', 'status'],
 					'READY',
-					'#d62822',
+					'#9c9a9a',
 					'OPENED_IN_ODK',
-					'#fad30a',
+					'#fae15f',
+					'SURVEY_SUBMITTED',
+					'#71bf86',
+					'#c5fbf5', // default color if no match is found
+				],
+				'fill-outline-color': [
+					'match',
+					['get', 'status'],
+					'READY',
+					'#000000',
+					'OPENED_IN_ODK',
+					'#ffd603',
 					'SURVEY_SUBMITTED',
 					'#32a852',
-					'#c5fbf5', // default color if no match is found
+					'#c5fbf5',
 				],
 			}}
 			beforeLayerType="symbol"
