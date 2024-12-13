@@ -46,7 +46,7 @@
 			<sl-select
 				placeholder="Select a basemap"
 				onsl-change={(event: SlSelectEvent) => {
-					const selectedId = event.originalTarget.value;
+					const selectedId = event.target.value;
 					selectedBasemap = basemapStore.projectBasemaps?.find((basemap: Basemap) => basemap.id === selectedId) || null;
 				}}
 			>
