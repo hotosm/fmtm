@@ -324,7 +324,7 @@
 	]}
 >
 	<!-- Controls -->
-	<NavigationControl position="top-left" />
+	<NavigationControl position="top-left" showZoom={false} />
 	<ScaleControl />
 	<Control class="flex flex-col gap-y-2" position="top-left">
 		<ControlGroup>
