@@ -2,11 +2,17 @@
 	import Editor from '$lib/components/editor/editor.svelte';
 	import Comment from '$lib/components/more/comment.svelte';
 	import Activities from '$lib/components/more/activities.svelte';
+	import ProjectInfo from '$lib/components/more/project-info.svelte';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
 	import type { ProjectData, TaskEventType } from '$lib/types';
 
-	type stackType = '' | 'Comment' | 'Instructions' | 'Activities';
+	type stackType = '' | 'Comment' | 'Instructions' | 'Activities' | 'Project Information';
+
 	const stackGroup: { icon: string; title: stackType }[] = [
+		{
+			icon: 'info-circle',
+			title: 'Project Information',
+		},
 		{
 			icon: 'chat',
 			title: 'Comment',
@@ -88,11 +94,11 @@
 			<p class="text-[1.125rem] font-barlow-semibold">{activeStack}</p>
 		</div>
 	{/if}
+
 	<!-- body -->
 	{#if activeStack === 'Comment'}
 		<Comment {comments} projectId={projectData?.id} />
 	{/if}
-
 	{#if activeStack === 'Instructions'}
 		{#if projectData?.per_task_instructions}
 			<Editor editable={false} content={projectData?.per_task_instructions} />
@@ -105,4 +111,5 @@
 	{#if activeStack === 'Activities'}
 		<Activities {taskEvents} {zoomToTask} />
 	{/if}
+	{#if activeStack === 'Project Information'}<ProjectInfo {projectData} />{/if}
 </div>
