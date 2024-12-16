@@ -77,9 +77,11 @@ nav:
       - Video Guides: manuals/videos.md
       - User Types Explanation: manuals/user-breakdown.md
       - Workflow Diagrams: manuals/workflow-diagrams.md
+      - Mapper Guide: manuals/mapping.md
       - Project Manager Guide: manuals/project-managers.md
       - XLSForm Design: manuals/xlsform-design.md
       - ODKCollect Offline Maps: https://docs.getodk.org/collect-offline-maps
+      - Field Mapping Examples: manuals/field-mapping-examples.md
   - Developer Guide:
       - Dev Practices: https://docs.hotosm.org/dev-practices
       - Setup: dev/Setup.md
