@@ -24,7 +24,7 @@
 	type Props = {
 		projectData: ProjectData;
 		zoomToTask: (taskId: number) => void;
-	}
+	};
 
 	let { projectData, zoomToTask }: Props = $props();
 	const taskStore = getTaskStore();
@@ -94,9 +94,15 @@
 	{/if}
 
 	{#if activeStack === 'Instructions'}
-		<Editor editable={false} content={projectData?.per_task_instructions} />
+		{#if projectData?.per_task_instructions}
+			<Editor editable={false} content={projectData?.per_task_instructions} />
+		{:else}
+			<div class="flex justify-center mt-10">
+				<p class="text-[#484848] text-base">No Instructions</p>
+			</div>
+		{/if}
 	{/if}
 	{#if activeStack === 'Activities'}
-		<Activities {taskEvents} zoomToTask={zoomToTask} />
+		<Activities {taskEvents} {zoomToTask} />
 	{/if}
 </div>
