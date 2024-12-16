@@ -25,6 +25,7 @@
 	let watchId: number | undefined = $state();
 	let directions: MapLibreGlDirections = $state();
 	let entityDistance: number = $state(0);
+	let tooltipRef: any = $state();
 
 	const entityToNavigate = $derived(entitiesStore.entityToNavigate);
 
@@ -206,20 +207,43 @@
 
 <Control class="flex flex-col gap-y-2" position="top-left">
 	<ControlGroup>
-		<ControlButton
-			on:click={() => {
-				entitiesStore.setToggleGeolocation(!entitiesStore.toggleGeolocation);
-				if (!entitiesStore.toggleGeolocation) {
-					exitNavigationMode();
-				}
+		<hot-tooltip
+			bind:this={tooltipRef}
+			placement="right"
+			hoist
+			open
+			trigger="manual"
+			style="--max-width: fit-content"
+			onclick={() => tooltipRef.hide()}
+			onkeydown={(e: KeyboardEvent) => {
+				e.key === 'Enter' && tooltipRef.hide();
 			}}
-			><hot-icon
-				name="geolocate"
-				class={`!text-[1.2rem] cursor-pointer  duration-200 ${entitiesStore.toggleGeolocation ? 'text-red-600' : 'text-[#52525B]'}`}
-			></hot-icon></ControlButton
+			role="button"
+			tabindex="0"
 		>
-	</ControlGroup></Control
->
+			<div slot="content" class="flex items-center gap-1">
+				<span>For the best experience, turn on location</span>
+				<button
+					class="text-white rounded"
+					style="border: white 1px solid; width: fit-content; padding-left: 10px; padding-right: 10px">Got it!</button
+				>
+			</div>
+			<ControlButton
+				on:click={() => {
+					entitiesStore.setToggleGeolocation(!entitiesStore.toggleGeolocation);
+					if (!entitiesStore.toggleGeolocation) {
+						exitNavigationMode();
+					}
+				}}
+			>
+				<hot-icon
+					name="geolocate"
+					class={`!text-[1.2rem] cursor-pointer  duration-200 ${entitiesStore.toggleGeolocation ? 'text-red-600' : 'text-[#52525B]'}`}
+				></hot-icon>
+			</ControlButton>
+		</hot-tooltip>
+	</ControlGroup>
+</Control>
 
 {#if entitiesStore.toggleGeolocation}
 	<GeoJSON data={locationGeojson} id="geolocation">
