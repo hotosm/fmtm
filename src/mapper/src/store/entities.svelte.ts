@@ -38,7 +38,7 @@ let syncEntityStatusLoading: boolean = $state(false);
 let updateEntityStatusLoading: boolean = $state(false);
 let selectedEntityCoordinate: entityIdCoordinateMapType | null = $state(null);
 let entityToNavigate: entityIdCoordinateMapType | null = $state(null);
-let toggleGeolocation: boolean = $state(true);
+let toggleGeolocation: boolean = $state(false);
 
 function getEntityStatusStream(projectId: number): ShapeStream | undefined {
 	if (!projectId) {
