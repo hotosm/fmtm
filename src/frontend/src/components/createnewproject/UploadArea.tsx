@@ -15,6 +15,7 @@ import NewDefineAreaMap from '@/views/NewDefineAreaMap';
 import { checkWGS84Projection } from '@/utilfunctions/checkWGS84Projection.js';
 import { valid } from 'geojson-validation';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
+import DescriptionSection from '@/components/createnewproject/Description';
 
 const uploadAreaOptions = [
   {
@@ -209,20 +210,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
 
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row fmtm-h-full">
-      <div className="fmtm-bg-white lg:fmtm-w-[20%] xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6 lg:fmtm-h-full lg:fmtm-overflow-y-scroll lg:scrollbar">
-        <h6 className="fmtm-text-xl fmtm-font-[600] fmtm-pb-2 lg:fmtm-pb-6">Upload Area</h6>
-        <div className="fmtm-text-gray-500 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3">
-          <span>You can choose to upload the AOI. Note: The file upload only supports .geojson format. </span>
-          <div>
-            <p>You may also draw a freehand polygon on map interface.</p>{' '}
-            <p>Click on the reset button to redraw the AOI.</p>
-          </div>
-          <span>The total area of the AOI is also calculated and displayed on the screen.</span>
-          <span>
-            <b>Note:</b> The uploaded geojson should be in EPSG:4326 coordinate system.
-          </span>
-        </div>
-      </div>
+      <DescriptionSection section="Upload Area" />
       <div className="lg:fmtm-w-[80%] xl:fmtm-w-[83%] fmtm-h-full fmtm-bg-white fmtm-px-5 lg:fmtm-px-11 fmtm-py-6 lg:fmtm-overflow-y-scroll lg:scrollbar">
         <div className="fmtm-w-full fmtm-flex fmtm-gap-6 md:fmtm-gap-14 fmtm-flex-col md:fmtm-flex-row fmtm-h-full">
           <form

@@ -14,6 +14,7 @@ import NewDefineAreaMap from '@/views/NewDefineAreaMap';
 import { CustomCheckbox } from '../common/Checkbox';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import { Loader2 } from 'lucide-react';
+import DescriptionSection from '@/components/createnewproject/Description';
 
 const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) => {
   useDocumentTitle('Create Project: Upload Survey');
@@ -85,31 +86,7 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
 
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row fmtm-h-full">
-      <div className="fmtm-bg-white lg:fmtm-w-[20%] xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6 lg:fmtm-h-full lg:fmtm-overflow-y-scroll lg:scrollbar">
-        <h6 className="fmtm-text-xl fmtm-font-[600] fmtm-pb-2 lg:fmtm-pb-6">Upload Survey</h6>
-        <p className="fmtm-text-gray-500 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3">
-          <span>
-            You may choose a pre-configured form, or upload a custom XLS form. Click{' '}
-            <a
-              href="https://hotosm.github.io/osm-fieldwork/about/xlsforms/"
-              target="_"
-              className="fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer"
-            >
-              here
-            </a>{' '}
-            to learn more about XLSForm building.{' '}
-          </span>
-          <span>
-            For creating a custom XLS form, there are few essential fields that must be present for FMTM to function.
-            You may either download the sample XLS file and modify all fields that are not hidden, or edit the sample
-            form interactively in the browser.
-          </span>
-          <span>
-            <b>Note:</b> Additional questions will be incorporated into your custom form to assess the digitization
-            status.
-          </span>
-        </p>
-      </div>
+      <DescriptionSection section="Upload Survey" />
       <div className="lg:fmtm-w-[80%] xl:fmtm-w-[83%] fmtm-bg-white fmtm-px-5 lg:fmtm-px-11 fmtm-py-6 fmtm-h-full lg:fmtm-overflow-y-scroll lg:scrollbar">
         <div className="fmtm-w-full fmtm-flex fmtm-gap-6 md:fmtm-gap-14 fmtm-flex-col md:fmtm-flex-row fmtm-h-full">
           <form onSubmit={handleSubmit} className="fmtm-flex fmtm-flex-col lg:fmtm-w-[40%] fmtm-justify-between">

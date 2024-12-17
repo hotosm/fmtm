@@ -15,6 +15,7 @@ import { CustomCheckbox } from '@/components/common/Checkbox';
 import { organizationDropdownType } from '@/models/createproject/createProjectModel';
 import RichTextEditor from '@/components/common/Editor/Editor';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
+import DescriptionSection from '@/components/createnewproject/Description';
 
 const ProjectDetailsForm = ({ flag }) => {
   useDocumentTitle('Create Project: Project Details');
@@ -105,47 +106,7 @@ const ProjectDetailsForm = ({ flag }) => {
 
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row fmtm-h-full">
-      <div className="fmtm-bg-white lg:fmtm-w-[20%] xl:fmtm-w-[17%] fmtm-px-5 fmtm-py-6 lg:fmtm-h-full lg:fmtm-overflow-y-scroll lg:scrollbar">
-        <h6 className="fmtm-text-xl fmtm-font-[600] fmtm-pb-2 lg:fmtm-pb-6">Project Details</h6>
-        <div className="fmtm-text-gray-500 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3">
-          <span>
-            Fill in your project basic information such as name, description, hashtag, etc. This captures essential
-            information about your project.
-          </span>
-          <span>To complete the first step, you will need the login credentials of ODK Central Server.</span>{' '}
-          <div>
-            <a
-              href="https://docs.getodk.org/central-install-digital-ocean/"
-              className="fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-w-fit"
-              target="_"
-            >
-              Here{' '}
-            </a>
-            <span>
-              are the instructions for setting up a Central ODK Server on Digital Ocean, if you haven’t already.
-            </span>
-          </div>
-          <div>
-            You can use the 'Custom TMS URL' option to integrate high-resolution aerial imagery like OpenAerialMap{' '}
-            <a
-              href="https://openaerialmap.org/"
-              className="fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-w-fit"
-              target="_"
-            >
-              (OAM)
-            </a>
-            . Simply obtain the TMS URL and paste it into the custom TMS field. More details:{' '}
-            <a
-              href="https://docs.openaerialmap.org/"
-              className="fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-w-fit"
-              target="_"
-            >
-              OpenAerialMap Documentation
-            </a>
-            .
-          </div>
-        </div>
-      </div>
+      <DescriptionSection section="Project Details" />
       <form
         className="xl:fmtm-w-[83%] fmtm-bg-white fmtm-px-11 fmtm-h-full fmtm-py-6 lg:fmtm-overflow-y-scroll lg:scrollbar"
         onSubmit={handleSubmit}
