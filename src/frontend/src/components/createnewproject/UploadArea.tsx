@@ -240,6 +240,11 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
                 }}
                 value={uploadAreaSelection}
                 errorMsg={errors.uploadAreaSelection}
+                hoveredOption={(hoveredOption) => {
+                  dispatch(
+                    CreateProjectActions.SetDescriptionToFocus(hoveredOption ? `uploadarea-${hoveredOption}` : null),
+                  );
+                }}
               />
               {uploadAreaSelection === 'draw' && (
                 <div>
@@ -263,15 +268,20 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
                 </div>
               )}
               {uploadAreaSelection === 'upload_file' && (
-                <FileInputComponent
-                  customFile={geojsonFile}
-                  onChange={changeFileHandler}
-                  onResetFile={resetFile}
-                  accept=".geojson, .json"
-                  fileDescription="*The supported file format is geojson file."
-                  btnText="Upload a Geojson"
-                  errorMsg={errors.uploadedAreaFile}
-                />
+                <div
+                  onMouseOver={() => dispatch(CreateProjectActions.SetDescriptionToFocus('uploadarea-uploadgeojson'))}
+                  onMouseLeave={() => dispatch(CreateProjectActions.SetDescriptionToFocus(null))}
+                >
+                  <FileInputComponent
+                    customFile={geojsonFile}
+                    onChange={changeFileHandler}
+                    onResetFile={resetFile}
+                    accept=".geojson, .json"
+                    fileDescription="*The supported file format is geojson file."
+                    btnText="Upload a Geojson"
+                    errorMsg={errors.uploadedAreaFile}
+                  />
+                </div>
               )}
             </div>
             <div className="fmtm-flex fmtm-gap-5 fmtm-mx-auto fmtm-mt-10 fmtm-my-5">

@@ -236,6 +236,13 @@ const DataExtract = ({
                   setExtractWays(value);
                 }}
                 errorMsg={errors.dataExtractWays}
+                hoveredOption={(hoveredOption) =>
+                  dispatch(
+                    CreateProjectActions.SetDescriptionToFocus(
+                      hoveredOption && hoveredOption === 'osm_data_extract' ? 'mapfeatures-osm' : null,
+                    ),
+                  )
+                }
               />
               {extractWays === 'osm_data_extract' && (
                 <Button
@@ -272,19 +279,26 @@ const DataExtract = ({
               )}
               {extractWays && (
                 <div className="fmtm-mt-4">
-                  <CustomCheckbox
-                    key="uploadAdditionalFeature"
-                    label="Upload Additional Features"
-                    checked={formValues?.hasAdditionalFeature}
-                    onCheckedChange={(status) => {
-                      handleCustomChange('hasAdditionalFeature', status);
-                      handleCustomChange('additionalFeature', null);
-                      dispatch(CreateProjectActions.SetAdditionalFeatureGeojson(null));
-                      setAdditionalFeature(null);
+                  <div
+                    onMouseOver={() => {
+                      dispatch(CreateProjectActions.SetDescriptionToFocus('mapfeatures-additional'));
                     }}
-                    className="fmtm-text-black"
-                    labelClickable
-                  />
+                    onMouseLeave={() => dispatch(CreateProjectActions.SetDescriptionToFocus(null))}
+                  >
+                    <CustomCheckbox
+                      key="uploadAdditionalFeature"
+                      label="Upload Additional Features"
+                      checked={formValues?.hasAdditionalFeature}
+                      onCheckedChange={(status) => {
+                        handleCustomChange('hasAdditionalFeature', status);
+                        handleCustomChange('additionalFeature', null);
+                        dispatch(CreateProjectActions.SetAdditionalFeatureGeojson(null));
+                        setAdditionalFeature(null);
+                      }}
+                      className="fmtm-text-black"
+                      labelClickable
+                    />
+                  </div>
                   {formValues?.hasAdditionalFeature && (
                     <>
                       <FileInputComponent

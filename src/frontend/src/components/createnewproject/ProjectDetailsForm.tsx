@@ -162,52 +162,60 @@ const ProjectDetailsForm = ({ flag }) => {
               <p className="fmtm-form-error fmtm-text-red-600 fmtm-text-sm fmtm-py-1">{errors.organisation_id}</p>
             )}
           </div>
-          {hasODKCredentials && (
-            <CustomCheckbox
-              key="defaultODKCredentials"
-              label="Use default ODK credentials"
-              checked={values.defaultODKCredentials}
-              onCheckedChange={() => {
-                handleCustomChange('defaultODKCredentials', !values.defaultODKCredentials);
-              }}
-              className="fmtm-text-black"
-              labelClickable={true}
-            />
-          )}
-          {((!values.defaultODKCredentials && hasODKCredentials) || !hasODKCredentials) && (
-            <div className="fmtm-flex fmtm-flex-col fmtm-gap-6">
-              <InputTextField
-                id="odk_central_url"
-                name="odk_central_url"
-                label="ODK Central URL"
-                value={values?.odk_central_url}
-                onChange={handleChange}
-                fieldType="text"
-                errorMsg={errors.odk_central_url}
-                required
+          <div
+            className="fmtm-flex fmtm-flex-col fmtm-gap-6"
+            onMouseOver={() => {
+              dispatch(CreateProjectActions.SetDescriptionToFocus('projectdetails-odk'));
+            }}
+            onMouseLeave={() => dispatch(CreateProjectActions.SetDescriptionToFocus(null))}
+          >
+            {hasODKCredentials && (
+              <CustomCheckbox
+                key="defaultODKCredentials"
+                label="Use default ODK credentials"
+                checked={values.defaultODKCredentials}
+                onCheckedChange={() => {
+                  handleCustomChange('defaultODKCredentials', !values.defaultODKCredentials);
+                }}
+                className="fmtm-text-black"
+                labelClickable={true}
               />
-              <InputTextField
-                id="odk_central_user"
-                name="odk_central_user"
-                label="ODK Central Email"
-                value={values?.odk_central_user}
-                onChange={handleChange}
-                fieldType="text"
-                errorMsg={errors.odk_central_user}
-                required
-              />
-              <InputTextField
-                id="odk_central_password"
-                name="odk_central_password"
-                label="ODK Central Password"
-                value={values?.odk_central_password}
-                onChange={handleChange}
-                fieldType="password"
-                errorMsg={errors.odk_central_password}
-                required
-              />
-            </div>
-          )}
+            )}
+            {((!values.defaultODKCredentials && hasODKCredentials) || !hasODKCredentials) && (
+              <>
+                <InputTextField
+                  id="odk_central_url"
+                  name="odk_central_url"
+                  label="ODK Central URL"
+                  value={values?.odk_central_url}
+                  onChange={handleChange}
+                  fieldType="text"
+                  errorMsg={errors.odk_central_url}
+                  required
+                />
+                <InputTextField
+                  id="odk_central_user"
+                  name="odk_central_user"
+                  label="ODK Central Email"
+                  value={values?.odk_central_user}
+                  onChange={handleChange}
+                  fieldType="text"
+                  errorMsg={errors.odk_central_user}
+                  required
+                />
+                <InputTextField
+                  id="odk_central_password"
+                  name="odk_central_password"
+                  label="ODK Central Password"
+                  value={values?.odk_central_password}
+                  onChange={handleChange}
+                  fieldType="password"
+                  errorMsg={errors.odk_central_password}
+                  required
+                />
+              </>
+            )}
+          </div>
           <div>
             <InputTextField
               id="hashtags"
@@ -225,15 +233,22 @@ const ProjectDetailsForm = ({ flag }) => {
             </p>
           </div>
           <div className="fmtm-flex fmtm-flex-col fmtm-gap-5">
-            <CustomCheckbox
-              key="hasCustomTMS"
-              label="Will you use a custom TMS basemap"
-              checked={values.hasCustomTMS}
-              onCheckedChange={() => {
-                handleCustomChange('hasCustomTMS', !values.hasCustomTMS);
+            <div
+              onMouseOver={() => {
+                dispatch(CreateProjectActions.SetDescriptionToFocus('projectdetails-tms'));
               }}
-              className="fmtm-text-black"
-            />
+              onMouseLeave={() => dispatch(CreateProjectActions.SetDescriptionToFocus(null))}
+            >
+              <CustomCheckbox
+                key="hasCustomTMS"
+                label="Will you use a custom TMS basemap"
+                checked={values.hasCustomTMS}
+                onCheckedChange={() => {
+                  handleCustomChange('hasCustomTMS', !values.hasCustomTMS);
+                }}
+                className="fmtm-text-black"
+              />
+            </div>
             {values.hasCustomTMS && (
               <InputTextField
                 id="custom_tms_url"

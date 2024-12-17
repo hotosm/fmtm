@@ -239,7 +239,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
               <div className="fmtm-flex fmtm-flex-col fmtm-gap-6 lg:fmtm-w-[40%] fmtm-justify-between">
                 <div>
                   <RadioButton
-                    value={splitTasksSelection || null}
+                    value={splitTasksSelection || ''}
                     topic="Select an option to split the task"
                     options={taskSplitOptions}
                     direction="column"
@@ -254,6 +254,13 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
                       }
                     }}
                     errorMsg={errors.task_split_type}
+                    hoveredOption={(hoveredOption) =>
+                      dispatch(
+                        CreateProjectActions.SetDescriptionToFocus(
+                          hoveredOption ? `splittasks-${hoveredOption}` : null,
+                        ),
+                      )
+                    }
                   />
                   <div className="fmtm-mt-5">
                     <p className="fmtm-text-gray-500">
