@@ -158,7 +158,7 @@ The corresponding docker-compose files are:
 main - docker-compose.main.yml
 staging - docker-compose.staging.yml
 development - docker-compose.development.yml
-local test - docker-compose.yml
+local test - compose.yaml
 ```
 
 Set your selection to a terminal variable to make the next step easier:
