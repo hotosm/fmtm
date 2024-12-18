@@ -1,0 +1,11 @@
+<map id="app.db.models.DbUser.one" name="app.db.models.DbUser.one">
+<area shape="rect" id="node1" title=" " alt="" coords="5,115,203,141"/>
+<area shape="rect" id="node2" href="$classapp_1_1db_1_1models_1_1DbProject.html#a4f8fe5156e57130c4992dcc5561a40f2" title=" " alt="" coords="269,5,483,32"/>
+<area shape="rect" id="node3" href="$classapp_1_1db_1_1models_1_1DbTask.html#abe7641f31410b8086f627ed3bf74c5a3" title=" " alt="" coords="277,56,475,83"/>
+<area shape="rect" id="node4" href="$classapp_1_1db_1_1models_1_1DbBackgroundTask.html#ad0b298d3de02723961138d0dfa30845b" title=" " alt="" coords="267,107,485,149"/>
+<area shape="rect" id="node5" href="$classapp_1_1db_1_1models_1_1DbOrganisation.html#a564098033a613faa58012c6dc87cf758" title=" " alt="" coords="251,173,501,200"/>
+<area shape="rect" id="node9" href="$classapp_1_1db_1_1models_1_1DbBasemap.html#a3a392fa37847a5acd85ef12e293a23ca" title=" " alt="" coords="261,224,491,251"/>
+<area shape="rect" id="node6" href="$classapp_1_1db_1_1models_1_1DbProject.html#a9a80b891da13348d456fd19964ad41e1" title=" " alt="" coords="557,115,792,141"/>
+<area shape="rect" id="node7" href="$classapp_1_1db_1_1models_1_1DbBackgroundTask.html#a9ca8f4297e312d38ea77ea6f4c76d87e" title=" " alt="" coords="566,166,783,207"/>
+<area shape="rect" id="node8" href="$classapp_1_1db_1_1models_1_1DbBasemap.html#a29efd63c2ad4a2e9bfd69f87ded8291c" title=" " alt="" coords="549,232,800,259"/>
+</map>

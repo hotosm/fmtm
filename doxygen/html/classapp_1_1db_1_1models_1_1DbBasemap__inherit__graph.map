@@ -1,0 +1,7 @@
+<map id="app.db.models.DbBasemap" name="app.db.models.DbBasemap">
+<area shape="rect" id="node1" title=" " alt="" coords="180,131,381,267"/>
+<area shape="rect" id="node3" href="$classapp_1_1projects_1_1project__schemas_1_1BasemapIn.html" title=" " alt="" coords="5,322,169,414"/>
+<area shape="rect" id="node4" href="$classapp_1_1projects_1_1project__schemas_1_1BasemapOut.html" title=" " alt="" coords="193,315,368,421"/>
+<area shape="rect" id="node5" href="$classapp_1_1projects_1_1project__schemas_1_1BasemapUpdate.html" title=" " alt="" coords="392,322,591,414"/>
+<area shape="rect" id="node2" title=" " alt="" coords="233,5,328,83"/>
+</map>

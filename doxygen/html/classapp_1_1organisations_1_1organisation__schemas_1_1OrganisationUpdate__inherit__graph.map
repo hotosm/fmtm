@@ -1,0 +1,8 @@
+<map id="app.organisations.organisation_schemas.OrganisationUpdate" name="app.organisations.organisation_schemas.OrganisationUpdate">
+<area shape="rect" id="node1" title=" " alt="" coords="108,595,331,687"/>
+<area shape="rect" id="node2" href="$classapp_1_1organisations_1_1organisation__schemas_1_1OrganisationInBase.html" title=" " alt="" coords="108,425,331,547"/>
+<area shape="rect" id="node3" href="$classapp_1_1central_1_1central__schemas_1_1ODKCentralIn.html" title=" " alt="" coords="5,285,201,377"/>
+<area shape="rect" id="node4" href="$classapp_1_1central_1_1central__schemas_1_1ODKCentral.html" title=" " alt="" coords="57,131,248,237"/>
+<area shape="rect" id="node5" title=" " alt="" coords="172,5,267,83"/>
+<area shape="rect" id="node6" href="$classapp_1_1db_1_1models_1_1DbOrganisation.html" title=" " alt="" coords="225,293,448,370"/>
+</map>
