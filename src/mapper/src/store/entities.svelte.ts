@@ -26,11 +26,19 @@ type entitiesShapeType = {
 	task_id: number;
 };
 
+type entityIdCoordinateMapType = {
+	entityId: string;
+	coordinate: [number, number];
+};
+
 let selectedEntity: number | null = $state(null);
 let entitiesShape: Shape;
 let entitiesStatusList: entitiesStatusListType[] = $state([]);
 let syncEntityStatusLoading: boolean = $state(false);
 let updateEntityStatusLoading: boolean = $state(false);
+let selectedEntityCoordinate: entityIdCoordinateMapType | null = $state(null);
+let entityToNavigate: entityIdCoordinateMapType | null = $state(null);
+let toggleGeolocation: boolean = $state(false);
 
 function getEntityStatusStream(projectId: number): ShapeStream | undefined {
 	if (!projectId) {
@@ -64,6 +72,10 @@ function getEntitiesStatusStore() {
 		selectedEntity = entityOsmId;
 	}
 
+	async function setSelectedEntityCoordinate(entityCoordinate: entityIdCoordinateMapType | null) {
+		selectedEntityCoordinate = entityCoordinate;
+	}
+
 	async function syncEntityStatus(projectId: number) {
 		try {
 			syncEntityStatusLoading = true;
@@ -93,11 +105,22 @@ function getEntitiesStatusStore() {
 		}
 	}
 
+	function setEntityToNavigate(entityCoordinate: entityIdCoordinateMapType | null) {
+		entityToNavigate = entityCoordinate;
+	}
+
+	function setToggleGeolocation(status: boolean) {
+		toggleGeolocation = status;
+	}
+
 	return {
 		subscribeToEntityStatusUpdates: subscribeToEntityStatusUpdates,
 		setSelectedEntity: setSelectedEntity,
 		syncEntityStatus: syncEntityStatus,
 		updateEntityStatus: updateEntityStatus,
+		setSelectedEntityCoordinate: setSelectedEntityCoordinate,
+		setEntityToNavigate: setEntityToNavigate,
+		setToggleGeolocation: setToggleGeolocation,
 		get selectedEntity() {
 			return selectedEntity;
 		},
@@ -109,6 +132,15 @@ function getEntitiesStatusStore() {
 		},
 		get updateEntityStatusLoading() {
 			return updateEntityStatusLoading;
+		},
+		get selectedEntityCoordinate() {
+			return selectedEntityCoordinate;
+		},
+		get entityToNavigate() {
+			return entityToNavigate;
+		},
+		get toggleGeolocation() {
+			return toggleGeolocation;
 		},
 	};
 }
