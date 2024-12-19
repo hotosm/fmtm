@@ -6,7 +6,7 @@ import type { ProjectTask, TaskEventType } from '$lib/types';
 
 let taskEventShape: Shape;
 let featcol = $state({ type: 'FeatureCollection', features: [] });
-let latestEvent = $state(null);
+let latestEvent: TaskEventType | null = $state(null);
 let events: TaskEventType[] = $state([]);
 
 // for UI show task index for simplicity & for api's use task id
@@ -29,7 +29,8 @@ function getTaskEventStream(projectId: number): ShapeStream | undefined {
 }
 
 function getTaskStore() {
-	async function subscribeToTaskEvents(taskEventStream: ShapeStream) {
+	async function subscribeToTaskEvents(taskEventStream: ShapeStream | undefined) {
+		if (!taskEventStream) return;
 		taskEventShape = new Shape(taskEventStream);
 
 		taskEventShape.subscribe((taskEvent: ShapeData) => {
