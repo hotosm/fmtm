@@ -1,11 +1,11 @@
 import { ShapeStream, Shape } from '@electric-sql/client';
 import type { ShapeData, Row } from '@electric-sql/client';
-import type { GeoJSON } from 'geojson';
+import type { Feature, FeatureCollection, GeoJSON } from 'geojson';
 
 import type { ProjectTask, TaskEventType } from '$lib/types';
 
 let taskEventShape: Shape;
-let featcol = $state({ type: 'FeatureCollection', features: [] });
+let featcol: FeatureCollection = $state({ type: 'FeatureCollection', features: [] });
 let latestEvent: TaskEventType | null = $state(null);
 let events: TaskEventType[] = $state([]);
 
@@ -50,7 +50,7 @@ function getTaskStore() {
 
 	async function appendTaskStatesToFeatcol(projectTasks: ProjectTask[]) {
 		const latestTaskStates = await getLatestStatePerTask();
-		const features = projectTasks.map((task) => ({
+		const features: Feature[] = projectTasks.map((task) => ({
 			type: 'Feature',
 			geometry: task.outline,
 			properties: {
@@ -89,7 +89,7 @@ function getTaskStore() {
 		const allTasksCurrentStates = await getLatestStatePerTask();
 		selectedTask = allTasksCurrentStates.get(taskId);
 		selectedTaskState = selectedTask?.state || 'UNLOCKED_TO_MAP';
-		selectedTaskGeom = featcol.features.find((x) => x.properties.fid === taskId)?.geometry || null;
+		selectedTaskGeom = featcol.features.find((x) => x?.properties?.fid === taskId)?.geometry || null;
 	}
 
 	return {
