@@ -9,7 +9,7 @@ mapping experience.
 
 - The first time you load the project, you should be prompted to download
   the custom `.apk` from the upper right corner of your browser window
-  usually represented by three vertical dots.
+  usually represented by three horizontal lines (☰).
 
 - Once downloaded, you should install the custom ODK Collect application.
   For installation, locate the downloaded ODK APK file usually found on
