@@ -1,15 +1,20 @@
 # Mapper Frontend Documentation
 
-The **Mapper Frontend** was developed to provide a simpler, more intuitive
-mapping experience.
+The **Mapper's page** was developed to provide a simpler, more intuitive
+mapping experience. 
 
 ## Part (A): Setup For Mapping
 
 ### Step 1: Install The Custom ODK Collect Mobile App
 
 - The first time you load the project, you should be prompted to download
-  the custom `.apk` from the sidebar.
+  the custom `.apk` from the upper right corner of your browser window
+   usually represented by three vertical dots.
+
 - Once downloaded, you should install the custom ODK Collect application.
+  For installation, locate the downloaded ODK APK file usually found on
+  downloads section of your file manager and tap install. 
+
 
 !!! tip
 
@@ -18,8 +23,17 @@ mapping experience.
 
       You may have to enable installing from unknown sources in your device
       settings too.
-
-### Step 2: Access the Mapper Frontend
+### Step 2: Add metadata on odk application(Optional)
+The metadata like username, email, phone number and device ID can be added
+on odk from settings. This addition allows FMTM to track submission by 
+username and filter data by mapppers.
+- Go to settings of odk project.
+- Click on User and device identity.
+- Click on form metadata and add username, phone number and email address. 
+**Note:** The username may be prepopulated with the osm username of
+  FMTM. Please confirm or update the username if necessary
+  
+### Step 3: Access the Mapper Frontend
 
 - **Option 1:** Click the **Start Mapping** button on the project cards of
   explore project page.
@@ -30,9 +44,10 @@ mapping experience.
 !!! note
 
       This functionality is designed for mappers in the field, so it is
-      recommended to use a mobile device to access it.
+      recommended to use a mobile device to access it. Furthermore, mappers
+      are encouraged to use Chrome based browser for field mapping activity.
 
-### Step 3: Configure ODK Collect (once only)
+### Step 4: Configure ODK Collect (once only)
 
 - **Option 1:** Scan the QR code displayed on the Mapper Frontend using
   the custom ODK Collect mobile application.
@@ -46,12 +61,15 @@ mapping experience.
   4. Select **Import QR Code**.
   5. Browse to the downloaded QR image and load the project.
 
+If you missed the QR code pop-up, You can get the it anytime from 
+QR code tab on bottom navigation bar of the mapper's page.
+
 !!! tip
 
       For a demonstration of the process above, click the **i** info icon
       on the QR Code tab of the mapper frontend.
 
-### Step 4: Load Imagery (optional)
+### Step 5: Load Imagery (optional)
 
 - You can load the reference base imagery by clicking on offline mode option
   (second tab on bottom navigation bar).
