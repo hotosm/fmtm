@@ -1,7 +1,7 @@
 # Mapper Frontend Documentation
 
 The **Mapper's page** was developed to provide a simpler, more intuitive
-mapping experience. 
+mapping experience.
 
 ## Part (A): Setup For Mapping
 
@@ -9,12 +9,11 @@ mapping experience.
 
 - The first time you load the project, you should be prompted to download
   the custom `.apk` from the upper right corner of your browser window
-   usually represented by three vertical dots.
+  usually represented by three vertical dots.
 
 - Once downloaded, you should install the custom ODK Collect application.
   For installation, locate the downloaded ODK APK file usually found on
-  downloads section of your file manager and tap install. 
-
+  downloads section of your file manager and tap install.
 
 !!! tip
 
@@ -23,16 +22,19 @@ mapping experience.
 
       You may have to enable installing from unknown sources in your device
       settings too.
+
 ### Step 2: Add metadata on odk application(Optional)
+
 The metadata like username, email, phone number and device ID can be added
-on odk from settings. This addition allows FMTM to track submission by 
+on odk from settings. This addition allows FMTM to track submission by
 username and filter data by mapppers.
+
 - Go to settings of odk project.
 - Click on User and device identity.
-- Click on form metadata and add username, phone number and email address. 
-**Note:** The username may be prepopulated with the osm username of
+- Click on form metadata and add username, phone number and email address.
+  **Note:** The username may be prepopulated with the osm username of
   FMTM. Please confirm or update the username if necessary
-  
+
 ### Step 3: Access the Mapper Frontend
 
 - **Option 1:** Click the **Start Mapping** button on the project cards of
@@ -61,7 +63,7 @@ username and filter data by mapppers.
   4. Select **Import QR Code**.
   5. Browse to the downloaded QR image and load the project.
 
-If you missed the QR code pop-up, You can get the it anytime from 
+If you missed the QR code pop-up, You can get the it anytime from
 QR code tab on bottom navigation bar of the mapper's page.
 
 !!! tip
