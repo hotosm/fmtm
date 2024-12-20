@@ -147,6 +147,9 @@ async def send_approval_message(
         Thank you for being a part of our platform!
     """)
     send_osm_message(
-        osm_token, creator_id, "Your organisation has been approved!", message_content
+        osm_token=osm_token,
+        osm_id=creator_id,
+        title="Your organisation has been approved!",
+        body=message_content,
     )
     log.info(f"Approval message sent to organisation creator ({creator_id}).")

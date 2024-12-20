@@ -124,17 +124,32 @@ def get_osm_token(request: Request, osm_auth: Auth) -> str:
     return osm_auth.deserialize_data(serialised_osm_token)
 
 
-def send_osm_message(osm_token: str, recipient_id: int, title: str, body: str) -> None:
+def send_osm_message(
+    osm_token: str,
+    title: str,
+    body: str,
+    osm_username: str = None,
+    osm_id: int = None,
+) -> None:
     """Send a message via OSM API."""
+    if not osm_username and not osm_id:
+        raise ValueError("Either recipient or recipient_id must be provided.")
+
     email_url = f"{settings.OSM_URL}api/0.6/user/messages"
     headers = {"Authorization": f"Bearer {osm_token}"}
     post_body = {
-        # "recipient_id": 22289603,
-        "recipient_id": recipient_id,
         "title": title,
         "body": body,
     }
-    log.debug(f"Sending message to user ({recipient_id}) via OSM API: {email_url}")
+
+    if osm_id:
+        post_body["recipient_id"] = osm_id
+    else:
+        post_body["recipient"] = osm_username
+
+    log.debug(
+        f"Sending message to user ({osm_id or osm_username}) via OSM API: {email_url}"
+    )
     response = requests.post(email_url, headers=headers, data=post_body)
 
     if response.status_code == 200:
@@ -142,4 +157,3 @@ def send_osm_message(osm_token: str, recipient_id: int, title: str, body: str) -
     else:
         msg = "Sending message via OSM failed"
         log.error(f"{msg}: {response.text}")
-        raise HTTPException(status_code=HTTPStatus.CONFLICT, detail=msg)
