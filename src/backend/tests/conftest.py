@@ -230,6 +230,7 @@ async def task_event(db, project, tasks, admin_user):
         new_event = TaskEventIn(
             task_id=task.id,
             user_id=user.id,
+            username=user.username,
             event=TaskEvent.MAP,
             comment="We added a comment!",
         )
