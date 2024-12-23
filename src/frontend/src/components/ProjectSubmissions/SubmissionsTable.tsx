@@ -482,6 +482,8 @@ const SubmissionsTable = ({ toggleView }) => {
                           projectId: projectId,
                           reviewState: row?.__system?.reviewState,
                           taskUid: taskUid,
+                          entity_id: row?.feature,
+                          label: row?.meta?.entity?.label,
                         }),
                       );
                     }}

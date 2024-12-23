@@ -188,6 +188,8 @@ const SubmissionDetails = () => {
                       taskId: taskId,
                       reviewState: restSubmissionDetails?.__system?.reviewState,
                       taskUid: taskUid,
+                      entity_id: restSubmissionDetails?.feature,
+                      label: restSubmissionDetails?.meta?.entity?.label,
                     }),
                   );
                 }}

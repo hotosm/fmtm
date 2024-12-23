@@ -29,6 +29,8 @@ type updateReviewStatusModal = {
   projectId: number | null;
   reviewState: string;
   taskUid: string | null;
+  entity_id: string | null;
+  label: string | null;
 };
 
 export type filterType = {
