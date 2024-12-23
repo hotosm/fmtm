@@ -33,7 +33,7 @@ const uploadAreaOptions = [
 ];
 
 const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpload, setAdditionalFeature }) => {
-  useDocumentTitle('Create Project: Upload Area');
+  useDocumentTitle('Create Project: Project Area');
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -210,7 +210,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
 
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row fmtm-h-full">
-      <DescriptionSection section="Upload Area" />
+      <DescriptionSection section="Project Area" />
       <div className="lg:fmtm-w-[80%] xl:fmtm-w-[83%] fmtm-h-full fmtm-bg-white fmtm-px-5 lg:fmtm-px-11 fmtm-py-6 lg:fmtm-overflow-y-scroll lg:scrollbar">
         <div className="fmtm-w-full fmtm-flex fmtm-gap-6 md:fmtm-gap-14 fmtm-flex-col md:fmtm-flex-row fmtm-h-full">
           <form
@@ -250,8 +250,8 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
                 <div>
                   <p className="fmtm-text-gray-700 fmtm-pt-5 fmtm-pb-5">Draw a polygon on the map to plot the area</p>
                   <Button
-                    btnText="Click to Reset"
-                    btnType="primary"
+                    btnText="Reset"
+                    btnType="secondary"
                     type="button"
                     onClick={() => resetFile()}
                     className=""
@@ -281,6 +281,9 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
                     btnText="Upload a Geojson"
                     errorMsg={errors.uploadedAreaFile}
                   />
+                  <p className="fmtm-text-gray-700">
+                    Total Area: <span className="fmtm-font-bold">{totalAreaSelection}</span>
+                  </p>
                 </div>
               )}
             </div>

@@ -34,7 +34,7 @@ const ProjectDetailsForm = ({ flag }) => {
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(values));
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 2 }));
-    navigate('/upload-area');
+    navigate('/project-area');
   };
 
   const { handleSubmit, handleChange, handleCustomChange, values, errors, checkValidationOnly }: any = useForm(
@@ -108,7 +108,7 @@ const ProjectDetailsForm = ({ flag }) => {
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row fmtm-h-full">
       <DescriptionSection section="Project Details" />
       <form
-        className="xl:fmtm-w-[83%] fmtm-bg-white fmtm-px-11 fmtm-h-full fmtm-py-6 lg:fmtm-overflow-y-scroll lg:scrollbar"
+        className="xl:fmtm-w-[83%] fmtm-bg-white fmtm-px-5 lg:fmtm-px-11 fmtm-h-full fmtm-py-6 lg:fmtm-overflow-y-scroll lg:scrollbar"
         onSubmit={handleSubmit}
       >
         <div className="fmtm-flex fmtm-flex-col fmtm-gap-6 xl:fmtm-w-[50%]">
@@ -241,7 +241,7 @@ const ProjectDetailsForm = ({ flag }) => {
             >
               <CustomCheckbox
                 key="hasCustomTMS"
-                label="Will you use a custom TMS basemap"
+                label="I would like to include my own imagery layer for reference"
                 checked={values.hasCustomTMS}
                 onCheckedChange={() => {
                   handleCustomChange('hasCustomTMS', !values.hasCustomTMS);
@@ -253,7 +253,7 @@ const ProjectDetailsForm = ({ flag }) => {
               <InputTextField
                 id="custom_tms_url"
                 name="custom_tms_url"
-                label="Custom TMS URL"
+                label="Please specify the TMS URL"
                 value={values?.custom_tms_url}
                 onChange={handleChange}
                 fieldType="text"

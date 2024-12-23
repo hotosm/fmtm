@@ -15,61 +15,51 @@
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
-name: fmtm-dev
+name: fmtm-main
 
 volumes:
   fmtm_frontend:
-    name: fmtm-frontend-${GIT_BRANCH}
+    name: fmtm-frontend-main
   fmtm_db_data:
-    name: fmtm-db-data-${GIT_BRANCH}
+    name: fmtm-db-data-main
   fmtm_data:
-    name: fmtm-s3-data-${GIT_BRANCH}
+    name: fmtm-s3-data-main
   fmtm_logs:
-    name: fmtm-logs-${GIT_BRANCH}
+    name: fmtm-logs-main
   fmtm_images:
-    name: fmtm-images-${GIT_BRANCH}
+    name: fmtm-images-main
   fmtm_tiles:
-    name: fmtm-tiles-${GIT_BRANCH}
+    name: fmtm-tiles-main
   certs:
-    name: fmtm-certs-${GIT_BRANCH}
+    name: fmtm-certs-main
   certbot_data:
-    name: fmtm-certbot-data-${GIT_BRANCH}
-  central_db_data:
-    name: fmtm-central-db-data-${GIT_BRANCH}
-  central_frontend:
-    name: fmtm-central-frontend-${GIT_BRANCH}
+    name: fmtm-certbot-data-main
 
 networks:
   fmtm-net:
-    name: fmtm-${GIT_BRANCH}
+    name: fmtm-main
 
 services:
   proxy:
-    image: "ghcr.io/hotosm/fmtm/proxy:${GIT_BRANCH}"
+    image: "ghcr.io/hotosm/fmtm/proxy:main"
     depends_on:
       api:
         condition: service_started
-      central:
-        condition: service_started
-      central-ui:
+      certbot:
         condition: service_completed_successfully
       s3:
         condition: service_started
-      certbot:
-        condition: service_completed_successfully
       ui:
         condition: service_completed_successfully
       electric:
         condition: service_started
     volumes:
       - fmtm_frontend:/usr/share/nginx/html/fmtm
-      - central_frontend:/usr/share/nginx/html/central/
       - certs:/etc/letsencrypt
       - certbot_data:/var/www/certbot
     environment:
       FMTM_DOMAIN: ${FMTM_DOMAIN}
       FMTM_API_DOMAIN: ${FMTM_API_DOMAIN:-api.${FMTM_DOMAIN}}
-      FMTM_ODK_DOMAIN: ${FMTM_ODK_DOMAIN:-odk.${FMTM_DOMAIN}}
       FMTM_S3_DOMAIN: ${FMTM_S3_DOMAIN:-s3.${FMTM_DOMAIN}}
       FMTM_SYNC_DOMAIN: ${FMTM_SYNC_DOMAIN:-sync.${FMTM_DOMAIN}}
     ports:
@@ -80,7 +70,7 @@ services:
     restart: "unless-stopped"
 
   api:
-    image: "ghcr.io/hotosm/fmtm/backend:${GIT_BRANCH}"
+    image: "ghcr.io/hotosm/fmtm/backend:main"
     volumes:
       - fmtm_logs:/opt/logs
       - fmtm_tiles:/opt/tiles
@@ -103,7 +93,7 @@ services:
       timeout: 5s
       retries: 10
     deploy:
-      replicas: ${API_REPLICAS:-2}
+      replicas: ${API_REPLICAS:-4}
       resources:
         limits:
           cpus: "0.9"
@@ -115,12 +105,12 @@ services:
   ui:
     # This service simply builds the frontend to a volume
     # accessible to the proxy, then shuts down
-    image: "ghcr.io/hotosm/fmtm/frontend:${GIT_BRANCH:-development}"
+    image: "ghcr.io/hotosm/fmtm/frontend:main"
     build:
       context: src
       dockerfile: Dockerfile.ui.prod
       args:
-        APP_VERSION: ${GIT_BRANCH}
+        APP_VERSION: main
         VITE_API_URL: https://${FMTM_API_DOMAIN:-api.${FMTM_DOMAIN}}
         VITE_SYNC_URL: https://${FMTM_SYNC_DOMAIN:-sync.${FMTM_DOMAIN}}
     volumes:
@@ -128,63 +118,13 @@ services:
     network_mode: none
     restart: "on-failure:2"
 
-  central:
-    image: "ghcr.io/hotosm/fmtm/odkcentral:${ODK_CENTRAL_TAG:-v2024.2.1}"
-    depends_on:
-      central-db:
-        condition: service_healthy
-    environment:
-      - DOMAIN=${FMTM_ODK_DOMAIN:-odk.${FMTM_DOMAIN}}
-      - SSL_TYPE=upstream
-      - SYSADMIN_EMAIL=${ODK_CENTRAL_USER}
-      - SYSADMIN_PASSWD=${ODK_CENTRAL_PASSWD}
-      - HTTPS_PORT=443
-      - DB_HOST=${CENTRAL_DB_HOST:-central-db}
-      - DB_USER=${CENTRAL_DB_USER}
-      - DB_PASSWORD=${CENTRAL_DB_PASSWORD}
-      - DB_NAME=${CENTRAL_DB_NAME}
-      - DB_SSL=null
-      - EMAIL_FROM=${ODK_CENTRAL_USER}
-      - EMAIL_HOST=${EMAIL_HOST:-mail}
-      - EMAIL_PORT=${EMAIL_PORT:-25}
-      - EMAIL_SECURE=${EMAIL_SECURE:-false}
-      - EMAIL_IGNORE_TLS=${EMAIL_IGNORE_TLS:-true}
-      - EMAIL_USER=${EMAIL_USER:-''}
-      - EMAIL_PASSWORD=${EMAIL_PASSWORD:-''}
-      - OIDC_ENABLED=${OIDC_ENABLED:-false}
-      - SENTRY_ORG_SUBDOMAIN=${SENTRY_ORG_SUBDOMAIN:-o130137}
-      - SENTRY_KEY=${SENTRY_KEY:-3cf75f54983e473da6bd07daddf0d2ee}
-      - SENTRY_PROJECT=${SENTRY_PROJECT:-1298632}
-    networks:
-      - fmtm-net
-    restart: "unless-stopped"
-
-  pyxform:
-    image: "ghcr.io/getodk/pyxform-http:v2.0.2"
-    depends_on:
-      central-db:
-        condition: service_healthy
-    networks:
-      - fmtm-net
-    restart: "unless-stopped"
-
-  central-ui:
-    # This service simply builds the frontend to a volume
-    # accessible to the proxy, then shuts down
-    image: "ghcr.io/hotosm/fmtm/odkcentral-ui:${ODK_CENTRAL_TAG:-v2024.2.1}"
-    volumes:
-      - central_frontend:/frontend
-    network_mode: none
-    restart: "on-failure:2"
-
   s3:
-    image: "docker.io/minio/minio:${MINIO_TAG:-RELEASE.2024-10-13T13-34-11Z}"
+    image: "docker.io/minio/minio:${MINIO_TAG:-RELEASE.2024-12-18T13-15-44Z}"
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
       MINIO_VOLUMES: "/mnt/data"
       MINIO_BROWSER: "off"
-      # MINIO_CONSOLE_ADDRESS: ":9090"
     volumes:
       - fmtm_data:/mnt/data
     networks:
@@ -235,28 +175,8 @@ services:
       - fmtm-net
     restart: "unless-stopped"
 
-  central-db:
-    image: "postgis/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
-    volumes:
-      - central_db_data:/var/lib/postgresql/data/
-    environment:
-      - POSTGRES_USER=${CENTRAL_DB_USER}
-      - POSTGRES_PASSWORD=${CENTRAL_DB_PASSWORD}
-      - POSTGRES_DB=${CENTRAL_DB_NAME}
-    ports:
-      - "5434:5432"
-    networks:
-      - fmtm-net
-    restart: "unless-stopped"
-    healthcheck:
-      test: pg_isready -U ${CENTRAL_DB_USER} -d ${CENTRAL_DB_NAME}
-      start_period: 5s
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
   migrations:
-    image: "ghcr.io/hotosm/fmtm/backend:${GIT_BRANCH}"
+    image: "ghcr.io/hotosm/fmtm/backend:main"
     depends_on:
       fmtm-db:
         condition: service_healthy
@@ -269,15 +189,32 @@ services:
     entrypoint: ["/migrate-entrypoint.sh"]
     restart: "on-failure:2"
 
+  backups:
+    image: "ghcr.io/hotosm/fmtm/backend:main"
+    depends_on:
+      fmtm-db:
+        condition: service_healthy
+    env_file:
+      - .env
+    networks:
+      - fmtm-net
+    entrypoint: ["/backup-entrypoint.sh"]
+    restart: "on-failure:2"
+    healthcheck:
+      test: pg_isready -U ${FMTM_DB_USER} -d ${FMTM_DB_NAME}
+      start_period: 5s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   certbot:
-    image: "ghcr.io/hotosm/fmtm/proxy:certs-init-development"
+    image: "ghcr.io/hotosm/fmtm/proxy:certs-init-main"
     volumes:
       - certs:/etc/letsencrypt
       - certbot_data:/var/www/certbot
     environment:
       FMTM_DOMAIN: ${FMTM_DOMAIN}
       FMTM_API_DOMAIN: ${FMTM_API_DOMAIN:-api.${FMTM_DOMAIN}}
-      FMTM_ODK_DOMAIN: ${FMTM_ODK_DOMAIN:-odk.${FMTM_DOMAIN}}
       FMTM_S3_DOMAIN: ${FMTM_S3_DOMAIN:-s3.${FMTM_DOMAIN}}
       FMTM_SYNC_DOMAIN: ${FMTM_SYNC_DOMAIN:-sync.${FMTM_DOMAIN}}
       CERT_EMAIL: ${CERT_EMAIL}

@@ -53,6 +53,16 @@
 		}
 	});
 
+	$effect(() => {
+		let taskIdIndexMap: Record<number, number> = {};
+		if (data?.project?.tasks && data?.project?.tasks?.length > 0) {
+			data?.project?.tasks?.forEach((task: ProjectTask) => {
+				taskIdIndexMap[task.id] = task.project_task_index;
+			});
+		}
+		taskStore.setTaskIdIndexMap(taskIdIndexMap);
+	});
+
 	function zoomToTask(taskId: number) {
 		const taskObj = data.project.tasks.find((task: ProjectTask) => task.id === taskId);
 
@@ -82,8 +92,8 @@
 	});
 
 	onDestroy(() => {
-		taskEventStream.unsubscribeAll();
-		entityStatusStream.unsubscribeAll();
+		taskEventStream?.unsubscribeAll();
+		entityStatusStream?.unsubscribeAll();
 	});
 
 	const projectSetupStepStore = getProjectSetupStepStore();
@@ -91,13 +101,14 @@
 	$effect(() => {
 		// if project loaded for the first time, set projectSetupStep to 1 else get it from localStorage
 		if (!localStorage.getItem(`project-${data.projectId}-setup`)) {
-			localStorage.setItem(`project-${data.projectId}-setup`, projectSetupStepEnum['odk_project_load']);
+			localStorage.setItem(`project-${data.projectId}-setup`, projectSetupStepEnum['odk_project_load'].toString());
 			projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['odk_project_load']);
 		} else {
-			projectSetupStepStore.setProjectSetupStep(localStorage.getItem(`project-${data.projectId}-setup`));
+			const projectStep = localStorage.getItem(`project-${data.projectId}-setup`);
+			projectSetupStepStore.setProjectSetupStep(projectStep ? +projectStep : 0);
 		}
 		// if project loaded for the first time then show qrcode tab
-		if (+projectSetupStepStore.projectSetupStep === projectSetupStepEnum['odk_project_load']) {
+		if (+(projectSetupStepStore.projectSetupStep || 0) === projectSetupStepEnum['odk_project_load']) {
 			tabGroup.updateComplete.then(() => {
 				tabGroup.show('qrcode');
 			});
@@ -163,7 +174,7 @@
 			{#if commonStore.selectedTab === 'qrcode'}
 				<QRCodeComponent {infoDialogRef} projectName={data.project.name} projectOdkToken={data.project.odk_token}>
 					<!-- Open ODK Button (Hide if it's project walkthrough step) -->
-					{#if +projectSetupStepStore.projectSetupStep !== projectSetupStepEnum['odk_project_load']}
+					{#if +(projectSetupStepStore.projectSetupStep || 0) !== projectSetupStepEnum['odk_project_load']}
 						<sl-button
 							size="small"
 							class="primary w-full max-w-[200px]"
@@ -214,9 +225,9 @@
 			commonStore.setSelectedTab(e.detail.name);
 			if (
 				e.detail.name !== 'qrcode' &&
-				+projectSetupStepStore.projectSetupStep === projectSetupStepEnum['odk_project_load']
+				+(projectSetupStepStore.projectSetupStep || 0) === projectSetupStepEnum['odk_project_load']
 			) {
-				localStorage.setItem(`project-${data.projectId}-setup`, projectSetupStepEnum['task_selection']);
+				localStorage.setItem(`project-${data.projectId}-setup`, projectSetupStepEnum['task_selection'].toString());
 				projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['task_selection']);
 			}
 		}}

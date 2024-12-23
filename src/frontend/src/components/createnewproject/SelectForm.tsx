@@ -40,7 +40,7 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
       return;
     }
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 4 }));
-    navigate('/map-features');
+    navigate('/map-data');
   };
   const {
     handleSubmit,
@@ -93,8 +93,8 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
             <div className="fmtm-flex fmtm-flex-col fmtm-gap-6">
               <div className="">
                 <CustomSelect
-                  title="Select Survey Type"
-                  placeholder="Select Survey Type"
+                  title="What are you Surveying"
+                  placeholder="Survey Type"
                   data={sortedFormCategoryList}
                   dataKey="id"
                   valueKey="title"
@@ -207,7 +207,7 @@ const SelectForm = ({ flag, geojsonFile, customFormFile, setCustomFormFile }) =>
                 type="button"
                 onClick={() => {
                   dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
-                  toggleStep(2, '/upload-area');
+                  toggleStep(2, '/project-area');
                 }}
                 className="fmtm-font-bold"
               />

@@ -20,8 +20,8 @@ import { CustomCheckbox } from '@/components/common/Checkbox';
 import DescriptionSection from '@/components/createnewproject/Description';
 
 const dataExtractOptions = [
-  { name: 'data_extract', value: 'osm_data_extract', label: 'Use OSM map features' },
-  { name: 'data_extract', value: 'custom_data_extract', label: 'Upload custom map features' },
+  { name: 'data_extract', value: 'osm_data_extract', label: 'Fetch data from OSM' },
+  { name: 'data_extract', value: 'custom_data_extract', label: 'Upload custom map data' },
 ];
 
 const DataExtract = ({
@@ -31,7 +31,7 @@ const DataExtract = ({
   additionalFeature,
   setAdditionalFeature,
 }) => {
-  useDocumentTitle('Create Project: Map Features');
+  useDocumentTitle('Create Project: Map Data');
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [extractWays, setExtractWays] = useState('');
@@ -124,7 +124,7 @@ const DataExtract = ({
       dispatch(
         CommonActions.SetSnackBar({
           open: true,
-          message: 'Error generating map features.',
+          message: 'Error generating map data.',
           variant: 'error',
           duration: 2000,
         }),
@@ -218,7 +218,7 @@ const DataExtract = ({
 
   return (
     <div className="fmtm-flex fmtm-gap-7 fmtm-flex-col lg:fmtm-flex-row fmtm-h-full">
-      <DescriptionSection section="Map Features" />
+      <DescriptionSection section="Map Data" />
       <div className="lg:fmtm-w-[80%] xl:fmtm-w-[83%] fmtm-bg-white fmtm-px-5 lg:fmtm-px-11 fmtm-py-6 lg:fmtm-overflow-y-scroll lg:scrollbar">
         <div className="fmtm-w-full fmtm-flex fmtm-gap-6 md:fmtm-gap-14 fmtm-flex-col md:fmtm-flex-row fmtm-h-full">
           <form
@@ -227,7 +227,7 @@ const DataExtract = ({
           >
             <div>
               <RadioButton
-                topic="You may choose to use OSM data or upload your own map features"
+                topic="You may choose to use OSM data or upload your own map data"
                 options={dataExtractOptions}
                 direction="column"
                 value={formValues.dataExtractWays}
@@ -246,7 +246,7 @@ const DataExtract = ({
               />
               {extractWays === 'osm_data_extract' && (
                 <Button
-                  btnText="Generate Map Features"
+                  btnText="Generate Map Data"
                   btnType="primary"
                   onClick={() => {
                     resetFile(setCustomDataExtractUpload);
@@ -254,7 +254,7 @@ const DataExtract = ({
                   }}
                   className="fmtm-mt-4 !fmtm-mb-8 fmtm-text-base"
                   isLoading={isFgbFetching}
-                  loadingText="Generating Map Features..."
+                  loadingText="Generating Map Data..."
                   disabled={dataExtractGeojson && customDataExtractUpload ? true : false}
                 />
               )}
@@ -270,7 +270,7 @@ const DataExtract = ({
                       dispatch(CreateProjectActions.setDataExtractGeojson(null));
                     }}
                     customFile={customDataExtractUpload}
-                    btnText="Upload Map Features"
+                    btnText="Upload Map Data"
                     accept=".geojson,.json,.fgb"
                     fileDescription="*The supported file formats are .geojson, .json, .fgb"
                     errorMsg={errors.customDataExtractUpload}
@@ -287,7 +287,7 @@ const DataExtract = ({
                   >
                     <CustomCheckbox
                       key="uploadAdditionalFeature"
-                      label="Upload Additional Features"
+                      label="Upload Supporting Datasets"
                       checked={formValues?.hasAdditionalFeature}
                       onCheckedChange={(status) => {
                         handleCustomChange('hasAdditionalFeature', status);
@@ -317,7 +317,7 @@ const DataExtract = ({
                           handleCustomChange('additionalFeature', null);
                         }}
                         customFile={additionalFeature}
-                        btnText="Upload Additional Features"
+                        btnText="Upload Supporting Datasets"
                         accept=".geojson"
                         fileDescription="*The supported file formats are .geojson"
                         errorMsg={errors.additionalFeature}
@@ -340,7 +340,7 @@ const DataExtract = ({
                 btnType="primary"
                 type="submit"
                 className="fmtm-font-bold"
-                dataTip={`${!dataExtractGeojson ? 'Please Generate Map Features First.' : ''}`}
+                dataTip={`${!dataExtractGeojson ? 'Please Generate Map Data First.' : ''}`}
                 disabled={
                   !dataExtractGeojson || (extractWays === 'osm_data_extract' && !dataExtractGeojson) || isFgbFetching
                     ? true

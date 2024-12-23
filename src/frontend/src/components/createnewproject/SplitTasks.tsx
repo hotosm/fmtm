@@ -48,7 +48,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
     {
       name: 'define_tasks',
       value: task_split_type.DIVIDE_ON_SQUARE,
-      label: 'Divide on square',
+      label: 'Divide into square tasks',
       disabled: false,
     },
     {
@@ -352,7 +352,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
                     type="button"
                     onClick={() => {
                       dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
-                      toggleStep(3, '/map-features');
+                      toggleStep(3, '/map-data');
                     }}
                     className="fmtm-font-bold"
                   />

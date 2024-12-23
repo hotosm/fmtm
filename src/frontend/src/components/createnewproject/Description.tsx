@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import windowDimention from '@/hooks/WindowDimension';
 import { useAppSelector } from '@/types/reduxTypes';
 
-type sectionType = 'Project Details' | 'Upload Area' | 'Upload Survey' | 'Map Features' | 'Split Tasks';
+type sectionType = 'Project Details' | 'Project Area' | 'Upload Survey' | 'Map Data' | 'Split Tasks';
 
 type hoveredSectionType = { hoveredSection: string | null };
 
@@ -202,10 +202,10 @@ const MapFeature = ({ hoveredSection }: hoveredSectionType) => {
         ref={osmFeaturesRef}
         className={`${hoveredSection === 'mapfeatures-osm' && 'fmtm-text-gray-800'} fmtm-duration-150 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3`}
       >
-        <span>The relevant map features that exist on OSM are imported based on the select map area.</span>{' '}
+        <span>The relevant map data that exist on OSM are imported based on the select map area.</span>{' '}
         <span>
-          You can use these map features to use the &apos;select from map&apos; functionality from ODK that allows you
-          to select the feature to collect data for.
+          You can use these map data to use the &apos;select from map&apos; functionality from ODK that allows you to
+          select the feature to collect data for.
         </span>{' '}
       </div>
       <span
@@ -272,11 +272,11 @@ const getDescription = (section: sectionType, hoveredSection: string | null): Re
   switch (section) {
     case 'Project Details':
       return <ProjectDetails hoveredSection={hoveredSection} />;
-    case 'Upload Area':
+    case 'Project Area':
       return <UploadArea hoveredSection={hoveredSection} />;
     case 'Upload Survey':
       return <UploadSurvey hoveredSection={hoveredSection} />;
-    case 'Map Features':
+    case 'Map Data':
       return <MapFeature hoveredSection={hoveredSection} />;
     case 'Split Tasks':
       return <SplitTasks hoveredSection={hoveredSection} />;
