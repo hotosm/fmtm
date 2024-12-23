@@ -1,12 +1,12 @@
 import { ShapeStream, Shape } from '@electric-sql/client';
 import type { ShapeData, Row } from '@electric-sql/client';
-import type { GeoJSON } from 'geojson';
+import type { Feature, FeatureCollection, GeoJSON } from 'geojson';
 
 import type { ProjectTask, TaskEventType } from '$lib/types';
 
 let taskEventShape: Shape;
-let featcol = $state({ type: 'FeatureCollection', features: [] });
-let latestEvent = $state(null);
+let featcol: FeatureCollection = $state({ type: 'FeatureCollection', features: [] });
+let latestEvent: TaskEventType | null = $state(null);
 let events: TaskEventType[] = $state([]);
 
 // for UI show task index for simplicity & for api's use task id
@@ -16,6 +16,7 @@ let selectedTaskIndex: number | null = $state(null);
 let selectedTask: any = $state(null);
 let selectedTaskState: string = $state('');
 let selectedTaskGeom: GeoJSON | null = $state(null);
+let taskIdIndexMap: Record<number, number> = $state({});
 
 function getTaskEventStream(projectId: number): ShapeStream | undefined {
 	if (!projectId) {
@@ -29,7 +30,8 @@ function getTaskEventStream(projectId: number): ShapeStream | undefined {
 }
 
 function getTaskStore() {
-	async function subscribeToTaskEvents(taskEventStream: ShapeStream) {
+	async function subscribeToTaskEvents(taskEventStream: ShapeStream | undefined) {
+		if (!taskEventStream) return;
 		taskEventShape = new Shape(taskEventStream);
 
 		taskEventShape.subscribe((taskEvent: ShapeData) => {
@@ -49,7 +51,7 @@ function getTaskStore() {
 
 	async function appendTaskStatesToFeatcol(projectTasks: ProjectTask[]) {
 		const latestTaskStates = await getLatestStatePerTask();
-		const features = projectTasks.map((task) => ({
+		const features: Feature[] = projectTasks.map((task) => ({
 			type: 'Feature',
 			geometry: task.outline,
 			properties: {
@@ -88,18 +90,23 @@ function getTaskStore() {
 		const allTasksCurrentStates = await getLatestStatePerTask();
 		selectedTask = allTasksCurrentStates.get(taskId);
 		selectedTaskState = selectedTask?.state || 'UNLOCKED_TO_MAP';
-		selectedTaskGeom = featcol.features.find((x) => x.properties.fid === taskId)?.geometry || null;
+		selectedTaskGeom = featcol.features.find((x) => x?.properties?.fid === taskId)?.geometry || null;
+	}
+
+	function setTaskIdIndexMap(idIndexMappedRecord: Record<number, number>) {
+		taskIdIndexMap = idIndexMappedRecord;
 	}
 
 	return {
 		// The task areas / status colours displayed on the map
 		appendTaskStatesToFeatcol: appendTaskStatesToFeatcol,
+		subscribeToEvents: subscribeToTaskEvents,
+		setSelectedTaskId: setSelectedTaskId,
+		setTaskIdIndexMap: setTaskIdIndexMap,
 		get featcol() {
 			return featcol;
 		},
-
 		// The latest event to display in notifications bar
-		subscribeToEvents: subscribeToTaskEvents,
 		get latestEvent() {
 			return latestEvent;
 		},
@@ -108,7 +115,6 @@ function getTaskStore() {
 		},
 
 		// The selected task to display mapping dialog
-		setSelectedTaskId: setSelectedTaskId,
 		get selectedTaskId() {
 			return selectedTaskId;
 		},
@@ -123,6 +129,9 @@ function getTaskStore() {
 		},
 		get selectedTaskGeom() {
 			return selectedTaskGeom;
+		},
+		get taskIdIndexMap() {
+			return taskIdIndexMap;
 		},
 	};
 }
