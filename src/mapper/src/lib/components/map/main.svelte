@@ -23,7 +23,7 @@
 	import { polygon } from '@turf/helpers';
 	import { buffer } from '@turf/buffer';
 	import { bbox } from '@turf/bbox';
-	import type { Position, Geometry as GeoJSONGeometry, FeatureCollection } from 'geojson';
+	import type { Position, Geometry as GeoJSONGeometry, FeatureCollection, Feature } from 'geojson';
 
 	import LocationArcImg from '$assets/images/locationArc.png';
 	import LocationDotImg from '$assets/images/locationDot.png';
@@ -76,6 +76,8 @@
 	let selectedBaselayer: string = $state('OSM');
 	let taskAreaClicked: boolean = $state(false);
 	let projectSetupStep: number | null = $state(null);
+	let lineWidth = $state(1); // Initial line width of the rejected entities
+	let expanding = true; // Whether the line is expanding
 
 	// Trigger adding the PMTiles layer to baselayers, if PmtilesUrl is set
 	let allBaseLayers: maplibregl.StyleSpecification[] = $derived(
@@ -257,7 +259,7 @@
 		}
 	});
 
-	function addStatusToGeojsonProperty(geojsonData: FeatureCollection) {
+	function addStatusToGeojsonProperty(geojsonData: FeatureCollection): FeatureCollection {
 		return {
 			...geojsonData,
 			features: geojsonData.features.map((feature) => {
@@ -271,6 +273,26 @@
 					},
 				};
 			}),
+		};
+	}
+
+	function getRejectedEntities(geojsonData: FeatureCollection): FeatureCollection {
+		const rejectedEntityStatusList = entitiesStore.entitiesStatusList.filter(
+			(entity) => entity.status === 'MARKED_BAD',
+		);
+		return {
+			...geojsonData,
+			features: rejectedEntityStatusList?.map((entity) => {
+				const feature = geojsonData.features.find((feature) => feature?.properties?.osm_id === entity.osmid);
+				return {
+					...feature,
+					properties: {
+						...feature?.properties,
+						status: entity.status,
+						entity_id: entity.entity_id,
+					},
+				};
+			}) as Feature[],
 		};
 	}
 
@@ -296,6 +318,16 @@
 			await loadOfflinePmtiles(projectId);
 			selectedBaselayer = 'PMTiles';
 		}
+
+		setInterval(() => {
+			if (expanding) {
+				lineWidth += 0.3;
+				if (lineWidth >= 6) expanding = false; // Maximum width
+			} else {
+				lineWidth -= 0.3;
+				if (lineWidth <= 1) expanding = true; // Minimum width
+			}
+		}, 50); // Update every 50ms for smooth animation
 	});
 </script>
 
@@ -421,6 +453,8 @@
 					'#fae15f',
 					'SURVEY_SUBMITTED',
 					'#71bf86',
+					'MARKED_BAD',
+					'#fa1100',
 					'#c5fbf5', // default color if no match is found
 				],
 				'fill-outline-color': [
@@ -432,6 +466,8 @@
 					'#ffd603',
 					'SURVEY_SUBMITTED',
 					'#32a852',
+					'MARKED_BAD',
+					'#fa1100',
 					'#c5fbf5',
 				],
 			}}
@@ -442,8 +478,40 @@
 			layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 			paint={{
 				'line-color': '#fa1100',
-				'line-width': ['case', ['==', ['get', 'osm_id'], entitiesStore.selectedEntity], 1, 0],
-				'line-opacity': ['case', ['==', ['get', 'osm_id'], entitiesStore.selectedEntity], 1, 0.35],
+				'line-width': ['case', ['==', ['get', 'osm_id'], entitiesStore.selectedEntity || ''], 1, 0],
+				'line-opacity': ['case', ['==', ['get', 'osm_id'], entitiesStore.selectedEntity || ''], 1, 0.35],
+			}}
+			beforeLayerType="symbol"
+			manageHoverState
+		/>
+	</FlatGeobuf>
+
+	<!-- pulse effect layer representing rejected entities -->
+	<FlatGeobuf
+		id="rejected-entities"
+		url={entitiesUrl}
+		extent={{ type: 'Polygon', coordinates: projectOutlineCoords }}
+		extractGeomCols={true}
+		promoteId="id"
+		processGeojson={(geojsonData) => getRejectedEntities(geojsonData)}
+		geojsonUpdateDependency={entitiesStore.entitiesStatusList}
+	>
+		<FillLayer
+			id="rejected-entity-fill-layer"
+			paint={{
+				'fill-opacity': 0.6,
+				'fill-color': '#9c9a9a',
+				'fill-outline-color': '#9c9a9a',
+			}}
+			beforeLayerType="symbol"
+			manageHoverState
+		/>
+		<LineLayer
+			layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+			paint={{
+				'line-color': '#fa1100',
+				'line-width': ['case', ['==', ['get', 'osm_id'], entitiesStore.selectedEntity || ''], 1, lineWidth],
+				'line-opacity': ['case', ['==', ['get', 'osm_id'], entitiesStore.selectedEntity || ''], 1, 0.35],
 			}}
 			beforeLayerType="symbol"
 			manageHoverState
