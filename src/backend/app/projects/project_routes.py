@@ -767,10 +767,7 @@ async def invite_new_user(
     invitee_username: str,
     osm_auth=Depends(init_osm_auth),
 ):
-    """Add a new project manager.
-
-    The logged in user must be either the admin of the organisation or a super admin.
-    """
+    """Invite a new user to a project."""
     user_exists = await check_osm_user(invitee_username)
 
     if not user_exists:
