@@ -1396,7 +1396,7 @@ class DbOdkEntities(BaseModel):
         )
 
         sql = """
-            INSERT INTO odk_entities
+            INSERT INTO public.odk_entities
                 (entity_id, status, project_id, task_id)
             VALUES
         """
