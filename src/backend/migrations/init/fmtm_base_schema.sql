@@ -287,7 +287,7 @@ CREATE TABLE public.task_events (
     task_id integer NOT NULL,
     project_id integer,
     user_id integer,
-    username character,
+    username character varying,
     state public.mappingstate,
     comment text,
     created_at timestamp with time zone NOT NULL DEFAULT now()
