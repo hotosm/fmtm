@@ -246,7 +246,7 @@ const DataExtract = ({
               />
               {extractWays === 'osm_data_extract' && (
                 <Button
-                  btnText="Generate Map Data"
+                  btnText="Fetch OSM Data"
                   btnType="primary"
                   onClick={() => {
                     resetFile(setCustomDataExtractUpload);
@@ -340,7 +340,7 @@ const DataExtract = ({
                 btnType="primary"
                 type="submit"
                 className="fmtm-font-bold"
-                dataTip={`${!dataExtractGeojson ? 'Please Generate Map Data First.' : ''}`}
+                dataTip={`${!dataExtractGeojson ? 'Please Fetch OSM Data First.' : ''}`}
                 disabled={
                   !dataExtractGeojson || (extractWays === 'osm_data_extract' && !dataExtractGeojson) || isFgbFetching
                     ? true
