@@ -324,6 +324,12 @@ const DataExtract = ({
                       />
                     </>
                   )}
+                  {additionalFeatureGeojson && (
+                    <p className="fmtm-text-gray-500 fmtm-mt-1">
+                      Total number of additional features:{' '}
+                      <span className="fmtm-font-bold">{additionalFeatureGeojson?.features?.length || 0}</span>
+                    </p>
+                  )}
                 </div>
               )}
             </div>
