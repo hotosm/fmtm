@@ -25,16 +25,7 @@ export type projectInfoType = {
   name: string;
   outline: {
     type: string;
-    geometry: {
-      type: string;
-      coordinates: [];
-    };
-    properties: {
-      id: number;
-      bbox: [number, number, number, number];
-    };
-    id: number;
-    bbox: null | number[];
+    coordinates: [];
   };
   priority: number;
   location_str: string;
