@@ -3,7 +3,7 @@ import '../../node_modules/ol/ol.css';
 import '../styles/home.scss';
 import WindowDimension from '@/hooks/WindowDimension';
 import ActivitiesPanel from '@/components/ProjectDetailsV2/ActivitiesPanel';
-import { ProjectById, GetEntityInfo } from '@/api/Project';
+import { ProjectById, GetEntityStatusList } from '@/api/Project';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import CustomizedSnackbar from '@/utilities/CustomizedSnackbar';
 import { HomeActions } from '@/store/slices/HomeSlice';
@@ -248,7 +248,7 @@ const ProjectDetailsV2 = () => {
   }, [taskModalStatus]);
 
   useEffect(() => {
-    dispatch(GetEntityInfo(`${import.meta.env.VITE_API_URL}/projects/${projectId}/entities/statuses`));
+    dispatch(GetEntityStatusList(`${import.meta.env.VITE_API_URL}/projects/${projectId}/entities/statuses`));
   }, []);
 
   return (
