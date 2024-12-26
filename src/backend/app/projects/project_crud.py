@@ -949,7 +949,7 @@ async def send_project_manager_message(
     osm_token = get_osm_token(request, osm_auth)
     project_url = f"{settings.FMTM_DOMAIN}/project/{project.id}"
     if not project_url.startswith("http"):
-        project_url = f"http://{project_url}"
+        project_url = f"https://{project_url}"
 
     message_content = dedent(f"""
         You have been assigned to the project **{project.name}** as a
