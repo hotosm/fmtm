@@ -954,7 +954,9 @@ async def send_project_manager_message(
     message_content = dedent(f"""
         You have been assigned to the project **{project.name}** as a
         manager. You can now manage the project and its tasks.
+
         [Click here to view the project]({project_url})
+
         Thank you for being a part of our platform!
     """)
 
