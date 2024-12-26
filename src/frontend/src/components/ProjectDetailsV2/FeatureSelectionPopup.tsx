@@ -1,18 +1,14 @@
 // Popup used to display task feature info & link to ODK Collect
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
-import { CommonActions } from '@/store/slices/CommonSlice';
-import Button from '@/components/common/Button';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
-import environment from '@/environment';
 import { useParams } from 'react-router-dom';
-import { UpdateEntityState } from '@/api/Project';
+import { UpdateEntityState } from '@/api/Project'; // TODO: update entity state to validated
 import { TaskFeatureSelectionProperties } from '@/store/types/ITask';
-import { CreateTaskEvent } from '@/api/TaskEvent';
-import MapStyles from '@/hooks/MapStyles';
-import { task_event, task_state as taskStateEnum } from '@/types/enums';
+import { entity_state } from '@/types/enums';
+import Button from '@/components/common/Button';
 
 type TaskFeatureSelectionPopupPropType = {
   taskId: number;
@@ -23,35 +19,12 @@ type TaskFeatureSelectionPopupPropType = {
 const TaskFeatureSelectionPopup = ({ featureProperties, taskId, taskFeature }: TaskFeatureSelectionPopupPropType) => {
   const dispatch = CoreModules.useAppDispatch();
   const params = useParams();
-  const geojsonStyles = MapStyles();
   const taskModalStatus = CoreModules.useAppSelector((state) => state.project.taskModalStatus);
-  const projectInfo = CoreModules.useAppSelector((state) => state.project.projectInfo);
   const entityOsmMap = CoreModules.useAppSelector((state) => state.project.entityOsmMap);
 
-  const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
   const currentProjectId = params.id || '';
-  const [task_state, set_task_state] = useState(taskStateEnum.UNLOCKED_TO_MAP);
-  const projectData = CoreModules.useAppSelector((state) => state.project.projectTaskBoundries);
-  const projectIndex = projectData.findIndex((project) => project.id == currentProjectId);
-  const projectTaskActivityList = CoreModules.useAppSelector((state) => state?.project?.projectTaskActivity);
   const updateEntityStateLoading = CoreModules.useAppSelector((state) => state.project.updateEntityStateLoading);
-  const currentTaskInfo = {
-    ...projectData?.[projectIndex]?.taskBoundries?.filter((task) => {
-      return task?.id == taskId;
-    })?.[0],
-  };
   const entity = entityOsmMap.find((x) => x.osm_id === featureProperties?.osm_id);
-
-  useEffect(() => {
-    if (projectIndex != -1) {
-      const currentStatus =
-        projectTaskActivityList.length > 0 ? projectTaskActivityList[0].state : taskStateEnum.UNLOCKED_TO_MAP;
-      const findCorrectTaskStatusIndex = environment.tasksStatus.findIndex((data) => data?.label == currentStatus);
-      const tasksStatus =
-        taskFeature?.id_ != undefined ? environment?.tasksStatus[findCorrectTaskStatusIndex]?.['label'] : '';
-      set_task_state(tasksStatus);
-    }
-  }, [projectTaskActivityList, taskId, taskFeature, entityOsmMap]);
 
   return (
     <div
@@ -106,64 +79,14 @@ const TaskFeatureSelectionPopup = ({ featureProperties, taskId, taskFeature }: T
             </p>
           </div>
         </div>
-        {(task_state === taskStateEnum.UNLOCKED_TO_MAP || task_state === taskStateEnum.LOCKED_FOR_MAPPING) && (
+        {entity?.status === entity_state.SURVEY_SUBMITTED && (
           <div className="fmtm-p-2 sm:fmtm-p-5 fmtm-border-t">
             <Button
-              btnText="MAP FEATURE IN ODK"
+              btnText="validate this feature"
               btnType="primary"
-              type="submit"
-              className="fmtm-font-bold !fmtm-rounded fmtm-text-sm !fmtm-py-2 !fmtm-w-full fmtm-flex fmtm-justify-center"
-              disabled={entity?.status !== 0}
-              isLoading={updateEntityStateLoading}
+              className="fmtm-font-bold !fmtm-rounded fmtm-text-sm !fmtm-py-2 !fmtm-w-full fmtm-flex fmtm-justify-center fmtm-uppercase"
               onClick={() => {
-                const xformId = projectInfo.odk_form_id;
-                const entity = entityOsmMap.find((x) => x.osm_id === featureProperties?.osm_id);
-                const entityUuid = entity ? entity.id : null;
-
-                if (!xformId || !entityUuid) {
-                  return;
-                }
-
-                dispatch(
-                  UpdateEntityState(`${import.meta.env.VITE_API_URL}/projects/${currentProjectId}/entity/status`, {
-                    entity_id: entityUuid,
-                    status: 1,
-                    label: `Task ${taskId} Feature ${entity.osm_id}`,
-                  }),
-                );
-
-                if (task_state === taskStateEnum.UNLOCKED_TO_MAP) {
-                  dispatch(
-                    CreateTaskEvent(
-                      `${import.meta.env.VITE_API_URL}/tasks/${currentTaskInfo?.id}/event`,
-                      task_event.MAP,
-                      currentProjectId,
-                      taskId.toString(),
-                      authDetails,
-                      { project_id: currentProjectId },
-                      geojsonStyles,
-                      taskFeature,
-                    ),
-                  );
-                }
-
-                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-                  navigator.userAgent,
-                );
-
-                if (isMobile) {
-                  // Load entity in ODK Collect by intent
-                  document.location.href = `odkcollect://form/${xformId}?feature=${entityUuid}`;
-                } else {
-                  dispatch(
-                    CommonActions.SetSnackBar({
-                      open: true,
-                      message: 'Requires a mobile phone with ODK Collect.',
-                      variant: 'warning',
-                      duration: 3000,
-                    }),
-                  );
-                }
+                // TODO: implement validate entity functionality
               }}
             />
           </div>
