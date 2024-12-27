@@ -1185,7 +1185,7 @@ class DbProject(BaseModel):
 
         # Filter by search term (project name using ILIKE for case-insensitive match)
         if search:
-            filters.append("slug ILIKE %(search)s")
+            filters.append("p.slug ILIKE %(search)s")
             params["search"] = f"%{search}%"
 
         # Base query with optional filtering
