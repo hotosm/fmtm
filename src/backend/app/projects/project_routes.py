@@ -946,7 +946,7 @@ async def generate_files(
 
     if project.custom_tms_url:
         basemap_in = project_schemas.BasemapGenerate(
-            tile_source="tms", file_format="pmtiles", tms_url=project.custom_tms_url
+            tile_source="custom", file_format="pmtiles", tms_url=project.custom_tms_url
         )
         org_id = project.organisation_id
         await generate_basemap(project_id, org_id, basemap_in, db, background_tasks)

@@ -275,7 +275,7 @@ class BasemapGenerate(BaseModel):
     """Params to generate a new basemap."""
 
     tile_source: Annotated[
-        Literal["esri", "bing", "google", "tms"], Field(default="esri")
+        Literal["esri", "bing", "google", "custom"], Field(default="esri")
     ]
     file_format: Annotated[
         Literal["mbtiles", "sqlitedb", "pmtiles"],
