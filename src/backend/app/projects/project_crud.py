@@ -853,8 +853,8 @@ def generate_project_basemap(
 
 async def get_pagination(page: int, count: int, results_per_page: int, total: int):
     """Pagination result for splash page."""
-    total_pages = (count + results_per_page - 1) // results_per_page
-    has_next = (page * results_per_page) < count  # noqa: N806
+    total_pages = (total + results_per_page - 1) // results_per_page
+    has_next = (page * results_per_page) < total  # noqa: N806
     has_prev = page > 1  # noqa: N806
 
     pagination = project_schemas.PaginationInfo(
@@ -892,9 +892,31 @@ async def get_paginated_projects(
         db, skip=skip, limit=limit, user_id=user_id, hashtags=hashtags, search=search
     )
 
-    # Count total number of projects for pagination
+    filters = []
+    params = {}
+
+    if user_id:
+        filters.append("author_id = %(user_id)s")
+        params["user_id"] = user_id
+
+    if hashtags:
+        filters.append("hashtags && %(hashtags)s")
+        params["hashtags"] = hashtags
+
+    if search:
+        filters.append("slug ILIKE %(search)s")
+        params["search"] = f"%{search}%"
+
+    where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
+
+    total_project_count_query = f"""
+        SELECT COUNT(*)
+        FROM projects
+        {where_clause};
+    """
+
     async with db.cursor() as cur:
-        await cur.execute("SELECT COUNT(*) FROM projects")
+        await cur.execute(total_project_count_query, params)
         total_project_count = await cur.fetchone()
         total_project_count = total_project_count[0]
 
