@@ -883,48 +883,19 @@ async def get_paginated_projects(
     if hashtags:
         hashtags = hashtags.split(",")
 
-    # Calculate pagination offsets
-    skip = (page - 1) * results_per_page
-    limit = results_per_page
-
     # Get subset of projects
     projects = await DbProject.all(
-        db, skip=skip, limit=limit, user_id=user_id, hashtags=hashtags, search=search
+        db, user_id=user_id, hashtags=hashtags, search=search
     )
-
-    filters = []
-    params = {}
-
-    if user_id:
-        filters.append("author_id = %(user_id)s")
-        params["user_id"] = user_id
-
-    if hashtags:
-        filters.append("hashtags && %(hashtags)s")
-        params["hashtags"] = hashtags
-
-    if search:
-        filters.append("slug ILIKE %(search)s")
-        params["search"] = f"%{search}%"
-
-    where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
-
-    total_project_count_query = f"""
-        SELECT COUNT(*)
-        FROM projects
-        {where_clause};
-    """
-
-    async with db.cursor() as cur:
-        await cur.execute(total_project_count_query, params)
-        total_project_count = await cur.fetchone()
-        total_project_count = total_project_count[0]
+    start_index = (page - 1) * results_per_page
+    end_index = start_index + results_per_page
+    paginated_projects = projects[start_index:end_index]
 
     pagination = await get_pagination(
-        page, len(projects), results_per_page, total_project_count
+        page, len(paginated_projects), results_per_page, len(projects)
     )
 
-    return {"results": projects, "pagination": pagination}
+    return {"results": paginated_projects, "pagination": pagination}
 
 
 async def get_project_users_plus_contributions(db: Connection, project_id: int):
