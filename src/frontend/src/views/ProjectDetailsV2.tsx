@@ -540,11 +540,7 @@ const ProjectDetailsV2 = () => {
         />
       )}
       {selectedTaskFeature != undefined && selectedTask && selectedTaskArea && (
-        <FeatureSelectionPopup
-          featureProperties={selectedFeatureProps}
-          taskId={selectedTask}
-          taskFeature={selectedTaskArea}
-        />
+        <FeatureSelectionPopup featureProperties={selectedFeatureProps} taskId={selectedTask} />
       )}
     </div>
   );
