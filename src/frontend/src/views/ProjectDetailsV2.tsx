@@ -34,9 +34,7 @@ import { useAppSelector } from '@/types/reduxTypes';
 import Comments from '@/components/ProjectDetailsV2/Comments';
 import { Geolocation } from '@/utilfunctions/Geolocation';
 import Instructions from '@/components/ProjectDetailsV2/Instructions';
-import { CustomCheckbox } from '@/components/common/Checkbox';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
-import QrcodeComponent from '@/components/QrcodeComponent';
 
 const ProjectDetailsV2 = () => {
   useDocumentTitle('Project Details');
@@ -484,9 +482,6 @@ const ProjectDetailsV2 = () => {
                   btnType="other"
                   className={`!fmtm-text-sm !fmtm-pr-2 fmtm-bg-white ${entityOsmMapLoading && 'fmtm-cursor-not-allowed'}`}
                 />
-              </div>
-              <div className="fmtm-absolute fmtm-right-0 fmtm-top-0 fmtm-z-50 fmtm-hidden sm:fmtm-block">
-                <QrcodeComponent />
               </div>
               <MapControlComponent
                 map={map}
