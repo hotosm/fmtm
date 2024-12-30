@@ -466,17 +466,6 @@ const ProjectDetailsV2 = () => {
                   className="!fmtm-text-sm !fmtm-pr-2 fmtm-bg-white"
                 />
               </div>
-              <div className="fmtm-absolute fmtm-bottom-20 sm:fmtm-bottom-5 fmtm-right-3 fmtm-z-50 fmtm-h-fit">
-                <Button
-                  btnText="START MAPPING"
-                  icon={<AssetModules.LocationOnIcon className="!fmtm-text-xl" />}
-                  onClick={() => {
-                    window.location.href = `${window.location.origin}/mapnow/${projectId}`;
-                  }}
-                  btnType="primary"
-                  className="!fmtm-text-sm !fmtm-pr-2"
-                />
-              </div>
               <div className="fmtm-absolute fmtm-right-0 fmtm-top-0 fmtm-z-50 fmtm-hidden sm:fmtm-block">
                 <QrcodeComponent />
               </div>
