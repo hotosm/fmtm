@@ -267,7 +267,7 @@ const ProjectDetailsV2 = () => {
       </div>
 
       <div className="fmtm-flex fmtm-h-full fmtm-gap-6">
-        <div className="fmtm-w-[22rem] fmtm-h-full sm:fmtm-block fmtm-hidden">
+        <div className="fmtm-w-[22rem] fmtm-h-full fmtm-hidden md:fmtm-block">
           <div className="fmtm-flex fmtm-justify-between fmtm-items-center fmtm-mb-4">
             {projectDetailsLoading ? (
               <div className="fmtm-flex fmtm-gap-1 fmtm-items-center">
@@ -400,7 +400,7 @@ const ProjectDetailsV2 = () => {
               ref={mapRef}
               mapInstance={map}
               className={`map naxatw-relative naxatw-min-h-full naxatw-w-full ${
-                windowSize.width <= 640 ? '!fmtm-h-[100dvh]' : '!fmtm-h-full'
+                windowSize.width <= 768 ? '!fmtm-h-[100dvh]' : '!fmtm-h-full'
               }`}
             >
               <LayerSwitcherControl visible={customBasemapUrl ? 'custom' : 'osm'} pmTileLayerUrl={customBasemapUrl} />
@@ -487,7 +487,7 @@ const ProjectDetailsV2 = () => {
               />
             </MapComponent>
             <div
-              className="fmtm-absolute fmtm-top-4 fmtm-left-4 fmtm-bg-white fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-red-50 fmtm-duration-300 fmtm-border-[1px] sm:fmtm-hidden fmtm-cursor-pointer"
+              className="fmtm-absolute fmtm-top-4 fmtm-left-4 fmtm-bg-white fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-red-50 fmtm-duration-300 fmtm-border-[1px] md:fmtm-hidden fmtm-cursor-pointer"
               onClick={() => navigate('/')}
             >
               <AssetModules.ArrowBackIcon className="fmtm-text-grey-800" />
