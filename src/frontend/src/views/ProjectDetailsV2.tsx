@@ -67,6 +67,7 @@ const ProjectDetailsV2 = () => {
   const taskModalStatus = CoreModules.useAppSelector((state) => state.project.taskModalStatus);
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
   const entityOsmMap = useAppSelector((state) => state?.project?.entityOsmMap);
+  const entityOsmMapLoading = useAppSelector((state) => state?.project?.entityOsmMapLoading);
 
   useEffect(() => {
     if (state.projectInfo.name) {
@@ -247,8 +248,12 @@ const ProjectDetailsV2 = () => {
     }
   }, [taskModalStatus]);
 
-  useEffect(() => {
+  const getEntityStatusList = () => {
     dispatch(GetEntityStatusList(`${import.meta.env.VITE_API_URL}/projects/${projectId}/entities/statuses`));
+  };
+
+  useEffect(() => {
+    getEntityStatusList();
   }, []);
 
   return (
@@ -455,7 +460,7 @@ const ProjectDetailsV2 = () => {
                 popupId="locked-popup"
                 className="fmtm-w-[235px]"
               />
-              <div className="fmtm-absolute fmtm-bottom-20 sm:fmtm-bottom-3 fmtm-left-3 fmtm-z-50 fmtm-rounded-lg">
+              <div className="fmtm-absolute fmtm-bottom-20 md:fmtm-bottom-3 fmtm-left-3 fmtm-z-50">
                 <Button
                   btnText="BASEMAPS"
                   icon={<AssetModules.BoltIcon className="!fmtm-text-xl" />}
@@ -464,6 +469,20 @@ const ProjectDetailsV2 = () => {
                   }}
                   btnType="other"
                   className="!fmtm-text-sm !fmtm-pr-2 fmtm-bg-white"
+                />
+              </div>
+              <div className="fmtm-absolute fmtm-bottom-20 md:fmtm-bottom-3 fmtm-right-3 fmtm-z-50">
+                <Button
+                  btnText="SYNC STATUS"
+                  icon={
+                    <AssetModules.SyncIcon className={`!fmtm-text-xl ${entityOsmMapLoading && 'fmtm-animate-spin'}`} />
+                  }
+                  onClick={() => {
+                    if (entityOsmMapLoading) return;
+                    getEntityStatusList();
+                  }}
+                  btnType="other"
+                  className={`!fmtm-text-sm !fmtm-pr-2 fmtm-bg-white ${entityOsmMapLoading && 'fmtm-cursor-not-allowed'}`}
                 />
               </div>
               <div className="fmtm-absolute fmtm-right-0 fmtm-top-0 fmtm-z-50 fmtm-hidden sm:fmtm-block">
