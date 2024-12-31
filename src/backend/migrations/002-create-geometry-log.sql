@@ -12,6 +12,8 @@ CREATE TABLE geometrylog (
     task_id int
 );
 
+ALTER TABLE geometrylog OWNER TO fmtm;
+
 -- Indexes for efficient querying
 CREATE INDEX idx_geometrylog ON geometrylog USING gist (geom);
 
