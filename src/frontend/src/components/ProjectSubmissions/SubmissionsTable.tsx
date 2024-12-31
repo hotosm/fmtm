@@ -95,16 +95,15 @@ const SubmissionsTable = ({ toggleView }) => {
     });
     setNumberOfFilters(count);
   }, [filter]);
+
   const updatedSubmissionFormFields = submissionFormFields
+    //filter necessary fields only
     ?.filter(
       (formField) =>
-        formField?.path === '/start' ||
-        formField?.path === '/end' ||
         formField?.path.startsWith('/survey_questions') ||
-        formField?.path === '/username' ||
-        formField?.path === '/task_id' ||
-        formField?.path === '/status',
+        ['/start', '/end', '/username', '/task_id', '/status'].includes(formField?.path),
     )
+    // convert path to dot notation & update name
     ?.map((formField) => {
       if (formField.type !== 'structure') {
         return {
@@ -115,6 +114,7 @@ const SubmissionsTable = ({ toggleView }) => {
       }
       return null;
     });
+
   useEffect(() => {
     dispatch(
       SubmissionFormFieldsService(
