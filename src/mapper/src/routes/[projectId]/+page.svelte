@@ -123,7 +123,7 @@
 		class="absolute z-10 top-15 sm:top-18.8 right-0 font-sans flex bg-white text-black bg-opacity-70 text-sm sm:text-base px-1 rounded-bl-md"
 	>
 		<b class="">{convertDateToTimeAgo(taskStore.latestEvent.created_at)}</b>&nbsp;| {taskStore.latestEvent.event}
-		on task {taskStore.latestEvent.task_id} by {taskStore.latestEvent.username || 'anon'}
+		on task {taskStore.taskIdIndexMap[taskStore.latestEvent.task_id]} by {taskStore.latestEvent.username || 'anon'}
 	</div>
 {/if}
 
