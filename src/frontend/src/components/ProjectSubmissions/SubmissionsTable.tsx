@@ -85,17 +85,6 @@ const SubmissionsTable = ({ toggleView }) => {
     setNumberOfFilters(count);
   }, [filter]);
 
-  useEffect(() => {
-    let count = 0;
-    const filters = Object.keys(filter);
-    filters?.map((fltr) => {
-      if (filter[fltr]) {
-        count = count + 1;
-      }
-    });
-    setNumberOfFilters(count);
-  }, [filter]);
-
   const updatedSubmissionFormFields = submissionFormFields
     //filter necessary fields only
     ?.filter(
@@ -263,7 +252,7 @@ const SubmissionsTable = ({ toggleView }) => {
           </div>
         }
         open={!!josmEditorError}
-        onOpenChange={(value) => {
+        onOpenChange={() => {
           dispatch(CoreModules.TaskActions.SetJosmEditorError(null));
         }}
       />
