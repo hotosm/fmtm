@@ -49,7 +49,7 @@ export default {
     { id: 1, label: 'ESRI', value: 'esri' },
     { id: 2, label: 'Bing', value: 'bing' },
     { id: 3, label: 'Google', value: 'google' },
-    { id: 5, label: 'Custom TMS', value: 'tms' },
+    { id: 5, label: 'Custom TMS', value: 'custom' },
   ],
   tileOutputFormats: [
     { id: 1, label: 'MBTiles', value: 'mbtiles' },
