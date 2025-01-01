@@ -28,6 +28,7 @@ from re import sub
 from typing import TYPE_CHECKING, Annotated, Optional, Self
 from uuid import UUID
 
+from app.db import database
 import geojson
 from fastapi import HTTPException, UploadFile
 from loguru import logger as log
@@ -1532,9 +1533,11 @@ class DbBackgroundTask(BaseModel):
             RETURNING *;
         """
 
-        async with db.cursor(row_factory=class_row(cls)) as cur:
-            await cur.execute(sql, {"task_id": task_id, **model_dump})
-            updated_task = await cur.fetchone()
+        pool = await database.get_db_connection_pool()
+        async with pool as pool_instance:
+            async with pool_instance.connection() as conn:
+                await conn.execute(sql, {"task_id": task_id, **model_dump})
+            updated_task = await conn.fetchone()
 
         if updated_task is None:
             msg = f"Failed to update background task with ID: {task_id}"
