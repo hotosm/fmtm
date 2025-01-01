@@ -53,7 +53,7 @@ export default {
   ],
   tileOutputFormats: [
     { id: 1, label: 'MBTiles', value: 'mbtiles' },
-    { id: 2, label: 'OSMAnd', value: 'sqlite3' },
+    { id: 2, label: 'OSMAnd', value: 'sqlitedb' },
     { id: 3, label: 'PMTiles', value: 'pmtiles' },
   ],
   statusColors: {
