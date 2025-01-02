@@ -240,6 +240,7 @@
 				>
 			</div>
 			<ControlButton
+				title="Geolocation"
 				on:click={() => {
 					entitiesStore.setToggleGeolocation(!entitiesStore.toggleGeolocation);
 					if (!entitiesStore.toggleGeolocation) {
