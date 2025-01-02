@@ -37,10 +37,7 @@
 	background: #c9c8c8;
 }
 
-p {
-	margin: 0px;
-}
-
+p,
 h5 {
-	margin: 0;
+	margin: 0px;
 }
