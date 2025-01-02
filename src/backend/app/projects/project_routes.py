@@ -1259,3 +1259,21 @@ async def create_geom_log(
         )
 
     return geometries
+
+
+@router.delete("/{project_id}/geometries")
+async def delete_geom_log(
+    project_id: int,
+    geom_id: int,
+    db: Annotated[Connection, Depends(db_conn)],
+):
+    """Delete geometry from geometry log table.
+
+    Returns: HTTP 204 response.
+
+    Raises:
+    HTTPException: If the geometries log deletion fails.
+    """
+    await DbGeometryLog.delete(db, project_id, geom_id)
+    log.info(f"Deletion of geom {geom_id} from project {project_id} is successful")
+    return Response(status_code=HTTPStatus.NO_CONTENT)
