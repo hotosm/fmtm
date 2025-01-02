@@ -34,7 +34,7 @@
 
 <hot-dialog
 	bind:this={dialogRef}
-	class="dialog-overview z-50 font-barlow-regular"
+	class="dialog-overview z-50 font-barlow font-regular"
 	open={loginStore.isLoginModalOpen}
 	onsl-hide={() => {
 		loginStore.toggleLoginModal(false);

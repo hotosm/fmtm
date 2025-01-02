@@ -18,7 +18,7 @@
 	];
 </script>
 
-<div use:clickOutside onclick_outside={() => (isOpen = false)} class="relative">
+<div use:clickOutside onclick_outside={() => (isOpen = false)} class="relative font-barlow">
 	<div
 		aria-label="toggle legend"
 		class="group text-nowrap cursor-pointer"
@@ -40,7 +40,7 @@
 	<div
 		class={`absolute bottom-0 right-14 bg-white rounded-md p-4 duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} overflow-hidden flex flex-col gap-2`}
 	>
-		<p class="font-barlow-semibold leading-0 text-lg mb-3">Legend</p>
+		<p class="font-semibold leading-0 text-lg mb-3">Legend</p>
 		{#each taskStatuses as taskStatus}
 			<div class="flex items-center gap-2">
 				{#if !taskStatus.color}
@@ -53,7 +53,7 @@
 						class={`w-5 h-5 opacity-40`}
 					></div>
 				{/if}
-				<p class="font-barlow-regular text-[#494949] text-nowrap leading-0">{taskStatus?.status}</p>
+				<p class="font-regular text-[#494949] text-nowrap leading-0">{taskStatus?.status}</p>
 			</div>
 		{/each}
 	</div>

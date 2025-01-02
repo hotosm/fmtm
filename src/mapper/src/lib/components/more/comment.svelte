@@ -81,7 +81,7 @@
 					tabindex="0"
 					variant="default"
 					size="small"
-					class="secondary col-span-2 sm:col-span-1"><span class="font-barlow-medium text-sm">CLEAR</span></sl-button
+					class="secondary col-span-2 sm:col-span-1"><span class="font-barlow text-sm">CLEAR</span></sl-button
 				>
 				<sl-button
 					variant="default"
@@ -93,7 +93,7 @@
 					}}
 					onkeydown={() => {}}
 					role="button"
-					tabindex="0"><span class="font-barlow-medium text-sm">COMMENT</span></sl-button
+					tabindex="0"><span class="font-barlow text-sm">COMMENT</span></sl-button
 				>
 			</div>
 		</div>
