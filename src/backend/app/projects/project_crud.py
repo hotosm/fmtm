@@ -21,6 +21,7 @@ import json
 import uuid
 from io import BytesIO
 from pathlib import Path
+from textwrap import dedent
 from traceback import format_exc
 from typing import Optional, Union
 
@@ -28,17 +29,19 @@ import geojson
 import geojson_pydantic
 import requests
 from asgiref.sync import async_to_sync
-from fastapi import HTTPException
+from fastapi import HTTPException, Request
 from loguru import logger as log
 from osm_fieldwork.basemapper import create_basemap_file
+from osm_login_python.core import Auth
 from osm_rawdata.postgres import PostgresClient
 from psycopg import Connection
 from psycopg.rows import class_row
 
+from app.auth.providers.osm import get_osm_token, send_osm_message
 from app.central import central_crud, central_schemas
 from app.config import settings
 from app.db.enums import BackgroundTaskStatus, HTTPStatus, XLSFormType
-from app.db.models import DbBackgroundTask, DbBasemap, DbProject, DbTask
+from app.db.models import DbBackgroundTask, DbBasemap, DbProject, DbTask, DbUser
 from app.db.postgis_utils import (
     check_crs,
     featcol_keep_single_geom_type,
@@ -850,8 +853,8 @@ def generate_project_basemap(
 
 async def get_pagination(page: int, count: int, results_per_page: int, total: int):
     """Pagination result for splash page."""
-    total_pages = (count + results_per_page - 1) // results_per_page
-    has_next = (page * results_per_page) < count  # noqa: N806
+    total_pages = (total + results_per_page - 1) // results_per_page
+    has_next = (page * results_per_page) < total  # noqa: N806
     has_prev = page > 1  # noqa: N806
 
     pagination = project_schemas.PaginationInfo(
@@ -880,26 +883,19 @@ async def get_paginated_projects(
     if hashtags:
         hashtags = hashtags.split(",")
 
-    # Calculate pagination offsets
-    skip = (page - 1) * results_per_page
-    limit = results_per_page
-
     # Get subset of projects
     projects = await DbProject.all(
-        db, skip=skip, limit=limit, user_id=user_id, hashtags=hashtags, search=search
+        db, user_id=user_id, hashtags=hashtags, search=search
     )
-
-    # Count total number of projects for pagination
-    async with db.cursor() as cur:
-        await cur.execute("SELECT COUNT(*) FROM projects")
-        total_project_count = await cur.fetchone()
-        total_project_count = total_project_count[0]
+    start_index = (page - 1) * results_per_page
+    end_index = start_index + results_per_page
+    paginated_projects = projects[start_index:end_index]
 
     pagination = await get_pagination(
-        page, len(projects), results_per_page, total_project_count
+        page, len(paginated_projects), results_per_page, len(projects)
     )
 
-    return {"results": projects, "pagination": pagination}
+    return {"results": paginated_projects, "pagination": pagination}
 
 
 async def get_project_users_plus_contributions(db: Connection, project_id: int):
@@ -932,3 +928,68 @@ async def get_project_users_plus_contributions(db: Connection, project_id: int):
     ) as cur:
         await cur.execute(query, {"project_id": project_id})
         return await cur.fetchall()
+
+
+async def send_project_manager_message(
+    request: Request,
+    project: DbProject,
+    new_manager: DbUser,
+    osm_auth: Auth,
+):
+    """Send message to the new project manager after assigned."""
+    log.info(f"Sending message to new project manager ({new_manager.username}).")
+
+    osm_token = get_osm_token(request, osm_auth)
+    project_url = f"{settings.FMTM_DOMAIN}/project/{project.id}"
+    if not project_url.startswith("http"):
+        project_url = f"https://{project_url}"
+
+    message_content = dedent(f"""
+        You have been assigned to the project **{project.name}** as a
+        manager. You can now manage the project and its tasks.
+
+        [Click here to view the project]({project_url})
+
+        Thank you for being a part of our platform!
+    """)
+
+    send_osm_message(
+        osm_token=osm_token,
+        osm_id=new_manager.id,
+        title=f"You have been assigned to project {project.name} as a manager",
+        body=message_content,
+    )
+    log.info(f"Message sent to new project manager ({new_manager.username}).")
+
+
+async def send_invitation_message(
+    request: Request,
+    project: DbProject,
+    invitee_username: str,
+    osm_auth: Auth,
+):
+    """Send an invitation message to a user to join a project."""
+    log.info(f"Sending invitation message to osm user ({invitee_username}).")
+
+    osm_token = get_osm_token(request, osm_auth)
+
+    project_url = f"{settings.FMTM_DOMAIN}/project/{project.id}"
+    if not project_url.startswith("http"):
+        project_url = f"https://{project_url}"
+
+    message_content = dedent(f"""
+        You have been invited to join the project **{project.name}**.
+
+        Please click this link:
+        [Project]({project_url})
+
+        Thank you for being a part of our platform!
+    """)
+
+    send_osm_message(
+        osm_token=osm_token,
+        osm_username=invitee_username,
+        title=f"You have been invited to join the project {project.name}",
+        body=message_content,
+    )
+    log.info(f"Invitation message sent to osm user ({invitee_username}).")

@@ -39,6 +39,7 @@ jobs:
     with:
       context: src/backend
       build_target: prod
+      scan_image: False
       image_name: ghcr.io/${{ github.repository }}/backend
 
   frontend-build:
@@ -156,5 +157,5 @@ jobs:
     uses: hotosm/gh-workflows/.github/workflows/remote_deploy_compose.yml@2.0.9
     with:
       environment: ${{ github.ref_name }}
-      docker_compose_file: "compose.${{ github.ref_name }}.yaml"
+      docker_compose_file: "docker-compose.${{ github.ref_name }}.yml"
     secrets: inherit

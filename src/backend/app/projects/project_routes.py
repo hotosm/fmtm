@@ -32,6 +32,7 @@ from fastapi import (
     Form,
     HTTPException,
     Query,
+    Request,
     Response,
     UploadFile,
 )
@@ -47,6 +48,7 @@ from psycopg import Connection
 
 from app.auth.auth_deps import login_required, mapper_login_required
 from app.auth.auth_schemas import AuthUser, OrgUserDict, ProjectUserDict
+from app.auth.providers.osm import check_osm_user, init_osm_auth
 from app.auth.roles import mapper, org_admin, project_manager
 from app.central import central_crud, central_deps, central_schemas
 from app.config import settings
@@ -59,9 +61,11 @@ from app.db.enums import (
 from app.db.models import (
     DbBackgroundTask,
     DbBasemap,
+    DbGeometryLog,
     DbOdkEntities,
     DbProject,
     DbTask,
+    DbUser,
     DbUserRole,
 )
 from app.db.postgis_utils import (
@@ -70,11 +74,11 @@ from app.db.postgis_utils import (
     flatgeobuf_to_featcol,
     merge_polygons,
     parse_geojson_file_to_featcol,
-    split_geojson_by_task_areas,
 )
 from app.organisations import organisation_deps
 from app.projects import project_crud, project_deps, project_schemas
 from app.s3 import delete_all_objs_under_prefix
+from app.users.user_deps import get_user
 
 router = APIRouter(
     prefix="/projects",
@@ -141,10 +145,11 @@ async def read_project_summaries(
     results_per_page: int = Query(13, le=100),
     user_id: Optional[int] = None,
     hashtags: Optional[str] = None,
+    search: Optional[str] = None,
 ):
     """Get a paginated summary of projects."""
     return await project_crud.get_paginated_projects(
-        db, page, results_per_page, user_id, hashtags
+        db, page, results_per_page, user_id, hashtags, search
     )
 
 
@@ -619,8 +624,9 @@ async def preview_split_by_square(
 
     return split_by_square(
         boundary_featcol,
-        osm_extract=parsed_extract,
+        settings.FMTM_DB_URL.unicode_string(),
         meters=dimension_meters,
+        osm_extract=parsed_extract,
     )
 
 
@@ -727,18 +733,56 @@ async def upload_custom_extract(
 
 @router.post("/add-manager")
 async def add_new_project_manager(
+    request: Request,
     db: Annotated[Connection, Depends(db_conn)],
-    project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
+    background_tasks: BackgroundTasks,
+    new_manager: Annotated[DbUser, Depends(get_user)],
+    org_user_dict: Annotated[OrgUserDict, Depends(org_admin)],
+    osm_auth=Depends(init_osm_auth),
 ):
     """Add a new project manager.
 
-    The logged in user must be either the admin of the organisation or a super admin.
+    The logged in user must be the admin of the organisation.
     """
     await DbUserRole.create(
         db,
-        project_user_dict["project"].id,
-        project_user_dict["user"].id,
+        org_user_dict["project"].id,
+        new_manager.id,
         ProjectRole.PROJECT_MANAGER,
+    )
+
+    background_tasks.add_task(
+        project_crud.send_project_manager_message,
+        request=request,
+        project=org_user_dict["project"],
+        new_manager=new_manager,
+        osm_auth=osm_auth,
+    )
+    return Response(status_code=HTTPStatus.OK)
+
+
+@router.post("/invite-new-user")
+async def invite_new_user(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    project: Annotated[DbProject, Depends(project_deps.get_project)],
+    invitee_username: str,
+    osm_auth=Depends(init_osm_auth),
+):
+    """Invite a new user to a project."""
+    user_exists = await check_osm_user(invitee_username)
+
+    if not user_exists:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail="User does not exist on Open Street Map",
+        )
+    background_tasks.add_task(
+        project_crud.send_invitation_message,
+        request=request,
+        project=project,
+        invitee_username=invitee_username,
+        osm_auth=osm_auth,
     )
     return Response(status_code=HTTPStatus.OK)
 
@@ -812,20 +856,15 @@ async def add_additional_entity_list(
     of the GeoJSON uploaded.
     """
     project = project_user_dict.get("project")
-    project_id = project.id
     project_odk_id = project.odkid
     project_odk_creds = project.odk_credentials
     # NOTE the Entity name is extracted from the filename (without extension)
     entity_name = Path(geojson.filename).stem
 
-    # Parse geojson + divide by task
-    # (not technically required, but also appends properties in correct format)
+    # Parse geojson
     featcol = parse_geojson_file_to_featcol(await geojson.read())
     properties = list(featcol.get("features")[0].get("properties").keys())
-    feature_split_by_task = await split_geojson_by_task_areas(db, featcol, project_id)
-    entities_list = await central_crud.task_geojson_dict_to_entity_values(
-        feature_split_by_task
-    )
+    entities_list = await central_crud.task_geojson_dict_to_entity_values(featcol, True)
     dataset_name = entity_name.replace(" ", "_")
 
     await central_crud.create_entity_list(
@@ -843,6 +882,7 @@ async def add_additional_entity_list(
 async def generate_files(
     db: Annotated[Connection, Depends(db_conn)],
     project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
+    background_tasks: BackgroundTasks,
     xlsform_upload: Annotated[
         Optional[BytesIO], Depends(central_deps.read_optional_xlsform)
     ],
@@ -867,6 +907,7 @@ async def generate_files(
             created (i.e. the project form references multiple geometries).
         db (Connection): The database connection.
         project_user_dict (ProjectUserDict): Project admin role.
+        background_tasks (BackgroundTasks): FastAPI background tasks.
 
     Returns:
         json (JSONResponse): A success message containing the project ID.
@@ -942,6 +983,13 @@ async def generate_files(
             },
         )
 
+    if project.custom_tms_url:
+        basemap_in = project_schemas.BasemapGenerate(
+            tile_source="custom", file_format="pmtiles", tms_url=project.custom_tms_url
+        )
+        org_id = project.organisation_id
+        await generate_basemap(project_id, org_id, basemap_in, db, background_tasks)
+
     return JSONResponse(
         status_code=HTTPStatus.OK,
         content={"message": "success"},
@@ -961,7 +1009,19 @@ async def generate_project_basemap(
     project_id = project_user.get("project").id
     org_id = project_user.get("project").organisation_id
 
+    await generate_basemap(project_id, org_id, basemap_in, db, background_tasks)
     # Create task in db and return uuid
+    return {"Message": "Tile generation started"}
+
+
+async def generate_basemap(
+    project_id: int,
+    org_id: int,
+    basemap_in: project_schemas.BasemapGenerate,
+    db: Connection,
+    background_tasks: BackgroundTasks,
+):
+    """Generate basemap tiles for a project."""
     log.debug(
         "Creating generate_project_basemap background task "
         f"for project ID: {project_id}"
@@ -984,8 +1044,6 @@ async def generate_project_basemap(
         basemap_in.file_format,
         basemap_in.tms_url,
     )
-
-    return {"Message": "Tile generation started"}
 
 
 @router.patch("/{project_id}", response_model=project_schemas.ProjectOut)
@@ -1197,3 +1255,26 @@ async def download_task_boundaries(
     }
 
     return Response(content=out, headers=headers)
+
+
+@router.post("/{project_id}/geometries")
+async def create_geom_log(
+    geom_log: project_schemas.GeometryLogIn,
+    db: Annotated[Connection, Depends(db_conn)],
+):
+    """Creates a new entry in the geometries log table.
+
+    Returns:
+    geometries (DbGeometryLog): The created geometries log entry.
+
+    Raises:
+    HTTPException: If the geometries log creation fails.
+    """
+    geometries = await DbGeometryLog.create(db, geom_log)
+    if not geometries:
+        raise HTTPException(
+            status_code=HTTPStatus.CONFLICT,
+            detail="geometries log creation failed.",
+        )
+
+    return geometries

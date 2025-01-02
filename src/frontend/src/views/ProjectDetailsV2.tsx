@@ -3,7 +3,7 @@ import '../../node_modules/ol/ol.css';
 import '../styles/home.scss';
 import WindowDimension from '@/hooks/WindowDimension';
 import ActivitiesPanel from '@/components/ProjectDetailsV2/ActivitiesPanel';
-import { ProjectById, GetEntityInfo } from '@/api/Project';
+import { ProjectById, GetEntityStatusList } from '@/api/Project';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import CustomizedSnackbar from '@/utilities/CustomizedSnackbar';
 import { HomeActions } from '@/store/slices/HomeSlice';
@@ -35,7 +35,6 @@ import Comments from '@/components/ProjectDetailsV2/Comments';
 import { Geolocation } from '@/utilfunctions/Geolocation';
 import Instructions from '@/components/ProjectDetailsV2/Instructions';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
-import QrcodeComponent from '@/components/QrcodeComponent';
 import { Feature } from 'ol';
 import { Polygon } from 'ol/geom';
 import { Style } from 'ol/style';
@@ -72,6 +71,7 @@ const ProjectDetailsV2 = () => {
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
   const entityOsmMap = useAppSelector((state) => state?.project?.entityOsmMap);
   const projectDetails = useAppSelector((state) => state.project.projectInfo);
+  const entityOsmMapLoading = useAppSelector((state) => state?.project?.entityOsmMapLoading);
 
   useEffect(() => {
     if (state.projectInfo.name) {
@@ -252,8 +252,12 @@ const ProjectDetailsV2 = () => {
     }
   }, [taskModalStatus]);
 
+  const getEntityStatusList = () => {
+    dispatch(GetEntityStatusList(`${import.meta.env.VITE_API_URL}/projects/${projectId}/entities/statuses`));
+  };
+
   useEffect(() => {
-    dispatch(GetEntityInfo(`${import.meta.env.VITE_API_URL}/projects/${projectId}/entities/statuses`));
+    getEntityStatusList();
   }, []);
 
   // filter rejected entity
@@ -314,7 +318,7 @@ const ProjectDetailsV2 = () => {
       </div>
 
       <div className="fmtm-flex fmtm-h-full fmtm-gap-6">
-        <div className="fmtm-w-[22rem] fmtm-h-full sm:fmtm-block fmtm-hidden">
+        <div className="fmtm-w-[22rem] fmtm-h-full fmtm-hidden md:fmtm-block">
           <div className="fmtm-flex fmtm-justify-between fmtm-items-center fmtm-mb-4">
             {projectDetailsLoading ? (
               <div className="fmtm-flex fmtm-gap-1 fmtm-items-center">
@@ -447,7 +451,7 @@ const ProjectDetailsV2 = () => {
               ref={mapRef}
               mapInstance={map}
               className={`map naxatw-relative naxatw-min-h-full naxatw-w-full ${
-                windowSize.width <= 640 ? '!fmtm-h-[100dvh]' : '!fmtm-h-full'
+                windowSize.width <= 768 ? '!fmtm-h-[100dvh]' : '!fmtm-h-full'
               }`}
             >
               <LayerSwitcherControl visible={customBasemapUrl ? 'custom' : 'osm'} pmTileLayerUrl={customBasemapUrl} />
@@ -526,7 +530,7 @@ const ProjectDetailsV2 = () => {
                 popupId="locked-popup"
                 className="fmtm-w-[235px]"
               />
-              <div className="fmtm-absolute fmtm-bottom-20 sm:fmtm-bottom-3 fmtm-left-3 fmtm-z-50 fmtm-rounded-lg">
+              <div className="fmtm-absolute fmtm-bottom-20 md:fmtm-bottom-3 fmtm-left-3 fmtm-z-50">
                 <Button
                   btnText="BASEMAPS"
                   icon={<AssetModules.BoltIcon className="!fmtm-text-xl" />}
@@ -537,19 +541,19 @@ const ProjectDetailsV2 = () => {
                   className="!fmtm-text-sm !fmtm-pr-2 fmtm-bg-white"
                 />
               </div>
-              <div className="fmtm-absolute fmtm-bottom-20 sm:fmtm-bottom-5 fmtm-right-3 fmtm-z-50 fmtm-h-fit">
+              <div className="fmtm-absolute fmtm-bottom-20 md:fmtm-bottom-3 fmtm-right-3 fmtm-z-50">
                 <Button
-                  btnText="START MAPPING"
-                  icon={<AssetModules.LocationOnIcon className="!fmtm-text-xl" />}
+                  btnText="SYNC STATUS"
+                  icon={
+                    <AssetModules.SyncIcon className={`!fmtm-text-xl ${entityOsmMapLoading && 'fmtm-animate-spin'}`} />
+                  }
                   onClick={() => {
-                    window.location.href = `${window.location.origin}/mapnow/${projectId}`;
+                    if (entityOsmMapLoading) return;
+                    getEntityStatusList();
                   }}
-                  btnType="primary"
-                  className="!fmtm-text-sm !fmtm-pr-2"
+                  btnType="other"
+                  className={`!fmtm-text-sm !fmtm-pr-2 fmtm-bg-white ${entityOsmMapLoading && 'fmtm-cursor-not-allowed'}`}
                 />
-              </div>
-              <div className="fmtm-absolute fmtm-right-0 fmtm-top-0 fmtm-z-50 fmtm-hidden sm:fmtm-block">
-                <QrcodeComponent />
               </div>
               <MapControlComponent
                 map={map}
@@ -558,7 +562,7 @@ const ProjectDetailsV2 = () => {
               />
             </MapComponent>
             <div
-              className="fmtm-absolute fmtm-top-4 fmtm-left-4 fmtm-bg-white fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-red-50 fmtm-duration-300 fmtm-border-[1px] sm:fmtm-hidden fmtm-cursor-pointer"
+              className="fmtm-absolute fmtm-top-4 fmtm-left-4 fmtm-bg-white fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-red-50 fmtm-duration-300 fmtm-border-[1px] md:fmtm-hidden fmtm-cursor-pointer"
               onClick={() => navigate('/')}
             >
               <AssetModules.ArrowBackIcon className="fmtm-text-grey-800" />
@@ -611,11 +615,7 @@ const ProjectDetailsV2 = () => {
         />
       )}
       {selectedTaskFeature != undefined && selectedTask && selectedTaskArea && (
-        <FeatureSelectionPopup
-          featureProperties={selectedFeatureProps}
-          taskId={selectedTask}
-          taskFeature={selectedTaskArea}
-        />
+        <FeatureSelectionPopup featureProperties={selectedFeatureProps} taskId={selectedTask} />
       )}
     </div>
   );

@@ -35,9 +35,9 @@
 	let maplibreMap: maplibregl.Map | undefined = $state(undefined);
 	let tabGroup: SlTabGroup;
 	let openedActionModal: 'entity-modal' | 'task-modal' | null = $state(null);
-	let isTaskActionModalOpen: boolean = $state(false);
 	let infoDialogRef: SlDialog | null = $state(null);
 	let isDrawEnabled: boolean = $state(false);
+	let latestEventTime: string = $state('');
 
 	const taskStore = getTaskStore();
 	const entitiesStore = getEntitiesStatusStore();
@@ -61,6 +61,21 @@
 			});
 		}
 		taskStore.setTaskIdIndexMap(taskIdIndexMap);
+	});
+
+	// update the latest time time every minute
+	$effect(() => {
+		const updateLatestTime = () => {
+			if (taskStore.latestEvent?.created_at) {
+				latestEventTime = convertDateToTimeAgo(taskStore.latestEvent.created_at);
+			}
+		};
+
+		updateLatestTime();
+
+		const interval = setInterval(updateLatestTime, 60000);
+
+		return () => clearInterval(interval); // Cleanup interval on unmount
 	});
 
 	function zoomToTask(taskId: number) {
@@ -118,10 +133,13 @@
 
 <!-- There is a new event to display in the top right corner -->
 {#if taskStore.latestEvent}
-	<hot-card id="notification-banner" class="absolute z-10 top-18 right-0 font-sans hidden sm:flex">
-		<b>{convertDateToTimeAgo(taskStore.latestEvent.created_at)}</b> | {taskStore.latestEvent.event}
-		on task {taskStore.latestEvent.task_id} by {taskStore.latestEvent.username || 'anon'}
-	</hot-card>
+	<div
+		id="notification-banner"
+		class="absolute z-10 top-15 sm:top-18.8 right-0 font-sans flex bg-white text-black bg-opacity-70 text-sm sm:text-base px-1 rounded-bl-md"
+	>
+		<b class="">{latestEventTime}</b>&nbsp;| {taskStore.latestEvent.event}
+		on task {taskStore.taskIdIndexMap[taskStore.latestEvent.task_id]} by {taskStore.latestEvent.username || 'anon'}
+	</div>
 {/if}
 
 <!-- The main page -->

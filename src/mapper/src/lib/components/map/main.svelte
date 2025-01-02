@@ -43,6 +43,7 @@
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
 	import { baseLayers, osmStyle, pmtilesStyle } from '$constants/baseLayers.ts';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
+	import { centroid } from '@turf/centroid';
 
 	type bboxType = [number, number, number, number];
 
@@ -154,11 +155,12 @@
 		});
 		// if clicked point contains entity then set it's osm id else set null to store
 		if (clickedEntityFeature && clickedEntityFeature?.length > 0) {
+			const entityCentroid = centroid(clickedEntityFeature[0].geometry);
 			const clickedEntityId = clickedEntityFeature[0]?.properties?.osm_id;
 			entitiesStore.setSelectedEntity(clickedEntityId);
 			entitiesStore.setSelectedEntityCoordinate({
 				entityId: clickedEntityId,
-				coordinate: [e.lngLat.lng, e.lngLat.lat],
+				coordinate: entityCentroid?.geometry?.coordinates,
 			});
 		} else {
 			entitiesStore.setSelectedEntity(null);
@@ -530,14 +532,14 @@
 
 	<!-- Help text for user on first load -->
 	{#if projectSetupStep === projectSetupStepEnum['task_selection']}
-		<div class="absolute top-5 w-fit bg-[#F097334D] z-10 left-[50%] translate-x-[-50%] p-1">
-			<p class="uppercase font-barlow-medium text-base">please select a task / feature for mapping</p>
+		<div class="absolute top-7 bg-[#F097334D] min-w-[14rem] z-10 left-[50%] translate-x-[-50%] p-1">
+			<p class="uppercase font-barlow-medium text-base">click on a task to select a feature for mapping</p>
 		</div>
 	{/if}
 
 	<!-- Help for drawing a new geometry -->
 	{#if displayDrawHelpText}
-		<div class="absolute top-5 w-fit bg-[#F097334D] z-10 left-[50%] translate-x-[-50%] p-1">
+		<div class="absolute top-7 w-fit bg-[#F097334D] z-10 left-[50%] translate-x-[-50%] p-1">
 			<p class="uppercase font-barlow-medium text-base">Click on the map to create a new point</p>
 		</div>
 	{/if}

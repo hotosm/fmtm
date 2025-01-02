@@ -43,6 +43,7 @@ from app.db.enums import (
     BackgroundTaskStatus,
     CommunityType,
     EntityState,
+    GeomStatus,
     HTTPStatus,
     MappingLevel,
     MappingState,
@@ -70,6 +71,7 @@ if TYPE_CHECKING:
         BackgroundTaskUpdate,
         BasemapIn,
         BasemapUpdate,
+        GeometryLogIn,
         ProjectIn,
         ProjectUpdate,
     )
@@ -1163,15 +1165,15 @@ class DbProject(BaseModel):
     async def all(
         cls,
         db: Connection,
-        skip: int = 0,
-        limit: int = 100,
+        skip: Optional[int] = None,
+        limit: Optional[int] = None,
         user_id: Optional[int] = None,
         hashtags: Optional[list[str]] = None,
         search: Optional[str] = None,
     ) -> Optional[list[Self]]:
         """Fetch all projects with optional filters for user, hashtags, and search."""
         filters = []
-        params = {"offset": skip, "limit": limit}
+        params = {"offset": skip, "limit": limit} if skip and limit else {}
 
         # Filter by user_id (project author)
         if user_id:
@@ -1185,7 +1187,7 @@ class DbProject(BaseModel):
 
         # Filter by search term (project name using ILIKE for case-insensitive match)
         if search:
-            filters.append("slug ILIKE %(search)s")
+            filters.append("p.slug ILIKE %(search)s")
             params["search"] = f"%{search}%"
 
         # Base query with optional filtering
@@ -1210,9 +1212,15 @@ class DbProject(BaseModel):
                 p.id, project_org.id
             ORDER BY
                 p.created_at DESC
+        """
+        sql += (
+            """
             OFFSET %(offset)s
             LIMIT %(limit)s;
         """
+            if skip and limit
+            else ";"
+        )
 
         async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(sql, params)
@@ -1735,3 +1743,62 @@ def slugify(name: Optional[str]) -> Optional[str]:
     # Remove consecutive hyphens
     slug = sub(r"[-\s]+", "-", slug)
     return slug
+
+
+class DbGeometryLog(BaseModel):
+    """Table geometry log."""
+
+    geom: dict
+    status: GeomStatus
+    project_id: Optional[int]
+    task_id: Optional[int]
+
+    @classmethod
+    async def create(
+        cls,
+        db: Connection,
+        geometry_log_in: "GeometryLogIn",
+    ) -> Self:
+        """Creates a new geometry log with its status."""
+        model_dump = dump_and_check_model(geometry_log_in)
+        columns = []
+        value_placeholders = []
+
+        for key in model_dump.keys():
+            columns.append(key)
+            if key == "geom":
+                value_placeholders.append(f"ST_GeomFromGeoJSON(%({key})s)")
+                # Must be string json for db input
+                model_dump[key] = json.dumps(model_dump[key])
+            else:
+                value_placeholders.append(f"%({key})s")
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(
+                f"""
+                INSERT INTO geometrylog
+                    ({", ".join(columns)})
+                VALUES
+                    ({", ".join(value_placeholders)})
+                RETURNING
+                    *,
+                    ST_AsGeoJSON(geom)::jsonb AS geom;
+            """,
+                model_dump,
+            )
+            new_geomlog = await cur.fetchone()
+        return new_geomlog
+
+    @classmethod
+    async def delete(
+        cls,
+        db: Connection,
+        id: int,
+    ) -> bool:
+        """Delete a geometry."""
+        async with db.cursor() as cur:
+            await cur.execute(
+                """
+                DELETE FROM geometrylog WHERE id = %(id)s;
+            """,
+                {"id": id},
+            )

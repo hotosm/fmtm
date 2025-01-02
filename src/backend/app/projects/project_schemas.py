@@ -33,10 +33,7 @@ from pydantic.functional_validators import field_validator, model_validator
 
 from app.central.central_schemas import ODKCentralDecrypted, ODKCentralIn
 from app.config import decrypt_value, encrypt_value, settings
-from app.db.enums import (
-    BackgroundTaskStatus,
-    ProjectPriority,
-)
+from app.db.enums import BackgroundTaskStatus, GeomStatus, ProjectPriority
 from app.db.models import DbBackgroundTask, DbBasemap, DbProject, slugify
 from app.db.postgis_utils import (
     geojson_to_featcol,
@@ -44,6 +41,30 @@ from app.db.postgis_utils import (
     merge_polygons,
     polygon_to_centroid,
 )
+
+
+class GeometryLogIn(BaseModel):
+    """Geometry log insert."""
+
+    status: GeomStatus
+    geom: dict
+    project_id: Optional[int]
+    task_id: Optional[int]
+
+    @field_validator("geom", mode="before")
+    @classmethod
+    def parse_input_geometry(
+        cls,
+        value: FeatureCollection | Feature | MultiPolygon | Polygon,
+    ) -> Optional[dict]:
+        """Parse any format geojson into featurecollection.
+
+        Return geometry only.
+        """
+        if value is None:
+            return None
+        featcol = geojson_to_featcol(value)
+        return featcol.get("features")[0].get("geometry")
 
 
 class ProjectInBase(DbProject):
@@ -230,7 +251,7 @@ class ProjectSummary(BaseModel):
     outline: Optional[Polygon]
     hashtags: Optional[list[str]]
     location_str: Optional[str] = None
-    description: Optional[str] = None
+    short_description: Optional[str] = None
 
     # Calculated
     organisation_logo: Optional[str] = None
@@ -274,7 +295,9 @@ class ProjectUserContributions(BaseModel):
 class BasemapGenerate(BaseModel):
     """Params to generate a new basemap."""
 
-    tile_source: Annotated[Literal["esri", "bing", "google"], Field(default="esri")]
+    tile_source: Annotated[
+        Literal["esri", "bing", "google", "custom"], Field(default="esri")
+    ]
     file_format: Annotated[
         Literal["mbtiles", "sqlitedb", "pmtiles"],
         Field(default="mbtiles"),
