@@ -20,6 +20,7 @@
 
 <div use:clickOutside onclick_outside={() => (isOpen = false)} class="relative">
 	<div
+		aria-label="toggle legend"
 		class="group text-nowrap cursor-pointer"
 		onclick={() => (isOpen = !isOpen)}
 		role="button"
@@ -44,7 +45,7 @@
 			<div class="flex items-center gap-2">
 				{#if !taskStatus.color}
 					<div class="w-5 h-5 flex justify-center">
-						<img src={taskStatus.icon} class="w-4" />
+						<img src={taskStatus.icon} class="w-4" alt="Lock Icon" />
 					</div>
 				{:else}
 					<div
