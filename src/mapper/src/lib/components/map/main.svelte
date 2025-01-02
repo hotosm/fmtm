@@ -331,7 +331,7 @@
 	<ScaleControl />
 	<Control class="flex flex-col gap-y-2" position="top-left">
 		<ControlGroup>
-			<ControlButton on:click={zoomToProject}
+			<ControlButton title="Zoom to project" on:click={zoomToProject}
 				><hot-icon name="crop-free" class={`!text-[1.2rem] cursor-pointer duration-200 text-black`}
 				></hot-icon></ControlButton
 			>
