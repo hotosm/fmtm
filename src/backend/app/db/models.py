@@ -1750,8 +1750,8 @@ class DbGeometryLog(BaseModel):
 
     geom: dict
     status: GeomStatus
-    project_id: Optional[int]
-    task_id: Optional[int]
+    project_id: Optional[int] = None
+    task_id: Optional[int] = None
 
     @classmethod
     async def create(
