@@ -1544,11 +1544,12 @@ class DbBackgroundTask(BaseModel):
             RETURNING *;
         """
 
-        pool = await database.get_db_connection_pool()
+        pool = database.get_db_connection_pool()
         async with pool as pool_instance:
             async with pool_instance.connection() as conn:
-                await conn.execute(sql, {"task_id": task_id, **model_dump})
-            updated_task = await conn.fetchone()
+                async with conn.cursor() as cursor:
+                    await cursor.execute(sql, {"task_id": task_id, **model_dump})
+                    updated_task = await cursor.fetchone()
 
         if updated_task is None:
             msg = f"Failed to update background task with ID: {task_id}"
