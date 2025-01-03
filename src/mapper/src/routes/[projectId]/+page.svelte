@@ -21,7 +21,7 @@
 	import { openOdkCollectNewFeature } from '$lib/odk/collect';
 	import { convertDateToTimeAgo } from '$lib/utils/datetime';
 	import { getTaskStore, getTaskEventStream } from '$store/tasks.svelte.ts';
-	import { getEntitiesStatusStore, getEntityStatusStream } from '$store/entities.svelte.ts';
+	import { getEntitiesStatusStore, getEntityStatusStream, getBadGeomStream } from '$store/entities.svelte.ts';
 	import More from '$lib/components/more/index.svelte';
 	import { getProjectSetupStepStore, getCommonStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
@@ -45,6 +45,7 @@
 
 	const taskEventStream = getTaskEventStream(data.projectId);
 	const entityStatusStream = getEntityStatusStream(data.projectId);
+	const badGeomStream = getBadGeomStream(data.projectId);
 
 	// Update the geojson task states when a new event is added
 	$effect(() => {
@@ -100,6 +101,7 @@
 	onMount(async () => {
 		// In store/entities.ts
 		await entitiesStore.subscribeToEntityStatusUpdates(entityStatusStream, data.entityStatus);
+		await entitiesStore.subscribeToBadGeom(badGeomStream);
 
 		// In store/tasks.svelte.ts
 		await taskStore.subscribeToEvents(taskEventStream);
