@@ -35,7 +35,9 @@ type entityIdCoordinateMapType = {
 let userLocationCoord: LngLatLike | undefined = $state();
 let selectedEntity: number | null = $state(null);
 let entitiesShape: Shape;
+let badGeomShape: Shape;
 let entitiesStatusList: entitiesStatusListType[] = $state([]);
+let badGeomList: [] = $state([]);
 let syncEntityStatusLoading: boolean = $state(false);
 let updateEntityStatusLoading: boolean = $state(false);
 let selectedEntityCoordinate: entityIdCoordinateMapType | null = $state(null);
@@ -50,6 +52,18 @@ function getEntityStatusStream(projectId: number): ShapeStream | undefined {
 		url: `${import.meta.env.VITE_SYNC_URL}/v1/shape`,
 		table: 'odk_entities',
 		where: `project_id=${projectId}`,
+	});
+}
+
+function getBadGeomStream(projectId: number): ShapeStream | undefined {
+	if (!projectId) {
+		return;
+	}
+	return new ShapeStream({
+		url: `${import.meta.env.VITE_SYNC_URL}/v1/shape`,
+		table: 'geometrylog',
+		// todo: electric sql doesn't support enums
+		where: `project_id=${projectId} AND status='BAD'`,
 	});
 }
 
@@ -70,6 +84,18 @@ function getEntitiesStatusStore() {
 						osmid: entitiesList?.find((entityx) => entityx.id === entity.entity_id)?.osm_id,
 					};
 				});
+			}
+		});
+	}
+
+	async function subscribeToBadGeom(badGeomStream: ShapeStream | undefined) {
+		if (!badGeomStream) return;
+		badGeomShape = new Shape(badGeomStream);
+
+		badGeomShape.subscribe((badGeom: ShapeData) => {
+			const rows: [] = badGeom.rows;
+			if (rows && Array.isArray(rows)) {
+				badGeomList = rows;
 			}
 		});
 	}
@@ -132,11 +158,15 @@ function getEntitiesStatusStore() {
 		setEntityToNavigate: setEntityToNavigate,
 		setToggleGeolocation: setToggleGeolocation,
 		setUserLocationCoordinate: setUserLocationCoordinate,
+		subscribeToBadGeom: subscribeToBadGeom,
 		get selectedEntity() {
 			return selectedEntity;
 		},
 		get entitiesStatusList() {
 			return entitiesStatusList;
+		},
+		get badGeomList() {
+			return badGeomList;
 		},
 		get syncEntityStatusLoading() {
 			return syncEntityStatusLoading;
@@ -159,4 +189,4 @@ function getEntitiesStatusStore() {
 	};
 }
 
-export { getEntityStatusStream, getEntitiesStatusStore };
+export { getEntityStatusStream, getEntitiesStatusStore, getBadGeomStream };
