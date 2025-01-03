@@ -1,3 +1,4 @@
+import { geometryLogType } from '@/models/submission/submissionModel';
 import CoreModules from '@/shared/CoreModules';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
@@ -119,5 +120,27 @@ export const MappedVsValidatedTaskService: Function = (url: string) => {
     };
 
     await MappedVsValidatedTask(url);
+  };
+};
+
+// post bad and new geometries
+export const PostGeometry = (url: string, payload: geometryLogType) => {
+  return async (dispatch) => {
+    const postGeometry = async () => {
+      try {
+        await CoreModules.axios.post(url, payload);
+      } catch (error) {
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: 'Failed to post geometry.',
+            variant: 'error',
+            duration: 2000,
+          }),
+        );
+      }
+    };
+
+    await postGeometry();
   };
 };
