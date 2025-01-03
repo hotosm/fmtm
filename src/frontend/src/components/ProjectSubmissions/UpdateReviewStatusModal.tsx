@@ -3,7 +3,7 @@ import { Modal } from '@/components/common/Modal';
 import { useDispatch } from 'react-redux';
 import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 import { reviewListType } from '@/models/submission/submissionModel';
-import { UpdateReviewStateService } from '@/api/SubmissionService';
+import { PostGeometry, UpdateReviewStateService } from '@/api/SubmissionService';
 import TextArea from '../common/TextArea';
 import Button from '../common/Button';
 import { useAppSelector } from '@/types/reduxTypes';
@@ -38,7 +38,13 @@ const UpdateReviewStatusModal = () => {
   }, [updateReviewStatusModal.reviewState]);
 
   const handleStatusUpdate = async () => {
-    if (!updateReviewStatusModal.instanceId || !updateReviewStatusModal.projectId || !updateReviewStatusModal.taskId) {
+    if (
+      !updateReviewStatusModal.instanceId ||
+      !updateReviewStatusModal.projectId ||
+      !updateReviewStatusModal.taskId ||
+      !updateReviewStatusModal.entity_id ||
+      !updateReviewStatusModal.taskUid
+    ) {
       return;
     }
 
@@ -52,6 +58,28 @@ const UpdateReviewStatusModal = () => {
           },
         ),
       );
+
+      // post bad geometry if submission is marked as hasIssues
+      // delete bad geometry if submission is marked as approved
+      if (reviewStatus === 'hasIssues') {
+        const badFeature = {
+          ...updateReviewStatusModal.feature,
+          properties: {
+            entity_id: updateReviewStatusModal.entity_id,
+            task_id: updateReviewStatusModal.taskUid,
+            instance_id: updateReviewStatusModal.instanceId,
+          },
+        };
+
+        dispatch(
+          PostGeometry(`${import.meta.env.VITE_API_URL}/projects/${updateReviewStatusModal.projectId}/geometries`, {
+            status: 'BAD',
+            geom: badFeature,
+            project_id: updateReviewStatusModal.projectId,
+            task_id: updateReviewStatusModal.taskUid,
+          }),
+        );
+      }
 
       dispatch(
         UpdateEntityState(
@@ -87,6 +115,7 @@ const UpdateReviewStatusModal = () => {
         taskUid: null,
         entity_id: null,
         label: null,
+        feature: null,
       }),
     );
     dispatch(SubmissionActions.UpdateReviewStateLoading(false));
@@ -141,6 +170,7 @@ const UpdateReviewStatusModal = () => {
                     taskUid: null,
                     entity_id: null,
                     label: null,
+                    feature: null,
                   }),
                 );
               }}
@@ -169,6 +199,7 @@ const UpdateReviewStatusModal = () => {
             taskUid: null,
             entity_id: null,
             label: null,
+            feature: null,
           }),
         );
       }}
