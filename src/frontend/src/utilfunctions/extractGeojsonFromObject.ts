@@ -1,7 +1,7 @@
 import { featureType, geojsonType } from '@/store/types/ISubmissions';
 
 // convert JavaRosa string to a GeoJson
-const convertCoordinateStringToFeature = (coordinateString: string) => {
+export const convertCoordinateStringToFeature = (coordinateString: string) => {
   let feature: featureType = {
     type: 'Feature',
     geometry: {},
