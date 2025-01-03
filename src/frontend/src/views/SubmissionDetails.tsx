@@ -13,7 +13,7 @@ import Accordion from '@/components/common/Accordion';
 import { GetProjectComments } from '@/api/Project';
 import SubmissionComments from '@/components/SubmissionInstance/SubmissionComments';
 import ImageSlider from '@/components/common/ImageSlider';
-import { extractGeojsonFromObject } from '@/utilfunctions/extractGeojsonFromObject';
+import { convertCoordinateStringToFeature, extractGeojsonFromObject } from '@/utilfunctions/extractGeojsonFromObject';
 
 const renderValue = (value: any, key: string = '') => {
   if (key === 'start' || key === 'end') {
@@ -190,6 +190,7 @@ const SubmissionDetails = () => {
                       taskUid: taskUid,
                       entity_id: restSubmissionDetails?.feature,
                       label: restSubmissionDetails?.meta?.entity?.label,
+                      feature: convertCoordinateStringToFeature(restSubmissionDetails?.xlocation),
                     }),
                   );
                 }}
