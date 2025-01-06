@@ -45,7 +45,7 @@ const OrganizationForm = () => {
   };
 
   const rejectOrganization = () => {
-    dispatch(RejectOrganizationService(`${import.meta.env.VITE_API_URL}/organisation/${organizationId}`));
+    dispatch(RejectOrganizationService(`${import.meta.env.VITE_API_URL}/organisation/unapproved/${organizationId}`));
   };
 
   // redirect to manage-organization page after approve/reject success
