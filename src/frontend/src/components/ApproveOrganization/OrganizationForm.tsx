@@ -105,7 +105,7 @@ const OrganizationForm = () => {
           id="url"
           name="url"
           label="Community or Organization are you applied for? "
-          value={organisationFormData?.organization_type}
+          value={organisationFormData?.community_type}
           onChange={() => {}}
           fieldType="text"
           disabled
