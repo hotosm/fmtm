@@ -180,6 +180,9 @@ function getEntitiesStatusStore() {
 		get badGeomList() {
 			return badGeomList;
 		},
+		get newGeomList() {
+			return newGeomList;
+		},
 		get syncEntityStatusLoading() {
 			return syncEntityStatusLoading;
 		},
