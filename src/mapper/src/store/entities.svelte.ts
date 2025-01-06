@@ -32,12 +32,21 @@ type entityIdCoordinateMapType = {
 	coordinate: [number, number];
 };
 
+type newBadGeomType<T> = {
+	geom: string;
+	id: number;
+	project_id: number;
+	status: T;
+	task_id: number;
+};
+
 let userLocationCoord: LngLatLike | undefined = $state();
 let selectedEntity: number | null = $state(null);
 let entitiesShape: Shape;
-let badGeomShape: Shape;
+let geomShape: Shape;
 let entitiesStatusList: entitiesStatusListType[] = $state([]);
-let badGeomList: [] = $state([]);
+let badGeomList: newBadGeomType<'BAD'>[] = $state([]);
+let newGeomList: newBadGeomType<'NEW'>[] = $state([]);
 let syncEntityStatusLoading: boolean = $state(false);
 let updateEntityStatusLoading: boolean = $state(false);
 let selectedEntityCoordinate: entityIdCoordinateMapType | null = $state(null);
@@ -55,15 +64,14 @@ function getEntityStatusStream(projectId: number): ShapeStream | undefined {
 	});
 }
 
-function getBadGeomStream(projectId: number): ShapeStream | undefined {
+function getNewBadGeomStream(projectId: number): ShapeStream | undefined {
 	if (!projectId) {
 		return;
 	}
 	return new ShapeStream({
 		url: `${import.meta.env.VITE_SYNC_URL}/v1/shape`,
 		table: 'geometrylog',
-		// todo: electric sql doesn't support enums
-		where: `project_id=${projectId} AND status='BAD'`,
+		where: `project_id=${projectId}`,
 	});
 }
 
@@ -88,14 +96,18 @@ function getEntitiesStatusStore() {
 		});
 	}
 
-	async function subscribeToBadGeom(badGeomStream: ShapeStream | undefined) {
-		if (!badGeomStream) return;
-		badGeomShape = new Shape(badGeomStream);
+	async function subscribeToNewBadGeom(geomStream: ShapeStream | undefined) {
+		if (!geomStream) return;
+		geomShape = new Shape(geomStream);
 
-		badGeomShape.subscribe((badGeom: ShapeData) => {
-			const rows: [] = badGeom.rows;
+		geomShape.subscribe((geom: ShapeData) => {
+			const rows: newBadGeomType<'NEW' | 'BAD'>[] = geom.rows;
+			const badRows = rows.filter((row) => row.status === 'BAD') as newBadGeomType<'BAD'>[];
+			const newRows = rows.filter((row) => row.status === 'NEW') as newBadGeomType<'NEW'>[];
+
 			if (rows && Array.isArray(rows)) {
-				badGeomList = rows;
+				badGeomList = badRows;
+				newGeomList = newRows;
 			}
 		});
 	}
@@ -158,7 +170,7 @@ function getEntitiesStatusStore() {
 		setEntityToNavigate: setEntityToNavigate,
 		setToggleGeolocation: setToggleGeolocation,
 		setUserLocationCoordinate: setUserLocationCoordinate,
-		subscribeToBadGeom: subscribeToBadGeom,
+		subscribeToNewBadGeom: subscribeToNewBadGeom,
 		get selectedEntity() {
 			return selectedEntity;
 		},
@@ -189,4 +201,4 @@ function getEntitiesStatusStore() {
 	};
 }
 
-export { getEntityStatusStream, getEntitiesStatusStore, getBadGeomStream };
+export { getEntityStatusStream, getEntitiesStatusStore, getNewBadGeomStream };
