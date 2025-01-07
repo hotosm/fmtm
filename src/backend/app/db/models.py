@@ -43,6 +43,7 @@ from app.db.enums import (
     BackgroundTaskStatus,
     CommunityType,
     EntityState,
+    GeomStatus,
     HTTPStatus,
     MappingLevel,
     MappingState,
@@ -70,6 +71,7 @@ if TYPE_CHECKING:
         BackgroundTaskUpdate,
         BasemapIn,
         BasemapUpdate,
+        GeometryLogIn,
         ProjectIn,
         ProjectUpdate,
     )
@@ -326,7 +328,7 @@ class DbOrganisation(BaseModel):
     url: Optional[str] = None
     type: Optional[OrganisationType] = None
     approved: Optional[bool] = None
-    created_by: Optional[int] = None
+    created_by: Optional[int] = None  # this is not foreign key linked intentionally
     odk_central_url: Optional[str] = None
     odk_central_user: Optional[str] = None
     odk_central_password: Optional[str] = None
@@ -1741,3 +1743,71 @@ def slugify(name: Optional[str]) -> Optional[str]:
     # Remove consecutive hyphens
     slug = sub(r"[-\s]+", "-", slug)
     return slug
+
+
+class DbGeometryLog(BaseModel):
+    """Table geometry log."""
+
+    geom: dict
+    status: GeomStatus
+    project_id: Optional[int] = None
+    task_id: Optional[int] = None
+
+    @classmethod
+    async def create(
+        cls,
+        db: Connection,
+        geometry_log_in: "GeometryLogIn",
+    ) -> Self:
+        """Creates a new geometry log with its status."""
+        model_dump = dump_and_check_model(geometry_log_in)
+        columns = []
+        value_placeholders = []
+
+        for key in model_dump.keys():
+            columns.append(key)
+            if key == "geom":
+                value_placeholders.append(f"ST_GeomFromGeoJSON(%({key})s)")
+                # Must be string json for db input
+                model_dump[key] = json.dumps(model_dump[key])
+            else:
+                value_placeholders.append(f"%({key})s")
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(
+                f"""
+                INSERT INTO geometrylog
+                    ({", ".join(columns)})
+                VALUES
+                    ({", ".join(value_placeholders)})
+                RETURNING
+                    *,
+                    ST_AsGeoJSON(geom)::jsonb AS geom;
+            """,
+                model_dump,
+            )
+            new_geomlog = await cur.fetchone()
+        return new_geomlog
+
+    @classmethod
+    async def delete(
+        cls,
+        db: Connection,
+        project_id: int,
+        id: int,
+    ) -> bool:
+        """Delete a geometry."""
+        async with db.cursor() as cur:
+            await cur.execute(
+                """
+                DELETE FROM geometrylog WHERE project_id=%(project_id)s AND id = %(id)s;
+            """,
+                {"project_id": project_id, "id": id},
+            )
+            if cur.rowcount == 0:
+                raise HTTPException(
+                    status_code=HTTPStatus.NOT_FOUND,
+                    detail=f"""
+                    Geometry log with project_id {project_id}
+                    and geom_id {id} not found.
+                    """,
+                )
