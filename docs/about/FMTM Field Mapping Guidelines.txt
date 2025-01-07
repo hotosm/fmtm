@@ -1,0 +1,46 @@
+﻿Field Mapping Guidelines for Mapper
+
+
+Before Field Preparation
+1. Device Requirements
+Ensure you have an Android device for field mapping activities, as ODK is not supported on iOS devices.
+2. Installing Custom ODK Collect
+   1. Before heading to the field, install the custom ODK Collect app on your mobile device.
+   2. To download the app, visit fmtm.hotosm.org from your mobile browser.
+   3. Open the menu in the top-right corner and select the option to install the ODK Collect mobile application.
+   4. Provide all necessary permission to download the application. 
+  
+
+
+
+  
+
+
+
+
+
+   3. Browser Usage
+   1. We recommend using the Chrome browser on your mobile device to access the FMTM platform for optimal performance.
+   2. If you find difficulties using FMTM through the browser, you can add the FMTM browser shortcut to your home screen via the menu.
+   3.         4. Minimum Device Specifications
+Verify that your mobile device meets the minimum specifications required for field mapping. This can be checked in your device's settings.
+      4. Go to file manager or my files of your mobile device to see the device storage. 
+      5. Go to phone settings to get information about device settings like RAM and processors. 
+      6. The minimum specs are as below: 
+Minimum RAM: 4GB
+Storage: 
+ODK recommends using Android 10 or higher for the best security and performance.
+At the field 
+      1. Please allow the necessary permissions odk asks during submissions. The permission for storage, camera and location. 
+      2. Make sure you load the PM tiles from the offline section (second tab of mapper’s mobile UI) and also try to view it online on map. If any problem is faced during loading and visualising mb tiles, consult with the project manager. 
+  
+
+      3. Before starting mapping activity, make sure you load QR code to custom ODK collect. The detailed step by step video tutorial can be accessed by clicking on the  red info icon (i) of the QR page. 
+      4.   
+
+         5. Click on the feature you want to map on FMTM and go to odk to carry out the field survey.
+         6. If the feature is not mapped in FMTM, click on add new feature and map the feature through ODK. Please consult the project manager if the feature should be geoshaped (Drawing all corners of feature in odk to demonstrate the shape of feature)or geopoint(collecting only GPS Point of the feature). If only geopoint need to be collected, also confirm the point (gate location, right corner, center of the building) and GPS accuracy needed to maintain consistency and quality of data. 
+         7. Make sure to login to mapper’s UI to get your submission name, when the form is submitted. Otherwise the form will be sent from SVCFMTM account.
+         8. Make sure to click the sync status button to get the latest update of the features. We suggest to sync feature after every submission is done.  This removes duplication in feature surveys. However, be aware that syncing of features needs internet connection. 
+         9.   Following the above guidelines will ensure a smoother experience during field mapping activities.
+If you want to understand more: Follow our step by step guide for field mapping Here
