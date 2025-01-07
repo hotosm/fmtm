@@ -1,27 +1,7 @@
 import CoreModules from '@/shared/CoreModules';
 import { CommonActions } from '@/store/slices/CommonSlice';
-import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 import { filterType } from '@/store/types/ISubmissions';
-
-export const ProjectSubmissionService: Function = (url: string) => {
-  return async (dispatch) => {
-    dispatch(ProjectActions.GetProjectSubmissionLoading(true));
-
-    const fetchProjectSubmission = async (url: string) => {
-      try {
-        const fetchSubmissionData = await CoreModules.axios.get(url);
-        const resp: any = fetchSubmissionData.data;
-        dispatch(ProjectActions.SetProjectSubmission(resp));
-        dispatch(ProjectActions.GetProjectSubmissionLoading(false));
-      } catch (error) {
-        dispatch(ProjectActions.GetProjectSubmissionLoading(false));
-      }
-    };
-
-    await fetchProjectSubmission(url);
-  };
-};
 
 export const ProjectContributorsService: Function = (url: string) => {
   return async (dispatch) => {
