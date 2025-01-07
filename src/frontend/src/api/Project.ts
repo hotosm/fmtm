@@ -10,6 +10,7 @@ import {
   projectTaskBoundriesType,
   tileType,
 } from '@/models/project/projectModel';
+import { TaskActions } from '@/store/slices/TaskSlice';
 
 export const ProjectById = (projectId: string) => {
   return async (dispatch) => {
@@ -213,14 +214,13 @@ export const GetEntityStatusList = (url: string) => {
         dispatch(CoreModules.TaskActions.SetTaskSubmissionStatesLoading(true));
         const response: AxiosResponse<EntityOsmMap[]> = await CoreModules.axios.get(url);
         dispatch(ProjectActions.SetEntityToOsmIdMapping(response.data));
-        dispatch(CoreModules.TaskActions.SetTaskSubmissionStates(response.data));
+        dispatch(TaskActions.SetTaskSubmissionStates(response.data));
         dispatch(ProjectActions.SetEntityToOsmIdMappingLoading(false));
       } catch (error) {
         dispatch(ProjectActions.SetEntityToOsmIdMappingLoading(false));
-        dispatch(CoreModules.TaskActions.SetTaskSubmissionStatesLoading(false));
       } finally {
         dispatch(ProjectActions.SetEntityToOsmIdMappingLoading(false));
-        dispatch(CoreModules.TaskActions.SetTaskSubmissionStatesLoading(false));
+        dispatch(TaskActions.SetTaskSubmissionStatesLoading(false));
       }
     };
     await getEntityOsmMap(url);
