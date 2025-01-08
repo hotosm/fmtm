@@ -1,11 +1,13 @@
-# Guidelines for Field Mappers
+# FMTM Guidelines
 
-## Device Requirements
+## Guidelines for Field Mappers
+
+### Device Requirements
 
 Ensure you have an Android device for field mapping activities, as ODK is
 not supported on iOS devices.
 
-## Installing Custom ODK Collect
+### Installing Custom ODK Collect
 
 Before heading to the field, install the custom ODK Collect app on your
 mobile device:
@@ -17,15 +19,15 @@ mobile device:
   ![image](https://github.com/user-attachments/assets/22501751-4962-4cd7-ace1-7587269ae16c)
 - Provide all necessary permissions to download the application.
 
-## Browser Usage
+### Browser Usage
 
 - We recommend using the Chrome browser on your mobile device to access
   the FMTM platform for optimal performance.
 - If you encounter difficulties using FMTM through the browser, you can
   add the FMTM browser shortcut to your home screen via the menu.
-  ![image](https://github.com/user-attachments/assets/03bd53fb-3879-4a11-a98e-6c8e2651210a)
+![image](https://github.com/user-attachments/assets/03bd53fb-3879-4a11-a98e-6c8e2651210a)
 
-## Minimum Device Specifications
+### Minimum Device Specifications
 
 Verify that your mobile device meets the minimum specifications required
 for field mapping:
@@ -42,7 +44,7 @@ for field mapping:
 - Check your phone settings for information about device settings
   such as RAM and processors.
 
-## At the Field
+### At the Field
 
 - Allow the necessary permissions (storage, camera, location) when
   prompted by ODK during submissions.
@@ -56,7 +58,7 @@ for field mapping:
   ODK Collect. A detailed step-by-step video tutorial is accessible by
   clicking on the red info icon (i) on the QR page.
 
-### Mapping Activities
+#### Mapping Activities
 
 - Click on the feature you want to map on FMTM and go to ODK to carry
   out the field survey.
@@ -81,17 +83,17 @@ field mapping activities.
 
 For more details, follow our step-by-step guide for field mapping [Here](https://docs.fmtm.dev/manuals/mapping/).
 
-# Guidelines for project manager
+## Guidelines for project manager
 
-## **During Project creation**
+### **During Project creation**
 
-### **Defining the Project Boundary**
+#### **Defining the Project Boundary**
 
 - Confirm the exact area for the survey before creating
   the project, as the project boundary cannot be
   edited once the project is created.
 
-### **Preparing Map Features**
+#### **Preparing Map Features**
 
 - Ensure you have the map features ready for the area
   you plan to survey before starting project creation.
@@ -140,7 +142,7 @@ For more details, follow our step-by-step guide for field mapping [Here](https:/
   Note that these secondary features can’t be surveyed but  
   selected for respective primary features.
 
-### **XLS Form Preparation**
+#### **XLS Form Preparation**
 
 - Be prepared with the XLS form for the project.
 - If updates are required to the form, you can edit the  
@@ -156,7 +158,7 @@ For more details, follow our step-by-step guide for field mapping [Here](https:/
 Also read carefully the overview in the left section of
 each step to understand the details of the functionalities.
 
-### **Uploading Custom Imagery**
+#### **Uploading Custom Imagery**
 
 If you have custom imagery that you want to use as basemap
 during field mapping activity, then you have to add the  
@@ -166,7 +168,7 @@ TMS link of that imagery during the first step of project creation.
   for reference_ in the first step to add TMS URL. You can  
   get the URL by uploading it in openaerialmap.
 
-### **ODK Central Credentials**
+#### **ODK Central Credentials**
 
 To store your submissions in ODK Central, you need to  
 have valid ODK Central credentials. You can obtain these  
@@ -174,7 +176,7 @@ by hosting your own ODK Central server. If you don’t have
 access to a personal ODK Central server, you can use HOT’s  
 server by selecting HOT as your organization.
 
-### **During Mapper Training**
+#### **During Mapper Training**
 
 1. Make sure mapper has downloaded custom odk collect from  
    FMTM website. You can also share the apk file if mappers
@@ -194,20 +196,15 @@ server by selecting HOT as your organization.
    familiarize themselves with the workflow and address  
    any issues during training.
 
-## **After Training**
+### **After Training**
 
-1. Collect regular ongoing feedback from mappers to ensure
-   they face no difficulties during fieldwork.
-2. Prepare clear and detailed instructions for mappers and  
-   validators, specific to the project requirements.
-3. Prepare the checklist for validation. The things to  
-   check may depend on the type of project.
-4. Connect the odk central to powerBI or any other data  
-   visualisation tool via Odata link to customise the charts and  
-   graphs as per your need.  
-   ![odk_image](image.png)
+1. Collect regular ongoing feedback from mappers to ensure they face no difficulties during fieldwork.
+2. Prepare clear and detailed instructions for mappers
+ and validators, specific to the project requirements.
+3. Prepare the checklist for validation. The things to
+ check may depend on the type of project.
+4. Connect the odk central to powerBI or any other data visualisation tool via Odata link to customise the charts and graphs as per your need.  
+![odk_image](image.png)
 
 To get more info about project management in odk collect  
-follow the guide [Here](https://docs.getodk.org/collect-using/)
-
-#
+follow the guide [Here](https://docs.getodk.org/collect-using/).
