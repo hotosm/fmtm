@@ -105,12 +105,12 @@ for field mapping:
 !!! tip
 
       This step should probably be done prior to leaving for the field!
-      
+
       The files can be a few 100MB in size.
-      
+
       MBTiles are used for loading into ODK Collect.
       PMTiles are used for navigating in FMTM.
-      
+
       If you encounter issues with the base imagery, contact your project
       manager.
 
@@ -163,7 +163,7 @@ Sometimes the feature does not exist on the map yet!
       Consult the project manager to determine if the feature should be a
       polygon (drawing all corners of the feature in ODK) or point
       (collecting only the GPS point of the feature).
-      
+
       Confirm the exact point (gate location, right corner, center of the
       building) and GPS accuracy required for consistency and quality data.
 
@@ -173,7 +173,7 @@ Sometimes the feature does not exist on the map yet!
   another feature for mapping.
 - You also also have to click the **Sync Status** button to see the feature
   turn green.
-    ![sync-status-button](https://github.com/user-attachments/assets/38062aad-c8ea-4d47-a617-4be70dbfa20c)
+  ![sync-status-button](https://github.com/user-attachments/assets/38062aad-c8ea-4d47-a617-4be70dbfa20c)
 - Select another feature to map (repeat from step 5)!
 
 !!! note
