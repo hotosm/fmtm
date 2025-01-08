@@ -75,12 +75,20 @@ In most cases we are submitting a survey about a feature that already exists.
   feature pre-selected in the survey (no need to open the ODK map!).
 - Complete the survey and submit.
 
-!!! note
+!!! tip
 
       You may manually click 'Start Mapping' for a task area.
 
       However, the task will be automatically locked for you
       if you map a feature within the task area.
+
+!!! note
+
+      The task area will change colour based on it's status.
+
+      The legend explaining these colours can be opened on the map:
+
+      ![legend](https://github.com/user-attachments/assets/280fd927-b71e-4336-a89a-1672e8de687b)
 
 ### Mapping A New Feature
 
