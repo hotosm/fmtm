@@ -25,7 +25,7 @@ mobile device:
   the FMTM platform for optimal performance.
 - If you encounter difficulties using FMTM through the browser, you can
   add the FMTM browser shortcut to your home screen via the menu.
-![image](https://github.com/user-attachments/assets/03bd53fb-3879-4a11-a98e-6c8e2651210a)
+  ![image](https://github.com/user-attachments/assets/03bd53fb-3879-4a11-a98e-6c8e2651210a)
 
 ### Minimum Device Specifications
 
@@ -200,11 +200,11 @@ server by selecting HOT as your organization.
 
 1. Collect regular ongoing feedback from mappers to ensure they face no difficulties during fieldwork.
 2. Prepare clear and detailed instructions for mappers
- and validators, specific to the project requirements.
+   and validators, specific to the project requirements.
 3. Prepare the checklist for validation. The things to
- check may depend on the type of project.
+   check may depend on the type of project.
 4. Connect the odk central to powerBI or any other data visualisation tool via Odata link to customise the charts and graphs as per your need.  
-![odk_image](image.png)
+   ![odk_image](image.png)
 
 To get more info about project management in odk collect  
 follow the guide [Here](https://docs.getodk.org/collect-using/).
