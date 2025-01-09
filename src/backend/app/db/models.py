@@ -624,10 +624,7 @@ class DbOrganisationManagers(BaseModel):
                 sql += " AND user_id = %(user_id)s"
                 params["user_id"] = user_id
             sql += ";"
-            await cur.execute(
-                sql,
-                params
-            )
+            await cur.execute(sql, params)
             return await cur.fetchall()
 
 
