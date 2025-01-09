@@ -161,7 +161,7 @@ async def new_organisation(db, admin_user, organisation_data):
         admin_user.id,
         None,
     )
-    return await DbOrganisation.one(db, new_organisation.id)
+    return new_organisation
 
 
 @pytest_asyncio.fixture(scope="function")
