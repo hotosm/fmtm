@@ -21,7 +21,7 @@ ALTER TABLE geometrylog
 ALTER COLUMN id TYPE UUID USING gen_random_uuid(),
 ALTER COLUMN id SET DEFAULT gen_random_uuid();
 
-CREATE INDEX IF NOT EXISTS idx_geom_gin ON geometrylog USING gin (geom);
+CREATE INDEX IF NOT EXISTS idx_geom_gin ON geometrylog USING gist (geom);
 
 -- Commit the transaction
 COMMIT;
