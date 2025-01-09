@@ -164,20 +164,6 @@ async def new_organisation(db, admin_user, organisation_data):
     return await DbOrganisation.one(db, new_organisation.id)
 
 
-# @pytest_asyncio.fixture(scope="function")
-# async def new_approved_organisation(db, admin_user, new_organisation):
-#     """A test approved organisation."""
-#     new_organisation = await DbOrganisation.update(
-#         db,
-#         new_organisation.id,
-#         OrganisationUpdate(approved=True),
-#     )
-#     await DbOrganisationManagers.create(
-#         db, new_organisation.id, new_organisation.created_by
-#     )
-#     return new_organisation
-
-
 @pytest_asyncio.fixture(scope="function")
 async def project(db, admin_user, organisation):
     """A test project, using the test user and org."""

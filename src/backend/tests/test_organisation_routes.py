@@ -99,26 +99,6 @@ async def test_get_my_organisations(client, new_organisation):
     assert len(data) > 0
 
 
-# async def test_update_organisation(client, new_organisation):
-#     """Test creating an organisation."""
-#     new_organisation_data = {
-#         "name": "New Name",
-#         "description": "New Description",
-#         "url": "https://dev.fmtm.hotosm.org/",
-#     }
-#     response = await client.patch(
-#         f"/organisation/{new_organisation.id}",
-#         data=new_organisation_data,
-#         files = None,
-#     )
-#     pprint(response.json())
-#     assert response.status_code == HTTPStatus.OK
-#     data = response.json()
-#     assert data["name"] == new_organisation_data["name"]
-#     assert data["description"] == new_organisation_data["description"]
-#     assert data["url"] == new_organisation_data["url"]
-
-
 async def test_delete_unapproved_organisation(client, new_organisation):
     """Test deleting an organisation."""
     response = await client.delete(f"/organisation/unapproved/{new_organisation.id}")
