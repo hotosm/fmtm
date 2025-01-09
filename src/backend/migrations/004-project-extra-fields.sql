@@ -43,6 +43,7 @@ DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'geometrylog' AND column_name = 'geom') THEN
         ALTER TABLE public.geometrylog RENAME COLUMN geom TO geojson;
+        ALTER TABLE public.geometrylog ALTER COLUMN geojson TYPE JSONB USING geojson::jsonb;
     END IF;
 END $$;
 

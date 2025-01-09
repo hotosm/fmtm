@@ -19,7 +19,7 @@ DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'geometrylog' AND column_name = 'geojson') THEN
         ALTER TABLE geometrylog
-        ALTER COLUMN geojson TYPE jsonb USING geojson::jsonb;
+        ALTER COLUMN geojson TYPE JSONB USING geojson::jsonb;
     END IF;
 END $$;
 
