@@ -611,17 +611,22 @@ class DbOrganisationManagers(BaseModel):
         cls,
         db: Connection,
         org_id: int,
-        user_id: int,
+        user_id: Optional[int] = None,
     ) -> Optional[list[Self]]:
         """Get organisation manager by organisation and user ID."""
         async with db.cursor(row_factory=class_row(cls)) as cur:
-            await cur.execute(
-                """
+            sql = """
                 SELECT * FROM organisation_managers
                 WHERE organisation_id = %(org_id)s
-                AND user_id = %(user_id)s;
-                """,
-                {"org_id": org_id, "user_id": user_id},
+            """
+            params = {"org_id": org_id}
+            if user_id:
+                sql += " AND user_id = %(user_id)s"
+                params["user_id"] = user_id
+            sql += ";"
+            await cur.execute(
+                sql,
+                params
             )
             return await cur.fetchall()
 
