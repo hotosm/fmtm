@@ -606,6 +606,25 @@ class DbOrganisationManagers(BaseModel):
             }
             await cur.execute(sql, data)
 
+    @classmethod
+    async def get(
+        cls,
+        db: Connection,
+        org_id: int,
+        user_id: int,
+    ) -> Optional[list[Self]]:
+        """Get organisation manager by organisation and user ID."""
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(
+                """
+                SELECT * FROM organisation_managers
+                WHERE organisation_id = %(org_id)s
+                AND user_id = %(user_id)s;
+                """,
+                {"org_id": org_id, "user_id": user_id},
+            )
+            return await cur.fetchall()
+
 
 class DbXLSForm(BaseModel):
     """Table xlsforms.
