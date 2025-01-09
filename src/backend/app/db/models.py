@@ -1544,12 +1544,14 @@ class DbBackgroundTask(BaseModel):
             RETURNING *;
         """
 
+        # This is a workaround as the db connection can often timeout,
+        # before the background job is finished processing
         pool = database.get_db_connection_pool()
         async with pool as pool_instance:
             async with pool_instance.connection() as conn:
-                async with conn.cursor() as cursor:
-                    await cursor.execute(sql, {"task_id": task_id, **model_dump})
-                    updated_task = await cursor.fetchone()
+                async with conn.cursor(row_factory=class_row(cls)) as cur:
+                    await cur.execute(sql, {"task_id": task_id, **model_dump})
+                    updated_task = await cur.fetchone()
 
         if updated_task is None:
             msg = f"Failed to update background task with ID: {task_id}"
@@ -1703,9 +1705,14 @@ class DbBasemap(BaseModel):
             RETURNING *;
         """
 
-        async with db.cursor(row_factory=class_row(cls)) as cur:
-            await cur.execute(sql, {"basemap_id": basemap_id, **model_dump})
-            updated_basemap = await cur.fetchone()
+        # This is a workaround as the db connection can often timeout,
+        # before the basemap is finished processing
+        pool = database.get_db_connection_pool()
+        async with pool as pool_instance:
+            async with pool_instance.connection() as conn:
+                async with conn.cursor(row_factory=class_row(cls)) as cur:
+                    await cur.execute(sql, {"basemap_id": basemap_id, **model_dump})
+                    updated_basemap = await cur.fetchone()
 
         if updated_basemap is None:
             msg = f"Failed to update basemap with ID: {basemap_id}"
