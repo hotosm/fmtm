@@ -492,10 +492,10 @@ const SubmissionsTable = ({ toggleView }) => {
                             taskId: row?.task_id,
                             projectId: projectId,
                             reviewState: row?.__system?.reviewState,
-                            taskUid: taskUid,
                             entity_id: row?.feature,
                             label: row?.meta?.entity?.label,
                             feature: convertCoordinateStringToFeature(row?.xlocation),
+                            taskUid: taskUid?.toString() || null,
                           }),
                         );
                       }}

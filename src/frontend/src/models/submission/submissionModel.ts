@@ -12,8 +12,10 @@ export type submissionFormFieldsTypes = {
 };
 
 export type submissionTableDataTypes = {
-  results: any[];
+  results: Record<string, any>[];
   pagination: {
+    has_next: boolean;
+    has_prev: boolean;
     total: number | null;
     page: number | null;
     prev_num: number | null;
@@ -47,4 +49,13 @@ export type geometryLogType = {
   geom: featureType;
   project_id: number;
   task_id: number;
+};
+
+export type updateReviewStateType = {
+  instanceId: string;
+  submitterId: number;
+  deviceId: string;
+  createdAt: string;
+  updatedAt: string;
+  reviewState: string;
 };
