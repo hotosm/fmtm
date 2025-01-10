@@ -133,8 +133,6 @@ In most cases we are submitting a survey about a feature that already exists.
 
 ![IMG_20250109_160742](https://github.com/user-attachments/assets/bf350d1c-c80e-42ee-970b-ca71a3713a9f)
 
-
-
 !!! tip
 
       You may manually click 'Start Mapping' for a task area.
@@ -159,8 +157,7 @@ Sometimes the feature does not exist on the map yet!
 - Click on the map to create a new geometry.
 - ODK Collect will be opened automatically to fill out the survey
   data for the newly created feature.
-![IMG_20250109_160816](https://github.com/user-attachments/assets/98b70f5a-4db8-46cb-84ae-58bec07c82c1)
-
+  ![IMG_20250109_160816](https://github.com/user-attachments/assets/98b70f5a-4db8-46cb-84ae-58bec07c82c1)
 
 !!! note
 
@@ -179,9 +176,9 @@ Sometimes the feature does not exist on the map yet!
   another feature for mapping.
 - You also also have to click the **Sync Status** button to see the feature
   turn green.
-  
+
   ![sync-status-button](https://github.com/user-attachments/assets/38062aad-c8ea-4d47-a617-4be70dbfa20c)
-  
+
 - Select another feature to map (repeat from step 5)!
 
 !!! note
