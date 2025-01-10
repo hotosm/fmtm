@@ -259,7 +259,7 @@ export const GetProjectComments = (url: string) => {
 
 export const PostProjectComments = (
   url: string,
-  payload: { event: task_event.COMMENT; task_id: number; comment: string },
+  payload: { event?: task_event.COMMENT; task_id: number; comment: string },
 ) => {
   return async (dispatch: AppDispatch) => {
     const postProjectComments = async (url: string) => {
