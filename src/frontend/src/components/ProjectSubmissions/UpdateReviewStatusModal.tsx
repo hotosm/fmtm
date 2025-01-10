@@ -9,6 +9,7 @@ import { PostProjectComments, UpdateEntityState } from '@/api/Project';
 import { entity_state } from '@/types/enums';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import { task_event } from '@/types/enums';
+import { featureType } from '@/store/types/ISubmissions';
 
 // Note these id values must be camelCase to match what ODK Central requires
 const reviewList: reviewListType[] = [
@@ -63,7 +64,7 @@ const UpdateReviewStatusModal = () => {
       // delete bad geometry if submission is marked as approved
       if (reviewStatus === 'hasIssues') {
         const badFeature = {
-          ...updateReviewStatusModal.feature,
+          ...(updateReviewStatusModal.feature as featureType),
           properties: {
             entity_id: updateReviewStatusModal.entity_id,
             task_id: updateReviewStatusModal.taskUid,
@@ -74,9 +75,9 @@ const UpdateReviewStatusModal = () => {
         dispatch(
           PostGeometry(`${import.meta.env.VITE_API_URL}/projects/${updateReviewStatusModal.projectId}/geometries`, {
             status: 'BAD',
-            geom: badFeature,
+            geojson: badFeature,
             project_id: updateReviewStatusModal.projectId,
-            task_id: updateReviewStatusModal.taskUid,
+            task_id: +updateReviewStatusModal.taskUid,
           }),
         );
       }
