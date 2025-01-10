@@ -88,7 +88,9 @@ async def download_submission(
             ).format(start_date, end_date)
         }
     if not export_json:
-        file_content = await submission_crud.gather_all_submission_csvs(project, filters)
+        file_content = await submission_crud.gather_all_submission_csvs(
+            project, filters
+        )
         headers = {"Content-Disposition": f"attachment; filename={project.slug}.zip"}
         return Response(file_content, headers=headers)
 
@@ -339,9 +341,7 @@ async def submission_table(
 
     if submitted_by:
         submissions = [
-            sub
-            for sub in submissions
-            if sub.get("username") == submitted_by
+            sub for sub in submissions if sub.get("username") == submitted_by
         ]
 
     start_index = (page - 1) * results_per_page
