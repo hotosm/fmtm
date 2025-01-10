@@ -79,6 +79,7 @@ async def download_submission(
         Union[list[dict], File]: JSON of submissions, or submission file.
     """
     project = project_user.get("project")
+    filters = None
     if submitted_date_range:
         start_date, end_date = submitted_date_range.split(",")
         filters = {
