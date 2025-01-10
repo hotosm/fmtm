@@ -46,7 +46,7 @@ type featureType = {
 
 export type geometryLogType = {
   status: 'NEW' | 'BAD';
-  geom: featureType;
+  geojson: featureType;
   project_id: number;
   task_id: number;
 };
