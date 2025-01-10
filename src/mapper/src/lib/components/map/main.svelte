@@ -37,7 +37,6 @@
 	import FlatGeobuf from '$lib/components/map/flatgeobuf-layer.svelte';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
 	import { getProjectSetupStepStore, getProjectBasemapStore } from '$store/common.svelte.ts';
-	// import { entityFeatcolStore, selectedEntityId } from '$store/entities';
 	import { readFileFromOPFS } from '$lib/fs/opfs.ts';
 	import { loadOfflinePmtiles } from '$lib/utils/basemaps.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
@@ -278,26 +277,6 @@
 		};
 	}
 
-	function getRejectedEntities(geojsonData: FeatureCollection): FeatureCollection {
-		const rejectedEntityStatusList = entitiesStore.entitiesStatusList.filter(
-			(entity) => entity.status === 'MARKED_BAD',
-		);
-		return {
-			...geojsonData,
-			features: rejectedEntityStatusList?.map((entity) => {
-				const feature = geojsonData.features.find((feature) => feature?.properties?.osm_id === entity.osmid);
-				return {
-					...feature,
-					properties: {
-						...feature?.properties,
-						status: entity.status,
-						entity_id: entity.entity_id,
-					},
-				};
-			}) as Feature[],
-		};
-	}
-
 	function zoomToProject() {
 		const taskBuffer = buffer(taskStore.featcol, 5, { units: 'meters' });
 		if (taskBuffer && map) {
@@ -489,36 +468,6 @@
 	</FlatGeobuf>
 
 	<!-- pulse effect layer representing rejected entities -->
-	<FlatGeobuf
-		id="rejected-entities"
-		url={entitiesUrl}
-		extent={{ type: 'Polygon', coordinates: projectOutlineCoords }}
-		extractGeomCols={true}
-		promoteId="id"
-		processGeojson={(geojsonData) => getRejectedEntities(geojsonData)}
-		geojsonUpdateDependency={entitiesStore.entitiesStatusList}
-	>
-		<FillLayer
-			id="rejected-entity-fill-layer"
-			paint={{
-				'fill-opacity': 0.6,
-				'fill-color': '#9c9a9a',
-				'fill-outline-color': '#9c9a9a',
-			}}
-			beforeLayerType="symbol"
-			manageHoverState
-		/>
-		<LineLayer
-			layout={{ 'line-cap': 'round', 'line-join': 'round' }}
-			paint={{
-				'line-color': '#fa1100',
-				'line-width': ['case', ['==', ['get', 'osm_id'], entitiesStore.selectedEntity || ''], 1, lineWidth],
-				'line-opacity': ['case', ['==', ['get', 'osm_id'], entitiesStore.selectedEntity || ''], 1, 0.35],
-			}}
-			beforeLayerType="symbol"
-			manageHoverState
-		/>
-	</FlatGeobuf>
 
 	<!-- Offline pmtiles, if present (alternative approach, not baselayer) -->
 	<!-- {#if projectBasemapStore.projectPmtilesUrl}
