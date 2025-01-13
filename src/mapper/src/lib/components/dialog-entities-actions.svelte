@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { distance } from '@turf/distance';
+	import type { Coord } from '@turf/helpers';
 	import { TaskStatusEnum, type ProjectData } from '$lib/types';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
 	import { getAlertStore } from '$store/common.svelte.ts';
@@ -25,7 +27,37 @@
 	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
 	const entityToNavigate = $derived(entitiesStore.entityToNavigate);
 
+	// check if distance constraint is set to projectand is valid
+	const isDistanceConstaintValid = (): boolean => {
+		if (projectData?.geo_restrict_force_error) {
+			const to = entitiesStore.selectedEntityCoordinate?.coordinate;
+			const from = entitiesStore.userLocationCoord;
+			if (!from) {
+				alertStore.setAlert({
+					message:
+						'Your project has a distance constraint set. Please enable device geolocation for optimal functionality',
+					variant: 'warning',
+				});
+				return false;
+			}
+
+			const entityDistance = distance(from as Coord, to as Coord, { units: 'kilometers' }) * 1000;
+			if (entityDistance && entityDistance > projectData?.geo_restrict_distance_meters) {
+				alertStore.setAlert({
+					message: `The feature must be within ${projectData?.geo_restrict_distance_meters} meters of your location`,
+					variant: 'warning',
+				});
+				return false;
+			}
+
+			return true;
+		}
+		return true;
+	};
+
 	const mapFeature = () => {
+		if (!isDistanceConstaintValid()) return;
+
 		const xformId = projectData?.odk_form_id;
 		const entityUuid = selectedEntity?.entity_id;
 
