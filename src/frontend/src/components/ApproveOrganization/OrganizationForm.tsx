@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import InputTextField from '@/components/common/InputTextField';
 import TextArea from '@/components/common/TextArea';
@@ -10,10 +9,10 @@ import {
   RejectOrganizationService,
 } from '@/api/OrganisationService';
 import { OrganisationAction } from '@/store/slices/organisationSlice';
-import { useAppSelector } from '@/types/reduxTypes';
+import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 
 const OrganizationForm = () => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const params = useParams();
   const navigate = useNavigate();
   const organizationId = params.id;
@@ -45,7 +44,7 @@ const OrganizationForm = () => {
   };
 
   const rejectOrganization = () => {
-    dispatch(RejectOrganizationService(`${import.meta.env.VITE_API_URL}/organisation/${organizationId}`));
+    dispatch(RejectOrganizationService(`${import.meta.env.VITE_API_URL}/organisation/unapproved/${organizationId}`));
   };
 
   // redirect to manage-organization page after approve/reject success
@@ -105,7 +104,7 @@ const OrganizationForm = () => {
           id="url"
           name="url"
           label="Community or Organization are you applied for? "
-          value={organisationFormData?.organization_type}
+          value={organisationFormData?.community_type}
           onChange={() => {}}
           fieldType="text"
           disabled

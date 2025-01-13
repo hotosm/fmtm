@@ -2,14 +2,13 @@ import React, { useEffect, useState } from 'react';
 import Button from '@/components/common/Button';
 import RadioButton from '@/components/common/RadioButton';
 import AssetModules from '@/shared/AssetModules.js';
-import { useDispatch } from 'react-redux';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import { useNavigate } from 'react-router-dom';
 import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
 import useForm from '@/hooks/useForm';
 import DefineTaskValidation from '@/components/createnewproject/validation/DefineTaskValidation';
 import NewDefineAreaMap from '@/views/NewDefineAreaMap';
-import { useAppSelector } from '@/types/reduxTypes';
+import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import {
   CreateProjectService,
   GetDividedTaskFromGeojson,
@@ -22,7 +21,7 @@ import DescriptionSection from '@/components/createnewproject/Description';
 
 const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalFeature, customFormFile }) => {
   useDocumentTitle('Create Project: Split Tasks');
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const [taskGenerationStatus, setTaskGenerationStatus] = useState(false);
@@ -245,7 +244,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
                     direction="column"
                     onChangeData={(value) => {
                       handleCustomChange('task_split_type', value);
-                      dispatch(CreateProjectActions.SetSplitTasksSelection(value));
+                      dispatch(CreateProjectActions.SetSplitTasksSelection(value as task_split_type));
                       if (task_split_type.CHOOSE_AREA_AS_TASK === value) {
                         dispatch(CreateProjectActions.SetIsTasksGenerated({ key: 'divide_on_square', value: false }));
                         dispatch(

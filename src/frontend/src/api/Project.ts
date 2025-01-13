@@ -1,18 +1,28 @@
+import { AxiosResponse } from 'axios';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import CoreModules from '@/shared/CoreModules';
 import { task_state, task_event } from '@/types/enums';
+import {
+  EntityOsmMap,
+  projectDashboardDetailTypes,
+  projectInfoType,
+  projectTaskBoundriesType,
+  tileType,
+} from '@/models/project/projectModel';
+import { TaskActions } from '@/store/slices/TaskSlice';
+import { AppDispatch } from '@/store/Store';
 
 export const ProjectById = (projectId: string) => {
-  return async (dispatch) => {
+  return async (dispatch: AppDispatch) => {
     const fetchProjectById = async (projectId: string) => {
       try {
         dispatch(ProjectActions.SetProjectDetialsLoading(true));
         const project = await CoreModules.axios.get(
           `${import.meta.env.VITE_API_URL}/projects/${projectId}?project_id=${projectId}`,
         );
-        const projectResp: Record<string, any> = project.data;
-        const persistingValues: Record<string, any> = projectResp.tasks.map((data) => {
+        const projectResp: projectInfoType = project.data;
+        const persistingValues = projectResp.tasks.map((data) => {
           return {
             id: data.id,
             index: data.project_task_index,
@@ -20,11 +30,12 @@ export const ProjectById = (projectId: string) => {
             task_state: task_state[data.task_state],
             actioned_by_uid: data.actioned_by_uid,
             actioned_by_username: data.actioned_by_username,
-            task_history: data.task_history,
           };
         });
         // At top level id project id to object
-        const projectTaskBoundries = [{ id: projectResp.id, taskBoundries: persistingValues }];
+        const projectTaskBoundries: projectTaskBoundriesType[] = [
+          { id: projectResp.id, taskBoundries: persistingValues },
+        ];
         dispatch(ProjectActions.SetProjectTaskBoundries([{ ...projectTaskBoundries[0] }]));
         dispatch(
           ProjectActions.SetProjectInfo({
@@ -37,11 +48,8 @@ export const ProjectById = (projectId: string) => {
             short_description: projectResp.short_description,
             num_contributors: projectResp.num_contributors,
             total_tasks: projectResp.total_tasks,
-            tasks_mapped: projectResp.tasks_mapped,
-            tasks_validated: projectResp.tasks_validated,
             xform_category: projectResp.xform_category,
             odk_form_id: projectResp?.odk_form_id,
-            tasks_bad: projectResp.tasks_bad,
             data_extract_url: projectResp.data_extract_url,
             instructions: projectResp?.per_task_instructions,
             odk_token: projectResp?.odk_token,
@@ -75,7 +83,7 @@ export const ProjectById = (projectId: string) => {
 };
 
 export const DownloadProjectForm = (url: string, downloadType: 'form' | 'geojson', projectId: string) => {
-  return async (dispatch) => {
+  return async (dispatch: AppDispatch) => {
     dispatch(ProjectActions.SetDownloadProjectFormLoading({ type: downloadType, loading: true }));
 
     const fetchProjectForm = async (url: string, downloadType: 'form' | 'geojson', projectId: string) => {
@@ -106,7 +114,7 @@ export const DownloadProjectForm = (url: string, downloadType: 'form' | 'geojson
 };
 
 export const DownloadDataExtract = (url: string, projectId: string) => {
-  return async (dispatch) => {
+  return async (dispatch: AppDispatch) => {
     dispatch(ProjectActions.SetDownloadDataExtractLoading(true));
 
     const getDownloadExtract = async (url: string, projectId: string) => {
@@ -131,16 +139,14 @@ export const DownloadDataExtract = (url: string, projectId: string) => {
 };
 
 export const GetTilesList = (url: string) => {
-  return async (dispatch) => {
+  return async (dispatch: AppDispatch) => {
     dispatch(ProjectActions.SetTilesListLoading(true));
 
     const fetchTilesList = async (url: string) => {
       try {
-        const response = await CoreModules.axios.get(url);
+        const response: AxiosResponse<tileType[]> = await CoreModules.axios.get(url);
         dispatch(ProjectActions.SetTilesList(response.data));
-        dispatch(ProjectActions.SetTilesListLoading(false));
       } catch (error) {
-        dispatch(ProjectActions.SetTilesListLoading(false));
       } finally {
         dispatch(ProjectActions.SetTilesListLoading(false));
       }
@@ -150,7 +156,7 @@ export const GetTilesList = (url: string) => {
 };
 
 export const GenerateProjectTiles = (url: string, projectId: string, data: object) => {
-  return async (dispatch) => {
+  return async (dispatch: AppDispatch) => {
     dispatch(ProjectActions.SetGenerateProjectTilesLoading(true));
 
     const generateProjectTiles = async (url: string, projectId: string) => {
@@ -168,32 +174,35 @@ export const GenerateProjectTiles = (url: string, projectId: string, data: objec
   };
 };
 
-export const DownloadBasemapFile = (url: string) => {
-  return async (dispatch) => {
-    dispatch(ProjectActions.SetDownloadTileLoading({ loading: true }));
-
+export const DownloadBasemapFile = (url: string | null) => {
+  return async (dispatch: AppDispatch) => {
     const downloadBasemapFromAPI = async (url: string) => {
       try {
         // Open S3 url directly
         window.open(url);
-
-        dispatch(ProjectActions.SetDownloadTileLoading({ loading: false }));
-      } catch (error) {
-        dispatch(ProjectActions.SetDownloadTileLoading({ loading: false }));
-      } finally {
-        dispatch(ProjectActions.SetDownloadTileLoading({ loading: false }));
-      }
+      } catch (error) {}
     };
-    await downloadBasemapFromAPI(url);
+    if (!url) {
+      dispatch(
+        CommonActions.SetSnackBar({
+          open: true,
+          message: 'No url associated to download basemap.',
+          variant: 'error',
+          duration: 2000,
+        }),
+      );
+    } else {
+      await downloadBasemapFromAPI(url);
+    }
   };
 };
 
 export const GetSubmissionDashboard = (url: string) => {
-  return async (dispatch) => {
+  return async (dispatch: AppDispatch) => {
     const GetSubmissionDashboard = async (url: string) => {
       try {
         dispatch(ProjectActions.SetProjectDashboardLoading(true));
-        const response = await CoreModules.axios.get(url);
+        const response: AxiosResponse<projectDashboardDetailTypes> = await CoreModules.axios.get(url);
         dispatch(ProjectActions.SetProjectDashboardDetail(response.data));
         dispatch(ProjectActions.SetProjectDashboardLoading(false));
       } catch (error) {
@@ -210,21 +219,20 @@ export const GetSubmissionDashboard = (url: string) => {
 };
 
 export const GetEntityStatusList = (url: string) => {
-  return async (dispatch) => {
+  return async (dispatch: AppDispatch) => {
     const getEntityOsmMap = async (url: string) => {
       try {
         dispatch(ProjectActions.SetEntityToOsmIdMappingLoading(true));
         dispatch(CoreModules.TaskActions.SetTaskSubmissionStatesLoading(true));
-        const response = await CoreModules.axios.get(url);
+        const response: AxiosResponse<EntityOsmMap[]> = await CoreModules.axios.get(url);
         dispatch(ProjectActions.SetEntityToOsmIdMapping(response.data));
-        dispatch(CoreModules.TaskActions.SetTaskSubmissionStates(response.data));
+        dispatch(TaskActions.SetTaskSubmissionStates(response.data));
         dispatch(ProjectActions.SetEntityToOsmIdMappingLoading(false));
       } catch (error) {
         dispatch(ProjectActions.SetEntityToOsmIdMappingLoading(false));
-        dispatch(CoreModules.TaskActions.SetTaskSubmissionStatesLoading(false));
       } finally {
         dispatch(ProjectActions.SetEntityToOsmIdMappingLoading(false));
-        dispatch(CoreModules.TaskActions.SetTaskSubmissionStatesLoading(false));
+        dispatch(TaskActions.SetTaskSubmissionStatesLoading(false));
       }
     };
     await getEntityOsmMap(url);
@@ -232,7 +240,7 @@ export const GetEntityStatusList = (url: string) => {
 };
 
 export const GetProjectComments = (url: string) => {
-  return async (dispatch) => {
+  return async (dispatch: AppDispatch) => {
     const getProjectComments = async (url: string) => {
       try {
         dispatch(ProjectActions.SetProjectGetCommentsLoading(true));
@@ -251,9 +259,9 @@ export const GetProjectComments = (url: string) => {
 
 export const PostProjectComments = (
   url: string,
-  payload: { event: task_event.COMMENT; task_id: number; comment: string },
+  payload: { event?: task_event.COMMENT; task_id: number; comment: string },
 ) => {
-  return async (dispatch) => {
+  return async (dispatch: AppDispatch) => {
     const postProjectComments = async (url: string) => {
       try {
         dispatch(ProjectActions.SetPostProjectCommentsLoading(true));
@@ -274,7 +282,7 @@ export const PostProjectComments = (
 };
 
 export const GetProjectTaskActivity = (url: string) => {
-  return async (dispatch) => {
+  return async (dispatch: AppDispatch) => {
     const getProjectActivity = async (url: string) => {
       try {
         dispatch(ProjectActions.SetProjectTaskActivityLoading(true));
@@ -292,7 +300,7 @@ export const GetProjectTaskActivity = (url: string) => {
 };
 
 export const UpdateEntityState = (url: string, payload: { entity_id: string; status: number; label: string }) => {
-  return async (dispatch) => {
+  return async (dispatch: AppDispatch) => {
     const updateEntityState = async (url: string, payload: { entity_id: string; status: number; label: string }) => {
       try {
         dispatch(ProjectActions.UpdateEntityStateLoading(true));
@@ -316,7 +324,7 @@ export const UpdateEntityState = (url: string, payload: { entity_id: string; sta
 };
 
 export const DownloadSubmissionGeojson = (url: string, projectName: string) => {
-  return async (dispatch) => {
+  return async (dispatch: AppDispatch) => {
     dispatch(ProjectActions.SetDownloadSubmissionGeojsonLoading(true));
 
     const downloadSubmissionGeojson = async (url: string) => {

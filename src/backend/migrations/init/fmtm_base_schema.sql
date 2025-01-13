@@ -153,6 +153,18 @@ CREATE TYPE public.entitystate AS ENUM (
 );
 ALTER TYPE public.entitystate OWNER TO fmtm;
 
+CREATE TYPE public.geomstatus AS ENUM (
+    'BAD',
+    'NEW'
+);
+ALTER TYPE public.geomstatus OWNER TO fmtm;
+
+CREATE TYPE public.geomtype AS ENUM (
+    'POINT',
+    'POLYLINE',
+    'POLYGON'
+);
+ALTER TYPE public.geomtype OWNER TO fmtm;
 
 -- Extra
 
@@ -212,6 +224,7 @@ CREATE TABLE public.organisations (
     type public.organisationtype DEFAULT 'FREE',
     community_type public.communitytype DEFAULT 'OSM_COMMUNITY',
     created_by integer,
+    associated_email character varying,
     approved BOOLEAN DEFAULT false,
     odk_central_url character varying,
     odk_central_user character varying,
@@ -264,6 +277,11 @@ CREATE TABLE public.projects (
     task_num_buildings smallint,
     hashtags character varying [],
     custom_tms_url character varying,
+    geo_restrict_force_error boolean DEFAULT false,
+    geo_restrict_distance_meters int2 DEFAULT 50 CHECK (
+        geo_restrict_distance_meters >= 0
+    ),
+    new_geom_type public.geomtype DEFAULT 'POINT',
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now()
 );
@@ -386,6 +404,15 @@ ALTER TABLE public.submission_photos_id_seq OWNER TO fmtm;
 ALTER SEQUENCE public.submission_photos_id_seq
 OWNED BY public.submission_photos.id;
 
+CREATE TABLE geometrylog (
+    id UUID NOT NULL DEFAULT gen_random_uuid(),
+    geojson JSONB NOT NULL,
+    status geomstatus,
+    project_id int,
+    task_id int
+);
+ALTER TABLE geometrylog OWNER TO fmtm;
+
 -- nextval for primary keys (autoincrement)
 
 ALTER TABLE ONLY public.organisations ALTER COLUMN id SET DEFAULT nextval(
@@ -458,6 +485,9 @@ ADD CONSTRAINT xlsforms_title_key UNIQUE (title);
 ALTER TABLE ONLY public.submission_photos
 ADD CONSTRAINT submission_photos_pkey PRIMARY KEY (id);
 
+ALTER TABLE ONLY public.idx_geometrylog
+ADD CONSTRAINT geometrylog_pkey PRIMARY KEY (id);
+
 -- Indexing
 
 CREATE INDEX idx_projects_outline ON public.projects USING gist (outline);
@@ -504,6 +534,9 @@ CREATE INDEX idx_entities_task_id
 ON public.odk_entities USING btree (
     entity_id, task_id
 );
+CREATE INDEX idx_geometrylog_geojson
+ON geometrylog USING gin (geom);
+
 
 -- Foreign keys
 

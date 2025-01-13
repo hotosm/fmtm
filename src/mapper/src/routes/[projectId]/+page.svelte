@@ -215,7 +215,7 @@
 								? `?task_filter=${taskStore.selectedTaskId}`
 								: ''}"
 						>
-							<span class="font-barlow-medium text-base uppercase">Open ODK</span></sl-button
+							<span class="font-barlow font-medium text-base uppercase">Open ODK</span></sl-button
 						>
 					{/if}
 				</QRCodeComponent>
@@ -244,7 +244,7 @@
 					size="small"
 					class="primary w-fit ml-auto"
 				>
-					<span class="font-barlow-medium text-SM uppercase">CLOSE</span>
+					<span class="font-barlow font-medium text-SM uppercase">CLOSE</span>
 				</sl-button>
 			</div>
 		</hot-dialog>

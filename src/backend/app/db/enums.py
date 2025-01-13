@@ -234,6 +234,14 @@ class GeometryType(StrEnum, Enum):
     Point = "Point"
 
 
+class DbGeomType(StrEnum, Enum):
+    """Enum in the database, all geom types are in caps."""
+
+    POINT = "POINT"
+    POLYGON = "POLYGON"
+    LINESTRING = "LINESTRING"
+
+
 class XLSFormType(StrEnum, Enum):
     """XLSForm categories bundled by default.
 
@@ -251,3 +259,10 @@ class XLSFormType(StrEnum, Enum):
     # religious = "religious"
     # landusage = "landusage"
     # waterways = "waterways"
+
+
+class GeomStatus(StrEnum, Enum):
+    """Geometry status."""
+
+    NEW = "NEW"
+    BAD = "BAD"

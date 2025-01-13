@@ -2,9 +2,8 @@ import TextArea from '@/components/common/TextArea';
 import InputTextField from '@/components/common/InputTextField';
 import React, { useEffect, useState } from 'react';
 import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
-import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useAppSelector } from '@/types/reduxTypes';
+import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import useForm from '@/hooks/useForm';
 import CreateProjectValidation from '@/components/createnewproject/validation/CreateProjectValidation';
 import Button from '@/components/common/Button';
@@ -19,7 +18,7 @@ import DescriptionSection from '@/components/createnewproject/Description';
 
 const ProjectDetailsForm = ({ flag }) => {
   useDocumentTitle('Create Project: Project Details');
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const projectDetails = useAppSelector((state) => state.createproject.projectDetails);
@@ -53,9 +52,6 @@ const ProjectDetailsForm = ({ flag }) => {
     // Calls onFocus when the window first loads
     return () => {
       window.removeEventListener('focus', onFocus);
-      // dispatch(
-      //   CreateProjectActions.SetCreateProjectValidations({ key: 'projectDetails', value: checkValidationOnly() }),
-      // );
     };
   }, []);
 
@@ -78,6 +74,9 @@ const ProjectDetailsForm = ({ flag }) => {
 
     if (selectedOrg && selectedOrg.hasODKCredentials) {
       handleCustomChange('defaultODKCredentials', selectedOrg.hasODKCredentials);
+    } else {
+      // Allow the user to choose default credentials for orgs without ODK credentials
+      handleCustomChange('defaultODKCredentials', false);
     }
   };
 
@@ -169,7 +168,7 @@ const ProjectDetailsForm = ({ flag }) => {
             }}
             onMouseLeave={() => dispatch(CreateProjectActions.SetDescriptionToFocus(null))}
           >
-            {hasODKCredentials && (
+            {
               <CustomCheckbox
                 key="defaultODKCredentials"
                 label="Use default ODK credentials"
@@ -178,10 +177,10 @@ const ProjectDetailsForm = ({ flag }) => {
                   handleCustomChange('defaultODKCredentials', !values.defaultODKCredentials);
                 }}
                 className="fmtm-text-black"
-                labelClickable={true}
+                labelClickable={hasODKCredentials} // Dynamically set labelClickable based on hasODKCredentials
               />
-            )}
-            {((!values.defaultODKCredentials && hasODKCredentials) || !hasODKCredentials) && (
+            }
+            {!values.defaultODKCredentials && !hasODKCredentials && (
               <>
                 <InputTextField
                   id="odk_central_url"
