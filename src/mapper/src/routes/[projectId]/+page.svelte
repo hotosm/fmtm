@@ -25,7 +25,7 @@
 	import More from '$lib/components/more/index.svelte';
 	import { getProjectSetupStepStore, getCommonStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
-	import { ShapeStream } from '@electric-sql/client';
+	import type { ShapeStream } from '@electric-sql/client';
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
