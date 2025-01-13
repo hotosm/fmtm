@@ -84,9 +84,9 @@ async def download_submission(
         start_date, end_date = submitted_date_range.split(",")
         filters = {
             "$filter": (
-                "__system/submissionDate ge {}T00:00:00+00:00 "
-                "and __system/submissionDate le {}T23:59:59.999+00:00"
-            ).format(start_date, end_date)
+                f"__system/submissionDate ge {start_date}T00:00:00+00:00 "
+                f"and __system/submissionDate le {end_date}T23:59:59.999+00:00"
+            )
         }
     if not export_json:
         file_content = await submission_crud.gather_all_submission_csvs(
