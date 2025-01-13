@@ -300,15 +300,19 @@
 			selectedBaselayer = 'PMTiles';
 		}
 
-		setInterval(() => {
+		const interval = setInterval(() => {
 			if (expanding) {
 				lineWidth += 0.3;
-				if (lineWidth >= 6) expanding = false; // Maximum width
+				if (lineWidth >= 4) expanding = false; // Maximum width
 			} else {
 				lineWidth -= 0.3;
 				if (lineWidth <= 1) expanding = true; // Minimum width
 			}
 		}, 50); // Update every 50ms for smooth animation
+
+		return () => {
+			clearInterval(interval);
+		};
 	});
 </script>
 
@@ -424,7 +428,7 @@
 		<FillLayer
 			id="entity-fill-layer"
 			paint={{
-				'fill-opacity': 0.6,
+				'fill-opacity': ['match', ['get', 'status'], 'MARKED_BAD', 0, 0.6],
 				'fill-color': [
 					'match',
 					['get', 'status'],
@@ -466,6 +470,27 @@
 			manageHoverState
 		/>
 	</FlatGeobuf>
+	<GeoJSON id="bad-geoms" data={entitiesStore.badGeomList}>
+		<FillLayer
+			id="bad-geom-fill-layer"
+			hoverCursor="pointer"
+			paint={{
+				'fill-color': '#fa1100',
+				'fill-opacity': 0.3,
+			}}
+			beforeLayerType="symbol"
+			manageHoverState
+		/>
+		<LineLayer
+			layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+			paint={{
+				'line-color': '#fa1100',
+				'line-width': lineWidth,
+			}}
+			beforeLayerType="symbol"
+			manageHoverState
+		/>
+	</GeoJSON>
 
 	<!-- pulse effect layer representing rejected entities -->
 
