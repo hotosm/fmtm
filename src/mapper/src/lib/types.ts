@@ -40,6 +40,8 @@ export interface ProjectData {
 	status: number;
 	hashtags: string[];
 	tasks: ProjectTask[];
+	geo_restrict_distance_meters: number;
+	geo_restrict_force_error: boolean;
 }
 
 export interface ZoomToTaskEventDetail {
