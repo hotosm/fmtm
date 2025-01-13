@@ -35,7 +35,7 @@
 			if (!from) {
 				alertStore.setAlert({
 					message:
-						'Your project has a distance constraint set. Please enable device geolocation for optimal functionality',
+						'This project has a distance constraint set. Please enable device geolocation for optimal functionality',
 					variant: 'warning',
 				});
 				return false;
