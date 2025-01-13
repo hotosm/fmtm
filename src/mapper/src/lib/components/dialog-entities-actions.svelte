@@ -28,7 +28,7 @@
 	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
 	const entityToNavigate = $derived(entitiesStore.entityToNavigate);
 
-	// check if distance constraint is set to projectand is valid
+	// Check if drawn geometry is within set distance constraints from user
 	const isDistanceConstaintValid = (): boolean => {
 		const coordTo = entitiesStore.selectedEntityCoordinate?.coordinate;
 		const coordFrom = entitiesStore.userLocationCoord;
