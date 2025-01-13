@@ -8,7 +8,7 @@ export const convertCoordinateStringToFeature = (coordinateString: string) => {
     properties: {},
   };
 
-  // if feature is LineString in JavaRosa format it contains string of array separated by ';'
+  // if feature is Polygon in JavaRosa format it contains string of array separated by ';'
   if (coordinateString?.includes(';')) {
     let coordinates = coordinateString?.split(';')?.map((coord) => {
       let coordinate = coord
@@ -20,7 +20,7 @@ export const convertCoordinateStringToFeature = (coordinateString: string) => {
         });
       return [coordinate[1], coordinate[0]];
     });
-    feature = { ...feature, geometry: { type: 'LineString', coordinates: coordinates } };
+    feature = { ...feature, geometry: { type: 'Polygon', coordinates: [coordinates] } };
   } else {
     // if feature is Point in JavaRosa format it contains string of array
     const splittedCoord = coordinateString?.split(' ');
