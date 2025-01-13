@@ -1,5 +1,6 @@
 import { ShapeStream, Shape } from '@electric-sql/client';
 import type { ShapeData } from '@electric-sql/client';
+import type { FeatureCollection, Geometry } from 'geojson';
 import type { LngLatLike } from 'svelte-maplibre';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -33,7 +34,7 @@ type entityIdCoordinateMapType = {
 };
 
 type newBadGeomType<T> = {
-	geom: string;
+	geojson: Geometry;
 	id: number;
 	project_id: number;
 	status: T;
@@ -45,8 +46,8 @@ let selectedEntity: number | null = $state(null);
 let entitiesShape: Shape;
 let geomShape: Shape;
 let entitiesStatusList: entitiesStatusListType[] = $state([]);
-let badGeomList: newBadGeomType<'BAD'>[] = $state([]);
-let newGeomList: newBadGeomType<'NEW'>[] = $state([]);
+let badGeomList: FeatureCollection | undefined = $state();
+let newGeomList: FeatureCollection | undefined = $state();
 let syncEntityStatusLoading: boolean = $state(false);
 let updateEntityStatusLoading: boolean = $state(false);
 let selectedEntityCoordinate: entityIdCoordinateMapType | null = $state(null);
@@ -102,12 +103,18 @@ function getEntitiesStatusStore() {
 
 		geomShape.subscribe((geom: ShapeData) => {
 			const rows: newBadGeomType<'NEW' | 'BAD'>[] = geom.rows;
-			const badRows = rows.filter((row) => row.status === 'BAD') as newBadGeomType<'BAD'>[];
-			const newRows = rows.filter((row) => row.status === 'NEW') as newBadGeomType<'NEW'>[];
+			const badRows = rows.filter((row) => row.status === 'BAD').map((row) => row?.geojson) as Geometry[];
+			const newRows = rows.filter((row) => row.status === 'NEW').map((row) => row?.geojson) as Geometry[];
 
 			if (rows && Array.isArray(rows)) {
-				badGeomList = badRows;
-				newGeomList = newRows;
+				badGeomList = {
+					type: 'FeatureCollection',
+					features: badRows?.map((geom) => ({ type: 'Feature', geometry: geom, properties: {} })),
+				};
+				newGeomList = {
+					type: 'FeatureCollection',
+					features: newRows?.map((geom) => ({ type: 'Feature', geometry: geom, properties: {} })),
+				};
 			}
 		});
 	}
