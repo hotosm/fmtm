@@ -6,6 +6,7 @@
 	import { getAlertStore } from '$store/common.svelte.ts';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
 	import { mapTask } from '$lib/db/events';
+	import { trusted } from 'svelte/legacy';
 
 	type Props = {
 		isTaskActionModalOpen: boolean;
@@ -29,29 +30,35 @@
 
 	// check if distance constraint is set to projectand is valid
 	const isDistanceConstaintValid = (): boolean => {
-		if (projectData?.geo_restrict_force_error) {
-			const to = entitiesStore.selectedEntityCoordinate?.coordinate;
-			const from = entitiesStore.userLocationCoord;
-			if (!from) {
-				alertStore.setAlert({
-					message:
-						'This project has a distance constraint set. Please enable device geolocation for optimal functionality',
-					variant: 'warning',
-				});
+		const coordTo = entitiesStore.selectedEntityCoordinate?.coordinate;
+		const coordFrom = entitiesStore.userLocationCoord;
+
+		// Geolocation not enabled, warn user
+		if (!coordFrom) {
+			alertStore.setAlert({
+				message:
+					'This project has a distance constraint set. Please enable device geolocation for optimal functionality',
+				variant: 'warning',
+			});
+			return false;
+		}
+
+		const entityDistance = distance(coordFrom as Coord, coordTo as Coord, { units: 'kilometers' }) * 1000;
+		if (entityDistance && entityDistance > projectData?.geo_restrict_distance_meters) {
+			// Feature is far away from user, warn user
+			alertStore.setAlert({
+				message: `The feature must be within ${projectData?.geo_restrict_distance_meters} meters of your location`,
+				variant: 'warning',
+			});
+			if (projectData?.geo_restrict_force_error) {
+				// Not valid coord, prevent user from continuing
 				return false;
 			}
-
-			const entityDistance = distance(from as Coord, to as Coord, { units: 'kilometers' }) * 1000;
-			if (entityDistance && entityDistance > projectData?.geo_restrict_distance_meters) {
-				alertStore.setAlert({
-					message: `The feature must be within ${projectData?.geo_restrict_distance_meters} meters of your location`,
-					variant: 'warning',
-				});
-				return false;
-			}
-
+			// Valid coord: it's outside of range, but only 'warn' user
 			return true;
 		}
+
+		// Valid coord
 		return true;
 	};
 
