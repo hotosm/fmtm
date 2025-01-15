@@ -39,7 +39,7 @@ const SubmissionsTable = ({ toggleView }) => {
     task_id: searchParams.get('task_id') ? searchParams?.get('task_id') || null : null,
     submitted_by: searchParams.get('submitted_by'),
     review_state: searchParams.get('review_state'),
-    submitted_date: searchParams.get('submitted_date'),
+    submitted_date_range: searchParams.get('submitted_date_range'),
   };
   const [filter, setFilter] = useState<filterType>(initialFilterState);
 
@@ -73,6 +73,16 @@ const SubmissionsTable = ({ toggleView }) => {
   const [numberOfFilters, setNumberOfFilters] = useState<number>(0);
   const [paginationPage, setPaginationPage] = useState<number>(1);
   const [submittedBy, setSubmittedBy] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
+
+  useEffect(() => {
+    if (!dateRange.start || !dateRange.end) return;
+
+    setFilter((prev) => ({
+      ...prev,
+      submitted_date_range: `${format(new Date(dateRange.start as Date), 'yyyy-MM-dd')},${format(new Date(dateRange.end as Date), 'yyyy-MM-dd')}`,
+    }));
+  }, [dateRange]);
 
   useEffect(() => {
     let count = 0;
@@ -163,7 +173,7 @@ const SubmissionsTable = ({ toggleView }) => {
 
   const clearFilters = () => {
     setSearchParams({ tab: 'table' });
-    setFilter({ task_id: null, submitted_by: null, review_state: null, submitted_date: null });
+    setFilter({ task_id: null, submitted_by: null, review_state: null, submitted_date_range: null });
   };
 
   function getValueByPath(obj: any, path: string) {
@@ -307,13 +317,13 @@ const SubmissionsTable = ({ toggleView }) => {
                     className="fmtm-text-grey-700 fmtm-text-sm !fmtm-mb-0 fmtm-bg-white"
                   />
                 </div>
-                <div className={`${windowSize.width < 500 ? 'fmtm-w-full' : 'fmtm-w-[11rem]'}`}>
+                <div className={`${windowSize.width < 500 ? 'fmtm-w-full' : 'fmtm-w-[11.5rem]'}`}>
                   <CustomDatePicker
                     title="Submitted Date"
-                    selectedDate={filter?.submitted_date}
-                    setSelectedDate={(date) =>
-                      setFilter((prev) => ({ ...prev, submitted_date: format(new Date(date), 'yyyy-MM-dd') }))
-                    }
+                    startDate={dateRange?.start}
+                    endDate={dateRange?.end}
+                    setStartDate={(date) => setDateRange((prev) => ({ ...prev, start: date }))}
+                    setEndDate={(date) => setDateRange((prev) => ({ ...prev, end: date }))}
                     className="fmtm-text-grey-700 fmtm-text-sm !fmtm-mb-0 fmtm-w-full"
                   />
                 </div>
