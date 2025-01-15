@@ -1265,7 +1265,7 @@ async def download_task_boundaries(
     return Response(content=out, headers=headers)
 
 
-@router.post("/{project_id}/geometries")
+@router.post("/{project_id}/geometry/records")
 async def create_geom_log(
     geom_log: project_schemas.GeometryLogIn,
     current_user: Annotated[ProjectUserDict, Depends(mapper)],
@@ -1310,19 +1310,31 @@ async def create_geom_log(
 
 
 @router.get(
-    "{project_id}/geometries", response_model=list[project_schemas.GeometryLogIn]
+    "{project_id}/geometry/records", response_model=list[project_schemas.GeometryLogIn]
 )
 async def read_geom_logs(
     db: Annotated[Connection, Depends(db_conn)],
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ):
-    """Retrieve geometry logs from a project."""
+    """Retrieve all geometry logs for a specific project.
+
+    This endpoint fetches geometry records.
+    - Bad submitted feature and
+    - new feature drawn in a project
+
+    Args:
+        db: The database connection.
+        project_user: The currently authenticated project user details.
+
+    Returns:
+        list[project_schemas.GeometryLogIn]: A list of geometry log entries.
+    """
     project_id = project_user.get("project").id
     geometries = await DbGeometryLog.all(db, project_id)
     return geometries
 
 
-@router.delete("/{project_id}/geometries")
+@router.delete("/{project_id}/geometry/records/{geom_id}")
 async def delete_geom_log(
     geom_id: str,
     project_user: Annotated[
