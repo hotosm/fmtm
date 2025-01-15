@@ -2,7 +2,7 @@ import React from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
-type CustomDatePickerType = {
+type DateRangePickerType = {
   title: string;
   className: string;
   setStartDate: (date: Date | null) => void;
@@ -11,7 +11,7 @@ type CustomDatePickerType = {
   endDate: Date | null;
 };
 
-const CustomDatePicker = ({ title, className, setStartDate, setEndDate, startDate, endDate }: CustomDatePickerType) => {
+const DateRangePicker = ({ title, className, setStartDate, setEndDate, startDate, endDate }: DateRangePickerType) => {
   const onChange = (dates: [Date | null, Date | null]) => {
     const [start, end] = dates;
     setStartDate(start);
@@ -36,4 +36,4 @@ const CustomDatePicker = ({ title, className, setStartDate, setEndDate, startDat
   );
 };
 
-export default CustomDatePicker;
+export default DateRangePicker;

@@ -11,7 +11,7 @@ import windowDimention from '@/hooks/WindowDimension';
 import Button from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
 import { CustomSelect } from '@/components/common/Select.js';
-import CustomDatePicker from '@/components/common/CustomDatePicker';
+import DateRangePicker from '@/components/common/DateRangePicker';
 import Table, { TableHeader } from '@/components/common/CustomTable';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/common/Dropdown';
 import { SubmissionsTableSkeletonLoader } from '@/components/ProjectSubmissions/ProjectSubmissionsSkeletonLoader.js';
@@ -318,7 +318,7 @@ const SubmissionsTable = ({ toggleView }) => {
                   />
                 </div>
                 <div className={`${windowSize.width < 500 ? 'fmtm-w-full' : 'fmtm-w-[11.5rem]'}`}>
-                  <CustomDatePicker
+                  <DateRangePicker
                     title="Submitted Date"
                     startDate={dateRange?.start}
                     endDate={dateRange?.end}
