@@ -1,6 +1,6 @@
 import { ShapeStream, Shape } from '@electric-sql/client';
 import type { ShapeData } from '@electric-sql/client';
-import type { FeatureCollection, Geometry } from 'geojson';
+import type { Feature, FeatureCollection } from 'geojson';
 import type { LngLatLike } from 'svelte-maplibre';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -34,7 +34,7 @@ type entityIdCoordinateMapType = {
 };
 
 type newBadGeomType<T> = {
-	geojson: Geometry;
+	geojson: Feature;
 	id: number;
 	project_id: number;
 	status: T;
@@ -103,17 +103,17 @@ function getEntitiesStatusStore() {
 
 		geomShape.subscribe((geom: ShapeData) => {
 			const rows: newBadGeomType<'NEW' | 'BAD'>[] = geom.rows;
-			const badRows = rows.filter((row) => row.status === 'BAD').map((row) => row?.geojson) as Geometry[];
-			const newRows = rows.filter((row) => row.status === 'NEW').map((row) => row?.geojson) as Geometry[];
+			const badRows = rows.filter((row) => row.status === 'BAD').map((row) => row?.geojson) as Feature[];
+			const newRows = rows.filter((row) => row.status === 'NEW').map((row) => row?.geojson) as Feature[];
 
 			if (rows && Array.isArray(rows)) {
 				badGeomList = {
 					type: 'FeatureCollection',
-					features: badRows?.map((geom) => ({ type: 'Feature', geometry: geom, properties: {} })),
+					features: badRows,
 				};
 				newGeomList = {
 					type: 'FeatureCollection',
-					features: newRows?.map((geom) => ({ type: 'Feature', geometry: geom, properties: {} })),
+					features: newRows,
 				};
 			}
 		});
