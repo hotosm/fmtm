@@ -1,5 +1,6 @@
 -- ## Migration add some extra fields.
 -- * Add last_active_at to users.
+-- * Remove NOT NULL constraint from author_id in projects.
 
 -- Related issues:
 -- https://github.com/hotosm/fmtm/issues/1999
@@ -17,6 +18,19 @@ BEGIN
           AND column_name = 'last_active_at'
     ) THEN
         ALTER TABLE users ADD COLUMN last_active_at TIMESTAMPTZ DEFAULT now();
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'projects'
+        AND column_name = 'author_id'
+        AND is_nullable = 'NO'
+    ) THEN
+        ALTER TABLE projects ALTER COLUMN author_id DROP NOT NULL;
     END IF;
 END $$;
 
