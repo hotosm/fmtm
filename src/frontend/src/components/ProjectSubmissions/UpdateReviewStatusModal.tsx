@@ -73,12 +73,15 @@ const UpdateReviewStatusModal = () => {
         };
 
         dispatch(
-          PostGeometry(`${import.meta.env.VITE_API_URL}/projects/${updateReviewStatusModal.projectId}/geometries`, {
-            status: 'BAD',
-            geojson: badFeature,
-            project_id: updateReviewStatusModal.projectId,
-            task_id: +updateReviewStatusModal.taskUid,
-          }),
+          PostGeometry(
+            `${import.meta.env.VITE_API_URL}/projects/${updateReviewStatusModal.projectId}/geometry/records`,
+            {
+              status: 'BAD',
+              geojson: badFeature,
+              project_id: updateReviewStatusModal.projectId,
+              task_id: +updateReviewStatusModal.taskUid,
+            },
+          ),
         );
       }
 
