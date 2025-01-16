@@ -73,7 +73,16 @@ const SubmissionsTable = ({ toggleView }) => {
   const [numberOfFilters, setNumberOfFilters] = useState<number>(0);
   const [paginationPage, setPaginationPage] = useState<number>(1);
   const [submittedBy, setSubmittedBy] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
+  const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({
+    start: initialFilterState?.submitted_date_range
+      ? new Date(initialFilterState.submitted_date_range.split(',')[0])
+      : null,
+    end: initialFilterState?.submitted_date_range
+      ? new Date(initialFilterState.submitted_date_range.split(',')[1])
+      : null,
+  });
+
+  console.log(searchParams.get('submitted_date_range'), "searchParams.get('submitted_date_range')");
 
   useEffect(() => {
     if (!dateRange.start || !dateRange.end) return;
@@ -174,6 +183,7 @@ const SubmissionsTable = ({ toggleView }) => {
   const clearFilters = () => {
     setSearchParams({ tab: 'table' });
     setFilter({ task_id: null, submitted_by: null, review_state: null, submitted_date_range: null });
+    setDateRange({ start: null, end: null });
   };
 
   function getValueByPath(obj: any, path: string) {
