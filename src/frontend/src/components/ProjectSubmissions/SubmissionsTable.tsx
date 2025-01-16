@@ -70,7 +70,6 @@ const SubmissionsTable = ({ toggleView }) => {
   };
   const taskList = projectData[projectIndex]?.taskBoundries;
 
-  const [numberOfFilters, setNumberOfFilters] = useState<number>(0);
   const [paginationPage, setPaginationPage] = useState<number>(1);
   const [submittedBy, setSubmittedBy] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({
@@ -92,17 +91,6 @@ const SubmissionsTable = ({ toggleView }) => {
       submitted_date_range: `${format(new Date(dateRange.start as Date), 'yyyy-MM-dd')},${format(new Date(dateRange.end as Date), 'yyyy-MM-dd')}`,
     }));
   }, [dateRange]);
-
-  useEffect(() => {
-    let count = 0;
-    const filters = Object.keys(filter);
-    filters?.map((fltr) => {
-      if (filter[fltr]) {
-        count = count + 1;
-      }
-    });
-    setNumberOfFilters(count);
-  }, [filter]);
 
   const updatedSubmissionFormFields = submissionFormFields
     //filter necessary fields only
@@ -282,7 +270,7 @@ const SubmissionsTable = ({ toggleView }) => {
               >
                 <AssetModules.TuneIcon style={{ fontSize: '20px' }} /> <p>FILTER</p>{' '}
                 <div className="fmtm-text-sm fmtm-bg-primaryRed fmtm-text-white fmtm-rounded-full fmtm-w-4 fmtm-h-4 fmtm-flex fmtm-justify-center fmtm-items-center">
-                  <p>{numberOfFilters}</p>
+                  <p>{Object.values(filter).filter((filterObjValue) => filterObjValue).length}</p>
                 </div>
               </button>
             </DropdownMenuTrigger>
