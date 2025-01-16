@@ -81,8 +81,6 @@ const SubmissionsTable = ({ toggleView }) => {
       : null,
   });
 
-  console.log(searchParams.get('submitted_date_range'), "searchParams.get('submitted_date_range')");
-
   useEffect(() => {
     if (!dateRange.start || !dateRange.end) return;
 
@@ -284,7 +282,7 @@ const SubmissionsTable = ({ toggleView }) => {
                     placeholder="Select"
                     data={taskInfo}
                     dataKey="value"
-                    value={filter?.task_id?.toString() || undefined}
+                    value={filter?.task_id?.toString() || ''}
                     valueKey="task_id"
                     label="task_id"
                     onValueChange={(value) => value && setFilter((prev) => ({ ...prev, task_id: value.toString() }))}
@@ -297,7 +295,7 @@ const SubmissionsTable = ({ toggleView }) => {
                     placeholder="Select"
                     data={reviewStateData}
                     dataKey="value"
-                    value={filter?.review_state || undefined}
+                    value={filter?.review_state || ''}
                     valueKey="value"
                     label="label"
                     onValueChange={(value) =>
