@@ -213,21 +213,13 @@ const SubmissionsTable = ({ toggleView }) => {
   };
 
   const handleDownload = (downloadType: 'csv' | 'json') => {
-    if (downloadType === 'csv') {
-      dispatch(
-        getDownloadProjectSubmission(
-          `${import.meta.env.VITE_API_URL}/submission/download?project_id=${projectId}&export_json=false`,
-          projectInfo.name!,
-        ),
-      );
-    } else if (downloadType === 'json') {
-      dispatch(
-        getDownloadProjectSubmission(
-          `${import.meta.env.VITE_API_URL}/submission/download?project_id=${projectId}&export_json=true`,
-          projectInfo.name!,
-        ),
-      );
-    }
+    dispatch(
+      getDownloadProjectSubmission(`${import.meta.env.VITE_API_URL}/submission/download`, projectInfo.name!, {
+        project_id: projectId,
+        submitted_date_range: filter?.submitted_date_range,
+        export_json: downloadType === 'json',
+      }),
+    );
   };
 
   const handleTaskMap = async () => {
@@ -317,7 +309,7 @@ const SubmissionsTable = ({ toggleView }) => {
                     className="fmtm-text-grey-700 fmtm-text-sm !fmtm-mb-0 fmtm-bg-white"
                   />
                 </div>
-                <div className={`${windowSize.width < 500 ? 'fmtm-w-full' : 'fmtm-w-[11.5rem]'}`}>
+                <div className={`${windowSize.width < 500 ? 'fmtm-w-full' : 'fmtm-w-[12rem]'}`}>
                   <DateRangePicker
                     title="Submitted Date"
                     startDate={dateRange?.start}
