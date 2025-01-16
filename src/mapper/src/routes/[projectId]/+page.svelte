@@ -25,6 +25,9 @@
 	import More from '$lib/components/more/index.svelte';
 	import { getProjectSetupStepStore, getCommonStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
+	import type { ShapeStream } from '@electric-sql/client';
+
+	const API_URL = import.meta.env.VITE_API_URL;
 
 	interface Props {
 		data: PageData;
@@ -110,9 +113,25 @@
 
 	onDestroy(() => {
 		taskEventStream?.unsubscribeAll();
-		entityStatusStream?.unsubscribeAll();
 	});
 
+	$effect(() => {
+		let entityStatusStream: ShapeStream | undefined;
+
+		async function getEntityStatus() {
+			const entityStatusResponse = await fetch(`${API_URL}/projects/${data.projectId}/entities/statuses`, {
+				credentials: 'include',
+			});
+			const response = await entityStatusResponse.json();
+			entityStatusStream = getEntityStatusStream(data.projectId);
+			await entitiesStore.subscribeToEntityStatusUpdates(entityStatusStream, response);
+		}
+
+		getEntityStatus();
+		return () => {
+			entityStatusStream?.unsubscribeAll();
+		};
+	});
 	const projectSetupStepStore = getProjectSetupStepStore();
 
 	$effect(() => {
@@ -157,6 +176,7 @@
 		projectId={data.projectId}
 		entitiesUrl={data.project.data_extract_url}
 		draw={isDrawEnabled}
+		drawGeomType={data.project.new_geom_type}
 		handleDrawnGeom={(geom) => {
 			isDrawEnabled = false;
 			openOdkCollectNewFeature(data?.project?.odk_form_id, geom);
