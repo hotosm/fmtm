@@ -3,7 +3,7 @@ import '../../node_modules/ol/ol.css';
 import '../styles/home.scss';
 import WindowDimension from '@/hooks/WindowDimension';
 import ActivitiesPanel from '@/components/ProjectDetailsV2/ActivitiesPanel';
-import { ProjectById, GetEntityStatusList } from '@/api/Project';
+import { ProjectById, GetEntityStatusList, GetGeometryLog } from '@/api/Project';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import CustomizedSnackbar from '@/utilities/CustomizedSnackbar';
 import { HomeActions } from '@/store/slices/HomeSlice';
@@ -35,11 +35,7 @@ import Comments from '@/components/ProjectDetailsV2/Comments';
 import { Geolocation } from '@/utilfunctions/Geolocation';
 import Instructions from '@/components/ProjectDetailsV2/Instructions';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
-import { Feature } from 'ol';
-import { Polygon } from 'ol/geom';
-import { Style } from 'ol/style';
-import { Stroke } from 'ol/style';
-import { entity_state } from '@/types/enums';
+import { Style, Stroke } from 'ol/style';
 
 const ProjectDetailsV2 = () => {
   useDocumentTitle('Project Details');
@@ -70,8 +66,9 @@ const ProjectDetailsV2 = () => {
   const taskModalStatus = CoreModules.useAppSelector((state) => state.project.taskModalStatus);
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
   const entityOsmMap = useAppSelector((state) => state?.project?.entityOsmMap);
-  const projectDetails = useAppSelector((state) => state.project.projectInfo);
   const entityOsmMapLoading = useAppSelector((state) => state?.project?.entityOsmMapLoading);
+  const badGeomFeatureCollection = useAppSelector((state) => state?.project?.badGeomFeatureCollection);
+  const getGeomLogLoading = useAppSelector((state) => state?.project?.getGeomLogLoading);
 
   useEffect(() => {
     if (state.projectInfo.name) {
@@ -258,20 +255,14 @@ const ProjectDetailsV2 = () => {
     dispatch(GetEntityStatusList(`${import.meta.env.VITE_API_URL}/projects/${projectId}/entities/statuses`));
   };
 
+  const getGeometryLog = () => {
+    dispatch(GetGeometryLog(`${import.meta.env.VITE_API_URL}/projects/${projectId}/geometry/records`));
+  };
+
   useEffect(() => {
     getEntityStatusList();
+    getGeometryLog();
   }, []);
-
-  // filter rejected entity
-  const filterRejectedEntity = (features) => {
-    if (features?.length === 0) return [];
-    const badEntities = entityOsmMap?.filter((entity) => entity?.status === entity_state['MARKED_BAD']);
-
-    return badEntities?.map((entity) => {
-      const feature = features?.find((feature) => feature?.getProperties()?.osm_id === entity?.osm_id);
-      return feature;
-    });
-  };
 
   // pulse rejected entity feature stroke effect
   useEffect(() => {
@@ -302,7 +293,7 @@ const ProjectDetailsV2 = () => {
     }, 50);
 
     return () => clearInterval(interval);
-  }, [map, entityOsmMap]);
+  }, [map, badGeomFeatureCollection]);
 
   return (
     <div className="fmtm-bg-[#f5f5f5] !fmtm-h-[100dvh] sm:!fmtm-h-full">
@@ -481,6 +472,19 @@ const ProjectDetailsV2 = () => {
                   }}
                 />
               )}
+              <VectorLayer
+                geojson={badGeomFeatureCollection}
+                viewProperties={{
+                  size: map?.getSize(),
+                  padding: [50, 50, 50, 50],
+                  constrainResolution: true,
+                  duration: 2000,
+                }}
+                layerProperties={{ name: 'bad-entities' }}
+                zoomToLayer
+                zIndex={5}
+                style=""
+              />
               {dataExtractUrl && isValidUrl(dataExtractUrl) && dataExtractExtent && selectedTask && (
                 <VectorLayer
                   fgbUrl={dataExtractUrl}
@@ -500,30 +504,6 @@ const ProjectDetailsV2 = () => {
                   zIndex={5}
                 />
               )}
-              {/* layer to display rejected entities */}
-              {dataExtractUrl &&
-                isValidUrl(dataExtractUrl) &&
-                projectDetails?.outline?.coordinates &&
-                entityOsmMap?.length > 0 && (
-                  <VectorLayer
-                    fgbUrl={dataExtractUrl}
-                    fgbExtent={new Feature({
-                      geometry: new Polygon(projectDetails?.outline?.coordinates).transform('EPSG:4326', 'EPSG:3857'),
-                    }).getGeometry()}
-                    viewProperties={{
-                      size: map?.getSize(),
-                      padding: [50, 50, 50, 50],
-                      constrainResolution: true,
-                      duration: 2000,
-                    }}
-                    mapOnClick={projectClickOnTaskFeature}
-                    style=""
-                    zoomToLayer
-                    zIndex={5}
-                    processGeojson={(features) => filterRejectedEntity(features)}
-                    layerProperties={{ name: 'bad-entities' }}
-                  />
-                )}
               <AsyncPopup
                 map={map}
                 popupUI={lockedPopup}
