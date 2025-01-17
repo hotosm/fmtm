@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Modal } from '@/components/common/Modal';
 import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 import { reviewListType } from '@/models/submission/submissionModel';
-import { PostGeometry, UpdateReviewStateService } from '@/api/SubmissionService';
+import { DeleteGeometry, PostGeometry, UpdateReviewStateService } from '@/api/SubmissionService';
 import TextArea from '../common/TextArea';
 import Button from '../common/Button';
-import { PostProjectComments, UpdateEntityState } from '@/api/Project';
+import { GetGeometryLog, PostProjectComments, UpdateEntityState } from '@/api/Project';
 import { entity_state } from '@/types/enums';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import { task_event } from '@/types/enums';
@@ -33,10 +33,18 @@ const UpdateReviewStatusModal = () => {
   const [reviewStatus, setReviewStatus] = useState('');
   const updateReviewStatusModal = useAppSelector((state) => state.submission.updateReviewStatusModal);
   const updateReviewStateLoading = useAppSelector((state) => state.submission.updateReviewStateLoading);
+  const badGeomLogList = useAppSelector((state) => state?.project?.badGeomLogList);
 
   useEffect(() => {
     setReviewStatus(updateReviewStatusModal.reviewState);
   }, [updateReviewStatusModal.reviewState]);
+
+  useEffect(() => {
+    if (!updateReviewStatusModal.projectId) return;
+    dispatch(
+      GetGeometryLog(`${import.meta.env.VITE_API_URL}/projects/${updateReviewStatusModal.projectId}/geometry/records`),
+    );
+  }, [updateReviewStatusModal.projectId]);
 
   const handleStatusUpdate = async () => {
     if (
@@ -61,7 +69,6 @@ const UpdateReviewStatusModal = () => {
       );
 
       // post bad geometry if submission is marked as hasIssues
-      // delete bad geometry if submission is marked as approved
       if (reviewStatus === 'hasIssues') {
         const badFeature = {
           ...(updateReviewStatusModal.feature as featureType),
@@ -85,6 +92,18 @@ const UpdateReviewStatusModal = () => {
         );
       }
 
+      // delete bad geometry if the entity previously has rejected submission and current submission is marked as approved
+      if (reviewStatus === 'approved') {
+        const badGeomId = badGeomLogList.find(
+          (geom) => geom.geojson.properties.entity_id === updateReviewStatusModal.entity_id,
+        )?.id;
+        dispatch(
+          DeleteGeometry(
+            `${import.meta.env.VITE_API_URL}/projects/${updateReviewStatusModal.projectId}/geometry/records/${badGeomId}`,
+          ),
+        );
+      }
+
       dispatch(
         UpdateEntityState(
           `${import.meta.env.VITE_API_URL}/projects/${updateReviewStatusModal.projectId}/entity/status`,
@@ -96,6 +115,7 @@ const UpdateReviewStatusModal = () => {
         ),
       );
     }
+
     if (noteComments.trim().length > 0) {
       dispatch(
         PostProjectComments(
