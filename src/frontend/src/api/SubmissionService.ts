@@ -1,4 +1,4 @@
-import { AxiosResponse } from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import {
   submissionContributorsTypes,
   submissionFormFieldsTypes,
@@ -111,7 +111,7 @@ export const MappedVsValidatedTaskService = (url: string) => {
 
 // post bad and new geometries
 export const PostGeometry = (url: string, payload: geometryLogType) => {
-  return async (dispatch) => {
+  return async (dispatch: AppDispatch) => {
     const postGeometry = async () => {
       try {
         await CoreModules.axios.post(url, payload);
@@ -128,5 +128,26 @@ export const PostGeometry = (url: string, payload: geometryLogType) => {
     };
 
     await postGeometry();
+  };
+};
+
+export const DeleteGeometry = (url: string) => {
+  return async (dispatch: AppDispatch) => {
+    const deleteGeometry = async () => {
+      try {
+        await axios.delete(url);
+      } catch (error) {
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: 'Failed to delete geometry.',
+            variant: 'error',
+            duration: 2000,
+          }),
+        );
+      }
+    };
+
+    await deleteGeometry();
   };
 };
