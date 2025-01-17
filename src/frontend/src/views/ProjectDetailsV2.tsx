@@ -287,13 +287,18 @@ const ProjectDetailsV2 = () => {
       // apply style to the layer
       layer.setStyle(
         new Style({
-          stroke: new Stroke({ color: 'rgb(215,63,62,0.6)', width: width }),
+          stroke: new Stroke({ color: 'rgb(215,63,62,1)', width: width }),
         }),
       );
     }, 50);
 
     return () => clearInterval(interval);
   }, [map, badGeomFeatureCollection]);
+
+  const syncStatus = () => {
+    getEntityStatusList();
+    getGeometryLog();
+  };
 
   return (
     <div className="fmtm-bg-[#f5f5f5] !fmtm-h-[100dvh] sm:!fmtm-h-full">
@@ -531,7 +536,7 @@ const ProjectDetailsV2 = () => {
                   }
                   onClick={() => {
                     if (entityOsmMapLoading) return;
-                    getEntityStatusList();
+                    syncStatus();
                   }}
                   btnType="other"
                   className={`!fmtm-text-sm !fmtm-pr-2 fmtm-bg-white ${entityOsmMapLoading && 'fmtm-cursor-not-allowed'}`}
