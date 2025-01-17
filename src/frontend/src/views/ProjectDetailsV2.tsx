@@ -275,6 +275,7 @@ const ProjectDetailsV2 = () => {
       const allLayers = map?.getAllLayers();
       // layer representing bad entities
       layer = allLayers?.find((layer) => layer.getProperties().name === 'bad-entities');
+      if (!layer) return;
 
       if (expanding) {
         width += 0.3;
@@ -285,7 +286,7 @@ const ProjectDetailsV2 = () => {
       }
 
       // apply style to the layer
-      layer.setStyle(
+      layer?.setStyle(
         new Style({
           stroke: new Stroke({ color: 'rgb(215,63,62,1)', width: width }),
         }),
@@ -486,7 +487,6 @@ const ProjectDetailsV2 = () => {
                   duration: 2000,
                 }}
                 layerProperties={{ name: 'bad-entities' }}
-                zoomToLayer
                 zIndex={5}
                 style=""
               />
