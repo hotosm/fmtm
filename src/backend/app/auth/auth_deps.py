@@ -19,19 +19,16 @@
 """Auth dependencies, for restricted routes and cookie handling."""
 
 from time import time
-from typing import Annotated, Optional
+from typing import Optional
 
 import jwt
-from fastapi import Depends, Header, HTTPException, Request, Response
+from fastapi import Header, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from loguru import logger as log
-from psycopg import Connection
 
 from app.auth.auth_schemas import AuthUser
 from app.config import settings
-from app.db.database import db_conn
 from app.db.enums import HTTPStatus, UserRole
-from app.db.models import DbUser
 
 ### Cookie / Token Handling
 
@@ -265,9 +262,7 @@ async def refresh_cookies(
 
 
 async def login_required(
-    db: Annotated[Connection, Depends(db_conn)],
-    request: Request,
-    access_token: str = Header(None),
+    request: Request, access_token: str = Header(None)
 ) -> AuthUser:
     """Dependency for endpoints requiring login."""
     if settings.DEBUG:
@@ -278,13 +273,11 @@ async def login_required(
         request,
         settings.cookie_name,  # FMTM cookie
     )
-    return await _authenticate_user(db, extracted_token)
+    return await _authenticate_user(extracted_token)
 
 
 async def mapper_login_required(
-    db: Annotated[Connection, Depends(db_conn)],
-    request: Request,
-    access_token: str = Header(None),
+    request: Request, access_token: str = Header(None)
 ) -> AuthUser:
     """Dependency for mapper frontend login."""
     if settings.DEBUG:
@@ -299,7 +292,8 @@ async def mapper_login_required(
 
     # Verify login and continue
     if extracted_token:
-        return await _authenticate_user(db, extracted_token)
+        print("mapper")
+        return await _authenticate_user(extracted_token)
 
     # Else user has no token, so we provide login data automatically
     username = "svcfmtm"
@@ -311,7 +305,7 @@ async def mapper_login_required(
     return AuthUser(**temp_user)
 
 
-async def _authenticate_user(db: Connection, access_token: Optional[str]) -> AuthUser:
+async def _authenticate_user(access_token: Optional[str]) -> AuthUser:
     """Authenticate user by verifying the access token."""
     if not access_token:
         raise HTTPException(
@@ -328,5 +322,4 @@ async def _authenticate_user(db: Connection, access_token: Optional[str]) -> Aut
             detail="Access token not valid",
         ) from e
 
-    await DbUser.update_last_active(db=db, user_id=int(token_data["sub"].split("|")[1]))
     return AuthUser(**token_data)

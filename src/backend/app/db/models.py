@@ -22,7 +22,7 @@ from SQL statements. Sometimes we only need a subset of the fields.
 """
 
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from io import BytesIO
 from re import sub
 from typing import TYPE_CHECKING, Annotated, Optional, Self
@@ -160,7 +160,6 @@ class DbUser(BaseModel):
     tasks_invalidated: Optional[int] = None
     projects_mapped: Optional[list[int]] = None
     registered_at: Optional[AwareDatetime] = None
-    last_active_at: Optional[AwareDatetime] = None
 
     # Relationships
     project_roles: Optional[dict[int, ProjectRole]] = None  # project:role pairs
@@ -312,20 +311,6 @@ class DbUser(BaseModel):
             )
 
         return new_user
-
-    @classmethod
-    async def update_last_active(cls, db: Connection, user_id: int) -> None:
-        """Update the last active timestamp."""
-        async with db.cursor(row_factory=class_row(cls)) as cur:
-            await cur.execute(
-                """
-                UPDATE users
-                SET last_active_at = %(now)s
-                WHERE id = %(user_id)s;
-                """,
-                {"now": datetime.now(timezone.utc), "user_id": user_id},
-            )
-        log.info(f"User ({user_id}) last active timestamp updated.")
 
 
 class DbOrganisation(BaseModel):
