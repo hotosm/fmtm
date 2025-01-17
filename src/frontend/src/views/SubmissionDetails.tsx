@@ -14,6 +14,7 @@ import { GetProjectComments } from '@/api/Project';
 import SubmissionComments from '@/components/SubmissionInstance/SubmissionComments';
 import ImageSlider from '@/components/common/ImageSlider';
 import { convertCoordinateStringToFeature, extractGeojsonFromObject } from '@/utilfunctions/extractGeojsonFromObject';
+import { submission_status } from '@/types/enums';
 
 const renderValue = (value: any, key: string = '') => {
   if (key === 'start' || key === 'end') {
@@ -171,6 +172,9 @@ const SubmissionDetails = () => {
                   <h2 className="fmtm-text-base fmtm-font-bold fmtm-text-[#545454]">Task: {taskId}</h2>
                   <h2 className="fmtm-text-base fmtm-font-bold fmtm-text-[#545454] fmtm-break-words">
                     Submission Id: {paramsInstanceId}
+                  </h2>
+                  <h2 className="fmtm-text-base fmtm-font-bold fmtm-text-[#545454] fmtm-break-words">
+                    Submission Status: {submission_status[restSubmissionDetails?.__system?.reviewState]}
                   </h2>
                 </div>
               )}
