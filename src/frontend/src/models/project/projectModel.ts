@@ -153,6 +153,7 @@ export type EntityOsmMap = {
 };
 
 export type geometryLogResponseType = {
+  id: string;
   status: 'BAD' | 'NEW';
   geojson: {
     type: 'Feature';
