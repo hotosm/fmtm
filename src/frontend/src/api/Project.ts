@@ -363,6 +363,8 @@ export const GetGeometryLog = (url: string) => {
         const response: AxiosResponse<geometryLogResponseType[]> = await axios.get(url);
         dispatch(ProjectActions.SetGeometryLog(response.data));
       } catch (error) {
+        // error means no geometry log present for the project
+        dispatch(ProjectActions.SetGeometryLog([]));
       } finally {
         dispatch(ProjectActions.SetGeometryLogLoading(false));
       }
