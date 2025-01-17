@@ -11,7 +11,7 @@ import windowDimention from '@/hooks/WindowDimension';
 import Button from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
 import { CustomSelect } from '@/components/common/Select.js';
-import CustomDatePicker from '@/components/common/CustomDatePicker';
+import DateRangePicker from '@/components/common/DateRangePicker';
 import Table, { TableHeader } from '@/components/common/CustomTable';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/common/Dropdown';
 import { SubmissionsTableSkeletonLoader } from '@/components/ProjectSubmissions/ProjectSubmissionsSkeletonLoader.js';
@@ -40,7 +40,7 @@ const SubmissionsTable = ({ toggleView }) => {
     task_id: searchParams.get('task_id') ? searchParams?.get('task_id') || null : null,
     submitted_by: searchParams.get('submitted_by'),
     review_state: searchParams.get('review_state'),
-    submitted_date: searchParams.get('submitted_date'),
+    submitted_date_range: searchParams.get('submitted_date_range'),
   };
   const [filter, setFilter] = useState<filterType>(initialFilterState);
 
@@ -71,20 +71,25 @@ const SubmissionsTable = ({ toggleView }) => {
   };
   const taskList = projectData[projectIndex]?.taskBoundries;
 
-  const [numberOfFilters, setNumberOfFilters] = useState<number>(0);
   const [paginationPage, setPaginationPage] = useState<number>(1);
   const [submittedBy, setSubmittedBy] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({
+    start: initialFilterState?.submitted_date_range
+      ? new Date(initialFilterState.submitted_date_range.split(',')[0])
+      : null,
+    end: initialFilterState?.submitted_date_range
+      ? new Date(initialFilterState.submitted_date_range.split(',')[1])
+      : null,
+  });
 
   useEffect(() => {
-    let count = 0;
-    const filters = Object.keys(filter);
-    filters?.map((fltr) => {
-      if (filter[fltr]) {
-        count = count + 1;
-      }
-    });
-    setNumberOfFilters(count);
-  }, [filter]);
+    if (!dateRange.start || !dateRange.end) return;
+
+    setFilter((prev) => ({
+      ...prev,
+      submitted_date_range: `${format(new Date(dateRange.start as Date), 'yyyy-MM-dd')},${format(new Date(dateRange.end as Date), 'yyyy-MM-dd')}`,
+    }));
+  }, [dateRange]);
 
   const updatedSubmissionFormFields = submissionFormFields
     //filter necessary fields only
@@ -164,7 +169,8 @@ const SubmissionsTable = ({ toggleView }) => {
 
   const clearFilters = () => {
     setSearchParams({ tab: 'table' });
-    setFilter({ task_id: null, submitted_by: null, review_state: null, submitted_date: null });
+    setFilter({ task_id: null, submitted_by: null, review_state: null, submitted_date_range: null });
+    setDateRange({ start: null, end: null });
   };
 
   function getValueByPath(obj: any, path: string) {
@@ -204,21 +210,13 @@ const SubmissionsTable = ({ toggleView }) => {
   };
 
   const handleDownload = (downloadType: 'csv' | 'json') => {
-    if (downloadType === 'csv') {
-      dispatch(
-        getDownloadProjectSubmission(
-          `${import.meta.env.VITE_API_URL}/submission/download?project_id=${projectId}&export_json=false`,
-          projectInfo.name!,
-        ),
-      );
-    } else if (downloadType === 'json') {
-      dispatch(
-        getDownloadProjectSubmission(
-          `${import.meta.env.VITE_API_URL}/submission/download?project_id=${projectId}&export_json=true`,
-          projectInfo.name!,
-        ),
-      );
-    }
+    dispatch(
+      getDownloadProjectSubmission(`${import.meta.env.VITE_API_URL}/submission/download`, projectInfo.name!, {
+        project_id: projectId,
+        submitted_date_range: filter?.submitted_date_range,
+        export_json: downloadType === 'json',
+      }),
+    );
   };
 
   const handleTaskMap = async () => {
@@ -271,7 +269,7 @@ const SubmissionsTable = ({ toggleView }) => {
               >
                 <AssetModules.TuneIcon style={{ fontSize: '20px' }} /> <p>FILTER</p>{' '}
                 <div className="fmtm-text-sm fmtm-bg-primaryRed fmtm-text-white fmtm-rounded-full fmtm-w-4 fmtm-h-4 fmtm-flex fmtm-justify-center fmtm-items-center">
-                  <p>{numberOfFilters}</p>
+                  <p>{Object.values(filter).filter((filterObjValue) => filterObjValue).length}</p>
                 </div>
               </button>
             </DropdownMenuTrigger>
@@ -285,7 +283,7 @@ const SubmissionsTable = ({ toggleView }) => {
                     placeholder="Select"
                     data={taskInfo}
                     dataKey="value"
-                    value={filter?.task_id?.toString() || undefined}
+                    value={filter?.task_id?.toString() || ''}
                     valueKey="task_id"
                     label="task_id"
                     onValueChange={(value) => value && setFilter((prev) => ({ ...prev, task_id: value.toString() }))}
@@ -298,7 +296,7 @@ const SubmissionsTable = ({ toggleView }) => {
                     placeholder="Select"
                     data={reviewStateData}
                     dataKey="value"
-                    value={filter?.review_state || undefined}
+                    value={filter?.review_state || ''}
                     valueKey="value"
                     label="label"
                     onValueChange={(value) =>
@@ -308,13 +306,13 @@ const SubmissionsTable = ({ toggleView }) => {
                     className="fmtm-text-grey-700 fmtm-text-sm !fmtm-mb-0 fmtm-bg-white"
                   />
                 </div>
-                <div className={`${windowSize.width < 500 ? 'fmtm-w-full' : 'fmtm-w-[11rem]'}`}>
-                  <CustomDatePicker
+                <div className={`${windowSize.width < 500 ? 'fmtm-w-full' : 'fmtm-w-[12rem]'}`}>
+                  <DateRangePicker
                     title="Submitted Date"
-                    selectedDate={filter?.submitted_date}
-                    setSelectedDate={(date) =>
-                      setFilter((prev) => ({ ...prev, submitted_date: format(new Date(date), 'yyyy-MM-dd') }))
-                    }
+                    startDate={dateRange?.start}
+                    endDate={dateRange?.end}
+                    setStartDate={(date) => setDateRange((prev) => ({ ...prev, start: date }))}
+                    setEndDate={(date) => setDateRange((prev) => ({ ...prev, end: date }))}
                     className="fmtm-text-grey-700 fmtm-text-sm !fmtm-mb-0 fmtm-w-full"
                   />
                 </div>
