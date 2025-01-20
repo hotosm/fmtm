@@ -160,6 +160,7 @@ class DbUser(BaseModel):
     tasks_invalidated: Optional[int] = None
     projects_mapped: Optional[list[int]] = None
     registered_at: Optional[AwareDatetime] = None
+    last_active_at: Optional[AwareDatetime] = None
 
     # Relationships
     project_roles: Optional[dict[int, ProjectRole]] = None  # project:role pairs
@@ -167,52 +168,61 @@ class DbUser(BaseModel):
 
     @classmethod
     async def one(cls, db: Connection, user_identifier: int | str) -> Self:
-        """Get a user either by ID or username, including roles and orgs managed."""
+        """Get a user either by ID or username, updating last active timestamp."""
+        if isinstance(user_identifier, str):
+            # Is username (basic flexible matching)
+            async with db.cursor(row_factory=class_row(cls)) as cur:
+                await cur.execute(
+                    "SELECT * FROM users WHERE username ILIKE %(username)s;",
+                    {"username": user_identifier},
+                )
+                user_row = await cur.fetchone()
+
+            if user_row is None:
+                raise KeyError(f"User ({user_identifier}) not found.")
+
+            user_identifier = user_row.id
+
         async with db.cursor(row_factory=class_row(cls)) as cur:
             sql = """
+                WITH updated_user AS (
+                    UPDATE users
+                    SET last_active_at = NOW()
+                    WHERE id = %(user_id)s
+                    RETURNING *
+                )
                 SELECT
                     u.*,
+                    agg.orgs_managed,
+                    agg.project_roles
+                FROM updated_user u
+                LEFT JOIN LATERAL (
+                    SELECT
+                        -- Aggregate organisation IDs managed by the user
+                        array_agg(DISTINCT om.organisation_id)
+                        FILTER (WHERE om.organisation_id IS NOT NULL) AS orgs_managed,
 
-                -- Aggregate organisation IDs managed by the user
-                array_agg(
-                    DISTINCT om.organisation_id
-                ) FILTER (WHERE om.organisation_id IS NOT NULL) AS orgs_managed,
+                        -- Aggregate project roles for the user, as project:role pairs
+                        jsonb_object_agg(ur.project_id, COALESCE(ur.role, 'MAPPER'))
+                        FILTER (WHERE ur.project_id IS NOT NULL) AS project_roles
 
-                -- Aggregate project roles for the user, as project:role pairs
-                jsonb_object_agg(
-                    ur.project_id,
-                    COALESCE(ur.role, 'MAPPER')
-                ) FILTER (WHERE ur.project_id IS NOT NULL) AS project_roles
-
-                FROM users u
-                LEFT JOIN user_roles ur ON u.id = ur.user_id
-                LEFT JOIN organisation_managers om ON u.id = om.user_id
+                    FROM organisation_managers om
+                    FULL OUTER JOIN user_roles ur ON TRUE
+                    WHERE om.user_id = u.id
+                    OR ur.user_id = u.id
+                ) agg ON TRUE;
             """
-
-            if isinstance(user_identifier, int):
-                # Is ID
-                sql += """
-                    WHERE u.id = %(user_identifier)s
-                    GROUP BY u.id;
-                """
-            else:
-                # Is username (basic flexible matching)
-                sql += """
-                    WHERE u.username ILIKE %(user_identifier)s
-                    GROUP BY u.id;
-                """
-                user_identifier = f"{user_identifier}%"
-
+            # Execute the SQL with user_identifier as the ID
             await cur.execute(
                 sql,
-                {"user_identifier": user_identifier},
+                {"user_id": user_identifier},
             )
-            db_project = await cur.fetchone()
+            db_user = await cur.fetchone()
 
-        if db_project is None:
+        if db_user is None:
             raise KeyError(f"User ({user_identifier}) not found.")
 
-        return db_project
+        return db_user
 
     @classmethod
     async def all(
