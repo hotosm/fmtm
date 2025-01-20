@@ -160,7 +160,7 @@ class DbUser(BaseModel):
     tasks_invalidated: Optional[int] = None
     projects_mapped: Optional[list[int]] = None
     registered_at: Optional[AwareDatetime] = None
-    last_active_at: Optional[AwareDatetime] = None
+    last_login_at: Optional[AwareDatetime] = None
 
     # Relationships
     project_roles: Optional[dict[int, ProjectRole]] = None  # project:role pairs
@@ -187,7 +187,7 @@ class DbUser(BaseModel):
             sql = """
                 WITH updated_user AS (
                     UPDATE users
-                    SET last_active_at = NOW()
+                    SET last_login_at = NOW()
                     WHERE id = %(user_id)s
                     RETURNING *
                 )
