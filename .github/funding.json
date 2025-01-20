@@ -1,0 +1,64 @@
+
+{
+  "version": "v1.0.0",
+  "entity": {
+    "type": "organisation",
+    "role": "maintainer",
+    "name": "Humanitarian OpenStreetMap Team",
+    "email": "tech-data@hotosm.org",
+    "description": "HOT is an international team dedicated to humanitarian action and community development through open mapping. We develop open-source products to address ecosystem gaps in the use of geospatial technology in development and humanitarian projects, aiming for a world where everyone has access to the right technology to use open map data for social change",
+    "webpageUrl": {
+      "url": "https://www.hotosm.org/"
+    }
+  },
+  "projects": [
+    {
+      "guid": "hotosm/fmtm",
+      "name": "Field Mapping Tasking Manager",
+      "description": "FMTM facilitates collaborative mapping by supporting and extending existing mature tools. The FMTM is a standalone mobile and web application that works using OpenDataKit (ODK), a powerful data collection platform that leverages commonly-available mobile Android devices to enable people to input information, including geospatial data in the field.\n\n\nYou can see the roadmap for 2025 and the work that is being planned here (https://github.com/hotosm/fmtm?tab=readme-ov-file#roadmap). These are the specific areas of work where we need your support and sponsorship for!\n",
+      "webpageUrl": {
+        "url": "https://fmtm.hotosm.org/"
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/hotosm/fmtm"
+      },
+      "licenses": [
+        "AGPL-3.0 license"
+      ],
+      "tags": [
+        "field-survey",
+        "open-mapping",
+        "ODK",
+        "openstreetmap",
+        "data-collection",
+        "pwa",
+        "community",
+        "social-impact"
+      ]
+    }
+  ],
+  "funding": {
+    "channels": [
+      {
+        "guid": "github-sponsors",
+        "type": "payment-provider",
+        "address": "https://github.com/sponsors/hotosm",
+        "description": "You can donate to HOTOSM projects using our Github sponsor page: https://github.com/sponsors/hotosm\n\nAn alternative method is also using Paypal or Venmo via our website:  https://www.hotosm.org/donate/"
+      }
+    ],
+    "plans": [
+      {
+        "guid": "github-sponsors",
+        "status": "active",
+        "name": "Support HOTOSM tech tool development & maintanance",
+        "amount": 100000,
+        "currency": "USD",
+        "frequency": "monthly",
+        "channels": [
+          "github-sponsors"
+        ]
+      }
+    ],
+    "history": []
+  }
+}
