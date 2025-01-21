@@ -18,6 +18,7 @@ import { CustomCheckbox } from '@/components/common/Checkbox';
 import { organizationTypeOptionsType } from '@/models/organisation/organisationModel';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import UploadArea from '@/components/common/UploadArea';
+import { CommonActions } from '@/store/slices/CommonSlice';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -57,6 +58,15 @@ const CreateEditOrganizationForm = ({ organizationId }: { organizationId: string
       }
       if (Object.keys(changedValues).length > 0) {
         dispatch(PatchOrganizationDataService(`${API_URL}/organisation/${organizationId}`, changedValues));
+      } else {
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: 'Organization details up to date',
+            variant: 'info',
+            duration: 2000,
+          }),
+        );
       }
     }
   };
