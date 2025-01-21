@@ -131,7 +131,16 @@ export const GetIndividualOrganizationService = (url: string) => {
         const getOrganisationDataResponse = await axios.get(url);
         const response: GetOrganisationDataModel = getOrganisationDataResponse.data;
         dispatch(OrganisationAction.SetIndividualOrganization(response));
-      } catch (error) {}
+      } catch (error) {
+        dispatch(
+          CommonActions.SetSnackBar({
+            open: true,
+            message: error.response.data.detail || 'Failed to fetch organization.',
+            variant: 'error',
+            duration: 2000,
+          }),
+        );
+      }
     };
     await getOrganisationData(url);
   };
