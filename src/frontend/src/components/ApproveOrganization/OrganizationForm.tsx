@@ -82,6 +82,15 @@ const OrganizationForm = () => {
           fieldType="text"
           disabled
         />
+        <InputTextField
+          id="associated_email"
+          name="associated_email"
+          label="Email"
+          value={organisationFormData?.associated_email}
+          onChange={() => {}}
+          fieldType="text"
+          disabled
+        />
         <TextArea
           id="description"
           name="description"
