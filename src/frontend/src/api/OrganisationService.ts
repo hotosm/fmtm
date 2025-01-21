@@ -79,12 +79,9 @@ export const MyOrganisationDataService = (url: string) => {
 
 export const PostOrganisationDataService = (url: string, payload: any) => {
   return async (dispatch: AppDispatch) => {
-    dispatch(OrganisationAction.SetOrganisationFormData({}));
     dispatch(OrganisationAction.PostOrganisationDataLoading(true));
 
     const postOrganisationData = async (url, payload) => {
-      dispatch(OrganisationAction.SetOrganisationFormData(payload));
-
       try {
         const generateApiFormData = new FormData();
         appendObjectToFormData(generateApiFormData, payload);
@@ -99,6 +96,8 @@ export const PostOrganisationDataService = (url: string, payload: any) => {
 
         dispatch(OrganisationAction.PostOrganisationDataLoading(false));
         dispatch(OrganisationAction.postOrganisationData(resp));
+        dispatch(OrganisationAction.SetOrganisationFormData({}));
+
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
@@ -140,12 +139,9 @@ export const GetIndividualOrganizationService = (url: string) => {
 
 export const PatchOrganizationDataService = (url: string, payload: any) => {
   return async (dispatch: AppDispatch) => {
-    dispatch(OrganisationAction.SetOrganisationFormData({}));
     dispatch(OrganisationAction.PostOrganisationDataLoading(true));
 
     const patchOrganisationData = async (url, payload) => {
-      dispatch(OrganisationAction.SetOrganisationFormData(payload));
-
       try {
         const generateApiFormData = new FormData();
         appendObjectToFormData(generateApiFormData, payload);
@@ -159,6 +155,7 @@ export const PatchOrganizationDataService = (url: string, payload: any) => {
         const resp: GetOrganisationDataModel = patchOrganisationData.data;
         dispatch(OrganisationAction.PostOrganisationDataLoading(false));
         dispatch(OrganisationAction.postOrganisationData(resp));
+        dispatch(OrganisationAction.SetOrganisationFormData({}));
         dispatch(
           CommonActions.SetSnackBar({
             open: true,
