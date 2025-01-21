@@ -1255,14 +1255,14 @@ async def download_task_boundaries(
         Response: The HTTP response object containing the downloaded file.
     """
     project_id = project_user.get("project").id
-    out = await project_crud.get_task_geometry(db, project_id)
+    task_geojson = await project_crud.get_task_geometry(db, project_id)
 
     headers = {
-        "Content-Disposition": "attachment; filename=project_outline.geojson",
+        "Content-Disposition": "attachment; filename=task_boundary.geojson",
         "Content-Type": "application/media",
     }
 
-    return Response(content=out, headers=headers)
+    return Response(content=task_geojson, headers=headers)
 
 
 @router.post("/{project_id}/geometry/records")
@@ -1310,7 +1310,7 @@ async def create_geom_log(
 
 
 @router.get(
-    "{project_id}/geometry/records", response_model=list[project_schemas.GeometryLogIn]
+    "/{project_id}/geometry/records", response_model=list[project_schemas.GeometryLogIn]
 )
 async def read_geom_logs(
     db: Annotated[Connection, Depends(db_conn)],
