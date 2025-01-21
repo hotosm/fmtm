@@ -149,6 +149,16 @@ const CreateEditOrganizationForm = ({ organizationId }: { organizationId: string
               errorMsg={errors.url}
             />
           )}
+          <InputTextField
+            id="associated_email"
+            name="associated_email"
+            label="Email"
+            value={values?.associated_email}
+            onChange={handleChange}
+            fieldType="text"
+            required
+            errorMsg={errors.associated_email}
+          />
           <TextArea
             id="description"
             name="description"
