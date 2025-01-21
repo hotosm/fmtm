@@ -19,6 +19,8 @@ import { organizationTypeOptionsType } from '@/models/organisation/organisationM
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import UploadArea from '@/components/common/UploadArea';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const organizationTypeOptions: organizationTypeOptionsType[] = [
   { name: 'osm_community', value: 'OSM_COMMUNITY', label: 'OSM Community' },
   { name: 'company', value: 'COMPANY', label: 'Company' },
@@ -39,7 +41,7 @@ const CreateEditOrganizationForm = ({ organizationId }: { organizationId: string
     if (!organizationId) {
       const { fillODKCredentials, ...filteredValues } = values;
       dispatch(
-        PostOrganisationDataService(`${import.meta.env.VITE_API_URL}/organisation`, {
+        PostOrganisationDataService(`${API_URL}/organisation`, {
           ...filteredValues,
           logo: filteredValues.logo ? filteredValues.logo?.[0].file : null,
         }),
@@ -54,9 +56,7 @@ const CreateEditOrganizationForm = ({ organizationId }: { organizationId: string
         };
       }
       if (Object.keys(changedValues).length > 0) {
-        dispatch(
-          PatchOrganizationDataService(`${import.meta.env.VITE_API_URL}/organisation/${organizationId}`, changedValues),
-        );
+        dispatch(PatchOrganizationDataService(`${API_URL}/organisation/${organizationId}`, changedValues));
       }
     }
   };
@@ -90,7 +90,7 @@ const CreateEditOrganizationForm = ({ organizationId }: { organizationId: string
 
   useEffect(() => {
     if (organizationId) {
-      dispatch(GetIndividualOrganizationService(`${import.meta.env.VITE_API_URL}/organisation/${organizationId}`));
+      dispatch(GetIndividualOrganizationService(`${API_URL}/organisation/${organizationId}`));
     }
   }, [organizationId]);
 
