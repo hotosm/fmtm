@@ -303,7 +303,7 @@ async def submission_table(
             "and __system/submissionDate le {}T23:59:59.999+00:00"
         ).format(start_date, end_date)
 
-    if review_state and review_state!="received":
+    if review_state and review_state != "received":
         review_filter = f"__system/reviewState eq '{review_state}'"
         filters["$filter"] = (
             f"{filters['$filter']} and {review_filter}"
@@ -315,7 +315,9 @@ async def submission_table(
     total_count = data.get("@odata.count", 0)
     submissions = data.get("value", [])
     if review_state == "received":
-        submissions = [sub for sub in submissions if sub["__system"].get("reviewState") is None]
+        submissions = [
+            sub for sub in submissions if sub["__system"].get("reviewState") is None
+        ]
         total_count = len(submissions)
 
     instance_ids = [
