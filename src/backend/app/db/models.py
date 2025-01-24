@@ -159,6 +159,7 @@ class DbUser(BaseModel):
     tasks_validated: Optional[int] = None
     tasks_invalidated: Optional[int] = None
     projects_mapped: Optional[list[int]] = None
+    api_key: Optional[str] = None
     registered_at: Optional[AwareDatetime] = None
 
     # Relationships
@@ -1357,6 +1358,12 @@ class DbProject(BaseModel):
     async def delete(cls, db: Connection, project_id: int) -> bool:
         """Delete a project and its related data."""
         async with db.cursor() as cur:
+            await cur.execute(
+                """
+                DELETE FROM submission_photos WHERE project_id = %(project_id)s;
+            """,
+                {"project_id": project_id},
+            )
             await cur.execute(
                 """
                 DELETE FROM background_tasks WHERE project_id = %(project_id)s;
