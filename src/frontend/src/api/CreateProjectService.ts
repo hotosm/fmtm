@@ -304,6 +304,7 @@ const OrganisationService = (url: string) => {
         const resp: OrganisationListModel[] = getOrganisationListResponse.data;
         dispatch(CreateProjectActions.GetOrganisationList(resp));
       } catch (error) {
+      } finally {
         dispatch(CreateProjectActions.GetOrganisationListLoading(false));
       }
     };
