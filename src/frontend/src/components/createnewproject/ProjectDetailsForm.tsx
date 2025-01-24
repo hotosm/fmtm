@@ -175,14 +175,14 @@ const ProjectDetailsForm = ({ flag }) => {
             )}
           </div>
           <div>
-            <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold !fmtm-bg-transparent">Project Admin</p>
+            <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold !fmtm-bg-transparent">Assign Project Admin</p>
             <Select2
               options={userList || []}
               value={values.project_admins}
               onChange={(value: any) => {
                 handleCustomChange('project_admins', value);
               }}
-              placeholder="Project Admin"
+              placeholder="Assign Project Admin"
               className="naxatw-w-1/5 naxatw-min-w-[9rem]"
               multiple
               checkBox
