@@ -29,13 +29,16 @@ type updateReviewStatusModal = {
   projectId: number | null;
   reviewState: string;
   taskUid: string | null;
+  entity_id: string | null;
+  label: string | null;
+  feature: featureType | null;
 };
 
 export type filterType = {
   task_id: string | null;
   submitted_by: string | null;
   review_state: string | null;
-  submitted_date: string | null;
+  submitted_date_range: string | null;
 };
 
 type mappedVsValidatedTaskType = {

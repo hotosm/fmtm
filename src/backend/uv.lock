@@ -493,7 +493,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/3e/0d/424de6e5612f1399f
 
 [[package]]
 name = "fmtm"
-version = "2024.5.0"
+version = "2025.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "asgi-lifespan" },
@@ -568,7 +568,7 @@ requires-dist = [
     { name = "httptools", specifier = "==0.6.4" },
     { name = "loguru", specifier = "==0.7.2" },
     { name = "minio", specifier = "==7.2.9" },
-    { name = "osm-fieldwork", specifier = "==0.18.0" },
+    { name = "osm-fieldwork", specifier = "==0.18.2" },
     { name = "osm-login-python", specifier = "==2.0.0" },
     { name = "osm-rawdata", specifier = "==0.4.1" },
     { name = "psycopg", extras = ["pool"], specifier = ">=3.2.3" },
@@ -1435,7 +1435,7 @@ wheels = [
 
 [[package]]
 name = "osm-fieldwork"
-version = "0.18.0"
+version = "0.18.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -1459,9 +1459,9 @@ dependencies = [
     { name = "shapely" },
     { name = "xmltodict" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ad/60/a43713da67c39b47460d1d9c598324e71a59c241bd54b69fce6de4168307/osm-fieldwork-0.18.0.tar.gz", hash = "sha256:887fb94b5796bc14a2f8b6ebe0391bb7795bb685f6d9ddee6c9458072d133252", size = 1485366 }
+sdist = { url = "https://files.pythonhosted.org/packages/6e/46/8833f246ee8df7e8c6d4cda682a6d85ef4e8c2716b6787031cc6192d84e6/osm-fieldwork-0.18.2.tar.gz", hash = "sha256:7e2bae57f3a2eb88dd3f91a67f89fbc7fa29ae512bd5c212ba060dc3f0ee825e", size = 1485777 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d1/58/8ed93d23d6f74ec92aa4326faef186f983a368aa9f028ad47d4ee6f4972b/osm_fieldwork-0.18.0-py3-none-any.whl", hash = "sha256:bde9c8c4cca9658d100e5993e986cae84b5060f71134182595a4e1896f8a7437", size = 1511469 },
+    { url = "https://files.pythonhosted.org/packages/0b/2d/f9c1bfa56f0ba4a22434c2cdab2ab70e2309368f2921d6218a7ed2a54073/osm_fieldwork-0.18.2-py3-none-any.whl", hash = "sha256:469d210f78b1d391ec5c8ddcbd751365c68beb03424334d5159192464f0744c7", size = 1511940 },
 ]
 
 [[package]]

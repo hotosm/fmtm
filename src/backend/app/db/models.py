@@ -159,6 +159,7 @@ class DbUser(BaseModel):
     tasks_validated: Optional[int] = None
     tasks_invalidated: Optional[int] = None
     projects_mapped: Optional[list[int]] = None
+    api_key: Optional[str] = None
     registered_at: Optional[AwareDatetime] = None
     last_login_at: Optional[AwareDatetime] = None
 
@@ -1360,6 +1361,12 @@ class DbProject(BaseModel):
         async with db.cursor() as cur:
             await cur.execute(
                 """
+                DELETE FROM submission_photos WHERE project_id = %(project_id)s;
+            """,
+                {"project_id": project_id},
+            )
+            await cur.execute(
+                """
                 DELETE FROM background_tasks WHERE project_id = %(project_id)s;
             """,
                 {"project_id": project_id},
@@ -1795,6 +1802,7 @@ def slugify(name: Optional[str]) -> Optional[str]:
 class DbGeometryLog(BaseModel):
     """Table geometry log."""
 
+    id: Optional[UUID] = None
     geojson: dict
     status: GeomStatus
     project_id: Optional[int] = None
@@ -1833,6 +1841,25 @@ class DbGeometryLog(BaseModel):
             )
             new_geomlog = await cur.fetchone()
         return new_geomlog
+
+    @classmethod
+    async def all(cls, db: Connection, project_id: int) -> Optional[list[Self]]:
+        """Retrieve geometry logs from a project."""
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(
+                """
+                SELECT * FROM geometrylog WHERE project_id=%(project_id)s;
+            """,
+                {"project_id": project_id},
+            )
+            if cur.rowcount == 0:
+                raise HTTPException(
+                    status_code=HTTPStatus.NOT_FOUND,
+                    detail=f"""
+                    No geometry log with project_id {project_id}
+                    """,
+                )
+            return await cur.fetchall()
 
     @classmethod
     async def delete(

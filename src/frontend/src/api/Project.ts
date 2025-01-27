@@ -1,10 +1,11 @@
-import { AxiosResponse } from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import CoreModules from '@/shared/CoreModules';
 import { task_state, task_event } from '@/types/enums';
 import {
   EntityOsmMap,
+  geometryLogResponseType,
   projectDashboardDetailTypes,
   projectInfoType,
   projectTaskBoundriesType,
@@ -351,5 +352,66 @@ export const DownloadSubmissionGeojson = (url: string, projectName: string) => {
       }
     };
     await downloadSubmissionGeojson(url);
+  };
+};
+
+export const GetGeometryLog = (url: string) => {
+  return async (dispatch: AppDispatch) => {
+    const getProjectActivity = async (url: string) => {
+      try {
+        dispatch(ProjectActions.SetGeometryLogLoading(true));
+        const response: AxiosResponse<geometryLogResponseType[]> = await axios.get(url);
+        dispatch(ProjectActions.SetGeometryLog(response.data));
+      } catch (error) {
+        // error means no geometry log present for the project
+        dispatch(ProjectActions.SetGeometryLog([]));
+      } finally {
+        dispatch(ProjectActions.SetGeometryLogLoading(false));
+      }
+    };
+    await getProjectActivity(url);
+  };
+};
+
+export const SyncTaskState = (
+  url: string,
+  params: { project_id: string },
+  taskBoundaryFeatures: any,
+  geojsonStyles: any,
+) => {
+  return async (dispatch: AppDispatch) => {
+    const syncTaskState = async () => {
+      try {
+        dispatch(ProjectActions.SyncTaskStateLoading(true));
+        const response: AxiosResponse = await axios.get(url, { params });
+
+        response.data.map((task) => {
+          const feature = taskBoundaryFeatures?.find((feature) => feature.getId() === task.id);
+          const previousProperties = feature.getProperties();
+          feature.setProperties({
+            ...previousProperties,
+            task_state: task.task_state,
+            actioned_by_uid: task.actioned_by_uid,
+            actioned_by_username: task.actioned_by_username,
+          });
+
+          feature.setStyle(geojsonStyles[task.task_state]);
+
+          dispatch(
+            ProjectActions.UpdateProjectTaskBoundries({
+              projectId: params.project_id,
+              taskId: task.id,
+              actioned_by_uid: task.actioned_by_uid,
+              actioned_by_username: task.actioned_by_username,
+              task_state: task.task_state,
+            }),
+          );
+        });
+      } catch (error) {
+      } finally {
+        dispatch(ProjectActions.SyncTaskStateLoading(false));
+      }
+    };
+    await syncTaskState();
   };
 };

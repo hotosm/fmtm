@@ -46,6 +46,7 @@ from app.db.postgis_utils import (
 class GeometryLogIn(BaseModel):
     """Geometry log insert."""
 
+    id: Optional[UUID] = None
     status: GeomStatus
     geojson: dict
     project_id: Optional[int] = None
@@ -64,7 +65,7 @@ class GeometryLogIn(BaseModel):
         if value is None:
             return None
         featcol = geojson_to_featcol(value)
-        return featcol.get("features")[0].get("geometry")
+        return featcol.get("features")[0]
 
 
 class ProjectInBase(DbProject):

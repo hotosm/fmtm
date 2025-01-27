@@ -23,8 +23,8 @@
 	import { polygon } from '@turf/helpers';
 	import { buffer } from '@turf/buffer';
 	import { bbox } from '@turf/bbox';
+	import type { Position, Geometry as GeoJSONGeometry, FeatureCollection, Feature } from 'geojson';
 	import { centroid } from '@turf/centroid';
-	import type { Position, Geometry as GeoJSONGeometry, FeatureCollection } from 'geojson';
 
 	import LocationArcImg from '$assets/images/locationArc.png';
 	import LocationDotImg from '$assets/images/locationDot.png';
@@ -38,13 +38,12 @@
 	import FlatGeobuf from '$lib/components/map/flatgeobuf-layer.svelte';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
 	import { getProjectSetupStepStore, getProjectBasemapStore } from '$store/common.svelte.ts';
-	// import { entityFeatcolStore, selectedEntityId } from '$store/entities';
 	import { readFileFromOPFS } from '$lib/fs/opfs.ts';
 	import { loadOfflinePmtiles } from '$lib/utils/basemaps.ts';
 	import { projectSetupStep as projectSetupStepEnum, NewGeomTypes } from '$constants/enums.ts';
 	import { baseLayers, osmStyle, pmtilesStyle } from '$constants/baseLayers.ts';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
-
+	import { clickOutside } from '$lib/utils/clickOutside.ts';
 
 	type bboxType = [number, number, number, number];
 
@@ -55,7 +54,7 @@
 		projectId: number;
 		setMapRef: (map: maplibregl.Map | undefined) => void;
 		draw?: boolean;
-	    drawGeomType: NewGeomTypes | undefined;
+		drawGeomType: NewGeomTypes | undefined;
 		handleDrawnGeom?: ((geojson: GeoJSONGeometry) => void) | null;
 	}
 
@@ -80,6 +79,10 @@
 	let selectedBaselayer: string = $state('OSM');
 	let taskAreaClicked: boolean = $state(false);
 	let projectSetupStep: number | null = $state(null);
+	let lineWidth = $state(1); // Initial line width of the rejected entities
+	let expanding = true; // Whether the line is expanding
+	let selectedControl: 'layer-switcher' | 'legend' | null = $state(null);
+	let selectedStyleUrl: string | undefined = $state(undefined);
 
 	// Trigger adding the PMTiles layer to baselayers, if PmtilesUrl is set
 	let allBaseLayers: maplibregl.StyleSpecification[] = $derived(
@@ -122,7 +125,7 @@
 	// })
 	let displayDrawHelpText: boolean = $state(false);
 	type DrawModeOptions = 'point' | 'linestring' | 'delete-selection' | 'polygon';
-	const currentDrawMode: DrawModeOptions = drawGeomType ? drawGeomType.toLowerCase() as DrawModeOptions : 'point';
+	const currentDrawMode: DrawModeOptions = drawGeomType ? (drawGeomType.toLowerCase() as DrawModeOptions) : 'point';
 	const drawControl = new MaplibreTerradrawControl({
 		modes: [
 			currentDrawMode,
@@ -262,7 +265,7 @@
 		}
 	});
 
-	function addStatusToGeojsonProperty(geojsonData: FeatureCollection) {
+	function addStatusToGeojsonProperty(geojsonData: FeatureCollection): FeatureCollection {
 		return {
 			...geojsonData,
 			features: geojsonData.features.map((feature) => {
@@ -301,6 +304,20 @@
 			await loadOfflinePmtiles(projectId);
 			selectedBaselayer = 'PMTiles';
 		}
+
+		const interval = setInterval(() => {
+			if (expanding) {
+				lineWidth += 0.3;
+				if (lineWidth >= 4) expanding = false; // Maximum width
+			} else {
+				lineWidth -= 0.3;
+				if (lineWidth <= 1) expanding = true; // Minimum width
+			}
+		}, 50); // Update every 50ms for smooth animation
+
+		return () => {
+			clearInterval(interval);
+		};
 	});
 </script>
 
@@ -341,13 +358,60 @@
 		</ControlGroup></Control
 	>
 	<Control class="flex flex-col gap-y-2" position="bottom-right">
-		<LayerSwitcher
-			{map}
-			styles={allBaseLayers}
-			sourcesIdToReAdd={['tasks', 'entities', 'geolocation']}
-			selectedStyleName={selectedBaselayer}
-		></LayerSwitcher>
-		<Legend />
+		<div
+			class="rounded-full w-[2.25rem] h-[2.25rem] overflow-hidden flex items-center justify-center border-1 border-solid border-red-600 bg-[#FFEDED]"
+		>
+			<sl-icon-button
+				name="arrow-repeat"
+				label="Settings"
+				disabled={entitiesStore.syncEntityStatusLoading}
+				class={`text-[1.25rem] rotate-90 text-red-600 ${entitiesStore.syncEntityStatusLoading && 'animate-spin'}`}
+				onclick={async () => await entitiesStore.syncEntityStatus(projectId)}
+				onkeydown={async (e: KeyboardEvent) => {
+					e.key === 'Enter' && (await entitiesStore.syncEntityStatus(projectId));
+				}}
+				role="button"
+				tabindex="0"
+			></sl-icon-button>
+		</div>
+		<div
+			aria-label="layer switcher"
+			onclick={() => {
+				selectedControl = 'layer-switcher';
+			}}
+			role="button"
+			onkeydown={(e) => {
+				if (e.key === 'Enter') {
+					selectedControl = 'layer-switcher';
+				}
+			}}
+			tabindex="0"
+		>
+			<img
+				style="border: 1px solid #d73f3f;"
+				class="w-[2.25rem] h-[2.25rem] rounded-full"
+				src={selectedStyleUrl}
+				alt="Basemap Icon"
+			/>
+		</div>
+		<div
+			aria-label="toggle legend"
+			class="group text-nowrap cursor-pointer"
+			onclick={() => (selectedControl = 'legend')}
+			role="button"
+			onkeydown={(e) => {
+				if (e.key === 'Enter') {
+					selectedControl = 'legend';
+				}
+			}}
+			tabindex="0"
+		>
+			<hot-icon
+				style="border: 1px solid #D7D7D7;"
+				name="legend-toggle"
+				class="!text-[1.7rem] text-[#333333] bg-white p-1 rounded-full group-hover:text-red-600 duration-200"
+			></hot-icon>
+		</div>
 	</Control>
 	<!-- Add the Geolocation GeoJSON layer to the map -->
 	<Geolocation {map}></Geolocation>
@@ -416,7 +480,7 @@
 		<FillLayer
 			id="entity-fill-layer"
 			paint={{
-				'fill-opacity': 0.6,
+				'fill-opacity': ['match', ['get', 'status'], 'MARKED_BAD', 0, 0.6],
 				'fill-color': [
 					'match',
 					['get', 'status'],
@@ -426,7 +490,9 @@
 					'#fae15f',
 					'SURVEY_SUBMITTED',
 					'#71bf86',
-					'#9c9a9a', // default color if no match is found
+					'MARKED_BAD',
+					'#fa1100',
+					'#c5fbf5', // default color if no match is found
 				],
 				'fill-outline-color': [
 					'match',
@@ -437,7 +503,9 @@
 					'#ffd603',
 					'SURVEY_SUBMITTED',
 					'#32a852',
-					'#000000',
+					'MARKED_BAD',
+					'#fa1100',
+					'#c5fbf5',
 				],
 			}}
 			beforeLayerType="symbol"
@@ -447,13 +515,36 @@
 			layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 			paint={{
 				'line-color': '#fa1100',
-				'line-width': ['case', ['==', ['get', 'osm_id'], entitiesStore.selectedEntity], 1, 0],
-				'line-opacity': ['case', ['==', ['get', 'osm_id'], entitiesStore.selectedEntity], 1, 0.35],
+				'line-width': ['case', ['==', ['get', 'osm_id'], entitiesStore.selectedEntity || ''], 1, 0],
+				'line-opacity': ['case', ['==', ['get', 'osm_id'], entitiesStore.selectedEntity || ''], 1, 0.35],
 			}}
 			beforeLayerType="symbol"
 			manageHoverState
 		/>
 	</FlatGeobuf>
+	<GeoJSON id="bad-geoms" data={entitiesStore.badGeomList}>
+		<FillLayer
+			id="bad-geom-fill-layer"
+			hoverCursor="pointer"
+			paint={{
+				'fill-color': '#fa1100',
+				'fill-opacity': 0.3,
+			}}
+			beforeLayerType="symbol"
+			manageHoverState
+		/>
+		<LineLayer
+			layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+			paint={{
+				'line-color': '#fa1100',
+				'line-width': lineWidth,
+			}}
+			beforeLayerType="symbol"
+			manageHoverState
+		/>
+	</GeoJSON>
+
+	<!-- pulse effect layer representing rejected entities -->
 
 	<!-- Offline pmtiles, if present (alternative approach, not baselayer) -->
 	<!-- {#if projectBasemapStore.projectPmtilesUrl}
@@ -479,3 +570,36 @@
 		</div>
 	{/if}
 </MapLibre>
+
+<div
+	use:clickOutside
+	onclick_outside={() => (selectedControl = null)}
+	class={`font-barlow flex justify-center !w-[100vw] absolute left-0 z-20 duration-400 ${selectedControl ? 'bottom-[4rem]' : '-bottom-[100%] pointer-events-none'}`}
+>
+	<div class="bg-white w-full font-regular md:max-w-[580px] px-4 py-3 sm:py-4 rounded-t-3xl">
+		<div class="flex justify-end">
+			<hot-icon
+				name="close"
+				class="!text-[1.5rem] text-[#52525B] cursor-pointer hover:text-red-600 duration-200"
+				onclick={() => (selectedControl = null)}
+				onkeydown={(e: KeyboardEvent) => {
+					if (e.key === 'Enter') {
+						selectedControl = null;
+					}
+				}}
+				role="button"
+				tabindex="0"
+			></hot-icon>
+		</div>
+		<LayerSwitcher
+			{map}
+			styles={allBaseLayers}
+			sourcesIdToReAdd={['tasks', 'entities', 'geolocation']}
+			selectedStyleName={selectedBaselayer}
+			{selectedStyleUrl}
+			setSelectedStyleUrl={(style) => (selectedStyleUrl = style)}
+			isOpen={selectedControl === 'layer-switcher'}
+		></LayerSwitcher>
+		<Legend isOpen={selectedControl === 'legend'} />
+	</div>
+</div>
