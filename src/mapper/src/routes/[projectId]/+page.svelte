@@ -153,7 +153,7 @@
 	let newFeatureGeom: any = $state(null);
 
 	function mapNewFeatureInODK() {
-		openOdkCollectNewFeature(data?.project?.odk_form_id, newFeatureGeom);
+		openOdkCollectNewFeature(data?.project?.odk_form_id, newFeatureGeom, taskStore.selectedTaskId);
 	}
 	function cancelMapNewFeatureInODK() {
 		newFeatureDrawInstance.clear();
