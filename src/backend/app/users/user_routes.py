@@ -91,7 +91,7 @@ async def delete_user_by_identifier(
 async def delete_inactive_users(
     request: Request,
     db: Annotated[Connection, Depends(db_conn)],
-    # current_user: Annotated[DbUser, Depends(super_admin)],
+    current_user: Annotated[DbUser, Depends(super_admin)],
     osm_auth=Depends(init_osm_auth),
 ):
     """Identify inactive users, send warnings, and delete accounts."""
