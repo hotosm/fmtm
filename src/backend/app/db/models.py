@@ -314,6 +314,19 @@ class DbUser(BaseModel):
 
         return new_user
 
+    @classmethod
+    async def update_role(cls, db: Connection, user_id: int, new_role: UserRole):
+        """Update the role of a specific user."""
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(
+                """
+                UPDATE users SET role = %(new_role)s WHERE id = %(user_id)s
+                RETURNING *;
+                """,
+                {"new_role": new_role.value, "user_id": user_id},
+            )
+            return await cur.fetchone()
+
 
 class DbOrganisation(BaseModel):
     """Table organisations."""

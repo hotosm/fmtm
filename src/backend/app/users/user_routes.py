@@ -19,7 +19,7 @@
 
 from typing import Annotated, List
 
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, Query, Request, Response
 from loguru import logger as log
 from psycopg import Connection
 
@@ -56,6 +56,17 @@ async def get_user_roles(current_user: Annotated[DbUser, Depends(mapper)]):
     for role in UserRoleEnum:
         user_roles[role.name] = role.value
     return user_roles
+
+
+@router.get("/change-role", response_model=user_schemas.UserOut)
+async def change_user_role(
+    user: Annotated[DbUser, Depends(get_user)],
+    new_role: Annotated[UserRoleEnum, Query(description="New role for the user.")],
+    current_user: Annotated[DbUser, Depends(super_admin)],
+    db: Annotated[Connection, Depends(db_conn)],
+):
+    """Change the role of a user."""
+    return await DbUser.update_role(db=db, user_id=user.id, new_role=new_role)
 
 
 @router.get("/{id}", response_model=user_schemas.UserOut)
