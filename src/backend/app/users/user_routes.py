@@ -66,7 +66,8 @@ async def change_user_role(
     db: Annotated[Connection, Depends(db_conn)],
 ):
     """Change the role of a user."""
-    return await DbUser.update_role(db=db, user_id=user.id, new_role=new_role)
+    user_update = user_schemas.UserUpdate(role=new_role)
+    return await DbUser.update(db=db, user_id=user.id, user_update=user_update)
 
 
 @router.get("/{id}", response_model=user_schemas.UserOut)
