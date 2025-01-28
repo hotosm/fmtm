@@ -19,7 +19,7 @@
 
 from typing import Annotated, List
 
-from fastapi import APIRouter, Depends, Query, Request, Response
+from fastapi import APIRouter, Depends, Request, Response
 from loguru import logger as log
 from psycopg import Connection
 
