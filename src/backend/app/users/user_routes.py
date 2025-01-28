@@ -58,16 +58,15 @@ async def get_user_roles(current_user: Annotated[DbUser, Depends(mapper)]):
     return user_roles
 
 
-@router.patch("/{user_id}/change-role", response_model=user_schemas.UserOut)
+@router.patch("/{user_id}", response_model=user_schemas.UserOut)
 async def change_user_role(
     user_id: int,
-    new_role: Annotated[UserRoleEnum, Query(description="New role for the user.")],
+    new_user_data: user_schemas.UserUpdate,
     current_user: Annotated[DbUser, Depends(super_admin)],
     db: Annotated[Connection, Depends(db_conn)],
 ):
     """Change the role of a user."""
-    user_update = user_schemas.UserRole(role=new_role)
-    return await DbUser.update(db=db, user_id=user_id, user_update=user_update)
+    return await DbUser.update(db=db, user_id=user_id, user_update=new_user_data)
 
 
 @router.get("/{id}", response_model=user_schemas.UserOut)
