@@ -41,7 +41,6 @@ class UserUpdate(DbUser):
     id: Annotated[Optional[int], Field(exclude=True)] = None
     username: Annotated[Optional[str], Field(exclude=True)] = None
     registered_at: Annotated[Optional[AwareDatetime], Field(exclude=True)] = None
-    api_key: Annotated[Optional[str], Field(exclude=True)] = None
     tasks_mapped: Annotated[Optional[int], Field(exclude=True)] = None
     tasks_validated: Annotated[Optional[int], Field(exclude=True)] = None
     tasks_invalidated: Annotated[Optional[int], Field(exclude=True)] = None
@@ -49,7 +48,6 @@ class UserUpdate(DbUser):
         None
     )
     orgs_managed: Annotated[Optional[list[int]], Field(exclude=True)] = None
-    is_email_verified: Annotated[Optional[bool], Field(exclude=True)] = None
 
 
 class UserOut(DbUser):
