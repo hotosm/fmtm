@@ -94,6 +94,7 @@ import {
   ExpandMore as ExpandMoreIcon,
   CheckBox as CheckBoxIcon,
   CheckBoxOutlineBlank as CheckBoxOutlineBlankIcon,
+  UnfoldMore as UnfoldMoreIcon,
 } from '@mui/icons-material';
 import LockPng from '@/assets/images/lock.png';
 import RedLockPng from '@/assets/images/red-lock.png';
@@ -198,4 +199,5 @@ export default {
   ExpandMoreIcon,
   CheckBoxIcon,
   CheckBoxOutlineBlankIcon,
+  UnfoldMoreIcon,
 };
