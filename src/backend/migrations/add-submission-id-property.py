@@ -24,7 +24,7 @@ def get_odk_creds(project: dict) -> central_schemas.ODKCentralDecrypted:
             )
 
     # Fallback to environment variables
-    return central_schemas.ODKCentralDecrypted(
+    return central_schemas.ODKCentral(
         odk_central_url=settings.ODK_CENTRAL_URL,
         odk_central_user=settings.ODK_CENTRAL_USER,
         odk_central_password=settings.ODK_CENTRAL_PASSWD.get_secret_value(),
