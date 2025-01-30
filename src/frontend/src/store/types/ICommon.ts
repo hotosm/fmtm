@@ -24,6 +24,6 @@ export type paginationType = {
   page: number | null;
   pages: number | null;
   prev_num: number | null;
-  per_page: number | null;
+  per_page: number;
   total: number | null;
 };
