@@ -4,7 +4,7 @@ import { cn } from '@/utilfunctions/shadcn';
 
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
-    <div className="fmtm-table-wrapper">
+    <div>
       <table
         ref={ref}
         className={cn('fmtm-table-container fmtm-relative fmtm-w-full fmtm-overflow-y-auto fmtm-rounded-lg', className)}
@@ -20,7 +20,7 @@ const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttribut
     <thead
       ref={ref}
       className={cn(
-        'fmtm-table-header fmtm-sticky fmtm-top-0 fmtm-z-10 fmtm-border-b-[#EAECF0] fmtm-bg-grey-200 [&_tr]:fmtm-border-b',
+        'fmtm-sticky fmtm-top-0 fmtm-z-10 fmtm-border-b-[#EAECF0] fmtm-bg-grey-200 [&_tr]:fmtm-border-b',
         className,
       )}
       {...props}
@@ -30,26 +30,13 @@ const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttribut
 TableHeader.displayName = 'TableHeader';
 
 const TableBody = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
-  ({ className, ...props }, ref) => (
-    <tbody
-      ref={ref}
-      className={cn('fmtm-table-body fmtm-bg-white [&_tr:last-child]:fmtm-border-0', className)}
-      {...props}
-    />
-  ),
+  ({ className, ...props }, ref) => <tbody ref={ref} className={cn('fmtm-bg-white', className)} {...props} />,
 );
 TableBody.displayName = 'TableBody';
 
 const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTMLTableRowElement>>(
   ({ className, ...props }, ref) => (
-    <tr
-      ref={ref}
-      className={cn(
-        'data-[state=selected]:-fmtm-bg-muted fmtm-table-body-row fmtm-border-b fmtm-border-b-black-200',
-        className,
-      )}
-      {...props}
-    />
+    <tr ref={ref} className={cn('data-[state=selected]:-fmtm-bg-muted fmtm-border-b', className)} {...props} />
   ),
 );
 TableRow.displayName = 'TableRow';
@@ -59,7 +46,7 @@ const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<
     <th
       ref={ref}
       className={cn(
-        'fmtm-whitespace-nowrap fmtm-p-3 fmtm-text-neutral-gray [&:not(:first-child):not(:last-child)]:fmtm-border-x-[1px] fmtm-border-white fmtm-text-grey-800 [&:has([role=checkbox])]:fmtm-pr-0 ',
+        'fmtm-whitespace-nowrap fmtm-px-4 fmtm-py-3 [&:not(:first-child):not(:last-child)]:fmtm-border-x-[1px] fmtm-border-white fmtm-text-grey-800 [&:has([role=checkbox])]:fmtm-pr-0 ',
         className,
       )}
       {...props}
@@ -73,7 +60,7 @@ const TableCell = React.forwardRef<HTMLTableCellElement, React.TdHTMLAttributes<
     <td
       ref={ref}
       className={cn(
-        'fmtm-table-body-column fmtm-table-body fmtm-h-11 fmtm-px-3 fmtm-text-grey-800 fmtm-text-[15px] [&:has([role=checkbox])]:fmtm-pr-0',
+        'fmtm-h-11 fmtm-px-4 fmtm-py-3 fmtm-text-grey-800 fmtm-text-[15px] [&:has([role=checkbox])]:fmtm-pr-0',
         className,
       )}
       {...props}
@@ -83,13 +70,7 @@ const TableCell = React.forwardRef<HTMLTableCellElement, React.TdHTMLAttributes<
 TableCell.displayName = 'TableCell';
 
 const TableFooter = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
-  ({ className, ...props }, ref) => (
-    <tfoot
-      ref={ref}
-      className={cn('fmtm-text-primary-foreground fmtm-bg-primary-600 fmtm-font-medium', className)}
-      {...props}
-    />
-  ),
+  ({ className, ...props }, ref) => <tfoot ref={ref} className={cn('fmtm-font-medium', className)} {...props} />,
 );
 TableFooter.displayName = 'TableFooter';
 
