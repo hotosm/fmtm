@@ -179,6 +179,7 @@ const ProjectDetailsForm = ({ flag }) => {
           <div>
             <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold !fmtm-bg-transparent">Assign Project Admin</p>
             <Select2
+              name="project_admins"
               options={userList || []}
               value={values.project_admins}
               onChange={(value: any) => {
