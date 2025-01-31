@@ -778,6 +778,7 @@ def generate_project_basemap(
             outdir=tiles_dir,
             source=source,
             tms=tms,
+            xy=True if tms else False,
         )
         log.info(f"Basemap created for project ID {project_id}: {outfile}")
 
