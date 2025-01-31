@@ -175,6 +175,30 @@ const ProjectDetailsForm = ({ flag }) => {
               <p className="fmtm-form-error fmtm-text-red-600 fmtm-text-sm fmtm-py-1">{errors.organisation_id}</p>
             )}
           </div>
+          {/* Custom ODK creds toggle */}
+          <div
+            className="fmtm-flex fmtm-flex-col fmtm-gap-6"
+            onMouseOver={() => {
+              dispatch(CreateProjectActions.SetDescriptionToFocus('projectdetails-odk'));
+            }}
+            onMouseLeave={() => dispatch(CreateProjectActions.SetDescriptionToFocus(null))}
+          >
+            {
+              <CustomCheckbox
+                key="useDefaultODKCredentials"
+                label="Use default ODK credentials"
+                checked={values.useDefaultODKCredentials}
+                onCheckedChange={() => {
+                  handleCustomChange('useDefaultODKCredentials', !values.useDefaultODKCredentials);
+                }}
+                className="fmtm-text-black"
+                labelClickable={hasODKCredentials} // Dynamically set labelClickable based on hasODKCredentials
+              />
+            }
+            {shouldShowCustomODKFields() && (
+              <ODKCredentialsFields values={values} errors={errors} handleChange={handleChange} />
+            )}
+          </div>
           {/* Select project admin */}
           <div>
             <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold !fmtm-bg-transparent">Assign Project Admin</p>
@@ -200,30 +224,6 @@ const ProjectDetailsForm = ({ flag }) => {
                 }
               }}
             />
-          </div>
-          {/* Custom ODK creds toggle */}
-          <div
-            className="fmtm-flex fmtm-flex-col fmtm-gap-6"
-            onMouseOver={() => {
-              dispatch(CreateProjectActions.SetDescriptionToFocus('projectdetails-odk'));
-            }}
-            onMouseLeave={() => dispatch(CreateProjectActions.SetDescriptionToFocus(null))}
-          >
-            {
-              <CustomCheckbox
-                key="useDefaultODKCredentials"
-                label="Use default ODK credentials"
-                checked={values.useDefaultODKCredentials}
-                onCheckedChange={() => {
-                  handleCustomChange('useDefaultODKCredentials', !values.useDefaultODKCredentials);
-                }}
-                className="fmtm-text-black"
-                labelClickable={hasODKCredentials} // Dynamically set labelClickable based on hasODKCredentials
-              />
-            }
-            {shouldShowCustomODKFields() && (
-              <ODKCredentialsFields values={values} errors={errors} handleChange={handleChange} />
-            )}
           </div>
           {/* Hashtags */}
           <div>
