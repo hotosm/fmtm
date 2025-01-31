@@ -6,6 +6,9 @@ import { Command, CommandGroup, CommandItem } from '@/components/RadixComponents
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/RadixComponents/Popover';
 import useDebouncedInput from '@/hooks/useDebouncedInput';
 import AssetModules from '@/shared/AssetModules';
+import { useAppSelector } from '@/types/reduxTypes';
+import { useDispatch } from 'react-redux';
+import { CommonActions } from '@/store/slices/CommonSlice';
 
 export interface selectPropType
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'onFocus' | 'onAbort'> {
@@ -22,8 +25,9 @@ export interface selectPropType
   onChange?: (e: any) => void;
   enableSearchbar?: boolean;
   handleApiSearch?: (e: string) => void;
+  name?: string;
 }
-type selectOptionsType = {
+export type selectOptionsType = {
   label: string;
   value: string | boolean | number;
   id?: string | number;
@@ -33,6 +37,7 @@ type selectOptionsType = {
 };
 
 function Select2({
+  name = 'select', // required if it's server-side search implemented
   options = [],
   multiple = false,
   choose = 'id',
@@ -50,11 +55,14 @@ function Select2({
   enableSearchbar = true,
   handleApiSearch, // if search is handled on backend
 }: selectPropType) {
+  const dispatch = useDispatch();
+
   const [open, setOpen] = React.useState(false);
   const [searchText, setSearchText] = React.useState('');
-  const [filteredOptionsData, setFilteredOptionsData] = React.useState<any>([]);
+  const [filteredOptionsData, setFilteredOptionsData] = React.useState<selectOptionsType[]>([]);
   const [dropDownWidth, setDropDownWidth] = React.useState<number | undefined>(0);
-  const [previousSelectedOptions, setPreviousSelectedOptions] = React.useState<any>([]);
+
+  const previousSelectedOptions = useAppSelector((state) => state.common.previousSelectedOptions);
 
   const handleSelect = (currentValue: any) => {
     if (onFocus) onFocus();
@@ -200,7 +208,16 @@ function Select2({
                       onSelect={() => {
                         handleSelect(option[choose as keyof selectPropType]);
                         // if server-side search then store the selected option since options list is cleared
-                        if (handleApiSearch) setPreviousSelectedOptions((prev) => [...prev, option]);
+                        if (handleApiSearch && name) {
+                          dispatch(
+                            CommonActions.SetPreviousSelectedOptions({
+                              key: name,
+                              options: previousSelectedOptions[name]
+                                ? [...previousSelectedOptions[name], option]
+                                : [option],
+                            }),
+                          );
+                        }
                       }}
                       className="fmtm-flex fmtm-items-center fmtm-gap-[0.15rem] hover:fmtm-bg-red-50 fmtm-duration-150"
                     >
@@ -248,8 +265,9 @@ function Select2({
               className="fmtm-bg-[#F5F5F5] fmtm-rounded-full fmtm-px-2 fmtm-py-1 fmtm-border-[1px] fmtm-border-[#D7D7D7] fmtm-text-[#484848] fmtm-flex fmtm-items-center fmtm-gap-1"
             >
               <p>
-                {handleApiSearch
-                  ? [...previousSelectedOptions, ...options].find((option) => option.value === val)?.label
+                {handleApiSearch && name
+                  ? [...previousSelectedOptions[name as string], ...options]?.find((option) => option.value === val)
+                      ?.label
                   : options.find((option) => option.value === val)?.label}
               </p>
               <AssetModules.CloseIcon
