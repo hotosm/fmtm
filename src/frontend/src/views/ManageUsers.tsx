@@ -61,6 +61,9 @@ const ManageUsers = () => {
     {
       header: 'Role',
       accessorKey: 'role',
+      cell: ({ row }: any) => {
+        return <>{roleLabel[row?.original?.role]}</>;
+      },
     },
     {
       header: 'Last Active',
@@ -105,7 +108,7 @@ const ManageUsers = () => {
 
   const [pagination, setPagination] = useState({
     pageIndex: 0,
-    pageSize: 2,
+    pageSize: 13,
   });
 
   const [searchTextData, handleChangeData] = useDebouncedInput({
@@ -117,7 +120,7 @@ const ManageUsers = () => {
   useEffect(() => {
     dispatch(
       GetUserListService(`${VITE_API_URL}/users`, {
-        results_per_page: 2,
+        results_per_page: 13,
         page: pagination.pageIndex + 1,
         ...filter,
       }),
