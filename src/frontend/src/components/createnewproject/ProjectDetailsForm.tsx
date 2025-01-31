@@ -14,7 +14,8 @@ import RichTextEditor from '@/components/common/Editor/Editor';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import DescriptionSection from '@/components/createnewproject/Description';
 import Select2 from '@/components/common/Select2';
-import { GetUserListService } from '@/api/User';
+import { GetUserListForSelect } from '@/api/User';
+import { UserActions } from '@/store/slices/UserSlice';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -26,7 +27,7 @@ const ProjectDetailsForm = ({ flag }) => {
   const projectDetails = useAppSelector((state) => state.createproject.projectDetails);
   const organisationListData = useAppSelector((state) => state.createproject.organisationList);
   const organisationListLoading = useAppSelector((state) => state.createproject.organisationListLoading);
-  const userList = useAppSelector((state) => state.user.userList)?.map((user) => ({
+  const userList = useAppSelector((state) => state.user.userListForSelect)?.map((user) => ({
     id: user.id,
     label: user.username,
     value: user.id,
@@ -64,10 +65,6 @@ const ProjectDetailsForm = ({ flag }) => {
     return () => {
       window.removeEventListener('focus', onFocus);
     };
-  }, []);
-
-  useEffect(() => {
-    dispatch(GetUserListService(`${VITE_API_URL}/users`));
   }, []);
 
   const handleInputChanges = (e) => {
@@ -192,6 +189,15 @@ const ProjectDetailsForm = ({ flag }) => {
               multiple
               checkBox
               isLoading={userListLoading}
+              handleApiSearch={(value) => {
+                if (value) {
+                  dispatch(
+                    GetUserListForSelect(`${VITE_API_URL}/users`, { search: value, page: 1, results_per_page: 30 }),
+                  );
+                } else {
+                  dispatch(UserActions.SetUserListForSelect([]));
+                }
+              }}
             />
           </div>
           {/* Custom ODK creds toggle */}
