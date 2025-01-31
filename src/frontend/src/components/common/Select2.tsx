@@ -21,6 +21,7 @@ export interface selectPropType
   onFocus?: (e?: any) => void;
   onChange?: (e: any) => void;
   enableSearchbar?: boolean;
+  handleApiSearch?: (e: string) => void;
 }
 type selectOptionsType = {
   label: string;
@@ -47,11 +48,13 @@ function Select2({
   style,
   checkBox = false,
   enableSearchbar = true,
+  handleApiSearch, // if search is handled on backend
 }: selectPropType) {
   const [open, setOpen] = React.useState(false);
   const [searchText, setSearchText] = React.useState('');
   const [filteredOptionsData, setFilteredOptionsData] = React.useState<any>([]);
   const [dropDownWidth, setDropDownWidth] = React.useState<number | undefined>(0);
+  const [previousSelectedOptions, setPreviousSelectedOptions] = React.useState<any>([]);
 
   const handleSelect = (currentValue: any) => {
     if (onFocus) onFocus();
@@ -85,7 +88,13 @@ function Select2({
   const [searchTextData, handleChangeData] = useDebouncedInput({
     ms: 400,
     init: searchText,
-    onChange: (debouncedEvent) => setSearchText(debouncedEvent.target.value),
+    onChange: (debouncedEvent) => {
+      if (handleApiSearch) {
+        handleApiSearch(debouncedEvent.target.value);
+      } else {
+        setSearchText(debouncedEvent.target.value);
+      }
+    },
   });
 
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -190,6 +199,8 @@ function Select2({
                       key={option.value?.toString()}
                       onSelect={() => {
                         handleSelect(option[choose as keyof selectPropType]);
+                        // if server-side search then store the selected option since options list is cleared
+                        if (handleApiSearch) setPreviousSelectedOptions((prev) => [...prev, option]);
                       }}
                       className="fmtm-flex fmtm-items-center fmtm-gap-[0.15rem] hover:fmtm-bg-red-50 fmtm-duration-150"
                     >
@@ -221,7 +232,7 @@ function Select2({
                   ))
                 ) : (
                   <div className="fmtm-body-sm fmtm-line-clamp-1 fmtm-flex fmtm-h-[4.25rem] fmtm-items-center fmtm-justify-center fmtm-text-start">
-                    No Data Found.
+                    No Data Found
                   </div>
                 )}
               </CommandGroup>
@@ -236,7 +247,11 @@ function Select2({
               key={val}
               className="fmtm-bg-[#F5F5F5] fmtm-rounded-full fmtm-px-2 fmtm-py-1 fmtm-border-[1px] fmtm-border-[#D7D7D7] fmtm-text-[#484848] fmtm-flex fmtm-items-center fmtm-gap-1"
             >
-              <p>{options.find((option) => option.value === val)?.label}</p>
+              <p>
+                {handleApiSearch
+                  ? [...previousSelectedOptions, ...options].find((option) => option.value === val)?.label
+                  : options.find((option) => option.value === val)?.label}
+              </p>
               <AssetModules.CloseIcon
                 onClick={() => handleSelect(val)}
                 className="!fmtm-text-[1.125rem] fmtm-cursor-pointer hover:fmtm-text-red-600"
