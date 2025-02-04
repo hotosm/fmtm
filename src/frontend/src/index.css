@@ -54,17 +54,60 @@ button {
 }
 
 @font-face {
-  font-family: 'BarlowBold';
+  font-family: 'Barlow';
+  font-weight: 800;
   src:
-    local('BarlowBold'),
-    url('./assets/fonts/Barlow/Barlow-Bold.ttf') format('truetype');
+    local('Barlow'),
+    url('./assets/fonts/Barlow/BarlowSemiCondensed-ExtraBold.ttf') format('truetype');
 }
-
 @font-face {
-  font-family: 'BarlowMedium';
+  font-family: 'Barlow';
+  font-weight: 700;
   src:
-    local('BarlowMedium'),
-    url('./assets/fonts/Barlow/Barlow-Medium.ttf') format('truetype');
+    local('Barlow'),
+    url('./assets/fonts/Barlow/BarlowSemiCondensed-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Barlow';
+  font-weight: 600;
+  src:
+    local('Barlow'),
+    url('./assets/fonts/Barlow/BarlowSemiCondensed-SemiBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Barlow';
+  font-weight: 500;
+  src:
+    local('Barlow'),
+    url('./assets/fonts/Barlow/BarlowSemiCondensed-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Barlow';
+  font-weight: 400;
+  src:
+    local('Barlow'),
+    url('./assets/fonts/Barlow/BarlowSemiCondensed-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Barlow';
+  font-weight: 300;
+  src:
+    local('Barlow'),
+    url('./assets/fonts/Barlow/BarlowSemiCondensed-Light.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Barlow';
+  font-weight: 200;
+  src:
+    local('Barlow'),
+    url('./assets/fonts/Barlow/BarlowSemiCondensed-ExtraLight.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Barlow';
+  font-weight: 100;
+  src:
+    local('Barlow'),
+    url('./assets/fonts/Barlow/BarlowSemiCondensed-Thin.ttf') format('truetype');
 }
 
 @font-face {
