@@ -54,6 +54,7 @@ module.exports = {
         },
       },
       fontFamily: {
+        barlow: ['Barlow'],
         archivo: ['ArchivoRegular'],
       },
     },
