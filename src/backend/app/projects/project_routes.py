@@ -886,7 +886,7 @@ async def add_additional_entity_list(
 
 
 @router.post("/{project_id}/create-entity")
-async def create_entity(
+async def add_new_entity(
     db: Annotated[Connection, Depends(db_conn)],
     project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
     geojson: Dict[str, Any],
