@@ -599,7 +599,7 @@ async def create_entity(
     properties: list[str],
     entity: central_schemas.EntityDict,
     dataset_name: str = "features",
-)-> dict:
+) -> dict:
     """Create a new Entity in ODK."""
     log.info(f"Creating ODK Entity in dataset '{dataset_name}' (ODK ID: {odk_id})")
     try:
