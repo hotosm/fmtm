@@ -40,6 +40,7 @@ export default defineConfig({
 			$static: path.resolve('./static'),
 			$styles: path.resolve('./src/styles'),
 			$assets: path.resolve('./src/assets'),
+			$translations: path.resolve('./src/translations'),
 		},
 	},
 	test: {

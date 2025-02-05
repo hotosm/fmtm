@@ -4,6 +4,7 @@
 
 	import { getLoginStore } from '$store/login.svelte.ts';
 	import { generateQrCode, downloadQrCode } from '$lib/odk/qrcode';
+	import * as m from "$translations/messages.js";
 
 	interface Props {
 		infoDialogRef: SlDialog | null;
@@ -26,7 +27,7 @@
 	<div class="text-center w-full">
 		<div class="text-lg font-medium">
 			<span class="mr-1"
-				>Scan this QR code in ODK Collect from another users phone, or download and import it manually</span
+				>{m.scan_qr_code()}</span
 			>
 			<sl-tooltip content="More information on manually importing qr code" placement="bottom">
 				<hot-icon
