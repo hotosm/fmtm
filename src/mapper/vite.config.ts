@@ -2,12 +2,17 @@ import path from 'path';
 import { defineConfig } from 'vitest/config';
 import { VitePWA } from 'vite-plugin-pwa';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { paraglide } from '@inlang/paraglide-vite';
 import UnoCSS from 'unocss/vite';
 import extractorSvelte from '@unocss/extractor-svelte';
 
 export default defineConfig({
 	plugins: [
 		sveltekit(),
+		paraglide({
+			project: './project.inlang',
+			outdir: './src/translations',
+		}),
 		UnoCSS({
 			extractors: [extractorSvelte()],
 		}),
