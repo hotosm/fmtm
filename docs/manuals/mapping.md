@@ -62,7 +62,7 @@ for field mapping:
 
       This functionality is designed for mappers in the field, so it is
       recommended to use a mobile device to access it. If you use computer
-      browser, you will be redirected to project details page instead of 
+      browser, you will be redirected to project details page instead of
       mapper's page.
 
 !!! warning
@@ -130,7 +130,7 @@ In most cases we are submitting a survey about a feature that already exists.
 - Now click 'Map Feature In ODK': ODK Collect will open, with the
   feature pre-selected in the survey (no need to open the ODK map!).
 - If the feature you are trying to map is farther than 50m, you will
-  be provided with warning message to encourge you to be near feature for mapping.
+  be provided with warning message to encourage you to be near feature for mapping.
 - Complete the survey and submit.
 
 ![IMG_20250109_160742](https://github.com/user-attachments/assets/bf350d1c-c80e-42ee-970b-ca71a3713a9f)
