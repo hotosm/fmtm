@@ -69,101 +69,108 @@ export default function PrimaryAppBar() {
   const [activeTab, setActiveTab] = useState(0);
 
   return (
-    <CoreModules.Stack sx={{ flexGrow: 0 }}>
-      <LoginPopup />
-      <DrawerComponent open={open} onClose={handleOnCloseDrawer} size={windowSize} type={type} setOpen={setOpen} />
-      <CoreModules.AppBar
-        position="static"
-        sx={{ boxShadow: 0, borderBottom: '1px solid #e1e0e0', borderTop: '1px solid #e1e0e0' }}
-      >
-        <div className="fmtm-flex fmtm-items-center fmtm-px-4">
-          <img
-            src={logo}
-            alt="FMTM Logo"
-            onClick={() => navigate('/')}
-            className="fmtm-w-[5.188rem] fmtm-min-w-[5.188rem] fmtm-cursor-pointer"
-          />
-          <div className="fmtm-hidden lg:fmtm-flex fmtm-items-center fmtm-gap-8 fmtm-ml-8">
-            <Link
-              to="/"
-              className={`fmtm-uppercase fmtm-text-base fmtm-text-[#717171] hover:fmtm-text-[#3f3d3d] fmtm-duration-200 ${
-                activeTab === 0 ? 'fmtm-border-[#706E6E]' : 'fmtm-border-white'
-              } fmtm-pb-1 fmtm-border-b-2`}
-            >
-              Explore Projects
-            </Link>
-            <Link
-              to="/organization"
-              className={`fmtm-uppercase fmtm-text-base fmtm-text-[#717171] hover:fmtm-text-[#3f3d3d] fmtm-duration-200 ${
-                activeTab === 1 ? 'fmtm-border-[#706E6E]' : 'fmtm-border-white'
-              } fmtm-pb-1 fmtm-border-b-2`}
-            >
-              Manage Organizations
-            </Link>
-          </div>
-          <CoreModules.Stack sx={{ flexGrow: 1 }} />
+    <>
+      {/* mapping header */}
+      <div className="fmtm-px-5 fmtm-py-1">
+        <p className="fmtm-body-sm-semibold fmtm-text-primaryRed">Mapping our world together</p>
+      </div>
+      {/* navigation bar */}
+      <CoreModules.Stack sx={{ flexGrow: 0 }}>
+        <LoginPopup />
+        <DrawerComponent open={open} onClose={handleOnCloseDrawer} size={windowSize} type={type} setOpen={setOpen} />
+        <CoreModules.AppBar
+          position="static"
+          sx={{ boxShadow: 0, borderBottom: '1px solid #e1e0e0', borderTop: '1px solid #e1e0e0' }}
+        >
+          <div className="fmtm-flex fmtm-items-center fmtm-px-4">
+            <img
+              src={logo}
+              alt="FMTM Logo"
+              onClick={() => navigate('/')}
+              className="fmtm-w-[5.188rem] fmtm-min-w-[5.188rem] fmtm-cursor-pointer"
+            />
+            <div className="fmtm-hidden lg:fmtm-flex fmtm-items-center fmtm-gap-8 fmtm-ml-8">
+              <Link
+                to="/"
+                className={`fmtm-uppercase fmtm-text-base fmtm-text-[#717171] hover:fmtm-text-[#3f3d3d] fmtm-duration-200 ${
+                  activeTab === 0 ? 'fmtm-border-[#706E6E]' : 'fmtm-border-white'
+                } fmtm-pb-1 fmtm-border-b-2`}
+              >
+                Explore Projects
+              </Link>
+              <Link
+                to="/organization"
+                className={`fmtm-uppercase fmtm-text-base fmtm-text-[#717171] hover:fmtm-text-[#3f3d3d] fmtm-duration-200 ${
+                  activeTab === 1 ? 'fmtm-border-[#706E6E]' : 'fmtm-border-white'
+                } fmtm-pb-1 fmtm-border-b-2`}
+              >
+                Manage Organizations
+              </Link>
+            </div>
+            <CoreModules.Stack sx={{ flexGrow: 1 }} />
 
-          {/* position changed */}
-          {authDetails && (
-            <CoreModules.Stack
-              direction={'row'}
-              spacing={1}
-              justifyContent="end"
-              alignItems="center"
-              className="fmtm-text-ellipsis fmtm-max-w-[9.5rem]"
-            >
-              {authDetails['picture'] !== 'null' && authDetails['picture'] ? (
-                <CoreModules.Stack
-                  className="fmtm-w-7 fmtm-h-7 fmtm-flex fmtm-items-center fmtm-justify-center fmtm-overflow-hidden fmtm-rounded-full fmtm-border-[1px]"
-                  sx={{ display: { xs: 'none', md: 'block' }, mt: '3%' }}
-                >
-                  <img src={authDetails['picture']} alt="Profile Picture" />
-                </CoreModules.Stack>
+            {/* position changed */}
+            {authDetails && (
+              <CoreModules.Stack
+                direction={'row'}
+                spacing={1}
+                justifyContent="end"
+                alignItems="center"
+                className="fmtm-text-ellipsis fmtm-max-w-[9.5rem]"
+              >
+                {authDetails['picture'] !== 'null' && authDetails['picture'] ? (
+                  <CoreModules.Stack
+                    className="fmtm-w-7 fmtm-h-7 fmtm-flex fmtm-items-center fmtm-justify-center fmtm-overflow-hidden fmtm-rounded-full fmtm-border-[1px]"
+                    sx={{ display: { xs: 'none', md: 'block' }, mt: '3%' }}
+                  >
+                    <img src={authDetails['picture']} alt="Profile Picture" />
+                  </CoreModules.Stack>
+                ) : (
+                  <AssetModules.PersonIcon color="success" sx={{ mt: '3%' }} />
+                )}
+                <CoreModules.Typography variant="typography" color={'info'} noWrap>
+                  {authDetails['username']}
+                </CoreModules.Typography>
+              </CoreModules.Stack>
+            )}
+
+            <CoreModules.Stack direction={'row'} sx={{ display: { md: 'flex' } }}>
+              {authDetails ? (
+                <CoreModules.Link style={{ textDecoration: 'none' }} className="fmtm-hidden sm:fmtm-flex" to={'/'}>
+                  <CoreModules.Button
+                    className="btnLogin fmtm-truncate"
+                    style={appBarInnerStyles.btnLogin}
+                    color="error"
+                    onClick={handleOnSignOut}
+                  >
+                    Sign Out
+                  </CoreModules.Button>
+                </CoreModules.Link>
               ) : (
-                <AssetModules.PersonIcon color="success" sx={{ mt: '3%' }} />
-              )}
-              <CoreModules.Typography variant="typography" color={'info'} noWrap>
-                {authDetails['username']}
-              </CoreModules.Typography>
-            </CoreModules.Stack>
-          )}
-
-          <CoreModules.Stack direction={'row'} sx={{ display: { md: 'flex' } }}>
-            {authDetails ? (
-              <CoreModules.Link style={{ textDecoration: 'none' }} className="fmtm-hidden sm:fmtm-flex" to={'/'}>
                 <CoreModules.Button
                   className="btnLogin fmtm-truncate"
                   style={appBarInnerStyles.btnLogin}
-                  color="error"
-                  onClick={handleOnSignOut}
+                  color="info"
+                  onClick={() => dispatch(LoginActions.setLoginModalOpen(true))}
                 >
-                  Sign Out
+                  Sign in
                 </CoreModules.Button>
-              </CoreModules.Link>
-            ) : (
-              <CoreModules.Button
-                className="btnLogin fmtm-truncate"
-                style={appBarInnerStyles.btnLogin}
-                color="info"
-                onClick={() => dispatch(LoginActions.setLoginModalOpen(true))}
+              )}
+            </CoreModules.Stack>
+            <CoreModules.Stack>
+              <CoreModules.IconButton
+                size="large"
+                aria-label="show more"
+                aria-haspopup="true"
+                onClick={handleOpenDrawer}
+                color="inherit"
               >
-                Sign in
-              </CoreModules.Button>
-            )}
-          </CoreModules.Stack>
-          <CoreModules.Stack>
-            <CoreModules.IconButton
-              size="large"
-              aria-label="show more"
-              aria-haspopup="true"
-              onClick={handleOpenDrawer}
-              color="inherit"
-            >
-              <AssetModules.MenuIcon />
-            </CoreModules.IconButton>
-          </CoreModules.Stack>
-        </div>
-      </CoreModules.AppBar>
-    </CoreModules.Stack>
+                <AssetModules.MenuIcon />
+              </CoreModules.IconButton>
+            </CoreModules.Stack>
+          </div>
+        </CoreModules.AppBar>
+      </CoreModules.Stack>
+    </>
   );
 }
