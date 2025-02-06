@@ -152,8 +152,24 @@
 	let newFeatureDrawInstance: any = $state(null);
 	let newFeatureGeom: any = $state(null);
 
-	function mapNewFeatureInODK() {
-		openOdkCollectNewFeature(data?.project?.odk_form_id, newFeatureGeom, taskStore.selectedTaskId);
+	async function mapNewFeatureInODK() {
+		{
+			/*
+			1: create entity in ODK of newly created feature
+			2: create geom record to show the feature on map
+			3: pass entity uuid to ODK intent URL as a param 
+			*/
+		}
+		const entity = await entitiesStore.createEntity(data.projectId, {
+			type: 'FeatureCollection',
+			features: [{ type: 'Feature', geometry: newFeatureGeom, properties: {} }],
+		});
+		await entitiesStore.createGeomRecord(data.projectId, {
+			status: 'NEW',
+			geojson: newFeatureGeom,
+			project_id: data.projectId,
+		});
+		openOdkCollectNewFeature(data?.project?.odk_form_id, entity.uuid);
 	}
 	function cancelMapNewFeatureInODK() {
 		newFeatureDrawInstance.clear();
