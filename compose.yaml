@@ -374,7 +374,7 @@ services:
         echo '* */3 * * * /opt/scheduler/unlock_tasks.py' > ./crontab
 
         # Task unlocking every Sunday 00:00
-        echo '0 0 * * 0 /opt/scheduler/inactive_users.py' > ./crontab
+        echo '0 0 * * 0 /opt/scheduler/inactive_users.py' >> ./crontab
 
         exec /usr/local/bin/supercronic ./crontab
       "
