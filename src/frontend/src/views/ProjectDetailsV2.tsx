@@ -71,6 +71,7 @@ const ProjectDetailsV2 = () => {
   const entityOsmMap = useAppSelector((state) => state?.project?.entityOsmMap);
   const entityOsmMapLoading = useAppSelector((state) => state?.project?.entityOsmMapLoading);
   const badGeomFeatureCollection = useAppSelector((state) => state?.project?.badGeomFeatureCollection);
+  const newGeomFeatureCollection = useAppSelector((state) => state?.project?.newGeomFeatureCollection);
   const getGeomLogLoading = useAppSelector((state) => state?.project?.getGeomLogLoading);
   const syncTaskStateLoading = useAppSelector((state) => state?.project?.syncTaskStateLoading);
 
@@ -511,6 +512,24 @@ const ProjectDetailsV2 = () => {
                 layerProperties={{ name: 'bad-entities' }}
                 zIndex={5}
                 style=""
+              />
+              {/* New geometry layer */}
+              {/* TODO: 
+                  1. style add to layer, 
+                  2. on feature click show validate button with feature info's 
+              */}
+              <VectorLayer
+                geojson={newGeomFeatureCollection}
+                viewProperties={{
+                  size: map?.getSize(),
+                  padding: [50, 50, 50, 50],
+                  constrainResolution: true,
+                  duration: 2000,
+                }}
+                layerProperties={{ name: 'new-entities' }}
+                zIndex={5}
+                style=""
+                mapOnClick={projectClickOnTaskFeature}
               />
               {dataExtractUrl && isValidUrl(dataExtractUrl) && dataExtractExtent && selectedTask && (
                 <VectorLayer
