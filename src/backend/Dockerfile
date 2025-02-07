@@ -19,6 +19,7 @@ ARG UV_IMG_TAG=0.5.2
 ARG MINIO_TAG=${MINIO_TAG:-RELEASE.2025-01-20T14-49-07Z}
 FROM ghcr.io/astral-sh/uv:${UV_IMG_TAG} AS uv
 FROM docker.io/minio/minio:${MINIO_TAG} AS minio
+FROM ghcr.io/hotosm/fmtm/basemap-generator:0.3.0 AS basemap-bins
 
 
 # Includes all labels and timezone info to extend from
@@ -121,6 +122,9 @@ RUN apt-get update --quiet \
     && rm -rf /var/lib/apt/lists/*
 # Copy minio mc client
 COPY --from=minio /usr/bin/mc /usr/local/bin/
+# Copy basemap generation binaries
+COPY --from=basemap-bins /usr/bin/tilepack /usr/local/bin/
+COPY --from=basemap-bins /usr/bin/pmtiles /usr/local/bin/
 COPY *-entrypoint.sh /
 ENTRYPOINT ["/app-entrypoint.sh"]
 # Copy Python deps from build to runtime
