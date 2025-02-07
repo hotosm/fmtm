@@ -3,6 +3,7 @@
 	import SlDialog from '@shoelace-style/shoelace/dist/components/dialog/dialog.component.js';
 
 	import { getLoginStore } from '$store/login.svelte.ts';
+	import { getCommonStore } from '$store/common.svelte.ts';
 	import { generateQrCode, downloadQrCode } from '$lib/odk/qrcode';
 	import * as m from "$translations/messages.js";
 
@@ -16,6 +17,7 @@
 	let { infoDialogRef, projectName, projectOdkToken, children }: Props = $props();
 
 	const loginStore = getLoginStore();
+	const commonStore = getCommonStore();
 
 	let qrCodeData = $derived(
 		generateQrCode(projectName, projectOdkToken, loginStore.getAuthDetails?.username || 'fmtm user'),
@@ -26,9 +28,7 @@
 	<!-- Text above the QR code -->
 	<div class="text-center w-full">
 		<div class="text-lg font-medium">
-			<span class="mr-1"
-				>{m.scan_qr_code()}</span
-			>
+			{#key commonStore.locale}<span class="mr-1">{m.scan_qr_code()}</span>{/key}
 			<sl-tooltip content="More information on manually importing qr code" placement="bottom">
 				<hot-icon
 					onclick={() => {
@@ -65,7 +65,7 @@
 		class="secondary w-full max-w-[200px]"
 	>
 		<hot-icon slot="prefix" name="download" class="!text-[1rem] text-[#b91c1c] cursor-pointer duration-200"></hot-icon>
-		<span class="font-barlow font-medium text-base uppercase">Download QR</span>
+		{#key commonStore.locale}<span class="font-barlow font-medium text-base uppercase">{m.download()} QR</span>{/key}
 	</sl-button>
 
 	{@render children?.()}

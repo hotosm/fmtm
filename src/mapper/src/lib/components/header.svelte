@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { setLanguageTag, onSetLanguageTag, availableLanguageTags, languageTag } from "$translations/runtime.js";
+	import { setLanguageTag, onSetLanguageTag, availableLanguageTags } from "$translations/runtime.js";
 	import type { SlDrawer, SlTooltip } from '@shoelace-style/shoelace';
 	// FIXME this is a workaround to re-import, as using sl-dropdown
 	// and sl-menu prevents selection of values!
@@ -17,28 +17,23 @@
 	import { drawerItems as menuItems } from '$constants/drawerItems.ts';
 	import { revokeCookies } from '$lib/utils/login';
 	import { getAlertStore } from '$store/common.svelte';
-	import { getProjectSetupStepStore } from '$store/common.svelte.ts';
+	import { getCommonStore, getProjectSetupStepStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
 
 	let drawerRef: SlDrawer | undefined = $state();
 	let drawerOpenButtonRef: SlTooltip | undefined = $state();
 	const loginStore = getLoginStore();
 	const alertStore = getAlertStore();
+	const commonStore = getCommonStore();
 	const projectSetupStepStore = getProjectSetupStepStore();
-	let selectedLocale: string = $state(languageTag());
 
 	let isFirstLoad = $derived(
 		+(projectSetupStepStore.projectSetupStep || 0) === projectSetupStepEnum['odk_project_load'],
 	);
 
-	// Locale functions
-	const getLocaleFromLocalStorage = (): string => {
-		const locale = localStorage.getItem('locale') ?? languageTag();
-		return locale;
-	};
-	onSetLanguageTag((newLocale) => {
-		selectedLocale = newLocale;
-		localStorage.setItem('locale', newLocale);
+	// Trigger from paraglide-js, when the locale changes
+	onSetLanguageTag((newLocale: string) => {
+		commonStore.setLocale(newLocale);
 	});
 
 	const handleSignOut = async () => {
@@ -53,8 +48,7 @@
 	};
 
 	onMount(() => {
-		const currentLocale = getLocaleFromLocalStorage();
-		setLanguageTag(currentLocale);
+		setLanguageTag(commonStore.locale);
 
 		// Handle locale change
 		const container = document.querySelector('.locale-selection');
@@ -160,11 +154,11 @@
 		<div class="locale-selection">
 			<sl-dropdown>
 				<hot-button slot="trigger" caret>
-					<hot-icon name="translate"></hot-icon> {selectedLocale}
+					<hot-icon name="translate"></hot-icon> {commonStore.locale}
 				</hot-button>
 				<sl-menu>
 					{#each availableLanguageTags as locale}
-						<sl-menu-item value="{locale}">{locale}</sl-menu-item>
+						<sl-menu-item value={locale}>{locale}</sl-menu-item>
 					{/each}
 				</sl-menu>
 			</sl-dropdown>
@@ -191,7 +185,7 @@
 				role="button"
 				tabindex="0"
 			>
-			{#key selectedLocale}<span class="font-barlow font-medium text-base">{m.sign_out()}</span>{/key}
+			{#key commonStore.locale}<span class="font-barlow font-medium text-base">{m.sign_out()}</span>{/key}
 			</hot-button>
 		{/if}
 	</div>
