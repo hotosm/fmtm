@@ -37,6 +37,7 @@ from app.central import central_schemas
 from app.central.central_crud import (
     get_odk_form,
 )
+from app.central.central_deps import get_async_odk_form
 from app.config import settings
 from app.db.enums import BackgroundTaskStatus, HTTPStatus
 from app.db.models import DbBackgroundTask, DbProject, DbSubmissionPhoto
@@ -232,6 +233,27 @@ async def create_new_submission(
                 device_id=device_id,
                 attachments=attachment_filepaths,
             )
+
+
+async def get_submission_photos(
+    submission_id: str,
+    project: DbProject,
+):
+    """Get the details of a submission.
+
+    Args:
+        submission_id: The instance uuid of the submission.
+        project: The project object representing the project.
+
+    Returns:
+        The details of the submission as a JSON object.
+    """
+    async with get_async_odk_form(project.odk_credentials) as async_odk_form:
+        submission_photos = await async_odk_form.getSubmissionAttachmentUrls(
+            project.odkid, project.odk_form_id, submission_id
+        )
+
+    return submission_photos
 
 
 async def upload_attachment_to_s3(

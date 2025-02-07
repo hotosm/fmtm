@@ -27,7 +27,6 @@ from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Qu
 from fastapi.responses import JSONResponse, Response
 from loguru import logger as log
 from psycopg import Connection
-from psycopg.rows import class_row
 from pyodk._endpoints.submissions import Submission as CentralSubmissionOut
 
 from app.auth.auth_schemas import ProjectUserDict
@@ -36,7 +35,7 @@ from app.central import central_crud
 from app.db import postgis_utils
 from app.db.database import db_conn
 from app.db.enums import HTTPStatus, SubmissionDownloadType
-from app.db.models import DbBackgroundTask, DbSubmissionPhoto, DbTask
+from app.db.models import DbBackgroundTask, DbTask
 from app.projects import project_crud, project_schemas
 from app.submissions import submission_crud, submission_deps, submission_schemas
 from app.tasks.task_deps import get_task
@@ -483,55 +482,19 @@ async def conflate_geojson(
 
 
 @router.get("/{submission_id}/photos")
-async def submission_photo(
-    db: Annotated[Connection, Depends(db_conn)],
+async def submission_photos(
     submission_id: str,
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ) -> dict:
-    """Get submission photos.
-
-    Retrieves the S3 paths of the submission photos for the given submission ID.
-
-    Args:
-        db (Connection): The database connection.
-        submission_id (str): The ID of the submission.
-
-    Returns:
-        dict: A dictionary containing the S3 path of the submission photo.
-            If no photo is found,
-            the dictionary will contain a None value for the S3 path.
-
-    Raises:
-        HTTPException: If an error occurs while retrieving the submission photo.
-    """
-    try:
-        async with db.cursor(row_factory=class_row(DbSubmissionPhoto)) as cur:
-            await cur.execute(
-                """
-                    SELECT
-                        s3_path
-                    FROM
-                        submission_photos
-                    WHERE
-                        submission_id = %(submission_id)s;
-                """,
-                {"submission_id": submission_id},
-            )
-            submission_photos = await cur.fetchall()
-
-        s3_paths = (
-            [photo.s3_path for photo in submission_photos] if submission_photos else []
-        )
-
-        return {"image_urls": s3_paths}
-
-    except Exception as e:
-        log.warning(
-            f"Failed to get submission photos for submission {submission_id}: {e}"
-        )
-        raise HTTPException(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail="Failed to get submission photos",
-        ) from e
+    """This api returns the submission detail of individual submission."""
+    project = project_user.get("project")
+    submission_attachments = await submission_crud.get_submission_photos(
+        submission_id,
+        project,
+    )
+    return {
+        "image_urls": submission_attachments,
+    }
 
 
 @router.get(
