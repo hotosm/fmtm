@@ -151,9 +151,23 @@
 
 	// using this function since outside click of entity layer couldn't be tracked via FillLayer
 	function handleMapClick(e: maplibregl.MapMouseEvent) {
+		let entityLayerName: string;
+		switch (drawGeomType) {
+			case NewGeomTypes.POINT:
+				entityLayerName = 'entity-point-layer';
+				break;
+			case NewGeomTypes.POLYGON:
+				entityLayerName = 'entity-polygon-layer';
+				break;
+			case NewGeomTypes.LINESTRING:
+				entityLayerName = 'entity-line-layer';
+				break;
+			default:
+				throw new Error(`Unsupported geometry type: ${drawGeomType}`);
+			}
 		// returns list of features of entity layer present on that clicked point
 		const clickedEntityFeature = map?.queryRenderedFeatures(e.point, {
-			layers: ['entity-point-layer', 'entity-polygon-layer'],
+			layers: [entityLayerName],
 		});
 		// returns list of features of task layer present on that clicked point
 		const clickedTaskFeature = map?.queryRenderedFeatures(e.point, {
@@ -482,6 +496,7 @@
 		processGeojson={(geojsonData) => addStatusToGeojsonProperty(geojsonData)}
 		geojsonUpdateDependency={entitiesStore.entitiesStatusList}
 	>
+	{#if drawGeomType === NewGeomTypes.POLYGON}
 		<FillLayer
 			id="entity-polygon-layer"
 			paint={{
@@ -528,10 +543,12 @@
 			beforeLayerType="symbol"
 			manageHoverState
 		/>
+		{:else if drawGeomType === NewGeomTypes.POINT}
 		<SymbolLayer
 			id="entity-point-layer"
 			applyToClusters={false}
 			hoverCursor="pointer"
+			manageHoverState
 			layout={{
 				'icon-image': [
 					'match',
@@ -550,8 +567,8 @@
 				],
 				'icon-allow-overlap': true,
 			}}
-			manageHoverState
 		/>
+		{/if}
 	</FlatGeobuf>
 	<GeoJSON id="bad-geoms" data={entitiesStore.badGeomList}>
 		<FillLayer
