@@ -112,14 +112,9 @@ const Home = () => {
                   </div>
                 </>
               ) : (
-                <CoreModules.Typography
-                  variant="h2"
-                  color="error"
-                  sx={{ p: 2, textAlign: 'center' }}
-                  className="fmtm-h-full fmtm-flex fmtm-justify-center fmtm-items-center"
-                >
-                  No projects found.
-                </CoreModules.Typography>
+                <p className="fmtm-text-red-medium fmtm-flex fmtm-justify-center fmtm-items-center fmtm-h-full">
+                  No Projects Found
+                </p>
               )}
             </div>
             {showMapStatus && <ProjectListMap />}

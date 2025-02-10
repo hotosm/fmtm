@@ -159,15 +159,7 @@ export default function CustomDrawer({ open, size, type, onClose, setOpen }: cus
                 ) : (
                   <AssetModules.PersonIcon color="success" sx={{ display: { xs: 'block', md: 'none' }, mt: '1%' }} />
                 )}
-                <CoreModules.Typography
-                  variant="subtitle2"
-                  color={'info'}
-                  noWrap
-                  sx={{ display: { xs: 'block', md: 'none' } }}
-                  className="fmtm-w-fit"
-                >
-                  {authDetails['username']}
-                </CoreModules.Typography>
+                <h4>{authDetails.username}</h4>
               </CoreModules.Stack>
             )}
             <CoreModules.Divider color={'info'} sx={{ display: { xs: 'block', md: 'none' } }} />
