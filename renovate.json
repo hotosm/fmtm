@@ -2,7 +2,7 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "schedule": ["before 7am on the first day of the month"],
-  "enabledManagers": ["python", "js"],
+  "enabledManagers": ["pep621", "npm"],
   "ignoreDeps": ["postgres", "pnpm", "python"],
   "rangeStrategy": "update-lockfile",
   "packageRules": [
