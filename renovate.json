@@ -7,7 +7,14 @@
   "lockFileMaintenance": {
     "enabled": true
   },
-  "ignoreDeps": ["postgres", "pnpm", "python"],
+  "ignoreDeps": [
+    "postgres",
+    "pnpm",
+    "python",
+    "pyodk",
+    "@hotosm/ui",
+    "@shoelace-style/shoelace"
+  ],
   "packageRules": [
     {
       "matchUpdateTypes": ["patch"],
