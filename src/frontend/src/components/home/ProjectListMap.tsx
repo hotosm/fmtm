@@ -6,7 +6,7 @@ import { ClusterLayer } from '@/components/MapComponent/OpenLayersComponent/Laye
 import CoreModules from '@/shared/CoreModules';
 import { geojsonObjectModel, geojsonObjectModelType } from '@/constants/geojsonObjectModal';
 import { defaultStyles } from '@/components/MapComponent/OpenLayersComponent/helpers/styleUtils';
-import MarkerIcon from '@/assets/images/red-marker.png';
+import MarkerIcon from '@/assets/images/map-pin-primary.png';
 import { useNavigate } from 'react-router-dom';
 import { Style, Text, Icon, Fill } from 'ol/style';
 import { projectType } from '@/models/home/homeModel';

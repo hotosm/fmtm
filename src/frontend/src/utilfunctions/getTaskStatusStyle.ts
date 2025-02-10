@@ -110,32 +110,31 @@ const getTaskStatusStyle = (feature: Record<string, any>, mapTheme: Record<strin
 
 export const getFeatureStatusStyle = (geomType: string, mapTheme: Record<string, any>, mappingStatus: string) => {
   let geojsonStyles;
-  console.log(updateRbgAlpha(mapTheme.palette.entityStatusColors.ready, 1));
 
   if (geomType === GeoGeomTypesEnum.POINT) {
     geojsonStyles = {
       READY: createIconStyle(
-        AssetModules.GreyMapPin,
+        AssetModules.MapPinGrey,
         1.1,
         updateRbgAlpha(mapTheme.palette.entityStatusColors.ready, 1),
       ),
       OPENED_IN_ODK: createIconStyle(
-        AssetModules.GreyMapPin,
+        AssetModules.MapPinGrey,
         1.1,
         updateRbgAlpha(mapTheme.palette.entityStatusColors.opened_in_odk, 1),
       ),
       SURVEY_SUBMITTED: createIconStyle(
-        AssetModules.GreyMapPin,
+        AssetModules.MapPinGrey,
         1.1,
         updateRbgAlpha(mapTheme.palette.entityStatusColors.survey_submitted, 1),
       ),
       MARKED_BAD: createIconStyle(
-        AssetModules.GreyMapPin,
+        AssetModules.MapPinGrey,
         1.1,
         updateRbgAlpha(mapTheme.palette.entityStatusColors.marked_bad, 1),
       ),
       VALIDATED: createIconStyle(
-        AssetModules.GreyMapPin,
+        AssetModules.MapPinGrey,
         1.1,
         updateRbgAlpha(mapTheme.palette.entityStatusColors.validated, 1),
       ),
