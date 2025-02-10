@@ -64,7 +64,7 @@ const MainView = () => {
             ) : (
               <CoreModules.Stack
                 className={`${
-                  pathname.includes('/project/') && windowSize.width < 768 ? '' : 'fmtm-p-6'
+                  pathname.includes('/project/') && windowSize.width < 768 ? '' : 'fmtm-py-2 fmtm-px-5'
                 } fmtm-bg-[#f5f5f5]`}
                 sx={{
                   height: popupInParams

@@ -71,12 +71,12 @@ const Home = () => {
   return (
     <div
       style={{ flex: 1, background: '#F5F5F5' }}
-      className="fmtm-flex fmtm-flex-col fmtm-justify-between fmtm-h-full"
+      className="fmtm-flex fmtm-flex-col fmtm-justify-between fmtm-h-full fmtm-mt-1"
     >
       <div className="fmtm-h-full">
         <HomePageFilters searchText={searchQuery} onSearch={handleSearch} />
         {stateHome.homeProjectLoading == false ? (
-          <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5 md:fmtm-overflow-hidden lg:fmtm-h-[calc(100%-9.313rem)]">
+          <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5 md:fmtm-overflow-hidden lg:fmtm-h-[calc(100%-9.313rem)] fmtm-mt-7">
             <div
               className={`fmtm-w-full fmtm-flex fmtm-flex-col fmtm-justify-between md:fmtm-overflow-y-scroll md:scrollbar ${showMapStatus ? 'lg:fmtm-w-[50%]' : ''} `}
             >

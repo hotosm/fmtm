@@ -26,7 +26,7 @@ const HomePageFilters = ({ searchText, onSearch }: homePageFiltersPropType) => {
         wrapperStyle="!fmtm-w-[10.313rem] !fmtm-h-9"
         className="!fmtm-rounded !fmtm-h-9"
       />
-      <div className="fmtm-flex fmtm-items-center fmtm-flex-1 fmtm-justify-end fmtm-gap-3">
+      <div className="fmtm-flex fmtm-items-center fmtm-justify-end fmtm-gap-3 fmtm-ml-auto sm:fmtm-ml-0">
         <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
           <p className="fmtm-button">Show Map</p>
           <Switch
