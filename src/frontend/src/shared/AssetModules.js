@@ -99,6 +99,8 @@ import {
 } from '@mui/icons-material';
 import LockPng from '@/assets/images/lock.png';
 import RedLockPng from '@/assets/images/red-lock.png';
+import RedMapPin from '@/assets/images/red-marker.png';
+import GreyMapPin from '@/assets/images/grey-marker.png';
 import { styled, alpha } from '@mui/material/styles';
 export default {
   ExitToAppIcon,
@@ -135,6 +137,8 @@ export default {
   ArrowBackIcon,
   LockPng,
   RedLockPng,
+  RedMapPin,
+  GreyMapPin,
   TaskIcon,
   SubmissionIcon,
   FeatureIcon,
