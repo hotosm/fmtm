@@ -74,7 +74,7 @@ const Home = () => {
       className="fmtm-flex fmtm-flex-col fmtm-justify-between fmtm-h-full"
     >
       <div className="fmtm-h-full">
-        <HomePageFilters onSearch={handleSearch} filteredProjectCount={filteredProjectCards?.length} />
+        <HomePageFilters searchText={searchQuery} onSearch={handleSearch} />
         {stateHome.homeProjectLoading == false ? (
           <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5 md:fmtm-overflow-hidden lg:fmtm-h-[calc(100%-9.313rem)]">
             <div
