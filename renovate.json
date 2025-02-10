@@ -3,8 +3,11 @@
   "extends": ["config:recommended"],
   "schedule": ["before 7am on the first day of the month"],
   "enabledManagers": ["pep621", "npm"],
-  "ignoreDeps": ["postgres", "pnpm", "python"],
   "rangeStrategy": "update-lockfile",
+  "lockFileMaintenance": {
+    "enabled": true
+  },
+  "ignoreDeps": ["postgres", "pnpm", "python"],
   "packageRules": [
     {
       "matchUpdateTypes": ["patch"],
