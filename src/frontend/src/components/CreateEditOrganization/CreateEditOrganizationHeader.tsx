@@ -8,9 +8,7 @@ const CreateEditOrganizationHeader = ({ organizationId }: { organizationId: stri
     <div className="fmtm-border-b-white fmtm-border-b-[1px] fmtm-bg-[#F5F5F5]">
       <div className="fmtm-flex fmtm-justify-between fmtm-items-center">
         <div className="fmtm-pb-1">
-          <h1 className="sm:fmtm-text-xl md:fmtm-text-2xl">
-            {organizationId ? 'EDIT YOUR ORGANIZATION' : 'REGISTER YOUR ORGANIZATION'}
-          </h1>
+          <h4>{organizationId ? 'EDIT YOUR ORGANIZATION' : 'REGISTER YOUR ORGANIZATION'}</h4>
         </div>
         <div
           className="hover:fmtm-bg-gray-200 fmtm-rounded-full fmtm-p-2 fmtm-duration-300 fmtm-cursor-pointer"
