@@ -26,7 +26,7 @@ const MenuItems = [
   },
   {
     name: 'Manage Organizations',
-    ref: '/organization',
+    ref: '/manage/organization',
     isExternalLink: false,
     isActive: true,
   },
