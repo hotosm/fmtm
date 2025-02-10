@@ -16,31 +16,19 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuPortal,
+  DropdownMenuItem,
 } from '@/components/common/Dropdown';
 import Button from '@/components/common/Button2';
+import { user_roles } from '@/types/enums';
 
 export default function PrimaryAppBar() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { type, windowSize } = windowDimention();
 
   const [open, setOpen] = useState<boolean>(false);
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
-  const handleOpenDrawer = () => {
-    setOpen(true);
-  };
-
-  const handleOnCloseDrawer = () => {
-    setOpen(false);
-  };
-
-  React.useEffect(() => {
-    if (location.pathname.includes('organisation') || location.pathname.includes('organization')) {
-      setActiveTab(1);
-    } else {
-      setActiveTab(0);
-    }
-  }, [location]);
 
   const handleOnSignOut = async () => {
     setOpen(false);
@@ -60,10 +48,6 @@ export default function PrimaryAppBar() {
     }
   };
 
-  const { type, windowSize } = windowDimention();
-
-  const [activeTab, setActiveTab] = useState(0);
-
   return (
     <>
       {/* mapping header */}
@@ -72,7 +56,15 @@ export default function PrimaryAppBar() {
       </div>
       {/* navigation bar */}
       <LoginPopup />
-      <DrawerComponent open={open} onClose={handleOnCloseDrawer} size={windowSize} type={type} setOpen={setOpen} />
+      <DrawerComponent
+        open={open}
+        onClose={() => {
+          setOpen(false);
+        }}
+        size={windowSize}
+        type={type}
+        setOpen={setOpen}
+      />
       <div className="fmtm-flex fmtm-items-center fmtm-justify-between fmtm-px-5 fmtm-py-2 fmtm-border-y fmtm-border-grey-100">
         <img
           src={logo}
@@ -83,20 +75,38 @@ export default function PrimaryAppBar() {
         <div className="fmtm-hidden lg:fmtm-flex fmtm-items-center fmtm-gap-8 fmtm-ml-8">
           <Link
             to="/"
-            className={`fmtm-uppercase fmtm-text-base fmtm-text-[#717171] hover:fmtm-text-[#3f3d3d] fmtm-duration-200 ${
-              activeTab === 0 ? 'fmtm-border-[#706E6E]' : 'fmtm-border-white'
-            } fmtm-pb-1 fmtm-border-b-2`}
+            className={`fmtm-uppercase fmtm-text-base fmtm-text-[#717171] hover:fmtm-text-[#3f3d3d] fmtm-duration-200 fmtm-px-3 fmtm-pt-3 fmtm-pb-2 ${
+              location.pathname === '/' ? 'fmtm-border-red-medium' : 'fmtm-border-white'
+            } fmtm-border-b-2`}
           >
             Explore Projects
           </Link>
-          <Link
-            to="/manage/organization"
-            className={`fmtm-uppercase fmtm-text-base fmtm-text-[#717171] hover:fmtm-text-[#3f3d3d] fmtm-duration-200 ${
-              activeTab === 1 ? 'fmtm-border-[#706E6E]' : 'fmtm-border-white'
-            } fmtm-pb-1 fmtm-border-b-2`}
-          >
-            Manage Organizations
-          </Link>
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger className="fmtm-outline-none fmtm-w-fit">
+              <div
+                className={`fmtm-uppercase fmtm-text-base fmtm-text-[#717171] hover:fmtm-text-[#3f3d3d] fmtm-duration-200 fmtm-px-3 fmtm-pt-3 fmtm-pb-2 ${
+                  location.pathname.includes('/manage') ? 'fmtm-border-red-medium' : 'fmtm-border-white'
+                } fmtm-border-b-2 fmtm-flex fmtm-items-center fmtm-gap-1`}
+              >
+                <p>Manage</p>
+                <AssetModules.ArrowDropDownIcon />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="fmtm-py-2 fmtm-border-none fmtm-bg-white !fmtm-shadow-[0px_0px_20px_4px_rgba(0,0,0,0.05)]"
+              align="center"
+              sideOffset={10}
+            >
+              {authDetails && authDetails.role === user_roles['ADMIN'] && (
+                <Link to="/manage/user">
+                  <DropdownMenuItem>Manage User</DropdownMenuItem>
+                </Link>
+              )}
+              <Link to="/manage/organization">
+                <DropdownMenuItem>Manage Organization</DropdownMenuItem>
+              </Link>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
           {authDetails ? (
@@ -156,7 +166,9 @@ export default function PrimaryAppBar() {
             </Button>
           )}
           <div
-            onClick={handleOpenDrawer}
+            onClick={() => {
+              setOpen(true);
+            }}
             className="fmtm-rounded-full hover:fmtm-bg-grey-100 fmtm-cursor-pointer fmtm-duration-200 fmtm-w-9 fmtm-h-9 fmtm-flex fmtm-items-center fmtm-justify-center"
           >
             <AssetModules.MenuIcon className="fmtm-rounded-full fmtm-text-grey-800 !fmtm-text-[20px]" />
