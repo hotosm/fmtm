@@ -237,24 +237,7 @@ async def get_submission_count(
 #     return Response(content=osmoutfile_data, media_type="application/xml")
 
 
-@router.get("/submission_page")
-async def get_submission_page(
-    project_user: Annotated[ProjectUserDict, Depends(mapper)],
-    days: int,
-    planned_task: Optional[int] = None,
-):
-    """Summary submissison details for submission page.
-
-    Returns:
-        dict: A dictionary containing the submission counts for each date.
-    """
-    project = project_user.get("project")
-    data = await submission_crud.get_submissions_by_date(project, days, planned_task)
-
-    return data
-
-
-@router.get("/submission_form_fields")
+@router.get("/submission-form-fields")
 async def get_submission_form_fields(
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ):
@@ -543,7 +526,7 @@ async def submission_photo(
 @router.get(
     "/{project_id}/dashboard", response_model=submission_schemas.SubmissionDashboard
 )
-async def project_dashboard(
+async def project_submission_dashboard(
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
     db: Annotated[Connection, Depends(db_conn)],
 ):

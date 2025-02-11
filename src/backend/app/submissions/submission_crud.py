@@ -20,10 +20,7 @@
 import io
 import json
 import uuid
-from collections import Counter
-from datetime import datetime, timedelta
 from io import BytesIO
-from typing import Optional
 
 from fastapi import HTTPException, Response
 from loguru import logger as log
@@ -37,7 +34,6 @@ from app.central.central_crud import (
 from app.config import settings
 from app.db.enums import BackgroundTaskStatus, HTTPStatus
 from app.db.models import DbBackgroundTask, DbProject, DbSubmissionPhoto
-from app.db.postgis_utils import timestamp
 from app.projects import project_crud, project_deps, project_schemas
 from app.s3 import add_obj_to_bucket
 
@@ -140,60 +136,6 @@ async def get_submission_count_of_a_project(project: DbProject):
     xform = get_odk_form(project.odk_credentials)
     data = xform.listSubmissions(project.odkid, project.odk_form_id, {})
     return len(data["value"])
-
-
-async def get_submissions_by_date(
-    project: DbProject,
-    days: int,
-    planned_task: Optional[int] = None,
-):
-    """Get submissions by date.
-
-    Fetches the submissions for a given project within a specified number of days.
-
-    Args:
-        project (DbProject): The database project object.
-        days (int): The number of days to consider for fetching submissions.
-        planned_task (int): Associated task id.
-
-    Returns:
-        dict: A dictionary containing the submission counts for each date.
-
-    Examples:
-        # Fetch submissions for project with ID 1 within the last 7 days
-        submissions = await get_submissions_by_date(1, 7)
-    """
-    data = await get_submission_by_project(project, {})
-
-    end_dates = [
-        datetime.fromisoformat(entry["end"].split("+")[0])
-        for entry in data["value"]
-        if entry.get("end")
-    ]
-
-    dates = [
-        date.strftime("%m/%d")
-        for date in end_dates
-        if timestamp() - date <= timedelta(days=days)
-    ]
-
-    submission_counts = Counter(sorted(dates))
-
-    response = [
-        {"date": key, "count": value} for key, value in submission_counts.items()
-    ]
-    if planned_task:
-        count_dict = {}
-        cummulative_count = 0
-        for date, count in submission_counts.items():
-            cummulative_count += count
-            count_dict[date] = cummulative_count
-        response = [
-            {"date": key, "count": count_dict[key], "planned": planned_task}
-            for key, value in submission_counts.items()
-        ]
-
-    return response
 
 
 async def get_submission_by_project(
