@@ -34,7 +34,6 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from loguru import logger as log
 from psycopg import AsyncConnection
-from pyodk.client import Client
 
 from app.auth.auth_routes import get_or_create_user
 from app.auth.auth_schemas import AuthUser, FMTMUser
@@ -334,6 +333,7 @@ async def odk_project(db, client, project, tasks):
 @pytest_asyncio.fixture(scope="function")
 async def submission(client, odk_project):
     """Set up a submission for a project in ODK Central."""
+    fmtm_project_id = odk_project.id
     odk_project_id = odk_project.odkid
     odk_credentials = odk_project.odk_credentials
     odk_creds = odk_credentials.model_dump()
@@ -403,14 +403,14 @@ async def submission(client, odk_project):
         </data>
     """
 
-    with Client(config_path=odk_config_file) as client:
-        submission_data = client.submissions.create(
-            project_id=odk_project_id,
-            form_id=odk_form_id,
-            xml=submission_xml,
-            device_id=None,
-            encoding="utf-8",
-        )
+    response = await client.post(
+        f"/submission?project_id={fmtm_project_id}",
+        json={"submission_xml": submission_xml},
+    )
+    assert response.status_code == 200, response.json()
+
+    submission_data = response.json()
+    assert submission_data.get("instanceId") == submission_id
 
     yield {
         "project": odk_project,

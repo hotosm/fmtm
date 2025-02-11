@@ -21,11 +21,13 @@ import io
 import json
 import uuid
 from io import BytesIO
+from typing import Optional
 
 from fastapi import HTTPException, Response
 from loguru import logger as log
 from psycopg import Connection
 from psycopg.rows import class_row
+from pyodk.client import Client
 
 # from osm_fieldwork.json2osm import json2osm
 from app.central.central_crud import (
@@ -190,6 +192,24 @@ async def get_submission_detail(
 
     submission = json.loads(project_submissions)
     return submission.get("value", [])[0]
+
+
+async def create_new_submission(
+    odk_project_id: int,
+    odk_form_id: uuid.UUID,
+    submission_xml: str,
+    device_id: Optional[str] = None,
+    attachment_filepaths: Optional[list[str]] = None,
+):
+    """Create a new submission in ODK Central, using pyodk REST endpoint."""
+    with Client() as client:  # uses env vars
+        return client.submissions.create(
+            project_id=odk_project_id,
+            form_id=odk_form_id,
+            xml=submission_xml,
+            device_id=device_id,
+            attachments=attachment_filepaths,
+        )
 
 
 async def upload_attachment_to_s3(

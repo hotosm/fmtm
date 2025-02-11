@@ -28,6 +28,7 @@ from fastapi.responses import JSONResponse, Response
 from loguru import logger as log
 from psycopg import Connection
 from psycopg.rows import class_row
+from pyodk._endpoints.submissions import Submission as CentralSubmissionOut
 
 from app.auth.auth_schemas import ProjectUserDict
 from app.auth.roles import mapper, project_contributors, project_manager
@@ -59,6 +60,37 @@ async def read_submissions(
     project = project_user.get("project")
     data = await submission_crud.get_submission_by_project(project, {})
     return data.get("value", [])
+
+
+@router.post("", response_model=CentralSubmissionOut)
+async def create_submission(
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
+    new_submission: submission_schemas.CentralSubmissionIn,
+):
+    """Create a new submission via ODK Central REST endpoint.
+
+    Typically it would be best to use the OpenRosa submission endpoint,
+    as used by ODK Collect.
+
+    However, for now ODK Web Forms do not have direct ODK Central access
+    configured. Meaning we must handle getting forms and submitting new
+    data to ODK Central within FMTM.
+
+    This endpoint helps to facilitate, by allowing submission, alongside
+    any form attachments, via the ODK Central REST API (via pyodk),
+
+    Returns:
+        bool: If the submission was a success.
+    """
+    project = project_user.get("project")
+
+    return await submission_crud.create_new_submission(
+        project.odkid,
+        project.odk_form_id,
+        new_submission.submission_xml,
+        new_submission.device_id,
+        new_submission.attachment_filepaths,
+    )
 
 
 @router.get("/download")
