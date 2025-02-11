@@ -356,6 +356,9 @@ async def submission(client, odk_project):
     odk_form_version = forms[0]["version"]
 
     submission_id = str(uuid.uuid4())
+    photo_file_name = "submission_photo.jpg"
+    photo_file_path = f"{test_data_path}/{photo_file_name}"
+    assert Path(photo_file_path).exists()
 
     submission_xml = f"""
         <data id="{odk_form_id}" version="{odk_form_version}">
@@ -366,12 +369,11 @@ async def submission(client, odk_project):
         <end>2024-11-15T12:29:00.876Z</end>
         <today>2024-11-15</today>
         <phonenumber/>
-        <deviceid>collect:OOYOOcNu8uOA2G4b</deviceid>
         <username>testuser</username>
         <instructions/>
         <warmup/>
         <feature/>
-        <null/>
+        <image>{photo_file_name}</image>
         <new_feature>12.750577838121643 -24.776785714285722 0.0 0.0</new_feature>
         <form_category>building</form_category>
         <xid/>
@@ -380,23 +382,23 @@ async def submission(client, odk_project):
         <status>2</status>
         <survey_questions>
             <buildings>
-            <category>housing</category>
-            <name/>
-            <building_material/>
-            <building_levels/>
-            <housing/>
-            <provider/>
+                <category>housing</category>
+                <name/>
+                <building_material/>
+                <building_levels/>
+                <housing/>
+                <provider/>
             </buildings>
             <details>
-            <power/>
-            <water/>
-            <age/>
-            <building_prefab/>
-            <building_floor/>
-            <building_roof/>
-            <condition/>
-            <access_roof/>
-            <levels_underground/>
+                <power/>
+                <water/>
+                <age/>
+                <building_prefab/>
+                <building_floor/>
+                <building_roof/>
+                <condition/>
+                <access_roof/>
+                <levels_underground/>
             </details>
             <comment/>
         </survey_questions>
@@ -405,7 +407,11 @@ async def submission(client, odk_project):
 
     response = await client.post(
         f"/submission?project_id={fmtm_project_id}",
-        json={"submission_xml": submission_xml},
+        json={
+            "submission_xml": submission_xml,
+            "device_id": "collect:BOYFOcNu8uOK2G4b",
+            "attachment_filepaths": [photo_file_path],
+        },
     )
     assert response.status_code == 200, response.json()
 
