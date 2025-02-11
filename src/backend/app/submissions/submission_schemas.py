@@ -97,11 +97,3 @@ class SubmissionDashboard(BaseModel):
             return f"{days_difference} day{'s' if days_difference > 1 else ''} ago"
         else:
             return last_active.strftime("%d %b %Y")
-
-
-class CentralSubmissionIn(BaseModel):
-    """Submission data for PyODK create submission via ODK Central REST."""
-
-    submission_xml: str
-    device_id: Optional[str] = None
-    attachment_filepaths: Optional[list[str]] = None

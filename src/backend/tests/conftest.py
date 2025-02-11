@@ -405,15 +405,20 @@ async def submission(client, odk_project):
         </data>
     """
 
-    response = await client.post(
-        f"/submission?project_id={fmtm_project_id}",
-        json={
-            "submission_xml": submission_xml,
-            "device_id": "collect:BOYFOcNu8uOK2G4b",
-            "attachment_filepaths": [photo_file_path],
-        },
-    )
-    assert response.status_code == 200, response.json()
+    # The file must be uploaded to the API, read, then re-uploaded to Central
+    with open(photo_file_path, "rb") as photo_file:
+        files = {"submission_files": (photo_file_name, photo_file, "image/jpeg")}
+
+        response = await client.post(
+            f"/submission?project_id={fmtm_project_id}",
+            data={
+                "submission_xml": submission_xml,
+                "device_id": "collect:BOYFOcNu8uOK2G4b",
+            },
+            files=files,
+        )
+
+        assert response.status_code == 200, response.json()
 
     submission_data = response.json()
     assert submission_data.get("instanceId") == submission_id

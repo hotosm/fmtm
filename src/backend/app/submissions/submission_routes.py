@@ -23,7 +23,7 @@ from io import BytesIO
 from typing import Annotated, Optional
 
 import geojson
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse, Response
 from loguru import logger as log
 from psycopg import Connection
@@ -38,7 +38,7 @@ from app.db.database import db_conn
 from app.db.enums import HTTPStatus
 from app.db.models import DbBackgroundTask, DbSubmissionPhoto, DbTask
 from app.projects import project_crud, project_schemas
-from app.submissions import submission_crud, submission_schemas
+from app.submissions import submission_crud, submission_deps, submission_schemas
 from app.tasks.task_deps import get_task
 
 router = APIRouter(
@@ -65,7 +65,11 @@ async def read_submissions(
 @router.post("", response_model=CentralSubmissionOut)
 async def create_submission(
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
-    new_submission: submission_schemas.CentralSubmissionIn,
+    submission_xml: Annotated[str, Body(embed=True)],
+    device_id: Annotated[Optional[str], Body(embed=True)] = None,
+    submission_attachments: Annotated[
+        Optional[dict[str, BytesIO]], Depends(submission_deps.read_submission_uploads)
+    ] = None,
 ):
     """Create a new submission via ODK Central REST endpoint.
 
@@ -78,18 +82,15 @@ async def create_submission(
 
     This endpoint helps to facilitate, by allowing submission, alongside
     any form attachments, via the ODK Central REST API (via pyodk),
-
-    Returns:
-        bool: If the submission was a success.
     """
     project = project_user.get("project")
 
     return await submission_crud.create_new_submission(
         project.odkid,
         project.odk_form_id,
-        new_submission.submission_xml,
-        new_submission.device_id,
-        new_submission.attachment_filepaths,
+        submission_xml,
+        device_id,
+        submission_attachments,
     )
 
 

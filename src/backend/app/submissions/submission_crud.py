@@ -199,9 +199,20 @@ async def create_new_submission(
     odk_form_id: uuid.UUID,
     submission_xml: str,
     device_id: Optional[str] = None,
-    attachment_filepaths: Optional[list[str]] = None,
+    submission_attachments: Optional[dict[str, BytesIO]] = None,
 ):
     """Create a new submission in ODK Central, using pyodk REST endpoint."""
+    submission_attachments = submission_attachments or {}  # Ensure always a dict
+    attachment_filepaths = []
+
+    # Write all uploaded data to temp files for upload
+    # (required by PyODK)
+    for file_name, file_data in submission_attachments.items():
+        temp_path = f"/tmp/{file_name}"
+        with open(temp_path, "wb") as temp_file:
+            temp_file.write(file_data.getvalue())
+        attachment_filepaths.append(temp_path)
+
     with Client() as client:  # uses env vars
         return client.submissions.create(
             project_id=odk_project_id,
