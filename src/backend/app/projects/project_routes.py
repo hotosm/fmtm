@@ -936,6 +936,18 @@ async def add_new_entity(
         ) from e
 
 
+@router.post("/{project_id}/form-xml")
+async def get_project_form_xml_route(
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
+) -> str:
+    """Get the raw XML from ODK Central for a project."""
+    project = project_user.get("project")
+    odk_creds = project.odk_credentials
+    odkid = project.odkid
+    odk_form_id = project.odk_form_id
+    return await central_crud.get_project_form_xml(odk_creds, odkid, odk_form_id)
+
+
 @router.post("/{project_id}/generate-project-data")
 async def generate_files(
     db: Annotated[Connection, Depends(db_conn)],
