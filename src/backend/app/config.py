@@ -239,13 +239,11 @@ class Settings(BaseSettings):
     def pyodk_env_vars(self) -> None:
         """Set the pyodk environment variable configuration."""
         if self.ODK_CENTRAL_URL:
-            os.environ["PYODK_CENTRAL_URL"] = self.ODK_CENTRAL_URL
+            os.environ["PYODK_BASE_URL"] = self.ODK_CENTRAL_URL
         if self.ODK_CENTRAL_USER:
-            os.environ["PYODK_CENTRAL_USER"] = self.ODK_CENTRAL_USER
+            os.environ["PYODK_USERNAME"] = self.ODK_CENTRAL_USER
         if self.ODK_CENTRAL_PASSWD:
-            os.environ["PYODK_CENTRAL_PASS"] = (
-                self.ODK_CENTRAL_PASSWD.get_secret_value()
-            )
+            os.environ["PYODK_PASSWORD"] = self.ODK_CENTRAL_PASSWD.get_secret_value()
         # This file caches as session token, to avoid creating new sessions
         os.environ["PYODK_CACHE_FILE"] = "/home/appuser/.pyodk_cache.toml"
         return None
