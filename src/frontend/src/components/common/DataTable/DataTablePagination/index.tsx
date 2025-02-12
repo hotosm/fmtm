@@ -4,7 +4,7 @@ import type { Table } from '@tanstack/react-table';
 import clsx from 'clsx';
 import AssetModules from '@/shared/AssetModules';
 import { ColumnData } from '..';
-import usePagination, { DOTS } from './usePagination';
+import usePagination, { DOTS } from '@/hooks/usePagination';
 
 interface IPaginationProps {
   totalCount: number;
