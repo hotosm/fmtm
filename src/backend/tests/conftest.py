@@ -61,7 +61,6 @@ from tests.test_data import test_data_path
 odk_central_url = os.getenv("ODK_CENTRAL_URL")
 odk_central_user = os.getenv("ODK_CENTRAL_USER")
 odk_central_password = encrypt_value(os.getenv("ODK_CENTRAL_PASSWD", ""))
-odk_config_file = str(Path(__file__).parent / ".pyodk_config.toml")
 
 
 def pytest_configure(config):

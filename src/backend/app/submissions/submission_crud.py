@@ -21,15 +21,19 @@ import io
 import json
 import uuid
 from io import BytesIO
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Optional
 
 from fastapi import HTTPException, Response
 from loguru import logger as log
 from psycopg import Connection
 from psycopg.rows import class_row
+from pyodk._utils.config import CentralConfig
 from pyodk.client import Client
 
 # from osm_fieldwork.json2osm import json2osm
+from app.central import central_schemas
 from app.central.central_crud import (
     get_odk_form,
 )
@@ -195,6 +199,7 @@ async def get_submission_detail(
 
 
 async def create_new_submission(
+    odk_credentials: central_schemas.ODKCentralDecrypted,
     odk_project_id: int,
     odk_form_id: uuid.UUID,
     submission_xml: str,
@@ -205,22 +210,28 @@ async def create_new_submission(
     submission_attachments = submission_attachments or {}  # Ensure always a dict
     attachment_filepaths = []
 
-    # Write all uploaded data to temp files for upload
-    # (required by PyODK)
-    for file_name, file_data in submission_attachments.items():
-        temp_path = f"/tmp/{file_name}"
-        with open(temp_path, "wb") as temp_file:
-            temp_file.write(file_data.getvalue())
-        attachment_filepaths.append(temp_path)
+    # Write all uploaded data to temp files for upload (required by PyODK)
+    # We must use TemporaryDir and preserve the uploaded file names
+    with TemporaryDirectory() as temp_dir:
+        for file_name, file_data in submission_attachments.items():
+            temp_path = Path(temp_dir) / file_name
+            with open(temp_path, "wb") as temp_file:
+                temp_file.write(file_data.getvalue())
+            attachment_filepaths.append(temp_path)
 
-    with Client() as client:  # uses env vars
-        return client.submissions.create(
-            project_id=odk_project_id,
-            form_id=odk_form_id,
-            xml=submission_xml,
-            device_id=device_id,
-            attachments=attachment_filepaths,
+        pyodk_config = CentralConfig(
+            base_url=odk_credentials.odk_central_url,
+            username=odk_credentials.odk_central_user,
+            password=odk_credentials.odk_central_password,
         )
+        with Client(pyodk_config) as client:
+            return client.submissions.create(
+                project_id=odk_project_id,
+                form_id=odk_form_id,
+                xml=submission_xml,
+                device_id=device_id,
+                attachments=attachment_filepaths,
+            )
 
 
 async def upload_attachment_to_s3(

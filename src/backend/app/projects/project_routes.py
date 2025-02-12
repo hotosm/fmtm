@@ -936,7 +936,7 @@ async def add_new_entity(
         ) from e
 
 
-@router.post("/{project_id}/form-xml")
+@router.get("/{project_id}/form-xml")
 async def get_project_form_xml_route(
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ) -> str:
@@ -945,7 +945,13 @@ async def get_project_form_xml_route(
     odk_creds = project.odk_credentials
     odkid = project.odkid
     odk_form_id = project.odk_form_id
-    return await central_crud.get_project_form_xml(odk_creds, odkid, odk_form_id)
+    # Run separate thread in event loop to avoid blocking with sync code
+    return await run_in_threadpool(
+        central_crud.get_project_form_xml,
+        odk_creds,
+        odkid,
+        odk_form_id,
+    )
 
 
 @router.post("/{project_id}/generate-project-data")

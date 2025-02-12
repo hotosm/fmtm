@@ -86,6 +86,7 @@ async def create_submission(
     project = project_user.get("project")
 
     return await submission_crud.create_new_submission(
+        project.odk_credentials,
         project.odkid,
         project.odk_form_id,
         submission_xml,
