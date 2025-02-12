@@ -1858,7 +1858,7 @@ wheels = [
 [[package]]
 name = "pyodk"
 version = "1.1.0"
-source = { git = "https://github.com/hotosm/pyodk?rev=master-modified#47c25b73bd6c7f1e06de1d4a9a2e29132010c519" }
+source = { git = "https://github.com/hotosm/pyodk?rev=master-modified#888c16efe357bd33e539b4ddc6a9671dbf2d0684" }
 dependencies = [
     { name = "pydantic" },
     { name = "requests" },
