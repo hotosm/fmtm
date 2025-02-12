@@ -75,38 +75,40 @@ export default function PrimaryAppBar() {
         <div className="fmtm-hidden lg:fmtm-flex fmtm-items-center fmtm-gap-8 fmtm-ml-8">
           <Link
             to="/"
-            className={`fmtm-uppercase fmtm-text-base fmtm-text-[#717171] hover:fmtm-text-[#3f3d3d] fmtm-duration-200 fmtm-px-3 fmtm-pt-3 fmtm-pb-2 ${
+            className={`fmtm-uppercase fmtm-button fmtm-text-grey-900 hover:fmtm-text-grey-800 fmtm-duration-200 fmtm-px-3 fmtm-pt-2 fmtm-pb-1 ${
               location.pathname === '/' ? 'fmtm-border-red-medium' : 'fmtm-border-white'
             } fmtm-border-b-2`}
           >
             Explore Projects
           </Link>
-          <DropdownMenu modal={false}>
-            <DropdownMenuTrigger className="fmtm-outline-none fmtm-w-fit">
-              <div
-                className={`fmtm-uppercase fmtm-text-base fmtm-text-[#717171] hover:fmtm-text-[#3f3d3d] fmtm-duration-200 fmtm-px-3 fmtm-pt-3 fmtm-pb-2 ${
-                  location.pathname.includes('/manage') ? 'fmtm-border-red-medium' : 'fmtm-border-white'
-                } fmtm-border-b-2 fmtm-flex fmtm-items-center fmtm-gap-1`}
+          {authDetails && (
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger className="fmtm-outline-none fmtm-w-fit">
+                <div
+                  className={`fmtm-uppercase fmtm-button fmtm-text-grey-900 hover:fmtm-text-grey-800 fmtm-duration-200 fmtm-px-3 fmtm-pt-2 fmtm-pb-1 ${
+                    location.pathname.includes('/manage') ? 'fmtm-border-red-medium' : 'fmtm-border-white'
+                  } fmtm-border-b-2 fmtm-flex fmtm-items-center fmtm-gap-1`}
+                >
+                  <p>Manage</p>
+                  <AssetModules.ArrowDropDownIcon className="!fmtm-text-sm" />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="fmtm-py-2 fmtm-border-none fmtm-bg-white !fmtm-shadow-[0px_0px_20px_4px_rgba(0,0,0,0.05)]"
+                align="center"
+                sideOffset={10}
               >
-                <p>Manage</p>
-                <AssetModules.ArrowDropDownIcon />
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              className="fmtm-py-2 fmtm-border-none fmtm-bg-white !fmtm-shadow-[0px_0px_20px_4px_rgba(0,0,0,0.05)]"
-              align="center"
-              sideOffset={10}
-            >
-              {authDetails && authDetails.role === user_roles['ADMIN'] && (
-                <Link to="/manage/user">
-                  <DropdownMenuItem>Manage User</DropdownMenuItem>
+                {authDetails && authDetails?.role === user_roles['ADMIN'] && (
+                  <Link to="/manage/user">
+                    <DropdownMenuItem>Manage User</DropdownMenuItem>
+                  </Link>
+                )}
+                <Link to="/manage/organization">
+                  <DropdownMenuItem>Manage Organization</DropdownMenuItem>
                 </Link>
-              )}
-              <Link to="/manage/organization">
-                <DropdownMenuItem>Manage Organization</DropdownMenuItem>
-              </Link>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
         <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
           {authDetails ? (
