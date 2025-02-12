@@ -234,18 +234,6 @@ class Settings(BaseSettings):
     ODK_CENTRAL_PASSWD: Optional[SecretStr] = ""
     CENTRAL_WEBHOOK_API_KEY: Optional[SecretStr] = ""
 
-    @computed_field
-    @property
-    def pyodk_env_vars(self) -> None:
-        """Set the pyodk environment variable configuration."""
-        if self.ODK_CENTRAL_URL:
-            os.environ["PYODK_BASE_URL"] = self.ODK_CENTRAL_URL
-        if self.ODK_CENTRAL_USER:
-            os.environ["PYODK_USERNAME"] = self.ODK_CENTRAL_USER
-        if self.ODK_CENTRAL_PASSWD:
-            os.environ["PYODK_PASSWORD"] = self.ODK_CENTRAL_PASSWD.get_secret_value()
-        return None
-
     OSM_CLIENT_ID: str
     OSM_CLIENT_SECRET: SecretStr
     OSM_SECRET_KEY: SecretStr
