@@ -244,8 +244,6 @@ class Settings(BaseSettings):
             os.environ["PYODK_USERNAME"] = self.ODK_CENTRAL_USER
         if self.ODK_CENTRAL_PASSWD:
             os.environ["PYODK_PASSWORD"] = self.ODK_CENTRAL_PASSWD.get_secret_value()
-        # This file caches as session token, to avoid creating new sessions
-        os.environ["PYODK_CACHE_FILE"] = "/home/appuser/.pyodk_cache.toml"
         return None
 
     OSM_CLIENT_ID: str
