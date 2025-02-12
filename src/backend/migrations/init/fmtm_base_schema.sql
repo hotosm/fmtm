@@ -131,7 +131,8 @@ CREATE TYPE public.taskevent AS ENUM (
     'SPLIT',
     'MERGE',
     'ASSIGN',
-    'COMMENT'
+    'COMMENT',
+    'RESET'
 );
 ALTER TYPE public.taskevent OWNER TO fmtm;
 
@@ -408,14 +409,14 @@ ALTER TABLE public.submission_photos_id_seq OWNER TO fmtm;
 ALTER SEQUENCE public.submission_photos_id_seq
 OWNED BY public.submission_photos.id;
 
-CREATE TABLE geometrylog (
+CREATE TABLE public.geometrylog (
     id UUID NOT NULL DEFAULT gen_random_uuid(),
     geojson JSONB NOT NULL,
-    status geomstatus,
+    status public.geomstatus,
     project_id int,
     task_id int
 );
-ALTER TABLE geometrylog OWNER TO fmtm;
+ALTER TABLE public.geometrylog OWNER TO fmtm;
 
 -- nextval for primary keys (autoincrement)
 
@@ -489,7 +490,7 @@ ADD CONSTRAINT xlsforms_title_key UNIQUE (title);
 ALTER TABLE ONLY public.submission_photos
 ADD CONSTRAINT submission_photos_pkey PRIMARY KEY (id);
 
-ALTER TABLE ONLY public.idx_geometrylog
+ALTER TABLE ONLY public.geometrylog
 ADD CONSTRAINT geometrylog_pkey PRIMARY KEY (id);
 
 -- Indexing
@@ -539,7 +540,7 @@ ON public.odk_entities USING btree (
     entity_id, task_id
 );
 CREATE INDEX idx_geometrylog_geojson
-ON geometrylog USING gin (geom);
+ON public.geometrylog USING gin (geojson);
 
 
 -- Foreign keys
@@ -621,6 +622,8 @@ BEGIN
             NEW.state := 'LOCKED_FOR_MAPPING';
         WHEN 'COMMENT' THEN
             NEW.state := OLD.state;
+        WHEN 'RESET' THEN
+            NEW.state := 'UNLOCKED_TO_MAP';
         ELSE
             RAISE EXCEPTION 'Unknown task event type: %', NEW.event;
     END CASE;

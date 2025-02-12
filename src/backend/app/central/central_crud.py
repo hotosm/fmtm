@@ -20,6 +20,7 @@
 import csv
 import json
 from asyncio import gather
+from datetime import datetime
 from io import BytesIO, StringIO
 from typing import Optional, Union
 from uuid import uuid4
@@ -593,6 +594,35 @@ async def create_entity_list(
             )
 
 
+async def create_entity(
+    odk_creds: central_schemas.ODKCentralDecrypted,
+    odk_id: int,
+    properties: list[str],
+    entity: central_schemas.EntityDict,
+    dataset_name: str = "features",
+) -> dict:
+    """Create a new Entity in ODK."""
+    log.info(f"Creating ODK Entity in dataset '{dataset_name}' (ODK ID: {odk_id})")
+    try:
+        properties = central_schemas.entity_fields_to_list(properties)
+
+        label = entity.get("label")
+        data = entity.get("data")
+
+        if not label or not data:
+            log.error("Missing required entity fields: 'label' or 'data'")
+            raise ValueError("Entity must contain 'label' and 'data' fields")
+
+        async with central_deps.get_odk_dataset(odk_creds) as odk_central:
+            response = await odk_central.createEntity(odk_id, dataset_name, label, data)
+        log.info(f"Entity '{label}' successfully created in ODK")
+        return response
+
+    except Exception as e:
+        log.exception(f"Failed to create entity in ODK: {str(e)}")
+        raise
+
+
 async def get_entities_geojson(
     odk_creds: central_schemas.ODKCentralDecrypted,
     odk_id: int,
@@ -693,6 +723,7 @@ async def get_entities_data(
     odk_id: int,
     dataset_name: str = "features",
     fields: str = "__system/updatedAt, osm_id, status, task_id, submission_ids",
+    filter_date: Optional[datetime] = None,
 ) -> list:
     """Get all the entity mapping statuses.
 
@@ -704,17 +735,26 @@ async def get_entities_data(
         dataset_name (str): The dataset / Entity list name in ODK Central.
         fields (str): Extra fields to include in $select filter.
             __id is included by default.
+        filter_date (datetime): Filter entities last updated after this date.
 
     Returns:
         list: JSON list containing Entity info. If updated_at is included,
             the format is string 2022-01-31T23:59:59.999Z.
     """
     try:
+        url_params = f"$select=__id{',' if fields else ''} {fields}"
+
+        filters = []
+        if filter_date:
+            filters.append(f"__system/updatedAt gt {filter_date}")
+        if filters:
+            url_params += f"&$filter={' and '.join(filters)}"
+
         async with central_deps.get_odk_dataset(odk_creds) as odk_central:
             entities = await odk_central.getEntityData(
                 odk_id,
                 dataset_name,
-                url_params=f"$select=__id{',' if fields else ''} {fields}",
+                url_params=url_params,
             )
     except Exception as e:
         log.exception(f"Error: {e}", stack_info=True)

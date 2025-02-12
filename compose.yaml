@@ -76,7 +76,6 @@ services:
     # tty: true
     volumes:
       - fmtm_logs:/opt/logs
-      - fmtm_tiles:/opt/tiles
       - ./src/backend/pyproject.toml:/opt/pyproject.toml:ro
       - ./src/backend/app:/opt/app
       - ./src/backend/tests:/opt/tests:ro
@@ -289,7 +288,7 @@ services:
       retries: 3
 
   electric:
-    image: "electricsql/electric:${ELECTRIC_TAG:-0.9.3}"
+    image: "electricsql/electric:${ELECTRIC_TAG:-1.0.0-beta.10}"
     depends_on:
       fmtm-db:
         condition: service_healthy
