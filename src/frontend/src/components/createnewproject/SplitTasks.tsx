@@ -214,17 +214,13 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
     handleQRGeneration();
   }, [generateProjectSuccess, generateProjectError]);
 
-  const renderTraceback = (errorText: string) => {
-    if (!errorText) {
-      return null;
-    }
-
-    return errorText.split('\n').map((line, index) => (
-      <div key={index} style={{ display: 'flex' }}>
-        <span style={{ color: 'gray', marginRight: '1em' }}>{index + 1}.</span>
-        <span>{line}</span>
-      </div>
-    ));
+  const downloadSplittedGeojson = () => {
+    const blob = new Blob([JSON.stringify(dividedTaskGeojson)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'task_splitted_geojson.geojson';
+    a.click();
   };
 
   const parsedTaskGeojsonCount = dividedTaskGeojson?.features?.length || drawnGeojson?.features?.length || 1;
@@ -333,9 +329,19 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
                     splitTasksSelection === task_split_type.TASK_SPLITTING_ALGORITHM ||
                     splitTasksSelection === task_split_type.CHOOSE_AREA_AS_TASK) && (
                     <div>
-                      <p className="fmtm-text-gray-500 fmtm-mt-5">
+                      <p className="fmtm-text-gray-500 fmtm-mt-5 fmtm-mb-2">
                         Total number of task: <span className="fmtm-font-bold">{totalSteps}</span>
                       </p>
+                      {dividedTaskGeojson && (
+                        <button
+                          type="button"
+                          onClick={downloadSplittedGeojson}
+                          className="fmtm-text-gray-500 fmtm-text-base fmtm-flex fmtm-items-center hover:fmtm-text-primaryRed fmtm-duration-200"
+                        >
+                          <AssetModules.FileDownloadOutlinedIcon className="fmtm-mr-1 !fmtm-text-xl" />
+                          <span>Download splitted geojson</span>
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
