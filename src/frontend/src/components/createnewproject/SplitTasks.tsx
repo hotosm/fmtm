@@ -19,6 +19,27 @@ import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import { taskSplitOptionsType } from '@/store/types/ICreateProject';
 import DescriptionSection from '@/components/createnewproject/Description';
 
+const taskSplitOptions: taskSplitOptionsType[] = [
+  {
+    name: 'define_tasks',
+    value: task_split_type.DIVIDE_ON_SQUARE,
+    label: 'Divide into square tasks',
+    disabled: false,
+  },
+  {
+    name: 'define_tasks',
+    value: task_split_type.CHOOSE_AREA_AS_TASK,
+    label: 'Use uploaded AOI as task areas',
+    disabled: false,
+  },
+  {
+    name: 'define_tasks',
+    value: task_split_type.TASK_SPLITTING_ALGORITHM,
+    label: 'Task Splitting Algorithm',
+    disabled: false,
+  },
+];
+
 const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalFeature, customFormFile }) => {
   useDocumentTitle('Create Project: Split Tasks');
   const dispatch = useAppDispatch();
@@ -42,27 +63,6 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
   const isFgbFetching = useAppSelector((state) => state.createproject.isFgbFetching);
   const toggleSplittedGeojsonEdit = useAppSelector((state) => state.createproject.toggleSplittedGeojsonEdit);
   const additionalFeatureGeojson = useAppSelector((state) => state.createproject.additionalFeatureGeojson);
-
-  const taskSplitOptions: taskSplitOptionsType[] = [
-    {
-      name: 'define_tasks',
-      value: task_split_type.DIVIDE_ON_SQUARE,
-      label: 'Divide into square tasks',
-      disabled: false,
-    },
-    {
-      name: 'define_tasks',
-      value: task_split_type.CHOOSE_AREA_AS_TASK,
-      label: 'Use uploaded AOI as task areas',
-      disabled: false,
-    },
-    {
-      name: 'define_tasks',
-      value: task_split_type.TASK_SPLITTING_ALGORITHM,
-      label: 'Task Splitting Algorithm',
-      disabled: false,
-    },
-  ];
 
   const toggleStep = (step: number, url: string) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
