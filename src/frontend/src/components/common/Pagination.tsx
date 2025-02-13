@@ -106,7 +106,7 @@ export default function Pagination({
               onClick={() => {
                 handlePageChange(currentPage + 1);
               }}
-              className={`fmtm-w-5 fmtm-h-5 fmtm-min-w-5 fmtm-min-h-5 fmtm-rounded-full fmtm-flex fmtm-items-center fmtm-justify-center ${currentPage === paginationRange[paginationRange.length - 1] ? 'fmtm-cursor-not-allowed fmtm-text-grey-400' : 'hover:fmtm-bg-red-50, fmtm-duration-100 hover:fmtm-text-red-600'}`}
+              className={`fmtm-w-5 fmtm-h-5 fmtm-min-w-5 fmtm-min-h-5 fmtm-rounded-full fmtm-flex fmtm-items-center fmtm-justify-center ${currentPage === paginationRange[paginationRange.length - 1] ? 'fmtm-cursor-not-allowed fmtm-text-grey-400' : 'hover:fmtm-bg-red-50 fmtm-duration-100 hover:fmtm-text-red-600'}`}
             >
               <AssetModules.ChevronRightIcon className="!fmtm-text-sm" />
             </button>
