@@ -339,7 +339,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
                           className="fmtm-text-gray-500 fmtm-text-base fmtm-flex fmtm-items-center hover:fmtm-text-primaryRed fmtm-duration-200"
                         >
                           <AssetModules.FileDownloadOutlinedIcon className="fmtm-mr-1 !fmtm-text-xl" />
-                          <span>Download splitted geojson</span>
+                          <span>Download split geojson</span>
                         </button>
                       )}
                     </div>
