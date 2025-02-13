@@ -119,7 +119,7 @@ const AsyncPopup = ({
         return;
       }
 
-      // in the case of cluster-layer, the features are nested withing features
+      // in the case of cluster-layer, the features are nested within features
       const featureProperties = features[0]?.getProperties()?.features
         ? features[0]?.getProperties()?.features[0]?.getProperties()
         : features[0]?.getProperties();
