@@ -17,7 +17,6 @@
 #
 """Functions for task submissions."""
 
-import io
 import json
 import uuid
 from io import BytesIO
@@ -28,7 +27,6 @@ from typing import Optional
 from fastapi import HTTPException, Response
 from loguru import logger as log
 from psycopg import Connection
-from psycopg.rows import class_row
 from pyodk._utils.config import CentralConfig
 from pyodk.client import Client
 
@@ -38,11 +36,9 @@ from app.central.central_crud import (
     get_odk_form,
 )
 from app.central.central_deps import get_async_odk_form
-from app.config import settings
-from app.db.enums import BackgroundTaskStatus, HTTPStatus
-from app.db.models import DbBackgroundTask, DbProject, DbSubmissionPhoto
-from app.projects import project_crud, project_deps, project_schemas
-from app.s3 import add_obj_to_bucket
+from app.db.enums import HTTPStatus
+from app.db.models import DbProject
+from app.projects import project_crud
 
 # async def convert_json_to_osm(file_path):
 #     """Wrapper for osm-fieldwork json2osm."""
