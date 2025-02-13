@@ -298,12 +298,9 @@ async def get_submission_form_fields(
 
 @router.get("/submission-table")
 async def submission_table(
-    db: Annotated[Connection, Depends(db_conn)],
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
-    background_tasks: BackgroundTasks,
     page: int = Query(1, ge=1),
     results_per_page: int = Query(13, le=100),
-    background_task_id: Optional[uuid.UUID] = None,
     task_id: Optional[int] = None,
     submitted_by: Optional[str] = None,
     review_state: Optional[str] = None,
@@ -347,29 +344,6 @@ async def submission_table(
             sub for sub in submissions if sub["__system"].get("reviewState") is None
         ]
         total_count = len(submissions)
-
-    instance_ids = [
-        sub["__id"]
-        for sub in submissions
-        if sub["__system"].get("attachmentsPresent", 0) != 0
-    ]
-
-    if instance_ids:
-        background_task_id = await DbBackgroundTask.create(
-            db,
-            project_schemas.BackgroundTaskIn(
-                project_id=project.id,
-                name="upload_submission_photos",
-            ),
-        )
-        log.info("uploading submission photos to s3")
-        background_tasks.add_task(
-            submission_crud.upload_attachment_to_s3,
-            project.id,
-            instance_ids,
-            background_task_id,
-            db,
-        )
 
     if task_id:
         submissions = [sub for sub in submissions if sub.get("task_id") == str(task_id)]
