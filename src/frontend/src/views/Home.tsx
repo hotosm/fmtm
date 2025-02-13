@@ -93,9 +93,6 @@ const Home = () => {
                     {filteredProjectCards.map((value: projectType, index: number) => (
                       <ExploreProjectCard data={value} key={index} />
                     ))}
-                    {filteredProjectCards.map((value: projectType, index: number) => (
-                      <ExploreProjectCard data={value} key={index} />
-                    ))}
                   </div>
                 </>
               ) : (
