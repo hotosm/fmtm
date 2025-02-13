@@ -45,7 +45,7 @@ dependencies = [
     "sozipfile==0.3.2",
     "cryptography==43.0.3",
     "pyjwt==2.9.0",
-    "osm-fieldwork==0.18.2",
+    "osm-fieldwork==0.19.0",
     "osm-login-python==2.0.0",
     "osm-rawdata==0.4.2",
     "fmtm-splitter==2.0.0",
@@ -63,7 +63,7 @@ test = [
     "pytest==8.3.3",
     "pytest-asyncio==0.24.0",
     "httpx==0.27.2",
-    "pyinstrument==5.0.0",
+    "pyinstrument==5.0.1",
     "coverage>=7.6.4",
     "coverage-badge>=1.1.2",
 ]
@@ -149,4 +149,4 @@ ignore-words-list = "ProjectIn"
 write-changes = true
 
 [tool.uv.sources]
-pyodk = { git = "https://github.com/hotosm/pyodk", rev = "build/python-3.10" }
+pyodk = { git = "https://github.com/hotosm/pyodk", rev = "master-modified" }
