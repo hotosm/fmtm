@@ -43,7 +43,7 @@ const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<
     <th
       ref={ref}
       className={cn(
-        'fmtm-whitespace-nowrap fmtm-px-4 fmtm-py-3 [&:not(:first-child):not(:last-child)]:fmtm-border-x-[1px] fmtm-border-white fmtm-text-grey-800 [&:has([role=checkbox])]:fmtm-pr-0 ',
+        'fmtm-body-lg-semibold fmtm-whitespace-nowrap fmtm-px-4 fmtm-py-3 [&:not(:first-child):not(:last-child)]:fmtm-border-x-[1px] fmtm-border-white fmtm-text-grey-800 [&:has([role=checkbox])]:fmtm-pr-0 ',
         className,
       )}
       {...props}
@@ -57,7 +57,7 @@ const TableCell = React.forwardRef<HTMLTableCellElement, React.TdHTMLAttributes<
     <td
       ref={ref}
       className={cn(
-        'fmtm-h-11 fmtm-px-4 fmtm-py-3 fmtm-text-grey-800 fmtm-text-[15px] [&:has([role=checkbox])]:fmtm-pr-0',
+        'fmtm-body-lg fmtm-h-11 fmtm-px-4 fmtm-py-3 fmtm-text-grey-800  [&:has([role=checkbox])]:fmtm-pr-0',
         className,
       )}
       {...props}
