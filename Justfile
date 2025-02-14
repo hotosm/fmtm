@@ -23,14 +23,15 @@ mod stop 'contrib/just/stop/Justfile'
 mod build 'contrib/just/build/Justfile'
 mod test 'contrib/just/test/Justfile'
 mod dotenv 'contrib/just/dotenv/Justfile'
+mod stats 'contrib/just/stats/Justfile'
 
 # Run the help script
 default:
-  @just --unstable help
+  @just help
 
 # View available commands
 help:
-  @just --unstable --list --justfile {{justfile()}}
+  @just --list --justfile {{justfile()}}
 
 # Run database migrations for backend
 migrate:
