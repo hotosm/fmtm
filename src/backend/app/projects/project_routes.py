@@ -955,7 +955,6 @@ async def get_project_form_xml_route(
     return Response(content=form_xml, media_type="application/xml")
 
 
-
 @router.post("/{project_id}/generate-project-data")
 async def generate_files(
     db: Annotated[Connection, Depends(db_conn)],
