@@ -458,15 +458,29 @@ async def submission_photos(
     submission_id: str,
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ) -> dict:
-    """This api returns the submission detail of individual submission."""
+    """This api returns the submission detail of individual submission.
+
+    NOTE Prerequisites:
+
+    1) The ODK server must have the S3_ENDPOINT param set to enable
+       S3 media uploads.
+
+       If it's not set, then these URLs will be direct downloads from ODK
+       (requiring auth).
+
+       If the S3 is configured, then these URLs should be pre-signed download
+       links to S3.
+
+    2) The media is uploaded to S3 by using `node lib/bin/s3.js upload-pending`
+       in the Central container (this is triggered automatically every 24hrs).
+    """
     project = project_user.get("project")
-    submission_attachments = await submission_crud.get_submission_photos(
+    submission_attachment_urls = await submission_crud.get_submission_photos(
         submission_id,
         project,
-    )
-    return {
-        "image_urls": submission_attachments,
-    }
+    )  # this is a dict {filename:url}
+
+    return submission_attachment_urls
 
 
 @router.get(
