@@ -195,7 +195,7 @@ services:
       - SENTRY_KEY=${SENTRY_KEY:-3cf75f54983e473da6bd07daddf0d2ee}
       - SENTRY_PROJECT=${SENTRY_PROJECT:-1298632}
       # Note S3_ENDPOINT is hardcoded here for when we use tunnel config
-      - S3_SERVER="http://s3:9000
+      - S3_SERVER="http://s3:9000"
       - S3_BUCKET_NAME=${S3_ODK_BUCKET_NAME:-"fmtm-odk-media"}
       - S3_ACCESS_KEY=${S3_ACCESS_KEY}
       - S3_SECRET_KEY=${S3_SECRET_KEY}

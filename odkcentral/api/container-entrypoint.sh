@@ -27,6 +27,15 @@ check_all_s3_vars_present() {
     export S3_BUCKET_NAME="${S3_BUCKET_NAME//\"/}"
 }
 
+ensure_extensions_installed() {
+    PGPASSWORD="$DB_PASSWORD" psql --host "$DB_HOST" \
+        --username "$DB_USER" "$DB_NAME" -c "
+    CREATE EXTENSION IF NOT EXISTS CITEXT;
+    CREATE EXTENSION IF NOT EXISTS pg_trgm;
+    CREATE EXTENSION IF NOT EXISTS pgrowlocks;
+    "
+}
+
 # Check env vars + strip extra quotes on vars
 check_all_s3_vars_present
 
@@ -41,6 +50,10 @@ chmod +x ./init-odk-db.sh
 echo "Running ODKCentral start script to init environment and migrate DB"
 echo "The server will not start on this run"
 ./init-odk-db.sh
+
+# Ensure all necessary extensions installed
+# https://docs.getodk.org/central-install-digital-ocean/#using-a-custom-database-server
+ensure_extensions_installed
 
 ### Create admin user ###
 echo "Creating test user ${SYSADMIN_EMAIL} with password ***${SYSADMIN_PASSWD: -3}"
