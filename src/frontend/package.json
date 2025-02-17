@@ -6,6 +6,7 @@
     "build:dev": "vite build --mode development",
     "build:start": "cd dist && PORT=8080 npx serve",
     "dev": "vite",
+    "dev:docker": "CI=1 pnpm install && npm run dev",
     "dev:dotenv": "env-cmd -f .env.dev vite",
     "test": "vitest",
     "test:unit": "vitest",

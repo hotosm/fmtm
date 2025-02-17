@@ -73,7 +73,7 @@ services:
     # Uncomment these to debug with a terminal debugger like pdb
     # Then `docker attach fmtm_api` to debug
     # stdin_open: true
-    # tty: true
+    tty: true
     volumes:
       - fmtm_logs:/opt/logs
       - ./src/backend/pyproject.toml:/opt/pyproject.toml:ro
@@ -83,6 +83,7 @@ services:
       # - ../osm-fieldwork/osm_fieldwork:/home/appuser/.local/lib/python3.12/site-packages/osm_fieldwork:ro
       # - ../osm-rawdata/osm_rawdata:/home/appuser/.local/lib/python3.12/site-packages/osm_rawdata:ro
       # - ../fmtm-splitter/fmtm_splitter:/home/appuser/.local/lib/python3.12/site-packages/fmtm_splitter:ro
+      # - ./src/backend/app/organisations/organisation_crud.py:/opt/app/organisations/organisation_crud.py
     depends_on:
       fmtm-db:
         condition: service_healthy

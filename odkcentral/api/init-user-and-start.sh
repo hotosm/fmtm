@@ -6,8 +6,10 @@ set -eo pipefail
 wait-for-it "${CENTRAL_DB_HOST:-central-db}:5432"
 
 ### Init, generate config, migrate db ###
-echo "Stripping pm2 exec command from start-odk.sh script (last 2 lines)"
-head -n -2 ./start-odk.sh > ./init-odk-db.sh
+echo "Stripping pm2 exec command and MEMTOT from start-odk.sh script (last 13 lines)"
+head -n -13 ./start-odk.sh > ./init-odk-db.sh
+echo "export WORKER_COUNT=1" >> ./init-odk-db.sh
+
 chmod +x ./init-odk-db.sh
 
 echo "Running ODKCentral start script to init environment and migrate DB"

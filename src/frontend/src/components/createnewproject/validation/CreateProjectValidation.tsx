@@ -35,6 +35,8 @@ const regexForSymbol = /_/g;
 function CreateProjectValidation(values: ProjectValues) {
   const errors: ValidationErrors = {};
 
+  console.warn("values?.defaultODKCredentials:", values?.defaultODKCredentials);
+
   if (!values?.organisation_id) {
     errors.organisation_id = 'Organization is Required.';
   }
@@ -68,6 +70,8 @@ function CreateProjectValidation(values: ProjectValues) {
   if (values?.hasCustomTMS && values?.custom_tms_url && !isValidUrl(values.custom_tms_url)) {
     errors.custom_tms_url = 'Invalid Custom TMS URL.';
   }
+
+  console.error("errors:", errors);
 
   return errors;
 }

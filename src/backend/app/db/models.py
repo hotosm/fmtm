@@ -156,7 +156,7 @@ class DbUser(BaseModel):
     is_email_verified: Optional[bool] = False
     is_expert: Optional[bool] = False
     mapping_level: Optional[MappingLevel] = None
-    tasks_mapped: Optional[int] = None
+    tasks_mapped: Optional[int] = 0
     tasks_validated: Optional[int] = None
     tasks_invalidated: Optional[int] = None
     projects_mapped: Optional[list[int]] = None

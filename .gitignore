@@ -95,3 +95,6 @@ chart/charts
 
 # Secrets / keys
 **/**/*.pem
+
+# Hidden files
+.*

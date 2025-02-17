@@ -43,6 +43,7 @@ const ProjectDetailsForm = ({ flag }) => {
   const [hasODKCredentials, setHasODKCredentials] = useState(false);
 
   const submission = () => {
+    console.log("callin submission:", submission);
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(values));
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: 2 }));
     navigate('/project-area');
@@ -179,6 +180,7 @@ const ProjectDetailsForm = ({ flag }) => {
                 key="useDefaultODKCredentials"
                 label="Use default ODK credentials"
                 checked={values.useDefaultODKCredentials}
+                // disabled={projectDetails?.defaultODKCredentials === undefined}
                 onCheckedChange={() => {
                   handleCustomChange('useDefaultODKCredentials', !values.useDefaultODKCredentials);
                 }}

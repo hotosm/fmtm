@@ -41,6 +41,7 @@
 			await revokeCookies();
 			loginStore.signOut();
 			drawerRef?.hide();
+			webFormsRef?.hide();
 			// window.location.href = window.location.origin;
 		} catch (error) {
 			alertStore.setAlert({ variant: 'danger', message: 'Sign Out Failed' });
