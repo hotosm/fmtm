@@ -40,7 +40,6 @@ from app.config import settings
 from app.db.enums import HTTPStatus, XLSFormType
 
 log = logging.getLogger(__name__)
-API_URL = settings.RAW_DATA_API_URL
 
 
 def timestamp():
