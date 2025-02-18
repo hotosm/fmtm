@@ -11,11 +11,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import Prompt from '@/hooks/Prompt';
-import { canCreateProject } from '@/utilfunctions/permissions';
+import { useCreateProjectAccess } from '@/hooks/usePermissions';
 import NoAccessComponent from '@/views/NoAccessComponent';
 
 const CreateNewProject = () => {
-  if (!canCreateProject()) return <NoAccessComponent />;
+  const createProjectAccess = useCreateProjectAccess();
+  if (!createProjectAccess) return <NoAccessComponent />;
 
   const location = useLocation();
   const dispatch = useAppDispatch();
