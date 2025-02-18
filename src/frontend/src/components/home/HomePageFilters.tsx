@@ -6,6 +6,7 @@ import { HomeActions } from '@/store/slices/HomeSlice';
 import Switch from '@/components/common/Switch';
 import Searchbar from '@/components/common/SearchBar';
 import Button from '@/components/common/Button2';
+import { canCreateProject } from '@/utilfunctions/permissions';
 
 type homePageFiltersPropType = {
   searchText: string;
@@ -36,12 +37,14 @@ const HomePageFilters = ({ searchText, onSearch }: homePageFiltersPropType) => {
             onCheckedChange={() => dispatch(HomeActions.SetShowMapStatus(!showMapStatus))}
           />
         </div>
-        <Link to={'/create-project'}>
-          <Button variant="primary-red">
-            <AssetModules.AddIcon className="!fmtm-text-[1.125rem]" />
-            <p>New Project</p>
-          </Button>
-        </Link>
+        {canCreateProject() && (
+          <Link to={'/create-project'}>
+            <Button variant="primary-red">
+              <AssetModules.AddIcon className="!fmtm-text-[1.125rem]" />
+              <p>New Project</p>
+            </Button>
+          </Link>
+        )}
       </div>
     </div>
   );

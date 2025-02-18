@@ -19,9 +19,10 @@ import {
   DropdownMenuItem,
 } from '@/components/common/Dropdown';
 import Button from '@/components/common/Button2';
-import { user_roles } from '@/types/enums';
+import { isAdmin } from '@/utilfunctions/permissions';
 
 export default function PrimaryAppBar() {
+  const isUserAdmin = isAdmin();
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -95,7 +96,7 @@ export default function PrimaryAppBar() {
                 align="center"
                 sideOffset={10}
               >
-                {authDetails && authDetails?.role === user_roles['ADMIN'] && (
+                {isUserAdmin && (
                   <Link to="/manage/user">
                     <DropdownMenuItem>Manage User</DropdownMenuItem>
                   </Link>
