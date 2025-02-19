@@ -103,7 +103,10 @@ async def delete_user_by_identifier(
 @router.post("/process-inactive-users")
 async def delete_inactive_users(
     db: Annotated[Connection, Depends(db_conn)],
+    current_user: Annotated[DbUser, Depends(super_admin)],
 ):
     """Identify inactive users, send warnings, and delete accounts."""
+    log.info("Start processing inactive users")
     await process_inactive_users(db)
+    log.info("Finished processing inactive users")
     return Response(status_code=HTTPStatus.NO_CONTENT)
