@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { SubmissionService, GetSubmissionPhotosService } from '@/api/Submission';
 import SubmissionInstanceMap from '@/components/SubmissionMap/SubmissionInstanceMap';
 import { GetSubmissionDashboard } from '@/api/Project';
-import Button from '@/components/common/Button';
+import Button from '@/components/common/Button2';
 import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 import UpdateReviewStatusModal from '@/components/ProjectSubmissions/UpdateReviewStatusModal';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
@@ -178,27 +178,29 @@ const SubmissionDetails = () => {
                   </h2>
                 </div>
               )}
-              <Button
-                btnText="Update Review Status"
-                disabled={submissionDetailsLoading}
-                btnType="primary"
-                className="fmtm-w-fit fmtm-justify-center !fmtm-rounded fmtm-font-bold fmtm-text-sm !fmtm-py-2 fmtm-mt-8"
-                onClick={() => {
-                  dispatch(
-                    SubmissionActions.SetUpdateReviewStatusModal({
-                      toggleModalStatus: true,
-                      instanceId: paramsInstanceId,
-                      projectId: projectId,
-                      taskId: taskId,
-                      reviewState: restSubmissionDetails?.__system?.reviewState,
-                      taskUid: taskUid,
-                      entity_id: restSubmissionDetails?.feature,
-                      label: restSubmissionDetails?.meta?.entity?.label,
-                      feature: convertCoordinateStringToFeature('xlocation', restSubmissionDetails?.xlocation),
-                    }),
-                  );
-                }}
-              />
+              <div className="fmtm-mt-8">
+                <Button
+                  variant="primary-red"
+                  onClick={() => {
+                    dispatch(
+                      SubmissionActions.SetUpdateReviewStatusModal({
+                        toggleModalStatus: true,
+                        instanceId: paramsInstanceId,
+                        projectId: projectId,
+                        taskId: taskId,
+                        reviewState: restSubmissionDetails?.__system?.reviewState,
+                        taskUid: taskUid,
+                        entity_id: restSubmissionDetails?.feature,
+                        label: restSubmissionDetails?.meta?.entity?.label,
+                        feature: convertCoordinateStringToFeature('xlocation', restSubmissionDetails?.xlocation),
+                      }),
+                    );
+                  }}
+                  disabled={submissionDetailsLoading}
+                >
+                  Update Review Status
+                </Button>
+              </div>
             </div>
             {/* start, end, today, deviceid values */}
             {submissionDetailsLoading ? (

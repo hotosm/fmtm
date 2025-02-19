@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import useForm from '@/hooks/useForm';
 import CreateProjectValidation from '@/components/createnewproject/validation/CreateProjectValidation';
-import Button from '@/components/common/Button';
+import Button from '@/components/common/Button2';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import { OrganisationService } from '@/api/CreateProjectService';
 import { CustomCheckbox } from '@/components/common/Checkbox';
@@ -273,7 +273,9 @@ const ProjectDetailsForm = ({ flag }) => {
             />
           </div>
           <div className="fmtm-w-fit fmtm-mx-auto fmtm-mt-10">
-            <Button btnText="NEXT" btnType="primary" type="submit" className="fmtm-font-bold" />
+            <Button variant="primary-red" type="submit">
+              NEXT
+            </Button>
           </div>
         </div>
       </form>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import TaskSubmissionsMap from '@/components/ProjectSubmissions/TaskSubmissionsMap';
 import InputTextField from '@/components/common/InputTextField';
-import Button from '@/components/common/Button';
+import Button from '@/components/common/Button2';
 import AssetModules from '@/shared/AssetModules.js';
 import CoreModules from '@/shared/CoreModules.js';
 import { TaskCardSkeletonLoader } from '@/components/ProjectSubmissions/ProjectSubmissionsSkeletonLoader';
@@ -85,18 +85,14 @@ const TaskSubmissions = () => {
         </div>
         <div className="fmtm-flex fmtm-flex-wrap fmtm-flex-row md:fmtm-flex-col lg:fmtm-flex-row fmtm-justify-between lg:fmtm-items-center fmtm-gap-2">
           {!(task?.submission_count === 0 && task?.feature_count === 0) && (
-            <Button
-              btnText="View Submissions"
-              btnType="primary"
-              onClick={() => setSearchParams({ tab: 'table', task_id: task?.task_id })}
-            />
+            <Button variant="primary-red" onClick={() => setSearchParams({ tab: 'table', task_id: task?.task_id })}>
+              View Submissions
+            </Button>
           )}
-          <button
-            className="fmtm-border-primaryRed fmtm-border-[2px] fmtm-flex fmtm-w-fit fmtm-px-2 fmtm-py-1 fmtm-rounded-md fmtm-items-center fmtm-gap-2 fmtm-bg-white hover:fmtm-bg-gray-100 fmtm-duration-150"
-            onClick={() => zoomToTask(task?.task_id)}
-          >
-            <AssetModules.MapIcon style={{ fontSize: '18px' }} /> <p className="fmtm-truncate">Zoom to Task</p>
-          </button>
+          <Button variant="secondary-red" onClick={() => zoomToTask(task?.task_id)}>
+            <AssetModules.MapIcon className="!fmtm-text-lg" />
+            Zoom to Task
+          </Button>
         </div>
       </div>
     </div>

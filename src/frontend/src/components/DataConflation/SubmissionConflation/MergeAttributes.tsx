@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Modal } from '@/components/common/Modal';
-import Button from '@/components/common/Button';
+import Button from '@/components/common/Button2';
 import Table, { TableHeader } from '@/components/common/CustomTable';
 
 type mergeAttributesPropType = {
@@ -122,15 +122,9 @@ const MergeAttributes = ({
               </Table>
             </div>
             <div className="fmtm-flex fmtm-gap-[0.625rem] fmtm-justify-center fmtm-mt-5">
-              <Button
-                btnText="Save"
-                btnType="primary"
-                onClick={() => {
-                  setSelectedConflateMethod('');
-                }}
-                type="button"
-                className="!fmtm-rounded fmtm-text-sm !fmtm-py-2 fmtm-font-bold"
-              />
+              <Button variant="primary-red" onClick={() => setSelectedConflateMethod('')}>
+                Save
+              </Button>
             </div>
           </div>
         }

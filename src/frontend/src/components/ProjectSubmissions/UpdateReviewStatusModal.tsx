@@ -4,7 +4,7 @@ import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 import { reviewListType } from '@/models/submission/submissionModel';
 import { DeleteGeometry, PostGeometry, UpdateReviewStateService } from '@/api/SubmissionService';
 import TextArea from '@/components/common/TextArea';
-import Button from '@/components/common/Button';
+import Button from '@/components/common/Button2';
 import { GetGeometryLog, PostProjectComments, UpdateEntityState } from '@/api/Project';
 import { entity_state } from '@/types/enums';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
@@ -174,22 +174,23 @@ const UpdateReviewStatusModal = () => {
           />
           <div className="fmtm-grid fmtm-grid-cols-2 fmtm-gap-4 fmtm-mt-8">
             <Button
-              btnText="Cancel"
-              btnType="other"
-              className="fmtm-w-full fmtm-justify-center !fmtm-rounded fmtm-font-bold fmtm-text-sm !fmtm-py-2"
+              variant="secondary-red"
               onClick={() => {
                 dispatch(SubmissionActions.SetUpdateReviewStatusModal(initialReviewState));
               }}
-            />
+              className="!fmtm-w-full"
+            >
+              Cancel
+            </Button>
             <Button
-              loadingText="Updating"
+              variant="primary-red"
+              onClick={handleStatusUpdate}
               isLoading={updateReviewStateLoading}
               disabled={!reviewStatus}
-              btnText="Update"
-              btnType="primary"
-              className="fmtm-w-full fmtm-justify-center !fmtm-rounded fmtm-font-bold fmtm-text-sm !fmtm-py-2"
-              onClick={handleStatusUpdate}
-            />
+              className="!fmtm-w-full"
+            >
+              Update
+            </Button>
           </div>
         </div>
       }

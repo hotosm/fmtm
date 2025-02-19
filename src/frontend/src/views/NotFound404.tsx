@@ -1,6 +1,6 @@
 import React from 'react';
 import NotFound from '@/assets/images/page-not-found.png';
-import Button from '@/components/common/Button';
+import Button from '@/components/common/Button2';
 import { useNavigate } from 'react-router-dom';
 
 const ProjectNotFound = () => {
@@ -19,12 +19,9 @@ const ProjectNotFound = () => {
             Page Not Found
           </p>
         </div>
-        <Button
-          btnText="Return Home"
-          onClick={() => navigate('/')}
-          btnType="other"
-          className="fmtm-mx-auto fmtm-rounded-none fmtm-py-2"
-        />
+        <Button variant="secondary-red" onClick={() => navigate('/')}>
+          Return Home
+        </Button>
       </div>
     </div>
   );

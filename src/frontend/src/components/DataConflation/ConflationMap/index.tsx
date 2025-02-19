@@ -2,7 +2,7 @@ import React from 'react';
 import { MapContainer as MapComponent, useOLMap } from '@/components/MapComponent/OpenLayersComponent';
 import LayerSwitcherControl from '@/components/MapComponent/OpenLayersComponent/LayerSwitcher/index';
 import MapLegend from '@/components/DataConflation/ConflationMap/MapLegend';
-import Button from '@/components/common/Button';
+import Button from '@/components/common/Button2';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import { VectorLayer } from '@/components/MapComponent/OpenLayersComponent/Layers';
 import { DataConflationActions } from '@/store/slices/DataConflationSlice';
@@ -55,13 +55,9 @@ const ConflationMap = () => {
           <MapLegend />
         </div>
         <div className="fmtm-absolute fmtm-bottom-20 sm:fmtm-top-3 fmtm-right-3 fmtm-z-50 fmtm-rounded-lg fmtm-h-fit">
-          <Button
-            btnText="Upload to OSM"
-            type="button"
-            btnType="primary"
-            onClick={() => {}}
-            disabled={submissionConflationGeojsonLoading}
-          />
+          <Button variant="primary-red" onClick={() => {}} isLoading={submissionConflationGeojsonLoading}>
+            Upload to OSM
+          </Button>
         </div>
       </MapComponent>
     </>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Button from '@/components/common/Button';
+import Button from '@/components/common/Button2';
 import AssetModules from '@/shared/AssetModules';
 import CoreModules from '@/shared/CoreModules';
 import { useAppSelector } from '@/types/reduxTypes';
@@ -86,22 +86,12 @@ const TaskInfo = () => {
         </div>
 
         <div className="fmtm-flex fmtm-flex-col fmtm-gap-3 fmtm-justify-end">
-          <Button
-            btnText="Submit Task"
-            type="button"
-            btnType="primary"
-            onClick={() => {}}
-            className="fmtm-text-sm !fmtm-rounded fmtm-w-full fmtm-justify-center"
-            disabled={submissionConflationGeojsonLoading}
-          />
-          <Button
-            btnText="Request Additional Mapping"
-            type="button"
-            btnType="other"
-            onClick={() => {}}
-            className="fmtm-text-sm !fmtm-rounded fmtm-w-full fmtm-justify-center"
-            disabled={submissionConflationGeojsonLoading}
-          />
+          <Button variant="primary-red" disabled={submissionConflationGeojsonLoading}>
+            Submit Task
+          </Button>
+          <Button variant="secondary-red" disabled={submissionConflationGeojsonLoading}>
+            Request Additional Mapping
+          </Button>
         </div>
       </div>
     </div>

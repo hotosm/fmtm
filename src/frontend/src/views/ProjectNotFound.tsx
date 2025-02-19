@@ -1,6 +1,6 @@
 import React from 'react';
 import NoFileImage from '@/assets/images/project-not-found.png';
-import Button from '@/components/common/Button';
+import Button from '@/components/common/Button2';
 import { useNavigate } from 'react-router-dom';
 
 const ProjectNotFound = () => {
@@ -19,12 +19,9 @@ const ProjectNotFound = () => {
             There is no project to show
           </p>
         </div>
-        <Button
-          btnText="Create Project"
-          onClick={() => navigate('/create-project')}
-          btnType="other"
-          className="fmtm-mx-auto fmtm-rounded-none fmtm-py-2"
-        />
+        <Button variant="secondary-red" onClick={() => navigate('/create-project')}>
+          Create Project
+        </Button>
       </div>
     </div>
   );
