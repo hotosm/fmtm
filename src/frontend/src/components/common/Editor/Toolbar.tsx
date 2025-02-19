@@ -4,7 +4,7 @@ import AssetModules from '@/shared/AssetModules';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../Dropdown';
 import { Tooltip } from '@mui/material';
 import InputTextField from '@/components/common/InputTextField';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 
 type ToolbarProps = {
   editor: Editor | null;

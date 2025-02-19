@@ -3,7 +3,7 @@ import InputTextField from '../../../components/common/InputTextField';
 import AssetModules from '../../../shared/AssetModules.js';
 import Chips from '../../common/Chips';
 import { CustomSelect } from '../../common/Select';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 
 const roleList = [

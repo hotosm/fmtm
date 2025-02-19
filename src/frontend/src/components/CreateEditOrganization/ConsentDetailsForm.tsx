@@ -2,7 +2,7 @@ import React from 'react';
 import { consentQuestions } from '@/constants/ConsentQuestions';
 import { CustomCheckbox } from '@/components/common/Checkbox';
 import RadioButton from '@/components/common/RadioButton';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import useForm from '@/hooks/useForm';
 import ConsentDetailsValidation from '@/components/CreateEditOrganization/validation/ConsentDetailsValidation';
 import { useNavigate } from 'react-router-dom';

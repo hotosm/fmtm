@@ -2,7 +2,7 @@ import React from 'react';
 import { MapContainer as MapComponent, useOLMap } from '@/components/MapComponent/OpenLayersComponent';
 import LayerSwitcherControl from '@/components/MapComponent/OpenLayersComponent/LayerSwitcher/index';
 import MapLegend from '@/components/DataConflation/ConflationMap/MapLegend';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import { VectorLayer } from '@/components/MapComponent/OpenLayersComponent/Layers';
 import { DataConflationActions } from '@/store/slices/DataConflationSlice';

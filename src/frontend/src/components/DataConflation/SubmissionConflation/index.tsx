@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import AssetModules from '@/shared/AssetModules';
 import MergeAttributes from '@/components/DataConflation/SubmissionConflation/MergeAttributes';
 import CoreModules from '@/shared/CoreModules';

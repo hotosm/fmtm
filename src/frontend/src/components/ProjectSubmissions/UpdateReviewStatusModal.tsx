@@ -4,7 +4,7 @@ import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 import { reviewListType } from '@/models/submission/submissionModel';
 import { DeleteGeometry, PostGeometry, UpdateReviewStateService } from '@/api/SubmissionService';
 import TextArea from '@/components/common/TextArea';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import { GetGeometryLog, PostProjectComments, UpdateEntityState } from '@/api/Project';
 import { entity_state } from '@/types/enums';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import UploadArea from '@/components/common/UploadArea';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import { CustomSelect } from '@/components/common/Select';
 import CoreModules from '@/shared/CoreModules';
 import { FormCategoryService } from '@/api/CreateProjectService';

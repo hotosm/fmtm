@@ -5,7 +5,7 @@ import MapStyles from '@/hooks/MapStyles';
 import CoreModules from '@/shared/CoreModules';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import { task_event as taskEventEnum, task_state as taskStateEnum, task_event } from '@/types/enums';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import { useNavigate } from 'react-router-dom';
 import { GetProjectTaskActivity } from '@/api/Project';
 import { Modal } from '@/components/common/Modal';

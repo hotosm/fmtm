@@ -1,7 +1,7 @@
 import React from 'react';
 import AssetModules from '@/shared/AssetModules';
 import { projectInfoType } from '@/models/project/projectModel';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import { useNavigate } from 'react-router-dom';
 
 const MobileProjectInfoContent = ({ projectInfo }: { projectInfo: Partial<projectInfoType> }) => {

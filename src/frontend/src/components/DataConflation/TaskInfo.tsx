@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import AssetModules from '@/shared/AssetModules';
 import CoreModules from '@/shared/CoreModules';
 import { useAppSelector } from '@/types/reduxTypes';

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import InputTextField from '@/components/common/InputTextField';
 import TextArea from '@/components/common/TextArea';
 import { useNavigate, useSearchParams } from 'react-router-dom';

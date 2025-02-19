@@ -1,6 +1,6 @@
 import React from 'react';
 import NotFound from '@/assets/images/page-not-found.png';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import { useNavigate } from 'react-router-dom';
 
 const ProjectNotFound = () => {

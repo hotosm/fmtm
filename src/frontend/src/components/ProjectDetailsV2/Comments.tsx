@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import RichTextEditor from '@/components/common/Editor/Editor';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import { PostProjectComments, GetProjectComments } from '@/api/Project';
 import { useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';

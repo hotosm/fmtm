@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { CommonActions } from '@/store/slices/CommonSlice';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import { CustomSelect } from '@/components/common/Select';
 import { useNavigate } from 'react-router-dom';
 import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';

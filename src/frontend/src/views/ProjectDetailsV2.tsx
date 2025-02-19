@@ -25,7 +25,7 @@ import { VectorLayer } from '@/components/MapComponent/OpenLayersComponent/Layer
 import { geojsonObjectModel } from '@/constants/geojsonObjectModal';
 import getTaskStatusStyle, { getFeatureStatusStyle } from '@/utilfunctions/getTaskStatusStyle';
 import AsyncPopup from '@/components/MapComponent/OpenLayersComponent/AsyncPopup/AsyncPopup';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import ProjectInfo from '@/components/ProjectDetailsV2/ProjectInfo';
 import useOutsideClick from '@/hooks/useOutsideClick';
 import { isValidUrl } from '@/utilfunctions/urlChecker';

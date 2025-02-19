@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import InputTextField from '@/components/common/InputTextField';
 import TextArea from '@/components/common/TextArea';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import {
   ApproveOrganizationService,
   GetIndividualOrganizationService,

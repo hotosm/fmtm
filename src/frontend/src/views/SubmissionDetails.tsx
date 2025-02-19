@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { SubmissionService, GetSubmissionPhotosService } from '@/api/Submission';
 import SubmissionInstanceMap from '@/components/SubmissionMap/SubmissionInstanceMap';
 import { GetSubmissionDashboard } from '@/api/Project';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 import UpdateReviewStatusModal from '@/components/ProjectSubmissions/UpdateReviewStatusModal';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';

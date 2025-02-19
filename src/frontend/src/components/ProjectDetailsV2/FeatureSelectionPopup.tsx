@@ -4,7 +4,7 @@ import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import AssetModules from '@/shared/AssetModules';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { TaskFeatureSelectionProperties } from '@/store/types/ITask';
 import { entity_state } from '@/types/enums';

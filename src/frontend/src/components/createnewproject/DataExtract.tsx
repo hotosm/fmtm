@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { geojson as fgbGeojson } from 'flatgeobuf';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import RadioButton from '@/components/common/RadioButton';
 import { useNavigate } from 'react-router-dom';

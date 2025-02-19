@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { CommonActions } from '@/store/slices/CommonSlice';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import RadioButton from '@/components/common/RadioButton';
 import AssetModules from '@/shared/AssetModules.js';
 import DrawSvg from '@/components/createnewproject/DrawSvg';

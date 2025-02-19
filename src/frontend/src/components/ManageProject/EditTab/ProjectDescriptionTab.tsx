@@ -1,7 +1,7 @@
 import React from 'react';
 import TextArea from '../../common/TextArea';
 import InputTextField from '../../common/InputTextField';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import EditProjectValidation from '@/components/ManageProject/EditTab/validation/EditProjectDetailsValidation';
 import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
 import { PatchProjectDetails } from '@/api/CreateProjectService';

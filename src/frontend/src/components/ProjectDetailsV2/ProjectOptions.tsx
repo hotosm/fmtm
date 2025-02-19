@@ -3,7 +3,7 @@ import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
 import { DownloadDataExtract, DownloadProjectForm } from '@/api/Project';
 import { DownloadProjectSubmission } from '@/api/task';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import { GetProjectQrCode } from '@/api/Files';
 

@@ -8,7 +8,7 @@ import AssetModules from '@/shared/AssetModules.js';
 import CoreModules from '@/shared/CoreModules.js';
 import windowDimention from '@/hooks/WindowDimension';
 
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
 import { CustomSelect } from '@/components/common/Select.js';
 import DateRangePicker from '@/components/common/DateRangePicker';

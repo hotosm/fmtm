@@ -1,6 +1,6 @@
 import React from 'react';
 import SomethingWentWrongImage from '@/assets/images/something_went_wrong.png';
-import Button from '@/components/common/Button2';
+import Button from '@/components/common/Button';
 import AssetModules from '@/shared/AssetModules';
 
 interface ErrorBoundaryProps {
