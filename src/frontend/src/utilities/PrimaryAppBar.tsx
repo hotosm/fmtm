@@ -19,10 +19,10 @@ import {
   DropdownMenuItem,
 } from '@/components/common/Dropdown';
 import Button from '@/components/common/Button2';
-import { useAdminAccess } from '@/hooks/usePermissions';
+import { useIsAdmin } from '@/hooks/usePermissions';
 
 export default function PrimaryAppBar() {
-  const adminAccess = useAdminAccess();
+  const isAdmin = useIsAdmin();
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -96,7 +96,7 @@ export default function PrimaryAppBar() {
                 align="center"
                 sideOffset={10}
               >
-                {adminAccess && (
+                {isAdmin && (
                   <Link to="/manage/user">
                     <DropdownMenuItem>Manage User</DropdownMenuItem>
                   </Link>

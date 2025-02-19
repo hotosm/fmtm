@@ -11,12 +11,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import Prompt from '@/hooks/Prompt';
-import { useCreateProjectAccess } from '@/hooks/usePermissions';
+import { useHasManagedAnyOrganization } from '@/hooks/usePermissions';
 import NoAccessComponent from '@/views/NoAccessComponent';
 
 const CreateNewProject = () => {
-  const createProjectAccess = useCreateProjectAccess();
-  if (!createProjectAccess) return <NoAccessComponent />;
+  const hasManagedAnyOrganization = useHasManagedAnyOrganization();
+  if (!hasManagedAnyOrganization) return <NoAccessComponent />;
 
   const location = useLocation();
   const dispatch = useAppDispatch();

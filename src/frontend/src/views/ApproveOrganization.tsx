@@ -2,12 +2,12 @@ import React from 'react';
 import ApproveOrganizationHeader from '@/components/ApproveOrganization/ApproveOrganizationHeader';
 import OrganizationForm from '@/components/ApproveOrganization/OrganizationForm';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
-import { useAdminAccess } from '@/hooks/usePermissions';
+import { useIsAdmin } from '@/hooks/usePermissions';
 import NoAccessComponent from '@/views/NoAccessComponent';
 
 const ApproveOrganization = () => {
-  const adminAccess = useAdminAccess();
-  if (!adminAccess) return <NoAccessComponent />;
+  const isAdmin = useIsAdmin();
+  if (!isAdmin) return <NoAccessComponent />;
 
   useDocumentTitle('Approve Organization');
   return (

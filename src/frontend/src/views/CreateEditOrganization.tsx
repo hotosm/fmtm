@@ -5,16 +5,16 @@ import ConsentDetailsForm from '@/components/CreateEditOrganization/ConsentDetai
 import CreateEditOrganizationForm from '@/components/CreateEditOrganization/CreateEditOrganizationForm';
 import { OrganisationAction } from '@/store/slices/organisationSlice';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
-import { useEditOrganizationAccess } from '@/hooks/usePermissions';
+import { useIsOrganizationAdmin } from '@/hooks/usePermissions';
 import NoAccessComponent from '@/views/NoAccessComponent';
 
 const CreateEditOrganization = () => {
   const params = CoreModules.useParams();
   const dispatch = useAppDispatch();
   const organizationId: string = params.id;
-  const editOrganizationAccess = useEditOrganizationAccess(+organizationId);
+  const isOrganizationAdmin = useIsOrganizationAdmin(+organizationId);
 
-  if (organizationId && !editOrganizationAccess) return <NoAccessComponent />;
+  if (organizationId && !isOrganizationAdmin) return <NoAccessComponent />;
 
   const consentApproval = useAppSelector((state) => state.organisation.consentApproval);
 
