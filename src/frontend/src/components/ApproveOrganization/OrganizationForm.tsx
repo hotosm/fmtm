@@ -148,7 +148,7 @@ const OrganizationForm = () => {
           isLoading={organizationApproving}
           disabled={organizationRejecting}
         >
-          Vefiry
+          Verify
         </Button>
       </div>
     </div>
