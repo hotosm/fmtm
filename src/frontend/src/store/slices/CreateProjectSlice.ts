@@ -29,6 +29,7 @@ export const initialState: CreateProjectStateTypes = {
   formCategoryLoading: false,
   generateProjectLoading: false,
   generateProjectSuccess: false,
+  generateProjectWarning: null,
   generateProjectError: false,
   organisationList: [],
   organisationListLoading: false,
@@ -91,6 +92,7 @@ const CreateProject = createSlice({
       state.dividedTaskGeojson = null;
       state.dividedTaskLoading = false;
       state.generateProjectSuccess = false;
+      state.generateProjectWarning = null;
       state.generateProjectError = false;
       state.drawToggle = false;
       state.additionalFeatureGeojson = null;
@@ -109,6 +111,9 @@ const CreateProject = createSlice({
     },
     GenerateProjectSuccess(state, action: PayloadAction<boolean>) {
       state.generateProjectSuccess = action.payload;
+    },
+    GenerateProjectWarning(state, action: PayloadAction<string>) {
+      state.generateProjectWarning = action.payload;
     },
     GenerateProjectError(state, action: PayloadAction<boolean>) {
       state.generateProjectError = action.payload;

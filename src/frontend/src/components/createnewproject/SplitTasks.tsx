@@ -54,6 +54,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
   const dataExtractGeojson = useAppSelector((state) => state.createproject.dataExtractGeojson);
 
   const generateProjectSuccess = useAppSelector((state) => state.createproject.generateProjectSuccess);
+  const generateProjectWarning = useAppSelector((state) => state.createproject.generateProjectWarning);
   const generateProjectError = useAppSelector((state) => state.createproject.generateProjectError);
   const projectDetailsResponse = useAppSelector((state) => state.createproject.projectDetailsResponse);
   const dividedTaskGeojson = useAppSelector((state) => state.createproject.dividedTaskGeojson);
@@ -209,15 +210,28 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
     const handleQRGeneration = async () => {
       if (!generateProjectError && generateProjectSuccess) {
         const projectId = projectDetailsResponse?.id;
-        dispatch(
-          CommonActions.SetSnackBar({
-            message: 'Project Generation Completed. Redirecting...',
-            variant: 'success',
-          }),
-        );
 
-        // Add 5-second delay to allow backend Entity generation to catch up
-        await delay(5000);
+        if (generateProjectWarning) {
+          dispatch(
+            CommonActions.SetSnackBar({
+              message: generateProjectWarning,
+              variant: 'success',
+              duration: 20000,
+            }),
+          );
+          // Add 20-second delay to allow backend Entity generation to catch up
+          await delay(20000);
+        } else {
+          dispatch(
+            CommonActions.SetSnackBar({
+              message: 'Project Generation Completed. Redirecting...',
+              variant: 'success',
+            }),
+          );
+          // Add 5-second delay to allow backend Entity generation to catch up
+          await delay(5000);
+        }
+
         dispatch(CreateProjectActions.CreateProjectLoading(false));
         navigate(`/project/${projectId}`);
         dispatch(CreateProjectActions.ClearCreateProjectFormData());

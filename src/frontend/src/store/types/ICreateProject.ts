@@ -11,6 +11,7 @@ export type CreateProjectStateTypes = {
   formCategoryLoading: boolean;
   generateProjectLoading: boolean;
   generateProjectSuccess: boolean;
+  generateProjectWarning: string | null;
   generateProjectError: boolean;
   organisationList: OrganisationListTypes[];
   organisationListLoading: boolean;

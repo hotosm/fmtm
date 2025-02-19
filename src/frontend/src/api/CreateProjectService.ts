@@ -216,6 +216,12 @@ const GenerateProjectFilesService = (url: string, projectData: any, formUpload: 
         throw new Error(`Request failed with status ${response.status}`);
       }
 
+      // If warning provided, then inform user
+      const message = response.data?.message;
+      if (message) {
+        dispatch(CreateProjectActions.GenerateProjectWarning(message));
+      }
+
       dispatch(CreateProjectActions.GenerateProjectSuccess(true));
       return true; // ✅ Return success
     } catch (error: any) {
