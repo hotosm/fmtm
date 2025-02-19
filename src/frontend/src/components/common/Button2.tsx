@@ -54,7 +54,7 @@ const Button = ({
     data-testid={btnTestId}
     type={type}
     onClick={onClick}
-    className={`fmtm-button fmtm-group fmtm-flex fmtm-items-center fmtm-gap-2 fmtm-outline-none fmtm-w-fit fmtm-duration-200 ${btnStyle(variant)} ${className} ${(disabled || isLoading) && 'fmtm-cursor-not-allowed'}`}
+    className={`fmtm-button fmtm-group fmtm-flex fmtm-justify-center fmtm-items-center fmtm-gap-2 fmtm-outline-none fmtm-w-fit fmtm-duration-200 fmtm-whitespace-nowrap ${btnStyle(variant)} ${className} ${(disabled || isLoading) && 'fmtm-cursor-not-allowed'}`}
     disabled={disabled || isLoading}
   >
     <>
