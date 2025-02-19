@@ -1053,21 +1053,33 @@ async def generate_files(
             },
         )
 
-    success = await project_crud.generate_project_files(
-        db,
-        project_id,
-    )
+    warning_message = None
 
-    if not success:
-        return JSONResponse(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            content={
-                "message": (
-                    f"Failed project ({project_id}) creation. "
-                    "Please contact the server admin."
-                )
-            },
+    if combined_features_count > 10000:
+        # Return immediately and run in background if many features
+        background_tasks.add_task(
+            project_crud.generate_project_files,
+            db,
+            project_id,
         )
+        warning_message = "There are lots of features to process. Please be patient 🙏"
+
+    else:
+        success = await project_crud.generate_project_files(
+            db,
+            project_id,
+        )
+
+        if not success:
+            return JSONResponse(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                content={
+                    "message": (
+                        f"Failed project ({project_id}) creation. "
+                        "Please contact the server admin."
+                    )
+                },
+            )
 
     if project.custom_tms_url:
         basemap_in = project_schemas.BasemapGenerate(
@@ -1076,10 +1088,12 @@ async def generate_files(
         org_id = project.organisation_id
         await generate_basemap(project_id, org_id, basemap_in, db, background_tasks)
 
-    return JSONResponse(
-        status_code=HTTPStatus.OK,
-        content={"message": "success"},
-    )
+    if warning_message:
+        return JSONResponse(
+            status_code=HTTPStatus.OK,
+            content={"message": warning_message},
+        )
+    return Response(status_code=HTTPStatus.OK)
 
 
 @router.post("/{project_id}/tiles-generate")
