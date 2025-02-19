@@ -965,8 +965,9 @@ async def generate_files(
     background_tasks: BackgroundTasks,
     xlsform_upload: Annotated[
         Optional[BytesIO], Depends(central_deps.read_optional_xlsform)
-    ],
-    additional_entities: Optional[list[str]] = None,
+    ] = None,
+    additional_entities: Annotated[Optional[list[str]], None] = None,
+    combined_features_count: Annotated[int, Form()] = 0,
 ):
     """Generate additional content to initialise the project.
 
@@ -985,6 +986,8 @@ async def generate_files(
             A file should be provided if user wants to upload a custom xls form.
         additional_entities (list[str]): If additional Entity lists need to be
             created (i.e. the project form references multiple geometries).
+        combined_features_count (int): Total count of features to be mapped, plus
+            additional dataset features, determined by frontend.
         db (Connection): The database connection.
         project_user_dict (ProjectUserDict): Project admin role.
         background_tasks (BackgroundTasks): FastAPI background tasks.
@@ -1082,7 +1085,7 @@ async def generate_files(
 @router.post("/{project_id}/tiles-generate")
 async def generate_project_basemap(
     # NOTE we do not set the correct role on this endpoint yet
-    # FIXME once sub project creation implemented, this should be manager only
+    # FIXME once stub project creation implemented, this should be manager only
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
     background_tasks: BackgroundTasks,
     db: Annotated[Connection, Depends(db_conn)],
