@@ -19,10 +19,11 @@ const CreateProjectService = (
   projectData: any,
   taskAreaGeojson: any,
   formUpload: any,
-  dataExtractFile: any,
+  dataExtractFile: File | null,
   isOsmExtract: boolean,
   additionalFeature: any,
   projectAdmins: number[],
+  combinedFeaturesCount: number,
 ) => {
   return async (dispatch: AppDispatch) => {
     dispatch(CreateProjectActions.CreateProjectLoading(true));
@@ -95,6 +96,7 @@ const CreateProjectService = (
             ? { ...projectData, additional_entities: [additionalFeature?.name?.split('.')?.[0]] }
             : projectData,
           formUpload,
+          combinedFeaturesCount,
         ),
       );
 
@@ -184,7 +186,7 @@ const UploadTaskAreasService = (url: string, filePayload: any) => {
   };
 };
 
-const GenerateProjectFilesService = (url: string, projectData: any, formUpload: any) => {
+const GenerateProjectFilesService = (url: string, projectData: any, formUpload: any, combinedFeaturesCount: number) => {
   return async (dispatch: AppDispatch) => {
     dispatch(CreateProjectActions.GenerateProjectLoading(true));
     dispatch(CommonActions.SetLoading(true));
@@ -198,13 +200,17 @@ const GenerateProjectFilesService = (url: string, projectData: any, formUpload: 
           projectData?.additional_entities?.length > 0
             ? projectData.additional_entities.map((e: string) => e.replaceAll(' ', '_'))
             : [];
+
         const generateApiFormData = new FormData();
 
         if (additional_entities?.length > 0) {
           generateApiFormData.append('additional_entities', additional_entities);
         }
+        generateApiFormData.append('combined_features_count', combinedFeaturesCount.toString());
 
         if (projectData.form_ways === 'custom_form') {
+          // Multipart/form-data payload
+
           // TODO move form upload to a separate service / endpoint?
           generateApiFormData.append('xlsform', formUpload);
           response = await axios.post(url, generateApiFormData, {
@@ -213,6 +219,7 @@ const GenerateProjectFilesService = (url: string, projectData: any, formUpload: 
             },
           });
         } else {
+          // Multipart/form-data without form upload
           if (additional_entities?.length > 0) {
             response = await axios.post(url, generateApiFormData, {
               headers: {
@@ -220,6 +227,7 @@ const GenerateProjectFilesService = (url: string, projectData: any, formUpload: 
               },
             });
           } else {
+            // JSON payload when no additional entities are provided
             const payload = {
               additional_entities: null,
             };
@@ -318,8 +326,8 @@ const GetDividedTaskFromGeojson = (url: string, projectData: Record<string, any>
         dividedTaskFormData.append('dimension_meters', projectData.dimension);
         const getGetDividedTaskFromGeojsonResponse = await axios.post(url, dividedTaskFormData);
         const resp: splittedGeojsonType = getGetDividedTaskFromGeojsonResponse.data;
-        dispatch(CreateProjectActions.SetIsTasksGenerated({ key: 'divide_on_square', value: true }));
-        dispatch(CreateProjectActions.SetIsTasksGenerated({ key: 'task_splitting_algorithm', value: false }));
+        dispatch(CreateProjectActions.SetIsTasksSplit({ key: 'divide_on_square', value: true }));
+        dispatch(CreateProjectActions.SetIsTasksSplit({ key: 'task_splitting_algorithm', value: false }));
         dispatch(CreateProjectActions.SetDividedTaskGeojson(resp));
         dispatch(CreateProjectActions.SetDividedTaskFromGeojsonLoading(false));
       } catch (error) {
@@ -393,8 +401,8 @@ const TaskSplittingPreviewService = (
           // TODO display error to user, perhaps there is not osm data here?
           return;
         }
-        dispatch(CreateProjectActions.SetIsTasksGenerated({ key: 'divide_on_square', value: false }));
-        dispatch(CreateProjectActions.SetIsTasksGenerated({ key: 'task_splitting_algorithm', value: true }));
+        dispatch(CreateProjectActions.SetIsTasksSplit({ key: 'divide_on_square', value: false }));
+        dispatch(CreateProjectActions.SetIsTasksSplit({ key: 'task_splitting_algorithm', value: true }));
         dispatch(CreateProjectActions.GetTaskSplittingPreview(resp));
       } catch (error) {
         dispatch(
