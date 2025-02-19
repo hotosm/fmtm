@@ -19,6 +19,7 @@
 
 import json
 import logging
+from collections import defaultdict
 from datetime import datetime, timezone
 from io import BytesIO
 from random import getrandbits
@@ -27,16 +28,16 @@ from typing import Optional, Union
 import geojson
 import geojson_pydantic
 from fastapi import HTTPException
-from osm_fieldwork.data_models import data_models_path
 from osm_rawdata.postgres import PostgresClient
-from psycopg import Connection, ProgrammingError
-from psycopg.rows import class_row
+from psycopg import Connection, ProgrammingError, sql
+from psycopg.rows import class_row, dict_row
 from shapely.geometry import MultiPolygon, Point, Polygon, mapping, shape
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
 from app.config import settings
 from app.db.enums import HTTPStatus, XLSFormType
+from osm_fieldwork.data_models import data_models_path
 
 log = logging.getLogger(__name__)
 
@@ -155,33 +156,35 @@ async def flatgeobuf_to_featcol(
             cur.row_factory = class_row(geojson_pydantic.FeatureCollection)
             await cur.execute(
                 """
+                WITH feature_data AS MATERIALIZED (
+                    SELECT
+                        geom,
+                        osm_id,
+                        tags,
+                        version,
+                        changeset,
+                        timestamp
+                    FROM ST_FromFlatGeobuf(null::temp_fgb, %(fgb_bytes)s)
+                ),
+                processed_features AS MATERIALIZED (
+                    SELECT jsonb_build_object(
+                        'type', 'Feature',
+                        'geometry', ST_AsGeoJSON(ST_GeometryN(geom, 1))::jsonb,
+                        'id', osm_id::VARCHAR,
+                        'properties', jsonb_build_object(
+                            'osm_id', osm_id,
+                            'tags', tags,
+                            'version', version,
+                            'changeset', changeset,
+                            'timestamp', timestamp
+                        )
+                    ) AS feature
+                    FROM feature_data
+                )
                 SELECT
                     'FeatureCollection' as type,
                     COALESCE(jsonb_agg(feature), '[]'::jsonb) AS features
-                FROM (
-                    SELECT jsonb_build_object(
-                        'type', 'Feature',
-                        'geometry', ST_AsGeoJSON(ST_GeometryN(fgb_data.geom, 1))::jsonb,
-                        'id', fgb_data.osm_id::VARCHAR,
-                        'properties', jsonb_build_object(
-                            'osm_id', fgb_data.osm_id,
-                            'tags', fgb_data.tags,
-                            'version', fgb_data.version,
-                            'changeset', fgb_data.changeset,
-                            'timestamp', fgb_data.timestamp
-                        )::jsonb
-                    ) AS feature
-                    FROM (
-                        SELECT
-                            geom,
-                            osm_id,
-                            tags,
-                            version,
-                            changeset,
-                            timestamp
-                        FROM ST_FromFlatGeobuf(null::temp_fgb, %(fgb_bytes)s)
-                    ) AS fgb_data
-                ) AS features;
+                FROM processed_features;
             """,
                 {"fgb_bytes": flatgeobuf},
             )
@@ -198,8 +201,7 @@ async def flatgeobuf_to_featcol(
         )
         return None
 
-    if featcol:
-        return geojson.loads(featcol.model_dump_json())
+    return geojson.loads(featcol.model_dump_json()) if featcol else None
 
 
 async def split_geojson_by_task_areas(
@@ -209,7 +211,7 @@ async def split_geojson_by_task_areas(
 ) -> Optional[dict[int, geojson.FeatureCollection]]:
     """Split GeoJSON into tagged task area GeoJSONs.
 
-    NOTE inserts feature.properties.osm_id as feature.id for each feature.
+    NOTE batch inserts feature.properties.osm_id as feature.id for each feature.
     NOTE ST_Within used on polygon centroids to correctly capture the geoms per task.
 
     Args:
@@ -220,129 +222,85 @@ async def split_geojson_by_task_areas(
     Returns:
         dict[int, geojson.FeatureCollection]: {task_id: FeatureCollection} mapping.
     """
+    batch_size = 10000
+
     try:
+        features = featcol["features"]
+        result_dict = defaultdict(list)
+
         async with db.cursor() as cur:
             await cur.execute("""
-                -- Drop table if already exists
-                DROP TABLE IF EXISTS temp_features CASCADE;
-            """)
-
-            await cur.execute("""
-                -- Create a temporary table to store the parsed GeoJSON features
-                CREATE TEMP TABLE temp_features (
+                DROP TABLE IF EXISTS tmp_project_features;
+                CREATE TEMP TABLE tmp_project_features (
                     id VARCHAR,
-                    geometry GEOMETRY,
-                    properties JSONB
-                );
+                    properties JSONB,
+                    geom GEOMETRY
+                ) ON COMMIT DROP;
             """)
 
-            await cur.execute(
-                """
-                -- Insert parsed geometries and properties into the temporary table
-                INSERT INTO temp_features (id, geometry, properties)
-                SELECT
-                    (feature->'properties'->>'osm_id')::VARCHAR AS id,
-                    ST_SetSRID(
-                        ST_GeomFromGeoJSON(feature->>'geometry'),
-                        4326
-                    ) AS geometry,
-                    jsonb_set(
-                        jsonb_set(
-                            feature->'properties',
-                            '{task_id}', to_jsonb(tasks.project_task_index), true
-                        ),
-                        '{project_id}', to_jsonb(tasks.project_id), true
-                    ) AS properties
-                FROM (
-                    SELECT jsonb_array_elements(
-                        CAST(%(geojson_featcol)s AS jsonb
-                    )->'features')
-                    AS feature
-                ) AS features
-                JOIN tasks ON tasks.project_id = %(project_id)s
-                WHERE
-                    ST_Within(
-                        ST_Centroid(ST_SetSRID(
-                            ST_GeomFromGeoJSON(feature->>'geometry'
-                        ), 4326)
-                    ), tasks.outline);
-            """,
-                {
-                    "project_id": project_id,
-                    "geojson_featcol": json.dumps(featcol),
-                },
-            )
+        # Batch insert features
+        for i in range(0, len(features), batch_size):
+            batch = features[i : i + batch_size]
+            data = [
+                (
+                    str(f["properties"].get("osm_id")),
+                    json.dumps(f["properties"]),
+                    json.dumps(f["geometry"]),
+                )
+                for f in batch
+            ]
 
-            # Set row_factory to output task_id:task_featcol dict
-            cur.row_factory = class_row(dict[int, geojson_pydantic.FeatureCollection])
+            async with db.cursor() as cur:
+                query = sql.SQL("""
+                    INSERT INTO tmp_project_features (id, properties, geom)
+                    VALUES (%s, %s::jsonb, ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))
+                """)
+
+                await cur.executemany(query, data)
+
+        async with db.cursor(row_factory=dict_row) as cur:
             await cur.execute(
                 """
-                -- Retrieve task outlines based on the provided project_id
-                SELECT
-                    tasks.project_task_index AS task_id,
-                    jsonb_build_object(
-                        'type', 'FeatureCollection',
-                        'features', jsonb_agg(feature)
-                    ) AS task_featcol
-                FROM
-                    tasks
-                LEFT JOIN LATERAL (
+                WITH task_features AS (
                     SELECT
-                        jsonb_build_object(
-                            'type', 'Feature',
-                            'geometry', ST_AsGeoJSON(temp_features.geometry)::jsonb,
-                            'id', temp_features.id::VARCHAR,
-                            'properties', temp_features.properties
-                        ) AS feature
-                    FROM (
-                        SELECT DISTINCT ON (geometry)
-                            id,
-                            geometry,
-                            properties
-                        FROM temp_features
-                    ) AS temp_features
-                    WHERE
-                        ST_Within(ST_Centroid(temp_features.geometry), tasks.outline)
-                ) AS feature ON true
-                WHERE
-                    tasks.project_id = %(project_id)s
-                GROUP BY
-                    tasks.project_task_index;
-
+                        t.project_task_index AS task_id,
+                        f.id,
+                        f.geom,
+                        f.properties
+                    FROM tasks t
+                    JOIN tmp_project_features f
+                    ON ST_Intersects(f.geom, t.outline)
+                    WHERE t.project_id = %s
+                )
+                SELECT
+                    task_id,
+                    jsonb_build_object(
+                        'type', 'Feature',
+                        'id', id,
+                        'geometry', ST_AsGeoJSON(geom)::jsonb,
+                        'properties', jsonb_set(
+                            jsonb_set(properties, '{task_id}', to_jsonb(task_id)),
+                            '{project_id}', to_jsonb(%s)
+                        )
+                    ) AS feature
+                FROM task_features;
             """,
-                {"project_id": project_id},
+                (project_id, project_id),
             )
-            task_featcol_dict = await cur.fetchall()
 
-            await cur.execute("""
-                -- Drop table at the end
-                DROP TABLE IF EXISTS temp_features CASCADE;
-            """)
+            # Aggregate results
+            async for rec in cur:
+                result_dict[rec["task_id"]].append(rec["feature"])
 
-    except ProgrammingError as e:
-        log.error(e)
-        log.error("Attempted geojson task splitting failed")
+        # Convert results into GeoJSON FeatureCollection
+        return {
+            task_id: geojson.FeatureCollection(features=features)
+            for task_id, features in result_dict.items()
+        }
+
+    except Exception as e:
+        log.error(f"Splitting failed: {e}", exc_info=True)
         return None
-
-    if not task_featcol_dict:
-        msg = f"Failed to split project ({project_id}) geojson by task areas."
-        log.exception(msg)
-        raise HTTPException(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail=msg,
-        )
-
-    if len(task_featcol_dict) < 1:
-        msg = (
-            f"Attempted splitting project ({project_id}) geojson by task areas, "
-            "but no data was returned."
-        )
-        log.warning(msg)
-        return None
-
-    # Update to be a dict of repeating task_id:task_featcol pairs
-    return {record["task_id"]: record["task_featcol"] for record in task_featcol_dict}
-    return task_featcol_dict
 
 
 def add_required_geojson_properties(
@@ -353,43 +311,31 @@ def add_required_geojson_properties(
     This step is required prior to flatgeobuf generation,
     else the workflows of conversion between the formats will fail.
     """
-    for feature in geojson.get("features", []):
-        properties = feature.get("properties", {})
+    current_timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    features = geojson.get("features", [])
 
-        # The top level id is defined, set to osm_id
+    for feature in features:
+        properties = feature.get("properties", {})
         if feature_id := feature.get("id"):
             properties["osm_id"] = feature_id
-
-        # Check for id type embedded in properties
-        if osm_id := properties.get("osm_id"):
-            # osm_id property exists, set top level id
-            feature["id"] = f"{osm_id}"
         else:
-            if prop_id := properties.get("id"):
-                # id is nested in properties, use that
-                feature["id"] = f"{prop_id}"
-                properties["osm_id"] = prop_id
-            elif fid := properties.get("fid"):
-                # The default from QGIS
-                feature["id"] = f"{fid}"
-                properties["osm_id"] = fid
-            else:
-                # Random id
-                # NOTE 32-bit int is max supported by standard postgres Integer
-                random_id = getrandbits(30)
-                feature["id"] = f"{random_id}"
-                properties["osm_id"] = random_id
+            osm_id = (
+                properties.get("osm_id")
+                or properties.get("id")
+                or properties.get("fid")
+                or getrandbits(30)
+            )
+            feature["id"] = str(osm_id)
+            properties["osm_id"] = osm_id
 
-        # Other required fields
-        if not properties.get("tags"):
-            properties["tags"] = ""
-        if not properties.get("version"):
-            properties["version"] = 1
-        if not properties.get("changeset"):
-            properties["changeset"] = 1
-        if not properties.get("timestamp"):
-            properties["timestamp"] = timestamp().strftime("%Y-%m-%dT%H:%M:%S")
-        properties["submission_ids"] = None
+        # Set default values efficiently
+        properties.setdefault("tags", "")
+        properties.setdefault("version", 1)
+        properties.setdefault("changeset", 1)
+        properties.setdefault("timestamp", current_timestamp)
+        properties.setdefault("submission_ids", None)
+
+        feature["properties"] = properties
 
     return geojson
 
