@@ -53,7 +53,7 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map }: activitiesPanelTy
     }
 
     const olFeature = new Feature({
-      geometry: new Polygon(geojson.geometry.coordinates).transform('EPSG:4326', 'EPSG:3857'),
+      geometry: new Polygon(geojson?.coordinates).transform('EPSG:4326', 'EPSG:3857'),
     });
     // Get the extent of the OpenLayers feature
     const extent = olFeature.getGeometry()?.getExtent();
