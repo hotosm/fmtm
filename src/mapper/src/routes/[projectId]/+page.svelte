@@ -57,6 +57,13 @@
 	const entityStatusStream = getEntityStatusStream(data.projectId);
 	const newBadGeomStream = getNewBadGeomStream(data.projectId);
 
+	const selectedEntityOsmId = $derived(entitiesStore.selectedEntity);
+	const selectedEntity = $derived(
+		entitiesStore.entitiesStatusList?.find((entity) => entity.osmid === selectedEntityOsmId),
+	);
+	const selectedEntityId = $derived(selectedEntity?.entity_id);
+	// // console.log("in [projectId]/+page.svelte:", {selectedEntityId});
+
 	// Update the geojson task states when a new event is added
 	$effect(() => {
 		if (taskStore.latestEvent) {
@@ -255,7 +262,6 @@
 			openedActionModal = null;
 			isDrawEnabled = true;
 		}}
-		webFormsDrawerRef={odkWebFormsWrapperRef}
 	/>
 	<DialogEntityActions
 		isTaskActionModalOpen={openedActionModal === 'entity-modal'}
@@ -351,7 +357,12 @@
 		</sl-tab>
 	</sl-tab-group>
 
-<OdkWebFormsWrapper bind:drawerRef={odkWebFormsWrapperRef} bind:webFormsRef={webFormsRef} projectId={data?.projectId} />
+<OdkWebFormsWrapper
+	bind:drawerRef={odkWebFormsWrapperRef}
+	bind:webFormsRef={webFormsRef}
+	projectId={data?.projectId}
+	entityId={selectedEntityId}
+/>
 
 </div>
 

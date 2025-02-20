@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://danieljdufour.com/web-forms-web-component/odk-web-form.js" type="module"></script>
+  </head>
+  <body style="height: 100vh; overflow-y: scroll; position: relative;">
+    <script type="module">
+        const entityId = new URL(window.location.href).searchParams.get("entityId");
+        console.log("got entityId from parent iframe:", { entityId });
+
+        // const projectId = window.frameElement?.getAttribute("data-project-id");
+        const projectId = new URL(window.location.href).searchParams.get("projectId");
+        console.log("got projectId from parent iframe:", { projectId });
+
+        const api_url = new URL(window.location.href).searchParams.get("api_url");
+
+        console.log("form-xml:", [`${api_url}/projects/${projectId}/form-xml`]);
+
+        const odkWebForm = document.createElement("odk-web-form");
+        odkWebForm.setAttribute("form-xml", `${api_url}/projects/${projectId}/form-xml`);
+        odkWebForm.setAttribute("missing-resource-behavior", "BLANK");
+        odkWebForm.fetchFormAttachment = function (url) {
+          url = url.toString();
+          if (url === "jr://file-csv/features.csv") {
+            const csv = `"name","label"\n"${entityId || ""}","${entityId || ""}"`;
+            return (async () => ({
+              status: 200,
+              text: async () => csv
+            }))();
+          } else if (url === "jr://instance/last-saved") {
+            return (async () => ({
+              status: 404
+            }))();
+          } else {
+            return fetch(url);
+          }
+        }
+        document.body.appendChild(odkWebForm);
+    </script>    
+  </body>
+</html>

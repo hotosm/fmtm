@@ -2,20 +2,17 @@
 	import { mapTask, finishTask, resetTask } from '$lib/db/events';
 	import type { ProjectData } from '$lib/types';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
-	import type { SlDrawer } from '@shoelace-style/shoelace';
-
 
 	type Props = {
 		isTaskActionModalOpen: boolean;
 		toggleTaskActionModal: (value: boolean) => void;
 		selectedTab: string;
 		projectData: ProjectData;
-		clickMapNewFeature: () => void;
-		webFormsDrawerRef: SlDrawer | undefined;
+		clickMapNewFeature: () => void
 	};
 
 	const taskStore = getTaskStore();
-	let { isTaskActionModalOpen, toggleTaskActionModal, selectedTab, projectData, clickMapNewFeature, webFormsDrawerRef }: Props = $props();
+	let { isTaskActionModalOpen, toggleTaskActionModal, selectedTab, projectData, clickMapNewFeature }: Props = $props();
 </script>
 
 {#if taskStore.selectedTaskId && selectedTab === 'map' && isTaskActionModalOpen && (taskStore.selectedTaskState === 'UNLOCKED_TO_MAP' || taskStore.selectedTaskState === 'LOCKED_FOR_MAPPING')}
@@ -143,23 +140,6 @@
 					</sl-button>
 					<sl-button variant="default" size="small" class="primary col-span-2 sm:col-span-1">
 						<span class="font-barlow font-medium text-sm">GO TO ODK</span>
-					</sl-button>
-					<sl-button
-						onclick={() => {
-							webFormsDrawerRef?.show();
-						}}
-						variant="default"
-						size="small"
-						class="primary col-span-2 sm:col-span-1"
-						onkeydown={(e: KeyboardEvent) => {
-							if (e.key === 'Enter') {
-								webFormsDrawerRef?.show();
-							}
-						}}						
-						role="button"
-						tabindex="0"
-					>
-						<span class="font-barlow font-medium text-sm">OPEN WEB FORMS</span>
 					</sl-button>
 				</div>
 			{/if}

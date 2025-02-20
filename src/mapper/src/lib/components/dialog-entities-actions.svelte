@@ -16,7 +16,13 @@
 		webFormsDrawerRef: SlDrawer | undefined;
 	};
 
-	let { isTaskActionModalOpen, toggleTaskActionModal, selectedTab, projectData, webFormsDrawerRef }: Props = $props();
+	let {
+		isTaskActionModalOpen,
+		toggleTaskActionModal,
+		selectedTab,
+		projectData,
+		webFormsDrawerRef
+	}: Props = $props();
 
 	let dialogRef: SlDialog | null = $state(null);
 	let toggleDistanceWarningDialog = $state(false);
@@ -29,6 +35,7 @@
 	const selectedEntity = $derived(
 		entitiesStore.entitiesStatusList?.find((entity) => entity.osmid === selectedEntityOsmId),
 	);
+
 	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
 	const entityToNavigate = $derived(entitiesStore.entityToNavigate);
 
@@ -114,6 +121,7 @@
 			return;
 		}
 		entitiesStore.setEntityToNavigate(selectedEntityCoordinate);
+		console.log("selectedEntity:", { selectedEntity });
 	};
 </script>
 
