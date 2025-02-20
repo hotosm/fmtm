@@ -130,7 +130,7 @@ const UpdateReviewStatusModal = () => {
           `${VITE_API_URL}/tasks/${updateReviewStatusModal?.taskUid}/event?project_id=${updateReviewStatusModal?.projectId}`,
           {
             task_id: +updateReviewStatusModal?.taskUid,
-            comment: `${updateReviewStatusModal?.instanceId}-SUBMISSION_INST-${noteComments}`,
+            comment: `#submissionId:${updateReviewStatusModal?.instanceId} #featureId:${updateReviewStatusModal?.entity_id} ${noteComments}`,
             event: task_event.COMMENT,
           },
         ),
