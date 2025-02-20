@@ -7,6 +7,7 @@ import { ActivitiesCardSkeletonLoader, ShowingCountSkeletonLoader } from '@/comp
 import { useAppSelector } from '@/types/reduxTypes';
 import { projectTaskActivity } from '@/store/types/IProject';
 import { projectTaskBoundriesType } from '@/models/project/projectModel';
+import { task_state_labels } from '@/types/enums';
 
 type activitiesPanelType = {
   defaultTheme: any;
@@ -84,7 +85,7 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map }: activitiesPanelTy
               updated status to{' '}
             </span>
             <p style={{ color: defaultTheme.statusTextTheme[taskEvent?.state] }} className="fmtm-font-archivo">
-              {taskEvent?.state}
+              {task_state_labels[taskEvent?.state]}
             </p>
             <div className="fmtm-flex fmtm-items-center fmtm-justify-between">
               <p className="fmtm-font-archivo fmtm-text-sm fmtm-text-[#7A7676]">#{selectedTask}</p>
