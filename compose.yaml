@@ -358,11 +358,12 @@ services:
     depends_on:
       fmtm-db:
         condition: service_healthy
-      s3:
-        condition: service_healthy
     env_file:
       - .env
+    environment:
+      DEBUG: false
     volumes:
+      - ./src/backend/app:/opt/app:ro
       - ./src/backend/scheduler:/opt/scheduler:ro
     networks:
       - fmtm-net
