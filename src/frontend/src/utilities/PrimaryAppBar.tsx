@@ -18,8 +18,8 @@ import {
   DropdownMenuPortal,
   DropdownMenuItem,
 } from '@/components/common/Dropdown';
-import Button from '@/components/common/Button2';
 import { useIsAdmin } from '@/hooks/usePermissions';
+import Button from '@/components/common/Button';
 
 export default function PrimaryAppBar() {
   const isAdmin = useIsAdmin();
