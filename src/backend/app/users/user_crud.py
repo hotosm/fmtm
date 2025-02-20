@@ -66,17 +66,17 @@ async def process_inactive_users(
                 )
                 users_to_warn = await cur.fetchall()
 
-            if SVC_OSM_TOKEN:
-                for user in users_to_warn:
+            for user in users_to_warn:
+                if SVC_OSM_TOKEN:
                     await send_warning_email_or_osm(
                         user.id, user.username, days, SVC_OSM_TOKEN
                     )
-            else:
-                log.warning(
-                    f"The SVC_OSM_TOKEN is not set on this server. "
-                    f"Cannot send emails to inactive users: "
-                    f"{', '.join(user.username for user in users_to_warn)}"
-                )
+                else:
+                    log.warning(
+                        f"The SVC_OSM_TOKEN is not set on this server. "
+                        f"Cannot send emails to inactive users: "
+                        f"{', '.join(user.username for user in users_to_warn)}"
+                    )
 
         # Users eligible for deletion
         async with db.cursor(row_factory=class_row(DbUser)) as cur:
