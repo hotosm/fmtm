@@ -1,0 +1,9 @@
+<map id="app.db.models.DbBasemap" name="app.db.models.DbBasemap">
+<area shape="rect" id="Node000001" title=" " alt="" coords="44,221,237,367"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,92,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="67,83,117,220,112,222,62,84"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="117,5,165,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="143,71,143,205,138,205,138,71"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="189,5,258,71"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="216,72,177,198,174,207,169,205,171,197,211,70"/>
+</map>

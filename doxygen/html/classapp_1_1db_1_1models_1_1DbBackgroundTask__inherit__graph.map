@@ -1,0 +1,9 @@
+<map id="app.db.models.DbBackgroundTask" name="app.db.models.DbBackgroundTask">
+<area shape="rect" id="Node000001" title=" " alt="" coords="108,119,347,324"/>
+<area shape="rect" id="Node000003" href="$classapp_1_1projects_1_1project__schemas_1_1BackgroundTaskIn.html" title=" " alt="" coords="5,372,207,472"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="160,338,138,373,134,370,156,335"/>
+<area shape="rect" id="Node000004" href="$classapp_1_1projects_1_1project__schemas_1_1BackgroundTaskUpdate.html" title=" " alt="" coords="231,372,467,472"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="299,335,321,370,316,373,295,338"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="184,5,271,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="230,84,230,119,225,119,225,84"/>
+</map>

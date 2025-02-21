@@ -1,0 +1,7 @@
+<map id="app.db.enums.TaskEvent" name="app.db.enums.TaskEvent">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,119,181,364"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="17,5,87,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="64,83,71,118,66,119,59,84"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="111,5,161,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="129,84,122,119,117,118,124,83"/>
+</map>

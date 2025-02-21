@@ -1,0 +1,7 @@
+<map id="app.db.enums.CommunityType" name="app.db.enums.CommunityType">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,119,221,264"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="37,5,107,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="87,83,96,117,91,119,82,85"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="131,5,181,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="146,85,136,119,131,117,141,83"/>
+</map>

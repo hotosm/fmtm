@@ -1,0 +1,13 @@
+<map id="app.db.models.DbGeometryLog" name="app.db.models.DbGeometryLog">
+<area shape="rect" id="Node000001" title=" " alt="" coords="41,297,261,403"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,130,92,195"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="75,206,125,296,120,298,71,209"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="117,130,186,195"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="154,196,154,281,149,281,149,196"/>
+<area shape="rect" id="Node000004" href="$classapp_1_1db_1_1enums_1_1GeomStatus.html" title=" " alt="" coords="211,120,401,205"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="283,207,235,275,224,287,220,284,231,272,279,204"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="230,5,299,71"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="282,83,294,119,289,121,277,84"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="323,5,374,71"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="336,85,323,121,318,119,331,83"/>
+</map>

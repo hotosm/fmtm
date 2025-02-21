@@ -1,0 +1,7 @@
+<map id="app.config.MonitoringTypes" name="app.config.MonitoringTypes">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,119,197,224"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="54,5,85,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="83,84,91,118,86,119,78,85"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="109,5,160,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="126,85,117,119,112,118,121,83"/>
+</map>

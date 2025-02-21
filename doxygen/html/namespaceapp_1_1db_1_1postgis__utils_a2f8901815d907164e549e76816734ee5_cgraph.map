@@ -1,0 +1,9 @@
+<map id="app.db.postgis_utils.merge_polygons" name="app.db.postgis_utils.merge_polygons">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,69,204,109"/>
+<area shape="rect" id="Node000002" href="$namespaceapp_1_1db_1_1postgis__utils.html#a15a1187646d91e7dec439297b1784e96" title=" " alt="" coords="257,5,454,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="183,67,263,46,264,51,184,72"/>
+<area shape="rect" id="Node000003" href="$namespaceapp_1_1db_1_1postgis__utils.html#aad664aef866ea095e3e20b20aa4c5161" title=" " alt="" coords="255,69,455,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="204,87,242,87,242,92,204,92"/>
+<area shape="rect" id="Node000004" href="$namespaceapp_1_1db_1_1postgis__utils.html#a78de39e58e80d1ddb2dbb23c08088d2a" title=" " alt="" coords="252,133,459,173"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="184,107,264,127,263,133,183,112"/>
+</map>

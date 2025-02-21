@@ -1,0 +1,9 @@
+<map id="app.projects.project_schemas.BasemapGenerate" name="app.projects.project_schemas.BasemapGenerate">
+<area shape="rect" id="Node000001" title=" " alt="" coords="55,148,259,228"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,92,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="82,80,130,146,126,149,78,84"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="116,5,197,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="159,71,159,131,154,131,154,71"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="239,5,309,71"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="271,72,261,99,247,126,235,139,231,135,242,122,257,97,265,70"/>
+</map>

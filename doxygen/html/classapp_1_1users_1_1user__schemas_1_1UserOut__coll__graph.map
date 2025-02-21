@@ -1,0 +1,15 @@
+<map id="app.users.user_schemas.UserOut" name="app.users.user_schemas.UserOut">
+<area shape="rect" id="Node000001" title=" " alt="" coords="119,668,349,733"/>
+<area shape="rect" id="Node000002" href="$classapp_1_1db_1_1models_1_1DbUser.html" title=" " alt="" coords="58,280,221,605"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="206,617,225,667,220,669,201,619"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,5,92,71"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="61,83,105,279,100,280,56,85"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="117,5,186,71"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="153,71,147,264,142,264,148,71"/>
+<area shape="rect" id="Node000005" href="$classapp_1_1db_1_1enums_1_1UserRole.html" title=" " alt="" coords="245,390,415,495"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="313,497,254,654,249,652,308,495"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="271,5,341,71"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="311,84,330,390,324,390,306,85"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="365,5,415,71"/>
+<area shape="poly" id="edge6_Node000005_Node000007" title=" " alt="" coords="386,85,340,390,335,389,381,84"/>
+</map>

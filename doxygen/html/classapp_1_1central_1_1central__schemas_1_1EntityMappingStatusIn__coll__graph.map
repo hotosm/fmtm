@@ -1,0 +1,11 @@
+<map id="app.central.central_schemas.EntityMappingStatusIn" name="app.central.central_schemas.EntityMappingStatusIn">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,348,236,468"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="56,170,143,235"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="107,249,117,348,112,348,101,249"/>
+<area shape="rect" id="Node000003" href="$classapp_1_1db_1_1enums_1_1EntityState.html" title=" " alt="" coords="167,120,349,285"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="205,287,172,336,168,333,200,284"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="183,5,251,71"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="231,83,240,119,235,120,225,85"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="275,5,326,71"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="292,85,282,120,277,119,286,83"/>
+</map>

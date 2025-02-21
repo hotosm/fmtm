@@ -1,0 +1,11 @@
+<map id="app.config.SentrySettings" name="app.config.SentrySettings">
+<area shape="rect" id="Node000001" title=" " alt="" coords="155,365,335,431"/>
+<area shape="rect" id="Node000002" href="$classapp_1_1config_1_1OtelSettings.html" title=" " alt="" coords="5,163,225,303"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="181,312,222,364,218,367,177,315"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="13,5,111,71"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="77,83,99,162,94,163,72,85"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="135,5,205,71"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="164,72,142,148,137,146,158,70"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="249,200,328,265"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="283,266,260,350,255,349,278,265"/>
+</map>

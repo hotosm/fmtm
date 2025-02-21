@@ -1,0 +1,9 @@
+<map id="app.auth.auth_deps.mapper_login_required" name="app.auth.auth_deps.mapper_login_required">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,37,209,77"/>
+<area shape="rect" id="Node000002" href="$namespaceapp_1_1auth_1_1auth__deps.html#ab47d9ea814cfe29b53454897eab3241a" title=" " alt="" coords="267,5,422,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="209,41,253,35,254,40,210,46"/>
+<area shape="rect" id="Node000004" href="$namespaceapp_1_1auth_1_1auth__deps.html#ae4e67b10731ac6e74ba7023a98eab818" title="Cookie / Token Handling." alt="" coords="257,69,432,109"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="210,68,244,73,244,78,209,74"/>
+<area shape="rect" id="Node000003" href="$namespaceapp_1_1auth_1_1auth__deps.html#a42418362fbec8c642720ece83be083a8" title=" " alt="" coords="480,5,671,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="423,23,466,23,466,28,423,28"/>
+</map>
