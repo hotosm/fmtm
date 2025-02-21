@@ -35,6 +35,7 @@
 
 	let dialogRef: SlDialog | null = $state(null);
 	let toggleDistanceWarningDialog = $state(false);
+	let showCommentsPopup: boolean = $state(false);
 
 	const entitiesStore = getEntitiesStatusStore();
 	const alertStore = getAlertStore();
@@ -46,6 +47,16 @@
 	);
 	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
 	const entityToNavigate = $derived(entitiesStore.entityToNavigate);
+	const entityComments = $derived(
+		taskStore.events
+			?.filter(
+				(event) =>
+					event.event === 'COMMENT' &&
+					event.comment?.startsWith('#submissionId:uuid:') &&
+					`#featureId:${entitiesStore.selectedEntity}` === event.comment?.split(' ')?.[1],
+			)
+			?.reverse(),
+	);
 
 	const mapFeature = () => {
 		const xformId = projectData?.odk_form_id;
@@ -134,7 +145,9 @@
 
 {#if isTaskActionModalOpen && selectedTab === 'map' && selectedEntity}
 	<div class="font-barlow flex justify-center !w-[100vw] absolute bottom-[4rem] left-0 pointer-events-none z-50">
-		<div class="bg-white w-full font-regular md:max-w-[580px] pointer-events-auto px-4 py-3 sm:py-4 rounded-t-3xl">
+		<div
+			class="bg-white w-full font-regular md:max-w-[580px] pointer-events-auto px-4 py-3 sm:py-4 rounded-t-3xl max-h-[60vh] overflow-y-scroll"
+		>
 			<div class="flex justify-end">
 				<hot-icon
 					name="close"
@@ -151,7 +164,7 @@
 			</div>
 			<div class="flex flex-col gap-4">
 				<p class="text-[#333] text-lg font-semibold">Feature {selectedEntity?.osmid}</p>
-				<div class="flex flex-col gap-1">
+				<div class="flex flex-col gap-2">
 					<div class="flex">
 						<p class="min-w-[6.25rem] text-[#2B2B2B]">Task Id</p>
 						:
@@ -171,6 +184,46 @@
 							{selectedEntity?.status?.replaceAll('_', ' ')?.toLowerCase()}
 						</p>
 					</div>
+					{#if entityComments?.length > 1}
+						<div class="flex">
+							<p class="min-w-[6.25rem] text-[#2B2B2B]">Comments</p>
+							:
+							<div class="flex flex-col ml-2 gap-2 flex-1">
+								{#each entityComments?.slice(0, 2) as comment}
+									<div class="bg-[#F6F5F5] rounded px-2 py-1">
+										<div class="flex items-center justify-between mb-1">
+											<p>{comment?.username}</p>
+											<div class="flex items-center gap-2">
+												<hot-icon name="clock-history" class="!text-[0.8rem] text-red-600 cursor-pointer"></hot-icon>
+												<p class="text-sm">{comment?.created_at?.split(' ')[0]}</p>
+											</div>
+										</div>
+										<p class="font-medium">
+											{comment?.comment?.replace(/#submissionId:uuid:[\w-]+|#featureId:[\w-]+/g, '')?.trim()}
+										</p>
+									</div>
+								{/each}
+								{#if entityComments?.length > 2}
+									<div class="flex items-center gap-2">
+										<div class="h-[1px] bg-gray-200 flex flex-1"></div>
+										<div
+											class="text-sm text-gray-600 hover:text-gray-800 cursor-pointer font-light"
+											onclick={() => (showCommentsPopup = true)}
+											onkeydown={(e: KeyboardEvent) => {
+												if (e.key === 'Enter') {
+													showCommentsPopup = true;
+												}
+											}}
+											tabindex="0"
+											role="button"
+										>
+											See all comments
+										</div>
+									</div>
+								{/if}
+							</div>
+						</div>
+					{/if}
 				</div>
 				{#if selectedEntity?.status !== 'SURVEY_SUBMITTED' && selectedEntity?.status !== 'VALIDATED'}
 					<div class="flex gap-2">
@@ -281,3 +334,29 @@
 		</div>
 	</hot-dialog>
 {/if}
+
+<hot-dialog
+	label="Feature Comments"
+	class="dialog-overview z-50 font-barlow font-regular"
+	open={showCommentsPopup}
+	onsl-hide={() => {
+		showCommentsPopup = false;
+	}}
+>
+	<div class="flex flex-col gap-3">
+		{#each entityComments as comment}
+			<div class="bg-[#F6F5F5] rounded px-2 py-1">
+				<div class="flex items-center justify-between mb-2">
+					<p>{comment?.username}</p>
+					<div class="flex items-center gap-2">
+						<hot-icon name="clock-history" class="!text-[0.8rem] text-red-600 cursor-pointer"></hot-icon>
+						<p class="text-sm">{comment?.created_at?.split(' ')[0]}</p>
+					</div>
+				</div>
+				<p class="font-medium">
+					{comment?.comment?.replace(/#submissionId:uuid:[\w-]+|#featureId:[\w-]+/g, '')?.trim()}
+				</p>
+			</div>
+		{/each}
+	</div>
+</hot-dialog>
