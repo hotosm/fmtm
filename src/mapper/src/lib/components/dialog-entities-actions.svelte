@@ -8,12 +8,28 @@
 	import { mapTask } from '$lib/db/events';
 	import type { SlDialog } from '@shoelace-style/shoelace';
 
+	type statusType = 'READY' | 'OPENED_IN_ODK' | 'SURVEY_SUBMITTED' | 'MARKED_BAD' | 'VALIDATED';
 	type Props = {
 		isTaskActionModalOpen: boolean;
 		toggleTaskActionModal: (value: boolean) => void;
 		selectedTab: string;
 		projectData: ProjectData;
 	};
+
+	function getStatusStyle(status: statusType) {
+		switch (status) {
+			case 'READY':
+				return 'bg-gray-100 text-gray-700';
+			case 'OPENED_IN_ODK':
+				return 'bg-yellow-100 text-yellow-700';
+			case 'SURVEY_SUBMITTED':
+				return 'bg-green-100 text-green-700';
+			case 'MARKED_BAD':
+				return 'bg-red-100 text-red-700';
+			case 'VALIDATED':
+				return 'bg-blue-100 text-blue-700';
+		}
+	}
 
 	let { isTaskActionModalOpen, toggleTaskActionModal, selectedTab, projectData }: Props = $props();
 
@@ -134,16 +150,27 @@
 				></hot-icon>
 			</div>
 			<div class="flex flex-col gap-4">
-				<div class="flex items-center justify-between">
-					<p class="text-[#333] text-xl font-semibold">Feature {selectedEntity?.osmid}</p>
-				</div>
+				<p class="text-[#333] text-lg font-semibold">Feature {selectedEntity?.osmid}</p>
 				<div class="flex flex-col gap-1">
-					<p><span class="font-medium">Task Id:</span> {selectedEntity?.task_id}</p>
-					<p><span class="font-medium">Entity Uuid:</span> {selectedEntity?.entity_id}</p>
-					<p>
-						<span class="font-medium">Status:</span>
-						{selectedEntity?.status?.replaceAll('_', ' ')}
-					</p>
+					<div class="flex">
+						<p class="min-w-[6.25rem] text-[#2B2B2B]">Task Id</p>
+						:
+						<p class="text-[#161616] font-medium ml-2">{selectedEntity?.task_id}</p>
+					</div>
+					<div class="flex">
+						<p class="min-w-[6.25rem] text-[#2B2B2B]">Entity Uuid</p>
+						:
+						<p class="break-all text-[#161616] font-medium ml-2">{selectedEntity?.entity_id}</p>
+					</div>
+					<div class="flex items-center">
+						<p class="min-w-[6.25rem] text-[#2B2B2B]">Status</p>
+						:
+						<p
+							class={`text-[#161616] font-medium capitalize border-[1px] border-solid ml-2 py-1 px-3 rounded-full ${getStatusStyle(selectedEntity?.status)}`}
+						>
+							{selectedEntity?.status?.replaceAll('_', ' ')?.toLowerCase()}
+						</p>
+					</div>
 				</div>
 				{#if selectedEntity?.status !== 'SURVEY_SUBMITTED' && selectedEntity?.status !== 'VALIDATED'}
 					<div class="flex gap-2">
