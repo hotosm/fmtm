@@ -60,7 +60,9 @@ const ProjectDetailsForm = ({ flag }) => {
   );
 
   const onFocus = () => {
-    dispatch(OrganisationService(`${VITE_API_URL}/organisation`));
+    dispatch(
+      OrganisationService(isAdmin ? `${VITE_API_URL}/organisation` : `${VITE_API_URL}/organisation/my-organisations`),
+    );
   };
 
   useEffect(() => {
