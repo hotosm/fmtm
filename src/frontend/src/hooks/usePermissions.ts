@@ -20,7 +20,6 @@ export function useIsOrganizationAdmin(id: number) {
 }
 
 export function useIsProjectManager(id: string | number) {
-  console.log('checking');
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
   return authDetails?.role === user_roles.ADMIN || authDetails?.project_roles?.[id] === project_roles.PROJECT_MANAGER;
 }
