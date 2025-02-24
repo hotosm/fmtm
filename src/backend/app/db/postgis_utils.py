@@ -29,7 +29,7 @@ import geojson
 import geojson_pydantic
 from fastapi import HTTPException
 from osm_rawdata.postgres import PostgresClient
-from psycopg import Connection, ProgrammingError, sql
+from psycopg import Connection, ProgrammingError
 from psycopg.rows import class_row, dict_row
 from shapely.geometry import MultiPolygon, Point, Polygon, mapping, shape
 from shapely.geometry.base import BaseGeometry
@@ -228,69 +228,66 @@ async def split_geojson_by_task_areas(
         features = featcol["features"]
         result_dict = defaultdict(list)
 
-        async with db.cursor() as cur:
+        async with db.cursor(row_factory=dict_row) as cur:
             await cur.execute("""
-                DROP TABLE IF EXISTS tmp_project_features;
-                CREATE TEMP TABLE tmp_project_features (
-                    id VARCHAR,
-                    properties JSONB,
-                    geom GEOMETRY
-                ) ON COMMIT DROP;
+            DROP TABLE IF EXISTS tmp_project_features;
+            CREATE TEMP TABLE tmp_project_features (
+                id VARCHAR,
+                properties JSONB,
+                geom GEOMETRY
+            ) ON COMMIT DROP;
             """)
 
-        # Batch insert features
-        for i in range(0, len(features), batch_size):
-            batch = features[i : i + batch_size]
-            data = [
-                (
-                    str(f["properties"].get("osm_id")),
-                    json.dumps(f["properties"]),
-                    json.dumps(f["geometry"]),
-                )
-                for f in batch
-            ]
-
-            async with db.cursor() as cur:
-                query = sql.SQL("""
+            # Batch insert features
+            for i in range(0, len(features), batch_size):
+                batch = features[i : i + batch_size]
+                data = [
+                    (
+                        str(f["properties"].get("osm_id")),
+                        json.dumps(f["properties"]),
+                        json.dumps(f["geometry"]),
+                    )
+                    for f in batch
+                ]
+                await cur.executemany(
+                    """
                     INSERT INTO tmp_project_features (id, properties, geom)
                     VALUES (%s, %s::jsonb, ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))
-                """)
-
-                await cur.executemany(query, data)
-
-        async with db.cursor(row_factory=dict_row) as cur:
-            await cur.execute(
-                """
-                WITH task_features AS (
-                    SELECT
-                        t.project_task_index AS task_id,
-                        f.id,
-                        f.geom,
-                        f.properties
-                    FROM tasks t
-                    JOIN tmp_project_features f
-                    ON ST_Intersects(f.geom, t.outline)
-                    WHERE t.project_id = %s
+                """,
+                    data,
                 )
-                SELECT
-                    task_id,
-                    jsonb_build_object(
-                        'type', 'Feature',
-                        'id', id,
-                        'geometry', ST_AsGeoJSON(geom)::jsonb,
-                        'properties', jsonb_set(
-                            jsonb_set(properties, '{task_id}', to_jsonb(task_id)),
-                            '{project_id}', to_jsonb(%s)
-                        )
-                    ) AS feature
-                FROM task_features;
-            """,
-                (project_id, project_id),
-            )
+                await cur.execute(
+                    """
+                    WITH task_features AS (
+                        SELECT
+                            t.project_task_index AS task_id,
+                            f.id,
+                            f.geom,
+                            f.properties
+                        FROM tasks t
+                        JOIN tmp_project_features f
+                        ON ST_Intersects(f.geom, t.outline)
+                        WHERE t.project_id = %s
+                    )
+                    SELECT
+                        task_id,
+                        jsonb_build_object(
+                            'type', 'Feature',
+                            'id', id,
+                            'geometry', ST_AsGeoJSON(geom)::jsonb,
+                            'properties', jsonb_set(
+                                jsonb_set(properties, '{task_id}', to_jsonb(task_id)),
+                                '{project_id}', to_jsonb(%s)
+                            )
+                        ) AS feature
+                    FROM task_features;
+                """,
+                    (project_id, project_id),
+                )
 
-            # Aggregate results
-            async for rec in cur:
-                result_dict[rec["task_id"]].append(rec["feature"])
+                # Aggregate results
+                async for rec in cur:
+                    result_dict[rec["task_id"]].append(rec["feature"])
 
         # Convert results into GeoJSON FeatureCollection
         return {
@@ -311,7 +308,6 @@ def add_required_geojson_properties(
     This step is required prior to flatgeobuf generation,
     else the workflows of conversion between the formats will fail.
     """
-    current_timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     features = geojson.get("features", [])
 
     for feature in features:
@@ -332,7 +328,7 @@ def add_required_geojson_properties(
         properties.setdefault("tags", "")
         properties.setdefault("version", 1)
         properties.setdefault("changeset", 1)
-        properties.setdefault("timestamp", current_timestamp)
+        properties.setdefault("timestamp", timestamp())
         properties.setdefault("submission_ids", None)
 
         feature["properties"] = properties
