@@ -45,10 +45,11 @@ dependencies = [
     "sozipfile==0.3.2",
     "cryptography==43.0.3",
     "pyjwt==2.9.0",
-    "osm-fieldwork==0.19.0",
+    "osm-fieldwork==0.20.4",
     "osm-login-python==2.0.0",
     "osm-rawdata==0.4.2",
     "fmtm-splitter==2.0.0",
+    "pg-nearest-city>=0.2.1",
     "pyodk",
 ]
 readme = "../../README.md"

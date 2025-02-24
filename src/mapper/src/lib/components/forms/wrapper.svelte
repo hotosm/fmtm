@@ -19,23 +19,45 @@
 
   let iframeRef: HTMLIFrameElement;
 
-  function handleSubmit() {
-    console.log("web forms was submitted");
+  function handleSubmit(payload: any) {
+    (async () => {
+      console.log("running handleSubmit with payload", payload);
+
+      if (!payload.detail) return;
+
+      const url = `${API_URL}/submission?project_id=${projectId}`;
+      console.log("posting to url:", url);
+      var data = new FormData()
+      data.append('submission_xml', await payload.detail[0].data.instanceFile.text());
+
+      const res = await fetch(url, {
+        method: "POST",
+        body: data
+      });
+      console.log(res);
+    })();
   }
 
   // could probably set up a custom event to be dispatched from the iframe
   // and just listen for that event vs. polling, ... idk
   $effect(() => {
-    let intervalId = setInterval(() => {
+    // adding a reference to projectId and entityId to force a re-run
+    // whenever a new iframe is rendered
+    projectId;
+    entityId;
+
+    const intervalId = setInterval(() => {
       webFormsRef = iframeRef.contentDocument?.querySelector("odk-web-form") || undefined;
       if (webFormsRef) {
-        console.log("webFormsRef:", webFormsRef);
         clearInterval(intervalId);
-
-        // set up event listener
         webFormsRef.addEventListener("submit", handleSubmit);
       }
     }, 100);
+
+    // clear interval when re-run
+    return () => {
+      clearInterval(intervalId);
+    };
   });
 </script>
 

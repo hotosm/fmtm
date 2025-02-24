@@ -126,7 +126,11 @@ const SubmissionDetails = () => {
 
   useEffect(() => {
     if (paramsInstanceId) {
-      dispatch(GetSubmissionPhotosService(`${import.meta.env.VITE_API_URL}/submission/${paramsInstanceId}/photos`));
+      dispatch(
+        GetSubmissionPhotosService(
+          `${import.meta.env.VITE_API_URL}/submission/${paramsInstanceId}/photos?project_id=${projectId}`,
+        ),
+      );
     }
   }, [paramsInstanceId]);
 
@@ -178,28 +182,31 @@ const SubmissionDetails = () => {
                   </h2>
                 </div>
               )}
-              <Button
-                btnText="Update Review Status"
-                disabled={submissionDetailsLoading}
-                btnType="primary"
-                className="fmtm-w-fit fmtm-justify-center !fmtm-rounded fmtm-font-bold fmtm-text-sm !fmtm-py-2 fmtm-mt-8"
-                onClick={() => {
-                  dispatch(
-                    SubmissionActions.SetUpdateReviewStatusModal({
-                      toggleModalStatus: true,
-                      instanceId: paramsInstanceId,
-                      projectId: projectId,
-                      taskId: taskId,
-                      reviewState: restSubmissionDetails?.__system?.reviewState,
-                      taskUid: taskUid,
-                      entity_id: restSubmissionDetails?.feature,
-                      label: restSubmissionDetails?.meta?.entity?.label,
-                      feature: convertCoordinateStringToFeature('xlocation', restSubmissionDetails?.xlocation),
-                    }),
-                  );
-                }}
-              />
+              <div className="fmtm-mt-8">
+                <Button
+                  variant="primary-red"
+                  onClick={() => {
+                    dispatch(
+                      SubmissionActions.SetUpdateReviewStatusModal({
+                        toggleModalStatus: true,
+                        instanceId: paramsInstanceId,
+                        projectId: projectId,
+                        taskId: taskId,
+                        reviewState: restSubmissionDetails?.__system?.reviewState,
+                        taskUid: taskUid,
+                        entity_id: restSubmissionDetails?.feature,
+                        label: restSubmissionDetails?.meta?.entity?.label,
+                        feature: convertCoordinateStringToFeature('xlocation', restSubmissionDetails?.xlocation),
+                      }),
+                    );
+                  }}
+                  disabled={submissionDetailsLoading}
+                >
+                  Update Review Status
+                </Button>
+              </div>
             </div>
+
             {/* start, end, today, deviceid values */}
             {submissionDetailsLoading ? (
               <div className="fmtm-grid fmtm-grid-cols-2 fmtm-mt-6 fmtm-gap-0">
@@ -247,6 +254,7 @@ const SubmissionDetails = () => {
             <SubmissionComments />
           </div>
         </div>
+
         {/* submission photos */}
         {submissionPhotosLoading ? (
           <div className="fmtm-flex fmtm-gap-x-3 fmtm-overflow-x-scroll scrollbar fmtm-bg-white fmtm-p-6 fmtm-rounded-xl">
@@ -258,10 +266,10 @@ const SubmissionDetails = () => {
               />
             ))}
           </div>
-        ) : submissionPhotos?.length > 0 ? (
+        ) : submissionPhotos && Object.keys(submissionPhotos).length > 0 ? (
           <div className="fmtm-bg-white fmtm-rounded-xl fmtm-p-6">
             <p className="fmtm-text-base fmtm-font-bold fmtm-text-[#555] fmtm-mb-2">Images</p>
-            <ImageSlider images={submissionPhotos || []} />
+            <ImageSlider images={submissionPhotos || {}} />
           </div>
         ) : null}
       </div>

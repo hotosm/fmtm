@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="./odk-web-form.js" type="module"></script>
+  </head>
+  <body style="height: 100vh; overflow-y: scroll; position: relative;">
+    <script type="module">
+      import("./odk-web-form.js").then(console.log);
+
+      console.log({OdkWebForms});
+      // explain why this is in static and not a vue component, issues with conflict
+        const entityId = new URL(window.location.href).searchParams.get("entityId");
+        console.log("got entityId from parent iframe:", { entityId });
+
+        // const projectId = window.frameElement?.getAttribute("data-project-id");
+        const projectId = new URL(window.location.href).searchParams.get("projectId");
+        console.log("got projectId from parent iframe:", { projectId });
+
+        const api_url = new URL(window.location.href).searchParams.get("api_url");
+
+        console.log("form-xml:", [`${api_url}/projects/${projectId}/form-xml`]);
+
+        // explain why creating programmatically in JavaScript
+        // const WebFormElement = customElements.get("odk-web-form");
+        console.log("WebFormElement:", WebFormElement);
+        const odkWebForm = new WebFormElement({
+          formXml: `${api_url}/projects/${projectId}/form-xml`,
+          missingResourceBehavior: "BLANK",
+          fetchFormAttachment: function fetchFormAttachment (url) {
+            url = url.toString();
+            if (url === "jr://file-csv/features.csv") {
+              // create comment explaining this
+              const csv = `"name","label"\n"${entityId || ""}","${entityId || ""}"`;
+              return (async () => ({
+                status: 200,
+                text: async () => csv
+              }))();
+            } else if (url === "jr://instance/last-saved") {
+              // create commnet
+              return (async () => ({
+                status: 404
+              }))();
+            } else {
+              return fetch(url);
+            }
+          },
+          onSubmit: function onSubmit(payload) {
+            console.log("onsubmitted payload:", payload);
+          }
+        });
+        console.log("created ", odkWebForm);
+        document.body.appendChild(odkWebForm);
+    </script>    
+  </body>
+</html>
