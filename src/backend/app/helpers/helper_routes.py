@@ -66,10 +66,10 @@ router = APIRouter(
 
 @router.get("/download-template-xlsform")
 async def download_template(
-    category: XLSFormType,
+    form_type: XLSFormType,
 ):
-    """Download an XLSForm template to fill out."""
-    filename = XLSFormType(category).name
+    """Download example XLSForm from FMTM."""
+    filename = XLSFormType(form_type).name
     xlsform_path = f"{xlsforms_path}/{filename}.xls"
     if Path(xlsform_path).exists():
         return FileResponse(xlsform_path, filename="form.xls")

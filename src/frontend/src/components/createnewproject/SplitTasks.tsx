@@ -40,7 +40,7 @@ const taskSplitOptions: taskSplitOptionsType[] = [
   },
 ];
 
-const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalFeature, customFormFile }) => {
+const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalFeature, xlsFormFile }) => {
   useDocumentTitle('Create Project: Split Tasks');
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -118,10 +118,8 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
       odk_central_url: projectDetails.odk_central_url,
       odk_central_user: projectDetails.odk_central_user,
       odk_central_password: projectDetails.odk_central_password,
-      // dont send xform_category if upload custom form is selected
-      xform_category: projectDetails.formCategorySelection,
+      osm_category: projectDetails.formExampleSelection,
       task_split_type: taskSplittingMethod,
-      form_ways: projectDetails.formWays,
       // "uploaded_form": projectDetails.uploaded_form,
       hashtags: projectDetails.hashtags,
       data_extract_url: projectDetails.data_extract_url,
@@ -145,7 +143,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
         `${import.meta.env.VITE_API_URL}/projects?org_id=${projectDetails.organisation_id}`,
         projectData,
         taskAreaGeojsonFile,
-        customFormFile,
+        xlsFormFile,
         customDataExtractUpload,
         projectDetails.dataExtractWays === 'osm_data_extract',
         additionalFeature,

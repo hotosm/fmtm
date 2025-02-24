@@ -273,7 +273,6 @@ CREATE TABLE public.projects (
     odk_central_user character varying,
     odk_central_password character varying,
     odk_token character varying,
-    data_extract_type character varying,
     data_extract_url character varying,
     task_split_type public.tasksplittype,
     task_split_dimension smallint,
@@ -284,6 +283,7 @@ CREATE TABLE public.projects (
     geo_restrict_distance_meters int2 DEFAULT 50 CHECK (
         geo_restrict_distance_meters >= 0
     ),
+    primary_geom_type public.geomtype DEFAULT 'POLYGON',
     new_geom_type public.geomtype DEFAULT 'POINT',
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now()

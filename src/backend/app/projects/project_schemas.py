@@ -173,8 +173,6 @@ class ProjectInBase(DbProject):
 class ProjectIn(ProjectInBase, ODKCentralIn):
     """Upload new project."""
 
-    # Mandatory
-    xform_category: str
     # Ensure geojson_pydantic.Polygon
     outline: Polygon
     # Omit new_geom_type as we calculate this automatically

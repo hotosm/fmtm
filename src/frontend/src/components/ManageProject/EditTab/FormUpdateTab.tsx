@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import UploadArea from '@/components/common/UploadArea';
 import Button from '@/components/common/Button';
-import { CustomSelect } from '@/components/common/Select';
+// import { CustomSelect } from '@/components/common/Select';
 import CoreModules from '@/shared/CoreModules';
 import { FormCategoryService } from '@/api/CreateProjectService';
 import { DownloadProjectForm } from '@/api/Project';
@@ -25,9 +25,9 @@ const FormUpdateTab = ({ projectId }) => {
   const [formError, setFormError] = useState(false);
 
   const xFormId = CoreModules.useAppSelector((state) => state.createproject.editProjectDetails.odk_form_id);
-  const formCategoryList = useAppSelector((state) => state.createproject.formCategoryList);
-  const sortedFormCategoryList = formCategoryList.slice().sort((a, b) => a.title.localeCompare(b.title));
-  const selectedCategory = useAppSelector((state) => state.createproject.editProjectDetails.xform_category);
+  // const formExampleList = useAppSelector((state) => state.createproject.formExampleList);
+  // const sortedFormExampleList = formExampleList.slice().sort((a, b) => a.title.localeCompare(b.title));
+  // const selectedCategory = useAppSelector((state) => state.createproject.editProjectDetails.osm_category);
   const formUpdateLoading = useAppSelector((state) => state.createproject.formUpdateLoading);
 
   useEffect(() => {
@@ -42,7 +42,7 @@ const FormUpdateTab = ({ projectId }) => {
     dispatch(
       PostFormUpdate(`${API_URL}/projects/update-form?project_id=${projectId}`, {
         xformId: xFormId,
-        category: selectedCategory,
+        // osm_category: selectedCategory,
         upload: uploadForm && uploadForm?.[0]?.file,
       }),
     );
@@ -50,11 +50,11 @@ const FormUpdateTab = ({ projectId }) => {
 
   return (
     <div className="fmtm-flex fmtm-flex-col fmtm-gap-10">
-      <div className="">
+      {/* <div className="">
         <CustomSelect
           title="What are you Surveying"
           placeholder="Survey Type"
-          data={sortedFormCategoryList}
+          data={sortedFormExampleList}
           dataKey="id"
           valueKey="title"
           label="title"
@@ -73,7 +73,7 @@ const FormUpdateTab = ({ projectId }) => {
           </a>{' '}
           {`if uploading the final submissions to OSM.`}
         </p>
-      </div>
+      </div> */}
       <div>
         <p className="fmtm-text-base">⚠️ IMPORTANT ⚠️</p>
         <p className="fmtm-text-base fmtm-mt-2">

@@ -133,7 +133,7 @@ const UploadSurvey = ({ hoveredSection }: hoveredSectionType) => {
 
   useEffect(() => {
     if (!hoveredSection || windowSize.width < 1024) return;
-    if (hoveredSection === 'selectform-customform') {
+    if (hoveredSection === 'selectform-osmnote') {
       customFormRef?.current?.scrollIntoView(scrollOptions);
     }
     if (hoveredSection === 'selectform-selectform') {
@@ -146,7 +146,7 @@ const UploadSurvey = ({ hoveredSection }: hoveredSectionType) => {
       className={`${hoveredSection ? 'fmtm-text-gray-400' : 'fmtm-text-gray-500'} lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3`}
     >
       <span>
-        You may choose a pre-configured form, or upload a custom XLS form. Click{' '}
+        You may choose to upload a pre-configured XLSForm, or an entirely custom form. Click{' '}
         <a
           href="https://hotosm.github.io/osm-fieldwork/about/xlsforms/"
           target="_"
@@ -158,12 +158,10 @@ const UploadSurvey = ({ hoveredSection }: hoveredSectionType) => {
       </span>
       <p
         ref={customFormRef}
-        className={`${hoveredSection === 'selectform-customform' && 'fmtm-text-gray-800'} fmtm-duration-150 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3`}
+        className={`${hoveredSection === 'selectform-osmnote' && 'fmtm-text-gray-800'} fmtm-duration-150 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3`}
       >
         <span>
-          For creating a custom XLS form, there are few essential fields that must be present for FMTM to function. You
-          may either download the sample XLS file and modify all fields that are not hidden, or edit the sample form
-          interactively in the browser.
+          <b>Note:</b> Uploading a custom form may make uploading of the final dataset to OSM difficult.
         </span>
         <span
           ref={uploadFormRef}

@@ -55,7 +55,7 @@ export enum project_roles {
   ASSOCIATE_PROJECT_MANAGER = 'ASSOCIATE_PROJECT_MANAGER',
 }
 
-export type NewGeomTypes = {
+export type MapGeomTypes = {
   POINT: 'POINT';
   POLYGON: 'POLYGON';
   LINESTRING: 'LINESTRING';

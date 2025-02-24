@@ -1026,7 +1026,7 @@ class DbProject(BaseModel):
     custom_tms_url: Optional[str] = None
     status: Optional[ProjectStatus] = None
     visibility: Optional[ProjectVisibility] = None
-    xform_category: Optional[str] = None
+    osm_category: Optional[str] = None
     odk_form_id: Optional[str] = None
     xlsform_content: Optional[bytes] = None
     mapper_level: Optional[MappingLevel] = None
@@ -1036,11 +1036,11 @@ class DbProject(BaseModel):
     odk_central_user: Optional[str] = None
     odk_central_password: Optional[str] = None
     odk_token: Optional[str] = None
-    data_extract_type: Optional[str] = None
     data_extract_url: Optional[str] = None
     task_split_dimension: Optional[int] = None
     task_num_buildings: Optional[int] = None
-    new_geom_type: Optional[DbGeomType] = None
+    primary_geom_type: Optional[DbGeomType] = None  # the main geometries surveyed
+    new_geom_type: Optional[DbGeomType] = None  # when new geometries are drawn
     geo_restrict_distance_meters: Optional[PositiveInt] = None
     geo_restrict_force_error: Optional[bool] = None
     hashtags: Optional[list[str]] = None

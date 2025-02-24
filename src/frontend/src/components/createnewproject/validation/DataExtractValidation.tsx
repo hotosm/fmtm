@@ -1,5 +1,4 @@
 interface ProjectValues {
-  form_ways: string;
   dataExtractWays: string;
   data_extractFile: object;
   data_extract_options: string;
@@ -8,7 +7,6 @@ interface ProjectValues {
   additionalFeature: File;
 }
 interface ValidationErrors {
-  form_ways?: string;
   dataExtractWays?: string;
   data_extractFile?: string;
   data_extract_options?: string;
