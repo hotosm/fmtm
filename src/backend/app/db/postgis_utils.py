@@ -28,7 +28,6 @@ from typing import Optional, Union
 import geojson
 import geojson_pydantic
 from fastapi import HTTPException
-from osm_fieldwork.data_models import data_models_path
 from osm_rawdata.postgres import PostgresClient
 from psycopg import Connection, ProgrammingError
 from psycopg.rows import class_row, dict_row
@@ -38,6 +37,7 @@ from shapely.ops import unary_union
 
 from app.config import settings
 from app.db.enums import HTTPStatus, XLSFormType
+from osm_fieldwork.data_models import data_models_path
 
 log = logging.getLogger(__name__)
 
@@ -309,6 +309,7 @@ def add_required_geojson_properties(
     else the workflows of conversion between the formats will fail.
     """
     features = geojson.get("features", [])
+    current_date = timestamp()
 
     for feature in features:
         properties = feature.get("properties", {})
@@ -328,7 +329,7 @@ def add_required_geojson_properties(
         properties.setdefault("tags", "")
         properties.setdefault("version", 1)
         properties.setdefault("changeset", 1)
-        properties.setdefault("timestamp", timestamp())
+        properties.setdefault("timestamp", str(current_date))
         properties.setdefault("submission_ids", None)
 
         feature["properties"] = properties
