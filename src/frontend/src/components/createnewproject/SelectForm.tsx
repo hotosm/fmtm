@@ -13,6 +13,7 @@ import NewDefineAreaMap from '@/views/NewDefineAreaMap';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import { Loader2 } from 'lucide-react';
 import DescriptionSection from '@/components/createnewproject/Description';
+import { osm_forms } from '@/types/enums';
 
 const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
   useDocumentTitle('Create Project: Upload Survey');
@@ -134,6 +135,10 @@ const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
                   value={formValues.formExampleSelection}
                   onValueChange={(value) => {
                     handleCustomChange('formExampleSelection', value);
+                    // Only set osmFormSelectionName for specific 'OSM forms'
+                    if (Object.values(osm_forms).includes(value as osm_forms)) {
+                      handleCustomChange('osmFormSelectionName', value);
+                    }
                     dispatch(CreateProjectActions.setDataExtractGeojson(null));
                   }}
                   errorMsg={errors.formExampleSelection}

@@ -102,6 +102,7 @@ export type ProjectDetailsTypes = {
   data_extract_options?: string;
   organisation_id?: number | null;
   formExampleSelection?: string;
+  osmFormSelectionName?: string;
   average_buildings_per_task?: number;
   dataExtractType?: string;
   per_task_instructions?: string;

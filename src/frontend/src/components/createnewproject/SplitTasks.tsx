@@ -118,7 +118,6 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
       odk_central_url: projectDetails.odk_central_url,
       odk_central_user: projectDetails.odk_central_user,
       odk_central_password: projectDetails.odk_central_password,
-      osm_category: projectDetails.formExampleSelection,
       primary_geom_type: projectDetails.primaryGeomType,
       new_geom_type: projectDetails.newGeomType ? projectDetails.newGeomType : projectDetails.primaryGeomType,
       task_split_type: taskSplittingMethod,
@@ -127,6 +126,10 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
       data_extract_url: projectDetails.data_extract_url,
       custom_tms_url: projectDetails.custom_tms_url,
     };
+    // Append osm_category if set
+    if (projectDetails.osmFormSelectionName) {
+      projectData = { ...projectData, osm_category: projectDetails.osmFormSelectionName };
+    }
     // Append extra param depending on task split type
     if (taskSplittingMethod === task_split_type.TASK_SPLITTING_ALGORITHM) {
       projectData = { ...projectData, task_num_buildings: projectDetails.average_buildings_per_task };

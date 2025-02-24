@@ -74,3 +74,8 @@ export enum submission_status {
   approved = 'Approved',
   rejected = 'Rejected',
 }
+
+export enum osm_forms {
+  buildings = 'OSM Buildings',
+  health = 'OSM Healthcare',
+}

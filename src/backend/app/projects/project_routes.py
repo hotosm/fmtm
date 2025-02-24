@@ -645,7 +645,8 @@ async def get_data_extract(
     # FIXME once sub project creation implemented, this should be manager only
     current_user: Annotated[AuthUser, Depends(login_required)],
     geojson_file: UploadFile = File(...),
-    osm_category: Optional[XLSFormType] = Form(None),
+    # FIXME this is currently hardcoded but needs to be user configurable via UI
+    osm_category: Annotated[Optional[XLSFormType], Form()] = XLSFormType.buildings,
 ):
     """Get a new data extract for a given project AOI.
 

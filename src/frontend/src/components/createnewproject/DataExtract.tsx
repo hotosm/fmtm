@@ -117,7 +117,9 @@ const DataExtract = ({
     const dataExtractRequestFormData = new FormData();
     const projectAoiGeojsonFile = getFileFromGeojson(projectAoiGeojson);
     dataExtractRequestFormData.append('geojson_file', projectAoiGeojsonFile);
-    dataExtractRequestFormData.append('form_category', projectDetails.formExampleSelection);
+    if (projectDetails.osmFormSelectionName) {
+      dataExtractRequestFormData.append('osm_category', projectDetails.osmFormSelectionName);
+    }
 
     // Set flatgeobuf as loading
     dispatch(CreateProjectActions.SetFgbFetchingStatus(true));

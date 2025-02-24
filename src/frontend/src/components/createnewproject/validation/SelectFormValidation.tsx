@@ -1,9 +1,7 @@
 interface ProjectValues {
-  formExampleSelection: string;
   xlsFormFileUpload: File | null;
 }
 interface ValidationErrors {
-  formExampleSelection?: string;
   xlsFormFileUpload?: any;
 }
 

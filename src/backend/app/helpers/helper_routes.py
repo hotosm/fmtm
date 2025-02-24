@@ -69,10 +69,10 @@ async def download_template(
     form_type: XLSFormType,
 ):
     """Download example XLSForm from FMTM."""
-    filename = XLSFormType(form_type).name
-    xlsform_path = f"{xlsforms_path}/{filename}.xls"
+    form_filename = XLSFormType(form_type).name
+    xlsform_path = f"{xlsforms_path}/{form_filename}.xls"
     if Path(xlsform_path).exists():
-        return FileResponse(xlsform_path, filename="form.xls")
+        return FileResponse(xlsform_path, filename=f"{form_filename}.xls")
     else:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Form not found")
 
