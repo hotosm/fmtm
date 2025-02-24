@@ -1087,7 +1087,13 @@ class DbProject(BaseModel):
         )
 
     @classmethod
-    async def one(cls, db: Connection, project_id: int, minimal: bool = False) -> Self:
+    async def one(
+        cls,
+        db: Connection,
+        project_id: int,
+        minimal: bool = False,
+        warn_on_missing_token: bool = True,
+    ) -> Self:
         """Get project by ID, including all tasks and other details."""
         # Simpler query without additional metadata
         if minimal:
@@ -1231,7 +1237,7 @@ class DbProject(BaseModel):
         if db_project is None:
             raise KeyError(f"Project ({project_id}) not found.")
 
-        if db_project.odk_token is None:
+        if warn_on_missing_token and db_project.odk_token is None:
             log.warning(
                 f"Project ({db_project.id}) has no 'odk_token' set. "
                 "The QRCode will not work!"

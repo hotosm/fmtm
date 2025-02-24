@@ -529,7 +529,7 @@ async def generate_project_files(
     Returns:
         bool: True if success.
     """
-    project = await project_deps.get_project_by_id(db, project_id)
+    project = await DbProject.one(db, project_id, warn_on_missing_token=False)
     log.info(f"Starting generate_project_files for project {project_id}")
 
     # Extract data extract from flatgeobuf
