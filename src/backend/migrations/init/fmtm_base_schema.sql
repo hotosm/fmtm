@@ -260,7 +260,7 @@ CREATE TABLE public.projects (
     outline public.GEOMETRY (POLYGON, 4326),
     status public.projectstatus NOT NULL DEFAULT 'DRAFT',
     total_tasks integer,
-    xform_category character varying,
+    osm_category character varying,
     xlsform_content bytea,
     odk_form_id character varying,
     visibility public.projectvisibility NOT NULL DEFAULT 'PUBLIC',
