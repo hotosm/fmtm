@@ -277,7 +277,7 @@ async def append_fields_to_user_xlsform(
     form_name: str = "buildings",
     additional_entities: Optional[list[str]] = None,
     existing_id: Optional[str] = None,
-    new_geom_type: Optional[DbGeomType] = DbGeomType.POINT,
+    new_geom_type: Optional[DbGeomType] = DbGeomType.POLYGON,
 ) -> tuple[str, BytesIO]:
     """Helper to return the intermediate XLSForm prior to convert."""
     log.debug("Appending mandatory FMTM fields to XLSForm")
@@ -295,7 +295,7 @@ async def validate_and_update_user_xlsform(
     form_name: str = "buildings",
     additional_entities: Optional[list[str]] = None,
     existing_id: Optional[str] = None,
-    new_geom_type: Optional[DbGeomType] = DbGeomType.POINT,
+    new_geom_type: Optional[DbGeomType] = DbGeomType.POLYGON,
 ) -> BytesIO:
     """Wrapper to append mandatory fields and validate user uploaded XLSForm."""
     xform_id, updated_file_bytes = await append_fields_to_user_xlsform(

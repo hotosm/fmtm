@@ -105,8 +105,8 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIsUnsavedChanges(false));
-
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
+
     // Project POST data
     let projectData = {
       name: projectDetails.name,
@@ -119,6 +119,8 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
       odk_central_user: projectDetails.odk_central_user,
       odk_central_password: projectDetails.odk_central_password,
       osm_category: projectDetails.formExampleSelection,
+      primary_geom_type: projectDetails.primaryGeomType,
+      new_geom_type: projectDetails.newGeomType ? projectDetails.newGeomType : projectDetails.primaryGeomType,
       task_split_type: taskSplittingMethod,
       // "uploaded_form": projectDetails.uploaded_form,
       hashtags: projectDetails.hashtags,
@@ -131,6 +133,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
     } else {
       projectData = { ...projectData, task_split_dimension: projectDetails.dimension };
     }
+
     // Create file object from generated task areas
     const taskAreaBlob = new Blob([JSON.stringify(dividedTaskGeojson || drawnGeojson)], {
       type: 'application/json',
@@ -145,7 +148,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
         taskAreaGeojsonFile,
         xlsFormFile,
         customDataExtractUpload,
-        projectDetails.dataExtractWays === 'osm_data_extract',
+        projectDetails.dataExtractType === 'osm_data_extract',
         additionalFeature,
         projectDetails.project_admins as number[],
         combinedFeaturesCount,
@@ -185,7 +188,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
       dispatch(
         GetDividedTaskFromGeojson(`${import.meta.env.VITE_API_URL}/projects/preview-split-by-square`, {
           geojson: drawnGeojsonFile,
-          extract_geojson: formValues.dataExtractWays === 'osm_data_extract' ? null : dataExtractFile,
+          extract_geojson: formValues.dataExtractType === 'osm_data_extract' ? null : dataExtractFile,
           dimension: formValues?.dimension,
         }),
       );
@@ -196,7 +199,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
           drawnGeojsonFile,
           formValues?.average_buildings_per_task,
           // Only send dataExtractFile if custom extract
-          formValues.dataExtractWays === 'osm_data_extract' ? null : dataExtractFile,
+          formValues.dataExtractType === 'osm_data_extract' ? null : dataExtractFile,
         ),
       );
     }

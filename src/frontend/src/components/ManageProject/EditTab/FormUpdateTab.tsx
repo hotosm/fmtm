@@ -50,30 +50,6 @@ const FormUpdateTab = ({ projectId }) => {
 
   return (
     <div className="fmtm-flex fmtm-flex-col fmtm-gap-10">
-      {/* <div className="">
-        <CustomSelect
-          title="What are you Surveying"
-          placeholder="Survey Type"
-          data={sortedFormExampleList}
-          dataKey="id"
-          valueKey="title"
-          label="title"
-          value={selectedCategory}
-          className="fmtm-max-w-[13.5rem]"
-          disabled
-        />
-        <p className="fmtm-text-base fmtm-mt-2">
-          The survey type will be used to set the OpenStreetMap{' '}
-          <a
-            href="https://wiki.openstreetmap.org/wiki/Tags"
-            target="_"
-            className="fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-underline"
-          >
-            tags
-          </a>{' '}
-          {`if uploading the final submissions to OSM.`}
-        </p>
-      </div> */}
       <div>
         <p className="fmtm-text-base">⚠️ IMPORTANT ⚠️</p>
         <p className="fmtm-text-base fmtm-mt-2">

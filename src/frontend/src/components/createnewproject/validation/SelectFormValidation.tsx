@@ -1,17 +1,17 @@
 interface ProjectValues {
   formExampleSelection: string;
-  customFormUpload: File | null;
+  xlsFormFileUpload: File | null;
 }
 interface ValidationErrors {
   formExampleSelection?: string;
-  customFormUpload?: any;
+  xlsFormFileUpload?: any;
 }
 
 function SelectFormValidation(values: ProjectValues) {
   const errors: ValidationErrors = {};
 
-  if (!values?.customFormUpload) {
-    errors.customFormUpload = 'Form needs to be Uploaded.';
+  if (!values?.xlsFormFileUpload) {
+    errors.xlsFormFileUpload = 'Form needs to be Uploaded.';
   }
 
   return errors;

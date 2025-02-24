@@ -2,6 +2,7 @@
 -- * Replace projects.xform_category with projects.osm_category
 -- * Replace projects.data_extract_type with primary_geom_type
 --   (to compliment new_geom_type)
+-- * Default for new_geom_type to Polygon
 
 -- Start a transaction
 BEGIN;
@@ -36,6 +37,8 @@ BEGIN
     END IF;
 END $$;
 
+ALTER TABLE IF EXISTS public.projects
+ALTER COLUMN new_geom_type SET DEFAULT 'POLYGON';
 
 -- Commit the transaction
 COMMIT;

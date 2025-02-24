@@ -14,7 +14,7 @@ import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import { Loader2 } from 'lucide-react';
 import DescriptionSection from '@/components/createnewproject/Description';
 
-const SelectForm = ({ flag, geojsonFile, xlsFormFile, setXlsFormFile }) => {
+const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
   useDocumentTitle('Create Project: Upload Survey');
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -57,10 +57,12 @@ const SelectForm = ({ flag, geojsonFile, xlsFormFile, setXlsFormFile }) => {
     const { files } = event.target;
     // Set the selected file as the xlsFormFile state
     setXlsFormFile(files[0]);
-    handleCustomChange('customFormUpload', files[0]);
+    console.log(files[0]);
+    console.log(xlsFormFile);
+    handleCustomChange('xlsFormFileUpload', files[0]);
   };
   const resetFile = (): void => {
-    handleCustomChange('customFormUpload', null);
+    handleCustomChange('xlsFormFileUpload', null);
     dispatch(CreateProjectActions.SetCustomFileValidity(false));
     setXlsFormFile(null);
   };
@@ -106,7 +108,7 @@ const SelectForm = ({ flag, geojsonFile, xlsFormFile, setXlsFormFile }) => {
                   btnText="Upload XLSForm"
                   accept=".xls,.xlsx,.xml"
                   fileDescription="*The supported file formats are .xlsx, .xls, .xml"
-                  errorMsg={errors.customFormUpload}
+                  errorMsg={errors.xlsFormFileUpload}
                 />
               </div>
               {validateCustomFormLoading && (

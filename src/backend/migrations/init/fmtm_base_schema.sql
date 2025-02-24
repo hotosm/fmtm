@@ -284,7 +284,7 @@ CREATE TABLE public.projects (
         geo_restrict_distance_meters >= 0
     ),
     primary_geom_type public.geomtype DEFAULT 'POLYGON',
-    new_geom_type public.geomtype DEFAULT 'POINT',
+    new_geom_type public.geomtype DEFAULT 'POLYGON',
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now()
 );

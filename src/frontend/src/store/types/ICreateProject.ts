@@ -103,12 +103,15 @@ export type ProjectDetailsTypes = {
   organisation_id?: number | null;
   formExampleSelection?: string;
   average_buildings_per_task?: number;
-  dataExtractWays?: string;
+  dataExtractType?: string;
   per_task_instructions?: string;
   custom_tms_url: string;
   hasCustomTMS: boolean;
-  customFormUpload: any;
+  xlsFormFileUpload: any;
   hasAdditionalFeature: boolean;
+  primaryGeomType: MapGeomTypes;
+  useMixedGeomTypes: boolean;
+  newGeomType: MapGeomTypes;
   project_admins: number[];
 };
 
