@@ -54,7 +54,23 @@ const DataExtract = ({
   const additionalFeatureGeojson = useAppSelector((state) => state.createproject.additionalFeatureGeojson);
 
   useEffect(() => {
+    if (!dataExtractGeojson) {
+      setDisableNextButton(true);
+      return;
+    }
     const featureCount = dataExtractGeojson?.features?.length ?? 0;
+
+    if (featureCount > 30000) {
+      setDisableNextButton(true);
+      dispatch(
+        CommonActions.SetSnackBar({
+          message: `${featureCount} is a lot of features! Please consider breaking this into smaller projects.`,
+          variant: 'error',
+          duration: 10000,
+        }),
+      );
+      return;
+    }
 
     if (featureCount > 10000) {
       dispatch(
@@ -66,18 +82,7 @@ const DataExtract = ({
       );
     }
 
-    if (featureCount > 30000) {
-      setDisableNextButton(true);
-      dispatch(
-        CommonActions.SetSnackBar({
-          message: `${featureCount} is a lot of features! Please consider breaking this into smaller projects.`,
-          variant: 'error',
-          duration: 10000,
-        }),
-      );
-    } else {
-      setDisableNextButton(false);
-    }
+    setDisableNextButton(false);
   }, [dataExtractGeojson, additionalFeatureGeojson, extractType, isFgbFetching]);
 
   const submission = () => {
@@ -260,7 +265,7 @@ const DataExtract = ({
             onSubmit={handleSubmit}
             className="fmtm-flex fmtm-flex-col fmtm-gap-6 lg:fmtm-w-[40%] fmtm-justify-between"
           >
-            <div>
+            <div className="fmtm-flex fmtm-flex-col fmtm-gap-4">
               <RadioButton
                 topic="What type of geometry do you wish to map?"
                 options={primaryGeomOptions}
@@ -272,33 +277,31 @@ const DataExtract = ({
                 errorMsg={errors.primaryGeomType}
                 required
               />
-            </div>
-            <CustomCheckbox
-              key="newFeatureType"
-              label="I want to use a mix of geometry types"
-              checked={formValues?.useMixedGeomTypes}
-              onCheckedChange={(status) => {
-                handleCustomChange('useMixedGeomTypes', status);
-              }}
-              className="fmtm-text-black"
-              labelClickable
-            />
-            {formValues?.useMixedGeomTypes && (
-              <>
-                <RadioButton
-                  topic="New geometries collected should be of type"
-                  options={newGeomOptions}
-                  direction="column"
-                  value={formValues.newGeomType}
-                  onChangeData={(value) => {
-                    handleCustomChange('newGeomType', value);
-                  }}
-                  errorMsg={errors.newGeomType}
-                  required
-                />
-              </>
-            )}
-            <div>
+              <CustomCheckbox
+                key="newFeatureType"
+                label="I want to use a mix of geometry types"
+                checked={formValues?.useMixedGeomTypes}
+                onCheckedChange={(status) => {
+                  handleCustomChange('useMixedGeomTypes', status);
+                }}
+                className="fmtm-text-black"
+                labelClickable
+              />
+              {formValues?.useMixedGeomTypes && (
+                <>
+                  <RadioButton
+                    topic="New geometries collected should be of type"
+                    options={newGeomOptions}
+                    direction="column"
+                    value={formValues.newGeomType}
+                    onChangeData={(value) => {
+                      handleCustomChange('newGeomType', value);
+                    }}
+                    errorMsg={errors.newGeomType}
+                    required
+                  />
+                </>
+              )}
               <RadioButton
                 topic="Upload your own map data or use OSM"
                 options={dataExtractOptions}
@@ -319,19 +322,17 @@ const DataExtract = ({
                 required
               />
               {extractType === 'osm_data_extract' && (
-                <div className="fmtm-mt-4 fmtm-mb-8">
-                  <Button
-                    variant="primary-red"
-                    onClick={() => {
-                      resetFile(setCustomDataExtractUpload);
-                      generateDataExtract();
-                    }}
-                    isLoading={isFgbFetching}
-                    disabled={dataExtractGeojson && customDataExtractUpload ? true : false}
-                  >
-                    Fetch OSM Data
-                  </Button>
-                </div>
+                <Button
+                  variant="primary-red"
+                  onClick={() => {
+                    resetFile(setCustomDataExtractUpload);
+                    generateDataExtract();
+                  }}
+                  isLoading={isFgbFetching}
+                  disabled={dataExtractGeojson && customDataExtractUpload ? true : false}
+                >
+                  Fetch OSM Data
+                </Button>
               )}
               {extractType === 'custom_data_extract' && (
                 <>
@@ -352,14 +353,12 @@ const DataExtract = ({
                   />
                 </>
               )}
-              <div className="fmtm-mt-5">
-                <p className="fmtm-text-gray-500">
-                  Total number of features:{' '}
-                  <span className="fmtm-font-bold">{dataExtractGeojson?.features?.length || 0}</span>
-                </p>
-              </div>
+              <p className="fmtm-text-gray-500">
+                Total number of features:{' '}
+                <span className="fmtm-font-bold">{dataExtractGeojson?.features?.length || 0}</span>
+              </p>
               {extractType && (
-                <div className="fmtm-mt-4">
+                <>
                   <div
                     onMouseOver={() => {
                       dispatch(CreateProjectActions.SetDescriptionToFocus('mapfeatures-additional'));
@@ -411,7 +410,7 @@ const DataExtract = ({
                       <span className="fmtm-font-bold">{additionalFeatureGeojson?.features?.length || 0}</span>
                     </p>
                   )}
-                </div>
+                </>
               )}
             </div>
             <div className="fmtm-flex fmtm-gap-5 fmtm-mx-auto fmtm-mt-10 fmtm-my-5">

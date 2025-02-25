@@ -128,14 +128,10 @@ const UploadArea = ({ hoveredSection }: hoveredSectionType) => {
 
 const UploadSurvey = ({ hoveredSection }: hoveredSectionType) => {
   const { windowSize } = windowDimention();
-  const customFormRef = useRef<HTMLDivElement>(null);
   const uploadFormRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!hoveredSection || windowSize.width < 1024) return;
-    if (hoveredSection === 'selectform-osmnote') {
-      customFormRef?.current?.scrollIntoView(scrollOptions);
-    }
     if (hoveredSection === 'selectform-selectform') {
       uploadFormRef?.current?.scrollIntoView(scrollOptions);
     }
@@ -157,16 +153,13 @@ const UploadSurvey = ({ hoveredSection }: hoveredSectionType) => {
         to learn more about XLSForm building.{' '}
       </span>
       <p
-        ref={customFormRef}
-        className={`${hoveredSection === 'selectform-osmnote' && 'fmtm-text-gray-800'} fmtm-duration-150 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3`}
+        ref={uploadFormRef}
+        className={`${hoveredSection === 'selectform-selectform' && 'fmtm-text-gray-800'} fmtm-duration-150 lg:fmtm-flex lg:fmtm-flex-col lg:fmtm-gap-3`}
       >
         <span>
           <b>Note:</b> Uploading a custom form may make uploading of the final dataset to OSM difficult.
         </span>
-        <span
-          ref={uploadFormRef}
-          className={`${hoveredSection === 'selectform-selectform' && 'fmtm-text-gray-800'} fmtm-duration-150`}
-        >
+        <span>
           <b>Note:</b> Additional questions will be incorporated into your custom form to assess the digitization
           status.
         </span>
