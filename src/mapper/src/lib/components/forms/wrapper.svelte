@@ -19,7 +19,7 @@
 
   let iframeRef: HTMLIFrameElement;
 
-  // to-do: hide drawer upon succesful submission
+  // to-do: hide drawer upon successful submission
   function handleSubmit(payload: any) {
     (async () => {
       if (!payload.detail) return;
