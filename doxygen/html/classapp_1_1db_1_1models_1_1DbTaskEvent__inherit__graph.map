@@ -1,0 +1,9 @@
+<map id="app.db.models.DbTaskEvent" name="app.db.models.DbTaskEvent">
+<area shape="rect" id="Node000001" title=" " alt="" coords="124,119,323,384"/>
+<area shape="rect" id="Node000003" href="$classapp_1_1tasks_1_1task__schemas_1_1TaskEventIn.html" title=" " alt="" coords="5,432,212,592"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="162,398,146,433,141,431,157,396"/>
+<area shape="rect" id="Node000004" href="$classapp_1_1tasks_1_1task__schemas_1_1TaskEventOut.html" title=" " alt="" coords="236,472,443,552"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="291,396,324,471,319,473,286,398"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="180,5,267,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="226,84,226,119,221,119,221,84"/>
+</map>

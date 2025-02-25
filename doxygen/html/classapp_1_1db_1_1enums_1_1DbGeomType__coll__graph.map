@@ -1,0 +1,7 @@
+<map id="app.db.enums.DbGeomType" name="app.db.enums.DbGeomType">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,119,203,224"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="28,5,97,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="79,83,90,117,85,119,74,85"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="121,5,172,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="135,85,123,119,118,117,130,83"/>
+</map>

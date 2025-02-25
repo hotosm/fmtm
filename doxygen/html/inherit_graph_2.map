@@ -1,0 +1,11 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" title=" " alt="" coords="5,55,112,80"/>
+<area shape="rect" id="Node000001" href="$classapp_1_1config_1_1OtelSettings.html" title=" " alt="" coords="160,29,333,55"/>
+<area shape="poly" id="edge65_Node000000_Node000001" title=" " alt="" coords="125,56,160,51,160,56,126,61"/>
+<area shape="rect" id="Node000004" href="$classapp_1_1config_1_1Settings.html" title=" " alt="" coords="173,79,320,104"/>
+<area shape="poly" id="edge68_Node000000_Node000004" title=" " alt="" coords="126,73,174,79,173,85,125,78"/>
+<area shape="rect" id="Node000002" href="$classapp_1_1config_1_1OpenObserveSettings.html" title=" " alt="" coords="381,5,616,31"/>
+<area shape="poly" id="edge66_Node000001_Node000002" title=" " alt="" coords="347,30,381,27,381,32,347,35"/>
+<area shape="rect" id="Node000003" href="$classapp_1_1config_1_1SentrySettings.html" title=" " alt="" coords="405,55,593,80"/>
+<area shape="poly" id="edge67_Node000001_Node000003" title=" " alt="" coords="347,49,405,55,404,61,347,55"/>
+</map>

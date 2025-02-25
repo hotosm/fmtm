@@ -1,0 +1,17 @@
+<map id="app.auth.auth_schemas.ProjectUserDict" name="app.auth.auth_schemas.ProjectUserDict">
+<area shape="rect" id="Node000001" title=" " alt="" coords="81,752,299,832"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,467,84,532"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="53,545,69,614,82,652,99,688,122,721,148,750,144,754,117,724,94,691,77,654,64,616,48,546"/>
+<area shape="rect" id="Node000003" href="$classapp_1_1db_1_1models_1_1DbUser.html" title=" " alt="" coords="109,337,271,662"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="193,662,193,736,187,736,187,662"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="128,5,215,71"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="173,84,175,285,178,336,173,336,170,285,168,84"/>
+<area shape="rect" id="Node000006" href="$classapp_1_1db_1_1models_1_1DbProject.html" title=" " alt="" coords="296,309,473,689"/>
+<area shape="poly" id="edge6_Node000006_Node000004" title=" " alt="" coords="175,84,183,197,193,250,200,270,208,284,225,295,243,296,263,297,285,307,298,319,294,323,282,312,262,302,243,302,223,300,204,287,195,272,188,251,178,198,169,84"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="295,5,365,71"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="296,51,260,68,243,81,230,96,214,134,203,188,193,320,188,320,198,187,209,132,225,93,239,77,257,64,294,46"/>
+<area shape="poly" id="edge7_Node000006_Node000005" title=" " alt="" coords="349,70,358,94,377,193,387,293,381,293,372,194,353,95,344,72"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="298,673,285,691,244,741,239,738,281,688,294,670"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="491,5,572,71"/>
+<area shape="poly" id="edge8_Node000006_Node000007" title=" " alt="" coords="534,71,528,168,519,228,505,286,483,340,478,338,499,285,514,227,523,168,529,71"/>
+</map>

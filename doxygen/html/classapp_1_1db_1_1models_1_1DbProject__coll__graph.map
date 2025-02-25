@@ -1,0 +1,9 @@
+<map id="app.db.models.DbProject" name="app.db.models.DbProject">
+<area shape="rect" id="Node000001" title=" " alt="" coords="63,309,240,689"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,92,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="61,83,112,308,106,309,56,85"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="117,5,186,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="154,71,154,292,149,292,149,71"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="257,5,339,71"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="301,71,295,168,286,228,271,286,250,340,245,338,266,285,281,227,289,168,295,71"/>
+</map>

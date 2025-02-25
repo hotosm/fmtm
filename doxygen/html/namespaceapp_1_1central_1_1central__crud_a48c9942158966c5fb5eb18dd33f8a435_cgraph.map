@@ -1,0 +1,8 @@
+<map id="app.central.central_crud.update_entity_mapping_status" name="app.central.central_crud.update_entity_mapping_status">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,22,156,77"/>
+<area shape="rect" id="Node000002" href="$namespaceapp_1_1central_1_1central__crud.html#a90a17da380ef76a0224fc8b029217c55" title=" " alt="" coords="204,29,383,69"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="156,47,190,47,190,52,156,52"/>
+<area shape="rect" id="Node000003" href="$namespaceapp_1_1central_1_1central__crud.html#a82b1e88d27cad5236b286cf58d18bfa8" title=" " alt="" coords="431,29,575,69"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="383,47,417,47,417,52,383,52"/>
+<area shape="poly" id="edge3_Node000003_Node000003" title=" " alt="" coords="464,30,461,20,467,10,481,5,503,3,527,6,540,13,538,18,525,11,503,8,483,10,471,15,466,21,469,28"/>
+</map>

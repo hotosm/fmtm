@@ -1,0 +1,7 @@
+<map id="app.s3.add_file_to_bucket" name="app.s3.add_file_to_bucket">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,5,145,45"/>
+<area shape="rect" id="Node000002" href="$namespaceapp_1_1s3.html#acffc355b9618f1abaeeae4268ff22f19" title=" " alt="" coords="193,13,320,38"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="146,23,179,23,179,28,146,28"/>
+<area shape="rect" id="Node000003" href="$namespaceapp_1_1s3.html#abcbfc1b4a1adb60f52517ff4e298294f" title=" " alt="" coords="368,5,527,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="320,23,354,23,354,28,320,28"/>
+</map>

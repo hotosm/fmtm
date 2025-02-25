@@ -1,0 +1,9 @@
+<map id="app.submissions.submission_schemas.SubmissionDashboard" name="app.submissions.submission_schemas.SubmissionDashboard">
+<area shape="rect" id="Node000001" title=" " alt="" coords="60,177,288,297"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,92,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="78,81,139,176,134,179,74,84"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="116,5,232,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="177,71,177,161,171,161,171,71"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="257,5,326,71"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="291,72,282,113,264,155,257,166,252,163,260,152,277,111,285,71"/>
+</map>

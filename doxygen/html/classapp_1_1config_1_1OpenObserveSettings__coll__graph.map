@@ -1,0 +1,12 @@
+<map id="app.config.OpenObserveSettings" name="app.config.OpenObserveSettings">
+<area shape="rect" id="Node000001" title=" " alt="" coords="163,365,390,480"/>
+<area shape="rect" id="Node000002" href="$classapp_1_1config_1_1OtelSettings.html" title=" " alt="" coords="5,163,225,303"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="185,311,230,363,226,367,181,315"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="22,5,121,71"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="82,83,93,138,98,162,93,163,87,139,76,84"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="193,5,262,71"/>
+<area shape="poly" id="edge5_Node000001_Node000004" title=" " alt="" coords="251,70,261,94,275,160,283,228,284,349,279,349,277,228,270,161,255,95,246,72"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="193,49,152,66,134,79,119,96,109,120,105,147,100,146,104,119,114,93,130,75,150,61,191,44"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="447,200,525,265"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="463,267,429,305,368,357,365,353,425,301,459,264"/>
+</map>
