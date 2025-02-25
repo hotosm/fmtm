@@ -159,10 +159,24 @@
 		newFeatureGeom = null;
 	}
 
-	function mapNewFeatureInODK() {
-		const newGeom = newFeatureGeom;
-		cancelMapNewFeatureInODK();
-		openOdkCollectNewFeature(data?.project?.odk_form_id, newGeom, taskStore.selectedTaskId);
+	async function mapNewFeatureInODK() {
+		{
+			/*
+			1: create entity in ODK of newly created feature
+			2: create geom record to show the feature on map
+			3: pass entity uuid to ODK intent URL as a param 
+			*/
+		}
+		const entity = await entitiesStore.createEntity(data.projectId, {
+			type: 'FeatureCollection',
+			features: [{ type: 'Feature', geometry: newFeatureGeom, properties: {} }],
+		});
+		await entitiesStore.createGeomRecord(data.projectId, {
+			status: 'NEW',
+			geojson: { type: 'Feature', geometry: newFeatureGeom, properties: { entity_id: entity.uuid } },
+			project_id: data.projectId,
+		});
+		openOdkCollectNewFeature(data?.project?.odk_form_id, entity.uuid);
 	}
 </script>
 
