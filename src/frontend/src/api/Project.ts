@@ -69,10 +69,7 @@ export const ProjectById = (projectId: string) => {
         dispatch(ProjectActions.SetProjectDetialsLoading(false));
         dispatch(
           CommonActions.SetSnackBar({
-            open: true,
             message: 'Failed to fetch project.',
-            variant: 'error',
-            duration: 2000,
           }),
         );
       }
@@ -186,10 +183,7 @@ export const DownloadBasemapFile = (url: string | null) => {
     if (!url) {
       dispatch(
         CommonActions.SetSnackBar({
-          open: true,
           message: 'No url associated to download basemap.',
-          variant: 'error',
-          duration: 2000,
         }),
       );
     } else {
@@ -311,47 +305,13 @@ export const UpdateEntityState = (url: string, payload: { entity_id: string; sta
       } catch (error) {
         dispatch(
           CommonActions.SetSnackBar({
-            open: true,
             message: error?.response?.data?.detail || 'Failed to update entity state.',
-            variant: 'error',
-            duration: 2000,
           }),
         );
         dispatch(ProjectActions.UpdateEntityStateLoading(false));
       }
     };
     await updateEntityState(url, payload);
-  };
-};
-
-export const DownloadSubmissionGeojson = (url: string, projectName: string) => {
-  return async (dispatch: AppDispatch) => {
-    dispatch(ProjectActions.SetDownloadSubmissionGeojsonLoading(true));
-
-    const downloadSubmissionGeojson = async (url: string) => {
-      try {
-        const response = await CoreModules.axios.get(url, { responseType: 'blob' });
-        const a = document.createElement('a');
-        a.href = window.URL.createObjectURL(response.data);
-        a.download = `${projectName}.geojson`;
-        a.click();
-        dispatch(ProjectActions.SetDownloadSubmissionGeojsonLoading(false));
-      } catch (error) {
-        const errortxt = JSON.parse(await error.response.data.text()).detail;
-        dispatch(
-          CommonActions.SetSnackBar({
-            open: true,
-            message: errortxt || 'Failed to download submission geojson.',
-            variant: 'error',
-            duration: 2000,
-          }),
-        );
-        dispatch(ProjectActions.SetDownloadSubmissionGeojsonLoading(false));
-      } finally {
-        dispatch(ProjectActions.SetDownloadSubmissionGeojsonLoading(false));
-      }
-    };
-    await downloadSubmissionGeojson(url);
   };
 };
 

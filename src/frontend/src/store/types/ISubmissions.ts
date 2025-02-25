@@ -18,9 +18,8 @@ export type SubmissionStateTypes = {
   updateReviewStateLoading: boolean;
   mappedVsValidatedTask: mappedVsValidatedTaskType[];
   mappedVsValidatedTaskLoading: boolean;
-  submissionPhotos: string[];
+  submissionPhotos: Record<string, string>;
   submissionPhotosLoading: boolean;
-  DownloadSubmissionGeojsonLoading: boolean;
 };
 
 type updateReviewStatusModal = {
@@ -33,6 +32,7 @@ type updateReviewStatusModal = {
   entity_id: string | null;
   label: string | null;
   feature: featureType | null;
+  featureId: string | null;
 };
 
 export type filterType = {

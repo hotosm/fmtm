@@ -68,12 +68,11 @@ const initialState: themeStateType = {
       },
     },
     statusTextTheme: {
-      READY: '#a3a2a2',
+      UNLOCKED_TO_MAP: '#a3a2a2',
       LOCKED_FOR_MAPPING: '#097085',
-      MAPPED: '#64cfe3',
+      UNLOCKED_TO_VALIDATE: '#64cfe3',
       LOCKED_FOR_VALIDATION: '#C5BD0A',
-      VALIDATED: '#44c9a2',
-      INVALIDATED: '#D73F37',
+      UNLOCKED_DONE: '#44c9a2',
     },
     READY: '#fff',
     LOCKED_FOR_MAPPING: '#fff',
@@ -87,7 +86,7 @@ const initialState: themeStateType = {
       //default font family changed to BarlowMedium
       fontSize: 16,
       // fontFamily: 'ArchivoMedium',
-      fontFamily: 'BarlowMedium',
+      fontFamily: 'Barlow',
       //custom
       htmlFontSize: 18,
 

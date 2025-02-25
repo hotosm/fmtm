@@ -8,6 +8,8 @@ import { user_roles } from '@/types/enums';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import Searchbar from '@/components/common/SearchBar';
 import useDebouncedInput from '@/hooks/useDebouncedInput';
+import { useIsAdmin } from '@/hooks/usePermissions';
+import NoAccessComponent from './NoAccessComponent';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -19,13 +21,16 @@ const roleLabel = {
 };
 
 const ManageUsers = () => {
+  const isAdmin = useIsAdmin();
+  if (!isAdmin) return <NoAccessComponent />;
+
   const dispatch = useAppDispatch();
   const userListLoading = useAppSelector((state) => state.user.userListLoading);
   const userList = useAppSelector((state) => state.user.userList);
 
   const updateRole = (id: number, currentRole: roleType, newRole: roleType) => {
     if (currentRole === newRole) {
-      dispatch(CommonActions.SetSnackBar({ duration: 2000, open: true, message: 'Role up-to-date', variant: 'info' }));
+      dispatch(CommonActions.SetSnackBar({ message: 'Role up-to-date', variant: 'info' }));
       return;
     }
     dispatch(UpdateUserRole(`${VITE_API_URL}/users/${id}`, { role: newRole }));
@@ -129,17 +134,19 @@ const ManageUsers = () => {
   return (
     <div className="fmtm-h-full fmtm-flex fmtm-flex-col">
       <div className="fmtm-flex fmtm-items-center fmtm-justify-between">
-        <h4 className="fmtm-text-[1.25rem] fmtm-font-bold fmtm-text-[#2C3038]">Manage Users</h4>
+        <h4 className="fmtm-font-semibold fmtm-text-[#2C3038]">Manage Users</h4>
         <Searchbar
           value={searchTextData}
           onChange={handleChangeData}
           wrapperStyle="!fmtm-w-[13rem]"
-          className="!fmtm-py-0"
+          className="!fmtm-py-0 !fmtm-rounded"
           placeholder="Search by username"
           isSmall
         />
       </div>
-      <p className="fmtm-text-grey-500  fmtm-mb-4">Total number of users: {userList?.pagination?.total}</p>
+      <p className="fmtm-body-md-semibold fmtm-text-grey-500 fmtm-mb-4">
+        Total number of users: {userList?.pagination?.total}
+      </p>
       <DataTable
         data={userList || []}
         columns={userDatacolumns}

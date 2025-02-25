@@ -3,11 +3,8 @@ import SwipeableDrawer from '@mui/material/SwipeableDrawer';
 import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
 import { NavLink } from 'react-router-dom';
-import { revokeCookies } from '@/utilfunctions/login';
-import { CommonActions } from '@/store/slices/CommonSlice';
-import { LoginActions } from '@/store/slices/LoginSlice';
-import { ProjectActions } from '@/store/slices/ProjectSlice';
-import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
+import { useAppSelector } from '@/types/reduxTypes';
+import { user_roles } from '@/types/enums';
 
 type customDrawerType = {
   open: boolean;
@@ -17,62 +14,60 @@ type customDrawerType = {
   setOpen: (open: boolean) => void;
 };
 
-const MenuItems = [
-  {
-    name: 'Explore Projects',
-    ref: '/',
-    isExternalLink: false,
-    isActive: true,
-  },
-  {
-    name: 'Manage Organizations',
-    ref: '/organization',
-    isExternalLink: false,
-    isActive: true,
-  },
-  {
-    name: 'Manage Category',
-    ref: '/',
-    isExternalLink: false,
-    isActive: true,
-  },
-  {
-    name: 'My Contributions',
-    ref: 'TBD',
-    isExternalLink: false,
-    isActive: false,
-  },
-  {
-    name: 'Learn',
-    ref: 'https://hotosm.github.io/fmtm',
-    isExternalLink: true,
-    isActive: true,
-  },
-  {
-    name: 'About',
-    ref: 'https://docs.fmtm.dev/about/about/',
-    isExternalLink: true,
-    isActive: true,
-  },
-  {
-    name: 'Support',
-    ref: 'https://github.com/hotosm/fmtm/issues/',
-    isExternalLink: true,
-    isActive: true,
-  },
-  {
-    name: 'Download Custom ODK Collect',
-    ref: 'https://github.com/hotosm/odkcollect/releases/download/v2024.2.4-entity-select/ODK-Collect-v2024.2.4-FMTM.apk',
-    isExternalLink: true,
-    isActive: true,
-  },
-];
-
 export default function CustomDrawer({ open, size, type, onClose, setOpen }: customDrawerType) {
-  const dispatch = useAppDispatch();
-
   const defaultTheme = useAppSelector((state) => state.theme.hotTheme);
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
+
+  const MenuItems = [
+    {
+      name: 'Explore Projects',
+      ref: '/',
+      isExternalLink: false,
+      isActive: true,
+    },
+    {
+      name: 'Manage Users',
+      ref: '/manage/user',
+      isExternalLink: false,
+      isActive: authDetails?.role === user_roles.ADMIN,
+    },
+    {
+      name: 'Manage Organizations',
+      ref: '/manage/organization',
+      isExternalLink: false,
+      isActive: true,
+    },
+    {
+      name: 'My Contributions',
+      ref: 'TBD',
+      isExternalLink: false,
+      isActive: false,
+    },
+    {
+      name: 'Learn',
+      ref: 'https://hotosm.github.io/fmtm',
+      isExternalLink: true,
+      isActive: true,
+    },
+    {
+      name: 'About',
+      ref: 'https://docs.fmtm.dev/about/about/',
+      isExternalLink: true,
+      isActive: true,
+    },
+    {
+      name: 'Support',
+      ref: 'https://github.com/hotosm/fmtm/issues/',
+      isExternalLink: true,
+      isActive: true,
+    },
+    {
+      name: 'Download Custom ODK Collect',
+      ref: 'https://github.com/hotosm/odkcollect/releases/download/v2024.3.5-entity-select/ODK-Collect-v2024.3.5-HOTOSM-FMTM.apk',
+      isExternalLink: true,
+      isActive: true,
+    },
+  ];
 
   const onMouseEnter = (event: React.MouseEvent<HTMLElement>) => {
     const targetElement = event.target as HTMLElement;
@@ -104,24 +99,6 @@ export default function CustomDrawer({ open, size, type, onClose, setOpen }: cus
       borderRadius: 7,
       fontFamily: defaultTheme.typography.subtitle2.fontFamily,
     },
-  };
-
-  const handleOnSignOut = async () => {
-    setOpen(false);
-    try {
-      await revokeCookies();
-      dispatch(LoginActions.signOut());
-      dispatch(ProjectActions.clearProjects([]));
-    } catch {
-      dispatch(
-        CommonActions.SetSnackBar({
-          open: true,
-          message: 'Failed to sign out.',
-          variant: 'error',
-          duration: 2000,
-        }),
-      );
-    }
   };
 
   return (
@@ -159,15 +136,7 @@ export default function CustomDrawer({ open, size, type, onClose, setOpen }: cus
                 ) : (
                   <AssetModules.PersonIcon color="success" sx={{ display: { xs: 'block', md: 'none' }, mt: '1%' }} />
                 )}
-                <CoreModules.Typography
-                  variant="subtitle2"
-                  color={'info'}
-                  noWrap
-                  sx={{ display: { xs: 'block', md: 'none' } }}
-                  className="fmtm-w-fit"
-                >
-                  {authDetails['username']}
-                </CoreModules.Typography>
+                <h4>{authDetails.username}</h4>
               </CoreModules.Stack>
             )}
             <CoreModules.Divider color={'info'} sx={{ display: { xs: 'block', md: 'none' } }} />
@@ -203,10 +172,13 @@ export default function CustomDrawer({ open, size, type, onClose, setOpen }: cus
                     key={index}
                     to={menuDetails.ref}
                     className={`fmtm-no-underline fmtm-text-inherit fmtm-opacity-80 ${
-                      menuDetails.name === 'Explore Projects' || menuDetails.name === 'Manage Organizations'
+                      menuDetails.name === 'Explore Projects' ||
+                      menuDetails.name === 'Manage Organizations' ||
+                      menuDetails.name === 'Manage Users'
                         ? 'lg:fmtm-hidden'
                         : ''
                     }`}
+                    onClick={onClose}
                   >
                     <CoreModules.ListItem
                       id={index.toString()}
@@ -219,26 +191,6 @@ export default function CustomDrawer({ open, size, type, onClose, setOpen }: cus
                   </NavLink>
                 ),
               )}
-              <div className="fmtm-ml-4 fmtm-mt-2 lg:fmtm-hidden">
-                {authDetails ? (
-                  <div
-                    className="fmtm-text-[#d73e3e] hover:fmtm-text-[#d73e3e] fmtm-cursor-pointer fmtm-opacity-80"
-                    onClick={handleOnSignOut}
-                  >
-                    Sign Out
-                  </div>
-                ) : (
-                  <div
-                    className="fmtm-text-[#44546a] hover:fmtm-text-[#d73e3e] fmtm-cursor-pointer fmtm-opacity-80"
-                    onClick={() => {
-                      onClose();
-                      dispatch(LoginActions.setLoginModalOpen(true));
-                    }}
-                  >
-                    Sign In
-                  </div>
-                )}
-              </div>
             </CoreModules.List>
           </CoreModules.Stack>
         </SwipeableDrawer>

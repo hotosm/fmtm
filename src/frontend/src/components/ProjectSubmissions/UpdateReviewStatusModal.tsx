@@ -23,6 +23,7 @@ const initialReviewState = {
   entity_id: null,
   label: null,
   feature: null,
+  featureId: null,
 };
 
 // Note these id values must be camelCase to match what ODK Central requires
@@ -64,7 +65,8 @@ const UpdateReviewStatusModal = () => {
       !updateReviewStatusModal.projectId ||
       !updateReviewStatusModal.taskId ||
       !updateReviewStatusModal.entity_id ||
-      !updateReviewStatusModal.taskUid
+      !updateReviewStatusModal.taskUid ||
+      !updateReviewStatusModal.featureId
     ) {
       return;
     }
@@ -130,7 +132,7 @@ const UpdateReviewStatusModal = () => {
           `${VITE_API_URL}/tasks/${updateReviewStatusModal?.taskUid}/event?project_id=${updateReviewStatusModal?.projectId}`,
           {
             task_id: +updateReviewStatusModal?.taskUid,
-            comment: `${updateReviewStatusModal?.instanceId}-SUBMISSION_INST-${noteComments}`,
+            comment: `#submissionId:${updateReviewStatusModal?.instanceId} #featureId:${updateReviewStatusModal?.featureId} ${noteComments}`,
             event: task_event.COMMENT,
           },
         ),
@@ -174,22 +176,23 @@ const UpdateReviewStatusModal = () => {
           />
           <div className="fmtm-grid fmtm-grid-cols-2 fmtm-gap-4 fmtm-mt-8">
             <Button
-              btnText="Cancel"
-              btnType="other"
-              className="fmtm-w-full fmtm-justify-center !fmtm-rounded fmtm-font-bold fmtm-text-sm !fmtm-py-2"
+              variant="secondary-red"
               onClick={() => {
                 dispatch(SubmissionActions.SetUpdateReviewStatusModal(initialReviewState));
               }}
-            />
+              className="!fmtm-w-full"
+            >
+              Cancel
+            </Button>
             <Button
-              loadingText="Updating"
+              variant="primary-red"
+              onClick={handleStatusUpdate}
               isLoading={updateReviewStateLoading}
               disabled={!reviewStatus}
-              btnText="Update"
-              btnType="primary"
-              className="fmtm-w-full fmtm-justify-center !fmtm-rounded fmtm-font-bold fmtm-text-sm !fmtm-py-2"
-              onClick={handleStatusUpdate}
-            />
+              className="!fmtm-w-full"
+            >
+              Update
+            </Button>
           </div>
         </div>
       }

@@ -44,6 +44,7 @@ from loguru import logger as log
 from osm_fieldwork.data_models import data_models_path
 from osm_fieldwork.make_data_extract import getChoices
 from osm_fieldwork.xlsforms import xlsforms_path
+from pg_nearest_city import AsyncNearestCity
 from psycopg import Connection
 
 from app.auth.auth_deps import login_required, mapper_login_required
@@ -58,6 +59,7 @@ from app.db.enums import (
     ProjectRole,
     XLSFormType,
 )
+from app.db.languages_and_countries import countries
 from app.db.models import (
     DbBackgroundTask,
     DbBasemap,
@@ -75,6 +77,7 @@ from app.db.postgis_utils import (
     flatgeobuf_to_featcol,
     merge_polygons,
     parse_geojson_file_to_featcol,
+    polygon_to_centroid,
     split_geojson_by_task_areas,
 )
 from app.organisations import organisation_deps
@@ -946,12 +949,13 @@ async def get_project_form_xml_route(
     odkid = project.odkid
     odk_form_id = project.odk_form_id
     # Run separate thread in event loop to avoid blocking with sync code
-    return await run_in_threadpool(
+    form_xml = await run_in_threadpool(
         central_crud.get_project_form_xml,
         odk_creds,
         odkid,
         odk_form_id,
     )
+    return Response(content=form_xml, media_type="application/xml")
 
 
 @router.post("/{project_id}/generate-project-data")
@@ -961,8 +965,9 @@ async def generate_files(
     background_tasks: BackgroundTasks,
     xlsform_upload: Annotated[
         Optional[BytesIO], Depends(central_deps.read_optional_xlsform)
-    ],
-    additional_entities: Optional[list[str]] = None,
+    ] = None,
+    additional_entities: Annotated[Optional[list[str]], None] = None,
+    combined_features_count: Annotated[int, Form()] = 0,
 ):
     """Generate additional content to initialise the project.
 
@@ -981,6 +986,8 @@ async def generate_files(
             A file should be provided if user wants to upload a custom xls form.
         additional_entities (list[str]): If additional Entity lists need to be
             created (i.e. the project form references multiple geometries).
+        combined_features_count (int): Total count of features to be mapped, plus
+            additional dataset features, determined by frontend.
         db (Connection): The database connection.
         project_user_dict (ProjectUserDict): Project admin role.
         background_tasks (BackgroundTasks): FastAPI background tasks.
@@ -1046,21 +1053,33 @@ async def generate_files(
             },
         )
 
-    success = await project_crud.generate_project_files(
-        db,
-        project_id,
-    )
+    warning_message = None
 
-    if not success:
-        return JSONResponse(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            content={
-                "message": (
-                    f"Failed project ({project_id}) creation. "
-                    "Please contact the server admin."
-                )
-            },
+    if combined_features_count > 10000:
+        # Return immediately and run in background if many features
+        background_tasks.add_task(
+            project_crud.generate_project_files,
+            db,
+            project_id,
         )
+        warning_message = "There are lots of features to process. Please be patient 🙏"
+
+    else:
+        success = await project_crud.generate_project_files(
+            db,
+            project_id,
+        )
+
+        if not success:
+            return JSONResponse(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                content={
+                    "message": (
+                        f"Failed project ({project_id}) creation. "
+                        "Please contact the server admin."
+                    )
+                },
+            )
 
     if project.custom_tms_url:
         basemap_in = project_schemas.BasemapGenerate(
@@ -1069,16 +1088,18 @@ async def generate_files(
         org_id = project.organisation_id
         await generate_basemap(project_id, org_id, basemap_in, db, background_tasks)
 
-    return JSONResponse(
-        status_code=HTTPStatus.OK,
-        content={"message": "success"},
-    )
+    if warning_message:
+        return JSONResponse(
+            status_code=HTTPStatus.OK,
+            content={"message": warning_message},
+        )
+    return Response(status_code=HTTPStatus.OK)
 
 
 @router.post("/{project_id}/tiles-generate")
 async def generate_project_basemap(
     # NOTE we do not set the correct role on this endpoint yet
-    # FIXME once sub project creation implemented, this should be manager only
+    # FIXME once stub project creation implemented, this should be manager only
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
     background_tasks: BackgroundTasks,
     db: Annotated[Connection, Depends(db_conn)],
@@ -1217,6 +1238,15 @@ async def create_project(
     odkproject = await run_in_threadpool(
         lambda: central_crud.create_odk_project(project_info.name, odk_creds_decrypted)
     )
+
+    # Get the location_str via reverse geocode
+    async with AsyncNearestCity(db) as geocoder:
+        centroid = await polygon_to_centroid(project_info.outline.model_dump())
+        latitude, longitude = centroid.y, centroid.x
+        location = await geocoder.query(latitude, longitude)
+        # Convert to two letter country code --> full name
+        country_full_name = countries.get(location.country, location.country)
+        project_info.location_str = f"{location.city},{country_full_name}"
 
     # Create the project in the FMTM DB
     project_info.odkid = odkproject["id"]

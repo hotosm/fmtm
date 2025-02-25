@@ -33,12 +33,43 @@ const DataExtract = ({
   useDocumentTitle('Create Project: Map Data');
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [disableNextButton, setDisableNextButton] = useState(true);
   const [extractWays, setExtractWays] = useState('');
   const projectDetails: any = useAppSelector((state) => state.createproject.projectDetails);
   const projectAoiGeojson = useAppSelector((state) => state.createproject.drawnGeojson);
   const dataExtractGeojson = useAppSelector((state) => state.createproject.dataExtractGeojson);
   const isFgbFetching = useAppSelector((state) => state.createproject.isFgbFetching);
   const additionalFeatureGeojson = useAppSelector((state) => state.createproject.additionalFeatureGeojson);
+
+  useEffect(() => {
+    const featureCount = dataExtractGeojson?.features?.length ?? 0;
+
+    if (featureCount > 10000) {
+      dispatch(
+        CommonActions.SetSnackBar({
+          message: `${featureCount} is a lot of features to map at once. Are you sure?`,
+          variant: 'warning',
+          duration: 10000,
+        }),
+      );
+    }
+
+    if (featureCount > 30000) {
+      setDisableNextButton(true);
+      dispatch(
+        CommonActions.SetSnackBar({
+          message: `${featureCount} is a lot of features! Please consider breaking this into smaller projects.`,
+          variant: 'error',
+          duration: 10000,
+        }),
+      );
+    } else {
+      // Enable/disable NEXT button based on conditions (if feature limit not exceeded)
+      const shouldDisableButton =
+        !dataExtractGeojson || (extractWays === 'osm_data_extract' && !dataExtractGeojson) || isFgbFetching;
+      setDisableNextButton(shouldDisableButton);
+    }
+  }, [dataExtractGeojson, additionalFeatureGeojson, extractWays, isFgbFetching]);
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
@@ -111,10 +142,7 @@ const DataExtract = ({
       } else {
         dispatch(
           CommonActions.SetSnackBar({
-            open: true,
             message: 'Map has no features. Please try adjusting the map area.',
-            variant: 'error',
-            duration: 2000,
           }),
         );
         dispatch(CreateProjectActions.SetFgbFetchingStatus(false));
@@ -122,10 +150,7 @@ const DataExtract = ({
     } catch (error) {
       dispatch(
         CommonActions.SetSnackBar({
-          open: true,
           message: 'Error generating map data.',
-          variant: 'error',
-          duration: 2000,
         }),
       );
       dispatch(CreateProjectActions.SetFgbFetchingStatus(false));
@@ -205,7 +230,7 @@ const DataExtract = ({
       await dispatch(CreateProjectActions.setDataExtractGeojson(extractFeatCol));
       return;
     }
-    dispatch(CommonActions.SetSnackBar({ open: true, message: 'Invalid GeoJSON', variant: 'error', duration: 4000 }));
+    dispatch(CommonActions.SetSnackBar({ message: 'Invalid GeoJSON' }));
     handleCustomChange('customDataExtractUpload', null);
     dispatch(CreateProjectActions.setDataExtractGeojson(null));
     return;
@@ -244,18 +269,19 @@ const DataExtract = ({
                 }
               />
               {extractWays === 'osm_data_extract' && (
-                <Button
-                  btnText="Fetch OSM Data"
-                  btnType="primary"
-                  onClick={() => {
-                    resetFile(setCustomDataExtractUpload);
-                    generateDataExtract();
-                  }}
-                  className="fmtm-mt-4 !fmtm-mb-8 fmtm-text-base"
-                  isLoading={isFgbFetching}
-                  loadingText="Generating Map Data..."
-                  disabled={dataExtractGeojson && customDataExtractUpload ? true : false}
-                />
+                <div className="fmtm-mt-4 fmtm-mb-8">
+                  <Button
+                    variant="primary-red"
+                    onClick={() => {
+                      resetFile(setCustomDataExtractUpload);
+                      generateDataExtract();
+                    }}
+                    isLoading={isFgbFetching}
+                    disabled={dataExtractGeojson && customDataExtractUpload ? true : false}
+                  >
+                    Fetch OSM Data
+                  </Button>
+                </div>
               )}
               {extractWays === 'custom_data_extract' && (
                 <>
@@ -276,6 +302,12 @@ const DataExtract = ({
                   />
                 </>
               )}
+              <div className="fmtm-mt-5">
+                <p className="fmtm-text-gray-500">
+                  Total number of features:{' '}
+                  <span className="fmtm-font-bold">{dataExtractGeojson?.features?.length || 0}</span>
+                </p>
+              </div>
               {extractWays && (
                 <div className="fmtm-mt-4">
                   <div
@@ -333,25 +365,12 @@ const DataExtract = ({
               )}
             </div>
             <div className="fmtm-flex fmtm-gap-5 fmtm-mx-auto fmtm-mt-10 fmtm-my-5">
-              <Button
-                btnText="PREVIOUS"
-                btnType="secondary"
-                type="button"
-                onClick={() => toggleStep(3, '/upload-survey')}
-                className="fmtm-font-bold"
-              />
-              <Button
-                btnText="NEXT"
-                btnType="primary"
-                type="submit"
-                className="fmtm-font-bold"
-                dataTip={`${!dataExtractGeojson ? 'Please Fetch OSM Data First.' : ''}`}
-                disabled={
-                  !dataExtractGeojson || (extractWays === 'osm_data_extract' && !dataExtractGeojson) || isFgbFetching
-                    ? true
-                    : false
-                }
-              />
+              <Button variant="secondary-grey" onClick={() => toggleStep(3, '/upload-survey')}>
+                PREVIOUS
+              </Button>
+              <Button variant="primary-red" type="submit" disabled={disableNextButton}>
+                NEXT
+              </Button>
             </div>
           </form>
           <div className="fmtm-w-full lg:fmtm-w-[60%] fmtm-flex fmtm-flex-col fmtm-gap-6 fmtm-bg-gray-300 fmtm-h-[60vh] lg:fmtm-h-full">

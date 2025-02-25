@@ -1,18 +1,17 @@
 import { AppDispatch } from '@/store/Store';
 import CoreModules from '@/shared/CoreModules';
 import { TaskActions } from '@/store/slices/TaskSlice';
+import { CommonActions } from '@/store/slices/CommonSlice';
 
-export const getDownloadProjectSubmission = (
+export const DownloadProjectSubmission = (
   url: string,
   projectName: string,
-  params: { project_id: string; export_json: boolean; submitted_date_range: string | null },
+  params: { project_id: string; file_type: 'csv' | 'json' | 'geojson'; submitted_date_range: string | null },
 ) => {
   return async (dispatch: AppDispatch) => {
-    const isExportJson = params.export_json;
-    const isJsonOrCsv = isExportJson ? 'json' : 'csv';
     dispatch(
-      TaskActions.GetDownloadProjectSubmissionLoading({
-        type: isJsonOrCsv,
+      TaskActions.DownloadProjectSubmissionLoading({
+        fileType: params.file_type,
         loading: true,
       }),
     );
@@ -22,13 +21,19 @@ export const getDownloadProjectSubmission = (
         const response = await CoreModules.axios.get(url, { params, responseType: 'blob' });
         var a = document.createElement('a');
         a.href = window.URL.createObjectURL(response.data);
-        a.download = isExportJson ? `${projectName}.json` : `${projectName}.zip`;
+        // CSV format is actually zipped, so change extension
+        a.download = `${projectName}.${params.file_type === 'csv' ? 'zip' : params.file_type}`;
         a.click();
       } catch (error) {
+        dispatch(
+          CommonActions.SetSnackBar({
+            message: JSON.parse(await error?.response?.data?.text())?.detail || 'Failed to download submissions',
+          }),
+        );
       } finally {
         dispatch(
-          TaskActions.GetDownloadProjectSubmissionLoading({
-            type: isJsonOrCsv,
+          TaskActions.DownloadProjectSubmissionLoading({
+            fileType: params.file_type,
             loading: false,
           }),
         );

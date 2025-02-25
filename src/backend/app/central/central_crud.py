@@ -277,7 +277,7 @@ async def append_fields_to_user_xlsform(
     form_category: str = "buildings",
     additional_entities: list[str] = None,
     existing_id: str = None,
-    new_geom_type: DbGeomType = DbGeomType.POINT,
+    new_geom_type: DbGeomType = DbGeomType.POLYGON,
 ) -> tuple[str, BytesIO]:
     """Helper to return the intermediate XLSForm prior to convert."""
     log.debug("Appending mandatory FMTM fields to XLSForm")
@@ -295,7 +295,7 @@ async def validate_and_update_user_xlsform(
     form_category: str = "buildings",
     additional_entities: list[str] = None,
     existing_id: str = None,
-    new_geom_type: DbGeomType = DbGeomType.POINT,
+    new_geom_type: DbGeomType = DbGeomType.POLYGON,
 ) -> BytesIO:
     """Wrapper to append mandatory fields and validate user uploaded XLSForm."""
     xform_id, updated_file_bytes = await append_fields_to_user_xlsform(
@@ -439,19 +439,46 @@ async def convert_odk_submission_json_to_geojson(
 
     all_features = []
     for submission in submission_json:
+        # Remove unnecessary keys
         keys_to_remove = ["meta", "__id", "__system"]
         for key in keys_to_remove:
             submission.pop(key)
 
+        # Ensure no nesting of the properties (flat struct)
         data = {}
         flatten_json(submission, data)
 
-        geojson_geom = await javarosa_to_geojson_geom(
-            data.pop("xlocation", {}), geom_type="Polygon"
-        )
+        # Process primary geometry
+        geojson_geom = await javarosa_to_geojson_geom(data.pop("xlocation", {}))
 
-        feature = geojson.Feature(geometry=geojson_geom, properties=data)
+        # Identify and process additional geometries
+        additional_geometries = []
+        for geom_field in list(data.keys()):
+            if geom_field.endswith("_geom"):
+                id_field = geom_field[:-5]  # Remove "_geom" suffix
+                geom_data = data.pop(geom_field, {})
+
+                # Convert geometry
+                geom = await javarosa_to_geojson_geom(geom_data)
+
+                feature = geojson.Feature(
+                    id=data.get(id_field),
+                    geometry=geom,
+                    properties={
+                        "is_additional_geom": True,
+                        "id_field": id_field,
+                        "geom_field": geom_field,
+                    },
+                )
+                additional_geometries.append(feature)
+
+        feature = geojson.Feature(
+            id=data.get("xlocation"),
+            geometry=geojson_geom,
+            properties=data,
+        )
         all_features.append(feature)
+        all_features.extend(additional_geometries)
 
     return geojson.FeatureCollection(features=all_features)
 
@@ -657,9 +684,7 @@ async def get_entities_geojson(
         flatten_json(entity, flattened_dict)
 
         javarosa_geom = flattened_dict.pop("geometry") or ""
-        geojson_geom = await javarosa_to_geojson_geom(
-            javarosa_geom, geom_type="Polygon"
-        )
+        geojson_geom = await javarosa_to_geojson_geom(javarosa_geom)
 
         feature = geojson.Feature(
             geometry=geojson_geom,

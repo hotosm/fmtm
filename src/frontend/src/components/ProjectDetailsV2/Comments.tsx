@@ -27,8 +27,9 @@ const Comments = () => {
       return task?.id == selectedTask;
     })?.[0],
   };
+  // filter out submission/feature level comments
   const filteredProjectCommentsList = projectCommentsList?.filter(
-    (entry) => !entry?.comment?.includes('-SUBMISSION_INST-'),
+    (entry) => !entry?.comment?.includes('-SUBMISSION_INST-') && !entry?.comment?.startsWith('#submissionId:uuid:'),
   );
 
   useEffect(() => {
@@ -48,10 +49,7 @@ const Comments = () => {
     if (isEditorEmpty) {
       dispatch(
         CommonActions.SetSnackBar({
-          open: true,
           message: 'Empty comment field.',
-          variant: 'error',
-          duration: 2000,
         }),
       );
       return;
@@ -133,30 +131,25 @@ const Comments = () => {
           isEditorEmpty={(status) => setIsEditorEmpty(status)}
         />
       </div>
-      <div className="fmtm-mt-4 fmtm-w-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-gap-4">
-        <div className="fmtm-w-1/2">
-          <Button
-            type="button"
-            btnText="CLEAR COMMENT"
-            btnType="other"
-            className="!fmtm-rounded !fmtm-py-[3px] fmtm-w-full fmtm-flex fmtm-justify-center"
-            onClick={() => {
-              clearComment();
-              dispatch(ProjectActions.SetMobileFooterSelection(''));
-            }}
-          />
-        </div>
-        <div className="fmtm-w-1/2">
-          <Button
-            type="button"
-            btnText="SAVE COMMENT"
-            btnType="primary"
-            className="!fmtm-rounded fmtm-w-full fmtm-flex fmtm-justify-center"
-            onClick={handleComment}
-            isLoading={projectPostCommentsLoading}
-            loadingText="Saving..."
-          />
-        </div>
+      <div className="fmtm-mt-2 fmtm-w-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-gap-4">
+        <Button
+          variant="secondary-red"
+          onClick={() => {
+            clearComment();
+            dispatch(ProjectActions.SetMobileFooterSelection(''));
+          }}
+          className="!fmtm-w-1/2"
+        >
+          CLEAR COMMENT
+        </Button>
+        <Button
+          variant="primary-red"
+          onClick={handleComment}
+          className="!fmtm-w-1/2"
+          isLoading={projectPostCommentsLoading}
+        >
+          SAVE COMMENT
+        </Button>
       </div>
     </div>
   );
