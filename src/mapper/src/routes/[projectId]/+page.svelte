@@ -173,7 +173,7 @@
 		});
 		await entitiesStore.createGeomRecord(data.projectId, {
 			status: 'NEW',
-			geojson: newFeatureGeom,
+			geojson: { type: 'Feature', geometry: newFeatureGeom, properties: { entity_id: entity.uuid } },
 			project_id: data.projectId,
 		});
 		openOdkCollectNewFeature(data?.project?.odk_form_id, entity.uuid);
