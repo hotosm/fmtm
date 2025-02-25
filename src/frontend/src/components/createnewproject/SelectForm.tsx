@@ -108,7 +108,7 @@ const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
                   btnText="Upload XLSForm"
                   accept=".xls,.xlsx,.xml"
                   fileDescription="*The supported file formats are .xlsx, .xls, .xml"
-                  errorMsg={errors.xlsFormFileUpload}
+                  errorMsg={!xlsFormFile && errors.xlsFormFileUpload}
                 />
               </div>
               {validateCustomFormLoading && (
