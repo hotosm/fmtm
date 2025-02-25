@@ -497,6 +497,14 @@ const ProjectDetailsV2 = () => {
                 zIndex={5}
                 style=""
                 mapOnClick={projectClickOnTaskFeature}
+                getTaskStatusStyle={(feature) => {
+                  const geomType = feature.getGeometry().getType();
+                  const entity = entityOsmMap?.find(
+                    (entity) => entity?.id === feature?.getProperties()?.entity_id,
+                  ) as EntityOsmMap;
+                  const status = entity_state[entity?.status];
+                  return getFeatureStatusStyle(geomType, mapTheme, status);
+                }}
               />
               {dataExtractUrl && isValidUrl(dataExtractUrl) && dataExtractExtent && selectedTask && (
                 <VectorLayer
