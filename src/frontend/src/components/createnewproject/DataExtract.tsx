@@ -18,6 +18,18 @@ import { dataExtractGeojsonType } from '@/store/types/ICreateProject';
 import { CustomCheckbox } from '@/components/common/Checkbox';
 import DescriptionSection from '@/components/createnewproject/Description';
 
+const primaryGeomOptions = [
+  { name: 'primary_geom_type', value: 'POLYGON', label: 'Polygons (e.g. buildings)' },
+  { name: 'primary_geom_type', value: 'POINT', label: 'Points, or polygon centroids' },
+  { name: 'primary_geom_type', value: 'LINESTRING', label: 'Lines (e.g. roads, rivers)' },
+];
+
+const newGeomOptions = [
+  { name: 'new_geom_type', value: 'POLYGON', label: 'Polygons' },
+  { name: 'new_geom_type', value: 'POINT', label: 'Points' },
+  { name: 'new_geom_type', value: 'LINESTRING', label: 'Lines' },
+];
+
 const dataExtractOptions = [
   { name: 'data_extract', value: 'osm_data_extract', label: 'Fetch data from OSM' },
   { name: 'data_extract', value: 'custom_data_extract', label: 'Upload custom map data' },
@@ -34,7 +46,7 @@ const DataExtract = ({
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [disableNextButton, setDisableNextButton] = useState(true);
-  const [extractWays, setExtractWays] = useState('');
+  const [extractType, setExtractType] = useState('');
   const projectDetails: any = useAppSelector((state) => state.createproject.projectDetails);
   const projectAoiGeojson = useAppSelector((state) => state.createproject.drawnGeojson);
   const dataExtractGeojson = useAppSelector((state) => state.createproject.dataExtractGeojson);
@@ -64,12 +76,9 @@ const DataExtract = ({
         }),
       );
     } else {
-      // Enable/disable NEXT button based on conditions (if feature limit not exceeded)
-      const shouldDisableButton =
-        !dataExtractGeojson || (extractWays === 'osm_data_extract' && !dataExtractGeojson) || isFgbFetching;
-      setDisableNextButton(shouldDisableButton);
+      setDisableNextButton(false);
     }
-  }, [dataExtractGeojson, additionalFeatureGeojson, extractWays, isFgbFetching]);
+  }, [dataExtractGeojson, additionalFeatureGeojson, extractType, isFgbFetching]);
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
@@ -98,7 +107,7 @@ const DataExtract = ({
 
   // Generate OSM data extract
   const generateDataExtract = async () => {
-    if (extractWays !== 'osm_data_extract') {
+    if (extractType !== 'osm_data_extract') {
       return;
     }
 
@@ -108,7 +117,9 @@ const DataExtract = ({
     const dataExtractRequestFormData = new FormData();
     const projectAoiGeojsonFile = getFileFromGeojson(projectAoiGeojson);
     dataExtractRequestFormData.append('geojson_file', projectAoiGeojsonFile);
-    dataExtractRequestFormData.append('form_category', projectDetails.formCategorySelection);
+    if (projectDetails.osmFormSelectionName) {
+      dataExtractRequestFormData.append('osm_category', projectDetails.osmFormSelectionName);
+    }
 
     // Set flatgeobuf as loading
     dispatch(CreateProjectActions.SetFgbFetchingStatus(true));
@@ -125,7 +136,7 @@ const DataExtract = ({
         CreateProjectActions.SetIndividualProjectDetailsData({
           ...formValues,
           data_extract_url: fgbUrl,
-          dataExtractWays: extractWays,
+          dataExtractType: extractType,
           customDataExtractUpload: null,
         }),
       );
@@ -159,17 +170,17 @@ const DataExtract = ({
   };
 
   useEffect(() => {
-    if (formValues?.dataExtractWays) {
-      setExtractWays(formValues?.dataExtractWays);
+    if (formValues?.dataExtractType) {
+      setExtractType(formValues?.dataExtractType);
     }
-  }, [formValues?.dataExtractWays]);
+  }, [formValues?.dataExtractType]);
 
   const toggleStep = (step, url) => {
     if (url === '/upload-survey') {
       dispatch(
         CreateProjectActions.SetIndividualProjectDetailsData({
           ...formValues,
-          dataExtractWays: extractWays,
+          dataExtractType: extractType,
         }),
       );
     }
@@ -251,15 +262,53 @@ const DataExtract = ({
           >
             <div>
               <RadioButton
-                topic="You may choose to use OSM data or upload your own map data"
+                topic="What type of geometry do you wish to map?"
+                options={primaryGeomOptions}
+                direction="column"
+                value={formValues.primaryGeomType}
+                onChangeData={(value) => {
+                  handleCustomChange('primaryGeomType', value);
+                }}
+                errorMsg={errors.primaryGeomType}
+                required
+              />
+            </div>
+            <CustomCheckbox
+              key="newFeatureType"
+              label="I want to use a mix of geometry types"
+              checked={formValues?.useMixedGeomTypes}
+              onCheckedChange={(status) => {
+                handleCustomChange('useMixedGeomTypes', status);
+              }}
+              className="fmtm-text-black"
+              labelClickable
+            />
+            {formValues?.useMixedGeomTypes && (
+              <>
+                <RadioButton
+                  topic="New geometries collected should be of type"
+                  options={newGeomOptions}
+                  direction="column"
+                  value={formValues.newGeomType}
+                  onChangeData={(value) => {
+                    handleCustomChange('newGeomType', value);
+                  }}
+                  errorMsg={errors.newGeomType}
+                  required
+                />
+              </>
+            )}
+            <div>
+              <RadioButton
+                topic="Upload your own map data or use OSM"
                 options={dataExtractOptions}
                 direction="column"
-                value={formValues.dataExtractWays}
+                value={formValues.dataExtractType}
                 onChangeData={(value) => {
-                  handleCustomChange('dataExtractWays', value);
-                  setExtractWays(value);
+                  handleCustomChange('dataExtractType', value);
+                  setExtractType(value);
                 }}
-                errorMsg={errors.dataExtractWays}
+                errorMsg={errors.dataExtractType}
                 hoveredOption={(hoveredOption) =>
                   dispatch(
                     CreateProjectActions.SetDescriptionToFocus(
@@ -267,8 +316,9 @@ const DataExtract = ({
                     ),
                   )
                 }
+                required
               />
-              {extractWays === 'osm_data_extract' && (
+              {extractType === 'osm_data_extract' && (
                 <div className="fmtm-mt-4 fmtm-mb-8">
                   <Button
                     variant="primary-red"
@@ -283,7 +333,7 @@ const DataExtract = ({
                   </Button>
                 </div>
               )}
-              {extractWays === 'custom_data_extract' && (
+              {extractType === 'custom_data_extract' && (
                 <>
                   <FileInputComponent
                     onChange={(e) => {
@@ -308,7 +358,7 @@ const DataExtract = ({
                   <span className="fmtm-font-bold">{dataExtractGeojson?.features?.length || 0}</span>
                 </p>
               </div>
-              {extractWays && (
+              {extractType && (
                 <div className="fmtm-mt-4">
                   <div
                     onMouseOver={() => {
