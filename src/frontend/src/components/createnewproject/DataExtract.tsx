@@ -54,7 +54,23 @@ const DataExtract = ({
   const additionalFeatureGeojson = useAppSelector((state) => state.createproject.additionalFeatureGeojson);
 
   useEffect(() => {
+    if (!dataExtractGeojson) {
+      setDisableNextButton(true);
+      return;
+    }
     const featureCount = dataExtractGeojson?.features?.length ?? 0;
+
+    if (featureCount > 30000) {
+      setDisableNextButton(true);
+      dispatch(
+        CommonActions.SetSnackBar({
+          message: `${featureCount} is a lot of features! Please consider breaking this into smaller projects.`,
+          variant: 'error',
+          duration: 10000,
+        }),
+      );
+      return;
+    }
 
     if (featureCount > 10000) {
       dispatch(
@@ -66,18 +82,7 @@ const DataExtract = ({
       );
     }
 
-    if (featureCount > 30000) {
-      setDisableNextButton(true);
-      dispatch(
-        CommonActions.SetSnackBar({
-          message: `${featureCount} is a lot of features! Please consider breaking this into smaller projects.`,
-          variant: 'error',
-          duration: 10000,
-        }),
-      );
-    } else {
-      setDisableNextButton(false);
-    }
+    setDisableNextButton(false);
   }, [dataExtractGeojson, additionalFeatureGeojson, extractType, isFgbFetching]);
 
   const submission = () => {
