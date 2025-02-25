@@ -88,7 +88,7 @@ const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
       <div className="lg:fmtm-w-[80%] xl:fmtm-w-[83%] fmtm-bg-white fmtm-px-5 lg:fmtm-px-11 fmtm-py-6 fmtm-h-full lg:fmtm-overflow-y-scroll lg:scrollbar">
         <div className="fmtm-w-full fmtm-flex fmtm-gap-6 md:fmtm-gap-14 fmtm-flex-col md:fmtm-flex-row fmtm-h-full">
           <form onSubmit={handleSubmit} className="fmtm-flex fmtm-flex-col lg:fmtm-w-[40%] fmtm-justify-between">
-            <div className="fmtm-flex fmtm-flex-col fmtm-gap-6">
+            <div className="fmtm-flex fmtm-flex-col fmtm-gap-3">
               <div
                 onMouseOver={() => {
                   dispatch(CreateProjectActions.SetDescriptionToFocus('selectform-selectform'));
@@ -96,13 +96,12 @@ const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
                 onMouseLeave={() => dispatch(CreateProjectActions.SetDescriptionToFocus(null))}
               >
                 <div className="fmtm-flex fmtm-gap-1">
-                  <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold !fmtm-bg-transparent">
+                  <p className="fmtm-text-[1rem] fmtm-mb-1 fmtm-font-semibold !fmtm-bg-transparent">
                     What are you surveying?
                   </p>
                   <p className="fmtm-text-red-500 fmtm-text-[1.2rem]">*</p>
                 </div>
                 <FileInputComponent
-                  title="What are you surveying?"
                   onChange={changeFileHandler}
                   onResetFile={resetFile}
                   customFile={xlsFormFile}
@@ -113,17 +112,11 @@ const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
                 />
               </div>
               {validateCustomFormLoading && (
-                <div className="fmtm-flex fmtm-items-center fmtm-gap-2 fmtm-mt-2">
+                <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
                   <Loader2 className="fmtm-h-4 fmtm-w-4 fmtm-animate-spin fmtm-text-primaryRed" />
                   <p className="fmtm-text-base">Validating form...</p>
                 </div>
               )}
-              <div
-                onMouseOver={() => {
-                  dispatch(CreateProjectActions.SetDescriptionToFocus('selectform-osmnote'));
-                }}
-                onMouseLeave={() => dispatch(CreateProjectActions.SetDescriptionToFocus(null))}
-              ></div>
               <div>
                 <CustomSelect
                   title="Browse available forms"
