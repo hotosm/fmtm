@@ -48,7 +48,7 @@ from app.central.central_crud import (
 )
 from app.central.central_schemas import ODKCentral
 from app.config import settings
-from app.db.enums import GeometryType, HTTPStatus, XLSFormType
+from app.db.enums import HTTPStatus, XLSFormType
 from app.db.postgis_utils import (
     add_required_geojson_properties,
     featcol_keep_single_geom_type,
@@ -66,13 +66,13 @@ router = APIRouter(
 
 @router.get("/download-template-xlsform")
 async def download_template(
-    category: XLSFormType,
+    form_type: XLSFormType,
 ):
-    """Download an XLSForm template to fill out."""
-    filename = XLSFormType(category).name
-    xlsform_path = f"{xlsforms_path}/{filename}.xls"
+    """Download example XLSForm from FMTM."""
+    form_filename = XLSFormType(form_type).name
+    xlsform_path = f"{xlsforms_path}/{form_filename}.xls"
     if Path(xlsform_path).exists():
-        return FileResponse(xlsform_path, filename="form.xls")
+        return FileResponse(xlsform_path, filename=f"{form_filename}.xls")
     else:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Form not found")
 
@@ -184,11 +184,10 @@ async def create_entities_from_csv(
 @router.post("/javarosa-geom-to-geojson")
 async def convert_javarosa_geom_to_geojson(
     javarosa_string: str,
-    geometry_type: GeometryType,
     current_user: Annotated[AuthUser, Depends(login_required)],
 ):
     """Convert a JavaRosa geometry string to GeoJSON."""
-    return await javarosa_to_geojson_geom(javarosa_string, geometry_type)
+    return await javarosa_to_geojson_geom(javarosa_string)
 
 
 @router.post("/convert-odk-submission-json-to-geojson")

@@ -131,7 +131,8 @@ CREATE TYPE public.taskevent AS ENUM (
     'SPLIT',
     'MERGE',
     'ASSIGN',
-    'COMMENT'
+    'COMMENT',
+    'RESET'
 );
 ALTER TYPE public.taskevent OWNER TO fmtm;
 
@@ -149,6 +150,8 @@ CREATE TYPE public.entitystate AS ENUM (
     'READY',
     'OPENED_IN_ODK',
     'SURVEY_SUBMITTED',
+    'NEW_GEOM',
+    'VALIDATED',
     'MARKED_BAD'
 );
 ALTER TYPE public.entitystate OWNER TO fmtm;
@@ -247,7 +250,7 @@ CREATE TABLE public.projects (
     id integer NOT NULL,
     organisation_id integer,
     odkid integer,
-    author_id integer NOT NULL,
+    author_id integer,
     name character varying,
     short_description character varying,
     description character varying,
@@ -257,7 +260,7 @@ CREATE TABLE public.projects (
     outline public.GEOMETRY (POLYGON, 4326),
     status public.projectstatus NOT NULL DEFAULT 'DRAFT',
     total_tasks integer,
-    xform_category character varying,
+    osm_category character varying,
     xlsform_content bytea,
     odk_form_id character varying,
     visibility public.projectvisibility NOT NULL DEFAULT 'PUBLIC',
@@ -270,7 +273,6 @@ CREATE TABLE public.projects (
     odk_central_user character varying,
     odk_central_password character varying,
     odk_token character varying,
-    data_extract_type character varying,
     data_extract_url character varying,
     task_split_type public.tasksplittype,
     task_split_dimension smallint,
@@ -281,7 +283,8 @@ CREATE TABLE public.projects (
     geo_restrict_distance_meters int2 DEFAULT 50 CHECK (
         geo_restrict_distance_meters >= 0
     ),
-    new_geom_type public.geomtype DEFAULT 'POINT',
+    primary_geom_type public.geomtype DEFAULT 'POLYGON',
+    new_geom_type public.geomtype DEFAULT 'POLYGON',
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now()
 );
@@ -357,7 +360,8 @@ CREATE TABLE public.users (
     tasks_invalidated integer NOT NULL DEFAULT 0,
     projects_mapped integer [],
     api_key character varying,
-    registered_at timestamp with time zone DEFAULT now()
+    registered_at timestamp with time zone DEFAULT now(),
+    last_login_at timestamp with time zone DEFAULT now()
 );
 ALTER TABLE public.users OWNER TO fmtm;
 
@@ -385,34 +389,14 @@ CACHE 1;
 ALTER TABLE public.xlsforms_id_seq OWNER TO fmtm;
 ALTER SEQUENCE public.xlsforms_id_seq OWNED BY public.xlsforms.id;
 
-CREATE TABLE public.submission_photos (
-    id integer NOT NULL,
-    project_id integer NOT NULL,
-    -- Note this is not public.tasks, but an ODK task_id
-    task_id integer NOT NULL,
-    submission_id character varying NOT NULL,
-    s3_path character varying NOT NULL
-);
-ALTER TABLE public.submission_photos OWNER TO fmtm;
-CREATE SEQUENCE public.submission_photos_id_seq
-AS integer
-START WITH 1
-INCREMENT BY 1
-NO MINVALUE
-NO MAXVALUE
-CACHE 1;
-ALTER TABLE public.submission_photos_id_seq OWNER TO fmtm;
-ALTER SEQUENCE public.submission_photos_id_seq
-OWNED BY public.submission_photos.id;
-
-CREATE TABLE geometrylog (
+CREATE TABLE public.geometrylog (
     id UUID NOT NULL DEFAULT gen_random_uuid(),
     geojson JSONB NOT NULL,
-    status geomstatus,
+    status public.geomstatus,
     project_id int,
     task_id int
 );
-ALTER TABLE geometrylog OWNER TO fmtm;
+ALTER TABLE public.geometrylog OWNER TO fmtm;
 
 -- nextval for primary keys (autoincrement)
 
@@ -427,9 +411,6 @@ ALTER TABLE ONLY public.tasks ALTER COLUMN id SET DEFAULT nextval(
 );
 ALTER TABLE ONLY public.xlsforms ALTER COLUMN id SET DEFAULT nextval(
     'public.xlsforms_id_seq'::regclass
-);
-ALTER TABLE ONLY public.submission_photos ALTER COLUMN id SET DEFAULT nextval(
-    'public.submission_photos_id_seq'::regclass
 );
 
 
@@ -483,10 +464,7 @@ ADD CONSTRAINT xlsforms_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.xlsforms
 ADD CONSTRAINT xlsforms_title_key UNIQUE (title);
 
-ALTER TABLE ONLY public.submission_photos
-ADD CONSTRAINT submission_photos_pkey PRIMARY KEY (id);
-
-ALTER TABLE ONLY public.idx_geometrylog
+ALTER TABLE ONLY public.geometrylog
 ADD CONSTRAINT geometrylog_pkey PRIMARY KEY (id);
 
 -- Indexing
@@ -536,7 +514,7 @@ ON public.odk_entities USING btree (
     entity_id, task_id
 );
 CREATE INDEX idx_geometrylog_geojson
-ON geometrylog USING gin (geom);
+ON public.geometrylog USING gin (geojson);
 
 
 -- Foreign keys
@@ -589,11 +567,6 @@ ADD CONSTRAINT user_roles_user_id_fkey FOREIGN KEY (
     user_id
 ) REFERENCES public.users (id);
 
-ALTER TABLE ONLY public.submission_photos
-ADD CONSTRAINT fk_project_id FOREIGN KEY (
-    project_id
-) REFERENCES public.projects (id);
-
 -- Triggers
 
 CREATE OR REPLACE FUNCTION public.set_task_state()
@@ -618,6 +591,8 @@ BEGIN
             NEW.state := 'LOCKED_FOR_MAPPING';
         WHEN 'COMMENT' THEN
             NEW.state := OLD.state;
+        WHEN 'RESET' THEN
+            NEW.state := 'UNLOCKED_TO_MAP';
         ELSE
             RAISE EXCEPTION 'Unknown task event type: %', NEW.event;
     END CASE;

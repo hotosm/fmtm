@@ -17,29 +17,30 @@
 #
 """Functions for task submissions."""
 
-import io
 import json
 import uuid
-from collections import Counter
-from datetime import datetime, timedelta
 from io import BytesIO
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Optional
 
 from fastapi import HTTPException, Response
 from loguru import logger as log
 from psycopg import Connection
-from psycopg.rows import class_row
+from pyodk._utils.config import CentralConfig
+from pyodk.client import Client
 
-# from osm_fieldwork.json2osm import json2osm
+from app.central import central_schemas
 from app.central.central_crud import (
     get_odk_form,
 )
+from app.central.central_deps import get_async_odk_form
+
+# from osm_fieldwork.json2osm import json2osm
 from app.config import settings
-from app.db.enums import BackgroundTaskStatus, HTTPStatus
-from app.db.models import DbBackgroundTask, DbProject, DbSubmissionPhoto
-from app.db.postgis_utils import timestamp
-from app.projects import project_crud, project_deps, project_schemas
-from app.s3 import add_obj_to_bucket
+from app.db.enums import HTTPStatus
+from app.db.models import DbProject
+from app.projects import project_crud
 
 # async def convert_json_to_osm(file_path):
 #     """Wrapper for osm-fieldwork json2osm."""
@@ -142,60 +143,6 @@ async def get_submission_count_of_a_project(project: DbProject):
     return len(data["value"])
 
 
-async def get_submissions_by_date(
-    project: DbProject,
-    days: int,
-    planned_task: Optional[int] = None,
-):
-    """Get submissions by date.
-
-    Fetches the submissions for a given project within a specified number of days.
-
-    Args:
-        project (DbProject): The database project object.
-        days (int): The number of days to consider for fetching submissions.
-        planned_task (int): Associated task id.
-
-    Returns:
-        dict: A dictionary containing the submission counts for each date.
-
-    Examples:
-        # Fetch submissions for project with ID 1 within the last 7 days
-        submissions = await get_submissions_by_date(1, 7)
-    """
-    data = await get_submission_by_project(project, {})
-
-    end_dates = [
-        datetime.fromisoformat(entry["end"].split("+")[0])
-        for entry in data["value"]
-        if entry.get("end")
-    ]
-
-    dates = [
-        date.strftime("%m/%d")
-        for date in end_dates
-        if timestamp() - date <= timedelta(days=days)
-    ]
-
-    submission_counts = Counter(sorted(dates))
-
-    response = [
-        {"date": key, "count": value} for key, value in submission_counts.items()
-    ]
-    if planned_task:
-        count_dict = {}
-        cummulative_count = 0
-        for date, count in submission_counts.items():
-            cummulative_count += count
-            count_dict[date] = cummulative_count
-        response = [
-            {"date": key, "count": count_dict[key], "planned": planned_task}
-            for key, value in submission_counts.items()
-        ]
-
-    return response
-
-
 async def get_submission_by_project(
     project: DbProject,
     filters: dict,
@@ -250,128 +197,68 @@ async def get_submission_detail(
     return submission.get("value", [])[0]
 
 
-async def upload_attachment_to_s3(
-    project_id: int, instance_ids: list, background_task_id: uuid.UUID, db: Connection
+async def create_new_submission(
+    odk_credentials: central_schemas.ODKCentralDecrypted,
+    odk_project_id: int,
+    odk_form_id: uuid.UUID,
+    submission_xml: str,
+    device_id: Optional[str] = None,
+    submission_attachments: Optional[dict[str, BytesIO]] = None,
 ):
-    """Uploads attachments to S3 for a given project and instance IDs.
+    """Create a new submission in ODK Central, using pyodk REST endpoint."""
+    submission_attachments = submission_attachments or {}  # Ensure always a dict
+    attachment_filepaths = []
+
+    # Write all uploaded data to temp files for upload (required by PyODK)
+    # We must use TemporaryDir and preserve the uploaded file names
+    with TemporaryDirectory() as temp_dir:
+        for file_name, file_data in submission_attachments.items():
+            temp_path = Path(temp_dir) / file_name
+            with open(temp_path, "wb") as temp_file:
+                temp_file.write(file_data.getvalue())
+            attachment_filepaths.append(temp_path)
+
+        pyodk_config = CentralConfig(
+            base_url=odk_credentials.odk_central_url,
+            username=odk_credentials.odk_central_user,
+            password=odk_credentials.odk_central_password,
+        )
+        with Client(pyodk_config) as client:
+            return client.submissions.create(
+                project_id=odk_project_id,
+                form_id=odk_form_id,
+                xml=submission_xml,
+                device_id=device_id,
+                attachments=attachment_filepaths,
+            )
+
+
+async def get_submission_photos(
+    submission_id: str,
+    project: DbProject,
+):
+    """Get the details of a submission.
 
     Args:
-        project_id (int): The ID of the project.
-        instance_ids (list): List of instance IDs.
-        background_task_id (uuid.UUID): The ID of the background task.
-        db (Connection): The database connection.
+        submission_id: The instance uuid of the submission.
+        project: The project object representing the project.
 
     Returns:
-        bool: True if the upload is successful.
-
-    Raises:
-        Exception: If an error occurs during the upload process.
+        The details of the submission as a JSON object.
     """
-    try:
-        project = await project_deps.get_project_by_id(db, project_id)
-        xform = get_odk_form(project.odk_credentials)
-        s3_bucket = settings.S3_BUCKET_NAME
-        s3_base_path = f"{project.organisation_id}/{project_id}"
-
-        async with db.cursor(row_factory=class_row(DbSubmissionPhoto)) as cur:
-            await cur.execute(
-                """
-                    SELECT
-                        submission_id, s3_path
-                    FROM
-                        submission_photos
-                    WHERE
-                        project_id = %(project_id)s;
-                """,
-                {"project_id": project_id},
-            )
-            existing_photos = await cur.fetchall()
-
-        existing_photos_dict = {}
-        for submission_id, s3_path in existing_photos:
-            existing_photos_dict[submission_id] = s3_path
-
-        batch_insert_data = []
-        for instance_id in instance_ids:
-            submission_detail = await get_submission_detail(instance_id, project)
-            attachments = submission_detail["image"]
-
-            if not isinstance(attachments, list):
-                attachments = [attachments]
-
-            for idx, filename in enumerate(attachments):
-                s3_key = f"{s3_base_path}/{instance_id}/{idx + 1}.jpeg"
-                img_url = f"{settings.S3_DOWNLOAD_ROOT}/{s3_bucket}/{s3_key}"
-
-                # Skip if the img_url already exists in the database
-                if img_url in existing_photos_dict.get(instance_id, []):
-                    log.warning(
-                        f"Image {img_url} for instance {instance_id} "
-                        "already exists in DB. Skipping upload."
-                    )
-                    continue
-
-                try:
-                    attachment = xform.getSubmissionPhoto(
-                        project.odkid,
-                        str(instance_id),
-                        project.odk_form_id,
-                        str(filename),
-                    )
-                    if attachment:
-                        image_stream = io.BytesIO(attachment)
-
-                        # Upload the attachment to S3
-                        add_obj_to_bucket(
-                            s3_bucket, image_stream, s3_key, content_type="image/jpeg"
-                        )
-
-                        # Collect the data for batch insert
-                        batch_insert_data.append(
-                            {
-                                "project_id": project_id,
-                                "task_id": submission_detail["task_id"],
-                                "submission_id": instance_id,
-                                "s3_path": img_url,
-                            }
-                        )
-
-                except Exception as e:
-                    log.warning(
-                        f"Failed to process {filename} for instance {instance_id}: {e}"
-                    )
-                    continue
-
-        # Perform batch insert if there are new records to insert
-        async with db.cursor() as cur:
-            await cur.executemany(  # executes multiple inserts (batch insert)
-                """
-                    INSERT INTO submission_photos (
-                        project_id,
-                        task_id,
-                        submission_id,
-                        s3_path
-                    )
-                    VALUES (
-                        %(project_id)s, %(task_id)s,
-                        %(submission_id)s, %(s3_path)s);
-                """,
-                batch_insert_data,
-            )
-            await db.commit()
-        return True
-
-    except Exception as e:
-        log.warning(str(e))
-        await DbBackgroundTask.update(
-            db,
-            background_task_id,
-            project_schemas.BackgroundTaskUpdate(
-                status=BackgroundTaskStatus.FAILED,
-                message=str(e),
-            ),
+    async with get_async_odk_form(project.odk_credentials) as async_odk_form:
+        submission_photos = await async_odk_form.getSubmissionAttachmentUrls(
+            project.odkid, project.odk_form_id, submission_id
         )
-        return False
+
+    # Iterate through and replace S3_ENDPOINT with S3_DOWNLOAD_ROOT,
+    # in case the S3 endpoint is containerised / local network
+    submission_photos = {
+        filename: url.replace(settings.S3_ENDPOINT, settings.S3_DOWNLOAD_ROOT)
+        for filename, url in submission_photos.items()
+    }
+
+    return submission_photos
 
 
 async def get_dashboard_detail(db: Connection, project: DbProject):

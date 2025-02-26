@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
 import type { Polygon } from 'geojson';
-import type { NewGeomTypes } from '$constants/enums.ts';
+import type { MapGeomTypes } from '$constants/enums.ts';
 
 export type ProjectTask = {
 	id: number;
@@ -30,7 +30,7 @@ export interface ProjectData {
 		id: number;
 	};
 	location_str: string;
-	xform_category: string;
+	osm_category: string;
 	odk_form_id: string;
 	data_extract_url: string;
 	odk_token: string;
@@ -41,7 +41,6 @@ export interface ProjectData {
 	status: number;
 	hashtags: string[];
 	tasks: ProjectTask[];
-	new_geom_type: NewGeomTypes;
 	geo_restrict_distance_meters: number;
 	geo_restrict_force_error: boolean;
 }

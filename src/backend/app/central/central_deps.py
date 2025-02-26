@@ -1,4 +1,4 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
 # This file is part of FMTM.
 #
@@ -21,11 +21,10 @@
 from contextlib import asynccontextmanager
 from io import BytesIO
 from pathlib import Path
-from typing import Optional
 
-from fastapi import File, UploadFile
+from fastapi import UploadFile
 from fastapi.exceptions import HTTPException
-from osm_fieldwork.OdkCentralAsync import OdkDataset
+from osm_fieldwork.OdkCentralAsync import OdkDataset, OdkForm
 
 from app.central.central_schemas import ODKCentralDecrypted
 from app.db.enums import HTTPStatus
@@ -47,10 +46,26 @@ async def get_odk_dataset(odk_creds: ODKCentralDecrypted):
         ) from conn_error
 
 
+@asynccontextmanager
+async def get_async_odk_form(odk_creds: ODKCentralDecrypted):
+    """Wrap getting an OdkDataset object with ConnectionError handling."""
+    try:
+        async with OdkForm(
+            url=odk_creds.odk_central_url,
+            user=odk_creds.odk_central_user,
+            passwd=odk_creds.odk_central_password,
+        ) as odk_central:
+            yield odk_central
+    except ConnectionError as conn_error:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail=str(conn_error)
+        ) from conn_error
+
+
 async def validate_xlsform_extension(xlsform: UploadFile):
     """Validate an XLSForm has .xls or .xlsx extension."""
-    file = Path(xlsform.filename)
-    file_ext = file.suffix.lower()
+    filename = Path(xlsform.filename)
+    file_ext = filename.suffix.lower()
 
     allowed_extensions = [".xls", ".xlsx"]
     if file_ext not in allowed_extensions:
@@ -64,11 +79,3 @@ async def validate_xlsform_extension(xlsform: UploadFile):
 async def read_xlsform(xlsform: UploadFile) -> BytesIO:
     """Read an XLSForm, validate extension, return wrapped in BytesIO."""
     return await validate_xlsform_extension(xlsform)
-
-
-async def read_optional_xlsform(
-    xlsform: Optional[UploadFile] = File(None),
-) -> Optional[BytesIO]:
-    """Read an XLSForm, validate extension, return wrapped in BytesIO."""
-    if xlsform:
-        return await validate_xlsform_extension(xlsform)

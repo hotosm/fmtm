@@ -23,11 +23,16 @@
 	import { polygon } from '@turf/helpers';
 	import { buffer } from '@turf/buffer';
 	import { bbox } from '@turf/bbox';
-	import type { Position, Geometry as GeoJSONGeometry, FeatureCollection, Feature } from 'geojson';
+	import type { Position, Geometry as GeoJSONGeometry, FeatureCollection } from 'geojson';
 	import { centroid } from '@turf/centroid';
 
 	import LocationArcImg from '$assets/images/locationArc.png';
 	import LocationDotImg from '$assets/images/locationDot.png';
+	import MapPinGrey from '$assets/images/map-pin-grey.png';
+	import MapPinRed from '$assets/images/map-pin-red.png';
+	import MapPinYellow from '$assets/images/map-pin-yellow.png';
+	import MapPinGreen from '$assets/images/map-pin-green.png';
+	import MapPinBlue from '$assets/images/map-pin-blue.png';
 	import BlackLockImg from '$assets/images/black-lock.png';
 	import RedLockImg from '$assets/images/red-lock.png';
 	import Arrow from '$assets/images/arrow.png';
@@ -40,7 +45,7 @@
 	import { getProjectSetupStepStore, getProjectBasemapStore } from '$store/common.svelte.ts';
 	import { readFileFromOPFS } from '$lib/fs/opfs.ts';
 	import { loadOfflinePmtiles } from '$lib/utils/basemaps.ts';
-	import { projectSetupStep as projectSetupStepEnum, NewGeomTypes } from '$constants/enums.ts';
+	import { projectSetupStep as projectSetupStepEnum, MapGeomTypes } from '$constants/enums.ts';
 	import { baseLayers, osmStyle, pmtilesStyle } from '$constants/baseLayers.ts';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
 	import { clickOutside } from '$lib/utils/clickOutside.ts';
@@ -53,9 +58,10 @@
 		toggleActionModal: (value: 'task-modal' | 'entity-modal' | null) => void;
 		projectId: number;
 		setMapRef: (map: maplibregl.Map | undefined) => void;
+		primaryGeomType: MapGeomTypes;
 		draw?: boolean;
-		drawGeomType: NewGeomTypes | undefined;
-		handleDrawnGeom?: ((geojson: GeoJSONGeometry) => void) | null;
+		drawGeomType: MapGeomTypes | undefined;
+		handleDrawnGeom?: ((drawInstance: any, geojson: GeoJSONGeometry) => void) | null;
 	}
 
 	let {
@@ -64,6 +70,7 @@
 		toggleActionModal,
 		projectId,
 		setMapRef,
+		primaryGeomType,
 		draw = false,
 		drawGeomType,
 		handleDrawnGeom,
@@ -127,10 +134,7 @@
 	type DrawModeOptions = 'point' | 'linestring' | 'delete-selection' | 'polygon';
 	const currentDrawMode: DrawModeOptions = drawGeomType ? (drawGeomType.toLowerCase() as DrawModeOptions) : 'point';
 	const drawControl = new MaplibreTerradrawControl({
-		modes: [
-			currentDrawMode,
-			// 'delete-selection'
-		],
+		modes: [currentDrawMode, 'select', 'delete'],
 		// Note We do not open the toolbar options, allowing the user
 		// to simply click with a pre-defined mode active
 		// open: true,
@@ -149,9 +153,23 @@
 
 	// using this function since outside click of entity layer couldn't be tracked via FillLayer
 	function handleMapClick(e: maplibregl.MapMouseEvent) {
+		let entityLayerName: string;
+		switch (drawGeomType) {
+			case MapGeomTypes.POINT:
+				entityLayerName = 'entity-point-layer';
+				break;
+			case MapGeomTypes.POLYGON:
+				entityLayerName = 'entity-polygon-layer';
+				break;
+			case MapGeomTypes.LINESTRING:
+				entityLayerName = 'entity-line-layer';
+				break;
+			default:
+				throw new Error(`Unsupported geometry type: ${drawGeomType}`);
+			}
 		// returns list of features of entity layer present on that clicked point
 		const clickedEntityFeature = map?.queryRenderedFeatures(e.point, {
-			layers: ['entity-fill-layer'],
+			layers: [entityLayerName],
 		});
 		// returns list of features of task layer present on that clicked point
 		const clickedTaskFeature = map?.queryRenderedFeatures(e.point, {
@@ -225,7 +243,6 @@
 
 			const drawInstance = drawControl.getTerraDrawInstance();
 			if (drawInstance && handleDrawnGeom) {
-				drawInstance.start();
 				drawInstance.setMode(currentDrawMode);
 
 				drawInstance.on('finish', (id: string, _context: any) => {
@@ -238,11 +255,10 @@
 					} else {
 						console.error(`Feature with id ${id} not found or has no geometry.`);
 					}
-					drawInstance.stop();
 
 					if (firstGeom) {
-						removeTerraDrawLayers();
-						handleDrawnGeom(firstGeom);
+						handleDrawnGeom(drawInstance, firstGeom);
+						displayDrawHelpText = false;
 					}
 				});
 			}
@@ -339,6 +355,11 @@
 		entitiesStore.setSelectedEntity(null);
 	}}
 	images={[
+		{ id: 'MAP_PIN_GREY', url: MapPinGrey },
+		{ id: 'MAP_PIN_RED', url: MapPinRed },
+		{ id: 'MAP_PIN_BLUE', url: MapPinBlue },
+		{ id: 'MAP_PIN_YELLOW', url: MapPinYellow },
+		{ id: 'MAP_PIN_GREEN', url: MapPinGreen },
 		{ id: 'LOCKED_FOR_MAPPING', url: BlackLockImg },
 		{ id: 'LOCKED_FOR_VALIDATION', url: RedLockImg },
 		{ id: 'locationArc', url: LocationArcImg },
@@ -477,8 +498,9 @@
 		processGeojson={(geojsonData) => addStatusToGeojsonProperty(geojsonData)}
 		geojsonUpdateDependency={entitiesStore.entitiesStatusList}
 	>
+	{#if primaryGeomType === MapGeomTypes.POLYGON}
 		<FillLayer
-			id="entity-fill-layer"
+			id="entity-polygon-layer"
 			paint={{
 				'fill-opacity': ['match', ['get', 'status'], 'MARKED_BAD', 0, 0.6],
 				'fill-color': [
@@ -489,6 +511,8 @@
 					'OPENED_IN_ODK',
 					'#fae15f',
 					'SURVEY_SUBMITTED',
+					'#71bf86',
+					'VALIDATED',
 					'#71bf86',
 					'MARKED_BAD',
 					'#fa1100',
@@ -521,6 +545,32 @@
 			beforeLayerType="symbol"
 			manageHoverState
 		/>
+		{:else if primaryGeomType === MapGeomTypes.POINT}
+		<SymbolLayer
+			id="entity-point-layer"
+			applyToClusters={false}
+			hoverCursor="pointer"
+			manageHoverState
+			layout={{
+				'icon-image': [
+					'match',
+					['get', 'status'],
+					'READY',
+					'MAP_PIN_GREY',
+					'OPENED_IN_ODK',
+					'MAP_PIN_YELLOW',
+					'SURVEY_SUBMITTED',
+					'MAP_PIN_GREEN',
+					'VALIDATED',
+					'MAP_PIN_BLUE',
+					'MARKED_BAD',
+					'MAP_PIN_RED',
+					'#c5fbf5', // default color if no match is found
+				],
+				'icon-allow-overlap': true,
+			}}
+		/>
+		{/if}
 	</FlatGeobuf>
 	<GeoJSON id="bad-geoms" data={entitiesStore.badGeomList}>
 		<FillLayer

@@ -18,26 +18,24 @@
 """Routes associated with data submission to and from ODK Central."""
 
 import json
-import uuid
 from io import BytesIO
 from typing import Annotated, Optional
 
 import geojson
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse, Response
-from loguru import logger as log
 from psycopg import Connection
-from psycopg.rows import class_row
+from pyodk._endpoints.submissions import Submission as CentralSubmissionOut
 
 from app.auth.auth_schemas import ProjectUserDict
 from app.auth.roles import mapper, project_contributors, project_manager
 from app.central import central_crud
 from app.db import postgis_utils
 from app.db.database import db_conn
-from app.db.enums import HTTPStatus
-from app.db.models import DbBackgroundTask, DbSubmissionPhoto, DbTask
-from app.projects import project_crud, project_schemas
-from app.submissions import submission_crud, submission_schemas
+from app.db.enums import HTTPStatus, SubmissionDownloadType
+from app.db.models import DbTask
+from app.projects import project_crud
+from app.submissions import submission_crud, submission_deps, submission_schemas
 from app.tasks.task_deps import get_task
 
 router = APIRouter(
@@ -61,10 +59,43 @@ async def read_submissions(
     return data.get("value", [])
 
 
+@router.post("", response_model=CentralSubmissionOut)
+async def create_submission(
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
+    submission_xml: Annotated[str, Body(embed=True)],
+    device_id: Annotated[Optional[str], Body(embed=True)] = None,
+    submission_attachments: Annotated[
+        Optional[dict[str, BytesIO]], Depends(submission_deps.read_submission_uploads)
+    ] = None,
+):
+    """Create a new submission via ODK Central REST endpoint.
+
+    Typically it would be best to use the OpenRosa submission endpoint,
+    as used by ODK Collect.
+
+    However, for now ODK Web Forms do not have direct ODK Central access
+    configured. Meaning we must handle getting forms and submitting new
+    data to ODK Central within FMTM.
+
+    This endpoint helps to facilitate, by allowing submission, alongside
+    any form attachments, via the ODK Central REST API (via pyodk),
+    """
+    project = project_user.get("project")
+
+    return await submission_crud.create_new_submission(
+        project.odk_credentials,
+        project.odkid,
+        project.odk_form_id,
+        submission_xml,
+        device_id,
+        submission_attachments,
+    )
+
+
 @router.get("/download")
 async def download_submission(
     project_user: Annotated[ProjectUserDict, Depends(project_contributors)],
-    export_json: bool = True,
+    file_type: SubmissionDownloadType,
     submitted_date_range: Optional[str] = Query(
         None,
         title="Submitted Date Range",
@@ -73,13 +104,11 @@ async def download_submission(
 ):
     """Download the submissions for a given project.
 
-    Returned as either a JSONResponse, or a file to download.
-
-    Returns:
-        Union[list[dict], File]: JSON of submissions, or submission file.
+    Returns a JSON, CSV, or GeoJSON file.
     """
     project = project_user.get("project")
-    filters = None
+    filters = {}
+
     if submitted_date_range:
         start_date, end_date = submitted_date_range.split(",")
         filters = {
@@ -88,14 +117,28 @@ async def download_submission(
                 f"and __system/submissionDate le {end_date}T23:59:59.999+00:00"
             )
         }
-    if not export_json:
+
+    if file_type == SubmissionDownloadType.JSON:
+        return await submission_crud.download_submission_in_json(project, filters)
+
+    elif file_type == SubmissionDownloadType.CSV:
         file_content = await submission_crud.gather_all_submission_csvs(
             project, filters
         )
         headers = {"Content-Disposition": f"attachment; filename={project.slug}.zip"}
         return Response(file_content, headers=headers)
 
-    return await submission_crud.download_submission_in_json(project, filters)
+    # Else is GeoJSON download
+    data = await submission_crud.get_submission_by_project(project, filters)
+    submission_json = data.get("value", [])
+
+    submission_geojson = await central_crud.convert_odk_submission_json_to_geojson(
+        submission_json
+    )
+    submission_data = BytesIO(json.dumps(submission_geojson).encode("utf-8"))
+
+    headers = {"Content-Disposition": f"attachment; filename={project.slug}.geojson"}
+    return Response(submission_data.getvalue(), headers=headers)
 
 
 # # FIXME 07/06/2024 since osm-fieldwork update
@@ -237,24 +280,7 @@ async def get_submission_count(
 #     return Response(content=osmoutfile_data, media_type="application/xml")
 
 
-@router.get("/submission_page")
-async def get_submission_page(
-    project_user: Annotated[ProjectUserDict, Depends(mapper)],
-    days: int,
-    planned_task: Optional[int] = None,
-):
-    """Summary submissison details for submission page.
-
-    Returns:
-        dict: A dictionary containing the submission counts for each date.
-    """
-    project = project_user.get("project")
-    data = await submission_crud.get_submissions_by_date(project, days, planned_task)
-
-    return data
-
-
-@router.get("/submission_form_fields")
+@router.get("/submission-form-fields")
 async def get_submission_form_fields(
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ):
@@ -270,12 +296,9 @@ async def get_submission_form_fields(
 
 @router.get("/submission-table")
 async def submission_table(
-    db: Annotated[Connection, Depends(db_conn)],
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
-    background_tasks: BackgroundTasks,
     page: int = Query(1, ge=1),
     results_per_page: int = Query(13, le=100),
-    background_task_id: Optional[uuid.UUID] = None,
     task_id: Optional[int] = None,
     submitted_by: Optional[str] = None,
     review_state: Optional[str] = None,
@@ -320,29 +343,6 @@ async def submission_table(
         ]
         total_count = len(submissions)
 
-    instance_ids = [
-        sub["__id"]
-        for sub in submissions
-        if sub["__system"].get("attachmentsPresent", 0) != 0
-    ]
-
-    if instance_ids:
-        background_task_id = await DbBackgroundTask.create(
-            db,
-            project_schemas.BackgroundTaskIn(
-                project_id=project.id,
-                name="upload_submission_photos",
-            ),
-        )
-        log.info("uploading submission photos to s3")
-        background_tasks.add_task(
-            submission_crud.upload_attachment_to_s3,
-            project.id,
-            instance_ids,
-            background_task_id,
-            db,
-        )
-
     if task_id:
         submissions = [sub for sub in submissions if sub.get("task_id") == str(task_id)]
 
@@ -385,32 +385,18 @@ async def update_review_state(
             post_data.instance_id,
             {"reviewState": post_data.review_state},
         )
+        # FIXME we have this due to bad exception handling code in osm-fieldwork
+        if response == {}:
+            raise Exception(
+                "ODK Central could not find or process the submission "
+                f"({post_data.instance_id})"
+            )
         return response
     except Exception as e:
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
             detail=str(e),
         ) from e
-
-
-@router.get("/download-submission-geojson")
-async def download_submission_geojson(
-    project_user: Annotated[ProjectUserDict, Depends(project_contributors)],
-):
-    """Download submission geojson for a specific project."""
-    project = project_user.get("project")
-    data = await submission_crud.get_submission_by_project(project, {})
-    submission_json = data.get("value", [])
-
-    submission_geojson = await central_crud.convert_odk_submission_json_to_geojson(
-        submission_json
-    )
-    submission_data = BytesIO(json.dumps(submission_geojson).encode("utf-8"))
-    filename = project.slug
-
-    headers = {"Content-Disposition": f"attachment; filename={filename}.geojson"}
-
-    return Response(submission_data.getvalue(), headers=headers)
 
 
 @router.get("/conflate-submission-geojson")
@@ -448,10 +434,10 @@ async def conflate_geojson(
         submission_geojson = await central_crud.convert_odk_submission_json_to_geojson(
             task_submission
         )
-        form_category = project.xform_category
+        osm_category = project.osm_category
         input_features = submission_geojson["features"]
 
-        osm_features = postgis_utils.get_osm_geometries(form_category, task_geojson)
+        osm_features = postgis_utils.get_osm_geometries(osm_category, task_geojson)
         conflated_features = postgis_utils.conflate_features(
             input_features, osm_features.get("features", []), remove_conflated
         )
@@ -468,61 +454,39 @@ async def conflate_geojson(
 
 
 @router.get("/{submission_id}/photos")
-async def submission_photo(
-    db: Annotated[Connection, Depends(db_conn)],
+async def submission_photos(
     submission_id: str,
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ) -> dict:
-    """Get submission photos.
+    """This api returns the submission detail of individual submission.
 
-    Retrieves the S3 paths of the submission photos for the given submission ID.
+    NOTE Prerequisites:
 
-    Args:
-        db (Connection): The database connection.
-        submission_id (str): The ID of the submission.
+    1) The ODK server must have the S3_ENDPOINT param set to enable
+       S3 media uploads.
 
-    Returns:
-        dict: A dictionary containing the S3 path of the submission photo.
-            If no photo is found,
-            the dictionary will contain a None value for the S3 path.
+       If it's not set, then these URLs will be direct downloads from ODK
+       (requiring auth).
 
-    Raises:
-        HTTPException: If an error occurs while retrieving the submission photo.
+       If the S3 is configured, then these URLs should be pre-signed download
+       links to S3.
+
+    2) The media is uploaded to S3 by using `node lib/bin/s3.js upload-pending`
+       in the Central container (this is triggered automatically every 24hrs).
     """
-    try:
-        async with db.cursor(row_factory=class_row(DbSubmissionPhoto)) as cur:
-            await cur.execute(
-                """
-                    SELECT
-                        s3_path
-                    FROM
-                        submission_photos
-                    WHERE
-                        submission_id = %(submission_id)s;
-                """,
-                {"submission_id": submission_id},
-            )
-            submission_photos = await cur.fetchall()
+    project = project_user.get("project")
+    submission_attachment_urls = await submission_crud.get_submission_photos(
+        submission_id,
+        project,
+    )  # this is a dict {filename:url}
 
-        s3_paths = (
-            [photo.s3_path for photo in submission_photos] if submission_photos else []
-        )
-
-        return {"image_urls": s3_paths}
-
-    except Exception as e:
-        log.warning(
-            f"Failed to get submission photos for submission {submission_id}: {e}"
-        )
-        raise HTTPException(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail="Failed to get submission photos",
-        ) from e
+    return submission_attachment_urls
 
 
 @router.get(
     "/{project_id}/dashboard", response_model=submission_schemas.SubmissionDashboard
 )
-async def project_dashboard(
+async def project_submission_dashboard(
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
     db: Annotated[Connection, Depends(db_conn)],
 ):

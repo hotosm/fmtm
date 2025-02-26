@@ -16,6 +16,7 @@ import ErrorBoundary from '@/views/ErrorBoundary';
 import ProjectDetailsV2 from '@/views/ProjectDetailsV2';
 import ProjectSubmissions from '@/views/ProjectSubmissions';
 import ManageProject from '@/views/ManageProject';
+import ManageUsers from '@/views/ManageUsers';
 import DataConflation from '@/views/DataConflation';
 
 const routes = createBrowserRouter([
@@ -31,7 +32,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/organization',
+        path: '/manage/organization',
         element: (
           <ProtectedRoute>
             <ErrorBoundary>
@@ -41,7 +42,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/organization/create',
+        path: '/manage/organization/new',
         element: (
           <ProtectedRoute>
             <ErrorBoundary>
@@ -51,7 +52,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/organization/edit/:id',
+        path: '/manage/organization/edit/:id',
         element: (
           <ProtectedRoute>
             <ErrorBoundary>
@@ -61,7 +62,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/organization/approve/:id',
+        path: '/manage/organization/approve/:id',
         element: (
           <ProtectedRoute>
             <ErrorBoundary>
@@ -207,12 +208,24 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/manage-project/:id',
+        path: '/manage/project/:id',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
               <ErrorBoundary>
                 <ManageProject />
+              </ErrorBoundary>
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/manage/user',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <ErrorBoundary>
+                <ManageUsers />
               </ErrorBoundary>
             </Suspense>
           </ProtectedRoute>

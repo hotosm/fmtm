@@ -1,4 +1,4 @@
-import { task_split_type, NewGeomTypes } from '@/types/enums';
+import { task_split_type, MapGeomTypes } from '@/types/enums';
 
 export type CreateProjectStateTypes = {
   editProjectDetails: ProjectDetailsTypes;
@@ -7,10 +7,11 @@ export type CreateProjectStateTypes = {
   projectDetailsResponse: EditProjectResponseTypes | null;
   projectDetailsLoading: boolean;
   editProjectDetailsLoading: boolean;
-  formCategoryList: FormCategoryListTypes[];
+  formExampleList: FormCategoryListTypes[];
   formCategoryLoading: boolean;
   generateProjectLoading: boolean;
   generateProjectSuccess: boolean;
+  generateProjectWarning: string | null;
   generateProjectError: boolean;
   organisationList: OrganisationListTypes[];
   organisationListLoading: boolean;
@@ -25,12 +26,12 @@ export type CreateProjectStateTypes = {
   validateCustomFormLoading: boolean;
   uploadAreaSelection: 'upload_file' | 'draw' | null;
   totalAreaSelection: string | null;
-  splitTasksSelection: task_split_type | null;
+  taskSplittingMethod: task_split_type | null;
   dataExtractGeojson: GeoJSONFeatureTypes | null;
   createProjectValidations: {};
   isUnsavedChanges: boolean;
   canSwitchCreateProjectSteps: boolean;
-  isTasksGenerated: Record<string, any>;
+  isTasksSplit: Record<string, any>;
   isFgbFetching: boolean;
   toggleSplittedGeojsonEdit: boolean;
   customFileValidity: boolean;
@@ -38,7 +39,6 @@ export type CreateProjectStateTypes = {
   descriptionToFocus: string | null;
   task_num_buildings: number | null;
   task_split_dimension: number | null;
-  new_geom_type: NewGeomTypes;
 };
 export type ValidateCustomFormResponse = {
   detail: { message: string; possible_reason: string };
@@ -79,7 +79,7 @@ type EditProjectResponseTypes = {
   status: number;
   outline: GeoJSONFeatureTypes;
   tasks: ProjectTaskTypes[];
-  xform_category: string;
+  osm_category: string;
   hashtags: string;
 };
 
@@ -98,20 +98,22 @@ export type ProjectDetailsTypes = {
   short_description?: string;
   description?: string;
   task_split_type?: number;
-  xform_category?: string;
+  osm_category?: string;
   data_extract_options?: string;
-  form_ways?: string;
   organisation_id?: number | null;
-  formWays?: string;
-  formCategorySelection?: string;
+  formExampleSelection?: string;
+  osmFormSelectionName?: string;
   average_buildings_per_task?: number;
-  dataExtractWays?: string;
+  dataExtractType?: string;
   per_task_instructions?: string;
   custom_tms_url: string;
   hasCustomTMS: boolean;
-  customFormUpload: any;
+  xlsFormFileUpload: any;
   hasAdditionalFeature: boolean;
-  new_geom_type: NewGeomTypes;
+  primaryGeomType: MapGeomTypes;
+  useMixedGeomTypes: boolean;
+  newGeomType: MapGeomTypes;
+  project_admins: number[];
 };
 
 export type FormCategoryListTypes = {

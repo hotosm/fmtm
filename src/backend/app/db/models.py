@@ -64,6 +64,7 @@ from app.s3 import add_obj_to_bucket, delete_all_objs_under_prefix
 
 # Avoid cyclical dependencies when only type checking
 if TYPE_CHECKING:
+    from app.central.central_schemas import OdkEntitiesUpdate
     from app.organisations.organisation_schemas import (
         OrganisationIn,
         OrganisationUpdate,
@@ -78,7 +79,7 @@ if TYPE_CHECKING:
         ProjectUpdate,
     )
     from app.tasks.task_schemas import TaskEventIn
-    from app.users.user_schemas import UserIn
+    from app.users.user_schemas import UserIn, UserUpdate
 
 
 def dump_and_check_model(db_model: BaseModel):
@@ -161,6 +162,7 @@ class DbUser(BaseModel):
     projects_mapped: Optional[list[int]] = None
     api_key: Optional[str] = None
     registered_at: Optional[AwareDatetime] = None
+    last_login_at: Optional[AwareDatetime] = None
 
     # Relationships
     project_roles: Optional[dict[int, ProjectRole]] = None  # project:role pairs
@@ -208,27 +210,46 @@ class DbUser(BaseModel):
                 sql,
                 {"user_identifier": user_identifier},
             )
-            db_project = await cur.fetchone()
+            db_user = await cur.fetchone()
 
-        if db_project is None:
+        if db_user is None:
             raise KeyError(f"User ({user_identifier}) not found.")
 
-        return db_project
+        return db_user
 
     @classmethod
     async def all(
-        cls, db: Connection, skip: int = 0, limit: int = 100
+        cls,
+        db: Connection,
+        skip: Optional[int] = None,
+        limit: Optional[int] = None,
+        search: Optional[str] = None,
     ) -> Optional[list[Self]]:
         """Fetch all users."""
+        filters = []
+        params = {"offset": skip, "limit": limit} if skip and limit else {}
+
+        if search:
+            filters.append("username ILIKE %(search)s")
+            params["search"] = f"%{search}%"
+
+        sql = f"""
+            SELECT * FROM users
+            {"WHERE " + " AND ".join(filters) if filters else ""}
+            ORDER BY registered_at DESC
+        """
+        sql += (
+            """
+            OFFSET %(offset)s
+            LIMIT %(limit)s;
+        """
+            if skip and limit
+            else ";"
+        )
         async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(
-                """
-                SELECT * FROM users
-                ORDER BY registered_at DESC
-                OFFSET %(offset)s
-                LIMIT %(limit)s;
-                """,
-                {"offset": skip, "limit": limit},
+                sql,
+                params,
             )
             return await cur.fetchall()
 
@@ -288,7 +309,8 @@ class DbUser(BaseModel):
             SET
                 role = EXCLUDED.role,
                 mapping_level = EXCLUDED.mapping_level,
-                name = EXCLUDED.name
+                name = EXCLUDED.name,
+                api_key = EXCLUDED.api_key
         """
 
         sql = f"""
@@ -312,6 +334,36 @@ class DbUser(BaseModel):
             )
 
         return new_user
+
+    @classmethod
+    async def update(
+        cls, db: Connection, user_id: int, user_update: "UserUpdate"
+    ) -> Self:
+        """Update the role of a specific user."""
+        model_dump = dump_and_check_model(user_update)
+        placeholders = [f"{key} = %({key})s" for key in model_dump.keys()]
+        sql = f"""
+            UPDATE users
+            SET {", ".join(placeholders)}
+            WHERE id = %(user_id)s
+            RETURNING *;
+        """
+
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(
+                sql,
+                {"user_id": user_id, **model_dump},
+            )
+            updated_user = await cur.fetchone()
+
+        if updated_user is None:
+            msg = f"Failed to update user with ID: {user_id}"
+            log.error(msg)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+            )
+
+        return updated_user
 
 
 class DbOrganisation(BaseModel):
@@ -974,7 +1026,7 @@ class DbProject(BaseModel):
     custom_tms_url: Optional[str] = None
     status: Optional[ProjectStatus] = None
     visibility: Optional[ProjectVisibility] = None
-    xform_category: Optional[str] = None
+    osm_category: Optional[str] = None
     odk_form_id: Optional[str] = None
     xlsform_content: Optional[bytes] = None
     mapper_level: Optional[MappingLevel] = None
@@ -984,11 +1036,11 @@ class DbProject(BaseModel):
     odk_central_user: Optional[str] = None
     odk_central_password: Optional[str] = None
     odk_token: Optional[str] = None
-    data_extract_type: Optional[str] = None
     data_extract_url: Optional[str] = None
     task_split_dimension: Optional[int] = None
     task_num_buildings: Optional[int] = None
-    new_geom_type: Optional[DbGeomType] = None
+    primary_geom_type: Optional[DbGeomType] = None  # the main geometries surveyed
+    new_geom_type: Optional[DbGeomType] = None  # when new geometries are drawn
     geo_restrict_distance_meters: Optional[PositiveInt] = None
     geo_restrict_force_error: Optional[bool] = None
     hashtags: Optional[list[str]] = None
@@ -1035,7 +1087,13 @@ class DbProject(BaseModel):
         )
 
     @classmethod
-    async def one(cls, db: Connection, project_id: int, minimal: bool = False) -> Self:
+    async def one(
+        cls,
+        db: Connection,
+        project_id: int,
+        minimal: bool = False,
+        warn_on_missing_token: bool = True,
+    ) -> Self:
         """Get project by ID, including all tasks and other details."""
         # Simpler query without additional metadata
         if minimal:
@@ -1179,7 +1237,7 @@ class DbProject(BaseModel):
         if db_project is None:
             raise KeyError(f"Project ({project_id}) not found.")
 
-        if db_project.odk_token is None:
+        if warn_on_missing_token and db_project.odk_token is None:
             log.warning(
                 f"Project ({db_project.id}) has no 'odk_token' set. "
                 "The QRCode will not work!"
@@ -1360,12 +1418,6 @@ class DbProject(BaseModel):
         async with db.cursor() as cur:
             await cur.execute(
                 """
-                DELETE FROM submission_photos WHERE project_id = %(project_id)s;
-            """,
-                {"project_id": project_id},
-            )
-            await cur.execute(
-                """
                 DELETE FROM background_tasks WHERE project_id = %(project_id)s;
             """,
                 {"project_id": project_id},
@@ -1484,6 +1536,34 @@ class DbOdkEntities(BaseModel):
                 result.extend(batch_result)
 
         return bool(result)
+
+    @classmethod
+    async def update(
+        cls, db: Connection, entity_uuid: str, entity_update: "OdkEntitiesUpdate"
+    ) -> bool:
+        """Update the entity value in the FMTM db."""
+        model_dump = dump_and_check_model(entity_update)
+        placeholders = [f"{key} = %({key})s" for key in model_dump.keys()]
+        sql = f"""
+            UPDATE odk_entities
+            SET {", ".join(placeholders)}
+            WHERE entity_id = %(entity_uuid)s
+            RETURNING entity_id;
+        """
+
+        async with db.cursor() as cur:
+            await cur.execute(
+                sql,
+                {"entity_uuid": entity_uuid, **model_dump},
+            )
+            success = await cur.fetchone()
+
+        if not success:
+            msg = f"Failed to update entity with UUID: {entity_uuid}"
+            log.error(msg)
+            return False
+
+        return True
 
 
 class DbBackgroundTask(BaseModel):
@@ -1772,19 +1852,6 @@ class DbBasemap(BaseModel):
         if success:
             return True
         return False
-
-
-class DbSubmissionPhoto(BaseModel):
-    """Table submission_photo.
-
-    TODO SQL this will be replace by ODK Central direct S3 upload.
-    """
-
-    id: Optional[int] = None
-    project_id: Optional[int] = None
-    task_id: Optional[int] = None  # Note this is not a DbTask, but an ODK task_id
-    submission_id: Optional[str] = None
-    s3_path: Optional[str] = None
 
 
 def slugify(name: Optional[str]) -> Optional[str]:

@@ -91,9 +91,18 @@ import {
   RotateLeft as RotateLeftIcon,
   RotateRight as RotateRightIcon,
   Sync as SyncIcon,
+  ExpandMore as ExpandMoreIcon,
+  CheckBox as CheckBoxIcon,
+  CheckBoxOutlineBlank as CheckBoxOutlineBlankIcon,
+  UnfoldMore as UnfoldMoreIcon,
+  ManageAccountsOutlined as ManageAccountsOutlinedIcon,
+  LogoutOutlined as LogoutOutlinedIcon,
+  ArrowDropDown as ArrowDropDownIcon,
 } from '@mui/icons-material';
 import LockPng from '@/assets/images/lock.png';
 import RedLockPng from '@/assets/images/red-lock.png';
+import MapPinRed from '@/assets/images/map-pin-primary.png';
+import MapPinGrey from '@/assets/images/map-pin-grey.png';
 import { styled, alpha } from '@mui/material/styles';
 export default {
   ExitToAppIcon,
@@ -130,6 +139,8 @@ export default {
   ArrowBackIcon,
   LockPng,
   RedLockPng,
+  MapPinRed,
+  MapPinGrey,
   TaskIcon,
   SubmissionIcon,
   FeatureIcon,
@@ -192,4 +203,11 @@ export default {
   RotateLeftIcon,
   RotateRightIcon,
   SyncIcon,
+  ExpandMoreIcon,
+  CheckBoxIcon,
+  CheckBoxOutlineBlankIcon,
+  UnfoldMoreIcon,
+  ManageAccountsOutlinedIcon,
+  LogoutOutlinedIcon,
+  ArrowDropDownIcon,
 };

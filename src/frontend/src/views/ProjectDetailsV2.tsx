@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import '../../node_modules/ol/ol.css';
 import '../styles/home.scss';
+import { Style, Stroke } from 'ol/style';
 import WindowDimension from '@/hooks/WindowDimension';
 import ActivitiesPanel from '@/components/ProjectDetailsV2/ActivitiesPanel';
 import { ProjectById, GetEntityStatusList, GetGeometryLog, SyncTaskState } from '@/api/Project';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
-import CustomizedSnackbar from '@/utilities/CustomizedSnackbar';
-import { HomeActions } from '@/store/slices/HomeSlice';
 import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
 import GenerateBasemap from '@/components/GenerateBasemap';
@@ -35,8 +34,9 @@ import Comments from '@/components/ProjectDetailsV2/Comments';
 import { Geolocation } from '@/utilfunctions/Geolocation';
 import Instructions from '@/components/ProjectDetailsV2/Instructions';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
-import { Style, Stroke } from 'ol/style';
 import MapStyles from '@/hooks/MapStyles';
+import { EntityOsmMap } from '@/store/types/IProject';
+import { entity_state } from '@/types/enums';
 
 const ProjectDetailsV2 = () => {
   useDocumentTitle('Project Details');
@@ -61,7 +61,6 @@ const ProjectDetailsV2 = () => {
   const projectInfo = useAppSelector((state) => state.home.selectedProject);
   const selectedTask = useAppSelector((state) => state.task.selectedTask);
   const selectedFeatureProps = useAppSelector((state) => state.task.selectedFeatureProps);
-  const stateSnackBar = useAppSelector((state) => state.home.snackbar);
   const mobileFooterSelection = useAppSelector((state) => state.project.mobileFooterSelection);
   const mapTheme = useAppSelector((state) => state.theme.hotTheme);
   const projectDetailsLoading = useAppSelector((state) => state?.project?.projectDetailsLoading);
@@ -81,21 +80,6 @@ const ProjectDetailsV2 = () => {
       document.title = 'HOT Field Mapping Tasking Manager';
     }
   }, [state.projectInfo.name]);
-
-  //snackbar handle close function
-  const handleClose = (event, reason) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-    dispatch(
-      HomeActions.SetSnackBar({
-        open: false,
-        message: stateSnackBar.message,
-        variant: stateSnackBar.variant,
-        duration: 0,
-      }),
-    );
-  };
 
   //Fetch project for the first time
   useEffect(() => {
@@ -327,17 +311,7 @@ const ProjectDetailsV2 = () => {
   return (
     <div className="fmtm-bg-[#f5f5f5] !fmtm-h-[100dvh] sm:!fmtm-h-full">
       {/* Customized Modal For Generate Tiles */}
-      <div>
-        <GenerateBasemap projectInfo={state.projectInfo} />
-        {/* Home snackbar */}
-        <CustomizedSnackbar
-          duration={stateSnackBar.duration}
-          open={stateSnackBar.open}
-          variant={stateSnackBar.variant}
-          message={stateSnackBar.message}
-          handleClose={handleClose}
-        />
-      </div>
+      <GenerateBasemap projectInfo={state.projectInfo} />
 
       <div className="fmtm-flex fmtm-h-full fmtm-gap-6">
         <div className="fmtm-w-[22rem] fmtm-h-full fmtm-hidden md:fmtm-block">
@@ -350,13 +324,9 @@ const ProjectDetailsV2 = () => {
             ) : (
               <p className="fmtm-text-lg fmtm-font-archivo fmtm-text-[#9B9999]">{`#${state.projectInfo.id}`}</p>
             )}
-            <Button
-              btnText="MANAGE PROJECT"
-              btnType="other"
-              className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md"
-              icon={<AssetModules.SettingsIcon />}
-              onClick={() => navigate(`/manage-project/${params?.id}`)}
-            />
+            <Button variant="secondary-red" onClick={() => navigate(`/manage/project/${params?.id}`)}>
+              MANAGE PROJECT <AssetModules.SettingsIcon />
+            </Button>
           </div>
           <div
             className="fmtm-flex fmtm-flex-col fmtm-gap-4 fmtm-flex-auto"
@@ -441,21 +411,18 @@ const ProjectDetailsV2 = () => {
           {viewState !== 'comments' && (
             <div className="fmtm-flex fmtm-gap-4">
               <Button
-                btnText="VIEW INFOGRAPHICS"
-                btnType="other"
-                className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md fmtm-my-2"
+                variant="secondary-red"
+                className="!fmtm-w-1/2"
                 onClick={() => navigate(`/project-submissions/${projectId}`)}
-              />
-              <div className="fmtm-relative" ref={divRef}>
-                <div onClick={() => handleToggle()}>
-                  <Button
-                    btnText="DOWNLOAD"
-                    btnType="other"
-                    className="hover:fmtm-text-red-700 fmtm-border-red-700 !fmtm-rounded-md fmtm-my-2"
-                  />
-                </div>
+              >
+                VIEW INFOGRAPHICS
+              </Button>
+              <div className="fmtm-relative fmtm-w-1/2" ref={divRef}>
+                <Button variant="secondary-red" className="fmtm-w-full" onClick={handleToggle}>
+                  DOWNLOAD
+                </Button>
                 <div
-                  className={`fmtm-flex fmtm-gap-4 fmtm-absolute fmtm-duration-200 fmtm-z-[1000] fmtm-bg-[#F5F5F5] fmtm-p-2 fmtm-rounded-md ${
+                  className={`fmtm-flex fmtm-gap-4 fmtm-absolute fmtm-duration-200 fmtm-z-[1000] fmtm-bg-[#F5F5F5] fmtm-px-2 fmtm-py-[2px] fmtm-rounded ${
                     toggle
                       ? 'fmtm-left-0 fmtm-bottom-0 lg:fmtm-top-0'
                       : '-fmtm-left-[65rem] fmtm-bottom-0 lg:fmtm-top-0'
@@ -517,7 +484,12 @@ const ProjectDetailsV2 = () => {
                   fgbUrl={dataExtractUrl}
                   fgbExtent={dataExtractExtent}
                   getTaskStatusStyle={(feature) => {
-                    return getFeatureStatusStyle(feature?.getProperties()?.osm_id, mapTheme, entityOsmMap);
+                    const geomType = feature.getGeometry().getType();
+                    const entity = entityOsmMap?.find(
+                      (entity) => entity?.osm_id === feature?.getProperties()?.osm_id,
+                    ) as EntityOsmMap;
+                    const status = entity_state[entity?.status];
+                    return getFeatureStatusStyle(geomType, mapTheme, status);
                   }}
                   viewProperties={{
                     size: map?.getSize(),
@@ -541,30 +513,20 @@ const ProjectDetailsV2 = () => {
               />
               <div className="fmtm-absolute fmtm-bottom-20 md:fmtm-bottom-3 fmtm-left-3 fmtm-z-50">
                 <Button
-                  btnText="BASEMAPS"
-                  icon={<AssetModules.BoltIcon className="!fmtm-text-xl" />}
-                  onClick={() => {
-                    dispatch(ProjectActions.ToggleGenerateMbTilesModalStatus(true));
-                  }}
-                  btnType="other"
-                  className="!fmtm-text-sm !fmtm-pr-2 fmtm-bg-white"
-                />
+                  variant="secondary-red"
+                  onClick={() => dispatch(ProjectActions.ToggleGenerateMbTilesModalStatus(true))}
+                >
+                  BASEMAPS
+                  <AssetModules.BoltIcon className="!fmtm-text-xl" />
+                </Button>
               </div>
               <div className="fmtm-absolute fmtm-bottom-20 md:fmtm-bottom-3 fmtm-right-3 fmtm-z-50">
-                <Button
-                  btnText="SYNC STATUS"
-                  icon={
-                    <AssetModules.SyncIcon
-                      className={`!fmtm-text-xl ${(entityOsmMapLoading || getGeomLogLoading || syncTaskStateLoading) && 'fmtm-animate-spin'}`}
-                    />
-                  }
-                  onClick={() => {
-                    if (entityOsmMapLoading) return;
-                    syncStatus();
-                  }}
-                  btnType="other"
-                  className={`!fmtm-text-sm !fmtm-pr-2 fmtm-bg-white ${(entityOsmMapLoading || getGeomLogLoading || syncTaskStateLoading) && 'fmtm-cursor-not-allowed'}`}
-                />
+                <Button variant="secondary-red" onClick={syncStatus} disabled={entityOsmMapLoading}>
+                  SYNC STATUS
+                  <AssetModules.SyncIcon
+                    className={`!fmtm-text-xl ${(entityOsmMapLoading || getGeomLogLoading || syncTaskStateLoading) && 'fmtm-animate-spin'}`}
+                  />
+                </Button>
               </div>
               <MapControlComponent
                 map={map}

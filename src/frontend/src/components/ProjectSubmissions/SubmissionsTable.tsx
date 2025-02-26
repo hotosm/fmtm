@@ -24,7 +24,7 @@ import { filterType } from '@/store/types/ISubmissions';
 import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 
 import { CreateTaskEvent } from '@/api/TaskEvent';
-import { ConvertXMLToJOSM, getDownloadProjectSubmission } from '@/api/task';
+import { ConvertXMLToJOSM, DownloadProjectSubmission } from '@/api/task';
 import { SubmissionFormFieldsService, SubmissionTableService } from '@/api/SubmissionService';
 
 import filterParams from '@/utilfunctions/filterParams';
@@ -82,6 +82,24 @@ const SubmissionsTable = ({ toggleView }) => {
       : null,
   });
 
+  const submissionDownloadTypes: { type: 'csv' | 'json' | 'geojson'; label: string; loading: boolean }[] = [
+    {
+      type: 'csv',
+      label: 'Download as Csv',
+      loading: downloadSubmissionLoading.fileType === 'csv' && downloadSubmissionLoading.loading,
+    },
+    {
+      type: 'json',
+      label: 'Download as Json',
+      loading: downloadSubmissionLoading.fileType === 'json' && downloadSubmissionLoading.loading,
+    },
+    {
+      type: 'geojson',
+      label: 'Download as GeoJson',
+      loading: downloadSubmissionLoading.fileType === 'geojson' && downloadSubmissionLoading.loading,
+    },
+  ];
+
   useEffect(() => {
     if (!dateRange.start || !dateRange.end) return;
 
@@ -113,7 +131,7 @@ const SubmissionsTable = ({ toggleView }) => {
   useEffect(() => {
     dispatch(
       SubmissionFormFieldsService(
-        `${import.meta.env.VITE_API_URL}/submission/submission_form_fields?project_id=${projectId}`,
+        `${import.meta.env.VITE_API_URL}/submission/submission-form-fields?project_id=${projectId}`,
       ),
     );
   }, []);
@@ -134,7 +152,7 @@ const SubmissionsTable = ({ toggleView }) => {
   const refreshTable = () => {
     dispatch(
       SubmissionFormFieldsService(
-        `${import.meta.env.VITE_API_URL}/submission/submission_form_fields?project_id=${projectId}`,
+        `${import.meta.env.VITE_API_URL}/submission/submission-form-fields?project_id=${projectId}`,
       ),
     );
     dispatch(SubmissionActions.SetSubmissionTableRefreshing(true));
@@ -209,12 +227,12 @@ const SubmissionsTable = ({ toggleView }) => {
     );
   };
 
-  const handleDownload = (downloadType: 'csv' | 'json') => {
+  const handleDownload = (downloadType: 'csv' | 'json' | 'geojson') => {
     dispatch(
-      getDownloadProjectSubmission(`${import.meta.env.VITE_API_URL}/submission/download`, projectInfo.name!, {
+      DownloadProjectSubmission(`${import.meta.env.VITE_API_URL}/submission/download`, projectInfo.name!, {
         project_id: projectId,
         submitted_date_range: filter?.submitted_date_range,
-        export_json: downloadType === 'json',
+        file_type: downloadType,
       }),
     );
   };
@@ -264,18 +282,17 @@ const SubmissionsTable = ({ toggleView }) => {
         >
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger>
-              <button
-                className={`fmtm-py-1 fmtm-px-2 fmtm-text-red-600 fmtm-rounded fmtm-border-[1px] fmtm-border-red-600 hover:fmtm-text-red-700 hover:fmtm-border-red-700 fmtm-flex fmtm-items-center fmtm-w-fit fmtm-text-base fmtm-gap-2 fmtm-bg-white`}
-              >
-                <AssetModules.TuneIcon style={{ fontSize: '20px' }} /> <p>FILTER</p>{' '}
-                <div className="fmtm-text-sm fmtm-bg-primaryRed fmtm-text-white fmtm-rounded-full fmtm-w-4 fmtm-h-4 fmtm-flex fmtm-justify-center fmtm-items-center">
+              <Button variant="secondary-red">
+                <AssetModules.TuneIcon style={{ fontSize: '20px' }} />
+                FILTER{' '}
+                <div className="fmtm-bg-primaryRed fmtm-text-white fmtm-rounded-full fmtm-w-4 fmtm-h-4 fmtm-flex fmtm-justify-center fmtm-items-center">
                   <p>{Object.values(filter).filter((filterObjValue) => filterObjValue).length}</p>
                 </div>
-              </button>
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="fmtm-z-[50]" align="start">
               <div
-                className={`fmtm-w-fit -fmtm-bottom-20 fmtm-bg-white fmtm-px-4 fmtm-rounded-lg fmtm-shadow-2xl fmtm-pb-4 fmtm-pt-2 fmtm-grid fmtm-grid-cols-2 sm:fmtm-grid-cols-3 md:fmtm-grid-cols-4 lg:fmtm-grid-cols-5 fmtm-gap-4 fmtm-items-end`}
+                className={`fmtm-w-fit fmtm-max-w-[90vw] -fmtm-bottom-20 fmtm-bg-white fmtm-px-4 fmtm-rounded-lg fmtm-shadow-2xl fmtm-pb-4 fmtm-pt-2 fmtm-gap-4 fmtm-items-end fmtm-flex fmtm-flex-wrap`}
               >
                 <div className={`${windowSize.width < 500 ? 'fmtm-w-full' : 'fmtm-w-[11rem]'}`}>
                   <CustomSelect
@@ -333,91 +350,62 @@ const SubmissionsTable = ({ toggleView }) => {
                   </div>
                 </div>
                 <Button
-                  btnText="Reset Filter"
-                  btnType="other"
-                  className={`${
-                    submissionTableDataLoading || submissionFormFieldsLoading ? '' : 'fmtm-bg-white'
-                  } !fmtm-text-base !fmtm-font-bold !fmtm-rounded`}
+                  variant="secondary-red"
                   onClick={clearFilters}
                   disabled={submissionTableDataLoading || submissionFormFieldsLoading}
-                />
+                >
+                  Reset Filter
+                </Button>
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
           <div className="fmtm-flex fmtm-gap-2">
-            <button
-              className={`fmtm-px-2 fmtm-py-1 fmtm-flex fmtm-items-center fmtm-w-fit fmtm-rounded fmtm-gap-2 fmtm-duration-150 fmtm-bg-primaryRed hover:fmtm-bg-red-700`}
-              onClick={uploadToJOSM}
-            >
-              <AssetModules.FileDownloadIcon className="fmtm-text-white" style={{ fontSize: '18px' }} />
-              <p className="fmtm-text-white fmtm-text-base fmtm-truncate">UPLOAD TO JOSM</p>
-            </button>
+            <Button variant="primary-red" onClick={uploadToJOSM}>
+              <AssetModules.FileDownloadIcon className="!fmtm-text-xl" />
+              UPLOAD TO JOSM
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger>
-                <button
-                  className={`fmtm-px-2 fmtm-py-1 fmtm-flex fmtm-items-center fmtm-w-fit fmtm-rounded fmtm-gap-2 fmtm-duration-150
-                    fmtm-bg-primaryRed hover:fmtm-bg-red-700
-                  `}
-                >
-                  <AssetModules.FileDownloadIcon className="fmtm-text-white" style={{ fontSize: '18px' }} />
-                  <p className="fmtm-text-white fmtm-text-base">DOWNLOAD</p>
-                </button>
+                <Button variant="primary-red">
+                  <AssetModules.FileDownloadIcon className="!fmtm-text-xl" />
+                  DOWNLOAD
+                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="fmtm-z-[5000] fmtm-bg-white">
-                <DropdownMenuItem
-                  disabled={downloadSubmissionLoading.type === 'csv' && downloadSubmissionLoading.loading}
-                  onSelect={() => handleDownload('csv')}
-                >
-                  <div className="fmtm-flex fmtm-gap-2 fmtm-items-center">
-                    <p className="fmtm-text-base">Download as Csv</p>
-                    {downloadSubmissionLoading.type === 'csv' && downloadSubmissionLoading.loading && (
-                      <Loader2 className="fmtm-h-4 fmtm-w-4 fmtm-animate-spin fmtm-text-primaryRed" />
-                    )}
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onSelect={() => handleDownload('json')}
-                  disabled={downloadSubmissionLoading.type === 'json' && downloadSubmissionLoading.loading}
-                >
-                  <div className="fmtm-flex fmtm-gap-2 fmtm-items-center">
-                    <p className="fmtm-text-base">Download as Json</p>
-                    {downloadSubmissionLoading.type === 'json' && downloadSubmissionLoading.loading && (
-                      <Loader2 className="fmtm-h-4 fmtm-w-4 fmtm-animate-spin fmtm-text-primaryRed" />
-                    )}
-                  </div>{' '}
-                </DropdownMenuItem>
+                {submissionDownloadTypes?.map((submissionDownload) => (
+                  <DropdownMenuItem
+                    key={submissionDownload.type}
+                    disabled={submissionDownload.loading}
+                    onSelect={() => handleDownload(submissionDownload.type)}
+                  >
+                    <div className="fmtm-flex fmtm-gap-2 fmtm-items-center">
+                      <p className="fmtm-text-base">{submissionDownload.label}</p>
+                      {submissionDownload.loading && (
+                        <Loader2 className="fmtm-h-4 fmtm-w-4 fmtm-animate-spin fmtm-text-primaryRed" />
+                      )}
+                    </div>
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            <button
-              className={`fmtm-px-4 fmtm-py-1 fmtm-flex fmtm-items-center fmtm-w-fit fmtm-rounded fmtm-gap-2 fmtm-duration-150 ${
-                submissionTableDataLoading || submissionFormFieldsLoading
-                  ? 'fmtm-bg-gray-400 fmtm-cursor-not-allowed'
-                  : 'fmtm-bg-primaryRed hover:fmtm-bg-red-700'
-              }`}
+            <Button
+              variant="primary-red"
               onClick={refreshTable}
+              isLoading={(submissionTableDataLoading || submissionFormFieldsLoading) && submissionTableRefreshing}
               disabled={submissionTableDataLoading || submissionFormFieldsLoading}
             >
-              {(submissionTableDataLoading || submissionFormFieldsLoading) && submissionTableRefreshing ? (
-                <Loader2 className="fmtm-h-4 fmtm-w-4 fmtm-animate-spin fmtm-text-white" />
-              ) : (
-                <AssetModules.ReplayIcon className="fmtm-text-white" style={{ fontSize: '18px' }} />
-              )}
-              <p className="fmtm-text-white fmtm-text-base">REFRESH</p>
-            </button>
+              <AssetModules.ReplayIcon className="!fmtm-text-xl" />
+              REFRESH
+            </Button>
           </div>
         </div>
-        <div className="fmtm-w-full fmtm-flex fmtm-justify-end xl:fmtm-w-fit fmtm-gap-3">
+        <div className="fmtm-w-full fmtm-flex fmtm-items-center fmtm-justify-end xl:fmtm-w-fit fmtm-gap-3">
           {filter?.task_id &&
             projectData?.[projectIndex]?.taskBoundries?.find((task) => task?.id === +filter?.task_id)?.task_state ===
               task_state.LOCKED_FOR_VALIDATION && (
-              <Button
-                isLoading={updateTaskStatusLoading}
-                loadingText="MARK AS VALIDATED"
-                btnText="MARK AS VALIDATED"
-                btnType="primary"
-                className="!fmtm-rounded !fmtm-text-base"
-                onClick={handleTaskMap}
-              />
+              <Button variant="primary-red" onClick={handleTaskMap} isLoading={updateTaskStatusLoading}>
+                MARK AS VALIDATED
+              </Button>
             )}
           {toggleView}
         </div>
@@ -492,8 +480,9 @@ const SubmissionsTable = ({ toggleView }) => {
                             reviewState: row?.__system?.reviewState,
                             entity_id: row?.feature,
                             label: row?.meta?.entity?.label,
-                            feature: convertCoordinateStringToFeature(row?.xlocation),
+                            feature: convertCoordinateStringToFeature('xlocation', row?.xlocation),
                             taskUid: taskUid?.toString() || null,
+                            featureId: row?.xid,
                           }),
                         );
                       }}

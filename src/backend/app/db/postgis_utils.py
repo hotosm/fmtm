@@ -26,13 +26,12 @@ from typing import Optional, Union
 
 import geojson
 import geojson_pydantic
-import requests
 from fastapi import HTTPException
 from osm_fieldwork.data_models import data_models_path
 from osm_rawdata.postgres import PostgresClient
 from psycopg import Connection, ProgrammingError
 from psycopg.rows import class_row
-from shapely.geometry import MultiPolygon, Polygon, mapping, shape
+from shapely.geometry import MultiPolygon, Point, Polygon, mapping, shape
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
@@ -50,9 +49,9 @@ def timestamp():
     return datetime.now(timezone.utc)
 
 
-def polygon_to_centroid(
+async def polygon_to_centroid(
     polygon: geojson.Polygon,
-) -> shape:
+) -> Point:
     """Convert GeoJSON to shapely geometry."""
     return shape(polygon).centroid
 
@@ -83,7 +82,7 @@ async def featcol_to_flatgeobuf(
             -- Wrap geometries in GeometryCollection
             CREATE TEMP TABLE IF NOT EXISTS temp_features(
                 geom geometry(GeometryCollection, 4326),
-                osm_id integer,
+                osm_id bigint,
                 tags text,
                 version integer,
                 changeset integer,
@@ -100,7 +99,7 @@ async def featcol_to_flatgeobuf(
                 ST_ForceCollection(ST_GeomFromGeoJSON(feat->>'geometry')) AS geom,
                 regexp_replace(
                     (feat->'properties'->>'osm_id')::text, '[^0-9]', '', 'g'
-                )::integer as osm_id,
+                )::BIGINT as osm_id,
                 (feat->'properties'->>'tags')::text as tags,
                 (feat->'properties'->>'version')::integer as version,
                 (feat->'properties'->>'changeset')::integer as changeset,
@@ -557,58 +556,6 @@ async def check_crs(input_geojson: Union[dict, geojson.FeatureCollection]):
         raise HTTPException(HTTPStatus.BAD_REQUEST, detail=error_message)
 
 
-def get_address_from_lat_lon(latitude, longitude):
-    """Get address using Nominatim, using lat,lon."""
-    base_url = "https://nominatim.openstreetmap.org/reverse"
-
-    params = {
-        "format": "json",
-        "lat": latitude,
-        "lon": longitude,
-        "zoom": 18,
-    }
-    headers = {
-        # Set the language to English
-        "Accept-Language": "en",
-        # Referer or User-Agent required as per usage policy:
-        # https://operations.osmfoundation.org/policies/nominatim
-        "Referer": settings.FMTM_DOMAIN,
-    }
-
-    log.debug(
-        f"Getting Nominatim address from project lat ({latitude}) lon ({longitude})"
-    )
-    response = requests.get(base_url, params=params, headers=headers)
-    if (status_code := response.status_code) != 200:
-        log.error(f"Getting address string failed: {status_code}")
-        return None
-
-    data = response.json()
-    log.debug(f"Nominatim response: {data}")
-
-    address = data.get("address", None)
-    if not address:
-        log.error(f"Getting address string failed: {status_code}")
-        return None
-
-    country = address.get("country", "")
-    city = address.get("city", "")
-    state = address.get("state", "")
-
-    address_str = f"{city},{country}" if city else f"{state},{country}"
-
-    if not address_str or address_str == ",":
-        log.error("Getting address string failed")
-        return None
-
-    return address_str
-
-
-async def get_address_from_lat_lon_async(latitude, longitude):
-    """Async wrapper for get_address_from_lat_lon."""
-    return get_address_from_lat_lon(latitude, longitude)
-
-
 async def geojson_to_javarosa_geom(geojson_geometry: dict) -> str:
     """Convert a GeoJSON geometry to JavaRosa format string.
 
@@ -658,12 +605,14 @@ async def geojson_to_javarosa_geom(geojson_geometry: dict) -> str:
     return ";".join(javarosa_geometry)
 
 
-async def javarosa_to_geojson_geom(javarosa_geom_string: str, geom_type: str) -> dict:
+async def javarosa_to_geojson_geom(javarosa_geom_string: str) -> dict:
     """Convert a JavaRosa format string to GeoJSON geometry.
+
+    The geometry type is automatically inferred from the geometry
+    coordinate structure.
 
     Args:
         javarosa_geom_string (str): The JavaRosa geometry.
-        geom_type (str): The geometry type.
 
     Returns:
         dict: A geojson geometry.
@@ -671,28 +620,25 @@ async def javarosa_to_geojson_geom(javarosa_geom_string: str, geom_type: str) ->
     if javarosa_geom_string is None:
         return {}
 
-    if geom_type == "Point":
-        lat, lon, _, _ = map(float, javarosa_geom_string.split())
-        geojson_geometry = {"type": "Point", "coordinates": [lon, lat]}
-    elif geom_type == "LineString":
-        coordinates = [
-            [float(coord) for coord in reversed(point.split()[:2])]
-            for point in javarosa_geom_string.split(";")
-        ]
-        geojson_geometry = {"type": "LineString", "coordinates": coordinates}
-    elif geom_type == "Polygon":
-        coordinates = [
-            [
-                [float(coord) for coord in reversed(point.split()[:2])]
-                for point in coordinate.split(";")
-            ]
-            for coordinate in javarosa_geom_string.split(",")
-        ]
-        geojson_geometry = {"type": "Polygon", "coordinates": coordinates}
-    else:
-        raise ValueError("Unsupported GeoJSON geometry type")
+    # Split by semicolon to get coordinate sets
+    coordinate_sets = javarosa_geom_string.strip().split(";")
+    # Convert coordinates to [lon, lat] pairs
+    coordinates = [
+        [float(coord) for coord in reversed(point.split()[:2])]
+        for point in coordinate_sets
+    ]
 
-    return geojson_geometry
+    # Determine geometry type
+    if len(coordinates) == 1:
+        geom_type = "Point"
+        coordinates = coordinates[0]  # Flatten for Point
+    elif coordinates[0] == coordinates[-1]:  # Check if closed loop
+        geom_type = "Polygon"
+        coordinates = [coordinates]  # Wrap in extra list for Polygon
+    else:
+        geom_type = "LineString"
+
+    return {"type": geom_type, "coordinates": coordinates}
 
 
 def multigeom_to_singlegeom(
@@ -828,17 +774,17 @@ def merge_polygons(
         ) from e
 
 
-def get_osm_geometries(form_category, geometry):
+def get_osm_geometries(osm_category, geometry):
     """Request a snapshot based on the provided geometry.
 
     Args:
-        form_category(str): feature category type (eg: buildings).
+        osm_category(str): feature category type (eg: buildings).
         geometry (str): The geometry data in JSON format.
 
     Returns:
         dict: The JSON response containing the snapshot data.
     """
-    config_filename = XLSFormType(form_category).name
+    config_filename = XLSFormType(osm_category).name
     data_model = f"{data_models_path}/{config_filename}.yaml"
 
     with open(data_model, "rb") as data_model_yaml:

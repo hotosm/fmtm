@@ -1,0 +1,387 @@
+# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# This file is part of FMTM.
+#
+#     FMTM is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     FMTM is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#
+
+name: fmtm
+
+volumes:
+  fmtm_data:
+  fmtm_db_data:
+  fmtm_logs:
+  fmtm_images:
+  fmtm_tiles:
+  central_db_data:
+  central_frontend:
+
+networks:
+  fmtm-net:
+    name: fmtm-${GIT_BRANCH:-local}
+
+services:
+  proxy:
+    image: "ghcr.io/hotosm/fmtm/proxy:debug"
+    build:
+      context: nginx
+      target: debug
+      args:
+        NGINX_TAG: "${NGINX_TAG:-1.27.0}"
+    depends_on:
+      api:
+        condition: service_started
+      ui:
+        condition: service_started
+      ui-mapper:
+        condition: service_started
+      central:
+        condition: service_started
+        required: false
+      central-ui:
+        condition: service_completed_successfully
+        required: false
+      s3:
+        condition: service_healthy
+      electric:
+        condition: service_started
+    volumes:
+      - central_frontend:/usr/share/nginx/html/central
+    ports:
+      - ${FMTM_DEV_PORT:-7050}:80
+    networks:
+      - fmtm-net
+    restart: "unless-stopped"
+
+  api:
+    image: "ghcr.io/hotosm/fmtm/backend:${TAG_OVERRIDE:-debug}"
+    build:
+      context: src/backend
+      target: "${TARGET_OVERRIDE:-debug}"
+      args:
+        APP_VERSION: "${TAG_OVERRIDE:-debug}"
+    # Uncomment these to debug with a terminal debugger like pdb
+    # Then `docker attach fmtm_api` to debug
+    # stdin_open: true
+    # tty: true
+    volumes:
+      - fmtm_logs:/opt/logs
+      - ./src/backend/pyproject.toml:/opt/pyproject.toml:ro
+      - ./src/backend/app:/opt/app:ro
+      - ./src/backend/tests:/opt/tests:ro
+      - ./src/backend/scheduler:/opt/scheduler:ro
+      - ./src/backend/stats:/opt/stats:ro
+      # - ../osm-fieldwork/osm_fieldwork:/opt/python/lib/python3.12/site-packages/osm_fieldwork:ro
+      # - ../osm-rawdata/osm_rawdata:/opt/python/lib/python3.12/site-packages/osm_rawdata:ro
+      # - ../fmtm-splitter/fmtm_splitter:/opt/python/lib/python3.12/site-packages/fmtm_splitter:ro
+    depends_on:
+      fmtm-db:
+        condition: service_healthy
+      central:
+        condition: service_healthy
+        required: false
+      migrations:
+        condition: service_completed_successfully
+      s3:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "7052-7055:8000"
+    #   - "5678-5679:5678" # Debugger port
+    networks:
+      - fmtm-net
+    restart: "unless-stopped"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/__lbheartbeat__"]
+      start_period: 60s
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      replicas: ${API_REPLICAS:-1}
+      resources:
+        limits:
+          cpus: "0.9"
+          memory: 1500M
+        reservations:
+          cpus: "0.1"
+          memory: 100M
+
+  ui:
+    image: "ghcr.io/hotosm/fmtm/frontend:debug"
+    build:
+      context: src
+      additional_contexts:
+        - code=src/frontend
+      dockerfile: Dockerfile.ui.debug
+    depends_on:
+      api:
+        condition: service_started
+    volumes:
+      - ./src/frontend:/app
+      - /app/node_modules/
+    environment:
+      - VITE_API_URL=http://api.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}
+    ports:
+      - "7051:7051"
+    networks:
+      - fmtm-net
+    restart: "unless-stopped"
+
+  ui-mapper:
+    image: "ghcr.io/hotosm/fmtm/frontend:mapper"
+    build:
+      context: src
+      additional_contexts:
+        - code=src/mapper
+      dockerfile: Dockerfile.ui.debug
+    depends_on:
+      api:
+        condition: service_started
+    volumes:
+      - ./src/mapper:/app
+      - /app/node_modules/
+      - /app/.svelte-kit/
+      # - ../ui:/app/node_modules/@hotosm/ui:ro
+    environment:
+      - VITE_API_URL=http://api.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}
+      - VITE_SYNC_URL=http://sync.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}
+    networks:
+      - fmtm-net
+    restart: "unless-stopped"
+
+  central:
+    profiles: ["", "central"]
+    image: "ghcr.io/hotosm/fmtm/odkcentral:${ODK_CENTRAL_TAG:-v2024.2.1}"
+    build:
+      context: odkcentral/api
+      args:
+        ODK_CENTRAL_TAG: ${ODK_CENTRAL_TAG:-v2024.2.1}
+    depends_on:
+      central-db:
+        condition: service_healthy
+      s3:
+        condition: service_healthy
+    environment:
+      - DOMAIN=${CENTRAL_DOMAIN_OVERRIDE:-odk.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}}
+      - SSL_TYPE=upstream
+      - SYSADMIN_EMAIL=${ODK_CENTRAL_USER}
+      - SYSADMIN_PASSWD=${ODK_CENTRAL_PASSWD}
+      - HTTPS_PORT=${HTTPS_PORT:-443}
+      - DB_HOST=${CENTRAL_DB_HOST:-central-db}
+      - DB_USER=${CENTRAL_DB_USER:-odk}
+      - DB_PASSWORD=${CENTRAL_DB_PASSWORD:-odk}
+      - DB_NAME=${CENTRAL_DB_NAME:-odk}
+      - DB_SSL=${DB_SSL:-null}
+      - EMAIL_FROM=${ODK_CENTRAL_USER}
+      - EMAIL_HOST=${EMAIL_HOST:-mail}
+      - EMAIL_PORT=${EMAIL_PORT:-25}
+      - EMAIL_SECURE=${EMAIL_SECURE:-false}
+      - EMAIL_IGNORE_TLS=${EMAIL_IGNORE_TLS:-true}
+      - EMAIL_USER=${EMAIL_USER:-''}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD:-''}
+      - OIDC_ENABLED=${OIDC_ENABLED:-false}
+      - SENTRY_ORG_SUBDOMAIN=${SENTRY_ORG_SUBDOMAIN:-o130137}
+      - SENTRY_KEY=${SENTRY_KEY:-3cf75f54983e473da6bd07daddf0d2ee}
+      - SENTRY_PROJECT=${SENTRY_PROJECT:-1298632}
+      # Note S3_ENDPOINT is hardcoded here for when we use tunnel config
+      - S3_SERVER="http://s3:9000"
+      - S3_BUCKET_NAME=${S3_ODK_BUCKET_NAME:-"fmtm-odk-media"}
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY}
+      - S3_SECRET_KEY=${S3_SECRET_KEY}
+    # ports:
+    #   - "8383:8383"
+    networks:
+      - fmtm-net
+    restart: "unless-stopped"
+
+  pyxform:
+    image: "ghcr.io/getodk/pyxform-http:v2.0.3"
+    # Temp workaround until multiarch support
+    build:
+      context: https://github.com/getodk/pyxform-http.git#v2.0.3
+    depends_on:
+      central-db:
+        condition: service_healthy
+    networks:
+      - fmtm-net
+    restart: "unless-stopped"
+
+  central-ui:
+    # This service simply builds the frontend to a volume
+    # accessible to the proxy, then shuts down
+    profiles: ["", "central"]
+    image: "ghcr.io/hotosm/fmtm/odkcentral-ui:${ODK_CENTRAL_TAG:-v2024.2.1}"
+    build:
+      context: odkcentral/ui
+      args:
+        ODK_CENTRAL_TAG: ${ODK_CENTRAL_TAG:-v2024.2.1}
+    volumes:
+      - central_frontend:/frontend
+    network_mode: none
+    restart: "on-failure:2"
+
+  central-webhook:
+    profiles: ["", "central"]
+    image: "ghcr.io/hotosm/central-webhook:${ODK_WEBHOOK_TAG:-0.1.0-rc}"
+    depends_on:
+      central:
+        condition: service_healthy
+    environment:
+      CENTRAL_WEBHOOK_DB_URI: postgresql://${CENTRAL_DB_USER:-odk}:${CENTRAL_DB_USER:-odk}@central-db:5432/${CENTRAL_DB_NAME:-odk}?sslmode=disable
+      CENTRAL_WEBHOOK_UPDATE_ENTITY_URL: http://api:8000/integrations/webhooks/entity-status
+      # CENTRAL_WEBHOOK_REVIEW_SUBMISSION_URL: https://your.domain.com/some/webhook
+      CENTRAL_WEBHOOK_API_KEY: qnyE7ev7OWsfMAaX2fm-PuWYnkAUJw2xlyp72FKCH3Q
+      # CENTRAL_WEBHOOK_LOG_LEVEL: DEBUG
+    networks:
+      - fmtm-net
+    restart: "unless-stopped"
+
+  s3:
+    image: "docker.io/minio/minio:${MINIO_TAG:-RELEASE.2025-01-20T14-49-07Z}"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-fmtm}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-somelongpassword}
+      MINIO_VOLUMES: "/mnt/data"
+      MINIO_BROWSER: ${MINIO_BROWSER:-off}
+      MINIO_CONSOLE_ADDRESS: ":9090"
+    volumes:
+      - fmtm_data:/mnt/data
+    # ports:
+    # - 9000:9000
+    # - 9090:9090
+    networks:
+      - fmtm-net
+    command: minio server
+    restart: "unless-stopped"
+    healthcheck:
+      test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1
+      interval: 5s
+      retries: 3
+      start_period: 5s
+      timeout: 5s
+
+  fmtm-db:
+    image: "postgis/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
+    # Temp workaround until https://github.com/postgis/docker-postgis/issues/216
+    build:
+      context: https://github.com/postgis/docker-postgis.git#master:14-3.5/alpine
+    command: -c 'max_connections=300' -c 'wal_level=logical'
+    volumes:
+      - fmtm_db_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=${FMTM_DB_USER:-fmtm}
+      - POSTGRES_PASSWORD=${FMTM_DB_PASSWORD:-fmtm}
+      - POSTGRES_DB=${FMTM_DB_NAME:-fmtm}
+    ports:
+      - "5438:5432"
+    networks:
+      - fmtm-net
+    restart: "unless-stopped"
+    healthcheck:
+      test: pg_isready -U ${FMTM_DB_USER:-fmtm} -d ${FMTM_DB_NAME:-fmtm}
+      start_period: 5s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  electric:
+    image: "electricsql/electric:${ELECTRIC_TAG:-1.0.0-beta.10}"
+    depends_on:
+      fmtm-db:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgresql://${FMTM_DB_USER:-fmtm}:${FMTM_DB_PASSWORD:-fmtm}@${FMTM_DB_HOST:-fmtm-db}/${FMTM_DB_NAME:-fmtm}?sslmode=disable
+      # OTEL_EXPORT: otlp
+      # OTLP_ENDPOINT: https://...
+      # ELECTRIC_WRITE_TO_PG_MODE: direct_writes
+    networks:
+      - fmtm-net
+    restart: "unless-stopped"
+
+  central-db:
+    profiles: ["", "central"]
+    image: "postgis/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
+    volumes:
+      - central_db_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=${CENTRAL_DB_USER:-odk}
+      - POSTGRES_PASSWORD=${CENTRAL_DB_PASSWORD:-odk}
+      - POSTGRES_DB=${CENTRAL_DB_NAME:-odk}
+    ports:
+      - "5434:5432"
+    networks:
+      - fmtm-net
+    restart: "unless-stopped"
+    healthcheck:
+      test: pg_isready -U ${CENTRAL_DB_USER:-odk} -d ${CENTRAL_DB_NAME:-odk}
+      start_period: 5s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  migrations:
+    image: "ghcr.io/hotosm/fmtm/backend:${TAG_OVERRIDE:-debug}"
+    depends_on:
+      fmtm-db:
+        condition: service_healthy
+      s3:
+        condition: service_healthy
+    env_file:
+      - .env
+    # Hardcode some vars for dev, as not necessarily present in the .env file
+    environment:
+      # Note S3_ENDPOINT is hardcoded here for when we use tunnel config
+      - S3_ENDPOINT="http://s3:9000
+      - S3_BACKUP_BUCKET_NAME=${S3_BACKUP_BUCKET_NAME:-"fmtm-db-backups"}
+    networks:
+      - fmtm-net
+    entrypoint: ["/migrate-entrypoint.sh"]
+    restart: "on-failure:2"
+    healthcheck:
+      test: ["NONE"] # Set the health check test to NONE to disable it
+
+  scheduler:
+    image: "ghcr.io/hotosm/fmtm/backend:${TAG_OVERRIDE:-debug}"
+    depends_on:
+      fmtm-db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DEBUG: false
+    networks:
+      - fmtm-net
+    entrypoint: ["/bin/sh", "-c"]
+    # The approach below allows us to easily switch to Kubernetes CronJob if needed
+    command: |
+      "
+        # Task unlocking every 3hrs
+        echo '* */3 * * * /opt/scheduler/unlock_tasks.py' > ./crontab
+
+        # Check inactive users every Sunday 00:00
+        echo '0 0 * * 0 /opt/scheduler/inactive_users.py' >> ./crontab
+
+        exec /usr/local/bin/supercronic ./crontab
+      "
+    restart: "unless-stopped"
+    # Check the 'supercronic' service is still running
+    healthcheck:
+      test: ["CMD", "pgrep", "supercronic"]
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 10s

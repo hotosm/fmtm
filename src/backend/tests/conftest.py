@@ -28,13 +28,11 @@ from uuid import uuid4
 
 import pytest
 import pytest_asyncio
-import requests
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from loguru import logger as log
 from psycopg import AsyncConnection
-from pyodk.client import Client
 
 from app.auth.auth_routes import get_or_create_user
 from app.auth.auth_schemas import AuthUser, FMTMUser
@@ -62,7 +60,6 @@ from tests.test_data import test_data_path
 odk_central_url = os.getenv("ODK_CENTRAL_URL")
 odk_central_user = os.getenv("ODK_CENTRAL_USER")
 odk_central_password = encrypt_value(os.getenv("ODK_CENTRAL_PASSWD", ""))
-odk_config_file = str(Path(__file__).parent / ".pyodk_config.toml")
 
 
 def pytest_configure(config):
@@ -196,7 +193,7 @@ async def project(db, admin_user, organisation):
         name=project_name,
         short_description="test",
         description="test",
-        xform_category="buildings",
+        osm_category="buildings",
         odk_central_url=os.getenv("ODK_CENTRAL_URL"),
         odk_central_user=os.getenv("ODK_CENTRAL_USER"),
         odk_central_password=os.getenv("ODK_CENTRAL_PASSWD"),
@@ -305,15 +302,19 @@ async def odk_project(db, client, project, tasks):
     )
 
     internal_s3_url = f"{settings.S3_ENDPOINT}{urlparse(data_extract_s3_path).path}"
-    response = requests.head(internal_s3_url, allow_redirects=True)
-    assert response.status_code < 400
+
+    async with AsyncClient() as client_httpx:
+        response = await client_httpx.head(internal_s3_url, follow_redirects=True)
+        assert response.status_code < 400, (
+            f"HEAD request failed with status {response.status_code}"
+        )
 
     xlsform_file = Path(f"{test_data_path}/buildings.xls")
     with open(xlsform_file, "rb") as xlsform_data:
         xlsform_obj = BytesIO(xlsform_data.read())
 
     xform_file = {
-        "xls_form_upload": (
+        "xlsform": (
             "buildings.xls",
             xlsform_obj,
         )
@@ -334,6 +335,7 @@ async def odk_project(db, client, project, tasks):
 @pytest_asyncio.fixture(scope="function")
 async def submission(client, odk_project):
     """Set up a submission for a project in ODK Central."""
+    fmtm_project_id = odk_project.id
     odk_project_id = odk_project.odkid
     odk_credentials = odk_project.odk_credentials
     odk_creds = odk_credentials.model_dump()
@@ -343,12 +345,15 @@ async def submission(client, odk_project):
         odk_creds["odk_central_password"],
     )
 
-    def forms(base_url, auth, pid):
+    async def forms(base_url, auth, pid):
         """Fetch a list of forms in a project."""
-        url = f"{base_url}/v1/projects/{pid}/forms"
-        return requests.get(url, auth=auth)
+        async with AsyncClient(auth=auth) as client_httpx:
+            url = f"{base_url}/v1/projects/{pid}/forms"
+            response = await client_httpx.get(url)
+            response.raise_for_status()
+            return response
 
-    forms_response = forms(base_url, auth, odk_project_id)
+    forms_response = await forms(base_url, auth, odk_project_id)
     assert forms_response.status_code == 200, "Failed to fetch forms from ODK Central"
     forms = forms_response.json()
     assert forms, "No forms found in ODK Central project"
@@ -356,6 +361,9 @@ async def submission(client, odk_project):
     odk_form_version = forms[0]["version"]
 
     submission_id = str(uuid.uuid4())
+    photo_file_name = "submission_photo.jpg"
+    photo_file_path = f"{test_data_path}/{photo_file_name}"
+    assert Path(photo_file_path).exists()
 
     submission_xml = f"""
         <data id="{odk_form_id}" version="{odk_form_version}">
@@ -366,51 +374,58 @@ async def submission(client, odk_project):
         <end>2024-11-15T12:29:00.876Z</end>
         <today>2024-11-15</today>
         <phonenumber/>
-        <deviceid>collect:OOYOOcNu8uOA2G4b</deviceid>
         <username>testuser</username>
         <instructions/>
         <warmup/>
         <feature/>
-        <null/>
+        <image>{photo_file_name}</image>
         <new_feature>12.750577838121643 -24.776785714285722 0.0 0.0</new_feature>
-        <form_category>building</form_category>
         <xid/>
         <xlocation>12.750577838121643 -24.776785714285722 0.0 0.0</xlocation>
         <task_id/>
         <status>2</status>
         <survey_questions>
             <buildings>
-            <category>housing</category>
-            <name/>
-            <building_material/>
-            <building_levels/>
-            <housing/>
-            <provider/>
+                <category>housing</category>
+                <name/>
+                <building_material/>
+                <building_levels/>
+                <housing/>
+                <provider/>
             </buildings>
             <details>
-            <power/>
-            <water/>
-            <age/>
-            <building_prefab/>
-            <building_floor/>
-            <building_roof/>
-            <condition/>
-            <access_roof/>
-            <levels_underground/>
+                <power/>
+                <water/>
+                <age/>
+                <building_prefab/>
+                <building_floor/>
+                <building_roof/>
+                <condition/>
+                <access_roof/>
+                <levels_underground/>
             </details>
             <comment/>
         </survey_questions>
         </data>
     """
 
-    with Client(config_path=odk_config_file) as client:
-        submission_data = client.submissions.create(
-            project_id=odk_project_id,
-            form_id=odk_form_id,
-            xml=submission_xml,
-            device_id=None,
-            encoding="utf-8",
+    # The file must be uploaded to the API, read, then re-uploaded to Central
+    with open(photo_file_path, "rb") as photo_file:
+        files = {"submission_files": (photo_file_name, photo_file, "image/jpeg")}
+
+        response = await client.post(
+            f"/submission?project_id={fmtm_project_id}",
+            data={
+                "submission_xml": submission_xml,
+                "device_id": "collect:BOYFOcNu8uOK2G4b",
+            },
+            files=files,
         )
+
+        assert response.status_code == 200, response.json()
+
+    submission_data = response.json()
+    assert submission_data.get("instanceId") == submission_id
 
     yield {
         "project": odk_project,
@@ -444,7 +459,7 @@ async def project_data():
         "name": project_name,
         "short_description": "test",
         "description": "test",
-        "xform_category": "buildings",
+        "osm_category": "buildings",
         "hashtags": "testtag",
         "outline": {
             "coordinates": [

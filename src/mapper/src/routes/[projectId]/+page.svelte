@@ -4,13 +4,14 @@
 	import '@hotosm/ui/dist/hotosm-ui';
 	import type { PageData } from '../$types';
 	import { onMount, onDestroy } from 'svelte';
+	import type { ShapeStream } from '@electric-sql/client';
 	import { polygon } from '@turf/helpers';
 	import { buffer } from '@turf/buffer';
 	import { bbox } from '@turf/bbox';
-	import ImportQrGif from '$assets/images/importQr.gif';
+	import type SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.component.js';
+	import type SlDialog from '@shoelace-style/shoelace/dist/components/dialog/dialog.component.js';
 
-	import SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.component.js';
-	import SlDialog from '@shoelace-style/shoelace/dist/components/dialog/dialog.component.js';
+	import ImportQrGif from '$assets/images/importQr.gif';
 	import BottomSheet from '$lib/components/bottom-sheet.svelte';
 	import MapComponent from '$lib/components/map/main.svelte';
 	import QRCodeComponent from '$lib/components/qrcode.svelte';
@@ -25,7 +26,6 @@
 	import More from '$lib/components/more/index.svelte';
 	import { getProjectSetupStepStore, getCommonStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
-	import type { ShapeStream } from '@electric-sql/client';
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
@@ -148,6 +148,22 @@
 			});
 		}
 	});
+
+	let newFeatureDrawInstance: any = $state(null);
+	let newFeatureGeom: any = $state(null);
+
+	function cancelMapNewFeatureInODK() {
+		newFeatureDrawInstance.clear();
+		isDrawEnabled = false;
+		newFeatureDrawInstance = null;
+		newFeatureGeom = null;
+	}
+
+	function mapNewFeatureInODK() {
+		const newGeom = newFeatureGeom;
+		cancelMapNewFeatureInODK();
+		openOdkCollectNewFeature(data?.project?.odk_form_id, newGeom, taskStore.selectedTaskId);
+	}
 </script>
 
 <!-- There is a new event to display in the top right corner -->
@@ -162,7 +178,7 @@
 {/if}
 
 <!-- The main page -->
-<div class="h-[calc(100svh-3.699rem)] sm:h-[calc(100svh-4.625rem)]">
+<div class="h-[calc(100svh-3.699rem)] sm:h-[calc(100svh-4.625rem)] font-barlow">
 	<MapComponent
 		setMapRef={(map) => {
 			maplibreMap = map;
@@ -173,13 +189,54 @@
 		projectOutlineCoords={data.project.outline.coordinates}
 		projectId={data.projectId}
 		entitiesUrl={data.project.data_extract_url}
+		primaryGeomType={data.project.primary_geom_type}
 		draw={isDrawEnabled}
 		drawGeomType={data.project.new_geom_type}
-		handleDrawnGeom={(geom) => {
-			isDrawEnabled = false;
-			openOdkCollectNewFeature(data?.project?.odk_form_id, geom);
+		handleDrawnGeom={(drawInstance, geom) => {
+			newFeatureDrawInstance = drawInstance;
+			newFeatureGeom = geom;
+			// after drawing a feature, allow user to modify the drawn feature
+			newFeatureDrawInstance.setMode('select');
 		}}
 	></MapComponent>
+
+	{#if newFeatureGeom}
+		<div class="absolute inset-0 z-20 flex items-center justify-center translate-y-[-5rem] pointer-events-none">
+			<div class="pointer-events-auto bg-white px-4 py-2 rounded-md shadow-lg w-fit max-w-[65%]">
+				<p class="mb-2">Is the geometry in the correct place?</p>
+				<div class="flex gap-2 justify-end">
+					<sl-button
+						onclick={() => {
+							cancelMapNewFeatureInODK();
+						}}
+						onkeydown={(e: KeyboardEvent) => {
+							if (e.key === 'Enter') {
+								cancelMapNewFeatureInODK();
+							}
+						}}
+						role="button"
+						tabindex="0"
+						size="small"
+						class="secondary w-fit"
+					>
+						<span class="font-barlow font-medium text-xs uppercase">CANCEL</span>
+					</sl-button>
+					<sl-button
+						onclick={() => mapNewFeatureInODK()}
+						onkeydown={(e: KeyboardEvent) => {
+							e.key === 'Enter' && mapNewFeatureInODK();
+						}}
+						role="button"
+						tabindex="0"
+						size="small"
+						class="primary w-fit"
+					>
+						<span class="font-barlow font-medium text-xs uppercase">PROCEED</span>
+					</sl-button>
+				</div>
+			</div>
+		</div>
+	{/if}
 	<!-- task action buttons popup -->
 	<DialogTaskActions
 		isTaskActionModalOpen={openedActionModal === 'task-modal'}
@@ -216,9 +273,7 @@
 						<sl-button
 							size="small"
 							class="primary w-full max-w-[200px]"
-							href="odkcollect://form/{data.project.odk_form_id}{taskStore.selectedTaskId
-								? `?task_filter=${taskStore.selectedTaskId}`
-								: ''}"
+							href="odkcollect://form/{data.project.odk_form_id}"
 						>
 							<span class="font-barlow font-medium text-base uppercase">Open ODK</span></sl-button
 						>

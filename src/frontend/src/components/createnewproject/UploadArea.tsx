@@ -61,10 +61,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
       if (totalArea > 200 && areaUnit === 'km²') {
         dispatch(
           CommonActions.SetSnackBar({
-            open: true,
             message: 'Cannot create project of project area exceeding 200 Sq.KM.',
-            variant: 'error',
-            duration: 3000,
           }),
         );
         return;
@@ -126,10 +123,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
       addGeojsonToState(null);
       dispatch(
         CommonActions.SetSnackBar({
-          open: true,
           message: 'File not a valid geojson',
-          variant: 'error',
-          duration: 4000,
         }),
       );
     }
@@ -141,10 +135,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
     if (drawnGeojson && !valid(drawnGeojson)) {
       dispatch(
         CommonActions.SetSnackBar({
-          open: true,
           message: 'File not a valid geojson',
-          variant: 'error',
-          duration: 4000,
         }),
       );
       return;
@@ -169,10 +160,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
   const showSpatialError = () => {
     dispatch(
       CommonActions.SetSnackBar({
-        open: true,
         message: 'Invalid spatial reference system. Please only import WGS84 (EPSG: 4326).',
-        variant: 'error',
-        duration: 6000,
       }),
     );
   };
@@ -196,20 +184,15 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
       if (totalArea > 100 && areaUnit === 'km²') {
         dispatch(
           CommonActions.SetSnackBar({
-            open: true,
             message: 'The project area exceeded over 100 Sq.KM.',
             variant: 'warning',
-            duration: 3000,
           }),
         );
       }
       if (totalArea > 200 && areaUnit === 'km²') {
         dispatch(
           CommonActions.SetSnackBar({
-            open: true,
             message: 'The project area exceeded 200 Sq.KM. and must be less than 200 Sq.KM.',
-            variant: 'error',
-            duration: 3000,
           }),
         );
       }
@@ -259,7 +242,9 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
                   <p className="fmtm-text-gray-700 fmtm-pt-5 fmtm-pb-5">Draw a polygon on the map to plot the area</p>
                   {drawnGeojson && (
                     <>
-                      <Button btnText="Reset" btnType="secondary" type="button" onClick={() => resetFile()} />
+                      <Button variant="secondary-grey" onClick={() => resetFile()}>
+                        Reset
+                      </Button>
                       <p className="fmtm-text-gray-700 fmtm-mt-5">
                         Total Area: <span className="fmtm-font-bold">{totalAreaSelection}</span>
                       </p>
@@ -274,6 +259,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
               )}
               {uploadAreaSelection === 'upload_file' && (
                 <div
+                  className="fmtm-my-2"
                   onMouseOver={() => dispatch(CreateProjectActions.SetDescriptionToFocus('uploadarea-uploadgeojson'))}
                   onMouseLeave={() => dispatch(CreateProjectActions.SetDescriptionToFocus(null))}
                 >
@@ -294,16 +280,17 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
             </div>
             <div className="fmtm-flex fmtm-gap-5 fmtm-mx-auto fmtm-mt-10 fmtm-my-5">
               <Button
-                btnText="PREVIOUS"
-                btnType="secondary"
-                type="button"
+                variant="secondary-grey"
                 onClick={() => {
                   dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
                   toggleStep(1, '/create-project');
                 }}
-                className="fmtm-font-bold"
-              />
-              <Button btnText="NEXT" btnType="primary" type="submit" className="fmtm-font-bold" />
+              >
+                PREVIOUS
+              </Button>
+              <Button variant="primary-red" type="submit">
+                NEXT
+              </Button>
             </div>
           </form>
           <div className="fmtm-w-full lg:fmtm-w-[60%] fmtm-flex fmtm-flex-col fmtm-gap-6 fmtm-bg-gray-300 fmtm-h-full">

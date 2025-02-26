@@ -24,10 +24,20 @@ export enum task_state {
   UNLOCKED_DONE = 'UNLOCKED_DONE',
 }
 
+export enum task_state_labels {
+  UNLOCKED_TO_MAP = 'Ready',
+  LOCKED_FOR_MAPPING = 'Locked For Mapping',
+  UNLOCKED_TO_VALIDATE = 'Ready For Validation',
+  LOCKED_FOR_VALIDATION = 'Locked For Validation',
+  UNLOCKED_DONE = 'Validated',
+}
+
 export enum entity_state {
   READY = 0,
   OPENED_IN_ODK = 1,
   SURVEY_SUBMITTED = 2,
+  NEW_GEOM = 3,
+  VALIDATED = 5,
   MARKED_BAD = 6,
 }
 
@@ -37,11 +47,25 @@ export enum user_roles {
   ADMIN = 'ADMIN',
 }
 
-export type NewGeomTypes = {
+export enum project_roles {
+  MAPPER = 'MAPPER',
+  VALIDATOR = 'VALIDATOR',
+  FIELD_MANAGER = 'FIELD_MANAGER',
+  PROJECT_MANAGER = 'PROJECT_MANAGER',
+  ASSOCIATE_PROJECT_MANAGER = 'ASSOCIATE_PROJECT_MANAGER',
+}
+
+export type MapGeomTypes = {
   POINT: 'POINT';
   POLYGON: 'POLYGON';
   LINESTRING: 'LINESTRING';
 };
+
+export enum GeoGeomTypesEnum {
+  POINT = 'Point',
+  POLYGON = 'Polygon',
+  LINESTRING = 'LineString',
+}
 
 export enum submission_status {
   null = 'Received',
@@ -49,4 +73,9 @@ export enum submission_status {
   edited = 'Edited',
   approved = 'Approved',
   rejected = 'Rejected',
+}
+
+export enum osm_forms {
+  buildings = 'OSM Buildings',
+  health = 'OSM Healthcare',
 }

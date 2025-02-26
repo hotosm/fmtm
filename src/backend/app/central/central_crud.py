@@ -20,6 +20,7 @@
 import csv
 import json
 from asyncio import gather
+from datetime import datetime
 from io import BytesIO, StringIO
 from typing import Optional, Union
 from uuid import uuid4
@@ -187,17 +188,6 @@ async def delete_odk_project(
         return "Could not delete project from central odk"
 
 
-def delete_odk_app_user(
-    project_id: int,
-    name: str,
-    odk_central: Optional[central_schemas.ODKCentralDecrypted] = None,
-):
-    """Delete an app-user from a remote ODK Server."""
-    odk_app_user = get_odk_app_user(odk_central)
-    result = odk_app_user.delete(project_id, name)
-    return result
-
-
 def create_odk_xform(
     odk_id: int,
     xform_data: BytesIO,
@@ -222,50 +212,6 @@ def create_odk_xform(
         ) from e
 
     xform.createForm(odk_id, xform_data, publish=True)
-
-
-def delete_odk_xform(
-    project_id: int,
-    xform_id: str,
-    odk_central: Optional[central_schemas.ODKCentralDecrypted] = None,
-):
-    """Delete an XForm from a remote ODK Central server."""
-    xform = get_odk_form(odk_central)
-    result = xform.deleteForm(project_id, xform_id)
-    # FIXME: make sure it's a valid project id
-    return result
-
-
-def list_odk_xforms(
-    project_id: int,
-    odk_central: Optional[central_schemas.ODKCentralDecrypted] = None,
-    metadata: bool = False,
-):
-    """List all XForms in an ODK Central project."""
-    project = get_odk_project(odk_central)
-    xforms = project.listForms(project_id, metadata)
-    # FIXME: make sure it's a valid project id
-    return xforms
-
-
-def get_form_full_details(
-    odk_project_id: int,
-    form_id: str,
-    odk_central: Optional[central_schemas.ODKCentralDecrypted] = None,
-):
-    """Get additional metadata for ODK Form."""
-    form = get_odk_form(odk_central)
-    form_details = form.getFullDetails(odk_project_id, form_id)
-    return form_details
-
-
-def get_odk_project_full_details(
-    odk_project_id: int, odk_central: central_schemas.ODKCentralDecrypted
-):
-    """Get additional metadata for ODK project."""
-    project = get_odk_project(odk_central)
-    project_details = project.getFullDetails(odk_project_id)
-    return project_details
 
 
 def list_submissions(
@@ -318,18 +264,26 @@ async def read_and_test_xform(input_data: BytesIO) -> None:
         ) from e
 
 
+def get_project_form_xml(
+    odk_creds: central_schemas.ODKCentralDecrypted, odkid: str, odk_form_id: str
+) -> str:
+    """Get the XForm from ODK Central as raw XML."""
+    xform = get_odk_form(odk_creds)
+    return xform.getXml(odkid, odk_form_id)
+
+
 async def append_fields_to_user_xlsform(
     xlsform: BytesIO,
-    form_category: str = "buildings",
-    additional_entities: list[str] = None,
-    existing_id: str = None,
-    new_geom_type: DbGeomType = DbGeomType.POINT,
+    form_name: str = "buildings",
+    additional_entities: Optional[list[str]] = None,
+    existing_id: Optional[str] = None,
+    new_geom_type: Optional[DbGeomType] = DbGeomType.POLYGON,
 ) -> tuple[str, BytesIO]:
     """Helper to return the intermediate XLSForm prior to convert."""
     log.debug("Appending mandatory FMTM fields to XLSForm")
     return await append_mandatory_fields(
         xlsform,
-        form_category=form_category,
+        form_name=form_name,
         additional_entities=additional_entities,
         existing_id=existing_id,
         new_geom_type=new_geom_type,
@@ -338,15 +292,15 @@ async def append_fields_to_user_xlsform(
 
 async def validate_and_update_user_xlsform(
     xlsform: BytesIO,
-    form_category: str = "buildings",
-    additional_entities: list[str] = None,
-    existing_id: str = None,
-    new_geom_type: DbGeomType = DbGeomType.POINT,
+    form_name: str = "buildings",
+    additional_entities: Optional[list[str]] = None,
+    existing_id: Optional[str] = None,
+    new_geom_type: Optional[DbGeomType] = DbGeomType.POLYGON,
 ) -> BytesIO:
     """Wrapper to append mandatory fields and validate user uploaded XLSForm."""
     xform_id, updated_file_bytes = await append_fields_to_user_xlsform(
         xlsform,
-        form_category=form_category,
+        form_name=form_name,
         additional_entities=additional_entities,
         existing_id=existing_id,
         new_geom_type=new_geom_type,
@@ -361,7 +315,7 @@ async def update_project_xform(
     xform_id: str,
     odk_id: int,
     xlsform: BytesIO,
-    category: str,
+    # osm_category: str,
     odk_credentials: central_schemas.ODKCentralDecrypted,
 ) -> None:
     """Update and publish the XForm for a project.
@@ -370,7 +324,6 @@ async def update_project_xform(
         xform_id (str): The UUID of the existing XForm in ODK Central.
         odk_id (int): ODK Central form ID.
         xlsform (UploadFile): XForm data.
-        category (str): Category of the XForm.
         odk_credentials (central_schemas.ODKCentralDecrypted): ODK Central creds.
 
     Returns: None
@@ -383,6 +336,7 @@ async def update_project_xform(
     xform_obj.createForm(
         odk_id,
         xform_bytesio,
+        # NOTE this variable is incorrectly named and should be form_id
         form_name=xform_id,
     )
     # The draft form must be published after upload
@@ -485,19 +439,46 @@ async def convert_odk_submission_json_to_geojson(
 
     all_features = []
     for submission in submission_json:
+        # Remove unnecessary keys
         keys_to_remove = ["meta", "__id", "__system"]
         for key in keys_to_remove:
             submission.pop(key)
 
+        # Ensure no nesting of the properties (flat struct)
         data = {}
         flatten_json(submission, data)
 
-        geojson_geom = await javarosa_to_geojson_geom(
-            data.pop("xlocation", {}), geom_type="Polygon"
-        )
+        # Process primary geometry
+        geojson_geom = await javarosa_to_geojson_geom(data.pop("xlocation", {}))
 
-        feature = geojson.Feature(geometry=geojson_geom, properties=data)
+        # Identify and process additional geometries
+        additional_geometries = []
+        for geom_field in list(data.keys()):
+            if geom_field.endswith("_geom"):
+                id_field = geom_field[:-5]  # Remove "_geom" suffix
+                geom_data = data.pop(geom_field, {})
+
+                # Convert geometry
+                geom = await javarosa_to_geojson_geom(geom_data)
+
+                feature = geojson.Feature(
+                    id=data.get(id_field),
+                    geometry=geom,
+                    properties={
+                        "is_additional_geom": True,
+                        "id_field": id_field,
+                        "geom_field": geom_field,
+                    },
+                )
+                additional_geometries.append(feature)
+
+        feature = geojson.Feature(
+            id=data.get("xlocation"),
+            geometry=geojson_geom,
+            properties=data,
+        )
         all_features.append(feature)
+        all_features.extend(additional_geometries)
 
     return geojson.FeatureCollection(features=all_features)
 
@@ -593,6 +574,35 @@ async def create_entity_list(
             )
 
 
+async def create_entity(
+    odk_creds: central_schemas.ODKCentralDecrypted,
+    odk_id: int,
+    properties: list[str],
+    entity: central_schemas.EntityDict,
+    dataset_name: str = "features",
+) -> dict:
+    """Create a new Entity in ODK."""
+    log.info(f"Creating ODK Entity in dataset '{dataset_name}' (ODK ID: {odk_id})")
+    try:
+        properties = central_schemas.entity_fields_to_list(properties)
+
+        label = entity.get("label")
+        data = entity.get("data")
+
+        if not label or not data:
+            log.error("Missing required entity fields: 'label' or 'data'")
+            raise ValueError("Entity must contain 'label' and 'data' fields")
+
+        async with central_deps.get_odk_dataset(odk_creds) as odk_central:
+            response = await odk_central.createEntity(odk_id, dataset_name, label, data)
+        log.info(f"Entity '{label}' successfully created in ODK")
+        return response
+
+    except Exception as e:
+        log.exception(f"Failed to create entity in ODK: {str(e)}")
+        raise
+
+
 async def get_entities_geojson(
     odk_creds: central_schemas.ODKCentralDecrypted,
     odk_id: int,
@@ -674,9 +684,7 @@ async def get_entities_geojson(
         flatten_json(entity, flattened_dict)
 
         javarosa_geom = flattened_dict.pop("geometry") or ""
-        geojson_geom = await javarosa_to_geojson_geom(
-            javarosa_geom, geom_type="Polygon"
-        )
+        geojson_geom = await javarosa_to_geojson_geom(javarosa_geom)
 
         feature = geojson.Feature(
             geometry=geojson_geom,
@@ -693,6 +701,7 @@ async def get_entities_data(
     odk_id: int,
     dataset_name: str = "features",
     fields: str = "__system/updatedAt, osm_id, status, task_id, submission_ids",
+    filter_date: Optional[datetime] = None,
 ) -> list:
     """Get all the entity mapping statuses.
 
@@ -704,17 +713,26 @@ async def get_entities_data(
         dataset_name (str): The dataset / Entity list name in ODK Central.
         fields (str): Extra fields to include in $select filter.
             __id is included by default.
+        filter_date (datetime): Filter entities last updated after this date.
 
     Returns:
         list: JSON list containing Entity info. If updated_at is included,
             the format is string 2022-01-31T23:59:59.999Z.
     """
     try:
+        url_params = f"$select=__id{',' if fields else ''} {fields}"
+
+        filters = []
+        if filter_date:
+            filters.append(f"__system/updatedAt gt {filter_date}")
+        if filters:
+            url_params += f"&$filter={' and '.join(filters)}"
+
         async with central_deps.get_odk_dataset(odk_creds) as odk_central:
             entities = await odk_central.getEntityData(
                 odk_id,
                 dataset_name,
-                url_params=f"$select=__id{',' if fields else ''} {fields}",
+                url_params=url_params,
             )
     except Exception as e:
         log.exception(f"Error: {e}", stack_info=True)
@@ -827,28 +845,6 @@ async def update_entity_mapping_status(
             },
         )
     return entity_to_flat_dict(entity, odk_id, entity_uuid, dataset_name)
-
-
-def upload_media(
-    project_id: int,
-    xform_id: str,
-    filespec: str,
-    odk_central: Optional[central_schemas.ODKCentralDecrypted] = None,
-):
-    """Upload a data file to Central."""
-    xform = get_odk_form(odk_central)
-    xform.uploadMedia(project_id, xform_id, filespec)
-
-
-def download_media(
-    project_id: int,
-    xform_id: str,
-    filename: str = "test",
-    odk_central: Optional[central_schemas.ODKCentralDecrypted] = None,
-):
-    """Upload a data file to Central."""
-    xform = get_odk_form(odk_central)
-    xform.getMedia(project_id, xform_id, filename)
 
 
 # FIXME replace osm_fieldwork.CSVDump with osm_fieldwork.ODKParsers

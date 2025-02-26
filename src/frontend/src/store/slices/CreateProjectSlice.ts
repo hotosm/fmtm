@@ -17,17 +17,18 @@ export const initialState: CreateProjectStateTypes = {
     description: '',
     organisation_id: null,
     per_task_instructions: '',
-    formWays: 'existing_form',
     hasCustomTMS: false,
     custom_tms_url: '',
+    project_admins: [],
   },
   projectDetailsResponse: null,
   projectDetailsLoading: false,
   editProjectDetailsLoading: false,
-  formCategoryList: [],
+  formExampleList: [],
   formCategoryLoading: false,
   generateProjectLoading: false,
   generateProjectSuccess: false,
+  generateProjectWarning: null,
   generateProjectError: false,
   organisationList: [],
   organisationListLoading: false,
@@ -42,12 +43,12 @@ export const initialState: CreateProjectStateTypes = {
   validateCustomFormLoading: false,
   uploadAreaSelection: null,
   totalAreaSelection: null,
-  splitTasksSelection: null,
+  taskSplittingMethod: null,
   dataExtractGeojson: null,
   createProjectValidations: {},
   isUnsavedChanges: false,
   canSwitchCreateProjectSteps: false,
-  isTasksGenerated: { divide_on_square: false, task_splitting_algorithm: false },
+  isTasksSplit: { divide_on_square: false, task_splitting_algorithm: false },
   isFgbFetching: false,
   toggleSplittedGeojsonEdit: false,
   customFileValidity: false,
@@ -78,10 +79,9 @@ const CreateProject = createSlice({
         odk_central_password: '',
         description: '',
         organisation_id: null,
-        form_ways: 'existing_form',
       };
       state.totalAreaSelection = null;
-      state.splitTasksSelection = null;
+      state.taskSplittingMethod = null;
       state.dataExtractGeojson = null;
       state.taskSplittingGeojson = null;
       state.drawnGeojson = null;
@@ -90,6 +90,7 @@ const CreateProject = createSlice({
       state.dividedTaskGeojson = null;
       state.dividedTaskLoading = false;
       state.generateProjectSuccess = false;
+      state.generateProjectWarning = null;
       state.generateProjectError = false;
       state.drawToggle = false;
       state.additionalFeatureGeojson = null;
@@ -97,8 +98,8 @@ const CreateProject = createSlice({
     GetFormCategoryLoading(state, action: PayloadAction<boolean>) {
       state.formCategoryLoading = action.payload;
     },
-    GetFormCategoryList(state, action: PayloadAction<CreateProjectStateTypes['formCategoryList']>) {
-      state.formCategoryList = action.payload;
+    GetFormCategoryList(state, action: PayloadAction<CreateProjectStateTypes['formExampleList']>) {
+      state.formExampleList = action.payload;
     },
     SetIndividualProjectDetailsData(state, action) {
       state.projectDetails = action.payload;
@@ -108,6 +109,9 @@ const CreateProject = createSlice({
     },
     GenerateProjectSuccess(state, action: PayloadAction<boolean>) {
       state.generateProjectSuccess = action.payload;
+    },
+    GenerateProjectWarning(state, action: PayloadAction<string>) {
+      state.generateProjectWarning = action.payload;
     },
     GenerateProjectError(state, action: PayloadAction<boolean>) {
       state.generateProjectError = action.payload;
@@ -166,8 +170,8 @@ const CreateProject = createSlice({
     SetTotalAreaSelection(state, action: PayloadAction<string | null>) {
       state.totalAreaSelection = action.payload;
     },
-    SetSplitTasksSelection(state, action: PayloadAction<task_split_type>) {
-      state.splitTasksSelection = action.payload;
+    SetTaskSplittingMethod(state, action: PayloadAction<task_split_type>) {
+      state.taskSplittingMethod = action.payload;
     },
     setDataExtractGeojson(state, action) {
       state.dataExtractGeojson = action.payload;
@@ -178,15 +182,15 @@ const CreateProject = createSlice({
     SetCanSwitchCreateProjectSteps(state, action: PayloadAction<boolean>) {
       state.canSwitchCreateProjectSteps = action.payload;
     },
-    SetIsTasksGenerated(
+    SetIsTasksSplit(
       state,
       action: PayloadAction<{
         key: 'divide_on_square' | 'task_splitting_algorithm';
         value: boolean;
       }>,
     ) {
-      state.isTasksGenerated = {
-        ...state.isTasksGenerated,
+      state.isTasksSplit = {
+        ...state.isTasksSplit,
         [action.payload.key]: action.payload.value,
       };
     },
@@ -195,7 +199,7 @@ const CreateProject = createSlice({
     },
     ClearProjectStepState(state, action) {
       state.dividedTaskGeojson = null;
-      state.splitTasksSelection = null;
+      state.taskSplittingMethod = null;
       state.dataExtractGeojson = null;
       state.projectDetails = { ...action.payload, customLineUpload: null, customPolygonUpload: null };
     },

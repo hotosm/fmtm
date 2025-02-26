@@ -11,6 +11,7 @@ import { GetProjectTaskActivity } from '@/api/Project';
 import { Modal } from '@/components/common/Modal';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import { taskSubmissionInfoType } from '@/models/task/taskModel';
+import { useIsOrganizationAdmin, useIsProjectManager } from '@/hooks/usePermissions';
 
 type dialogPropType = {
   taskId: number;
@@ -20,7 +21,7 @@ type dialogPropType = {
 type taskListStateType = {
   value: string;
   key: string;
-  btnBG: string;
+  btnType: 'primary-red' | 'primary-grey' | 'link-red' | 'secondary-red';
 };
 
 export default function Dialog({ taskId, feature }: dialogPropType) {
@@ -41,6 +42,9 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
   const projectTaskActivityList = useAppSelector((state) => state?.project?.projectTaskActivity);
 
+  const isOrganizationAdmin = useIsOrganizationAdmin(projectInfo?.organisation_id as number);
+  const isProjectManager = useIsProjectManager(projectInfo?.id as number);
+
   const currentProjectId: string = params.id;
   const projectIndex = projectData.findIndex((project) => project.id == parseInt(currentProjectId));
   const selectedTask = {
@@ -48,8 +52,14 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
       return task?.id == taskId;
     })?.[0],
   };
-  const checkIfTaskAssignedOrNot =
-    selectedTask?.actioned_by_username === authDetails?.username || selectedTask?.actioned_by_username === null;
+
+  const checkIfTaskAssignedOrNot = (taskEvent) => {
+    return (
+      selectedTask?.actioned_by_username === authDetails?.username ||
+      selectedTask?.actioned_by_username === null ||
+      task_event.MAP === taskEvent
+    );
+  };
 
   useEffect(() => {
     if (taskId) {
@@ -113,20 +123,14 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
       } else {
         dispatch(
           CommonActions.SetSnackBar({
-            open: true,
             message: 'Something is wrong with the user.',
-            variant: 'error',
-            duration: 2000,
           }),
         );
       }
     } else {
       dispatch(
         CommonActions.SetSnackBar({
-          open: true,
           message: 'Oops!, Please try again.',
-          variant: 'error',
-          duration: 2000,
         }),
       );
     }
@@ -150,42 +154,42 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
             </div>
             <div className="fmtm-flex fmtm-gap-4 fmtm-items-center fmtm-justify-end">
               <Button
-                btnText="CONTINUE MAPPING"
-                btnType="primary"
-                type="submit"
-                className="fmtm-font-bold !fmtm-rounded fmtm-text-sm !fmtm-py-2 !fmtm-w-full fmtm-flex fmtm-justify-center"
+                variant="primary-red"
                 onClick={() => {
                   setToggleMappedConfirmationModal(false);
                 }}
-              />
+              >
+                CONTINUE MAPPING
+              </Button>
               <Button
                 btnId="FINISH"
+                variant="primary-grey"
                 onClick={(e) => {
                   handleOnClick(e);
                   setToggleMappedConfirmationModal(false);
                 }}
                 disabled={loading}
-                btnText="MARK AS FULLY MAPPED"
-                btnType="other"
-                className={`fmtm-font-bold !fmtm-rounded fmtm-text-sm !fmtm-py-2 !fmtm-w-full fmtm-flex fmtm-justify-center !fmtm-bg-[#4C4C4C] hover:!fmtm-bg-[#5f5f5f] fmtm-text-white hover:!fmtm-text-white !fmtm-border-none`}
-              />
+              >
+                MARK AS FULLY MAPPED
+              </Button>
             </div>
           </div>
         }
         className=""
       />
-      {list_of_task_actions?.length > 0 && checkIfTaskAssignedOrNot && (
+      {list_of_task_actions?.length > 0 && (
         <div
-          className={`fmtm-grid fmtm-border-t-[1px] fmtm-p-2 sm:fmtm-p-5 ${
-            list_of_task_actions?.length === 1 ? 'fmtm-grid-cols-1' : 'fmtm-grid-cols-2'
+          className={`empty:fmtm-hidden fmtm-grid fmtm-border-t-[1px] fmtm-p-2 sm:fmtm-p-5 ${
+            list_of_task_actions?.length === 1 ? 'fmtm-grid-cols-1' : 'fmtm-grid-cols-2 fmtm-gap-2'
           }`}
         >
           {list_of_task_actions?.map((data, index) => {
-            return list_of_task_actions?.length != 0 ? (
+            return checkIfTaskAssignedOrNot(data.value) || isOrganizationAdmin || isProjectManager ? (
               <Button
+                key={index}
+                variant={data.btnType}
                 btnId={data.value}
                 btnTestId="StartMapping"
-                key={index}
                 onClick={(e) => {
                   if (
                     data.key === 'Mark as fully mapped' &&
@@ -197,17 +201,10 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
                     handleOnClick(e);
                   }
                 }}
-                disabled={loading}
-                btnText={data.key.toUpperCase()}
-                btnType={data.btnBG === 'red' ? 'primary' : 'other'}
-                className={`fmtm-font-bold !fmtm-rounded fmtm-text-sm !fmtm-py-2 !fmtm-w-full fmtm-flex fmtm-justify-center ${
-                  data.btnBG === 'gray'
-                    ? '!fmtm-bg-[#4C4C4C] hover:!fmtm-bg-[#5f5f5f] fmtm-text-white hover:!fmtm-text-white !fmtm-border-none'
-                    : data.btnBG === 'transparent'
-                      ? '!fmtm-bg-transparent !fmtm-text-primaryRed !fmtm-border-none !fmtm-w-fit fmtm-mx-auto hover:!fmtm-text-red-700'
-                      : ''
-                }`}
-              />
+                className="!fmtm-w-full"
+              >
+                {data.key.toUpperCase()}
+              </Button>
             ) : null;
           })}
         </div>
@@ -215,40 +212,38 @@ export default function Dialog({ taskId, feature }: dialogPropType) {
       {task_state !== taskStateEnum.UNLOCKED_TO_MAP && task_state !== taskStateEnum.LOCKED_FOR_MAPPING && (
         <div className="fmtm-p-2 sm:fmtm-p-5 fmtm-border-t">
           <Button
-            btnText="GO TO TASK SUBMISSION"
-            btnType="primary"
-            type="submit"
-            className="fmtm-font-bold !fmtm-rounded fmtm-text-sm !fmtm-py-2 !fmtm-w-full fmtm-flex fmtm-justify-center"
+            variant="primary-red"
             onClick={() => navigate(`/project-submissions/${params.id}?tab=table&task_id=${taskId}`)}
-          />
+            className="!fmtm-w-full"
+          >
+            GO TO TASK SUBMISSION
+          </Button>
         </div>
       )}
       {task_state === taskStateEnum.LOCKED_FOR_MAPPING && (
         <div className="fmtm-p-2 sm:fmtm-p-5 fmtm-border-t">
           <Button
-            btnText="GO TO ODK"
-            btnType="primary"
-            type="submit"
-            className="fmtm-font-bold !fmtm-rounded fmtm-text-sm !fmtm-py-2 !fmtm-w-full fmtm-flex fmtm-justify-center"
+            variant="primary-red"
             onClick={() => {
               const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
                 navigator.userAgent,
               );
 
               if (isMobile) {
-                document.location.href = `odkcollect://form/${projectInfo.odk_form_id}?task_filter=${taskId}`;
+                document.location.href = `odkcollect://form/${projectInfo.odk_form_id}`;
               } else {
                 dispatch(
                   CommonActions.SetSnackBar({
-                    open: true,
                     message: 'Requires a mobile phone with ODK Collect.',
                     variant: 'warning',
-                    duration: 3000,
                   }),
                 );
               }
             }}
-          />
+            className="!fmtm-w-full"
+          >
+            GO TO ODK
+          </Button>
         </div>
       )}
     </div>

@@ -19,50 +19,59 @@ import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import { taskSplitOptionsType } from '@/store/types/ICreateProject';
 import DescriptionSection from '@/components/createnewproject/Description';
 
-const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalFeature, customFormFile }) => {
+const taskSplitOptions: taskSplitOptionsType[] = [
+  {
+    name: 'define_tasks',
+    value: task_split_type.DIVIDE_ON_SQUARE,
+    label: 'Divide into square tasks',
+    disabled: false,
+  },
+  {
+    name: 'define_tasks',
+    value: task_split_type.CHOOSE_AREA_AS_TASK,
+    label: 'Use uploaded AOI as task areas',
+    disabled: false,
+  },
+  {
+    name: 'define_tasks',
+    value: task_split_type.TASK_SPLITTING_ALGORITHM,
+    label: 'Task Splitting Algorithm',
+    disabled: false,
+  },
+];
+
+const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalFeature, xlsFormFile }) => {
   useDocumentTitle('Create Project: Split Tasks');
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const [taskGenerationStatus, setTaskGenerationStatus] = useState(false);
+  const [disableSubmitButton, setDisableSubmitButton] = useState(true);
+  const [combinedFeaturesCount, setCombinedFeaturesCount] = useState(0);
 
-  const splitTasksSelection = useAppSelector((state) => state.createproject.splitTasksSelection);
+  const taskSplittingMethod = useAppSelector((state) => state.createproject.taskSplittingMethod);
   const drawnGeojson = useAppSelector((state) => state.createproject.drawnGeojson);
   const projectDetails = useAppSelector((state) => state.createproject.projectDetails);
   const dataExtractGeojson = useAppSelector((state) => state.createproject.dataExtractGeojson);
 
   const generateProjectSuccess = useAppSelector((state) => state.createproject.generateProjectSuccess);
+  const generateProjectWarning = useAppSelector((state) => state.createproject.generateProjectWarning);
   const generateProjectError = useAppSelector((state) => state.createproject.generateProjectError);
   const projectDetailsResponse = useAppSelector((state) => state.createproject.projectDetailsResponse);
   const dividedTaskGeojson = useAppSelector((state) => state.createproject.dividedTaskGeojson);
   const projectDetailsLoading = useAppSelector((state) => state.createproject.projectDetailsLoading);
   const dividedTaskLoading = useAppSelector((state) => state.createproject.dividedTaskLoading);
   const taskSplittingGeojsonLoading = useAppSelector((state) => state.createproject.taskSplittingGeojsonLoading);
-  const isTasksGenerated = useAppSelector((state) => state.createproject.isTasksGenerated);
+  const isTasksSplit = useAppSelector((state) => state.createproject.isTasksSplit);
   const isFgbFetching = useAppSelector((state) => state.createproject.isFgbFetching);
   const toggleSplittedGeojsonEdit = useAppSelector((state) => state.createproject.toggleSplittedGeojsonEdit);
   const additionalFeatureGeojson = useAppSelector((state) => state.createproject.additionalFeatureGeojson);
 
-  const taskSplitOptions: taskSplitOptionsType[] = [
-    {
-      name: 'define_tasks',
-      value: task_split_type.DIVIDE_ON_SQUARE,
-      label: 'Divide into square tasks',
-      disabled: false,
-    },
-    {
-      name: 'define_tasks',
-      value: task_split_type.CHOOSE_AREA_AS_TASK,
-      label: 'Use uploaded AOI as task areas',
-      disabled: false,
-    },
-    {
-      name: 'define_tasks',
-      value: task_split_type.TASK_SPLITTING_ALGORITHM,
-      label: 'Task Splitting Algorithm',
-      disabled: false,
-    },
-  ];
+  useEffect(() => {
+    const featureCount =
+      (dataExtractGeojson?.features?.length ?? 0) + (additionalFeatureGeojson?.features?.length ?? 0);
+    // Set combined feature count to send to backend for hard limits
+    setCombinedFeaturesCount(featureCount);
+  }, [dataExtractGeojson, additionalFeatureGeojson]);
 
   const toggleStep = (step: number, url: string) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
@@ -71,26 +80,33 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
   };
 
   const checkTasksGeneration = () => {
-    if (!isTasksGenerated.divide_on_square && splitTasksSelection === task_split_type.DIVIDE_ON_SQUARE) {
-      setTaskGenerationStatus(false);
-    } else if (
-      !isTasksGenerated.task_splitting_algorithm &&
-      splitTasksSelection === task_split_type.TASK_SPLITTING_ALGORITHM
-    ) {
-      setTaskGenerationStatus(false);
-    } else {
-      setTaskGenerationStatus(true);
+    if (!taskSplittingMethod) {
+      setDisableSubmitButton(true);
+      return;
     }
+
+    if (!isTasksSplit.divide_on_square && taskSplittingMethod === task_split_type.DIVIDE_ON_SQUARE) {
+      setDisableSubmitButton(true);
+      return;
+    } else if (
+      !isTasksSplit.task_splitting_algorithm &&
+      taskSplittingMethod === task_split_type.TASK_SPLITTING_ALGORITHM
+    ) {
+      setDisableSubmitButton(true);
+      return;
+    }
+
+    setDisableSubmitButton(false);
   };
 
   useEffect(() => {
     checkTasksGeneration();
-  }, [splitTasksSelection, isTasksGenerated]);
+  }, [taskSplittingMethod, isTasksSplit]);
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIsUnsavedChanges(false));
-
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
+
     // Project POST data
     let projectData = {
       name: projectDetails.name,
@@ -102,21 +118,25 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
       odk_central_url: projectDetails.odk_central_url,
       odk_central_user: projectDetails.odk_central_user,
       odk_central_password: projectDetails.odk_central_password,
-      // dont send xform_category if upload custom form is selected
-      xform_category: projectDetails.formCategorySelection,
-      task_split_type: splitTasksSelection,
-      form_ways: projectDetails.formWays,
+      primary_geom_type: projectDetails.primaryGeomType,
+      new_geom_type: projectDetails.newGeomType ? projectDetails.newGeomType : projectDetails.primaryGeomType,
+      task_split_type: taskSplittingMethod,
       // "uploaded_form": projectDetails.uploaded_form,
       hashtags: projectDetails.hashtags,
       data_extract_url: projectDetails.data_extract_url,
       custom_tms_url: projectDetails.custom_tms_url,
     };
+    // Append osm_category if set
+    if (projectDetails.osmFormSelectionName) {
+      projectData = { ...projectData, osm_category: projectDetails.osmFormSelectionName };
+    }
     // Append extra param depending on task split type
-    if (splitTasksSelection === task_split_type.TASK_SPLITTING_ALGORITHM) {
+    if (taskSplittingMethod === task_split_type.TASK_SPLITTING_ALGORITHM) {
       projectData = { ...projectData, task_num_buildings: projectDetails.average_buildings_per_task };
     } else {
       projectData = { ...projectData, task_split_dimension: projectDetails.dimension };
     }
+
     // Create file object from generated task areas
     const taskAreaBlob = new Blob([JSON.stringify(dividedTaskGeojson || drawnGeojson)], {
       type: 'application/json',
@@ -124,19 +144,17 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
     // Create a file object from the Blob
     const taskAreaGeojsonFile = new File([taskAreaBlob], 'data.json', { type: 'application/json' });
 
-    // FIXME for now hardcoded as Polygon projects (add project creation UI for user selection)
-    // projectData = { ...projectData, new_geom_type: projectDetails.new_geom_type };
-    projectData = { ...projectData, new_geom_type: 'POLYGON' };
-
     dispatch(
       CreateProjectService(
         `${import.meta.env.VITE_API_URL}/projects?org_id=${projectDetails.organisation_id}`,
         projectData,
         taskAreaGeojsonFile,
-        customFormFile,
+        xlsFormFile,
         customDataExtractUpload,
-        projectDetails.dataExtractWays === 'osm_data_extract',
+        projectDetails.dataExtractType === 'osm_data_extract',
         additionalFeature,
+        projectDetails.project_admins as number[],
+        combinedFeaturesCount,
       ),
     );
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData({ ...projectDetails, ...formValues }));
@@ -144,10 +162,10 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
   };
 
   useEffect(() => {
-    if (splitTasksSelection === task_split_type.CHOOSE_AREA_AS_TASK) {
+    if (taskSplittingMethod === task_split_type.CHOOSE_AREA_AS_TASK) {
       dispatch(CreateProjectActions.SetDividedTaskGeojson(null));
     }
-  }, [splitTasksSelection]);
+  }, [taskSplittingMethod]);
 
   const {
     handleSubmit,
@@ -169,22 +187,22 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
     const dataExtractBlob = new Blob([JSON.stringify(dataExtractGeojson)], { type: 'application/json' });
     const dataExtractFile = new File([dataExtractBlob], 'extract.json', { type: 'application/json' });
 
-    if (splitTasksSelection === task_split_type.DIVIDE_ON_SQUARE) {
+    if (taskSplittingMethod === task_split_type.DIVIDE_ON_SQUARE) {
       dispatch(
         GetDividedTaskFromGeojson(`${import.meta.env.VITE_API_URL}/projects/preview-split-by-square`, {
           geojson: drawnGeojsonFile,
-          extract_geojson: formValues.dataExtractWays === 'osm_data_extract' ? null : dataExtractFile,
+          extract_geojson: formValues.dataExtractType === 'osm_data_extract' ? null : dataExtractFile,
           dimension: formValues?.dimension,
         }),
       );
-    } else if (splitTasksSelection === task_split_type.TASK_SPLITTING_ALGORITHM) {
+    } else if (taskSplittingMethod === task_split_type.TASK_SPLITTING_ALGORITHM) {
       dispatch(
         TaskSplittingPreviewService(
           `${import.meta.env.VITE_API_URL}/projects/task-split`,
           drawnGeojsonFile,
           formValues?.average_buildings_per_task,
           // Only send dataExtractFile if custom extract
-          formValues.dataExtractWays === 'osm_data_extract' ? null : dataExtractFile,
+          formValues.dataExtractType === 'osm_data_extract' ? null : dataExtractFile,
         ),
       );
     }
@@ -196,17 +214,28 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
     const handleQRGeneration = async () => {
       if (!generateProjectError && generateProjectSuccess) {
         const projectId = projectDetailsResponse?.id;
-        dispatch(
-          CommonActions.SetSnackBar({
-            open: true,
-            message: 'Project Generation Completed. Redirecting...',
-            variant: 'success',
-            duration: 2000,
-          }),
-        );
 
-        // Add 5-second delay to allow backend Entity generation to catch up
-        await delay(5000);
+        if (generateProjectWarning) {
+          dispatch(
+            CommonActions.SetSnackBar({
+              message: generateProjectWarning,
+              variant: 'success',
+              duration: 20000,
+            }),
+          );
+          // Add 20-second delay to allow backend Entity generation to catch up
+          await delay(20000);
+        } else {
+          dispatch(
+            CommonActions.SetSnackBar({
+              message: 'Project Generation Completed. Redirecting...',
+              variant: 'success',
+            }),
+          );
+          // Add 5-second delay to allow backend Entity generation to catch up
+          await delay(5000);
+        }
+
         dispatch(CreateProjectActions.CreateProjectLoading(false));
         navigate(`/project/${projectId}`);
         dispatch(CreateProjectActions.ClearCreateProjectFormData());
@@ -217,17 +246,13 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
     handleQRGeneration();
   }, [generateProjectSuccess, generateProjectError]);
 
-  const renderTraceback = (errorText: string) => {
-    if (!errorText) {
-      return null;
-    }
-
-    return errorText.split('\n').map((line, index) => (
-      <div key={index} style={{ display: 'flex' }}>
-        <span style={{ color: 'gray', marginRight: '1em' }}>{index + 1}.</span>
-        <span>{line}</span>
-      </div>
-    ));
+  const downloadSplittedGeojson = () => {
+    const blob = new Blob([JSON.stringify(dividedTaskGeojson)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'task_splitted_geojson.geojson';
+    a.click();
   };
 
   const parsedTaskGeojsonCount = dividedTaskGeojson?.features?.length || drawnGeojson?.features?.length || 1;
@@ -242,17 +267,17 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
               <div className="fmtm-flex fmtm-flex-col fmtm-gap-6 lg:fmtm-w-[40%] fmtm-justify-between">
                 <div>
                   <RadioButton
-                    value={splitTasksSelection || ''}
+                    value={taskSplittingMethod || ''}
                     topic="Select an option to split your project area"
                     options={taskSplitOptions}
                     direction="column"
                     onChangeData={(value) => {
                       handleCustomChange('task_split_type', value);
-                      dispatch(CreateProjectActions.SetSplitTasksSelection(value as task_split_type));
+                      dispatch(CreateProjectActions.SetTaskSplittingMethod(value as task_split_type));
                       if (task_split_type.CHOOSE_AREA_AS_TASK === value) {
-                        dispatch(CreateProjectActions.SetIsTasksGenerated({ key: 'divide_on_square', value: false }));
+                        dispatch(CreateProjectActions.SetIsTasksSplit({ key: 'divide_on_square', value: false }));
                         dispatch(
-                          CreateProjectActions.SetIsTasksGenerated({ key: 'task_splitting_algorithm', value: false }),
+                          CreateProjectActions.SetIsTasksSplit({ key: 'task_splitting_algorithm', value: false }),
                         );
                       }
                     }}
@@ -271,7 +296,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
                       <span className="fmtm-font-bold">{dataExtractGeojson?.features?.length || 0}</span>
                     </p>
                   </div>
-                  {splitTasksSelection === task_split_type.DIVIDE_ON_SQUARE && (
+                  {taskSplittingMethod === task_split_type.DIVIDE_ON_SQUARE && (
                     <>
                       <div className="fmtm-mt-6 fmtm-flex fmtm-items-center fmtm-gap-4">
                         <p className="fmtm-text-gray-500">Dimension of square in metres: </p>
@@ -289,7 +314,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
                       )}
                     </>
                   )}
-                  {splitTasksSelection === task_split_type.TASK_SPLITTING_ALGORITHM && (
+                  {taskSplittingMethod === task_split_type.TASK_SPLITTING_ALGORITHM && (
                     <>
                       <div className="fmtm-mt-6 fmtm-flex fmtm-items-center fmtm-gap-4">
                         <p className="fmtm-text-gray-500">Average number of buildings per task: </p>
@@ -309,58 +334,62 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
                       )}
                     </>
                   )}
-                  {(splitTasksSelection === task_split_type.DIVIDE_ON_SQUARE ||
-                    splitTasksSelection === task_split_type.TASK_SPLITTING_ALGORITHM) && (
+                  {(taskSplittingMethod === task_split_type.DIVIDE_ON_SQUARE ||
+                    taskSplittingMethod === task_split_type.TASK_SPLITTING_ALGORITHM) && (
                     <div className="fmtm-mt-6 fmtm-pb-3">
                       <div className="fmtm-flex fmtm-items-center fmtm-gap-4">
                         <Button
-                          btnText="Click to generate task"
-                          btnType="primary"
-                          type="button"
+                          variant="primary-red"
                           isLoading={dividedTaskLoading || taskSplittingGeojsonLoading}
                           onClick={generateTaskBasedOnSelection}
-                          className=""
-                          icon={<AssetModules.SettingsIcon className="fmtm-text-white" />}
                           disabled={
-                            (splitTasksSelection === task_split_type.TASK_SPLITTING_ALGORITHM &&
+                            (taskSplittingMethod === task_split_type.TASK_SPLITTING_ALGORITHM &&
                               !formValues?.average_buildings_per_task) ||
                             isFgbFetching
                               ? true
                               : false
                           }
-                        />
+                        >
+                          Click to generate task
+                          <AssetModules.SettingsIcon />
+                        </Button>
                       </div>
                     </div>
                   )}
-                  {(splitTasksSelection === task_split_type.DIVIDE_ON_SQUARE ||
-                    splitTasksSelection === task_split_type.TASK_SPLITTING_ALGORITHM ||
-                    splitTasksSelection === task_split_type.CHOOSE_AREA_AS_TASK) && (
+                  {(taskSplittingMethod === task_split_type.DIVIDE_ON_SQUARE ||
+                    taskSplittingMethod === task_split_type.TASK_SPLITTING_ALGORITHM ||
+                    taskSplittingMethod === task_split_type.CHOOSE_AREA_AS_TASK) && (
                     <div>
-                      <p className="fmtm-text-gray-500 fmtm-mt-5">
+                      <p className="fmtm-text-gray-500 fmtm-mt-5 fmtm-mb-2">
                         Total number of task: <span className="fmtm-font-bold">{totalSteps}</span>
                       </p>
+                      {dividedTaskGeojson && (
+                        <Button variant="link-grey" onClick={downloadSplittedGeojson}>
+                          <AssetModules.FileDownloadOutlinedIcon />
+                          Download split geojson
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>
                 <div className="fmtm-flex fmtm-gap-5 fmtm-mx-auto fmtm-mt-10 fmtm-my-5">
                   <Button
-                    btnText="PREVIOUS"
-                    btnType="secondary"
-                    type="button"
+                    variant="secondary-grey"
                     onClick={() => {
                       dispatch(CreateProjectActions.SetIndividualProjectDetailsData(formValues));
                       toggleStep(3, '/map-data');
                     }}
-                    className="fmtm-font-bold"
-                  />
+                  >
+                    PREVIOUS
+                  </Button>
                   <Button
-                    isLoading={projectDetailsLoading}
-                    btnText="SUBMIT"
-                    btnType="primary"
+                    variant="primary-red"
                     type="submit"
-                    className="fmtm-font-bold"
-                    disabled={taskGenerationStatus ? false : true}
-                  />
+                    isLoading={projectDetailsLoading}
+                    disabled={disableSubmitButton}
+                  >
+                    SUBMIT
+                  </Button>
                 </div>
               </div>
               <div className="fmtm-w-full lg:fmtm-w-[60%] fmtm-flex fmtm-flex-col fmtm-gap-6 fmtm-bg-gray-300 fmtm-h-[60vh] lg:fmtm-h-full">

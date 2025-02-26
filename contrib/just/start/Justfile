@@ -80,18 +80,34 @@ without-central:
 [no-cd]
 josm:
   docker compose \
-    -f docker-compose.yml \
-    -f contrib/josm/docker-compose.yml \
+    -f compose.yaml \
+    -f contrib/josm/compose.yaml \
     up -d
   
   @echo
   @echo "\033[0;33m ############################################### \033[0m"
   @echo
-  @echo " Access the JOSM Remote API: http://localhost:8111"
+  @echo " Access the S3 Browser at: http://localhost:8111"
   @echo " Access the JOSM GUI in browser: http://localhost:8112"
   @echo
   @echo "\033[0;33m ############################################### \033[0m"
   @echo
+
+# Start S3 browser
+[no-cd]
+s3-browser:
+  docker compose \
+    -f contrib/s3_browser/compose.yaml \
+    up -d
+  
+  @echo
+  @echo "\033[0;33m ############################################### \033[0m"
+  @echo
+  @echo " Access the S3 Browser at: http://localhost:8334"
+  @echo
+  @echo "\033[0;33m ############################################### \033[0m"
+  @echo
+
 
 # Externally accessible ODK Central for tests
 [no-cd]
@@ -99,8 +115,8 @@ tunnel:
   #!/usr/bin/env sh
 
   docker compose \
-    -f docker-compose.yml \
-    -f contrib/tunnel/docker-compose.yml \
+    -f compose.yaml \
+    -f contrib/tunnel/compose.yaml \
     up --wait
 
   # Workaround to until PR merged:
@@ -108,35 +124,35 @@ tunnel:
   # Wait until services ready without HEALTHCHECK
   sleep 5
 
-  odk_url=$(just --unstable start _get-tunnel-url 'central')
-  button_url=$(just --unstable start _get-tunnel-url 'button')
+  odk_url=$(just start _get-tunnel-url 'central')
+  button_url=$(just start _get-tunnel-url 'button')
 
   # Restart Central with DOMAIN var set to new tunnel URL.
   # Is is required to correctly download forms from Collect
   CENTRAL_DOMAIN_OVERRIDE="$(echo "${odk_url}" | sed 's|^https://||')" \
   docker compose \
-    -f docker-compose.yml \
-    -f contrib/tunnel/docker-compose.yml \
+    -f compose.yaml \
+    -f contrib/tunnel/compose.yaml \
     up -d central
 
-  just --unstable start _print-tunnel-url "$odk_url" "$button_url"
+  just start _print-tunnel-url "$odk_url" "$button_url"
 
 # View the URLs for created tunnels
 [no-cd]
 view-tunnel-url:
   #!/usr/bin/env sh
 
-  odk_url=$(just --unstable start _get-tunnel-url 'central')
-  button_url=$(just --unstable start _get-tunnel-url 'button')
-  just --unstable start _print-tunnel-url "$odk_url" "$button_url"
+  odk_url=$(just start _get-tunnel-url 'central')
+  button_url=$(just start _get-tunnel-url 'button')
+  just start _print-tunnel-url "$odk_url" "$button_url"
 
 [no-cd]
 _get-tunnel-url service_name:
   #!/usr/bin/env sh
 
   service_url=$(docker compose \
-    -f docker-compose.yml \
-    -f contrib/tunnel/docker-compose.yml \
+    -f compose.yaml \
+    -f contrib/tunnel/compose.yaml \
     logs {{service_name}}-tunnel | \
     grep 'Your quick Tunnel' -A 1 | tail -n 1 | \
     sed -n 's/.*| *\(https:\/\/[^ ]*\).*/\1/p')

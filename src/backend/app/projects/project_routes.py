@@ -21,7 +21,7 @@ import json
 import os
 from io import BytesIO
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated, Any, Dict, Optional
 
 import requests
 from fastapi import (
@@ -43,7 +43,7 @@ from geojson_pydantic import FeatureCollection
 from loguru import logger as log
 from osm_fieldwork.data_models import data_models_path
 from osm_fieldwork.make_data_extract import getChoices
-from osm_fieldwork.xlsforms import xlsforms_path
+from pg_nearest_city import AsyncNearestCity
 from psycopg import Connection
 
 from app.auth.auth_deps import login_required, mapper_login_required
@@ -58,6 +58,7 @@ from app.db.enums import (
     ProjectRole,
     XLSFormType,
 )
+from app.db.languages_and_countries import countries
 from app.db.models import (
     DbBackgroundTask,
     DbBasemap,
@@ -69,11 +70,14 @@ from app.db.models import (
     DbUserRole,
 )
 from app.db.postgis_utils import (
+    add_required_geojson_properties,
     check_crs,
     featcol_keep_single_geom_type,
     flatgeobuf_to_featcol,
     merge_polygons,
     parse_geojson_file_to_featcol,
+    polygon_to_centroid,
+    split_geojson_by_task_areas,
 )
 from app.organisations import organisation_deps
 from app.projects import project_crud, project_deps, project_schemas
@@ -563,7 +567,6 @@ async def validate_form(
 
     NOTE this provides a basic sanity check, some fields are omitted
     so the form is not usable in production:
-        - form_category
         - additional_entities
         - new_geom_type
     """
@@ -642,7 +645,8 @@ async def get_data_extract(
     # FIXME once sub project creation implemented, this should be manager only
     current_user: Annotated[AuthUser, Depends(login_required)],
     geojson_file: UploadFile = File(...),
-    form_category: Optional[XLSFormType] = Form(None),
+    # FIXME this is currently hardcoded but needs to be user configurable via UI
+    osm_category: Annotated[Optional[XLSFormType], Form()] = XLSFormType.buildings,
 ):
     """Get a new data extract for a given project AOI.
 
@@ -653,8 +657,8 @@ async def get_data_extract(
     clean_boundary_geojson = merge_polygons(boundary_geojson)
 
     # Get extract config file from existing data_models
-    if form_category:
-        config_filename = XLSFormType(form_category).name
+    if osm_category:
+        config_filename = XLSFormType(osm_category).name
         data_model = f"{data_models_path}/{config_filename}.yaml"
         with open(data_model, "rb") as data_model_yaml:
             extract_config = BytesIO(data_model_yaml.read())
@@ -798,30 +802,17 @@ async def update_project_form(
     db: Annotated[Connection, Depends(db_conn)],
     project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
     xform_id: str = Form(...),
-    category: XLSFormType = Form(...),
+    # FIXME add back in capability to update osm_category
+    # osm_category: XLSFormType = Form(...),
 ):
-    """Update the XForm data in ODK Central.
-
-    Also updates the category and custom XLSForm data in the database.
-    """
+    """Update the XForm data in ODK Central & FMTM DB."""
     project = project_user_dict["project"]
-
-    # TODO we currently do nothing with the provided category
-    # TODO allowing for category updates is disabled due to complexity
-    # TODO as it would mean also updating data extracts,
-    # TODO so perhaps we just remove this?
-    # form_filename = XLSFormType(project.xform_category).name
-    # xlsform_path = Path(f"{xlsforms_path}/{form_filename}.xls")
-    # file_ext = xlsform_path.suffix.lower()
-    # with open(xlsform_path, "rb") as f:
-    #     new_xform_data = BytesIO(f.read())
 
     # Update ODK Central form data
     await central_crud.update_project_xform(
         xform_id,
         project.odkid,
         xlsform,
-        category,
         project.odk_credentials,
     )
 
@@ -883,21 +874,90 @@ async def add_additional_entity_list(
     return Response(status_code=HTTPStatus.OK)
 
 
+@router.post("/{project_id}/create-entity")
+async def add_new_entity(
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
+    geojson: Dict[str, Any],
+):
+    """Create an Entity for the project in ODK."""
+    try:
+        project = project_user_dict.get("project")
+        project_odk_id = project.odkid
+        project_odk_creds = project.odk_credentials
+
+        features = geojson.get("features")
+        if not features or not isinstance(features, list):
+            raise HTTPException(
+                status_code=HTTPStatus.BAD_REQUEST, detail="Invalid GeoJSON format"
+            )
+
+        # Add required properties and extract entity data
+        featcol = add_required_geojson_properties(geojson)
+        properties = list(featcol["features"][0]["properties"].keys())
+        task_geojson = await split_geojson_by_task_areas(db, featcol, project.id)
+        entities_list = await central_crud.task_geojson_dict_to_entity_values(
+            task_geojson
+        )
+
+        if not entities_list:
+            raise HTTPException(
+                status_code=HTTPStatus.BAD_REQUEST, detail="No valid entities found"
+            )
+
+        # Create entity in ODK
+        return await central_crud.create_entity(
+            project_odk_creds,
+            project_odk_id,
+            properties=properties,
+            entity=entities_list[0],
+            dataset_name="features",
+        )
+
+    except HTTPException as http_err:
+        log.error(f"HTTP error: {http_err.detail}")
+        raise
+    except Exception as e:
+        log.exception("Unexpected error during entity creation")
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail="Entity creation failed",
+        ) from e
+
+
+@router.get("/{project_id}/form-xml")
+async def get_project_form_xml_route(
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
+) -> str:
+    """Get the raw XML from ODK Central for a project."""
+    project = project_user.get("project")
+    odk_creds = project.odk_credentials
+    odkid = project.odkid
+    odk_form_id = project.odk_form_id
+    # Run separate thread in event loop to avoid blocking with sync code
+    form_xml = await run_in_threadpool(
+        central_crud.get_project_form_xml,
+        odk_creds,
+        odkid,
+        odk_form_id,
+    )
+    return Response(content=form_xml, media_type="application/xml")
+
+
 @router.post("/{project_id}/generate-project-data")
 async def generate_files(
     db: Annotated[Connection, Depends(db_conn)],
     project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
     background_tasks: BackgroundTasks,
-    xlsform_upload: Annotated[
-        Optional[BytesIO], Depends(central_deps.read_optional_xlsform)
-    ],
-    additional_entities: Optional[list[str]] = None,
+    xlsform_upload: Annotated[BytesIO, Depends(central_deps.read_xlsform)],
+    additional_entities: Annotated[Optional[list[str]], None] = None,
+    combined_features_count: Annotated[int, Form()] = 0,
 ):
     """Generate additional content to initialise the project.
 
     Boundary, ODK Central forms, QR codes, etc.
 
-    Accepts a project ID, category, custom form flag, and an uploaded file as inputs.
+    Accepts a project ID and an uploaded file as inputs.
     The generated files are associated with the project ID and stored in the database.
     This api generates odk appuser tokens, forms. This api also creates an app user for
     each task and provides the required roles.
@@ -906,10 +966,11 @@ async def generate_files(
     it to the form.
 
     Args:
-        xlsform_upload (UploadFile, optional): A custom XLSForm to use in the project.
-            A file should be provided if user wants to upload a custom xls form.
+        xlsform_upload (UploadFile): The XLSForm for the project data collection.
         additional_entities (list[str]): If additional Entity lists need to be
             created (i.e. the project form references multiple geometries).
+        combined_features_count (int): Total count of features to be mapped, plus
+            additional dataset features, determined by frontend.
         db (Connection): The database connection.
         project_user_dict (ProjectUserDict): Project admin role.
         background_tasks (BackgroundTasks): FastAPI background tasks.
@@ -919,34 +980,24 @@ async def generate_files(
     """
     project = project_user_dict.get("project")
     project_id = project.id
-    form_category = project.xform_category
     new_geom_type = project.new_geom_type
 
     log.debug(f"Generating additional files for project: {project.id}")
 
-    if xlsform_upload:
-        log.debug("User provided custom XLSForm")
+    form_name = f"FMTM_Project_{project.id}"
 
-        # Validate uploaded form
-        await central_crud.validate_and_update_user_xlsform(
-            xlsform=xlsform_upload,
-            form_category=form_category,
-            additional_entities=additional_entities,
-            new_geom_type=new_geom_type,
-        )
-        xlsform = xlsform_upload
-
-    else:
-        log.debug(f"Using default XLSForm for category: '{form_category}'")
-
-        form_filename = XLSFormType(form_category).name
-        xlsform_path = f"{xlsforms_path}/{form_filename}.xls"
-        with open(xlsform_path, "rb") as f:
-            xlsform = BytesIO(f.read())
+    # Validate uploaded form
+    await central_crud.validate_and_update_user_xlsform(
+        xlsform=xlsform_upload,
+        form_name=form_name,
+        additional_entities=additional_entities,
+        new_geom_type=new_geom_type,
+    )
+    xlsform = xlsform_upload
 
     xform_id, project_xlsform = await central_crud.append_fields_to_user_xlsform(
         xlsform=xlsform,
-        form_category=form_category,
+        form_name=form_name,
         additional_entities=additional_entities,
         new_geom_type=new_geom_type,
     )
@@ -975,21 +1026,33 @@ async def generate_files(
             },
         )
 
-    success = await project_crud.generate_project_files(
-        db,
-        project_id,
-    )
+    warning_message = None
 
-    if not success:
-        return JSONResponse(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            content={
-                "message": (
-                    f"Failed project ({project_id}) creation. "
-                    "Please contact the server admin."
-                )
-            },
+    if combined_features_count > 10000:
+        # Return immediately and run in background if many features
+        background_tasks.add_task(
+            project_crud.generate_project_files,
+            db,
+            project_id,
         )
+        warning_message = "There are lots of features to process. Please be patient 🙏"
+
+    else:
+        success = await project_crud.generate_project_files(
+            db,
+            project_id,
+        )
+
+        if not success:
+            return JSONResponse(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                content={
+                    "message": (
+                        f"Failed project ({project_id}) creation. "
+                        "Please contact the server admin."
+                    )
+                },
+            )
 
     if project.custom_tms_url:
         basemap_in = project_schemas.BasemapGenerate(
@@ -998,16 +1061,18 @@ async def generate_files(
         org_id = project.organisation_id
         await generate_basemap(project_id, org_id, basemap_in, db, background_tasks)
 
-    return JSONResponse(
-        status_code=HTTPStatus.OK,
-        content={"message": "success"},
-    )
+    if warning_message:
+        return JSONResponse(
+            status_code=HTTPStatus.OK,
+            content={"message": warning_message},
+        )
+    return Response(status_code=HTTPStatus.OK)
 
 
 @router.post("/{project_id}/tiles-generate")
 async def generate_project_basemap(
     # NOTE we do not set the correct role on this endpoint yet
-    # FIXME once sub project creation implemented, this should be manager only
+    # FIXME once stub project creation implemented, this should be manager only
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
     background_tasks: BackgroundTasks,
     db: Annotated[Connection, Depends(db_conn)],
@@ -1146,6 +1211,15 @@ async def create_project(
     odkproject = await run_in_threadpool(
         lambda: central_crud.create_odk_project(project_info.name, odk_creds_decrypted)
     )
+
+    # Get the location_str via reverse geocode
+    async with AsyncNearestCity(db) as geocoder:
+        centroid = await polygon_to_centroid(project_info.outline.model_dump())
+        latitude, longitude = centroid.y, centroid.x
+        location = await geocoder.query(latitude, longitude)
+        # Convert to two letter country code --> full name
+        country_full_name = countries.get(location.country, location.country)
+        project_info.location_str = f"{location.city},{country_full_name}"
 
     # Create the project in the FMTM DB
     project_info.odkid = odkproject["id"]

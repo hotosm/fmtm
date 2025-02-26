@@ -17,7 +17,7 @@ const initialState: SubmissionStateTypes = {
       page: null,
       prev_num: null,
       next_num: null,
-      per_page: null,
+      per_page: 13,
       pages: null,
     },
   },
@@ -33,11 +33,12 @@ const initialState: SubmissionStateTypes = {
     taskUid: null,
     entity_id: null,
     label: null,
+    feature: null,
   },
   updateReviewStateLoading: false,
   mappedVsValidatedTask: [],
   mappedVsValidatedTaskLoading: false,
-  submissionPhotos: [],
+  submissionPhotos: {},
   submissionPhotosLoading: false,
 };
 
@@ -113,7 +114,7 @@ const SubmissionSlice = createSlice({
     SetMappedVsValidatedTaskLoading(state, action: PayloadAction<boolean>) {
       state.mappedVsValidatedTaskLoading = action.payload;
     },
-    SetSubmissionPhotos(state, action: PayloadAction<string[]>) {
+    SetSubmissionPhotos(state, action: PayloadAction<Record<string, string>>) {
       state.submissionPhotos = action.payload;
     },
     SetSubmissionPhotosLoading(state, action: PayloadAction<boolean>) {

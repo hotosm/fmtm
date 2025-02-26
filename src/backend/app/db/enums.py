@@ -134,6 +134,7 @@ class TaskEvent(StrEnum, Enum):
     MERGE = "MERGE"
     ASSIGN = "ASSIGN"
     COMMENT = "COMMENT"
+    RESET = "RESET"
 
 
 class MappingState(StrEnum, Enum):
@@ -161,6 +162,8 @@ class EntityState(IntEnum, Enum):
     READY = 0
     OPENED_IN_ODK = 1
     SURVEY_SUBMITTED = 2
+    NEW_GEOM = 3
+    VALIDATED = 5
     MARKED_BAD = 6
 
 
@@ -226,14 +229,6 @@ class ReviewStateEnum(StrEnum, Enum):
     REJECTED = "rejected"
 
 
-class GeometryType(StrEnum, Enum):
-    """GeoJSON geometry types."""
-
-    Polygon = "Polygon"
-    LineString = "LineString"
-    Point = "Point"
-
-
 class DbGeomType(StrEnum, Enum):
     """Enum in the database, all geom types are in caps."""
 
@@ -252,9 +247,9 @@ class XLSFormType(StrEnum, Enum):
     The the value is the user facing form name (e.g. healthcare).
     """
 
-    buildings = "buildings"
+    buildings = "OSM Buildings"
     # highways = "highways"
-    health = "healthcare"
+    health = "OSM Healthcare"
     # toilets = "toilets"
     # religious = "religious"
     # landusage = "landusage"
@@ -266,3 +261,19 @@ class GeomStatus(StrEnum, Enum):
 
     NEW = "NEW"
     BAD = "BAD"
+
+
+class SubmissionDownloadType(StrEnum, Enum):
+    """File type to download for ODK submission data."""
+
+    GEOJSON = "geojson"
+    JSON = "json"
+    CSV = "csv"
+
+
+class OdkWebhookEvents(StrEnum, Enum):
+    """Types of events received from ODK Central webhook."""
+
+    UPDATE_ENTITY = "entity.update.version"
+    NEW_SUBMISSION = "submission.create"
+    REVIEW_SUBMISSION = "submission.update"

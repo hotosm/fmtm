@@ -10,15 +10,20 @@ import {
 import { CommonActions } from '@/store/slices/CommonSlice';
 import { isStatusSuccess } from '@/utilfunctions/commonUtils';
 import { AppDispatch } from '@/store/Store';
+import isEmpty from '@/utilfunctions/isEmpty';
+
+const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 const CreateProjectService = (
   url: string,
   projectData: any,
   taskAreaGeojson: any,
   formUpload: any,
-  dataExtractFile: any,
+  dataExtractFile: File | null,
   isOsmExtract: boolean,
   additionalFeature: any,
+  projectAdmins: number[],
+  combinedFeaturesCount: number,
 ) => {
   return async (dispatch: AppDispatch) => {
     dispatch(CreateProjectActions.CreateProjectLoading(true));
@@ -42,10 +47,7 @@ const CreateProjectService = (
 
       // Submit task boundaries
       hasAPISuccess = await dispatch(
-        UploadTaskAreasService(
-          `${import.meta.env.VITE_API_URL}/projects/${projectId}/upload-task-boundaries`,
-          taskAreaGeojson,
-        ),
+        UploadTaskAreasService(`${VITE_API_URL}/projects/${projectId}/upload-task-boundaries`, taskAreaGeojson),
       );
 
       if (!hasAPISuccess) {
@@ -57,16 +59,14 @@ const CreateProjectService = (
       if (isOsmExtract) {
         // Generated extract from raw-data-api
         extractResponse = await API.get(
-          `${import.meta.env.VITE_API_URL}/projects/data-extract-url?project_id=${projectId}&url=${
-            projectData.data_extract_url
-          }`,
+          `${VITE_API_URL}/projects/data-extract-url?project_id=${projectId}&url=${projectData.data_extract_url}`,
         );
       } else if (dataExtractFile) {
-        // Custom data extract from user
+        // post custom data extract
         const dataExtractFormData = new FormData();
         dataExtractFormData.append('custom_extract_file', dataExtractFile);
         extractResponse = await API.post(
-          `${import.meta.env.VITE_API_URL}/projects/upload-custom-extract?project_id=${projectId}`,
+          `${VITE_API_URL}/projects/upload-custom-extract?project_id=${projectId}`,
           dataExtractFormData,
         );
       }
@@ -79,10 +79,7 @@ const CreateProjectService = (
       // post additional feature if available
       if (additionalFeature) {
         const postAdditionalFeature = await dispatch(
-          PostAdditionalFeatureService(
-            `${import.meta.env.VITE_API_URL}/projects/${projectId}/additional-entity`,
-            additionalFeature,
-          ),
+          PostAdditionalFeatureService(`${VITE_API_URL}/projects/${projectId}/additional-entity`, additionalFeature),
         );
 
         hasAPISuccess = postAdditionalFeature;
@@ -91,14 +88,15 @@ const CreateProjectService = (
         }
       }
 
-      // Generate project files
+      // generate project files
       const generateProjectFile = await dispatch(
         GenerateProjectFilesService(
-          `${import.meta.env.VITE_API_URL}/projects/${projectId}/generate-project-data`,
+          `${VITE_API_URL}/projects/${projectId}/generate-project-data`,
           additionalFeature
             ? { ...projectData, additional_entities: [additionalFeature?.name?.split('.')?.[0]] }
             : projectData,
           formUpload,
+          combinedFeaturesCount,
         ),
       );
 
@@ -106,20 +104,27 @@ const CreateProjectService = (
       if (!hasAPISuccess) {
         throw new Error(`Request failed`);
       }
+
+      // assign project admins
+      if (!isEmpty(projectAdmins)) {
+        const promises = projectAdmins?.map(async (id: any) => {
+          await dispatch(
+            AssignProjectManager(`${VITE_API_URL}/projects/add-manager`, { id, project_id: projectId as number }),
+          );
+        });
+        await Promise.all(promises);
+      }
       dispatch(CreateProjectActions.GenerateProjectError(false));
       // dispatch(CreateProjectActions.CreateProjectLoading(false));
     } catch (error: any) {
       if (projectId) {
-        await dispatch(DeleteProjectService(`${import.meta.env.VITE_API_URL}/projects/${projectId}`, false));
+        await dispatch(DeleteProjectService(`${VITE_API_URL}/projects/${projectId}`, false));
       }
 
       await dispatch(CreateProjectActions.GenerateProjectError(true));
       dispatch(
         CommonActions.SetSnackBar({
-          open: true,
           message: JSON.stringify(error?.response?.data?.detail) || 'Something went wrong. Please try again.',
-          variant: 'error',
-          duration: 2000,
         }),
       );
       dispatch(CreateProjectActions.CreateProjectLoading(false));
@@ -170,10 +175,7 @@ const UploadTaskAreasService = (url: string, filePayload: any) => {
         await dispatch(CreateProjectActions.GenerateProjectError(true));
         dispatch(
           CommonActions.SetSnackBar({
-            open: true,
             message: JSON.stringify(error?.response?.data?.detail) || 'Something Went Wrong.',
-            variant: 'error',
-            duration: 2000,
           }),
         );
       }
@@ -184,80 +186,54 @@ const UploadTaskAreasService = (url: string, filePayload: any) => {
   };
 };
 
-const GenerateProjectFilesService = (url: string, projectData: any, formUpload: any) => {
+const GenerateProjectFilesService = (url: string, projectData: any, formUpload: any, combinedFeaturesCount: number) => {
   return async (dispatch: AppDispatch) => {
     dispatch(CreateProjectActions.GenerateProjectLoading(true));
     dispatch(CommonActions.SetLoading(true));
 
-    const postUploadArea = async (url, projectData: any, formUpload) => {
-      let isAPISuccess = true;
-      try {
-        let response;
+    try {
+      const formData = new FormData();
 
-        const additional_entities =
-          projectData?.additional_entities?.length > 0
-            ? projectData.additional_entities.map((e: string) => e.replaceAll(' ', '_'))
-            : [];
-        const generateApiFormData = new FormData();
-
-        if (additional_entities?.length > 0) {
-          generateApiFormData.append('additional_entities', additional_entities);
-        }
-
-        if (projectData.form_ways === 'custom_form') {
-          // TODO move form upload to a separate service / endpoint?
-          generateApiFormData.append('xlsform', formUpload);
-          response = await axios.post(url, generateApiFormData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
-        } else {
-          if (additional_entities?.length > 0) {
-            response = await axios.post(url, generateApiFormData, {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-              },
-            });
-          } else {
-            const payload = {
-              additional_entities: null,
-            };
-            response = await axios.post(url, payload, {
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            });
-          }
-        }
-
-        isAPISuccess = isStatusSuccess(response.status);
-        if (!isAPISuccess) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
-
-        await dispatch(CreateProjectActions.GenerateProjectLoading(false));
-        dispatch(CommonActions.SetLoading(false));
-        // Trigger the watcher and redirect after success
-        await dispatch(CreateProjectActions.GenerateProjectSuccess(true));
-      } catch (error: any) {
-        isAPISuccess = false;
-        dispatch(CommonActions.SetLoading(false));
-        await dispatch(CreateProjectActions.GenerateProjectError(true));
-        dispatch(
-          CommonActions.SetSnackBar({
-            open: true,
-            message: JSON.stringify(error?.response?.data?.detail),
-            variant: 'error',
-            duration: 2000,
-          }),
-        );
-        dispatch(CreateProjectActions.GenerateProjectLoading(false));
+      // Append additional_entities if they exist
+      const additionalEntities = projectData?.additional_entities?.map((e: string) => e.replaceAll(' ', '_')) ?? [];
+      if (additionalEntities.length > 0) {
+        formData.append('additional_entities', additionalEntities);
       }
-      return isAPISuccess;
-    };
 
-    return await postUploadArea(url, projectData, formUpload);
+      // Append xlsform
+      formData.append('xlsform', formUpload);
+
+      // Add combined features count
+      formData.append('combined_features_count', combinedFeaturesCount.toString());
+
+      const response = await axios.post(url, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      if (!isStatusSuccess(response.status)) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      // If warning provided, then inform user
+      const message = response.data?.message;
+      if (message) {
+        dispatch(CreateProjectActions.GenerateProjectWarning(message));
+      }
+
+      dispatch(CreateProjectActions.GenerateProjectSuccess(true));
+      return true; // ✅ Return success
+    } catch (error: any) {
+      dispatch(CreateProjectActions.GenerateProjectError(true));
+      dispatch(
+        CommonActions.SetSnackBar({
+          message: JSON.stringify(error?.response?.data?.detail),
+        }),
+      );
+      return false; // ❌ Return failure
+    } finally {
+      dispatch(CreateProjectActions.GenerateProjectLoading(false));
+      dispatch(CommonActions.SetLoading(false));
+    }
   };
 };
 
@@ -281,10 +257,7 @@ const PostAdditionalFeatureService = (url: string, file: File) => {
         isAPISuccess = false;
         dispatch(
           CommonActions.SetSnackBar({
-            open: true,
             message: JSON.stringify(error?.response?.data?.detail),
-            variant: 'error',
-            duration: 2000,
           }),
         );
       }
@@ -304,6 +277,7 @@ const OrganisationService = (url: string) => {
         const resp: OrganisationListModel[] = getOrganisationListResponse.data;
         dispatch(CreateProjectActions.GetOrganisationList(resp));
       } catch (error) {
+      } finally {
         dispatch(CreateProjectActions.GetOrganisationListLoading(false));
       }
     };
@@ -323,8 +297,8 @@ const GetDividedTaskFromGeojson = (url: string, projectData: Record<string, any>
         dividedTaskFormData.append('dimension_meters', projectData.dimension);
         const getGetDividedTaskFromGeojsonResponse = await axios.post(url, dividedTaskFormData);
         const resp: splittedGeojsonType = getGetDividedTaskFromGeojsonResponse.data;
-        dispatch(CreateProjectActions.SetIsTasksGenerated({ key: 'divide_on_square', value: true }));
-        dispatch(CreateProjectActions.SetIsTasksGenerated({ key: 'task_splitting_algorithm', value: false }));
+        dispatch(CreateProjectActions.SetIsTasksSplit({ key: 'divide_on_square', value: true }));
+        dispatch(CreateProjectActions.SetIsTasksSplit({ key: 'task_splitting_algorithm', value: false }));
         dispatch(CreateProjectActions.SetDividedTaskGeojson(resp));
         dispatch(CreateProjectActions.SetDividedTaskFromGeojsonLoading(false));
       } catch (error) {
@@ -398,16 +372,13 @@ const TaskSplittingPreviewService = (
           // TODO display error to user, perhaps there is not osm data here?
           return;
         }
-        dispatch(CreateProjectActions.SetIsTasksGenerated({ key: 'divide_on_square', value: false }));
-        dispatch(CreateProjectActions.SetIsTasksGenerated({ key: 'task_splitting_algorithm', value: true }));
+        dispatch(CreateProjectActions.SetIsTasksSplit({ key: 'divide_on_square', value: false }));
+        dispatch(CreateProjectActions.SetIsTasksSplit({ key: 'task_splitting_algorithm', value: true }));
         dispatch(CreateProjectActions.GetTaskSplittingPreview(resp));
       } catch (error) {
         dispatch(
           CommonActions.SetSnackBar({
-            open: true,
             message: 'Task generation failed. Please try again',
-            variant: 'error',
-            duration: 2000,
           }),
         );
         dispatch(CreateProjectActions.GetTaskSplittingPreviewLoading(false));
@@ -432,14 +403,17 @@ const PatchProjectDetails = (url: string, projectData: Record<string, any>) => {
         dispatch(CreateProjectActions.SetPatchProjectDetailsLoading(false));
         dispatch(
           CommonActions.SetSnackBar({
-            open: true,
             message: 'Project Successfully Edited',
             variant: 'success',
-            duration: 2000,
           }),
         );
       } catch (error) {
         dispatch(CreateProjectActions.SetPatchProjectDetailsLoading(false));
+        dispatch(
+          CommonActions.SetSnackBar({
+            message: 'Failed. Do you have permission to edit?',
+          }),
+        );
       } finally {
         dispatch(CreateProjectActions.SetPatchProjectDetailsLoading(false));
       }
@@ -457,7 +431,8 @@ const PostFormUpdate = (url: string, projectData: Record<string, any>) => {
       try {
         const formFormData = new FormData();
         formFormData.append('xform_id', projectData.xformId);
-        formFormData.append('category', projectData.category);
+        // FIXME add back in capability to update osm_category
+        // formFormData.append('category', projectData.osm_category);
         formFormData.append('xlsform', projectData.upload);
 
         const postFormUpdateResponse = await axios.post(url, formFormData);
@@ -467,19 +442,14 @@ const PostFormUpdate = (url: string, projectData: Record<string, any>) => {
         dispatch(CreateProjectActions.SetPostFormUpdateLoading(false));
         dispatch(
           CommonActions.SetSnackBar({
-            open: true,
             message: resp.message,
             variant: 'success',
-            duration: 2000,
           }),
         );
       } catch (error) {
         dispatch(
           CommonActions.SetSnackBar({
-            open: true,
             message: error?.response?.data?.detail || 'Failed to update Form',
-            variant: 'error',
-            duration: 2000,
           }),
         );
         dispatch(CreateProjectActions.SetPostFormUpdateLoading(false));
@@ -510,10 +480,8 @@ const EditProjectBoundaryService = (url: string, geojsonUpload: any, dimension: 
         dispatch(CreateProjectActions.SetEditProjectBoundaryServiceLoading(false));
         dispatch(
           CommonActions.SetSnackBar({
-            open: true,
             message: 'Project Boundary Successfully Updated',
             variant: 'success',
-            duration: 2000,
           }),
         );
       } catch (error) {
@@ -541,20 +509,15 @@ const ValidateCustomForm = (url: string, formUpload: any) => {
         dispatch(CreateProjectActions.ValidateCustomFormLoading(false));
         dispatch(
           CommonActions.SetSnackBar({
-            open: true,
             message: JSON.stringify(resp.message),
             variant: 'success',
-            duration: 2000,
           }),
         );
         dispatch(CreateProjectActions.SetCustomFileValidity(true));
       } catch (error) {
         dispatch(
           CommonActions.SetSnackBar({
-            open: true,
             message: error?.response?.data?.detail || 'Something Went Wrong',
-            variant: 'error',
-            duration: 5000,
           }),
         );
         dispatch(CreateProjectActions.ValidateCustomFormLoading(false));
@@ -575,10 +538,8 @@ const DeleteProjectService = (url: string, hasRedirect: boolean = true) => {
         await API.delete(url);
         dispatch(
           CommonActions.SetSnackBar({
-            open: true,
             message: `Project deleted. ${hasRedirect && 'Redirecting...'}`,
             variant: 'success',
-            duration: 2000,
           }),
         );
         // Redirect to homepage
@@ -591,10 +552,8 @@ const DeleteProjectService = (url: string, hasRedirect: boolean = true) => {
         if (error.response.status === 404) {
           dispatch(
             CommonActions.SetSnackBar({
-              open: true,
               message: 'Project already deleted',
               variant: 'success',
-              duration: 2000,
             }),
           );
         } else {
@@ -603,6 +562,24 @@ const DeleteProjectService = (url: string, hasRedirect: boolean = true) => {
     };
 
     await deleteProject(url);
+  };
+};
+
+const AssignProjectManager = (url: string, params: { id: number; project_id: number }) => {
+  return async (dispatch: AppDispatch) => {
+    const assignProjectManager = async () => {
+      try {
+        await axios.post(url, {}, { params });
+      } catch (error) {
+        dispatch(
+          CommonActions.SetSnackBar({
+            message: error.response.data.detail || 'Could not assign project manager',
+          }),
+        );
+      }
+    };
+
+    return await assignProjectManager();
   };
 };
 

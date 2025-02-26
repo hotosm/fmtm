@@ -123,11 +123,11 @@ Alternatively see the [docs](https://docs.fmtm.dev) for various deployment guide
 |✅| 📱 features turn green once mapped |
 |✅| 📱 better support for mapping **new** points, lines, polygons |
 |✅| 📱 navigation and capability for routing to map features |
+|✅| 🖥️ organization creation and management |
 |⚙️| 📱 integrate ODK Web Forms (to avoid switching apps) |
 |⚙️| 🖥️ multiple approaches to task splitting algorithm |
 |⚙️| 🖥️ user role management per project |
 | | 📱 fully offline field mapping |
-| | 🖥️ organization creation and management |
 | | 🖥️ simplify project creation with basic / advanced workflows |
 | | 🖥️ improvements to the validation criteria and workflow |
 | | 🖥️ export (+merge) the final data to OpenStreetMap |
@@ -202,6 +202,10 @@ Thanks goes to these wonderful people:
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/sijandh35"><img src="https://avatars.githubusercontent.com/u/29759582?v=4?s=100" width="100px;" alt="Sijan Dhungana"/><br /><sub><b>Sijan Dhungana</b></sub></a><br /><a href="https://github.com/hotosm/fmtm/commits?author=sijandh35" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/khushishikhu"><img src="https://avatars.githubusercontent.com/u/65439761?v=4?s=100" width="100px;" alt="Khushi Gautam"/><br /><sub><b>Khushi Gautam</b></sub></a><br /><a href="https://github.com/hotosm/fmtm/commits?author=khushishikhu" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Seckrel"><img src="https://avatars.githubusercontent.com/u/43112525?v=4?s=100" width="100px;" alt="Aayam Ojha"/><br /><sub><b>Aayam Ojha</b></sub></a><br /><a href="https://github.com/hotosm/fmtm/commits?author=Seckrel" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/casdal"><img src="https://avatars.githubusercontent.com/u/141283367?v=4?s=100" width="100px;" alt="casdal"/><br /><sub><b>casdal</b></sub></a><br /><a href="https://github.com/hotosm/fmtm/commits?author=casdal" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="http://danieljdufour.com"><img src="https://avatars.githubusercontent.com/u/4313463?v=4?s=100" width="100px;" alt="Daniel J. Dufour"/><br /><sub><b>Daniel J. Dufour</b></sub></a><br /><a href="#ideas-DanielJDufour" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/hotosm/fmtm/commits?author=DanielJDufour" title="Code">💻</a></td>
     </tr>
   </tbody>
   <tfoot>

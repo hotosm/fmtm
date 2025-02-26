@@ -19,6 +19,7 @@ ARG UV_IMG_TAG=0.5.2
 ARG MINIO_TAG=${MINIO_TAG:-RELEASE.2025-01-20T14-49-07Z}
 FROM ghcr.io/astral-sh/uv:${UV_IMG_TAG} AS uv
 FROM docker.io/minio/minio:${MINIO_TAG} AS minio
+FROM ghcr.io/hotosm/fmtm/basemap-generator:0.3.0 AS basemap-bins
 
 
 # Includes all labels and timezone info to extend from
@@ -57,6 +58,17 @@ ENV LANG=en_US.UTF-8 \
     UV_PYTHON="python$PYTHON_IMG_TAG" \
     UV_PROJECT_ENVIRONMENT=/opt/python
 STOPSIGNAL SIGINT
+
+
+# Get supercronic binary for userland scheduling (cron daemon needs root)
+FROM base AS supercronic
+ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.2.33/supercronic-linux-amd64 \
+    SUPERCRONIC_SHA1SUM=71b0d58cc53f6bd72cf2f293e09e294b79c666d8 \
+    SUPERCRONIC=supercronic-linux-amd64
+RUN curl -fsSLO "$SUPERCRONIC_URL" \
+ && echo "${SUPERCRONIC_SHA1SUM}  ${SUPERCRONIC}" | sha1sum -c - \
+ && chmod +x "$SUPERCRONIC" \
+ && mv "$SUPERCRONIC" /supercronic
 
 
 # Build stage will all dependencies required to build Python wheels
@@ -105,11 +117,17 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
     REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
     CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+# Packages:
+# - procps: pgrep util for heathchecks
+# - gettext-base: envsubst util for dotenv substitution
+# - postgresql-client: pg_isready util for healthchecks
+# - mime-support: web mimetype support
 RUN apt-get update --quiet \
     && DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --quiet --no-install-recommends \
         "nano" \
         "curl" \
+        "procps" \
         "gettext-base" \
         "libpcre3" \
         "mime-support" \
@@ -121,6 +139,10 @@ RUN apt-get update --quiet \
     && rm -rf /var/lib/apt/lists/*
 # Copy minio mc client
 COPY --from=minio /usr/bin/mc /usr/local/bin/
+# Copy basemap generation binaries
+COPY --from=basemap-bins /usr/bin/tilepack /usr/local/bin/
+COPY --from=basemap-bins /usr/bin/pmtiles /usr/local/bin/
+COPY --from=supercronic /supercronic /usr/local/bin/
 COPY *-entrypoint.sh /
 ENTRYPOINT ["/app-entrypoint.sh"]
 # Copy Python deps from build to runtime
@@ -129,14 +151,15 @@ WORKDIR /opt
 # Add app code
 COPY app/ /opt/app/
 COPY migrations/ /opt/migrations/
+COPY stats/ /opt/stats/
+COPY scheduler/ /opt/scheduler/
 # Add non-root user, permissions
 RUN useradd -u 1001 -m -c "fmtm account" -d /home/appuser -s /bin/false appuser \
-    && mkdir -p /opt/logs /opt/tiles \
+    && mkdir -p /opt/logs \
     && chown -R appuser:appuser /opt /home/appuser \
     && chmod +x /app-entrypoint.sh /migrate-entrypoint.sh /backup-entrypoint.sh
-# Add volumes for persistence
+# Add log volume for persistence
 VOLUME /opt/logs
-VOLUME /opt/tiles
 # Change to non-root user
 USER appuser
 
@@ -168,7 +191,9 @@ EOT
 CMD ["python", "-Xfrozen_modules=off", "-m", "debugpy", \
     "--listen", "0.0.0.0:5678", "-m", "uvicorn", "app.main:api", \
     "--host", "0.0.0.0", "--port", "8000", "--workers", "1", \
-    "--reload", "--log-level", "critical", "--no-access-log"]
+    "--reload", "--reload-dir", "app", "--reload-dir", "tests", \
+    "--reload-dir", "scheduler", "--reload-dir", "stats", "--log-level", \
+    "critical", "--no-access-log"]
 
 
 # Used during CI workflows (as root), with docs/test dependencies pre-installed

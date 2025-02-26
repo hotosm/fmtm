@@ -18,6 +18,7 @@
 """Tests for submission routes."""
 
 import json
+from datetime import datetime
 
 import pytest
 
@@ -34,13 +35,13 @@ async def test_read_submissions(client, submission):
     assert isinstance(submission_list, list), "Expected a list of submissions"
 
     first_submission = submission_list[0]
-    test_instance_id = submission_data.instanceId
+    test_instance_id = submission_data.get("instanceId")
     assert first_submission["__id"] == test_instance_id, "Instance ID mismatch"
     assert first_submission["meta"]["instanceID"] == test_instance_id, (
         "Meta instanceID mismatch"
     )
     assert first_submission["__system"]["submitterId"] == str(
-        submission_data.submitterId
+        submission_data.get("submitterId")
     ), "Submitter ID mismatch"
 
 
@@ -48,11 +49,14 @@ async def test_download_submission_json(client, submission):
     """Test downloading submissions as JSON."""
     odk_project = submission["project"]
 
-    date = submission["submission_data"].createdAt.strftime("%Y-%m-%d")
+    print(submission["submission_data"].get("createdAt"))
+    date = datetime.strptime(
+        submission["submission_data"].get("createdAt"), "%Y-%m-%dT%H:%M:%S.%fZ"
+    ).strftime("%Y-%m-%d")
 
     response = await client.get(
-        f"/submission/download?project_id={odk_project.id}"
-        f"&submitted_date_range={date},{date}&export_json=true"
+        f"/submission/download?project_id={odk_project.id}&file_type=json"
+        f"&submitted_date_range={date},{date}"
     )
 
     assert response.status_code == 200, (
@@ -76,14 +80,16 @@ async def test_download_submission_json(client, submission):
 
 
 async def test_download_submission_file(client, submission):
-    """Test downloading submissions as a ZIP file."""
+    """Test downloading submissions as zipped CSV file + attachment media."""
     odk_project = submission["project"]
 
-    date = submission["submission_data"].createdAt.strftime("%Y-%m-%d")
+    date = datetime.strptime(
+        submission["submission_data"].get("createdAt"), "%Y-%m-%dT%H:%M:%S.%fZ"
+    ).strftime("%Y-%m-%d")
 
     response = await client.get(
-        f"/submission/download?project_id={odk_project.id}"
-        f"&submitted_date_range={date},{date}&export_json=false"
+        f"/submission/download?project_id={odk_project.id}&file_type=csv"
+        f"&submitted_date_range={date},{date}"
     )
 
     assert response.status_code == 200, (
@@ -124,7 +130,7 @@ async def test_download_submission_geojson(client, submission):
     odk_project = submission["project"]
 
     response = await client.get(
-        f"/submission/download-submission-geojson?project_id={odk_project.id}"
+        f"/submission/download?project_id={odk_project.id}&file_type=geojson"
     )
 
     assert response.status_code == 200, (

@@ -11,8 +11,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import Prompt from '@/hooks/Prompt';
+import { useHasManagedAnyOrganization } from '@/hooks/usePermissions';
+import NoAccessComponent from '@/views/NoAccessComponent';
 
 const CreateNewProject = () => {
+  const hasManagedAnyOrganization = useHasManagedAnyOrganization();
+  if (!hasManagedAnyOrganization) return <NoAccessComponent />;
+
   const location = useLocation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -22,7 +27,7 @@ const CreateNewProject = () => {
   const projectDetails: any = useAppSelector((state) => state.createproject.projectDetails);
   const [geojsonFile, setGeojsonFile] = useState(null);
   const [customDataExtractUpload, setCustomDataExtractUpload] = useState(null);
-  const [customFormFile, setCustomFormFile] = useState(null);
+  const [xlsFormFile, setXlsFormFile] = useState(null);
   const [additionalFeature, setAdditionalFeature] = useState(null);
 
   useEffect(() => {
@@ -74,8 +79,8 @@ const CreateNewProject = () => {
           <SelectForm
             flag="create_project"
             geojsonFile={geojsonFile}
-            customFormFile={customFormFile}
-            setCustomFormFile={setCustomFormFile}
+            xlsFormFile={xlsFormFile}
+            setXlsFormFile={setXlsFormFile}
           />
         );
       case '/map-data':
@@ -95,7 +100,7 @@ const CreateNewProject = () => {
             setGeojsonFile={setGeojsonFile}
             customDataExtractUpload={customDataExtractUpload}
             additionalFeature={additionalFeature}
-            customFormFile={customFormFile}
+            xlsFormFile={xlsFormFile}
           />
         );
       default:
