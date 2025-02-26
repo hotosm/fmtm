@@ -1,0 +1,13 @@
+<map id="app.projects.project_schemas.GeometryLogIn" name="app.projects.project_schemas.GeometryLogIn">
+<area shape="rect" id="Node000001" title=" " alt="" coords="59,297,244,377"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,130,92,195"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="77,206,130,295,126,298,72,209"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="117,130,186,195"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="154,196,154,281,149,281,149,196"/>
+<area shape="rect" id="Node000004" href="$classapp_1_1db_1_1enums_1_1GeomStatus.html" title=" " alt="" coords="211,120,401,205"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="285,207,262,242,235,275,221,289,217,285,231,272,258,238,280,204"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="230,5,299,71"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="282,83,294,119,289,121,277,84"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="323,5,374,71"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="336,85,323,121,318,119,331,83"/>
+</map>

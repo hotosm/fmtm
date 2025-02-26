@@ -1,0 +1,7 @@
+<map id="app.db.enums.SubmissionDownloadType" name="app.db.enums.SubmissionDownloadType">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,119,285,224"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="69,5,139,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="121,83,132,117,126,119,116,85"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="163,5,213,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="176,85,165,119,160,117,171,83"/>
+</map>

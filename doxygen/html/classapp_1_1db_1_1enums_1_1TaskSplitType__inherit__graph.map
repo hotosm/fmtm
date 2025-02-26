@@ -1,0 +1,7 @@
+<map id="app.db.enums.TaskSplitType" name="app.db.enums.TaskSplitType">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,119,227,224"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="40,5,109,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="91,83,102,117,97,119,86,85"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="133,5,184,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="147,85,135,119,130,117,142,83"/>
+</map>

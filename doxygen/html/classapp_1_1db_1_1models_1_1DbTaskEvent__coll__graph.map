@@ -1,0 +1,17 @@
+<map id="app.db.models.DbTaskEvent" name="app.db.models.DbTaskEvent">
+<area shape="rect" id="Node000001" title=" " alt="" coords="144,487,343,572"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,210,92,275"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="60,288,71,328,87,373,109,419,137,461,163,485,160,489,133,464,104,422,82,375,66,330,55,289"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="117,210,165,275"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="139,276,137,315,138,363,146,414,164,461,172,473,167,476,160,464,141,415,133,364,131,315,134,275"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="196,210,277,275"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="240,275,245,470,239,470,235,276"/>
+<area shape="rect" id="Node000005" href="$classapp_1_1db_1_1enums_1_1TaskEvent.html" title=" " alt="" coords="302,120,478,365"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="371,367,353,417,328,464,318,477,314,474,324,461,349,415,366,365"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="313,5,382,71"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="359,83,367,119,362,120,354,85"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="406,5,457,71"/>
+<area shape="poly" id="edge6_Node000005_Node000007" title=" " alt="" coords="425,85,417,120,412,119,420,83"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="502,210,571,275"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="531,276,517,319,495,371,463,422,443,445,421,465,391,484,359,499,357,494,389,479,418,461,440,441,459,419,490,368,512,317,526,275"/>
+</map>

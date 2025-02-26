@@ -1,0 +1,17 @@
+<map id="app.db.models.DbUser.create" name="app.db.models.DbUser.create">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,177,220,202"/>
+<area shape="rect" id="Node000002" href="$namespaceapp_1_1db_1_1models.html#a34f9b3e9cd8f79616e5b22b6b9b93142" title=" " alt="" coords="314,5,473,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="123,175,180,117,221,84,267,55,300,41,302,46,269,60,225,88,184,121,127,179"/>
+<area shape="rect" id="Node000003" href="$classapp_1_1db_1_1models_1_1DbProject.html#a85c8608bbc2d05801819a7b53304cc0b" title=" " alt="" coords="287,70,500,95"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="132,174,191,139,267,104,294,96,295,101,269,109,193,144,134,179"/>
+<area shape="rect" id="Node000004" href="$classapp_1_1db_1_1models_1_1DbTask.html#abe7641f31410b8086f627ed3bf74c5a3" title=" " alt="" coords="295,119,492,145"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="175,174,267,155,316,145,317,150,269,160,176,179"/>
+<area shape="rect" id="Node000005" href="$classapp_1_1db_1_1models_1_1DbBackgroundTask.html#ad0b298d3de02723961138d0dfa30845b" title=" " alt="" coords="285,169,502,209"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="220,187,271,187,271,192,220,192"/>
+<area shape="rect" id="Node000006" href="$classapp_1_1db_1_1models_1_1DbOrganisation.html#a564098033a613faa58012c6dc87cf758" title=" " alt="" coords="268,234,519,259"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="176,199,269,219,317,229,316,234,267,224,175,205"/>
+<area shape="rect" id="Node000007" href="$classapp_1_1db_1_1models_1_1DbUser.html#ac79031f03a76322b52f83ada2e970839" title=" " alt="" coords="295,283,492,309"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="135,200,194,234,269,268,300,278,299,283,267,273,191,239,132,204"/>
+<area shape="rect" id="Node000008" href="$classapp_1_1db_1_1models_1_1DbBasemap.html#a3a392fa37847a5acd85ef12e293a23ca" title=" " alt="" coords="279,333,508,358"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="127,200,184,258,224,290,269,318,290,326,288,331,267,322,221,295,180,262,123,204"/>
+</map>

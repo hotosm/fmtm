@@ -1,0 +1,7 @@
+<map id="app.central.central_schemas.EntityTaskID" name="app.central.central_schemas.EntityTaskID">
+<area shape="rect" id="Node000001" title=" " alt="" coords="33,119,197,219"/>
+<area shape="rect" id="Node000003" href="$classapp_1_1central_1_1central__schemas_1_1EntityMappingStatus.html" title=" " alt="" coords="5,267,224,387"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="117,232,117,266,112,266,112,232"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="71,5,158,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="117,84,117,119,112,119,112,84"/>
+</map>

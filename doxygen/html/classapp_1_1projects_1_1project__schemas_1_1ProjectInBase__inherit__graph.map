@@ -1,0 +1,11 @@
+<map id="app.projects.project_schemas.ProjectInBase" name="app.projects.project_schemas.ProjectInBase">
+<area shape="rect" id="Node000001" title=" " alt="" coords="78,547,257,921"/>
+<area shape="rect" id="Node000004" href="$classapp_1_1projects_1_1project__schemas_1_1ProjectIn.html" title=" " alt="" coords="5,979,148,1059"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="106,935,92,980,87,978,101,934"/>
+<area shape="rect" id="Node000005" href="$classapp_1_1projects_1_1project__schemas_1_1ProjectUpdate.html" title=" " alt="" coords="172,969,347,1069"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="235,934,246,968,241,970,230,935"/>
+<area shape="rect" id="Node000002" href="$classapp_1_1db_1_1models_1_1DbProject.html" title=" " alt="" coords="79,119,256,499"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="170,513,170,546,165,546,165,513"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="124,5,211,71"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="170,85,170,118,165,118,165,85"/>
+</map>

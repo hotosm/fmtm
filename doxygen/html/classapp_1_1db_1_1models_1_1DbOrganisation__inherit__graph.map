@@ -1,0 +1,11 @@
+<map id="app.db.models.DbOrganisation" name="app.db.models.DbOrganisation">
+<area shape="rect" id="Node000001" title=" " alt="" coords="124,119,339,584"/>
+<area shape="rect" id="Node000003" href="$classapp_1_1organisations_1_1organisation__schemas_1_1OrganisationInBase.html" title=" " alt="" coords="124,632,339,747"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="234,598,234,632,229,632,229,598"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="188,5,275,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="234,84,234,118,229,118,229,84"/>
+<area shape="rect" id="Node000004" href="$classapp_1_1organisations_1_1organisation__schemas_1_1OrganisationIn.html" title=" " alt="" coords="5,795,220,875"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="178,759,147,796,143,793,174,756"/>
+<area shape="rect" id="Node000005" href="$classapp_1_1organisations_1_1organisation__schemas_1_1OrganisationUpdate.html" title=" " alt="" coords="244,795,459,875"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="290,756,321,793,317,796,286,759"/>
+</map>

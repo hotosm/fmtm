@@ -1,0 +1,7 @@
+<map id="app.db.enums.GeomStatus" name="app.db.enums.GeomStatus">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,119,196,204"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="25,5,94,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="77,83,89,118,84,119,72,85"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="118,5,169,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="130,85,118,119,113,118,125,83"/>
+</map>

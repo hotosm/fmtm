@@ -1,0 +1,17 @@
+<map id="app.central.central_schemas.ODKCentralIn" name="app.central.central_schemas.ODKCentralIn">
+<area shape="rect" id="Node000001" title=" " alt="" coords="340,367,528,447"/>
+<area shape="rect" id="Node000004" href="$classapp_1_1organisations_1_1organisation__schemas_1_1OrganisationInBase.html" title=" " alt="" coords="124,495,339,609"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="369,457,312,497,309,492,366,453"/>
+<area shape="rect" id="Node000007" href="$classapp_1_1projects_1_1project__schemas_1_1ProjectIn.html" title=" " alt="" coords="363,512,505,592"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="437,461,437,512,431,512,431,461"/>
+<area shape="rect" id="Node000008" href="$classapp_1_1projects_1_1project__schemas_1_1ProjectUpdate.html" title=" " alt="" coords="529,502,704,602"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="497,453,556,500,552,504,493,458"/>
+<area shape="rect" id="Node000002" href="$classapp_1_1central_1_1central__schemas_1_1ODKCentral.html" title=" " alt="" coords="343,119,525,319"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="437,333,437,367,431,367,431,333"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="391,5,477,71"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="437,84,437,119,431,119,431,84"/>
+<area shape="rect" id="Node000005" href="$classapp_1_1organisations_1_1organisation__schemas_1_1OrganisationIn.html" title=" " alt="" coords="5,657,220,737"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="178,622,147,659,143,655,174,619"/>
+<area shape="rect" id="Node000006" href="$classapp_1_1organisations_1_1organisation__schemas_1_1OrganisationUpdate.html" title=" " alt="" coords="244,657,459,737"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="290,619,321,655,317,659,286,622"/>
+</map>

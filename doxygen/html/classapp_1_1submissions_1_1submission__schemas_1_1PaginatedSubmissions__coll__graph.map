@@ -1,0 +1,10 @@
+<map id="app.submissions.submission_schemas.PaginatedSubmissions" name="app.submissions.submission_schemas.PaginatedSubmissions">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,391,235,471"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="74,5,161,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="120,85,122,390,117,390,115,85"/>
+<area shape="rect" id="Node000003" href="$classapp_1_1submissions_1_1submission__schemas_1_1PaginationInfo.html" title=" " alt="" coords="137,148,338,328"/>
+<area shape="poly" id="edge3_Node000003_Node000002" title=" " alt="" coords="146,81,186,147,181,149,141,84"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="185,330,155,378,150,375,180,327"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="203,5,272,71"/>
+<area shape="poly" id="edge4_Node000003_Node000004" title=" " alt="" coords="240,71,240,132,235,132,235,71"/>
+</map>

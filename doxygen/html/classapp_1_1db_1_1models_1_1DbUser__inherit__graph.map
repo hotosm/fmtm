@@ -1,0 +1,11 @@
+<map id="app.db.models.DbUser" name="app.db.models.DbUser">
+<area shape="rect" id="Node000001" title=" " alt="" coords="283,119,446,464"/>
+<area shape="rect" id="Node000003" href="$classapp_1_1users_1_1user__schemas_1_1UserIn.html" title=" " alt="" coords="5,589,225,655"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="277,413,141,591,137,588,273,409"/>
+<area shape="rect" id="Node000004" href="$classapp_1_1users_1_1user__schemas_1_1UserOut.html" title=" " alt="" coords="249,589,480,655"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="367,478,367,589,362,589,362,478"/>
+<area shape="rect" id="Node000005" href="$classapp_1_1users_1_1user__schemas_1_1UserUpdate.html" title=" " alt="" coords="505,512,713,732"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="456,412,530,510,525,513,452,415"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="321,5,408,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="367,85,367,118,362,118,362,85"/>
+</map>

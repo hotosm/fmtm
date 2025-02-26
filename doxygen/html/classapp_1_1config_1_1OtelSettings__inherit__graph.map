@@ -1,0 +1,9 @@
+<map id="app.config.OtelSettings" name="app.config.OtelSettings">
+<area shape="rect" id="Node000001" title=" " alt="" coords="122,119,342,299"/>
+<area shape="rect" id="Node000003" href="$classapp_1_1config_1_1OpenObserveSettings.html" title=" " alt="" coords="5,347,232,481"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="178,312,158,348,153,345,173,309"/>
+<area shape="rect" id="Node000004" href="$classapp_1_1config_1_1SentrySettings.html" title=" " alt="" coords="257,381,437,447"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="291,309,331,380,327,382,287,312"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="183,5,281,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="235,85,235,118,229,118,229,85"/>
+</map>

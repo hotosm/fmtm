@@ -1,0 +1,13 @@
+<map id="app.projects.project_schemas.ProjectSummary" name="app.projects.project_schemas.ProjectSummary">
+<area shape="rect" id="Node000001" title=" " alt="" coords="123,411,313,531"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,150,92,215"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="77,226,185,409,181,412,72,229"/>
+<area shape="rect" id="Node000003" href="$classapp_1_1db_1_1enums_1_1ProjectPriority.html" title=" " alt="" coords="117,120,319,245"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="221,246,221,394,215,394,215,246"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="141,5,210,71"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="191,83,202,119,197,120,186,84"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="234,5,285,71"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="249,85,239,120,233,119,244,83"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="343,150,413,215"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="369,217,336,296,288,388,281,398,277,396,284,385,331,294,364,214"/>
+</map>

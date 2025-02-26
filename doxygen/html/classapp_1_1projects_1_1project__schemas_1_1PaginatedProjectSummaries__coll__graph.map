@@ -1,0 +1,10 @@
+<map id="app.projects.project_schemas.PaginatedProjectSummaries" name="app.projects.project_schemas.PaginatedProjectSummaries">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,391,272,471"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="86,5,173,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="133,85,140,390,135,390,128,85"/>
+<area shape="rect" id="Node000003" href="$classapp_1_1projects_1_1project__schemas_1_1PaginationInfo.html" title=" " alt="" coords="155,148,331,328"/>
+<area shape="poly" id="edge3_Node000003_Node000002" title=" " alt="" coords="157,82,194,147,189,149,152,84"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="196,329,170,377,165,375,192,327"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="208,5,277,71"/>
+<area shape="poly" id="edge4_Node000003_Node000004" title=" " alt="" coords="245,71,245,132,240,132,240,71"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="app.db.enums.ProjectPriority" name="app.db.enums.ProjectPriority">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,119,208,244"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="31,5,100,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="81,83,91,118,86,119,76,85"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="124,5,175,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="138,85,128,119,123,118,133,83"/>
+</map>

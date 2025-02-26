@@ -1,0 +1,14 @@
+<map id="app.central.central_schemas.EntityMappingStatus" name="app.central.central_schemas.EntityMappingStatus">
+<area shape="rect" id="Node000001" title=" " alt="" coords="167,263,386,343"/>
+<area shape="rect" id="Node000002" href="$classapp_1_1central_1_1central__schemas_1_1EntityOsmID.html" title=" " alt="" coords="194,133,359,213"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="279,227,279,262,274,262,274,227"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="73,5,160,71"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="135,82,153,108,173,124,195,138,192,142,170,128,149,111,131,85"/>
+<area shape="rect" id="Node000005" href="$classapp_1_1central_1_1central__schemas_1_1EntityTaskID.html" title=" " alt="" coords="5,133,169,213"/>
+<area shape="poly" id="edge5_Node000005_Node000003" title=" " alt="" coords="109,85,99,134,93,133,104,84"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="242,5,311,71"/>
+<area shape="poly" id="edge7_Node000001_Node000004" title=" " alt="" coords="313,59,348,90,363,110,374,132,383,174,381,192,374,214,362,235,347,253,343,250,358,232,369,212,376,191,378,174,369,134,359,113,344,93,310,63"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="279,71,279,117,274,117,274,71"/>
+<area shape="poly" id="edge6_Node000005_Node000004" title=" " alt="" coords="243,66,157,126,154,122,240,61"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="158,219,220,260,217,265,155,223"/>
+</map>

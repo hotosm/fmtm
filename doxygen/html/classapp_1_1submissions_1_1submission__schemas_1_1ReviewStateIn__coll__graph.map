@@ -1,0 +1,11 @@
+<map id="app.submissions.submission_schemas.ReviewStateIn" name="app.submissions.submission_schemas.ReviewStateIn">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,288,207,368"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="41,140,128,205"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="94,219,103,287,98,288,88,220"/>
+<area shape="rect" id="Node000003" href="$classapp_1_1db_1_1enums_1_1ReviewStateEnum.html" title=" " alt="" coords="153,120,382,225"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="215,228,161,278,158,274,211,224"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="191,5,261,71"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="243,83,254,119,249,121,237,85"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="285,5,335,71"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="298,85,287,121,281,119,293,83"/>
+</map>

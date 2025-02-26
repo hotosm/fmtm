@@ -1,0 +1,11 @@
+<map id="app.users.user_schemas.UserRole" name="app.users.user_schemas.UserRole">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,288,243,353"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="33,140,119,205"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="93,218,116,287,111,289,88,220"/>
+<area shape="rect" id="Node000003" href="$classapp_1_1db_1_1enums_1_1UserRole.html" title=" " alt="" coords="143,120,313,225"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="193,227,158,276,154,273,189,224"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="151,5,220,71"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="202,83,214,119,209,121,197,85"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="244,5,295,71"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="258,85,247,121,242,119,253,83"/>
+</map>

@@ -1,0 +1,19 @@
+<map id="app.projects.project_schemas.BackgroundTaskUpdate" name="app.projects.project_schemas.BackgroundTaskUpdate">
+<area shape="rect" id="Node000001" title=" " alt="" coords="207,380,443,460"/>
+<area shape="rect" id="Node000002" href="$classapp_1_1db_1_1models_1_1DbBackgroundTask.html" title=" " alt="" coords="21,185,260,310"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="219,317,284,378,281,382,215,321"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,5,92,71"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="71,82,116,183,111,185,66,84"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="117,5,165,71"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="143,71,143,168,138,168,138,71"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="189,5,258,71"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="213,72,174,170,169,168,208,70"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="284,215,365,280"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="327,280,327,363,322,363,322,280"/>
+<area shape="rect" id="Node000007" href="$classapp_1_1db_1_1enums_1_1BackgroundTaskStatus.html" title=" " alt="" coords="390,177,606,317"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="429,320,378,370,374,366,426,316"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="421,5,490,71"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="467,84,486,176,481,178,462,85"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="514,5,565,71"/>
+<area shape="poly" id="edge8_Node000007_Node000009" title=" " alt="" coords="533,85,514,178,509,177,528,84"/>
+</map>

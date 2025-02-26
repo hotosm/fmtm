@@ -1,0 +1,15 @@
+<map id="app.auth.auth_schemas.OrgUserDict" name="app.auth.auth_schemas.OrgUserDict">
+<area shape="rect" id="Node000001" title=" " alt="" coords="117,697,313,777"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,439,84,505"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="54,517,70,575,82,605,98,633,126,667,158,695,155,699,122,670,93,636,77,607,65,577,49,519"/>
+<area shape="rect" id="Node000003" href="$classapp_1_1db_1_1models_1_1DbUser.html" title=" " alt="" coords="347,309,510,635"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="349,621,337,636,284,689,280,685,333,633,345,618"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="177,5,264,71"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="224,84,233,197,243,250,250,270,259,283,276,295,294,297,315,297,337,307,349,318,345,322,334,312,314,302,294,302,274,300,255,287,246,272,238,251,228,198,219,85"/>
+<area shape="rect" id="Node000006" href="$classapp_1_1db_1_1models_1_1DbOrganisation.html" title=" " alt="" coords="108,339,323,605"/>
+<area shape="poly" id="edge6_Node000006_Node000004" title=" " alt="" coords="223,84,220,339,214,339,217,84"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="346,5,415,71"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="402,70,411,94,430,193,437,293,432,293,424,194,406,95,397,72"/>
+<area shape="poly" id="edge7_Node000006_Node000005" title=" " alt="" coords="347,52,311,69,294,81,280,96,270,125,258,180,236,323,231,323,253,179,265,124,276,93,290,77,308,64,345,47"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="218,605,218,681,213,681,213,605"/>
+</map>

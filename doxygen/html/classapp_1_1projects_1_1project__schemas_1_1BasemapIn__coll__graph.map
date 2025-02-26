@@ -1,0 +1,20 @@
+<map id="app.projects.project_schemas.BasemapIn" name="app.projects.project_schemas.BasemapIn">
+<area shape="rect" id="Node000001" title=" " alt="" coords="365,429,521,529"/>
+<area shape="rect" id="Node000002" href="$classapp_1_1db_1_1models_1_1DbBasemap.html" title=" " alt="" coords="95,221,289,367"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="282,374,320,403,366,433,363,437,317,408,279,378"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="162,5,249,71"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="206,85,198,221,193,221,200,84"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="313,5,361,71"/>
+<area shape="poly" id="edge6_Node000001_Node000004" title=" " alt="" coords="335,71,328,128,325,203,331,285,340,326,352,366,365,391,381,415,377,418,360,394,347,368,334,328,326,286,320,203,323,128,329,71"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="315,67,293,96,260,152,232,208,227,205,255,149,288,93,311,64"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="5,5,75,71"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="36,71,32,132,37,165,49,196,64,217,84,236,80,240,60,221,44,199,32,166,27,132,31,71"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="507,261,589,327"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="532,328,481,416,477,414,528,325"/>
+<area shape="rect" id="Node000007" href="$classapp_1_1db_1_1enums_1_1BackgroundTaskStatus.html" title=" " alt="" coords="613,224,829,364"/>
+<area shape="poly" id="edge7_Node000001_Node000007" title=" " alt="" coords="618,366,532,423,529,418,615,362"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="644,5,713,71"/>
+<area shape="poly" id="edge8_Node000007_Node000008" title=" " alt="" coords="689,84,712,223,707,224,684,85"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="737,5,788,71"/>
+<area shape="poly" id="edge9_Node000007_Node000009" title=" " alt="" coords="758,85,735,224,730,223,753,84"/>
+</map>
