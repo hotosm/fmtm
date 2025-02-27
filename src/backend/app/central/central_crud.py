@@ -449,7 +449,9 @@ async def convert_odk_submission_json_to_geojson(
         flatten_json(submission, data)
 
         try:
-            manual_geopoint = submission["survery_questions"]["group_1"]["manual_geopoint"]
+            manual_geopoint = submission["survery_questions"]["group_1"][
+                "manual_geopoint"
+            ]
         except (KeyError, IndexError) as e:
             log.warning(e)
             manual_geopoint = None
@@ -457,7 +459,9 @@ async def convert_odk_submission_json_to_geojson(
         if manual_geopoint:
             manual_geopoint_geom = {
                 "type": manual_geopoint["type"],
-                "coordinates": manual_geopoint["coordinates"][:2],  # Use only [lon, lat]
+                "coordinates": manual_geopoint["coordinates"][
+                    :2
+                ],  # Use only [lon, lat]
             }
             # Add manual_geopoint as a separate feature
             manual_geopoint_feature = geojson.Feature(
