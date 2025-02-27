@@ -228,7 +228,7 @@
 				{#if selectedEntity?.status !== 'SURVEY_SUBMITTED' && selectedEntity?.status !== 'VALIDATED'}
 					<div class="flex gap-2">
 						<sl-button
-							disabled={entityToNavigate?.entityId === selectedEntity?.osmid}
+							disabled={entityToNavigate?.entityId === selectedEntity?.entity_id}
 							variant="default"
 							size="small"
 							class="secondary flex-grow"
