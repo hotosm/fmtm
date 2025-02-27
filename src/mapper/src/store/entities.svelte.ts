@@ -43,7 +43,7 @@ type newBadGeomType<T> = {
 };
 
 let userLocationCoord: LngLatLike | undefined = $state();
-let selectedEntity: number | null = $state(null);
+let selectedEntity: string | null = $state(null);
 let entitiesShape: Shape;
 let geomShape: Shape;
 let entitiesStatusList: entitiesStatusListType[] = $state([]);

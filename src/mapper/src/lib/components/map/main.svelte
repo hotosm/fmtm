@@ -183,7 +183,7 @@
 		// if clicked point contains entity then set it's osm id else set null to store
 		if (clickedEntityFeature && clickedEntityFeature?.length > 0) {
 			const entityCentroid = centroid(clickedEntityFeature[0].geometry);
-			const clickedEntityId = clickedEntityFeature[0]?.properties?.osm_id;
+			const clickedEntityId = clickedEntityFeature[0]?.properties?.entity_id;
 			entitiesStore.setSelectedEntity(clickedEntityId);
 			entitiesStore.setSelectedEntityCoordinate({
 				entityId: clickedEntityId,
@@ -213,7 +213,10 @@
 			}
 		}
 
-		if (clickedEntityFeature && clickedEntityFeature?.length > 0) {
+		if (
+			(clickedEntityFeature && clickedEntityFeature?.length > 0) ||
+			(clickedNewEntityFeature && clickedNewEntityFeature?.length > 0)
+		) {
 			toggleActionModal('entity-modal');
 		} else if (clickedTaskFeature && clickedTaskFeature?.length > 0) {
 			toggleActionModal('task-modal');

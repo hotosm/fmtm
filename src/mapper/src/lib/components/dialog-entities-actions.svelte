@@ -41,9 +41,9 @@
 	const alertStore = getAlertStore();
 	const taskStore = getTaskStore();
 
-	const selectedEntityOsmId = $derived(entitiesStore.selectedEntity);
+	const selectedEntityId = $derived(entitiesStore.selectedEntity);
 	const selectedEntity = $derived(
-		entitiesStore.entitiesStatusList?.find((entity) => entity.osmid === selectedEntityOsmId),
+		entitiesStore.entitiesStatusList?.find((entity) => entity.entity_id === selectedEntityId),
 	);
 	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
 	const entityToNavigate = $derived(entitiesStore.entityToNavigate);
