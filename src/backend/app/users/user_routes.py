@@ -23,7 +23,7 @@ from fastapi import APIRouter, Depends, Query, Response
 from loguru import logger as log
 from psycopg import Connection
 
-from app.auth.roles import mapper, project_manager, super_admin
+from app.auth.roles import mapper, org_admin, super_admin
 from app.db.database import db_conn
 from app.db.enums import HTTPStatus
 from app.db.enums import UserRole as UserRoleEnum
@@ -42,7 +42,7 @@ router = APIRouter(
 @router.get("", response_model=user_schemas.PaginatedUsers)
 async def get_users(
     db: Annotated[Connection, Depends(db_conn)],
-    current_user: Annotated[DbUser, Depends(project_manager)],
+    current_user: Annotated[DbUser, Depends(org_admin)],
     page: int = Query(1, ge=1),
     results_per_page: int = Query(13, le=100),
     search: str = None,
