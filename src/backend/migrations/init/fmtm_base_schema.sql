@@ -398,6 +398,14 @@ CREATE TABLE public.geometrylog (
 );
 ALTER TABLE public.geometrylog OWNER TO fmtm;
 
+CREATE TABLE public.task_assignments (
+    project_id INTEGER NOT NULL,
+    task_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    assigned_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+);
+ALTER TABLE public.task_assignments OWNER TO fmtm;
+
 -- nextval for primary keys (autoincrement)
 
 ALTER TABLE ONLY public.organisations ALTER COLUMN id SET DEFAULT nextval(
@@ -466,6 +474,9 @@ ADD CONSTRAINT xlsforms_title_key UNIQUE (title);
 
 ALTER TABLE ONLY public.geometrylog
 ADD CONSTRAINT geometrylog_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.task_assignments
+ADD CONSTRAINT task_assignments_pkey PRIMARY KEY (task_id, user_id);
 
 -- Indexing
 
@@ -567,6 +578,13 @@ ADD CONSTRAINT user_roles_user_id_fkey FOREIGN KEY (
     user_id
 ) REFERENCES public.users (id);
 
+ALTER TABLE ONLY public.task_assignments
+ADD CONSTRAINT task_assignments_user_id_fkey FOREIGN KEY (user_id)
+REFERENCES public.users (id) ON DELETE CASCADE;
+
+ALTER TABLE public.task_assignments
+ADD CONSTRAINT task_assignments_project_id_fkey FOREIGN KEY (project_id)
+REFERENCES public.projects (id) ON DELETE CASCADE;
 -- Triggers
 
 CREATE OR REPLACE FUNCTION public.set_task_state()

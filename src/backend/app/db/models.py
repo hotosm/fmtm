@@ -25,7 +25,7 @@ import json
 from datetime import timedelta
 from io import BytesIO
 from re import sub
-from typing import TYPE_CHECKING, Annotated, Optional, Self
+from typing import TYPE_CHECKING, Annotated, List, Optional, Self
 from uuid import UUID
 
 import geojson
@@ -862,7 +862,7 @@ class DbTaskEvent(BaseModel):
                         u.profile_img
                     FROM inserted
                     JOIN users u ON u.id = inserted.user_id;
-            """,
+                """,
                 model_dump,
             )
             new_task_event = await cur.fetchone()
@@ -875,6 +875,51 @@ class DbTaskEvent(BaseModel):
             )
 
         return new_task_event
+
+
+class DbTaskAssignment(BaseModel):
+    """Table task_assignments."""
+
+    project_id: int
+    task_id: int
+    user_id: Annotated[Optional[int], Field(gt=0)] = None
+    assigned_at: Optional[AwareDatetime] = None
+
+    @classmethod
+    async def create(
+        cls, db: Connection, project_id: int, task_id: int, user_ids: List[int]
+    ):
+        """Create new task assignments for multiple users."""
+        print("user_ids in task assignments", user_ids)
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.executemany(
+                """
+                    INSERT INTO public.task_assignments (project_id, task_id, user_id)
+                    VALUES (%(project_id)s, %(task_id)s, %(user_id)s)
+                    ON CONFLICT (task_id, user_id) DO NOTHING;
+                """,
+                [
+                    {"project_id": project_id, "task_id": task_id, "user_id": user_id}
+                    for user_id in user_ids
+                ],
+            )
+
+    @classmethod
+    async def get(cls, db: Connection, project_id: int, task_id: int):
+        """Get task assignment by task ID."""
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(
+                """
+                SELECT * FROM public.task_assignments
+                WHERE project_id = %(project_id)s
+                AND task_id = %(task_id)s
+                """,
+                {
+                    "task_id": task_id,
+                    "project_id": project_id,
+                },
+            )
+            return await cur.fetchall()
 
 
 class DbTask(BaseModel):

@@ -21,7 +21,7 @@ from typing import Annotated, Optional
 from uuid import UUID
 
 from geojson_pydantic import Polygon
-from pydantic import BaseModel, Field
+from pydantic import AwareDatetime, BaseModel, Field
 
 from app.db.enums import MappingState
 from app.db.models import DbTask, DbTaskEvent
@@ -64,3 +64,12 @@ class TaskEventCount(BaseModel):
     date: str
     mapped: int
     validated: int
+
+
+class TaskAssignmentOut(BaseModel):
+    """Task assignments."""
+
+    project_id: int
+    task_id: int
+    user_id: int
+    assigned_at: AwareDatetime
