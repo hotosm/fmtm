@@ -37,7 +37,7 @@ networks:
 
 services:
   proxy:
-    image: "ghcr.io/bunkerity/bunkerweb:1.5.9"
+    image: "ghcr.io/bunkerity/bunkerweb:${BUNKERWEB_TAG:-1.6.0}"
     depends_on:
       proxy-config:
         condition: service_started
@@ -118,7 +118,7 @@ services:
 
   # This is needed by bunkerweb, but we don't use it
   proxy-config:
-    image: "ghcr.io/bunkerity/bunkerweb-scheduler:1.5.9"
+    image: "ghcr.io/bunkerity/bunkerweb-scheduler:${BUNKERWEB_TAG:-1.6.0}"
     depends_on:
       proxy-docker-sock:
         condition: service_started
