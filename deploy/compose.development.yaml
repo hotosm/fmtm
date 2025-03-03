@@ -53,6 +53,9 @@ networks:
 
 services:
   proxy:
+    # Extend proxy-configs so environment var config is duplicated
+    extends:
+      service: proxy-config
     image: "ghcr.io/bunkerity/bunkerweb:${BUNKERWEB_TAG:-1.6.0}"
     depends_on:
       proxy-config:
@@ -76,6 +79,16 @@ services:
       - central_frontend:/var/www/html/odk.dev.fmtm.hotosm.org:ro
       - certs:/etc/letsencrypt
       - certbot_data:/var/www/certbot
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - fmtm-net
+    restart: "unless-stopped"
+
+  # This is needed by bunkerweb to generate the nginx configs
+  proxy-config:
+    image: "ghcr.io/bunkerity/bunkerweb-scheduler:${BUNKERWEB_TAG:-1.6.0}"
     environment:
       # General
       LOG_LEVEL: notice
@@ -112,12 +125,10 @@ services:
       # buffer requests, but not responses, so streaming out works
       odk.fmtm.localhost_REVERSE_PROXY_BUFFERING: no
       odk.fmtm.localhost_MAX_CLIENT_SIZE: 500m
-    ports:
-      - 80:80
-      - 443:443
     networks:
       - fmtm-net
-    restart: "unless-stopped"
+    restart: "no"
+    entrypoint: timeout 120 ./entrypoint.sh
 
   api:
     image: "ghcr.io/hotosm/fmtm/backend:${GIT_BRANCH}"

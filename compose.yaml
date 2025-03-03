@@ -37,6 +37,9 @@ networks:
 
 services:
   proxy:
+    # Extend proxy-configs so environment var config is duplicated
+    extends:
+      service: proxy-config
     image: "ghcr.io/bunkerity/bunkerweb:${BUNKERWEB_TAG:-1.6.0}"
     depends_on:
       proxy-config:
@@ -60,8 +63,19 @@ services:
     volumes:
       - nginx-configs:/etc/nginx
       - central_frontend:/var/www/html/odk.fmtm.localhost:ro
+    ports:
+      - ${FMTM_DEV_PORT:-7050}:8080
+    networks:
+      fmtm-net:
+        ipv4_address: 10.20.30.50
+    restart: "unless-stopped"
+
+  # This is needed by bunkerweb, but we don't use it
+  proxy-config:
+    image: "ghcr.io/bunkerity/bunkerweb-scheduler:${BUNKERWEB_TAG:-1.6.0}"
     environment:
       # General
+      BUNKERWEB_INSTANCES: proxy:5000
       LOG_LEVEL: notice
       API_WHITELIST_IP: 127.0.0.0/8 10.20.30.0/24
       MULTISITE: yes
@@ -77,12 +91,6 @@ services:
       USE_LIMIT_REQ: no
       USE_MODSECURITY: no
       USE_BROTLI: yes
-      # For OpenTelemetry
-      # KEEP_UPSTREAM_HEADERS: "*"
-      # CUSTOM_HEADER: "Access-Control-Allow-Headers: traceparent,tracestate"
-      # AUTO_LETS_ENCRYPT: yes
-      # EMAIL_LETS_ENCRYPT:
-      # USE_LETS_ENCRYPT_STAGING: yes
       # Reverse proxy configs
       SERVER_NAME: fmtm.localhost mapper.fmtm.localhost api.fmtm.localhost s3.fmtm.localhost sync.fmtm.localhost odk.fmtm.localhost odkcentral
       fmtm.localhost_REVERSE_PROXY_HOST: http://ui:7051
@@ -109,38 +117,10 @@ services:
       odkcentral_AUTO_REDIRECT_HTTP_TO_HTTPS: no
       odkcentral_CUSTOM_SSL_CERT_DATA: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUI5RENDQVhtZ0F3SUJBZ0lVWXFyb0dWRVdsK204eU9OY2pUU2pCWThkckN3d0NnWUlLb1pJemowRUF3SXcKRlRFVE1CRUdBMVVFQXd3S2IyUnJZMlZ1ZEhKaGJEQWdGdzB5TkRBM01qTXhNakF6TVRWYUdBOHlNVEkwTURZeQpPVEV5TURNeE5Wb3dGVEVUTUJFR0ExVUVBd3dLYjJSclkyVnVkSEpoYkRCMk1CQUdCeXFHU000OUFnRUdCU3VCCkJBQWlBMklBQktSZmpOQVFzWUI0ekNXckdETHdKNEVIRDRTNW5rL1Z3aG00TmYwN203c0RTai9RTzlYK0JnNjIKeWlMbWVzT1ZMRExHRklpZXZ2aHIrZkxNY0YwUDQwN0FWKytER1o5bXZ6VmNwMVdZMlE5NllpTVVuelM3MWx0RQo4K3BXbFBmanRLT0JoekNCaERBZEJnTlZIUTRFRmdRVWNVekZsNUpWN1dUM045VUhxbmhSRHlWT3ZjY3dId1lEClZSMGpCQmd3Rm9BVWNVekZsNUpWN1dUM045VUhxbmhSRHlWT3ZjY3dEd1lEVlIwVEFRSC9CQVV3QXdFQi96QXgKQmdOVkhSRUVLakFvZ2dwdlpHdGpaVzUwY21Gc2doUXFMbTlrYXk1bWJYUnRMbXh2WTJGc2FHOXpkSWNFQ2hRZQpNakFLQmdncWhrak9QUVFEQWdOcEFEQm1BakVBb2xuOGRubmlQN0dKSEJPQW4rTHVCV0ZhaUY1NHFZRmpTYyt1Clpia1cwY1pyNWw2VnZ6WVlBdGdWbUtOdTB5WWRBakVBMWlvT2JRTERYdDV3S1JPWjV5VUtmbys2T21IbTV1NWkKQU5LUHd2MExqc2ZIYk5hbzJMWnduK0VxTjNtdUpPNXEKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
       odkcentral_CUSTOM_SSL_KEY_DATA: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JRzJBZ0VBTUJBR0J5cUdTTTQ5QWdFR0JTdUJCQUFpQklHZU1JR2JBZ0VCQkRCc21pQjBmUU5hR1VobEdpWnMKNks1YVo1K1hUOVM1cFdlWkhZc05SVXRlK2FRZ1hIK0pTSmpwRnFqRnNLN21abldoWkFOaUFBU2tYNHpRRUxHQQplTXdscXhneThDZUJCdytFdVo1UDFjSVp1RFg5TzV1N0Ewby8wRHZWL2dZT3Rzb2k1bnJEbFN3eXhoU0lucjc0CmEvbnl6SEJkRCtOT3dGZnZneG1mWnI4MVhLZFZtTmtQZW1JakZKODB1OVpiUlBQcVZwVDM0N1E9Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K
-    ports:
-      - ${FMTM_DEV_PORT:-7050}:8080
-    networks:
-      fmtm-net:
-        ipv4_address: 10.20.30.50
-    restart: "unless-stopped"
-
-  # This is needed by bunkerweb, but we don't use it
-  proxy-config:
-    image: "ghcr.io/bunkerity/bunkerweb-scheduler:${BUNKERWEB_TAG:-1.6.0}"
-    depends_on:
-      proxy-docker-sock:
-        condition: service_started
-    environment:
-      - DOCKER_HOST=tcp://proxy-docker-sock:2375
     networks:
       - fmtm-net
     restart: "no"
     entrypoint: timeout 120 ./entrypoint.sh
-
-  # This is needed by the bunkerweb scheduler to identify which container to route to
-  proxy-docker-sock:
-    image: "docker.io/tecnativa/docker-socket-proxy:0.2.0"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    environment:
-      - CONTAINERS=1
-      - LOG_LEVEL=warning
-    networks:
-      - fmtm-net
-    restart: "no"
-    command: timeout 120 haproxy -W -db -f /usr/local/etc/haproxy/haproxy.cfg
 
   api:
     image: "ghcr.io/hotosm/fmtm/backend:${TAG_OVERRIDE:-debug}"
