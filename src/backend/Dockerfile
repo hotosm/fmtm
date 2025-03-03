@@ -167,7 +167,7 @@ USER appuser
 # Add certificates to use ODK Central over SSL (HTTPS, required)
 FROM runtime AS add-odk-certs
 USER root
-# Add the SSL cert for debug odkcentral
+# Add the SSL cert for local odkcentral install (debugging only)
 RUN echo 'LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUI5RENDQVhtZ0F3SUJBZ0lVWXFyb\
 0dWRVdsK204eU9OY2pUU2pCWThkckN3d0NnWUlLb1pJemowRUF3SXcKRlRFVE1CRUdBMVVFQXd3S2Iy\
 UnJZMlZ1ZEhKaGJEQWdGdzB5TkRBM01qTXhNakF6TVRWYUdBOHlNVEkwTURZeQpPVEV5TURNeE5Wb3d\
