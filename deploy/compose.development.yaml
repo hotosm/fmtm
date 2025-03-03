@@ -91,6 +91,7 @@ services:
     image: "ghcr.io/bunkerity/bunkerweb-scheduler:${BUNKERWEB_TAG:-1.6.0}"
     environment:
       # General
+      BUNKERWEB_INSTANCES: proxy:5000
       LOG_LEVEL: notice
       API_WHITELIST_IP: 127.0.0.0/8 10.20.30.0/24
       MULTISITE: yes
