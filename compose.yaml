@@ -84,9 +84,11 @@ services:
       # EMAIL_LETS_ENCRYPT:
       # USE_LETS_ENCRYPT_STAGING: yes
       # Reverse proxy configs
-      SERVER_NAME: fmtm.localhost api.fmtm.localhost s3.fmtm.localhost sync.fmtm.localhost odk.fmtm.localhost odkcentral
+      SERVER_NAME: fmtm.localhost mapper.fmtm.localhost api.fmtm.localhost s3.fmtm.localhost sync.fmtm.localhost odk.fmtm.localhost odkcentral
       fmtm.localhost_REVERSE_PROXY_HOST: http://ui:7051
       fmtm.localhost_MAX_CLIENT_SIZE: 1G
+      mapper.fmtm.localhost_REVERSE_PROXY_HOST: http://ui-mapper:7055
+      mapper.fmtm.localhost_MAX_CLIENT_SIZE: 1G
       api.fmtm.localhost_REVERSE_PROXY_HOST: http://api:8000
       api.fmtm.localhost_MAX_CLIENT_SIZE: 1G
       s3.fmtm.localhost_REVERSE_PROXY_HOST: http://s3:9000
@@ -127,7 +129,7 @@ services:
     restart: "no"
     entrypoint: timeout 120 ./entrypoint.sh
 
-  # This is needed by the bunkerweb scheduler to run unfortunately
+  # This is needed by the bunkerweb scheduler to identify which container to route to
   proxy-docker-sock:
     image: "docker.io/tecnativa/docker-socket-proxy:0.2.0"
     volumes:
