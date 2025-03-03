@@ -402,7 +402,7 @@ CREATE TABLE public.task_assignments (
     project_id INTEGER NOT NULL,
     task_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
-    assigned_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    assigned_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE public.task_assignments OWNER TO fmtm;
 
