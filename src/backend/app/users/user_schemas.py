@@ -82,7 +82,7 @@ class PaginatedUsers(BaseModel):
     pagination: PaginationInfo
 
 
-class Usernames(DbUser):
+class Usernames(BaseModel):
     """User info with username and their id."""
 
     id: int
