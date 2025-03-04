@@ -13,7 +13,7 @@ const pwaOptions: Partial<VitePWAOptions> = {
 		enabled: true,
 	},
 	manifest: {
-		name: 'Field Mapping Tasking Manager',
+		name: 'FieldTM',
 		short_name: 'FieldTM',
 		description: 'Coordinated field mapping for Open Mapping campaigns.',
 		display: 'standalone',
