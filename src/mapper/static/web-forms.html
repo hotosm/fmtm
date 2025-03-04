@@ -12,6 +12,7 @@
       const entityId = new URL(window.location.href).searchParams.get("entityId");
       const projectId = new URL(window.location.href).searchParams.get("projectId");
       const api_url = new URL(window.location.href).searchParams.get("api_url");
+      const language = new URL(window.location.href).searchParams.get("language");
 
       // we are creating an instance of a web component programmatically
       // and not by inserting a <odk-web-form> tag in the html
@@ -19,6 +20,7 @@
       // (and you can't pass a function as a tag attribute in HTML)
       const odkWebForm = new OdkWebForm({
         formXml: `${api_url}/projects/${projectId}/form-xml`,
+        header: false,
         missingResourceBehavior: "BLANK",
         fetchFormAttachment: function (url) {
           url = url.toString();
@@ -46,6 +48,8 @@
             return fetch(url);
           }
         },
+
+        onOdkForm: true,
 
         // hack to make sure isEmitSubscribed function in OdkWebForm.vue returns true
         // if you attach an event listener in Vue, I think it'll appear as a prop

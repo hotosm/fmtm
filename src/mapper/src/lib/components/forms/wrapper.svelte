@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onSetLanguageTag, languageTag } from '$translations/runtime.js';
 	import type { SlDrawer } from '@shoelace-style/shoelace';
 
   const API_URL = import.meta.env.VITE_API_URL;
@@ -18,6 +19,7 @@
   }: Props = $props();
 
   let iframeRef: HTMLIFrameElement;
+  let odkForm: any;
 
   // to-do: hide drawer upon succesful submission
   function handleSubmit(payload: any) {
@@ -30,8 +32,32 @@
         method: "POST",
         body: data
       });
+      drawerRef?.hide();
     })();
   }
+
+  function handleOdkForm(evt: any) {
+    if (evt?.detail?.[0]) {
+      odkForm = evt.detail[0];
+      console.log("set odkForm", odkForm);
+
+      // over-write default language
+      setFormLanguage(languageTag());
+
+      // select feature that you clicked on map
+      odkForm.getChildren().find((it: any) => it.definition.nodeset === "/data/feature")?.setValueState([entityId]);
+    }
+  }
+
+  const setFormLanguage = (newLocale: string) => {
+    if (odkForm) {
+      const target = `(${newLocale.toLowerCase()})`;
+      const match = odkForm.languages.find((it: any) => it?.language.toLowerCase().includes(target));
+      if (match) {
+        odkForm?.setLanguage(match);
+      }
+    }
+  };
 
   $effect(() => {
     // we want to rerun this $effect function whenever a new iframe is rendered
@@ -40,18 +66,23 @@
     projectId;
     entityId;
 
-    const intervalId = setInterval(() => {
-      webFormsRef = iframeRef.contentDocument?.querySelector("odk-web-form") || undefined;
-      if (webFormsRef) {
+    if (iframeRef) {
+      const intervalId = setInterval(() => {
+        webFormsRef = iframeRef.contentDocument?.querySelector("odk-web-form") || undefined;
+        if (webFormsRef) {
+          clearInterval(intervalId);
+          webFormsRef.addEventListener("submit", handleSubmit);
+          webFormsRef.addEventListener("odkForm", handleOdkForm);
+        }
+      }, 10);
+      // clear interval when re-run
+      return () => {
         clearInterval(intervalId);
-        webFormsRef.addEventListener("submit", handleSubmit);
-      }
-    }, 100);
-    // clear interval when re-run
-    return () => {
-      clearInterval(intervalId);
-    };
+      };
+    }
   });
+
+	onSetLanguageTag((newLocale: string) => setFormLanguage(newLocale));
 </script>
 
 <style>
@@ -71,15 +102,17 @@
   class="drawer-contained drawer-placement-start drawer-overview"
   style="--size: 100vw; --header-spacing: 0px"
 >
-  {#key projectId}
-    {#key entityId}
-      <iframe
-        bind:this={iframeRef}
-        title="odk-web-forms-wrapper"
-        src={`./web-forms.html?projectId=${projectId}&entityId=${entityId}&api_url=${API_URL}`}
-        style="height: {window.outerHeight}px; width: 100%; z-index: 11;"
-      >
-      </iframe>  
-    {/key} 
-  {/key}
+  {#if entityId}
+    {#key projectId}
+      {#key entityId}
+        <iframe
+          bind:this={iframeRef}
+          title="odk-web-forms-wrapper"
+          src={`./web-forms.html?projectId=${projectId}&entityId=${entityId}&api_url=${API_URL}&language=${languageTag()}`}
+          style="height: {window.outerHeight}px; width: 100%; z-index: 11;"
+        >
+        </iframe>
+      {/key}
+    {/key}
+  {/if}
 </hot-drawer>
