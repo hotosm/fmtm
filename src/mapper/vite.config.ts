@@ -1,10 +1,49 @@
 import path from 'path';
 import { defineConfig } from 'vitest/config';
+import type { VitePWAOptions } from 'vite-plugin-pwa';
 import { VitePWA } from 'vite-plugin-pwa';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { paraglide } from '@inlang/paraglide-vite';
 import UnoCSS from 'unocss/vite';
 import extractorSvelte from '@unocss/extractor-svelte';
+
+const pwaOptions: Partial<VitePWAOptions> = {
+	registerType: 'autoUpdate',
+	devOptions: {
+		enabled: true,
+	},
+	manifest: {
+		name: 'Field Mapping Tasking Manager',
+		short_name: 'FieldTM',
+		description: 'Coordinated field mapping for Open Mapping campaigns.',
+		display: 'standalone',
+		theme_color: '#d63f3f',
+		background_color: '#d63f3f',
+		icons: [
+			{
+				src: 'pwa-64x64.png',
+				sizes: '64x64',
+				type: 'image/png',
+			},
+			{
+				src: 'pwa-192x192.png',
+				sizes: '192x192',
+				type: 'image/png',
+			},
+			{
+				src: 'pwa-512x512.png',
+				sizes: '512x512',
+				type: 'image/png',
+			},
+			{
+				src: 'maskable-icon-512x512.png',
+				sizes: '512x512',
+				type: 'image/png',
+				purpose: 'maskable',
+			},
+		],
+	},
+};
 
 export default defineConfig({
 	plugins: [
@@ -16,12 +55,7 @@ export default defineConfig({
 		UnoCSS({
 			extractors: [extractorSvelte()],
 		}),
-		VitePWA({
-			registerType: 'autoUpdate',
-			devOptions: {
-				enabled: true,
-			},
-		}),
+		VitePWA(pwaOptions),
 	],
 	server: {
 		host: true,
