@@ -119,7 +119,7 @@
 				role="button"
 				tabindex="0"
 			>
-				<span class="font-barlow font-medium text-base">SIGN IN</span>
+				<span class="font-barlow font-medium text-base">{m['header.sign_in']()}</span>
 			</hot-button>
 		{/if}
 

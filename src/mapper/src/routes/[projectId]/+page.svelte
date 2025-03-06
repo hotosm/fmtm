@@ -10,6 +10,7 @@
 	import type SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.component.js';
 	import type SlDialog from '@shoelace-style/shoelace/dist/components/dialog/dialog.component.js';
 
+	import { m } from "$translations/messages.js";
 	import ImportQrGif from '$assets/images/importQr.gif';
 	import BottomSheet from '$lib/components/bottom-sheet.svelte';
 	import MapComponent from '$lib/components/map/main.svelte';
@@ -25,8 +26,6 @@
 	import More from '$lib/components/more/index.svelte';
 	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
-
-	const API_URL = import.meta.env.VITE_API_URL;
 
 	interface Props {
 		data: PageData;
@@ -245,7 +244,7 @@
 						size="small"
 						class="secondary w-fit"
 					>
-						<span class="font-barlow font-medium text-xs uppercase">CANCEL</span>
+						<span class="font-barlow font-medium text-xs uppercase">{m['popup.cancel']()}</span>
 					</sl-button>
 					<sl-button
 						onclick={() => mapNewFeatureInODK()}
