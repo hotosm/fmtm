@@ -1,7 +1,6 @@
 <script lang="ts">
 	import '$styles/page.css';
 	import '$styles/button.css';
-	import '@hotosm/ui/dist/hotosm-ui';
 	import type { PageData } from '../$types';
 	import { onMount, onDestroy } from 'svelte';
 	import type { ShapeStream } from '@electric-sql/client';

@@ -1,7 +1,9 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"header": {
+		"sign_out": "SAIR"
+	},
 	"start_mapping_task": "Deseja começar a mapear a tarefa #{taskId}?",
 	"scan_qr_code": "Digitize este código QR no ODK Collect a partir do telefone de outro usuário ou faça o download e importe-o manualmente",
-	"sign_out": "SAIR",
 	"download": "BAIXAR"
 }

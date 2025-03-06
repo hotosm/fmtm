@@ -2,7 +2,6 @@
 	import '$styles/page.css';
 	import '$styles/button.css';
 	import '@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css';
-	import '@hotosm/ui/dist/hotosm-ui';
 	import { onMount } from 'svelte';
 	import {
 		MapLibre,
