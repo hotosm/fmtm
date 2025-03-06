@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import SlDialog from '@shoelace-style/shoelace/dist/components/dialog/dialog.component.js';
+	import type SlDialog from '@shoelace-style/shoelace/dist/components/dialog/dialog.component.js';
 
 	import { getLoginStore } from '$store/login.svelte.ts';
 	import { getCommonStore } from '$store/common.svelte.ts';

@@ -8,6 +8,7 @@
 	import '@shoelace-style/shoelace/dist/components/dropdown/dropdown.js';
 	import '@shoelace-style/shoelace/dist/components/menu/menu.js';
 	import '@shoelace-style/shoelace/dist/components/menu-item/menu-item.js';
+	import type { SlSelectEvent } from '@shoelace-style/shoelace/dist/events';
 
 	import * as m from "$translations/messages.js";
 	import Login from '$lib/components/login.svelte';
