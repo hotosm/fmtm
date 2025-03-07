@@ -9,7 +9,6 @@ import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
 import useForm from '@/hooks/useForm';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import { FormCategoryService } from '@/api/CreateProjectService';
-import FileInputComponent from '@/components/common/FileInputComponent';
 import DataExtractValidation from '@/components/createnewproject/validation/DataExtractValidation';
 import NewDefineAreaMap from '@/views/NewDefineAreaMap';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
@@ -18,6 +17,7 @@ import { dataExtractGeojsonType } from '@/store/types/ICreateProject';
 import { CustomCheckbox } from '@/components/common/Checkbox';
 import DescriptionSection from '@/components/createnewproject/Description';
 import UploadArea from '@/components/common/UploadArea';
+import { convertFileToGeojson } from '@/utilfunctions/convertFileToGeojson';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -193,34 +193,6 @@ const DataExtract = ({
     navigate(url);
   };
 
-  const convertFileToFeatureCol = async (file) => {
-    if (!file) return;
-    // Parse file as JSON
-    const fileReader = new FileReader();
-    const fileLoaded: any = await new Promise((resolve) => {
-      fileReader.onload = (e) => resolve(e.target?.result);
-      fileReader.readAsText(file, 'UTF-8');
-    });
-    const parsedJSON = JSON.parse(fileLoaded);
-
-    // Convert to FeatureCollection
-    let geojsonConversion;
-    if (parsedJSON.type === 'FeatureCollection') {
-      geojsonConversion = parsedJSON;
-    } else if (parsedJSON.type === 'Feature') {
-      geojsonConversion = {
-        type: 'FeatureCollection',
-        features: [parsedJSON],
-      };
-    } else {
-      geojsonConversion = {
-        type: 'FeatureCollection',
-        features: [{ type: 'Feature', properties: null, geometry: parsedJSON }],
-      };
-    }
-    return geojsonConversion;
-  };
-
   const changeMapDataFileHandler = async (file, setDataExtractToState) => {
     if (!file) {
       resetFile(setCustomDataExtractUpload);
@@ -236,7 +208,7 @@ const DataExtract = ({
     if (['json', 'geojson'].includes(fileType)) {
       // Set to state immediately for splitting
       setDataExtractToState(file);
-      extractFeatCol = await convertFileToFeatureCol(uploadedFile);
+      extractFeatCol = await convertFileToGeojson(uploadedFile);
     } else if (['fgb'].includes(fileType)) {
       const arrayBuffer = new Uint8Array(await uploadedFile.arrayBuffer());
       extractFeatCol = fgbGeojson.deserialize(arrayBuffer);
@@ -267,7 +239,7 @@ const DataExtract = ({
     const uploadedFile = file?.file;
     setAdditionalFeature(file);
     handleCustomChange('additionalFeature', uploadedFile);
-    const additionalFeatureGeojson = await convertFileToFeatureCol(uploadedFile);
+    const additionalFeatureGeojson = await convertFileToGeojson(uploadedFile);
     dispatch(CreateProjectActions.SetAdditionalFeatureGeojson(additionalFeatureGeojson));
   };
 
