@@ -1,4 +1,4 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 # This file is part of FMTM.
 #
 #     FMTM is free software: you can redistribute it and/or modify
@@ -20,6 +20,8 @@ name: fmtm-dev
 volumes:
   fmtm_frontend:
     name: fmtm-frontend-${GIT_BRANCH}
+  fmtm_mapper_frontend:
+    name: fmtm-mapper-frontend-${GIT_BRANCH}
   fmtm_db_data:
     name: fmtm-db-data-${GIT_BRANCH}
   fmtm_data:
@@ -32,8 +34,6 @@ volumes:
     name: fmtm-tiles-${GIT_BRANCH}
   certs:
     name: fmtm-certs-${GIT_BRANCH}
-  certbot_data:
-    name: fmtm-certbot-data-${GIT_BRANCH}
   central_db_data:
     name: fmtm-central-db-data-${GIT_BRANCH}
   central_frontend:
@@ -42,48 +42,117 @@ volumes:
 networks:
   fmtm-net:
     name: fmtm-${GIT_BRANCH}
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.20.30.0/24
+
+# Used for both bunkerweb proxy + scheduler (config) service
+x-proxy-env: &proxy-env # General
+  BUNKERWEB_INSTANCES: proxy:5000
+  LOG_LEVEL: notice
+  USE_BUNKERNET: no
+  DISABLE_DEFAULT_SERVER: yes
+  API_WHITELIST_IP: 127.0.0.0/8 10.20.30.0/24
+  # Avoid running ModSec rules on internal service calls
+  WHITELIST_IP: 10.20.30.0/24
+  WHITELIST_URI: https://dev.fmtm.hotosm.org
+  MULTISITE: yes
+  USE_REVERSE_PROXY: yes
+  # Required for electric headers electric-offset, electric-handle, electric-schema
+  KEEP_UPSTREAM_HEADERS: yes
+  REVERSE_PROXY_INTERCEPT_ERRORS: no
+  ALLOWED_METHODS: OPTIONS|HEAD|GET|POST|PATCH|PUT|DELETE
+  USE_REAL_IP: yes
+  SERVE_FILES: yes
+  USE_BACKUP: no
+  USE_METRICS: no
+  # USE_ANTIBOT: yes
+  USE_LIMIT_CONN: yes
+  # BAD_BEHAVIOUR disabled as it's difficult to work with...
+  USE_BAD_BEHAVIOR: no
+  USE_LIMIT_REQ: yes
+  USE_MODSECURITY: yes
+  USE_GZIP: yes
+  # On client, brotli is preferred over gzip if both are enabled
+  USE_BROTLI: yes
+  # For OpenTelemetry (Allow-Headers are what the browser can include in the REQUEST headers)
+  CUSTOM_HEADER: "Access-Control-Allow-Headers: DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,traceparent,tracestate"
+  AUTO_LETS_ENCRYPT: yes
+  EMAIL_LETS_ENCRYPT: ${CERT_EMAIL}
+  # USE_LETS_ENCRYPT_STAGING: yes
+  # Reverse proxy configs
+  SERVER_NAME: dev.fmtm.hotosm.org mapper.dev.fmtm.hotosm.org api.dev.fmtm.hotosm.org s3.dev.fmtm.hotosm.org sync.dev.fmtm.hotosm.org odk.dev.fmtm.hotosm.org
+  # We need this to allow for client-side routing in the SPA (from index.html)
+  dev.fmtm.hotosm.org_ERRORS: 404=/index.html
+  mapper.dev.fmtm.hotosm.org_ERRORS: 404=/index.html
+  # CORS for the backend is configured by FastAPI
+  api.dev.fmtm.hotosm.org_REVERSE_PROXY_HOST: http://api:8000
+  api.dev.fmtm.hotosm.org_MAX_CLIENT_SIZE: 1G
+  s3.dev.fmtm.hotosm.org_REVERSE_PROXY_HOST: http://s3:9000
+  s3.dev.fmtm.hotosm.org_MAX_CLIENT_SIZE: 10G
+  # CORS must be enabled for Minio to work
+  s3.dev.fmtm.hotosm.org_USE_CORS: yes
+  s3.dev.fmtm.hotosm.org_CORS_ALLOW_ORIGIN: https://dev.fmtm.hotosm.org
+  sync.dev.fmtm.hotosm.org_REVERSE_PROXY_HOST: http://electric:3000
+  sync.dev.fmtm.hotosm.org_MAX_CLIENT_SIZE: 1G
+  # CORS must be enabled for Electric to work
+  sync.dev.fmtm.hotosm.org_USE_CORS: yes
+  sync.dev.fmtm.hotosm.org_CORS_ALLOW_ORIGIN: https://mapper.dev.fmtm.hotosm.org
+  sync.dev.fmtm.hotosm.org_CORS_ALLOW_METHODS: GET, HEAD, DELETE, OPTIONS
+  # Expose-Headers are RESPONSE headers the browser is allowed to access
+  sync.dev.fmtm.hotosm.org_CORS_EXPOSE_HEADERS: electric-offset,electric-handle,electric-schema
+  odk.dev.fmtm.hotosm.org_REVERSE_PROXY_HOST: http://central:8383
+  odk.dev.fmtm.hotosm.org_REVERSE_PROXY_URL: ~ ^/v\d
+  # buffer requests, but not responses, so streaming out works
+  odk.dev.fmtm.hotosm.org_REVERSE_PROXY_BUFFERING: no
+  odk.dev.fmtm.hotosm.org_MAX_CLIENT_SIZE: 500m
 
 services:
   proxy:
-    image: "ghcr.io/hotosm/fmtm/proxy:${GIT_BRANCH}"
+    image: "ghcr.io/bunkerity/bunkerweb:${BUNKERWEB_TAG:-1.6.0}"
     depends_on:
-      api:
-        condition: service_started
-      central:
-        condition: service_started
-      central-ui:
-        condition: service_completed_successfully
-      s3:
-        condition: service_healthy
-      certbot:
-        condition: service_completed_successfully
+      # Frontends must be built and available first
       ui:
         condition: service_completed_successfully
-      electric:
-        condition: service_started
+      central-ui:
+        condition: service_completed_successfully
     volumes:
-      - fmtm_frontend:/usr/share/nginx/html/fmtm
-      - central_frontend:/usr/share/nginx/html/central/
-      - certs:/etc/letsencrypt
-      - certbot_data:/var/www/certbot
-    environment:
-      FMTM_DOMAIN: ${FMTM_DOMAIN}
-      FMTM_API_DOMAIN: ${FMTM_API_DOMAIN:-api.${FMTM_DOMAIN}}
-      FMTM_ODK_DOMAIN: ${FMTM_ODK_DOMAIN:-odk.${FMTM_DOMAIN}}
-      FMTM_S3_DOMAIN: ${FMTM_S3_DOMAIN:-s3.${FMTM_DOMAIN}}
-      FMTM_SYNC_DOMAIN: ${FMTM_SYNC_DOMAIN:-sync.${FMTM_DOMAIN}}
+      # - certs:/etc/letsencrypt
+      - certs:/data
+      - fmtm_frontend:/var/www/html/dev.fmtm.hotosm.org:ro
+      - fmtm_mapper_frontend:/var/www/html/mapper.dev.fmtm.hotosm.org:ro
+      - central_frontend:/var/www/html/odk.dev.fmtm.hotosm.org:ro
+    environment: *proxy-env
     ports:
-      - 80:80
-      - 443:443
+      - 80:8080
+      - 443:8443
     networks:
       - fmtm-net
     restart: "unless-stopped"
+
+  # This is needed by bunkerweb to generate the nginx configs
+  proxy-setup:
+    image: "ghcr.io/bunkerity/bunkerweb-scheduler:${BUNKERWEB_TAG:-1.6.0}"
+    depends_on:
+      proxy:
+        condition: service_started
+    volumes:
+      - certs:/data
+    environment: *proxy-env
+    networks:
+      - fmtm-net
+    restart: "no"
+    # If success or timeout exits with 0 code, else use actual exit code
+    entrypoint: sh -c 'timeout 120 ./entrypoint.sh || [ $? -eq 124 ] && exit 0'
 
   api:
     image: "ghcr.io/hotosm/fmtm/backend:${GIT_BRANCH}"
     volumes:
       - fmtm_logs:/opt/logs
     depends_on:
+      proxy:
+        condition: service_healthy
       fmtm-db:
         condition: service_healthy
       migrations:
@@ -123,17 +192,22 @@ services:
         VITE_API_URL: https://${FMTM_API_DOMAIN:-api.${FMTM_DOMAIN}}
         VITE_SYNC_URL: https://${FMTM_SYNC_DOMAIN:-sync.${FMTM_DOMAIN}}
     volumes:
-      - fmtm_frontend:/frontend
+      - fmtm_frontend:/frontend/manager
+      - fmtm_mapper_frontend:/frontend/mapper
     network_mode: none
     restart: "on-failure:2"
 
   central:
     image: "ghcr.io/hotosm/fmtm/odkcentral:${ODK_CENTRAL_TAG:-v2024.2.1}"
     depends_on:
+      proxy:
+        condition: service_healthy
       central-db:
         condition: service_healthy
       s3:
         condition: service_healthy
+      pyxform:
+        condition: service_started
     environment:
       - DOMAIN=${FMTM_ODK_DOMAIN:-odk.${FMTM_DOMAIN}}
       - SSL_TYPE=upstream
@@ -181,9 +255,6 @@ services:
 
   pyxform:
     image: "ghcr.io/getodk/pyxform-http:v3.0.0"
-    depends_on:
-      central-db:
-        condition: service_healthy
     networks:
       - fmtm-net
     restart: "unless-stopped"
@@ -199,6 +270,9 @@ services:
 
   s3:
     image: "docker.io/minio/minio:${MINIO_TAG:-RELEASE.2025-01-20T14-49-07Z}"
+    depends_on:
+      proxy:
+        condition: service_healthy
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
@@ -241,6 +315,8 @@ services:
   electric:
     image: "electricsql/electric:${ELECTRIC_TAG:-1.0.0-beta.10}"
     depends_on:
+      proxy:
+        condition: service_healthy
       fmtm-db:
         condition: service_healthy
       migrations:
@@ -293,22 +369,3 @@ services:
       file: ../compose.yaml
       service: scheduler
     image: "ghcr.io/hotosm/fmtm/backend:${GIT_BRANCH}"
-
-  certbot:
-    image: "ghcr.io/hotosm/fmtm/proxy:certs-init-development"
-    volumes:
-      - certs:/etc/letsencrypt
-      - certbot_data:/var/www/certbot
-    environment:
-      FMTM_DOMAIN: ${FMTM_DOMAIN}
-      FMTM_API_DOMAIN: ${FMTM_API_DOMAIN:-api.${FMTM_DOMAIN}}
-      FMTM_ODK_DOMAIN: ${FMTM_ODK_DOMAIN:-odk.${FMTM_DOMAIN}}
-      FMTM_S3_DOMAIN: ${FMTM_S3_DOMAIN:-s3.${FMTM_DOMAIN}}
-      FMTM_SYNC_DOMAIN: ${FMTM_SYNC_DOMAIN:-sync.${FMTM_DOMAIN}}
-      CERT_EMAIL: ${CERT_EMAIL}
-    ports:
-      - 80:80
-      - 443:443
-    networks:
-      - fmtm-net
-    restart: "on-failure:2"

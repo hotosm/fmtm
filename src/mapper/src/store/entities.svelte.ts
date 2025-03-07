@@ -2,6 +2,7 @@ import { ShapeStream, Shape } from '@electric-sql/client';
 import type { ShapeData } from '@electric-sql/client';
 import type { Feature, FeatureCollection } from 'geojson';
 import type { LngLatLike } from 'svelte-maplibre';
+import { getAlertStore } from './common.svelte';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -42,7 +43,7 @@ type newBadGeomType<T> = {
 };
 
 let userLocationCoord: LngLatLike | undefined = $state();
-let selectedEntity: number | null = $state(null);
+let selectedEntity: string | null = $state(null);
 let entitiesShape: Shape;
 let geomShape: Shape;
 let entitiesStatusList: entitiesStatusListType[] = $state([]);
@@ -53,6 +54,8 @@ let updateEntityStatusLoading: boolean = $state(false);
 let selectedEntityCoordinate: entityIdCoordinateMapType | null = $state(null);
 let entityToNavigate: entityIdCoordinateMapType | null = $state(null);
 let toggleGeolocation: boolean = $state(false);
+let entitiesList: entitiesListType[] = $state([]);
+let alertStore = getAlertStore();
 
 function getEntityStatusStream(projectId: number): ShapeStream | undefined {
 	if (!projectId) {
@@ -134,9 +137,11 @@ function getEntitiesStatusStore() {
 	async function syncEntityStatus(projectId: number) {
 		try {
 			syncEntityStatusLoading = true;
-			await fetch(`${API_URL}/projects/${projectId}/entities/statuses`, {
+			const entityStatusResponse = await fetch(`${API_URL}/projects/${projectId}/entities/statuses`, {
 				credentials: 'include',
 			});
+			const response = await entityStatusResponse.json();
+			entitiesList = response;
 			syncEntityStatusLoading = false;
 		} catch (error) {
 			syncEntityStatusLoading = false;
@@ -160,6 +165,51 @@ function getEntitiesStatusStore() {
 		}
 	}
 
+	async function createEntity(projectId: number, payload: Record<string, any>) {
+		try {
+			const resp = await fetch(`${import.meta.env.VITE_API_URL}/projects/${projectId}/create-entity`, {
+				method: 'POST',
+				body: JSON.stringify(payload),
+				headers: {
+					'Content-type': 'application/json',
+				},
+				credentials: 'include',
+			});
+			if (!resp.ok) {
+				const errorData = await resp.json();
+				throw new Error(errorData.detail);
+			}
+			return await resp.json();
+		} catch (error: any) {
+			alertStore.setAlert({
+				variant: 'danger',
+				message: error.message || 'Failed to create entity',
+			});
+		}
+	}
+
+	async function createGeomRecord(projectId: number, payload: Record<string, any>) {
+		try {
+			const resp = await fetch(`${import.meta.env.VITE_API_URL}/projects/${projectId}/geometry/records`, {
+				method: 'POST',
+				body: JSON.stringify(payload),
+				headers: {
+					'Content-type': 'application/json',
+				},
+				credentials: 'include',
+			});
+			if (!resp.ok) {
+				const errorData = await resp.json();
+				throw new Error(errorData.detail);
+			}
+		} catch (error: any) {
+			alertStore.setAlert({
+				variant: 'danger',
+				message: error.message || 'Failed to create geometry record',
+			});
+		}
+	}
+
 	function setEntityToNavigate(entityCoordinate: entityIdCoordinateMapType | null) {
 		entityToNavigate = entityCoordinate;
 	}
@@ -177,6 +227,8 @@ function getEntitiesStatusStore() {
 		setSelectedEntity: setSelectedEntity,
 		syncEntityStatus: syncEntityStatus,
 		updateEntityStatus: updateEntityStatus,
+		createEntity: createEntity,
+		createGeomRecord: createGeomRecord,
 		setSelectedEntityCoordinate: setSelectedEntityCoordinate,
 		setEntityToNavigate: setEntityToNavigate,
 		setToggleGeolocation: setToggleGeolocation,
@@ -211,6 +263,9 @@ function getEntitiesStatusStore() {
 		},
 		get userLocationCoord() {
 			return userLocationCoord;
+		},
+		get entitiesList() {
+			return entitiesList;
 		},
 	};
 }

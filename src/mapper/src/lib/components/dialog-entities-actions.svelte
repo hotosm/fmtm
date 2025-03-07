@@ -41,9 +41,9 @@
 	const alertStore = getAlertStore();
 	const taskStore = getTaskStore();
 
-	const selectedEntityOsmId = $derived(entitiesStore.selectedEntity);
+	const selectedEntityId = $derived(entitiesStore.selectedEntity);
 	const selectedEntity = $derived(
-		entitiesStore.entitiesStatusList?.find((entity) => entity.osmid === selectedEntityOsmId),
+		entitiesStore.entitiesStatusList?.find((entity) => entity.entity_id === selectedEntityId),
 	);
 	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
 	const entityToNavigate = $derived(entitiesStore.entityToNavigate);
@@ -184,7 +184,7 @@
 							{selectedEntity?.status?.replaceAll('_', ' ')?.toLowerCase()}
 						</p>
 					</div>
-					{#if entityComments?.length > 1}
+					{#if entityComments?.length > 0}
 						<div class="flex">
 							<p class="min-w-[6.25rem] text-[#2B2B2B]">Comments</p>
 							:
@@ -228,7 +228,7 @@
 				{#if selectedEntity?.status !== 'SURVEY_SUBMITTED' && selectedEntity?.status !== 'VALIDATED'}
 					<div class="flex gap-2">
 						<sl-button
-							disabled={entityToNavigate?.entityId === selectedEntity?.osmid}
+							disabled={entityToNavigate?.entityId === selectedEntity?.entity_id}
 							variant="default"
 							size="small"
 							class="secondary flex-grow"

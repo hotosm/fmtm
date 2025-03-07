@@ -28,6 +28,7 @@ from typing import Optional, Union
 import geojson
 import geojson_pydantic
 from fastapi import HTTPException
+from osm_fieldwork.data_models import data_models_path
 from osm_rawdata.postgres import PostgresClient
 from psycopg import Connection, ProgrammingError
 from psycopg.rows import class_row, dict_row
@@ -37,7 +38,6 @@ from shapely.ops import unary_union
 
 from app.config import settings
 from app.db.enums import HTTPStatus, XLSFormType
-from osm_fieldwork.data_models import data_models_path
 
 log = logging.getLogger(__name__)
 
@@ -717,17 +717,17 @@ def merge_polygons(
         ) from e
 
 
-def get_osm_geometries(form_category, geometry):
+def get_osm_geometries(osm_category, geometry):
     """Request a snapshot based on the provided geometry.
 
     Args:
-        form_category(str): feature category type (eg: buildings).
+        osm_category(str): feature category type (eg: buildings).
         geometry (str): The geometry data in JSON format.
 
     Returns:
         dict: The JSON response containing the snapshot data.
     """
-    config_filename = XLSFormType(form_category).name
+    config_filename = XLSFormType(osm_category).name
     data_model = f"{data_models_path}/{config_filename}.yaml"
 
     with open(data_model, "rb") as data_model_yaml:

@@ -223,11 +223,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
                 onChangeData={(value) => {
                   handleCustomChange('uploadAreaSelection', value);
                   dispatch(CreateProjectActions.SetUploadAreaSelection(value as uploadAreaType));
-                  if (value === 'draw') {
-                    dispatch(CreateProjectActions.SetDrawToggle(!drawToggle));
-                  } else {
-                    dispatch(CreateProjectActions.SetDrawToggle(false));
-                  }
+                  dispatch(CreateProjectActions.SetDrawToggle(value === 'draw' ? true : false));
                 }}
                 value={uploadAreaSelection || ''}
                 errorMsg={errors.uploadAreaSelection}
@@ -259,6 +255,7 @@ const UploadArea = ({ flag, geojsonFile, setGeojsonFile, setCustomDataExtractUpl
               )}
               {uploadAreaSelection === 'upload_file' && (
                 <div
+                  className="fmtm-my-2"
                   onMouseOver={() => dispatch(CreateProjectActions.SetDescriptionToFocus('uploadarea-uploadgeojson'))}
                   onMouseLeave={() => dispatch(CreateProjectActions.SetDescriptionToFocus(null))}
                 >

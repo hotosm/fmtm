@@ -138,9 +138,8 @@ Alternatively, request the creation of a new organisation for your team:
 
     ![image](https://github.com/user-attachments/assets/64aeda34-c682-4fdc-8c2f-1fd83e29c61f)
 
-13. The step 3 is to choose the form category of the project. Meaning if you want
-    to survey each household or healthcare or educational institutes.
-    You can upload the custom XLS form by clicking on the checkbox.
+13. Upload your XLSForm. Here you download pre-defined forms from FMTM.
+    Some are specifically designed to work with OpenStreetMap.
     Click on "Next" to proceed.
 
     ![image](https://github.com/user-attachments/assets/cdf1e050-42ec-4149-bf97-0d841bc5117f)
@@ -265,7 +264,7 @@ server by selecting HOT as your organization.
    find it difficult to download by themselves.
 2. Share the link of the project for the mapper to reach  
    to the project easily. The URL be:
-   [https://fmtm.hotosm.org/mapnow/project_id](https://fmtm.hotosm.org/mapnow/project_id)
+   [https://mapper.fmtm.hotosm.org/project_id](https://mapper.fmtm.hotosm.org/project_id)
 3. **Updating Metadata**  
    If you need mappers to include their email  
    and phone number along with their username, guide them  

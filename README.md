@@ -18,7 +18,7 @@
 <!-- prettier-ignore-start -->
 <div align="center">
 
-| **CI/CD** | | [![Build and Deploy](https://github.com/hotosm/fmtm/actions/workflows/build_and_deploy.yml/badge.svg?branch=main)](https://github.com/hotosm/fmtm/actions/workflows/build_and_deploy.yml?query=branch%3Amain) [![Build CI Img](https://github.com/hotosm/fmtm/actions/workflows/build_ci_img.yml/badge.svg?branch=development)](https://github.com/hotosm/fmtm/actions/workflows/build_ci_img.yml) [![Build ODK Images](https://github.com/hotosm/fmtm/actions/workflows/build_odk_imgs.yml/badge.svg?branch=development)](https://github.com/hotosm/fmtm/actions/workflows/build_odk_imgs.yml) <br> [![🔧 Build Proxy Images](https://github.com/hotosm/fmtm/actions/workflows/build_proxy_imgs.yml/badge.svg?branch=development)](https://github.com/hotosm/fmtm/actions/workflows/build_proxy_imgs.yml) [![Publish Docs](https://github.com/hotosm/fmtm/actions/workflows/docs.yml/badge.svg?branch=development)](https://github.com/hotosm/fmtm/actions/workflows/docs.yml) [![pre-commit.ci](https://results.pre-commit.ci/badge/github/hotosm/fmtm/development.svg)](https://results.pre-commit.ci/latest/github/hotosm/fmtm/development) |
+| **CI/CD** | | [![Build and Deploy](https://github.com/hotosm/fmtm/actions/workflows/build_and_deploy.yml/badge.svg?branch=main)](https://github.com/hotosm/fmtm/actions/workflows/build_and_deploy.yml?query=branch%3Amain) [![Build CI Img](https://github.com/hotosm/fmtm/actions/workflows/build_ci_img.yml/badge.svg?branch=development)](https://github.com/hotosm/fmtm/actions/workflows/build_ci_img.yml) [![Build ODK Images](https://github.com/hotosm/fmtm/actions/workflows/build_odk_imgs.yml/badge.svg?branch=development)](https://github.com/hotosm/fmtm/actions/workflows/build_odk_imgs.yml) <br> [![Publish Docs](https://github.com/hotosm/fmtm/actions/workflows/docs.yml/badge.svg?branch=development)](https://github.com/hotosm/fmtm/actions/workflows/docs.yml) [![pre-commit.ci](https://results.pre-commit.ci/badge/github/hotosm/fmtm/development.svg)](https://results.pre-commit.ci/latest/github/hotosm/fmtm/development) |
 | :--- | :--- | :--- |
 | **Tech Stack** | | ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi) ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![Svelte](https://img.shields.io/badge/Svelte-4A4A55?style=for-the-badge&logo=svelte) ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) ![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?style=for-the-badge&logo=kubernetes&logoColor=white) ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white) |
 | **Code Style** | | [![Backend Style](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/format.json&labelColor=202235)](https://github.com/astral-sh/ruff) [![Frontend Style](https://img.shields.io/badge/code%20style-prettier-F7B93E?logo=Prettier)](https://github.com/prettier/prettier) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com) |
@@ -123,11 +123,11 @@ Alternatively see the [docs](https://docs.fmtm.dev) for various deployment guide
 |✅| 📱 features turn green once mapped |
 |✅| 📱 better support for mapping **new** points, lines, polygons |
 |✅| 📱 navigation and capability for routing to map features |
+|✅| 🖥️ organization creation and management |
 |⚙️| 📱 integrate ODK Web Forms (to avoid switching apps) |
 |⚙️| 🖥️ multiple approaches to task splitting algorithm |
 |⚙️| 🖥️ user role management per project |
 | | 📱 fully offline field mapping |
-| | 🖥️ organization creation and management |
 | | 🖥️ simplify project creation with basic / advanced workflows |
 | | 🖥️ improvements to the validation criteria and workflow |
 | | 🖥️ export (+merge) the final data to OpenStreetMap |

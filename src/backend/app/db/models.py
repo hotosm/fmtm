@@ -141,6 +141,29 @@ class DbUserRole(BaseModel):
 
         return new_role
 
+    @classmethod
+    async def all(
+        cls,
+        db: Connection,
+        project_id: Optional[int] = None,
+    ) -> Optional[list[Self]]:
+        """Fetch all project user roles."""
+        filters = []
+        params = {}
+        if project_id:
+            filters.append(f"project_id = {project_id}")
+            params["project_id"] = project_id
+
+        sql = f"""
+            SELECT * FROM user_roles
+            {"WHERE " + " AND ".join(filters) if filters else ""}
+        """
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(
+                sql,
+            )
+            return await cur.fetchall()
+
 
 class DbUser(BaseModel):
     """Table users."""
@@ -1005,7 +1028,18 @@ class DbTask(BaseModel):
             await cur.execute(sql, data)
             result = await cur.fetchall()
 
-        return bool(result)
+            if success := bool(result):
+                update_project_sql = """
+                    UPDATE projects
+                    SET total_tasks = (
+                        SELECT COALESCE(MAX(project_task_index), 0)
+                        FROM public.tasks WHERE project_id = %(project_id)s
+                    )
+                    WHERE id = %(project_id)s;
+                """
+                await cur.execute(update_project_sql, {"project_id": project_id})
+
+        return success
 
 
 class DbProject(BaseModel):
@@ -1026,7 +1060,7 @@ class DbProject(BaseModel):
     custom_tms_url: Optional[str] = None
     status: Optional[ProjectStatus] = None
     visibility: Optional[ProjectVisibility] = None
-    xform_category: Optional[str] = None
+    osm_category: Optional[str] = None
     odk_form_id: Optional[str] = None
     xlsform_content: Optional[bytes] = None
     mapper_level: Optional[MappingLevel] = None
@@ -1036,11 +1070,11 @@ class DbProject(BaseModel):
     odk_central_user: Optional[str] = None
     odk_central_password: Optional[str] = None
     odk_token: Optional[str] = None
-    data_extract_type: Optional[str] = None
     data_extract_url: Optional[str] = None
     task_split_dimension: Optional[int] = None
     task_num_buildings: Optional[int] = None
-    new_geom_type: Optional[DbGeomType] = None
+    primary_geom_type: Optional[DbGeomType] = None  # the main geometries surveyed
+    new_geom_type: Optional[DbGeomType] = None  # when new geometries are drawn
     geo_restrict_distance_meters: Optional[PositiveInt] = None
     geo_restrict_force_error: Optional[bool] = None
     hashtags: Optional[list[str]] = None
@@ -1087,7 +1121,13 @@ class DbProject(BaseModel):
         )
 
     @classmethod
-    async def one(cls, db: Connection, project_id: int, minimal: bool = False) -> Self:
+    async def one(
+        cls,
+        db: Connection,
+        project_id: int,
+        minimal: bool = False,
+        warn_on_missing_token: bool = True,
+    ) -> Self:
         """Get project by ID, including all tasks and other details."""
         # Simpler query without additional metadata
         if minimal:
@@ -1231,7 +1271,7 @@ class DbProject(BaseModel):
         if db_project is None:
             raise KeyError(f"Project ({project_id}) not found.")
 
-        if db_project.odk_token is None:
+        if warn_on_missing_token and db_project.odk_token is None:
             log.warning(
                 f"Project ({db_project.id}) has no 'odk_token' set. "
                 "The QRCode will not work!"

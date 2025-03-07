@@ -24,7 +24,7 @@
 	import { getTaskStore, getTaskEventStream } from '$store/tasks.svelte.ts';
 	import { getEntitiesStatusStore, getEntityStatusStream, getNewBadGeomStream } from '$store/entities.svelte.ts';
 	import More from '$lib/components/more/index.svelte';
-	import { getProjectSetupStepStore, getCommonStore } from '$store/common.svelte.ts';
+	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
 
 	const API_URL = import.meta.env.VITE_API_URL;
@@ -41,10 +41,12 @@
 	let infoDialogRef: SlDialog | null = $state(null);
 	let isDrawEnabled: boolean = $state(false);
 	let latestEventTime: string = $state('');
+	let isGeometryCreationLoading: boolean = $state(false);
 
 	const taskStore = getTaskStore();
 	const entitiesStore = getEntitiesStatusStore();
 	const commonStore = getCommonStore();
+	const alertStore = getAlertStore();
 
 	const taskEventStream = getTaskEventStream(data.projectId);
 	const entityStatusStream = getEntityStatusStream(data.projectId);
@@ -114,15 +116,17 @@
 	});
 
 	$effect(() => {
+		entitiesStore.syncEntityStatus(data.projectId);
+	});
+
+	$effect(() => {
+		entitiesStore.entitiesList;
 		let entityStatusStream: ShapeStream | undefined;
 
+		if (entitiesStore.entitiesList?.length === 0) return;
 		async function getEntityStatus() {
-			const entityStatusResponse = await fetch(`${API_URL}/projects/${data.projectId}/entities/statuses`, {
-				credentials: 'include',
-			});
-			const response = await entityStatusResponse.json();
 			entityStatusStream = getEntityStatusStream(data.projectId);
-			await entitiesStore.subscribeToEntityStatusUpdates(entityStatusStream, response);
+			await entitiesStore.subscribeToEntityStatusUpdates(entityStatusStream, entitiesStore.entitiesList);
 		}
 
 		getEntityStatus();
@@ -159,10 +163,33 @@
 		newFeatureGeom = null;
 	}
 
-	function mapNewFeatureInODK() {
-		const newGeom = newFeatureGeom;
-		cancelMapNewFeatureInODK();
-		openOdkCollectNewFeature(data?.project?.odk_form_id, newGeom, taskStore.selectedTaskId);
+	async function mapNewFeatureInODK() {
+		{
+			/*
+			1: create entity in ODK of newly created feature
+			2: create geom record to show the feature on map
+			3: pass entity uuid to ODK intent URL as a param 
+			*/
+		}
+		try {
+			isGeometryCreationLoading = true;
+			const entity = await entitiesStore.createEntity(data.projectId, {
+				type: 'FeatureCollection',
+				features: [{ type: 'Feature', geometry: newFeatureGeom, properties: {} }],
+			});
+			await entitiesStore.createGeomRecord(data.projectId, {
+				status: 'NEW',
+				geojson: { type: 'Feature', geometry: newFeatureGeom, properties: { entity_id: entity.uuid } },
+				project_id: data.projectId,
+			});
+			entitiesStore.syncEntityStatus(data.projectId);
+			cancelMapNewFeatureInODK();
+			openOdkCollectNewFeature(data?.project?.odk_form_id, entity.uuid);
+		} catch (error) {
+			alertStore.setAlert({ message: 'Unable to create entity', variant: 'danger' });
+		} finally {
+			isGeometryCreationLoading = false;
+		}
 	}
 </script>
 
@@ -189,6 +216,7 @@
 		projectOutlineCoords={data.project.outline.coordinates}
 		projectId={data.projectId}
 		entitiesUrl={data.project.data_extract_url}
+		primaryGeomType={data.project.primary_geom_type}
 		draw={isDrawEnabled}
 		drawGeomType={data.project.new_geom_type}
 		handleDrawnGeom={(drawInstance, geom) => {
@@ -229,6 +257,7 @@
 						tabindex="0"
 						size="small"
 						class="primary w-fit"
+						loading={isGeometryCreationLoading}
 					>
 						<span class="font-barlow font-medium text-xs uppercase">PROCEED</span>
 					</sl-button>
