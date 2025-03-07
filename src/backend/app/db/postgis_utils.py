@@ -220,7 +220,7 @@ async def split_geojson_by_task_areas(
         project_id (int): The project ID for associated tasks.
 
     Returns:
-        Dict of task_id to FeatureCollection mappings
+        dict[int, geojson.FeatureCollection]: {task_id: FeatureCollection} mapping.
     """
     try:
         features = featcol["features"]
@@ -319,13 +319,17 @@ def add_required_geojson_properties(
 
     for feature in features:
         properties = feature.get("properties", {})
+        # Check for id type embedded in properties
         if feature_id := feature.get("id"):
+            # osm_id property exists, set top level id
             properties["osm_id"] = feature_id
         else:
             osm_id = (
                 properties.get("osm_id")
                 or properties.get("id")
                 or properties.get("fid")
+                # Random id
+                # NOTE 32-bit int is max supported by standard postgres Integer
                 or getrandbits(30)
             )
             feature["id"] = str(osm_id)
