@@ -257,6 +257,20 @@ const DataExtract = ({
     return;
   };
 
+  const changeAdditionalMapDataFileHandler = async (file) => {
+    if (!file) {
+      resetFile(setAdditionalFeature);
+      dispatch(CreateProjectActions.SetAdditionalFeatureGeojson(null));
+      handleCustomChange('additionalFeature', null);
+      return;
+    }
+    const uploadedFile = file?.file;
+    setAdditionalFeature(file);
+    handleCustomChange('additionalFeature', uploadedFile);
+    const additionalFeatureGeojson = await convertFileToFeatureCol(uploadedFile);
+    dispatch(CreateProjectActions.SetAdditionalFeatureGeojson(additionalFeatureGeojson));
+  };
+
   useEffect(() => {
     dispatch(FormCategoryService(`${VITE_API_URL}/central/list-forms`));
   }, []);
@@ -380,27 +394,20 @@ const DataExtract = ({
                   </div>
                   {formValues?.hasAdditionalFeature && (
                     <>
-                      <FileInputComponent
-                        onChange={async (e) => {
-                          if (e?.target?.files) {
-                            const uploadedFile = e?.target?.files[0];
-                            setAdditionalFeature(uploadedFile);
-                            handleCustomChange('additionalFeature', uploadedFile);
-                            const additionalFeatureGeojson = await convertFileToFeatureCol(uploadedFile);
-                            dispatch(CreateProjectActions.SetAdditionalFeatureGeojson(additionalFeatureGeojson));
-                          }
+                      <UploadArea
+                        title="Upload Supporting Datasets"
+                        label="The supported file formats are .geojson"
+                        data={additionalFeature ? [additionalFeature] : []}
+                        onUploadFile={(updatedFiles) => {
+                          changeAdditionalMapDataFileHandler(updatedFiles?.[0]);
                         }}
-                        onResetFile={() => {
-                          resetFile(setAdditionalFeature);
-                          dispatch(CreateProjectActions.SetAdditionalFeatureGeojson(null));
-                          handleCustomChange('additionalFeature', null);
-                        }}
-                        customFile={additionalFeature}
-                        btnText="Upload Supporting Datasets"
-                        accept=".geojson"
-                        fileDescription="*The supported file formats are .geojson"
-                        errorMsg={errors.additionalFeature}
+                        acceptedInput=".geojson"
                       />
+                      {errors.additionalFeature && (
+                        <p className="fmtm-form-error fmtm-text-red-600 fmtm-text-sm fmtm-py-1">
+                          {errors.additionalFeature}
+                        </p>
+                      )}
                     </>
                   )}
                   {additionalFeatureGeojson && (
