@@ -19,7 +19,6 @@
 
 import json
 import logging
-from collections import defaultdict
 from datetime import datetime, timezone
 from io import BytesIO
 from random import getrandbits
@@ -32,6 +31,7 @@ from osm_fieldwork.data_models import data_models_path
 from osm_rawdata.postgres import PostgresClient
 from psycopg import Connection, ProgrammingError
 from psycopg.rows import class_row, dict_row
+from psycopg.types.json import Json
 from shapely.geometry import MultiPolygon, Point, Polygon, mapping, shape
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
@@ -220,83 +220,89 @@ async def split_geojson_by_task_areas(
         project_id (int): The project ID for associated tasks.
 
     Returns:
-        dict[int, geojson.FeatureCollection]: {task_id: FeatureCollection} mapping.
+        Dict of task_id to FeatureCollection mappings
     """
-    batch_size = 10000
-
     try:
         features = featcol["features"]
-        result_dict = defaultdict(list)
+        feature_ids = []
+        feature_properties = []
+        feature_geometries = []
+        result_dict = {}
+        for f in features:
+            feature_ids.append(str(f["properties"].get("osm_id")))
+            feature_properties.append(Json(f["properties"]))
+            feature_geometries.append(json.dumps(f["geometry"]))
 
         async with db.cursor(row_factory=dict_row) as cur:
-            await cur.execute("""
-            DROP TABLE IF EXISTS tmp_project_features;
-            CREATE TEMP TABLE tmp_project_features (
-                id VARCHAR,
-                properties JSONB,
-                geom GEOMETRY
-            ) ON COMMIT DROP;
-            """)
+            await cur.execute(
+                """
+            WITH feature_data AS (
+                SELECT DISTINCT ON (geom)
+                    unnest(%s::TEXT[]) AS id,
+                    unnest(%s::JSONB[]) AS properties,
+                    ST_SetSRID(ST_GeomFromGeoJSON(unnest(%s::TEXT[])), 4326) AS geom
+            ),
+            task_features AS (
+                SELECT
+                    t.project_task_index AS task_id,
+                    jsonb_build_object(
+                        'type', 'Feature',
+                        'id', f.id,
+                        'geometry', ST_AsGeoJSON(f.geom)::jsonb,
+                        'properties', jsonb_set(
+                            jsonb_set(
+                                f.properties,
+                                '{task_id}',
+                                to_jsonb(t.project_task_index)
+                            ),
+                            '{project_id}', to_jsonb(%s)
+                        )
+                    ) AS feature
+                FROM tasks t
+                JOIN feature_data f
+                ON ST_Intersects(f.geom, t.outline)
+                WHERE t.project_id = %s
+            )
+            SELECT
+                task_id,
+                jsonb_agg(feature) AS features
+            FROM task_features
+            GROUP BY task_id;
+            """,
+                (
+                    feature_ids,
+                    feature_properties,
+                    feature_geometries,
+                    project_id,
+                    project_id,
+                ),
+            )
 
-            # Batch insert features
-            for i in range(0, len(features), batch_size):
-                batch = features[i : i + batch_size]
-                data = [
-                    (
-                        str(f["properties"].get("osm_id")),
-                        json.dumps(f["properties"]),
-                        json.dumps(f["geometry"]),
-                    )
-                    for f in batch
-                ]
-                await cur.executemany(
-                    """
-                    INSERT INTO tmp_project_features (id, properties, geom)
-                    VALUES (%s, %s::jsonb, ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))
-                """,
-                    data,
+            # Convert results into GeoJSON FeatureCollection
+            result_dict = {
+                rec["task_id"]: geojson.FeatureCollection(features=rec["features"])
+                for rec in await cur.fetchall()
+            }
+            if not result_dict:
+                msg = f"Failed to split project ({project_id}) geojson by task areas."
+                log.exception(msg)
+                raise HTTPException(
+                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                    detail=msg,
                 )
-                await cur.execute(
-                    """
-                    WITH task_features AS (
-                        SELECT
-                            t.project_task_index AS task_id,
-                            f.id,
-                            f.geom,
-                            f.properties
-                        FROM tasks t
-                        JOIN tmp_project_features f
-                        ON ST_Intersects(f.geom, t.outline)
-                        WHERE t.project_id = %s
-                    )
-                    SELECT
-                        task_id,
-                        jsonb_build_object(
-                            'type', 'Feature',
-                            'id', id,
-                            'geometry', ST_AsGeoJSON(geom)::jsonb,
-                            'properties', jsonb_set(
-                                jsonb_set(properties, '{task_id}', to_jsonb(task_id)),
-                                '{project_id}', to_jsonb(%s)
-                            )
-                        ) AS feature
-                    FROM task_features;
-                """,
-                    (project_id, project_id),
+
+            if len(result_dict) < 1:
+                msg = (
+                    f"Attempted splitting project ({project_id}) geojson by task areas,"
+                    "but no data was returned."
                 )
+                log.warning(msg)
+                return None
+        return result_dict
 
-                # Aggregate results
-                async for rec in cur:
-                    result_dict[rec["task_id"]].append(rec["feature"])
-
-        # Convert results into GeoJSON FeatureCollection
-        return {
-            task_id: geojson.FeatureCollection(features=features)
-            for task_id, features in result_dict.items()
-        }
-
-    except Exception as e:
-        log.error(f"Splitting failed: {e}", exc_info=True)
+    except ProgrammingError as e:
+        log.error(e)
+        log.error("Attempted geojson task splitting failed")
         return None
 
 
