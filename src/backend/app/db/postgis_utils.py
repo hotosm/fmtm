@@ -260,7 +260,7 @@ async def split_geojson_by_task_areas(
                     ) AS feature
                 FROM tasks t
                 JOIN feature_data f
-                ON ST_Intersects(f.geom, t.outline)
+                ON ST_Contains(ST_Centroid(f.geom), t.outline)
                 WHERE t.project_id = %s
             )
             SELECT
