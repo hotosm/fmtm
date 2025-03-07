@@ -181,9 +181,9 @@
 						<p class="min-w-[6.25rem] text-[#2B2B2B]">Status</p>
 						:
 						<p
-							class={`text-[#161616] font-medium capitalize border-[1px] border-solid ml-2 py-1 px-3 rounded-full ${getStatusStyle(selectedEntity?.status)}`}
+							class={`text-[#161616] font-medium border-[1px] border-solid ml-2 py-1 px-3 rounded-full ${getStatusStyle(selectedEntity?.status)}`}
 						>
-							{selectedEntity?.status?.replaceAll('_', ' ')?.toLowerCase()}
+							{m[`entity_states.${selectedEntity?.status}`]()}
 						</p>
 					</div>
 					{#if entityComments?.length > 0}
