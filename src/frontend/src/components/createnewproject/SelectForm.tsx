@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
 import useForm from '@/hooks/useForm';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
-import FileInputComponent from '@/components/common/FileInputComponent';
 import SelectFormValidation from '@/components/createnewproject/validation/SelectFormValidation';
 import { FormCategoryService, ValidateCustomForm } from '@/api/CreateProjectService';
 import NewDefineAreaMap from '@/views/NewDefineAreaMap';
@@ -14,6 +13,9 @@ import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import { Loader2 } from 'lucide-react';
 import DescriptionSection from '@/components/createnewproject/Description';
 import { osm_forms } from '@/types/enums';
+import UploadArea from '@/components/common/UploadArea';
+
+const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
   useDocumentTitle('Create Project: Upload Survey');
@@ -52,14 +54,17 @@ const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
    *
    * @param {Event} event - The change event object.
    */
-  const changeFileHandler = (event): void => {
+  const changeFileHandler = (file): void => {
+    if (!file) {
+      resetFile();
+      return;
+    }
     dispatch(CreateProjectActions.SetCustomFileValidity(false));
-    // Get the selected files from the event target
-    const { files } = event.target;
     // Set the selected file as the xlsFormFile state
-    setXlsFormFile(files[0]);
-    handleCustomChange('xlsFormFileUpload', files[0]);
+    setXlsFormFile(file);
+    handleCustomChange('xlsFormFileUpload', file);
   };
+
   const resetFile = (): void => {
     handleCustomChange('xlsFormFileUpload', null);
     dispatch(CreateProjectActions.SetCustomFileValidity(false));
@@ -67,7 +72,7 @@ const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
   };
 
   useEffect(() => {
-    dispatch(FormCategoryService(`${import.meta.env.VITE_API_URL}/central/list-forms`));
+    dispatch(FormCategoryService(`${VITE_API_URL}/central/list-forms`));
   }, []);
 
   const toggleStep = (step, url) => {
@@ -76,7 +81,7 @@ const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
   };
   useEffect(() => {
     if (xlsFormFile && !customFileValidity) {
-      dispatch(ValidateCustomForm(`${import.meta.env.VITE_API_URL}/projects/validate-form`, xlsFormFile));
+      dispatch(ValidateCustomForm(`${VITE_API_URL}/projects/validate-form`, xlsFormFile?.file));
     }
   }, [xlsFormFile]);
 
@@ -99,15 +104,18 @@ const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
                   </p>
                   <p className="fmtm-text-red-500 fmtm-text-[1.2rem]">*</p>
                 </div>
-                <FileInputComponent
-                  onChange={changeFileHandler}
-                  onResetFile={resetFile}
-                  customFile={xlsFormFile}
-                  btnText="Upload XLSForm"
-                  accept=".xls,.xlsx,.xml"
-                  fileDescription="*The supported file formats are .xlsx, .xls, .xml"
-                  errorMsg={!xlsFormFile && errors.xlsFormFileUpload}
+                <UploadArea
+                  title="Upload Form"
+                  label="The supported file formats are .xlsx, .xls, .xml"
+                  data={xlsFormFile ? [xlsFormFile] : []}
+                  onUploadFile={(updatedFiles) => {
+                    changeFileHandler(updatedFiles?.[0]);
+                  }}
+                  acceptedInput=".xls,.xlsx,.xml"
                 />
+                {!xlsFormFile && (
+                  <p className="fmtm-form-error fmtm-text-red-600 fmtm-text-sm fmtm-py-1">{errors.xlsFormFileUpload}</p>
+                )}
               </div>
               {validateCustomFormLoading && (
                 <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
@@ -148,9 +156,7 @@ const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
                 </p>
                 <p className="fmtm-text-base fmtm-mt-2">
                   <a
-                    href={`${import.meta.env.VITE_API_URL}/helper/download-template-xlsform?form_type=${
-                      formValues.formExampleSelection
-                    }`}
+                    href={`${VITE_API_URL}/helper/download-template-xlsform?form_type=${formValues.formExampleSelection}`}
                     target="_"
                     className="fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-underline"
                   >
@@ -159,9 +165,7 @@ const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
                 </p>
                 <p className="fmtm-text-base fmtm-mt-2">
                   <a
-                    href={`https://xlsforms.fmtm.dev?url=${
-                      import.meta.env.VITE_API_URL
-                    }/helper/download-template-xlsform?form_type=${formValues.formExampleSelection}`}
+                    href={`https://xlsforms.fmtm.dev?url=${VITE_API_URL}/helper/download-template-xlsform?form_type=${formValues.formExampleSelection}`}
                     target="_"
                     className="fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-underline"
                   >
