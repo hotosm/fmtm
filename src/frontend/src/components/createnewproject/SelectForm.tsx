@@ -14,6 +14,7 @@ import { Loader2 } from 'lucide-react';
 import DescriptionSection from '@/components/createnewproject/Description';
 import { osm_forms } from '@/types/enums';
 import UploadArea from '@/components/common/UploadArea';
+import { Tooltip } from '@mui/material';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -79,6 +80,7 @@ const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
     dispatch(CommonActions.SetCurrentStepFormStep({ flag: flag, step: step }));
     navigate(url);
   };
+
   useEffect(() => {
     if (xlsFormFile && !customFileValidity) {
       dispatch(ValidateCustomForm(`${VITE_API_URL}/projects/validate-form`, xlsFormFile?.file));
@@ -155,13 +157,21 @@ const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
                   {`will help with merging the final data back to OSM.`}
                 </p>
                 <p className="fmtm-text-base fmtm-mt-2">
-                  <a
-                    href={`${VITE_API_URL}/helper/download-template-xlsform?form_type=${formValues.formExampleSelection}`}
-                    target="_"
-                    className="fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-underline"
+                  <Tooltip
+                    arrow
+                    placement="bottom"
+                    title={!formValues.formExampleSelection ? 'Please select a form category first' : ''}
                   >
-                    Download Form
-                  </a>
+                    <div className="fmtm-w-fit">
+                      <a
+                        href={`${VITE_API_URL}/helper/download-template-xlsform?form_type=${formValues.formExampleSelection}`}
+                        target="_"
+                        className={`fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-underline fmtm-w-fit ${!formValues.formExampleSelection && 'fmtm-opacity-70 fmtm-pointer-events-none'}`}
+                      >
+                        Download Form
+                      </a>
+                    </div>
+                  </Tooltip>
                 </p>
                 <p className="fmtm-text-base fmtm-mt-2">
                   <a
