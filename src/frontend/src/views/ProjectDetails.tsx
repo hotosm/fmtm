@@ -40,6 +40,15 @@ import { EntityOsmMap } from '@/models/project/projectModel';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
+type tabType = 'project_info' | 'task_activity' | 'comments' | 'instructions';
+
+const tabList: { id: tabType; name: string }[] = [
+  { id: 'project_info', name: 'Project Info' },
+  { id: 'task_activity', name: 'Task Activity' },
+  { id: 'comments', name: 'Comments' },
+  { id: 'instructions', name: 'Instructions' },
+];
+
 const ProjectDetails = () => {
   useDocumentTitle('Project Details');
   const dispatch = useAppDispatch();
@@ -56,7 +65,7 @@ const ProjectDetails = () => {
   const [dataExtractExtent, setDataExtractExtent] = useState(null);
   const [taskBoundariesLayer, setTaskBoundariesLayer] = useState<null | Record<string, any>>(null);
   const customBasemapUrl = useAppSelector((state) => state.project.customBasemapUrl);
-  const [viewState, setViewState] = useState('project_info');
+  const [selectedTab, setSelectedTab] = useState<tabType>('project_info');
   const projectId: string | undefined = params.id;
   const defaultTheme = useAppSelector((state) => state.theme.hotTheme);
   const state = useAppSelector((state) => state.project);
@@ -214,9 +223,9 @@ const ProjectDetails = () => {
 
   useEffect(() => {
     if (taskModalStatus) {
-      setViewState('task_activity');
+      setSelectedTab('task_activity');
     } else {
-      setViewState('project_info');
+      setSelectedTab('project_info');
     }
   }, [taskModalStatus]);
 
@@ -282,6 +291,23 @@ const ProjectDetails = () => {
     syncTaskState();
   };
 
+  const getTabContent = (tabState: tabType) => {
+    switch (tabState) {
+      case 'project_info':
+        return <ProjectInfo />;
+      case 'task_activity':
+        return (
+          <ActivitiesPanel params={params} state={state.projectTaskBoundries} defaultTheme={defaultTheme} map={map} />
+        );
+      case 'comments':
+        return <Comments />;
+      case 'instructions':
+        return <Instructions instructions={state?.projectInfo?.instructions} />;
+      default:
+        return <></>;
+    }
+  };
+
   return (
     <div className="fmtm-bg-[#f5f5f5] !fmtm-h-[100dvh] sm:!fmtm-h-full">
       {/* Customized Modal For Generate Tiles */}
@@ -304,7 +330,7 @@ const ProjectDetails = () => {
           </div>
           <div
             className="fmtm-flex fmtm-flex-col fmtm-gap-4 fmtm-flex-auto"
-            style={{ height: `${viewState === 'comments' ? 'calc(100% - 63px)' : 'calc(100% - 103px)'}` }}
+            style={{ height: `${selectedTab === 'comments' ? 'calc(100% - 63px)' : 'calc(100% - 103px)'}` }}
           >
             {projectDetailsLoading ? (
               <CoreModules.Skeleton className="!fmtm-w-[250px] fmtm-h-[25px]" />
@@ -320,69 +346,23 @@ const ProjectDetails = () => {
             )}
             <div className="fmtm-w-full fmtm-h-1 fmtm-bg-white"></div>
             <div className="fmtm-flex fmtm-w-full">
-              {!taskModalStatus && (
+              {tabList.map((tab) => (
                 <button
-                  className={`fmtm-rounded-none fmtm-border-none fmtm-text-base ${
-                    viewState === 'project_info'
+                  key={tab.id}
+                  className={`fmtm-rounded-none fmtm-border-none fmtm-text-base fmtm-py-1 ${
+                    selectedTab === tab.id
                       ? 'fmtm-bg-primaryRed fmtm-text-white hover:fmtm-bg-red-700'
                       : 'fmtm-bg-white fmtm-text-[#706E6E] hover:fmtm-bg-grey-50'
-                  } fmtm-py-1`}
-                  onClick={() => setViewState('project_info')}
+                  } ${(taskModalStatus && tab.id === 'project_info') || (!taskModalStatus && (tab.id === 'task_activity' || tab.id === 'comments')) ? 'fmtm-hidden' : ''}`}
+                  onClick={() => setSelectedTab(tab.id)}
                 >
-                  Project Info
+                  {tab.name}
                 </button>
-              )}
-              {taskModalStatus && (
-                <button
-                  className={`fmtm-rounded-none fmtm-border-none fmtm-text-base ${
-                    viewState === 'task_activity'
-                      ? 'fmtm-bg-primaryRed fmtm-text-white hover:fmtm-bg-red-700'
-                      : 'fmtm-bg-white fmtm-text-[#706E6E] hover:fmtm-bg-grey-50'
-                  } fmtm-py-1`}
-                  onClick={() => setViewState('task_activity')}
-                >
-                  Task Activity
-                </button>
-              )}
-              {taskModalStatus && (
-                <button
-                  className={`fmtm-rounded-none fmtm-border-none fmtm-text-base ${
-                    viewState === 'comments'
-                      ? 'fmtm-bg-primaryRed fmtm-text-white hover:fmtm-bg-red-700'
-                      : 'fmtm-bg-white fmtm-text-[#706E6E] hover:fmtm-bg-grey-50'
-                  } fmtm-py-1`}
-                  onClick={() => setViewState('comments')}
-                >
-                  Comments
-                </button>
-              )}
-              <button
-                className={`fmtm-rounded-none fmtm-border-none fmtm-text-base ${
-                  viewState === 'instructions'
-                    ? 'fmtm-bg-primaryRed fmtm-text-white hover:fmtm-bg-red-700'
-                    : 'fmtm-bg-white fmtm-text-[#706E6E] hover:fmtm-bg-grey-50'
-                } fmtm-py-1`}
-                onClick={() => setViewState('instructions')}
-              >
-                Instructions
-              </button>
+              ))}
             </div>
-            {viewState === 'project_info' ? (
-              <ProjectInfo />
-            ) : viewState === 'comments' ? (
-              <Comments />
-            ) : viewState === 'task_activity' ? (
-              <ActivitiesPanel
-                params={params}
-                state={state.projectTaskBoundries}
-                defaultTheme={defaultTheme}
-                map={map}
-              />
-            ) : (
-              <Instructions instructions={state?.projectInfo?.instructions} />
-            )}
+            {getTabContent(selectedTab)}
           </div>
-          {viewState !== 'comments' && (
+          {selectedTab !== 'comments' && (
             <div className="fmtm-flex fmtm-gap-4">
               <Button
                 variant="secondary-red"
