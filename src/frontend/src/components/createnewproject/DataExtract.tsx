@@ -221,7 +221,10 @@ const DataExtract = ({
       const arrayBuffer = new Uint8Array(await uploadedFile.arrayBuffer());
       extractFeatCol = fgbGeojson.deserialize(arrayBuffer);
       // Set converted geojson to state for splitting
-      const geojsonFile = new File([extractFeatCol], 'custom_extract.geojson', { type: 'application/json' });
+      const geojsonFile = {
+        ...file,
+        file: new File([extractFeatCol], 'custom_extract.geojson', { type: 'application/json' }),
+      };
       setCustomDataExtractUpload(geojsonFile);
     }
 
