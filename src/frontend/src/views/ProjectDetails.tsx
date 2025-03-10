@@ -35,8 +35,10 @@ import { Geolocation } from '@/utilfunctions/Geolocation';
 import Instructions from '@/components/ProjectDetails/Instructions';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import MapStyles from '@/hooks/MapStyles';
-import { EntityOsmMap } from '@/store/types/IProject';
 import { entity_state } from '@/types/enums';
+import { EntityOsmMap } from '@/models/project/projectModel';
+
+const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 const ProjectDetails = () => {
   useDocumentTitle('Project Details');
@@ -193,31 +195,9 @@ const ProjectDetails = () => {
    */
   const projectClickOnTaskFeature = (properties, feature) => {
     // Close task area popup, open task feature popup
-    // setSelectedTaskArea(undefined);
     setSelectedTaskFeature(feature);
-
     dispatch(CoreModules.TaskActions.SetSelectedFeatureProps(properties));
-
-    // let extent = properties.geometry.getExtent();
-    // setDataExtractExtent(properties.geometry);
-
-    // mapRef.current?.scrollIntoView({
-    //   block: 'center',
-    //   behavior: 'smooth',
-    // });
-
     dispatch(ProjectActions.ToggleTaskModalStatus(true));
-
-    // // Fit the map view to the clicked feature's extent based on the window size
-    // if (windowSize.width < 768 && map.getView().getZoom() < 17) {
-    //   map.getView().fit(extent, {
-    //     padding: [10, 20, 300, 20],
-    //   });
-    // } else if (windowSize.width > 768 && map.getView().getZoom() < 17) {
-    //   map.getView().fit(extent, {
-    //     padding: [20, 350, 50, 10],
-    //   });
-    // }
   };
 
   useEffect(() => {
@@ -241,11 +221,11 @@ const ProjectDetails = () => {
   }, [taskModalStatus]);
 
   const getEntityStatusList = () => {
-    dispatch(GetEntityStatusList(`${import.meta.env.VITE_API_URL}/projects/${projectId}/entities/statuses`));
+    dispatch(GetEntityStatusList(`${VITE_API_URL}/projects/${projectId}/entities/statuses`));
   };
 
   const getGeometryLog = () => {
-    dispatch(GetGeometryLog(`${import.meta.env.VITE_API_URL}/projects/${projectId}/geometry/records`));
+    dispatch(GetGeometryLog(`${VITE_API_URL}/projects/${projectId}/geometry/records`));
   };
 
   const syncTaskState = () => {
@@ -256,14 +236,7 @@ const ProjectDetails = () => {
     const taskBoundaryFeatures = taskBoundaryLayer.getSource().getFeatures();
 
     projectId &&
-      dispatch(
-        SyncTaskState(
-          `${import.meta.env.VITE_API_URL}/tasks`,
-          { project_id: projectId },
-          taskBoundaryFeatures,
-          geojsonStyles,
-        ),
-      );
+      dispatch(SyncTaskState(`${VITE_API_URL}/tasks`, { project_id: projectId }, taskBoundaryFeatures, geojsonStyles));
   };
 
   useEffect(() => {
