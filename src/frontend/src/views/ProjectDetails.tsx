@@ -3,42 +3,42 @@ import '../../node_modules/ol/ol.css';
 import '../styles/home.scss';
 import { Style, Stroke } from 'ol/style';
 import WindowDimension from '@/hooks/WindowDimension';
-import ActivitiesPanel from '@/components/ProjectDetailsV2/ActivitiesPanel';
+import ActivitiesPanel from '@/components/ProjectDetails/ActivitiesPanel';
 import { ProjectById, GetEntityStatusList, GetGeometryLog, SyncTaskState } from '@/api/Project';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
 import GenerateBasemap from '@/components/GenerateBasemap';
-import TaskSelectionPopup from '@/components/ProjectDetailsV2/TaskSelectionPopup';
-import FeatureSelectionPopup from '@/components/ProjectDetailsV2/FeatureSelectionPopup';
+import TaskSelectionPopup from '@/components/ProjectDetails/TaskSelectionPopup';
+import FeatureSelectionPopup from '@/components/ProjectDetails/FeatureSelectionPopup';
 import DialogTaskActions from '@/components/DialogTaskActions';
-import MobileFooter from '@/components/ProjectDetailsV2/MobileFooter';
-import MobileActivitiesContents from '@/components/ProjectDetailsV2/MobileActivitiesContents';
+import MobileFooter from '@/components/ProjectDetails/MobileFooter';
+import MobileActivitiesContents from '@/components/ProjectDetails/MobileActivitiesContents';
 import BottomSheet from '@/components/common/BottomSheet';
-import MobileProjectInfoContent from '@/components/ProjectDetailsV2/MobileProjectInfoContent';
+import MobileProjectInfoContent from '@/components/ProjectDetails/MobileProjectInfoContent';
 import { useNavigate, useParams } from 'react-router-dom';
-import ProjectOptions from '@/components/ProjectDetailsV2/ProjectOptions';
+import ProjectOptions from '@/components/ProjectDetails/ProjectOptions';
 import { MapContainer as MapComponent, useOLMap } from '@/components/MapComponent/OpenLayersComponent';
 import LayerSwitcherControl from '@/components/MapComponent/OpenLayersComponent/LayerSwitcher/index';
-import MapControlComponent from '@/components/ProjectDetailsV2/MapControlComponent';
+import MapControlComponent from '@/components/ProjectDetails/MapControlComponent';
 import { VectorLayer } from '@/components/MapComponent/OpenLayersComponent/Layers';
 import { geojsonObjectModel } from '@/constants/geojsonObjectModal';
 import getTaskStatusStyle, { getFeatureStatusStyle } from '@/utilfunctions/getTaskStatusStyle';
 import AsyncPopup from '@/components/MapComponent/OpenLayersComponent/AsyncPopup/AsyncPopup';
 import Button from '@/components/common/Button';
-import ProjectInfo from '@/components/ProjectDetailsV2/ProjectInfo';
+import ProjectInfo from '@/components/ProjectDetails/ProjectInfo';
 import useOutsideClick from '@/hooks/useOutsideClick';
 import { isValidUrl } from '@/utilfunctions/urlChecker';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
-import Comments from '@/components/ProjectDetailsV2/Comments';
+import Comments from '@/components/ProjectDetails/Comments';
 import { Geolocation } from '@/utilfunctions/Geolocation';
-import Instructions from '@/components/ProjectDetailsV2/Instructions';
+import Instructions from '@/components/ProjectDetails/Instructions';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import MapStyles from '@/hooks/MapStyles';
 import { EntityOsmMap } from '@/store/types/IProject';
 import { entity_state } from '@/types/enums';
 
-const ProjectDetailsV2 = () => {
+const ProjectDetails = () => {
   useDocumentTitle('Project Details');
   const dispatch = useAppDispatch();
   const params = useParams();
@@ -480,11 +480,6 @@ const ProjectDetailsV2 = () => {
                 zIndex={5}
                 style=""
               />
-              {/* New geometry layer */}
-              {/* TODO: 
-                  1. style add to layer, 
-                  2. on feature click show validate button with feature info's 
-              */}
               <VectorLayer
                 geojson={newGeomFeatureCollection}
                 viewProperties={{
@@ -621,4 +616,4 @@ const ProjectDetailsV2 = () => {
   );
 };
 
-export default ProjectDetailsV2;
+export default ProjectDetails;
