@@ -308,6 +308,31 @@ const ProjectDetails = () => {
     }
   };
 
+  const getMobileBottomSheetContent = (
+    mobileTabState: '' | 'projectInfo' | 'activities' | 'comment' | 'instructions',
+  ) => {
+    switch (mobileTabState) {
+      case 'projectInfo':
+        return <MobileProjectInfoContent projectInfo={state.projectInfo} />;
+      case 'activities':
+        return <MobileActivitiesContents map={map} />;
+      case 'instructions':
+        return (
+          <div className="fmtm-mb-[10vh]">
+            <Instructions instructions={state?.projectInfo?.instructions} />
+          </div>
+        );
+      case 'comment':
+        return (
+          <div className="fmtm-mb-[10vh]">
+            <Comments />
+          </div>
+        );
+      default:
+        return <></>;
+    }
+  };
+
   return (
     <div className="fmtm-bg-[#f5f5f5] !fmtm-h-[100dvh] sm:!fmtm-h-full">
       {/* Customized Modal For Generate Tiles */}
@@ -515,35 +540,9 @@ const ProjectDetails = () => {
             >
               <AssetModules.ArrowBackIcon className="fmtm-text-grey-800" />
             </div>
-            {mobileFooterSelection === 'projectInfo' && (
+            {['projectInfo', 'activities', 'instructions', 'comment'].includes(mobileFooterSelection) && (
               <BottomSheet
-                body={<MobileProjectInfoContent projectInfo={state.projectInfo} />}
-                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
-              />
-            )}
-            {mobileFooterSelection === 'activities' && (
-              <BottomSheet
-                body={<MobileActivitiesContents map={map} />}
-                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
-              />
-            )}
-            {mobileFooterSelection === 'instructions' && (
-              <BottomSheet
-                body={
-                  <div className="fmtm-mb-[10vh]">
-                    <Instructions instructions={state?.projectInfo?.instructions} />
-                  </div>
-                }
-                onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
-              />
-            )}
-            {mobileFooterSelection === 'comment' && (
-              <BottomSheet
-                body={
-                  <div className="fmtm-mb-[10vh]">
-                    <Comments />
-                  </div>
-                }
+                body={getMobileBottomSheetContent(mobileFooterSelection)}
                 onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
               />
             )}
