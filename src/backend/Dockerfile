@@ -96,6 +96,7 @@ RUN --mount=type=cache,target=/root/.cache <<EOT
     uv sync \
         --project /_lock \
         --locked \
+        --no-editable \
         --no-dev \
         --no-install-project \
     $(if [ -z "$MONITORING" ]; then \
@@ -196,6 +197,7 @@ RUN --mount=type=cache,target=/root/.cache <<EOT
     uv sync \
         --project /_lock \
         --locked \
+        --no-editable \
         --no-install-project \
         --group debug \
         --group test \
