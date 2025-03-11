@@ -21,7 +21,7 @@ import json
 import os
 from io import BytesIO
 from pathlib import Path
-from typing import Annotated, Any, Dict, Optional
+from typing import Annotated, Any, Dict, List, Optional
 
 import requests
 from fastapi import (
@@ -65,6 +65,8 @@ from app.db.models import (
     DbGeometryLog,
     DbOdkEntities,
     DbProject,
+    DbProjectTeam,
+    DbProjectTeamUser,
     DbTask,
     DbUser,
     DbUserRole,
@@ -1423,4 +1425,91 @@ async def delete_geom_log(
     project_id = project_user.get("project").id
     await DbGeometryLog.delete(db, project_id, geom_id)
     log.info(f"Deletion of geom {geom_id} from project {project_id} is successful")
+    return Response(status_code=HTTPStatus.NO_CONTENT)
+
+
+@router.get("/{project_id}/teams")
+async def get_project_teams(
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(project_manager)],
+):
+    """Get the teams associated with a project."""
+    project_id = project_user.get("project").id
+    teams = await DbProjectTeam.all(db, project_id)
+    return teams
+
+
+@router.post("/{project_id}/teams")
+async def create_project_team(
+    team: project_schemas.ProjectTeamIn,
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(project_manager)],
+):
+    """Create a new team for a project."""
+    return await DbProjectTeam.create(db, team)
+
+
+@router.get("/{project_id}/teams/{team_id}")
+async def get_team(
+    team: Annotated[DbProjectTeam, Depends(project_deps.get_project_team)],
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(project_manager)],
+):
+    """Get the teams associated with a project."""
+    team = await DbProjectTeam.one(db, team.team_id)
+    return team
+
+
+@router.patch("/{project_id}/teams/{team_id}")
+async def update_project_team(
+    team: Annotated[DbProjectTeam, Depends(project_deps.get_project_team)],
+    team_update: project_schemas.ProjectTeamIn,
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(project_manager)],
+):
+    """Get the teams associated with a project."""
+    team = await DbProjectTeam.update(db, team.team_id, team_update)
+    return team
+
+
+@router.delete("/{project_id}/teams/{team_id}")
+async def delete_project_team(
+    team: Annotated[DbProjectTeam, Depends(project_deps.get_project_team)],
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(project_manager)],
+):
+    """Get the teams associated with a project."""
+    team = await DbProjectTeam.delete(db, team.team_id)
+    return team
+
+
+@router.post("/{project_id}/teams/{team_id}/users")
+async def add_team_users(
+    team: Annotated[DbProjectTeam, Depends(project_deps.get_project_team)],
+    users: List[int],
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(project_manager)],
+):
+    """Add users to a team."""
+    # Assign mapper user roles to the project
+    for user_id in users:
+        await DbUserRole.create(
+            db,
+            project_user.get("project").id,
+            user_id,
+            ProjectRole.MAPPER,
+        )
+    await DbProjectTeamUser.create(db, team.team_id, users)
+    return Response(status_code=HTTPStatus.OK)
+
+
+@router.delete("/{project_id}/teams/{team_id}/users")
+async def remove_team_users(
+    team: Annotated[DbProjectTeam, Depends(project_deps.get_project_team)],
+    users: List[int],
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(project_manager)],
+):
+    """Add users to a team."""
+    await DbProjectTeamUser.delete(db, team.team_id, users)
     return Response(status_code=HTTPStatus.NO_CONTENT)

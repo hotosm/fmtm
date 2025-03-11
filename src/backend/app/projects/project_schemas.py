@@ -19,7 +19,7 @@
 
 from datetime import datetime
 from pathlib import Path
-from typing import Annotated, Literal, Optional, Self
+from typing import Annotated, Literal, Optional, Self, TYPE_CHECKING
 from uuid import UUID
 
 from geojson_pydantic import Feature, FeatureCollection, MultiPolygon, Point, Polygon
@@ -34,7 +34,13 @@ from pydantic.functional_validators import field_validator, model_validator
 from app.central.central_schemas import ODKCentralDecrypted, ODKCentralIn
 from app.config import decrypt_value, encrypt_value
 from app.db.enums import BackgroundTaskStatus, GeomStatus, ProjectPriority
-from app.db.models import DbBackgroundTask, DbBasemap, DbProject, slugify
+from app.db.models import (
+    DbBackgroundTask,
+    DbBasemap,
+    DbProject,
+    DbProjectTeam,
+    slugify,
+)
 from app.db.postgis_utils import geojson_to_featcol, merge_polygons
 
 
@@ -350,3 +356,24 @@ class BackgroundTaskStatus(BaseModel):
 
     status: str
     message: Optional[str] = None
+
+
+class ProjectTeamUser(BaseModel):
+    """Single user with name and image for project team."""
+
+    id: int
+    username: str
+    profile_img: Optional[str] = None
+
+
+class ProjectTeam(DbProjectTeam):
+    """Project team."""
+
+    users: list[ProjectTeamUser] = []
+
+
+class ProjectTeamIn(DbProjectTeam):
+    """Create a new project team."""
+
+    # Exclude, as the uuid is generated in the database
+    team_id: Annotated[Optional[UUID], Field(exclude=True)] = None

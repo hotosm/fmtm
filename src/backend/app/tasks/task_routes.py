@@ -17,7 +17,8 @@
 #
 """Routes for FMTM tasks."""
 
-from typing import Annotated, List, Optional
+from typing import Annotated, Optional
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger as log
@@ -27,7 +28,7 @@ from app.auth.auth_schemas import ProjectUserDict
 from app.auth.roles import mapper, super_admin
 from app.db.database import db_conn
 from app.db.enums import HTTPStatus, TaskEvent
-from app.db.models import DbTask, DbTaskAssignment, DbTaskEvent, DbUser
+from app.db.models import DbTask, DbTaskEvent, DbUser
 from app.tasks import task_crud, task_schemas
 
 router = APIRouter(
@@ -96,6 +97,7 @@ async def add_new_task_event(
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
     db: Annotated[Connection, Depends(db_conn)],
     assignee_id: Optional[int] = None,
+    team_id: Optional[UUID] = None,
 ):
     """Add a new event to the events table / update task status."""
     user_id = project_user.get("user").id
@@ -104,44 +106,21 @@ async def add_new_task_event(
     new_event.user_id = user_id
     new_event.task_id = task_id
     if new_event.event == TaskEvent.ASSIGN:
-        if not assignee_id:
+        if not assignee_id and not team_id:
             raise HTTPException(
                 status_code=HTTPStatus.BAD_REQUEST,
-                detail="Assignee ID is required for ASSIGN event",
+                detail="Assignee or Team ID is required for ASSIGN event",
             )
-        project_id = project_user.get("project").id
 
-        # NOTE: This will save the assigned user instead of current user if event is
-        # ASSIGN to avoid adding a new field for it
-        new_event.user_id = assignee_id
-        await DbTaskAssignment.create(db, project_id, task_id, [assignee_id])
+        # NOTE: This is saving the assignee instead of the current user if assignee is
+        # provided else it will save the team if team is provided
+        if assignee_id:
+            new_event.user_id = assignee_id
+        elif team_id:
+            new_event.user_id = None
+            new_event.username = None
+            new_event.team_id = team_id
     return await DbTaskEvent.create(db, new_event)
-
-
-@router.get(
-    "/{task_id}/assignments", response_model=list[task_schemas.TaskAssignmentOut]
-)
-async def get_task_assignments(
-    task_id: int,
-    project_user: Annotated[ProjectUserDict, Depends(mapper)],
-    db: Annotated[Connection, Depends(db_conn)],
-):
-    """Get all task assignments for a task."""
-    project_id = project_user.get("project").id
-    return await DbTaskAssignment.get(db, project_id, task_id)
-
-
-@router.post("/{task_id}/assignments")
-async def assign_to_task(
-    task_id: int,
-    project_user: Annotated[ProjectUserDict, Depends(mapper)],
-    db: Annotated[Connection, Depends(db_conn)],
-    user_ids: List[int],
-):
-    """Get all task assignments for a task."""
-    project_id = project_user.get("project").id
-    await DbTaskAssignment.create(db, project_id, task_id, user_ids)
-    return {"message": "Users have been assigned to the task successfully."}
 
 
 @router.get("/{task_id}/history", response_model=list[task_schemas.TaskEventOut])
