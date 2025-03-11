@@ -19,7 +19,7 @@
 
 from datetime import datetime
 from pathlib import Path
-from typing import Annotated, Literal, Optional, Self, TYPE_CHECKING
+from typing import Annotated, Literal, Optional, Self
 from uuid import UUID
 
 from geojson_pydantic import Feature, FeatureCollection, MultiPolygon, Point, Polygon

@@ -890,6 +890,7 @@ class DbProjectTeam(BaseModel):
         """Fetch a single team by its ID along with user details."""
         # NOTE Avoiding cyclical import errors
         from app.projects.project_schemas import ProjectTeam
+
         async with db.cursor(row_factory=class_row(ProjectTeam)) as cur:
             await cur.execute(
                 """
@@ -983,6 +984,7 @@ class DbProjectTeam(BaseModel):
         """Fetch all teams for a project along with users."""
         # NOTE Avoiding cyclical import errors
         from app.projects.project_schemas import ProjectTeam
+
         async with db.cursor(row_factory=class_row(ProjectTeam)) as cur:
             await cur.execute(
                 """
