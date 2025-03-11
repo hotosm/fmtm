@@ -29,7 +29,6 @@
 # NOTE If async functionality is required, then OdkCentralAsync is available,
 # NOTE as pyodk does not support async workflows.
 
-import concurrent.futures
 import json
 import logging
 import os
@@ -39,12 +38,9 @@ from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 from typing import Optional, Union
-from xml.etree import ElementTree
 
 import requests
 import segno
-from codetiming import Timer
-from cpuinfo import get_cpu_info
 
 # Instantiate logger
 log_level = os.getenv("LOG_LEVEL", default="INFO")
@@ -52,36 +48,6 @@ log_level = os.getenv("LOG_LEVEL", default="INFO")
 logging.getLogger("urllib3").setLevel(log_level)
 
 log = logging.getLogger(__name__)
-
-
-def downloadThread(project_id: int, xforms: list, odk_credentials: dict, filters: dict = None):
-    """Download a list of submissions from ODK Central.
-
-    Args:
-        project_id (int): The ID of the project on ODK Central
-        xforms (list): A list of the XForms to down the submissions from
-        odk_credentials (dict): The authentication credentials for ODK Collect
-
-    Returns:
-        (list): The submissions in JSON format
-    """
-    timer = Timer(text="downloadThread() took {seconds:.0f}s")
-    timer.start()
-    data = list()
-    # log.debug(f"downloadThread() called! {len(xforms)} xforms")
-    for task in xforms:
-        form = OdkForm(odk_credentials["url"], odk_credentials["user"], odk_credentials["passwd"])
-        # submissions = form.getSubmissions(project_id, task, 0, False, True)
-        subs = form.listSubmissions(project_id, task, filters)
-        if not subs:
-            log.error(f"Failed to get submissions for project ({project_id}) task ({task})")
-            continue
-        # log.debug(f"There are {len(subs)} submissions for {task}")
-        if len(subs["value"]) > 0:
-            data += subs["value"]
-    # log.debug(f"There are {len(xforms)} Xforms, and {len(submissions)} submissions total")
-    timer.stop()
-    return data
 
 
 class OdkCentral:
@@ -282,97 +248,6 @@ class OdkCentral:
         self.listProjects()
         return self.findProject(project_id=project_id)
 
-    def findProject(
-        self,
-        name: str = None,
-        project_id: int = None,
-    ):
-        """Get the project data from Central.
-
-        Args:
-            name (str): The name of the project
-
-        Returns:
-            (dict): the project data from ODK Central
-        """
-        # First, populate self.projects
-        self.listProjects()
-
-        if self.projects:
-            if name:
-                log.debug(f"Finding project by name: {name}")
-                for _key, value in self.projects.items():
-                    if name == value["name"]:
-                        log.info(f"ODK project found: {name}")
-                        return value
-            if project_id:
-                log.debug(f"Finding project by id: {project_id}")
-                for _key, value in self.projects.items():
-                    if project_id == value["id"]:
-                        log.info(f"ODK project found: {project_id}")
-                        return value
-        return None
-
-    def findAppUser(
-        self,
-        user_id: int,
-        name: str = None,
-    ):
-        """Get the data for an app user.
-
-        Args:
-            user_id (int): The user ID of the app-user on ODK Central
-            name (str): The name of the app-user on ODK Central
-
-        Returns:
-            (dict): The data for an app-user on ODK Central
-        """
-        if self.appusers:
-            if name is not None:
-                result = [d for d in self.appusers if d["displayName"] == name]
-                if result:
-                    return result[0]
-                else:
-                    log.debug(f"No user found with name: {name}")
-                    return None
-            if user_id is not None:
-                result = [d for d in self.appusers if d["id"] == user_id]
-                if result:
-                    return result[0]
-                else:
-                    log.debug(f"No user found with id: {user_id}")
-                    return None
-        return None
-
-    def listUsers(self):
-        """Fetch a list of users on the ODK Central server.
-
-        Returns:
-            (list): A list of users on ODK Central, not app-users
-        """
-        log.info("Getting a list of users from %s" % self.url)
-        url = self.base + "users"
-        result = self.session.get(url, verify=self.verify)
-        self.users = result.json()
-        return self.users
-
-    def dump(self):
-        """Dump internal data structures, for debugging purposes only."""
-        # print("URL: %s" % self.url)
-        # print("User: %s" % self.user)
-        # print("Passwd: %s" % self.passwd)
-        print("REST URL: %s" % self.base)
-
-        print("There are %d projects on this server" % len(self.projects))
-        for id, data in self.projects.items():
-            print("\t {}: {}".format(id, data["name"]))
-        if self.users:
-            print("There are %d users on this server" % len(self.users))
-            for data in self.users:
-                print("\t {}: {}".format(data["id"], data["email"]))
-        else:
-            print("There are no users on this server")
-
 
 class OdkProject(OdkCentral):
     """Class to manipulate a project on an ODK Central server."""
@@ -398,18 +273,6 @@ class OdkProject(OdkCentral):
         self.appusers = None
         self.id = None
 
-    def getData(
-        self,
-        keyword: str,
-    ):
-        """Args:
-            keyword (str): The keyword to search for.
-
-        Returns:
-            (json): The data for the keyword
-        """
-        return self.data[keyword]
-
     def listForms(self, project_id: int, metadata: bool = False):
         """Fetch a list of forms in a project on an ODK Central server.
 
@@ -425,60 +288,6 @@ class OdkProject(OdkCentral):
         result = self.session.get(url, verify=self.verify)
         self.forms = result.json()
         return self.forms
-
-    def getAllSubmissions(self, project_id: int, xforms: list = None, filters: dict = None):
-        """Fetch a list of submissions in a project on an ODK Central server.
-
-        Args:
-            project_id (int): The ID of the project on ODK Central
-            xforms (list): The list of XForms to get the submissions of
-
-        Returns:
-            (json): All of the submissions for all of the XForm in a project
-        """
-        # The number of threads is based on the CPU cores
-        info = get_cpu_info()
-        self.cores = info["count"]
-
-        timer = Timer(text="getAllSubmissions() took {seconds:.0f}s")
-        timer.start()
-        if not xforms:
-            xforms_data = self.listForms(project_id)
-            xforms = [d["xmlFormId"] for d in xforms_data]
-
-        chunk = round(len(xforms) / self.cores) if round(len(xforms) / self.cores) > 0 else 1
-        last_slice = len(xforms) if len(xforms) % chunk == 0 else len(xforms) - 1
-        cycle = range(0, (last_slice + chunk) + 1, chunk)
-        future = None
-        result = None
-        previous = 0
-        newdata = list()
-
-        # single threaded for easier debugging
-        # for current in cycle:
-        #     if previous == current:
-        #         continue
-        #     result = downloadThread(project_id, xforms[previous:current])
-        #     previous = current
-        #     newdata += result
-
-        odk_credentials = {"url": self.url, "user": self.user, "passwd": self.passwd}
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=self.cores) as executor:
-            futures = list()
-            for current in cycle:
-                if previous == current:
-                    continue
-                result = executor.submit(downloadThread, project_id, xforms[previous:current], odk_credentials, filters)
-                previous = current
-                futures.append(result)
-            for future in concurrent.futures.as_completed(futures):
-                log.debug("Waiting for thread to complete..")
-                data = future.result(timeout=10)
-                if len(data) > 0:
-                    newdata += data
-        timer.stop()
-        return newdata
 
     def listAppUsers(
         self,
@@ -496,22 +305,6 @@ class OdkProject(OdkCentral):
         result = self.session.get(url, verify=self.verify)
         self.appusers = result.json()
         return self.appusers
-
-    def listAssignments(
-        self,
-        projectId: int,
-    ):
-        """List the Role & Actor assignments for users on a project.
-
-        Args:
-            projectId (int): The ID of the project on ODK Central
-
-        Returns:
-            (json): The list of assignments
-        """
-        url = f"{self.base}projects/{projectId}/assignments"
-        result = self.session.get(url, verify=self.verify)
-        return result.json()
 
     def getDetails(
         self,
@@ -546,22 +339,6 @@ class OdkProject(OdkCentral):
         self.session.headers.update({"X-Extended-Metadata": "true"})
         result = self.session.get(url, verify=self.verify)
         return result.json()
-
-    def dump(self):
-        """Dump internal data structures, for debugging purposes only."""
-        super().dump()
-        if self.forms:
-            print("There are %d forms in this project" % len(self.forms))
-            for data in self.forms:
-                print("\t {}({}): {}".format(data["xmlFormId"], data["version"], data["name"]))
-        if self.data:
-            print("Project ID: %s" % self.data["id"])
-        print("There are %d submissions in this project" % len(self.submissions))
-        for data in self.submissions:
-            print("\t{}: {}".format(data["instanceId"], data["createdAt"]))
-        print("There are %d app users in this project" % len(self.appusers))
-        for data in self.appusers:
-            print("\t{}: {}".format(data["id"], data["displayName"]))
 
     def updateReviewState(self, projectId: int, xmlFormId: str, instanceId: str, review_state: dict) -> dict:
         """Updates the review state of a submission in ODK Central.
@@ -611,26 +388,6 @@ class OdkForm(OdkCentral):
         self.xml = None
         self.submissions = []
         self.appusers = {}
-        # self.xmlFormId = None
-        # self.projectId = None
-
-    # def getName(self):
-    #     """
-    #     Extract the name from a form on an ODK Central server
-    #
-    #     Returns:
-    #     """
-    #     if "name" in self.data:
-    #         return self.data["name"]
-    #     else:
-    #         log.warning("Execute OdkForm.getDetails() to get this data.")
-
-    # def getFormId(self):
-    #     """Extract the xmlFormId from a form on an ODK Central server"""
-    #     if "xmlFormId" in self.data:
-    #         return self.data["xmlFormId"]
-    #     else:
-    #         log.warning("Execute OdkForm.getDetails() to get this data.")
 
     def getDetails(
         self,
@@ -692,24 +449,6 @@ class OdkForm(OdkCentral):
 
         return result.text
 
-    def listSubmissionBasicInfo(
-        self,
-        projectId: int,
-        xform: str,
-    ):
-        """Fetch a list of submission instances basic information for a given form.
-
-        Args:
-            projectId (int): The ID of the project on ODK Central
-            xform (str): The XForm to get the details of from ODK Central
-
-        Returns:
-            (json): The data for this XForm
-        """
-        url = f"{self.base}projects/{projectId}/forms/{xform}/submissions"
-        result = self.session.get(url, verify=self.verify)
-        return result.json()
-
     def listSubmissions(self, projectId: int, xform: str, filters: dict = None):
         """Fetch a list of submission instances for a given form.
 
@@ -737,26 +476,6 @@ class OdkForm(OdkCentral):
         except Exception as e:
             log.error(f"Error fetching submissions: {e}")
             return {}
-
-    def listAssignments(
-        self,
-        projectId: int,
-        xform: str,
-    ):
-        """List the Role & Actor assignments for users on a project.
-
-        Fetch a list of submission instances basic information for a given form.
-
-        Args:
-            projectId (int): The ID of the project on ODK Central
-            xform (str): The XForm to get the details of from ODK Central
-
-        Returns:
-            (json): The data for this XForm
-        """
-        url = f"{self.base}projects/{projectId}/forms/{xform}/assignments"
-        result = self.session.get(url, verify=self.verify)
-        return result.json()
 
     def getSubmissions(
         self,
@@ -864,84 +583,6 @@ class OdkForm(OdkCentral):
             log.error(f"Couldn't fetch {filename} from Central: {status['message']}")
         return result.content
 
-    def addMedia(
-        self,
-        media: bytes,
-        filespec: str,
-    ):
-        """Add a data file to this form.
-
-        Args:
-            media (str): The media file
-            filespec (str): the name of the media
-        """
-        # FIXME: this also needs the data
-        self.media[filespec] = media
-
-    def addXMLForm(
-        self,
-        projectId: int,
-        xmlFormId: int,
-        xform: str,
-    ):
-        """Add an XML file to this form.
-
-        Args:
-            projectId (int): The ID of the project on ODK Central
-            xform (str): The XForm to get the details of from ODK Central
-        """
-        self.xml = xform
-
-    def listMedia(
-        self,
-        projectId: int,
-        xform: str,
-    ):
-        """List all the attchements for this form.
-
-        Args:
-            projectId (int): The ID of the project on ODK Central
-            xform (str): The XForm to get the details of from ODK Central
-
-        Returns:
-            (list): A list of al the media files for this project
-        """
-        if self.draft:
-            url = f"{self.base}projects/{projectId}/forms/{xform}/draft/attachments"
-        else:
-            url = f"{self.base}projects/{projectId}/forms/{xform}/attachments"
-        result = self.session.get(url, verify=self.verify)
-        self.media = result.json()
-        return self.media
-
-    def validateMedia(self, filename: str):
-        """Validate the specified filename is present in the XForm."""
-        if not self.xml:
-            return
-        xform_filenames = []
-        namespaces = {
-            "h": "http://www.w3.org/1999/xhtml",
-            "odk": "http://www.opendatakit.org/xforms",
-            "xforms": "http://www.w3.org/2002/xforms",
-        }
-
-        root = ElementTree.fromstring(self.xml)
-        instances = root.findall(".//xforms:model/xforms:instance[@src]", namespaces)
-
-        for inst in instances:
-            src_value = inst.attrib.get("src", "")
-            if src_value.startswith("jr://"):
-                src_value = src_value[len("jr://") :]  # Remove jr:// prefix
-            if src_value.startswith("file/"):
-                src_value = src_value[len("file/") :]  # Remove file/ prefix
-            xform_filenames.append(src_value)
-
-        if filename not in xform_filenames:
-            log.error(f"Filename ({filename}) is not present in XForm media: {xform_filenames}")
-            return False
-
-        return True
-
     def uploadMedia(
         self,
         projectId: int,
@@ -1013,35 +654,6 @@ class OdkForm(OdkCentral):
         self.addMedia(media, filename)
 
         return result
-
-    def getMedia(
-        self,
-        projectId: int,
-        xform: str,
-        filename: str,
-    ):
-        """Fetch a specific attachment by filename from a submission to a form.
-
-        Args:
-            projectId (int): The ID of the project on ODK Central
-            xform (str): The XForm to get the details of from ODK Central
-            filename (str): The name of the attachment for the XForm on ODK Central
-
-        Returns:
-            (bytes): The media data
-        """
-        if self.draft:
-            url = f"{self.base}projects/{projectId}/forms/{xform}/draft/attachments/{filename}"
-        else:
-            url = f"{self.base}projects/{projectId}/forms/{xform}/attachments/{filename}"
-        result = self.session.get(url, verify=self.verify)
-        if result.status_code == 200:
-            log.debug(f"fetched {filename} from Central")
-        else:
-            status = result.json()
-            log.error(f"Couldn't fetch {filename} from Central: {status['message']}")
-        self.addMedia(result.content, filename)
-        return self.media
 
     def createForm(
         self,
@@ -1231,16 +843,6 @@ class OdkForm(OdkCentral):
             response.raise_for_status()
 
         return response.json()
-
-    def dump(self):
-        """Dump internal data structures, for debugging purposes only."""
-        # super().dump()
-        entries = len(self.media.keys())
-        print("Form has %d attachments" % entries)
-        for filename, content in self.media:
-            print("Filename: %s" % filename)
-            print("Content length: %s" % len(content))
-            print("")
 
 
 class OdkAppUser(OdkCentral):
