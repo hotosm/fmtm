@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import '../../node_modules/ol/ol.css';
 import '../styles/home.scss';
-import { Style, Stroke } from 'ol/style';
-import WindowDimension from '@/hooks/WindowDimension';
 import ActivitiesPanel from '@/components/ProjectDetails/ActivitiesPanel';
-import { ProjectById, GetEntityStatusList, GetGeometryLog, SyncTaskState } from '@/api/Project';
+import { ProjectById, GetEntityStatusList, GetGeometryLog } from '@/api/Project';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import CoreModules from '@/shared/CoreModules';
 import AssetModules from '@/shared/AssetModules';
@@ -18,25 +16,14 @@ import BottomSheet from '@/components/common/BottomSheet';
 import MobileProjectInfoContent from '@/components/ProjectDetails/MobileProjectInfoContent';
 import { useNavigate, useParams } from 'react-router-dom';
 import ProjectOptions from '@/components/ProjectDetails/ProjectOptions';
-import { MapContainer as MapComponent, useOLMap } from '@/components/MapComponent/OpenLayersComponent';
-import LayerSwitcherControl from '@/components/MapComponent/OpenLayersComponent/LayerSwitcher/index';
-import MapControlComponent from '@/components/ProjectDetails/MapControlComponent';
-import { VectorLayer } from '@/components/MapComponent/OpenLayersComponent/Layers';
-import { geojsonObjectModel } from '@/constants/geojsonObjectModal';
-import getTaskStatusStyle, { getFeatureStatusStyle } from '@/utilfunctions/getTaskStatusStyle';
-import AsyncPopup from '@/components/MapComponent/OpenLayersComponent/AsyncPopup/AsyncPopup';
 import Button from '@/components/common/Button';
 import ProjectInfo from '@/components/ProjectDetails/ProjectInfo';
 import useOutsideClick from '@/hooks/useOutsideClick';
-import { isValidUrl } from '@/utilfunctions/urlChecker';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import Comments from '@/components/ProjectDetails/Comments';
-import { Geolocation } from '@/utilfunctions/Geolocation';
 import Instructions from '@/components/ProjectDetails/Instructions';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
-import MapStyles from '@/hooks/MapStyles';
-import { entity_state } from '@/types/enums';
-import { EntityOsmMap } from '@/models/project/projectModel';
+import ProjectDetailsMap from '@/components/ProjectDetails/ProjectDetailsMap';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -54,36 +41,23 @@ const ProjectDetails = () => {
   const dispatch = useAppDispatch();
   const params = useParams();
   const navigate = useNavigate();
-  const { windowSize } = WindowDimension();
   const [divRef, toggle, handleToggle] = useOutsideClick();
-  const geojsonStyles = MapStyles();
 
   const projectId: string | undefined = params.id;
 
+  const [map, setMap] = useState();
   const [selectedTaskArea, setSelectedTaskArea] = useState<Record<string, any> | null>(null);
   const [selectedTaskFeature, setSelectedTaskFeature] = useState();
-  const [dataExtractExtent, setDataExtractExtent] = useState(null);
-  const [taskBoundariesLayer, setTaskBoundariesLayer] = useState<null | Record<string, any>>(null);
   const [selectedTab, setSelectedTab] = useState<tabType>('project_info');
 
-  const customBasemapUrl = useAppSelector((state) => state.project.customBasemapUrl);
   const defaultTheme = useAppSelector((state) => state.theme.hotTheme);
   const projectTaskBoundries = useAppSelector((state) => state.project.projectTaskBoundries);
   const projectInfo = useAppSelector((state) => state.project.projectInfo);
   const selectedTask = useAppSelector((state) => state.task.selectedTask);
   const selectedFeatureProps = useAppSelector((state) => state.task.selectedFeatureProps);
   const mobileFooterSelection = useAppSelector((state) => state.project.mobileFooterSelection);
-  const mapTheme = useAppSelector((state) => state.theme.hotTheme);
   const projectDetailsLoading = useAppSelector((state) => state.project.projectDetailsLoading);
-  const geolocationStatus = useAppSelector((state) => state.project.geolocationStatus);
   const taskModalStatus = useAppSelector((state) => state.project.taskModalStatus);
-  const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
-  const entityOsmMap = useAppSelector((state) => state.project.entityOsmMap);
-  const entityOsmMapLoading = useAppSelector((state) => state.project.entityOsmMapLoading);
-  const badGeomFeatureCollection = useAppSelector((state) => state.project.badGeomFeatureCollection);
-  const newGeomFeatureCollection = useAppSelector((state) => state.project.newGeomFeatureCollection);
-  const getGeomLogLoading = useAppSelector((state) => state.project.getGeomLogLoading);
-  const syncTaskStateLoading = useAppSelector((state) => state.project.syncTaskStateLoading);
 
   useEffect(() => {
     if (projectInfo.name) {
@@ -107,92 +81,6 @@ const ProjectDetails = () => {
     }
     return () => {};
   }, [projectId]);
-
-  const { mapRef, map } = useOLMap({
-    center: [0, 0],
-    zoom: 4,
-  });
-
-  useEffect(() => {
-    if (!map) return;
-    Geolocation(map, geolocationStatus, dispatch);
-  }, [geolocationStatus]);
-
-  useEffect(() => {
-    if (!map) return;
-
-    const features = projectTaskBoundries[0]?.taskBoundries?.map((taskObj) => ({
-      type: 'Feature',
-      id: taskObj.id,
-      geometry: { ...taskObj.outline },
-      properties: {
-        ...taskObj.outline.properties,
-        task_state: taskObj?.task_state,
-        actioned_by_uid: taskObj?.actioned_by_uid,
-        actioned_by_username: taskObj?.actioned_by_username,
-      },
-    }));
-
-    const taskBoundariesFeatcol = {
-      ...geojsonObjectModel,
-      features: features,
-    };
-    setTaskBoundariesLayer(taskBoundariesFeatcol);
-  }, [projectTaskBoundries[0]?.taskBoundries?.length]);
-
-  const lockedPopup = (properties: Record<string, any>) => {
-    if (properties.actioned_by_uid === authDetails?.id) {
-      return <p>This task was locked by you</p>;
-    }
-    return null;
-  };
-
-  /**
-   * Handles the click event on a project task area.
-   *
-   * @param {Object} properties - Properties attached to task area boundary feature.
-   * @param {Object} feature - The clicked task area feature.
-   */
-  const projectClickOnTaskArea = (properties, feature) => {
-    // Close task feature popup, open task area popup
-    setSelectedTaskFeature(undefined);
-    setSelectedTaskArea(feature);
-
-    let extent = properties.geometry.getExtent();
-    setDataExtractExtent(properties.geometry);
-
-    mapRef.current?.scrollIntoView({
-      block: 'center',
-      behavior: 'smooth',
-    });
-
-    dispatch(CoreModules.TaskActions.SetSelectedTask(feature.getId()));
-    dispatch(ProjectActions.ToggleTaskModalStatus(true));
-
-    // Fit the map view to the clicked feature's extent based on the window size
-    if (windowSize.width < 768 && map.getView().getZoom() < 17) {
-      map.getView().fit(extent, {
-        padding: [10, 20, 300, 20],
-      });
-    } else if (windowSize.width > 768 && map.getView().getZoom() < 17) {
-      map.getView().fit(extent, {
-        padding: [20, 350, 50, 10],
-      });
-    }
-  };
-
-  /**
-   * Handles the click event on a task feature (geometry).
-   *
-   * @param {Object} properties - Properties attached to map feature.
-   * @param {Object} feature - The clicked feature.
-   */
-  const projectClickOnTaskFeature = (properties, feature) => {
-    // Close task area popup, open task feature popup
-    setSelectedTaskFeature(feature);
-    dispatch(CoreModules.TaskActions.SetSelectedFeatureProps(properties));
-    dispatch(ProjectActions.ToggleTaskModalStatus(true));
-  };
 
   useEffect(() => {
     if (mobileFooterSelection !== '') {
@@ -222,59 +110,10 @@ const ProjectDetails = () => {
     dispatch(GetGeometryLog(`${VITE_API_URL}/projects/${projectId}/geometry/records`));
   };
 
-  const syncTaskState = () => {
-    const taskBoundaryLayer = map
-      .getLayers()
-      .getArray()
-      .find((layer: any) => layer.get('name') == 'project-area');
-    const taskBoundaryFeatures = taskBoundaryLayer.getSource().getFeatures();
-
-    projectId &&
-      dispatch(SyncTaskState(`${VITE_API_URL}/tasks`, { project_id: projectId }, taskBoundaryFeatures, geojsonStyles));
-  };
-
   useEffect(() => {
     getEntityStatusList();
     getGeometryLog();
   }, []);
-
-  // pulse rejected entity feature stroke effect
-  useEffect(() => {
-    if (!map) return;
-    let layer;
-    let width = 1;
-    let expanding = true;
-
-    const interval = setInterval(() => {
-      const allLayers = map?.getAllLayers();
-      // layer representing bad entities
-      layer = allLayers?.find((layer) => layer.getProperties().name === 'bad-entities');
-      if (!layer) return;
-
-      if (expanding) {
-        width += 0.3;
-        if (width >= 6) expanding = false;
-      } else {
-        width -= 0.3;
-        if (width <= 1) expanding = true;
-      }
-
-      // apply style to the layer
-      layer?.setStyle(
-        new Style({
-          stroke: new Stroke({ color: 'rgb(215,63,62,1)', width: width }),
-        }),
-      );
-    }, 50);
-
-    return () => clearInterval(interval);
-  }, [map, badGeomFeatureCollection]);
-
-  const syncStatus = () => {
-    getEntityStatusList();
-    getGeometryLog();
-    syncTaskState();
-  };
 
   const getTabContent = (tabState: tabType) => {
     switch (tabState) {
@@ -387,132 +226,19 @@ const ProjectDetails = () => {
                       : '-fmtm-left-[65rem] fmtm-bottom-0 lg:fmtm-top-0'
                   }`}
                 >
-                  <ProjectOptions projectName={projectInfo?.name} />
+                  <ProjectOptions projectName={projectInfo?.name as string} />
                 </div>
               </div>
             </div>
           )}
         </div>
-        {params?.id && (
+        {projectId && (
           <div className="fmtm-relative sm:fmtm-static fmtm-flex-grow fmtm-h-full sm:fmtm-rounded-2xl fmtm-overflow-hidden">
-            <MapComponent
-              ref={mapRef}
-              mapInstance={map}
-              className={`map naxatw-relative naxatw-min-h-full naxatw-w-full ${
-                windowSize.width <= 768 ? '!fmtm-h-[100dvh]' : '!fmtm-h-full'
-              }`}
-            >
-              <LayerSwitcherControl visible={customBasemapUrl ? 'custom' : 'osm'} pmTileLayerUrl={customBasemapUrl} />
-
-              {taskBoundariesLayer && taskBoundariesLayer?.features?.length > 0 && (
-                <VectorLayer
-                  geojson={taskBoundariesLayer}
-                  viewProperties={{
-                    size: map?.getSize(),
-                    padding: [50, 50, 50, 50],
-                    constrainResolution: true,
-                  }}
-                  layerProperties={{ name: 'project-area' }}
-                  mapOnClick={projectClickOnTaskArea}
-                  zoomToLayer
-                  zIndex={5}
-                  style=""
-                  getTaskStatusStyle={(feature) => {
-                    return getTaskStatusStyle(
-                      feature,
-                      mapTheme,
-                      feature.getProperties()?.actioned_by_uid == authDetails?.id,
-                    );
-                  }}
-                />
-              )}
-              <VectorLayer
-                geojson={badGeomFeatureCollection}
-                viewProperties={{
-                  size: map?.getSize(),
-                  padding: [50, 50, 50, 50],
-                  constrainResolution: true,
-                  duration: 2000,
-                }}
-                layerProperties={{ name: 'bad-entities' }}
-                zIndex={5}
-                style=""
-              />
-              <VectorLayer
-                geojson={newGeomFeatureCollection}
-                viewProperties={{
-                  size: map?.getSize(),
-                  padding: [50, 50, 50, 50],
-                  constrainResolution: true,
-                  duration: 2000,
-                }}
-                layerProperties={{ name: 'new-entities' }}
-                zIndex={5}
-                style=""
-                mapOnClick={projectClickOnTaskFeature}
-                getTaskStatusStyle={(feature) => {
-                  const geomType = feature.getGeometry().getType();
-                  const entity = entityOsmMap?.find(
-                    (entity) => entity?.id === feature?.getProperties()?.entity_id,
-                  ) as EntityOsmMap;
-                  const status = entity_state[entity?.status];
-                  return getFeatureStatusStyle(geomType, mapTheme, status);
-                }}
-              />
-              {projectInfo.data_extract_url &&
-                isValidUrl(projectInfo.data_extract_url) &&
-                dataExtractExtent &&
-                selectedTask && (
-                  <VectorLayer
-                    fgbUrl={projectInfo.data_extract_url}
-                    fgbExtent={dataExtractExtent}
-                    getTaskStatusStyle={(feature) => {
-                      const geomType = feature.getGeometry().getType();
-                      const entity = entityOsmMap?.find(
-                        (entity) => entity?.osm_id === feature?.getProperties()?.osm_id,
-                      ) as EntityOsmMap;
-                      const status = entity_state[entity?.status];
-                      return getFeatureStatusStyle(geomType, mapTheme, status);
-                    }}
-                    viewProperties={{
-                      size: map?.getSize(),
-                      padding: [50, 50, 50, 50],
-                      constrainResolution: true,
-                      duration: 2000,
-                    }}
-                    style=""
-                    mapOnClick={projectClickOnTaskFeature}
-                    zoomToLayer
-                    zIndex={5}
-                  />
-                )}
-              <AsyncPopup
-                map={map}
-                popupUI={lockedPopup}
-                primaryKey={'actioned_by_uid'}
-                showOnHover="pointermove"
-                popupId="locked-popup"
-                className="fmtm-w-[235px]"
-              />
-              <div className="fmtm-absolute fmtm-bottom-20 md:fmtm-bottom-3 fmtm-left-3 fmtm-z-50">
-                <Button
-                  variant="secondary-red"
-                  onClick={() => dispatch(ProjectActions.ToggleGenerateMbTilesModalStatus(true))}
-                >
-                  BASEMAPS
-                  <AssetModules.BoltIcon className="!fmtm-text-xl" />
-                </Button>
-              </div>
-              <div className="fmtm-absolute fmtm-bottom-20 md:fmtm-bottom-3 fmtm-right-3 fmtm-z-50">
-                <Button variant="secondary-red" onClick={syncStatus} disabled={entityOsmMapLoading}>
-                  SYNC STATUS
-                  <AssetModules.SyncIcon
-                    className={`!fmtm-text-xl ${(entityOsmMapLoading || getGeomLogLoading || syncTaskStateLoading) && 'fmtm-animate-spin'}`}
-                  />
-                </Button>
-              </div>
-              <MapControlComponent map={map} projectName={projectInfo?.name || ''} pmTileLayerUrl={customBasemapUrl} />
-            </MapComponent>
+            <ProjectDetailsMap
+              setSelectedTaskArea={setSelectedTaskArea}
+              setSelectedTaskFeature={setSelectedTaskFeature}
+              setMap={setMap}
+            />
             <div
               className="fmtm-absolute fmtm-top-4 fmtm-left-4 fmtm-bg-white fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-red-50 fmtm-duration-300 fmtm-border-[1px] md:fmtm-hidden fmtm-cursor-pointer"
               onClick={() => navigate('/')}
