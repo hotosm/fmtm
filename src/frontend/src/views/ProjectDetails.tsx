@@ -69,7 +69,6 @@ const ProjectDetails = () => {
   const projectId: string | undefined = params.id;
   const defaultTheme = useAppSelector((state) => state.theme.hotTheme);
   const state = useAppSelector((state) => state.project);
-  const projectInfo = useAppSelector((state) => state.home.selectedProject);
   const selectedTask = useAppSelector((state) => state.task.selectedTask);
   const selectedFeatureProps = useAppSelector((state) => state.task.selectedFeatureProps);
   const mobileFooterSelection = useAppSelector((state) => state.project.mobileFooterSelection);
@@ -105,15 +104,8 @@ const ProjectDetails = () => {
       dispatch(ProjectActions.SetProjectTaskBoundries([]));
       dispatch(ProjectById(projectId));
     }
-    if (Object.keys(state.projectInfo)?.length == 0) {
-      dispatch(ProjectActions.SetProjectInfo(projectInfo));
-    } else {
-      if (state.projectInfo.id?.toString() != projectId) {
-        dispatch(ProjectActions.SetProjectInfo(projectInfo));
-      }
-    }
     return () => {};
-  }, [params.id]);
+  }, [projectId]);
 
   const { mapRef, map } = useOLMap({
     center: [0, 0],
@@ -128,7 +120,6 @@ const ProjectDetails = () => {
   useEffect(() => {
     if (!map) return;
 
-    // FIXME should the feature id be an int, not a string?
     const features = state.projectTaskBoundries[0]?.taskBoundries?.map((taskObj) => ({
       type: 'Feature',
       id: taskObj.id,
