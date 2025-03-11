@@ -1,0 +1,124 @@
+[project]
+name = "osm-fieldwork"
+version = "0.21.1"
+description = "Processing field data from ODK to OpenStreetMap format."
+authors = [
+    {name = "Rob Savoye", email = "rob.savoye@hotosm.org"},
+    {name = "Sam Woodcock", email = "sam.woodcock@hotosm.org"},
+    {name = "Sujan Adhikari", email = "adhikarisujan.naxa@gmail.com"},
+]
+dependencies = [
+    "codetiming>=1.3.0",
+    "geojson>=3.0.0",
+    "progress>=1.6",
+    "PyYAML>=6.0.0",
+    "segno>=1.5.2",
+    "xmltodict>=0.13.0",
+    "shapely>=1.8.5",
+    # levenshtein used by thefuzz underneath (do not remove)
+    "levenshtein>=0.20.0",
+    "haversine>=2.8.0",
+    "flatdict>=4.0.1",
+    "mercantile>=1.2.1",
+    "pySmartDL>=1.3.4",
+    "pandas>=1.5.0",
+    "python-calamine>=0.3.1",
+    "openpyxl>=3.0.10",
+    "py-cpuinfo>=9.0.0",
+    "requests>=2.26.0",
+    "pmtiles>=3.2.0",
+    "aiohttp>=3.8.4",
+    "osm-rawdata>=0.1.7",
+]
+requires-python = ">=3.10"
+readme = "README.md"
+license = "GPL-3.0-only"
+keywords = ["hot", "odk", "openstreetmap", "fmtm"]
+classifiers = [
+    "Topic :: Utilities",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+homepage = "https://github.com/hotosm/osm-fieldwork/wiki"
+documentation = "https://hotosm.github.io/osm-fieldwork"
+repository = "https://github.com/hotosm/osm-fieldwork"
+
+[dependency-groups]
+test = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.23.6",
+    "pyxform>=2.1.0",
+    "pyodk @ git+https://github.com/hotosm/pyodk@build/python-3.10",
+]
+dev = [
+    "commitizen>=3.6.0",
+    "pre-commit>=3.3.3",
+]
+debug = [
+    "debugpy>=1.6.7.post1",
+    "ipdb>=0.13.13",
+    "epdb>=0.15.1",
+]
+docs = [
+    "mkdocs>=1.5.2",
+    "mkdocs-material>=9.2.3",
+    "mkdocstrings-python>=1.5.1",
+    "mkdocs-exclude>=1.0.2",
+    "mdx-truly-sane-lists>=1.3",
+    "mkdocs-git-revision-date-localized-plugin>=1.2.4",
+]
+
+[tool.pytest.ini_options]
+addopts = "-ra -q -p no:warnings"
+testpaths = [
+    "tests",
+]
+pythonpath = "osm_fieldwork"
+asyncio_mode="auto"
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.21.1"
+version_files = [
+    "pyproject.toml:version",
+    "osm_fieldwork/__version__.py",
+    "Makefile:VERSION",
+]
+update_changelog_on_bump = true
+
+[tool.ruff]
+fix = true
+line-length = 132
+target-version = "py310"
+exclude = [
+    ".git",
+    ".ruff_cache",
+    ".vscode",
+    "__pypackages__",
+    "build",
+    "dist",
+    "osm_fieldwork/__version__.py",
+    # Temp workaround until osm-fieldwork linting all fixed
+    "osm_fieldwork",
+    "tests",
+]
+[tool.ruff.lint]
+select = ["I", "E", "W", "D", "B", "F", "N", "Q"]
+ignore = ["N805", "B008"]
+[tool.ruff.lint.per-file-ignores]
+"osm_fieldwork/basemapper.py" = ["N802"]
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[project.scripts]
+basemapper = "osm_fieldwork.basemapper:main"
+osm2favorites = "osm_fieldwork.osm2favorities:main"
+odk2osm = "osm_fieldwork.odk2osm:main"
+odk_client = "osm_fieldwork.odk_client:main"
+make_data_extract = "osm_fieldwork.make_data_extract:main"
+fmtm_xlsform = "osm_fieldwork.update_xlsform:main"
