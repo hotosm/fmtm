@@ -62,7 +62,6 @@ const ProjectDetails = () => {
 
   const [selectedTaskArea, setSelectedTaskArea] = useState<Record<string, any> | null>(null);
   const [selectedTaskFeature, setSelectedTaskFeature] = useState();
-  const [dataExtractUrl, setDataExtractUrl] = useState<string | undefined>();
   const [dataExtractExtent, setDataExtractExtent] = useState(null);
   const [taskBoundariesLayer, setTaskBoundariesLayer] = useState<null | Record<string, any>>(null);
   const [selectedTab, setSelectedTab] = useState<tabType>('project_info');
@@ -140,13 +139,6 @@ const ProjectDetails = () => {
     };
     setTaskBoundariesLayer(taskBoundariesFeatcol);
   }, [projectTaskBoundries[0]?.taskBoundries?.length]);
-
-  /**
-   * Sets the data extract URL when the data extract URL in the state changes.
-   */
-  useEffect(() => {
-    setDataExtractUrl(projectInfo.data_extract_url);
-  }, [projectInfo.data_extract_url]);
 
   const lockedPopup = (properties: Record<string, any>) => {
     if (properties.actioned_by_uid === authDetails?.id) {
@@ -467,30 +459,33 @@ const ProjectDetails = () => {
                   return getFeatureStatusStyle(geomType, mapTheme, status);
                 }}
               />
-              {dataExtractUrl && isValidUrl(dataExtractUrl) && dataExtractExtent && selectedTask && (
-                <VectorLayer
-                  fgbUrl={dataExtractUrl}
-                  fgbExtent={dataExtractExtent}
-                  getTaskStatusStyle={(feature) => {
-                    const geomType = feature.getGeometry().getType();
-                    const entity = entityOsmMap?.find(
-                      (entity) => entity?.osm_id === feature?.getProperties()?.osm_id,
-                    ) as EntityOsmMap;
-                    const status = entity_state[entity?.status];
-                    return getFeatureStatusStyle(geomType, mapTheme, status);
-                  }}
-                  viewProperties={{
-                    size: map?.getSize(),
-                    padding: [50, 50, 50, 50],
-                    constrainResolution: true,
-                    duration: 2000,
-                  }}
-                  style=""
-                  mapOnClick={projectClickOnTaskFeature}
-                  zoomToLayer
-                  zIndex={5}
-                />
-              )}
+              {projectInfo.data_extract_url &&
+                isValidUrl(projectInfo.data_extract_url) &&
+                dataExtractExtent &&
+                selectedTask && (
+                  <VectorLayer
+                    fgbUrl={projectInfo.data_extract_url}
+                    fgbExtent={dataExtractExtent}
+                    getTaskStatusStyle={(feature) => {
+                      const geomType = feature.getGeometry().getType();
+                      const entity = entityOsmMap?.find(
+                        (entity) => entity?.osm_id === feature?.getProperties()?.osm_id,
+                      ) as EntityOsmMap;
+                      const status = entity_state[entity?.status];
+                      return getFeatureStatusStyle(geomType, mapTheme, status);
+                    }}
+                    viewProperties={{
+                      size: map?.getSize(),
+                      padding: [50, 50, 50, 50],
+                      constrainResolution: true,
+                      duration: 2000,
+                    }}
+                    style=""
+                    mapOnClick={projectClickOnTaskFeature}
+                    zoomToLayer
+                    zIndex={5}
+                  />
+                )}
               <AsyncPopup
                 map={map}
                 popupUI={lockedPopup}
