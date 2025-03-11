@@ -915,7 +915,6 @@ class DbProjectTeam(BaseModel):
                 {"team_id": team_id},
             )
             team = await cur.fetchone()
-            print("team", team)
 
         if team is None:
             raise KeyError(f"Team ({team_id}) not found.")
