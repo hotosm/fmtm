@@ -56,48 +56,50 @@ const ProjectDetails = () => {
   const navigate = useNavigate();
   const { windowSize } = WindowDimension();
   const [divRef, toggle, handleToggle] = useOutsideClick();
-
   const geojsonStyles = MapStyles();
+
+  const projectId: string | undefined = params.id;
 
   const [selectedTaskArea, setSelectedTaskArea] = useState<Record<string, any> | null>(null);
   const [selectedTaskFeature, setSelectedTaskFeature] = useState();
   const [dataExtractUrl, setDataExtractUrl] = useState<string | undefined>();
   const [dataExtractExtent, setDataExtractExtent] = useState(null);
   const [taskBoundariesLayer, setTaskBoundariesLayer] = useState<null | Record<string, any>>(null);
-  const customBasemapUrl = useAppSelector((state) => state.project.customBasemapUrl);
   const [selectedTab, setSelectedTab] = useState<tabType>('project_info');
-  const projectId: string | undefined = params.id;
+
+  const customBasemapUrl = useAppSelector((state) => state.project.customBasemapUrl);
   const defaultTheme = useAppSelector((state) => state.theme.hotTheme);
-  const state = useAppSelector((state) => state.project);
+  const projectTaskBoundries = useAppSelector((state) => state.project.projectTaskBoundries);
+  const projectInfo = useAppSelector((state) => state.project.projectInfo);
   const selectedTask = useAppSelector((state) => state.task.selectedTask);
   const selectedFeatureProps = useAppSelector((state) => state.task.selectedFeatureProps);
   const mobileFooterSelection = useAppSelector((state) => state.project.mobileFooterSelection);
   const mapTheme = useAppSelector((state) => state.theme.hotTheme);
-  const projectDetailsLoading = useAppSelector((state) => state?.project?.projectDetailsLoading);
+  const projectDetailsLoading = useAppSelector((state) => state.project.projectDetailsLoading);
   const geolocationStatus = useAppSelector((state) => state.project.geolocationStatus);
-  const taskModalStatus = CoreModules.useAppSelector((state) => state.project.taskModalStatus);
+  const taskModalStatus = useAppSelector((state) => state.project.taskModalStatus);
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
-  const entityOsmMap = useAppSelector((state) => state?.project?.entityOsmMap);
-  const entityOsmMapLoading = useAppSelector((state) => state?.project?.entityOsmMapLoading);
-  const badGeomFeatureCollection = useAppSelector((state) => state?.project?.badGeomFeatureCollection);
-  const newGeomFeatureCollection = useAppSelector((state) => state?.project?.newGeomFeatureCollection);
-  const getGeomLogLoading = useAppSelector((state) => state?.project?.getGeomLogLoading);
-  const syncTaskStateLoading = useAppSelector((state) => state?.project?.syncTaskStateLoading);
+  const entityOsmMap = useAppSelector((state) => state.project.entityOsmMap);
+  const entityOsmMapLoading = useAppSelector((state) => state.project.entityOsmMapLoading);
+  const badGeomFeatureCollection = useAppSelector((state) => state.project.badGeomFeatureCollection);
+  const newGeomFeatureCollection = useAppSelector((state) => state.project.newGeomFeatureCollection);
+  const getGeomLogLoading = useAppSelector((state) => state.project.getGeomLogLoading);
+  const syncTaskStateLoading = useAppSelector((state) => state.project.syncTaskStateLoading);
 
   useEffect(() => {
-    if (state.projectInfo.name) {
-      document.title = `${state.projectInfo.name} - HOT Field Mapping Tasking Manager`;
+    if (projectInfo.name) {
+      document.title = `${projectInfo.name} - HOT Field Mapping Tasking Manager`;
     } else {
       document.title = 'HOT Field Mapping Tasking Manager';
     }
-  }, [state.projectInfo.name]);
+  }, [projectInfo.name]);
 
   //Fetch project for the first time
   useEffect(() => {
     if (!projectId) return;
 
     dispatch(ProjectActions.SetNewProjectTrigger());
-    if (state.projectTaskBoundries.findIndex((project) => project.id.toString() === projectId) == -1) {
+    if (projectTaskBoundries.findIndex((project) => project.id.toString() === projectId) == -1) {
       dispatch(ProjectActions.SetProjectTaskBoundries([]));
       dispatch(ProjectById(projectId));
     } else {
@@ -120,7 +122,7 @@ const ProjectDetails = () => {
   useEffect(() => {
     if (!map) return;
 
-    const features = state.projectTaskBoundries[0]?.taskBoundries?.map((taskObj) => ({
+    const features = projectTaskBoundries[0]?.taskBoundries?.map((taskObj) => ({
       type: 'Feature',
       id: taskObj.id,
       geometry: { ...taskObj.outline },
@@ -137,14 +139,14 @@ const ProjectDetails = () => {
       features: features,
     };
     setTaskBoundariesLayer(taskBoundariesFeatcol);
-  }, [state.projectTaskBoundries[0]?.taskBoundries?.length]);
+  }, [projectTaskBoundries[0]?.taskBoundries?.length]);
 
   /**
    * Sets the data extract URL when the data extract URL in the state changes.
    */
   useEffect(() => {
-    setDataExtractUrl(state.projectInfo.data_extract_url);
-  }, [state.projectInfo.data_extract_url]);
+    setDataExtractUrl(projectInfo.data_extract_url);
+  }, [projectInfo.data_extract_url]);
 
   const lockedPopup = (properties: Record<string, any>) => {
     if (properties.actioned_by_uid === authDetails?.id) {
@@ -287,13 +289,11 @@ const ProjectDetails = () => {
       case 'project_info':
         return <ProjectInfo />;
       case 'task_activity':
-        return (
-          <ActivitiesPanel params={params} state={state.projectTaskBoundries} defaultTheme={defaultTheme} map={map} />
-        );
+        return <ActivitiesPanel params={params} state={projectTaskBoundries} defaultTheme={defaultTheme} map={map} />;
       case 'comments':
         return <Comments />;
       case 'instructions':
-        return <Instructions instructions={state?.projectInfo?.instructions} />;
+        return <Instructions instructions={projectInfo?.instructions} />;
       default:
         return <></>;
     }
@@ -304,13 +304,13 @@ const ProjectDetails = () => {
   ) => {
     switch (mobileTabState) {
       case 'projectInfo':
-        return <MobileProjectInfoContent projectInfo={state.projectInfo} />;
+        return <MobileProjectInfoContent projectInfo={projectInfo} />;
       case 'activities':
         return <MobileActivitiesContents map={map} />;
       case 'instructions':
         return (
           <div className="fmtm-mb-[10vh]">
-            <Instructions instructions={state?.projectInfo?.instructions} />
+            <Instructions instructions={projectInfo?.instructions} />
           </div>
         );
       case 'comment':
@@ -327,7 +327,7 @@ const ProjectDetails = () => {
   return (
     <div className="fmtm-bg-[#f5f5f5] !fmtm-h-[100dvh] sm:!fmtm-h-full">
       {/* Customized Modal For Generate Tiles */}
-      <GenerateBasemap projectInfo={state.projectInfo} />
+      <GenerateBasemap projectInfo={projectInfo} />
 
       <div className="fmtm-flex fmtm-h-full fmtm-gap-6">
         <div className="fmtm-w-[22rem] fmtm-h-full fmtm-hidden md:fmtm-block">
@@ -338,7 +338,7 @@ const ProjectDetails = () => {
                 <CoreModules.Skeleton className="!fmtm-w-[50px] fmtm-h-[20px]" />
               </div>
             ) : (
-              <p className="fmtm-text-lg fmtm-font-archivo fmtm-text-[#9B9999]">{`#${state.projectInfo.id}`}</p>
+              <p className="fmtm-text-lg fmtm-font-archivo fmtm-text-[#9B9999]">{`#${projectInfo.id}`}</p>
             )}
             <Button variant="secondary-red" onClick={() => navigate(`/manage/project/${params?.id}`)}>
               MANAGE PROJECT <AssetModules.SettingsIcon />
@@ -352,11 +352,8 @@ const ProjectDetails = () => {
               <CoreModules.Skeleton className="!fmtm-w-[250px] fmtm-h-[25px]" />
             ) : (
               <div className="fmtm-relative">
-                <p
-                  className="fmtm-text-xl fmtm-font-archivo fmtm-line-clamp-3 fmtm-mr-4"
-                  title={state.projectInfo.name}
-                >
-                  {state.projectInfo.name}
+                <p className="fmtm-text-xl fmtm-font-archivo fmtm-line-clamp-3 fmtm-mr-4" title={projectInfo.name}>
+                  {projectInfo.name}
                 </p>
               </div>
             )}
@@ -398,7 +395,7 @@ const ProjectDetails = () => {
                       : '-fmtm-left-[65rem] fmtm-bottom-0 lg:fmtm-top-0'
                   }`}
                 >
-                  <ProjectOptions projectName={state?.projectInfo?.name} />
+                  <ProjectOptions projectName={projectInfo?.name} />
                 </div>
               </div>
             </div>
@@ -519,11 +516,7 @@ const ProjectDetails = () => {
                   />
                 </Button>
               </div>
-              <MapControlComponent
-                map={map}
-                projectName={state?.projectInfo?.name || ''}
-                pmTileLayerUrl={customBasemapUrl}
-              />
+              <MapControlComponent map={map} projectName={projectInfo?.name || ''} pmTileLayerUrl={customBasemapUrl} />
             </MapComponent>
             <div
               className="fmtm-absolute fmtm-top-4 fmtm-left-4 fmtm-bg-white fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-red-50 fmtm-duration-300 fmtm-border-[1px] md:fmtm-hidden fmtm-cursor-pointer"
