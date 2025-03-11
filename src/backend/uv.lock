@@ -568,7 +568,7 @@ requires-dist = [
     { name = "httptools", specifier = "==0.6.4" },
     { name = "loguru", specifier = "==0.7.2" },
     { name = "minio", specifier = "==7.2.9" },
-    { name = "osm-fieldwork", virtual = "packages/osm-fieldwork" },
+    { name = "osm-fieldwork", editable = "packages/osm-fieldwork" },
     { name = "osm-login-python", specifier = "==2.0.0" },
     { name = "osm-rawdata", specifier = "==0.4.2" },
     { name = "pg-nearest-city", specifier = ">=0.2.1" },
@@ -1388,7 +1388,7 @@ wheels = [
 [[package]]
 name = "osm-fieldwork"
 version = "0.21.1"
-source = { virtual = "packages/osm-fieldwork" }
+source = { editable = "packages/osm-fieldwork" }
 dependencies = [
     { name = "aiohttp" },
     { name = "geojson" },
