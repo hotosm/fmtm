@@ -64,12 +64,3 @@ class TaskEventCount(BaseModel):
     date: str
     mapped: int
     validated: int
-
-
-class TaskAssignmentOut(BaseModel):
-    """Task assignments."""
-
-    project_id: int
-    task_id: int
-    user_id: int
-    assigned_at: AwareDatetime
