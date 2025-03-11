@@ -21,7 +21,7 @@ from typing import Annotated, Optional
 from uuid import UUID
 
 from geojson_pydantic import Polygon
-from pydantic import AwareDatetime, BaseModel, Field
+from pydantic import BaseModel, Field
 
 from app.db.enums import MappingState
 from app.db.models import DbTask, DbTaskEvent
