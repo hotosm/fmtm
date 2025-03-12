@@ -155,7 +155,6 @@ class DbUserRole(BaseModel):
 
         return latest_role
 
-
     @classmethod
     async def all(
         cls,
