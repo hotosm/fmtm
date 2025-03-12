@@ -116,7 +116,7 @@ class DbUserRole(BaseModel):
         role: ProjectRole,
     ) -> Self:
         """Create a new user role."""
-        async with db.cursor() as cur:
+        async with db.cursor(row_factory=class_row(cls)) as cur:
             params = {
                 "project_id": project_id,
                 "user_id": user_id,
@@ -128,10 +128,33 @@ class DbUserRole(BaseModel):
                     (user_id, project_id, role)
                 VALUES
                     (%(user_id)s, %(project_id)s, %(role)s)
-                ON CONFLICT (user_id, project_id) DO NOTHING;
+                    ON CONFLICT (user_id, project_id) DO UPDATE
+                    SET role = EXCLUDED.role
+                    WHERE user_roles.role < EXCLUDED.role;
             """,
                 params,
             )
+
+            # NOTE this will return the latest role, even if it's not updated
+            # to make sure something is always returned
+            await cur.execute(
+                """
+                SELECT * FROM user_roles
+                WHERE user_id = %(user_id)s AND project_id = %(project_id)s;
+            """,
+                params,
+            )
+            latest_role = await cur.fetchone()
+
+        if latest_role is None:
+            msg = f"Failed to create user role: {params}"
+            log.error(msg)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+            )
+
+        return latest_role
+
 
     @classmethod
     async def all(
