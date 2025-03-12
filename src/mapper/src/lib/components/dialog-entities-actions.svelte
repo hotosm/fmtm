@@ -6,7 +6,7 @@
 	import { getAlertStore } from '$store/common.svelte.ts';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
 	import { mapTask } from '$lib/db/events';
-	import type { SlDialog } from '@shoelace-style/shoelace';
+	import type { SlDialog, SlDrawer } from '@shoelace-style/shoelace';
 
 	type statusType = 'READY' | 'OPENED_IN_ODK' | 'SURVEY_SUBMITTED' | 'MARKED_BAD' | 'VALIDATED';
 	type Props = {
@@ -14,6 +14,7 @@
 		toggleTaskActionModal: (value: boolean) => void;
 		selectedTab: string;
 		projectData: ProjectData;
+		webFormsDrawerRef: SlDrawer | undefined;
 	};
 
 	function getStatusStyle(status: statusType) {
@@ -31,11 +32,13 @@
 		}
 	}
 
-	let { isTaskActionModalOpen, toggleTaskActionModal, selectedTab, projectData }: Props = $props();
+	let { isTaskActionModalOpen, toggleTaskActionModal, selectedTab, projectData, webFormsDrawerRef }: Props = $props();
 
 	let dialogRef: SlDialog | null = $state(null);
 	let toggleDistanceWarningDialog = $state(false);
 	let showCommentsPopup: boolean = $state(false);
+
+	const displayWebFormsButton = new URLSearchParams(window.location.search).get('webforms') === 'true';
 
 	const entitiesStore = getEntitiesStatusStore();
 	const alertStore = getAlertStore();
@@ -266,6 +269,30 @@
 							></hot-icon>
 							<span class="font-barlow font-medium text-sm">MAP FEATURE IN ODK</span>
 						</sl-button>
+						{#if displayWebFormsButton}
+							<sl-button
+								loading={entitiesStore.updateEntityStatusLoading}
+								variant="default"
+								size="small"
+								class="primary flex-grow"
+								onclick={() => {
+									toggleTaskActionModal(false);
+									webFormsDrawerRef?.show();
+								}}
+								onkeydown={(e: KeyboardEvent) => {
+									if (e.key === 'Enter') {
+										toggleTaskActionModal(false);
+										webFormsDrawerRef?.show();
+									}
+								}}
+								role="button"
+								tabindex="0"
+							>
+								<hot-icon slot="prefix" name="location" class="!text-[1rem] text-white cursor-pointer duration-200"
+								></hot-icon>
+								<span class="font-barlow font-medium text-sm">MAP IN ODK WEB FORMS</span>
+							</sl-button>
+						{/if}
 					</div>
 				{/if}
 			</div>
