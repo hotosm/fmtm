@@ -1428,7 +1428,7 @@ async def delete_geom_log(
     return Response(status_code=HTTPStatus.NO_CONTENT)
 
 
-@router.get("/{project_id}/teams")
+@router.get("/{project_id}/teams", response_model=List[project_schemas.ProjectTeam])
 async def get_project_teams(
     db: Annotated[Connection, Depends(db_conn)],
     project_user: Annotated[ProjectUserDict, Depends(project_manager)],
@@ -1449,7 +1449,7 @@ async def create_project_team(
     return await DbProjectTeam.create(db, team)
 
 
-@router.get("/{project_id}/teams/{team_id}")
+@router.get("/{project_id}/teams/{team_id}", response_model=project_schemas.ProjectTeam)
 async def get_team(
     team: Annotated[DbProjectTeam, Depends(project_deps.get_project_team)],
     db: Annotated[Connection, Depends(db_conn)],
