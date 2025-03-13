@@ -17,8 +17,6 @@
 #
 """Configuration and fixtures for PyTest."""
 
-import logging
-import sys
 import uuid
 from pathlib import Path
 
@@ -27,13 +25,6 @@ from pyodk.client import Client
 
 from osm_fieldwork.OdkCentral import OdkAppUser, OdkForm, OdkProject
 from osm_fieldwork.OdkCentralAsync import OdkDataset
-
-logging.basicConfig(
-    level="DEBUG",
-    format=("%(asctime)s.%(msecs)03d [%(levelname)s] %(name)s | %(funcName)s:%(lineno)d | %(message)s"),
-    datefmt="%y-%m-%d %H:%M:%S",
-    stream=sys.stdout,
-)
 
 odk_config_file = str(Path(__file__).parent / ".pyodk_config.toml")
 test_data_dir = Path(__file__).parent / "test_data"
