@@ -267,18 +267,18 @@ def test_form_fields(odk_form_cleanup):
 def test_invalid_connection_sync():
     """Test case when connection to Central fails, sync code."""
     with pytest.raises(ConnectionError, match="Failed to connect to Central. Is the URL valid?"):
-        OdkCentral("https://somerandominvalidurl546456546.xyz", "test@hotosm.org", "Password1234")
+        OdkCentral("https://somerandominvalidurl546456546.xyz", "admin@hotosm.org", "Password1234")
 
     with pytest.raises(ConnectionError, match="ODK credentials are invalid, or may have changed. Please update them."):
-        OdkCentral("https://proxy", "thisuser@notexist.org", "Password1234")
+        OdkCentral("https://odkcentral:8443", "thisuser@notexist.org", "Password1234")
 
 
 async def test_invalid_connection_async():
     """Test case when connection to Central fails, async code."""
     with pytest.raises(ConnectionError, match="Failed to connect to Central. Is the URL valid?"):
-        async with OdkCentralAsync("https://somerandominvalidurl546456546.xyz", "test@hotosm.org", "Password1234"):
+        async with OdkCentralAsync("https://somerandominvalidurl546456546.xyz", "admin@hotosm.org", "Password1234"):
             pass
 
     with pytest.raises(ConnectionError, match="ODK credentials are invalid, or may have changed. Please update them."):
-        async with OdkCentralAsync("https://proxy", "thisuser@notexist.org", "Password1234"):
+        async with OdkCentralAsync("https://odkcentral:8443", "thisuser@notexist.org", "Password1234"):
             pass

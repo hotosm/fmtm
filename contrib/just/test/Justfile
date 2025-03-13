@@ -26,6 +26,12 @@ backend:
   docker compose up -d
   docker compose run --rm api pytest
 
+# Test osm-fieldwork package only
+[no-cd]
+backend:
+  docker compose up -d
+  docker compose run --rm api pytest package_tests/test_osm_fieldwork
+
 # Test frontend with Playwright
 [no-cd]
 frontend:

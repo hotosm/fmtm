@@ -17,16 +17,17 @@
 #
 """Configuration and fixtures for PyTest."""
 
+import os
 import uuid
 from pathlib import Path
 
 import pytest
+from pyodk._utils.config import CentralConfig
 from pyodk.client import Client
 
 from osm_fieldwork.OdkCentral import OdkAppUser, OdkForm, OdkProject
 from osm_fieldwork.OdkCentralAsync import OdkDataset
 
-odk_config_file = str(Path(__file__).parent / ".pyodk_config.toml")
 test_data_dir = Path(__file__).parent / "test_data"
 
 
@@ -79,7 +80,7 @@ test_data_dir = Path(__file__).parent / "test_data"
 # def token():
 #     """Get persistent ODK Central requests session."""
 #     response = requests.post("http://central:8383/v1/sessions", json={
-#         "email": "test@hotosm.org",
+#         "email": "admin@hotosm.org",
 #         "password": "Password1234"
 #     })
 #     return response.json().get("token")
@@ -88,7 +89,7 @@ test_data_dir = Path(__file__).parent / "test_data"
 @pytest.fixture(scope="session")
 def project():
     """Get persistent ODK Central requests session."""
-    return OdkProject("https://proxy", "test@hotosm.org", "Password1234")
+    return OdkProject("https://odkcentral:8443", "admin@hotosm.org", "Password1234")
 
 
 @pytest.fixture(scope="session")
@@ -101,8 +102,8 @@ def project_details(project):
 def appuser():
     """Get appuser for a project."""
     return OdkAppUser(
-        url="https://proxy",
-        user="test@hotosm.org",
+        url="https://odkcentral:8443",
+        user="admin@hotosm.org",
         passwd="Password1234",
     )
 
@@ -123,8 +124,8 @@ def odk_form(project_details) -> tuple:
     """Get appuser for a project."""
     odk_id = project_details.get("id")
     form = OdkForm(
-        url="https://proxy",
-        user="test@hotosm.org",
+        url="https://odkcentral:8443",
+        user="admin@hotosm.org",
         passwd="Password1234",
     )
     return odk_id, form
@@ -152,8 +153,8 @@ async def odk_dataset(project_details) -> tuple:
     """Get dataset (entity list) for a project."""
     odk_id = project_details.get("id")
     dataset = OdkDataset(
-        url="https://proxy",
-        user="test@hotosm.org",
+        url="https://odkcentral:8443",
+        user="admin@hotosm.org",
         passwd="Password1234",
     )
 
@@ -212,7 +213,19 @@ async def odk_dataset_cleanup(odk_dataset):
 
 
 @pytest.fixture(scope="function")
-async def odk_submission(odk_form_cleanup) -> tuple:
+def pyodk_config() -> CentralConfig:
+    odk_central_url = os.getenv("ODK_CENTRAL_URL")
+    odk_central_user = os.getenv("ODK_CENTRAL_USER")
+    odk_central_password = os.getenv("ODK_CENTRAL_PASSWD", "")
+    return CentralConfig(
+        base_url=odk_central_url,
+        username=odk_central_user,
+        password=odk_central_password,
+    )
+
+
+@pytest.fixture(scope="function")
+async def odk_submission(odk_form_cleanup, pyodk_config) -> tuple:
     """A submission for the project form."""
     xform_xls_definition = test_data_dir / "buildings.xml"
     odk_id, form_name, xform = odk_form_cleanup
@@ -270,7 +283,7 @@ async def odk_submission(odk_form_cleanup) -> tuple:
         </data>
     """
 
-    with Client(config_path=odk_config_file) as client:
+    with Client(pyodk_config) as client:
         # Update the form to ensure we know the version number for submission
         # for some reason osm_fieldwork.OdkForm.create does not set the version number
         client.forms.update(form_name, project_id=odk_id, definition=xform_xls_definition)
@@ -289,8 +302,8 @@ async def odk_submission(odk_form_cleanup) -> tuple:
 def cleanup():
     """Cleanup projects and forms after all tests (session)."""
     project = OdkProject(
-        url="https://proxy",
-        user="test@hotosm.org",
+        url="https://odkcentral:8443",
+        user="admin@hotosm.org",
         passwd="Password1234",
     )
 
