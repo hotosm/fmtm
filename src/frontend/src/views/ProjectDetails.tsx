@@ -24,6 +24,7 @@ import Instructions from '@/components/ProjectDetails/Instructions';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import ProjectDetailsMap from '@/components/ProjectDetails/ProjectDetailsMap';
 import FolderManagedIcon from '@/assets/icons/folderManagedIcon.svg';
+import boltIcon from '@/assets/icons/boltIcon.svg';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/RadixComponents/Resizable';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
@@ -157,7 +158,7 @@ const ProjectDetails = () => {
   };
 
   return (
-    <div className="fmtm-bg-grey-100 !fmtm-h-[100dvh] sm:!fmtm-h-full md:fmtm-overflow-hidden">
+    <div className="fmtm-bg-grey-100 !fmtm-h-[100dvh] md:!fmtm-h-full md:fmtm-overflow-hidden">
       {/* Customized Modal For Generate Tiles */}
       <GenerateBasemap projectInfo={projectInfo} />
 
@@ -173,7 +174,7 @@ const ProjectDetails = () => {
               variant="secondary-grey"
               onClick={() => dispatch(ProjectActions.ToggleGenerateMbTilesModalStatus(true))}
             >
-              <AssetModules.BoltIcon className="!fmtm-text-[1.125rem]" />
+              <img src={boltIcon} alt="bolt icon" />
               Generate Basemap
             </Button>
             <div className="fmtm-relative fmtm-w-1/2" ref={divRef}>
@@ -191,8 +192,8 @@ const ProjectDetails = () => {
             </div>
           </div>
         </div>
-        <div className="fmtm-flex fmtm-h-[calc(100%-3rem)] fmtm-gap-6 fmtm-mt-0 sm:fmtm-mt-2">
-          <ResizablePanelGroup direction="horizontal" className="fmtm-gap-5">
+        <div className="fmtm-flex fmtm-h-[calc(100%-3rem)] fmtm-gap-6 fmtm-mt-0 md:fmtm-mt-2">
+          <ResizablePanelGroup direction="horizontal" className="fmtm-gap-3">
             <ResizablePanel className="fmtm-hidden md:fmtm-flex md:fmtm-min-w-[22rem]">
               <div className="fmtm-w-full fmtm-h-full fmtm-hidden md:fmtm-flex fmtm-flex-col">
                 <div
@@ -232,32 +233,32 @@ const ProjectDetails = () => {
                 )}
               </div>
             </ResizablePanel>
-            <ResizableHandle withHandle className="fmtm-bg-grey-200 fmtm-hidden sm:fmtm-flex" />
+            <ResizableHandle withHandle className="fmtm-bg-grey-200 fmtm-hidden md:fmtm-flex" />
             <ResizablePanel className="md:fmtm-min-w-[22rem]">
               {projectId && (
-                <div className="fmtm-relative sm:fmtm-static fmtm-flex-grow fmtm-h-full sm:fmtm-rounded-2xl fmtm-overflow-hidden">
+                <div className="fmtm-relative md:fmtm-static fmtm-flex-grow fmtm-h-full md:fmtm-rounded-2xl fmtm-overflow-hidden">
                   <ProjectDetailsMap
                     setSelectedTaskArea={setSelectedTaskArea}
                     setSelectedTaskFeature={setSelectedTaskFeature}
                     setMap={setMap}
                   />
-                  <div
-                    className="fmtm-absolute fmtm-top-4 fmtm-left-4 fmtm-bg-white fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-red-50 fmtm-duration-300 fmtm-border-[1px] md:fmtm-hidden fmtm-cursor-pointer"
-                    onClick={() => navigate('/')}
-                  >
-                    <AssetModules.ArrowBackIcon className="fmtm-text-grey-800" />
-                  </div>
-                  {['projectInfo', 'activities', 'instructions', 'comment'].includes(mobileFooterSelection) && (
-                    <BottomSheet
-                      body={getMobileBottomSheetContent(mobileFooterSelection)}
-                      onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
-                    />
-                  )}
-                  <MobileFooter />
                 </div>
               )}
             </ResizablePanel>
           </ResizablePanelGroup>
+          <div
+            className="fmtm-absolute fmtm-top-4 fmtm-left-4 fmtm-bg-white fmtm-rounded-full fmtm-p-1 hover:fmtm-bg-red-50 fmtm-duration-300 fmtm-border-[1px] md:fmtm-hidden fmtm-cursor-pointer"
+            onClick={() => navigate('/')}
+          >
+            <AssetModules.ArrowBackIcon className="fmtm-text-grey-800" />
+          </div>
+          {['projectInfo', 'activities', 'instructions', 'comment'].includes(mobileFooterSelection) && (
+            <BottomSheet
+              body={getMobileBottomSheetContent(mobileFooterSelection)}
+              onClose={() => dispatch(ProjectActions.SetMobileFooterSelection(''))}
+            />
+          )}
+          <MobileFooter />
         </div>
       </div>
       {selectedTaskArea != undefined && selectedTaskFeature === undefined && selectedTask && (
