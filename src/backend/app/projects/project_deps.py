@@ -18,7 +18,7 @@
 
 """Project dependencies for use in Depends."""
 
-from typing import Annotated
+from typing import Annotated, Optional
 from uuid import UUID
 
 from fastapi import Depends
@@ -73,10 +73,13 @@ async def check_project_dup_name(db: Connection, name: str):
 
 async def get_project_team(
     project_id: int,
-    team_id: UUID,
     db: Annotated[Connection, Depends(db_conn)],
+    team_id: Optional[UUID] = None,
 ) -> DbProjectTeam:
     """Dependency to fetch a team and validate it belongs to the project."""
+    if not team_id:
+        return None
+
     team = await DbProjectTeam.one(db, team_id)
 
     if not team or team.project_id != project_id:
