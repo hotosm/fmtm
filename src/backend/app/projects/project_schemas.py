@@ -372,7 +372,13 @@ class ProjectTeam(DbProjectTeam):
     users: list[ProjectTeamUser] = []
 
 
-class ProjectTeamIn(DbProjectTeam):
+class ProjectTeamOne(DbProjectTeam):
+    """Project team without users."""
+
+    users: list[ProjectTeamUser] = Field(exclude=True)
+
+
+class ProjectTeamIn(ProjectTeamOne):
     """Create a new project team."""
 
     # Exclude, as the uuid is generated in the database

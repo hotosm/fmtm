@@ -1439,7 +1439,7 @@ async def get_project_teams(
     return teams
 
 
-@router.post("/{project_id}/teams")
+@router.post("/{project_id}/teams", response_model=project_schemas.ProjectTeamOne)
 async def create_project_team(
     team: project_schemas.ProjectTeamIn,
     db: Annotated[Connection, Depends(db_conn)],
@@ -1460,7 +1460,9 @@ async def get_team(
     return team
 
 
-@router.patch("/{project_id}/teams/{team_id}")
+@router.patch(
+    "/{project_id}/teams/{team_id}", response_model=project_schemas.ProjectTeamOne
+)
 async def update_project_team(
     team: Annotated[DbProjectTeam, Depends(project_deps.get_project_team)],
     team_update: project_schemas.ProjectTeamIn,

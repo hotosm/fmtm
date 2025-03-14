@@ -76,7 +76,6 @@ if TYPE_CHECKING:
         BasemapUpdate,
         GeometryLogIn,
         ProjectIn,
-        ProjectTeam,
         ProjectTeamIn,
         ProjectUpdate,
     )
@@ -908,10 +907,10 @@ class DbProjectTeam(BaseModel):
     project_id: int
 
     # Computed
-    users: Optional[list[dict]] = None
+    users: Optional[list[dict]] = []
 
     @classmethod
-    async def one(cls, db: Connection, team_id: UUID) -> "ProjectTeam":
+    async def one(cls, db: Connection, team_id: UUID) -> Self:
         """Fetch a single team by its ID along with user details."""
         async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(
@@ -944,7 +943,7 @@ class DbProjectTeam(BaseModel):
         return team
 
     @classmethod
-    async def create(cls, db: Connection, team_in: "ProjectTeamIn") -> "ProjectTeam":
+    async def create(cls, db: Connection, team_in: "ProjectTeamIn") -> Self:
         """Create a new team for a project."""
         model_dump = dump_and_check_model(team_in)
         columns = ", ".join(model_dump.keys())
@@ -966,7 +965,7 @@ class DbProjectTeam(BaseModel):
     @classmethod
     async def update(
         cls, db: Connection, team_id: UUID, team_update: "ProjectTeamIn"
-    ) -> "ProjectTeam":
+    ) -> Self:
         """Update a team for a project."""
         model_dump = dump_and_check_model(team_update)
         placeholders = ", ".join(f"{key} = %({key})s" for key in model_dump.keys())
@@ -1001,7 +1000,7 @@ class DbProjectTeam(BaseModel):
             )
 
     @classmethod
-    async def all(cls, db: Connection, project_id: int) -> list["ProjectTeam"]:
+    async def all(cls, db: Connection, project_id: int) -> list[Self]:
         """Fetch all teams for a project along with users."""
         async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(
