@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import '../../node_modules/ol/ol.css';
 import '../styles/home.scss';
-import ActivitiesPanel from '@/components/ProjectDetails/ActivitiesPanel';
+import TaskActivity from '@/components/ProjectDetails/Tabs/TaskActivity';
 import { ProjectById, GetEntityStatusList, GetGeometryLog } from '@/api/Project';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import AssetModules from '@/shared/AssetModules';
@@ -16,11 +16,11 @@ import MobileProjectInfoContent from '@/components/ProjectDetails/MobileProjectI
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import ProjectOptions from '@/components/ProjectDetails/ProjectOptions';
 import Button from '@/components/common/Button';
-import ProjectInfo from '@/components/ProjectDetails/ProjectInfo';
+import ProjectInfo from '@/components/ProjectDetails/Tabs/ProjectInfo';
 import useOutsideClick from '@/hooks/useOutsideClick';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
-import Comments from '@/components/ProjectDetails/Comments';
-import Instructions from '@/components/ProjectDetails/Instructions';
+import Comments from '@/components/ProjectDetails/Tabs/Comments';
+import Instructions from '@/components/ProjectDetails/Tabs/Instructions';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import ProjectDetailsMap from '@/components/ProjectDetails/ProjectDetailsMap';
 import FolderManagedIcon from '@/assets/icons/folderManagedIcon.svg';
@@ -122,7 +122,7 @@ const ProjectDetails = () => {
       case 'project_info':
         return <ProjectInfo />;
       case 'task_activity':
-        return <ActivitiesPanel params={params} state={projectTaskBoundries} defaultTheme={defaultTheme} map={map} />;
+        return <TaskActivity params={params} state={projectTaskBoundries} defaultTheme={defaultTheme} map={map} />;
       case 'comments':
         return <Comments />;
       case 'instructions':

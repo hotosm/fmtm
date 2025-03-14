@@ -9,14 +9,14 @@ import { projectTaskActivity } from '@/store/types/IProject';
 import { projectTaskBoundriesType } from '@/models/project/projectModel';
 import { task_state_labels } from '@/types/enums';
 
-type activitiesPanelType = {
+type taskActivityType = {
   defaultTheme: any;
   state: projectTaskBoundriesType[];
   params: Record<string, any>;
   map: any;
 };
 
-const ActivitiesPanel = ({ defaultTheme, state, params, map }: activitiesPanelType) => {
+const TaskActivity = ({ defaultTheme, state, params, map }: taskActivityType) => {
   const [searchText, setSearchText] = useState<string>('');
   const [taskHistories, setTaskHistories] = useState<projectTaskActivity[]>([]);
   const [allActivities, setAllActivities] = useState(0);
@@ -146,4 +146,4 @@ const ActivitiesPanel = ({ defaultTheme, state, params, map }: activitiesPanelTy
   );
 };
 
-export default ActivitiesPanel;
+export default TaskActivity;
