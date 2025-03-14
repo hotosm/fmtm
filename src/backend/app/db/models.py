@@ -907,13 +907,13 @@ class DbProjectTeam(BaseModel):
     team_name: Optional[str] = None
     project_id: int
 
+    # Computed
+    users: Optional[list[dict]] = None
+
     @classmethod
     async def one(cls, db: Connection, team_id: UUID) -> "ProjectTeam":
         """Fetch a single team by its ID along with user details."""
-        # NOTE Avoiding cyclical import errors
-        from app.projects.project_schemas import ProjectTeam
-
-        async with db.cursor(row_factory=class_row(ProjectTeam)) as cur:
+        async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(
                 """
                 SELECT pt.team_id, pt.team_name, pt.project_id,
@@ -1003,10 +1003,7 @@ class DbProjectTeam(BaseModel):
     @classmethod
     async def all(cls, db: Connection, project_id: int) -> list["ProjectTeam"]:
         """Fetch all teams for a project along with users."""
-        # NOTE Avoiding cyclical import errors
-        from app.projects.project_schemas import ProjectTeam
-
-        async with db.cursor(row_factory=class_row(ProjectTeam)) as cur:
+        async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(
                 """
                 SELECT pt.team_id, pt.team_name, pt.project_id,
