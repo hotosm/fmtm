@@ -26,16 +26,18 @@ import ProjectDetailsMap from '@/components/ProjectDetails/ProjectDetailsMap';
 import FolderManagedIcon from '@/assets/icons/folderManagedIcon.svg';
 import boltIcon from '@/assets/icons/boltIcon.svg';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/RadixComponents/Resizable';
+import TaskList from '@/components/ProjectDetails/Tabs/TaskList';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
-type tabType = 'project_info' | 'task_activity' | 'comments' | 'instructions';
+type tabType = 'project_info' | 'task_activity' | 'comments' | 'instructions' | 'task_list';
 
 const tabList: { id: tabType; name: string }[] = [
   { id: 'project_info', name: 'Project Info' },
   { id: 'task_activity', name: 'Task Activity' },
   { id: 'comments', name: 'Comments' },
   { id: 'instructions', name: 'Instructions' },
+  { id: 'task_list', name: 'Task List' },
 ];
 
 const ProjectDetails = () => {
@@ -127,6 +129,8 @@ const ProjectDetails = () => {
         return <Comments />;
       case 'instructions':
         return <Instructions instructions={projectInfo?.instructions} />;
+      case 'task_list':
+        return <TaskList map={map} />;
       default:
         return <></>;
     }
@@ -166,7 +170,10 @@ const ProjectDetails = () => {
         {/* upper div */}
         <div className="fmtm-w-full fmtm-hidden md:fmtm-flex fmtm-items-center fmtm-justify-between fmtm-gap-2">
           <div className="fmtm-flex fmtm-items-center">
-            <AssetModules.ChevronLeftIcon className="!fmtm-w-[1.125rem] fmtm-mx-1" />
+            <AssetModules.ChevronLeftIcon
+              className="!fmtm-w-[1.125rem] fmtm-mx-1 hover:fmtm-text-black hover:fmtm-scale-125 !fmtm-duration-200 fmtm-cursor-pointer"
+              onClick={() => navigate('/')}
+            />
             <h5>{projectInfo.name}</h5>
           </div>
           <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
@@ -215,7 +222,7 @@ const ProjectDetails = () => {
                   </div>
                   {getTabContent(selectedTab)}
                 </div>
-                {selectedTab !== 'comments' && (
+                {selectedTab !== 'comments' && selectedTab !== 'task_list' && (
                   <div className="fmtm-flex fmtm-gap-[0.625rem]">
                     <Link to={`/manage/project/${params?.id}`} className="!fmtm-w-1/2">
                       <Button variant="secondary-grey" className="fmtm-w-full">
