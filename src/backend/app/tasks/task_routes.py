@@ -36,7 +36,7 @@ from app.db.database import db_conn
 from app.db.enums import HTTPStatus, TaskEvent
 from app.db.models import DbProjectTeam, DbTask, DbTaskEvent, DbUser
 from app.projects import project_deps
-from app.tasks import task_crud, task_schemas, task_deps
+from app.tasks import task_crud, task_deps, task_schemas
 
 router = APIRouter(
     prefix="/tasks",

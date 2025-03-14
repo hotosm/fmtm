@@ -27,8 +27,8 @@ from loguru import logger as log
 from osm_login_python.core import Auth
 from psycopg import Connection
 from psycopg.rows import class_row
-from app.auth.auth_schemas import ProjectUserDict
 
+from app.auth.auth_schemas import ProjectUserDict
 from app.auth.providers.osm import (
     get_osm_token,
     send_osm_message,
