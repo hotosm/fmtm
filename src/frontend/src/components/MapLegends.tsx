@@ -19,32 +19,32 @@ const MapLegends = ({ defaultTheme }: { defaultTheme: any }) => {
   const MapDetails: mapDetialsType[] = [
     {
       value: 'Ready',
-      color: defaultTheme.palette.mapFeatureColors.ready,
+      color: defaultTheme.palette.mapFeatureColors.UNLOCKED_TO_MAP,
       status: 'none',
     },
     {
       value: 'Locked For Mapping',
-      color: defaultTheme.palette.mapFeatureColors.locked_for_mapping,
+      color: defaultTheme.palette.mapFeatureColors.LOCKED_FOR_MAPPING,
       status: 'lock',
     },
     {
       value: 'Ready For Validation',
-      color: defaultTheme.palette.mapFeatureColors.mapped,
+      color: defaultTheme.palette.mapFeatureColors.UNLOCKED_TO_VALIDATE,
       status: 'none',
     },
     {
       value: 'Locked For Validation',
-      color: defaultTheme.palette.mapFeatureColors.locked_for_validation,
+      color: defaultTheme.palette.mapFeatureColors.LOCKED_FOR_VALIDATION,
       status: 'lock',
     },
     {
       value: 'Validated',
-      color: defaultTheme.palette.mapFeatureColors.validated,
+      color: defaultTheme.palette.mapFeatureColors.UNLOCKED_DONE,
       status: 'none',
     },
     {
       value: 'Locked',
-      color: defaultTheme.palette.mapFeatureColors.invalidated,
+      color: '',
       status: 'none',
       type: 'locked',
     },

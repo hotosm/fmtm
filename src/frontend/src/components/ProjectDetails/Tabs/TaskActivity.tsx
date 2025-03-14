@@ -84,9 +84,9 @@ const TaskActivity = ({ defaultTheme, state, params, map }: taskActivityType) =>
             <span className="fmtm-text-[#7A7676] fmtm-font-extralight fmtm-italic fmtm-font-archivo">
               updated status to{' '}
             </span>
-            <p style={{ color: defaultTheme.statusTextTheme[taskEvent?.state] }} className="fmtm-font-archivo">
+            <span style={{ color: defaultTheme.statusTextTheme[taskEvent?.state] }} className="fmtm-font-archivo">
               {task_state_labels[taskEvent?.state]}
-            </p>
+            </span>
             <div className="fmtm-flex fmtm-items-center fmtm-justify-between">
               <p className="fmtm-font-archivo fmtm-text-sm fmtm-text-[#7A7676]">#{selectedTask}</p>
               <div className="fmtm-flex fmtm-items-center fmtm-mb-1">
