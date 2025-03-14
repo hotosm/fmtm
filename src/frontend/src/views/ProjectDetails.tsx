@@ -198,7 +198,7 @@ const ProjectDetails = () => {
               <div className="fmtm-w-full fmtm-h-full fmtm-hidden md:fmtm-flex fmtm-flex-col">
                 <div
                   className="fmtm-flex fmtm-flex-col fmtm-gap-4 fmtm-flex-1"
-                  // style={{ height: `${selectedTab === 'comments' ? 'calc(100% - 63px)' : 'calc(100% - 103px)'}` }}
+                  style={{ height: `${selectedTab === 'comments' ? 'calc(100% - 500px)' : 'calc(100% - 103px)'}` }}
                 >
                   <div className="fmtm-flex fmtm-border-b fmtm-border-grey-200 fmtm-gap-3">
                     {tabList.map((tab) => (

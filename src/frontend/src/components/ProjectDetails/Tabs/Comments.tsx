@@ -64,8 +64,8 @@ const Comments = () => {
   };
 
   return (
-    <div style={{ height: 'calc(100% - 120px)' }} className="fmtm-w-full fmtm-z-50">
-      <div style={{ height: 'calc(100% - 271px)' }} className="fmtm-overflow-y-scroll scrollbar">
+    <div className="fmtm-flex fmtm-flex-col fmtm-w-full fmtm-h-full sm:fmtm-h-[calc(100%-47px)] fmtm-z-50">
+      <div className="fmtm-flex-1 fmtm-overflow-y-scroll scrollbar">
         {projectGetCommentsLoading ? (
           <div className="fmtm-flex fmtm-flex-col fmtm-gap-4 fmtm-mb-1">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -92,7 +92,7 @@ const Comments = () => {
                         <RichTextEditor
                           editorHtmlContent={commentEvent?.comment}
                           editable={false}
-                          className="sm:!fmtm-bg-[#f5f5f5] !fmtm-rounded-none !fmtm-border-none"
+                          className="sm:!fmtm-bg-grey-100 !fmtm-rounded-none !fmtm-border-none"
                         />
                       </div>
                       <div className="fmtm-flex fmtm-items-center fmtm-justify-between">
@@ -123,33 +123,34 @@ const Comments = () => {
           </div>
         )}
       </div>
-      <div className="fmtm-pt-2 sm:fmtm-max-h-[235px] sm:fmtm-overflow-scroll sm:scrollbar">
+      <div className="fmtm-pt-2">
         <RichTextEditor
           editorHtmlContent={comment}
           setEditorHtmlContent={(content) => setComment(content)}
           editable={true}
           isEditorEmpty={(status) => setIsEditorEmpty(status)}
+          className="sm:fmtm-h-[235px] fmtm-overflow-scroll scrollbar"
         />
-      </div>
-      <div className="fmtm-mt-2 fmtm-w-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-gap-4">
-        <Button
-          variant="secondary-red"
-          onClick={() => {
-            clearComment();
-            dispatch(ProjectActions.SetMobileFooterSelection(''));
-          }}
-          className="!fmtm-w-1/2"
-        >
-          CLEAR COMMENT
-        </Button>
-        <Button
-          variant="primary-red"
-          onClick={handleComment}
-          className="!fmtm-w-1/2"
-          isLoading={projectPostCommentsLoading}
-        >
-          SAVE COMMENT
-        </Button>
+        <div className="fmtm-mt-2 fmtm-w-full fmtm-flex fmtm-justify-center fmtm-items-center fmtm-gap-4">
+          <Button
+            variant="secondary-grey"
+            onClick={() => {
+              clearComment();
+              dispatch(ProjectActions.SetMobileFooterSelection(''));
+            }}
+            className="!fmtm-w-1/2"
+          >
+            Clear Comment
+          </Button>
+          <Button
+            variant="primary-grey"
+            onClick={handleComment}
+            className="!fmtm-w-1/2"
+            isLoading={projectPostCommentsLoading}
+          >
+            Save Comment
+          </Button>
+        </div>
       </div>
     </div>
   );

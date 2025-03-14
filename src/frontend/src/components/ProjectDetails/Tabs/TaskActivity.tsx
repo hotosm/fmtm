@@ -111,7 +111,7 @@ const TaskActivity = ({ defaultTheme, state, params, map }: taskActivityType) =>
 
   return (
     <div className="fmtm-w-full fmtm-px-2 sm:fmtm-px-0 fmtm-relative sm:fmtm-overflow-y-scroll scrollbar">
-      <div className="fmtm-sticky fmtm-overflow-y-scroll scrollbar sm:fmtm-overflow-visible -fmtm-top-[2px] sm:fmtm-top-0 fmtm-bg-white md:fmtm-bg-[#F5F5F5]">
+      <div className="fmtm-sticky fmtm-overflow-y-scroll scrollbar sm:fmtm-overflow-visible -fmtm-top-[2px] sm:fmtm-top-0 fmtm-bg-white md:fmtm-bg-grey-100">
         <div className="fmtm-flex fmtm-items-center fmtm-w-full fmtm-justify-between fmtm-gap-4">
           <input
             type="text"
