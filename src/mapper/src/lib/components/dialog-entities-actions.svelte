@@ -3,7 +3,7 @@
 	import type { Coord } from '@turf/helpers';
 	import type { SlDialog, SlDrawer } from '@shoelace-style/shoelace';
 
-	import { m } from "$translations/messages.js";
+	import { m } from '$translations/messages.js';
 	import { TaskStatusEnum, type ProjectData } from '$lib/types';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
 	import { getAlertStore } from '$store/common.svelte.ts';
@@ -16,7 +16,7 @@
 		toggleTaskActionModal: (value: boolean) => void;
 		selectedTab: string;
 		projectData: ProjectData;
-		webFormsDrawerRef: SlDrawer | undefined;
+		displayWebFormsDrawer: Boolean;
 	};
 
 	function getStatusStyle(status: statusType) {
@@ -34,7 +34,13 @@
 		}
 	}
 
-	let { isTaskActionModalOpen, toggleTaskActionModal, selectedTab, projectData, webFormsDrawerRef }: Props = $props();
+	let {
+		isTaskActionModalOpen,
+		toggleTaskActionModal,
+		selectedTab,
+		projectData,
+		displayWebFormsDrawer = $bindable(false),
+	}: Props = $props();
 
 	let dialogRef: SlDialog | null = $state(null);
 	let toggleDistanceWarningDialog = $state(false);
@@ -279,12 +285,12 @@
 								class="primary flex-grow"
 								onclick={() => {
 									toggleTaskActionModal(false);
-									webFormsDrawerRef?.show();
+									displayWebFormsDrawer = true;
 								}}
 								onkeydown={(e: KeyboardEvent) => {
 									if (e.key === 'Enter') {
 										toggleTaskActionModal(false);
-										webFormsDrawerRef?.show();
+										displayWebFormsDrawer = true;
 									}
 								}}
 								role="button"
