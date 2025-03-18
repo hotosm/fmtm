@@ -6,6 +6,11 @@ import { useAppSelector } from '@/types/reduxTypes';
 import { task_state_labels } from '@/types/enums';
 import AssetModules from '@/shared/AssetModules';
 import DataTable from '@/components/common/DataTable';
+import { useDispatch } from 'react-redux';
+import { TaskActions } from '@/store/slices/TaskSlice';
+import { ProjectActions } from '@/store/slices/ProjectSlice';
+
+type taskListPropType = { map: any; setSelectedTab: (tab: 'task_activity') => void };
 
 type taskListType = {
   task_state: string | undefined;
@@ -16,8 +21,9 @@ type taskListType = {
   feature_count: number;
 };
 
-const TaskList = ({ map }: { map: any }) => {
+const TaskList = ({ map, setSelectedTab }: taskListPropType) => {
   const params = useParams();
+  const dispatch = useDispatch();
   const projectId: string | undefined = params.id;
 
   const [taskList, setTaskList] = useState<taskListType[]>([]);
@@ -48,6 +54,13 @@ const TaskList = ({ map }: { map: any }) => {
     map.getView().fit(extent, {
       padding: [0, 0, 0, 0],
     });
+  };
+
+  const showTaskHistory = (taskIndex: string) => {
+    dispatch(TaskActions.SetSelectedTask(+taskIndex));
+    dispatch(ProjectActions.ToggleTaskModalStatus(true));
+    setSelectedTab('task_activity');
+    zoomToTask(taskIndex);
   };
 
   const taskDataColumns = [
@@ -87,10 +100,13 @@ const TaskList = ({ map }: { map: any }) => {
         return (
           <div className="fmtm-flex fmtm-items-center fmtm-gap-4 fmtm-px-4">
             <AssetModules.MapOutlinedIcon
-              className="!fmtm-text-sm fmtm-text-grey-800 fmtm-cursor-pointer"
+              className="!fmtm-text-sm fmtm-text-grey-800 hover:fmtm-text-grey-900 fmtm-cursor-pointer"
               onClick={() => zoomToTask(row?.original?.index)}
             />
-            <AssetModules.HistoryOutlinedIcon className="!fmtm-text-sm fmtm-text-grey-800 fmtm-cursor-pointer" />
+            <AssetModules.HistoryOutlinedIcon
+              className="!fmtm-text-sm fmtm-text-grey-800 hover:fmtm-text-grey-900 fmtm-cursor-pointer"
+              onClick={() => showTaskHistory(row?.original?.index)}
+            />
           </div>
         );
       },

@@ -130,7 +130,7 @@ const ProjectDetails = () => {
       case 'instructions':
         return <Instructions instructions={projectInfo?.instructions} />;
       case 'task_list':
-        return <TaskList map={map} />;
+        return <TaskList map={map} setSelectedTab={setSelectedTab} />;
       default:
         return <></>;
     }
