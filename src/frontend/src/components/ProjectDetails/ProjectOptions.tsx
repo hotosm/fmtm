@@ -83,7 +83,7 @@ const ProjectOptions = ({ projectName }: projectOptionPropTypes) => {
       {downloadButtonList.map((btn) => (
         <Button
           key={btn.downloadType}
-          variant="secondary-red"
+          variant="secondary-grey"
           onClick={() => handleDownload(btn.downloadType)}
           isLoading={btn.isLoading}
         >
