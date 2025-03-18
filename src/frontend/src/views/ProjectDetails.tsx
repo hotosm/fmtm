@@ -204,21 +204,23 @@ const ProjectDetails = () => {
             <ResizablePanel className="fmtm-hidden md:fmtm-flex md:fmtm-min-w-[22rem]">
               <div className="fmtm-w-full fmtm-h-full fmtm-hidden md:fmtm-flex fmtm-flex-col">
                 <div
-                  className="fmtm-flex fmtm-flex-col fmtm-gap-4 fmtm-flex-1"
+                  className="fmtm-flex fmtm-flex-col fmtm-gap-5 fmtm-flex-1"
                   style={{ height: `${selectedTab === 'comments' ? 'calc(100% - 500px)' : 'calc(100% - 103px)'}` }}
                 >
-                  <div className="fmtm-flex fmtm-border-b fmtm-border-grey-200 fmtm-gap-3">
-                    {tabList.map((tab) => (
-                      <button
-                        key={tab.id}
-                        className={`fmtm-body-md fmtm-rounded-none fmtm-border-b fmtm-py-1 fmtm-px-5 fmtm-duration-200 fmtm-w-fit fmtm-text-grey-900 ${
-                          selectedTab === tab.id ? 'fmtm-border-primaryRed fmtm-button' : 'fmtm-border-transparent'
-                        } ${(taskModalStatus && tab.id === 'project_info') || (!taskModalStatus && (tab.id === 'task_activity' || tab.id === 'comments')) ? 'fmtm-hidden' : ''}`}
-                        onClick={() => setSelectedTab(tab.id)}
-                      >
-                        {tab.name}
-                      </button>
-                    ))}
+                  <div className="fmtm-overflow-y-hidden fmtm-overflow-x-scroll scrollbar fmtm-min-h-fit">
+                    <div className="fmtm-flex fmtm-border-b fmtm-border-grey-200 fmtm-gap-3">
+                      {tabList.map((tab) => (
+                        <button
+                          key={tab.id}
+                          className={`fmtm-body-md fmtm-rounded-none fmtm-border-b fmtm-py-1 fmtm-px-5 fmtm-duration-200 fmtm-w-fit fmtm-text-grey-900 fmtm-text-nowrap ${
+                            selectedTab === tab.id ? 'fmtm-border-primaryRed fmtm-button' : 'fmtm-border-transparent'
+                          } ${(taskModalStatus && tab.id === 'project_info') || (!taskModalStatus && (tab.id === 'task_activity' || tab.id === 'comments')) ? 'fmtm-hidden' : ''}`}
+                          onClick={() => setSelectedTab(tab.id)}
+                        >
+                          {tab.name}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   {getTabContent(selectedTab)}
                 </div>
