@@ -350,7 +350,7 @@ CREATE TABLE public.users (
     role public.userrole NOT NULL DEFAULT 'MAPPER',
     name character varying,
     city character varying,
-    provider character varying,
+    auth_provider character varying,
     country character varying,
     profile_img character varying,
     email_address character varying,
