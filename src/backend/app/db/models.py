@@ -197,6 +197,7 @@ class DbUser(BaseModel):
     tasks_invalidated: Optional[int] = None
     projects_mapped: Optional[list[int]] = None
     api_key: Optional[str] = None
+    auth_provider: Optional[str] = "osm"
     registered_at: Optional[AwareDatetime] = None
     last_login_at: Optional[AwareDatetime] = None
 

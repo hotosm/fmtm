@@ -47,12 +47,13 @@ class BaseUser(BaseModel):
     # TODO any usage of profile_img should be refactored out
     # in place of 'picture'
     profile_img: Optional[str] = None
+    email: Optional[str] = None
     picture: Optional[str] = None
     role: Optional[UserRole] = UserRole.MAPPER
 
 
 class AuthUser(BaseUser):
-    """The user model returned from OSM OAuth2."""
+    """The user model returned from OAuth2."""
 
     _sub: str = PrivateAttr()  # it won't return this field
 
@@ -67,6 +68,13 @@ class AuthUser(BaseUser):
         """Compute id from sub field."""
         sub = self._sub
         return int(sub.split("|")[1])
+
+    @computed_field
+    @property
+    def provider(self) -> str:
+        """Compute provider from sub field."""
+        sub = self._sub
+        return sub.split("|")[0]
 
     def model_post_init(self, ctx):
         """Temp workaround to convert oauth picture --> profile_img.
@@ -87,6 +95,7 @@ class FMTMUser(BaseUser):
     """User details returned to the frontend."""
 
     id: int
+    auth_provider: Optional[str] = "osm"
     project_roles: Optional[dict[int, ProjectRole]] = None
     orgs_managed: Optional[list[int]] = None
 

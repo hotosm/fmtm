@@ -35,6 +35,7 @@ from app.auth.auth_deps import (
     set_cookies,
 )
 from app.auth.auth_schemas import AuthUser, FMTMUser
+from app.auth.providers.google import handle_google_callback, init_google_auth
 from app.auth.providers.osm import handle_osm_callback, init_osm_auth
 from app.config import settings
 from app.db.database import db_conn
@@ -49,14 +50,13 @@ router = APIRouter(
 
 
 @router.get("/osm-login")
-async def login_url(osm_auth=Depends(init_osm_auth)):
+async def login_url_osm(osm_auth=Depends(init_osm_auth)):
     """Get Login URL for OSM Oauth Application.
 
     The application must be registered on openstreetmap.org.
     Open the download url returned to get access_token.
 
     Args:
-        request: The GET request.
         osm_auth: The Auth object from osm-login-python.
 
     Returns:
@@ -64,12 +64,30 @@ async def login_url(osm_auth=Depends(init_osm_auth)):
             Includes URL params: client_id, redirect_uri, permission scope.
     """
     login_url = osm_auth.login()
-    log.debug(f"Login URL returned: {login_url}")
+    log.debug(f"OSM Login URL returned: {login_url}")
     return JSONResponse(content=login_url, status_code=HTTPStatus.OK)
 
 
-@router.get("/callback")
-async def callback(
+@router.get("/google-login")
+async def login_url_google(google_auth=Depends(init_google_auth)):
+    """Get Login URL for Google Oauth Application.
+
+    The application must be registered with Google.
+    Open the URL returned to start Google authorization flow.
+
+    Args:
+        google_auth: The GoogleAuth object.
+
+    Returns:
+        login_url (string): URL to authorize user in Google.
+    """
+    login_url = google_auth.login()
+    log.debug(f"Google Login URL returned: {login_url}")
+    return JSONResponse(content=login_url, status_code=HTTPStatus.OK)
+
+
+@router.get("/callback/osm")
+async def osm_callback(
     request: Request, osm_auth: Annotated[AuthUser, Depends(init_osm_auth)]
 ) -> JSONResponse:
     """Performs oauth token exchange with OpenStreetMap.
@@ -80,6 +98,23 @@ async def callback(
     try:
         # This includes the main cookie, refresh cookie, osm token cookie
         response_plus_cookies = await handle_osm_callback(request, osm_auth)
+        return response_plus_cookies
+    except Exception as e:
+        raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail=str(e)) from e
+
+
+@router.get("/callback/google")
+async def google_callback(
+    request: Request, google_auth=Depends(init_google_auth)
+) -> JSONResponse:
+    """Performs oauth token exchange with Google.
+
+    Provides an access token that can be used for authenticating other endpoints.
+    Also returns a cookie containing the access token for persistence in frontend apps.
+    """
+    try:
+        # This includes the main cookie, refresh cookie
+        response_plus_cookies = await handle_google_callback(request, google_auth)
         return response_plus_cookies
     except Exception as e:
         raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail=str(e)) from e
@@ -127,19 +162,36 @@ async def get_or_create_user(
         upsert_sql = """
             WITH upserted_user AS (
                 INSERT INTO users (
-                    id, username, profile_img, role, registered_at
-                ) VALUES (
-                    %(user_id)s, %(username)s, %(profile_img)s, %(role)s, NOW()
+                    id,
+                    username,
+                    email_address,
+                    profile_img,
+                    role,
+                    registered_at,
+                    auth_provider
+                )
+                VALUES (
+                    %(user_id)s,
+                    %(username)s,
+                    %(email_address)s,
+                    %(profile_img)s,
+                    %(role)s, NOW(),
+                    %(auth_provider)s
                 )
                 ON CONFLICT (id)
                 DO UPDATE SET
                     profile_img = EXCLUDED.profile_img,
                     last_login_at = NOW()
-                RETURNING id, username, profile_img, role
+                RETURNING id, username, email_address, profile_img, role, auth_provider
             )
 
             SELECT
-                u.id, u.username, u.profile_img, u.role,
+                u.id,
+                u.username,
+                u.email_address,
+                u.profile_img,
+                u.role,
+                u.auth_provider,
 
                 -- Aggregate the organisation IDs managed by the user
                 array_agg(
@@ -155,7 +207,12 @@ async def get_or_create_user(
             FROM upserted_user u
             LEFT JOIN user_roles ur ON u.id = ur.user_id
             LEFT JOIN organisation_managers om ON u.id = om.user_id
-            GROUP BY u.id, u.username, u.profile_img, u.role;
+            GROUP BY u.id,
+                u.username,
+                u.email_address,
+                u.profile_img,
+                u.role,
+                u.auth_provider;
         """
 
         async with db.cursor(row_factory=class_row(DbUser)) as cur:
@@ -164,8 +221,10 @@ async def get_or_create_user(
                 {
                     "user_id": user_data.id,
                     "username": user_data.username,
+                    "email_address": user_data.email,
                     "profile_img": user_data.profile_img or "",
                     "role": UserRole(user_data.role).name,
+                    "auth_provider": user_data.provider,
                 },
             )
             db_user_details = await cur.fetchone()
@@ -199,11 +258,11 @@ async def my_data(
     db: Annotated[Connection, Depends(db_conn)],
     current_user: Annotated[AuthUser, Depends(login_required)],
 ):
-    """Read access token and get user details from OSM.
+    """Read access token and get user details.
 
     Args:
         db (Connection): The db connection.
-        current_user (AuthUser): User data provided by osm-login-python Auth.
+        current_user (AuthUser): User data provided by authentication.
 
     Returns:
         FMTMUser: The dict of user data.
@@ -220,7 +279,7 @@ async def refresh_management_cookies(
 
     This endpoint is specific to the management desktop frontend.
     Any temp auth cookies will be ignored and removed.
-    OSM login is required.
+    Authentication is required.
 
     NOTE this endpoint has no db calls and returns in ~2ms.
     """
@@ -241,7 +300,7 @@ async def refresh_mapper_token(
 
     This endpoint is specific to the mapper mobile frontend.
     By default the user will be logged in with a temporary auth cookie.
-    OSM auth is optional, if the user wishes to be attributed for contributions.
+    Authentication is optional, if the user wishes to be attributed for contributions.
 
     NOTE this endpoint has no db calls and returns in ~2ms.
     """

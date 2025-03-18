@@ -70,7 +70,7 @@ async def handle_osm_callback(request: Request, osm_auth: Auth):
         log.debug(f"Access token returned of length {len(serialised_user_data)}")
         osm_user = osm_auth.deserialize_data(serialised_user_data)
         user_data = {
-            "sub": f"fmtm|{osm_user['id']}",
+            "sub": f"osm|{osm_user['id']}",
             "aud": settings.FMTM_DOMAIN,
             "iat": int(time()),
             "exp": int(time()) + 86400,  # expiry set to 1 day

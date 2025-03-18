@@ -345,11 +345,12 @@ ALTER TABLE public.user_roles OWNER TO fmtm;
 
 
 CREATE TABLE public.users (
-    id integer NOT NULL,
+    id NUMERIC NOT NULL,
     username character varying,
     role public.userrole NOT NULL DEFAULT 'MAPPER',
     name character varying,
     city character varying,
+    provider character varying,
     country character varying,
     profile_img character varying,
     email_address character varying,
