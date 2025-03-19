@@ -245,7 +245,7 @@ const ProjectDetails = () => {
             <ResizableHandle withHandle className="fmtm-bg-grey-200 fmtm-hidden md:fmtm-flex" />
             <ResizablePanel className="md:fmtm-min-w-[22rem]">
               {projectId && (
-                <div className="fmtm-relative md:fmtm-static fmtm-flex-grow fmtm-h-full md:fmtm-rounded-2xl fmtm-overflow-hidden">
+                <div className="fmtm-relative md:fmtm-static fmtm-flex-grow fmtm-h-full md:fmtm-rounded-xl fmtm-overflow-hidden">
                   <ProjectDetailsMap
                     setSelectedTaskArea={setSelectedTaskArea}
                     setSelectedTaskFeature={setSelectedTaskFeature}

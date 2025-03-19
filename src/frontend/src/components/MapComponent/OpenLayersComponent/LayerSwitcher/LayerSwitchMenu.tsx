@@ -117,16 +117,16 @@ const LayerSwitchMenu = ({ map, pmTileLayerUrl = null }: { map: any; pmTileLayer
   };
 
   return (
-    <div>
+    <div className="fmtm-w-6 fmtm-h-6 fmtm-max-w-6 fmtm-max-h-6">
       <DropdownMenu modal={false} onOpenChange={(status) => setIsLayerMenuOpen(status)}>
         <DropdownMenuTrigger className="fmtm-outline-none">
-          <Tooltip title="Base Maps" placement={isLayerMenuOpen ? 'bottom' : 'left'}>
+          <Tooltip title="Base Maps" placement={isLayerMenuOpen ? 'bottom' : 'left'} arrow>
             <div
               style={{
                 backgroundImage: activeLayer === 'None' ? 'none' : `url(${layerIcons[activeLayer] || satelliteImg})`,
                 backgroundColor: 'white',
               }}
-              className={`fmtm-relative fmtm-group fmtm-order-4 fmtm-w-9 fmtm-h-9 fmtm-border-[1px] fmtm-border-primaryRed hover:fmtm-border-[2px] fmtm-duration-75 fmtm-cursor-pointer fmtm-bg-contain fmtm-rounded-full ${
+              className={`fmtm-relative fmtm-group fmtm-order-4 fmtm-w-6 fmtm-h-6 fmtm-max-w-6 fmtm-max-h-6 fmtm-cursor-pointer fmtm-bg-contain ${
                 activeLayer === 'None' ? '!fmtm-border-primaryRed' : ''
               }`}
             ></div>

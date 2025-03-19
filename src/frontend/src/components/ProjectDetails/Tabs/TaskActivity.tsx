@@ -69,7 +69,7 @@ const TaskActivity = ({ defaultTheme, state, params, map }: taskActivityType) =>
     }`;
     return (
       <div className="fmtm-flex fmtm-gap-2 fmtm-items-center fmtm-justify-between fmtm-px-1 fmtm-border-b-[2px] fmtm-border-white fmtm-py-3">
-        <div className="fmtm-flex fmtm-items-center">
+        <div className="fmtm-flex fmtm-items-center fmtm-flex-1">
           <div className="fmtm-w-[2.81rem] fmtm-h-[2.81rem] fmtm-border fmtm-rounded-full fmtm-overflow-hidden fmtm-mr-4">
             {taskEvent?.profile_img ? (
               <img src={taskEvent?.profile_img} alt="Profile Picture" />
@@ -79,23 +79,21 @@ const TaskActivity = ({ defaultTheme, state, params, map }: taskActivityType) =>
               </div>
             )}
           </div>
-          <div className="fmtm-text-base">
-            <span className="fmtm-text-[#555555] fmtm-font-medium fmtm-font-archivo">{taskEvent?.username} </span>
-            <span className="fmtm-text-[#7A7676] fmtm-font-extralight fmtm-italic fmtm-font-archivo">
-              updated status to{' '}
-            </span>
-            <span style={{ color: defaultTheme.statusTextTheme[taskEvent?.state] }} className="fmtm-font-archivo">
+          <div className="fmtm-text-base fmtm-flex-1">
+            <span className="fmtm-text-[#555555] fmtm-font-medium">{taskEvent?.username} </span>
+            <span className="fmtm-text-[#7A7676] fmtm-font-extralight fmtm-italic ">updated status to </span>
+            <span style={{ color: defaultTheme.statusTextTheme[taskEvent?.state] }}>
               {task_state_labels[taskEvent?.state]}
             </span>
             <div className="fmtm-flex fmtm-items-center fmtm-justify-between">
-              <p className="fmtm-font-archivo fmtm-text-sm fmtm-text-[#7A7676]">#{selectedTask}</p>
-              <div className="fmtm-flex fmtm-items-center fmtm-mb-1">
+              <p className="fmtm-text-sm fmtm-text-[#7A7676]">#{selectedTask}</p>
+              <div className="fmtm-flex fmtm-items-center fmtm-gap-1">
                 <AssetModules.AccessTimeIcon className="fmtm-text-primaryRed" style={{ fontSize: '20px' }} />
+                <p className="fmtm-text-sm fmtm-text-[#7A7676]">
+                  <span>{actionDate} </span>
+                  <span>{actionTime}</span>
+                </p>
               </div>
-              <p className="fmtm-font-archivo fmtm-text-sm fmtm-text-[#7A7676]">
-                <span>{actionDate} </span>
-                <span>{actionTime}</span>
-              </p>
             </div>
           </div>
         </div>

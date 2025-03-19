@@ -155,7 +155,7 @@ const TaskList = ({ map, setSelectedTab }: taskListPropType) => {
           value={searchTextData}
           onChange={handleChangeData}
           type="number"
-          wrapperStyle="fmtm-w-[7.5rem] fmtm-rounded"
+          wrapperStyle="!fmtm-w-[7.5rem] fmtm-rounded"
         />
         <Select2
           options={taskStatusList || []}

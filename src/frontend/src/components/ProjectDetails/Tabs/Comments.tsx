@@ -64,7 +64,7 @@ const Comments = () => {
   };
 
   return (
-    <div className="fmtm-flex fmtm-flex-col fmtm-w-full fmtm-h-full sm:fmtm-h-[calc(100%-47px)] fmtm-z-50">
+    <div className="fmtm-flex fmtm-flex-col fmtm-w-full fmtm-h-full sm:fmtm-h-[calc(100%-54px)] fmtm-z-50">
       <div className="fmtm-flex-1 fmtm-overflow-y-scroll scrollbar">
         {projectGetCommentsLoading ? (
           <div className="fmtm-flex fmtm-flex-col fmtm-gap-4 fmtm-mb-1">
@@ -96,15 +96,10 @@ const Comments = () => {
                         />
                       </div>
                       <div className="fmtm-flex fmtm-items-center fmtm-justify-between">
-                        <p className="fmtm-font-archivo fmtm-text-sm fmtm-text-[#7A7676]">#{selectedTask}</p>
+                        <p className="fmtm-text-sm fmtm-text-[#7A7676]">#{selectedTask}</p>
                         <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
-                          <div className="fmtm-flex fmtm-items-center fmtm-mb-1">
-                            <AssetModules.AccessTimeIcon
-                              className="fmtm-text-primaryRed"
-                              style={{ fontSize: '20px' }}
-                            />
-                          </div>
-                          <p className="fmtm-font-archivo fmtm-text-sm fmtm-text-[#7A7676] fmtm-flex fmtm-gap-2">
+                          <AssetModules.AccessTimeIcon className="fmtm-text-primaryRed" style={{ fontSize: '20px' }} />
+                          <p className="fmtm-text-sm fmtm-text-[#7A7676] fmtm-flex fmtm-gap-2">
                             <span>{commentEvent?.created_at?.split('T')[0]}</span>
                             <span>
                               {commentEvent?.created_at?.split('T')[1].split(':')[0]}:

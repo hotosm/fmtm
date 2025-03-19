@@ -9,7 +9,6 @@ import MapControlComponent from '@/components/ProjectDetails/MapControlComponent
 import AsyncPopup from '../MapComponent/OpenLayersComponent/AsyncPopup/AsyncPopup';
 
 import CoreModules from '@/shared/CoreModules';
-import AssetModules from '@/shared/AssetModules';
 import WindowDimension from '@/hooks/WindowDimension';
 import { useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
@@ -22,6 +21,7 @@ import { isValidUrl } from '@/utilfunctions/urlChecker';
 import { entity_state } from '@/types/enums';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { GetEntityStatusList, GetGeometryLog, SyncTaskState } from '@/api/Project';
+import MapLegends from '@/components/MapLegends';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -55,6 +55,7 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
   const newGeomFeatureCollection = useAppSelector((state) => state.project.newGeomFeatureCollection);
   const customBasemapUrl = useAppSelector((state) => state.project.customBasemapUrl);
   const selectedTask = useAppSelector((state) => state.task.selectedTask);
+  const defaultTheme = useAppSelector((state) => state.theme.hotTheme);
 
   const entityOsmMapLoading = useAppSelector((state) => state.project.entityOsmMapLoading);
   const getGeomLogLoading = useAppSelector((state) => state.project.getGeomLogLoading);
@@ -202,10 +203,11 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
     <MapComponent
       ref={mapRef}
       mapInstance={map}
-      className={`map naxatw-relative naxatw-min-h-full naxatw-w-full ${
+      className={`map naxatw-relative naxatw-min-h-full naxatw-w-full fmtm-cursor-grab active:fmtm-cursor-grabbing ${
         windowSize.width <= 768 ? '!fmtm-h-[100dvh]' : '!fmtm-h-full'
       }`}
     >
+      <MapLegends defaultTheme={defaultTheme} />
       <LayerSwitcherControl visible={customBasemapUrl ? 'custom' : 'osm'} pmTileLayerUrl={customBasemapUrl} />
 
       {taskBoundariesLayer && taskBoundariesLayer?.features?.length > 0 && (
@@ -294,18 +296,14 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
         popupId="locked-popup"
         className="fmtm-w-[235px]"
       />
-      <div className="fmtm-absolute fmtm-bottom-20 md:fmtm-bottom-3 fmtm-left-3 fmtm-z-50">
-        <Button variant="secondary-red" onClick={() => dispatch(ProjectActions.ToggleGenerateMbTilesModalStatus(true))}>
-          BASEMAPS
-          <AssetModules.BoltIcon className="!fmtm-text-xl" />
-        </Button>
-      </div>
-      <div className="fmtm-absolute fmtm-bottom-20 md:fmtm-bottom-3 fmtm-right-3 fmtm-z-50">
-        <Button variant="secondary-red" onClick={syncStatus} disabled={entityOsmMapLoading}>
-          SYNC STATUS
-          <AssetModules.SyncIcon
-            className={`!fmtm-text-xl ${(entityOsmMapLoading || getGeomLogLoading || syncTaskStateLoading) && 'fmtm-animate-spin'}`}
-          />
+      <div className="fmtm-absolute fmtm-bottom-24 md:fmtm-bottom-10 fmtm-left-[50%] fmtm-translate-x-[-50%] fmtm-z-40">
+        <Button
+          variant="primary-red"
+          onClick={syncStatus}
+          disabled={entityOsmMapLoading}
+          isLoading={entityOsmMapLoading || getGeomLogLoading || syncTaskStateLoading}
+        >
+          Sync Status
         </Button>
       </div>
       <MapControlComponent map={map} projectName={projectInfo?.name || ''} pmTileLayerUrl={customBasemapUrl} />
