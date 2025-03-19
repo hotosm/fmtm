@@ -4,6 +4,7 @@
 # Allow files and directories
 !**/*.py
 !app
+!packages
 !tests
 !app-entrypoint.sh
 !migrate-entrypoint.sh
@@ -12,3 +13,6 @@
 !uv.lock
 !migrations
 !scheduler
+
+**/__pycache__
+**/*.pyc

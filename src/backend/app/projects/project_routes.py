@@ -21,7 +21,7 @@ import json
 import os
 from io import BytesIO
 from pathlib import Path
-from typing import Annotated, Any, Dict, Optional
+from typing import Annotated, Any, Dict, List, Optional
 
 import requests
 from fastapi import (
@@ -41,10 +41,10 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fmtm_splitter.splitter import split_by_sql, split_by_square
 from geojson_pydantic import FeatureCollection
 from loguru import logger as log
-from osm_fieldwork.data_models import data_models_path
-from osm_fieldwork.make_data_extract import getChoices
+from osm_fieldwork.data_models import data_models_path, get_choices
 from pg_nearest_city import AsyncNearestCity
 from psycopg import Connection
+from psycopg.rows import dict_row
 
 from app.auth.auth_deps import login_required, mapper_login_required
 from app.auth.auth_schemas import AuthUser, OrgUserDict, ProjectUserDict
@@ -65,6 +65,8 @@ from app.db.models import (
     DbGeometryLog,
     DbOdkEntities,
     DbProject,
+    DbProjectTeam,
+    DbProjectTeamUser,
     DbTask,
     DbUser,
     DbUserRole,
@@ -77,7 +79,6 @@ from app.db.postgis_utils import (
     merge_polygons,
     parse_geojson_file_to_featcol,
     polygon_to_centroid,
-    split_geojson_by_task_areas,
 )
 from app.organisations import organisation_deps
 from app.projects import project_crud, project_deps, project_schemas
@@ -374,8 +375,8 @@ async def get_categories(current_user: Annotated[AuthUser, Depends(login_require
     """
     # FIXME update to use osm-rawdata
     categories = (
-        getChoices()
-    )  # categories are fetched from osm_fieldwork.make_data_extracts.getChoices()
+        get_choices()
+    )  # categories are fetched from osm_fieldwork.data_models.get_choices()
     return categories
 
 
@@ -697,7 +698,8 @@ async def upload_custom_extract(
 ):
     """Upload a custom data extract geojson for a project.
 
-    Extract can be in geojson for flatgeobuf format.
+    The frontend has the option to upload flatgeobuf, but this must first
+    be deserialised to GeoJSON before upload here.
 
     Note the following properties are mandatory:
     - "id"
@@ -706,6 +708,8 @@ async def upload_custom_extract(
     - "version"
     - "changeset"
     - "timestamp"
+
+    If a property is missing, a defaults will be assigned.
 
     Extracts are best generated with https://export.hotosm.org for full compatibility.
 
@@ -889,10 +893,31 @@ async def add_new_entity(
 
         # Add required properties and extract entity data
         featcol = add_required_geojson_properties(geojson)
-        properties = list(featcol["features"][0]["properties"].keys())
-        task_geojson = await split_geojson_by_task_areas(db, featcol, project.id)
+        featcol["features"][0]["properties"]["project_id"] = project.id
+
+        # Get task_id of the feature if inside task boundary
+        async with db.cursor(row_factory=dict_row) as cur:
+            await cur.execute(
+                """
+                SELECT t.project_task_index AS task_id
+                FROM tasks t
+                WHERE t.project_id = %s
+                AND ST_Within(
+                    ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326),
+                    t.outline
+                )
+                LIMIT 1;
+                """,
+                (project.id, json.dumps(features[0].get("geometry"))),
+            )
+            result = await cur.fetchone()
+
+        task_id = ""
+        if result and (task_id := result.get("task_id")):
+            featcol["features"][0]["properties"]["task_id"] = task_id
+
         entities_list = await central_crud.task_geojson_dict_to_entity_values(
-            task_geojson
+            {task_id: featcol}
         )
 
         if not entities_list:
@@ -904,7 +929,7 @@ async def add_new_entity(
         return await central_crud.create_entity(
             project_odk_creds,
             project_odk_id,
-            properties=properties,
+            properties=list(featcol["features"][0]["properties"].keys()),
             entity=entities_list[0],
             dataset_name="features",
         )
@@ -1420,4 +1445,93 @@ async def delete_geom_log(
     project_id = project_user.get("project").id
     await DbGeometryLog.delete(db, project_id, geom_id)
     log.info(f"Deletion of geom {geom_id} from project {project_id} is successful")
+    return Response(status_code=HTTPStatus.NO_CONTENT)
+
+
+@router.get("/{project_id}/teams", response_model=List[project_schemas.ProjectTeam])
+async def get_project_teams(
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(project_manager)],
+):
+    """Get the teams associated with a project."""
+    project_id = project_user.get("project").id
+    teams = await DbProjectTeam.all(db, project_id)
+    return teams
+
+
+@router.post("/{project_id}/teams", response_model=project_schemas.ProjectTeamOne)
+async def create_project_team(
+    team: project_schemas.ProjectTeamIn,
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(project_manager)],
+):
+    """Create a new team for a project."""
+    return await DbProjectTeam.create(db, team)
+
+
+@router.get("/{project_id}/teams/{team_id}", response_model=project_schemas.ProjectTeam)
+async def get_team(
+    team: Annotated[DbProjectTeam, Depends(project_deps.get_project_team)],
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(project_manager)],
+):
+    """Get the teams associated with a project."""
+    team = await DbProjectTeam.one(db, team.team_id)
+    return team
+
+
+@router.patch(
+    "/{project_id}/teams/{team_id}", response_model=project_schemas.ProjectTeamOne
+)
+async def update_project_team(
+    team: Annotated[DbProjectTeam, Depends(project_deps.get_project_team)],
+    team_update: project_schemas.ProjectTeamIn,
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(project_manager)],
+):
+    """Get the teams associated with a project."""
+    team = await DbProjectTeam.update(db, team.team_id, team_update)
+    return team
+
+
+@router.delete("/{project_id}/teams/{team_id}")
+async def delete_project_team(
+    team: Annotated[DbProjectTeam, Depends(project_deps.get_project_team)],
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(project_manager)],
+):
+    """Get the teams associated with a project."""
+    team = await DbProjectTeam.delete(db, team.team_id)
+    return team
+
+
+@router.post("/{project_id}/teams/{team_id}/users")
+async def add_team_users(
+    team: Annotated[DbProjectTeam, Depends(project_deps.get_project_team)],
+    users: List[int],
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(project_manager)],
+):
+    """Add users to a team."""
+    # Assign mapper user roles to the project
+    for user_id in users:
+        await DbUserRole.create(
+            db,
+            project_user.get("project").id,
+            user_id,
+            ProjectRole.MAPPER,
+        )
+    await DbProjectTeamUser.create(db, team.team_id, users)
+    return Response(status_code=HTTPStatus.OK)
+
+
+@router.delete("/{project_id}/teams/{team_id}/users")
+async def remove_team_users(
+    team: Annotated[DbProjectTeam, Depends(project_deps.get_project_team)],
+    users: List[int],
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user: Annotated[ProjectUserDict, Depends(project_manager)],
+):
+    """Add users to a team."""
+    await DbProjectTeamUser.delete(db, team.team_id, users)
     return Response(status_code=HTTPStatus.NO_CONTENT)

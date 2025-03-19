@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { setLanguageTag, onSetLanguageTag, availableLanguageTags } from "$translations/runtime.js";
+	import { onMount, onDestroy } from 'svelte';
 	import type { SlDrawer, SlTooltip } from '@shoelace-style/shoelace';
 	// FIXME this is a workaround to re-import, as using sl-dropdown
 	// and sl-menu prevents selection of values!
@@ -8,10 +7,10 @@
 	import '@shoelace-style/shoelace/dist/components/dropdown/dropdown.js';
 	import '@shoelace-style/shoelace/dist/components/menu/menu.js';
 	import '@shoelace-style/shoelace/dist/components/menu-item/menu-item.js';
+	import type { SlSelectEvent } from '@shoelace-style/shoelace/dist/events';
 
-	import * as m from "$translations/messages.js";
-	import HotLogo from '$assets/images/hot-logo.svg';
-	import HotLogoText from '$assets/images/hot-logo-text.svg';
+	import { setLocale as setParaglideLocale, locales } from "$translations/runtime.js";
+	import { m } from "$translations/messages.js";
 	import Login from '$lib/components/login.svelte';
 	import { getLoginStore } from '$store/login.svelte.ts';
 	import { drawerItems as menuItems } from '$constants/drawerItems.ts';
@@ -31,11 +30,6 @@
 		+(projectSetupStepStore.projectSetupStep || 0) === projectSetupStepEnum['odk_project_load'],
 	);
 
-	// Trigger from paraglide-js, when the locale changes
-	onSetLanguageTag((newLocale: string) => {
-		commonStore.setLocale(newLocale);
-	});
-
 	const handleSignOut = async () => {
 		try {
 			await revokeCookies();
@@ -47,23 +41,41 @@
 		}
 	};
 
-	onMount(() => {
-		setLanguageTag(commonStore.locale);
+	const handleLocaleSelect = (event: SlSelectEvent) => {
+		const selectedItem = event.detail.item;
+		commonStore.setLocale(selectedItem.value);
+		setParaglideLocale(selectedItem.value) // paraglide function for UI changes (causes reload)
+	};
 
+	onMount(() => {
 		// Handle locale change
 		const container = document.querySelector('.locale-selection');
-		const dropdown = container.querySelector('sl-dropdown');
-		dropdown.addEventListener('sl-select', event => {
-			const selectedItem = event.detail.item;
-			setLanguageTag(selectedItem.value);
-		});
+		const dropdown = container?.querySelector('sl-dropdown');
+		dropdown?.addEventListener('sl-select', handleLocaleSelect);
+	});
+
+	onDestroy(() => {
+		const container = document.querySelector('.locale-selection');
+		const dropdown = container?.querySelector('sl-dropdown');
+		dropdown?.removeEventListener('sl-select', handleLocaleSelect);
 	});
 </script>
 
 <div class="p-3 flex items-center justify-between font-barlow">
 	<div class="flex items-center gap-1">
-		<a href={window.location.origin}><img src={HotLogo} alt="hot-logo" class="h-[2.2rem] sm:h-[3rem]" /></a>
-		<img src={HotLogoText} alt="hot-logo" class="h-[2.2rem] sm:h-[3rem]" />
+		<a href={window.location.origin}><img src={commonStore.config?.logoUrl} alt="hot-logo" class="h-[2.2rem] sm:h-[3rem]" /></a>
+		<!-- The approach below is finicky - can loading the logo via CSS work nicely? -->
+		<!-- <a href={window.location.origin} 
+			class="inline-block flex h-[2.2rem] sm:h-[3rem] w-[2.2rem] sm:w-[3rem] bg-no-repeat bg-cover"
+			style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/45/Humanitarian_OpenStreetMap_Team_logo.svg');"
+			aria-label="Home"
+		></a> -->
+		<span
+			class="text-sm sm:text-base font-bold text-red-600 h-[2.2rem] sm:h-[3rem] max-w-[6rem] sm:max-w-[8rem] p-0 m-0 flex items-center justify-center leading-[1.1] sm:leading-[1.2] text-left"
+			style="color: var(--sl-color-primary-700); font-family: var(--sl-font-sans);"
+		>
+			{commonStore.config?.logoText}
+		</span>
 	</div>
 	<div class="flex items-center gap-4">
 		<!-- profile image and username display -->
@@ -107,7 +119,7 @@
 				role="button"
 				tabindex="0"
 			>
-				<span class="font-barlow font-medium text-base">SIGN IN</span>
+				<span class="font-barlow font-medium text-base">{m['header.sign_in']()}</span>
 			</hot-button>
 		{/if}
 
@@ -116,7 +128,7 @@
 			<hot-icon
 				name="list"
 				class="!text-[1.8rem] text-[#52525B] leading-0 cursor-pointer hover:text-red-600 duration-200"
-				style={isFirstLoad ? 'background-color: var(--hot-color-yellow-300);' : ''}
+				style={isFirstLoad ? 'background-color: var(--sl-color-warning-300);' : ''}
 				onclick={() => {
 					drawerRef?.show();
 				}}
@@ -157,7 +169,7 @@
 					<hot-icon name="translate"></hot-icon> {commonStore.locale}
 				</hot-button>
 				<sl-menu>
-					{#each availableLanguageTags as locale}
+					{#each locales as locale}
 						<sl-menu-item value={locale}>{locale}</sl-menu-item>
 					{/each}
 				</sl-menu>
@@ -185,7 +197,7 @@
 				role="button"
 				tabindex="0"
 			>
-			{#key commonStore.locale}<span class="font-barlow font-medium text-base">{m.sign_out()}</span>{/key}
+			{#key commonStore.locale}<span class="font-barlow font-medium text-base">{m['header.sign_out']()}</span>{/key}
 			</hot-button>
 		{/if}
 	</div>

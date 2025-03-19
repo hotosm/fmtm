@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { distance } from '@turf/distance';
 	import type { Coord } from '@turf/helpers';
+	import type { SlDialog, SlDrawer } from '@shoelace-style/shoelace';
+
+	import { m } from "$translations/messages.js";
 	import { TaskStatusEnum, type ProjectData } from '$lib/types';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
 	import { getAlertStore } from '$store/common.svelte.ts';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
 	import { mapTask } from '$lib/db/events';
-	import type { SlDialog } from '@shoelace-style/shoelace';
 
 	type statusType = 'READY' | 'OPENED_IN_ODK' | 'SURVEY_SUBMITTED' | 'MARKED_BAD' | 'VALIDATED';
 	type Props = {
@@ -14,6 +16,7 @@
 		toggleTaskActionModal: (value: boolean) => void;
 		selectedTab: string;
 		projectData: ProjectData;
+		webFormsDrawerRef: SlDrawer | undefined;
 	};
 
 	function getStatusStyle(status: statusType) {
@@ -31,11 +34,13 @@
 		}
 	}
 
-	let { isTaskActionModalOpen, toggleTaskActionModal, selectedTab, projectData }: Props = $props();
+	let { isTaskActionModalOpen, toggleTaskActionModal, selectedTab, projectData, webFormsDrawerRef }: Props = $props();
 
 	let dialogRef: SlDialog | null = $state(null);
 	let toggleDistanceWarningDialog = $state(false);
 	let showCommentsPopup: boolean = $state(false);
+
+	const displayWebFormsButton = new URLSearchParams(window.location.search).get('webforms') === 'true';
 
 	const entitiesStore = getEntitiesStatusStore();
 	const alertStore = getAlertStore();
@@ -72,7 +77,7 @@
 				entitiesStore.updateEntityStatus(projectData.id, {
 					entity_id: entityUuid,
 					status: 1,
-					label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osmid}`,
+					label: `${m['popup.task']()} ${selectedEntity?.task_id} ${m['popup.feature']()} ${selectedEntity?.osmid}`,
 				});
 
 				if (taskStore.selectedTaskId && taskStore.selectedTaskState === TaskStatusEnum['UNLOCKED_TO_MAP']) {
@@ -163,10 +168,10 @@
 				></hot-icon>
 			</div>
 			<div class="flex flex-col gap-4">
-				<p class="text-[#333] text-lg font-semibold">Feature {selectedEntity?.osmid}</p>
+				<p class="text-[#333] text-lg font-semibold">{m['popup.feature']()} {selectedEntity?.osmid}</p>
 				<div class="flex flex-col gap-2">
 					<div class="flex">
-						<p class="min-w-[6.25rem] text-[#2B2B2B]">Task Id</p>
+						<p class="min-w-[6.25rem] text-[#2B2B2B]">{m['popup.task_id']()}</p>
 						:
 						<p class="text-[#161616] font-medium ml-2">{selectedEntity?.task_id}</p>
 					</div>
@@ -179,9 +184,9 @@
 						<p class="min-w-[6.25rem] text-[#2B2B2B]">Status</p>
 						:
 						<p
-							class={`text-[#161616] font-medium capitalize border-[1px] border-solid ml-2 py-1 px-3 rounded-full ${getStatusStyle(selectedEntity?.status)}`}
+							class={`text-[#161616] font-medium border-[1px] border-solid ml-2 py-1 px-3 rounded-full ${getStatusStyle(selectedEntity?.status)}`}
 						>
-							{selectedEntity?.status?.replaceAll('_', ' ')?.toLowerCase()}
+							{m[`entity_states.${selectedEntity?.status}`]()}
 						</p>
 					</div>
 					{#if entityComments?.length > 0}
@@ -244,7 +249,7 @@
 							tabindex="0"
 						>
 							<hot-icon slot="prefix" name="direction" class="!text-[1rem] cursor-pointer duration-200"></hot-icon>
-							<span class="font-barlow font-medium text-sm">NAVIGATE HERE</span>
+							<span class="font-barlow font-medium text-sm">{m['popup.navigate_here']()}</span>
 						</sl-button>
 						<sl-button
 							loading={entitiesStore.updateEntityStatusLoading}
@@ -264,8 +269,32 @@
 						>
 							<hot-icon slot="prefix" name="location" class="!text-[1rem] text-white cursor-pointer duration-200"
 							></hot-icon>
-							<span class="font-barlow font-medium text-sm">MAP FEATURE IN ODK</span>
+							<span class="font-barlow font-medium text-sm">{m['popup.map_in_odk']()}</span>
 						</sl-button>
+						{#if displayWebFormsButton}
+							<sl-button
+								loading={entitiesStore.updateEntityStatusLoading}
+								variant="default"
+								size="small"
+								class="primary flex-grow"
+								onclick={() => {
+									toggleTaskActionModal(false);
+									webFormsDrawerRef?.show();
+								}}
+								onkeydown={(e: KeyboardEvent) => {
+									if (e.key === 'Enter') {
+										toggleTaskActionModal(false);
+										webFormsDrawerRef?.show();
+									}
+								}}
+								role="button"
+								tabindex="0"
+							>
+								<hot-icon slot="prefix" name="location" class="!text-[1rem] text-white cursor-pointer duration-200"
+								></hot-icon>
+								<span class="font-barlow font-medium text-sm">MAP IN ODK WEB FORMS</span>
+							</sl-button>
+						{/if}
 					</div>
 				{/if}
 			</div>

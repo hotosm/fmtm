@@ -1,7 +1,6 @@
 <script lang="ts">
 	import '$styles/page.css';
 	import '$styles/button.css';
-	import '@hotosm/ui/dist/hotosm-ui';
 	import type { PageData } from '../$types';
 	import { onMount, onDestroy } from 'svelte';
 	import type { ShapeStream } from '@electric-sql/client';
@@ -11,6 +10,7 @@
 	import type SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.component.js';
 	import type SlDialog from '@shoelace-style/shoelace/dist/components/dialog/dialog.component.js';
 
+	import { m } from "$translations/messages.js";
 	import ImportQrGif from '$assets/images/importQr.gif';
 	import BottomSheet from '$lib/components/bottom-sheet.svelte';
 	import MapComponent from '$lib/components/map/main.svelte';
@@ -18,6 +18,7 @@
 	import BasemapComponent from '$lib/components/offline/basemaps.svelte';
 	import DialogTaskActions from '$lib/components/dialog-task-actions.svelte';
 	import DialogEntityActions from '$lib/components/dialog-entities-actions.svelte';
+	import OdkWebFormsWrapper from '$lib/components/forms/wrapper.svelte';
 	import type { ProjectTask } from '$lib/types';
 	import { openOdkCollectNewFeature } from '$lib/odk/collect';
 	import { convertDateToTimeAgo } from '$lib/utils/datetime';
@@ -26,14 +27,16 @@
 	import More from '$lib/components/more/index.svelte';
 	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
-
-	const API_URL = import.meta.env.VITE_API_URL;
+	import type { SlDrawer } from '@shoelace-style/shoelace';
 
 	interface Props {
 		data: PageData;
 	}
 
 	let { data }: Props = $props();
+
+	let odkWebFormsWrapperRef: SlDrawer | undefined = $state();
+	let webFormsRef: HTMLElement | undefined = $state();
 
 	let maplibreMap: maplibregl.Map | undefined = $state(undefined);
 	let tabGroup: SlTabGroup;
@@ -51,6 +54,8 @@
 	const taskEventStream = getTaskEventStream(data.projectId);
 	const entityStatusStream = getEntityStatusStream(data.projectId);
 	const newBadGeomStream = getNewBadGeomStream(data.projectId);
+
+	const selectedEntityId = $derived(entitiesStore.selectedEntity);
 
 	// Update the geojson task states when a new event is added
 	$effect(() => {
@@ -205,7 +210,7 @@
 {/if}
 
 <!-- The main page -->
-<div class="h-[calc(100svh-3.699rem)] sm:h-[calc(100svh-4.625rem)] font-barlow">
+<div class="h-[calc(100svh-3.699rem)] sm:h-[calc(100svh-4.625rem)] font-barlow" style="position: relative">
 	<MapComponent
 		setMapRef={(map) => {
 			maplibreMap = map;
@@ -246,7 +251,7 @@
 						size="small"
 						class="secondary w-fit"
 					>
-						<span class="font-barlow font-medium text-xs uppercase">CANCEL</span>
+						<span class="font-barlow font-medium text-xs uppercase">{m['popup.cancel']()}</span>
 					</sl-button>
 					<sl-button
 						onclick={() => mapNewFeatureInODK()}
@@ -285,6 +290,7 @@
 		}}
 		selectedTab={commonStore.selectedTab}
 		projectData={data?.project}
+		webFormsDrawerRef={odkWebFormsWrapperRef}
 	/>
 	{#if commonStore.selectedTab !== 'map'}
 		<BottomSheet onClose={() => tabGroup.show('map')}>
@@ -368,6 +374,13 @@
 			<hot-icon name="three-dots" class="!text-[1.7rem] !sm:text-[2rem]"></hot-icon>
 		</sl-tab>
 	</sl-tab-group>
+
+	<OdkWebFormsWrapper
+		bind:drawerRef={odkWebFormsWrapperRef}
+		bind:webFormsRef
+		projectId={data?.projectId}
+		entityId={selectedEntityId}
+	/>
 </div>
 
 <style>
