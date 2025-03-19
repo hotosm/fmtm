@@ -155,7 +155,8 @@ const TaskList = ({ map, setSelectedTab }: taskListPropType) => {
           value={searchTextData}
           onChange={handleChangeData}
           type="number"
-          wrapperStyle="!fmtm-w-[7.5rem] fmtm-rounded"
+          placeholder="Search by ID"
+          wrapperStyle="!fmtm-w-[10rem] fmtm-rounded"
         />
         <Select2
           options={taskStatusList || []}
@@ -164,7 +165,7 @@ const TaskList = ({ map, setSelectedTab }: taskListPropType) => {
             setFilters({ ...filter, status: value });
           }}
           placeholder="All Status"
-          className="!fmtm-w-[7.5rem] fmtm-bg-white fmtm-rounded"
+          className="!fmtm-w-[12rem] fmtm-bg-white fmtm-rounded"
         />
       </div>
       <DataTable
