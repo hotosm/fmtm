@@ -201,7 +201,7 @@ const ProjectDetails = () => {
         </div>
         <div className="fmtm-flex fmtm-h-[calc(100%-3rem)] fmtm-gap-6 fmtm-mt-0 md:fmtm-mt-2">
           <ResizablePanelGroup direction="horizontal" className="fmtm-gap-3">
-            <ResizablePanel className="fmtm-hidden md:fmtm-flex md:fmtm-min-w-[22rem]">
+            <ResizablePanel defaultSize={30} className="fmtm-hidden md:fmtm-flex md:fmtm-min-w-[22rem]">
               <div className="fmtm-w-full fmtm-h-full fmtm-hidden md:fmtm-flex fmtm-flex-col">
                 <div
                   className="fmtm-flex fmtm-flex-col fmtm-gap-5 fmtm-flex-1"
@@ -243,7 +243,7 @@ const ProjectDetails = () => {
               </div>
             </ResizablePanel>
             <ResizableHandle withHandle className="fmtm-bg-grey-200 fmtm-hidden md:fmtm-flex" />
-            <ResizablePanel className="md:fmtm-min-w-[22rem]">
+            <ResizablePanel defaultSize={70} className="md:fmtm-min-w-[22rem]">
               {projectId && (
                 <div className="fmtm-relative md:fmtm-static fmtm-flex-grow fmtm-h-full md:fmtm-rounded-xl fmtm-overflow-hidden">
                   <ProjectDetailsMap
