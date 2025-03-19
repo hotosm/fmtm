@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AssetModules from '@/shared/AssetModules';
 import {
   DropdownMenu,
@@ -50,9 +50,11 @@ const MapLegends = ({ defaultTheme }: { defaultTheme: any }) => {
     },
   ];
 
+  const [toggleLegend, setToggleLegend] = useState(true);
+
   const LegendListItem = ({ data }: { data: mapDetialsType }) => {
     return (
-      <div className="fmtm-flex fmtm-items-center fmtm-gap-3">
+      <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
         {data.type !== 'locked' ? (
           <div
             style={{ backgroundColor: data.color, borderRadius: 0 }}
@@ -62,40 +64,47 @@ const MapLegends = ({ defaultTheme }: { defaultTheme: any }) => {
         ) : (
           <AssetModules.LockIcon className="!fmtm-text-[20px]" />
         )}
-        <p className="fmtm-text-base fmtm-text-[#494949]">{data.value}</p>
+        <p className="fmtm-body-sm fmtm-text-[#494949]">{data.value}</p>
       </div>
     );
   };
 
   return (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger className="fmtm-outline-none">
-        <Tooltip title="Legend Toggle" placement="left">
-          <div
-            className={`fmtm-bg-white fmtm-rounded-full hover:fmtm-bg-gray-100 fmtm-cursor-pointer fmtm-duration-300 fmtm-w-9 fmtm-h-9 fmtm-min-h-9 fmtm-min-w-9 fmtm-max-w-9 fmtm-max-h-9 fmtm-flex fmtm-justify-center fmtm-items-center `}
+    <div className="fmtm-absolute fmtm-bottom-24 md:fmtm-bottom-10 fmtm-left-3 fmtm-z-50">
+      <DropdownMenu modal={false} open={toggleLegend}>
+        <DropdownMenuTrigger className="fmtm-outline-none" onClick={() => setToggleLegend(true)}>
+          <Tooltip title="Legend" placement="right" arrow>
+            <div
+              className={`fmtm-bg-white fmtm-rounded hover:fmtm-bg-gray-100 fmtm-cursor-pointer fmtm-duration-300 fmtm-w-6 fmtm-h-6 fmtm-min-h-6 fmtm-min-w-6 fmtm-max-w-6 fmtm-max-h-6 fmtm-flex fmtm-justify-center fmtm-items-center fmtm-border-[1px]  fmtm-border-grey-300`}
+            >
+              <AssetModules.LegendToggleIcon className="!fmtm-text-[1rem]" />
+            </div>
+          </Tooltip>
+        </DropdownMenuTrigger>
+        <DropdownMenuPortal>
+          <DropdownMenuContent
+            className="fmtm-border-none fmtm-z-[60] fmtm-bg-white fmtm-p-2"
+            align="start"
+            sideOffset={-25}
           >
-            <AssetModules.LegendToggleIcon />
-          </div>
-        </Tooltip>
-      </DropdownMenuTrigger>
-      <DropdownMenuPortal>
-        <DropdownMenuContent
-          className="fmtm-px-2 fmtm-border-none fmtm-z-[60px] fmtm-bg-white"
-          align="end"
-          alignOffset={100}
-          sideOffset={-42}
-        >
-          <div className="fmtm-py-3">
-            <p className="fmtm-mb-3">Legend</p>
-            <div className="fmtm-flex fmtm-flex-col fmtm-gap-2">
+            <div className="fmtm-flex fmtm-items-center fmtm-justify-between">
+              <p className="fmtm-body-sm-semibold fmtm-mb-2">Legend</p>
+              <div
+                className="fmtm-p-1 hover:fmtm-bg-grey-200 fmtm-rounded-full fmtm-w-4 fmtm-h-4 fmtm-flex fmtm-items-center fmtm-justify-center fmtm-duration-200"
+                onClick={() => setToggleLegend(false)}
+              >
+                <AssetModules.ExpandMoreIcon className="!fmtm-text-sm fmtm-cursor-pointer" />
+              </div>
+            </div>
+            <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
               {MapDetails.map((data, index) => {
                 return <LegendListItem data={data} key={index} />;
               })}
             </div>
-          </div>{' '}
-        </DropdownMenuContent>
-      </DropdownMenuPortal>
-    </DropdownMenu>
+          </DropdownMenuContent>
+        </DropdownMenuPortal>
+      </DropdownMenu>
+    </div>
   );
 };
 
