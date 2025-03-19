@@ -17,7 +17,10 @@ BEGIN
         WHERE table_name = 'users' AND column_name = 'auth_provider'
     ) THEN
         ALTER TABLE public.users
-        ADD COLUMN provider character varying;
+        ADD COLUMN auth_provider character varying;
+
+        -- Update all existing users to have auth_provider as 'osm'
+        UPDATE public.users SET auth_provider = 'osm' WHERE auth_provider IS NULL;
     END IF;
 END
 $$;

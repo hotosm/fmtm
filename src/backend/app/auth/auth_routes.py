@@ -175,7 +175,8 @@ async def get_or_create_user(
                     %(username)s,
                     %(email_address)s,
                     %(profile_img)s,
-                    %(role)s, NOW(),
+                    %(role)s,
+                    NOW(),
                     %(auth_provider)s
                 )
                 ON CONFLICT (id)
@@ -207,7 +208,8 @@ async def get_or_create_user(
             FROM upserted_user u
             LEFT JOIN user_roles ur ON u.id = ur.user_id
             LEFT JOIN organisation_managers om ON u.id = om.user_id
-            GROUP BY u.id,
+            GROUP BY
+                u.id,
                 u.username,
                 u.email_address,
                 u.profile_img,
