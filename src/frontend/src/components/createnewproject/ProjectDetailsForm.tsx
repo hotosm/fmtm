@@ -27,6 +27,8 @@ const ProjectDetailsForm = ({ flag }) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const isAdmin = useIsAdmin();
+  const { hostname } = window.location;
+  const hashtagsPrefix = `#FMTM,#${hostname}-{project_id}`;
 
   const projectDetails = useAppSelector((state) => state.createproject.projectDetails);
   const organisationListData = useAppSelector((state) => state.createproject.organisationList);
@@ -59,6 +61,12 @@ const ProjectDetailsForm = ({ flag }) => {
     submission,
     CreateProjectValidation,
   );
+
+  // prefill hashtag
+  useEffect(() => {
+    if (values.hashtags) return;
+    handleCustomChange('hashtags', hashtagsPrefix);
+  }, [values.hashtags]);
 
   const onFocus = () => {
     dispatch(
@@ -253,16 +261,18 @@ const ProjectDetailsForm = ({ flag }) => {
             <InputTextField
               id="hashtags"
               label="Hashtags"
-              value={values?.hashtags}
+              value={`${values?.hashtags}`}
               onChange={(e) => {
-                handleCustomChange('hashtags', e.target.value);
+                // hastags to be prefilled with hashtagsPrefix
+                const value = e.target.value;
+                const newValue = value.startsWith(hashtagsPrefix) ? value : hashtagsPrefix;
+                handleCustomChange('hashtags', newValue);
               }}
               fieldType="text"
-              errorMsg={errors.hashtag}
             />
             <p className="fmtm-text-sm fmtm-text-gray-500 fmtm-leading-4 fmtm-mt-2">
-              *Hashtags related to what is being mapped. By default #FMTM is included. Hashtags are sometimes used for
-              analysis later, but should be human informative and not overused, #group #event
+              *Hashtags related to what is being mapped. By default {hashtagsPrefix} is included. Hashtags are sometimes
+              used for analysis later, but should be human informative and not overused, #group #event
             </p>
           </div>
           {/* Custom TMS */}

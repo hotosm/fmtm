@@ -44,6 +44,8 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
   useDocumentTitle('Create Project: Split Tasks');
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { hostname } = window.location;
+  const hashtagsPrefix = `#FMTM,#${hostname}-{project_id}`;
 
   const [disableSubmitButton, setDisableSubmitButton] = useState(true);
   const [combinedFeaturesCount, setCombinedFeaturesCount] = useState(0);
@@ -122,7 +124,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
       new_geom_type: projectDetails.newGeomType ? projectDetails.newGeomType : projectDetails.primaryGeomType,
       task_split_type: taskSplittingMethod,
       // "uploaded_form": projectDetails.uploaded_form,
-      hashtags: projectDetails.hashtags,
+      hashtags: projectDetails.hashtags?.replace(hashtagsPrefix, ''),
       data_extract_url: projectDetails.data_extract_url,
       custom_tms_url: projectDetails.custom_tms_url,
     };
