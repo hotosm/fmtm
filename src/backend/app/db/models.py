@@ -342,7 +342,7 @@ class DbUser(BaseModel):
         columns = ", ".join(model_dump.keys())
         value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
         conflict_statement = """
-            ON CONFLICT (auth_provider, username) DO UPDATE
+            ON CONFLICT (id) DO UPDATE
             SET
                 role = EXCLUDED.role,
                 mapping_level = EXCLUDED.mapping_level,
