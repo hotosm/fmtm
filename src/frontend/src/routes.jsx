@@ -18,6 +18,7 @@ import ProjectSubmissions from '@/views/ProjectSubmissions';
 import ManageProject from '@/views/ManageProject';
 import ManageUsers from '@/views/ManageUsers';
 import DataConflation from '@/views/DataConflation';
+import OrganizationDashboard from '@/views/OrganizationDashboard';
 
 const routes = createBrowserRouter([
   {
@@ -238,6 +239,18 @@ const routes = createBrowserRouter([
             <Suspense fallback={<div>Loading...</div>}>
               <ErrorBoundary>
                 <DataConflation />
+              </ErrorBoundary>
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/organization/:id',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <ErrorBoundary>
+                <OrganizationDashboard />
               </ErrorBoundary>
             </Suspense>
           </ProtectedRoute>
