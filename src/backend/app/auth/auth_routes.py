@@ -242,12 +242,14 @@ async def get_or_create_user(
     except Exception as e:
         await db.rollback()
         log.exception(f"Exception occurred: {e}", stack_info=True)
-        if 'duplicate key value violates unique constraint "users_username_key"' in str(
-            e
+        if (
+            'duplicate key value violates unique constraint "users_id_username_key"'
+            in str(e)
         ):
             raise HTTPException(
                 status_code=HTTPStatus.BAD_REQUEST,
-                detail=f"User with this username {user_data.username} already exists.",
+                detail=f"User with username '{user_data.username}' already exists "
+                "for '{user_data.provider}' provider.",
             ) from e
         else:
             raise HTTPException(

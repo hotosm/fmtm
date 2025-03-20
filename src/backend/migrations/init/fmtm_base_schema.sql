@@ -483,7 +483,7 @@ ALTER TABLE ONLY public.users
 ADD CONSTRAINT users_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY public.users
-ADD CONSTRAINT users_username_key UNIQUE (username);
+ADD CONSTRAINT users_id_username_key UNIQUE (auth_provider, username);
 
 ALTER TABLE ONLY public.odk_entities
 ADD CONSTRAINT odk_entities_pkey PRIMARY KEY (entity_id);
