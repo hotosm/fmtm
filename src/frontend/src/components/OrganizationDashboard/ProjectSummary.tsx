@@ -28,12 +28,12 @@ const ProjectSummary = () => {
 
   useEffect(() => {
     dispatch(
-      HomeSummaryService(`${VITE_API_URL}/projects/search?page=${paginationPage}&results_per_page=2&search=${search}`),
+      HomeSummaryService(`${VITE_API_URL}/projects/search?page=${paginationPage}&results_per_page=12&search=${search}`),
     );
   }, [search, paginationPage]);
 
   return (
-    <div className="fmtm-bg-white fmtm-rounded-lg fmtm-p-5 fmtm-flex-1 fmtm-overflow-hidden">
+    <div className="fmtm-bg-white fmtm-rounded-lg fmtm-p-5 fmtm-flex-1 md:fmtm-overflow-hidden">
       <div className="fmtm-flex fmtm-items-center fmtm-justify-between fmtm-flex-wrap fmtm-pb-4">
         <h4 className="fmtm-text-grey-800">Project Location Map</h4>
         <Searchbar value={searchTextData} onChange={handleChangeData} wrapperStyle="!fmtm-w-[10.5rem]" isSmall />
@@ -43,11 +43,15 @@ const ProjectSummary = () => {
         </div>
       </div>
       <div
-        className={`fmtm-h-[calc(100%-56px)] fmtm-grid fmtm-gap-5 ${showMap ? 'fmtm-grid-cols-2' : 'fmtm-grid-cols-1'}`}
+        className={`md:fmtm-h-[calc(100%-56px)] fmtm-grid fmtm-gap-5 ${showMap ? 'fmtm-grid-cols-1 md:fmtm-grid-cols-2' : 'fmtm-grid-cols-1'}`}
       >
-        <div className="fmtm-h-full fmtm-relative fmtm-overflow-y-scroll scrollbar">
-          <div className={`fmtm-grid ${showMap ? 'fmtm-grid-cols-2' : 'fmtm-grid-cols-4'} fmtm-gap-5`}>
-            {projectList?.map((project) => <ExploreProjectCard key={project.id} data={project} />)}
+        <div className="fmtm-h-full md:fmtm-overflow-hidden">
+          <div className="md:fmtm-h-[calc(100%-48px)] fmtm-relative md:fmtm-overflow-y-scroll md:scrollbar">
+            <div
+              className={`fmtm-grid ${showMap ? 'fmtm-grid-cols-2 xl:fmtm-grid-cols-3' : 'fmtm-grid-cols-2 sm:fmtm-grid-cols-3 md:fmtm-grid-cols-4 xl:fmtm-grid-cols-5'} fmtm-gap-2 sm:fmtm-gap-5`}
+            >
+              {projectList?.map((project) => <ExploreProjectCard key={project.id} data={project} />)}
+            </div>
           </div>
           <Pagination
             showing={projectList?.length}
@@ -56,11 +60,10 @@ const ProjectSummary = () => {
             isLoading={false}
             pageSize={projectListPagination.per_page}
             handlePageChange={(page) => setPaginationPage(page)}
-            className="fmtm-sticky fmtm-bottom-0 fmtm-border-x fmtm-border-b"
           />
         </div>
         {showMap && (
-          <div>
+          <div className="fmtm-h-[30vh] md:fmtm-h-full">
             <ProjectSummaryMap />
           </div>
         )}
