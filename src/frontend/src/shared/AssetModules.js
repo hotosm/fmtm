@@ -98,6 +98,7 @@ import {
   ManageAccountsOutlined as ManageAccountsOutlinedIcon,
   LogoutOutlined as LogoutOutlinedIcon,
   ArrowDropDown as ArrowDropDownIcon,
+  AlternateEmail as AlternateEmailIcon,
 } from '@mui/icons-material';
 import LockPng from '@/assets/images/lock.png';
 import RedLockPng from '@/assets/images/red-lock.png';
@@ -210,4 +211,5 @@ export default {
   ManageAccountsOutlinedIcon,
   LogoutOutlinedIcon,
   ArrowDropDownIcon,
+  AlternateEmailIcon,
 };
