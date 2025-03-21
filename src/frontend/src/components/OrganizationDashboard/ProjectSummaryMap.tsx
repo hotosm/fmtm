@@ -22,7 +22,7 @@ const getIndividualClusterPointStyle = (featureProperty) => {
       src: MarkerIcon,
     }),
     text: new Text({
-      text: featureProperty?.project_id,
+      text: `#${featureProperty?.project_id}`,
       fill: new Fill({
         color: 'black',
       }),
@@ -42,7 +42,7 @@ const ProjectSummaryMap = () => {
     features: projectList.map((project) => ({
       type: 'Feature',
       properties: {
-        project_id: `#${project.id}`,
+        project_id: project.id?.toString(),
       },
       geometry: project.centroid || [],
     })),
@@ -55,13 +55,12 @@ const ProjectSummaryMap = () => {
   });
 
   const projectClickOnMap = (properties: any) => {
-    const projectId = properties.id;
+    const projectId = properties.project_id;
     navigate(`/project/${projectId}`);
   };
 
   return (
     <div className="fmtm-w-full fmtm-h-full fmtm-rounded-lg fmtm-overflow-hidden">
-      {' '}
       <MapComponent
         ref={mapRef}
         mapInstance={map}
