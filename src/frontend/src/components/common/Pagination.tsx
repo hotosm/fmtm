@@ -31,7 +31,7 @@ export default function Pagination({
 
   return (
     <div
-      className={`fmtm-bottom-0 fmtm-flex fmtm-items-center fmtm-justify-between fmtm-flex-col sm:fmtm-flex-row fmtm-bg-white fmtm-py-2 fmtm-px-11 fmtm-shadow-black fmtm-shadow-2xl fmtm-z-50 fmtm-gap-1 ${className}`}
+      className={`fmtm-bottom-0 fmtm-flex fmtm-items-center fmtm-justify-between fmtm-flex-col sm:fmtm-flex-row fmtm-bg-white fmtm-py-2 fmtm-px-11 fmtm-shadow-[0px_-5px_10px_0px_rgba(0,0,0,0.1)]  fmtm-z-50 fmtm-gap-1 ${className}`}
     >
       <p className="fmtm-body-sm fmtm-text-grey-800">
         Showing {showing} of {totalCount} results
