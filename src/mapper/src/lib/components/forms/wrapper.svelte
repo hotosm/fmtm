@@ -19,7 +19,7 @@
 
 	let { display = $bindable(false), entityId, webFormsRef = $bindable(undefined), projectId, taskId }: Props = $props();
 	let drawerRef: SlDrawer;
-	let iframeRef: HTMLIFrameElement;
+	let iframeRef: HTMLIFrameElement | undefined;
 	let odkForm: any;
 	let startDate: string | undefined;
 
@@ -188,7 +188,7 @@
 					bind:this={iframeRef}
 					title="odk-web-forms-wrapper"
 					src={`./web-forms.html?projectId=${projectId}&entityId=${entityId}&api_url=${API_URL}&language=${commonStore.locale}`}
-					style="height: {window.outerHeight}px; width: 100%; z-index: 11;"
+					style="height: 100%; width: 100%; z-index: 11;"
 				>
 				</iframe>
 			{/key}
