@@ -123,7 +123,7 @@
 		}
 	};
 	$effect(() => {
-		// making sure we re-run whenver one of the following reactive variables changes
+		// making sure we re-run whenever one of the following reactive variables changes
 		display;
 		projectId;
 		entityId;
