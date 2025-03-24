@@ -72,12 +72,12 @@ const Home = () => {
   return (
     <div
       style={{ flex: 1, background: '#F5F5F5' }}
-      className="fmtm-flex fmtm-flex-col fmtm-justify-between fmtm-h-full fmtm-mt-1 lg:fmtm-overflow-hidden"
+      className="fmtm-flex fmtm-flex-col fmtm-justify-between fmtm-h-full lg:fmtm-overflow-hidden"
     >
       <div className="fmtm-h-full">
         <HomePageFilters searchText={searchQuery} onSearch={handleSearch} />
         {stateHome.homeProjectLoading == false ? (
-          <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5 fmtm-mt-7 md:fmtm-overflow-hidden lg:fmtm-h-[calc(100%-120px)] fmtm-pb-16 lg:fmtm-pb-0">
+          <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5 fmtm-mt-2 md:fmtm-overflow-hidden lg:fmtm-h-[calc(100%-85px)] fmtm-pb-16 lg:fmtm-pb-0">
             <div
               className={`fmtm-w-full fmtm-flex fmtm-flex-col fmtm-justify-between md:fmtm-overflow-y-scroll md:scrollbar ${showMapStatus ? 'lg:fmtm-w-[50%]' : ''} `}
             >

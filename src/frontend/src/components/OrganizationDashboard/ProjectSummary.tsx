@@ -46,7 +46,7 @@ const ProjectSummary = () => {
         className={`md:fmtm-h-[calc(100%-56px)] fmtm-grid fmtm-gap-5 ${showMap ? 'fmtm-grid-cols-1 md:fmtm-grid-cols-2' : 'fmtm-grid-cols-1'}`}
       >
         <div className="fmtm-h-full md:fmtm-overflow-hidden">
-          <div className="md:fmtm-h-[calc(100%-48px)] fmtm-relative md:fmtm-overflow-y-scroll md:scrollbar">
+          <div className="md:fmtm-h-[calc(100%-49px)] fmtm-relative md:fmtm-overflow-y-scroll md:scrollbar">
             <div
               className={`fmtm-grid ${showMap ? 'fmtm-grid-cols-2 xl:fmtm-grid-cols-3' : 'fmtm-grid-cols-2 sm:fmtm-grid-cols-3 md:fmtm-grid-cols-4 xl:fmtm-grid-cols-5'} fmtm-gap-2 sm:fmtm-gap-5`}
             >
@@ -60,6 +60,7 @@ const ProjectSummary = () => {
             isLoading={false}
             pageSize={projectListPagination.per_page}
             handlePageChange={(page) => setPaginationPage(page)}
+            className="fmtm-border-b fmtm-border-x fmtm-border-[#E2E2E2] fmtm-rounded-b-lg"
           />
         </div>
         {showMap && (
