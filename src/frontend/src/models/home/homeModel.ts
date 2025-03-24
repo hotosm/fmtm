@@ -22,4 +22,5 @@ export type projectType = {
   organisation_logo: string | null;
   priority: number;
   outline: { type: string; coordinates: number[][] };
+  total_tasks: number;
 };
