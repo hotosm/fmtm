@@ -101,7 +101,7 @@ export default function PrimaryAppBar() {
                     <DropdownMenuItem>Manage User</DropdownMenuItem>
                   </Link>
                 )}
-                <Link to="/manage/organization">
+                <Link to="/organization">
                   <DropdownMenuItem>Manage Organization</DropdownMenuItem>
                 </Link>
               </DropdownMenuContent>

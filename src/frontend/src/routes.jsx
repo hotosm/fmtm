@@ -19,6 +19,7 @@ import ManageProject from '@/views/ManageProject';
 import ManageUsers from '@/views/ManageUsers';
 import DataConflation from '@/views/DataConflation';
 import OrganizationDashboard from '@/views/OrganizationDashboard';
+import ManageOrganization from '@/views/ManageOrganization';
 
 const routes = createBrowserRouter([
   {
@@ -33,7 +34,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/manage/organization',
+        path: '/organization',
         element: (
           <ProtectedRoute>
             <ErrorBoundary>
@@ -43,7 +44,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/manage/organization/new',
+        path: '/organization/new',
         element: (
           <ProtectedRoute>
             <ErrorBoundary>
@@ -53,7 +54,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/manage/organization/edit/:id',
+        path: '/organization/edit/:id',
         element: (
           <ProtectedRoute>
             <ErrorBoundary>
@@ -63,7 +64,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/manage/organization/approve/:id',
+        path: '/organization/approve/:id',
         element: (
           <ProtectedRoute>
             <ErrorBoundary>
@@ -206,6 +207,18 @@ const routes = createBrowserRouter([
           <Suspense fallback={<div>Loading...</div>}>
             <UnderConstruction />
           </Suspense>
+        ),
+      },
+      {
+        path: '/manage/organization/:id',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <ErrorBoundary>
+                <ManageOrganization />
+              </ErrorBoundary>
+            </Suspense>
+          </ProtectedRoute>
         ),
       },
       {

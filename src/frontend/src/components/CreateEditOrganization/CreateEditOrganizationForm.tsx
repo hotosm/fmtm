@@ -91,7 +91,7 @@ const CreateEditOrganizationForm = ({ organizationId }: { organizationId: string
       if (searchParams.get('popup') === 'true') {
         window.close();
       } else {
-        navigate('/manage/organization');
+        navigate('/organization');
       }
     }
   }, [postOrganisationData]);

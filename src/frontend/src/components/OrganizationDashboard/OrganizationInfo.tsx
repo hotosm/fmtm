@@ -122,7 +122,7 @@ const OrganizationInfo = () => {
         <Button
           variant="secondary-grey"
           onClick={() => {
-            navigate(`/manage/organization/edit/${organizationId}`);
+            navigate(`/manage/organization/${organizationId}`);
           }}
         >
           <AssetModules.EditIcon className="!fmtm-text-lg" />

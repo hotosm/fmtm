@@ -35,7 +35,7 @@ const OrganisationGridCard = ({ filteredData, allDataLength }: organizationGridC
         {filteredData?.map((data, index) => (
           <Link
             key={index}
-            to={!data?.approved && isAdmin ? `/manage/organization/approve/${data?.id}` : `/organization/${data?.id}`}
+            to={!data?.approved && isAdmin ? `/organization/approve/${data?.id}` : `/organization/${data?.id}`}
           >
             <CoreModules.Card key={index} sx={cardStyle} className="fmtm-h-full">
               {data.logo ? (
