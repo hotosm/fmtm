@@ -5,7 +5,7 @@ import MainView from '@/views/MainView';
 import ProtectedRoute from '@/utilities/ProtectedRoute';
 import NotFoundPage from '@/views/NotFound404';
 import Organisation from '@/views/Organisation';
-import CreateEditOrganization from '@/views/CreateEditOrganization';
+import CreateOrganization from '@/views/CreateOrganization';
 import ApproveOrganization from '@/views/ApproveOrganization';
 import OsmAuth from '@/views/OsmAuth';
 import PlaywrightTempLogin from '@/views/PlaywrightTempLogin';
@@ -48,17 +48,7 @@ const routes = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <ErrorBoundary>
-              <CreateEditOrganization />
-            </ErrorBoundary>
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/organization/edit/:id',
-        element: (
-          <ProtectedRoute>
-            <ErrorBoundary>
-              <CreateEditOrganization />
+              <CreateOrganization />
             </ErrorBoundary>
           </ProtectedRoute>
         ),
