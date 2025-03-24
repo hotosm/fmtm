@@ -84,7 +84,7 @@ const Home = () => {
               {filteredProjectCards.length > 0 ? (
                 <>
                   <div
-                    className={`fmtm-grid fmtm-gap-5 ${
+                    className={`fmtm-grid fmtm-gap-3 ${
                       !showMapStatus
                         ? 'fmtm-grid-cols-1 sm:fmtm-grid-cols-2 md:fmtm-grid-cols-3 lg:fmtm-grid-cols-4 xl:fmtm-grid-cols-5 2xl:fmtm-grid-cols-6'
                         : 'fmtm-grid-cols-1 sm:fmtm-grid-cols-2 md:fmtm-grid-cols-3 lg:fmtm-grid-cols-2 2xl:fmtm-grid-cols-3 lg:fmtm-overflow-y-scroll lg:scrollbar'
