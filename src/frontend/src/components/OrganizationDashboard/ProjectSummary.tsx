@@ -48,9 +48,11 @@ const ProjectSummary = () => {
         <div className="fmtm-h-full md:fmtm-overflow-hidden">
           <div className="md:fmtm-h-[calc(100%-49px)] fmtm-relative md:fmtm-overflow-y-scroll md:scrollbar">
             <div
-              className={`fmtm-grid ${showMap ? 'fmtm-grid-cols-2 xl:fmtm-grid-cols-3' : 'fmtm-grid-cols-2 sm:fmtm-grid-cols-3 md:fmtm-grid-cols-4 xl:fmtm-grid-cols-5'} fmtm-gap-2 sm:fmtm-gap-5`}
+              className={`fmtm-grid ${showMap ? 'fmtm-grid-cols-2 xl:fmtm-grid-cols-3' : 'fmtm-grid-cols-2 sm:fmtm-grid-cols-3 md:fmtm-grid-cols-4 xl:fmtm-grid-cols-5'} fmtm-gap-2 sm:fmtm-gap-3`}
             >
-              {projectList?.map((project) => <ExploreProjectCard key={project.id} data={project} />)}
+              {projectList?.map((project) => (
+                <ExploreProjectCard key={project.id} data={project} className="fmtm-border fmtm-border-[#EDEDED]" />
+              ))}
             </div>
           </div>
           <Pagination
