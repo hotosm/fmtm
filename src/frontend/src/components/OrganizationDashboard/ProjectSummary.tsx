@@ -62,7 +62,7 @@ const ProjectSummary = () => {
             isLoading={false}
             pageSize={projectListPagination.per_page}
             handlePageChange={(page) => setPaginationPage(page)}
-            className="fmtm-border-b fmtm-border-x fmtm-border-[#E2E2E2] fmtm-rounded-b-lg"
+            className="fmtm-relative fmtm-border-b fmtm-border-x fmtm-border-[#E2E2E2] fmtm-rounded-b-lg"
           />
         </div>
         {showMap && (
