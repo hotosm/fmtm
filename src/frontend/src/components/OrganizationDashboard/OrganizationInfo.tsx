@@ -5,7 +5,8 @@ import Button from '@/components/common/Button';
 import AssetModules from '@/shared/AssetModules';
 import { GetIndividualOrganizationService } from '@/api/OrganisationService';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
-import { OrganizationInfoSkeleton } from './SkeletonLoader';
+import { OrganizationInfoSkeleton } from '@/components/OrganizationDashboard/SkeletonLoader';
+import { useIsOrganizationAdmin } from '@/hooks/usePermissions';
 
 const fakeusers = [
   { id: 1, username: 'svcfmtm', profile_img: null },
@@ -79,6 +80,7 @@ const OrganizationInfo = () => {
   const navigate = useNavigate();
 
   const organizationId = params.id;
+  const isOrganizationAdmin = useIsOrganizationAdmin(+(organizationId as string));
 
   const organization = useAppSelector((state) => state.organisation.organisationFormData);
   const organizationLoading = useAppSelector((state) => state.organisation.organisationFormDataLoading);
@@ -122,17 +124,19 @@ const OrganizationInfo = () => {
         </a>
       </div>
 
-      <div className="fmtm-my-auto">
-        <Button
-          variant="secondary-grey"
-          onClick={() => {
-            navigate(`/manage/organization/${organizationId}`);
-          }}
-        >
-          <AssetModules.EditIcon className="!fmtm-text-lg" />
-          Edit Organization
-        </Button>
-      </div>
+      {isOrganizationAdmin && (
+        <div className="fmtm-my-auto">
+          <Button
+            variant="secondary-grey"
+            onClick={() => {
+              navigate(`/manage/organization/${organizationId}`);
+            }}
+          >
+            <AssetModules.EditIcon className="!fmtm-text-lg" />
+            Edit Organization
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
