@@ -2,11 +2,11 @@ import React from 'react';
 import { Skeleton } from '@/components/common/Skeleton';
 
 // Skeleton card main purpose is to perform loading in case of any delay in retrieving project
-const ProjectCardSkeleton = () => {
+const ProjectCardSkeleton = ({ className }: { className?: string }) => {
   return Array.from({ length: 12 }).map((_, i) => (
     <div
       key={i}
-      className="fmtm-h-[15.5rem] fmtm-bg-white fmtm-rounded-lg fmtm-p-4 fmtm-flex fmtm-flex-col fmtm-justify-between"
+      className={`fmtm-h-[15.5rem] fmtm-bg-white fmtm-rounded-lg fmtm-p-4 fmtm-flex fmtm-flex-col fmtm-justify-between ${className}`}
     >
       <div>
         <Skeleton className="fmtm-w-8 fmtm-h-8 !fmtm-rounded-full" />
