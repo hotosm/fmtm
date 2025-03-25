@@ -5,6 +5,7 @@ import Button from '@/components/common/Button';
 import AssetModules from '@/shared/AssetModules';
 import { GetIndividualOrganizationService } from '@/api/OrganisationService';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
+import { OrganizationInfoSkeleton } from './SkeletonLoader';
 
 const fakeusers = [
   { id: 1, username: 'svcfmtm', profile_img: null },
@@ -80,10 +81,13 @@ const OrganizationInfo = () => {
   const organizationId = params.id;
 
   const organization = useAppSelector((state) => state.organisation.organisationFormData);
+  const organizationLoading = useAppSelector((state) => state.organisation.organisationFormDataLoading);
 
   useEffect(() => {
     dispatch(GetIndividualOrganizationService(`${VITE_API_URL}/organisation/${organizationId}`));
   }, []);
+
+  if (organizationLoading) return <OrganizationInfoSkeleton />;
 
   return (
     <div className="fmtm-flex fmtm-justify-between fmtm-flex-wrap sm:fmtm-flex-nowrap fmtm-gap-x-8 fmtm-gap-y-2 fmtm-bg-white fmtm-rounded-lg fmtm-p-4">
