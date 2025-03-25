@@ -519,7 +519,7 @@ CREATE INDEX idx_user_roles ON public.user_roles USING btree (
     project_id, user_sub
 );
 CREATE INDEX idx_org_managers ON public.organisation_managers USING btree (
-    user_sub, organisation_id
+    organisation_id, user_sub
 );
 CREATE INDEX idx_task_event_composite
 ON public.task_events USING btree (

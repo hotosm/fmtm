@@ -127,7 +127,7 @@ class DbUserRole(BaseModel):
                     (user_sub, project_id, role)
                 VALUES
                     (%(user_sub)s, %(project_id)s, %(role)s)
-                    ON CONFLICT (user_sub, project_id) DO UPDATE
+                    ON CONFLICT (project_id, user_sub) DO UPDATE
                     SET role = EXCLUDED.role
                     WHERE user_roles.role < EXCLUDED.role;
             """,

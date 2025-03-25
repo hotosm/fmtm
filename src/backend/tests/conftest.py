@@ -93,7 +93,7 @@ async def admin_user(db):
     db_user = await get_or_create_user(
         db,
         AuthUser(
-            sub="fmtm|1",
+            sub="osm|1",
             username="localadmin",
             role=UserRole.ADMIN,
         ),

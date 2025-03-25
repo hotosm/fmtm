@@ -19,6 +19,13 @@ BEGIN
 
     IF EXISTS (
         SELECT 1 FROM information_schema.table_constraints
+        WHERE constraint_name = 'organisation_user_key'
+    ) THEN
+        ALTER TABLE organisation_managers DROP CONSTRAINT organisation_user_key;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.table_constraints
         WHERE constraint_name = 'user_roles_user_id_fkey'
     ) THEN
         ALTER TABLE user_roles DROP CONSTRAINT user_roles_user_id_fkey;
@@ -150,6 +157,14 @@ BEGIN
     END IF;
 
     IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'organisation_user_key'
+    AND table_name = 'organisation_managers'
+    ) THEN
+        ALTER TABLE organisation_managers ADD CONSTRAINT organisation_user_key UNIQUE (organisation_id, user_sub);
+    END IF;
+
+    IF NOT EXISTS (
         SELECT 1 FROM information_schema.table_constraints 
         WHERE constraint_name = 'task_events_user_sub_fkey'
         AND table_name = 'task_events'
@@ -192,9 +207,9 @@ BEGIN
         project_id, user_sub
     );
 
-    CREATE INDEX  IF NOT EXISTS idx_org_managers
+    CREATE INDEX IF NOT EXISTS idx_org_managers
     ON public.organisation_managers USING btree (
-        user_sub, organisation_id
+        organisation_id, user_sub
     );
 
     CREATE INDEX IF NOT EXISTS idx_task_event_project_user

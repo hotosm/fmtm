@@ -266,7 +266,7 @@ async def login_required(
 ) -> AuthUser:
     """Dependency for endpoints requiring login."""
     if settings.DEBUG:
-        return AuthUser(sub="fmtm|1", username="localadmin", role=UserRole.ADMIN)
+        return AuthUser(sub="osm|1", username="localadmin", role=UserRole.ADMIN)
 
     # Extract access token only from the FMTM cookie
     extracted_token = access_token or get_cookie_value(
@@ -281,7 +281,7 @@ async def mapper_login_required(
 ) -> AuthUser:
     """Dependency for mapper frontend login."""
     if settings.DEBUG:
-        return AuthUser(sub="fmtm|1", username="localadmin", role=UserRole.ADMIN)
+        return AuthUser(sub="osm|1", username="localadmin", role=UserRole.ADMIN)
 
     # Extract access token from FMTM cookie, fallback to temp auth cookie
     extracted_token = access_token or get_cookie_value(

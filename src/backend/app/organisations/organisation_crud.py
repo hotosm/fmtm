@@ -41,7 +41,7 @@ async def init_admin_org(db: Connection) -> None:
     """Init admin org and user at application startup."""
     # Create admin user
     admin_user = UserIn(
-        sub="fmtm|1",
+        sub="osm|1",
         username="localadmin",
         role=UserRole.ADMIN,
         name="Admin",
