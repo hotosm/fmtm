@@ -22,6 +22,7 @@ export const initialState: IOrganisationState = {
     organizationApproving: false,
     organizationRejecting: false,
   },
+  organizationDeleteLoading: false,
 };
 
 const OrganisationSlice = createSlice({
@@ -66,6 +67,9 @@ const OrganisationSlice = createSlice({
     },
     SetOrganizationApprovalStatus(state, action: PayloadAction<boolean>) {
       state.organizationApprovalStatus.isSuccess = action.payload;
+    },
+    SetOrganizationDeleting(state, action: PayloadAction<boolean>) {
+      state.organizationDeleteLoading = action.payload;
     },
   },
 });

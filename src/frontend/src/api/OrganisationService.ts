@@ -5,6 +5,7 @@ import { OrganisationAction } from '@/store/slices/organisationSlice';
 import { API } from '.';
 import { LoginActions } from '@/store/slices/LoginSlice';
 import { AppDispatch } from '@/store/Store';
+import { NavigateFunction } from 'react-router-dom';
 
 function appendObjectToFormData(formData: FormData, object: Record<string, any>) {
   for (const [key, value] of Object.entries(object)) {
@@ -227,6 +228,33 @@ export const RejectOrganizationService = (url: string) => {
             message: 'Failed to reject organization.',
           }),
         );
+      }
+    };
+    await rejectOrganization(url);
+  };
+};
+
+export const DeleteOrganizationService = (url: string, navigate: NavigateFunction) => {
+  return async (dispatch: AppDispatch) => {
+    const rejectOrganization = async (url: string) => {
+      try {
+        dispatch(OrganisationAction.SetOrganizationDeleting(true));
+        await axios.delete(url);
+        navigate('/organization');
+        dispatch(
+          CommonActions.SetSnackBar({
+            message: 'Organization deleted successfully',
+            variant: 'success',
+          }),
+        );
+      } catch (error) {
+        dispatch(
+          CommonActions.SetSnackBar({
+            message: 'Failed to delete organization',
+          }),
+        );
+      } finally {
+        dispatch(OrganisationAction.SetOrganizationDeleting(false));
       }
     };
     await rejectOrganization(url);
