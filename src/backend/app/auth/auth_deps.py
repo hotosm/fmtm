@@ -292,7 +292,6 @@ async def mapper_login_required(
 
     # Verify login and continue
     if extracted_token:
-        print("mapper")
         return await _authenticate_user(extracted_token)
 
     # Else user has no token, so we provide login data automatically

@@ -57,7 +57,7 @@ async def read_tasks(
 
 @router.post("/near_me", response_model=task_schemas.TaskOut)
 async def get_tasks_near_me(
-    lat: float, long: float, project_id: int = None, user_id: int = None
+    lat: float, long: float, project_id: int = None, user_sub: str = None
 ):
     """Get tasks near the requesting user."""
     return "Coming..."
@@ -110,10 +110,10 @@ async def add_new_task_event(
     notify: bool = False,
 ):
     """Add a new event to the events table / update task status."""
-    user_id = project_user.get("user").id
+    user_sub = project_user.get("user").sub
 
-    log.info(f"Task {task.id} event: {new_event.event.name} (by user {user_id})")
-    new_event.user_id = user_id
+    log.info(f"Task {task.id} event: {new_event.event.name} (by user {user_sub})")
+    new_event.user_sub = user_sub
     new_event.task_id = task.id
 
     if new_event.event == TaskEvent.ASSIGN:
@@ -126,9 +126,9 @@ async def add_new_task_event(
         # NOTE: This is saving the assignee instead of the current user if assignee is
         # provided else it will save the team if team is provided
         if assignee_id:
-            new_event.user_id = assignee_id
+            new_event.user_sub = assignee_id
         elif team:
-            new_event.user_id = None
+            new_event.user_sub = None
             new_event.username = None
             new_event.team_id = team.team_id
 

@@ -18,7 +18,7 @@
 
 from typing import Optional, TypedDict
 
-from pydantic import BaseModel, ConfigDict, PrivateAttr, computed_field
+from pydantic import BaseModel, ConfigDict, computed_field
 
 from app.db.enums import ProjectRole, UserRole
 from app.db.models import DbOrganisation, DbProject, DbUser
@@ -43,6 +43,7 @@ class BaseUser(BaseModel):
 
     model_config = ConfigDict(use_enum_values=True)
 
+    sub: str
     username: str
     # TODO any usage of profile_img should be refactored out
     # in place of 'picture'
@@ -55,26 +56,21 @@ class BaseUser(BaseModel):
 class AuthUser(BaseUser):
     """The user model returned from OAuth2."""
 
-    _sub: str = PrivateAttr()  # it won't return this field
-
-    def __init__(self, sub: str, **data):
+    def __init__(self, **data):
         """Initializes the AuthUser class."""
         super().__init__(**data)
-        self._sub = sub
 
     @computed_field
     @property
-    def id(self) -> int:
+    def id(self) -> str:
         """Compute id from sub field."""
-        sub = self._sub
-        return int(sub.split("|")[1])
+        return self.sub.split("|")[1]
 
     @computed_field
     @property
     def provider(self) -> str:
         """Compute provider from sub field."""
-        sub = self._sub
-        return sub.split("|")[0]
+        return self.sub.split("|")[0]
 
     def model_post_init(self, ctx):
         """Temp workaround to convert oauth picture --> profile_img.
@@ -94,8 +90,7 @@ class AuthUser(BaseUser):
 class FMTMUser(BaseUser):
     """User details returned to the frontend."""
 
-    id: int
-    auth_provider: Optional[str] = "osm"
+    sub: str
     project_roles: Optional[dict[int, ProjectRole]] = None
     orgs_managed: Optional[list[int]] = None
 

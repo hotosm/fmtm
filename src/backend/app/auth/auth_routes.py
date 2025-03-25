@@ -162,37 +162,34 @@ async def get_or_create_user(
         upsert_sql = """
             WITH upserted_user AS (
                 INSERT INTO users (
-                    id,
+                    sub,
                     username,
                     email_address,
                     profile_img,
                     role,
-                    registered_at,
-                    auth_provider
+                    registered_at
                 )
                 VALUES (
-                    %(user_id)s,
+                    %(user_sub)s,
                     %(username)s,
                     %(email_address)s,
                     %(profile_img)s,
                     %(role)s,
-                    NOW(),
-                    %(auth_provider)s
+                    NOW()
                 )
-                ON CONFLICT (id)
+                ON CONFLICT (sub)
                 DO UPDATE SET
                     profile_img = EXCLUDED.profile_img,
                     last_login_at = NOW()
-                RETURNING id, username, email_address, profile_img, role, auth_provider
+                RETURNING sub, username, email_address, profile_img, role
             )
 
             SELECT
-                u.id,
+                u.sub,
                 u.username,
                 u.email_address,
                 u.profile_img,
                 u.role,
-                u.auth_provider,
 
                 -- Aggregate the organisation IDs managed by the user
                 array_agg(
@@ -206,27 +203,25 @@ async def get_or_create_user(
                 ) FILTER (WHERE ur.project_id IS NOT NULL) AS project_roles
 
             FROM upserted_user u
-            LEFT JOIN user_roles ur ON u.id = ur.user_id
-            LEFT JOIN organisation_managers om ON u.id = om.user_id
+            LEFT JOIN user_roles ur ON u.sub = ur.user_sub
+            LEFT JOIN organisation_managers om ON u.sub = om.user_sub
             GROUP BY
-                u.id,
+                u.sub,
                 u.username,
                 u.email_address,
                 u.profile_img,
-                u.role,
-                u.auth_provider;
+                u.role;
         """
 
         async with db.cursor(row_factory=class_row(DbUser)) as cur:
             await cur.execute(
                 upsert_sql,
                 {
-                    "user_id": user_data.id,
+                    "user_sub": user_data.sub,
                     "username": user_data.username,
                     "email_address": user_data.email,
                     "profile_img": user_data.profile_img or "",
                     "role": UserRole(user_data.role).name,
-                    "auth_provider": user_data.provider,
                 },
             )
             db_user_details = await cur.fetchone()
@@ -234,7 +229,7 @@ async def get_or_create_user(
         if not db_user_details:
             raise HTTPException(
                 status_code=HTTPStatus.NOT_FOUND,
-                detail=f"User ID ({user_data.id}) could not be inserted in db",
+                detail=f"User ({user_data.sub}) could not be inserted in db",
             )
 
         return db_user_details
@@ -242,19 +237,7 @@ async def get_or_create_user(
     except Exception as e:
         await db.rollback()
         log.exception(f"Exception occurred: {e}", stack_info=True)
-        if (
-            'duplicate key value violates unique constraint "users_id_username_key"'
-            in str(e)
-        ):
-            raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST,
-                detail=f"User with username '{user_data.username}' already exists "
-                "for '{user_data.provider}' provider.",
-            ) from e
-        else:
-            raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST, detail=str(e)
-            ) from e
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(e)) from e
 
 
 @router.get("/me", response_model=FMTMUser)
@@ -325,7 +308,7 @@ async def refresh_mapper_token(
     # Refresh the temp cookies (we must re-create the 'sub' field)
     temp_jwt_details = {
         **current_user.model_dump(exclude=["id"]),
-        "sub": f"fmtm|{current_user.id}",
+        "sub": current_user.sub,
         "aud": settings.FMTM_DOMAIN,
         "iat": int(time()),
         "exp": int(time()) + 86400,  # set token expiry to 1 day

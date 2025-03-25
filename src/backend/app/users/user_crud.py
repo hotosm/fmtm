@@ -96,7 +96,7 @@ async def process_inactive_users(
 
 
 async def send_warning_email_or_osm(
-    user_id: int,
+    user_sub: str,
     username: str,
     days_remaining: int,
     osm_token: str,
@@ -117,7 +117,7 @@ async def send_warning_email_or_osm(
 
     send_osm_message(
         osm_token=osm_token,
-        osm_id=user_id,
+        osm_id=user_sub,
         title="FMTM account deletion warning",
         body=message_content,
     )
