@@ -23,6 +23,7 @@ export const initialState: IOrganisationState = {
     organizationRejecting: false,
   },
   organizationDeleteLoading: false,
+  organisationFormDataLoading: false,
 };
 
 const OrganisationSlice = createSlice({
@@ -55,6 +56,9 @@ const OrganisationSlice = createSlice({
     },
     SetConsentApproval(state, action: PayloadAction<boolean>) {
       state.consentApproval = action.payload;
+    },
+    SetIndividualOrganizationLoading(state, action: PayloadAction<boolean>) {
+      state.organisationFormDataLoading = action.payload;
     },
     SetIndividualOrganization(state, action: PayloadAction<IOrganisationState['organisationFormData']>) {
       state.organisationFormData = action.payload;

@@ -124,6 +124,7 @@ export const GetIndividualOrganizationService = (url: string) => {
     dispatch(OrganisationAction.SetOrganisationFormData({}));
     const getOrganisationData = async (url: string) => {
       try {
+        dispatch(OrganisationAction.SetIndividualOrganizationLoading(true));
         const getOrganisationDataResponse = await axios.get(url);
         const response: GetOrganisationDataModel = getOrganisationDataResponse.data;
         dispatch(OrganisationAction.SetIndividualOrganization(response));
@@ -133,6 +134,8 @@ export const GetIndividualOrganizationService = (url: string) => {
             message: error.response.data.detail || 'Failed to fetch organization.',
           }),
         );
+      } finally {
+        dispatch(OrganisationAction.SetIndividualOrganizationLoading(false));
       }
     };
     await getOrganisationData(url);

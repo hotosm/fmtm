@@ -16,4 +16,5 @@ export interface IOrganisationState {
     organizationRejecting: boolean;
   };
   organizationDeleteLoading: boolean;
+  organisationFormDataLoading: boolean;
 }
