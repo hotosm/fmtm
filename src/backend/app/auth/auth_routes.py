@@ -267,9 +267,37 @@ async def refresh_management_cookies(
     This endpoint is specific to the management desktop frontend.
     Any temp auth cookies will be ignored and removed.
     Authentication is required.
+    If signed in with login method other than OSM, the user will be logged out and
+    a forbidden status will be returned.
 
     NOTE this endpoint has no db calls and returns in ~2ms.
     """
+    if "google" in current_user.sub.lower():
+        response = Response(
+            status_code=HTTPStatus.FORBIDDEN,
+            content="Please log in using OSM for management access.",
+        )
+        fmtm_cookie_name = settings.cookie_name
+        refresh_cookie_name = f"{fmtm_cookie_name}_refresh"
+
+        for cookie_name in [
+            fmtm_cookie_name,
+            refresh_cookie_name,
+        ]:
+            log.debug(f"Resetting cookie in response named '{cookie_name}'")
+            response.set_cookie(
+                key=cookie_name,
+                value="",
+                max_age=0,  # Set to expire immediately
+                expires=0,  # Set to expire immediately
+                path="/",
+                domain=settings.FMTM_DOMAIN,
+                secure=False if settings.DEBUG else True,
+                httponly=True,
+                samesite="lax",
+            )
+        return response
+
     return await refresh_cookies(
         request,
         current_user,
