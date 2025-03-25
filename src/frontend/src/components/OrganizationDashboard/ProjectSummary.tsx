@@ -5,8 +5,9 @@ import Searchbar from '@/components/common/SearchBar';
 import useDebouncedInput from '@/hooks/useDebouncedInput';
 import Switch from '@/components/common/Switch';
 import ExploreProjectCard from '../home/ExploreProjectCard';
-import Pagination from '../common/Pagination';
-import ProjectSummaryMap from './ProjectSummaryMap';
+import Pagination from '@/components/common/Pagination';
+import ProjectSummaryMap from '@/components/OrganizationDashboard/ProjectSummaryMap';
+import ProjectCardSkeleton from '@/components/home/ProjectCardSkeleton';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -24,6 +25,7 @@ const ProjectSummary = () => {
   });
 
   const projectList = useAppSelector((state) => state.home.homeProjectSummary);
+  const projectListLoading = useAppSelector((state) => state.home.homeProjectLoading);
   const projectListPagination = useAppSelector((state) => state.home.homeProjectPagination);
 
   useEffect(() => {
@@ -50,9 +52,19 @@ const ProjectSummary = () => {
             <div
               className={`fmtm-grid ${showMap ? 'fmtm-grid-cols-2 xl:fmtm-grid-cols-3' : 'fmtm-grid-cols-2 sm:fmtm-grid-cols-3 md:fmtm-grid-cols-4 xl:fmtm-grid-cols-5'} fmtm-gap-2 sm:fmtm-gap-3`}
             >
-              {projectList?.map((project) => (
-                <ExploreProjectCard key={project.id} data={project} className="fmtm-border fmtm-border-[#EDEDED]" />
-              ))}
+              {projectListLoading ? (
+                <ProjectCardSkeleton className="fmtm-border fmtm-border-[#EDEDED]" />
+              ) : projectList?.length === 0 ? (
+                <p
+                  className={`${showMap ? 'fmtm-col-span-2 xl:fmtm-col-span-3' : 'fmtm-col-span-2 sm:fmtm-col-span-3 md:fmtm-col-span-4 xl:fmtm-col-span-5'} fmtm-mx-auto fmtm-mt-14 fmtm-text-grey-500`}
+                >
+                  Organization has no projects
+                </p>
+              ) : (
+                projectList?.map((project) => (
+                  <ExploreProjectCard key={project.id} data={project} className="fmtm-border fmtm-border-[#EDEDED]" />
+                ))
+              )}
             </div>
           </div>
           <Pagination
