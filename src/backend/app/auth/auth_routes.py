@@ -49,7 +49,7 @@ router = APIRouter(
 )
 
 
-@router.get("/osm-login")
+@router.get("/login/osm")
 async def login_url_osm(osm_auth=Depends(init_osm_auth)):
     """Get Login URL for OSM Oauth Application.
 
@@ -68,7 +68,7 @@ async def login_url_osm(osm_auth=Depends(init_osm_auth)):
     return JSONResponse(content=login_url, status_code=HTTPStatus.OK)
 
 
-@router.get("/google-login")
+@router.get("/login/google")
 async def login_url_google(google_auth=Depends(init_google_auth)):
     """Get Login URL for Google Oauth Application.
 
