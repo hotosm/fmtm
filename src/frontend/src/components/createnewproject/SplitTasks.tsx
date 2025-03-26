@@ -44,8 +44,6 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
   useDocumentTitle('Create Project: Split Tasks');
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { hostname } = window.location;
-  const hashtagsPrefix = `#FMTM,#${hostname}-{project_id}`;
 
   const [disableSubmitButton, setDisableSubmitButton] = useState(true);
   const [combinedFeaturesCount, setCombinedFeaturesCount] = useState(0);
