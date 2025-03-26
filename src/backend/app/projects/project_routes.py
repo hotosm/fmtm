@@ -1509,30 +1509,30 @@ async def delete_project_team(
 @router.post("/{project_id}/teams/{team_id}/users")
 async def add_team_users(
     team: Annotated[DbProjectTeam, Depends(project_deps.get_project_team)],
-    users: List[int],
+    user_subs: List[str],
     db: Annotated[Connection, Depends(db_conn)],
     project_user: Annotated[ProjectUserDict, Depends(project_manager)],
 ):
     """Add users to a team."""
     # Assign mapper user roles to the project
-    for user_sub in users:
+    for user_sub in user_subs:
         await DbUserRole.create(
             db,
             project_user.get("project").id,
             user_sub,
             ProjectRole.MAPPER,
         )
-    await DbProjectTeamUser.create(db, team.team_id, users)
+    await DbProjectTeamUser.create(db, team.team_id, user_subs)
     return Response(status_code=HTTPStatus.OK)
 
 
 @router.delete("/{project_id}/teams/{team_id}/users")
 async def remove_team_users(
     team: Annotated[DbProjectTeam, Depends(project_deps.get_project_team)],
-    users: List[int],
+    user_subs: List[str],
     db: Annotated[Connection, Depends(db_conn)],
     project_user: Annotated[ProjectUserDict, Depends(project_manager)],
 ):
     """Add users to a team."""
-    await DbProjectTeamUser.delete(db, team.team_id, users)
+    await DbProjectTeamUser.delete(db, team.team_id, user_subs)
     return Response(status_code=HTTPStatus.NO_CONTENT)

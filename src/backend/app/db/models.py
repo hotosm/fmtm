@@ -127,7 +127,7 @@ class DbUserRole(BaseModel):
                     (user_sub, project_id, role)
                 VALUES
                     (%(user_sub)s, %(project_id)s, %(role)s)
-                    ON CONFLICT (project_id, user_sub) DO UPDATE
+                    ON CONFLICT (user_sub, project_id) DO UPDATE
                     SET role = EXCLUDED.role
                     WHERE user_roles.role < EXCLUDED.role;
             """,
@@ -1036,7 +1036,7 @@ class DbProjectTeamUser(BaseModel):
     user_sub: str
 
     @classmethod
-    async def create(cls, db: Connection, team_id: UUID, user_subs: List[int]):
+    async def create(cls, db: Connection, team_id: UUID, user_subs: List[str]):
         """Add users to a team."""
         model_dump = [
             {"team_id": team_id, "user_sub": user_sub} for user_sub in user_subs
@@ -1055,7 +1055,7 @@ class DbProjectTeamUser(BaseModel):
             )
 
     @classmethod
-    async def delete(cls, db: Connection, team_id: UUID, user_subs: List[int]):
+    async def delete(cls, db: Connection, team_id: UUID, user_subs: List[str]):
         """Remove users from a team."""
         model_dump = [
             {"team_id": team_id, "user_sub": user_sub} for user_sub in user_subs
