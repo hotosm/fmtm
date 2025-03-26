@@ -62,12 +62,6 @@ const ProjectDetailsForm = ({ flag }) => {
     CreateProjectValidation,
   );
 
-  // prefill hashtag
-  useEffect(() => {
-    if (values.hashtags) return;
-    handleCustomChange('hashtags', hashtagsPrefix);
-  }, [values.hashtags]);
-
   const onFocus = () => {
     dispatch(
       OrganisationService(isAdmin ? `${VITE_API_URL}/organisation` : `${VITE_API_URL}/organisation/my-organisations`),
@@ -257,18 +251,20 @@ const ProjectDetailsForm = ({ flag }) => {
             />
           </div>
           {/* Hashtags */}
-          <div>
-            <InputTextField
+          <div className="fmtm-relative">
+            <div className="fmtm-absolute fmtm-top-[2.6rem] fmtm-left-2 fmtm-z-50 fmtm-bg-grey-100 fmtm-px-1">
+              {hashtagsPrefix}
+            </div>
+            <TextArea
               id="hashtags"
               label="Hashtags"
-              value={`${values?.hashtags}`}
+              rows={3}
+              value={values?.hashtags}
               onChange={(e) => {
-                // hastags to be prefilled with hashtagsPrefix
                 const value = e.target.value;
-                const newValue = value.startsWith(hashtagsPrefix) ? value : hashtagsPrefix;
-                handleCustomChange('hashtags', newValue);
+                handleCustomChange('hashtags', value);
               }}
-              fieldType="text"
+              className="fmtm-indent-[15rem]"
             />
             <p className="fmtm-text-sm fmtm-text-gray-500 fmtm-leading-4 fmtm-mt-2">
               *Hashtags related to what is being mapped. By default {hashtagsPrefix} is included. Hashtags are sometimes

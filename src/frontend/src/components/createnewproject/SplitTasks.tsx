@@ -128,7 +128,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
       new_geom_type: projectDetails.newGeomType ? projectDetails.newGeomType : projectDetails.primaryGeomType,
       task_split_type: taskSplittingMethod,
       // "uploaded_form": projectDetails.uploaded_form,
-      hashtags: projectDetails.hashtags?.replace(hashtagsPrefix, ''),
+      hashtags: projectDetails.hashtags,
       custom_tms_url: projectDetails.custom_tms_url,
     };
     // Append osm_category if set
