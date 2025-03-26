@@ -9,6 +9,7 @@ import { useIsOrganizationAdmin } from '@/hooks/usePermissions';
 import NoAccessComponent from './NoAccessComponent';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/RadixComponents/Dialog';
 import InputTextField from '@/components/common/InputTextField';
+import ManageAdmins from '@/components/ManageOrganization/ManageAdmins';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -44,7 +45,7 @@ const ManageOrganization = () => {
       case 'details':
         return <CreateEditOrganizationForm organizationId={organizationId || ''} />;
       case 'admins':
-        return <div>Admins</div>;
+        return <ManageAdmins />;
       default:
         return <></>;
     }
