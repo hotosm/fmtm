@@ -53,7 +53,7 @@ async def init_admin_org(db: Connection) -> None:
 
     # Create service user
     svc_user = UserIn(
-        sub="fmtm|20386219",
+        sub="osm|20386219",
         username="svcfmtm",
         name="FMTM Service Account",
         email_address=settings.ODK_CENTRAL_USER,

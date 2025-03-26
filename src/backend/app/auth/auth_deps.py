@@ -297,7 +297,7 @@ async def mapper_login_required(
     # Else user has no token, so we provide login data automatically
     username = "svcfmtm"
     temp_user = {
-        "sub": "fmtm|20386219",
+        "sub": "osm|20386219",
         "username": username,
         "role": UserRole.MAPPER,
     }
