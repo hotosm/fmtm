@@ -10,7 +10,7 @@ interface IInputTextFieldProps {
   value: string;
   placeholder?: string;
   name?: string;
-  classNames?: string;
+  className?: string;
   maxLength?: number;
   disabled?: boolean;
   required?: boolean;
@@ -25,13 +25,13 @@ function TextArea({
   value,
   placeholder,
   name,
-  classNames,
+  className,
   maxLength,
   disabled,
   required,
 }: IInputTextFieldProps) {
   return (
-    <div className={`fmtm-custom-textField ${classNames}`}>
+    <div className={`fmtm-custom-textField`}>
       <div className="fmtm-flex fmtm-gap-1">
         <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold">{label}</p>
         {required && <p className="fmtm-text-red-500 fmtm-text-[1.2rem]">*</p>}
@@ -45,7 +45,7 @@ function TextArea({
           rows={rows}
           className={`fmtm-w-full fmtm-pr-3 fmtm-px-3 focus:fmtm-outline-none fmtm-resize-none ${
             disabled && 'fmtm-bg-gray-400 fmtm-cursor-not-allowed '
-          } fmtm-bg-white fmtm-py-[10px] fmtm-text-[1rem]`}
+          } fmtm-bg-white fmtm-py-[10px] fmtm-text-[1rem] ${className}`}
           placeholder={placeholder}
           value={value}
           maxLength={maxLength}
