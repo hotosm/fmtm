@@ -147,7 +147,7 @@ BEGIN
     ALTER TABLE ONLY public.users
     DROP CONSTRAINT IF EXISTS users_username_key;
 
-    -- Step 6: Create new foreign key constraints
+    -- Step 6: Create new constraints
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.table_constraints 
         WHERE constraint_name = 'organisation_managers_user_sub_fkey'
@@ -162,6 +162,22 @@ BEGIN
     AND table_name = 'organisation_managers'
     ) THEN
         ALTER TABLE organisation_managers ADD CONSTRAINT organisation_user_key UNIQUE (organisation_id, user_sub);
+    END IF;
+
+    IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'user_roles_pkey'
+    AND table_name = 'user_roles'
+    ) THEN
+        ALTER TABLE public.user_roles ADD CONSTRAINT user_roles_pkey UNIQUE (user_sub, project_id);
+    END IF;
+
+    IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'project_team_users_pkey'
+    AND table_name = 'project_team_users'
+    ) THEN
+        ALTER TABLE public.project_team_users ADD CONSTRAINT project_team_users_pkey UNIQUE (team_id, user_sub);
     END IF;
 
     IF NOT EXISTS (
