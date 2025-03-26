@@ -29,6 +29,7 @@ from psycopg.rows import class_row
 
 from app.auth.auth_deps import (
     create_jwt_tokens,
+    expire_cookies,
     login_required,
     mapper_login_required,
     refresh_cookies,
@@ -131,25 +132,15 @@ async def logout():
     temp_refresh_cookie_name = f"{fmtm_cookie_name}_temp_refresh"
     osm_cookie_name = f"{fmtm_cookie_name}_osm"
 
-    for cookie_name in [
+    cookie_names = [
         fmtm_cookie_name,
         refresh_cookie_name,
         temp_cookie_name,
         temp_refresh_cookie_name,
         osm_cookie_name,
-    ]:
-        log.debug(f"Resetting cookie in response named '{cookie_name}'")
-        response.set_cookie(
-            key=cookie_name,
-            value="",
-            max_age=0,  # Set to expire immediately
-            expires=0,  # Set to expire immediately
-            path="/",
-            domain=settings.FMTM_DOMAIN,
-            secure=False if settings.DEBUG else True,
-            httponly=True,
-            samesite="lax",
-        )
+    ]
+
+    response = await expire_cookies(response, cookie_names)
     return response
 
 
@@ -277,25 +268,12 @@ async def refresh_management_cookies(
             status_code=HTTPStatus.FORBIDDEN,
             content="Please log in using OSM for management access.",
         )
-        fmtm_cookie_name = settings.cookie_name
-        refresh_cookie_name = f"{fmtm_cookie_name}_refresh"
+        cookie_names = [
+            settings.cookie_name,
+            f"{settings.cookie_name}_refresh",
+        ]
 
-        for cookie_name in [
-            fmtm_cookie_name,
-            refresh_cookie_name,
-        ]:
-            log.debug(f"Resetting cookie in response named '{cookie_name}'")
-            response.set_cookie(
-                key=cookie_name,
-                value="",
-                max_age=0,  # Set to expire immediately
-                expires=0,  # Set to expire immediately
-                path="/",
-                domain=settings.FMTM_DOMAIN,
-                secure=False if settings.DEBUG else True,
-                httponly=True,
-                samesite="lax",
-            )
+        response = await expire_cookies(response, cookie_names)
         return response
 
     return await refresh_cookies(
