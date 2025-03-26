@@ -263,7 +263,7 @@ async def refresh_management_cookies(
 
     NOTE this endpoint has no db calls and returns in ~2ms.
     """
-    if "google" in current_user.sub.lower():
+    if "osm" not in current_user.sub.lower():
         response = Response(
             status_code=HTTPStatus.FORBIDDEN,
             content="Please log in using OSM for management access.",
