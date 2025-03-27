@@ -116,6 +116,6 @@ class OrganisationOut(BaseModel):
 class OrgManagersOut(BaseModel):
     """Detail of Organisation Managers."""
 
-    user_id: int
+    user_sub: str
     username: str
     profile_img: str

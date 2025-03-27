@@ -62,7 +62,7 @@ async def get_userlist(
     if not users:
         return []
     return [
-        user_schemas.Usernames(id=user.id, username=user.username) for user in users
+        user_schemas.Usernames(sub=user.sub, username=user.username) for user in users
     ]
 
 
@@ -110,8 +110,8 @@ async def delete_user_by_identifier(
     log.info(
         f"User {current_user.username} attempting deletion of user {user.username}"
     )
-    await DbUser.delete(db, user.id)
-    log.info(f"User {user.id} deleted successfully.")
+    await DbUser.delete(db, user.sub)
+    log.info(f"User {user.sub} deleted successfully.")
     return Response(status_code=HTTPStatus.NO_CONTENT)
 
 

@@ -707,7 +707,7 @@ class DbOrganisationManagers(BaseModel):
                     u.profile_img
                 FROM organisation_managers AS om
                 INNER JOIN users AS u
-                    ON u.id = om.user_sub
+                    ON u.sub = om.user_sub
                 WHERE om.organisation_id = %(org_id)s
             """
             params = {"org_id": org_id}
@@ -1490,7 +1490,7 @@ class DbProject(BaseModel):
         """Fetch all projects with optional filters for user, hashtags, and search."""
         filters_map = {
             "organisation_id = %(org_id)s": org_id,
-            "author_id = %(user_sub)s": user_sub,  # project author
+            "author_sub = %(user_sub)s": user_sub,  # project author
             "hashtags && %(hashtags)s": hashtags,
             # search term (project name using ILIKE for case-insensitive match)
             "p.slug ILIKE %(search)s": f"%{search}%" if search else None,
