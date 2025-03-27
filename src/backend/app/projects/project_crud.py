@@ -963,7 +963,7 @@ async def send_project_manager_message(
 
     send_osm_message(
         osm_token=osm_token,
-        osm_id=new_manager.id,
+        osm_sub=new_manager.sub,
         title=f"You have been assigned to project {project.name} as a manager",
         body=message_content,
     )

@@ -161,7 +161,7 @@ async def approve_organisation(
         background_tasks.add_task(
             organisation_crud.send_approval_message,
             request=request,
-            creator_id=approved_org.created_by,
+            creator_sub=approved_org.created_by,
             organisation_name=approved_org.name,
             osm_auth=osm_auth,
         )

@@ -135,12 +135,12 @@ async def get_my_organisations(
 
 async def send_approval_message(
     request: Request,
-    creator_id: int,
+    creator_sub: str,
     organisation_name: str,
     osm_auth: Auth,
 ):
     """Send message to the organisation creator after approval."""
-    log.info(f"Sending approval message to organisation creator ({creator_id}).")
+    log.info(f"Sending approval message to organisation creator ({creator_sub}).")
     osm_token = get_osm_token(request, osm_auth)
     message_content = dedent(f"""
         ## Congratulations!
@@ -153,8 +153,8 @@ async def send_approval_message(
     """)
     send_osm_message(
         osm_token=osm_token,
-        osm_id=creator_id,
+        osm_sub=creator_sub,
         title="Your organisation has been approved!",
         body=message_content,
     )
-    log.info(f"Approval message sent to organisation creator ({creator_id}).")
+    log.info(f"Approval message sent to organisation creator ({creator_sub}).")

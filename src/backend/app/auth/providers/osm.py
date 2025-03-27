@@ -129,10 +129,10 @@ def send_osm_message(
     title: str,
     body: str,
     osm_username: str = None,
-    osm_id: int = None,
+    osm_sub: str = None,
 ) -> None:
     """Send a message via OSM API."""
-    if not osm_username and not osm_id:
+    if not osm_username and not osm_sub:
         raise ValueError("Either recipient or recipient_id must be provided.")
 
     email_url = f"{settings.OSM_URL}api/0.6/user/messages"
@@ -142,13 +142,13 @@ def send_osm_message(
         "body": body,
     }
 
-    if osm_id:
-        post_body["recipient_id"] = osm_id
+    if osm_sub:
+        post_body["recipient_id"] = osm_sub.split("|")[-1]
     else:
         post_body["recipient"] = osm_username
 
     log.debug(
-        f"Sending message to user ({osm_id or osm_username}) via OSM API: {email_url}"
+        f"Sending message to user ({osm_sub or osm_username}) via OSM API: {email_url}"
     )
     response = requests.post(email_url, headers=headers, data=post_body)
 

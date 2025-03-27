@@ -106,7 +106,7 @@ async def add_new_task_event(
     db: Annotated[Connection, Depends(db_conn)],
     osm_auth: Annotated[Auth, Depends(init_osm_auth)],
     team: Annotated[Optional[DbProjectTeam], Depends(project_deps.get_project_team)],
-    assignee_id: Optional[int] = None,
+    assignee_sub: Optional[str] = None,
     notify: bool = False,
 ):
     """Add a new event to the events table / update task status."""
@@ -117,7 +117,7 @@ async def add_new_task_event(
     new_event.task_id = task.id
 
     if new_event.event == TaskEvent.ASSIGN:
-        if not (assignee_id or team.team_id):
+        if not (assignee_sub or team.team_id):
             raise HTTPException(
                 status_code=HTTPStatus.BAD_REQUEST,
                 detail="Assignee or Team ID is required for ASSIGN event",
@@ -125,8 +125,8 @@ async def add_new_task_event(
 
         # NOTE: This is saving the assignee instead of the current user if assignee is
         # provided else it will save the team if team is provided
-        if assignee_id:
-            new_event.user_sub = assignee_id
+        if assignee_sub:
+            new_event.user_sub = assignee_sub
         elif team:
             new_event.user_sub = None
             new_event.username = None
@@ -134,9 +134,9 @@ async def add_new_task_event(
 
     event = await DbTaskEvent.create(db, new_event)
 
-    if notify and event.event == TaskEvent.ASSIGN and (assignee_id or team):
+    if notify and event.event == TaskEvent.ASSIGN and (assignee_sub or team):
         await task_crud.send_task_assignment_notifications(
-            request, osm_auth, team, project_user, task, assignee_id
+            request, osm_auth, team, project_user, task, assignee_sub
         )
 
     return event
