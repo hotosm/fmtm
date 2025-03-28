@@ -3,37 +3,25 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Tooltip } from '@mui/material';
 import Button from '@/components/common/Button';
 import AssetModules from '@/shared/AssetModules';
-import { GetIndividualOrganizationService } from '@/api/OrganisationService';
+import { GetIndividualOrganizationService, GetOrganizationAdminsService } from '@/api/OrganisationService';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
-import { OrganizationInfoSkeleton } from '@/components/OrganizationDashboard/SkeletonLoader';
+import { OrganizationInfoSkeleton, UserListSkeleton } from '@/components/OrganizationDashboard/SkeletonLoader';
 import { useIsOrganizationAdmin } from '@/hooks/usePermissions';
-
-const fakeusers = [
-  { id: 1, username: 'svcfmtm', profile_img: null },
-  {
-    id: 5,
-    username: 'ram',
-    profile_img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxpjzMkaU0p9zhQMTqe4ckWkComL6uCz0Jqg&s',
-  },
-  { id: 6, username: 'ham', profile_img: 'https://cdn-icons-png.flaticon.com/512/5231/5231019.png' },
-  { id: 4, username: 'Nam', profile_img: null },
-  {
-    id: 3,
-    username: 'nsuwal',
-    profile_img: 'https://cdn1.iconfinder.com/data/icons/bokbokstars-121-classic-stock-icons-1/512/person-man.png',
-  },
-  { id: 2, username: 'LocalAdmin', profile_img: null },
-];
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
-const OrganizationAdminList = ({ users }) => {
+const OrganizationAdminList = () => {
+  const organizationAdmins = useAppSelector((state) => state.organisation.organizationAdmins);
+  const organizationAdminsLoading = useAppSelector((state) => state.organisation.getOrganizationAdminsLoading);
+
+  if (organizationAdminsLoading) return <UserListSkeleton />;
+
   return (
     <div className="fmtm-flex fmtm-items-center">
-      {users.slice(0, 5).map((user, index) => (
-        <Tooltip key={user.id} title={user.username} arrow>
+      {organizationAdmins.slice(0, 5).map((user, index) => (
+        <Tooltip key={user.user_id} title={user.username} arrow>
           <div
-            style={{ zIndex: users.length - index }}
+            style={{ zIndex: organizationAdmins.length - index }}
             className="fmtm-border fmtm-rounded-full fmtm-h-[1.688rem] fmtm-w-[1.688rem] fmtm-relative fmtm-mr-[-0.5rem] fmtm-bg-white fmtm-overflow-hidden fmtm-cursor-pointer"
           >
             {user.profile_img ? (
@@ -56,18 +44,20 @@ const OrganizationAdminList = ({ users }) => {
           </div>
         </Tooltip>
       ))}
-      {users.length <= 4 ? null : (
+      {organizationAdmins.length <= 4 ? null : (
         <Tooltip
           title={
             <ul>
-              {users.slice(5).map((user) => (
+              {organizationAdmins.slice(5).map((user) => (
                 <li key={user.id}>{user.username}</li>
               ))}
             </ul>
           }
           arrow
         >
-          <p className="fmtm-ml-[0.8rem] fmtm-body-lg-medium fmtm-cursor-pointer">+{users.slice(5).length}</p>
+          <p className="fmtm-ml-[0.8rem] fmtm-body-lg-medium fmtm-cursor-pointer">
+            +{organizationAdmins.slice(5).length}
+          </p>
         </Tooltip>
       )}
     </div>
@@ -86,8 +76,14 @@ const OrganizationInfo = () => {
   const organizationLoading = useAppSelector((state) => state.organisation.organisationFormDataLoading);
 
   useEffect(() => {
+    if (!organizationId) return;
     dispatch(GetIndividualOrganizationService(`${VITE_API_URL}/organisation/${organizationId}`));
-  }, []);
+  }, [organizationId]);
+
+  useEffect(() => {
+    if (!organizationId) return;
+    dispatch(GetOrganizationAdminsService(`${VITE_API_URL}/organisation/org-admins`, { org_id: +organizationId }));
+  }, [organizationId]);
 
   if (organizationLoading) return <OrganizationInfoSkeleton />;
 
@@ -113,7 +109,7 @@ const OrganizationInfo = () => {
 
       <div className="fmtm-text-grey-800">
         <p className="fmtm-body-lg-medium fmtm-mb-1">Organization Admins</p>
-        <OrganizationAdminList users={fakeusers} />
+        <OrganizationAdminList />
         <a href={organization?.url} target="_" className="fmtm-flex fmtm-items-center fmtm-gap-2 fmtm-mt-3 fmtm-mb-1">
           <AssetModules.LinkIcon className="!fmtm-text-lg" />
           <p className="fmtm-body-lg-medium">{organization?.url}</p>

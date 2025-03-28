@@ -45,3 +45,9 @@ export type consentDetailsFormDataType = {
   log_into: string[];
   participated_in: string[];
 };
+
+export type OrganizationAdminsModel = {
+  user_id: number;
+  username: string;
+  profile_img: string | null;
+};

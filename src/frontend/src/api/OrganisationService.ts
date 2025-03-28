@@ -1,5 +1,9 @@
-import axios from 'axios';
-import { GetOrganisationDataModel, OrganisationModal } from '@/models/organisation/organisationModel';
+import axios, { AxiosResponse } from 'axios';
+import {
+  GetOrganisationDataModel,
+  OrganisationModal,
+  OrganizationAdminsModel,
+} from '@/models/organisation/organisationModel';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import { OrganisationAction } from '@/store/slices/organisationSlice';
 import { API } from '.';
@@ -261,5 +265,29 @@ export const DeleteOrganizationService = (url: string, navigate: NavigateFunctio
       }
     };
     await rejectOrganization(url);
+  };
+};
+
+export const GetOrganizationAdminsService = (url: string, params: { org_id: number }) => {
+  return async (dispatch: AppDispatch) => {
+    const getOrganizationAdmins = async (url: string, params: { org_id: number }) => {
+      try {
+        dispatch(OrganisationAction.GetOrganizationAdminsLoading(true));
+        const getOrganizationAdminsResponse: AxiosResponse<OrganizationAdminsModel[]> = await axios.get(url, {
+          params,
+        });
+        const response = getOrganizationAdminsResponse.data;
+        dispatch(OrganisationAction.SetOrganizationAdmins(response));
+      } catch (error) {
+        dispatch(
+          CommonActions.SetSnackBar({
+            message: 'Failed to fetch organization admins',
+          }),
+        );
+      } finally {
+        dispatch(OrganisationAction.GetOrganizationAdminsLoading(false));
+      }
+    };
+    await getOrganizationAdmins(url, params);
   };
 };
