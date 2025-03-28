@@ -22,8 +22,8 @@ const Home = () => {
 
   const showMapStatus = useAppSelector((state) => state.home.showMapStatus);
   const homeProjectPagination = useAppSelector((state) => state.home.homeProjectPagination);
-  const stateHome = useAppSelector((state) => state.home);
-  const filteredProjectCards = stateHome.homeProjectSummary;
+  const filteredProjectCards = useAppSelector((state) => state.home.homeProjectSummary);
+  const homeProjectLoading = useAppSelector((state) => state.home.homeProjectLoading);
 
   const [searchTextData, handleChangeData] = useDebouncedInput({
     ms: 400,
@@ -52,7 +52,7 @@ const Home = () => {
     >
       <div className="fmtm-h-full">
         <HomePageFilters searchText={searchTextData} onSearch={handleChangeData} />
-        {!stateHome.homeProjectLoading ? (
+        {!homeProjectLoading ? (
           <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5 fmtm-mt-2 md:fmtm-overflow-hidden lg:fmtm-h-[calc(100%-85px)] fmtm-pb-16 lg:fmtm-pb-0">
             <div
               className={`fmtm-w-full fmtm-flex fmtm-flex-col fmtm-justify-between md:fmtm-overflow-y-scroll md:scrollbar ${showMapStatus ? 'lg:fmtm-w-[50%]' : ''} `}
