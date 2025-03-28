@@ -1,6 +1,7 @@
-import { HomeSummaryService } from '@/api/HomeService';
-import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import React, { useEffect, useState } from 'react';
+import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
+import { useParams } from 'react-router-dom';
+import { HomeSummaryService } from '@/api/HomeService';
 import Searchbar from '@/components/common/SearchBar';
 import useDebouncedInput from '@/hooks/useDebouncedInput';
 import Switch from '@/components/common/Switch';
@@ -13,6 +14,9 @@ const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 const ProjectSummary = () => {
   const dispatch = useAppDispatch();
+  const params = useParams();
+
+  const organizationId = params.id;
 
   const [showMap, setShowMap] = useState(true);
   const [search, setSearch] = useState('');
@@ -30,7 +34,9 @@ const ProjectSummary = () => {
 
   useEffect(() => {
     dispatch(
-      HomeSummaryService(`${VITE_API_URL}/projects/search?page=${paginationPage}&results_per_page=12&search=${search}`),
+      HomeSummaryService(
+        `${VITE_API_URL}/projects/summaries?page=${paginationPage}&results_per_page=12&search=${search}&org_id=${organizationId}`,
+      ),
     );
   }, [search, paginationPage]);
 
