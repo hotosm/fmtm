@@ -59,15 +59,15 @@ export default function ExploreProjectCard({ data, className }: { data: projectT
         </div>
         <div className="fmtm-mt-4">
           <div className="fmtm-flex fmtm-justify-between fmtm-mb-1">
-            <p className="fmtm-body-sm-semibold">{data.total_tasks} Tasks</p>
-            <p className="fmtm-body-sm-semibold">30 Submissions</p>
+            <p className="fmtm-body-sm-semibold">{data?.total_tasks} Tasks</p>
+            <p className="fmtm-body-sm-semibold">{data?.total_submissions} Submissions</p>
           </div>
           <Tooltip
             title={
               <div>
-                <p>{12} Total Tasks</p>
-                <p>{5} Tasks Mapped</p>
-                <p>{3} Tasks Validated</p>
+                <p>{data?.total_tasks} Total Tasks</p>
+                <p>{data?.tasks_mapped} Tasks Mapped</p>
+                <p>{data?.tasks_validated} Tasks Validated</p>
               </div>
             }
             placement="top"
@@ -90,13 +90,13 @@ export default function ExploreProjectCard({ data, className }: { data: projectT
             <div className="fmtm-h-[0.375rem] fmtm-w-full fmtm-bg-grey-300 fmtm-rounded-xl fmtm-overflow-hidden fmtm-flex fmtm-cursor-pointer">
               <div
                 style={{
-                  width: `${(5 / 12) * 100}%`,
+                  width: `${(data?.tasks_mapped / data?.total_tasks) * 100}%`,
                 }}
                 className={`fmtm-h-full fmtm-bg-grey-800 fmtm-rounded-r-xl`}
               />
               <div
                 style={{
-                  width: `${(3 / 12) * 100}%`,
+                  width: `${(data?.tasks_validated / data?.total_tasks) * 100}%`,
                 }}
                 className={`fmtm-h-full fmtm-bg-grey-500 fmtm-rounded-r-xl`}
               />
