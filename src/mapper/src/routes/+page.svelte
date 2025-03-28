@@ -19,7 +19,7 @@
 		page: null,
 		pages: null,
 		prev_num: null,
-		per_page: 1,
+		per_page: 12,
 		total: null,
 	});
 	let projectListLoading = $state(false);
@@ -40,12 +40,10 @@
 		return () => clearTimeout(timeoutId);
 	});
 
-	const fetchProjects = async () => {
+	const fetchProjects = async (page: number, search: string) => {
 		try {
 			projectListLoading = true;
-			const response = await fetch(
-				`${API_URL}/projects/summaries?page=${paginationPage}&search=${debouncedSearch}&results_per_page=1`,
-			);
+			const response = await fetch(`${API_URL}/projects/summaries?page=${page}&search=${search}&results_per_page=12`);
 			const projectResponse = (await response.json()) as { results: projectType[]; pagination: paginationType };
 			projectList = projectResponse.results;
 			projectPagination = projectResponse.pagination;
@@ -57,7 +55,7 @@
 	};
 
 	$effect(() => {
-		fetchProjects();
+		fetchProjects(paginationPage, search);
 	});
 </script>
 
