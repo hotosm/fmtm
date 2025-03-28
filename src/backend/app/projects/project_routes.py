@@ -756,7 +756,7 @@ async def add_new_project_manager(
     await DbUserRole.create(
         db,
         org_user_dict["project"].id,
-        new_manager.id,
+        new_manager.sub,
         ProjectRole.PROJECT_MANAGER,
     )
 
