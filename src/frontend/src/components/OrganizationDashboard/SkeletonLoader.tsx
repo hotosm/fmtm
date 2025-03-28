@@ -1,6 +1,21 @@
 import React from 'react';
 import { Skeleton } from '@/components/common/Skeleton';
 
+export const UserListSkeleton = () => {
+  return (
+    <div className="fmtm-flex fmtm-items-center">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Skeleton
+          key={i}
+          style={{ zIndex: 5 - i }}
+          className="fmtm-border !fmtm-rounded-full fmtm-h-[1.688rem] fmtm-w-[1.688rem] fmtm-mr-[-0.5rem]"
+        />
+      ))}
+      <Skeleton className="fmtm-w-[2rem] fmtm-h-[1rem] fmtm-ml-4" />
+    </div>
+  );
+};
+
 export const OrganizationInfoSkeleton = () => {
   return (
     <div className="fmtm-flex fmtm-justify-between fmtm-flex-wrap sm:fmtm-flex-nowrap fmtm-gap-x-8 fmtm-gap-y-2 fmtm-bg-white fmtm-rounded-lg fmtm-p-4">
@@ -16,14 +31,7 @@ export const OrganizationInfoSkeleton = () => {
         <div>
           <Skeleton className="fmtm-w-[11rem] fmtm-h-[1rem] fmtm-mb-1" />
           <div className="fmtm-flex fmtm-items-center">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton
-                key={i}
-                style={{ zIndex: 5 - i }}
-                className="fmtm-border !fmtm-rounded-full fmtm-h-[1.688rem] fmtm-w-[1.688rem] fmtm-mr-[-0.5rem]"
-              />
-            ))}
-            <Skeleton className="fmtm-w-[2rem] fmtm-h-[1rem] fmtm-ml-4" />
+            <UserListSkeleton />
           </div>
         </div>
         <Skeleton className="fmtm-w-[11rem] fmtm-h-[1rem]" />
@@ -34,8 +42,4 @@ export const OrganizationInfoSkeleton = () => {
       </div>
     </div>
   );
-};
-
-export const ProjectSummarySkeleton = () => {
-  return <div>SkeletonLoader</div>;
 };
