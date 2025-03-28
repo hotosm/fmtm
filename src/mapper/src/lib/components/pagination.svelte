@@ -35,14 +35,14 @@
 <div
 	class={`bottom-0 flex items-center justify-between flex-col sm:flex-row bg-white py-2 px-11 shadow-black shadow-2xl z-50 gap-1 ${className} box-border`}
 >
-	<p class="text-[0.75rem] leading-normal font-normal text-grey-800">
+	<p class="text-[0.75rem] leading-normal font-normal text-[#484848]">
 		Showing {showing} of {totalCount} results
 	</p>
 
 	<div class="flex flex-wrap justify-center gap-x-6 gap-y-1">
 		<!-- Go to Page -->
 		<div class="flex flex-1 items-center justify-center gap-2 md:pr-6">
-			<p class="text-[0.75rem] leading-normal font-normal whitespace-nowrap text-grey-800">Go to Page</p>
+			<p class="text-[0.75rem] leading-normal font-normal whitespace-nowrap text-[#484848]">Go to Page</p>
 			<input
 				type="number"
 				min="1"
@@ -71,7 +71,7 @@
 						<span class="text-[0.75rem] leading-normal font-normal-regular text-black-600">&#8230;</span>
 					{:else}
 						<div
-							class={`grid h-8 cursor-pointer place-items-center px-3 transition-colors hover:text-primary-900 border-b ${currentPage === pageNumber ? 'border-grey-800' : 'border-white'}`}
+							class={`grid h-8 cursor-pointer place-items-center px-3`}
 							onclick={() => handlePageChange(+pageNumber)}
 							onkeydown={(e) => {
 								if (e.key === 'Enter') handlePageChange(+pageNumber);
@@ -80,7 +80,7 @@
 							tabindex="0"
 						>
 							<p
-								class={`text-[0.75rem] leading-normal font-normal ${currentPage === pageNumber ? 'font-bold text-[#212121]' : 'texy-grey-800'}`}
+								class={`text-[0.75rem] leading-normal font-normal ${currentPage === pageNumber ? '!font-bold text-[#D73F37]' : 'texy-[#484848] text-[#212121]'}`}
 							>
 								{pageNumber}
 							</p>
