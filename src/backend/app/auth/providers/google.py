@@ -108,7 +108,7 @@ async def init_google_auth():
     ]
     if not all(required_settings):
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
+            status_code=HTTPStatus.NOT_IMPLEMENTED,
             detail="Google authentication is not enabled.",
         )
 
