@@ -21,6 +21,7 @@
 from time import time
 
 from fastapi import Request, Response
+from fastapi.exceptions import HTTPException
 from loguru import logger as log
 from requests_oauthlib import OAuth2Session
 
@@ -100,6 +101,17 @@ class GoogleAuth:
 
 async def init_google_auth():
     """Initialize Auth object for Google login."""
+    required_settings = [
+        settings.GOOGLE_CLIENT_ID,
+        settings.GOOGLE_CLIENT_SECRET,
+        settings.GOOGLE_LOGIN_REDIRECT_URI,
+    ]
+    if not all(required_settings):
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="Google authentication is not enabled.",
+        )
+
     return GoogleAuth(
         authorization_url="https://accounts.google.com/o/oauth2/v2/auth",
         token_url="https://www.googleapis.com/oauth2/v4/token",
