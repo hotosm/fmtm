@@ -14,12 +14,4 @@
 		<Skeleton className="w-full h-[14px] !rounded-full my-1" />
 		<Skeleton className="w-[50%] h-[14px] !rounded-full" />
 	</div>
-
-	<div>
-		<div class="flex items-center justify-between mb-1">
-			<Skeleton className="w-10 h-[14px] !rounded-full" />
-			<Skeleton className="w-16 h-[14px] !rounded-full" />
-		</div>
-		<Skeleton className="w-full h-[6px] !rounded-full" />
-	</div>
 </div>

@@ -53,23 +53,5 @@
 				</p>
 			</div>
 		</div>
-		<div class="mt-4">
-			<div class="flex justify-between mb-1">
-				<p class="text-[0.75rem] leading-[0.9rem] font-semibold">{project.total_tasks} Tasks</p>
-				<p class="text-[0.75rem] leading-[0.9rem] font-semibold">30 Submissions</p>
-			</div>
-			<sl-tooltip>
-				<div slot="content">
-					<p>{12} Total Tasks</p>
-					<p>{5} Tasks Mapped</p>
-					<p>{3} Tasks Validated</p>
-				</div>
-
-				<div class="h-[0.375rem] w-full bg-[#D7D7D7] rounded-xl overflow-hidden flex cursor-pointer">
-					<div style={`width: ${(5 / 12) * 100}%;`} class="h-full bg-[#484848] rounded-r-xl"></div>
-					<div style={`width: ${(3 / 12) * 100}%;`} class="h-full bg-[#989898] rounded-r-xl"></div>
-				</div>
-			</sl-tooltip>
-		</div>
 	</div>
 </div>
