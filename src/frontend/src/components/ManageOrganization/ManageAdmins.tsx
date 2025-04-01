@@ -1,20 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import DataTable from '@/components/common/DataTable';
-import { GetUserListService } from '@/api/User';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import AssetModules from '@/shared/AssetModules';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/RadixComponents/Dialog';
 import Button from '@/components/common/Button';
+import { GetOrganizationAdminsService } from '@/api/OrganisationService';
+import { useParams } from 'react-router-dom';
+import { OrganizationAdminsModel } from '@/models/organisation/organisationModel';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 const ManageAdmins = () => {
   const dispatch = useAppDispatch();
-  const userListLoading = useAppSelector((state) => state.user.userListLoading);
-  const userList = useAppSelector((state) => state.user.userList);
+  const params = useParams();
+
+  const organizationId = params.id;
+  const organizationAdmins = useAppSelector((state) => state.organisation.organizationAdmins);
+  const organizationAdminsLoading = useAppSelector((state) => state.organisation.getOrganizationAdminsLoading);
 
   const [toggleDeleteOrgModal, setToggleDeleteOrgModal] = useState(false);
-  const [adminToRemove, setAdminToRemove] = useState(null);
+  const [adminToRemove, setAdminToRemove] = useState<OrganizationAdminsModel | null>(null);
 
   const userDatacolumns = [
     {
@@ -72,7 +77,7 @@ const ManageAdmins = () => {
                       variant="primary-red"
                       isLoading={false}
                       onClick={() => {
-                        console.log(row.original);
+                        adminToRemove && removeOrgAdmin(adminToRemove?.user_sub);
                       }}
                     >
                       Remove
@@ -87,28 +92,21 @@ const ManageAdmins = () => {
     },
   ];
 
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 13,
-  });
-
   useEffect(() => {
-    dispatch(
-      GetUserListService(`${VITE_API_URL}/users`, {
-        results_per_page: 13,
-        page: pagination.pageIndex + 1,
-      }),
-    );
-  }, [pagination]);
+    if (!organizationId) return;
+    dispatch(GetOrganizationAdminsService(`${VITE_API_URL}/organisation/org-admins`, { org_id: +organizationId }));
+  }, [organizationId]);
+
+  const removeOrgAdmin = (user_sub: string) => {
+    // TODO: implement remove org admin
+  };
 
   return (
     <div className="fmtm-h-full fmtm-flex fmtm-flex-col fmtm-py-6 fmtm-max-w-[37.5rem] fmtm-mx-auto">
       <DataTable
-        data={userList || []}
+        data={organizationAdmins || []}
         columns={userDatacolumns}
-        isLoading={userListLoading}
-        pagination={{ pageIndex: pagination.pageIndex, pageSize: pagination.pageSize }}
-        setPaginationPage={(page) => setPagination(page)}
+        isLoading={organizationAdminsLoading}
         tableWrapperClassName="fmtm-flex-1"
       />
     </div>
