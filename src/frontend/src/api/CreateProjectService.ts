@@ -23,6 +23,7 @@ const CreateProjectService = (
   additionalFeature: any,
   projectAdmins: number[],
   combinedFeaturesCount: number,
+  isEmptyDataExtract: boolean,
 ) => {
   return async (dispatch: AppDispatch) => {
     dispatch(CreateProjectActions.CreateProjectLoading(true));
@@ -40,7 +41,9 @@ const CreateProjectService = (
       await dispatch(CreateProjectActions.PostProjectDetails(projectCreateResp));
 
       if (!hasAPISuccess) {
-        throw new Error(`Request failed with status ${projectCreateResp.status}`);
+        const msg = `Request failed with status ${projectCreateResp.status}`;
+        console.error(msg);
+        throw new Error(msg);
       }
       projectId = projectCreateResp.id;
 
@@ -50,21 +53,40 @@ const CreateProjectService = (
       );
 
       if (!hasAPISuccess) {
-        throw new Error(`Request failed`);
+        const msg = `Request failed`;
+        console.error(msg);
+        throw new Error(msg);
       }
 
       // Upload data extract
       let extractResponse;
-      const dataExtractFormData = new FormData();
-      dataExtractFormData.append('data_extract_file', dataExtractFile);
-      extractResponse = await API.post(
+      if (isOsmExtract) {
+        // Generated extract from raw-data-api
+        extractResponse = await API.get(
+          `${VITE_API_URL}/projects/data-extract-url?project_id=${projectId}&url=${projectData.data_extract_url}`,
+        );
+      } else if (dataExtractFile) {
+        // post custom data extract
+        const dataExtractFormData = new FormData();
+        dataExtractFormData.append('data_extract_file', dataExtractFile);
+        extractResponse = await API.post(
         `${VITE_API_URL}/projects/upload-data-extract?project_id=${projectId}`,
         dataExtractFormData,
       );
+      } else if (isEmptyDataExtract) {
+        // Manually set response as we don't call an API
+        extractResponse = { status: 200 };
+      } else {
+        const msg = 'Neither isOsmExtract or dataExtractFile was set';
+        console.error(msg);
+        throw new Error(msg);
+      }
       hasAPISuccess = isStatusSuccess(extractResponse.status);
 
       if (!hasAPISuccess) {
-        throw new Error(`Request failed with status ${extractResponse.status}`);
+        const msg = `Request failed with status ${extractResponse.status}`;
+        console.error(msg);
+        throw new Error(msg);
       }
 
       // post additional feature if available
@@ -75,7 +97,9 @@ const CreateProjectService = (
 
         hasAPISuccess = postAdditionalFeature;
         if (!hasAPISuccess) {
-          throw new Error(`Request failed`);
+          const msg = `Request failed`;
+          console.error(msg);
+          throw new Error(msg);
         }
       }
 
@@ -93,7 +117,9 @@ const CreateProjectService = (
 
       hasAPISuccess = generateProjectFile;
       if (!hasAPISuccess) {
-        throw new Error(`Request failed`);
+        const msg = `Request failed`;
+        console.error(msg);
+        throw new Error(msg);
       }
 
       // assign project admins
@@ -159,7 +185,9 @@ const UploadTaskAreasService = (url: string, filePayload: any) => {
         isAPISuccess = isStatusSuccess(postNewProjectDetails.status);
 
         if (!isAPISuccess) {
-          throw new Error(`Request failed with status ${postNewProjectDetails.status}`);
+          const msg = `Request failed with status ${postNewProjectDetails.status}`;
+          console.error(msg);
+          throw new Error(msg);
         }
       } catch (error: any) {
         isAPISuccess = false;
@@ -202,7 +230,9 @@ const GenerateProjectFilesService = (url: string, projectData: any, formUpload: 
       });
 
       if (!isStatusSuccess(response.status)) {
-        throw new Error(`Request failed with status ${response.status}`);
+        const msg = `Request failed with status ${response.status}`;
+        console.error(msg);
+        throw new Error(msg);
       }
 
       // If warning provided, then inform user

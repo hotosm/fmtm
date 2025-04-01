@@ -410,9 +410,13 @@ async def generate_odk_central_project_content(
 ) -> str:
     """Populate the project in ODK Central with XForm, Appuser, Permissions."""
     # The ODK Dataset (Entity List) must exist prior to main XLSForm
-    entities_list = await central_crud.task_geojson_dict_to_entity_values(
-        task_extract_dict
-    )
+    if task_extract_dict:
+        entities_list = await central_crud.task_geojson_dict_to_entity_values(
+            task_extract_dict
+        )
+    else:
+        # We must set a status to avoid error downstream
+        entities_list = [{"label": "dummy entity", "data": {"status": "0"}}]
 
     log.debug("Creating main ODK Entity list for project: features")
     await central_crud.create_entity_list(
@@ -465,19 +469,24 @@ async def generate_project_files(
         log.debug("Getting data extract geojson from flatgeobuf")
         feature_collection = await get_project_features_geojson(db, project)
 
-        # Get properties to create datasets
-        entity_properties = list(
-            feature_collection.get("features")[0].get("properties").keys()
-        )
-        entity_properties.append("submission_ids")
+        if feature_collection.get("features"):
+            # Get properties to create datasets
+            entity_properties = list(
+                feature_collection.get("features")[0].get("properties").keys()
+            )
+            # FIXME perhaps this should be done in the SQL code?
+            entity_properties.append("submission_ids")
 
-        # Split extract by task area
-        log.debug("Splitting data extract per task area")
-        # TODO in future this splitting could be removed if the task_id is
-        # no longer used in the XLSForm for the map filter
-        task_extract_dict = await split_geojson_by_task_areas(
-            db, feature_collection, project_id
-        )
+            # Split extract by task area
+            log.debug("Splitting data extract per task area")
+            # TODO in future this splitting could be removed if the task_id is
+            # no longer used in the XLSForm for the map filter
+            task_extract_dict = await split_geojson_by_task_areas(
+                db, feature_collection, project_id
+            )
+        else:
+            entity_properties = []
+            task_extract_dict = {}
 
         # Get ODK Project details
         project_odk_id = project.odkid
@@ -584,10 +593,12 @@ async def get_project_features_geojson(
     data_extract_url = db_project.data_extract_url
 
     if not data_extract_url:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail=f"No data extract exists for project ({project_id})",
-        )
+        # raise HTTPException(
+        #     status_code=HTTPStatus.NOT_FOUND,
+        #     detail=f"No data extract exists for project ({project_id})",
+        # )
+        # Return an empty featcol for projects with no existing features
+        return {"type": "FeatureCollection", "features": []}
 
     # If local debug URL, replace with Docker service name
     data_extract_url = data_extract_url.replace(
