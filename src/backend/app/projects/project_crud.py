@@ -405,20 +405,17 @@ async def generate_odk_central_project_content(
     project_odk_form_id: str,
     odk_credentials: central_schemas.ODKCentralDecrypted,
     xlsform: BytesIO,
-    task_extract_dict: dict[int, geojson.FeatureCollection],
-    entity_properties: list[str],
+    task_extract_dict: Optional[dict[int, geojson.FeatureCollection]] = None,
+    entity_properties: Optional[list[str]] = None,
 ) -> str:
     """Populate the project in ODK Central with XForm, Appuser, Permissions."""
-    # The ODK Dataset (Entity List) must exist prior to main XLSForm
+    entities_list = []
     if task_extract_dict:
         entities_list = await central_crud.task_geojson_dict_to_entity_values(
             task_extract_dict
         )
-    else:
-        # We must set a status to avoid error downstream
-        entities_list = [{"label": "dummy entity", "data": {"status": "0"}}]
 
-    log.debug("Creating main ODK Entity list for project: features")
+    log.debug("Creating main Datasets for project: features")
     await central_crud.create_entity_list(
         odk_credentials,
         project_odk_id,
@@ -469,15 +466,12 @@ async def generate_project_files(
         log.debug("Getting data extract geojson from flatgeobuf")
         feature_collection = await get_project_features_geojson(db, project)
 
-        if feature_collection.get("features"):
-            # Get properties to create datasets
-            entity_properties = list(
-                feature_collection.get("features")[0].get("properties").keys()
-            )
-            # FIXME perhaps this should be done in the SQL code?
-            entity_properties.append("submission_ids")
+        first_feature = next(iter(feature_collection.get("features", [])), {})  # Get first feature or {}
 
-            # Split extract by task area
+        if first_feature and "properties" in first_feature:  # Check if properties exist
+            # FIXME perhaps this should be done in the SQL code?
+            entity_properties = list(first_feature["properties"].keys()) + ["submission_ids"]
+
             log.debug("Splitting data extract per task area")
             # TODO in future this splitting could be removed if the task_id is
             # no longer used in the XLSForm for the map filter

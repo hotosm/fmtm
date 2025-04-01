@@ -567,6 +567,7 @@ async def create_entity_list(
         )
         # Step 2: populate the Entities
         if entities_list:
+            log.debug("Creating Entities for project: features")
             await odk_central.createEntities(
                 odk_id,
                 dataset_name,

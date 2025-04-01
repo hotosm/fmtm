@@ -60,34 +60,29 @@ const CreateProjectService = (
 
       // Upload data extract
       let extractResponse;
-      if (isOsmExtract) {
-        // Generated extract from raw-data-api
-        extractResponse = await API.get(
-          `${VITE_API_URL}/projects/data-extract-url?project_id=${projectId}&url=${projectData.data_extract_url}`,
-        );
-      } else if (dataExtractFile) {
-        // post custom data extract
-        const dataExtractFormData = new FormData();
-        dataExtractFormData.append('data_extract_file', dataExtractFile);
-        extractResponse = await API.post(
+      if (isEmptyDataExtract) {
+        // Manually set response as we don't call an API
+        extractResponse = { status: 200 };
+      }
+      else if (dataExtractFile) {
+      const dataExtractFormData = new FormData();
+      dataExtractFormData.append('data_extract_file', dataExtractFile);
+      extractResponse = await API.post(
         `${VITE_API_URL}/projects/upload-data-extract?project_id=${projectId}`,
         dataExtractFormData,
       );
-      } else if (isEmptyDataExtract) {
-        // Manually set response as we don't call an API
-        extractResponse = { status: 200 };
-      } else {
-        const msg = 'Neither isOsmExtract or dataExtractFile was set';
-        console.error(msg);
-        throw new Error(msg);
-      }
-      hasAPISuccess = isStatusSuccess(extractResponse.status);
+    } else {
+      const msg = 'No dataExtractFile or EmptyDataExtractwas set';
+      console.error(msg);
+      throw new Error(msg);
+    }
+    hasAPISuccess = isStatusSuccess(extractResponse.status);
 
-      if (!hasAPISuccess) {
+    if (!hasAPISuccess) {
         const msg = `Request failed with status ${extractResponse.status}`;
         console.error(msg);
         throw new Error(msg);
-      }
+    }
 
       // post additional feature if available
       if (additionalFeature) {
