@@ -3,6 +3,7 @@
 """Updates project data stats every 10 minutes."""
 
 import asyncio
+import sys
 
 from psycopg import AsyncConnection
 
@@ -10,7 +11,7 @@ from app.config import settings
 
 DB_URL = settings.FMTM_DB_URL.unicode_string()
 
-# create materialized view to store project stats faster faster query
+# create materialized view to store project stats for faster query
 CREATE_MATERIALIZED_VIEW_SQL = """
     CREATE MATERIALIZED VIEW IF NOT EXISTS mv_project_stats AS
     WITH latest_task_events AS (
@@ -42,54 +43,42 @@ CREATE_MATERIALIZED_VIEW_SQL = """
             THEN lte.event_id END
         ) AS tasks_validated
     FROM projects p
-    LEFT JOIN tasks t ON p.id = t.project_id
     LEFT JOIN task_events ev ON p.id = ev.project_id
     LEFT JOIN odk_entities et ON p.id = et.project_id
     LEFT JOIN latest_task_events lte ON p.id = lte.project_id
     GROUP BY p.id;
 """
 
-REFRESH_MATERIALIZED_VIEW_SQL = """
-REFRESH MATERIALIZED VIEW CONCURRENTLY mv_project_stats;
-"""
 CREATE_UNIQUE_INDEX_SQL = """
-CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS idx_mv_project_stats
-ON mv_project_stats (project_id);
+    CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS idx_mv_project_stats
+    ON mv_project_stats (project_id);
 """
 
-
-async def create_materialized_view():
-    """Creates the materialized view."""
-    async with await AsyncConnection.connect(DB_URL) as db:
-        async with db.cursor() as cur:
-            await cur.execute(CREATE_MATERIALIZED_VIEW_SQL)
-            await db.commit()
-            print("Materialized view created successfully.")
-
-    # Run CREATE INDEX outside a transaction using autocommit
-    async with await AsyncConnection.connect(DB_URL, autocommit=True) as db:
-        async with db.cursor() as cur:
-            await cur.execute(CREATE_UNIQUE_INDEX_SQL)
-            print("Unique index created successfully.")
+REFRESH_MATERIALIZED_VIEW_SQL = """
+    REFRESH MATERIALIZED VIEW CONCURRENTLY mv_project_stats;
+"""
 
 
 async def main():
     """Main function for cron execution."""
     try:
-        # First ensure the view exists
-        await create_materialized_view()
-
-        # Then refresh it (once)
-        async with await AsyncConnection.connect(DB_URL) as db:
+        async with await AsyncConnection.connect(DB_URL, autocommit=True) as db:
             async with db.cursor() as cur:
+                # First ensure the view exists
+                await cur.execute(CREATE_MATERIALIZED_VIEW_SQL)
+                print("Materialized view created successfully.")
+
+                # Create the index
+                await cur.execute(CREATE_UNIQUE_INDEX_SQL)
+                print("Unique index created successfully.")
+
+                # Then refresh it (once)
                 await cur.execute(REFRESH_MATERIALIZED_VIEW_SQL)
-                await db.commit()
                 print("Materialized view refreshed successfully.")
 
     except Exception as e:
         print(f"Error in project stats update: {e}")
         # Exit with non-zero status to indicate failure
-        import sys
 
         sys.exit(1)
 
