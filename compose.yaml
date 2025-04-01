@@ -211,6 +211,7 @@ services:
     environment:
       - VITE_API_URL=http://api.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}
       - VITE_SYNC_URL=http://sync.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}
+      - VITE_S3_URL=http://s3.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}
     networks:
       - fmtm-net
     restart: "unless-stopped"

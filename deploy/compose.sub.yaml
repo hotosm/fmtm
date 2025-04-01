@@ -176,6 +176,7 @@ services:
         APP_VERSION: ${GIT_BRANCH}
         VITE_API_URL: https://${FMTM_API_DOMAIN:-api.${FMTM_DOMAIN}}
         VITE_SYNC_URL: https://${FMTM_SYNC_DOMAIN:-sync.${FMTM_DOMAIN}}
+        VITE_S3_URL: https://${FMTM_S3_DOMAIN:-s3.${FMTM_DOMAIN}}
     volumes:
       - fmtm_frontend:/frontend/manager
       - fmtm_mapper_frontend:/frontend/mapper
