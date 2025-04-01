@@ -57,7 +57,7 @@ const ManageOrganization = () => {
         <div className="fmtm-flex fmtm-items-center">
           <AssetModules.ChevronLeftIcon
             className="!fmtm-w-[1.125rem] fmtm-mx-1 hover:fmtm-text-black hover:fmtm-scale-125 !fmtm-duration-200 fmtm-cursor-pointer fmtm-text-grey-800"
-            onClick={() => navigate('/')}
+            onClick={() => navigate(`/organization/${organizationId}`)}
           />
           <h4 className="fmtm-text-grey-800">Manage Organization</h4>
         </div>
