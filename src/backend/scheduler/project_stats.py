@@ -3,13 +3,15 @@
 """Updates project data stats every 10 minutes."""
 
 import asyncio
+
 from psycopg import AsyncConnection
+
 from app.config import settings
 
 DB_URL = settings.FMTM_DB_URL.unicode_string()
 
 # create materialized view to store project stats faster faster query
-CREATE_MATERIALIZED_VIEW_SQL="""
+CREATE_MATERIALIZED_VIEW_SQL = """
     CREATE MATERIALIZED VIEW IF NOT EXISTS mv_project_stats AS
     WITH latest_task_events AS (
         SELECT DISTINCT ON (ev.project_id, ev.task_id)
@@ -63,7 +65,7 @@ async def create_materialized_view():
             await cur.execute(CREATE_MATERIALIZED_VIEW_SQL)
             await db.commit()
             print("Materialized view created successfully.")
-    
+
     # Run CREATE INDEX outside a transaction using autocommit
     async with await AsyncConnection.connect(DB_URL, autocommit=True) as db:
         async with db.cursor() as cur:
@@ -76,19 +78,21 @@ async def main():
     try:
         # First ensure the view exists
         await create_materialized_view()
-        
+
         # Then refresh it (once)
         async with await AsyncConnection.connect(DB_URL) as db:
             async with db.cursor() as cur:
                 await cur.execute(REFRESH_MATERIALIZED_VIEW_SQL)
                 await db.commit()
                 print("Materialized view refreshed successfully.")
-    
+
     except Exception as e:
         print(f"Error in project stats update: {e}")
         # Exit with non-zero status to indicate failure
         import sys
+
         sys.exit(1)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

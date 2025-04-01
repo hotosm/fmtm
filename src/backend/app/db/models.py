@@ -1488,7 +1488,6 @@ class DbProject(BaseModel):
         minimal: bool = False,
     ) -> Optional[list[Self]]:
         """Fetch all projects with optional filters for user, hashtags, and search."""
-
         filters_map = {
             "p.organisation_id = %(org_id)s": org_id,
             "p.author_sub = %(user_sub)s": user_sub,  # project author
@@ -1557,8 +1556,8 @@ class DbProject(BaseModel):
             OFFSET %(offset)s
             LIMIT %(limit)s;
         """
-        if skip and limit
-        else ";"
+            if skip and limit
+            else ";"
         )
 
         async with db.cursor(row_factory=class_row(cls)) as cur:
