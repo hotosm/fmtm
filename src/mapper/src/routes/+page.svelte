@@ -43,7 +43,9 @@
 	const fetchProjects = async (page: number, search: string) => {
 		try {
 			projectListLoading = true;
-			const response = await fetch(`${API_URL}/projects/summaries?page=${page}&search=${search}&results_per_page=12`);
+			const response = await fetch(
+				`${API_URL}/projects/summaries?page=${page}&search=${search}&results_per_page=12&minimal=true`,
+			);
 			const projectResponse = (await response.json()) as { results: projectType[]; pagination: paginationType };
 			projectList = projectResponse.results;
 			projectPagination = projectResponse.pagination;
@@ -55,7 +57,7 @@
 	};
 
 	$effect(() => {
-		fetchProjects(paginationPage, search);
+		fetchProjects(paginationPage, debouncedSearch);
 	});
 </script>
 
