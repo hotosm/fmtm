@@ -415,7 +415,7 @@ async def generate_odk_central_project_content(
             task_extract_dict
         )
 
-    log.debug("Creating main Datasets for project: features")
+    log.debug("Creating project ODK dataset named 'features'")
     await central_crud.create_entity_list(
         odk_credentials,
         project_odk_id,
