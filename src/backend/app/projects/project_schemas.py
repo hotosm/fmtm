@@ -226,8 +226,8 @@ class ProjectSummary(BaseModel):
 
     id: int
     name: str
-    organisation_id: int
-    priority: ProjectPriority
+    organisation_id: Optional[int]
+    priority: Optional[ProjectPriority]
 
     # FIXME Do we need outline in summary?
     outline: Optional[Polygon]
@@ -361,7 +361,7 @@ class BackgroundTaskStatus(BaseModel):
 class ProjectTeamUser(BaseModel):
     """Single user with name and image for project team."""
 
-    id: int
+    sub: str
     username: str
     profile_img: Optional[str] = None
 
