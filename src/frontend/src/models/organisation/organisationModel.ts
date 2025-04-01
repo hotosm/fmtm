@@ -47,7 +47,7 @@ export type consentDetailsFormDataType = {
 };
 
 export type OrganizationAdminsModel = {
-  user_id: number;
+  user_sub: string;
   username: string;
   profile_img: string | null;
 };
