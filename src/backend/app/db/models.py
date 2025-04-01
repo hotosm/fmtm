@@ -1535,7 +1535,7 @@ class DbProject(BaseModel):
                     ST_AsGeoJSON(p.outline)::jsonb AS outline,
                     ST_AsGeoJSON(ST_Centroid(p.outline))::jsonb AS centroid,
                     project_org.logo AS organisation_logo,
-                    stats.total_tasks,
+                    p.total_tasks,
                     stats.num_contributors,
                     stats.total_submissions,
                     stats.tasks_mapped,
