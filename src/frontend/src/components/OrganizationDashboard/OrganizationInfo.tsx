@@ -129,7 +129,7 @@ const OrganizationInfo = () => {
             }}
           >
             <AssetModules.EditIcon className="!fmtm-text-lg" />
-            Edit Organization
+            Manage Organization
           </Button>
         </div>
       )}
