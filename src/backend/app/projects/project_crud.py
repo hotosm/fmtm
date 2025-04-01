@@ -466,11 +466,15 @@ async def generate_project_files(
         log.debug("Getting data extract geojson from flatgeobuf")
         feature_collection = await get_project_features_geojson(db, project)
 
-        first_feature = next(iter(feature_collection.get("features", [])), {})  # Get first feature or {}
+        first_feature = next(
+            iter(feature_collection.get("features", [])), {}
+        )  # Get first feature or {}
 
         if first_feature and "properties" in first_feature:  # Check if properties exist
             # FIXME perhaps this should be done in the SQL code?
-            entity_properties = list(first_feature["properties"].keys()) + ["submission_ids"]
+            entity_properties = list(first_feature["properties"].keys()) + [
+                "submission_ids"
+            ]
 
             log.debug("Splitting data extract per task area")
             # TODO in future this splitting could be removed if the task_id is

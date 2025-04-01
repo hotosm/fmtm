@@ -63,26 +63,25 @@ const CreateProjectService = (
       if (isEmptyDataExtract) {
         // Manually set response as we don't call an API
         extractResponse = { status: 200 };
+      } else if (dataExtractFile) {
+        const dataExtractFormData = new FormData();
+        dataExtractFormData.append('data_extract_file', dataExtractFile);
+        extractResponse = await API.post(
+          `${VITE_API_URL}/projects/upload-data-extract?project_id=${projectId}`,
+          dataExtractFormData,
+        );
+      } else {
+        const msg = 'No dataExtractFile or EmptyDataExtractwas set';
+        console.error(msg);
+        throw new Error(msg);
       }
-      else if (dataExtractFile) {
-      const dataExtractFormData = new FormData();
-      dataExtractFormData.append('data_extract_file', dataExtractFile);
-      extractResponse = await API.post(
-        `${VITE_API_URL}/projects/upload-data-extract?project_id=${projectId}`,
-        dataExtractFormData,
-      );
-    } else {
-      const msg = 'No dataExtractFile or EmptyDataExtractwas set';
-      console.error(msg);
-      throw new Error(msg);
-    }
-    hasAPISuccess = isStatusSuccess(extractResponse.status);
+      hasAPISuccess = isStatusSuccess(extractResponse.status);
 
-    if (!hasAPISuccess) {
+      if (!hasAPISuccess) {
         const msg = `Request failed with status ${extractResponse.status}`;
         console.error(msg);
         throw new Error(msg);
-    }
+      }
 
       // post additional feature if available
       if (additionalFeature) {
