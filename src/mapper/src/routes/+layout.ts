@@ -11,7 +11,7 @@ export const load: PageLoad = async ({ fetch }) => {
 	let config;
 
 	try {
-		const s3Response = await fetch(`${import.meta.env.VITE_S3_URL}/frontend/config.json`);
+		const s3Response = await fetch(`${import.meta.env.VITE_S3_URL}/fmtm-data/frontend/config.json`);
 		if (s3Response.ok) {
 			config = await s3Response.json();
 		} else {
