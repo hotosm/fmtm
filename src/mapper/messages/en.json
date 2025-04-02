@@ -91,7 +91,6 @@
 		"status": "Status",
 		"comments": "Comments",
 		"entity_uuid": "Entity Uuid"
-
 	},
 	"dialog_task_actions": {
 		"complete_mapping": "COMPLETE MAPPING",

@@ -64,7 +64,7 @@
 		"download_mbtiles": "Baixar MBTiles"
 	},
 	"project_info": {
-		"organization_name": "Nome da organização",
+		"organization_name": "Gnome da organização",
 		"description": "Descrição",
 		"total_tasks": "Total de tarefas",
 		"project_id": "ID do projeto"
@@ -110,6 +110,6 @@
 	"geolocation": {
 		"distance": "Distância"
 	},
-	"scan_qr_code": "Digitalize este código QR no ODK Collect a partir do telefone de outro usuário ou faça o download e importe-o manualmente",
+	"scan_qr_code": "Digitize este código QR no ODK Collect a partir do telefone de outro usuário ou faça o download e importe-o manualmente",
 	"download": "BAIXAR"
 }
