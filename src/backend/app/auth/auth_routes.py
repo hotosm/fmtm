@@ -37,7 +37,7 @@ from app.auth.auth_deps import (
 )
 from app.auth.auth_schemas import AuthUser, FMTMUser
 from app.auth.providers.google import handle_google_callback, init_google_auth
-from app.auth.providers.osm import handle_osm_callback, init_osm_auth
+from app.auth.providers.osm import handle_osm_callback, init_osm_auth, get_mapper_osm_auth
 from app.config import settings
 from app.db.database import db_conn
 from app.db.enums import HTTPStatus, UserRole
@@ -50,12 +50,32 @@ router = APIRouter(
 )
 
 
-@router.get("/login/osm")
+@router.get("/login/osm/management")
 async def login_url_osm(osm_auth=Depends(init_osm_auth)):
     """Get Login URL for OSM Oauth Application.
 
     The application must be registered on openstreetmap.org.
     Open the download url returned to get access_token.
+
+    Args:
+        osm_auth: The Auth object from osm-login-python.
+
+    Returns:
+        login_url (string): URL to authorize user in OSM.
+            Includes URL params: client_id, redirect_uri, permission scope.
+    """
+    login_url = osm_auth.login()
+    log.debug(f"OSM Login URL returned: {login_url}")
+    return JSONResponse(content=login_url, status_code=HTTPStatus.OK)
+
+
+@router.get("/login/osm/mapper")
+async def login_url_osm(osm_auth=Depends(get_mapper_osm_auth)):
+    """Get Login URL for OSM Oauth Application.
+
+    The application must be registered on openstreetmap.org.
+    Open the download url returned to get access_token.
+    This endpoint is specifically for mapper page.
 
     Args:
         osm_auth: The Auth object from osm-login-python.
@@ -90,6 +110,23 @@ async def login_url_google(google_auth=Depends(init_google_auth)):
 @router.get("/callback/osm")
 async def osm_callback(
     request: Request, osm_auth: Annotated[AuthUser, Depends(init_osm_auth)]
+) -> JSONResponse:
+    """Performs oauth token exchange with OpenStreetMap.
+
+    Provides an access token that can be used for authenticating other endpoints.
+    Also returns a cookie containing the access token for persistence in frontend apps.
+    """
+    try:
+        # This includes the main cookie, refresh cookie, osm token cookie
+        response_plus_cookies = await handle_osm_callback(request, osm_auth)
+        return response_plus_cookies
+    except Exception as e:
+        raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail=str(e)) from e
+
+
+@router.get("/callback/osm/mapper")
+async def osm_callback(
+    request: Request, osm_auth: Annotated[AuthUser, Depends(get_mapper_osm_auth)]
 ) -> JSONResponse:
     """Performs oauth token exchange with OpenStreetMap.
 
