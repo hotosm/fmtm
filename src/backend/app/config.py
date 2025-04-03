@@ -238,12 +238,7 @@ class Settings(BaseSettings):
 
     OSM_CLIENT_ID: str
     OSM_CLIENT_SECRET: SecretStr
-    # MANAGER_OSM_LOGIN_REDIRECT_URI: str
 
-    # Mapper login creds
-    MAPPER_OSM_CLIENT_ID: str
-    MAPPER_OSM_CLIENT_SECRET: SecretStr
-    # MAPPER_OSM_LOGIN_REDIRECT_URI: str
     # NOTE www is required for now
     # https://github.com/openstreetmap/operations/issues/951#issuecomment-1748717154
     OSM_URL: HttpUrlStr = "https://www.openstreetmap.org"
