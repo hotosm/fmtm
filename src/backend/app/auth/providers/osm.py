@@ -40,7 +40,8 @@ if settings.DEBUG:
 async def init_osm_auth(mapper: Optional[bool] = None):
     """Initialize Auth object from osm-login-python."""
     login_redirect_uri = (
-        settings.mapper_osm_login_redirect_uri if mapper 
+        settings.mapper_osm_login_redirect_uri
+        if mapper
         else settings.manager_osm_login_redirect_uri
     )
 
