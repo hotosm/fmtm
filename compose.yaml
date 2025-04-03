@@ -36,7 +36,7 @@ networks:
 
 services:
   proxy:
-    image: "bunkerity/bunkerweb-all-in-one:${BUNKERWEB_TAG:-dev}"
+    image: "bunkerity/bunkerweb-all-in-one:${BUNKERWEB_TAG:-1.6.2-rc1}"
     depends_on:
       # Frontends must be built and available first
       ui:
@@ -62,7 +62,7 @@ services:
       WHITELIST_URI: http://fmtm.localhost:7050
       MULTISITE: yes
       USE_REVERSE_PROXY: yes
-      # Required for electric headers electric-offset, electric-handle, electric-schema
+      # Required for electric headers electric-offset, electric-handle, electric-schema, electric-cursor
       KEEP_UPSTREAM_HEADERS: yes
       REVERSE_PROXY_INTERCEPT_ERRORS: no
       ALLOWED_METHODS: OPTIONS|HEAD|GET|POST|PATCH|PUT|DELETE
@@ -84,7 +84,7 @@ services:
       fmtm.localhost_MAX_CLIENT_SIZE: 1G
       # Required for vite websockets / live-reload
       fmtm.localhost_REVERSE_PROXY_WS: yes
-      mapper.fmtm.localhost_REVERSE_PROXY_HOST: http://ui-mapper:7055
+      mapper.fmtm.localhost_REVERSE_PROXY_HOST: http://ui-mapper:7053
       mapper.fmtm.localhost_MAX_CLIENT_SIZE: 1G
       # Required for vite websockets / live-reload
       mapper.fmtm.localhost_REVERSE_PROXY_WS: yes
@@ -96,6 +96,8 @@ services:
       s3.fmtm.localhost_MAX_CLIENT_SIZE: 10G
       sync.fmtm.localhost_REVERSE_PROXY_HOST: http://electric:3000
       sync.fmtm.localhost_MAX_CLIENT_SIZE: 1G
+      # Expose-Headers are RESPONSE headers the browser is allowed to access
+      sync.fmtm.localhost_CORS_EXPOSE_HEADERS: electric-offset,electric-handle,electric-schema,electric-cursor,electric-up-to-date
       odk.fmtm.localhost_REVERSE_PROXY_HOST: http://central:8383
       odk.fmtm.localhost_REVERSE_PROXY_URL: ~ ^/v\d
       # buffer requests, but not responses, so streaming out works
@@ -213,7 +215,7 @@ services:
       - VITE_SYNC_URL=http://sync.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}
       - VITE_S3_URL=http://s3.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}
     ports:
-      - "7055:7055"
+      - "7053:7053"
     networks:
       - fmtm-net
     restart: "unless-stopped"
@@ -360,7 +362,7 @@ services:
       retries: 3
 
   electric:
-    image: "electricsql/electric:${ELECTRIC_TAG:-1.0.0-beta.23}"
+    image: "electricsql/electric:${ELECTRIC_TAG:-1.0.3}"
     depends_on:
       proxy:
         condition: service_started
@@ -370,6 +372,8 @@ services:
         condition: service_completed_successfully
     environment:
       DATABASE_URL: postgresql://${FMTM_DB_USER:-fmtm}:${FMTM_DB_PASSWORD:-fmtm}@${FMTM_DB_HOST:-fmtm-db}/${FMTM_DB_NAME:-fmtm}?sslmode=disable
+      # For development we do not need to include auth token security
+      ELECTRIC_INSECURE: true
       # OTEL_EXPORT: otlp
       # OTLP_ENDPOINT: https://...
       # ELECTRIC_WRITE_TO_PG_MODE: direct_writes

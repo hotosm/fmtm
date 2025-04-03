@@ -49,7 +49,7 @@ networks:
 
 services:
   proxy:
-    image: "bunkerity/bunkerweb-all-in-one:${BUNKERWEB_TAG:-dev}"
+    image: "bunkerity/bunkerweb-all-in-one:${BUNKERWEB_TAG:-1.6.2-rc1}"
     depends_on:
       # Frontends must be built and available first
       ui:
@@ -74,7 +74,7 @@ services:
       WHITELIST_URI: https://${FMTM_DOMAIN}
       MULTISITE: yes
       USE_REVERSE_PROXY: yes
-      # Required for electric headers electric-offset, electric-handle, electric-schema
+      # Required for electric headers electric-offset, electric-handle, electric-schema,electric-cursor,electric-up-to-date
       KEEP_UPSTREAM_HEADERS: yes
       REVERSE_PROXY_INTERCEPT_ERRORS: no
       ALLOWED_METHODS: OPTIONS|HEAD|GET|POST|PATCH|PUT|DELETE
@@ -118,7 +118,7 @@ services:
       sync.${FMTM_DOMAIN}_CORS_ALLOW_ORIGIN: https://mapper.${FMTM_DOMAIN}
       sync.${FMTM_DOMAIN}_CORS_ALLOW_METHODS: GET, HEAD, DELETE, OPTIONS
       # Expose-Headers are RESPONSE headers the browser is allowed to access
-      sync.${FMTM_DOMAIN}_CORS_EXPOSE_HEADERS: electric-offset,electric-handle,electric-schema
+      sync.${FMTM_DOMAIN}_CORS_EXPOSE_HEADERS: electric-offset,electric-handle,electric-schema,electric-cursor,electric-up-to-date
       odk.${FMTM_DOMAIN}_REVERSE_PROXY_HOST: http://central:8383
       odk.${FMTM_DOMAIN}_REVERSE_PROXY_URL: ~ ^/v\d
       # buffer requests, but not responses, so streaming out works
@@ -305,7 +305,7 @@ services:
       retries: 3
 
   electric:
-    image: "electricsql/electric:${ELECTRIC_TAG:-1.0.0-beta.10}"
+    image: "electricsql/electric:${ELECTRIC_TAG:-1.0.3}"
     depends_on:
       proxy:
         condition: service_started
@@ -315,6 +315,9 @@ services:
         condition: service_completed_successfully
     environment:
       DATABASE_URL: postgresql://${FMTM_DB_USER}:${FMTM_DB_PASSWORD}@${FMTM_DB_HOST:-fmtm-db}/${FMTM_DB_NAME:-fmtm}?sslmode=disable
+      # Do not set ELECTRIC_SECRET var for now, until docs are available for how it actually works...
+      # The frontend ShapeStream should then use params.api_secret? Or perhaps set via proxy somehow?
+      ELECTRIC_INSECURE: true
       # OTEL_EXPORT: otlp
       # OTLP_ENDPOINT: https://...
       # ELECTRIC_WRITE_TO_PG_MODE: direct_writes
@@ -351,8 +354,6 @@ services:
         condition: service_healthy
       s3:
         condition: service_healthy
-    volumes:
-      - ./src/mapper/static/config.json:/opt/frontend-config.json:ro
     env_file:
       - .env
     networks:

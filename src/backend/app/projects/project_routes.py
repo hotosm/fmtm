@@ -154,28 +154,12 @@ async def read_project_summaries(
     search: Optional[str] = None,
     minimal: bool = False,
 ):
-    """Get a paginated summary of projects."""
+    """Get a paginated summary of projects.
+
+    NOTE this is a public endpoint with no auth requirements.
+    """
     return await project_crud.get_paginated_projects(
         db, page, results_per_page, org_id, user_sub, hashtags, search, minimal
-    )
-
-
-@router.get(
-    "/search",
-    response_model=project_schemas.PaginatedProjectSummaries,
-)
-async def search_project(
-    current_user: Annotated[AuthUser, Depends(login_required)],
-    db: Annotated[Connection, Depends(db_conn)],
-    search: str,
-    page: int = Query(1, ge=1),  # Default to page 1, must be greater than or equal to 1
-    results_per_page: int = Query(13, le=100),
-    user_sub: Optional[str] = None,
-    hashtags: Optional[str] = None,
-):
-    """Search projects by string, hashtag, or other criteria."""
-    return await project_crud.get_paginated_projects(
-        db, page, results_per_page, user_sub, hashtags, search
     )
 
 
@@ -878,7 +862,7 @@ async def add_additional_entity_list(
 @router.post("/{project_id}/create-entity")
 async def add_new_entity(
     db: Annotated[Connection, Depends(db_conn)],
-    project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
+    project_user_dict: Annotated[ProjectUserDict, Depends(mapper)],
     geojson: Dict[str, Any],
 ):
     """Create an Entity for the project in ODK."""
