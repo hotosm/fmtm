@@ -243,7 +243,32 @@ class Settings(BaseSettings):
     # https://github.com/openstreetmap/operations/issues/951#issuecomment-1748717154
     OSM_URL: HttpUrlStr = "https://www.openstreetmap.org"
     OSM_SCOPE: list[str] = ["read_prefs", "send_messages"]
-    OSM_LOGIN_REDIRECT_URI: str = "http://127.0.0.1:7055/osmauth"
+
+    @computed_field
+    @property
+    def osm_login_manager_redirect_uri(self) -> str:
+        """The constructed OSM redirect URL for manager frontend.
+
+        Must be set in the OAuth2 config for the openstreetmap profile.
+        """
+        if self.DEBUG:
+            uri = "http://127.0.0.1:7051/osmauth"
+        uri = f"https://{self.FMTM_DOMAIN}/osmauth"
+        os.environ["OSM_LOGIN_MANAGER_REDIRECT_URI"] = uri
+        return uri
+
+    @computed_field
+    @property
+    def osm_login_mapper_redirect_uri(self) -> str:
+        """The constructed OSM redirect URL for mapper frontend.
+
+        Must be set in the OAuth2 config for the openstreetmap profile.
+        """
+        if self.DEBUG:
+            uri = "http://127.0.0.1:7053/osmauth"
+        uri = f"https://mapper.{self.FMTM_DOMAIN}/osmauth"
+        os.environ["OSM_LOGIN_MAPPER_REDIRECT_URI"] = uri
+        return uri
 
     GOOGLE_CLIENT_ID: Optional[str] = ""
     GOOGLE_CLIENT_SECRET: Optional[SecretStr] = ""

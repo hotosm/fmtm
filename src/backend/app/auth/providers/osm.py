@@ -43,7 +43,7 @@ async def init_osm_auth():
         client_id=settings.OSM_CLIENT_ID,
         client_secret=settings.OSM_CLIENT_SECRET.get_secret_value(),
         secret_key=settings.OSM_SECRET_KEY.get_secret_value(),
-        login_redirect_uri=settings.OSM_LOGIN_REDIRECT_URI,
+        login_redirect_uri=settings.OSM_LOGIN_MANAGER_REDIRECT_URI,
         scope=settings.OSM_SCOPE,
     )
 
