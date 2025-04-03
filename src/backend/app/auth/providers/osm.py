@@ -38,22 +38,19 @@ if settings.DEBUG:
 
 
 async def init_osm_auth(mapper: Optional[bool] = None):
-    """Initialise Auth object from osm-login-python."""
-    if mapper:
-        return Auth(
-            osm_url=settings.OSM_URL,
-            client_id=settings.MAPPER_OSM_CLIENT_ID,
-            client_secret=settings.MAPPER_OSM_CLIENT_SECRET.get_secret_value(),
-            secret_key=settings.OSM_SECRET_KEY.get_secret_value(),
-            login_redirect_uri=settings.mapper_osm_login_redirect_uri,
-            scope=settings.OSM_SCOPE,
-        )
+    """Initialize Auth object from osm-login-python."""
+    login_redirect_uri = (
+        settings.mapper_osm_login_redirect_uri
+        if mapper
+        else settings.manager_osm_login_redirect_uri
+    )
+
     return Auth(
         osm_url=settings.OSM_URL,
         client_id=settings.OSM_CLIENT_ID,
         client_secret=settings.OSM_CLIENT_SECRET.get_secret_value(),
         secret_key=settings.OSM_SECRET_KEY.get_secret_value(),
-        login_redirect_uri=settings.manager_osm_login_redirect_uri,
+        login_redirect_uri=login_redirect_uri,
         scope=settings.OSM_SCOPE,
     )
 
