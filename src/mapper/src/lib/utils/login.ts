@@ -20,7 +20,7 @@ export const loginRedirect = async (accountType: 'osm_account' | 'google_account
 	try {
 		let resp;
 		if (accountType === 'osm_account') {
-			resp = await fetch(`${import.meta.env.VITE_API_URL}/auth/login/osm`);
+			resp = await fetch(`${import.meta.env.VITE_API_URL}/auth/login/osm/mapper`);
 		} else if (accountType === 'google_account') {
 			resp = await fetch(`${import.meta.env.VITE_API_URL}/auth/login/google`);
 		}
