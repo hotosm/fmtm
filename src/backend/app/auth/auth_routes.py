@@ -37,7 +37,11 @@ from app.auth.auth_deps import (
 )
 from app.auth.auth_schemas import AuthUser, FMTMUser
 from app.auth.providers.google import handle_google_callback, init_google_auth
-from app.auth.providers.osm import handle_osm_callback, init_osm_auth, get_mapper_osm_auth
+from app.auth.providers.osm import (
+    get_mapper_osm_auth,
+    handle_osm_callback,
+    init_osm_auth,
+)
 from app.config import settings
 from app.db.database import db_conn
 from app.db.enums import HTTPStatus, UserRole

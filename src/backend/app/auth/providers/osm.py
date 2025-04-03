@@ -37,19 +37,17 @@ if settings.DEBUG:
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 
-async def init_osm_auth(
-        mapper:Optional[bool]= None
-    ):
+async def init_osm_auth(mapper: Optional[bool] = None):
     """Initialise Auth object from osm-login-python."""
     if mapper:
         return Auth(
-        osm_url=settings.OSM_URL,
-        client_id=settings.MAPPER_OSM_CLIENT_ID,
-        client_secret=settings.MAPPER_OSM_CLIENT_SECRET.get_secret_value(),
-        secret_key=settings.OSM_SECRET_KEY.get_secret_value(),
-        login_redirect_uri=settings.mapper_osm_login_redirect_uri,
-        scope=settings.OSM_SCOPE,
-    )
+            osm_url=settings.OSM_URL,
+            client_id=settings.MAPPER_OSM_CLIENT_ID,
+            client_secret=settings.MAPPER_OSM_CLIENT_SECRET.get_secret_value(),
+            secret_key=settings.OSM_SECRET_KEY.get_secret_value(),
+            login_redirect_uri=settings.mapper_osm_login_redirect_uri,
+            scope=settings.OSM_SCOPE,
+        )
     return Auth(
         osm_url=settings.OSM_URL,
         client_id=settings.OSM_CLIENT_ID,
@@ -58,6 +56,7 @@ async def init_osm_auth(
         login_redirect_uri=settings.manager_osm_login_redirect_uri,
         scope=settings.OSM_SCOPE,
     )
+
 
 async def get_mapper_osm_auth():
     """Wrapper function to await async dependency."""
