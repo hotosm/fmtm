@@ -129,7 +129,7 @@ async def osm_callback(
 
 
 @router.get("/callback/osm/mapper")
-async def osm_callback(
+async def mapper_osm_callback(
     request: Request, osm_auth: Annotated[AuthUser, Depends(get_mapper_osm_auth)]
 ) -> JSONResponse:
     """Performs oauth token exchange with OpenStreetMap.
