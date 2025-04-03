@@ -243,11 +243,11 @@ class Settings(BaseSettings):
     # https://github.com/openstreetmap/operations/issues/951#issuecomment-1748717154
     OSM_URL: HttpUrlStr = "https://www.openstreetmap.org"
     OSM_SCOPE: list[str] = ["read_prefs", "send_messages"]
-    OSM_LOGIN_REDIRECT_URI: str = "http://127.0.0.1:7051/osmauth"
+    OSM_LOGIN_REDIRECT_URI: str = "http://127.0.0.1:7055/osmauth"
 
     GOOGLE_CLIENT_ID: Optional[str] = ""
     GOOGLE_CLIENT_SECRET: Optional[SecretStr] = ""
-    GOOGLE_LOGIN_REDIRECT_URI: Optional[str] = "http://127.0.0.1:7051/googleauth"
+    GOOGLE_LOGIN_REDIRECT_URI: Optional[str] = "http://127.0.0.1:7055/googleauth"
 
     S3_ENDPOINT: str
     S3_ACCESS_KEY: str
