@@ -287,7 +287,7 @@ class Settings(BaseSettings):
         Must be set in the OAuth2 config for the Google profile.
         """
         if self.DEBUG:
-            uri = "http://127.0.0.1:7055/googleauth"
+            uri = "http://127.0.0.1:7053/googleauth"
         else:
             uri = f"https://mapper.{self.FMTM_DOMAIN}/googleauth"
         os.environ["GOOGLE_LOGIN_REDIRECT_URI"] = uri
