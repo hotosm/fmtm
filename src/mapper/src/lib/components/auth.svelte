@@ -43,8 +43,8 @@
 
 	onMount(() => {
 		if (
-			window.location.href.includes('127.0.0.1:7055/googleauth') ||
-			window.location.href.includes('127.0.0.1:7055/osmauth')
+			window.location.href.includes('127.0.0.1:7053/googleauth') ||
+			window.location.href.includes('127.0.0.1:7053/osmauth')
 		) {
 			window.location.href = `http://mapper.fmtm.localhost:7050${location.pathname}${location.search}`;
 			return;
