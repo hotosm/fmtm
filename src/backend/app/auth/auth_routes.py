@@ -55,7 +55,7 @@ router = APIRouter(
 
 
 @router.get("/login/osm/management")
-async def login_url_osm(osm_auth=Depends(init_osm_auth)):
+async def get_osm_management_login_url(osm_auth=Depends(init_osm_auth)):
     """Get Login URL for OSM Oauth Application.
 
     The application must be registered on openstreetmap.org.
@@ -74,7 +74,7 @@ async def login_url_osm(osm_auth=Depends(init_osm_auth)):
 
 
 @router.get("/login/osm/mapper")
-async def login_url_osm(osm_auth=Depends(get_mapper_osm_auth)):
+async def get_osm_mapper_login_url(osm_auth=Depends(get_mapper_osm_auth)):
     """Get Login URL for OSM Oauth Application.
 
     The application must be registered on openstreetmap.org.
