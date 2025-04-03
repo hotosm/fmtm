@@ -253,7 +253,8 @@ class Settings(BaseSettings):
         """
         if self.DEBUG:
             uri = "http://127.0.0.1:7051/osmauth"
-        uri = f"https://{self.FMTM_DOMAIN}/osmauth"
+        else:
+            uri = f"https://{self.FMTM_DOMAIN}/osmauth"
         os.environ["OSM_LOGIN_MANAGER_REDIRECT_URI"] = uri
         return uri
 
@@ -266,13 +267,27 @@ class Settings(BaseSettings):
         """
         if self.DEBUG:
             uri = "http://127.0.0.1:7053/osmauth"
-        uri = f"https://mapper.{self.FMTM_DOMAIN}/osmauth"
+        else:
+            uri = f"https://mapper.{self.FMTM_DOMAIN}/osmauth"
         os.environ["OSM_LOGIN_MAPPER_REDIRECT_URI"] = uri
         return uri
 
     GOOGLE_CLIENT_ID: Optional[str] = ""
     GOOGLE_CLIENT_SECRET: Optional[SecretStr] = ""
-    GOOGLE_LOGIN_REDIRECT_URI: Optional[str] = "http://127.0.0.1:7055/googleauth"
+
+    @computed_field
+    @property
+    def google_login_redirect_uri(self) -> str:
+        """The constructed Google redirect URL for mapper frontend.
+
+        Must be set in the OAuth2 config for the Google profile.
+        """
+        if self.DEBUG:
+            uri = "http://127.0.0.1:7055/googleauth"
+        else:
+            uri = f"https://mapper.{self.FMTM_DOMAIN}/googleauth"
+        os.environ["GOOGLE_LOGIN_REDIRECT_URI"] = uri
+        return uri
 
     S3_ENDPOINT: str
     S3_ACCESS_KEY: str
