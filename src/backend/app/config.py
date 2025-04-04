@@ -266,7 +266,7 @@ class Settings(BaseSettings):
         Must be set in the OAuth2 config for the openstreetmap profile.
         """
         if self.DEBUG:
-            uri = "http://127.0.0.1:7053/osmauth"
+            uri = "http://127.0.0.1:7057/osmauth"
         else:
             uri = f"https://mapper.{self.FMTM_DOMAIN}/osmauth"
         return uri
@@ -282,10 +282,9 @@ class Settings(BaseSettings):
         Must be set in the OAuth2 config for the Google profile.
         """
         if self.DEBUG:
-            uri = "http://127.0.0.1:7053/googleauth"
+            uri = "http://127.0.0.1:7057/googleauth"
         else:
             uri = f"https://mapper.{self.FMTM_DOMAIN}/googleauth"
-        os.environ["GOOGLE_LOGIN_REDIRECT_URI"] = uri
         return uri
 
     S3_ENDPOINT: str
