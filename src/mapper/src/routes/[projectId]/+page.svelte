@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '$styles/page.css';
 	import '$styles/button.css';
-	import type { PageData } from '../$types';
+	import type { PageData } from './$types';
 	import { onMount, onDestroy } from 'svelte';
 	import type { ShapeStream } from '@electric-sql/client';
 	import { polygon } from '@turf/helpers';
@@ -154,9 +154,11 @@
 		}
 		// if project loaded for the first time then show qrcode tab
 		if (+(projectSetupStepStore.projectSetupStep || 0) === projectSetupStepEnum['odk_project_load']) {
-			tabGroup.updateComplete.then(() => {
-				tabGroup.show('qrcode');
-			});
+			if (tabGroup) {
+				tabGroup.updateComplete.then(() => {
+					tabGroup.show('qrcode');
+				});
+			}
 		}
 	});
 
@@ -276,7 +278,7 @@
 		entitiesUrl={data.project.data_extract_url}
 		primaryGeomType={data.project.primary_geom_type}
 		draw={isDrawEnabled}
-		drawGeomType={data.project.new_geom_type}
+		drawGeomType={data.project?.new_geom_type}
 		handleDrawnGeom={(drawInstance, geom) => {
 			newFeatureDrawInstance = drawInstance;
 			newFeatureGeom = geom;
@@ -314,7 +316,8 @@
 						role="button"
 						tabindex="0"
 						size="small"
-						class="primary w-fit"
+						class="w-fit"
+						variant="primary"
 						loading={isGeometryCreationLoading}
 					>
 						<span class="font-barlow font-medium text-xs uppercase">PROCEED</span>
@@ -359,10 +362,11 @@
 					{#if +(projectSetupStepStore.projectSetupStep || 0) !== projectSetupStepEnum['odk_project_load']}
 						<sl-button
 							size="small"
-							class="primary w-full max-w-[200px]"
+							variant="primary"
+							class="w-full max-w-[200px]"
 							href="odkcollect://form/{data.project.odk_form_id}"
 						>
-							<span class="font-barlow font-medium text-base uppercase">Open ODK</span></sl-button
+							<span class="font-barlow font-medium text-base uppercase">{m['odk.open']()}</span></sl-button
 						>
 					{/if}
 				</QRCodeComponent>
@@ -389,7 +393,8 @@
 					role="button"
 					tabindex="0"
 					size="small"
-					class="primary w-fit ml-auto"
+					variant="primary"
+					class="w-fit ml-auto"
 				>
 					<span class="font-barlow font-medium text-SM uppercase">CLOSE</span>
 				</sl-button>
@@ -434,7 +439,8 @@
 		bind:webFormsRef
 		bind:display={displayWebFormsDrawer}
 		projectId={data?.projectId}
-		entityId={selectedEntityId}
+		entityId={selectedEntityId || undefined}
+		taskId={taskStore.selectedTaskIndex || undefined}
 	/>
 </div>
 

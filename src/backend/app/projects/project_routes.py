@@ -21,7 +21,7 @@ import json
 import os
 from io import BytesIO
 from pathlib import Path
-from typing import Annotated, Any, Dict, List, Optional
+from typing import Annotated, List, Optional
 
 import requests
 from fastapi import (
@@ -110,12 +110,12 @@ async def read_projects_to_featcol(
 async def read_projects(
     current_user: Annotated[AuthUser, Depends(login_required)],
     db: Annotated[Connection, Depends(db_conn)],
-    user_id: int = None,
+    user_sub: str = None,
     skip: int = 0,
     limit: int = 100,
 ):
     """Return all projects."""
-    projects = await DbProject.all(db, skip, limit, user_id)
+    projects = await DbProject.all(db, skip, limit, user_sub)
     return projects
 
 
@@ -149,32 +149,17 @@ async def read_project_summaries(
     page: int = Query(1, ge=1),  # Default to page 1, must be greater than or equal to 1
     results_per_page: int = Query(13, le=100),
     org_id: Optional[int] = None,
-    user_id: Optional[int] = None,
+    user_sub: Optional[str] = None,
     hashtags: Optional[str] = None,
     search: Optional[str] = None,
+    minimal: bool = False,
 ):
-    """Get a paginated summary of projects."""
-    return await project_crud.get_paginated_projects(
-        db, page, results_per_page, org_id, user_id, hashtags, search
-    )
+    """Get a paginated summary of projects.
 
-
-@router.get(
-    "/search",
-    response_model=project_schemas.PaginatedProjectSummaries,
-)
-async def search_project(
-    current_user: Annotated[AuthUser, Depends(login_required)],
-    db: Annotated[Connection, Depends(db_conn)],
-    search: str,
-    page: int = Query(1, ge=1),  # Default to page 1, must be greater than or equal to 1
-    results_per_page: int = Query(13, le=100),
-    user_id: Optional[int] = None,
-    hashtags: Optional[str] = None,
-):
-    """Search projects by string, hashtag, or other criteria."""
+    NOTE this is a public endpoint with no auth requirements.
+    """
     return await project_crud.get_paginated_projects(
-        db, page, results_per_page, user_id, hashtags, search
+        db, page, results_per_page, org_id, user_sub, hashtags, search, minimal
     )
 
 
@@ -756,7 +741,7 @@ async def add_new_project_manager(
     await DbUserRole.create(
         db,
         org_user_dict["project"].id,
-        new_manager.id,
+        new_manager.sub,
         ProjectRole.PROJECT_MANAGER,
     )
 
@@ -877,23 +862,27 @@ async def add_additional_entity_list(
 @router.post("/{project_id}/create-entity")
 async def add_new_entity(
     db: Annotated[Connection, Depends(db_conn)],
-    project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
-    geojson: Dict[str, Any],
+    project_user_dict: Annotated[ProjectUserDict, Depends(mapper)],
+    geojson: FeatureCollection,
 ):
-    """Create an Entity for the project in ODK."""
+    """Create an Entity for the project in ODK.
+
+    NOTE a FeatureCollection must be uploaded.
+    """
     try:
         project = project_user_dict.get("project")
         project_odk_id = project.odkid
         project_odk_creds = project.odk_credentials
 
-        features = geojson.get("features")
+        featcol_dict = geojson.model_dump()
+        features = featcol_dict.get("features")
         if not features or not isinstance(features, list):
             raise HTTPException(
                 status_code=HTTPStatus.BAD_REQUEST, detail="Invalid GeoJSON format"
             )
 
         # Add required properties and extract entity data
-        featcol = add_required_geojson_properties(geojson)
+        featcol = add_required_geojson_properties(featcol_dict)
         featcol["features"][0]["properties"]["project_id"] = project.id
 
         # Get task_id of the feature if inside task boundary
@@ -1177,9 +1166,11 @@ async def upload_project_task_boundaries(
         geom_type="Polygon",
     )
     success = await DbTask.create(db, project_id, featcol_single_geom_type)
-    if not success:
-        return JSONResponse(content={"message": "failure"})
-    return JSONResponse(content={"message": "success"})
+    if success:
+        return JSONResponse(content={"message": "success"})
+
+    log.error(f"Failed to create task areas for project {project_id}")
+    return JSONResponse(content={"message": "failure"})
 
 
 ####################
@@ -1244,11 +1235,17 @@ async def create_project(
 
     # Create the project in the FMTM DB
     project_info.odkid = odkproject["id"]
-    project_info.author_id = db_user.id
-    project = await DbProject.create(db, project_info)
+    project_info.author_sub = db_user.sub
+    try:
+        project = await DbProject.create(db, project_info)
+    except Exception as e:
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail="Project creation failed.",
+        ) from e
     if not project:
         raise HTTPException(
-            status_code=HTTPStatus.CONFLICT,
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
             detail="Project creation failed.",
         )
 
@@ -1509,30 +1506,30 @@ async def delete_project_team(
 @router.post("/{project_id}/teams/{team_id}/users")
 async def add_team_users(
     team: Annotated[DbProjectTeam, Depends(project_deps.get_project_team)],
-    users: List[int],
+    user_subs: List[str],
     db: Annotated[Connection, Depends(db_conn)],
     project_user: Annotated[ProjectUserDict, Depends(project_manager)],
 ):
     """Add users to a team."""
     # Assign mapper user roles to the project
-    for user_id in users:
+    for user_sub in user_subs:
         await DbUserRole.create(
             db,
             project_user.get("project").id,
-            user_id,
+            user_sub,
             ProjectRole.MAPPER,
         )
-    await DbProjectTeamUser.create(db, team.team_id, users)
+    await DbProjectTeamUser.create(db, team.team_id, user_subs)
     return Response(status_code=HTTPStatus.OK)
 
 
 @router.delete("/{project_id}/teams/{team_id}/users")
 async def remove_team_users(
     team: Annotated[DbProjectTeam, Depends(project_deps.get_project_team)],
-    users: List[int],
+    user_subs: List[str],
     db: Annotated[Connection, Depends(db_conn)],
     project_user: Annotated[ProjectUserDict, Depends(project_manager)],
 ):
     """Add users to a team."""
-    await DbProjectTeamUser.delete(db, team.team_id, users)
+    await DbProjectTeamUser.delete(db, team.team_id, user_subs)
     return Response(status_code=HTTPStatus.NO_CONTENT)

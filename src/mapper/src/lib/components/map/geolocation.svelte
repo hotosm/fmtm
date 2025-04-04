@@ -24,7 +24,7 @@
 
 	let rotationDeg: number | undefined = $state();
 	let watchId: number | undefined = $state();
-	let directions: MapLibreGlDirections = $state();
+	let directions: MapLibreGlDirections | undefined = $state();
 	let entityDistance: number = $state(0);
 	let tooltipRef: any = $state();
 
@@ -39,27 +39,30 @@
 					map.addImage('location', image.data);
 				}
 			});
-			directions = new MapLibreGlDirections(map, {
-				// custom styled direction layer
-				layers,
-				sensitiveWaypointLayers: ['maplibre-gl-directions-waypoint'],
-				sensitiveSnappointLayers: ['maplibre-gl-directions-snappoint'],
-				sensitiveRoutelineLayers: ['maplibre-gl-directions-routeline'],
-				sensitiveAltRoutelineLayers: ['maplibre-gl-directions-alt-routeline'],
-			});
-			directions.interactive = false;
-			map.addControl(new LoadingIndicatorControl(directions));
-			directions.clear();
 
-			directions.on('fetchroutesend', (ev) => {
-				entityDistance = ev.data?.routes[0].distance as number;
-			});
+			if (!directions) {
+				directions = new MapLibreGlDirections(map, {
+					// custom styled direction layer
+					layers,
+					sensitiveWaypointLayers: ['maplibre-gl-directions-waypoint'],
+					sensitiveSnappointLayers: ['maplibre-gl-directions-snappoint'],
+					sensitiveRoutelineLayers: ['maplibre-gl-directions-routeline'],
+					sensitiveAltRoutelineLayers: ['maplibre-gl-directions-alt-routeline'],
+				});
+				directions.interactive = false;
+				map.addControl(new LoadingIndicatorControl(directions));
+				directions.clear();
 
-			directions.on('removewaypoint', () => {
-				if (directions.waypoints.length < 2) {
-					entityDistance = 0;
-				}
-			});
+				directions.on('fetchroutesend', (ev) => {
+					entityDistance = ev.data?.routes[0].distance as number;
+				});
+
+				directions.on('removewaypoint', () => {
+					if (directions.waypoints.length < 2) {
+						entityDistance = 0;
+					}
+				});
+			}
 		}
 	});
 
@@ -283,7 +286,7 @@
 {#if entitiesStore.toggleGeolocation && entityToNavigate}
 	<div class="font-barlow w-full flex justify-center absolute z-10 bottom-2 pointer-events-none">
 		<div class="bg-white rounded-md py-2 px-4 flex items-center gap-6 pointer-events-auto shadow-md z-10">
-			<p class="text-black text-base font-medium">Distance: {entityDistance}m</p>
+			<p class="text-black text-base font-medium">{m['geolocation.distance']()}: {entityDistance}m</p>
 			<sl-button
 				onclick={exitNavigationMode}
 				onkeydown={(e: KeyboardEvent) => {

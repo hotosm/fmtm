@@ -6,7 +6,7 @@
 	import { m } from '$translations/messages.js';
 	import { TaskStatusEnum, type ProjectData } from '$lib/types';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
-	import { getAlertStore } from '$store/common.svelte.ts';
+	import { getAlertStore, getCommonStore } from '$store/common.svelte.ts';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
 	import { mapTask } from '$lib/db/events';
 
@@ -44,6 +44,7 @@
 
 	const entitiesStore = getEntitiesStatusStore();
 	const alertStore = getAlertStore();
+	const commonStore = getCommonStore();
 	const taskStore = getTaskStore();
 
 	let dialogRef: SlDialog | null = $state(null);
@@ -53,7 +54,7 @@
 	// use Map for quick lookups
 	let entityMap = $derived(new Map(entitiesStore.entitiesStatusList.map((entity) => [entity.entity_id, entity])));
 
-	const displayWebFormsButton = new URLSearchParams(window.location.search).get('webforms') === 'true';
+	const enableWebforms = $derived(commonStore.config?.enableWebforms || false);
 
 	const selectedEntityId = $derived(entitiesStore.selectedEntity || '');
 	const selectedEntity = $derived(entityMap.get(selectedEntityId));
@@ -84,7 +85,8 @@
 				entitiesStore.updateEntityStatus(projectData.id, {
 					entity_id: entityUuid,
 					status: 1,
-					label: `${m['popup.task']()} ${selectedEntity?.task_id} ${m['popup.feature']()} ${selectedEntity?.osmid}`,
+					// NOTE here we don't translate the field as English values are always saved as the Entity label
+					label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osmid}`,
 				});
 
 				if (taskStore.selectedTaskId && taskStore.selectedTaskState === TaskStatusEnum['UNLOCKED_TO_MAP']) {
@@ -115,7 +117,7 @@
 			if (!coordFrom) {
 				alertStore.setAlert({
 					message:
-						'This project has distance constraint enabled. Please enable device geolocation for optimal functionality',
+						m['dialog_entities_actions.distance_constraint'](),
 					variant: 'warning',
 				});
 				return;
@@ -125,7 +127,7 @@
 			if (entityDistance && entityDistance > projectData?.geo_restrict_distance_meters) {
 				// Feature is far away from user, warn user
 				alertStore.setAlert({
-					message: `The feature must be within ${projectData?.geo_restrict_distance_meters} meters of your location`,
+					message: `${m['dialog_entities_actions.feature_must_be']()} ${projectData?.geo_restrict_distance_meters} ${m['dialog_entities_actions.meters_location']()}`,
 					variant: 'warning',
 				});
 				return;
@@ -148,7 +150,7 @@
 
 	const navigateToEntity = () => {
 		if (!entitiesStore.toggleGeolocation) {
-			alertStore.setAlert({ message: 'Please enable geolocation to navigate to the entity.', variant: 'warning' });
+			alertStore.setAlert({ message: m['dialog_entities_actions.enable_location'](), variant: 'warning' });
 			return;
 		}
 		entitiesStore.setEntityToNavigate(selectedEntityCoordinate);
@@ -183,12 +185,12 @@
 						<p class="text-[#161616] font-medium ml-2">{selectedEntity?.task_id}</p>
 					</div>
 					<div class="flex">
-						<p class="min-w-[6.25rem] text-[#2B2B2B]">Entity Uuid</p>
+						<p class="min-w-[6.25rem] text-[#2B2B2B]">{m['dialog_entities_actions.entity_uuid']()}</p>
 						:
 						<p class="break-all text-[#161616] font-medium ml-2">{selectedEntity?.entity_id}</p>
 					</div>
 					<div class="flex items-center">
-						<p class="min-w-[6.25rem] text-[#2B2B2B]">Status</p>
+						<p class="min-w-[6.25rem] text-[#2B2B2B]">{m['dialog_entities_actions.status']()}</p>
 						:
 						<p
 							class={`text-[#161616] font-medium border-[1px] border-solid ml-2 py-1 px-3 rounded-full ${getStatusStyle(selectedEntity?.status)}`}
@@ -198,7 +200,7 @@
 					</div>
 					{#if entityComments?.length > 0}
 						<div class="flex">
-							<p class="min-w-[6.25rem] text-[#2B2B2B]">Comments</p>
+							<p class="min-w-[6.25rem] text-[#2B2B2B]">{m['dialog_entities_actions.comments']()}</p>
 							:
 							<div class="flex flex-col ml-2 gap-2 flex-1">
 								{#each entityComments?.slice(0, 2) as comment}
@@ -258,39 +260,53 @@
 							<hot-icon slot="prefix" name="direction" class="!text-[1rem] cursor-pointer duration-200"></hot-icon>
 							<span class="font-barlow font-medium text-sm">{m['popup.navigate_here']()}</span>
 						</sl-button>
-						<sl-button
-							loading={entitiesStore.updateEntityStatusLoading}
-							variant="default"
-							size="small"
-							class="primary flex-grow"
-							onclick={() => {
-								handleMapFeature();
-							}}
-							onkeydown={(e: KeyboardEvent) => {
-								if (e.key === 'Enter') {
-									handleMapFeature();
-								}
-							}}
-							role="button"
-							tabindex="0"
-						>
-							<hot-icon slot="prefix" name="location" class="!text-[1rem] text-white cursor-pointer duration-200"
-							></hot-icon>
-							<span class="font-barlow font-medium text-sm">{m['popup.map_in_odk']()}</span>
-						</sl-button>
-						{#if displayWebFormsButton}
+						{#if enableWebforms === false}
 							<sl-button
 								loading={entitiesStore.updateEntityStatusLoading}
-								variant="default"
+								variant="primary"
 								size="small"
-								class="primary flex-grow"
+								class="flex-grow"
+								onclick={() => {
+									handleMapFeature();
+								}}
+								onkeydown={(e: KeyboardEvent) => {
+									if (e.key === 'Enter') {
+										handleMapFeature();
+									}
+								}}
+								role="button"
+								tabindex="0"
+							>
+								<hot-icon slot="prefix" name="location" class="!text-[1rem] text-white cursor-pointer duration-200"
+								></hot-icon>
+								<span class="font-barlow font-medium text-sm">{m['popup.map_in_odk']()}</span>
+							</sl-button>
+						{/if}
+						{#if enableWebforms}
+							<sl-button
+								loading={entitiesStore.updateEntityStatusLoading}
+								variant="primary"
+								size="small"
+								class="flex-grow"
 								onclick={() => {
 									toggleTaskActionModal(false);
+									entitiesStore.updateEntityStatus(projectData.id, {
+										entity_id: selectedEntity?.entity_id,
+										status: 1,
+										// NOTE here we don't translate the field as English values are always saved as the Entity label
+										label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osmid}`,
+									});
 									displayWebFormsDrawer = true;
 								}}
 								onkeydown={(e: KeyboardEvent) => {
 									if (e.key === 'Enter') {
 										toggleTaskActionModal(false);
+										entitiesStore.updateEntityStatus(projectData.id, {
+											entity_id: selectedEntity?.entity_id,
+											status: 1,
+											// NOTE here we don't translate the field as English values are always saved as the Entity label
+											label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osmid}`,
+										});
 										displayWebFormsDrawer = true;
 									}
 								}}
@@ -299,7 +315,7 @@
 							>
 								<hot-icon slot="prefix" name="location" class="!text-[1rem] text-white cursor-pointer duration-200"
 								></hot-icon>
-								<span class="font-barlow font-medium text-sm">MAP IN ODK WEB FORMS</span>
+								<span class="font-barlow font-medium text-sm">{m['dialog_entities_actions.collect_data']()}</span>
 							</sl-button>
 						{/if}
 					</div>
@@ -321,7 +337,7 @@
 	>
 		<div class="flex items-start flex-col">
 			<p class="text-base mb-5 text-gray-700">
-				Your are <b
+				{m['dialog_entities_actions.you_are']()} <b
 					>{(
 						distance(
 							entitiesStore.selectedEntityCoordinate?.coordinate as Coord,
@@ -329,7 +345,7 @@
 							{ units: 'kilometers' },
 						) * 1000
 					).toFixed(2)}m</b
-				> away from the feature. Are you sure you want to map this feature?
+				> {m['dialog_entities_actions.away_sure']()}
 			</p>
 			<div class="flex gap-2 ml-auto">
 				<sl-button
@@ -348,9 +364,9 @@
 					<span class="font-barlow font-medium text-sm">NO</span>
 				</sl-button>
 				<sl-button
-					variant="default"
+					variant="primary"
 					size="small"
-					class="primary flex-grow"
+					class="flex-grow"
 					onclick={() => {
 						mapFeature();
 						toggleDistanceWarningDialog = false;

@@ -69,6 +69,7 @@ mapper-frontend-dev:
   pnpm install
   VITE_API_URL=https://api.stage.fmtm.hotosm.org \
   VITE_SYNC_URL=https://sync.stage.fmtm.hotosm.org \
+  VITE_S3_URL=https://s3.stage.fmtm.hotosm.org \
   pnpm run dev
 
 # Start FMTM without ODK Central
@@ -103,7 +104,9 @@ s3-browser:
   @echo
   @echo "\033[0;33m ############################################### \033[0m"
   @echo
-  @echo " Access the S3 Browser at: http://localhost:8334"
+  @echo " Access the S3 Browser at:    http://localhost:8334"
+  @echo ""
+  @echo " Access Minio S3 buckets at:  http://localhost:9000"
   @echo
   @echo "\033[0;33m ############################################### \033[0m"
   @echo

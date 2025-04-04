@@ -567,6 +567,7 @@ async def create_entity_list(
         )
         # Step 2: populate the Entities
         if entities_list:
+            log.debug(f"Creating project ODK entities for dataset: {dataset_name}")
             await odk_central.createEntities(
                 odk_id,
                 dataset_name,
@@ -914,8 +915,8 @@ async def get_appuser_token(
 
         # delete if app_user already exists
         if odk_app_user:
-            app_user_id = odk_app_user[0].get("id")
-            appuser.delete(project_odk_id, app_user_id)
+            app_user_sub = odk_app_user[0].get("id")
+            appuser.delete(project_odk_id, app_user_sub)
 
         # create new app_user
         appuser_name = "fmtm_user"
@@ -924,7 +925,7 @@ async def get_appuser_token(
         )
         appuser_json = appuser.create(project_odk_id, appuser_name)
         appuser_token = appuser_json.get("token")
-        appuser_id = appuser_json.get("id")
+        appuser_sub = appuser_json.get("id")
 
         odk_url = odk_credentials.odk_central_url
 
@@ -933,7 +934,7 @@ async def get_appuser_token(
         response = appuser.updateRole(
             projectId=project_odk_id,
             xform=xform_id,
-            actorId=appuser_id,
+            actorId=appuser_sub,
         )
         if not response.ok:
             try:
