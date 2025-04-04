@@ -8,5 +8,5 @@ export type UserStateTypes = {
   userListForSelect: userType[];
   userListForSelectLoading: boolean;
   getUserNamesLoading: boolean;
-  userNames: Pick<userType, 'id' | 'username'>[];
+  userNames: Pick<userType, 'sub' | 'username'>[];
 };
