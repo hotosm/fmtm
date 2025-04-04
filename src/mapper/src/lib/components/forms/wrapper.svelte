@@ -78,7 +78,7 @@
 
 			let submission_xml = await payload.detail[0].data.instanceFile.text();
 
-			// entity id isn't included in the payload by default because we marked it as not relevent earlier
+			// entity id isn't included in the payload by default because we marked it as not relevant earlier
 			// (in order to hide it from the user's display)
 			submission_xml = submission_xml.replace('<warmup/>', `<warmup/><feature>${entityId}</feature>`);
 
