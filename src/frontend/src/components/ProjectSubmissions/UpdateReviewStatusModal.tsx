@@ -208,7 +208,7 @@ const UpdateReviewStatusModal = () => {
               {!getUserNamesLoading ? (
                 <>
                   {userNames?.map((user) => (
-                    <Option key={user.id.toString()} value={user.username}>
+                    <Option key={user.sub} value={user.username}>
                       {user.username}
                     </Option>
                   ))}
