@@ -5,12 +5,13 @@ import isEmpty from '@/utilfunctions/isEmpty.js';
 type chipsType = {
   data: string[];
   clearChip: (i: number) => void;
+  className?: string;
 };
 
-const Chips = ({ data, clearChip }: chipsType) => {
+const Chips = ({ data, clearChip, className }: chipsType) => {
   return (
     !isEmpty(data) && (
-      <div className="fmtm-flex fmtm-gap-2 fmtm-items-center">
+      <div className={`fmtm-flex fmtm-gap-2 fmtm-items-center ${className}`}>
         {data.map((item: string, i: number) => (
           <div
             key={i}
