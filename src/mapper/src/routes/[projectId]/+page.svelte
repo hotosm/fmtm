@@ -239,6 +239,7 @@
 				</sl-button>
 				<sl-button
 					onclick={() => {
+						zoomToTask(commentMention.task_id);
 						const osmId = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
 						entitiesStore.setSelectedEntity(osmId);
 						taskStore.dismissCommentMention();
