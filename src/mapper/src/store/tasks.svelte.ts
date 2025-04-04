@@ -52,7 +52,7 @@ function getTaskStore() {
 					latestEvent?.event === 'COMMENT' &&
 					latestEvent?.comment?.includes(`@${userDetails?.username}`) &&
 					latestEvent.comment?.startsWith('#submissionId:uuid:') &&
-					getTimeDiff(new Date(latestEvent?.created_at)) < 12000
+					getTimeDiff(new Date(latestEvent?.created_at)) < 120
 				) {
 					commentMention = latestEvent;
 				}
