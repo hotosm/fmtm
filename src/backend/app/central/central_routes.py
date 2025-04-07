@@ -164,14 +164,16 @@ async def get_form_media(
     project_id = project.id
     project_odk_id = project.odkid
     project_xform_id = project.odk_form_id
-    project_odk_creds = project.odk_credentials
+    # project_odk_creds = project.odk_credentials
 
     try:
-        return await central_crud.get_form_media(
-            project_xform_id,
-            project_odk_id,
-            project_odk_creds,
-        )
+        # FIXME we hardcode here to test with, but should swap to code below eventually
+        return {"mdp.png": "https://s3.mdp.fmtm.hotosm.org/fmtm-data/frontend/mdp.png"}
+        # return await central_crud.get_form_media(
+        #     project_xform_id,
+        #     project_odk_id,
+        #     project_odk_creds,
+        # )
 
     except Exception as e:
         log.exception(f"Error: {e}")
