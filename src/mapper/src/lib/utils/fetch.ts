@@ -4,7 +4,7 @@
  * @returns {string} object url to the cached fetch response
  */
 export async function fetchBlobUrl(url: string): Promise<string> {
-  const response = await fetch(url);
-  const blob = await response.blob();
-  return URL.createObjectURL(blob);
+	const response = await fetch(url);
+	const blob = await response.blob();
+	return URL.createObjectURL(blob);
 }
