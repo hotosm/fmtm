@@ -11,7 +11,8 @@
 		"READY": "",
 		"OPENED_IN_ODK": "",
 		"SURVEY_SUBMITTED": "सर्वेक्षण पेश",
-		"MARKED_BAD": "खराब"
+		"MARKED_BAD": "खराब",
+		"VALIDATED": "प्रमाणीकृत"
 	},
 	"header": {
 		"about": "",
