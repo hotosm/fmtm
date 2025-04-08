@@ -45,7 +45,7 @@
 	let isDrawEnabled: boolean = $state(false);
 	let latestEventTime: string = $state('');
 	let isGeometryCreationLoading: boolean = $state(false);
-
+	
 	const taskStore = getTaskStore();
 	const entitiesStore = getEntitiesStatusStore();
 	const commonStore = getCommonStore();
@@ -242,6 +242,7 @@
 						zoomToTask(commentMention.task_id);
 						const osmId = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
 						entitiesStore.setSelectedEntity(osmId);
+						openedActionModal = 'entity-modal'
 						taskStore.dismissCommentMention();
 					}}
 					onkeydown={(e: KeyboardEvent) => {
