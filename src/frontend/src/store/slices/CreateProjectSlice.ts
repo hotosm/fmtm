@@ -217,8 +217,8 @@ const CreateProject = createSlice({
       state.descriptionToFocus = action.payload;
     },
     SetProjectDeletePending(state, action: PayloadAction<boolean>) {
-      state.isProjectDeletePending = action.payload
-    }
+      state.isProjectDeletePending = action.payload;
+    },
   },
 });
 

@@ -551,7 +551,7 @@ const DeleteProjectService = (url: string, navigate?: NavigateFunction) => {
   return async (dispatch: AppDispatch) => {
     const deleteProject = async (url: string) => {
       try {
-        dispatch(CreateProjectActions.SetProjectDeletePending(true))
+        dispatch(CreateProjectActions.SetProjectDeletePending(true));
         await API.delete(url);
         dispatch(
           CommonActions.SetSnackBar({
@@ -559,8 +559,7 @@ const DeleteProjectService = (url: string, navigate?: NavigateFunction) => {
             variant: 'success',
           }),
         );
-        if (navigate) navigate('/')
-        
+        if (navigate) navigate('/');
       } catch (error) {
         if (error.response.status === 404) {
           dispatch(
@@ -571,7 +570,7 @@ const DeleteProjectService = (url: string, navigate?: NavigateFunction) => {
           );
         }
       } finally {
-        dispatch(CreateProjectActions.SetProjectDeletePending(false))
+        dispatch(CreateProjectActions.SetProjectDeletePending(false));
       }
     };
 
