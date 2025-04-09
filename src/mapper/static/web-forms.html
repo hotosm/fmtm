@@ -2,7 +2,7 @@
 <html>
 	<body style="height: 100vh; overflow-y: scroll; position: relative">
 		<script type="module">
-			const odkWebFormUrl = new URL(window.location.href).searchParams.get("odkWebFormUrl");
+			const odkWebFormUrl = new URL(window.location.href).searchParams.get('odkWebFormUrl');
 			const OdkWebForm = (await import(odkWebFormUrl)).default;
 
 			// we created this static html file for a few reasons:

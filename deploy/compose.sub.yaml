@@ -184,7 +184,7 @@ services:
     restart: "on-failure:2"
 
   central:
-    image: "ghcr.io/hotosm/fmtm/odkcentral:${ODK_CENTRAL_TAG:-v2024.2.1}"
+    image: "ghcr.io/hotosm/fmtm/odkcentral:${ODK_CENTRAL_TAG:-v2024.3.1}"
     depends_on:
       proxy:
         condition: service_healthy
@@ -254,7 +254,7 @@ services:
   central-ui:
     # This service simply builds the frontend to a volume
     # accessible to the proxy, then shuts down
-    image: "ghcr.io/hotosm/fmtm/odkcentral-ui:${ODK_CENTRAL_TAG:-v2024.2.1}"
+    image: "ghcr.io/hotosm/fmtm/odkcentral-ui:${ODK_CENTRAL_TAG:-v2024.3.1}"
     volumes:
       - central_frontend:/frontend
     network_mode: none
@@ -284,7 +284,7 @@ services:
       timeout: 5s
 
   fmtm-db:
-    image: "postgis/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
+    image: "ghcr.io/hotosm/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
     command: -c 'max_connections=300' -c 'wal_level=logical'
     volumes:
       - fmtm_db_data:/var/lib/postgresql/data/
@@ -326,7 +326,7 @@ services:
     restart: "unless-stopped"
 
   central-db:
-    image: "postgis/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
+    image: "ghcr.io/hotosm/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
     volumes:
       - central_db_data:/var/lib/postgresql/data/
     environment:
