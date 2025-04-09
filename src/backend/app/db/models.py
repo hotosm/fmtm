@@ -1489,6 +1489,59 @@ class DbProject(BaseModel):
         minimal: bool = False,
     ) -> Optional[list[Self]]:
         """Fetch all projects with optional filters for user, hashtags, and search."""
+        access_info = await cls._get_user_access_level(db, current_user)
+        filters, params, needs_user_roles_join = cls._build_query_filters(
+            skip, limit, org_id, user_sub, hashtags, search, access_info
+        )
+        sql = cls._construct_sql_query(
+            filters, 
+            minimal, 
+            skip, 
+            limit, 
+            needs_user_roles_join
+        )
+        
+        # Execute query and return results
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(sql, params)
+            return await cur.fetchall()
+
+    @classmethod
+    async def _get_user_access_level(
+        cls, 
+        db: Connection, 
+        current_user: Optional[str]
+    ) -> dict:
+        """Extract user context information for authorization checks."""
+        access_info = {
+            "is_authenticated": current_user is not None,
+            "is_superadmin": False,
+            "managed_org_ids": [],
+            "user_sub": None
+        }
+        
+        if current_user:
+            db_user = await DbUser.one(db, current_user.sub)
+            access_info["is_superadmin"] = db_user.role == UserRole.ADMIN
+            managed_orgs = db_user.orgs_managed if hasattr(db_user, 'orgs_managed') else []
+            access_info["managed_org_ids"] = managed_orgs
+            access_info["user_sub"] = current_user.sub
+            
+        return access_info
+
+    @classmethod
+    def _build_query_filters(
+        cls,
+        skip: Optional[int],
+        limit: Optional[int],
+        org_id: Optional[int],
+        user_sub: Optional[str],
+        hashtags: Optional[list[str]],
+        search: Optional[str],
+        access_info: dict
+    ) -> tuple[list[str], dict, bool]:
+        """Build query filters and parameters based on provided criteria."""
+        # Build basic filters
         filters_map = {
             "p.organisation_id = %(org_id)s": org_id,
             "p.author_sub = %(user_sub)s": user_sub,  # project author
@@ -1497,7 +1550,15 @@ class DbProject(BaseModel):
             "p.slug ILIKE %(search)s": f"%{search}%" if search else None,
         }
 
-        filters = [condition for condition, value in filters_map.items() if value]
+        filters = [condition for condition, value in filters_map.items() if value is not None]
+        
+        # Add visibility filter based on user authorization
+        visibility_filter = cls._build_visibility_filter(access_info)
+        needs_user_roles_join = False
+        if visibility_filter:
+            needs_user_roles_join =  True
+            filters.append(visibility_filter)
+        
         params = {
             key: value
             for key, value in {
@@ -1556,9 +1617,8 @@ class DbProject(BaseModel):
         sql = f"""
             WITH filtered_projects AS (
                 SELECT p.* FROM projects p
-                LEFT JOIN user_roles ur ON ur.project_id = p.id
+                {user_roles_join}
                 {where_clause}
-                GROUP BY p.id
             )
         """
 
