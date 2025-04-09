@@ -68,7 +68,7 @@
 		"project_id": "परियोजना आईडी"
 	},
 	"activities": {
-		"update_status_to": "स्थिति अपडेट गरियो",
+		"update_status_to": "द्वारा स्थिति अपडेट गरियो",
 		"no_activities_on_task_yet": "यो टास्कमा हालसम्म कुनै गतिविधि छैन",
 		"no_activities_yet": "अहिलेसम्म कुनै गतिविधि छैन"
 	},
