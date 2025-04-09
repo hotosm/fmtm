@@ -41,6 +41,7 @@
 	const taskStore = getTaskStore();
 
 	let activeStack: stackType = $state('');
+	let activeStackTitle: string = $state('');
 	let taskEvents: TaskEventType[] = $state([]);
 	let comments: TaskEventType[] = $state([]);
 
@@ -77,9 +78,15 @@
 		{#each stackGroup as stack}
 			<div
 				class="group flex items-center justify-between hover:bg-red-50 rounded-md p-2 duration-200 cursor-pointer"
-				onclick={() => (activeStack = stack.id)}
+				onclick={() => {
+					activeStack = stack.id;
+					activeStackTitle = stack.title;
+				}}
 				onkeydown={(e) => {
-					if (e.key === 'Enter') activeStack = stack.id;
+					if (e.key === 'Enter') {
+						activeStack = stack.id;
+						activeStackTitle = stack.title;
+					}
 				}}
 				tabindex="0"
 				role="button"
@@ -99,14 +106,20 @@
 			<hot-icon
 				name="chevron-left"
 				class="text-[1rem] hover:-translate-x-[2px] duration-200 cursor-pointer text-[1.125rem] text-black hover:text-red-600 duration-200"
-				onclick={() => (activeStack = '')}
+				onclick={() => {
+					activeStack = ''; 
+					activeStackTitle = ''
+				}}
 				onkeydown={(e: KeyboardEvent) => {
-					if (e.key === 'Enter') activeStack = '';
+					if (e.key === 'Enter') {
+						activeStack = ''; 
+						activeStackTitle = ''
+					}
 				}}
 				tabindex="0"
 				role="button"
 			></hot-icon>
-			<p class="text-[1.125rem] font-semibold">{activeStack}</p>
+			<p class="text-[1.125rem] font-semibold">{activeStackTitle}</p>
 		</div>
 	{/if}
 
