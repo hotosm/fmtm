@@ -91,11 +91,10 @@
 		return () => clearInterval(interval); // Cleanup interval on unmount
 	});
 
-	function zoomToTask(taskId: number) {
+	function zoomToTask(taskId: number, fitOptions?: Record<string, any> =  {duration: 0}) {
 		const taskObj = data.project.tasks.find((task: ProjectTask) => task.id === taskId);
 
 		if (!taskObj) return;
-
 		// Set as selected task for buttons
 		taskStore.setSelectedTaskId(taskObj.id, taskObj?.task_index);
 
@@ -103,7 +102,7 @@
 		const taskBuffer = buffer(taskPolygon, 5, { units: 'meters' });
 		if (taskBuffer && maplibreMap) {
 			const taskBbox: [number, number, number, number] = bbox(taskBuffer) as [number, number, number, number];
-			maplibreMap.fitBounds(taskBbox, { duration: 500 });
+			maplibreMap.fitBounds(taskBbox, fitOptions);
 		}
 
 		// Open the map tab
@@ -216,7 +215,7 @@
 <!-- Alert shown when user is tagged on a comment when they is active -->
 {#if commentMention}
 	<div class="absolute top-25 z-50 left-0 right-0 mx-5">
-		<sl-alert open={true} variant="primary">
+		<sl-alert open={true} variant="neutral" style="padding: 0px;">
 			<sl-icon slot="icon" name="chat" class="mb-auto mt-7 animate-pulse"></sl-icon>
 			<strong>{commentMention?.username} mentioned you on a comment</strong><br />
 			<p>{commentMention?.comment?.replace(/#submissionId:uuid:[\w-]+|#featureId:[\w-]+/g, '')?.trim()}</p>
@@ -239,7 +238,7 @@
 				</sl-button>
 				<sl-button
 					onclick={() => {
-						zoomToTask(commentMention.task_id);
+						zoomToTask(commentMention.task_id, { duration: 0, padding:	{bottom: 325} });
 						const osmId = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
 						entitiesStore.setSelectedEntity(osmId);
 						openedActionModal = 'entity-modal'
