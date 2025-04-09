@@ -1494,13 +1494,9 @@ class DbProject(BaseModel):
             skip, limit, org_id, user_sub, hashtags, search, access_info
         )
         sql = cls._construct_sql_query(
-            filters, 
-            minimal, 
-            skip, 
-            limit, 
-            needs_user_roles_join
+            filters, minimal, skip, limit, needs_user_roles_join
         )
-        
+
         # Execute query and return results
         async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(sql, params)
@@ -1508,25 +1504,25 @@ class DbProject(BaseModel):
 
     @classmethod
     async def _get_user_access_level(
-        cls, 
-        db: Connection, 
-        current_user: Optional[str]
+        cls, db: Connection, current_user: Optional[str]
     ) -> dict:
         """Extract user context information for authorization checks."""
         access_info = {
             "is_authenticated": current_user is not None,
             "is_superadmin": False,
             "managed_org_ids": [],
-            "user_sub": None
+            "user_sub": None,
         }
-        
+
         if current_user:
             db_user = await DbUser.one(db, current_user.sub)
             access_info["is_superadmin"] = db_user.role == UserRole.ADMIN
-            managed_orgs = db_user.orgs_managed if hasattr(db_user, 'orgs_managed') else []
+            managed_orgs = (
+                db_user.orgs_managed if hasattr(db_user, "orgs_managed") else []
+            )
             access_info["managed_org_ids"] = managed_orgs
             access_info["user_sub"] = current_user.sub
-            
+
         return access_info
 
     @classmethod
@@ -1538,7 +1534,7 @@ class DbProject(BaseModel):
         user_sub: Optional[str],
         hashtags: Optional[list[str]],
         search: Optional[str],
-        access_info: dict
+        access_info: dict,
     ) -> tuple[list[str], dict, bool]:
         """Build query filters and parameters based on provided criteria."""
         # Build basic filters
@@ -1550,15 +1546,17 @@ class DbProject(BaseModel):
             "p.slug ILIKE %(search)s": f"%{search}%" if search else None,
         }
 
-        filters = [condition for condition, value in filters_map.items() if value is not None]
-        
+        filters = [
+            condition for condition, value in filters_map.items() if value is not None
+        ]
+
         # Add visibility filter based on user authorization
         visibility_filter = cls._build_visibility_filter(access_info)
         needs_user_roles_join = False
         if visibility_filter:
-            needs_user_roles_join =  True
+            needs_user_roles_join = True
             filters.append(visibility_filter)
-        
+
         params = {
             key: value
             for key, value in {
@@ -1571,12 +1569,12 @@ class DbProject(BaseModel):
             }.items()
             if value
         }
-        
+
         if access_info["is_authenticated"]:
             params["current_user_sub"] = access_info["user_sub"]
             if access_info["managed_org_ids"]:
                 params["managed_org_ids"] = access_info["managed_org_ids"]
-        
+
         return filters, params, needs_user_roles_join
 
     @classmethod
@@ -1584,11 +1582,11 @@ class DbProject(BaseModel):
         """Build visibility filter based on user context."""
         if not access_info["is_authenticated"]:
             return "p.visibility = 'PUBLIC'"
-            
+
         if access_info["is_superadmin"]:
             # Superadmin sees everything
             return None
-            
+
         if access_info["managed_org_ids"]:
             # Org managers see all projects in their orgs
             return """
@@ -1597,7 +1595,7 @@ class DbProject(BaseModel):
                     OR p.organisation_id = ANY(%(managed_org_ids)s)
                 )
             """
-        
+
         # Regular users see public projects and private ones they have access to
         return """
             (
@@ -1611,22 +1609,22 @@ class DbProject(BaseModel):
 
     @classmethod
     def _construct_sql_query(
-        cls, 
-        filters: list, 
-        minimal: bool, 
-        skip: Optional[int], 
+        cls,
+        filters: list,
+        minimal: bool,
+        skip: Optional[int],
         limit: Optional[int],
         needs_user_roles_join: Optional[bool] = False,
     ) -> str:
         """Construct SQL query based on filters and query type."""
         where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
-        
+
         # Only join user_roles if needed for private visibility check
         if needs_user_roles_join:
             user_roles_join = "LEFT JOIN user_roles ur ON ur.project_id = p.id"
         else:
             user_roles_join = ""
-        
+
         sql = f"""
             WITH filtered_projects AS (
                 SELECT p.* FROM projects p
@@ -1634,13 +1632,13 @@ class DbProject(BaseModel):
                 {where_clause}
             )
         """
-        
+
         # Add appropriate SELECT based on minimal flag
         if minimal:
             sql += cls._minimal_select_query()
         else:
             sql += cls._full_select_query()
-        
+
         if skip is not None and limit is not None:
             sql += """
                 OFFSET %(offset)s
@@ -1648,7 +1646,7 @@ class DbProject(BaseModel):
             """
         else:
             sql += ";"
-            
+
         return sql
 
     @classmethod
