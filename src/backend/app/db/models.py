@@ -1571,49 +1571,62 @@ class DbProject(BaseModel):
             }.items()
             if value
         }
-        is_superadmin = False
-        managed_org_ids = []
+        
+        if access_info["is_authenticated"]:
+            params["current_user_sub"] = access_info["user_sub"]
+            if access_info["managed_org_ids"]:
+                params["managed_org_ids"] = access_info["managed_org_ids"]
+        
+        return filters, params, needs_user_roles_join
 
-        if current_user:
-            db_user = await DbUser.one(db, current_user.sub)
-            is_superadmin = db_user.role == UserRole.ADMIN
-            managed_org_ids = (
-                db_user.orgs_managed if hasattr(db_user, "orgs_managed") else []
+    @classmethod
+    def _build_visibility_filter(cls, access_info: dict) -> Optional[str]:
+        """Build visibility filter based on user context."""
+        if not access_info["is_authenticated"]:
+            return "p.visibility = 'PUBLIC'"
+            
+        if access_info["is_superadmin"]:
+            # Superadmin sees everything
+            return None
+            
+        if access_info["managed_org_ids"]:
+            # Org managers see all projects in their orgs
+            return """
+                (
+                    p.visibility = 'PUBLIC'
+                    OR p.organisation_id = ANY(%(managed_org_ids)s)
+                )
+            """
+        
+        # Regular users see public projects and private ones they have access to
+        return """
+            (
+                p.visibility = 'PUBLIC'
+                OR (
+                    p.visibility = 'PRIVATE'
+                    AND ur.user_sub = %(current_user_sub)s
+                )
             )
-            params["current_user_sub"] = current_user.sub
+        """
 
-        if current_user:
-            if is_superadmin:
-                # Superadmin sees everything, no visibility filter needed
-                pass
-            elif managed_org_ids:
-                # org managers can see all their projects in org
-                # both private and public
-                filters.append("""
-                    (
-                        p.visibility = 'PUBLIC'
-                        OR p.organisation_id = ANY(%(managed_org_ids)s)
-                    )
-                """)
-                params["managed_org_ids"] = managed_org_ids
-            else:
-                filters.append("""
-                    (
-                        p.visibility = 'PUBLIC'
-                        OR (
-                            p.visibility = 'PRIVATE'
-                            AND ur.user_sub = %(current_user_sub)s
-                        )
-                    )
-                """)
-        else:
-            # Non-authenticated users only see public projects
-            filters.append("p.visibility = 'PUBLIC'")
-
-        # Build the WHERE clause
+    @classmethod
+    def _construct_sql_query(
+        cls, 
+        filters: list, 
+        minimal: bool, 
+        skip: Optional[int], 
+        limit: Optional[int],
+        needs_user_roles_join: Optional[bool] = False,
+    ) -> str:
+        """Construct SQL query based on filters and query type."""
         where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
-
-        # filtered projects
+        
+        # Only join user_roles if needed for private visibility check
+        if needs_user_roles_join:
+            user_roles_join = "LEFT JOIN user_roles ur ON ur.project_id = p.id"
+        else:
+            user_roles_join = ""
+        
         sql = f"""
             WITH filtered_projects AS (
                 SELECT p.* FROM projects p
@@ -1621,56 +1634,65 @@ class DbProject(BaseModel):
                 {where_clause}
             )
         """
-
+        
+        # Add appropriate SELECT based on minimal flag
         if minimal:
-            # Minimal query for mapper frontend
+            sql += cls._minimal_select_query()
+        else:
+            sql += cls._full_select_query()
+        
+        if skip is not None and limit is not None:
             sql += """
-                SELECT
-                    fp.id,
-                    fp.name,
-                    fp.location_str,
-                    fp.short_description,
-                    project_org.logo AS organisation_logo
-                FROM
-                    filtered_projects fp
-                LEFT JOIN
-                    organisations project_org ON fp.organisation_id = project_org.id
-                ORDER BY
-                    fp.created_at DESC
+                OFFSET %(offset)s
+                LIMIT %(limit)s;
             """
         else:
-            sql += """
-                SELECT
-                    fp.*,
-                    ST_AsGeoJSON(fp.outline)::jsonb AS outline,
-                    ST_AsGeoJSON(ST_Centroid(fp.outline))::jsonb AS centroid,
-                    project_org.logo AS organisation_logo,
-                    fp.total_tasks,
-                    stats.num_contributors,
-                    stats.total_submissions,
-                    stats.tasks_mapped,
-                    stats.tasks_bad,
-                    stats.tasks_validated
-                FROM
-                    filtered_projects fp
-                LEFT JOIN
-                    organisations project_org ON fp.organisation_id = project_org.id
-                LEFT JOIN
-                    mv_project_stats stats ON fp.id = stats.project_id
-                ORDER BY
-                    fp.created_at DESC
-            """
-        sql += (
-            """
-            OFFSET %(offset)s
-            LIMIT %(limit)s;
+            sql += ";"
+            
+        return sql
+
+    @classmethod
+    def _minimal_select_query(cls) -> str:
+        """Return minimal SELECT query for mapper frontend."""
+        return """
+            SELECT
+                fp.id,
+                fp.name,
+                fp.location_str,
+                fp.short_description,
+                project_org.logo AS organisation_logo
+            FROM
+                filtered_projects fp
+            LEFT JOIN
+                organisations project_org ON fp.organisation_id = project_org.id
+            ORDER BY
+                fp.created_at DESC
         """
-            if skip and limit
-            else ";"
-        )
-        async with db.cursor(row_factory=class_row(cls)) as cur:
-            await cur.execute(sql, params)
-            return await cur.fetchall()
+
+    @classmethod
+    def _full_select_query(cls) -> str:
+        """Return full SELECT query with all project details."""
+        return """
+            SELECT
+                fp.*,
+                ST_AsGeoJSON(fp.outline)::jsonb AS outline,
+                ST_AsGeoJSON(ST_Centroid(fp.outline))::jsonb AS centroid,
+                project_org.logo AS organisation_logo,
+                fp.total_tasks,
+                stats.num_contributors,
+                stats.total_submissions,
+                stats.tasks_mapped,
+                stats.tasks_bad,
+                stats.tasks_validated
+            FROM
+                filtered_projects fp
+            LEFT JOIN
+                organisations project_org ON fp.organisation_id = project_org.id
+            LEFT JOIN
+                mv_project_stats stats ON fp.id = stats.project_id
+            ORDER BY
+                fp.created_at DESC
+        """
 
     @classmethod
     async def create(cls, db: Connection, project_in: "ProjectIn") -> Self:
