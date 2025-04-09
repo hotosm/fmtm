@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Mentions from 'rc-mentions';
 import { Modal } from '@/components/common/Modal';
 import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 import { reviewListType } from '@/models/submission/submissionModel';
@@ -9,10 +10,8 @@ import { entity_state } from '@/types/enums';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import { task_event } from '@/types/enums';
 import { featureType } from '@/store/types/ISubmissions';
-import Mentions from 'rc-mentions';
 import '@/styles/rc-mentions.css';
 import { GetUserNames } from '@/api/User';
-import CoreModules from '@/shared/CoreModules';
 import { UserActions } from '@/store/slices/UserSlice';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
@@ -203,21 +202,13 @@ const UpdateReviewStatusModal = () => {
               onSearch={(search) => {
                 setSearchText(search);
               }}
-              notFoundContent={searchText ? '' : 'Search for a user'}
-            >
-              {!getUserNamesLoading ? (
-                <>
-                  {userNames?.map((user) => (
-                    <Option key={user.sub} value={user.username}>
-                      {user.username}
-                    </Option>
-                  ))}
-                </>
-              ) : (
-                <div>
-                  <CoreModules.Skeleton height={14} width={100} count={5} />
-                </div>
-              )}
+              notFoundContent={getUserNamesLoading ? 'Searching...' : searchText ? 'Search for a user' : 'User not found'}
+            >       
+              {userNames?.map((user) => (
+                <Option key={user.sub} value={user.username}>
+                  {user.username}
+                </Option>
+              ))}
             </Mentions>
           </div>
           <div className="fmtm-grid fmtm-grid-cols-2 fmtm-gap-4 fmtm-mt-8">
