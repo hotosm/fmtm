@@ -81,7 +81,7 @@ export const GetUserNames = (url: string, params: { project_id: number; search: 
     const getUserNames = async (url: string, params: { project_id: number }) => {
       try {
         dispatch(UserActions.GetUserNamesLoading(true));
-        const response: AxiosResponse<Pick<userType, 'id' | 'username'>[]> = await axios.get(url, { params });
+        const response: AxiosResponse<Pick<userType, 'sub' | 'username'>[]> = await axios.get(url, { params });
         dispatch(UserActions.SetUserNames(response.data));
       } catch (error) {
       } finally {
