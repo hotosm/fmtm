@@ -202,8 +202,10 @@ const UpdateReviewStatusModal = () => {
               onSearch={(search) => {
                 setSearchText(search);
               }}
-              notFoundContent={getUserNamesLoading ? 'Searching...' : searchText ? 'Search for a user' : 'User not found'}
-            >       
+              notFoundContent={
+                getUserNamesLoading ? 'Searching...' : searchText ? 'Search for a user' : 'User not found'
+              }
+            >
               {userNames?.map((user) => (
                 <Option key={user.sub} value={user.username}>
                   {user.username}
