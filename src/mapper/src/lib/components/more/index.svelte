@@ -7,22 +7,26 @@
 	import type { ProjectData, TaskEventType } from '$lib/types';
 	import { m } from "$translations/messages.js";
 
-	type stackType = '' | 'Comment' | 'Instructions' | 'Activities' | 'Project Information';
+	type stackType = '' | 'comment' | 'instructions' | 'activities' | 'project-info';
 
-	const stackGroup: { icon: string; title: stackType }[] = [
+	const stackGroup: { id: stackType, icon: string; title: string }[] = [
 		{
+			id: 'project-info',
 			icon: 'info-circle',
 			title: m['stack_group.project_information'](),
 		},
 		{
+			id: 'comment',
 			icon: 'chat',
 			title: m['stack_group.comment'](),
 		},
 		{
+			id: 'instructions',
 			icon: 'description',
 			title: m['stack_group.instructions'](),
 		},
 		{
+			id: 'activities',
 			icon: 'list-ul',
 			title: m['stack_group.activities'](),
 		},
@@ -68,14 +72,14 @@
 	});
 </script>
 
-<div class={`font-barlow font-medium ${activeStack === 'Comment' ? 'h-full' : 'h-fit'}`}>
+<div class={`font-barlow font-medium ${activeStack === 'comment' ? 'h-full' : 'h-fit'}`}>
 	{#if activeStack === ''}
 		{#each stackGroup as stack}
 			<div
 				class="group flex items-center justify-between hover:bg-red-50 rounded-md p-2 duration-200 cursor-pointer"
-				onclick={() => (activeStack = stack.title)}
+				onclick={() => (activeStack = stack.id)}
 				onkeydown={(e) => {
-					if (e.key === 'Enter') activeStack = stack.title;
+					if (e.key === 'Enter') activeStack = stack.id;
 				}}
 				tabindex="0"
 				role="button"
@@ -107,10 +111,10 @@
 	{/if}
 
 	<!-- body -->
-	{#if activeStack === 'Comment'}
+	{#if activeStack === 'comment'}
 		<Comment {comments} projectId={projectData?.id} />
 	{/if}
-	{#if activeStack === 'Instructions'}
+	{#if activeStack === 'instructions'}
 		{#if projectData?.per_task_instructions}
 			<Editor editable={false} content={projectData?.per_task_instructions} />
 		{:else}
@@ -119,8 +123,8 @@
 			</div>
 		{/if}
 	{/if}
-	{#if activeStack === 'Activities'}
+	{#if activeStack === 'activities'}
 		<Activities {taskEvents} {zoomToTask} />
 	{/if}
-	{#if activeStack === 'Project Information'}<ProjectInfo {projectData} />{/if}
+	{#if activeStack === 'project-info'}<ProjectInfo {projectData} />{/if}
 </div>
