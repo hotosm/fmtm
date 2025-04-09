@@ -1481,6 +1481,7 @@ class DbProject(BaseModel):
         db: Connection,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
+        current_user: Optional[str] = None,
         org_id: Optional[int] = None,
         user_sub: Optional[str] = None,
         hashtags: Optional[list[str]] = None,
@@ -1509,47 +1510,94 @@ class DbProject(BaseModel):
             }.items()
             if value
         }
+        is_superadmin = False
+        managed_org_ids = []
+
+        if current_user:
+            db_user = await DbUser.one(db, current_user.sub)
+            is_superadmin = db_user.role == UserRole.ADMIN
+            managed_org_ids = db_user.orgs_managed if hasattr(db_user, 'orgs_managed') else []
+            params["current_user_sub"] = current_user.sub
+        
+        if current_user:
+            if is_superadmin:
+                # Superadmin sees everything, no visibility filter needed
+                pass
+            elif managed_org_ids:
+                # org managers can see all their projects in org
+                # both private and public
+                filters.append("""
+                    (
+                        p.visibility = 'PUBLIC'
+                        OR p.organisation_id = ANY(%(managed_org_ids)s)
+                    )
+                """)
+                params["managed_org_ids"] = managed_org_ids
+            else:
+                filters.append("""
+                    (
+                        p.visibility = 'PUBLIC'
+                        OR (
+                            p.visibility = 'PRIVATE'
+                            AND ur.user_sub = %(current_user_sub)s
+                        )
+                    )
+                """)
+        else:
+            # Non-authenticated users only see public projects
+            filters.append("p.visibility = 'PUBLIC'")
+
+        # Build the WHERE clause
+        where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
+        
+        # filtered projects
+        sql = f"""
+            WITH filtered_projects AS (
+                SELECT p.* FROM projects p
+                LEFT JOIN user_roles ur ON ur.project_id = p.id
+                {where_clause}
+                GROUP BY p.id
+            )
+        """
+            
+
         if minimal:
             # Minimal query for mapper frontend
-            sql = f"""
+            sql += f"""
                 SELECT
-                    p.id,
-                    p.name,
-                    p.location_str,
-                    p.short_description,
+                    fp.id,
+                    fp.name,
+                    fp.location_str,
+                    fp.short_description,
                     project_org.logo AS organisation_logo
                 FROM
-                    projects p
+                    filtered_projects fp
                 LEFT JOIN
-                    organisations project_org ON p.organisation_id = project_org.id
-                {"WHERE " + " AND ".join(filters) if filters else ""}
-                GROUP BY
-                    p.id, project_org.id
+                    organisations project_org ON fp.organisation_id = project_org.id
                 ORDER BY
-                    p.created_at DESC
+                    fp.created_at DESC
             """
         else:
-            sql = f"""
+            sql += f"""
                 SELECT
-                    p.*,
-                    ST_AsGeoJSON(p.outline)::jsonb AS outline,
-                    ST_AsGeoJSON(ST_Centroid(p.outline))::jsonb AS centroid,
+                    fp.*,
+                    ST_AsGeoJSON(fp.outline)::jsonb AS outline,
+                    ST_AsGeoJSON(ST_Centroid(fp.outline))::jsonb AS centroid,
                     project_org.logo AS organisation_logo,
-                    p.total_tasks,
+                    fp.total_tasks,
                     stats.num_contributors,
                     stats.total_submissions,
                     stats.tasks_mapped,
                     stats.tasks_bad,
                     stats.tasks_validated
                 FROM
-                    projects p
+                    filtered_projects fp
                 LEFT JOIN
-                    organisations project_org ON p.organisation_id = project_org.id
+                    organisations project_org ON fp.organisation_id = project_org.id
                 LEFT JOIN
-                    mv_project_stats stats ON p.id = stats.project_id
-                {"WHERE " + " AND ".join(filters) if filters else ""}
+                    mv_project_stats stats ON fp.id = stats.project_id
                 ORDER BY
-                    p.created_at DESC
+                    fp.created_at DESC
             """
         sql += (
             """
@@ -1559,7 +1607,6 @@ class DbProject(BaseModel):
             if skip and limit
             else ";"
         )
-
         async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(sql, params)
             return await cur.fetchall()
