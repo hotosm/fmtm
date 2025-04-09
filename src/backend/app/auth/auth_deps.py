@@ -275,7 +275,7 @@ async def public_view(
     """Optional login dependency: returns AuthUser if authenticated, else None."""
     if settings.DEBUG:
         return AuthUser(sub="osm|1", username="localadmin", role=UserRole.ADMIN)
-    
+
     extracted_token = access_token or get_cookie_value(request, settings.cookie_name)
 
     if not extracted_token:

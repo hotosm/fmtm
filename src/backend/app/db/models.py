@@ -1516,9 +1516,11 @@ class DbProject(BaseModel):
         if current_user:
             db_user = await DbUser.one(db, current_user.sub)
             is_superadmin = db_user.role == UserRole.ADMIN
-            managed_org_ids = db_user.orgs_managed if hasattr(db_user, 'orgs_managed') else []
+            managed_org_ids = (
+                db_user.orgs_managed if hasattr(db_user, "orgs_managed") else []
+            )
             params["current_user_sub"] = current_user.sub
-        
+
         if current_user:
             if is_superadmin:
                 # Superadmin sees everything, no visibility filter needed
@@ -1549,7 +1551,7 @@ class DbProject(BaseModel):
 
         # Build the WHERE clause
         where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
-        
+
         # filtered projects
         sql = f"""
             WITH filtered_projects AS (
@@ -1559,11 +1561,10 @@ class DbProject(BaseModel):
                 GROUP BY p.id
             )
         """
-            
 
         if minimal:
             # Minimal query for mapper frontend
-            sql += f"""
+            sql += """
                 SELECT
                     fp.id,
                     fp.name,
@@ -1578,7 +1579,7 @@ class DbProject(BaseModel):
                     fp.created_at DESC
             """
         else:
-            sql += f"""
+            sql += """
                 SELECT
                     fp.*,
                     ST_AsGeoJSON(fp.outline)::jsonb AS outline,
