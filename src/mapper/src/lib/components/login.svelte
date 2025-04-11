@@ -8,7 +8,6 @@
 		id: 'osm_account' | 'google_account';
 		name: string;
 		image: string;
-		description?: string;
 	};
 
 	const loginOptions: loginOptionsType[] = [
@@ -16,7 +15,6 @@
 			id: 'osm_account',
 			name: 'Sign in with OSM',
 			image: OSMLogo,
-			description: 'Edits made in FMTM will be credited to your OSM account.',
 		},
 		{
 			id: 'google_account',
@@ -72,13 +70,7 @@
 					class="option-card bg-[#F5F5F5] text-gray-700 p-3 border-1 border-solid border-white hover:border-[#d73f3f] rounded-md duration-300 hover:text-red-600 cursor-pointer text-sm flex items-start gap-3 group flex items-center"
 				>
 					<img src={option?.image} class="w-10" alt="personal osm account" />
-
-					<div class="flex flex-col">
-						<div class="text-lg font-medium">{option.name}</div>
-						{#if option.description}
-							<div class="">{option.description}</div>
-						{/if}
-					</div>
+					<div class="text-lg font-medium">{option.name}</div>
 				</div>
 			{/each}
 		</div>
