@@ -60,13 +60,6 @@ const ManageUsers = () => {
       },
     },
     {
-      header: 'ID',
-      accessorKey: 'sub',
-      cell: ({ getValue }) => {
-        return getValue()?.split('|')[1];
-      },
-    },
-    {
       header: 'Sign-in Method',
       accessorKey: 'sub',
       cell: ({ getValue }) => {
