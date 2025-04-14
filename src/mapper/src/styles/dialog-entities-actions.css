@@ -1,0 +1,309 @@
+/* Task action modal */
+
+.task-action-modal {
+    --at-apply:
+        font-barlow
+        flex
+        justify-center
+        !w-[100vw]
+        absolute
+        bottom-[4rem]
+        left-0
+        pointer-events-none
+        z-50;
+}
+
+.task-action-modal .content {
+    --at-apply:
+        bg-white
+        w-full
+        font-regular
+        md:max-w-[580px]
+        pointer-events-auto
+        px-4
+        py-3
+        sm:py-4
+        rounded-t-3xl
+        max-h-[60vh]
+        overflow-y-scroll;
+}
+
+.task-action-modal .icon {
+    --at-apply:
+        flex
+        justify-end;
+}
+
+.task-action-modal .icon hot-icon {
+    --at-apply:
+        !text-[1.5rem]
+        text-[#52525B]
+        cursor-pointer
+        hover:text-red-600
+        duration-200;
+}
+
+.section-container {
+    --at-apply:
+        flex
+        flex-col
+        gap-4;
+}
+
+.selected-title {
+    --at-apply:
+        text-[#333]
+        text-lg
+        font-semibold;
+}
+
+.section {
+    --at-apply:
+        flex
+        flex-col
+        gap-2;
+}
+
+.item {
+    --at-apply:
+        flex;
+}
+
+.item p.label {
+    --at-apply
+        min-w-[6.25rem]
+        text-[#2B2B2B];
+}
+
+.item p.value {
+    --at-apply:
+        text-[#161616]
+        font-medium ml-2;
+}
+
+.item p.status {
+    --at-apply:
+        text-[#161616]
+        font-medium
+        border-[1px]
+        border-solid
+        ml-2
+        py-1
+        px-3
+        rounded-full;
+}
+
+/* Comments */
+
+.comments {
+    --at-apply:
+        flex;
+}
+
+.comments-list {
+    --at-apply:
+        flex
+        flex-col
+        ml-2
+        gap-2
+        flex-1;
+}
+
+.comment {
+    --at-apply:
+        bg-[#F6F5F5]
+        rounded
+        px-2
+        py-1;
+}
+
+.comment-content {
+    --at-apply:
+        flex
+        items-center
+        justify-between
+        mb-1;
+}
+
+.comment-info {
+    --at-apply:
+        flex
+        items-center
+        gap-2;
+}
+
+.comment-info hot-icon {
+    --at-apply:
+        !text-[0.8rem]
+        text-red-600
+        cursor-pointer;
+}
+
+.comment-info .created-at {
+    --at-apply:
+        text-sm;
+}
+
+.comment-text {
+    --at-apply:
+        font-medium;
+}
+
+.comment-see-all {
+    --at-apply:
+        flex
+        items-center
+        gap-2;
+}
+
+.comment-see-all-empty {
+    --at-apply:
+        h-[1px]
+        bg-gray-200
+        flex
+        flex-1;
+}
+
+.comment-see-all-link {
+    --at-apply:
+        text-sm
+        text-gray-600
+        hover:text-gray-800
+        cursor-pointer
+        font-light;
+}
+
+/* Entity */
+
+.entity {
+    --at-apply:
+        flex
+        gap-2;
+}
+
+.entity-navigate-to {
+    --at-apply:
+        secondary
+        flex-grow;
+}
+
+
+.entity hot-icon {
+    --at-apply:
+        !text-[1rem]
+        cursor-pointer
+        duration-200;
+}
+
+.entity span {
+    --at-apply:
+        font-barlow
+        font-mediumtext-sm;
+}
+
+.entity sl-button {
+    --at-apply:
+        flex-grow;
+}
+
+.entity-dialog {
+    --at-apply:
+        dialog-overview
+        z-50
+        font-barlow
+        font-regular;
+}
+
+.entity-dialog-content {
+    --at-apply:
+        flex 
+        items-start
+        flex-col;
+}
+
+.entity-dialog-youare {
+    --at-apply:
+        text-base
+        mb-5
+        text-gray-700;
+}
+
+.entity-dialog-actions {
+    --at-apply:
+        flex
+        gap-2
+        ml-auto;
+}
+
+.entity-dialog-actions sl-button {
+    --at-apply:
+        flex-grow;
+}
+
+.entity-dialog-actions sl-button span {
+    --at-apply:
+        font-barlow
+        font-medium
+        text-sm;
+}
+
+/* Feature comments */
+
+.feature-comments-dialog {
+    --at-apply:
+        dialog-overview
+        z-50
+        font-barlow
+        font-regular;
+}
+
+.feature-comment {
+    --at-apply:
+        bg-[#F6F5F5]
+        rounded
+        px-2
+        py-1;
+}
+
+.feature-comments {
+    --at-apply:
+        flex
+        flex-col
+        gap-3;
+}
+
+.feature-comment-meta {
+    --at-apply:
+        flex
+        items-center
+        justify-between
+        mb-2;
+}
+
+.feature-comment-history {
+    --at-apply:
+        flex
+        items-center
+        gap-2;
+}
+
+.feature-comment-history sl-icon {
+    --at-apply:
+        !text-[0.8rem]
+        text-red-600 
+        cursor-pointer;
+}
+
+.feature-comment-history p {
+    --at-apply:
+        text-sm;
+}
+
+.feature-comment-comment {
+    --at-apply:
+        font-medium;
+}
+
+
+
+

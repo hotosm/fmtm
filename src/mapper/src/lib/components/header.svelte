@@ -62,7 +62,6 @@
 		dropdown?.removeEventListener('sl-select', handleLocaleSelect);
 	});
 </script>
-
 <div class="p-3 flex items-center justify-between font-barlow">
 	<div
 		onclick={() => goto('/')}
