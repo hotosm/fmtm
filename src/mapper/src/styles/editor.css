@@ -15,7 +15,7 @@
 }
 
 .tiptap code {
-	background-color: rgba(97,97,97, 0.1);
+	background-color: rgba(97, 97, 97, 0.1);
 	color: var(--sl-color-neutral-700);
 }
 
@@ -77,8 +77,7 @@
 /* Editor */
 
 .editor {
-	--at-apply:
-		rounded-md;
+	--at-apply: rounded-md;
 }
 
 .editor.editable {
@@ -86,40 +85,23 @@
 }
 
 .editor.editable .bottom {
-	--at-apply:
-		h-[80px]
-		overflow-y-scroll
-		pt-[3px];
+	--at-apply: h-[80px] overflow-y-scroll pt-[3px];
 }
 
 .editor.non-editable .bottom {
-	--at-apply:
-		h-full;
+	--at-apply: h-full;
 }
 
 /* Toobar */
 
 .toolbar {
 	border-bottom: 1px solid var(--sl-color-neutral-0);
-	--at-apply:
-		items-center
-		gap-2
-		px-2
-		py-1
-		flex-wrap;
+	--at-apply: items-center gap-2 px-2 py-1 flex-wrap;
 }
 
 .toolbar .icon {
-	--at-apply:
-		text-[1.2rem]
-		text-neutral-800
-		hover:bg-rose-50
-		p-[2px]
-		rounded
-		cursor-pointer
-		duration-200;
+	--at-apply: text-[1.2rem] text-neutral-800 hover: bg-rose-50 p-[2px] rounded cursor-pointer duration-200;
 }
-
 
 .toolbar hot-icon.active {
 	background: var(--sl-color-primary-50);
