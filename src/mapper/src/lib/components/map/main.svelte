@@ -78,6 +78,12 @@
 		handleDrawnGeom,
 	}: Props = $props();
 
+	const cssValue = property => (
+		getComputedStyle(document.documentElement)
+				.getPropertyValue(property)
+				.trim()
+	)
+
 	const taskStore = getTaskStore();
 	const projectSetupStepStore = getProjectSetupStepStore();
 	const entitiesStore = getEntitiesStatusStore();
@@ -93,6 +99,16 @@
 	let expanding = true; // Whether the line is expanding
 	let selectedControl: 'layer-switcher' | 'legend' | null = $state(null);
 	let selectedStyleUrl: string | undefined = $state(undefined);
+
+	let fillLayerColors = {
+		'UNLOCKED_TO_MAP': '#ffffff',
+		'LOCKED_FOR_MAPPING': '#008099',
+		'UNLOCKED_TO_VALIDATE': '#ade6ef',
+		'LOCKED_FOR_VALIDATION': '#fceca4',
+		'UNLOCKED_DONE': '#40ac8c',
+		'default': '#c5fbf5',
+		'primary': 'red'
+	};
 
 	// use Map for quick lookups
 	let entityMapByEntity = $derived(
@@ -350,6 +366,32 @@
 	}
 
 	onMount(async () => {
+
+		// Give the browser a tick to apply all styles
+		requestAnimationFrame(() => {
+			setTimeout(() => {
+
+			// Load color from CSS variables
+			const unlockedToMapColor = cssValue("--sl-color-neutral-300");
+			const lockedForMappingColor = cssValue("--sl-color-warning-700");
+			const unlockedToValidateColor = cssValue("--sl-color-primary-400");
+			const lockedForValidationColor = cssValue("--sl-color-success-700");
+			const unlockedDoneColor = cssValue("--sl-color-success-700");
+			const primary = cssValue("--sl-color-primary-700");
+
+			// Replace your color variables with the ones fetched from CSS
+			fillLayerColors = {
+				'UNLOCKED_TO_MAP': unlockedToMapColor || fillLayerColors['UNLOCKED_TO_MAP'],
+				'LOCKED_FOR_MAPPING': lockedForMappingColor || fillLayerColors['LOCKED_FOR_MAPPING'],
+				'UNLOCKED_TO_VALIDATE': unlockedToValidateColor || fillLayerColors['UNLOCKED_TO_VALIDATE'],
+				'LOCKED_FOR_VALIDATION': lockedForValidationColor || fillLayerColors['LOCKED_FOR_VALIDATION'],
+				'UNLOCKED_DONE': unlockedDoneColor || fillLayerColors['UNLOCKED_DONE'],
+				'default': fillLayerColors['default'], // Keep default color as is
+				'primary': primary || fillLayerColors['primary'],
+			};
+		}, 100);
+		});
+
 		// Register pmtiles protocol
 		if (!maplibre.config.REGISTERED_PROTOCOLS.hasOwnProperty('pmtiles')) {
 			let protocol = new Protocol();
@@ -487,7 +529,6 @@
 	<Geolocation {map}></Geolocation>
 	<!-- The task area geojson -->
 	<GeoJSON id="tasks" data={taskStore.featcol} promoteId="fid">
-		<!-- TODO: colors values should be dynamic -->
 		<FillLayer
 			id="task-fill-layer"
 			hoverCursor="pointer"
@@ -495,17 +536,12 @@
 				'fill-color': [
 					'match',
 					['get', 'state'],
-					'UNLOCKED_TO_MAP',
-					'#ffffff',
-					'LOCKED_FOR_MAPPING',
-					'#008099',
-					'UNLOCKED_TO_VALIDATE',
-					'#ade6ef',
-					'LOCKED_FOR_VALIDATION',
-					'#fceca4',
-					'UNLOCKED_DONE',
-					'#40ac8c',
-					'#c5fbf5', // default color if no match is found
+					'UNLOCKED_TO_MAP', fillLayerColors['UNLOCKED_TO_MAP'],
+					'LOCKED_FOR_MAPPING', fillLayerColors['LOCKED_FOR_MAPPING'],
+					'UNLOCKED_TO_VALIDATE', fillLayerColors['UNLOCKED_TO_VALIDATE'],
+					'LOCKED_FOR_VALIDATION', fillLayerColors['LOCKED_FOR_VALIDATION'],
+					'UNLOCKED_DONE', fillLayerColors['UNLOCKED_DONE'],
+					fillLayerColors['default'], // default color if no match,
 				],
 				'fill-opacity': hoverStateFilter(0.3, 0),
 			}}
@@ -516,7 +552,7 @@
 		<LineLayer
 			layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 			paint={{
-				'line-color': ['case', ['==', ['get', 'fid'], taskStore.selectedTaskId], '#fa1100', '#0fffff'],
+				'line-color': ['case', ['==', ['get', 'fid'], taskStore.selectedTaskId], fillLayerColors['primary'], fillLayerColors['primary']],
 				'line-width': 3,
 				'line-opacity': ['case', ['==', ['get', 'fid'], taskStore.selectedTaskId], 1, 0.35],
 			}}
