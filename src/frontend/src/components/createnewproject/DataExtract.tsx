@@ -135,7 +135,7 @@ const DataExtract = ({
     if (projectDetails.osmFormSelectionName) {
       dataExtractRequestFormData.append('osm_category', projectDetails.osmFormSelectionName);
     }
-    dataExtractRequestFormData.append("geom_type", formValues.primaryGeomType)
+    dataExtractRequestFormData.append('geom_type', formValues.primaryGeomType);
     // Check if geom_type is POINT, then append centroid = true by default
     // TODO later on advanced mode, allow toggle on and off for centroid
     if (formValues.primaryGeomType === 'POINT') {

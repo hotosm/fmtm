@@ -125,7 +125,7 @@ async def get_projects_featcol(
 async def generate_data_extract(
     aoi: geojson.FeatureCollection | geojson.Feature | dict,
     extract_config: Optional[BytesIO] = None,
-    centroid: bool= False,
+    centroid: bool = False,
 ) -> str:
     """Request a new data extract in flatgeobuf format.
 
