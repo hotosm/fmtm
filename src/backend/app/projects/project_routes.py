@@ -19,6 +19,7 @@
 
 import json
 import os
+import yaml
 from io import BytesIO
 from pathlib import Path
 from typing import Annotated, List, Optional
@@ -656,21 +657,28 @@ async def get_data_extract(
     clean_boundary_geojson = merge_polygons(boundary_geojson)
 
     # Get extract config file from existing data_models
-    if osm_category == XLSFormType.buildings:
-        config_filename = XLSFormType(osm_category).name
-        yaml_file = "centroid.yaml" if centroid else f"{geom_type.name.lower()}.yaml"
-        data_model = f"{data_models_path}/{config_filename}/{yaml_file}"
-        with open(data_model, "rb") as data_model_yaml:
-            extract_config = BytesIO(data_model_yaml.read())
-
-    elif osm_category:
+    geom_type = geom_type.name.lower()
+    extract_config = None
+    if osm_category:
         config_filename = XLSFormType(osm_category).name
         data_model = f"{data_models_path}/{config_filename}.yaml"
-        with open(data_model, "rb") as data_model_yaml:
-            extract_config = BytesIO(data_model_yaml.read())
+    
+        with open(data_model, 'r') as f:
+            config = yaml.safe_load(f)
+        
+        data_config = {
+        ('polygon', False): ['ways_poly'],
+        ('point', True): ['ways_poly', 'nodes'],
+        ('point', False): ['nodes'],
+        ('linestring', False): ['ways_line']
+        }
 
-    else:
-        extract_config = None
+        config['from'] = data_config.get((geom_type, centroid))
+        # Serialize to YAML string
+        yaml_str = yaml.safe_dump(config, sort_keys=False)
+
+        # Encode to bytes and wrap in BytesIO
+        extract_config = BytesIO(yaml_str.encode('utf-8'))
 
     geojson_url = await project_crud.generate_data_extract(
         clean_boundary_geojson,

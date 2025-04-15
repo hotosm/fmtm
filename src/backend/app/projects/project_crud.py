@@ -130,11 +130,11 @@ async def generate_data_extract(
     """Request a new data extract in flatgeobuf format.
 
     Args:
-        db (Connection): The database connection.
         aoi (geojson.FeatureCollection | geojson.Feature | dict]):
             Area of interest for data extraction.
         extract_config (Optional[BytesIO], optional):
             Configuration for data extraction. Defaults to None.
+        centroid (bool): Generate centroid of polygons.
 
     Raises:
         HTTPException:
