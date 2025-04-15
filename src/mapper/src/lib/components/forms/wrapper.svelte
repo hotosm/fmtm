@@ -159,7 +159,7 @@
 				const [longitude, latitude] = selectedEntityCoordinate.coordinate as unknown as [number, number];
 				nodes
 					.find((it: any) => it.definition.nodeset === '/data/xlocation')
-					?.setValueState(`${latitude} ${longitude} 0.0 10.0`);
+					?.setValueState(`${latitude} ${longitude} 0.0 0.0`);
 			}
 		}
 	}
