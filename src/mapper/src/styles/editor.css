@@ -1,3 +1,5 @@
+/* Tiptap */
+
 .tiptap {
 	outline: none !important;
 	padding-left: 1rem;
@@ -70,4 +72,60 @@
 .tiptap .ProseMirror-selectednode iframe {
 	transition: outline 0.15s;
 	outline: 6px solid #ece111;
+}
+
+/* Editor */
+
+.editor {
+	--at-apply:
+		rounded-md;
+}
+
+.editor.editable {
+	border: 1px solid #c2c2c2;
+}
+
+.editor.editable .bottom {
+	--at-apply:
+		h-[80px]
+		overflow-y-scroll
+		pt-[3px];
+}
+
+.editor.non-editable .bottom {
+	--at-apply:
+		h-full;
+}
+
+/* Toobar */
+
+.toolbar {
+	border-bottom: 1px solid #c2c2c2;
+	--at-apply:
+		items-center
+		gap-2
+		px-2
+		py-1
+		flex-wrap;
+}
+
+.toolbar .icon {
+	--at-apply:
+		text-[1.2rem]
+		text-[#52525B]
+		hover:bg-[#f7d9d8]
+		p-[2px]
+		rounded
+		cursor-pointer
+		duration-200;
+}
+
+
+.toolbar hot-icon.active {
+	background: #f7d9d8;
+	color: #e84846;
+}
+
+.toolbar sl-tooltip {
+	font-size: 10px;
 }
