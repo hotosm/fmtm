@@ -42,3 +42,4 @@ or inform the field mappers that they need to fix it. They need to:
 - Communicate with field mappers if rework is necessary
 - Merge good-quality data into OSM (probably from JOSM).
 - Mark areas as completed and merged.
+

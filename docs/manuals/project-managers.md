@@ -179,3 +179,4 @@ the following resources:
 [2]: https://fmtm.hotosm.org/ "fmtm"
 [3]: https://docs.fmtm.dev/faq "FAQs"
 [4]: https://hotosm.slack.com/archives/C04PCBFDEGN "Slack channel: #field-mapping-tasking-manager"
+
