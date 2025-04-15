@@ -199,29 +199,29 @@
 						</p>
 					</div>
 					{#if entityComments?.length > 0}
-						<div class="comments">
+						<div class="dialog-comments">
 							<p class="label">{m['dialog_entities_actions.comments']()}</p>
 							:
-							<div class="comments-list">
+							<div class="dialog-comments-list">
 								{#each entityComments?.slice(0, 2) as comment}
-									<div class="comment">
-										<div class="comment-content">
+									<div class="dialog-comment">
+										<div class="dialog-comment-content">
 											<p>{comment?.username}</p>
-											<div class="comment-info">
+											<div class="dialog-comment-info">
 												<hot-icon name="clock-history"></hot-icon>
 												<p class="created-at">{comment?.created_at?.split(' ')[0]}</p>
 											</div>
 										</div>
-										<p class="comment-text">
+										<p class="dialog-comment-text">
 											{comment?.comment?.replace(/#submissionId:uuid:[\w-]+|#featureId:[\w-]+/g, '')?.trim()}
 										</p>
 									</div>
 								{/each}
 								{#if entityComments?.length > 2}
-									<div class="comment-see-all">
-										<div class="comment-see-all-empty"></div>
+									<div class="dialog-comment-see-all">
+										<div class="dialog-comment-see-all-empty"></div>
 										<div
-											class="comment-see-all-link"
+											class="dialog-comment-see-all-link"
 											onclick={() => (showCommentsPopup = true)}
 											onkeydown={(e: KeyboardEvent) => {
 												if (e.key === 'Enter') {

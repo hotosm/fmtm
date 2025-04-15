@@ -1,10 +1,10 @@
-    .comments {
+.comments {
     --at-apply:
         h-[calc(100%-2.25rem)]
         sm:h-[calc(100%-2.6rem)];
 }
 
-.comments .content {
+.comments .comments-content {
     --at-apply:
         overflow-y-scroll
         overflow-x-hidden
@@ -13,12 +13,12 @@
         gap-2;
 }
 
-.comments .content.selected {
+.comments .comments-content.selected {
     --at-apply:
         h-[calc(100%-11.875rem)]
 }
 
-.comments .content.not-selected {
+.comments .comments-content.not-selected {
     --at-apply:
         h-[100%];
 }

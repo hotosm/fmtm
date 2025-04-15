@@ -35,7 +35,7 @@
 <div class="basemaps">
 	<!-- Text above the basemap selector -->
 	<div class="text-above">
-		<div class="content">
+		<div class="basemaps-content">
 			<span>{m['basemaps.manage']()}</span>
 		</div>
 	</div>

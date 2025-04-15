@@ -227,7 +227,7 @@
 			<sl-icon slot="icon" name="chat"></sl-icon>
 			<strong>{commentMention?.username} mentioned you on a comment</strong><br />
 			<p>{commentMention?.comment?.replace(/#submissionId:uuid:[\w-]+|#featureId:[\w-]+/g, '')?.trim()}</p>
-			<div class="content">
+			<div class="page-content">
 				<sl-button
 					onclick={() => {
 						taskStore.dismissCommentMention();

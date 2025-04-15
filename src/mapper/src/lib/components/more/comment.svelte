@@ -21,7 +21,7 @@
 
 <div class="comments">
 	<div
-		class={`content ${taskStore.selectedTaskIndex ? 'selected' : 'not-selected'}`}
+		class={`comments-content ${taskStore.selectedTaskIndex ? 'selected' : 'not-selected'}`}
 	>
 		{#if comments?.length === 0}
 			<div class="no-comments">

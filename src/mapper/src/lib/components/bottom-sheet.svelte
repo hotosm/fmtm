@@ -97,7 +97,7 @@
 		<!-- sheet content -->
 		<div
 			bind:this={sheetContentRef}
-			class={`content 
+			class={`sheet-container-content 
 			${!show ? 'translate-y-[100%]' : 'translate-y-[0%]'
 			} ${isDragging ? 'transition-none' : ''}`}
 		>

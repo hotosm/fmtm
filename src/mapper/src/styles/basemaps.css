@@ -14,14 +14,14 @@
         w-full;
 }
 
-.basemaps .text-above .content {
+.basemaps .text-above .basemaps-content {
     --at-apply:
         font-bold
         text-lg
         font-medium;
 }
 
-.basemaps .text-above .content span {
+.basemaps .text-above .basemaps-content span {
     --at-apply:
         mr-1;
 }

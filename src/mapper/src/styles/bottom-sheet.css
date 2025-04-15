@@ -17,7 +17,7 @@
         pointer-events-none;
 }
 
-.sheet-container .content {
+.sheet-container .sheet-container-content {
     --at-apply:
         shadow-[0px_-10px_10px_5px_rgba(0,0,0,0.05)]
         w-full 
@@ -36,7 +36,7 @@
     border-radius: 50px 50px 0 0;
 }
 
-.sheet-container .content .action {
+.sheet-container .sheet-container-content .action {
     border-top-left-radius: 1rem;
     --at-apply:
         flex
@@ -47,7 +47,7 @@
         w-full;
 }
 
-.sheet-container .content .action span {
+.sheet-container .sheet-container-content .action span {
     --at-apply:
         h-[6px]
         w-[3.25rem]
@@ -57,7 +57,7 @@
         pointer-events-none;
 }
 
-.sheet-container .content .body {
+.sheet-container .sheet-container-content .body {
     --at-apply:
         overflow-y-scroll
         scrollbar

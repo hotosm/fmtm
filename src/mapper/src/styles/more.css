@@ -4,12 +4,12 @@
         font-medium;
 }
 
-.more.comment {
+.more-comment {
     --at-apply:
         h-full;
 }
 
-.more.no-comment {
+.more-no-comment {
     --at-apply:
         h-fit;
 }

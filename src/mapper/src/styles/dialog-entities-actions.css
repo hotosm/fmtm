@@ -95,12 +95,12 @@
 
 /* Comments */
 
-.comments {
+.dialog-comments {
     --at-apply:
         flex;
 }
 
-.comments-list {
+.dialog-comments-list {
     --at-apply:
         flex
         flex-col
@@ -109,7 +109,7 @@
         flex-1;
 }
 
-.comment {
+.dialog-comment {
     --at-apply:
         bg-[#F6F5F5]
         rounded
@@ -117,7 +117,7 @@
         py-1;
 }
 
-.comment-content {
+.dialog-comment-content {
     --at-apply:
         flex
         items-center
@@ -125,38 +125,38 @@
         mb-1;
 }
 
-.comment-info {
+.dialog-comment-info {
     --at-apply:
         flex
         items-center
         gap-2;
 }
 
-.comment-info hot-icon {
+.dialog-comment-info hot-icon {
     --at-apply:
         text-[0.8rem]
         text-red-600
         cursor-pointer;
 }
 
-.comment-info .created-at {
+.dialog-comment-info .created-at {
     --at-apply:
         text-sm;
 }
 
-.comment-text {
+.dialog-comment-text {
     --at-apply:
         font-medium;
 }
 
-.comment-see-all {
+.dialog-comment-see-all {
     --at-apply:
         flex
         items-center
         gap-2;
 }
 
-.comment-see-all-empty {
+.dialog-comment-see-all-empty {
     --at-apply:
         h-[1px]
         bg-gray-200
@@ -164,7 +164,7 @@
         flex-1;
 }
 
-.comment-see-all-link {
+.dialog-comment-see-all-link {
     --at-apply:
         text-sm
         text-gray-600

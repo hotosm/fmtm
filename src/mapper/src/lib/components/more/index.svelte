@@ -74,7 +74,7 @@
 	});
 </script>
 
-<div class={`more ${activeStack === 'comment' ? 'comment' : 'no-comment'}`}>
+<div class={`more ${activeStack === 'comment' ? 'more-comment' : 'more-no-comment'}`}>
 	{#if activeStack === ''}
 		{#each stackGroup as stack}
 			<div
