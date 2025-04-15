@@ -1,6 +1,6 @@
 <script lang="ts">
+	import '$styles/forms.css';
 	import type { SlDrawer } from '@shoelace-style/shoelace';
-
 	import { getCommonStore } from '$store/common.svelte.ts';
 	import { getLoginStore } from '$store/login.svelte.ts';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
