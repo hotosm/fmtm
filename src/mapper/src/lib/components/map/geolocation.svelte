@@ -1,5 +1,5 @@
 <script lang="ts">
-	import '$styles/geolocation.css';
+	import '$styles/map-geolocation.css';
 	import { Control, ControlButton, ControlGroup, GeoJSON, SymbolLayer, type LngLatLike } from 'svelte-maplibre';
 	import type { FeatureCollection } from 'geojson';
 	import MapLibreGlDirections, { LoadingIndicatorControl } from '@maplibre/maplibre-gl-directions';
