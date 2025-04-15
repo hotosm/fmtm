@@ -26,7 +26,7 @@ const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 const primaryGeomOptions = [
   { name: 'primary_geom_type', value: 'POLYGON', label: 'Polygons (e.g. buildings)' },
-  { name: 'primary_geom_type', value: 'POINT', label: 'Points, or polygon centroids' },
+  { name: 'primary_geom_type', value: 'POINT', label: 'Points (e.g. POIs)' },
   { name: 'primary_geom_type', value: 'LINESTRING', label: 'Lines (e.g. roads, rivers)' },
 ];
 
@@ -325,7 +325,7 @@ const DataExtract = ({
                           onChange={(e) => handleCustomChange('includeCentroid', e.target.checked)}
                         />
                         <label htmlFor="includeCentroid" className="fmtm-text-sm">
-                          Include polygons centroid
+                          Include polygon centroids
                         </label>
                       </div>
                     )}
