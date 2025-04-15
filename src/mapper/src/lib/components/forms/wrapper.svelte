@@ -106,7 +106,7 @@
 			if (entitiesStore.userLocationCoord) {
 				const [longitude, latitude] = entitiesStore.userLocationCoord as [number, number];
 				// add 0.0 for altitude and 10.0 for accuracy as defaults
-				submission_xml = submission_xml.replace('<warmup/>', `<warmup>${latitude} ${longitude} 0.0 10.0</warmup>`);
+				submission_xml = submission_xml.replace('<warmup/>', `<warmup>${latitude} ${longitude} 0.0 0.0</warmup>`);
 			}
 
 			const url = `${API_URL}/submission?project_id=${projectId}`;
