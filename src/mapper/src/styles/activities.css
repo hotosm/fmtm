@@ -41,7 +41,7 @@
 .activities .event-content .icon {
     --at-apply:
         text-[1.7rem]
-        text-red-600
+        text-primary-600
         cursor-pointer
         duration-200
         rounded-full
@@ -86,7 +86,7 @@
 .activities .event-content .detail .meta .icon {
     --at-apply:
         text-[1rem]
-        text-red-600
+        text-primary-600
         cursor-pointer
         duration-200;
 }
@@ -118,7 +118,7 @@
     --at-apply:
         text-[1rem]
         text-neutral-900
-        hover:text-red-600
+        hover:text-primary-600
         cursor-pointer
         duration-200;
 }

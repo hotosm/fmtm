@@ -23,13 +23,13 @@
 	function getStatusStyle(status: statusType) {
 		switch (status) {
 			case 'READY':
-				return 'bg-gray-100 text-gray-700';
+				return 'bg-neutral-100 text-neutral-700';
 			case 'OPENED_IN_ODK':
-				return 'bg-yellow-100 text-yellow-700';
+				return 'bg-warning-100 text-warning-700';
 			case 'SURVEY_SUBMITTED':
-				return 'bg-green-100 text-green-700';
+				return 'bg-success-100 text-success-700';
 			case 'MARKED_BAD':
-				return 'bg-red-100 text-red-700';
+				return 'bg-danger-100 text-danger-700';
 			case 'VALIDATED':
 				return 'bg-blue-100 text-blue-700';
 		}

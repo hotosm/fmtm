@@ -31,7 +31,7 @@
         text-sm
         sm:text-base
         font-bold
-        text-red-600
+        text-primary-600
         h-[2.2rem]
         sm:h-[3rem] 
         max-w-[6rem]
@@ -65,11 +65,10 @@
 .header .user hot-icon {
     --at-apply:
         text-[1.5rem]
-        text-neutral-800
         leading-0
         cursor-pointer
-        text-red-600
         duration-200;
+    color: var(--sl-color-primary-700);
 }
 
 .header .user img {
@@ -114,7 +113,7 @@
         text-neutral-800
         leading-0
         cursor-pointer
-        hover:text-red-600
+        hover:text-primary-600
         duration-200;
 }
 
@@ -132,7 +131,7 @@
 
 .menu-item {
     --at-apply:
-        hover:text-red-600
+        hover:text-primary-600
         cursor-pointer
         duration-200
         decoration-none

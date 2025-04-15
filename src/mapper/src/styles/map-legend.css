@@ -62,6 +62,6 @@
 }
 
 .map-legend .task-status .bad {
-    background-color: var(--sl-color-red-700);
+    background-color: var(--sl-color-primary-700);
 }
 

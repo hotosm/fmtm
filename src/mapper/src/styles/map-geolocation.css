@@ -36,7 +36,7 @@
 
 .geolocation .geolocate-icon.toggle {
     --at-apply:
-        text-red-600;
+        text-primary-600;
 }
 
 .geolocation .geolocate-icon.not-toggle {

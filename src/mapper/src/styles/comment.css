@@ -56,7 +56,7 @@
 .comments .comment .icon {
     --at-apply:
         text-[1.7rem]
-        text-red-600
+        text-primary-600
         cursor-pointer
         duration-200
         rounded-full
@@ -103,7 +103,7 @@
 .comments .comment .details .history .icon {
     --at-apply:
         text-[1rem]
-        text-red-600
+        text-primary-600
         cursor-pointer
         duration-200;
 }
