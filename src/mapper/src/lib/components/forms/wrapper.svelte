@@ -25,6 +25,7 @@
 	let entityMap = $derived(new Map(entitiesStore.entitiesStatusList.map((entity) => [entity.entity_id, entity])));
 	const selectedEntityId = $derived(entitiesStore.selectedEntity || '');
 	const selectedEntity = $derived(entityMap.get(selectedEntityId));
+	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
 
 	let { display = $bindable(false), entityId, webFormsRef = $bindable(undefined), projectId, taskId }: Props = $props();
 	let drawerRef: SlDrawer;
@@ -149,6 +150,17 @@
 			}
 
 			nodes.find((it: any) => it.definition.nodeset === '/data/task_id')?.setValueState(`${taskId}`);
+
+			if (selectedEntity?.osmid) {
+				nodes.find((it: any) => it.definition.nodeset === '/data/xid')?.setValueState(`${selectedEntity?.osmid}`);
+			}
+
+			if (selectedEntityCoordinate) {
+				const [longitude, latitude] = selectedEntityCoordinate.coordinate as unknown as [number, number];
+				nodes
+					.find((it: any) => it.definition.nodeset === '/data/xlocation')
+					?.setValueState(`${latitude} ${longitude} 0.0 10.0`);
+			}
 		}
 	}
 	const setFormLanguage = (newLocale: string) => {
