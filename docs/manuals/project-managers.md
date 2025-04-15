@@ -102,7 +102,7 @@ Alternatively, request the creation of a new organisation for your team:
 3. Now submit the form. The request will reach the Admin who will create your
    organization and inform you through the email.
    ![image](https://github.com/user-attachments/assets/6efffe4c-f887-4ef0-95e5-b432ee227a91)
-   
+
 ## Steps To View Your Submissions and Infographics
 
 1. Go to the respective project. On the bottom left side,
@@ -176,7 +176,5 @@ the following resources:
 - Ask your doubts in the [Slack channel: #field-mapping-tasking-manager][4]
 
 [1]: https://tasks.hotosm.org/learn/map "If you are new to mapping"
-[2]: https://fmtm.hotosm.org/ "fmtm"
 [3]: https://docs.fmtm.dev/faq "FAQs"
 [4]: https://hotosm.slack.com/archives/C04PCBFDEGN "Slack channel: #field-mapping-tasking-manager"
-
