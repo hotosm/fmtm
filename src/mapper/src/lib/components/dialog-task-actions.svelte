@@ -94,7 +94,7 @@
 					</sl-button>
 				</div>
 			{:else if taskStore.selectedTaskState === 'LOCKED_FOR_MAPPING'}
-				<p class="lock-selected">{m['dialog_task_actions.task']} #{taskStore.selectedTaskIndex} {m['dialog_task_actions.locked_is_complete']} </p>
+				<p class="lock-selected">{m['dialog_task_actions.task']()} #{taskStore.selectedTaskIndex} {m['dialog_task_actions.locked_is_complete']()} </p>
 				<div class="lock-actions">
 					<sl-button
 						onclick={() => {
@@ -134,7 +134,7 @@
 						tabindex="0"
 					>
 						<hot-icon slot="prefix" name="check"></hot-icon>
-						<span>{m['dialog_entities_actions.complete_mapping']()}</span>
+						<span>{m['dialog_task_actions.complete_mapping']()}</span>
 					</sl-button>
 				</div>
 			{/if}
