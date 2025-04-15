@@ -57,6 +57,7 @@ from app.db.enums import (
     HTTPStatus,
     ProjectRole,
     XLSFormType,
+    DbGeomType
 )
 from app.db.languages_and_countries import countries
 from app.db.models import (
@@ -643,6 +644,8 @@ async def get_data_extract(
     geojson_file: UploadFile = File(...),
     # FIXME this is currently hardcoded but needs to be user configurable via UI
     osm_category: Annotated[Optional[XLSFormType], Form()] = XLSFormType.buildings,
+    centroid:Annotated[bool, Form()] = False,
+    geom_type: Annotated[DbGeomType, Form()] = DbGeomType.POLYGON,
 ):
     """Get a new data extract for a given project AOI.
 
@@ -653,17 +656,26 @@ async def get_data_extract(
     clean_boundary_geojson = merge_polygons(boundary_geojson)
 
     # Get extract config file from existing data_models
-    if osm_category:
+    if osm_category == XLSFormType.buildings:
+        config_filename = XLSFormType(osm_category).name
+        yaml_file = "centroid.yaml" if centroid else f"{geom_type.name.lower()}.yaml"
+        data_model = f"{data_models_path}/{config_filename}/{yaml_file}"
+        with open(data_model, "rb") as data_model_yaml:
+            extract_config = BytesIO(data_model_yaml.read())
+
+    elif osm_category:
         config_filename = XLSFormType(osm_category).name
         data_model = f"{data_models_path}/{config_filename}.yaml"
         with open(data_model, "rb") as data_model_yaml:
             extract_config = BytesIO(data_model_yaml.read())
+
     else:
         extract_config = None
 
     geojson_url = await project_crud.generate_data_extract(
         clean_boundary_geojson,
         extract_config,
+        centroid,
     )
 
     return JSONResponse(status_code=HTTPStatus.OK, content={"url": geojson_url})
