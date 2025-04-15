@@ -146,9 +146,9 @@ async def get_tasks_near_me(
 @router.get("/summaries", response_model=project_schemas.PaginatedProjectSummaries)
 async def read_project_summaries(
     db: Annotated[Connection, Depends(db_conn)],
+    current_user: Annotated[AuthUser, Depends(public_endpoint)],
     page: int = Query(1, ge=1),  # Default to page 1, must be greater than or equal to 1
     results_per_page: int = Query(13, le=100),
-    current_user: Annotated[Optional[AuthUser], Depends(public_endpoint)] = None,
     org_id: Optional[int] = None,
     user_sub: Optional[str] = None,
     hashtags: Optional[str] = None,
