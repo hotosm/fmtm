@@ -41,7 +41,7 @@
 
 .geolocation .geolocate-icon.not-toggle {
     --at-apply:
-        text-[#52525B];
+        text-neutral-800;
 }
 
 .geolocation-exit {

@@ -15,13 +15,13 @@
 }
 
 .tiptap code {
-	background-color: rgba(#616161, 0.1);
-	color: #616161;
+	background-color: rgba(97,97,97, 0.1);
+	color: var(--sl-color-neutral-700);
 }
 
 .tiptap pre {
-	background: #0d0d0d;
-	color: #fff;
+	background: var(--sl-color-neutral-1000);
+	color: var(--sl-color-neutral-0);
 	font-family: 'JetBrainsMono', monospace;
 	padding: 0.75rem 1rem;
 	border-radius: 0.5rem;
@@ -40,23 +40,23 @@
 
 .tiptap blockquote {
 	padding-left: 1rem;
-	border-left: 2px solid #c2c2c2;
+	border-left: 2px solid var(--sl-color-neutral-200);
 }
 
 .tiptap hr {
 	border: none;
-	border-top: 1px solid #c2c2c2;
+	border-top: 1px solid var(--sl-color-neutral-200);
 	margin: 1.5rem 0;
 }
 
 .tiptap a {
-	color: #0092d1;
+	color: var(--sl-color-primary-700);
 	text-decoration: underline;
 	cursor: pointer;
 }
 
 .tiptap iframe {
-	border: 8px solid #000;
+	border: 8px solid var(--sl-color-neutral-0);
 	border-radius: 4px;
 	min-width: 200px;
 	min-height: 200px;
@@ -71,7 +71,7 @@
 
 .tiptap .ProseMirror-selectednode iframe {
 	transition: outline 0.15s;
-	outline: 6px solid #ece111;
+	outline: 6px solid var(--sl-color-warning-400);
 }
 
 /* Editor */
@@ -82,7 +82,7 @@
 }
 
 .editor.editable {
-	border: 1px solid #c2c2c2;
+	border: 1px solid var(--sl-color-neutral-0);
 }
 
 .editor.editable .bottom {
@@ -100,7 +100,7 @@
 /* Toobar */
 
 .toolbar {
-	border-bottom: 1px solid #c2c2c2;
+	border-bottom: 1px solid var(--sl-color-neutral-0);
 	--at-apply:
 		items-center
 		gap-2
@@ -112,8 +112,8 @@
 .toolbar .icon {
 	--at-apply:
 		text-[1.2rem]
-		text-[#52525B]
-		hover:bg-[#f7d9d8]
+		text-neutral-800
+		hover:bg-rose-50
 		p-[2px]
 		rounded
 		cursor-pointer
@@ -122,8 +122,8 @@
 
 
 .toolbar hot-icon.active {
-	background: #f7d9d8;
-	color: #e84846;
+	background: var(--sl-color-primary-50);
+	color: var(--sl-color-primary-500);
 }
 
 .toolbar sl-tooltip {

@@ -32,7 +32,7 @@
 
 .comments .no-comments p {
     --at-apply:
-        text-[#484848]
+        text-neutral-900
         text-base;
 }
 
@@ -42,7 +42,7 @@
         flex-col
         gap-2
         py-3
-        bg-[#F6F5F5]
+        bg-neutral-50
         rounded-md;
 }
 
@@ -89,7 +89,7 @@
 
 .comments .comment .details .task-id {
     --at-apply:
-        text-[#484848]
+        text-neutral-900
         text-sm;
 }
 
@@ -110,7 +110,7 @@
 
 .comments .comment .details .history .created-at {
     --at-apply:
-        text-[#484848]
+        text-neutral-900
         text-sm;
 }
 

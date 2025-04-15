@@ -37,13 +37,13 @@
         opacity-40
         border-solid
         border-[1px]
-        border-[#D0D0D0];
+        border-neutral-100;
 }
 
 .map-legend .task-status .label {
     --at-apply:
         font-regular
-        text-[#494949]
+        text-neutral-800
         text-nowrap
         leading-0;
 }

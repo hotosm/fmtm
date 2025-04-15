@@ -37,7 +37,7 @@
 .task-action-modal .icon hot-icon {
     --at-apply:
         text-[1.5rem]
-        text-[#52525B]
+        text-neutral-800
         cursor-pointer
         hover:text-red-600
         duration-200;
@@ -52,7 +52,7 @@
 
 .selected-title {
     --at-apply:
-        text-[#333]
+        text-neutral-950
         text-lg
         font-semibold;
 }
@@ -72,18 +72,18 @@
 .item p.label {
     --at-apply
         min-w-[6.25rem]
-        text-[#2B2B2B];
+        text-neutral-950;
 }
 
 .item p.value {
     --at-apply:
-        text-[#161616]
+        text-neutral-1000
         font-medium ml-2;
 }
 
 .item p.status {
     --at-apply:
-        text-[#161616]
+        text-neutral-1000
         font-medium
         border-[1px]
         border-solid
@@ -111,7 +111,7 @@
 
 .dialog-comment {
     --at-apply:
-        bg-[#F6F5F5]
+        bg-neutral-50
         rounded
         px-2
         py-1;
@@ -259,7 +259,7 @@
 
 .feature-comment {
     --at-apply:
-        bg-[#F6F5F5]
+        bg-neutral-50
         rounded
         px-2
         py-1;

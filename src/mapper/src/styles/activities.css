@@ -17,7 +17,7 @@
 
 .activities .header p {
     --at-apply:
-        text-[#484848]
+        text-neutral-900
         text-base;
 }
 
@@ -27,7 +27,7 @@
         flex-col
         gap-2
         py-3
-        bg-[#F6F5F5]
+        bg-neutral-50
         rounded-md mr-1;
 }
 
@@ -72,7 +72,7 @@
 
 .activities .event-content .detail .meta .task-id {
     --at-apply:
-        text-[#484848]
+        text-neutral-900
         text-sm;
 }
 
@@ -93,7 +93,7 @@
 
 .activities .event-content .detail .meta .created-at {
     --at-apply:
-        text-[#484848]
+        text-neutral-900
         text-sm;
         
 }
@@ -110,14 +110,14 @@
 .activities .event-more .username {
     --at-apply:
         font-normal
-        text-[#484848]
+        text-neutral-900
         flex-1;
 }
 
 .activities .event-more .icon {
     --at-apply:
         text-[1rem]
-        text-[#484848]
+        text-neutral-900
         hover:text-red-600
         cursor-pointer
         duration-200;

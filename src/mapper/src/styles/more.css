@@ -84,7 +84,7 @@
 
 .active-stack-instructions p {
     --at-apply:
-        text-[#484848]
+        text-neutral-900
         text-base;
 }
 

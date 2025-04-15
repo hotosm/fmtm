@@ -21,7 +21,7 @@
         text-[0.75rem]
         leading-normal
         font-normal
-        text-[#484848];
+        text-neutral-900;
 }
 
 .pagination .content  {
@@ -47,7 +47,7 @@
         leading-normal
         font-normal
         whitespace-nowrap
-        text-[#484848];
+        text-neutral-900;
 }
 
 .pagination .goto-page .input {
@@ -55,7 +55,7 @@
         body-md
         outline-none
         border
-        border-[#D0D5DD]
+        border-neutral-100
         rounded-lg
         w-8
         h-8
@@ -88,20 +88,20 @@
 .pagination .actions .current-page {
     --at-apply:
         cursor-not-allowed
-        text-[#BDBDBD];
+        text-neutral-200;
 }
 
 .pagination .actions .not-current-page {
     --at-apply:
-        hover:bg-[#FFEDED]
+        hover:bg-primary-50
         duration-100
-        hover:text-[#B11E20];
+        hover:text-primary-900;
 }
 
 .pagination .actions button hot-icon {
     --at-apply:
         text-[0.8rem]
-        text-[#B11E20]
+        text-primary-900
         cursor-pointer;
 }
 
@@ -132,14 +132,14 @@
 .pagination .page-num.first-page {
     --at-apply:
         font-bold
-        text-[#D73F37];
+        text-primary-600;
 }
 
 
 .pagination .page-num.not-first-page {
     --at-apply:
-        texy-[#484848]
-        text-[#212121];
+        texy-neutral-900
+        text-neutral-950
 }
 
 .pagination .next-button {
@@ -158,20 +158,20 @@
 .pagination .next-button.last-page {
     --at-apply:
         cursor-not-allowed
-        text-[#BDBDBD];
+        text-neutral-200;
 }
 
 .pagination .next-button.not-last-page {
     --at-apply:
-        hover:bg-[#FFEDED]
+        hover:bg-primary-50
         duration-100
-        hover:text-[#B11E20];
+        hover:text-primary-900;
 }
 
 .pagination .next-button hot-icon {
     --at-apply:
         text-[0.8rem]
-        text-[#B11E20]
+        text-primary-900
         cursor-pointer;
 }
 

@@ -34,12 +34,12 @@
         hover:border-red-600;
 }
 .layer-card:hover {
-    border-color: #d73f3f;
+    border-color: var(--sl-color-primary-600);
     transition-duration: 200ms;
 }
 
 .layer-card.active {
-    border-color: #d73f3f;
+    border-color: var(--sl-color-primary-600);
 }
 
 .layer-card img {

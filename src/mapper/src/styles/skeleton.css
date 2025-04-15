@@ -2,7 +2,7 @@
     --at-apply:
         animate-pulse
         rounded-md
-        bg-[#D7D7D7];
+        bg-neutral-100;
 }
 
 

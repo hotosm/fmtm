@@ -72,7 +72,7 @@
 
 .project-card {
     --at-apply:
-        hover:bg-[#FFEDED]
+        hover:bg-primary-50
         hover:shadow-xl
         duration-500
         rounded-lg
@@ -113,7 +113,7 @@
         text-[0.75rem]
         leading-[0.9rem]
         font-semibold
-        text-[#706E6E]
+        text-neutral-600
         mb-1;
 }
 
@@ -124,7 +124,7 @@
         leading-normal
         font-normal
         line-clamp-1
-        text-[#7A7676];
+        text-neutral-600;
 }
 
 .project-card .meta2 .project-name {
@@ -132,7 +132,7 @@
         text-[0.875rem]
         leading-normal
         font-semibold
-        text-[#090909]
+        text-neutral-1000
         line-clamp-1
         capitalize
         mb-1;
@@ -145,7 +145,7 @@
         font-normal
         capitalize
         line-clamp-3
-        text-[#2B2B2B]
+        text-neutral-950
         min-h-[3.2rem];
 }
 

@@ -56,12 +56,12 @@
 .login-dialog .option {
     --at-apply:
         option-card
-        bg-[#F5F5F5]
+        bg-neutral-50
         text-gray-700
         p-3 border-1
         border-solid
         border-white
-        hover:border-[#d73f3f]
+        hover:border-primary-600
         rounded-md
         duration-300
         hover:text-red-600

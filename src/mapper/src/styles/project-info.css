@@ -1,7 +1,7 @@
 .project-info-name {
     --at-apply:
         text-lg
-        text-[#333333]
+        text-neutral-950
         font-semibold
         mb-6
         mt-3;
@@ -17,14 +17,14 @@
 .project-info .description-title {
     --at-apply:
         text-base
-        text-[#D73F3F]
+        text-primary-600
         font-semibold;
 }
 
 .project-info .description {
     --at-apply:
         text-sm
-        text-[#2B2B2B]
+        text-neutral-950
         font-regular;
 }
 
@@ -44,13 +44,13 @@
 .project-info .description-key {
     --at-apply:
         text-sm
-        text-[#2B2B2B]
+        text-neutral-950
         font-regular;
 }
 .project-info .description-value {
     --at-apply:
         text-sm
-        text-[#161616]
+        text-neutral-1000
         font-semibold;
 }
 .project-info .description-value span {

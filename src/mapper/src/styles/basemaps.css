@@ -62,7 +62,7 @@
 .basemaps .button .icon {
     --at-apply:
         text-[1rem]
-        text-[#b91c1c]
+        text-primary-900
         cursor-pointer
         duration-200;
 }

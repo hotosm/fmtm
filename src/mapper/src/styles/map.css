@@ -33,7 +33,7 @@
         border-1
         border-solid
         border-red-600
-        bg-[#FFEDED];
+        bg-primary-50;
 }
 
 .map .control .sync-button {
@@ -48,7 +48,7 @@
         w-[2.25rem]
         h-[2.25rem]
         rounded-full;
-    border: 1px solid #d73f3f;
+    border: 1px solid var(--sl-color-primary-600);
 }
 
 .map .control .toggle-legend {
@@ -59,10 +59,10 @@
 }
 
 .map .control .toggle-legend .icon {
-    border: 1px solid #D7D7D7;
+    border: 1px solid var(--sl-color-neutral-100);
     --at-apply:
         text-[1.7rem]
-        text-[#333333]
+        text-neutral-950
         bg-white
         p-1
         rounded-full
@@ -75,7 +75,6 @@
     --at-apply:
         absolute
         top-7
-        bg-[#F097334D]
         min-w-[14rem]
         z-10
         left-[50%]
@@ -96,7 +95,6 @@
         absolute
         top-7
         w-fit
-        bg-[#F097334D]
         z-10
         left-[50%]
         translate-x-[-50%]
@@ -154,7 +152,7 @@
 .map-control-container .icon {
     --at-apply:
         text-[1.5rem]
-        text-[#52525B]
+        text-neutral-800
         cursor-pointer
         hover:text-red-600
         duration-200;

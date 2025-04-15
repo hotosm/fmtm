@@ -52,7 +52,7 @@
         h-[6px]
         w-[3.25rem]
         block
-        bg-[#d2d2d4]
+        bg-neutral-100
         rounded-full
         pointer-events-none;
 }

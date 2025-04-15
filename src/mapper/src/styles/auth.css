@@ -17,7 +17,7 @@
 .spinner h2 {
     --at-apply:
         font-barlow
-        text-[#757575]
+        text-neutral-600
         font-semibold;
 }
 
