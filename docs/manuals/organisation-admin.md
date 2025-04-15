@@ -1,4 +1,4 @@
-## Steps To Create A Project In FMTM
+# Steps To Create A Project In FMTM
 
 1. Go to [fmtm][2] .
 2. In the header, you'll find two tabs: Explore Projects and Manage Organization.
