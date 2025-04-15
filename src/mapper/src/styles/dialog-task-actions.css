@@ -4,7 +4,7 @@
     --at-apply:
         flex
         justify-center
-        !w-[100vw]
+        w-[100vw]
         absolute
         bottom-[4rem]
         left-0
@@ -34,7 +34,7 @@
 
 .dialog-task-actions .icon hot-icon {
     --at-apply:
-        !text-[1.5rem]
+        text-[1.5rem]
         text-[#52525B]
         cursor-pointer
         hover:text-red-600
@@ -66,7 +66,7 @@
 
 .dialog-task-new-feature .icon hot-icon {
     --at-apply:
-        !text-[1.25rem]
+        text-[1.25rem]
         duration-200
         text-[#333333]
         font-light
@@ -104,7 +104,7 @@
 
 .dialog-task-new-feature .unlock-actions hot-icon {
     --at-apply:
-        !text-[1rem]
+        text-[1rem]
         text-white
         cursor-pointer
         duration-200;
@@ -121,7 +121,7 @@
 
 .dialog-task-new-feature .lock-actions hot-icon {
     --at-apply:
-        !text-[1rem]
+        text-[1rem]
         text-[#d73f37]
         cursor-pointer
         duration-200

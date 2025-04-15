@@ -64,7 +64,7 @@
 
 .header .user hot-icon {
     --at-apply:
-        !text-[1.5rem]
+        text-[1.5rem]
         text-[#52525B]
         leading-0
         cursor-pointer
@@ -110,7 +110,7 @@
 
 .header .drawer-icon {
     --at-apply:
-        !text-[1.8rem]
+        text-[1.8rem]
         text-[#52525B]
         leading-0
         cursor-pointer

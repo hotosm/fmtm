@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '$styles/page.css';
 	import '$styles/button.css';
+	import '$styles/map.css';
 	import '@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css';
 	import { onMount } from 'svelte';
 	import {
@@ -394,7 +395,7 @@
 	bind:map
 	bind:loaded
 	style={osmStyle}
-	class="flex-auto w-full sm:aspect-video h-[calc(100%-4rem)]"
+	class="map"
 	center={[0, 0]}
 	zoom={2}
 	attributionControl={false}
@@ -422,23 +423,21 @@
 	<!-- Controls -->
 	<NavigationControl position="top-left" showZoom={false} />
 	<ScaleControl />
-	<Control class="flex flex-col gap-y-2" position="top-left">
+	<Control class="control" position="top-left">
 		<ControlGroup>
 			<ControlButton title="Zoom to project" on:click={zoomToProject}
-				><hot-icon name="crop-free" class={`!text-[1.2rem] cursor-pointer duration-200 text-black`}
+				><hot-icon name="crop-free" class="icon"
 				></hot-icon></ControlButton
 			>
 		</ControlGroup></Control
 	>
-	<Control class="flex flex-col gap-y-2" position="bottom-right">
-		<div
-			class="rounded-full w-[2.25rem] h-[2.25rem] overflow-hidden flex items-center justify-center border-1 border-solid border-red-600 bg-[#FFEDED]"
-		>
+	<Control class="control" position="bottom-right">
+		<div class="content">
 			<sl-icon-button
 				name="arrow-repeat"
 				label="Settings"
 				disabled={entitiesStore.syncEntityStatusLoading}
-				class={`text-[1.25rem] rotate-90 text-red-600 ${entitiesStore.syncEntityStatusLoading && 'animate-spin'}`}
+				class={`sync-button ${entitiesStore.syncEntityStatusLoading && 'animate-spin'}`}
 				onclick={async () => await entitiesStore.syncEntityStatus(projectId)}
 				onkeydown={async (e: KeyboardEvent) => {
 					e.key === 'Enter' && (await entitiesStore.syncEntityStatus(projectId));
@@ -461,15 +460,14 @@
 			tabindex="0"
 		>
 			<img
-				style="border: 1px solid #d73f3f;"
-				class="w-[2.25rem] h-[2.25rem] rounded-full"
+				class="basemap-icon"
 				src={selectedStyleUrl}
 				alt="Basemap Icon"
 			/>
 		</div>
 		<div
 			aria-label="toggle legend"
-			class="group text-nowrap cursor-pointer"
+			class="toggle-legend"
 			onclick={() => (selectedControl = 'legend')}
 			role="button"
 			onkeydown={(e) => {
@@ -480,9 +478,8 @@
 			tabindex="0"
 		>
 			<hot-icon
-				style="border: 1px solid #D7D7D7;"
 				name="legend-toggle"
-				class="!text-[1.7rem] text-[#333333] bg-white p-1 rounded-full group-hover:text-red-600 duration-200"
+				class="icon"
 			></hot-icon>
 		</div>
 	</Control>
@@ -490,6 +487,7 @@
 	<Geolocation {map}></Geolocation>
 	<!-- The task area geojson -->
 	<GeoJSON id="tasks" data={taskStore.featcol} promoteId="fid">
+		<!-- TODO: colors values should be dynamic -->
 		<FillLayer
 			id="task-fill-layer"
 			hoverCursor="pointer"
@@ -514,6 +512,7 @@
 			beforeLayerType="symbol"
 			manageHoverState
 		/>
+		<!-- TODO: colors values should be dynamic -->
 		<LineLayer
 			layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 			paint={{
@@ -552,6 +551,7 @@
 		geojsonUpdateDependency={[entityMapByEntity, entityMapByOsm]}
 	>
 		{#if primaryGeomType === MapGeomTypes.POLYGON}
+			<!-- TODO: colors values should be dynamic -->
 			<FillLayer
 				id="entity-polygon-layer"
 				paint={{
@@ -588,6 +588,7 @@
 				beforeLayerType="symbol"
 				manageHoverState
 			/>
+			<!-- TODO: colors values should be dynamic -->
 			<LineLayer
 				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 				paint={{
@@ -599,6 +600,7 @@
 				manageHoverState
 			/>
 		{:else if primaryGeomType === MapGeomTypes.POINT}
+			<!-- TODO: colors values should be dynamic -->
 			<SymbolLayer
 				id="entity-point-layer"
 				applyToClusters={false}
@@ -629,6 +631,7 @@
 	{/if}
 	<GeoJSON id="bad-geoms" data={entitiesStore.badGeomList}>
 		{#if drawGeomType === MapGeomTypes.POLYGON}
+			<!-- TODO: colors values should be dynamic -->
 			<FillLayer
 				id="bad-geom-fill-layer"
 				hoverCursor="pointer"
@@ -639,6 +642,7 @@
 				beforeLayerType="symbol"
 				manageHoverState
 			/>
+			<!-- TODO: colors values should be dynamic -->
 			<LineLayer
 				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 				paint={{
@@ -649,6 +653,7 @@
 				manageHoverState
 			/>
 		{:else if drawGeomType === MapGeomTypes.POINT}
+			<!-- TODO: colors values should be dynamic -->
 			<CircleLayer
 				id="bad-geom-circle-layer"
 				hoverCursor="pointer"
@@ -663,6 +668,7 @@
 	</GeoJSON>
 	<GeoJSON id="new-geoms" data={addStatusToGeojsonProperty(entitiesStore.newGeomList, 'new')}>
 		{#if drawGeomType === MapGeomTypes.POLYGON}
+			<!-- TODO: colors values should be dynamic -->
 			<FillLayer
 				id="new-entity-polygon-layer"
 				paint={{
@@ -699,6 +705,7 @@
 				beforeLayerType="symbol"
 				manageHoverState
 			/>
+			<!-- TODO: colors values should be dynamic -->
 			<LineLayer
 				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 				paint={{
@@ -711,6 +718,7 @@
 			/>
 		{:else if drawGeomType === MapGeomTypes.POINT}
 			<!-- id="new-geom-symbol-layer" -->
+			 <!-- TODO: colors values should be dynamic -->
 			<SymbolLayer
 				id="new-entity-point-layer"
 				applyToClusters={false}
@@ -753,15 +761,15 @@
 
 	<!-- Help text for user on first load -->
 	{#if projectSetupStep === projectSetupStepEnum['task_selection']}
-		<div class="absolute top-7 bg-[#F097334D] min-w-[14rem] z-10 left-[50%] translate-x-[-50%] p-1">
-			<p class="uppercase font-barlow font-medium text-base">{m['map.click_on_a_task']()}</p>
+		<div class="help-text">
+			<p>{m['map.click_on_a_task']()}</p>
 		</div>
 	{/if}
 
 	<!-- Help for drawing a new geometry -->
 	{#if displayDrawHelpText}
-		<div class="absolute top-7 w-fit bg-[#F097334D] z-10 left-[50%] translate-x-[-50%] p-1">
-			<p class="uppercase font-barlow font-medium text-base">{m['map.click_on_the_map']()}</p>
+		<div class="help-text-2">
+			<p>{m['map.click_on_the_map']()}</p>
 		</div>
 	{/if}
 </MapLibre>
@@ -769,13 +777,13 @@
 <div
 	use:clickOutside
 	onclick_outside={() => (selectedControl = null)}
-	class={`font-barlow flex justify-center !w-[100vw] absolute left-0 z-20 duration-400 ${selectedControl ? 'bottom-[4rem]' : '-bottom-[100%] pointer-events-none'}`}
+	class={`map-control-container ${selectedControl ? 'selected' : 'not-selected'}`}
 >
-	<div class="bg-white w-full font-regular md:max-w-[580px] px-4 py-3 sm:py-4 rounded-t-3xl">
-		<div class="flex justify-end">
+	<div class="wrapper">
+		<div class="icon-container">
 			<hot-icon
 				name="close"
-				class="!text-[1.5rem] text-[#52525B] cursor-pointer hover:text-red-600 duration-200"
+				class="icon"
 				onclick={() => (selectedControl = null)}
 				onkeydown={(e: KeyboardEvent) => {
 					if (e.key === 'Enter') {

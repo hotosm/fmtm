@@ -5,7 +5,7 @@
         font-barlow
         flex
         justify-center
-        !w-[100vw]
+        w-[100vw]
         absolute
         bottom-[4rem]
         left-0
@@ -36,7 +36,7 @@
 
 .task-action-modal .icon hot-icon {
     --at-apply:
-        !text-[1.5rem]
+        text-[1.5rem]
         text-[#52525B]
         cursor-pointer
         hover:text-red-600
@@ -134,7 +134,7 @@
 
 .comment-info hot-icon {
     --at-apply:
-        !text-[0.8rem]
+        text-[0.8rem]
         text-red-600
         cursor-pointer;
 }
@@ -190,7 +190,7 @@
 
 .entity hot-icon {
     --at-apply:
-        !text-[1rem]
+        text-[1rem]
         cursor-pointer
         duration-200;
 }
@@ -289,7 +289,7 @@
 
 .feature-comment-history sl-icon {
     --at-apply:
-        !text-[0.8rem]
+        text-[0.8rem]
         text-red-600 
         cursor-pointer;
 }

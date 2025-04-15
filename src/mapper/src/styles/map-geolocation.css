@@ -29,7 +29,7 @@
 
 .geolocation .geolocate-icon {
     --at-apply:
-        !text-[1.2rem]
+        text-[1.2rem]
         cursor-pointer
         duration-200;
 }

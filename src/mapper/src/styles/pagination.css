@@ -100,7 +100,7 @@
 
 .pagination .actions button hot-icon {
     --at-apply:
-        !text-[0.8rem]
+        text-[0.8rem]
         text-[#B11E20]
         cursor-pointer;
 }
@@ -131,7 +131,7 @@
 
 .pagination .page-num.first-page {
     --at-apply:
-        !font-bold
+        font-bold
         text-[#D73F37];
 }
 
@@ -170,7 +170,7 @@
 
 .pagination .next-button hot-icon {
     --at-apply:
-        !text-[0.8rem]
+        text-[0.8rem]
         text-[#B11E20]
         cursor-pointer;
 }

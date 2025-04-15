@@ -27,7 +27,7 @@
 
 .qr-code .title .hot-icon {
     --at-apply:
-        !text-[14px]
+        text-[14px]
         text-[#b91c1c]
         cursor-pointer
         duration-200
@@ -58,7 +58,7 @@
 
 .qr-code .download-button hot-icon {
     --at-apply:
-        !text-[1rem]
+        text-[1rem]
         text-[#b91c1c]
         cursor-pointer
         duration-200;

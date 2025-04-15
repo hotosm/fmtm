@@ -231,7 +231,7 @@ sl-tab hot-icon {
 
 .web-forms-drawer sl-tab hot-icon {
     --at-apply:
-        !text-[1.7rem]
-        !sm:text-[2rem];
+        text-[1.7rem]
+        sm:text-[2rem];
 }
 
