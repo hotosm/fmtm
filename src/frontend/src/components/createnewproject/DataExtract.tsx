@@ -135,7 +135,7 @@ const DataExtract = ({
     if (projectDetails.osmFormSelectionName) {
       dataExtractRequestFormData.append('osm_category', projectDetails.osmFormSelectionName);
     }
-    dataExtractRequestFormData.append("geom_type", formValues.primaryGeomType);
+    dataExtractRequestFormData.append('geom_type', formValues.primaryGeomType);
     dataExtractRequestFormData.append('centroid', formValues.includeCentroid);
 
     // Set flatgeobuf as loading
@@ -324,7 +324,9 @@ const DataExtract = ({
                           checked={formValues.includeCentroid || false}
                           onChange={(e) => handleCustomChange('includeCentroid', e.target.checked)}
                         />
-                        <label htmlFor="includeCentroid" className="fmtm-text-sm">Include polygons centroid</label>
+                        <label htmlFor="includeCentroid" className="fmtm-text-sm">
+                          Include polygons centroid
+                        </label>
                       </div>
                     )}
                   </div>
