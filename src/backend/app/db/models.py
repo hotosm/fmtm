@@ -22,7 +22,7 @@ from SQL statements. Sometimes we only need a subset of the fields.
 """
 
 import json
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from re import sub
 from typing import TYPE_CHECKING, Annotated, List, Optional, Self
@@ -525,9 +525,7 @@ class DbUserInvite(BaseModel):
 
     def is_expired(self) -> bool:
         """Helper to check if invite is expired."""
-        if self.created_at and self.expires_at:
-            return self.created_at > self.expires_at
-        return True
+        return bool(self.used_at) or (datetime.now(timezone.utc) > self.expires_at)
 
 
 class DbOrganisation(BaseModel):

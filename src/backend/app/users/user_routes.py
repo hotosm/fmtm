@@ -17,6 +17,7 @@
 #
 """Endpoints for users and role."""
 
+from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import (
@@ -45,7 +46,7 @@ from app.config import settings
 from app.db.database import db_conn
 from app.db.enums import HTTPStatus
 from app.db.enums import UserRole as UserRoleEnum
-from app.db.models import DbUser, DbUserInvite
+from app.db.models import DbUser, DbUserInvite, DbUserRole
 from app.users import user_schemas
 from app.users.user_crud import (
     get_paginated_users,
@@ -191,11 +192,12 @@ async def accept_invite(
             status_code=HTTPStatus.FORBIDDEN, detail="Invite has expired (valid 7 days)"
         )
 
-    # TODO Create a user_roles for the user and the project
-    # TODO and also expire the token and set used_at (or delete entry?)
-
-    # await DbUserRole.update(db, xxx)
-    # await DbUserInvite.update(db, xxx)
+    await DbUserRole.create(db, invite.project_id, current_user.sub, invite.role)
+    await DbUserInvite.update(
+        db,
+        invite.token,
+        user_update=user_schemas.UserInviteUpdate(used_at=datetime.now(timezone.utc)),
+    )
 
     return Response(status_code=HTTPStatus.OK)
 
