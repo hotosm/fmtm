@@ -184,7 +184,4 @@ server by selecting HOT as your organization.
    link to customise the charts and graphs as per your need.  
    ![odk_image](image.png)
 
-[1]: https://tasks.hotosm.org/learn/map "If you are new to mapping"
 [2]: https://fmtm.hotosm.org/ "fmtm"
-[3]: https://docs.fmtm.dev/faq "FAQs"
-[4]: https://hotosm.slack.com/archives/C04PCBFDEGN "Slack channel: #field-mapping-tasking-manager"
