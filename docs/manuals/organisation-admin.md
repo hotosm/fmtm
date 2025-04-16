@@ -1,4 +1,4 @@
-## Steps To Create A Project In FMTM
+# Steps To Create A Project In FMTM
 
 1. Go to [fmtm][2] .
 2. In the header, you'll find two tabs: Explore Projects and Manage Organization.
@@ -61,9 +61,9 @@
 17. After the project creation is successful and QR codes are generated, you are
     redirected to the project details page of the project.
 
-### Guidelines / Common Questions
+## Guidelines / Common Questions
 
-#### Defining the Project Boundary
+### Defining the Project Boundary
 
 - Confirm the exact area for the survey before creating
   the project, as the project boundary cannot be
