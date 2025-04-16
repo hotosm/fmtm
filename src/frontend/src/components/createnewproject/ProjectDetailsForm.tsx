@@ -36,9 +36,9 @@ const ProjectDetailsForm = ({ flag }) => {
   const organisationListData = useAppSelector((state) => state.createproject.organisationList);
   const organisationListLoading = useAppSelector((state) => state.createproject.organisationListLoading);
   const userList = useAppSelector((state) => state.user.userListForSelect)?.map((user) => ({
-    id: user.id,
+    id: user.sub,
     label: user.username,
-    value: user.id,
+    value: user.sub,
   }));
   const userListLoading = useAppSelector((state) => state.user.userListLoading);
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
