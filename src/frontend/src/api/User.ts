@@ -4,6 +4,7 @@ import { UserActions } from '@/store/slices/UserSlice';
 import { userType } from '@/models/user/userModel';
 import { paginationType } from '@/store/types/ICommon';
 import { CommonActions } from '@/store/slices/CommonSlice';
+import { NavigateFunction } from 'react-router-dom';
 
 export const GetUserListService = (url: string, params: { page: number; results_per_page: number; search: string }) => {
   return async (dispatch: AppDispatch) => {
@@ -89,5 +90,25 @@ export const GetUserNames = (url: string, params: { project_id: number; search: 
       }
     };
     await getUserNames(url, params);
+  };
+};
+
+export const AcceptInvite = (url: string, navigate: NavigateFunction) => {
+  return async (dispatch: AppDispatch) => {
+    const getProjectUserInvites = async (url: string) => {
+      try {
+        await axios.get(url);
+      } catch (error) {
+        dispatch(
+          CommonActions.SetSnackBar({
+            message: error.response.data.detail || 'Failed to accept invitation',
+            duration: 4000,
+          }),
+        );
+      } finally {
+        navigate('/');
+      }
+    };
+    await getProjectUserInvites(url);
   };
 };
