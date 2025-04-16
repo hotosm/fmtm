@@ -1,31 +1,32 @@
 # Steps To Create A Project In FMTM
 
-1. Go to [fmtm][2] .
-2. In the header, you'll find two tabs: Explore Projects and Manage Organization.
+1. Go to [fmtm].
+  - https://fmtm.hotosm.org/ "fmtm"
+3. In the header, you'll find two tabs: Explore Projects and Manage Organization.
 
    ![image](https://github.com/user-attachments/assets/6bf8604b-d44c-4488-a8c6-5312fb75a975)
 
-3. Start by exploring the projects listed by different nations and world
+4. Start by exploring the projects listed by different nations and world
    communities for field mapping exercises.
-4. Use the search option to narrow down the project cards or find the project
+5. Use the search option to narrow down the project cards or find the project
    of your choice.
-5. If you are not logged into the system, the "Create new project" button will
+6. If you are not logged into the system, the "Create new project" button will
    be disabled.
-6. If you are new then on the top right corner click on Sign up and create an
+7. If you are new then on the top right corner click on Sign up and create an
    account . Else , Sign in to your existing account .
-7. Once signed in, the "Create new project" button will be enabled. Click on it.
-8. The process of creating a new project involves four steps: Project Details,
+8. Once signed in, the "Create new project" button will be enabled. Click on it.
+9. The process of creating a new project involves four steps: Project Details,
    Uploading the Area, Defining the Task, and Selecting the Form.
-9. Start by filling in the project details, including the organization name,
+10. Start by filling in the project details, including the organization name,
    project name, description, and other relevant information.
 
    ![image](https://github.com/user-attachments/assets/c65c4ae2-d9be-4e45-ac71-a8b5653baba3)
 
-10. If your organization's name is not listed, you can add it through the
+11. If your organization's name is not listed, you can add it through the
     "Manage Organization" tab.
-11. Provide the necessary credentials for the ODK (Open Data Kit) central setup,
+12. Provide the necessary credentials for the ODK (Open Data Kit) central setup,
     including URL, username, and password.
-12. Proceed to the next step, which is uploading the area for field mapping.
+13. Proceed to the next step, which is uploading the area for field mapping.
     Choose the file option and select the AOI (Area of Interest) file in GEOJSON
     file format.
     Review the displayed map that corresponds to your selected area and click
@@ -33,20 +34,20 @@
 
     ![image](https://github.com/user-attachments/assets/64aeda34-c682-4fdc-8c2f-1fd83e29c61f)
 
-13. Upload your XLSForm. Here you download pre-defined forms from FMTM.
+14. Upload your XLSForm. Here you download pre-defined forms from FMTM.
     Some are specifically designed to work with OpenStreetMap.
     Click on "Next" to proceed.
 
     ![image](https://github.com/user-attachments/assets/cdf1e050-42ec-4149-bf97-0d841bc5117f)
 
-14. In step 4, you can either generate the map features from osm or upload the
+15. In step 4, you can either generate the map features from osm or upload the
     custom map features.
     You can also upload additional map feature to have multiple feature
     selection supported.
 
     ![image](https://github.com/user-attachments/assets/8df7c0fc-9a14-4d2d-bfdf-9fb8d9e92b89)
 
-15. The final step is task splitting which can be performed on three different
+16. The final step is task splitting which can be performed on three different
     ways. You can split the task on square of size you want. The second option
     is to choose area as task where you can use single polygon as a task. And
     the task splitting algorithm which splits the tasks with average number of
@@ -56,9 +57,9 @@
 
     ![image](https://github.com/user-attachments/assets/7eeaf7ed-c13d-4444-aeeb-d71aed4fee8e)
 
-16. Wait for the system to generate QR codes for each task, which will be used
+17. Wait for the system to generate QR codes for each task, which will be used
     later in the field mapping process.
-17. After the project creation is successful and QR codes are generated, you are
+18. After the project creation is successful and QR codes are generated, you are
     redirected to the project details page of the project.
 
 ## Guidelines / Common Questions
@@ -186,4 +187,4 @@ server by selecting HOT as your organization.
 
 To get more info about project management in odk collect  
 follow the guide [Here](https://docs.getodk.org/collect-using/).
-[2]: <https://fmtm.hotosm.org/> "fmtm"
+
