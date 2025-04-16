@@ -189,7 +189,7 @@ async def accept_invite(
     invite = await DbUserInvite.one(db, token)
     if not invite or invite.is_expired():
         raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN, detail="Invite has expired (valid 7 days)"
+            status_code=HTTPStatus.FORBIDDEN, detail="Invite has expired"
         )
 
     # Create the role for the user / project
