@@ -1,7 +1,9 @@
 # Steps To Create A Project In FMTM
 
 1. Go to [fmtm].
-  - https://fmtm.hotosm.org/ "fmtm"
+
+- <https://fmtm.hotosm.org/> "fmtm"
+
 3. In the header, you'll find two tabs: Explore Projects and Manage Organization.
 
    ![image](https://github.com/user-attachments/assets/6bf8604b-d44c-4488-a8c6-5312fb75a975)
@@ -18,9 +20,9 @@
 9. The process of creating a new project involves four steps: Project Details,
    Uploading the Area, Defining the Task, and Selecting the Form.
 10. Start by filling in the project details, including the organization name,
-   project name, description, and other relevant information.
+    project name, description, and other relevant information.
 
-   ![image](https://github.com/user-attachments/assets/c65c4ae2-d9be-4e45-ac71-a8b5653baba3)
+![image](https://github.com/user-attachments/assets/c65c4ae2-d9be-4e45-ac71-a8b5653baba3)
 
 11. If your organization's name is not listed, you can add it through the
     "Manage Organization" tab.
@@ -187,4 +189,3 @@ server by selecting HOT as your organization.
 
 To get more info about project management in odk collect  
 follow the guide [Here](https://docs.getodk.org/collect-using/).
-
