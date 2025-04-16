@@ -53,7 +53,7 @@ const UserTab = () => {
   const handleResendInvitation = () => {};
 
   return (
-    <>
+    <div className="fmtm-py-5 lg:fmtm-py-10 fmtm-px-5 lg:fmtm-px-9">
       <div className="fmtm-flex fmtm-flex-col lg:fmtm-flex-row fmtm-gap-5 lg:fmtm-gap-10 fmtm-w-full">
         <div className="fmtm-max-w-[18rem] lg:fmtm-w-[23%] lg:fmtm-min-w-[18rem]">
           <div className="fmtm-flex fmtm-gap-3 fmtm-mb-5">
@@ -162,7 +162,7 @@ const UserTab = () => {
           )}
         />
       </Table>
-    </>
+    </div>
   );
 };
 

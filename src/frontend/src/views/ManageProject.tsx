@@ -16,6 +16,7 @@ const VITE_API_URL = import.meta.env.VITE_API_URL;
 const tabList = [
   { id: 'details', name: 'Details', icon: <AssetModules.InfoIcon className="!fmtm-text-[1.125rem]" /> },
   { id: 'form', name: 'Form', icon: <AssetModules.SubmissionIcon className="!fmtm-text-[1.125rem]" /> },
+  { id: 'users', name: 'Users', icon: <AssetModules.PersonIcon className="!fmtm-text-[1.125rem]" /> },
 ];
 
 const ManageProject = () => {
