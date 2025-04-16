@@ -61,9 +61,9 @@
 17. After the project creation is successful and QR codes are generated, you are
     redirected to the project details page of the project.
 
-### Guidelines / Common Questions
+## Guidelines / Common Questions
 
-#### Defining the Project Boundary
+### Defining the Project Boundary
 
 - Confirm the exact area for the survey before creating
   the project, as the project boundary cannot be
@@ -186,3 +186,4 @@ server by selecting HOT as your organization.
 
 To get more info about project management in odk collect  
 follow the guide [Here](https://docs.getodk.org/collect-using/).
+[2]: https://fmtm.hotosm.org/ "fmtm"
