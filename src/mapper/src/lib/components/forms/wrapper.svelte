@@ -1,6 +1,6 @@
 <script lang="ts">
+	import '$styles/forms.css';
 	import type { SlDrawer } from '@shoelace-style/shoelace';
-
 	import { getCommonStore } from '$store/common.svelte.ts';
 	import { getLoginStore } from '$store/login.svelte.ts';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
@@ -25,6 +25,7 @@
 	let entityMap = $derived(new Map(entitiesStore.entitiesStatusList.map((entity) => [entity.entity_id, entity])));
 	const selectedEntityId = $derived(entitiesStore.selectedEntity || '');
 	const selectedEntity = $derived(entityMap.get(selectedEntityId));
+	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
 
 	let { display = $bindable(false), entityId, webFormsRef = $bindable(undefined), projectId, taskId }: Props = $props();
 	let drawerRef: SlDrawer;
@@ -105,7 +106,7 @@
 			if (entitiesStore.userLocationCoord) {
 				const [longitude, latitude] = entitiesStore.userLocationCoord as [number, number];
 				// add 0.0 for altitude and 10.0 for accuracy as defaults
-				submission_xml = submission_xml.replace('<warmup/>', `<warmup>${latitude} ${longitude} 0.0 10.0</warmup>`);
+				submission_xml = submission_xml.replace('<warmup/>', `<warmup>${latitude} ${longitude} 0.0 0.0</warmup>`);
 			}
 
 			const url = `${API_URL}/submission?project_id=${projectId}`;
@@ -149,6 +150,17 @@
 			}
 
 			nodes.find((it: any) => it.definition.nodeset === '/data/task_id')?.setValueState(`${taskId}`);
+
+			if (selectedEntity?.osmid) {
+				nodes.find((it: any) => it.definition.nodeset === '/data/xid')?.setValueState(`${selectedEntity?.osmid}`);
+			}
+
+			if (selectedEntityCoordinate) {
+				const [longitude, latitude] = selectedEntityCoordinate.coordinate as unknown as [number, number];
+				nodes
+					.find((it: any) => it.definition.nodeset === '/data/xlocation')
+					?.setValueState(`${latitude} ${longitude} 0.0 0.0`);
+			}
 		}
 	}
 	const setFormLanguage = (newLocale: string) => {
@@ -216,8 +228,7 @@
 	contained
 	open={display}
 	placement="start"
-	class="drawer-contained drawer-placement-start drawer-overview"
-	style="--size: 100vw; --header-spacing: 0px"
+	class="forms-wrapper-drawer"
 >
 	{#await odkWebFormPromise then odkWebFormUrl}
 		{#if entityId}
@@ -226,10 +237,10 @@
 					{#await formMediaPromise then formMedia}
 						{#key entityId}
 							<iframe
+								class="iframe"
 								use:handleIframe
 								title="odk-web-forms-wrapper"
 								src={`./web-forms.html?projectId=${projectId}&entityId=${entityId}&formXml=${formXml}&language=${commonStore.locale}&odkWebFormUrl=${odkWebFormUrl}&formMedia=${encodeURIComponent(JSON.stringify(formMedia))}`}
-								style="height: 100%; width: 100%; z-index: 11;"
 							></iframe>
 						{/key}
 					{/await}
@@ -238,12 +249,3 @@
 		{/if}
 	{/await}
 </hot-drawer>
-
-<style>
-	#odk-web-forms-drawer::part(panel) {
-		z-index: 11;
-	}
-	#odk-web-forms-drawer::part(body) {
-		padding: 0;
-	}
-</style>

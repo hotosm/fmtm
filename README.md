@@ -24,7 +24,7 @@
 | **Code Style** | | [![Backend Style](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/format.json&labelColor=202235)](https://github.com/astral-sh/ruff) [![Frontend Style](https://img.shields.io/badge/code%20style-prettier-F7B93E?logo=Prettier)](https://github.com/prettier/prettier) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com) |
 | **Quality** | | [![Coverage](https://docs.fmtm.dev/coverage.svg)](https://docs.fmtm.dev/coverage.html) [![Translation](https://hosted.weblate.org/widget/hotosm/fieldtm/svg-badge.svg)](https://hosted.weblate.org/engage/hotosm) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9218/badge)](https://www.bestpractices.dev/projects/9218) |
 | **Community** | | [![Slack](https://img.shields.io/badge/Slack-Join%20the%20community!-d63f3f?style=for-the-badge&logo=slack&logoColor=d63f3f)](https://slack.hotosm.org) [![All Contributors](https://img.shields.io/github/all-contributors/hotosm/fmtm?color=ee8449&style=flat-square)](#contributors-) |
-| **Other Info** | | [![docs](https://github.com/hotosm/fmtm/blob/development/docs/images/docs_badge.svg?raw=true)](https://docs.fmtm.dev/) [![dev-roadmap](https://github.com/hotosm/fmtm/blob/development/docs/images/dev_roadmap_badge.svg?raw=true)](https://roadmap.fmtm.dev) [![timeline](https://github.com/hotosm/fmtm/blob/development/docs/images/timeline_badge.svg?raw=true)](https://docs.fmtm.dev/timeline) [![license-code](https://img.shields.io/github/license/hotosm/fmtm.svg)](https://github.com/hotosm/fmtm/blob/main/LICENSE.md) [![license-translations](https://img.shields.io/badge/license-CC%20BY%204.0-orange.svg)](https://github.com/hotosm/fmtm/blob/main/src/mapper/messages/LICENSE.md) |
+| **Other Info** | | [![docs](https://github.com/hotosm/fmtm/blob/development/docs/images/docs_badge.svg?raw=true)](https://docs.fmtm.dev/) [![dev-roadmap](https://github.com/hotosm/fmtm/blob/development/docs/images/dev_roadmap_badge.svg?raw=true)](https://roadmap.fmtm.dev) [![timeline](https://github.com/hotosm/fmtm/blob/development/docs/images/timeline_badge.svg?raw=true)](https://docs.fmtm.dev/timeline) [![license-code](https://img.shields.io/github/license/hotosm/fmtm.svg)](https://github.com/hotosm/fmtm/blob/main/LICENSE.md) [![license-translations](https://img.shields.io/badge/license:translations-CC%20BY%204.0-orange.svg)](https://github.com/hotosm/fmtm/blob/main/src/mapper/messages/LICENSE.md) |
 
 </div>
 
@@ -108,31 +108,35 @@ Alternatively see the [docs](https://docs.fmtm.dev) for various deployment guide
 ## Roadmap
 
 <!-- prettier-ignore-start -->
-| Status | Feature |
-|:--:| :-- |
-|✅| 🖥️ project area splitting avoiding roads, rivers, railways |
-|✅| 🖥️ XLSForm survey generation in ODK Central |
-|✅| 📱 mapping of project via survey in ODK Collect mobile app |
-|✅| 📱 locking & unlocking of tasks to coordinate mapping |
-|✅| 📱 download base imagery & geolocation for in the field |
-|✅| 🖥️ view mapper submissions in the FMTM dashboard |
-|✅| 📢 Beta Release |
-|✅| 🖥️ & 📱 basic user tutorials and usage guides |
-|✅| 📱 open ODK Collect with feature already selected |
-|✅| 📱 live updates during mapping (if online) |
-|✅| 📱 features turn green once mapped |
-|✅| 📱 better support for mapping **new** points, lines, polygons |
-|✅| 📱 navigation and capability for routing to map features |
-|✅| 🖥️ organization creation and management |
-|⚙️| 📱 integrate ODK Web Forms (to avoid switching apps) |
-|⚙️| 🖥️ multiple approaches to task splitting algorithm |
-|⚙️| 🖥️ user role management per project |
-| | 📱 fully offline field mapping |
-| | 🖥️ simplify project creation with basic / advanced workflows |
-| | 🖥️ improvements to the validation criteria and workflow |
-| | 🖥️ export (+merge) the final data to OpenStreetMap |
-| | 🖥️ better data visualisation and export options |
-| | 🖥️ Field Admin role |
+| Status | Feature | Release |
+|:------:|:-------:|:--------|
+| ✅ | 🖥️ project area splitting avoiding roads, rivers, railways | Since [v2024.4.0][1] |
+| ✅ | 🖥️ XLSForm survey generation in ODK Central | Since [v2024.4.0][1] |
+| ✅ | 📱 mapping of project via survey in ODK Collect mobile app | Since [v2024.4.0][1] |
+| ✅ | 📱 locking & unlocking of tasks to coordinate mapping | Since [v2024.4.0][1] |
+| ✅ | 📱 download base imagery & geolocation for in the field | Since [v2024.4.0][1] |
+| ✅ | 🖥️ view mapper submissions in the FMTM dashboard | Since [v2024.4.0][1] |
+| ✅ | 📢 Beta Release | Since [v2024.4.0][1] |
+| ✅ | 🖥️ & 📱 basic user tutorials and usage guides | Since [v2024.4.0][1] |
+| ✅ | 📱 open ODK Collect with feature already selected | Since [v2024.4.0][1] |
+| ✅ | 📱 live updates during mapping (if online) | Since [v2024.5.0][2] |
+| ✅ | 📱 features turn green once mapped | Since [v2024.5.0][2] |
+| ✅ | 📱 navigation and capability for routing to map features | Since [v2024.5.0][2] |
+| ✅ | 🖥️ organization creation and management | Since [v2024.5.0][2] |
+| ✅ | 📱 better support for mapping **new** points, lines, polygons | Since [v2025.1.0][3] |
+| ✅ | 📱 integrate ODK Web Forms (to avoid switching apps) | Expected [v2025.2.0][4] |
+| ✅ | 🖥️ user role management per project | Expected [v2025.2.0][4] |
+| 🔄 | 📱 fully offline field mapping (local-first design) | – |
+| 🔄 | 🖥️ simplify project creation with basic / advanced workflows | – |
+| 📅 | 🖥️ pre-defined OpenStreetMap forms for easy OSM mapping | – |
+| 📅 | 🖥️ integration with other mobile apps: EveryDoor, StreetComplete | – |
+| 📅 | 🖥️ integration with other ODK server types: Ona.io, Kobo | – |
+| 📅 | 🖥️ multiple approaches to task splitting algorithm | – |
+| 📅 | 🖥️ improvements to the validation criteria and workflow | – |
+| 📅 | 🖥️ export (+merge) the final data to OpenStreetMap | – |
+| 📅 | 🖥️ better data visualisation and export options | – |
+| 📅 | 🖥️ Field Admin role | – |
+
 <!-- prettier-ignore-end -->
 
 > [!Note]
@@ -227,3 +231,8 @@ Thanks goes to these wonderful people:
 ## Repo Activity
 
 ![FMTM Repo Activity](https://repobeats.axiom.co/api/embed/4c670cc740c638c52d6c2e822fe78a999d3994fc.svg "Repobeats analytics image")
+
+[1]: https://github.com/hotosm/fmtm/releases/tag/2024.4.0 "Beta Release"
+[2]: https://github.com/hotosm/fmtm/releases/tag/2024.5.0 "Mapper Frontend"
+[3]: https://github.com/hotosm/fmtm/releases/tag/2025.1.0 "New Geoms"
+[4]: https://github.com/hotosm/fmtm/releases/tag/2025.2.0 "Web Forms"
