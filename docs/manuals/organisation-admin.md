@@ -2,7 +2,7 @@
 
 1. Go to [fmtm].
 
-- https://fmtm.hotosm.org/ "fmtm"
+- <https://fmtm.hotosm.org/> "fmtm"
 
 3. In the header, you'll find two tabs: Explore Projects and Manage Organization.
 
