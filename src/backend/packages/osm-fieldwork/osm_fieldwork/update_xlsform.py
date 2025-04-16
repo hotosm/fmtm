@@ -28,6 +28,7 @@ import sys
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
+from typing import Optional
 from uuid import uuid4
 
 import pandas as pd
@@ -190,50 +191,65 @@ def normalize_with_meta(row, meta_df):
     return row
 
 
-def merge_dataframes(mandatory_df: pd.DataFrame, user_question_df: pd.DataFrame, digitisation_df: pd.DataFrame) -> pd.DataFrame:
-    """Merge multiple Pandas dataframes together, removing duplicate fields."""
+def merge_dataframes(
+        mandatory_df: pd.DataFrame, 
+        user_question_df: pd.DataFrame, 
+        digitisation_df: Optional[pd.DataFrame] = None,
+        meta_df: Optional[pd.DataFrame] = None
+    ) -> pd.DataFrame:
+    """
+    Merge multiple Pandas dataframes together, removing duplicate fields.
+    
+    Arguments:
+        mandatory_df: DataFrame containing required fields
+        user_question_df: DataFrame containing user-specified questions
+        digitisation_df: Optional DataFrame with digitization fields
+        meta_df: Optional metadata DataFrame used for normalization
+    
+    Returns:
+        pd.DataFrame: Merged DataFrame with duplicates removed
+    """
+    # If list_name present, use simpler merge logic
     if "list_name" in user_question_df.columns:
-        merged_df = pd.concat(
-            [
-                mandatory_df,
-                user_question_df,
-                digitisation_df,
-            ],
-            ignore_index=True,
-        )
-        # NOTE here we remove duplicate PAIRS based on `list_name` and the name column
-        # we have `allow_duplicate_choices` set in the settings sheet, so it is possible
-        # to have duplicate NAME_COLUMN entries, if they are in different a `list_name`.
+        frames = [mandatory_df, user_question_df]
+        if digitisation_df is not None:
+            frames.append(digitisation_df)
+        merged_df = pd.concat(frames, ignore_index=True)
         return merged_df.drop_duplicates(subset=["list_name", NAME_COLUMN], ignore_index=True)
-
-    user_question_df = user_question_df.apply(normalize_with_meta, axis=1, meta_df=meta_df)
-
-    # Find common fields between user_question_df and mandatory_df or digitisation_df
-    duplicate_fields = set(user_question_df[NAME_COLUMN]).intersection(
-        set(mandatory_df[NAME_COLUMN]).union(set(digitisation_df[NAME_COLUMN]))
-    )
-
-    # NOTE filter out 'end group' from duplicate check as they have empty NAME_COLUMN
-    end_group_rows = user_question_df[user_question_df["type"].isin(["end group", "end_group"])]
+    
+    # Normalize user questions if meta_df provided
+    if meta_df is not None:
+        user_question_df = user_question_df.apply(
+            lambda row: normalize_with_meta(row, meta_df), 
+            axis=1
+        )
+    
+    is_end_group = user_question_df["type"].isin(["end group", "end_group"])
+    
+    # Find duplicate fields
+    digitisation_names = set() if digitisation_df is None else set(digitisation_df[NAME_COLUMN])
+    all_existing_names = set(mandatory_df[NAME_COLUMN]).union(digitisation_names)
+    duplicate_fields = set(user_question_df[NAME_COLUMN]).intersection(all_existing_names)
+    
+    # Filter out duplicates but keep end group rows
     user_question_df_filtered = user_question_df[
-        (~user_question_df[NAME_COLUMN].isin(duplicate_fields)) | (user_question_df.index.isin(end_group_rows.index))
+        (~user_question_df[NAME_COLUMN].isin(duplicate_fields)) | is_end_group
     ]
-
-    # Create survey group wrapper
+    
     survey_group = create_survey_group()
-
-    # Concatenate dataframes in the desired order
-    return pd.concat(
-        [
-            mandatory_df,
-            # Wrap the survey question in a group
-            survey_group["begin"],
-            user_question_df_filtered,
-            survey_group["end"],
-            digitisation_df,
-        ],
-        ignore_index=True,
-    )
+    
+    # Create and combine all frames
+    frames = [
+        mandatory_df,
+        survey_group["begin"],
+        user_question_df_filtered,
+        survey_group["end"],
+    ]
+    
+    if digitisation_df is not None:
+        frames.append(digitisation_df)
+    
+    return pd.concat(frames, ignore_index=True)
 
 
 def append_select_one_from_file_row(df: pd.DataFrame, entity_name: str) -> pd.DataFrame:
@@ -278,6 +294,7 @@ async def append_mandatory_fields(
     form_name: str = f"fmtm_{uuid4()}",
     additional_entities: list[str] = None,
     new_geom_type: DbGeomType = DbGeomType.POINT,
+    need_verification_fields: bool = True,
 ) -> tuple[str, BytesIO]:
     """Append mandatory fields to the XLSForm for use in FMTM.
 
@@ -303,8 +320,8 @@ async def append_mandatory_fields(
     custom_sheets = standardize_xlsform_sheets(custom_sheets)
 
     log.debug("Merging survey sheet XLSForm data")
-    survey_df = create_survey_df(new_geom_type)
-    custom_sheets["survey"] = merge_dataframes(survey_df, custom_sheets.get("survey"), digitisation_df)
+    survey_df = create_survey_df(new_geom_type, need_verification_fields)
+    custom_sheets["survey"] = merge_dataframes(survey_df, custom_sheets.get("survey"), digitisation_df) if need_verification_fields else merge_dataframes(survey_df, custom_sheets.get("survey"), None)
 
     # Ensure the 'choices' sheet exists in custom_sheets
     if "choices" not in custom_sheets or custom_sheets["choices"] is None:

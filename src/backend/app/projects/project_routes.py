@@ -1022,6 +1022,7 @@ async def generate_files(
         form_name=form_name,
         additional_entities=additional_entities,
         new_geom_type=new_geom_type,
+        need_verification_fields=True if combined_features_count else False,
     )
     # Write XLS form content to db
     xlsform_bytes = project_xlsform.getvalue()

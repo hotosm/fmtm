@@ -69,16 +69,42 @@ meta_df = pd.DataFrame(
 )
 
 
-def get_mandatory_fields(new_geom_type: DbGeomType):
-    """Return the mandatory fields data."""
-    if new_geom_type == DbGeomType.POINT:
-        geom_field = "geopoint"
-    elif new_geom_type == DbGeomType.POLYGON:
-        geom_field = "geoshape"
-    elif new_geom_type == DbGeomType.LINESTRING:
-        geom_field = "geotrace"
-    else:
+def get_mandatory_fields(
+        new_geom_type: DbGeomType, 
+        need_verification_fields: bool
+    ):
+    """
+    Return the mandatory fields data for form creation.
+    
+    Args:
+        new_geom_type: The geometry type (POINT, POLYGON, LINESTRING)
+        need_verification_fields: Whether to include verification fields
+    
+    Returns:
+        List of field definitions for the form
+    """
+    calculate_status = (
+        """if(${new_feature} != '', 2,
+           if(${building_exists} = 'no', 5,
+           if(${digitisation_correct} = 'no', 6,
+           ${status})))"""
+        if need_verification_fields else
+        """if(${new_feature} != '', 2,
+           if(${building_exists} = 'no', 5,
+           ${status}))"""
+    )
+    # Map geometry types to field types
+    geom_type_mapping = {
+        DbGeomType.POINT: "geopoint",
+        DbGeomType.POLYGON: "geoshape",
+        DbGeomType.LINESTRING: "geotrace"
+    }
+    
+    # Get the correct field type or raise error if not supported
+    if new_geom_type not in geom_type_mapping:
         raise ValueError(f"Unsupported geometry type: {new_geom_type}")
+    
+    geom_field = geom_type_mapping[new_geom_type]
 
     return [
         {"type": "start-geopoint", "name": "warmup", "notes": "collects location on form start"},
@@ -131,10 +157,7 @@ def get_mandatory_fields(new_geom_type: DbGeomType):
             "notes": "Update the Entity 'status' field",
             "label::english(en)": "Mapping Status",
             "appearance": "minimal",
-            "calculation": """if(${new_feature} != '', 2,
-                            if(${building_exists} = 'no', 5,
-                            if(${digitisation_correct} = 'no', 6,
-                            ${status})))""",
+            "calculation": f"{calculate_status}",
             "default": "2",
             "trigger": "${new_feature}",
             "save_to": "status",
@@ -163,13 +186,16 @@ def get_mandatory_fields(new_geom_type: DbGeomType):
     ]
 
 
-def create_survey_df(new_geom_type: DbGeomType) -> pd.DataFrame:
+def create_survey_df(
+        new_geom_type: DbGeomType, 
+        need_verification_fields: bool
+    ) -> pd.DataFrame:
     """Create the survey sheet dataframe.
 
     We do this in a function to allow the geometry type
     for new data to be specified.
     """
-    fields = get_mandatory_fields(new_geom_type)
+    fields = get_mandatory_fields(new_geom_type, need_verification_fields)
     mandatory_df = pd.DataFrame(fields)
     return pd.concat([meta_df, mandatory_df])
 
