@@ -186,5 +186,4 @@ server by selecting HOT as your organization.
 
 To get more info about project management in odk collect  
 follow the guide [Here](https://docs.getodk.org/collect-using/).
-[2]: https://fmtm.hotosm.org/ "fmtm"
-
+[2]: <https://fmtm.hotosm.org/> "fmtm"
