@@ -89,8 +89,8 @@ const OrganisationSlice = createSlice({
       state.deleteOrganizationAdminPending = action.payload;
     },
     SetAddOrganizationAdminPending(state, action: PayloadAction<boolean>) {
-      state.addOrganizationAdminPending = action.payload
-    }
+      state.addOrganizationAdminPending = action.payload;
+    },
   },
 });
 
