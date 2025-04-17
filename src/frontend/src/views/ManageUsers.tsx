@@ -41,20 +41,31 @@ const ManageUsers = () => {
       header: 'Users',
       accessorKey: 'username',
       cell: ({ row }: any) => {
+        const currRow = row?.original;
         return (
           <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
-            {!row?.original?.profile_img ? (
+            {!currRow?.profile_img ? (
               <div className="fmtm-w-[1.875rem] fmtm-h-[1.875rem] fmtm-rounded-full fmtm-bg-[#68707F] fmtm-flex fmtm-items-center fmtm-justify-center fmtm-cursor-default">
-                <p className="fmtm-text-white">{row?.original?.username[0]?.toUpperCase()}</p>
+                <p className="fmtm-text-white">{currRow?.username[0]?.toUpperCase()}</p>
               </div>
             ) : (
               <img
-                src={row?.original?.profile_img}
+                src={currRow?.profile_img}
                 className="fmtm-w-[1.875rem] fmtm-h-[1.875rem] fmtm-rounded-full"
                 alt="profile image"
               />
             )}
-            <p>{row?.original?.username}</p>
+            <a
+              target="_"
+              href={
+                currRow?.sub?.split('|')[0] === 'osm'
+                  ? `https://www.openstreetmap.org/user/${currRow?.username}`
+                  : `mailto:${currRow?.email_address}`
+              }
+              className="fmtm-text-red-medium hover:fmtm-text-red-dark fmtm-underline"
+            >
+              {currRow?.username}
+            </a>
           </div>
         );
       },
