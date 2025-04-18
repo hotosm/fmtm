@@ -1487,7 +1487,7 @@ class DbProject(BaseModel):
         # Simpler query without additional metadata
         if minimal:
             sql = """
-               WITH latest_status_per_task AS (
+                WITH latest_status_per_task AS (
                     SELECT DISTINCT ON (task_id)
                         th.task_id,
                         th.event,
