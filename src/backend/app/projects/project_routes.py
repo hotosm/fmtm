@@ -1003,6 +1003,9 @@ async def generate_files(
     project = project_user_dict.get("project")
     project_id = project.id
     new_geom_type = project.new_geom_type
+    
+    # Project requirement if they need to use odk-collect
+    use_odk_collect = project.use_odk_collect
 
     log.debug(f"Generating additional files for project: {project.id}")
 
@@ -1023,6 +1026,7 @@ async def generate_files(
         additional_entities=additional_entities,
         new_geom_type=new_geom_type,
         need_verification_fields=True if combined_features_count else False,
+        use_odk_collect=use_odk_collect,
     )
     # Write XLS form content to db
     xlsform_bytes = project_xlsform.getvalue()
