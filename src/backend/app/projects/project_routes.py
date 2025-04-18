@@ -1003,7 +1003,7 @@ async def generate_files(
     project = project_user_dict.get("project")
     project_id = project.id
     new_geom_type = project.new_geom_type
-    
+
     # Project requirement if they need to use odk-collect
     use_odk_collect = project.use_odk_collect
 
