@@ -39,18 +39,10 @@ Modules and functionalities:
 - **Settings Sheet**: Sets the form ID, version, and configuration options.
 """
 
-from datetime import datetime
-from enum import Enum
-
 import pandas as pd
+from datetime import datetime
 
-
-class DbGeomType(str, Enum):
-    """Type for new geometries collected."""
-
-    POINT = "POINT"
-    POLYGON = "POLYGON"
-    LINESTRING = "LINESTRING"
+from osm_fieldwork.enums import DbGeomType
 
 
 meta_df = pd.DataFrame(
@@ -90,7 +82,6 @@ def get_mandatory_fields(
            ${status})))"""
         if need_verification_fields else
         """if(${new_feature} != '', 2,
-           if(${building_exists} = 'no', 5,
            ${status}))"""
     )
     # Map geometry types to field types
@@ -106,7 +97,7 @@ def get_mandatory_fields(
     
     geom_field = geom_type_mapping[new_geom_type]
 
-    return [
+    fields = [
         {"type": "start-geopoint", "name": "warmup", "notes": "collects location on form start"},
         {
             "type": "select_one_from_file features.csv",
@@ -163,14 +154,6 @@ def get_mandatory_fields(
             "save_to": "status",
         },
         {
-            "type": "select_one yes_no",
-            "name": "building_exists",
-            "label::english(en)": "Does this feature exist?",
-            "label::nepali(ne)": "के यो भवन अवस्थित छ?",
-            "label::portuguese(pt-BR)": "Esse recurso existe?",
-            "relevant": "${feature} != '' ",
-        },
-        {
             "type": "calculate",
             "name": "submission_ids",
             "notes": "Update the submission ids",
@@ -184,6 +167,16 @@ def get_mandatory_fields(
             "save_to": "submission_ids",
         },
     ]
+    if need_verification_fields:
+        fields.append({
+            "type": "select_one yes_no",
+            "name": "building_exists",
+            "label::english(en)": "Does this feature exist?",
+            "label::nepali(ne)": "के यो भवन अवस्थित छ?",
+            "label::portuguese(pt-BR)": "Esse recurso existe?",
+            "relevant": "${feature} != '' ",
+        })
+    return fields
 
 
 def create_survey_df(

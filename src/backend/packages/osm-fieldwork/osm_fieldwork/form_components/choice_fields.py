@@ -50,38 +50,3 @@ choices_data = [
 ]
 
 choices_df = pd.DataFrame(choices_data)
-
-digitisation_choices = [
-    {
-        "list_name": "digitisation_problem",
-        "name": "lumped",
-        "label::english(en)": "Lumped - one polygon (more than one building digitized as one)",
-        "label::nepali(ne)": "लुम्पेड - एक बहुभुज (एउटा भन्दा बढी भवनहरू एकको रूपमा डिजिटलाइज गरिएको)",
-        "label::swahili(sw)": "Lumped - poligoni moja (zaidi ya jengo moja limewekwa dijiti kuwa moja)",
-        "label::french(fr)": "Lumped - un polygone (plus d'un bâtiment numérisé en un seul)",
-        "label::spanish(es)": "Agrupado - un polígono (más de un edificio digitalizado como uno)",
-        "label::portuguese(pt-BR)": "Agrupado - um polígono (mais de um edifício digitalizado como um só)",
-    },
-    {
-        "list_name": "digitisation_problem",
-        "name": "split",
-        "label::english(en)": "Split - one building (one building digitized as more than one polygon)",
-        "label::nepali(ne)": "विभाजन - एउटा भवन (एउटा भवन एक भन्दा बढी बहुभुजको रूपमा डिजिटाइज गरिएको)",
-        "label::swahili(sw)": "Mgawanyiko - jengo moja (jengo moja limebadilishwa kuwa zaidi ya poligoni moja)",
-        "label::french(fr)": "Fractionnement - un bâtiment (un bâtiment numérisé sous la forme de plusieurs polygones)",
-        "label::spanish(es)": "Split - un edificio (un edificio digitalizado como más de un polígono)",
-        "label::portuguese(pt-BR)": "Split - um edifício (um edifício digitalizado como mais de um polígono)",
-    },
-    {
-        "list_name": "digitisation_problem",
-        "name": "other",
-        "label::english(en)": "OTHER",
-        "label::nepali(ne)": "अन्य",
-        "label::swahili(sw)": "MENGINEYO",
-        "label::french(fr)": "AUTRES",
-        "label::spanish(es)": "OTROS",
-        "label::portuguese(pt-BR)": "OUTROS",
-    },
-]
-
-digitisation_choices_df = pd.DataFrame(digitisation_choices)
