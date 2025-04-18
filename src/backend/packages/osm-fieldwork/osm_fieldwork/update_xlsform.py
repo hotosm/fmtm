@@ -236,6 +236,7 @@ def merge_dataframes(
         if digitisation_df is not None:
             frames.append(digitisation_df)
         merged_df = pd.concat(frames, ignore_index=True)
+        # NOTE here we remove duplicate PAIRS based on `list_name` and the name column
         return merged_df.drop_duplicates(subset=["list_name", NAME_COLUMN], ignore_index=True)
     
     # Normalize user questions if meta_df provided
@@ -245,6 +246,7 @@ def merge_dataframes(
             axis=1
         )
     
+    # NOTE filter out 'end group' from duplicate check as they have empty NAME_COLUMN
     is_end_group = user_question_df["type"].isin(["end group", "end_group"])
     
     # Find duplicate fields
