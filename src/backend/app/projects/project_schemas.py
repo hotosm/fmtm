@@ -33,7 +33,12 @@ from pydantic.functional_validators import field_validator, model_validator
 
 from app.central.central_schemas import ODKCentralDecrypted, ODKCentralIn
 from app.config import decrypt_value, encrypt_value
-from app.db.enums import BackgroundTaskStatus, GeomStatus, ProjectPriority, ProjectVisibility
+from app.db.enums import (
+    BackgroundTaskStatus,
+    GeomStatus,
+    ProjectPriority,
+    ProjectVisibility,
+)
 from app.db.models import (
     DbBackgroundTask,
     DbBasemap,
@@ -42,6 +47,7 @@ from app.db.models import (
     slugify,
 )
 from app.db.postgis_utils import geojson_to_featcol, merge_polygons
+
 
 class GeometryLogIn(BaseModel):
     """Geometry log insert."""
@@ -234,7 +240,7 @@ class ProjectSummary(BaseModel):
     location_str: Optional[str] = None
     short_description: Optional[str] = None
     visibility: Optional[ProjectVisibility] = None
-    
+
     # Calculated
     organisation_logo: Optional[str] = None
     centroid: Optional[Point]
