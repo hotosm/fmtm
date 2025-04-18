@@ -254,6 +254,8 @@ class DbUser(BaseModel):
         skip: Optional[int] = None,
         limit: Optional[int] = None,
         search: Optional[str] = None,
+        username: Optional[str] = None,
+        signin_type: Optional[str] = None,
     ) -> Optional[list[Self]]:
         """Fetch all users."""
         filters = []
@@ -262,6 +264,14 @@ class DbUser(BaseModel):
         if search:
             filters.append("username ILIKE %(search)s")
             params["search"] = f"%{search}%"
+
+        if username:
+            filters.append("username = %(username)s")
+            params["username"] = username
+
+        if signin_type:
+            filters.append("sub LIKE %(signin_type)s")
+            params["signin_type"] = f"{signin_type}|%"
 
         sql = f"""
             SELECT * FROM users
@@ -1432,6 +1442,7 @@ class DbProject(BaseModel):
     new_geom_type: Optional[DbGeomType] = None  # when new geometries are drawn
     geo_restrict_distance_meters: Optional[PositiveInt] = None
     geo_restrict_force_error: Optional[bool] = None
+    use_odk_collect: Optional[bool] = None
     hashtags: Optional[list[str]] = None
     due_date: Optional[AwareDatetime] = None
     updated_at: Optional[AwareDatetime] = None
