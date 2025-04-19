@@ -5,56 +5,56 @@ Go to [fmtm]
 1. - Setting up your field mapping project needs following the steps below;
    - Login to fmtm first to see the option of creating the project.
 
-    ![image](https://github.com/user-attachments/assets/6bf8604b-d44c-4488-a8c6-5312fb75a975)
+   ![image](https://github.com/user-attachments/assets/6bf8604b-d44c-4488-a8c6-5312fb75a975)
 
-    - If you are not logged in, the option of create a new project is
-      not visible not visible.
-    - Start by filling in the project basic information such as the name,
-      description,
-      hashtag, etc. This captures essential information about your project.
-    - Finally click Next to proceed.
+   - If you are not logged in, the option of create a new project is
+     not visible not visible.
+   - Start by filling in the project basic information such as the name,
+     description,
+     hashtag, etc. This captures essential information about your project.
+   - Finally click Next to proceed.
 
-    ![image](https://github.com/user-attachments/assets/c65c4ae2-d9be-4e45-ac71-a8b5653baba3)
+   ![image](https://github.com/user-attachments/assets/c65c4ae2-d9be-4e45-ac71-a8b5653baba3)
 
 2. - You can draw a freehand polygon on a map interface or you can upload
      the AOI file.
    - Click on Upload file button to upload the AOI file. The file is only
-      supported by Geojson format.
+     supported by Geojson format.
    - Review the displayed map that corresponds to your selected area and
      click on "Next".
 
-    ![image](https://github.com/user-attachments/assets/64aeda34-c682-4fdc-8c2f-1fd83e29c61f)
+   ![image](https://github.com/user-attachments/assets/64aeda34-c682-4fdc-8c2f-1fd83e29c61f)
 
 3. - You need to upload a survey that you are going to work on.
    - You may choose to upload a pre-Configured XLSForm or browse the forms.
    - Click the UploadXLSForm if you are uploading the file or download forms
-     by  clicking Download form.
+     by clicking Download form.
    - Finally click Next to proceed.
 
-    ![image](https://github.com/user-attachments/assets/cdf1e050-42ec-4149-bf97-0d841bc5117f)
+   ![image](https://github.com/user-attachments/assets/cdf1e050-42ec-4149-bf97-0d841bc5117f)
 
 4. - In mapping data we you shall choose the geometry to use by clicking in
      the button under
-      the heading, what type of geometry
+     the heading, what type of geometry
    - If you want to upload your own, click in Upload custom mapdata or else
      go with the default
-      one of fetch data from OSM
+     one of fetch data from OSM
    - You can also upload additional map feature to have multiple feature
-      selection supported.
+     selection supported.
 
-    ![image](https://github.com/user-attachments/assets/8df7c0fc-9a14-4d2d-bfdf-9fb8d9e92b89)
+   ![image](https://github.com/user-attachments/assets/8df7c0fc-9a14-4d2d-bfdf-9fb8d9e92b89)
 
 5. - The final step is task splitting which can be performed on three
-      different ways. you
-      can split the task on square of size you want.
+     different ways. you
+     can split the task on square of size you want.
    - The second option is to choose area as task where you can use single
-      polygon as a task. And the task splitting algorithm which splits
-      the tasks with average number of features which is provided by project
-      creator.
+     polygon as a task. And the task splitting algorithm which splits
+     the tasks with average number of features which is provided by project
+     creator.
    - The task splitting may take few seconds to few minutes considering
-    the feature count and size of AOI. Click on "Submit" to create project.
+     the feature count and size of AOI. Click on "Submit" to create project.
 
-    ![image](https://github.com/user-attachments/assets/7eeaf7ed-c13d-4444-aeeb-d71aed4fee8e)
+   ![image](https://github.com/user-attachments/assets/7eeaf7ed-c13d-4444-aeeb-d71aed4fee8e)
 
 ## Guidelines / Common Questions
 
@@ -72,39 +72,39 @@ Go to [fmtm]
   The map feature file should follow the osm tags structure.
 - Below is a sample of the required file structure:
 
-    ```json
-    {
-       "type": "Feature",
-       "properties": { "full_id": "r9517874",
-          "osm_id": "9517874",
-          "osm_type": "relation"
-          "tags": {"building": "yes"},
-          "type": "multipolygon",
-          "name": "",
-          "building:levels": "" },
-       "geometry": { "type": "MultiPolygon", "coordinates": [ [ [
-          [ -3.9618848, 5.3041323 ],
-          [ -3.9615121, 5.3041457 ],
-          [ -3.9615028, 5.3038906 ],
-          [ -3.9618755, 5.3038772 ],
-          [ -3.9618848, 5.3041323 ]
-       ],
-       [
-          [ -3.9620167, 5.3042236 ],
-          [ -3.9620143, 5.3041258 ],
-          [ -3.9619839, 5.3041266 ],
-          [ -3.9619757, 5.3037882 ],
-          [ -3.9614038, 5.3038019 ],
-          [ -3.9614144, 5.3042381 ],
-          [ -3.9620167, 5.3042236 ]
-       ] ] ] }
-    },
-    ```
+  ```json
+  {
+     "type": "Feature",
+     "properties": { "full_id": "r9517874",
+        "osm_id": "9517874",
+        "osm_type": "relation"
+        "tags": {"building": "yes"},
+        "type": "multipolygon",
+        "name": "",
+        "building:levels": "" },
+     "geometry": { "type": "MultiPolygon", "coordinates": [ [ [
+        [ -3.9618848, 5.3041323 ],
+        [ -3.9615121, 5.3041457 ],
+        [ -3.9615028, 5.3038906 ],
+        [ -3.9618755, 5.3038772 ],
+        [ -3.9618848, 5.3041323 ]
+     ],
+     [
+        [ -3.9620167, 5.3042236 ],
+        [ -3.9620143, 5.3041258 ],
+        [ -3.9619839, 5.3041266 ],
+        [ -3.9619757, 5.3037882 ],
+        [ -3.9614038, 5.3038019 ],
+        [ -3.9614144, 5.3042381 ],
+        [ -3.9620167, 5.3042236 ]
+     ] ] ] }
+  },
+  ```
 
 - You may download features from OpenStreetMap (OSM) by clicking on
   Fetch data from osm with FMTM project creation; however, note that
   FMTM is not responsible for the data quality of features extracted
-   from OSM.
+  from OSM.
 - Currently, available types of survey features are Buildings and
   Healthcare only. We plan to add more types of features moving ahead.
 - Project managers can also upload supporting map features. Note that
@@ -122,11 +122,11 @@ Go to [fmtm]
   or download the form after the project is created to know about the
   field injected. You can also get the fields injected from our documentation
 
-     ![Here](https://docs.fmtm.dev/manuals/xlsform-design/#injected-fields-in-the-fmtm-xls-form)
+  ![Here](https://docs.fmtm.dev/manuals/xlsform-design/#injected-fields-in-the-fmtm-xls-form)
 
   Also read carefully the overview in the left section of each step to
-   understand the details
-   of the functionalities.
+  understand the details
+  of the functionalities.
 
 #### Uploading Custom Imagery
 
