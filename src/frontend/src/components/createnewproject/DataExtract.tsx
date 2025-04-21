@@ -20,12 +20,13 @@ import UploadArea from '@/components/common/UploadArea';
 import { convertFileToGeojson } from '@/utilfunctions/convertFileToGeojson';
 import { fileType } from '@/store/types/ICommon';
 import { valid } from 'geojson-validation';
+import type { FeatureCollection } from 'geojson';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 const primaryGeomOptions = [
   { name: 'primary_geom_type', value: 'POLYGON', label: 'Polygons (e.g. buildings)' },
-  { name: 'primary_geom_type', value: 'POINT', label: 'Points, or polygon centroids' },
+  { name: 'primary_geom_type', value: 'POINT', label: 'Points (e.g. POIs)' },
   { name: 'primary_geom_type', value: 'LINESTRING', label: 'Lines (e.g. roads, rivers)' },
 ];
 
@@ -38,6 +39,7 @@ const newGeomOptions = [
 const dataExtractOptions = [
   { name: 'data_extract', value: 'osm_data_extract', label: 'Fetch data from OSM' },
   { name: 'data_extract', value: 'custom_data_extract', label: 'Upload custom map data' },
+  { name: 'data_extract', value: 'no_data_extract', label: 'No existing data' },
 ];
 
 const DataExtract = ({
@@ -59,6 +61,13 @@ const DataExtract = ({
   const additionalFeatureGeojson = useAppSelector((state) => state.createproject.additionalFeatureGeojson);
 
   useEffect(() => {
+    // Creating project without data extract, allow to continue
+    if (extractType === 'no_data_extract') {
+      setDisableNextButton(false);
+      return;
+    }
+
+    // No data extract geojson provided, although specified
     if (!dataExtractGeojson) {
       setDisableNextButton(true);
       return;
@@ -125,6 +134,11 @@ const DataExtract = ({
     dataExtractRequestFormData.append('geojson_file', projectAoiGeojsonFile);
     if (projectDetails.osmFormSelectionName) {
       dataExtractRequestFormData.append('osm_category', projectDetails.osmFormSelectionName);
+    }
+    dataExtractRequestFormData.append('geom_type', formValues.primaryGeomType);
+
+    if (formValues.primaryGeomType == 'POINT') {
+      dataExtractRequestFormData.append('centroid', formValues.includeCentroid);
     }
 
     // Set flatgeobuf as loading
@@ -225,9 +239,13 @@ const DataExtract = ({
       setCustomDataExtractUpload(geojsonFromFgbFile);
     }
 
+    validateDataExtractGeojson(extractFeatCol, uploadedFile);
+  };
+
+  const validateDataExtractGeojson = (extractFeatCol: FeatureCollection, uploadedFile: File) => {
     const isGeojsonValid = valid(extractFeatCol, true);
 
-    if (isGeojsonValid?.length === 0 && extractFeatCol && extractFeatCol?.features?.length > 0) {
+    if (isGeojsonValid?.length === 0 && extractFeatCol) {
       handleCustomChange('customDataExtractUpload', uploadedFile);
       handleCustomChange('task_split_type', task_split_type.CHOOSE_AREA_AS_TASK.toString());
       dispatch(CreateProjectActions.setDataExtractGeojson(extractFeatCol));
@@ -286,17 +304,37 @@ const DataExtract = ({
             className="fmtm-flex fmtm-flex-col fmtm-gap-6 lg:fmtm-w-[40%] fmtm-justify-between"
           >
             <div className="fmtm-flex fmtm-flex-col fmtm-gap-4">
-              <RadioButton
-                topic="What type of geometry do you wish to map?"
-                options={primaryGeomOptions}
-                direction="column"
-                value={formValues.primaryGeomType}
-                onChangeData={(value) => {
-                  handleCustomChange('primaryGeomType', value);
-                }}
-                errorMsg={errors.primaryGeomType}
-                required
-              />
+              <label className="fmtm-text-sm font-medium">What type of geometry do you wish to map?</label>
+              <div className="fmtm-flex fmtm-flex-col fmtm-gap-2">
+                {primaryGeomOptions.map((option) => (
+                  <div key={option.value} className="fmtm-flex fmtm-flex-col">
+                    <label className="fmtm-flex fmtm-items-center fmtm-gap-2">
+                      <input
+                        type="radio"
+                        name="primary_geom_type"
+                        value={option.value}
+                        checked={formValues.primaryGeomType === option.value}
+                        onChange={(e) => handleCustomChange('primaryGeomType', e.target.value)}
+                      />
+                      {option.label}
+                    </label>
+
+                    {option.value === 'POINT' && formValues.primaryGeomType === 'POINT' && (
+                      <div className="fmtm-ml-8 fmtm-mt-1 fmtm-flex fmtm-items-center fmtm-gap-2">
+                        <input
+                          type="checkbox"
+                          id="includeCentroid"
+                          checked={formValues.includeCentroid || false}
+                          onChange={(e) => handleCustomChange('includeCentroid', e.target.checked)}
+                        />
+                        <label htmlFor="includeCentroid" className="fmtm-text-sm">
+                          Include polygon centroids
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
               <CustomCheckbox
                 key="newFeatureType"
                 label="I want to use a mix of geometry types"

@@ -128,6 +128,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
       // "uploaded_form": projectDetails.uploaded_form,
       hashtags: projectDetails.hashtags,
       custom_tms_url: projectDetails.custom_tms_url,
+      visibility: projectDetails.visibility,
     };
     // Append osm_category if set
     if (projectDetails.osmFormSelectionName) {
@@ -157,6 +158,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
         additionalFeature?.file,
         projectDetails.project_admins as number[],
         combinedFeaturesCount,
+        projectDetails.dataExtractType === 'no_data_extract',
       ),
     );
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData({ ...projectDetails, ...formValues }));

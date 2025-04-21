@@ -45,7 +45,7 @@ networks:
 
 services:
   proxy:
-    image: "bunkerity/bunkerweb-all-in-one:${BUNKERWEB_TAG:-dev}"
+    image: "bunkerity/bunkerweb-all-in-one:${BUNKERWEB_TAG:-1.6.2-rc1}"
     depends_on:
       # Frontends must be built and available first
       ui:
@@ -53,8 +53,8 @@ services:
     volumes:
       # - certs:/etc/letsencrypt
       - certs:/data
-      - fmtm_frontend:/var/www/html/fmtm.hotosm.org
-      - fmtm_mapper_frontend:/var/www/html/mapper.fmtm.hotosm.org
+      - fmtm_frontend:/var/www/html/fmtm.hotosm.org:ro
+      - fmtm_mapper_frontend:/var/www/html/mapper.fmtm.hotosm.org:ro
     environment:
       # General
       BUNKERWEB_INSTANCES: proxy:5000
@@ -67,7 +67,7 @@ services:
       WHITELIST_URI: https://fmtm.hotosm.org
       MULTISITE: yes
       USE_REVERSE_PROXY: yes
-      # Required for electric headers electric-offset, electric-handle, electric-schema
+      # Required for electric headers electric-offset, electric-handle, electric-schema,electric-cursor,electric-up-to-date
       KEEP_UPSTREAM_HEADERS: yes
       REVERSE_PROXY_INTERCEPT_ERRORS: no
       ALLOWED_METHODS: OPTIONS|HEAD|GET|POST|PATCH|PUT|DELETE
@@ -109,7 +109,7 @@ services:
       sync.fmtm.hotosm.org_CORS_ALLOW_ORIGIN: https://mapper.fmtm.hotosm.org
       sync.fmtm.hotosm.org_CORS_ALLOW_METHODS: GET, HEAD, DELETE, OPTIONS
       # Expose-Headers are RESPONSE headers the browser is allowed to access
-      sync.fmtm.hotosm.org_CORS_EXPOSE_HEADERS: electric-offset,electric-handle,electric-schema
+      sync.fmtm.hotosm.org_CORS_EXPOSE_HEADERS: electric-offset,electric-handle,electric-schema,electric-cursor,electric-up-to-date
     ports:
       - 80:8080
       - 443:8443

@@ -98,9 +98,11 @@ import {
   ManageAccountsOutlined as ManageAccountsOutlinedIcon,
   LogoutOutlined as LogoutOutlinedIcon,
   ArrowDropDown as ArrowDropDownIcon,
+  AlternateEmail as AlternateEmailIcon,
   BarChartOutlined as BarChartOutlinedIcon,
   MapOutlined as MapOutlinedIcon,
   HistoryOutlined as HistoryOutlinedIcon,
+  LockOutlined as LockOutlinedIcon,
 } from '@mui/icons-material';
 import LockPng from '@/assets/images/lock.png';
 import RedLockPng from '@/assets/images/red-lock.png';
@@ -213,7 +215,9 @@ export default {
   ManageAccountsOutlinedIcon,
   LogoutOutlinedIcon,
   ArrowDropDownIcon,
+  AlternateEmailIcon,
   BarChartOutlinedIcon,
   MapOutlinedIcon,
   HistoryOutlinedIcon,
+  LockOutlinedIcon,
 };

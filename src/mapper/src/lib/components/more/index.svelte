@@ -1,29 +1,35 @@
 <script lang="ts">
+	import '$styles/more.css';
 	import Editor from '$lib/components/editor/editor.svelte';
 	import Comment from '$lib/components/more/comment.svelte';
 	import Activities from '$lib/components/more/activities.svelte';
 	import ProjectInfo from '$lib/components/more/project-info.svelte';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
 	import type { ProjectData, TaskEventType } from '$lib/types';
+	import { m } from "$translations/messages.js";
 
-	type stackType = '' | 'Comment' | 'Instructions' | 'Activities' | 'Project Information';
+	type stackType = '' | 'comment' | 'instructions' | 'activities' | 'project-info';
 
-	const stackGroup: { icon: string; title: stackType }[] = [
+	const stackGroup: { id: stackType, icon: string; title: string }[] = [
 		{
+			id: 'project-info',
 			icon: 'info-circle',
-			title: 'Project Information',
+			title: m['stack_group.project_information'](),
 		},
 		{
+			id: 'comment',
 			icon: 'chat',
-			title: 'Comment',
+			title: m['stack_group.comment'](),
 		},
 		{
+			id: 'instructions',
 			icon: 'description',
-			title: 'Instructions',
+			title: m['stack_group.instructions'](),
 		},
 		{
+			id: 'activities',
 			icon: 'list-ul',
-			title: 'Activities',
+			title: m['stack_group.activities'](),
 		},
 	];
 
@@ -36,6 +42,7 @@
 	const taskStore = getTaskStore();
 
 	let activeStack: stackType = $state('');
+	let activeStackTitle: string = $state('');
 	let taskEvents: TaskEventType[] = $state([]);
 	let comments: TaskEventType[] = $state([]);
 
@@ -67,59 +74,71 @@
 	});
 </script>
 
-<div class={`font-barlow font-medium ${activeStack === 'Comment' ? 'h-full' : 'h-fit'}`}>
+<div class={`more ${activeStack === 'comment' ? 'more-comment' : 'more-no-comment'}`}>
 	{#if activeStack === ''}
 		{#each stackGroup as stack}
 			<div
-				class="group flex items-center justify-between hover:bg-red-50 rounded-md p-2 duration-200 cursor-pointer"
-				onclick={() => (activeStack = stack.title)}
+				class="stack"
+				onclick={() => {
+					activeStack = stack.id;
+					activeStackTitle = stack.title;
+				}}
 				onkeydown={(e) => {
-					if (e.key === 'Enter') activeStack = stack.title;
+					if (e.key === 'Enter') {
+						activeStack = stack.id;
+						activeStackTitle = stack.title;
+					}
 				}}
 				tabindex="0"
 				role="button"
 			>
-				<div class="flex items-center gap-3">
-					<hot-icon name={stack.icon} class="text-[1.25rem]"></hot-icon>
+				<div class="icon-title">
+					<hot-icon name={stack.icon} class="icon"></hot-icon>
 					<p>{stack.title}</p>
 				</div>
-				<hot-icon name="chevron-right" class="text-[1rem] group-hover:translate-x-1 duration-200"></hot-icon>
+				<hot-icon name="chevron-right" class="icon-next"></hot-icon>
 			</div>
 		{/each}
 	{/if}
 
 	<!-- header -->
 	{#if activeStack !== ''}
-		<div class="flex items-center gap-x-2 sticky -top-1 bg-white pb-2 z-50">
+		<div class="active-stack-header">
 			<hot-icon
 				name="chevron-left"
-				class="text-[1rem] hover:-translate-x-[2px] duration-200 cursor-pointer text-[1.125rem] text-black hover:text-red-600 duration-200"
-				onclick={() => (activeStack = '')}
+				class="icon"
+				onclick={() => {
+					activeStack = ''; 
+					activeStackTitle = ''
+				}}
 				onkeydown={(e: KeyboardEvent) => {
-					if (e.key === 'Enter') activeStack = '';
+					if (e.key === 'Enter') {
+						activeStack = ''; 
+						activeStackTitle = ''
+					}
 				}}
 				tabindex="0"
 				role="button"
 			></hot-icon>
-			<p class="text-[1.125rem] font-semibold">{activeStack}</p>
+			<p class="title">{activeStackTitle}</p>
 		</div>
 	{/if}
 
 	<!-- body -->
-	{#if activeStack === 'Comment'}
+	{#if activeStack === 'comment'}
 		<Comment {comments} projectId={projectData?.id} />
 	{/if}
-	{#if activeStack === 'Instructions'}
+	{#if activeStack === 'instructions'}
 		{#if projectData?.per_task_instructions}
 			<Editor editable={false} content={projectData?.per_task_instructions} />
 		{:else}
-			<div class="flex justify-center mt-10">
-				<p class="text-[#484848] text-base">No Instructions</p>
+			<div class="active-stack-instructions">
+				<p>{m['index.no_instructions']()}</p>
 			</div>
 		{/if}
 	{/if}
-	{#if activeStack === 'Activities'}
+	{#if activeStack === 'activities'}
 		<Activities {taskEvents} {zoomToTask} />
 	{/if}
-	{#if activeStack === 'Project Information'}<ProjectInfo {projectData} />{/if}
+	{#if activeStack === 'project-info'}<ProjectInfo {projectData} />{/if}
 </div>

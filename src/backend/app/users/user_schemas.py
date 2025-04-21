@@ -18,11 +18,12 @@
 """Pydantic models overriding base DbUser fields."""
 
 from typing import Annotated, Optional
+from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, Field
 
 from app.db.enums import ProjectRole, UserRole
-from app.db.models import DbUser, DbUserRole
+from app.db.models import DbUser, DbUserInvite, DbUserRole
 from app.projects.project_schemas import PaginationInfo
 
 
@@ -39,7 +40,7 @@ class UserUpdate(DbUser):
     """User details for update in DB."""
 
     # Exclude (do not allow update)
-    id: Annotated[Optional[int], Field(exclude=True)] = None
+    sub: Annotated[Optional[str], Field(exclude=True)] = None
     username: Annotated[Optional[str], Field(exclude=True)] = None
     registered_at: Annotated[Optional[AwareDatetime], Field(exclude=True)] = None
     tasks_mapped: Annotated[Optional[int], Field(exclude=True)] = None
@@ -52,7 +53,7 @@ class UserUpdate(DbUser):
 
 
 class UserOut(DbUser):
-    """User with ID and role."""
+    """User and role."""
 
     # Mandatory user role field
     role: UserRole
@@ -70,7 +71,7 @@ class UserRole(BaseModel):
 class UserRolesOut(DbUserRole):
     """User role for a specific project."""
 
-    user_id: int
+    user_sub: str
     role: ProjectRole
     project_id: Optional[int] = None
 
@@ -85,5 +86,26 @@ class PaginatedUsers(BaseModel):
 class Usernames(BaseModel):
     """User info with username and their id."""
 
-    id: int
+    sub: str
     username: str
+
+
+class UserInviteIn(DbUserInvite):
+    """Insert a user invite record."""
+
+    # Exclude (fields auto-generated in db)
+    token: Annotated[Optional[UUID], Field(exclude=True)] = None
+    expires_at: Annotated[Optional[AwareDatetime], Field(exclude=True)] = None
+    created_at: Annotated[Optional[AwareDatetime], Field(exclude=True)] = None
+    # project_id is included in the URL anyway
+    project_id: Annotated[Optional[int], Field(exclude=True)] = None
+
+    # Set default role
+    role: Optional[ProjectRole] = ProjectRole.MAPPER
+
+
+class UserInviteUpdate(UserInviteIn):
+    """Update a user invite record, mostly to update timestamps."""
+
+    # Allow setting new expiry (plus used_at field)
+    expires_at: Optional[AwareDatetime] = None

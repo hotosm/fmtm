@@ -125,15 +125,16 @@ async def get_projects_featcol(
 async def generate_data_extract(
     aoi: geojson.FeatureCollection | geojson.Feature | dict,
     extract_config: Optional[BytesIO] = None,
+    centroid: bool = False,
 ) -> str:
     """Request a new data extract in flatgeobuf format.
 
     Args:
-        db (Connection): The database connection.
         aoi (geojson.FeatureCollection | geojson.Feature | dict]):
             Area of interest for data extraction.
         extract_config (Optional[BytesIO], optional):
             Configuration for data extraction. Defaults to None.
+        centroid (bool): Generate centroid of polygons.
 
     Raises:
         HTTPException:
@@ -167,6 +168,7 @@ async def generate_data_extract(
             "outputType": "geojson",
             "bind_zip": False,
             "useStWithin": False,
+            "centroid": centroid,
         },
     )
 
@@ -405,16 +407,17 @@ async def generate_odk_central_project_content(
     project_odk_form_id: str,
     odk_credentials: central_schemas.ODKCentralDecrypted,
     xlsform: BytesIO,
-    task_extract_dict: dict[int, geojson.FeatureCollection],
-    entity_properties: list[str],
+    task_extract_dict: Optional[dict[int, geojson.FeatureCollection]] = None,
+    entity_properties: Optional[list[str]] = None,
 ) -> str:
     """Populate the project in ODK Central with XForm, Appuser, Permissions."""
-    # The ODK Dataset (Entity List) must exist prior to main XLSForm
-    entities_list = await central_crud.task_geojson_dict_to_entity_values(
-        task_extract_dict
-    )
+    entities_list = []
+    if task_extract_dict:
+        entities_list = await central_crud.task_geojson_dict_to_entity_values(
+            task_extract_dict
+        )
 
-    log.debug("Creating main ODK Entity list for project: features")
+    log.debug("Creating project ODK dataset named 'features'")
     await central_crud.create_entity_list(
         odk_credentials,
         project_odk_id,
@@ -465,19 +468,25 @@ async def generate_project_files(
         log.debug("Getting data extract geojson from flatgeobuf")
         feature_collection = await get_project_features_geojson(db, project)
 
-        # Get properties to create datasets
-        entity_properties = list(
-            feature_collection.get("features")[0].get("properties").keys()
-        )
-        entity_properties.append("submission_ids")
+        first_feature = next(
+            iter(feature_collection.get("features", [])), {}
+        )  # Get first feature or {}
 
-        # Split extract by task area
-        log.debug("Splitting data extract per task area")
-        # TODO in future this splitting could be removed if the task_id is
-        # no longer used in the XLSForm for the map filter
-        task_extract_dict = await split_geojson_by_task_areas(
-            db, feature_collection, project_id
-        )
+        if first_feature and "properties" in first_feature:  # Check if properties exist
+            # FIXME perhaps this should be done in the SQL code?
+            entity_properties = list(first_feature["properties"].keys()) + [
+                "submission_ids"
+            ]
+
+            log.debug("Splitting data extract per task area")
+            # TODO in future this splitting could be removed if the task_id is
+            # no longer used in the XLSForm for the map filter
+            task_extract_dict = await split_geojson_by_task_areas(
+                db, feature_collection, project_id
+            )
+        else:
+            entity_properties = []
+            task_extract_dict = {}
 
         # Get ODK Project details
         project_odk_id = project.odkid
@@ -584,10 +593,12 @@ async def get_project_features_geojson(
     data_extract_url = db_project.data_extract_url
 
     if not data_extract_url:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail=f"No data extract exists for project ({project_id})",
-        )
+        # raise HTTPException(
+        #     status_code=HTTPStatus.NOT_FOUND,
+        #     detail=f"No data extract exists for project ({project_id})",
+        # )
+        # Return an empty featcol for projects with no existing features
+        return {"type": "FeatureCollection", "features": []}
 
     # If local debug URL, replace with Docker service name
     data_extract_url = data_extract_url.replace(
@@ -882,9 +893,12 @@ async def get_paginated_projects(
     db: Connection,
     page: int,
     results_per_page: int,
-    user_id: Optional[int] = None,
+    current_user: Optional[str] = None,
+    org_id: Optional[int] = None,
+    user_sub: Optional[str] = None,
     hashtags: Optional[str] = None,
     search: Optional[str] = None,
+    minimal: bool = False,
 ) -> dict:
     """Helper function to fetch paginated projects with optional filters."""
     if hashtags:
@@ -892,7 +906,13 @@ async def get_paginated_projects(
 
     # Get subset of projects
     projects = await DbProject.all(
-        db, user_id=user_id, hashtags=hashtags, search=search
+        db,
+        current_user=current_user,
+        org_id=org_id,
+        user_sub=user_sub,
+        hashtags=hashtags,
+        search=search,
+        minimal=minimal,
     )
     start_index = (page - 1) * results_per_page
     end_index = start_index + results_per_page
@@ -920,11 +940,11 @@ async def get_project_users_plus_contributions(db: Connection, project_id: int):
     query = """
         SELECT
             u.username as user,
-            COUNT(th.user_id) as contributions
+            COUNT(th.user_sub) as contributions
         FROM
             users u
         JOIN
-            task_events th ON u.id = th.user_id
+            task_events th ON u.sub = th.user_sub
         WHERE
             th.project_id = %(project_id)s
         GROUP BY u.username
@@ -962,41 +982,8 @@ async def send_project_manager_message(
 
     send_osm_message(
         osm_token=osm_token,
-        osm_id=new_manager.id,
+        osm_sub=new_manager.sub,
         title=f"You have been assigned to project {project.name} as a manager",
         body=message_content,
     )
     log.info(f"Message sent to new project manager ({new_manager.username}).")
-
-
-async def send_invitation_message(
-    request: Request,
-    project: DbProject,
-    invitee_username: str,
-    osm_auth: Auth,
-):
-    """Send an invitation message to a user to join a project."""
-    log.info(f"Sending invitation message to osm user ({invitee_username}).")
-
-    osm_token = get_osm_token(request, osm_auth)
-
-    project_url = f"{settings.FMTM_DOMAIN}/project/{project.id}"
-    if not project_url.startswith("http"):
-        project_url = f"https://{project_url}"
-
-    message_content = dedent(f"""
-        You have been invited to join the project **{project.name}**.
-
-        Please click this link:
-        [Project]({project_url})
-
-        Thank you for being a part of our platform!
-    """)
-
-    send_osm_message(
-        osm_token=osm_token,
-        osm_username=invitee_username,
-        title=f"You have been invited to join the project {project.name}",
-        body=message_content,
-    )
-    log.info(f"Invitation message sent to osm user ({invitee_username}).")

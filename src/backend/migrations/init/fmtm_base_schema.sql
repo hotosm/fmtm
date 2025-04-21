@@ -212,7 +212,7 @@ ALTER TABLE public.basemaps OWNER TO fmtm;
 
 CREATE TABLE public.organisation_managers (
     organisation_id integer NOT NULL,
-    user_id integer NOT NULL
+    user_sub character varying NOT NULL
 );
 ALTER TABLE public.organisation_managers OWNER TO fmtm;
 
@@ -226,7 +226,7 @@ CREATE TABLE public.organisations (
     url character varying,
     type public.organisationtype DEFAULT 'FREE',
     community_type public.communitytype DEFAULT 'OSM_COMMUNITY',
-    created_by integer,
+    created_by character varying,
     associated_email character varying,
     approved BOOLEAN DEFAULT false,
     odk_central_url character varying,
@@ -250,7 +250,7 @@ CREATE TABLE public.projects (
     id integer NOT NULL,
     organisation_id integer,
     odkid integer,
-    author_id integer,
+    author_sub character varying,
     name character varying,
     short_description character varying,
     description character varying,
@@ -285,6 +285,7 @@ CREATE TABLE public.projects (
     ),
     primary_geom_type public.geomtype DEFAULT 'POLYGON',
     new_geom_type public.geomtype DEFAULT 'POLYGON',
+    use_odk_collect boolean DEFAULT false,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now()
 );
@@ -298,6 +299,17 @@ NO MAXVALUE
 CACHE 1;
 ALTER TABLE public.projects_id_seq OWNER TO fmtm;
 ALTER SEQUENCE public.projects_id_seq OWNED BY public.projects.id;
+-- Table field comments
+COMMENT ON COLUMN public.projects.geo_restrict_force_error
+IS 'Prevent users from creating new geometries far away from current location';
+COMMENT ON COLUMN public.projects.geo_restrict_distance_meters
+IS 'Specify how many meters the user can be from new point before error shown';
+COMMENT ON COLUMN public.projects.primary_geom_type IS
+'Main geom type being mapped in this project';
+COMMENT ON COLUMN public.projects.new_geom_type IS
+'Geom type used for drawing new geoms, e.g. existing: polygons, new: points';
+COMMENT ON COLUMN public.projects.use_odk_collect IS
+'Override whether this project uses ODK Collect (vs default webforms)';
 
 
 -- Note we use UUID for interoperability with external databases,
@@ -307,7 +319,7 @@ CREATE TABLE public.task_events (
     event public.taskevent NOT NULL,
     task_id integer NOT NULL,
     project_id integer,
-    user_id integer,
+    user_sub character varying,
     team_id UUID,
     username character varying,
     state public.mappingstate,
@@ -337,7 +349,7 @@ ALTER SEQUENCE public.tasks_id_seq OWNED BY public.tasks.id;
 
 
 CREATE TABLE public.user_roles (
-    user_id integer NOT NULL,
+    user_sub character varying NOT NULL,
     project_id integer NOT NULL,
     role public.projectrole NOT NULL DEFAULT 'MAPPER'
 );
@@ -345,7 +357,7 @@ ALTER TABLE public.user_roles OWNER TO fmtm;
 
 
 CREATE TABLE public.users (
-    id integer NOT NULL,
+    sub character varying NOT NULL,
     username character varying,
     role public.userrole NOT NULL DEFAULT 'MAPPER',
     name character varying,
@@ -365,6 +377,18 @@ CREATE TABLE public.users (
     last_login_at timestamp with time zone DEFAULT now()
 );
 ALTER TABLE public.users OWNER TO fmtm;
+
+CREATE TABLE IF NOT EXISTS public.user_invites (
+    token UUID DEFAULT gen_random_uuid(),
+    project_id integer NOT NULL,
+    role public.projectrole NOT NULL DEFAULT 'MAPPER',
+    osm_username VARCHAR,
+    email VARCHAR,
+    expires_at timestamp with time zone DEFAULT now() + interval '7 days',
+    used_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now()
+);
+ALTER TABLE public.user_invites OWNER TO fmtm;
 
 CREATE TABLE public.odk_entities (
     entity_id UUID NOT NULL,
@@ -418,7 +442,7 @@ ALTER SEQUENCE public.team_name_seq OWNED BY public.project_teams.team_name;
 
 CREATE TABLE IF NOT EXISTS public.project_team_users (
     team_id UUID,
-    user_id INTEGER NOT NULL
+    user_sub character varying NOT NULL
 );
 ALTER TABLE public.project_team_users OWNER TO fmtm;
 
@@ -442,7 +466,6 @@ ALTER COLUMN team_name SET DEFAULT (
     'Team ' || nextval('public.team_name_seq'::regclass)
 );
 
-
 -- Constraints for primary keys
 
 ALTER TABLE public._migrations
@@ -455,7 +478,7 @@ ALTER TABLE ONLY public.basemaps
 ADD CONSTRAINT basemaps_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY public.organisation_managers
-ADD CONSTRAINT organisation_user_key UNIQUE (organisation_id, user_id);
+ADD CONSTRAINT organisation_user_key UNIQUE (organisation_id, user_sub);
 
 ALTER TABLE ONLY public.organisations
 ADD CONSTRAINT organisations_name_key UNIQUE (name);
@@ -476,13 +499,13 @@ ALTER TABLE ONLY public.tasks
 ADD CONSTRAINT tasks_pkey PRIMARY KEY (id, project_id);
 
 ALTER TABLE ONLY public.user_roles
-ADD CONSTRAINT user_roles_pkey PRIMARY KEY (user_id, project_id);
+ADD CONSTRAINT user_roles_pkey PRIMARY KEY (user_sub, project_id);
 
 ALTER TABLE ONLY public.users
-ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+ADD CONSTRAINT users_pkey PRIMARY KEY (sub);
 
-ALTER TABLE ONLY public.users
-ADD CONSTRAINT users_username_key UNIQUE (username);
+ALTER TABLE ONLY public.user_invites
+ADD CONSTRAINT user_invites_pkey PRIMARY KEY (token);
 
 ALTER TABLE ONLY public.odk_entities
 ADD CONSTRAINT odk_entities_pkey PRIMARY KEY (entity_id);
@@ -500,7 +523,7 @@ ALTER TABLE ONLY public.project_teams
 ADD CONSTRAINT project_teams_pkey PRIMARY KEY (team_id);
 
 ALTER TABLE ONLY public.project_team_users
-ADD CONSTRAINT project_team_users_pkey PRIMARY KEY (team_id, user_id);
+ADD CONSTRAINT project_team_users_pkey PRIMARY KEY (team_id, user_sub);
 
 -- Indexing
 
@@ -519,10 +542,10 @@ ON public.tasks USING btree (
     id, project_id
 );
 CREATE INDEX idx_user_roles ON public.user_roles USING btree (
-    project_id, user_id
+    project_id, user_sub
 );
 CREATE INDEX idx_org_managers ON public.organisation_managers USING btree (
-    user_id, organisation_id
+    organisation_id, user_sub
 );
 CREATE INDEX idx_task_event_composite
 ON public.task_events USING btree (
@@ -530,15 +553,19 @@ ON public.task_events USING btree (
 );
 CREATE INDEX idx_task_event_project_user
 ON public.task_events USING btree (
-    user_id, project_id
+    user_sub, project_id
 );
 CREATE INDEX idx_task_event_project_id
 ON public.task_events USING btree (
     task_id, project_id
 );
-CREATE INDEX idx_task_event_user_id
+CREATE INDEX idx_task_event_user_sub
 ON public.task_events USING btree (
-    task_id, user_id
+    task_id, user_sub
+);
+CREATE INDEX idx_user_invites_project
+ON public.user_invites USING btree (
+    project_id
 );
 CREATE INDEX idx_entities_project_id
 ON public.odk_entities USING btree (
@@ -564,7 +591,7 @@ ADD CONSTRAINT fk_organisations FOREIGN KEY (
 ) REFERENCES public.organisations (id);
 
 ALTER TABLE ONLY public.projects
-ADD CONSTRAINT fk_users FOREIGN KEY (author_id) REFERENCES public.users (id);
+ADD CONSTRAINT fk_users FOREIGN KEY (author_sub) REFERENCES public.users (id);
 
 ALTER TABLE ONLY public.organisation_managers
 ADD CONSTRAINT organisation_managers_organisation_id_fkey FOREIGN KEY (
@@ -572,9 +599,9 @@ ADD CONSTRAINT organisation_managers_organisation_id_fkey FOREIGN KEY (
 ) REFERENCES public.organisations (id);
 
 ALTER TABLE ONLY public.organisation_managers
-ADD CONSTRAINT organisation_managers_user_id_fkey FOREIGN KEY (
-    user_id
-) REFERENCES public.users (id);
+ADD CONSTRAINT organisation_managers_user_sub_fkey FOREIGN KEY (
+    user_sub
+) REFERENCES public.users (sub);
 
 ALTER TABLE ONLY public.tasks
 ADD CONSTRAINT tasks_project_id_fkey FOREIGN KEY (
@@ -593,8 +620,8 @@ ADD CONSTRAINT fk_project_task_id FOREIGN KEY (
 
 ALTER TABLE ONLY public.task_events
 ADD CONSTRAINT fk_users FOREIGN KEY (
-    user_id
-) REFERENCES public.users (id);
+    user_sub
+) REFERENCES public.users (sub);
 
 ALTER TABLE ONLY public.user_roles
 ADD CONSTRAINT user_roles_project_id_fkey FOREIGN KEY (
@@ -602,9 +629,14 @@ ADD CONSTRAINT user_roles_project_id_fkey FOREIGN KEY (
 ) REFERENCES public.projects (id);
 
 ALTER TABLE ONLY public.user_roles
-ADD CONSTRAINT user_roles_user_id_fkey FOREIGN KEY (
-    user_id
-) REFERENCES public.users (id);
+ADD CONSTRAINT user_roles_user_sub_fkey FOREIGN KEY (
+    user_sub
+) REFERENCES public.users (sub);
+
+ALTER TABLE ONLY public.user_invites
+ADD CONSTRAINT user_invites_project_id_fkey FOREIGN KEY (
+    project_id
+) REFERENCES public.projects (id);
 
 ALTER TABLE ONLY public.task_events
 ADD CONSTRAINT fk_team_id FOREIGN KEY (
@@ -618,8 +650,8 @@ ADD CONSTRAINT fk_projects FOREIGN KEY (
 
 ALTER TABLE ONLY public.project_team_users
 ADD CONSTRAINT fk_users FOREIGN KEY (
-    user_id
-) REFERENCES public.users (id) ON DELETE CASCADE;
+    user_sub
+) REFERENCES public.users (sub) ON DELETE CASCADE;
 
 -- Triggers
 

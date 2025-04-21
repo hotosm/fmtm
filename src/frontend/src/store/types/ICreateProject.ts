@@ -1,4 +1,4 @@
-import { task_split_type, MapGeomTypes } from '@/types/enums';
+import { task_split_type, MapGeomTypes, project_visibility } from '@/types/enums';
 
 export type CreateProjectStateTypes = {
   editProjectDetails: ProjectDetailsTypes;
@@ -39,6 +39,7 @@ export type CreateProjectStateTypes = {
   descriptionToFocus: string | null;
   task_num_buildings: number | null;
   task_split_dimension: number | null;
+  isProjectDeletePending: boolean;
 };
 export type ValidateCustomFormResponse = {
   detail: { message: string; possible_reason: string };
@@ -80,7 +81,7 @@ type EditProjectResponseTypes = {
   outline: GeoJSONFeatureTypes;
   tasks: ProjectTaskTypes[];
   osm_category: string;
-  hashtags: string;
+  hashtags: string[];
 };
 
 export type ProjectDetailsTypes = {
@@ -94,7 +95,7 @@ export type ProjectDetailsTypes = {
   organisation?: number;
   odk_central_url?: string;
   name?: string;
-  hashtags?: string;
+  hashtags?: string[];
   short_description?: string;
   description?: string;
   task_split_type?: number;
@@ -114,6 +115,7 @@ export type ProjectDetailsTypes = {
   useMixedGeomTypes: boolean;
   newGeomType: MapGeomTypes;
   project_admins: number[];
+  visibility: project_visibility;
 };
 
 export type FormCategoryListTypes = {
@@ -159,4 +161,10 @@ export type splittedGeojsonType = {
     geometry: { type: 'Polygon'; coordinates: number[][] };
     properties: Record<string, any>;
   }[];
+};
+
+export type projectVisibilityOptionsType = {
+  name: string;
+  value: project_visibility;
+  label: string;
 };

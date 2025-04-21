@@ -17,19 +17,42 @@
 #
 """Endpoints for users and role."""
 
+from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Query,
+    Request,
+    Response,
+)
+from fastapi.responses import JSONResponse
 from loguru import logger as log
 from psycopg import Connection
 
-from app.auth.roles import mapper, org_admin, project_manager, super_admin
+from app.auth.auth_deps import AuthUser, login_required
+from app.auth.providers.osm import check_osm_user, init_osm_auth
+from app.auth.roles import (
+    ProjectUserDict,
+    field_manager,
+    mapper,
+    super_admin,
+    validator,
+)
+from app.config import settings
 from app.db.database import db_conn
 from app.db.enums import HTTPStatus
 from app.db.enums import UserRole as UserRoleEnum
-from app.db.models import DbUser, DbUserRole
+from app.db.models import DbUser, DbUserInvite, DbUserRole
 from app.users import user_schemas
-from app.users.user_crud import get_paginated_users, process_inactive_users
+from app.users.user_crud import (
+    get_paginated_users,
+    process_inactive_users,
+    send_invitation_osm_message,
+)
 from app.users.user_deps import get_user
 
 router = APIRouter(
@@ -54,7 +77,7 @@ async def get_users(
 @router.get("/usernames", response_model=list[user_schemas.Usernames])
 async def get_userlist(
     db: Annotated[Connection, Depends(db_conn)],
-    _: Annotated[DbUser, Depends(org_admin)],
+    _: Annotated[DbUser, Depends(validator)],
     search: str = "",
 ):
     """Get all user list with info such as id and username."""
@@ -62,7 +85,7 @@ async def get_userlist(
     if not users:
         return []
     return [
-        user_schemas.Usernames(id=user.id, username=user.username) for user in users
+        user_schemas.Usernames(sub=user.sub, username=user.username) for user in users
     ]
 
 
@@ -75,15 +98,155 @@ async def get_user_roles(_: Annotated[DbUser, Depends(mapper)]):
     return user_roles
 
 
-@router.patch("/{user_id}", response_model=user_schemas.UserOut)
+@router.post("/process-inactive-users")
+async def delete_inactive_users(
+    db: Annotated[Connection, Depends(db_conn)],
+    _: Annotated[DbUser, Depends(super_admin)],
+):
+    """Identify inactive users, send warnings, and delete accounts."""
+    log.info("Start processing inactive users")
+    await process_inactive_users(db)
+    log.info("Finished processing inactive users")
+    return Response(status_code=HTTPStatus.NO_CONTENT)
+
+
+@router.get("/invites", response_model=list[DbUserInvite])
+async def get_project_user_invites(
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user_dict: Annotated[ProjectUserDict, Depends(field_manager)],
+):
+    """Get all user invites for a project."""
+    project_id = project_user_dict.get("project").id
+    return await DbUserInvite.all(db, project_id)
+
+
+@router.post("/invite")
+async def invite_new_user(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user_dict: Annotated[ProjectUserDict, Depends(field_manager)],
+    user_in: user_schemas.UserInviteIn,
+    osm_auth=Depends(init_osm_auth),
+):
+    """Invite a user to a project.
+
+    If the user already exists, directly assign the role to the user.
+    If the user does not exist, create an invite and send an email or OSM message.
+    The invite URL is user specific with a token that expires after 7 days.
+    - Including `osm_username` will send an OSM message notification (including email).
+    - Including `email` will send an email to the user.
+    - It's also possible to send the returned invite URL to the user via other means
+    (e.g. mobile message).
+    """
+    project = project_user_dict.get("project")
+
+    if user_in.osm_username:
+        if osm_user_exists := await check_osm_user(user_in.osm_username):
+            username = user_in.osm_username
+            signin_type = "osm"
+        else:
+            raise HTTPException(
+                status_code=HTTPStatus.NOT_FOUND,
+                detail=f"OSM user not found: {user_in.osm_username}",
+            )
+    elif user_in.email and user_in.email.endswith("@gmail.com"):
+        username = user_in.email.split("@")[0]
+        signin_type = "google"
+    else:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="Either osm username or google email must be provided.",
+        )
+
+    # The user is unique by username and auth provider
+    if users := await DbUser.all(db, username=username, signin_type=signin_type):
+        user = users[0]
+        latest_role = await DbUserRole.create(db, project.id, user.sub, user_in.role)
+
+        return JSONResponse(
+            status_code=HTTPStatus.CREATED,
+            content={
+                "message": f"User {user.username} already exists. "
+                f"Role Assigned: {latest_role.role.value}."
+            },
+        )
+
+    new_invite = await DbUserInvite.create(db, project.id, user_in)
+
+    # Generate invite URL
+    # TODO create frontend page to handle /invite
+    # TODO save token from URL in localStorage
+    # TODO ask user to login to FMTM first, present options
+    # TODO once logged in and redirected back to frontend
+    # TODO read the localStorage `invite` key, and call the
+    # TODO /users/invite/{token} endpoint.
+    if settings.DEBUG:
+        invite_url = (
+            f"http://{settings.FMTM_DOMAIN}:{settings.FMTM_DEV_PORT}"
+            f"/invite?token={new_invite.token}"
+        )
+    else:
+        invite_url = f"https://{settings.FMTM_DOMAIN}/invite?token={new_invite.token}"
+
+    # Notify via OSM message
+    if osm_user_exists:
+        background_tasks.add_task(
+            send_invitation_osm_message,
+            request=request,
+            project=project,
+            invitee_username=username,
+            osm_auth=osm_auth,
+            invite_url=invite_url,
+        )
+
+    # TODO Notify via email (consider options)
+
+    return JSONResponse(status_code=HTTPStatus.OK, content={"invite_url": invite_url})
+
+
+@router.get("/invite/{token}")
+async def accept_invite(
+    token: str,
+    db: Annotated[Connection, Depends(db_conn)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
+):
+    """Accept a user invite token and generate relevant DB entries."""
+    invite = await DbUserInvite.one(db, token)
+    if not invite or invite.is_expired():
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN, detail="Invite has expired (valid 7 days)"
+        )
+
+    if (invite.osm_username and invite.osm_username != current_user.username) or (
+        invite.email and invite.email != current_user.email
+    ):
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail="Invite is not for the current user.",
+        )
+
+    # Create the role for the user / project
+    await DbUserRole.create(db, invite.project_id, current_user.sub, invite.role)
+    # Expire the token
+    await DbUserInvite.update(
+        db,
+        invite.token,
+        user_update=user_schemas.UserInviteUpdate(used_at=datetime.now(timezone.utc)),
+    )
+
+    return Response(status_code=HTTPStatus.OK)
+
+
+@router.patch("/{user_sub}", response_model=user_schemas.UserOut)
 async def update_existing_user(
-    user_id: int,
+    user_sub: str,
     new_user_data: user_schemas.UserUpdate,
     _: Annotated[DbUser, Depends(super_admin)],
     db: Annotated[Connection, Depends(db_conn)],
 ):
     """Change the role of a user."""
-    return await DbUser.update(db=db, user_id=user_id, user_update=new_user_data)
+    return await DbUser.update(db=db, user_sub=user_sub, user_update=new_user_data)
 
 
 @router.get("/{id}", response_model=user_schemas.UserOut)
@@ -110,38 +273,6 @@ async def delete_user_by_identifier(
     log.info(
         f"User {current_user.username} attempting deletion of user {user.username}"
     )
-    await DbUser.delete(db, user.id)
-    log.info(f"User {user.id} deleted successfully.")
+    await DbUser.delete(db, user.sub)
+    log.info(f"User {user.sub} deleted successfully.")
     return Response(status_code=HTTPStatus.NO_CONTENT)
-
-
-@router.post("/process-inactive-users")
-async def delete_inactive_users(
-    db: Annotated[Connection, Depends(db_conn)],
-    _: Annotated[DbUser, Depends(super_admin)],
-):
-    """Identify inactive users, send warnings, and delete accounts."""
-    log.info("Start processing inactive users")
-    await process_inactive_users(db)
-    log.info("Finished processing inactive users")
-    return Response(status_code=HTTPStatus.NO_CONTENT)
-
-
-@router.get(
-    "/{project_id}/project-users", response_model=list[user_schemas.UserRolesOut]
-)
-async def get_project_users(
-    db: Annotated[Connection, Depends(db_conn)],
-    project_user_dict: Annotated[DbUser, Depends(project_manager)],
-):
-    """Get project users and their project role."""
-    project = project_user_dict.get("project")
-    users = await DbUserRole.all(db, project.id)
-    if not users:
-        return []
-    return [
-        user_schemas.UserRolesOut(
-            user_id=user.user_id, project_id=user.project_id, role=user.role
-        )
-        for user in users
-    ]

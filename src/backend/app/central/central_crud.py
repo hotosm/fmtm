@@ -46,6 +46,7 @@ from app.db.postgis_utils import (
     javarosa_to_geojson_geom,
     parse_geojson_file_to_featcol,
 )
+from app.s3 import strip_presigned_url_for_local_dev
 
 
 def get_odk_project(odk_central: Optional[central_schemas.ODKCentralDecrypted] = None):
@@ -567,6 +568,7 @@ async def create_entity_list(
         )
         # Step 2: populate the Entities
         if entities_list:
+            log.debug(f"Creating project ODK entities for dataset: {dataset_name}")
             await odk_central.createEntities(
                 odk_id,
                 dataset_name,
@@ -914,8 +916,8 @@ async def get_appuser_token(
 
         # delete if app_user already exists
         if odk_app_user:
-            app_user_id = odk_app_user[0].get("id")
-            appuser.delete(project_odk_id, app_user_id)
+            app_user_sub = odk_app_user[0].get("id")
+            appuser.delete(project_odk_id, app_user_sub)
 
         # create new app_user
         appuser_name = "fmtm_user"
@@ -924,7 +926,7 @@ async def get_appuser_token(
         )
         appuser_json = appuser.create(project_odk_id, appuser_name)
         appuser_token = appuser_json.get("token")
-        appuser_id = appuser_json.get("id")
+        appuser_sub = appuser_json.get("id")
 
         odk_url = odk_credentials.odk_central_url
 
@@ -933,7 +935,7 @@ async def get_appuser_token(
         response = appuser.updateRole(
             projectId=project_odk_id,
             xform=xform_id,
-            actorId=appuser_id,
+            actorId=appuser_sub,
         )
         if not response.ok:
             try:
@@ -989,3 +991,24 @@ async def upload_form_media(
                 form_id=xform_id,
                 attachments=attachment_filepaths,
             )
+
+
+async def get_form_media(
+    xform_id: str,
+    project_odk_id: int,
+    odk_credentials: central_schemas.ODKCentralDecrypted,
+):
+    """Get a list of form media attachments with their URLs."""
+    async with central_deps.get_async_odk_form(odk_credentials) as async_odk_form:
+        form_attachment_urls = await async_odk_form.getFormAttachmentUrls(
+            project_odk_id,
+            xform_id,
+        )
+
+    if settings.DEBUG:
+        form_attachment_urls = {
+            filename: strip_presigned_url_for_local_dev(url)
+            for filename, url in form_attachment_urls.items()
+        }
+
+    return form_attachment_urls

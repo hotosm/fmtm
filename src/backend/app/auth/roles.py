@@ -30,30 +30,14 @@ from psycopg import Connection
 from psycopg.rows import class_row
 from pydantic import Field
 
-from app.auth.auth_deps import login_required, mapper_login_required
+from app.auth.auth_deps import login_required, public_endpoint
+from app.auth.auth_logic import get_uid
 from app.auth.auth_schemas import AuthUser, OrgUserDict, ProjectUserDict
 from app.db.database import db_conn
 from app.db.enums import HTTPStatus, ProjectRole, ProjectVisibility
 from app.db.models import DbProject, DbUser
 from app.organisations.organisation_deps import get_organisation
 from app.projects.project_deps import get_project, get_project_by_id
-
-
-async def get_uid(user_data: AuthUser | DbUser) -> int:
-    """Extract user id from returned OSM user."""
-    try:
-        user_id = user_data.id
-        return user_id
-
-    except Exception as e:
-        log.exception(
-            f"Failed to get user id from auth object: {user_data}. Error: {e}",
-            stack_info=True,
-        )
-        raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED,
-            detail="Auth failed. No user id present",
-        ) from e
 
 
 async def check_access(
@@ -85,7 +69,7 @@ async def check_access(
         Optional[DbUser]: The user details if access is granted,
             otherwise None.
     """
-    user_id = await get_uid(user)
+    user_sub = await get_uid(user)
 
     sql = """
         WITH role_hierarchy AS (
@@ -98,7 +82,7 @@ async def check_access(
 
         SELECT *
         FROM users
-        WHERE id = %(user_id)s
+        WHERE sub = %(user_sub)s
             AND (
                 CASE
                     -- Simple check to see if ADMIN or blocked (READ_ONLY)
@@ -110,7 +94,7 @@ async def check_access(
                         EXISTS (
                             SELECT 1
                             FROM organisation_managers
-                            WHERE organisation_managers.user_id = %(user_id)s
+                            WHERE organisation_managers.user_sub = %(user_sub)s
                             AND organisation_managers.organisation_id = %(org_id)s
                         )
 
@@ -124,7 +108,7 @@ async def check_access(
                             JOIN role_hierarchy AS required_role_h
                                 ON %(role)s::public.projectrole
                                     = required_role_h.role::public.projectrole
-                            WHERE user_roles.user_id = %(user_id)s
+                            WHERE user_roles.user_sub = %(user_sub)s
                             AND user_roles.project_id = %(project_id)s
                             AND user_role_h.level >= required_role_h.level
                         )
@@ -139,7 +123,7 @@ async def check_access(
                                 JOIN projects
                                     ON projects.organisation_id =
                                         organisation_managers.organisation_id
-                                WHERE organisation_managers.user_id = %(user_id)s
+                                WHERE organisation_managers.user_sub = %(user_sub)s
                                 AND projects.id = %(project_id)s
                             )
                         )
@@ -151,7 +135,7 @@ async def check_access(
         await cur.execute(
             sql,
             {
-                "user_id": user_id,
+                "user_sub": user_sub,
                 "project_id": project_id,
                 "org_id": org_id,
                 "role": getattr(role, "name", None),
@@ -351,7 +335,7 @@ async def mapper(
     project: Annotated[DbProject, Depends(get_project)],
     db: Annotated[Connection, Depends(db_conn)],
     # Here temp auth token/cookie is allowed
-    current_user: Annotated[AuthUser, Depends(mapper_login_required)],
+    current_user: Annotated[AuthUser, Depends(public_endpoint)],
 ) -> ProjectUserDict:
     """A mapper for a specific project.
 
@@ -363,7 +347,7 @@ async def mapper(
     # If project is public, skip permission check
     if project.visibility == ProjectVisibility.PUBLIC:
         return {
-            "user": await DbUser.one(db, current_user.id),
+            "user": await DbUser.one(db, current_user.sub),
             "project": project,
         }
 
@@ -384,34 +368,34 @@ async def project_contributors(
     current_user: Annotated[AuthUser, Depends(login_required)],
 ) -> ProjectUserDict:
     """A contributor to a specific project."""
-    user_id = current_user.id
+    user_sub = current_user.sub
     project_id = project.id
     org_id = project.organisation_id
 
     query = """
         SELECT * FROM users
-        WHERE id = %(user_id)s
+        WHERE sub = %(user_sub)s
             AND (
                 CASE WHEN role = 'ADMIN' THEN true
                 ELSE
                     EXISTS (
                         SELECT 1 FROM organisation_managers
-                        WHERE organisation_managers.user_id = %(user_id)s
+                        WHERE organisation_managers.user_sub = %(user_sub)s
                           AND organisation_managers.organisation_id = %(org_id)s
                     )
                     OR EXISTS (
                         SELECT 1 FROM user_roles
-                        WHERE user_roles.user_id = %(user_id)s
+                        WHERE user_roles.user_sub = %(user_sub)s
                           AND user_roles.project_id = %(project_id)s
                           AND user_roles.role = 'PROJECT_MANAGER'
                     )
                     OR EXISTS (
                         SELECT 1 FROM projects
-                        WHERE projects.author_id = %(user_id)s
+                        WHERE projects.author_sub = %(user_sub)s
                     )
                     OR EXISTS (
                         SELECT 1 FROM task_events
-                        WHERE task_events.user_id = %(user_id)s
+                        WHERE task_events.user_sub = %(user_sub)s
                           AND task_events.project_id = %(project_id)s
                     )
                 END
@@ -420,7 +404,7 @@ async def project_contributors(
     async with db.cursor() as cur:
         await cur.execute(
             query,
-            {"user_id": user_id, "project_id": project_id, "org_id": org_id},
+            {"user_sub": user_sub, "project_id": project_id, "org_id": org_id},
         )
         db_user = await cur.fetchone()
 

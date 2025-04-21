@@ -21,9 +21,10 @@ import json
 import os
 from io import BytesIO
 from pathlib import Path
-from typing import Annotated, Any, Dict, List, Optional
+from typing import Annotated, List, Optional
 
 import requests
+import yaml
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -46,18 +47,14 @@ from pg_nearest_city import AsyncNearestCity
 from psycopg import Connection
 from psycopg.rows import dict_row
 
-from app.auth.auth_deps import login_required, mapper_login_required
+from app.auth.auth_deps import login_required, public_endpoint
 from app.auth.auth_schemas import AuthUser, OrgUserDict, ProjectUserDict
-from app.auth.providers.osm import check_osm_user, init_osm_auth
+from app.auth.providers.osm import init_osm_auth
 from app.auth.roles import check_access, mapper, org_admin, project_manager
 from app.central import central_crud, central_deps, central_schemas
 from app.config import settings
 from app.db.database import db_conn
-from app.db.enums import (
-    HTTPStatus,
-    ProjectRole,
-    XLSFormType,
-)
+from app.db.enums import DbGeomType, HTTPStatus, ProjectRole, XLSFormType
 from app.db.languages_and_countries import countries
 from app.db.models import (
     DbBackgroundTask,
@@ -84,6 +81,7 @@ from app.organisations import organisation_deps
 from app.projects import project_crud, project_deps, project_schemas
 from app.s3 import delete_all_objs_under_prefix
 from app.users.user_deps import get_user
+from app.users.user_schemas import UserRolesOut
 
 router = APIRouter(
     prefix="/projects",
@@ -110,12 +108,12 @@ async def read_projects_to_featcol(
 async def read_projects(
     current_user: Annotated[AuthUser, Depends(login_required)],
     db: Annotated[Connection, Depends(db_conn)],
-    user_id: int = None,
+    user_sub: str = None,
     skip: int = 0,
     limit: int = 100,
 ):
     """Return all projects."""
-    projects = await DbProject.all(db, skip, limit, user_id)
+    projects = await DbProject.all(db, skip, limit, user_sub)
     return projects
 
 
@@ -146,34 +144,29 @@ async def get_tasks_near_me(
 @router.get("/summaries", response_model=project_schemas.PaginatedProjectSummaries)
 async def read_project_summaries(
     db: Annotated[Connection, Depends(db_conn)],
+    current_user: Annotated[AuthUser, Depends(public_endpoint)],
     page: int = Query(1, ge=1),  # Default to page 1, must be greater than or equal to 1
     results_per_page: int = Query(13, le=100),
-    user_id: Optional[int] = None,
+    org_id: Optional[int] = None,
+    user_sub: Optional[str] = None,
     hashtags: Optional[str] = None,
     search: Optional[str] = None,
+    minimal: bool = False,
 ):
-    """Get a paginated summary of projects."""
-    return await project_crud.get_paginated_projects(
-        db, page, results_per_page, user_id, hashtags, search
-    )
+    """Get a paginated summary of projects.
 
-
-@router.get(
-    "/search",
-    response_model=project_schemas.PaginatedProjectSummaries,
-)
-async def search_project(
-    current_user: Annotated[AuthUser, Depends(login_required)],
-    db: Annotated[Connection, Depends(db_conn)],
-    search: str,
-    page: int = Query(1, ge=1),  # Default to page 1, must be greater than or equal to 1
-    results_per_page: int = Query(13, le=100),
-    user_id: Optional[int] = None,
-    hashtags: Optional[str] = None,
-):
-    """Search projects by string, hashtag, or other criteria."""
+    NOTE this is a public endpoint with no auth requirements.
+    """
     return await project_crud.get_paginated_projects(
-        db, page, results_per_page, user_id, hashtags, search
+        db,
+        page,
+        results_per_page,
+        current_user,
+        org_id,
+        user_sub,
+        hashtags,
+        search,
+        minimal,
     )
 
 
@@ -648,6 +641,8 @@ async def get_data_extract(
     geojson_file: UploadFile = File(...),
     # FIXME this is currently hardcoded but needs to be user configurable via UI
     osm_category: Annotated[Optional[XLSFormType], Form()] = XLSFormType.buildings,
+    centroid: Annotated[bool, Form()] = False,
+    geom_type: Annotated[DbGeomType, Form()] = DbGeomType.POLYGON,
 ):
     """Get a new data extract for a given project AOI.
 
@@ -658,17 +653,33 @@ async def get_data_extract(
     clean_boundary_geojson = merge_polygons(boundary_geojson)
 
     # Get extract config file from existing data_models
+    geom_type = geom_type.name.lower()
+    extract_config = None
     if osm_category:
         config_filename = XLSFormType(osm_category).name
         data_model = f"{data_models_path}/{config_filename}.yaml"
-        with open(data_model, "rb") as data_model_yaml:
-            extract_config = BytesIO(data_model_yaml.read())
-    else:
-        extract_config = None
+
+        with open(data_model) as f:
+            config = yaml.safe_load(f)
+
+        data_config = {
+            ("polygon", False): ["ways_poly"],
+            ("point", True): ["ways_poly", "nodes"],
+            ("point", False): ["nodes"],
+            ("linestring", False): ["ways_line"],
+        }
+
+        config["from"] = data_config.get((geom_type, centroid))
+        # Serialize to YAML string
+        yaml_str = yaml.safe_dump(config, sort_keys=False)
+
+        # Encode to bytes and wrap in BytesIO
+        extract_config = BytesIO(yaml_str.encode("utf-8"))
 
     geojson_url = await project_crud.generate_data_extract(
         clean_boundary_geojson,
         extract_config,
+        centroid,
     )
 
     return JSONResponse(status_code=HTTPStatus.OK, content={"url": geojson_url})
@@ -755,7 +766,7 @@ async def add_new_project_manager(
     await DbUserRole.create(
         db,
         org_user_dict["project"].id,
-        new_manager.id,
+        new_manager.sub,
         ProjectRole.PROJECT_MANAGER,
     )
 
@@ -764,32 +775,6 @@ async def add_new_project_manager(
         request=request,
         project=org_user_dict["project"],
         new_manager=new_manager,
-        osm_auth=osm_auth,
-    )
-    return Response(status_code=HTTPStatus.OK)
-
-
-@router.post("/invite-new-user")
-async def invite_new_user(
-    request: Request,
-    background_tasks: BackgroundTasks,
-    project: Annotated[DbProject, Depends(project_deps.get_project)],
-    invitee_username: str,
-    osm_auth=Depends(init_osm_auth),
-):
-    """Invite a new user to a project."""
-    user_exists = await check_osm_user(invitee_username)
-
-    if not user_exists:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail="User does not exist on Open Street Map",
-        )
-    background_tasks.add_task(
-        project_crud.send_invitation_message,
-        request=request,
-        project=project,
-        invitee_username=invitee_username,
         osm_auth=osm_auth,
     )
     return Response(status_code=HTTPStatus.OK)
@@ -831,12 +816,25 @@ async def update_project_form(
                 "project_id": project.id,
             },
         )
-        db.commit()
+        await db.commit()
 
     return JSONResponse(
         status_code=HTTPStatus.OK,
         content={"message": f"Successfully updated the form for project {project.id}"},
     )
+
+
+@router.get("/{project_id}/users", response_model=list[UserRolesOut])
+async def get_project_users(
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user_dict: Annotated[DbUser, Depends(project_manager)],
+):
+    """Get project users and their project role."""
+    project = project_user_dict.get("project")
+    users = await DbUserRole.all(db, project.id)
+    if not users:
+        return []
+    return users
 
 
 @router.post("/{project_id}/additional-entity")
@@ -876,23 +874,27 @@ async def add_additional_entity_list(
 @router.post("/{project_id}/create-entity")
 async def add_new_entity(
     db: Annotated[Connection, Depends(db_conn)],
-    project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
-    geojson: Dict[str, Any],
+    project_user_dict: Annotated[ProjectUserDict, Depends(mapper)],
+    geojson: FeatureCollection,
 ):
-    """Create an Entity for the project in ODK."""
+    """Create an Entity for the project in ODK.
+
+    NOTE a FeatureCollection must be uploaded.
+    """
     try:
         project = project_user_dict.get("project")
         project_odk_id = project.odkid
         project_odk_creds = project.odk_credentials
 
-        features = geojson.get("features")
+        featcol_dict = geojson.model_dump()
+        features = featcol_dict.get("features")
         if not features or not isinstance(features, list):
             raise HTTPException(
                 status_code=HTTPStatus.BAD_REQUEST, detail="Invalid GeoJSON format"
             )
 
         # Add required properties and extract entity data
-        featcol = add_required_geojson_properties(geojson)
+        featcol = add_required_geojson_properties(featcol_dict)
         featcol["features"][0]["properties"]["project_id"] = project.id
 
         # Get task_id of the feature if inside task boundary
@@ -1176,9 +1178,11 @@ async def upload_project_task_boundaries(
         geom_type="Polygon",
     )
     success = await DbTask.create(db, project_id, featcol_single_geom_type)
-    if not success:
-        return JSONResponse(content={"message": "failure"})
-    return JSONResponse(content={"message": "success"})
+    if success:
+        return JSONResponse(content={"message": "success"})
+
+    log.error(f"Failed to create task areas for project {project_id}")
+    return JSONResponse(content={"message": "failure"})
 
 
 ####################
@@ -1243,11 +1247,17 @@ async def create_project(
 
     # Create the project in the FMTM DB
     project_info.odkid = odkproject["id"]
-    project_info.author_id = db_user.id
-    project = await DbProject.create(db, project_info)
+    project_info.author_sub = db_user.sub
+    try:
+        project = await DbProject.create(db, project_info)
+    except Exception as e:
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail="Project creation failed.",
+        ) from e
     if not project:
         raise HTTPException(
-            status_code=HTTPStatus.CONFLICT,
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
             detail="Project creation failed.",
         )
 
@@ -1297,7 +1307,7 @@ async def read_project(
 async def read_project_minimal(
     project_id: int,
     db: Annotated[Connection, Depends(db_conn)],
-    current_user: Annotated[AuthUser, Depends(mapper_login_required)],
+    current_user: Annotated[AuthUser, Depends(public_endpoint)],
 ):
     """Get a specific project by ID, with minimal metadata.
 
@@ -1508,30 +1518,30 @@ async def delete_project_team(
 @router.post("/{project_id}/teams/{team_id}/users")
 async def add_team_users(
     team: Annotated[DbProjectTeam, Depends(project_deps.get_project_team)],
-    users: List[int],
+    user_subs: List[str],
     db: Annotated[Connection, Depends(db_conn)],
     project_user: Annotated[ProjectUserDict, Depends(project_manager)],
 ):
     """Add users to a team."""
     # Assign mapper user roles to the project
-    for user_id in users:
+    for user_sub in user_subs:
         await DbUserRole.create(
             db,
             project_user.get("project").id,
-            user_id,
+            user_sub,
             ProjectRole.MAPPER,
         )
-    await DbProjectTeamUser.create(db, team.team_id, users)
+    await DbProjectTeamUser.create(db, team.team_id, user_subs)
     return Response(status_code=HTTPStatus.OK)
 
 
 @router.delete("/{project_id}/teams/{team_id}/users")
 async def remove_team_users(
     team: Annotated[DbProjectTeam, Depends(project_deps.get_project_team)],
-    users: List[int],
+    user_subs: List[str],
     db: Annotated[Connection, Depends(db_conn)],
     project_user: Annotated[ProjectUserDict, Depends(project_manager)],
 ):
     """Add users to a team."""
-    await DbProjectTeamUser.delete(db, team.team_id, users)
+    await DbProjectTeamUser.delete(db, team.team_id, user_subs)
     return Response(status_code=HTTPStatus.NO_CONTENT)

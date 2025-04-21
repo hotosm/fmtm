@@ -227,61 +227,89 @@ class OdkForm(OdkCentral):
         """
         super().__init__(url, user, passwd)
 
-    # NOTE this does not work and has been abandoned for now
-    # Probably best to use pyodk instead
-    # async def createSubmission(
-    #     self,
-    #     projectId: int,
-    #     appuser_token: str,
-    #     submission_xml: str,
-    #     submission_media_name: Optional[str] = None,
-    #     submission_media_bytes: Optional[bytes] = None,
-    # ):
-    #     """Create a new form submission via ODK OpenRosa API.
+    async def listFormAttachments(self, projectId: int, xform: str):
+        """Fetch a list of attachments listed for upload on a given form.
 
-    #     Args:
-    #         projectId (int): The ODK project ID.
-    #         appuser_token (str): An appuser token with access permissions on the form.
-    #         submission_xml (str): The XML submission, created by JavaRosa,
-    #             web-forms, or similar.
-    #         submission_media_name (str, optional): The name of the media file.
-    #         submission_media_bytes (bytes, optional): Bytes of media (e.g. photo)
-    #             file to upload with the submission.
+        Returns data in format:
 
-    #     Returns:
-    #         dict: The submission response metadata.
-    #     """
-    #     url = f"{self.base}key/{appuser_token}/projects/{projectId}/submission"
-    #     headers = {
-    #         "X-OpenRosa-Version": "1.0",
-    #     }
+        [
+            {'name': '1731673738156.jpg', 'exists': False},
+        ]
 
-    #     # Prepare multipart form data
-    #     form_data = FormData()
-    #     form_data.add_field(
-    #         "xml_submission_file",
-    #         submission_xml.encode(encoding="utf-8"),
-    #         content_type="text/xml",
-    #     )
-    #     if submission_media_bytes and submission_media_name:
-    #         form_data.add_field(
-    #             submission_media_name,
-    #             submission_media_bytes,
-    #             filename=submission_media_name,
-    #             content_type="image/jpeg",
-    #         )
+        Args:
+            projectId (int): The ID of the project on ODK Central
+            xform (str): The XForm to get the details of from ODK Central
 
-    #     try:
-    #         async with self.session.post(url, data=form_data, headers=headers, ssl=self.verify) as response:
-    #             if response.status != 201:
-    #                 msg = f"Unexpected response {response.status}: {await response.text()}"
-    #                 log.error(msg)
-    #                 response.raise_for_status()
-    #             return await response.text()
-    #     except aiohttp.ClientError as e:
-    #         msg = f"Error creating submission: {e}"
-    #         log.error(msg)
-    #         raise aiohttp.ClientError(msg) from e
+        Returns:
+            (list[dict]): The list of form attachments.
+        """
+        url = f"{self.base}projects/{projectId}/forms/{xform}/attachments"
+        try:
+            async with self.session.get(url, ssl=self.verify) as response:
+                return await response.json()
+        except aiohttp.ClientError as e:
+            msg = f"Error fetching submissions: {e}"
+            log.error(msg)
+            raise aiohttp.ClientError(msg) from e
+
+    async def getFormAttachmentUrls(
+        self,
+        projectId: int,
+        xform: str,
+    ) -> dict[str, str]:
+        """Get a dictionary of form attachment names and their pre-signed URLs.
+
+        Args:
+            projectId (int): The ID of the project on ODK Central.
+            xform (str): The XForm ID to get attachments from.
+
+        Returns:
+            dict[str, str]: A dictionary mapping attachment names to URLs.
+        """
+        attachments = await self.listFormAttachments(projectId, xform)
+        if not attachments:
+            return {}
+
+        async def fetch_url(attachment: dict) -> tuple[str, Optional[str]]:
+            """Fetch the pre-signed URL for a given form attachment filename."""
+            filename = attachment["name"]
+            url = f"{self.base}projects/{projectId}/forms/{xform}/attachments/{filename}"
+            result = await self.session.get(url, ssl=self.verify, allow_redirects=False)
+
+            if result.status in (301, 302, 303, 307, 308):  # is a redirect to the S3 URL
+                s3_url = result.headers.get("Location")
+                if not s3_url:
+                    try:
+                        text_body = await result.text()
+                    except UnicodeDecodeError:
+                        text_body = "[Binary data]"
+                    log.error(
+                        f"No 'Location' response header for form attachment {filename} from Central: "
+                        f"{text_body}"
+                    )
+                    return filename, None
+
+            else:
+                try:
+                    log.error(
+                        f"Incorrect response code for form attachment {filename} from Central: "
+                        f"{await result.text()}"
+                    )
+                except UnicodeDecodeError:
+                    log.error(f"Central response code: {result.status}")
+                    log.error(
+                        "Central appears to be returning the binary data instead "
+                        "of the S3 URL. Is Central configured to use S3 storage? "
+                        "Or perhaps the file is simply not uploaded to S3 yet."
+                    )
+
+                return filename, None
+
+            return filename, s3_url
+
+        urls = await gather(*(fetch_url(attachment) for attachment in attachments))
+        
+        return {filename: url for filename, url in urls if url is not None}
 
     async def listSubmissions(self, projectId: int, xform: str):
         """Fetch a list of submission instances for a given form.

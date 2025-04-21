@@ -24,11 +24,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse, Response
 from loguru import logger as log
+from osm_fieldwork.OdkCentralAsync import OdkCentral
 from psycopg import Connection
 
 from app.auth.auth_deps import login_required
-from app.auth.auth_schemas import AuthUser
-from app.auth.roles import project_manager
+from app.auth.auth_schemas import AuthUser, ProjectUserDict
+from app.auth.roles import mapper, project_manager
 from app.central import central_crud, central_deps
 from app.db.database import db_conn
 from app.db.enums import HTTPStatus
@@ -138,12 +139,50 @@ async def upload_form_media(
             media_attachments,
         )
 
+        async with OdkCentral(
+            url=project_odk_creds.odk_central_url,
+            user=project_odk_creds.odk_central_user,
+            passwd=project_odk_creds.odk_central_password,
+        ) as odk_central:
+            await odk_central.s3_sync()
+
         return Response(status_code=HTTPStatus.OK)
 
     except Exception as e:
         log.exception(f"Error: {e}")
         msg = (
             f"Failed to upload form media for FMTM project ({project_id}) "
+            f"ODK project ({project_odk_id}) form ID ({project_xform_id})"
+        )
+        log.error(msg)
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail=msg,
+        ) from e
+
+
+@router.post("/get-form-media", response_model=dict[str, str])
+async def get_form_media(
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
+):
+    """Return the project form attachments as a list of files."""
+    project = project_user.get("project")
+    project_id = project.id
+    project_odk_id = project.odkid
+    project_xform_id = project.odk_form_id
+    project_odk_creds = project.odk_credentials
+
+    try:
+        return await central_crud.get_form_media(
+            project_xform_id,
+            project_odk_id,
+            project_odk_creds,
+        )
+
+    except Exception as e:
+        log.exception(f"Error: {e}")
+        msg = (
+            f"Failed to get form media for FMTM project ({project_id}) "
             f"ODK project ({project_odk_id}) form ID ({project_xform_id})"
         )
         log.error(msg)

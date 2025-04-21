@@ -63,7 +63,7 @@ class OrganisationUpdate(OrganisationInBase):
 def parse_organisation_input(
     name: Optional[str] = Form(None),
     slug: Optional[str] = Form(None),
-    created_by: Optional[int] = Form(None),
+    created_by: Optional[str] = Form(None),
     community_type: CommunityType = Form(None),
     description: Optional[str] = Form(None),
     associated_email: Optional[str] = Form(None),
@@ -111,3 +111,11 @@ class OrganisationOut(BaseModel):
     url: Optional[str]
     associated_email: Optional[str]
     odk_central_url: Optional[str]
+
+
+class OrgManagersOut(BaseModel):
+    """Detail of Organisation Managers."""
+
+    user_sub: str
+    username: str
+    profile_img: Optional[str] = None

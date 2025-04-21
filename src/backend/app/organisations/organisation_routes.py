@@ -45,6 +45,7 @@ from app.organisations.organisation_schemas import (
     OrganisationIn,
     OrganisationOut,
     OrganisationUpdate,
+    OrgManagersOut,
     parse_organisation_input,
 )
 
@@ -61,7 +62,7 @@ async def get_organisations(
     current_user: Annotated[AuthUser, Depends(login_required)],
 ) -> list[DbOrganisation]:
     """Get a list of all organisations."""
-    return await DbOrganisation.all(db, current_user.id)
+    return await DbOrganisation.all(db, current_user.sub)
 
 
 @router.post("", response_model=OrganisationOut)
@@ -82,7 +83,7 @@ async def create_organisation(
             status_code=HTTPStatus.BAD_REQUEST,
             detail="The `name` is required to create an organisation.",
         )
-    return await DbOrganisation.create(db, org_in, current_user.id, logo)
+    return await DbOrganisation.create(db, org_in, current_user.sub, logo)
 
 
 @router.get("/my-organisations", response_model=list[OrganisationOut])
@@ -160,7 +161,7 @@ async def approve_organisation(
         background_tasks.add_task(
             organisation_crud.send_approval_message,
             request=request,
-            creator_id=approved_org.created_by,
+            creator_sub=approved_org.created_by,
             organisation_name=approved_org.name,
             osm_auth=osm_auth,
         )
@@ -172,7 +173,7 @@ async def approve_organisation(
 async def add_new_organisation_admin(
     db: Annotated[Connection, Depends(db_conn)],
     org_user_dict: Annotated[OrgUserDict, Depends(org_admin)],
-    user_id: int,
+    user_sub: str,
 ):
     """Add a new organisation admin.
 
@@ -181,8 +182,21 @@ async def add_new_organisation_admin(
     await DbOrganisationManagers.create(
         db,
         org_user_dict.get("org").id,
-        user_id,
+        user_sub,
     )
+
+
+@router.get("/org-admins", response_model=list[OrgManagersOut])
+async def get_organisation_admins(
+    db: Annotated[Connection, Depends(db_conn)],
+    org_user_dict: Annotated[OrgUserDict, Depends(org_admin)],
+):
+    """Get the list of organisation admins."""
+    org_managers = await DbOrganisationManagers.get(
+        db,
+        org_user_dict.get("org").id,
+    )
+    return org_managers
 
 
 @router.get("/{org_id}", response_model=OrganisationOut)
@@ -220,4 +234,37 @@ async def delete_org(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
             detail=f"Failed deleting org ({org.name}).",
         )
+    return Response(status_code=HTTPStatus.NO_CONTENT)
+
+
+@router.delete("/org-admin/{user_sub}")
+async def remove_organisation_admin(
+    user_sub: str,
+    db: Annotated[Connection, Depends(db_conn)],
+    org_user_dict: Annotated[OrgUserDict, Depends(org_admin)],
+):
+    """Remove an organization admin.
+
+    The logged in user must be either the admin of the organization or a super admin.
+    Users cannot delete their own admin role.
+
+    Args:
+        user_sub: The subject ID of the user to remove as admin
+        db: Database connection
+        org_user_dict: Dictionary containing authenticated user and organization info
+
+    Returns:
+        204 No Content on success
+
+    Raises:
+        HTTPException: 400 if attempting to delete own role
+    """
+    current_user = org_user_dict.get("user")
+    if current_user.sub == user_sub:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="You cannot remove your own admin role.",
+        )
+
+    await DbOrganisationManagers.delete(db, user_sub)
     return Response(status_code=HTTPStatus.NO_CONTENT)

@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING, Annotated, List, Optional, Self
 from uuid import UUID
 
 import geojson
+import psycopg
 from fastapi import HTTPException, UploadFile
 from loguru import logger as log
 from psycopg import Connection
@@ -80,7 +81,12 @@ if TYPE_CHECKING:
         ProjectUpdate,
     )
     from app.tasks.task_schemas import TaskEventIn
-    from app.users.user_schemas import UserIn, UserUpdate
+    from app.users.user_schemas import (
+        UserIn,
+        UserInviteIn,
+        UserInviteUpdate,
+        UserUpdate,
+    )
 
 
 def dump_and_check_model(db_model: BaseModel):
@@ -102,7 +108,7 @@ def dump_and_check_model(db_model: BaseModel):
 class DbUserRole(BaseModel):
     """Table user_roles."""
 
-    user_id: int
+    user_sub: str
     project_id: int
     role: ProjectRole
 
@@ -111,23 +117,23 @@ class DbUserRole(BaseModel):
         cls,
         db: Connection,
         project_id: int,
-        user_id: int,
+        user_sub: str,
         role: ProjectRole,
     ) -> Self:
         """Create a new user role."""
         async with db.cursor(row_factory=class_row(cls)) as cur:
             params = {
                 "project_id": project_id,
-                "user_id": user_id,
+                "user_sub": user_sub,
                 "role": role.name,
             }
             await cur.execute(
                 """
                 INSERT INTO user_roles
-                    (user_id, project_id, role)
+                    (user_sub, project_id, role)
                 VALUES
-                    (%(user_id)s, %(project_id)s, %(role)s)
-                    ON CONFLICT (user_id, project_id) DO UPDATE
+                    (%(user_sub)s, %(project_id)s, %(role)s)
+                    ON CONFLICT (user_sub, project_id) DO UPDATE
                     SET role = EXCLUDED.role
                     WHERE user_roles.role < EXCLUDED.role;
             """,
@@ -139,7 +145,7 @@ class DbUserRole(BaseModel):
             await cur.execute(
                 """
                 SELECT * FROM user_roles
-                WHERE user_id = %(user_id)s AND project_id = %(project_id)s;
+                WHERE user_sub = %(user_sub)s AND project_id = %(project_id)s;
             """,
                 params,
             )
@@ -181,7 +187,7 @@ class DbUserRole(BaseModel):
 class DbUser(BaseModel):
     """Table users."""
 
-    id: int  # NOTE normally the OSM ID
+    sub: str
     username: str
     role: Optional[UserRole] = None
     profile_img: Optional[str] = None
@@ -205,7 +211,7 @@ class DbUser(BaseModel):
     orgs_managed: Optional[list[int]] = None
 
     @classmethod
-    async def one(cls, db: Connection, user_identifier: int | str) -> Self:
+    async def one(cls, db: Connection, user_subidentifier: str) -> Self:
         """Get a user either by ID or username, including roles and orgs managed."""
         async with db.cursor(row_factory=class_row(cls)) as cur:
             sql = """
@@ -224,32 +230,20 @@ class DbUser(BaseModel):
                 ) FILTER (WHERE ur.project_id IS NOT NULL) AS project_roles
 
                 FROM users u
-                LEFT JOIN user_roles ur ON u.id = ur.user_id
-                LEFT JOIN organisation_managers om ON u.id = om.user_id
+                LEFT JOIN user_roles ur ON u.sub = ur.user_sub
+                LEFT JOIN organisation_managers om ON u.sub = om.user_sub
+                WHERE u.sub ILIKE %(user_subidentifier)s
+                GROUP BY u.sub;
             """
-
-            if isinstance(user_identifier, int):
-                # Is ID
-                sql += """
-                    WHERE u.id = %(user_identifier)s
-                    GROUP BY u.id;
-                """
-            else:
-                # Is username (basic flexible matching)
-                sql += """
-                    WHERE u.username ILIKE %(user_identifier)s
-                    GROUP BY u.id;
-                """
-                user_identifier = f"{user_identifier}%"
 
             await cur.execute(
                 sql,
-                {"user_identifier": user_identifier},
+                {"user_subidentifier": user_subidentifier},
             )
             db_user = await cur.fetchone()
 
         if db_user is None:
-            raise KeyError(f"User ({user_identifier}) not found.")
+            raise KeyError(f"User ({user_subidentifier}) not found.")
 
         return db_user
 
@@ -260,6 +254,8 @@ class DbUser(BaseModel):
         skip: Optional[int] = None,
         limit: Optional[int] = None,
         search: Optional[str] = None,
+        username: Optional[str] = None,
+        signin_type: Optional[str] = None,
     ) -> Optional[list[Self]]:
         """Fetch all users."""
         filters = []
@@ -268,6 +264,14 @@ class DbUser(BaseModel):
         if search:
             filters.append("username ILIKE %(search)s")
             params["search"] = f"%{search}%"
+
+        if username:
+            filters.append("username = %(username)s")
+            params["username"] = username
+
+        if signin_type:
+            filters.append("sub LIKE %(signin_type)s")
+            params["signin_type"] = f"{signin_type}|%"
 
         sql = f"""
             SELECT * FROM users
@@ -290,38 +294,38 @@ class DbUser(BaseModel):
             return await cur.fetchall()
 
     @classmethod
-    async def delete(cls, db: Connection, user_id: int) -> bool:
+    async def delete(cls, db: Connection, user_sub: str) -> bool:
         """Delete a user and their related data."""
         async with db.cursor() as cur:
             await cur.execute(
                 """
-                UPDATE task_events SET user_id = NULL WHERE user_id = %(user_id)s;
+                UPDATE task_events SET user_sub = NULL WHERE user_sub = %(user_sub)s;
             """,
-                {"user_id": user_id},
+                {"user_sub": user_sub},
             )
             await cur.execute(
                 """
-                UPDATE projects SET author_id = NULL WHERE author_id = %(user_id)s;
+                UPDATE projects SET author_sub = NULL WHERE author_sub = %(user_sub)s;
             """,
-                {"user_id": user_id},
+                {"user_sub": user_sub},
             )
             await cur.execute(
                 """
-                DELETE FROM organisation_managers WHERE user_id = %(user_id)s;
+                DELETE FROM organisation_managers WHERE user_sub = %(user_sub)s;
             """,
-                {"user_id": user_id},
+                {"user_sub": user_sub},
             )
             await cur.execute(
                 """
-                DELETE FROM user_roles WHERE user_id = %(user_id)s;
+                DELETE FROM user_roles WHERE user_sub = %(user_sub)s;
             """,
-                {"user_id": user_id},
+                {"user_sub": user_sub},
             )
             await cur.execute(
                 """
-                DELETE FROM users WHERE id = %(user_id)s;
+                DELETE FROM users WHERE id = %(user_sub)s;
             """,
-                {"user_id": user_id},
+                {"user_sub": user_sub},
             )
 
     @classmethod
@@ -341,7 +345,7 @@ class DbUser(BaseModel):
         columns = ", ".join(model_dump.keys())
         value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
         conflict_statement = """
-            ON CONFLICT ("username") DO UPDATE
+            ON CONFLICT (sub) DO UPDATE
             SET
                 role = EXCLUDED.role,
                 mapping_level = EXCLUDED.mapping_level,
@@ -373,33 +377,169 @@ class DbUser(BaseModel):
 
     @classmethod
     async def update(
-        cls, db: Connection, user_id: int, user_update: "UserUpdate"
+        cls, db: Connection, user_sub: str, user_update: "UserUpdate"
     ) -> Self:
-        """Update the role of a specific user."""
+        """Update a specific user record."""
         model_dump = dump_and_check_model(user_update)
         placeholders = [f"{key} = %({key})s" for key in model_dump.keys()]
         sql = f"""
             UPDATE users
             SET {", ".join(placeholders)}
-            WHERE id = %(user_id)s
+            WHERE sub = %(user_sub)s
             RETURNING *;
         """
 
         async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(
                 sql,
-                {"user_id": user_id, **model_dump},
+                {"user_sub": user_sub, **model_dump},
             )
             updated_user = await cur.fetchone()
 
         if updated_user is None:
-            msg = f"Failed to update user with ID: {user_id}"
+            msg = f"Failed to update user: {user_sub}"
             log.error(msg)
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
             )
 
         return updated_user
+
+
+class DbUserInvite(BaseModel):
+    """Table user_invites."""
+
+    token: Optional[UUID] = None
+    project_id: Optional[int] = None
+    osm_username: Optional[str] = None
+    email: Optional[str] = None
+    role: Optional[ProjectRole] = None
+    expires_at: Optional[AwareDatetime] = None
+    used_at: Optional[AwareDatetime] = None
+    created_at: Optional[AwareDatetime] = None
+
+    @classmethod
+    async def one(cls, db: Connection, token: str) -> Self:
+        """Get a user invite record by it's token."""
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            sql = """
+                SELECT *
+                FROM user_invites
+                WHERE token = %(token)s;
+            """
+
+            await cur.execute(
+                sql,
+                {"token": token},
+            )
+            db_user_invite = await cur.fetchone()
+
+        if db_user_invite is None:
+            raise KeyError(f"User invite token ({token}) not found.")
+
+        return db_user_invite
+
+    @classmethod
+    async def all(
+        cls,
+        db: Connection,
+        project_id: int,
+    ) -> Optional[list[Self]]:
+        """Fetch all user invites for a project."""
+        sql = """
+            SELECT * FROM user_invites
+            WHERE project_id = %(project_id)s
+            ORDER BY created_at DESC;
+        """
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(
+                sql,
+                {"project_id": project_id},
+            )
+            return await cur.fetchall()
+
+    @classmethod
+    async def delete(cls, db: Connection, token: str) -> None:
+        """Delete a user and their related data."""
+        async with db.cursor() as cur:
+            await cur.execute(
+                """
+                DELETE FROM user_invites WHERE token = %(token)s;
+            """,
+                {"token": token},
+            )
+
+    @classmethod
+    async def create(
+        cls,
+        db: Connection,
+        project_id: int,
+        user_in: "UserInviteIn",
+    ) -> Self:
+        """Create a new user invite."""
+        model_dump = dump_and_check_model(user_in)
+        model_dump.update({"project_id": project_id})
+        columns = ", ".join(model_dump.keys())
+        value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
+
+        sql = f"""
+            INSERT INTO user_invites
+                ({columns})
+            VALUES
+                ({value_placeholders})
+            RETURNING *;
+        """
+
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(sql, model_dump)
+            new_user_invite = await cur.fetchone()
+
+        if new_user_invite is None:
+            msg = f"Unknown SQL error for data: {model_dump}"
+            log.error(f"Failed user invite creation: {model_dump}")
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+            )
+
+        return new_user_invite
+
+    @classmethod
+    async def update(
+        cls, db: Connection, token: UUID, user_update: "UserInviteUpdate"
+    ) -> Self:
+        """Update the a user invite record."""
+        model_dump = dump_and_check_model(user_update)
+        placeholders = [f"{key} = %({key})s" for key in model_dump.keys()]
+        sql = f"""
+            UPDATE user_invites
+            SET {", ".join(placeholders)}
+            WHERE token = %(token)s
+            RETURNING *;
+        """
+
+        async with db.cursor(row_factory=class_row(cls)) as cur:
+            await cur.execute(
+                sql,
+                {"token": token, **model_dump},
+            )
+            updated_user_invite = await cur.fetchone()
+
+        if updated_user_invite is None:
+            msg = f"Failed to update user invite: {token}"
+            log.error(msg)
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
+            )
+
+        return updated_user_invite
+
+    def is_expired(self) -> bool:
+        """Helper to check if invite is expired."""
+        if bool(self.used_at):
+            return True
+        if self.expires_at:
+            return timestamp() > self.expires_at
+        return False
 
 
 class DbOrganisation(BaseModel):
@@ -419,7 +559,7 @@ class DbOrganisation(BaseModel):
     url: Optional[str] = None
     type: Optional[OrganisationType] = None
     approved: Optional[bool] = None
-    created_by: Optional[int] = None  # this is not foreign key linked intentionally
+    created_by: Optional[str] = None  # this is not foreign key linked intentionally
     associated_email: Optional[str] = None
     odk_central_url: Optional[str] = None
     odk_central_user: Optional[str] = None
@@ -458,7 +598,7 @@ class DbOrganisation(BaseModel):
 
     @classmethod
     async def all(
-        cls, db: Connection, current_user_id: int = 0
+        cls, db: Connection, current_user_sub: str = ""
     ) -> Optional[list[Self]]:
         """Fetch all organisations.
 
@@ -472,7 +612,7 @@ class DbOrganisation(BaseModel):
                     WHEN (
                         SELECT role
                         FROM users
-                        WHERE id = %(user_id)s) = 'ADMIN'
+                        WHERE sub = %(user_sub)s) = 'ADMIN'
                         THEN TRUE
                     ELSE approved
                 END = TRUE
@@ -480,7 +620,7 @@ class DbOrganisation(BaseModel):
         """
 
         async with db.cursor(row_factory=class_row(cls)) as cur:
-            await cur.execute(sql, {"user_id": current_user_id})
+            await cur.execute(sql, {"user_sub": current_user_sub})
             return await cur.fetchall()
 
     @classmethod
@@ -488,13 +628,13 @@ class DbOrganisation(BaseModel):
         cls,
         db: Connection,
         org_in: "OrganisationIn",
-        user_id: int,
+        user_sub: str,
         new_logo: UploadFile,
         ignore_conflict: bool = False,
     ) -> Optional[Self]:
         """Create a new organisation."""
         # Set requesting user to the org owner
-        org_in.created_by = user_id
+        org_in.created_by = user_sub
 
         model_dump = dump_and_check_model(org_in)
         columns = ", ".join(model_dump.keys())
@@ -532,7 +672,7 @@ class DbOrganisation(BaseModel):
         except Exception as e:
             # Log errors only for actual failures (e.g., DB errors)
             msg = f"Unknown SQL error for data: {model_dump}"
-            log.error(f"User ({user_id}) failed organisation creation: {e}")
+            log.error(f"User ({user_sub}) failed organisation creation: {e}")
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=msg
             ) from e
@@ -605,45 +745,43 @@ class DbOrganisation(BaseModel):
     @classmethod
     async def delete(cls, db: Connection, org_id: int) -> bool:
         """Delete an organisation and its related data."""
-        sql = """
-            WITH deleted_task_events AS (
-                DELETE FROM task_events
-                WHERE project_id IN (
-                    SELECT id FROM projects WHERE organisation_id = %(org_id)s
+        try:
+            sql = """
+                WITH deleted_org_managers AS (
+                    DELETE FROM organisation_managers
+                    WHERE organisation_id = %(org_id)s
+                    RETURNING organisation_id
+                ),
+                deleted_org AS (
+                    DELETE FROM organisations
+                    WHERE id = %(org_id)s
+                    RETURNING id
                 )
-                RETURNING project_id
-            ), deleted_tasks AS (
-                DELETE FROM tasks
-                WHERE project_id IN (
-                    SELECT id FROM projects WHERE organisation_id = %(org_id)s
+                SELECT id FROM deleted_org;
+            """
+
+            async with db.cursor() as cur:
+                await cur.execute(sql, {"org_id": org_id})
+                success = await cur.fetchone()
+
+            if success:
+                await delete_all_objs_under_prefix(
+                    settings.S3_BUCKET_NAME,
+                    f"/{org_id}/",
                 )
-                RETURNING project_id
-            ), deleted_projects AS (
-                DELETE FROM projects
-                WHERE organisation_id = %(org_id)s
-                RETURNING organisation_id
-            ), deleted_org_managers AS (
-                DELETE FROM organisation_managers
-                WHERE organisation_id = %(org_id)s
-                RETURNING organisation_id
-            ),deleted_org AS (
-                DELETE FROM organisations
-                WHERE id = %(org_id)s
-                RETURNING id
-            )
-            SELECT id FROM deleted_org;
-        """
+                return True
 
-        async with db.cursor() as cur:
-            await cur.execute(sql, {"org_id": org_id})
-            success = await cur.fetchone()
-
-        if success:
-            await delete_all_objs_under_prefix(
-                settings.S3_BUCKET_NAME,
-                f"/{org_id}/",
-            )
-            return True
+        except psycopg.errors.ForeignKeyViolation as e:
+            raise HTTPException(
+                status_code=HTTPStatus.CONFLICT,
+                detail="""Cannot delete organization with existing projects.
+                Delete all projects first.""",
+            ) from e
+        except Exception as e:
+            raise HTTPException(
+                status_code=HTTPStatus.BAD_REQUEST,
+                detail=f"Failed to delete organization: {e}",
+            ) from e
 
     @classmethod
     async def unapproved(cls, db: Connection) -> Optional[list[Self]]:
@@ -663,38 +801,42 @@ class DbOrganisationManagers(BaseModel):
     """Table organisation_managers."""
 
     organisation_id: int
-    user_id: int
+    user_sub: str
+
+    # calculated
+    username: Optional[str] = ""
+    profile_img: Optional[str] = ""
 
     @classmethod
     async def create(
         cls,
         db: Connection,
         org_id: int,
-        user_id: int,
+        user_sub: str,
     ) -> Self:
         """Add a new organisation manager.
 
         Args:
             db (Connection): The database connection.
             org_id (int): The organisation ID.
-            user_id (int): The user ID to add as manager.
+            user_sub (int): The user ID to add as manager.
 
         Returns:
             Self: An instance of DbOrganisationManagers.
         """
-        log.info(f"Adding user ({user_id}) as org ({org_id}) admin")
+        log.info(f"Adding user ({user_sub}) as org ({org_id}) admin")
         sql = """
             INSERT INTO public.organisation_managers
-                (organisation_id, user_id)
+                (organisation_id, user_sub)
             VALUES
-                (%(org_id)s, %(user_id)s)
-            ON CONFLICT (organisation_id, user_id) DO NOTHING;
+                (%(org_id)s, %(user_sub)s)
+            ON CONFLICT (organisation_id, user_sub) DO NOTHING;
         """
 
         async with db.cursor(row_factory=class_row(cls)) as cur:
             data = {
                 "org_id": org_id,
-                "user_id": user_id,
+                "user_sub": user_sub,
             }
             await cur.execute(sql, data)
 
@@ -703,21 +845,45 @@ class DbOrganisationManagers(BaseModel):
         cls,
         db: Connection,
         org_id: int,
-        user_id: Optional[int] = None,
+        user_sub: Optional[str] = None,
     ) -> Optional[list[Self]]:
         """Get organisation manager by organisation and user ID."""
         async with db.cursor(row_factory=class_row(cls)) as cur:
             sql = """
-                SELECT * FROM organisation_managers
-                WHERE organisation_id = %(org_id)s
+                SELECT
+                    om.organisation_id,
+                    om.user_sub,
+                    u.username,
+                    u.profile_img
+                FROM organisation_managers AS om
+                INNER JOIN users AS u
+                    ON u.sub = om.user_sub
+                WHERE om.organisation_id = %(org_id)s
             """
             params = {"org_id": org_id}
-            if user_id:
-                sql += " AND user_id = %(user_id)s"
-                params["user_id"] = user_id
+            if user_sub:
+                sql += " AND user_sub = %(user_sub)s"
+                params["user_sub"] = user_sub
             sql += ";"
             await cur.execute(sql, params)
             return await cur.fetchall()
+
+    @classmethod
+    async def delete(cls, db: Connection, user_sub: str):
+        """Delete an organization manager.
+
+        Args:
+            db: Database connection
+            user_sub: The subject ID of the user to remove
+
+        Returns:
+            None
+        """
+        async with db.cursor() as cur:
+            await cur.execute(
+                "DELETE FROM organisation_managers WHERE user_sub = %(user_sub)s;",
+                {"user_sub": user_sub},
+            )
 
 
 class DbXLSForm(BaseModel):
@@ -768,7 +934,7 @@ class DbTaskEvent(BaseModel):
     event: TaskEvent
 
     project_id: Annotated[Optional[int], Field(gt=0)] = None
-    user_id: Annotated[Optional[int], Field(gt=0)] = None
+    user_sub: Optional[str] = None
     team_id: Optional[UUID] = None
     username: Optional[str] = None
     comment: Optional[str] = None
@@ -832,7 +998,7 @@ class DbTaskEvent(BaseModel):
             FROM
                 public.task_events the
             LEFT JOIN
-                users u ON u.id = the.user_id
+                users u ON u.sub = the.user_sub
             WHERE {filters_joined}
             ORDER BY created_at DESC;
         """
@@ -853,8 +1019,8 @@ class DbTaskEvent(BaseModel):
         value_placeholders = ", ".join(f"%({key})s" for key in model_dump.keys())
         username = (
             "NULL"
-            if model_dump.get("user_id") is None
-            else "(SELECT username FROM users WHERE id = %(user_id)s)"
+            if model_dump.get("user_sub") is None
+            else "(SELECT username FROM users WHERE sub = %(user_sub)s)"
         )
 
         # NOTE the project_id need not be passed, as it's extracted from the task
@@ -878,8 +1044,10 @@ class DbTaskEvent(BaseModel):
                     )
                     SELECT
                         inserted.*,
-                        CASE WHEN inserted.user_id IS NOT NULL THEN
-                            (SELECT profile_img FROM users WHERE id = inserted.user_id)
+                        CASE WHEN inserted.user_sub IS NOT NULL THEN
+                            (SELECT profile_img FROM users
+                                WHERE sub = inserted.user_sub
+                            )
                         ELSE
                             NULL
                         END as profile_img
@@ -919,17 +1087,17 @@ class DbProjectTeam(BaseModel):
                 COALESCE(
                     JSON_AGG(
                         JSON_BUILD_OBJECT(
-                            'id', u.id,
+                            'sub', u.sub,
                             'username', u.username,
                             'profile_img', u.profile_img
                         )
-                    ) FILTER (WHERE u.id IS NOT NULL), '[]'
+                    ) FILTER (WHERE u.sub IS NOT NULL), '[]'
                 ) AS users
                 FROM project_teams pt
                 LEFT JOIN project_team_users ptu
                     ON pt.team_id = ptu.team_id
                 LEFT JOIN users u
-                    ON ptu.user_id = u.id
+                    ON ptu.user_sub = u.sub
                 WHERE pt.team_id = %(team_id)s
                 GROUP BY pt.team_id;
                 """,
@@ -1009,15 +1177,15 @@ class DbProjectTeam(BaseModel):
                 COALESCE(
                     JSON_AGG(
                         JSON_BUILD_OBJECT(
-                            'id', u.id,
+                            'sub', u.sub,
                             'username', u.username,
                             'profile_img', u.profile_img
                         )
-                    ) FILTER (WHERE u.id IS NOT NULL), '[]'
+                    ) FILTER (WHERE u.sub IS NOT NULL), '[]'
                 ) AS users
                 FROM project_teams pt
                 LEFT JOIN project_team_users ptu ON pt.team_id = ptu.team_id
-                LEFT JOIN users u ON ptu.user_id = u.id
+                LEFT JOIN users u ON ptu.user_sub = u.sub
                 WHERE pt.project_id = %(project_id)s
                 GROUP BY pt.team_id;
                 """,
@@ -1032,35 +1200,39 @@ class DbProjectTeamUser(BaseModel):
     """Table project_team_users."""
 
     team_id: UUID
-    user_id: int
+    user_sub: str
 
     @classmethod
-    async def create(cls, db: Connection, team_id: UUID, user_ids: List[int]):
+    async def create(cls, db: Connection, team_id: UUID, user_subs: List[str]):
         """Add users to a team."""
-        model_dump = [{"team_id": team_id, "user_id": user_id} for user_id in user_ids]
+        model_dump = [
+            {"team_id": team_id, "user_sub": user_sub} for user_sub in user_subs
+        ]
 
         async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.executemany(
                 """
                     INSERT INTO public.project_team_users
-                        (team_id, user_id)
+                        (team_id, user_sub)
                     VALUES
-                        (%(team_id)s, %(user_id)s)
-                    ON CONFLICT (team_id, user_id) DO NOTHING;
+                        (%(team_id)s, %(user_sub)s)
+                    ON CONFLICT (team_id, user_sub) DO NOTHING;
                 """,
                 model_dump,
             )
 
     @classmethod
-    async def delete(cls, db: Connection, team_id: UUID, user_ids: List[int]):
+    async def delete(cls, db: Connection, team_id: UUID, user_subs: List[str]):
         """Remove users from a team."""
-        model_dump = [{"team_id": team_id, "user_id": user_id} for user_id in user_ids]
+        model_dump = [
+            {"team_id": team_id, "user_sub": user_sub} for user_sub in user_subs
+        ]
 
         async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.executemany(
                 """
                     DELETE FROM public.project_team_users
-                    WHERE team_id = %(team_id)s AND user_id = %(user_id)s;
+                    WHERE team_id = %(team_id)s AND user_sub = %(user_sub)s;
                 """,
                 model_dump,
             )
@@ -1077,7 +1249,7 @@ class DbTask(BaseModel):
 
     # Calculated
     task_state: Optional[MappingState] = None
-    actioned_by_uid: Optional[int] = None
+    actioned_by_uid: Optional[str] = None
     actioned_by_username: Optional[str] = None
 
     @classmethod
@@ -1095,7 +1267,7 @@ class DbTask(BaseModel):
                         COALESCE(
                             latest_event.state, 'UNLOCKED_TO_MAP'
                         ) AS task_state,
-                        COALESCE(latest_event.user_id, NULL) AS actioned_by_uid,
+                        COALESCE(latest_event.user_sub, NULL) AS actioned_by_uid,
                         COALESCE(latest_event.username, NULL) AS actioned_by_username
                     FROM
                         tasks
@@ -1103,12 +1275,12 @@ class DbTask(BaseModel):
                         SELECT
                             th.event,
                             th.state,
-                            th.user_id,
+                            th.user_sub,
                             u.username
                         FROM
                             task_events th
                         LEFT JOIN
-                            users u ON u.id = th.user_id
+                            users u ON u.sub = th.user_sub
                         WHERE
                             th.task_id = tasks.id
                             AND th.event != 'COMMENT'
@@ -1143,7 +1315,7 @@ class DbTask(BaseModel):
                 tasks.*,
                 ST_AsGeoJSON(tasks.outline)::jsonb AS outline,
                 COALESCE(latest_event.state, 'UNLOCKED_TO_MAP') AS task_state,
-                COALESCE(latest_event.user_id, NULL) AS actioned_by_uid,
+                COALESCE(latest_event.user_sub, NULL) AS actioned_by_uid,
                 COALESCE(latest_event.username, NULL) AS actioned_by_username
             FROM
                 tasks
@@ -1151,12 +1323,12 @@ class DbTask(BaseModel):
                 SELECT
                     th.event,
                     th.state,
-                    th.user_id,
+                    th.user_sub,
                     u.username
                 FROM
                     task_events th
                 LEFT JOIN
-                    users u ON u.id = th.user_id
+                    users u ON u.sub = th.user_sub
                 WHERE
                     th.task_id = tasks.id
                     AND th.event != 'COMMENT'
@@ -1242,7 +1414,7 @@ class DbProject(BaseModel):
     name: str
     outline: Optional[dict] = None
     odkid: Optional[int] = None
-    author_id: Optional[int] = None
+    author_sub: Optional[str] = None
     organisation_id: Optional[int] = None
     short_description: Optional[str] = None
     description: Optional[str] = None
@@ -1270,6 +1442,7 @@ class DbProject(BaseModel):
     new_geom_type: Optional[DbGeomType] = None  # when new geometries are drawn
     geo_restrict_distance_meters: Optional[PositiveInt] = None
     geo_restrict_force_error: Optional[bool] = None
+    use_odk_collect: Optional[bool] = None
     hashtags: Optional[list[str]] = None
     due_date: Optional[AwareDatetime] = None
     updated_at: Optional[AwareDatetime] = None
@@ -1290,11 +1463,10 @@ class DbProject(BaseModel):
     ] = None
     total_tasks: Optional[int] = None
     num_contributors: Optional[int] = None
-    # FIXME we could add the following to the project summary cards
-    # Also required uncommenting of the ProjectSummary fields
-    # tasks_mapped: Optional[int] = 0
-    # tasks_validated: Optional[int] = 0
-    # tasks_bad: Optional[int] = 0
+    total_submissions: Optional[int] = 0
+    tasks_mapped: Optional[int] = 0
+    tasks_validated: Optional[int] = 0
+    tasks_bad: Optional[int] = 0
 
     @field_validator("odk_credentials", mode="before")
     @classmethod
@@ -1365,12 +1537,12 @@ class DbProject(BaseModel):
                         th.event,
                         th.state,
                         th.created_at,
-                        th.user_id,
+                        th.user_sub,
                         u.username AS username
                     FROM
                         task_events th
                     LEFT JOIN
-                        users u ON u.id = th.user_id
+                        users u ON u.sub = th.user_sub
                     WHERE
                         th.event != 'COMMENT'
                     ORDER BY
@@ -1421,7 +1593,7 @@ class DbProject(BaseModel):
                                     'UNLOCKED_TO_MAP'
                                 ),
                                 'actioned_by_uid', COALESCE(
-                                    latest_status_per_task.user_id,
+                                    latest_status_per_task.user_sub,
                                     NULL
                                 ),
                                 'actioned_by_username', COALESCE(
@@ -1431,8 +1603,7 @@ class DbProject(BaseModel):
                             )
                         -- Required filter if the task array is empty
                         ) FILTER (WHERE tasks.id IS NOT NULL), '[]'::json
-                    ) AS tasks,
-                    COUNT(tasks.id) AS total_tasks
+                    ) AS tasks
                 FROM
                     projects p
                 -- For org name, logo, and ODK credentials
@@ -1478,64 +1649,203 @@ class DbProject(BaseModel):
         db: Connection,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
-        user_id: Optional[int] = None,
+        current_user: Optional[str] = None,
+        org_id: Optional[int] = None,
+        user_sub: Optional[str] = None,
         hashtags: Optional[list[str]] = None,
         search: Optional[str] = None,
+        minimal: bool = False,
     ) -> Optional[list[Self]]:
         """Fetch all projects with optional filters for user, hashtags, and search."""
-        filters = []
-        params = {"offset": skip, "limit": limit} if skip and limit else {}
-
-        # Filter by user_id (project author)
-        if user_id:
-            filters.append("author_id = %(user_id)s")
-            params["user_id"] = user_id
-
-        # Filter by hashtags
-        if hashtags:
-            filters.append("hashtags && %(hashtags)s")
-            params["hashtags"] = hashtags
-
-        # Filter by search term (project name using ILIKE for case-insensitive match)
-        if search:
-            filters.append("p.slug ILIKE %(search)s")
-            params["search"] = f"%{search}%"
-
-        # Base query with optional filtering
-        sql = f"""
-            SELECT
-                p.*,
-                ST_AsGeoJSON(p.outline)::jsonb AS outline,
-                ST_AsGeoJSON(ST_Centroid(p.outline))::jsonb AS centroid,
-                project_org.logo as organisation_logo,
-                COUNT(t.id) AS total_tasks,
-                COUNT(DISTINCT task_events.user_id) AS num_contributors
-            FROM
-                projects p
-            LEFT JOIN
-                organisations project_org ON p.organisation_id = project_org.id
-            LEFT JOIN
-                tasks t ON p.id = t.project_id
-            LEFT JOIN
-                task_events ON p.id = task_events.project_id
-            {"WHERE " + " AND ".join(filters) if filters else ""}
-            GROUP BY
-                p.id, project_org.id
-            ORDER BY
-                p.created_at DESC
-        """
-        sql += (
-            """
-            OFFSET %(offset)s
-            LIMIT %(limit)s;
-        """
-            if skip and limit
-            else ";"
+        access_info = await cls._get_user_access_level(db, current_user)
+        filters, params, needs_user_roles_join = cls._build_query_filters(
+            skip, limit, org_id, user_sub, hashtags, search, access_info
+        )
+        sql = cls._construct_sql_query(
+            filters, minimal, skip, limit, needs_user_roles_join
         )
 
+        # Execute query and return results
         async with db.cursor(row_factory=class_row(cls)) as cur:
             await cur.execute(sql, params)
             return await cur.fetchall()
+
+    @classmethod
+    async def _get_user_access_level(
+        cls, db: Connection, current_user: Optional[str]
+    ) -> dict:
+        """Extract user context information for authorization checks."""
+        access_info = {}
+        db_user = await DbUser.one(db, current_user.sub)
+        managed_orgs = db_user.orgs_managed if hasattr(db_user, "orgs_managed") else []
+        access_info["is_superadmin"] = db_user.role == UserRole.ADMIN
+        access_info["managed_org_ids"] = managed_orgs
+        access_info["user_sub"] = current_user.sub
+
+        return access_info
+
+    @classmethod
+    def _build_query_filters(
+        cls,
+        skip: Optional[int],
+        limit: Optional[int],
+        org_id: Optional[int],
+        user_sub: Optional[str],
+        hashtags: Optional[list[str]],
+        search: Optional[str],
+        access_info: dict,
+    ) -> tuple[list[str], dict, bool]:
+        """Build query filters and parameters based on provided criteria."""
+        # Build basic filters
+        filters_map = {
+            "p.organisation_id = %(org_id)s": org_id,
+            "p.author_sub = %(user_sub)s": user_sub,  # project author
+            "p.hashtags && %(hashtags)s": hashtags,
+            # search term (project name using ILIKE for case-insensitive match)
+            "p.slug ILIKE %(search)s": f"%{search}%" if search else None,
+        }
+
+        filters = [
+            condition for condition, value in filters_map.items() if value is not None
+        ]
+
+        # Add visibility filter based on user authorization
+        visibility_filter = cls._build_visibility_filter(access_info)
+        needs_user_roles_join = False
+        if visibility_filter:
+            needs_user_roles_join = True
+            filters.append(visibility_filter)
+
+        params = {
+            key: value
+            for key, value in {
+                "offset": skip,
+                "limit": limit,
+                "org_id": org_id,
+                "user_sub": user_sub,
+                "hashtags": hashtags,
+                "search": f"%{search}%" if search else None,
+            }.items()
+            if value
+        }
+
+        params["current_user_sub"] = access_info["user_sub"]
+        if access_info["managed_org_ids"]:
+            params["managed_org_ids"] = access_info["managed_org_ids"]
+
+        return filters, params, needs_user_roles_join
+
+    @classmethod
+    def _build_visibility_filter(cls, access_info: dict) -> Optional[str]:
+        """Build visibility filter based on user context."""
+        if access_info["is_superadmin"]:
+            # Superadmin sees everything
+            return None
+
+        if access_info["managed_org_ids"]:
+            # Org managers see all projects in their orgs
+            return """
+                (
+                    p.visibility = 'PUBLIC'
+                    OR p.organisation_id = ANY(%(managed_org_ids)s)
+                )
+            """
+
+        # Regular users see public projects and private ones they have access to
+        return """
+            (
+                p.visibility = 'PUBLIC'
+                OR (
+                    p.visibility = 'PRIVATE'
+                    AND ur.user_sub = %(current_user_sub)s
+                )
+            )
+        """
+
+    @classmethod
+    def _construct_sql_query(
+        cls,
+        filters: list,
+        minimal: bool,
+        skip: Optional[int],
+        limit: Optional[int],
+        needs_user_roles_join: Optional[bool] = False,
+    ) -> str:
+        """Construct SQL query based on filters and query type."""
+        where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
+
+        # Only join user_roles if needed for private visibility check
+        if needs_user_roles_join:
+            user_roles_join = "LEFT JOIN user_roles ur ON ur.project_id = p.id"
+        else:
+            user_roles_join = ""
+
+        sql = f"""
+            WITH filtered_projects AS (
+                SELECT p.* FROM projects p
+                {user_roles_join}
+                {where_clause}
+            )
+        """
+
+        # Add appropriate SELECT based on minimal flag
+        if minimal:
+            sql += cls._minimal_select_query()
+        else:
+            sql += cls._full_select_query()
+
+        if skip is not None and limit is not None:
+            sql += """
+                OFFSET %(offset)s
+                LIMIT %(limit)s;
+            """
+        else:
+            sql += ";"
+
+        return sql
+
+    @classmethod
+    def _minimal_select_query(cls) -> str:
+        """Return minimal SELECT query for mapper frontend."""
+        return """
+            SELECT
+                fp.id,
+                fp.name,
+                fp.location_str,
+                fp.short_description,
+                project_org.logo AS organisation_logo
+            FROM
+                filtered_projects fp
+            LEFT JOIN
+                organisations project_org ON fp.organisation_id = project_org.id
+            ORDER BY
+                fp.created_at DESC
+        """
+
+    @classmethod
+    def _full_select_query(cls) -> str:
+        """Return full SELECT query with all project details."""
+        return """
+            SELECT
+                fp.*,
+                ST_AsGeoJSON(fp.outline)::jsonb AS outline,
+                ST_AsGeoJSON(ST_Centroid(fp.outline))::jsonb AS centroid,
+                project_org.logo AS organisation_logo,
+                fp.total_tasks,
+                stats.num_contributors,
+                stats.total_submissions,
+                stats.tasks_mapped,
+                stats.tasks_bad,
+                stats.tasks_validated
+            FROM
+                filtered_projects fp
+            LEFT JOIN
+                organisations project_org ON fp.organisation_id = project_org.id
+            LEFT JOIN
+                mv_project_stats stats ON fp.id = stats.project_id
+            ORDER BY
+                fp.created_at DESC
+        """
 
     @classmethod
     async def create(cls, db: Connection, project_in: "ProjectIn") -> Self:

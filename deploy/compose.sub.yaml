@@ -49,7 +49,7 @@ networks:
 
 services:
   proxy:
-    image: "bunkerity/bunkerweb-all-in-one:${BUNKERWEB_TAG:-dev}"
+    image: "bunkerity/bunkerweb-all-in-one:${BUNKERWEB_TAG:-1.6.2-rc1}"
     depends_on:
       # Frontends must be built and available first
       ui:
@@ -59,8 +59,8 @@ services:
     volumes:
       # - certs:/etc/letsencrypt
       - certs:/data
-      - fmtm_frontend:/var/www/html/${FMTM_DOMAIN}
-      - fmtm_mapper_frontend:/var/www/html/mapper.${FMTM_DOMAIN}
+      - fmtm_frontend:/var/www/html/${FMTM_DOMAIN}:ro
+      - fmtm_mapper_frontend:/var/www/html/mapper.${FMTM_DOMAIN}:ro
       - central_frontend:/var/www/html/odk.${FMTM_DOMAIN}:ro
     environment:
       # General
@@ -74,7 +74,7 @@ services:
       WHITELIST_URI: https://${FMTM_DOMAIN}
       MULTISITE: yes
       USE_REVERSE_PROXY: yes
-      # Required for electric headers electric-offset, electric-handle, electric-schema
+      # Required for electric headers electric-offset, electric-handle, electric-schema,electric-cursor,electric-up-to-date
       KEEP_UPSTREAM_HEADERS: yes
       REVERSE_PROXY_INTERCEPT_ERRORS: no
       ALLOWED_METHODS: OPTIONS|HEAD|GET|POST|PATCH|PUT|DELETE
@@ -118,7 +118,7 @@ services:
       sync.${FMTM_DOMAIN}_CORS_ALLOW_ORIGIN: https://mapper.${FMTM_DOMAIN}
       sync.${FMTM_DOMAIN}_CORS_ALLOW_METHODS: GET, HEAD, DELETE, OPTIONS
       # Expose-Headers are RESPONSE headers the browser is allowed to access
-      sync.${FMTM_DOMAIN}_CORS_EXPOSE_HEADERS: electric-offset,electric-handle,electric-schema
+      sync.${FMTM_DOMAIN}_CORS_EXPOSE_HEADERS: electric-offset,electric-handle,electric-schema,electric-cursor,electric-up-to-date
       odk.${FMTM_DOMAIN}_REVERSE_PROXY_HOST: http://central:8383
       odk.${FMTM_DOMAIN}_REVERSE_PROXY_URL: ~ ^/v\d
       # buffer requests, but not responses, so streaming out works
@@ -176,6 +176,7 @@ services:
         APP_VERSION: ${GIT_BRANCH}
         VITE_API_URL: https://${FMTM_API_DOMAIN:-api.${FMTM_DOMAIN}}
         VITE_SYNC_URL: https://${FMTM_SYNC_DOMAIN:-sync.${FMTM_DOMAIN}}
+        VITE_S3_URL: https://${FMTM_S3_DOMAIN:-s3.${FMTM_DOMAIN}}
     volumes:
       - fmtm_frontend:/frontend/manager
       - fmtm_mapper_frontend:/frontend/mapper
@@ -183,7 +184,7 @@ services:
     restart: "on-failure:2"
 
   central:
-    image: "ghcr.io/hotosm/fmtm/odkcentral:${ODK_CENTRAL_TAG:-v2024.2.1}"
+    image: "ghcr.io/hotosm/fmtm/odkcentral:${ODK_CENTRAL_TAG:-v2024.3.1}"
     depends_on:
       proxy:
         condition: service_healthy
@@ -253,7 +254,7 @@ services:
   central-ui:
     # This service simply builds the frontend to a volume
     # accessible to the proxy, then shuts down
-    image: "ghcr.io/hotosm/fmtm/odkcentral-ui:${ODK_CENTRAL_TAG:-v2024.2.1}"
+    image: "ghcr.io/hotosm/fmtm/odkcentral-ui:${ODK_CENTRAL_TAG:-v2024.3.1}"
     volumes:
       - central_frontend:/frontend
     network_mode: none
@@ -283,7 +284,7 @@ services:
       timeout: 5s
 
   fmtm-db:
-    image: "postgis/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
+    image: "ghcr.io/hotosm/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
     command: -c 'max_connections=300' -c 'wal_level=logical'
     volumes:
       - fmtm_db_data:/var/lib/postgresql/data/
@@ -304,7 +305,7 @@ services:
       retries: 3
 
   electric:
-    image: "electricsql/electric:${ELECTRIC_TAG:-1.0.0-beta.10}"
+    image: "electricsql/electric:${ELECTRIC_TAG:-1.0.4}"
     depends_on:
       proxy:
         condition: service_started
@@ -314,6 +315,9 @@ services:
         condition: service_completed_successfully
     environment:
       DATABASE_URL: postgresql://${FMTM_DB_USER}:${FMTM_DB_PASSWORD}@${FMTM_DB_HOST:-fmtm-db}/${FMTM_DB_NAME:-fmtm}?sslmode=disable
+      # Do not set ELECTRIC_SECRET var for now, until docs are available for how it actually works...
+      # The frontend ShapeStream should then use params.api_secret? Or perhaps set via proxy somehow?
+      ELECTRIC_INSECURE: true
       # OTEL_EXPORT: otlp
       # OTLP_ENDPOINT: https://...
       # ELECTRIC_WRITE_TO_PG_MODE: direct_writes
@@ -322,7 +326,7 @@ services:
     restart: "unless-stopped"
 
   central-db:
-    image: "postgis/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
+    image: "ghcr.io/hotosm/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
     volumes:
       - central_db_data:/var/lib/postgresql/data/
     environment:

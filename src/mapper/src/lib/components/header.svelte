@@ -1,4 +1,5 @@
 <script lang="ts">
+	import '$styles/header.css';
 	import { onMount, onDestroy } from 'svelte';
 	import type { SlDrawer, SlTooltip } from '@shoelace-style/shoelace';
 	// FIXME this is a workaround to re-import, as using sl-dropdown
@@ -9,8 +10,8 @@
 	import '@shoelace-style/shoelace/dist/components/menu-item/menu-item.js';
 	import type { SlSelectEvent } from '@shoelace-style/shoelace/dist/events';
 
-	import { setLocale as setParaglideLocale, locales } from "$translations/runtime.js";
-	import { m } from "$translations/messages.js";
+	import { setLocale as setParaglideLocale, locales } from '$translations/runtime.js';
+	import { m } from '$translations/messages.js';
 	import Login from '$lib/components/login.svelte';
 	import { getLoginStore } from '$store/login.svelte.ts';
 	import { drawerItems as menuItems } from '$constants/drawerItems.ts';
@@ -18,6 +19,7 @@
 	import { getAlertStore } from '$store/common.svelte';
 	import { getCommonStore, getProjectSetupStepStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
+	import { goto } from '$app/navigation';
 
 	let drawerRef: SlDrawer | undefined = $state();
 	let drawerOpenButtonRef: SlTooltip | undefined = $state();
@@ -44,7 +46,7 @@
 	const handleLocaleSelect = (event: SlSelectEvent) => {
 		const selectedItem = event.detail.item;
 		commonStore.setLocale(selectedItem.value);
-		setParaglideLocale(selectedItem.value) // paraglide function for UI changes (causes reload)
+		setParaglideLocale(selectedItem.value); // paraglide function for UI changes (causes reload)
 	};
 
 	onMount(() => {
@@ -60,31 +62,35 @@
 		dropdown?.removeEventListener('sl-select', handleLocaleSelect);
 	});
 </script>
-
-<div class="p-3 flex items-center justify-between font-barlow">
-	<div class="flex items-center gap-1">
-		<a href={window.location.origin}><img src={commonStore.config?.logoUrl} alt="hot-logo" class="h-[2.2rem] sm:h-[3rem]" /></a>
+<div class="header">
+	<div
+		onclick={() => goto('/')}
+		onkeydown={(e) => {
+			if (e.key === 'Enter') goto('/');
+		}}
+		role="button"
+		tabindex="0"
+		class="logo"
+	>
+		<img src={commonStore.config?.logoUrl} alt="hot-logo" />
 		<!-- The approach below is finicky - can loading the logo via CSS work nicely? -->
 		<!-- <a href={window.location.origin} 
 			class="inline-block flex h-[2.2rem] sm:h-[3rem] w-[2.2rem] sm:w-[3rem] bg-no-repeat bg-cover"
 			style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/45/Humanitarian_OpenStreetMap_Team_logo.svg');"
 			aria-label="Home"
 		></a> -->
-		<span
-			class="text-sm sm:text-base font-bold text-red-600 h-[2.2rem] sm:h-[3rem] max-w-[6rem] sm:max-w-[8rem] p-0 m-0 flex items-center justify-center leading-[1.1] sm:leading-[1.2] text-left"
-			style="color: var(--sl-color-primary-700); font-family: var(--sl-font-sans);"
-		>
+		<span class="logo-text">
 			{commonStore.config?.logoText}
 		</span>
 	</div>
-	<div class="flex items-center gap-4">
+	<div class="nav">
 		<!-- profile image and username display -->
 		{#if loginStore?.getAuthDetails?.username}
-			<div class="flex items-center gap-2">
+			<div class="user">
 				{#if !loginStore?.getAuthDetails?.picture}
 					<hot-icon
 						name="person-fill"
-						class="!text-[1.5rem] text-[#52525B] leading-0 cursor-pointer text-red-600 duration-200"
+						class=""
 						onclick={() => {}}
 						onkeydown={() => {}}
 						role="button"
@@ -94,18 +100,15 @@
 					<img
 						src={loginStore?.getAuthDetails?.picture}
 						alt="profile"
-						class="w-[1.8rem] h-[1.8rem] min-w-[1.8rem] min-h-[1.8rem] max-w-[1.8rem] max-h-[1.8rem] rounded-full"
 					/>
 				{/if}
-				<p
-					class="font-medium text-sm sm:text-base text-ellipsis whitespace-nowrap overflow-hidden max-w-[6rem] sm:max-w-fit"
-				>
+				<p class="username">
 					{loginStore?.getAuthDetails?.username}
 				</p>
 			</div>
 		{:else}
 			<hot-button
-				class="hover:bg-gray-50 rounded"
+				class="login-link"
 				variant="text"
 				size="small"
 				onclick={() => {
@@ -119,7 +122,7 @@
 				role="button"
 				tabindex="0"
 			>
-				<span class="font-barlow font-medium text-base">{m['header.sign_in']()}</span>
+				<span>{m['header.sign_in']()}</span>
 			</hot-button>
 		{/if}
 
@@ -127,8 +130,7 @@
 		{#snippet drawerOpenButton()}
 			<hot-icon
 				name="list"
-				class="!text-[1.8rem] text-[#52525B] leading-0 cursor-pointer hover:text-red-600 duration-200"
-				style={isFirstLoad ? 'background-color: var(--sl-color-warning-300);' : ''}
+				class="drawer-icon ${isFirstLoad && !commonStore.enableWebforms ? 'drawer-icon-firstload' : ''}"
 				onclick={() => {
 					drawerRef?.show();
 				}}
@@ -140,7 +142,7 @@
 			></hot-icon>
 		{/snippet}
 		<!-- add tooltip on first load -->
-		{#if isFirstLoad}
+		{#if isFirstLoad && !commonStore.enableWebforms}
 			<hot-tooltip
 				bind:this={drawerOpenButtonRef}
 				content="First download the custom ODK Collect app here"
@@ -162,11 +164,12 @@
 <Login />
 
 <hot-drawer bind:this={drawerRef} class="drawer-overview">
-	<div class="flex flex-col gap-8 px-4">
+	<div class="content">
 		<div class="locale-selection">
 			<sl-dropdown>
 				<hot-button slot="trigger" caret>
-					<hot-icon name="translate"></hot-icon> {commonStore.locale}
+					<hot-icon name="translate"></hot-icon>
+					{commonStore.locale}
 				</hot-button>
 				<sl-menu>
 					{#each locales as locale}
@@ -180,12 +183,12 @@
 				target="_blank"
 				rel="noopener noreferrer"
 				href={menu.path}
-				class="hover:text-red-600 cursor-pointer duration-200 decoration-none text-black font-barlow">{menu.name}</a
+				class="menu-item">{menu.name}</a
 			>
 		{/each}
 		{#if loginStore?.getAuthDetails?.username}
 			<hot-button
-				class="primary rounded"
+				class="sign-out"
 				variant="primary"
 				size="small"
 				onclick={handleSignOut}
@@ -197,7 +200,7 @@
 				role="button"
 				tabindex="0"
 			>
-			{#key commonStore.locale}<span class="font-barlow font-medium text-base">{m['header.sign_out']()}</span>{/key}
+				{#key commonStore.locale}<span>{m['header.sign_out']()}</span>{/key}
 			</hot-button>
 		{/if}
 	</div>

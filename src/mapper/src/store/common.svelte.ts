@@ -4,10 +4,18 @@ import { getBasemapList } from '$lib/utils/basemaps';
 
 import { getLocale as getParaglideLocale, locales } from '$translations/runtime.js';
 
+export const LOGIN_PROVIDER_KEYS = ['osm', 'google'] as const;
+export type LoginProviderKey = (typeof LOGIN_PROVIDER_KEYS)[number];
+export interface LoginProviders {
+	osm: boolean;
+	google: boolean;
+}
 interface ConfigJson {
 	logoUrl: string;
 	logoText: string;
 	cssFile: string;
+	enableWebforms: boolean;
+	loginProviders: LoginProviders;
 }
 
 interface AlertDetails {
@@ -21,6 +29,8 @@ let projectBasemaps: Basemap[] = $state([]);
 let projectPmtilesUrl: string | null = $state(null);
 let selectedTab: string = $state('map');
 let config: ConfigJson | null = $state(null);
+let useOdkCollectOverride: boolean = $state(false);
+let enableWebforms = $derived<boolean>(!useOdkCollectOverride && config?.enableWebforms ? true : false);
 
 function getCommonStore() {
 	function getLocaleFromStorage() {
@@ -68,6 +78,10 @@ function getCommonStore() {
 			return config;
 		},
 		setConfig: (fetchedConfig: ConfigJson) => (config = fetchedConfig),
+		setUseOdkCollectOverride: (isEnabled: boolean) => (useOdkCollectOverride = isEnabled),
+		get enableWebforms() {
+			return enableWebforms;
+		},
 	};
 }
 

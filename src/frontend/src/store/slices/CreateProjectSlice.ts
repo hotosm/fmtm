@@ -1,5 +1,5 @@
 import { CreateProjectStateTypes } from '@/store/types/ICreateProject';
-import { task_split_type } from '@/types/enums';
+import { project_visibility, task_split_type } from '@/types/enums';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export const initialState: CreateProjectStateTypes = {
@@ -8,7 +8,7 @@ export const initialState: CreateProjectStateTypes = {
   projectDetails: {
     dimension: 10,
     no_of_buildings: 5,
-    hashtags: '',
+    hashtags: [],
     name: '',
     short_description: '',
     odk_central_url: '',
@@ -20,6 +20,7 @@ export const initialState: CreateProjectStateTypes = {
     hasCustomTMS: false,
     custom_tms_url: '',
     project_admins: [],
+    visibility: project_visibility.PUBLIC,
   },
   projectDetailsResponse: null,
   projectDetailsLoading: false,
@@ -54,6 +55,7 @@ export const initialState: CreateProjectStateTypes = {
   customFileValidity: false,
   additionalFeatureGeojson: null,
   descriptionToFocus: null,
+  isProjectDeletePending: false,
 };
 
 const CreateProject = createSlice({
@@ -71,7 +73,7 @@ const CreateProject = createSlice({
       state.projectDetails = {
         dimension: 10,
         no_of_buildings: 5,
-        hashtags: '',
+        hashtags: [],
         name: '',
         short_description: '',
         odk_central_url: '',
@@ -79,6 +81,7 @@ const CreateProject = createSlice({
         odk_central_password: '',
         description: '',
         organisation_id: null,
+        visibility: project_visibility.PUBLIC,
       };
       state.totalAreaSelection = null;
       state.taskSplittingMethod = null;
@@ -214,6 +217,9 @@ const CreateProject = createSlice({
     },
     SetDescriptionToFocus(state, action: PayloadAction<CreateProjectStateTypes['descriptionToFocus']>) {
       state.descriptionToFocus = action.payload;
+    },
+    SetProjectDeletePending(state, action: PayloadAction<boolean>) {
+      state.isProjectDeletePending = action.payload;
     },
   },
 });

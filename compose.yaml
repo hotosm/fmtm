@@ -36,7 +36,7 @@ networks:
 
 services:
   proxy:
-    image: "bunkerity/bunkerweb-all-in-one:${BUNKERWEB_TAG:-dev}"
+    image: "bunkerity/bunkerweb-all-in-one:${BUNKERWEB_TAG:-1.6.2-rc1}"
     depends_on:
       # Frontends must be built and available first
       ui:
@@ -62,7 +62,7 @@ services:
       WHITELIST_URI: http://fmtm.localhost:7050
       MULTISITE: yes
       USE_REVERSE_PROXY: yes
-      # Required for electric headers electric-offset, electric-handle, electric-schema
+      # Required for electric headers electric-offset, electric-handle, electric-schema, electric-cursor
       KEEP_UPSTREAM_HEADERS: yes
       REVERSE_PROXY_INTERCEPT_ERRORS: no
       ALLOWED_METHODS: OPTIONS|HEAD|GET|POST|PATCH|PUT|DELETE
@@ -84,7 +84,7 @@ services:
       fmtm.localhost_MAX_CLIENT_SIZE: 1G
       # Required for vite websockets / live-reload
       fmtm.localhost_REVERSE_PROXY_WS: yes
-      mapper.fmtm.localhost_REVERSE_PROXY_HOST: http://ui-mapper:7055
+      mapper.fmtm.localhost_REVERSE_PROXY_HOST: http://ui-mapper:7057
       mapper.fmtm.localhost_MAX_CLIENT_SIZE: 1G
       # Required for vite websockets / live-reload
       mapper.fmtm.localhost_REVERSE_PROXY_WS: yes
@@ -96,6 +96,8 @@ services:
       s3.fmtm.localhost_MAX_CLIENT_SIZE: 10G
       sync.fmtm.localhost_REVERSE_PROXY_HOST: http://electric:3000
       sync.fmtm.localhost_MAX_CLIENT_SIZE: 1G
+      # Expose-Headers are RESPONSE headers the browser is allowed to access
+      sync.fmtm.localhost_CORS_EXPOSE_HEADERS: electric-offset,electric-handle,electric-schema,electric-cursor,electric-up-to-date
       odk.fmtm.localhost_REVERSE_PROXY_HOST: http://central:8383
       odk.fmtm.localhost_REVERSE_PROXY_URL: ~ ^/v\d
       # buffer requests, but not responses, so streaming out works
@@ -211,17 +213,20 @@ services:
     environment:
       - VITE_API_URL=http://api.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}
       - VITE_SYNC_URL=http://sync.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}
+      - VITE_S3_URL=http://s3.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}
+    ports:
+      - "7057:7057"
     networks:
       - fmtm-net
     restart: "unless-stopped"
 
   central:
     profiles: ["", "central"]
-    image: "ghcr.io/hotosm/fmtm/odkcentral:${ODK_CENTRAL_TAG:-v2024.2.1}"
+    image: "ghcr.io/hotosm/fmtm/odkcentral:${ODK_CENTRAL_TAG:-v2024.3.1}"
     build:
       context: odkcentral/api
       args:
-        ODK_CENTRAL_TAG: ${ODK_CENTRAL_TAG:-v2024.2.1}
+        ODK_CENTRAL_TAG: ${ODK_CENTRAL_TAG:-v2024.3.1}
     depends_on:
       proxy:
         condition: service_healthy
@@ -280,11 +285,11 @@ services:
     # This service simply builds the frontend to a volume
     # accessible to the proxy, then shuts down
     profiles: ["", "central"]
-    image: "ghcr.io/hotosm/fmtm/odkcentral-ui:${ODK_CENTRAL_TAG:-v2024.2.1}"
+    image: "ghcr.io/hotosm/fmtm/odkcentral-ui:${ODK_CENTRAL_TAG:-v2024.3.1}"
     build:
       context: odkcentral/ui
       args:
-        ODK_CENTRAL_TAG: ${ODK_CENTRAL_TAG:-v2024.2.1}
+        ODK_CENTRAL_TAG: ${ODK_CENTRAL_TAG:-v2024.3.1}
     volumes:
       - central_frontend:/frontend
     network_mode: none
@@ -333,10 +338,8 @@ services:
       timeout: 5s
 
   fmtm-db:
-    image: "postgis/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
     # Temp workaround until https://github.com/postgis/docker-postgis/issues/216
-    build:
-      context: https://github.com/postgis/docker-postgis.git#master:14-3.5/alpine
+    image: "ghcr.io/hotosm/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
     command: -c 'max_connections=300' -c 'wal_level=logical'
     volumes:
       - fmtm_db_data:/var/lib/postgresql/data/
@@ -357,7 +360,7 @@ services:
       retries: 3
 
   electric:
-    image: "electricsql/electric:${ELECTRIC_TAG:-1.0.0-beta.10}"
+    image: "electricsql/electric:${ELECTRIC_TAG:-1.0.4}"
     depends_on:
       proxy:
         condition: service_started
@@ -367,6 +370,8 @@ services:
         condition: service_completed_successfully
     environment:
       DATABASE_URL: postgresql://${FMTM_DB_USER:-fmtm}:${FMTM_DB_PASSWORD:-fmtm}@${FMTM_DB_HOST:-fmtm-db}/${FMTM_DB_NAME:-fmtm}?sslmode=disable
+      # For development we do not need to include auth token security
+      ELECTRIC_INSECURE: true
       # OTEL_EXPORT: otlp
       # OTLP_ENDPOINT: https://...
       # ELECTRIC_WRITE_TO_PG_MODE: direct_writes
@@ -376,7 +381,7 @@ services:
 
   central-db:
     profiles: ["", "central"]
-    image: "postgis/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
+    image: "ghcr.io/hotosm/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
     volumes:
       - central_db_data:/var/lib/postgresql/data/
     environment:
@@ -408,6 +413,7 @@ services:
     environment:
       # Note S3_ENDPOINT is hardcoded here for when we use tunnel config
       - S3_ENDPOINT=http://s3:9000
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-"fmtm-data"}
       - S3_BACKUP_BUCKET_NAME=${S3_BACKUP_BUCKET_NAME:-"fmtm-db-backups"}
     networks:
       - fmtm-net
@@ -436,6 +442,9 @@ services:
 
         # Check inactive users every Sunday 00:00
         echo '0 0 * * 0 /opt/scheduler/inactive_users.py' >> ./crontab
+
+        # Run project stats script every 10 mins
+        echo '*/10 * * * * /opt/scheduler/project_stats.py' >> ./crontab
 
         exec /usr/local/bin/supercronic ./crontab
       "

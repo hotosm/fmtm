@@ -14,7 +14,7 @@ on:
 
 jobs:
   pytest:
-    uses: hotosm/gh-workflows/.github/workflows/test_compose.yml@3.1.1
+    uses: hotosm/gh-workflows/.github/workflows/test_compose.yml@3.2.0
     with:
       image_name: ghcr.io/${{ github.repository }}/backend
       build_context: src/backend
@@ -23,6 +23,6 @@ jobs:
       compose_service: api
       compose_command: pytest
       cache_extra_imgs: |
-        "docker.io/postgis/postgis:${{ vars.POSTGIS_TAG }}"
+        "ghcr.io/hotosm/postgis:${{ vars.POSTGIS_TAG }}"
         "docker.io/minio/minio:${{ vars.MINIO_TAG }}"
     secrets: inherit

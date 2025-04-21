@@ -17,7 +17,7 @@
     "test:e2e-install-deps": "playwright install-deps",
     "lint": "eslint --fix --ext .js,.jsx,.ts,.tsx src"
   },
-  "license": "GPL-3.0-only",
+  "license": "(AGPL-3.0-only OR CC-BY-4.0)",
   "author": {
     "name": "HOTOSM",
     "email": "sysadmin@hotosm.org"
@@ -74,6 +74,7 @@
     "@tiptap/pm": "^2.4.0",
     "@tiptap/react": "^2.4.0",
     "@tiptap/starter-kit": "^2.4.0",
+    "@turf/centroid": "^7.2.0",
     "axios": "^1.7.2",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
@@ -89,6 +90,7 @@
     "pako": "^2.1.0",
     "pmtiles": "^3.0.6",
     "qrcode-generator": "^1.4.4",
+    "rc-mentions": "^2.19.1",
     "react": "^19.0.0",
     "react-datepicker": "^6.9.0",
     "react-dom": "^19.0.0",
@@ -102,6 +104,7 @@
     "redux": "^5.0.1",
     "redux-persist": "^6.0.0",
     "tailwind-merge": "2.3.0",
+    "tailwindcss-animate": "^1.0.7",
     "uuid": "^10.0.0"
   },
   "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"

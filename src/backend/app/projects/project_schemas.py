@@ -33,7 +33,12 @@ from pydantic.functional_validators import field_validator, model_validator
 
 from app.central.central_schemas import ODKCentralDecrypted, ODKCentralIn
 from app.config import decrypt_value, encrypt_value
-from app.db.enums import BackgroundTaskStatus, GeomStatus, ProjectPriority
+from app.db.enums import (
+    BackgroundTaskStatus,
+    GeomStatus,
+    ProjectPriority,
+    ProjectVisibility,
+)
 from app.db.models import (
     DbBackgroundTask,
     DbBasemap,
@@ -226,24 +231,25 @@ class ProjectSummary(BaseModel):
 
     id: int
     name: str
-    organisation_id: int
-    priority: ProjectPriority
+    organisation_id: Optional[int]
+    priority: Optional[ProjectPriority]
 
-    outline: Optional[Polygon]
+    # FIXME Do we need outline in summary?
+    # outline: Optional[Polygon]
     hashtags: Optional[list[str]]
     location_str: Optional[str] = None
     short_description: Optional[str] = None
+    visibility: Optional[ProjectVisibility] = None
 
     # Calculated
     organisation_logo: Optional[str] = None
     centroid: Optional[Point]
     total_tasks: Optional[int] = 0
     num_contributors: Optional[int] = 0
-    # FIXME we could add the following to the project summary cards
-    # Also required uncommenting of the DbProject fields
-    # tasks_mapped: Optional[int] = 0
-    # tasks_validated: Optional[int] = 0
-    # tasks_bad: Optional[int] = 0
+    total_submissions: Optional[int] = 0
+    tasks_mapped: Optional[int] = 0
+    tasks_validated: Optional[int] = 0
+    tasks_bad: Optional[int] = 0
 
 
 class PaginationInfo(BaseModel):
@@ -361,7 +367,7 @@ class BackgroundTaskStatus(BaseModel):
 class ProjectTeamUser(BaseModel):
     """Single user with name and image for project team."""
 
-    id: int
+    sub: str
     username: str
     profile_img: Optional[str] = None
 

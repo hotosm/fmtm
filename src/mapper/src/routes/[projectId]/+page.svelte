@@ -1,7 +1,8 @@
 <script lang="ts">
 	import '$styles/page.css';
 	import '$styles/button.css';
-	import type { PageData } from '../$types';
+	import './page.css';
+	import type { PageData } from './$types';
 	import { onMount, onDestroy } from 'svelte';
 	import type { ShapeStream } from '@electric-sql/client';
 	import { polygon } from '@turf/helpers';
@@ -45,7 +46,7 @@
 	let isDrawEnabled: boolean = $state(false);
 	let latestEventTime: string = $state('');
 	let isGeometryCreationLoading: boolean = $state(false);
-
+	
 	const taskStore = getTaskStore();
 	const entitiesStore = getEntitiesStatusStore();
 	const commonStore = getCommonStore();
@@ -56,10 +57,17 @@
 	const newBadGeomStream = getNewBadGeomStream(data.projectId);
 
 	const selectedEntityId = $derived(entitiesStore.selectedEntity);
+	const latestEvent = $derived(taskStore.latestEvent);
+	const commentMention = $derived(taskStore.commentMention);
+
+	// Set useOdkCollect override to disable webforms in app
+	if (data.project.use_odk_collect) {
+		commonStore.setUseOdkCollectOverride(true);
+	}
 
 	// Update the geojson task states when a new event is added
 	$effect(() => {
-		if (taskStore.latestEvent) {
+		if (latestEvent) {
 			taskStore.appendTaskStatesToFeatcol(data.project.tasks);
 		}
 	});
@@ -77,8 +85,8 @@
 	// update the latest time time every minute
 	$effect(() => {
 		const updateLatestTime = () => {
-			if (taskStore.latestEvent?.created_at) {
-				latestEventTime = convertDateToTimeAgo(taskStore.latestEvent.created_at);
+			if (latestEvent?.created_at) {
+				latestEventTime = convertDateToTimeAgo(latestEvent.created_at);
 			}
 		};
 
@@ -89,11 +97,10 @@
 		return () => clearInterval(interval); // Cleanup interval on unmount
 	});
 
-	function zoomToTask(taskId: number) {
+	function zoomToTask(taskId: number, fitOptions?: Record<string, any> =  {duration: 0}) {
 		const taskObj = data.project.tasks.find((task: ProjectTask) => task.id === taskId);
 
 		if (!taskObj) return;
-
 		// Set as selected task for buttons
 		taskStore.setSelectedTaskId(taskObj.id, taskObj?.task_index);
 
@@ -101,7 +108,7 @@
 		const taskBuffer = buffer(taskPolygon, 5, { units: 'meters' });
 		if (taskBuffer && maplibreMap) {
 			const taskBbox: [number, number, number, number] = bbox(taskBuffer) as [number, number, number, number];
-			maplibreMap.fitBounds(taskBbox, { duration: 500 });
+			maplibreMap.fitBounds(taskBbox, fitOptions);
 		}
 
 		// Open the map tab
@@ -144,17 +151,25 @@
 	$effect(() => {
 		// if project loaded for the first time, set projectSetupStep to 1 else get it from localStorage
 		if (!localStorage.getItem(`project-${data.projectId}-setup`)) {
-			localStorage.setItem(`project-${data.projectId}-setup`, projectSetupStepEnum['odk_project_load'].toString());
-			projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['odk_project_load']);
+			// if webforms enabled, avoid project load in odk step
+			if (commonStore.enableWebforms) {
+				localStorage.setItem(`project-${data.projectId}-setup`, projectSetupStepEnum['task_selection'].toString());
+				projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['task_selection']);
+			} else {
+				localStorage.setItem(`project-${data.projectId}-setup`, projectSetupStepEnum['odk_project_load'].toString());
+				projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['odk_project_load']);
+			}
 		} else {
 			const projectStep = localStorage.getItem(`project-${data.projectId}-setup`);
 			projectSetupStepStore.setProjectSetupStep(projectStep ? +projectStep : 0);
 		}
 		// if project loaded for the first time then show qrcode tab
 		if (+(projectSetupStepStore.projectSetupStep || 0) === projectSetupStepEnum['odk_project_load']) {
-			tabGroup.updateComplete.then(() => {
-				tabGroup.show('qrcode');
-			});
+			if (tabGroup) {
+				tabGroup.updateComplete.then(() => {
+					tabGroup.show('qrcode');
+				});
+			}
 		}
 	});
 
@@ -199,18 +214,69 @@
 </script>
 
 <!-- There is a new event to display in the top right corner -->
-{#if taskStore.latestEvent}
+{#if latestEvent}
 	<div
 		id="notification-banner"
-		class="absolute z-10 top-15 sm:top-18.8 right-0 font-sans flex bg-white text-black bg-opacity-70 text-sm sm:text-base px-1 rounded-bl-md"
+		class="floating-msg"
 	>
-		<b class="">{latestEventTime}</b>&nbsp;| {taskStore.latestEvent.event}
-		on task {taskStore.taskIdIndexMap[taskStore.latestEvent.task_id]} by {taskStore.latestEvent.username || 'anon'}
+		<b>{latestEventTime}</b>&nbsp;| {latestEvent.event}
+		on task {taskStore.taskIdIndexMap[latestEvent.task_id]} by {latestEvent.username || 'anon'}
+	</div>
+{/if}
+
+<!-- Alert shown when user is tagged on a comment when they is active -->
+{#if commentMention}
+	<div class="alert-msg">
+		<sl-alert open={true} variant="neutral">
+			<sl-icon slot="icon" name="chat"></sl-icon>
+			<strong>{commentMention?.username} mentioned you on a comment</strong><br />
+			<p>{commentMention?.comment?.replace(/#submissionId:uuid:[\w-]+|#featureId:[\w-]+/g, '')?.trim()}</p>
+			<div class="page-content">
+				<sl-button
+					onclick={() => {
+						taskStore.dismissCommentMention();
+					}}
+					onkeydown={(e: KeyboardEvent) => {
+						if (e.key === 'Enter') {
+							taskStore.dismissCommentMention();
+						}
+					}}
+					role="button"
+					tabindex="0"
+					size="small"
+				>
+					<span>Dismiss</span>
+				</sl-button>
+				<sl-button
+					onclick={() => {
+						zoomToTask(commentMention.task_id, { duration: 0, padding:	{bottom: 325} });
+						const osmId = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
+						entitiesStore.setSelectedEntity(osmId);
+						openedActionModal = 'entity-modal'
+						taskStore.dismissCommentMention();
+					}}
+					onkeydown={(e: KeyboardEvent) => {
+						if (e.key === 'Enter') {
+							const osmId = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
+							if (osmId) {
+								entitiesStore.setSelectedEntity(osmId);
+							}
+							taskStore.dismissCommentMention();
+						}
+					}}
+					role="button"
+					tabindex="0"
+					size="small"
+				>
+					<span>Tap to View</span>
+				</sl-button>
+			</div>
+		</sl-alert>
 	</div>
 {/if}
 
 <!-- The main page -->
-<div class="h-[calc(100svh-3.699rem)] sm:h-[calc(100svh-4.625rem)] font-barlow" style="position: relative">
+<div class="main-page">
 	<MapComponent
 		setMapRef={(map) => {
 			maplibreMap = map;
@@ -223,7 +289,7 @@
 		entitiesUrl={data.project.data_extract_url}
 		primaryGeomType={data.project.primary_geom_type}
 		draw={isDrawEnabled}
-		drawGeomType={data.project.new_geom_type}
+		drawGeomType={data.project?.new_geom_type}
 		handleDrawnGeom={(drawInstance, geom) => {
 			newFeatureDrawInstance = drawInstance;
 			newFeatureGeom = geom;
@@ -233,10 +299,10 @@
 	></MapComponent>
 
 	{#if newFeatureGeom}
-		<div class="absolute inset-0 z-20 flex items-center justify-center translate-y-[-5rem] pointer-events-none">
-			<div class="pointer-events-auto bg-white px-4 py-2 rounded-md shadow-lg w-fit max-w-[65%]">
-				<p class="mb-2">Is the geometry in the correct place?</p>
-				<div class="flex gap-2 justify-end">
+		<div class="proceed-dialog">
+			<div class="proceed-dialog-content">
+				<p>Is the geometry in the correct place?</p>
+				<div class="buttons">
 					<sl-button
 						onclick={() => {
 							cancelMapNewFeatureInODK();
@@ -249,9 +315,9 @@
 						role="button"
 						tabindex="0"
 						size="small"
-						class="secondary w-fit"
+						variant="secondary"
 					>
-						<span class="font-barlow font-medium text-xs uppercase">{m['popup.cancel']()}</span>
+						<span>{m['popup.cancel']()}</span>
 					</sl-button>
 					<sl-button
 						onclick={() => mapNewFeatureInODK()}
@@ -261,10 +327,10 @@
 						role="button"
 						tabindex="0"
 						size="small"
-						class="primary w-fit"
+						variant="primary"
 						loading={isGeometryCreationLoading}
 					>
-						<span class="font-barlow font-medium text-xs uppercase">PROCEED</span>
+						<span>PROCEED</span>
 					</sl-button>
 				</div>
 			</div>
@@ -301,15 +367,15 @@
 				<BasemapComponent projectId={data.project.id}></BasemapComponent>
 			{/if}
 			{#if commonStore.selectedTab === 'qrcode'}
-				<QRCodeComponent {infoDialogRef} projectName={data.project.name} projectOdkToken={data.project.odk_token}>
+				<QRCodeComponent class="map-qr" {infoDialogRef} projectName={data.project.name} projectOdkToken={data.project.odk_token}>
 					<!-- Open ODK Button (Hide if it's project walkthrough step) -->
 					{#if +(projectSetupStepStore.projectSetupStep || 0) !== projectSetupStepEnum['odk_project_load']}
 						<sl-button
 							size="small"
-							class="primary w-full max-w-[200px]"
+							variant="primary"
 							href="odkcollect://form/{data.project.odk_form_id}"
 						>
-							<span class="font-barlow font-medium text-base uppercase">Open ODK</span></sl-button
+							<span>{m['odk.open']()}</span></sl-button
 						>
 					{/if}
 				</QRCodeComponent>
@@ -318,15 +384,13 @@
 		<hot-dialog
 			bind:this={infoDialogRef}
 			class="dialog-overview"
-			style="--width: fit; --body-spacing: 0.5rem"
 			no-header
 		>
-			<div class="flex flex-col gap-[0.5rem]">
+			<div class="content">
 				<img
 					src={ImportQrGif}
 					alt="manual process of importing qr code gif"
-					style="border: 1px solid #ededed;"
-					class="h-[70vh]"
+					class="manual-qr-gif"
 				/>
 				<sl-button
 					onclick={() => infoDialogRef?.hide()}
@@ -336,9 +400,9 @@
 					role="button"
 					tabindex="0"
 					size="small"
-					class="primary w-fit ml-auto"
+					variant="primary"
 				>
-					<span class="font-barlow font-medium text-SM uppercase">CLOSE</span>
+					<span>CLOSE</span>
 				</sl-button>
 			</div>
 		</hot-dialog>
@@ -346,7 +410,7 @@
 
 	{#if displayWebFormsDrawer === false}
 		<sl-tab-group
-			class={'z-9999 fixed bottom-0 left-0 right-0'}
+			class="web-forms-drawer"
 			placement="bottom"
 			no-scroll-controls
 			onsl-tab-show={(e: CustomEvent<{ name: string }>) => {
@@ -359,20 +423,21 @@
 					projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['task_selection']);
 				}
 			}}
-			style="--panel-display: none"
 			bind:this={tabGroup}
 		>
 			<sl-tab slot="nav" panel="map">
-				<hot-icon name="map" class="!text-[1.7rem] !sm:text-[2rem]"></hot-icon>
+				<hot-icon name="map"></hot-icon>
 			</sl-tab>
 			<sl-tab slot="nav" panel="offline">
-				<hot-icon name="wifi-off" class="!text-[1.7rem] !sm:text-[2rem]"></hot-icon>
+				<hot-icon name="wifi-off"></hot-icon>
 			</sl-tab>
-			<sl-tab slot="nav" panel="qrcode">
-				<hot-icon name="qr-code" class="!text-[1.7rem] !sm:text-[2rem]"></hot-icon>
-			</sl-tab>
+			{#if (!commonStore.enableWebforms)}
+				<sl-tab slot="nav" panel="qrcode">
+					<hot-icon name="qr-code"></hot-icon>
+				</sl-tab>
+			 {/if}
 			<sl-tab slot="nav" panel="events">
-				<hot-icon name="three-dots" class="!text-[1.7rem] !sm:text-[2rem]"></hot-icon>
+				<hot-icon name="three-dots"></hot-icon>
 			</sl-tab>
 		</sl-tab-group>
 	{/if}
@@ -381,51 +446,8 @@
 		bind:webFormsRef
 		bind:display={displayWebFormsDrawer}
 		projectId={data?.projectId}
-		entityId={selectedEntityId}
+		entityId={selectedEntityId || undefined}
+		taskId={taskStore.selectedTaskIndex || undefined}
 	/>
 </div>
 
-<style>
-	:root {
-		--nav-height: 4rem;
-	}
-
-	sl-tab-group::part(body) {
-		display: var(--panel-display);
-		position: fixed;
-		bottom: var(--nav-height);
-		width: 100%;
-		height: calc(80vh - var(--nav-height));
-		min-height: 25vh;
-		max-height: 90vh;
-		background-color: rgba(255, 255, 255, 1);
-		overflow: auto;
-		border-top-left-radius: 1rem;
-		border-top-right-radius: 1rem;
-		z-index: 100; /* Map is using z-index 10 */
-	}
-
-	/* The tab selector */
-	sl-tab-group::part(nav) {
-		display: flex;
-		justify-content: center;
-		background-color: var(--hot-white);
-		height: var(--nav-height);
-		background-color: white;
-	}
-
-	/* Each tab item (icon) container */
-	sl-tab {
-		padding-left: 3vw;
-		padding-right: 3vw;
-	}
-
-	/* The tab item icon */
-	hot-icon {
-		font-size: 2rem;
-	}
-
-	#notification-banner {
-		--padding: 0.3rem;
-	}
-</style>
