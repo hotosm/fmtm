@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import UserTab from '@/components/ManageProject/UserTab';
+import UserTab from '@/components/ManageProject/User';
 import AssetModules from '@/shared/AssetModules.js';
 import { GetIndividualProjectDetails } from '@/api/CreateProjectService';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';

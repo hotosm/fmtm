@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import InputTextField from '../../../components/common/InputTextField';
+import InputTextField from '../../common/InputTextField';
 import AssetModules from '../../../shared/AssetModules.js';
 import Chips from '../../common/Chips';
 import { CustomSelect } from '../../common/Select';
@@ -16,6 +16,7 @@ const InviteTab = () => {
   const [user, setUser] = useState<string | null>('');
   const [inviteUser, setInviteUser] = useState<string[]>([]);
   const [assignedRole, setAssignedRole] = useState<string>('');
+
   return (
     <div className="fmtm-flex fmtm-flex-col fmtm-gap-5 lg:fmtm-gap-10">
       <div>

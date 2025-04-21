@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import InputTextField from '../../../components/common/InputTextField';
+import InputTextField from '../../common/InputTextField';
 import AssetModules from '../../../shared/AssetModules.js';
 import Chips from '../../common/Chips';
 import { CustomSelect } from '../../common/Select';
