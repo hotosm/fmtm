@@ -12,42 +12,79 @@ from app.db.postgis_utils import timestamp
 
 DB_URL = settings.FMTM_DB_URL.unicode_string()
 
-# create materialized view to store project stats for faster query
+# Create materialized view to store project stats for faster query:
+# Here we retrieve:
+#  - Total number of contributors (task / entity events)
+#  - Total number of complete submissions
+#  - Total number of tasks mapped
+#  - Total number of task validated as bad
+#  - Total number of task validated as good
+#  - Total task count for project
+# Previously we did a big join of all data in the entire database. Now instead:
+#  - Uses scalar subqueries, filtered by project_id = p.id (one row per project)
+#  - All metrics are isolated subqueries, using indexes efficiently
+#  - No big joins, no GROUP BY, no row explosions
+#  - Each subquery uses narrow filters (WHERE project_id = p.id)
+# NOTE as FieldTM scales and projects increase, we could swap the final
+# NOTE    WHERE p.id IN (SELECT p FROM projects);
+# NOTE to take a narrower range of IDs and do schedule partial updates to
+# NOTE avoid refreshing all in one go.
+# TODO performance of this takes ~15ms. Consider moving back to models.py logic.
 CREATE_MATERIALIZED_VIEW_SQL = """
     CREATE MATERIALIZED VIEW IF NOT EXISTS mv_project_stats AS
-    WITH latest_task_events AS (
-        SELECT DISTINCT ON (ev.project_id, ev.task_id)
-            ev.project_id,
-            ev.task_id,
-            ev.event_id,
-            ev.event
-        FROM task_events ev
-        ORDER BY ev.project_id, ev.task_id, ev.created_at DESC
-    )
     SELECT
         p.id AS project_id,
-        COUNT(DISTINCT ev.user_sub) AS num_contributors,
-        COUNT(
-            DISTINCT CASE WHEN et.status = 'SURVEY_SUBMITTED'
-            THEN et.entity_id END
+        (
+            SELECT COUNT(DISTINCT user_sub)
+            FROM task_events
+            WHERE project_id = p.id
+        ) AS num_contributors,
+        (
+            SELECT COUNT(DISTINCT entity_id)
+            FROM odk_entities
+            WHERE project_id = p.id
+            AND status = 'SURVEY_SUBMITTED'
         ) AS total_submissions,
-        COUNT(
-            DISTINCT CASE WHEN lte.event = 'FINISH'
-            THEN lte.event_id END
+        (
+            SELECT COUNT(*) FROM (
+            SELECT DISTINCT ON (task_id)
+                task_id,
+                event
+            FROM task_events
+            WHERE project_id = p.id
+            ORDER BY task_id, created_at DESC
+            ) latest_events
+            WHERE event = 'FINISH'
         ) AS tasks_mapped,
-        COUNT(
-            DISTINCT CASE WHEN lte.event = 'BAD'
-            THEN lte.event_id END
+        (
+            SELECT COUNT(*) FROM (
+            SELECT DISTINCT ON (task_id)
+                task_id,
+                event
+            FROM task_events
+            WHERE project_id = p.id
+            ORDER BY task_id, created_at DESC
+            ) latest_events
+            WHERE event = 'BAD'
         ) AS tasks_bad,
-        COUNT(
-            DISTINCT CASE WHEN lte.event = 'GOOD'
-            THEN lte.event_id END
-        ) AS tasks_validated
+        (
+            SELECT COUNT(*) FROM (
+            SELECT DISTINCT ON (task_id)
+                task_id,
+                event
+            FROM task_events
+            WHERE project_id = p.id
+            ORDER BY task_id, created_at DESC
+            ) latest_events
+            WHERE event = 'GOOD'
+        ) AS tasks_validated,
+        (
+            SELECT COUNT(DISTINCT t.id)
+            FROM tasks t
+            WHERE t.project_id = p.id
+        ) AS total_tasks
     FROM projects p
-    LEFT JOIN task_events ev ON p.id = ev.project_id
-    LEFT JOIN odk_entities et ON p.id = et.project_id
-    LEFT JOIN latest_task_events lte ON p.id = lte.project_id
-    GROUP BY p.id;
+    WHERE p.id IN (SELECT id FROM projects);
 """
 
 CREATE_UNIQUE_INDEX_SQL = """
@@ -66,10 +103,12 @@ async def main():
         async with await AsyncConnection.connect(DB_URL, autocommit=True) as db:
             async with db.cursor() as cur:
                 # First ensure the view exists
+                print(f"Creating materialized view for project stats: {timestamp()}")
                 await cur.execute(CREATE_MATERIALIZED_VIEW_SQL)
-                print("Materialized view created successfully.")
+                print(f"Materialized view created successfully: {timestamp()}")
 
                 # Create the index
+                print("Creating index for new materialized view")
                 await cur.execute(CREATE_UNIQUE_INDEX_SQL)
                 print("Unique index created successfully.")
 
