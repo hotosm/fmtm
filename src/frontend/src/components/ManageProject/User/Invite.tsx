@@ -1,21 +1,15 @@
 import React, { useState } from 'react';
-import InputTextField from '../../common/InputTextField';
-import AssetModules from '../../../shared/AssetModules.js';
-import Chips from '../../common/Chips';
-import { CustomSelect } from '../../common/Select';
+import AssetModules from '@/shared/AssetModules.js';
 import Button from '@/components/common/Button';
+import Chips from '@/components/common/Chips.js';
+import InputTextField from '@/components/common/InputTextField.js';
+import Select2 from '@/components/common/Select2.js';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 
-const roleList = [
-  { label: 'Project Manger', value: 'project_manager' },
-  { label: 'Surveyor', value: 'surveyor' },
-  { label: 'Supervisor', value: 'supervisor' },
-];
 const InviteTab = () => {
   useDocumentTitle('Manage Project: Invite User');
   const [user, setUser] = useState<string | null>('');
   const [inviteUser, setInviteUser] = useState<string[]>([]);
-  const [assignedRole, setAssignedRole] = useState<string>('');
 
   return (
     <div className="fmtm-flex fmtm-flex-col fmtm-gap-5 lg:fmtm-gap-10">
@@ -50,17 +44,6 @@ const InviteTab = () => {
           </div>
         )}
       </div>
-      <CustomSelect
-        title="Assign as"
-        placeholder="Choose"
-        data={roleList}
-        dataKey="value"
-        value={assignedRole}
-        valueKey="value"
-        label="label"
-        onValueChange={(value) => setAssignedRole(value)}
-        className="fmtm-bg-white"
-      />
       <div className="fmtm-flex fmtm-justify-center">
         <Button variant="primary-red">ASSIGN</Button>
       </div>
