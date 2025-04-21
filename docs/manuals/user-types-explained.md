@@ -1,6 +1,14 @@
-# Users
+# Types Of User In FieldTM
 
-## Campaign managers
+## Organisation Managers
+
+- Oversee all projects within an organisation.
+- Typically responsible for creating projects and assigning project managers
+  to them.
+- For a small organisation, the organisation manager may also be the project
+  manager.
+
+## Project / Campaign Managers
 
 Campaign managers select an Area of Interest (AOI) and organize
 field mappers to go out and collect data. They need to:
@@ -16,7 +24,7 @@ field mappers to go out and collect data. They need to:
 - See the status of tasks (open, "checked out", completed but not validated,
   requires rework, validated, etc) in the Web browser on their computer
 
-## Field mappers
+## Field Mappers
 
 Field mappers select (or are allocated) individual tasks within a project
 AOI and use the ODK mobile app to gather data in those areas. They need to:
