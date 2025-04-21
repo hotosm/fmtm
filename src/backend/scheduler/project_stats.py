@@ -8,6 +8,7 @@ import sys
 from psycopg import AsyncConnection
 
 from app.config import settings
+from app.db.postgis_utils import timestamp
 
 DB_URL = settings.FMTM_DB_URL.unicode_string()
 
@@ -73,8 +74,9 @@ async def main():
                 print("Unique index created successfully.")
 
                 # Then refresh it (once)
+                print(f"Refreshing materialized view once: {timestamp()}")
                 await cur.execute(REFRESH_MATERIALIZED_VIEW_SQL)
-                print("Materialized view refreshed successfully.")
+                print(f"Materialized view refreshed successfully: {timestamp()}")
 
     except Exception as e:
         print(f"Error in project stats update: {e}")
