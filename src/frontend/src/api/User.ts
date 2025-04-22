@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 import { AppDispatch } from '@/store/Store';
 import { UserActions } from '@/store/slices/UserSlice';
-import { userType } from '@/models/user/userModel';
+import { projectUserInvites, userType } from '@/models/user/userModel';
 import { paginationType } from '@/store/types/ICommon';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import { NavigateFunction } from 'react-router-dom';
@@ -107,6 +107,57 @@ export const AcceptInvite = (url: string, navigate: NavigateFunction) => {
         );
       } finally {
         navigate('/');
+      }
+    };
+    await getProjectUserInvites(url);
+  };
+};
+
+export const GetProjectUserInvites = (url: string, params: { project_id: number }) => {
+  return async (dispatch: AppDispatch) => {
+    const getProjectUserInvites = async (url: string) => {
+      try {
+        dispatch(UserActions.GetProjectUserInvitesLoading(true));
+        const response: AxiosResponse<projectUserInvites[]> = await axios.get(url, { params });
+        dispatch(UserActions.SetProjectUserInvites(response.data));
+      } catch (error) {
+      } finally {
+        dispatch(UserActions.GetProjectUserInvitesLoading(false));
+      }
+    };
+    await getProjectUserInvites(url);
+  };
+};
+
+export const InviteNewUser = (
+  url: string,
+  values: { inviteVia: string; user: string[]; role: string; projectId: number },
+) => {
+  return async (dispatch: AppDispatch) => {
+    const { inviteVia, role, user: users, projectId } = values;
+
+    const getProjectUserInvites = async (url: string) => {
+      try {
+        dispatch(UserActions.InviteNewUserPending(true));
+        const promises = users?.map(async (user) => {
+          try {
+            const payload: Record<string, any> = { project_id: projectId, role };
+
+            if (inviteVia === 'osm') {
+              payload.osm_username = user;
+            } else {
+              payload.email = user;
+            }
+
+            const response = await axios.post(url, payload, { params: { project_id: projectId } });
+          } catch (error) {
+            console.log(error.response.data.detail, 'error.response.data.detail');
+          }
+        });
+        await Promise.all(promises);
+      } catch (error) {
+      } finally {
+        dispatch(UserActions.InviteNewUserPending(false));
       }
     };
     await getProjectUserInvites(url);
