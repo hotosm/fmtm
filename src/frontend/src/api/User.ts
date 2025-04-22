@@ -102,7 +102,7 @@ export const AcceptInvite = (url: string, navigate: NavigateFunction) => {
         dispatch(
           CommonActions.SetSnackBar({
             message: error.response.data.detail || 'Failed to accept invitation',
-            duration: 4000,
+            duration: 6000,
           }),
         );
       } finally {
