@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
-import AssignTab from './Assign';
+// import AssignTab from './Assign';
 import InviteTab from './Invite';
 import { project_roles } from '@/types/enums';
 
-const tabList: ['Assign', 'Invite'] = ['Assign', 'Invite'];
+const tabList: ['Invite'] = ['Invite'];
+{
+  /* TODO: work on user task assignment after finalization */
+}
+// const tabList: ['Assign', 'Invite'] = ['Assign', 'Invite'];
+
 const roleList = [
   {
     id: 'MAPPER',
@@ -35,7 +40,9 @@ const UserTab = () => {
           </div>
         ))}
       </div>
-      {tabView === 'Assign' ? <AssignTab roleList={roleList} /> : <InviteTab roleList={roleList} />}
+      <InviteTab roleList={roleList} />
+      {/* TODO: work on user task assignment after finalization */}
+      {/* {tabView === 'Assign' ? <AssignTab roleList={roleList} /> : <InviteTab roleList={roleList} />} */}
     </div>
   );
 };
