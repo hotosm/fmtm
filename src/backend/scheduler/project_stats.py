@@ -19,7 +19,6 @@ DB_URL = settings.FMTM_DB_URL.unicode_string()
 #  - Total number of tasks mapped
 #  - Total number of task validated as bad
 #  - Total number of task validated as good
-#  - Total task count for project
 # Previously we did a big join of all data in the entire database. Now instead:
 #  - Uses scalar subqueries, filtered by project_id = p.id (one row per project)
 #  - All metrics are isolated subqueries, using indexes efficiently
@@ -32,6 +31,15 @@ DB_URL = settings.FMTM_DB_URL.unicode_string()
 # TODO performance of this takes ~15ms. Consider moving back to models.py logic.
 CREATE_MATERIALIZED_VIEW_SQL = """
     CREATE MATERIALIZED VIEW IF NOT EXISTS mv_project_stats AS
+    WITH latest_task_events AS (
+        SELECT DISTINCT ON (ev.project_id, ev.task_id)
+            ev.project_id,
+            ev.task_id,
+            ev.event_id,
+            ev.event
+        FROM task_events ev
+        ORDER BY ev.project_id, ev.task_id, ev.created_at DESC
+    )
     SELECT
         p.id AS project_id,
         (
@@ -46,45 +54,22 @@ CREATE_MATERIALIZED_VIEW_SQL = """
             AND status = 'SURVEY_SUBMITTED'
         ) AS total_submissions,
         (
-            SELECT COUNT(*) FROM (
-            SELECT DISTINCT ON (task_id)
-                task_id,
-                event
-            FROM task_events
-            WHERE project_id = p.id
-            ORDER BY task_id, created_at DESC
-            ) latest_events
-            WHERE event = 'FINISH'
+            SELECT COUNT(*)
+            FROM latest_task_events
+            WHERE project_id = p.id AND event = 'FINISH'
         ) AS tasks_mapped,
         (
-            SELECT COUNT(*) FROM (
-            SELECT DISTINCT ON (task_id)
-                task_id,
-                event
-            FROM task_events
-            WHERE project_id = p.id
-            ORDER BY task_id, created_at DESC
-            ) latest_events
-            WHERE event = 'BAD'
+            SELECT COUNT(*)
+            FROM latest_task_events
+            WHERE project_id = p.id AND event = 'BAD'
         ) AS tasks_bad,
         (
-            SELECT COUNT(*) FROM (
-            SELECT DISTINCT ON (task_id)
-                task_id,
-                event
-            FROM task_events
-            WHERE project_id = p.id
-            ORDER BY task_id, created_at DESC
-            ) latest_events
-            WHERE event = 'GOOD'
-        ) AS tasks_validated,
-        (
-            SELECT COUNT(DISTINCT t.id)
-            FROM tasks t
-            WHERE t.project_id = p.id
-        ) AS total_tasks
-    FROM projects p
-    WHERE p.id IN (SELECT id FROM projects);
+            SELECT COUNT(*)
+            FROM latest_task_events
+            WHERE project_id = p.id AND event = 'GOOD'
+        ) AS tasks_validated
+    FROM projects p;
+    -- where p.id in (SELECT id FROM projects);
 """
 
 CREATE_UNIQUE_INDEX_SQL = """
