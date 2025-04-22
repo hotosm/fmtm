@@ -5,13 +5,22 @@ import Chips from '@/components/common/Chips';
 import InputTextField from '@/components/common/InputTextField.js';
 import Select2 from '@/components/common/Select2';
 import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
+import { project_roles } from '@/types/enums';
 
-const AssignTab = () => {
+type propType = {
+  roleList: {
+    id: string;
+    value: project_roles;
+    label: string;
+  }[];
+};
+
+const AssignTab = ({ roleList }: propType) => {
   useDocumentTitle('Manage Project: Assign User');
   const [user, setUser] = useState<string | null>('');
   const [assignUser, setAssignUser] = useState<string[]>([]);
   return (
-    <div className="fmtm-flex fmtm-flex-col fmtm-gap-5 lg:fmtm-gap-10">
+    <div className="fmtm-flex fmtm-flex-col fmtm-gap-5 lg:fmtm-gap-10 fmtm-bg-white fmtm-p-6">
       <div>
         <div className="fmtm-flex fmtm-gap-2">
           <div className="fmtm-flex-grow">
