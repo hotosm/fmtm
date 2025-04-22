@@ -21,7 +21,9 @@ export const initialState: UserStateTypes = {
   userListForSelect: [],
   userListForSelectLoading: false,
   userNames: [],
+  projectUserInvitesList: [],
   getUserNamesLoading: false,
+  inviteNewUserPending: false,
 };
 
 const UserSlice = createSlice({
@@ -53,6 +55,15 @@ const UserSlice = createSlice({
     },
     GetUserNamesLoading: (state, action: PayloadAction<boolean>) => {
       state.getUserNamesLoading = action.payload;
+    },
+    InviteNewUserPending: (state, action: PayloadAction<boolean>) => {
+      state.inviteNewUserPending = action.payload;
+    },
+    SetProjectUserInvites: (state, action: PayloadAction<UserStateTypes['projectUserInvitesList']>) => {
+      state.projectUserInvitesList = action.payload;
+    },
+    GetProjectUserInvitesLoading: (state, action: PayloadAction<boolean>) => {
+      state.getProjectUserInvitesLoading = action.payload;
     },
   },
 });
