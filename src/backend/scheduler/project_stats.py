@@ -13,7 +13,7 @@ from app.db.postgis_utils import timestamp
 DB_URL = settings.FMTM_DB_URL.unicode_string()
 
 # Create materialized view to store project stats for faster query:
-# Here we retrieve:
+# Using a CTE to get lastest_task_events first, we then calculate:
 #  - Total number of contributors (task / entity events)
 #  - Total number of complete submissions
 #  - Total number of tasks mapped
@@ -25,10 +25,12 @@ DB_URL = settings.FMTM_DB_URL.unicode_string()
 #  - No big joins, no GROUP BY, no row explosions
 #  - Each subquery uses narrow filters (WHERE project_id = p.id)
 # NOTE as FieldTM scales and projects increase, we could swap the final
-# NOTE    WHERE p.id IN (SELECT p FROM projects);
+# NOTE    FROM projects p;
+# NOTE to
+# NOTE    WHERE p.id in (SELECT id FROM projects COUNT xxx);
 # NOTE to take a narrower range of IDs and do schedule partial updates to
-# NOTE avoid refreshing all in one go.
-# TODO performance of this takes ~15ms. Consider moving back to models.py logic.
+# NOTE avoid refreshing all in one go. Performance of this takes ~15ms 36 projects.
+# TODO We could consider moving back to models.py logic to generate via the API.
 CREATE_MATERIALIZED_VIEW_SQL = """
     CREATE MATERIALIZED VIEW IF NOT EXISTS mv_project_stats AS
     WITH latest_task_events AS (
@@ -69,7 +71,6 @@ CREATE_MATERIALIZED_VIEW_SQL = """
             WHERE project_id = p.id AND event = 'GOOD'
         ) AS tasks_validated
     FROM projects p;
-    -- where p.id in (SELECT id FROM projects);
 """
 
 CREATE_UNIQUE_INDEX_SQL = """
