@@ -140,6 +140,7 @@ async def invite_new_user(
     (e.g. mobile message).
     """
     project = project_user_dict.get("project")
+    osm_user_exists = False
 
     if user_in.osm_username:
         if osm_user_exists := await check_osm_user(user_in.osm_username):
