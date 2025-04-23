@@ -6,6 +6,8 @@ import { paginationType } from '@/store/types/ICommon';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import { NavigateFunction } from 'react-router-dom';
 
+const VITE_API_URL = import.meta.env.VITE_API_URL;
+
 export const GetUserListService = (url: string, params: { page: number; results_per_page: number; search: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(UserActions.SetUserListLoading(true));
@@ -139,6 +141,7 @@ export const InviteNewUser = (
     const getProjectUserInvites = async (url: string) => {
       try {
         dispatch(UserActions.InviteNewUserPending(true));
+        let errorResponses: string[] = [];
         const promises = users?.map(async (user) => {
           try {
             const payload: Record<string, any> = { project_id: projectId, role };
@@ -150,14 +153,19 @@ export const InviteNewUser = (
             }
 
             const response = await axios.post(url, payload, { params: { project_id: projectId } });
+            if (response.status === 201) {
+              errorResponses = [...errorResponses, response.data.message];
+            }
           } catch (error) {
-            console.log(error.response.data.detail, 'error.response.data.detail');
+            errorResponses = [...errorResponses, error.response.data.detail];
           }
         });
         await Promise.all(promises);
+        dispatch(UserActions.SetProjectUserInvitesError(errorResponses));
       } catch (error) {
       } finally {
         dispatch(UserActions.InviteNewUserPending(false));
+        dispatch(GetProjectUserInvites(`${VITE_API_URL}/users/invites`, { project_id: projectId }));
       }
     };
     await getProjectUserInvites(url);

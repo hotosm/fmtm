@@ -24,6 +24,7 @@ export const initialState: UserStateTypes = {
   projectUserInvitesList: [],
   getUserNamesLoading: false,
   inviteNewUserPending: false,
+  projectUserInvitesError: [],
 };
 
 const UserSlice = createSlice({
@@ -64,6 +65,9 @@ const UserSlice = createSlice({
     },
     GetProjectUserInvitesLoading: (state, action: PayloadAction<boolean>) => {
       state.getProjectUserInvitesLoading = action.payload;
+    },
+    SetProjectUserInvitesError: (state, action: PayloadAction<string[]>) => {
+      state.projectUserInvitesError = action.payload;
     },
   },
 });

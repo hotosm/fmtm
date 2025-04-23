@@ -12,4 +12,5 @@ export type UserStateTypes = {
   inviteNewUserPending: boolean;
   getProjectUserInvitesLoading: boolean;
   projectUserInvitesList: projectUserInvites[];
+  projectUserInvitesError: string[];
 };
