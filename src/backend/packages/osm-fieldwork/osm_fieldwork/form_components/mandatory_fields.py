@@ -92,15 +92,17 @@ def _get_mandatory_fields(
     Returns:
         List of field definitions for the form
     """
-    calculate_status = (
-        f"if({FEATURE} != '', 2,"
-        "if(${feature_exists} = 'no', 6,"
-        "if(${digitisation_correct} = 'no', 6,"
-    )
+    status_field_calculation = f"if({FEATURE} != '', 2, "
+    if need_verification_fields:
+        status_field_calculation += "if(${feature_exists} = 'no', 6, "
+        status_field_calculation += "if(${digitisation_correct} = 'no', 6, "
     if use_odk_collect:
-        calculate_status += f"if({NEW_FEATURE} != '', 3, 6))"
+        status_field_calculation += f"if({NEW_FEATURE} != '', 3, 6)"
     else:
-        calculate_status += "6)))"
+        status_field_calculation += "6"
+    if need_verification_fields:
+        status_field_calculation += "))"
+    status_field_calculation += ")"
 
     fields = [
         {"type": "start-geopoint", "name": "warmup", "notes": "collects location on form start"},
@@ -169,7 +171,7 @@ def _get_mandatory_fields(
             "notes": "Update the Entity 'status' field",
             "label::english(en)": "Mapping Status",
             "appearance": "minimal",
-            "calculation": f"{calculate_status}",
+            "calculation": f"{status_field_calculation}",
             "default": "2",
             "trigger": f"{NEW_FEATURE}" if use_odk_collect else "",
             "save_to": "status",

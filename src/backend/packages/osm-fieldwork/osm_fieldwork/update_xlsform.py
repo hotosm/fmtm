@@ -129,12 +129,11 @@ def standardize_xlsform_sheets(xlsform: dict) -> dict:
 
 def create_survey_group(need_verification: bool=False) -> dict[str, pd.DataFrame]:
     """Helper function to create a begin and end group for XLSForm."""
-    relevant= "(${feature_exists} = 'yes')" if need_verification else ""
     begin_group = pd.DataFrame(
         add_label_translations({
             "type": ["begin group"],
             "name": ["survey_questions"],
-            "relevant": f"{relevant}",
+            "relevant": "${feature_exists} = 'yes'" if need_verification else "",
         })
     )
     end_group = pd.DataFrame(

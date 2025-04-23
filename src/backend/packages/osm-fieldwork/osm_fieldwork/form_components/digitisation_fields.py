@@ -25,6 +25,9 @@ capturing any issues with digitization, and adding additional notes or
 images if required. The fields include logic for relevance, mandatory
 requirements, and conditions based on user responses.
 
+NOTE the fields are omitted if need_verification_fields=False is
+NOTE passed to update_xlsform.
+
 Returns:
     pd.DataFrame: A DataFrame containing the digitization-related fields.
 """
