@@ -138,7 +138,7 @@ export const InviteNewUser = (
   return async (dispatch: AppDispatch) => {
     const { inviteVia, role, user: users, projectId } = values;
 
-    const getProjectUserInvites = async (url: string) => {
+    const inviteNewUser = async (url: string) => {
       try {
         dispatch(UserActions.InviteNewUserPending(true));
         let errorResponses: string[] = [];
@@ -168,6 +168,6 @@ export const InviteNewUser = (
         dispatch(GetProjectUserInvites(`${VITE_API_URL}/users/invites`, { project_id: projectId }));
       }
     };
-    await getProjectUserInvites(url);
+    await inviteNewUser(url);
   };
 };
