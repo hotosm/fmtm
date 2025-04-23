@@ -514,15 +514,14 @@ async def entities(odk_project):
 
 
 @pytest_asyncio.fixture(scope="function")
-async def project_data():
+async def stub_project_data(organisation):
     """Sample data for creating a project."""
     project_name = f"Test Project {uuid4()}"
     data = {
         "name": project_name,
         "short_description": "test",
         "description": "test",
-        "osm_category": "buildings",
-        "hashtags": "testtag",
+        "organisation_id": organisation.id,
         "outline": {
             "coordinates": [
                 [
@@ -536,15 +535,22 @@ async def project_data():
             "type": "Polygon",
         },
     }
+    return data
 
+
+@pytest_asyncio.fixture(scope="function")
+async def project_data(stub_project_data):
+    """Sample data for creating a project."""
     odk_credentials = {
         "odk_central_url": odk_central_url,
         "odk_central_user": odk_central_user,
         "odk_central_password": odk_central_password,
     }
     odk_creds_decrypted = central_schemas.ODKCentralDecrypted(**odk_credentials)
-    data.update(**odk_creds_decrypted.model_dump())
 
+    data = stub_project_data.copy()
+    data.pop("outline")  # Remove outline from copied data
+    data.update(**odk_creds_decrypted.model_dump())
     return data
 
 
