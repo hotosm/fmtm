@@ -32,7 +32,7 @@ Modules and functionalities:
 - **Survey Sheet**: Combines metadata with mandatory fields required for FMTM workflows.
     - `warmup` for collecting initial location.
     - `feature` for selecting map geometry from predefined options.
-    - `new_feature` for capturing GPS coordinates of new map features.
+    - `new_feature` (ODK Collect only) for capturing GPS coordinates of new features.
     - Calculated fields such as `xid`, `xlocation`, `status`, and others.
 - **Entities Sheet**: Defines entity management rules to handle mapping tasks dynamically.
     - Includes rules for entity creation and updates with user-friendly labels.
@@ -43,6 +43,13 @@ import pandas as pd
 from datetime import datetime
 
 from osm_fieldwork.enums import DbGeomType
+from osm_fieldwork.form_components.translations import add_label_translations
+
+
+NEW_FEATURE = "${new_feature}"
+FEATURE = "${feature}"
+INSTANCE_ID = "${instanceId}"
+INSTANCE_FEATURE = "instance('features')/root/item[name=${feature}]"
 
 
 meta_df = pd.DataFrame(
@@ -60,9 +67,19 @@ meta_df = pd.DataFrame(
     ]
 )
 
+photo_collection_df = pd.DataFrame([
+    add_label_translations({
+        "type": "image",
+        "name": "image",
+        "appearance": "minimal",
+        "parameters": "max-pixels=1000",
+    })
+])
 
-def get_mandatory_fields(
-        new_geom_type: DbGeomType, 
+
+def _get_mandatory_fields(
+        use_odk_collect: bool,
+        new_geom_type: DbGeomType,
         need_verification_fields: bool
     ):
     """
@@ -76,53 +93,54 @@ def get_mandatory_fields(
         List of field definitions for the form
     """
     calculate_status = (
-        """if(${new_feature} != '', 2,
-           if(${building_exists} = 'no', 5,
-           if(${digitisation_correct} = 'no', 6,
-           ${status})))"""
-        if need_verification_fields else
-        """if(${new_feature} != '', 2,
-           ${status}))"""
+        f"if({FEATURE} != '', 2,"
+        "if(${feature_exists} = 'no', 6,"
+        "if(${digitisation_correct} = 'no', 6,"
     )
-    # Map geometry types to field types
-    geom_type_mapping = {
-        DbGeomType.POINT: "geopoint",
-        DbGeomType.POLYGON: "geoshape",
-        DbGeomType.LINESTRING: "geotrace"
-    }
-    
-    # Get the correct field type or raise error if not supported
-    if new_geom_type not in geom_type_mapping:
-        raise ValueError(f"Unsupported geometry type: {new_geom_type}")
-    
-    geom_field = geom_type_mapping[new_geom_type]
+    if use_odk_collect:
+        calculate_status += f"if({NEW_FEATURE} != '', 3, 6))"
+    else:
+        calculate_status += "6)))"
 
     fields = [
         {"type": "start-geopoint", "name": "warmup", "notes": "collects location on form start"},
-        {
+        add_label_translations({
             "type": "select_one_from_file features.csv",
             "name": "feature",
-            "label::english(en)": "Geometry",
-            "label::portuguese(pt-BR)": "geometria",
             "appearance": "map",
-        },
-        {
-            "type": geom_field,
-            "name": "new_feature",
-            "label::english(en)": "Please draw a new geometry",
-            "label::nepali(ne)": "कृपया नयाँ ज्यामिति कोर्नुहोस्।",
-            "label::portuguese(pt-BR)": "Por favor, desenhe uma nova geometria",
-            "appearance": "placement-map",
-            "relevant": "${feature}= ''",
-            "required": "yes",
-        },
+        })
+    ]
+    if use_odk_collect:
+        # Map geometry types to field types
+        geom_type_mapping = {
+            DbGeomType.POINT: "geopoint",
+            DbGeomType.POLYGON: "geoshape",
+            DbGeomType.LINESTRING: "geotrace"
+        }
+        
+        # Get the correct field type or raise error if not supported
+        if new_geom_type not in geom_type_mapping:
+            raise ValueError(f"Unsupported geometry type: {new_geom_type}")
+
+        geom_field = geom_type_mapping[new_geom_type]
+
+        fields.append(
+            {
+                "type": geom_field,
+                "name": "new_feature",
+                "appearance": "placement-map",
+                "relevant": "${feature}= ''",
+                "required": "yes",
+            }
+        )
+    fields.extend([
         {
             "type": "calculate",
             "name": "xid",
             "notes": "e.g. OSM ID",
             "label::english(en)": "Feature ID",
             "appearance": "minimal",
-            "calculation": "if(${feature} != '', instance('features')/root/item[name=${feature}]/osm_id, '')",
+            "calculation": f"if({FEATURE} != '', {INSTANCE_FEATURE}/osm_id, '')",
         },
         {
             "type": "calculate",
@@ -130,7 +148,10 @@ def get_mandatory_fields(
             "notes": "e.g. OSM Geometry",
             "label::english(en)": "Feature Geometry",
             "appearance": "minimal",
-            "calculation": "if(${feature} != '', instance('features')/root/item[name=${feature}]/geometry, ${new_feature})",
+            "calculation": (
+                f"if({NEW_FEATURE} != '', {NEW_FEATURE}, '')" if use_odk_collect
+                else f"if({FEATURE} != '', {INSTANCE_FEATURE}/geometry, '')"
+            ),
             "save_to": "geometry",
         },
         {
@@ -139,7 +160,7 @@ def get_mandatory_fields(
             "notes": "e.g. FMTM Task ID",
             "label::english(en)": "Task ID",
             "appearance": "minimal",
-            "calculation": "if(${feature} != '', instance('features')/root/item[name=${feature}]/task_id, '')",
+            "calculation": f"if({FEATURE} != '', {INSTANCE_FEATURE}/task_id, '')",
             "save_to": "task_id",
         },
         {
@@ -150,37 +171,34 @@ def get_mandatory_fields(
             "appearance": "minimal",
             "calculation": f"{calculate_status}",
             "default": "2",
-            "trigger": "${new_feature}",
+            "trigger": f"{NEW_FEATURE}" if use_odk_collect else "",
             "save_to": "status",
         },
-        {
-            "type": "calculate",
-            "name": "submission_ids",
-            "notes": "Update the submission ids",
-            "label::english(en)": "Submission ids",
-            "appearance": "minimal",
-            "calculation": """if(
-        instance('features')/root/item[name=${feature}]/submission_ids = '',
-        ${instanceID},
-        concat(instance('features')/root/item[name=${feature}]/submission_ids, ',', ${instanceID})
-        )""",
-            "save_to": "submission_ids",
-        },
-    ]
+        # {
+        #     "type": "calculate",
+        #     "name": "submission_ids",
+        #     "notes": "Update the submission ids",
+        #     "label::english(en)": "Submission ids",
+        #     "appearance": "minimal",
+        #     "calculation": (
+        #         f"if({INSTANCE_FEATURE}/submission_ids = '', {INSTANCE_ID},"
+        #         f"concat({INSTANCE_FEATURE}/submission_ids, ',', {INSTANCE_ID}))"
+        #     ),
+        #     "save_to": "submission_ids",
+        # },
+    ])
     if need_verification_fields:
-        fields.append({
+        fields.append(add_label_translations({
             "type": "select_one yes_no",
-            "name": "building_exists",
-            "label::english(en)": "Does this feature exist?",
-            "label::nepali(ne)": "के यो भवन अवस्थित छ?",
-            "label::portuguese(pt-BR)": "Esse recurso existe?",
+            "name": "feature_exists",
             "relevant": "${feature} != '' ",
-        })
+        }))
     return fields
 
 
 def create_survey_df(
-        new_geom_type: DbGeomType, 
+        use_odk_collect: bool,
+        new_geom_type: DbGeomType,
         need_verification_fields: bool
     ) -> pd.DataFrame:
     """Create the survey sheet dataframe.
@@ -188,25 +206,31 @@ def create_survey_df(
     We do this in a function to allow the geometry type
     for new data to be specified.
     """
-    fields = get_mandatory_fields(new_geom_type, need_verification_fields)
+    fields = _get_mandatory_fields(use_odk_collect, new_geom_type, need_verification_fields)
     mandatory_df = pd.DataFrame(fields)
     return pd.concat([meta_df, mandatory_df])
 
 
-# Define entities sheet
-entities_data = [
-    {
-        "list_name": "features",
-        "entity_id": "coalesce(${feature}, uuid())",
-        "create_if": "if(${new_feature}, true(), false())",
-        "update_if": "if(${new_feature}, false(), true())",
-        "label": """concat(if(${status} = '1', "🔒 ",
-        if(${status} = '2', "✅ ", if(${status} = '5', "❌ ",
-        if(${status} = '6', "❌ ", '')))), "Task ", ${task_id},
-        " Feature ", if(${xid} != ' ', ${xid}, ' '))""",
-    }
-]
-entities_df = pd.DataFrame(entities_data)
+def create_entity_df(use_odk_collect: bool) -> pd.DataFrame:
+    """Get the entities sheet for the dataframe."""
+    status_label_expr = """concat(
+        if(${status} = '1', "🔒 ",
+        if(${status} = '2', "✅ ",
+        if(${status} = '5', "🏁 ",
+        if(${status} = '6', "❌ ", '')))),
+        "Task ", ${task_id},
+        " Feature ", if(${xid} != ' ', ${xid}, ' ')
+    )"""
+    entities_data = [
+        {
+            "list_name": "features",
+            "entity_id": f"coalesce({FEATURE}, uuid())",
+            "create_if": f"if({NEW_FEATURE}, true(), false())" if use_odk_collect else "",
+            "update_if": f"if({NEW_FEATURE}, false(), true())" if use_odk_collect else "",
+            "label": status_label_expr,
+        }
+    ]
+    return pd.DataFrame(entities_data)
 
 # Define the settings sheet
 settings_data = [

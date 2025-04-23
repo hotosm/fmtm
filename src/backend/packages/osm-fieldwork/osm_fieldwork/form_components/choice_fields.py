@@ -31,22 +31,18 @@ and digitisation problems respectively.
 
 import pandas as pd
 
+from osm_fieldwork.form_components.translations import add_label_translations
+
 # Define the choices sheet
 choices_data = [
-    {
+    add_label_translations({
         "list_name": "yes_no",
         "name": "yes",
-        "label::english(en)": "Yes",
-        "label::nepali(ne)": "छ",
-        "label::portuguese(pt-BR)": "Sim",
-    },
-    {
+    }),
+    add_label_translations({
         "list_name": "yes_no",
         "name": "no",
-        "label::english(en)": "No",
-        "label::nepali(ne)": "छैन",
-        "label::portuguese(pt-BR)": "Não",
-    },
+    }),
 ]
 
 choices_df = pd.DataFrame(choices_data)

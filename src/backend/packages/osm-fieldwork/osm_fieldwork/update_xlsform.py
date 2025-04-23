@@ -33,30 +33,20 @@ from uuid import uuid4
 
 import pandas as pd
 from python_calamine.pandas import pandas_monkeypatch
+
 from osm_fieldwork.enums import DbGeomType
 from osm_fieldwork.form_components.choice_fields import choices_df
-
-## Web-Form components ##
-from osm_fieldwork.form_components.web_form_components.digitisation_fields import (
-    digitisation_df as web_digitisation_df, 
-    digitisation_choices_df as web_digitisation_choices_df
-)
-from osm_fieldwork.form_components.web_form_components.mandatory_fields import (
+from osm_fieldwork.form_components.mandatory_fields import (
+    meta_df,
     create_survey_df,
-    entities_df as web_entities_df, 
-    meta_df
+    photo_collection_df,
+    create_entity_df,
 )
-
-## Odk-Collect form components ##
-from osm_fieldwork.form_components.odk_form_components.digitisation_fields import (
-    digitisation_df as odk_digitisation_df, 
-    digitisation_choices_df as odk_digitisation_choices_df
+from osm_fieldwork.form_components.digitisation_fields import (
+    digitisation_df, 
+    digitisation_choices_df,
 )
-from osm_fieldwork.form_components.odk_form_components.mandatory_fields import (
-    create_survey_df as odk_create_survey_df, 
-    entities_df as odk_entities_df
-)
-
+from osm_fieldwork.form_components.translations import INCLUDED_LANGUAGES, add_label_translations
 from osm_fieldwork.xlsforms import xlsforms_path
 
 log = logging.getLogger(__name__)
@@ -68,48 +58,6 @@ pandas_monkeypatch()
 FEATURE_COLUMN = "feature"
 NAME_COLUMN = "name"
 TYPE_COLUMN = "type"
-DEFAULT_LANGUAGES = {
-    "english": "en",
-    "french": "fr",
-    "spanish": "es",
-    "swahili": "sw",
-    "nepali": "ne",
-    "portuguese": "pt-BR",
-}
-
-# def handle_translations(
-#     mandatory_df: pd.DataFrame, user_question_df: pd.DataFrame, digitisation_df: pd.DataFrame, fields: list[str]
-# ):
-#     """Handle translations, defaulting to English if no translations are present.
-
-#     Handles all field types that can be translated, such as
-#     'label', 'hint', 'required_message'.
-#     """
-#     for field in fields:
-#         # Identify translation columns for this field in the user_question_df
-#         translation_columns = [col for col in user_question_df.columns if col.startswith(f"{field}::")]
-
-#         if field in user_question_df.columns and not translation_columns:
-#             # If user_question_df has only the base field (e.g., 'label'), map English translation from mandatory and digitisation
-#             mandatory_df[field] = mandatory_df.get(f"{field}::english(en)", mandatory_df.get(field))
-#             digitisation_df[field] = digitisation_df.get(f"{field}::english(en)", digitisation_df.get(field))
-
-#             # Then drop translation columns
-#             mandatory_df = mandatory_df.loc[:, ~mandatory_df.columns.str.startswith("label::")]
-#             digitisation_df = digitisation_df.loc[:, ~digitisation_df.columns.str.startswith("label::")]
-
-#         else:
-#             # If translation columns exist, match them for mandatory and digitisation dataframes
-#             for col in translation_columns:
-#                 mandatory_col = mandatory_df.get(col)
-#                 digitisation_col = digitisation_df.get(col)
-#                 if mandatory_col is not None:
-#                     mandatory_df[col] = mandatory_col
-#                 if digitisation_col is not None:
-#                     digitisation_df[col] = digitisation_col
-
-#     return mandatory_df, user_question_df, digitisation_df
-
 
 def standardize_xlsform_sheets(xlsform: dict) -> dict:
     """Standardizes column headers in both the 'survey' and 'choices' sheets of an XLSForm.
@@ -144,8 +92,8 @@ def standardize_xlsform_sheets(xlsform: dict) -> dict:
                     match = re.match(rf"{base_col}::\s*(\w+)", col)
                     if match:
                         lang_name = match.group(1)
-                        if lang_name in DEFAULT_LANGUAGES:
-                            standardized_col = f"{base_col}::{lang_name}({DEFAULT_LANGUAGES[lang_name]})"
+                        if lang_name in INCLUDED_LANGUAGES:
+                            standardized_col = f"{base_col}::{lang_name}({INCLUDED_LANGUAGES[lang_name]})"
 
                 elif col == base_col:  # if only label,hint or required_message then add '::english(en)'
                     standardized_col = f"{base_col}::english(en)"
@@ -181,19 +129,13 @@ def standardize_xlsform_sheets(xlsform: dict) -> dict:
 
 def create_survey_group(need_verification: bool=False) -> dict[str, pd.DataFrame]:
     """Helper function to create a begin and end group for XLSForm."""
-    relevant= "(${building_exists} = 'yes')" if need_verification else ""
+    relevant= "(${feature_exists} = 'yes')" if need_verification else ""
     begin_group = pd.DataFrame(
-        {
+        add_label_translations({
             "type": ["begin group"],
             "name": ["survey_questions"],
-            "label::english(en)": ["Survey Questions"],
-            "label::swahili(sw)": ["Maswali ya Utafiti"],
-            "label::french(fr)": ["Questions de l'enquête"],
-            "label::spanish(es)": ["Preguntas de la encuesta"],
-            "label::portuguese(pt-BR)": ["Perguntas da pesquisa"],
-            "label::nepali(ne)": ["सर्वेक्षण प्रश्नहरू"],
             "relevant": f"{relevant}",
-        }
+        })
     )
     end_group = pd.DataFrame(
         {
@@ -224,7 +166,7 @@ def merge_dataframes(
     Arguments:
         mandatory_df: DataFrame containing required fields
         user_question_df: DataFrame containing user-specified questions
-        digitisation_df: Optional DataFrame with digitization fields
+        digitisation_df: Optional DataFrame with digitisation fields
         meta_df: Optional metadata DataFrame used for normalization
     
     Returns:
@@ -394,21 +336,20 @@ def _get_form_components(
     if use_odk_collect:
         # only add verification questions if new feature type is Polygon
         need_verification_fields = new_geom_type == DbGeomType.POLYGON and need_verification_fields
-        return {
-            "survey_df": odk_create_survey_df(new_geom_type, need_verification_fields),
-            "choices_df": choices_df,
-            "digitisation_df": odk_digitisation_df,
-            "digitisation_choices_df": odk_digitisation_choices_df,
-            "entities_df": odk_entities_df
-        }
-    else:
-        return {
-            "survey_df": create_survey_df(need_verification_fields),
-            "choices_df": choices_df,
-            "digitisation_df": web_digitisation_df,
-            "digitisation_choices_df": web_digitisation_choices_df,
-            "entities_df": web_entities_df
-        }
+        # modify digitisation_df to include the `new_feature` field
+        # NOTE we set digitisation_correct to 'yes' if the user is drawing a new geometry
+        digitisation_correct_col = digitisation_df["name"] == "digitisation_correct"
+        digitisation_df.loc[digitisation_correct_col, "calculation"] = "once(if(${new_feature} != '', 'yes', '')"
+        digitisation_df.loc[digitisation_correct_col, "read_only"] = "${new_feature} != ''"
+
+    return {
+        "survey_df": create_survey_df(use_odk_collect, new_geom_type, need_verification_fields),
+        "choices_df": choices_df,
+        "digitisation_df": digitisation_df,
+        "photo_collection_df": photo_collection_df,
+        "digitisation_choices_df": digitisation_choices_df,
+        "entities_df": create_entity_df(use_odk_collect)
+    }
 
 
 def _process_survey_sheet(
