@@ -116,7 +116,7 @@ const ManageProject = () => {
         </div>
         {/* right container */}
         <div
-          className={`fmtm-h-full fmtm-rounded-xl fmtm-w-full ${selectedTab !== 'users' ? 'fmtm-max-w-[54rem] sm:fmtm-overflow-y-scroll sm:scrollbar' : ''}`}
+          className={`fmtm-h-full fmtm-rounded-xl fmtm-w-full ${selectedTab !== 'users' ? 'fmtm-max-w-[54rem] sm:fmtm-overflow-y-scroll sm:scrollbar' : 'md:fmtm-w-[calc(100%-17.5rem)]'}`}
         >
           {getContent(selectedTab)}
         </div>

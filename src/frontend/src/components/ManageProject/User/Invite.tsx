@@ -96,10 +96,10 @@ const InviteTab = ({ roleList }: propType) => {
         </DialogContent>
       </Dialog>
 
-      <div className="fmtm-flex fmtm-h-[calc(100%-24px)] fmtm-w-full fmtm-gap-5">
+      <div className="fmtm-flex fmtm-flex-col md:fmtm-flex-row fmtm-h-[calc(100%-24px)] fmtm-w-full fmtm-gap-5">
         <form
           onSubmit={handleSubmit}
-          className="fmtm-flex fmtm-flex-col fmtm-gap-5 fmtm-bg-white fmtm-rounded-xl fmtm-p-6 fmtm-w-[17.5rem] fmtm-h-full fmtm-overflow-y-scroll scrollbar"
+          className="fmtm-flex fmtm-flex-col fmtm-gap-5 fmtm-bg-white fmtm-rounded-xl fmtm-p-6 md:fmtm-w-[17.5rem] md:fmtm-min-w-[17.5rem] md:fmtm-h-full md:fmtm-overflow-y-scroll md:scrollbar"
         >
           <RadioButton
             value={values?.inviteVia || ''}
@@ -165,7 +165,7 @@ const InviteTab = ({ roleList }: propType) => {
             </Button>
           </div>
         </form>
-        <div className="fmtm-flex-1">
+        <div className="fmtm-flex-1 md:fmtm-w-[calc(100%-20rem)] fmtm-overflow-hidden">
           <InviteTable />
         </div>
       </div>
