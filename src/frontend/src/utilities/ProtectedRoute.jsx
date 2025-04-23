@@ -19,6 +19,7 @@ const ProtectedRoute = ({ children, next }) => {
       if (status === 403) {
         setIsForbidden(true);
       }
+      return Promise.reject(error);
     },
   );
 
