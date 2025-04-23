@@ -158,6 +158,7 @@ def merge_dataframes(
         mandatory_df: pd.DataFrame, 
         user_question_df: pd.DataFrame, 
         digitisation_df: Optional[pd.DataFrame] = None,
+        photo_collection_df: Optional[pd.DataFrame] = None,
         need_verification: Optional[bool] = None
     ) -> pd.DataFrame:
     """
@@ -167,6 +168,7 @@ def merge_dataframes(
         mandatory_df: DataFrame containing required fields
         user_question_df: DataFrame containing user-specified questions
         digitisation_df: Optional DataFrame with digitisation fields
+        photo_collection_df: Optional DataFrame with photo collection fields
         meta_df: Optional metadata DataFrame used for normalization
     
     Returns:
@@ -177,6 +179,8 @@ def merge_dataframes(
         frames = [mandatory_df, user_question_df]
         if digitisation_df is not None:
             frames.append(digitisation_df)
+        if photo_collection_df is not None:
+            frames.append(photo_collection_df)
         merged_df = pd.concat(frames, ignore_index=True)
         # NOTE here we remove duplicate PAIRS based on `list_name` and the name column
         return merged_df.drop_duplicates(subset=["list_name", NAME_COLUMN], ignore_index=True)
@@ -193,7 +197,8 @@ def merge_dataframes(
     
     # Find duplicate fields
     digitisation_names = set() if digitisation_df is None else set(digitisation_df[NAME_COLUMN])
-    all_existing_names = set(mandatory_df[NAME_COLUMN]).union(digitisation_names)
+    photo_collection_names = set() if photo_collection_df is None else set(photo_collection_df[NAME_COLUMN])
+    all_existing_names = set(mandatory_df[NAME_COLUMN]).union(digitisation_names).union(photo_collection_names)
     duplicate_fields = set(user_question_df[NAME_COLUMN]).intersection(all_existing_names)
     
     # Filter out duplicates but keep end group rows
@@ -213,6 +218,8 @@ def merge_dataframes(
     
     if digitisation_df is not None:
         frames.append(digitisation_df)
+    if photo_collection_df is not None:
+        frames.append(photo_collection_df)
     
     return pd.concat(frames, ignore_index=True)
 
@@ -297,14 +304,15 @@ async def append_mandatory_fields(
     custom_sheets["survey"] = _process_survey_sheet(
         custom_sheets.get("survey"),
         form_components["survey_df"],
-        form_components["digitisation_df"] if need_verification_fields else None
+        form_components["digitisation_df"] if need_verification_fields else None,
+        form_components["photo_collection_df"],
     )
     
     # Process choices sheet
     custom_sheets["choices"] = _process_choices_sheet(
         custom_sheets.get("choices"), 
         form_components["choices_df"],
-        form_components["digitisation_choices_df"]
+        form_components["digitisation_choices_df"],
     )
     
     # Process entities and settings sheets
@@ -355,17 +363,23 @@ def _get_form_components(
 def _process_survey_sheet(
         existing_survey: pd.DataFrame, 
         survey_df: pd.DataFrame, 
-        digitisation_df: pd.DataFrame
+        digitisation_df: pd.DataFrame,
+        photo_collection_df: pd.DataFrame,
     ) -> pd.DataFrame:
     """Process and merge survey sheets."""
     log.debug("Merging survey sheet XLSForm data")
-    return merge_dataframes(survey_df, existing_survey, digitisation_df)
+    return merge_dataframes(
+        survey_df,
+        existing_survey,
+        digitisation_df=digitisation_df,
+        photo_collection_df=photo_collection_df
+    )
 
 
 def _process_choices_sheet(
         existing_choices: pd.DataFrame, 
         choices_df: pd.DataFrame, 
-        digitisation_choices_df: pd.DataFrame
+        digitisation_choices_df: pd.DataFrame,
     ) -> pd.DataFrame:
     """Process and merge choices sheets."""
     log.debug("Merging choices sheet XLSForm data")
@@ -373,7 +387,11 @@ def _process_choices_sheet(
     if existing_choices is None:
         existing_choices = pd.DataFrame(columns=["list_name", "name", "label::english(en)"])
     
-    return merge_dataframes(choices_df, existing_choices, digitisation_choices_df)
+    return merge_dataframes(
+        choices_df,
+        existing_choices,
+        digitisation_df=digitisation_choices_df,
+    )
 
 
 def _validate_required_sheet(
