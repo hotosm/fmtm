@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# This script takes any files that have dates in the copyright header, e.g.
+#   Copyright (c) 2022, 2023
+#   Copyright (c) 2022
+# and replaces them with simply:
+#   Copyright (c) Humanitarian OpenStreetMap Team
+
 # Root directory of your repo
 REPO_DIR="."
 
