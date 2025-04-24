@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { onDestroy } from 'svelte';
-	import { GeoJSON as MapLibreGeoJSON } from 'svelte-maplibre';
+	import { GeoJSON as MapLibreGeoJSON, type ClusterOptions } from 'svelte-maplibre';
 	import { getId, updatedSourceContext, addSource, removeSource } from 'svelte-maplibre';
 	import type { HeaderMeta } from 'flatgeobuf';
 	import type { GeoJSON, Polygon, FeatureCollection } from 'geojson';
@@ -18,6 +18,7 @@
 		children?: Snippet;
 		processGeojson?: (geojson: FeatureCollection) => FeatureCollection;
 		geojsonUpdateDependency?: any;
+		cluster?: ClusterOptions;
 	}
 
 	let {
@@ -30,6 +31,7 @@
 		children,
 		processGeojson,
 		geojsonUpdateDependency = '',
+		cluster,
 	}: Props = $props();
 
 	const { map, self: sourceId } = updatedSourceContext();
@@ -85,6 +87,10 @@
 			type: 'geojson',
 			data: geojsonData,
 			promoteId,
+			...(cluster && {
+				clusterRadius: cluster?.radius,
+				clusterProperties: cluster?.properties,
+			}),
 		};
 
 		// Use the currentSourceId in addSource
@@ -120,6 +126,6 @@
 	});
 </script>
 
-<MapLibreGeoJSON id={currentSourceId} data={geojsonData} {promoteId}>
+<MapLibreGeoJSON id={currentSourceId} data={geojsonData} {promoteId} {cluster}>
 	{@render children?.()}
 </MapLibreGeoJSON>
