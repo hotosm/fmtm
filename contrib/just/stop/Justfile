@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
 # This file is part of FMTM.
 #
