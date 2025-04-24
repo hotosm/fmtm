@@ -39,7 +39,7 @@ class OrganisationInBase(ODKCentralIn, DbOrganisation):
 
     @model_validator(mode="after")
     def append_fmtm_hashtag_and_slug(self) -> Self:
-        """Append the #FMTM hashtag and add URL slug."""
+        """Append the #FieldTM hashtag and add URL slug."""
         # NOTE the slug is set here as a field_validator
         # does not seem to work?
         self.slug = slugify(self.name)

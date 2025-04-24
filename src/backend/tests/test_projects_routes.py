@@ -224,10 +224,10 @@ async def test_unsupported_crs(project_data, crs):
 @pytest.mark.parametrize(
     "hashtag_input, expected_output",
     [
-        ("tag1, tag2, tag3", ["#tag1", "#tag2", "#tag3", "#FMTM"]),
-        ("tag1   tag2    tag3", ["#tag1", "#tag2", "#tag3", "#FMTM"]),
-        ("tag1, tag2 tag3    tag4", ["#tag1", "#tag2", "#tag3", "#tag4", "#FMTM"]),
-        ("TAG1, tag2 #TAG3", ["#TAG1", "#tag2", "#TAG3", "#FMTM"]),
+        ("tag1, tag2, tag3", ["#tag1", "#tag2", "#tag3", "#FieldTM"]),
+        ("tag1   tag2    tag3", ["#tag1", "#tag2", "#tag3", "#FieldTM"]),
+        ("tag1, tag2 tag3    tag4", ["#tag1", "#tag2", "#tag3", "#tag4", "#FieldTM"]),
+        ("TAG1, tag2 #TAG3", ["#TAG1", "#tag2", "#TAG3", "#FieldTM"]),
     ],
 )
 async def test_project_hashtags(
@@ -372,7 +372,7 @@ async def test_update_project(client, admin_user, project):
         "short_description": "updated short description",
         "description": "updated description",
         "osm_category": "healthcare",
-        "hashtags": "#FMTM anothertag",
+        "hashtags": "#FieldTM anothertag",
     }
 
     response = await client.patch(f"/projects/{project.id}", json=updated_project_data)
@@ -391,7 +391,7 @@ async def test_update_project(client, admin_user, project):
     assert response_data["osm_category"] == updated_project_data["osm_category"]
     assert sorted(response_data["hashtags"]) == sorted(
         [
-            "#FMTM",
+            "#FieldTM",
             f"#{settings.FMTM_DOMAIN}-{response_data['id']}",
             "#anothertag",
         ]

@@ -46,7 +46,7 @@ const ProjectDetailsForm = ({ flag }) => {
   const navigate = useNavigate();
   const isAdmin = useIsAdmin();
   const { hostname } = window.location;
-  const defaultHashtags = ['#FMTM', `#${hostname}-{project_id}`];
+  const defaultHashtags = ['#FieldTM', `#${hostname}-{project_id}`];
 
   const projectDetails = useAppSelector((state) => state.createproject.projectDetails);
   const organisationListData = useAppSelector((state) => state.createproject.organisationList);

@@ -169,15 +169,15 @@ class ProjectInBase(DbProject):
 
     @model_validator(mode="after")
     def append_fmtm_hashtag_and_slug(self) -> Self:
-        """Append the #FMTM hashtag and add URL slug."""
+        """Append the #FieldTM hashtag and add URL slug."""
         # NOTE the slug is set here as the field_validator above
         # does not seem to work?
         self.slug = slugify(self.name)
 
         if not self.hashtags:
-            self.hashtags = ["#FMTM"]
-        elif "#FMTM" not in self.hashtags:
-            self.hashtags.append("#FMTM")
+            self.hashtags = ["#FieldTM"]
+        elif "#FieldTM" not in self.hashtags:
+            self.hashtags.append("#FieldTM")
         return self
 
 
