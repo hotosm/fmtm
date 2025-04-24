@@ -54,7 +54,12 @@ from app.main import get_application
 from app.organisations.organisation_deps import get_organisation
 from app.organisations.organisation_schemas import OrganisationIn
 from app.projects import project_crud
-from app.projects.project_schemas import GeometryLogIn, ProjectIn, ProjectTeamIn
+from app.projects.project_schemas import (
+    GeometryLogIn,
+    ProjectIn,
+    ProjectTeamIn,
+    StubProjectIn,
+)
 from app.tasks.task_schemas import TaskEventIn
 from app.users.user_crud import get_or_create_user
 from app.users.user_deps import get_user
@@ -539,6 +544,17 @@ async def stub_project_data(organisation):
 
 
 @pytest_asyncio.fixture(scope="function")
+async def stub_project(db, stub_project_data):
+    """A stub project."""
+    stub_project_data = StubProjectIn(**stub_project_data)
+    stub_project = await DbProject.create(
+        db,
+        stub_project_data,
+    )
+    yield stub_project
+
+
+@pytest_asyncio.fixture(scope="function")
 async def project_data(stub_project_data):
     """Sample data for creating a project."""
     odk_credentials = {
@@ -550,6 +566,7 @@ async def project_data(stub_project_data):
 
     data = stub_project_data.copy()
     data.pop("outline")  # Remove outline from copied data
+    data["name"] = "new project name"
     data.update(**odk_creds_decrypted.model_dump())
     return data
 

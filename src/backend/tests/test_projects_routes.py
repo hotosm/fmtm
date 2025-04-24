@@ -40,7 +40,7 @@ from tests.test_data import test_data_path
 
 
 async def create_stub_project(client, organisation_id, stub_project_data):
-    """Create a new project."""
+    """Create a stub project for testing."""
     response = await client.post(
         f"/projects/stub?org_id={organisation_id}", json=stub_project_data
     )
@@ -48,11 +48,26 @@ async def create_stub_project(client, organisation_id, stub_project_data):
     return response.json()
 
 
+async def test_create_project(client, organisation, stub_project_data, project_data):
+    """Create a new project."""
+    stub_project = await create_stub_project(client, organisation.id, stub_project_data)
+    assert stub_project["name"] == stub_project_data["name"]
+    assert stub_project["outline"] is not None
+
+    response = await client.patch(
+        f"/projects?project_id={stub_project['id']}",
+        json=project_data,
+    )
+    assert response.status_code == HTTPStatus.OK
+    project = response.json()
+    assert project["name"] == project_data["name"]
+
+
 async def test_create_project_invalid(client, organisation, project_data):
     """Test project creation endpoint, duplicate checker."""
     project_data["task_split_type"] = "invalid"
     project_data["priority"] = "invalid"
-    response_invalid = await client.post(
+    response_invalid = await client.patch(
         f"/projects?org_id={organisation.id}", json=project_data
     )
     assert response_invalid.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
@@ -196,11 +211,13 @@ async def test_valid_geojson_types(client, organisation, project_data, geojson_t
         },
     ],
 )
-async def test_invalid_geojson_types(client, organisation, project_data, geojson_type):
+async def test_invalid_geojson_types(
+    client, organisation, project_data, geojson_type, stub_project
+):
     """Test invalid geojson types."""
     project_data["outline"] = geojson_type
-    response = await client.post(
-        f"/projects?org_id={organisation.id}", json=project_data
+    response = await client.patch(
+        f"/projects?project_id={stub_project.id}", json=project_data
     )
     assert response.status_code == 422
 
@@ -219,15 +236,6 @@ async def test_unsupported_crs(stub_project_data, crs):
     with pytest.raises(HTTPException) as exc_info:
         await check_crs(stub_project_data["outline"])
     assert exc_info.value.status_code == 400
-
-
-async def create_project(client, organisation_id, stub_project_data):
-    """Create a new project."""
-    response = await client.post(
-        f"/projects/stub?org_id={organisation_id}", json=stub_project_data
-    )
-    assert response.status_code == HTTPStatus.OK
-    return response.json()
 
 
 @pytest.mark.parametrize(
@@ -254,7 +262,7 @@ async def test_project_hashtags(
     )
     project_id = response_data["id"]
     assert "id" in response_data
-    response = await client.post(
+    response = await client.patch(
         f"/projects?project_id={project_id}", json=project_data
     )
     response_data = response.json()

@@ -1071,13 +1071,13 @@ async def delete_project(
     return Response(status_code=HTTPStatus.NO_CONTENT)
 
 
-@router.post("", response_model=project_schemas.ProjectOut)
+@router.patch("", response_model=project_schemas.ProjectOut)
 async def create_project(
     project_info: project_schemas.ProjectIn,
     project_user: Annotated[ProjectUserDict, Depends(project_manager)],
     db: Annotated[Connection, Depends(db_conn)],
 ):
-    """Create a project in ODK Central and the local database.
+    """Create a project in ODK Central and update the local stub project.
 
     The org_id and project_id params are inherited from the org_admin permission.
     Either param can be passed to determine if the user has admin permission
