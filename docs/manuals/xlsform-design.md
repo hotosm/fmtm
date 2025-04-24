@@ -161,7 +161,7 @@ The example CSV can be downloaded
 
 ### 3. From Code (API)
 
-### Injected Fields in the FMTM XLS Form
+### Injected Fields in the FieldTM XLS Form
 
 During project creation in the Field Mapping Tasking Manager (FMTM), specific
 fields and questions are automatically injected into the XLS form to assess
@@ -177,7 +177,7 @@ overview of the injected fields and their purposes:
    of new feature.
    Note: One of these two options must be filled up to proceed.
 5. We also dedicate few rows for calculating OSM ID,
-   Task ID and mapping status used on FMTM.
+   Task ID and mapping status used on FieldTM.
 6. We then ask mappers to answer if the feature exist in reality?
    If yes, user proceeds with form submission.
 7. If no, the user is prompted to capture an image (if available) and the form

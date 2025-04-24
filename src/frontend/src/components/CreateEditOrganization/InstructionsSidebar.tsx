@@ -10,13 +10,13 @@ const InstructionsSidebar = () => {
           created.
         </span>
         <span>
-          HOT reserves all rights to give, and remove, all roles and permissions on FMTM as well as alter or remove
+          HOT reserves all rights to give, and remove, all roles and permissions on FieldTM as well as alter or remove
           projects as deemed necessary.
         </span>
         <span>
           Your input will be collected, stored, and processed by the Humanitarian OpenStreetMap Team (HOT) for the
           purpose of evaluating your application and hosting your organization’s presence. Factual data about your use
-          of the Tasking Manager may be published for HOT to promote and demonstrate use of the FMTM.{' '}
+          of the Tasking Manager may be published for HOT to promote and demonstrate use of the FieldTM.{' '}
         </span>
         <span>Please make sure the information you are providing are correct.</span>
       </p>

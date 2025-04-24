@@ -2,7 +2,7 @@
 
 ## Software Requirements
 
-It is recommended to run FMTM on a Linux-based machine.
+It is recommended to run FieldTM on a Linux-based machine.
 
 > This includes MacOS, but some [tools must be substituted][1].
 >
@@ -13,13 +13,13 @@ the following software installed and configured on your system:
 
 > If running Debian/Ubuntu, the install script below does this for you.
 
-[Git][3] to clone the FMTM repository.
+[Git][3] to clone the FieldTM repository.
 
 [Docker][4]
-to run FMTM inside containers.
+to run FieldTM inside containers.
 
 [Docker Compose][5]
-for easy orchestration of the FMTM services.
+for easy orchestration of the FieldTM services.
 
 > This is Docker Compose V2, the official Docker CLI plugin.
 >
@@ -52,7 +52,7 @@ If more details are required, check out the
   - [Easy Install](#easy-install)
   - [Manual Install](#manual-install)
     - [Table of Contents](#table-of-contents)
-    - [Clone the FMTM repository](#clone-the-fmtm-repository)
+    - [Clone the FieldTM repository](#clone-the-fieldtm-repository)
     - [Setup Your Local Environment](#setup-your-local-environment)
       - [1. Setup OSM OAUTH 2.0](#1-setup-osm-oauth-20)
       - [2. Create an `.env` File](#2-create-an-env-file)
@@ -66,7 +66,7 @@ If more details are required, check out the
     - [Check Authentication (Optional)](#check-authentication-optional)
     - [Configure Custom Branding](#configure-custom-branding)
 
-### Clone the FMTM repository
+### Clone the FieldTM repository
 
 Clone the repository to your local machine using the following command:
 
@@ -83,9 +83,9 @@ These steps are essential to run and test your code!
 
 #### 1. Setup OSM OAuth 2.0
 
-The FMTM uses OAuth with OSM to authenticate users.
+The FieldTM uses OAuth with OSM to authenticate users.
 
-To properly configure your FMTM project, you will need to create keys for OSM.
+To properly configure your FieldTM project, you will need to create keys for OSM.
 
 1. [Login to OSM][7]
    (_If you do not have an account yet, click the signup
@@ -94,7 +94,7 @@ To properly configure your FMTM project, you will need to create keys for OSM.
    Click the drop down arrow on the top right of the navigation bar
    and select My Settings.
 
-2. Register your FMTM instance to OAuth 2 applications.
+2. Register your FieldTM instance to OAuth 2 applications.
 
    Put your login redirect url as `http://127.0.0.1:7051/osmauth` if running locally,
    or for production replace with https://{YOUR_DOMAIN}/osmauth
@@ -133,14 +133,14 @@ bash scripts/1-environment/gen-env.sh
 
 ### Start the API with Docker
 
-This is the easiest way to get started with FMTM.
+This is the easiest way to get started with FieldTM.
 
 Docker runs each service inside **containers**, fully isolated from your
 host operating system.
 
 #### Select the install type
 
-Determine the what type of FMTM install you would like:
+Determine the what type of FieldTM install you would like:
 
 ```text
 main - the latest production
@@ -208,7 +208,7 @@ http://fmtm.localhost:7050
 
 ### Setup ODK Central User (Optional)
 
-The FMTM uses ODK Central to store ODK data.
+The FieldTM uses ODK Central to store ODK data.
 
 - By default, the docker setup includes a Central server.
 - The credentials should have been provided in your `.env`

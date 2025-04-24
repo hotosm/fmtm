@@ -2,7 +2,7 @@
 
 ## Context and Problem Statement
 
-We need to serve FMTM in many languages, not just English, as mappers are
+We need to serve FieldTM in many languages, not just English, as mappers are
 global.
 
 Ideally these translations are contributed by the **community** and not

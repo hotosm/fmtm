@@ -66,7 +66,7 @@ export default function PrimaryAppBar() {
       <div className="fmtm-flex fmtm-items-center fmtm-justify-between fmtm-px-5 fmtm-py-2 fmtm-border-y fmtm-border-grey-100">
         <img
           src={logo}
-          alt="FMTM Logo"
+          alt="FieldTM Logo"
           onClick={() => navigate('/')}
           className="fmtm-w-[5.188rem] fmtm-min-w-[5.188rem] fmtm-cursor-pointer"
         />

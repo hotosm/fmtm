@@ -255,7 +255,7 @@ const ProjectDetailsForm = ({ flag }) => {
               onChange={(value: any) => {
                 handleCustomChange('project_admins', value);
               }}
-              placeholder="Search for FMTM users"
+              placeholder="Search for FieldTM users"
               className="naxatw-w-1/5 naxatw-min-w-[9rem]"
               multiple
               checkBox

@@ -1,21 +1,21 @@
 # Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of FieldTM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     FieldTM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     FieldTM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with FieldTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
-"""Routes to help with common processes in the FMTM workflow."""
+"""Routes to help with common processes in the FieldTM workflow."""
 
 import csv
 import json
@@ -68,7 +68,7 @@ router = APIRouter(
 async def download_template(
     form_type: XLSFormType,
 ):
-    """Download example XLSForm from FMTM."""
+    """Download example XLSForm from FieldTM."""
     form_filename = XLSFormType(form_type).name
     xlsform_path = f"{xlsforms_path}/{form_filename}.xls"
     if Path(xlsform_path).exists():
@@ -84,7 +84,7 @@ async def append_required_geojson_properties(
 ):
     """Append required properties to a GeoJSON file.
 
-    The required properties for FMTM are:
+    The required properties for FieldTM are:
     - "id"
     - "osm_id"
     - "tags"
@@ -243,10 +243,10 @@ async def view_user_oauth_token(
     request: Request,
     current_user: Annotated[AuthUser, Depends(login_required)],
 ):
-    """Get the FMTM OSM (OAuth) token for a logged in user.
+    """Get the FieldTM OSM (OAuth) token for a logged in user.
 
     The token is encrypted with a secret key and only usable via
-    this FMTM instance and the osm-login-python module.
+    this FieldTM instance and the osm-login-python module.
     """
     cookie_name = settings.cookie_name
     return JSONResponse(
@@ -316,7 +316,7 @@ async def send_test_osm_message(
     post_body = {
         "recipient_id": 16289154,
         # "recipient_id": current_user.id,
-        "title": "Test message from FMTM!",
+        "title": "Test message from FieldTM!",
         "body": message_content,
     }
 

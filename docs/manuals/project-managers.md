@@ -1,4 +1,4 @@
-# Project Manager Manual for FMTM
+# Project Manager Manual for FieldTM
 
 This manual is a step by step guide for the project managers on how to get
 started with the Field Mapping Tasking Manager.
@@ -30,7 +30,7 @@ detailed maps that can have a variety of use cases. These could be:
 - Understanding the impact of environmental changes on the landscape,
   etc.
 
-## An Overview Of FMTM In Relation To HOT, OSM and ODK
+## An Overview Of FieldTM In Relation To HOT, OSM and ODK
 
 The **Humanitarian OpenStreetMap Team (HOT**) is a non-profit
 organization that uses open mapping data to support humanitarian and
@@ -108,7 +108,7 @@ manager.
 
 All project manager permissions are granted to the organisation manager.
 
-## Steps To Create A Project In FMTM
+## Steps To Create A Project In FieldTM
 
 Go to [fmtm]
 
@@ -220,8 +220,8 @@ Go to [fmtm]
          ```
 
 - You may download features from OpenStreetMap (OSM) by clicking on
-  Fetch data from osm with FMTM project creation; however, note that
-  FMTM is not responsible for the data quality of features extracted
+  Fetch data from osm with FieldTM project creation; however, note that
+  FieldTM is not responsible for the data quality of features extracted
   from OSM.
 - Currently, available types of survey features are Buildings and
   Healthcare only. We plan to add more types of features moving ahead.
@@ -286,7 +286,7 @@ Go to [fmtm]
 #### During Training
 
 1. Make sure mapper has downloaded custom odk collect from  
-   FMTM website. You can also share the apk file if mappers
+   FieldTM website. You can also share the apk file if mappers
    find it difficult to download by themselves.
 2. Share the link of the project for the mapper to reach  
    to the project easily. The URL be:
@@ -321,7 +321,7 @@ follow the guide [Here][5].
 ### Connecting The Data To External Applications
 
 If you want to visualise the submissions and create custom charts
-and diagrams using FMTM submissions, then you can follow the steps
+and diagrams using FieldTM submissions, then you can follow the steps
 below and load the submissions on any data analysis platform using **OData**.
 
 OData endpoints are a standardised way to ingest
@@ -364,7 +364,7 @@ dashboard you need.
 
 ## Help and Support
 
-If you encounter any issues or need assistance while using FMTM, you can access
+If you encounter any issues or need assistance while using FieldTM, you can access
 the following resources:
 
 - Check the [FAQs][3] .

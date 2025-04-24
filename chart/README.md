@@ -1,4 +1,4 @@
-# HOTOSM FMTM Chart
+# HOTOSM FieldTM Chart
 
 Chart for HOTOSM Field Mapping Tasking Manager.
 

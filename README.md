@@ -34,11 +34,11 @@
 <!-- prettier-ignore-end -->
 
 Building on the success of HOT's [Tasking Manager](https://tasks.hotosm.org), a tool
-for coordinating remote digitization of map features, the FMTM was conceived with
+for coordinating remote digitization of map features, the FieldTM was conceived with
 the purpose of tagging the features with _field-verified_ information.
 
 While there are many excellent applications for tagging map features already,
-the FMTM aims to solve the problem of **coordinating** field mapping campaigns.
+the FieldTM aims to solve the problem of **coordinating** field mapping campaigns.
 
 > More details can be found here:
 > [overview](https://www.hotosm.org/updates/field-mapping-tasking-manager-fmtm),
@@ -46,7 +46,7 @@ the FMTM aims to solve the problem of **coordinating** field mapping campaigns.
 > [docs](https://docs.fmtm.dev) page, and the
 > [FAQ](https://docs.fmtm.dev/about/faq).
 
-## How FMTM Works
+## How FieldTM Works
 
 1. Project is created in an area with three things:
    - Data extract: the features you want to map, say building polygons.
@@ -56,7 +56,7 @@ the FMTM aims to solve the problem of **coordinating** field mapping campaigns.
    in ODK Collect.
 3. User navigates to the feature and fills out the XLSForm survey, then submits.
 4. The submissions are collected by ODK Central, which feeds the data back into
-   FMTM, for cleaning, conflation with existing data, and pushing back to OSM.
+   FieldTM, for cleaning, conflation with existing data, and pushing back to OSM.
 
 ## Usage of ODK
 
@@ -115,7 +115,7 @@ Alternatively see the [docs](https://docs.fmtm.dev) for various deployment guide
 | ✅ | 📱 mapping of project via survey in ODK Collect mobile app | Since [v2024.4.0][1] |
 | ✅ | 📱 locking & unlocking of tasks to coordinate mapping | Since [v2024.4.0][1] |
 | ✅ | 📱 download base imagery & geolocation for in the field | Since [v2024.4.0][1] |
-| ✅ | 🖥️ view mapper submissions in the FMTM dashboard | Since [v2024.4.0][1] |
+| ✅ | 🖥️ view mapper submissions in the FieldTM dashboard | Since [v2024.4.0][1] |
 | ✅ | 📢 Beta Release | Since [v2024.4.0][1] |
 | ✅ | 🖥️ & 📱 basic user tutorials and usage guides | Since [v2024.4.0][1] |
 | ✅ | 📱 open ODK Collect with feature already selected | Since [v2024.4.0][1] |
@@ -235,7 +235,7 @@ Thanks goes to these wonderful people:
 
 ## Repo Activity
 
-![FMTM Repo Activity](https://repobeats.axiom.co/api/embed/4c670cc740c638c52d6c2e822fe78a999d3994fc.svg "Repobeats analytics image")
+![FieldTM Repo Activity](https://repobeats.axiom.co/api/embed/4c670cc740c638c52d6c2e822fe78a999d3994fc.svg "Repobeats analytics image")
 
 [1]: https://github.com/hotosm/fmtm/releases/tag/2024.4.0 "Beta Release"
 [2]: https://github.com/hotosm/fmtm/releases/tag/2024.5.0 "Mapper Frontend"

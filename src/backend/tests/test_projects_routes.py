@@ -1,19 +1,19 @@
 # Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of FieldTM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     FieldTM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     FieldTM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with FieldTM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Tests for project routes."""
 
@@ -243,7 +243,7 @@ async def test_project_hashtags(
 
 
 async def test_delete_project(client, admin_user, project):
-    """Test deleting a FMTM project, plus ODK Central project."""
+    """Test deleting a FieldTM project, plus ODK Central project."""
     response = await client.delete(f"/projects/{project.id}")
     assert response.status_code == 204
 
@@ -263,8 +263,8 @@ async def test_create_odk_project():
         result = create_odk_project("Test Project", odk_credentials)
 
     assert result == {"status": "success"}
-    # FMTM gets appended to project name by default
-    mock_project.createProject.assert_called_once_with("FMTM Test Project")
+    # FieldTM gets appended to project name by default
+    mock_project.createProject.assert_called_once_with("FieldTM Test Project")
 
 
 async def test_upload_data_extracts(client, project):

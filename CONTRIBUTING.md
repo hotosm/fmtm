@@ -11,7 +11,7 @@ place to start, and we will make sure you are supported every step of the way.
 If you have **any** questions, please ask!
 
 You can see an overview of the project and the process we have gone through in
-developing FMTM so far in these
+developing FieldTM so far in these
 [slides][1]
 
 Furthermore, there are many ways to contribute to the
