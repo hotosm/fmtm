@@ -588,6 +588,10 @@
 			promoteId="id"
 			processGeojson={(geojsonData) => addStatusToGeojsonProperty(geojsonData, '')}
 			geojsonUpdateDependency={[entityMapByEntity, entityMapByOsm]}
+			cluster={{
+				radius: 500,
+				properties: {},
+			}}
 		>
 			{#if primaryGeomType === MapGeomTypes.POLYGON}
 				<!-- TODO: colors values should be dynamic -->
@@ -639,8 +643,54 @@
 					manageHoverState
 				/>
 			{:else if primaryGeomType === MapGeomTypes.POINT}
-				<!-- TODO: colors values should be dynamic -->
+				<CircleLayer
+					id="entities_clusters"
+					applyToClusters
+					hoverCursor="pointer"
+					paint={{
+						'circle-color': '#183F47',
+						'circle-radius': ['step', ['get', 'point_count'], 10, 2, 20, 10, 30],
+					}}
+					manageHoverState
+				></CircleLayer>
 				<SymbolLayer
+					id="cluster_labels"
+					interactive={false}
+					applyToClusters
+					layout={{
+						'text-field': ['get', 'point_count'],
+						'text-size': 14,
+					}}
+					paint={{ 'text-color': '#ffffff' }}
+				/>
+				<!-- TODO: colors values should be dynamic -->
+				<CircleLayer
+					id="entity-point-layer"
+					applyToClusters={false}
+					hoverCursor="pointer"
+					paint={{
+						'circle-color': [
+							'match',
+							['get', 'status'],
+							'READY',
+							'#6c6c6c',
+							'OPENED_IN_ODK',
+							'#ffeaa3',
+							'SURVEY_SUBMITTED',
+							'#2b8f6d',
+							'VALIDATED',
+							'#2b8f6d',
+							'MARKED_BAD',
+							'#cc6d66',
+							'#71bf86',
+						],
+						'circle-radius': 8,
+						'circle-stroke-width': 1,
+						'circle-stroke-color': '#fff',
+					}}
+				></CircleLayer>
+				<!-- TODO: remove the following symbol layer after cluster layer is fully functional & reliable -->
+				<!-- <SymbolLayer
 					id="entity-point-layer"
 					applyToClusters={false}
 					hoverCursor="pointer"
@@ -664,7 +714,7 @@
 						'icon-allow-overlap': true,
 						'icon-size': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1.6, 1],
 					}}
-				/>
+				/> -->
 			{/if}
 		</FlatGeobuf>
 	{/if}
