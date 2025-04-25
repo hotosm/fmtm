@@ -1,6 +1,6 @@
 # Encrypter Util
 
-FieldTM encrypts the ODK access token & ODK passwords in the database.
+Field-TM encrypts the ODK access token & ODK passwords in the database.
 
 Sometimes these must be manually encrypted / decrypted for the database.
 

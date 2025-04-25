@@ -1,19 +1,19 @@
 # Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FieldTM.
+# This file is part of Field-TM.
 #
-#     FieldTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FieldTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FieldTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Pydantic schemas for Projects for usage in endpoints."""
 
@@ -169,15 +169,15 @@ class ProjectInBase(DbProject):
 
     @model_validator(mode="after")
     def append_fmtm_hashtag_and_slug(self) -> Self:
-        """Append the #FieldTM hashtag and add URL slug."""
+        """Append the #Field-TM hashtag and add URL slug."""
         # NOTE the slug is set here as the field_validator above
         # does not seem to work?
         self.slug = slugify(self.name)
 
         if not self.hashtags:
-            self.hashtags = ["#FieldTM"]
-        elif "#FieldTM" not in self.hashtags:
-            self.hashtags.append("#FieldTM")
+            self.hashtags = ["#Field-TM"]
+        elif "#Field-TM" not in self.hashtags:
+            self.hashtags.append("#Field-TM")
         return self
 
 

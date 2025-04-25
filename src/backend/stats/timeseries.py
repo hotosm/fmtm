@@ -1,4 +1,4 @@
-"""Get number of FieldTM projects over time."""
+"""Get number of Field-TM projects over time."""
 
 import asyncio
 import calendar

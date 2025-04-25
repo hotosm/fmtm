@@ -1,1 +1,1 @@
-"""FieldTM organisations API."""
+"""Field-TM organisations API."""

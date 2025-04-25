@@ -1,19 +1,19 @@
 # Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FieldTM.
+# This file is part of Field-TM.
 #
-#     FieldTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FieldTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FieldTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
 set dotenv-load
@@ -86,11 +86,11 @@ mount-s3:
   url=http://s3.fmtm.localhost:7050 0 0"
 
   if ! grep -q "$fstab_entry" /etc/fstab; then
-      echo "Mounting local FieldTM S3 permanently in /etc/fstab"
+      echo "Mounting local Field-TM S3 permanently in /etc/fstab"
       echo "$fstab_entry" | sudo tee -a /etc/fstab > /dev/null
       echo
   else
-      echo "Local FieldTM S3 is already mounted"
+      echo "Local Field-TM S3 is already mounted"
   fi
 
 # Echo to terminal with blue colour

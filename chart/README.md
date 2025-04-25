@@ -1,6 +1,6 @@
-# HOTOSM FieldTM Chart
+# HOTOSM Field-TM Chart
 
-Chart for HOTOSM Field Mapping Tasking Manager.
+Chart for HOTOSM Field Tasking Manager.
 
 ## Secrets
 

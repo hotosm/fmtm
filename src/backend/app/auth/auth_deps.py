@@ -1,19 +1,19 @@
 # Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FieldTM.
+# This file is part of Field-TM.
 #
-#     FieldTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FieldTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FieldTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
 """Auth dependencies, for restricted routes and cookie handling."""
@@ -76,10 +76,10 @@ async def login_required(
     if settings.DEBUG:
         return AuthUser(sub="osm|1", username="localadmin", role=UserRole.ADMIN)
 
-    # Extract access token only from the FieldTM cookie
+    # Extract access token only from the Field-TM cookie
     extracted_token = access_token or get_cookie_value(
         request,
-        settings.cookie_name,  # FieldTM cookie
+        settings.cookie_name,  # Field-TM cookie
     )
     if extracted_token:
         return await _authenticate_cookie_token(extracted_token)

@@ -1,1 +1,1 @@
-"""Scripts using the API to generate FieldTM statistics."""
+"""Scripts using the API to generate Field-TM statistics."""
