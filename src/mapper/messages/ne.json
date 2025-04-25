@@ -96,6 +96,7 @@
 	},
 	"dialog_task_actions": {
 		"complete_mapping": "म्यापिङ सम्पन्न गर्नुहोस्",
+		"continue_mapping": "म्यापिङ जारी राख्नुहोस्",
 		"locked_is_complete": "लक गरिएको छ। के टास्क पूर्ण रूपमा म्याप गरिएको छ?",
 		"task": "टास्क"
 	},

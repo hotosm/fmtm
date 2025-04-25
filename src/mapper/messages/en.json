@@ -96,6 +96,7 @@
 	},
 	"dialog_task_actions": {
 		"complete_mapping": "COMPLETE MAPPING",
+		"continue_mapping": "CONTINUE MAPPING",
 		"locked_is_complete": "has been locked. Is the task completely mapped?",
 		"task": "Task"
 	},
