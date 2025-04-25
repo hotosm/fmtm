@@ -46,14 +46,14 @@
 	</head>
 	<body style="height: 100vh; overflow-y: scroll; position: relative">
 		<script type="module">
-			URL.canParse = function(string) {
+			URL.canParse = function (string) {
 				try {
 					new URL(string);
 					return true;
 				} catch (err) {
 					return false;
 				}
-			}
+			};
 
 			const odkWebFormUrl = new URL(window.location.href).searchParams.get('odkWebFormUrl');
 			const OdkWebForm = (await import(odkWebFormUrl)).default;
