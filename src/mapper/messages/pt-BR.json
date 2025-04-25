@@ -96,6 +96,7 @@
 	},
 	"dialog_task_actions": {
 		"complete_mapping": "CONCLUIR MAPEAMENTO",
+		"continue_mapping": "CONTINUAR MAPEANDO",
 		"locked_is_complete": "foi bloqueado. Você concluiu o mapeamento desse ponto?",
 		"task": "Tarefa"
 	},
