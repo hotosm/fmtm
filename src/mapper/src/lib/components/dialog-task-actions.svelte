@@ -135,6 +135,7 @@
 						<span>{m['popup.cancel_mapping']()}</span>
 					</sl-button>
 					<sl-button
+						disabled={!taskSubmission}
 						onclick={() => {
 							markTaskAsComplete();
 						}}
@@ -160,21 +161,21 @@
 
 <hot-dialog
 	bind:this={dialogRef}
-	class="login-dialog"
+	class="task-action-dialog"
 	open={toggleTaskCompleteConfirmation}
 	onsl-hide={() => {
 		toggleTaskCompleteConfirmation = false;
 	}}
 	noHeader
 >
-	<h5>
+	<h5 class="dialog-text">
 		You have only mapped{' '}
-		<span>
+		<span class="text-highlight">
 			{taskSubmission?.submission_count}/{taskSubmission?.feature_count}
 		</span>{' '}
-		features in the task area. <br /> Are you sure you wish to mark this task as complete?
+		features in the task area. Are you sure you wish to mark this task as complete?
 	</h5>
-	<div>
+	<div class="button-wrapper">
 		<sl-button
 			onclick={() => {
 				toggleTaskCompleteConfirmation = false;
