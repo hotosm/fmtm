@@ -1088,6 +1088,8 @@ async def create_project(
     db_org = await DbOrganisation.one(db, org_id)
     project = await DbProject.one(db, project_id)
 
+    if project_info.name:
+        await project_deps.check_project_dup_name(db, project_info.name)
     if project_info.odk_credentials:
         odk_creds_decrypted = project_info.odk_credentials
     else:
