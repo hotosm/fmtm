@@ -27,8 +27,9 @@
 	let toggleTaskCompleteConfirmation: boolean = $state(false);
 
 	const markTaskAsComplete = () => {
-		if (!taskStore.selectedTaskId || !taskSubmission) return;
-		if (taskSubmission?.submission_count < taskSubmission?.feature_count) {
+		if (!taskStore.selectedTaskId) return;
+		// there may be tasks with no features, so allow those tasks to skip the confirmation step
+		if (taskSubmission && taskSubmission?.submission_count < taskSubmission?.feature_count) {
 			toggleTaskCompleteConfirmation = true;
 		} else {
 			finishTask(projectData?.id, taskStore.selectedTaskId);
@@ -134,8 +135,9 @@
 						<hot-icon slot="prefix" name="close"></hot-icon>
 						<span>{m['popup.cancel_mapping']()}</span>
 					</sl-button>
+					<!-- keep button disabled until the entity statuses are fetched -->
 					<sl-button
-						disabled={!taskSubmission}
+						disabled={entitiesStore.syncEntityStatusLoading}
 						onclick={() => {
 							markTaskAsComplete();
 						}}
@@ -197,6 +199,7 @@
 			onclick={() => {
 				if (!taskStore.selectedTaskId) return;
 				finishTask(projectData?.id, taskStore.selectedTaskId);
+				toggleTaskCompleteConfirmation = false;
 			}}
 			variant="default"
 			size="small"
@@ -205,6 +208,7 @@
 				if (e.key === 'Enter') {
 					if (!taskStore.selectedTaskId) return;
 					finishTask(projectData?.id, taskStore.selectedTaskId);
+					toggleTaskCompleteConfirmation = false;
 				}
 			}}
 			role="button"
