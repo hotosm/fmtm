@@ -28,7 +28,8 @@
 	import More from '$lib/components/more/index.svelte';
 	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
-	import type { SlDrawer } from '@shoelace-style/shoelace';
+	import ProjectInfo from '$lib/components/more/project-info.svelte';
+	import Editor from '$lib/components/editor/editor.svelte';
 
 	interface Props {
 		data: PageData;
@@ -378,6 +379,14 @@
 					{/if}
 				</QRCodeComponent>
 			{/if}
+			{#if commonStore.selectedTab === 'info'}
+				<p class="bottom-sheet-header">{m['stack_group.project_information']()}</p>
+				<ProjectInfo projectData={data?.project} />
+			{/if}
+			{#if commonStore.selectedTab === 'instructions'}
+				<p class="bottom-sheet-header">{m['stack_group.instructions']()}</p>
+				<Editor editable={false} content={data?.project?.per_task_instructions} />
+			{/if}
 		</BottomSheet>
 		<hot-dialog bind:this={infoDialogRef} class="dialog-overview" no-header>
 			<div class="content">
@@ -424,6 +433,14 @@
 				</sl-tab>
 				<sl-tab slot="nav" panel="qrcode">
 					<hot-icon name="qr-code"></hot-icon>
+				</sl-tab>
+			{/if}
+			{#if commonStore.enableWebforms}
+				<sl-tab slot="nav" panel="info">
+					<hot-icon name="info-circle"></hot-icon>
+				</sl-tab>
+				<sl-tab slot="nav" panel="instructions">
+					<hot-icon name="description"></hot-icon>
 				</sl-tab>
 			{/if}
 			<sl-tab slot="nav" panel="events">
