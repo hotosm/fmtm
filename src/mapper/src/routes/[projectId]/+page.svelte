@@ -379,13 +379,15 @@
 					{/if}
 				</QRCodeComponent>
 			{/if}
-			{#if commonStore.selectedTab === 'info'}
-				<p class="bottom-sheet-header">{m['stack_group.project_information']()}</p>
-				<ProjectInfo projectData={data?.project} />
-			{/if}
 			{#if commonStore.selectedTab === 'instructions'}
 				<p class="bottom-sheet-header">{m['stack_group.instructions']()}</p>
-				<Editor editable={false} content={data?.project?.per_task_instructions} />
+				{#if data?.project?.per_task_instructions}
+					<Editor editable={false} content={data?.project?.per_task_instructions} />
+				{:else}
+					<div class="active-stack-instructions">
+						<p>{m['index.no_instructions']()}</p>
+					</div>
+				{/if}
 			{/if}
 		</BottomSheet>
 		<hot-dialog bind:this={infoDialogRef} class="dialog-overview" no-header>
@@ -436,9 +438,6 @@
 				</sl-tab>
 			{/if}
 			{#if commonStore.enableWebforms}
-				<sl-tab slot="nav" panel="info">
-					<hot-icon name="info-circle"></hot-icon>
-				</sl-tab>
 				<sl-tab slot="nav" panel="instructions">
 					<hot-icon name="description"></hot-icon>
 				</sl-tab>

@@ -32,7 +32,7 @@
 			id: 'project-info',
 			icon: 'info-circle',
 			title: m['stack_group.project_information'](),
-			show: !commonStore.enableWebforms,
+			show: true,
 		},
 		{
 			id: 'comment',
