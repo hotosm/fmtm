@@ -4,6 +4,7 @@
 	import { mapTask, finishTask, resetTask } from '$lib/db/events';
 	import type { ProjectData } from '$lib/types';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
+	import { getEntitiesStatusStore } from '$store/entities.svelte';
 
 	type Props = {
 		isTaskActionModalOpen: boolean;
@@ -14,7 +15,25 @@
 	};
 
 	const taskStore = getTaskStore();
+	const entitiesStore = getEntitiesStatusStore();
+
 	let { isTaskActionModalOpen, toggleTaskActionModal, selectedTab, projectData, clickMapNewFeature }: Props = $props();
+
+	const taskSubmissionInfo = $derived(entitiesStore.taskSubmissionInfo);
+	const taskSubmission = $derived(
+		taskSubmissionInfo?.find((taskSubmission) => taskSubmission?.task_id === taskStore?.selectedTaskIndex),
+	);
+	let dialogRef;
+	let toggleTaskCompleteConfirmation: boolean = $state(false);
+
+	const markTaskAsComplete = () => {
+		if (!taskStore.selectedTaskId || !taskSubmission) return;
+		if (taskSubmission?.submission_count < taskSubmission?.feature_count) {
+			toggleTaskCompleteConfirmation = true;
+		} else {
+			finishTask(projectData?.id, taskStore.selectedTaskId);
+		}
+	};
 </script>
 
 {#if taskStore.selectedTaskId && selectedTab === 'map' && isTaskActionModalOpen && (taskStore.selectedTaskState === 'UNLOCKED_TO_MAP' || taskStore.selectedTaskState === 'LOCKED_FOR_MAPPING')}
@@ -117,14 +136,14 @@
 					</sl-button>
 					<sl-button
 						onclick={() => {
-							if (taskStore.selectedTaskId) finishTask(projectData?.id, taskStore.selectedTaskId);
+							markTaskAsComplete();
 						}}
 						variant="default"
 						size="small"
 						class="green"
 						onkeydown={(e: KeyboardEvent) => {
 							if (e.key === 'Enter') {
-								if (taskStore.selectedTaskId) finishTask(projectData?.id, taskStore.selectedTaskId);
+								markTaskAsComplete();
 							}
 						}}
 						role="button"
@@ -139,4 +158,58 @@
 	</div>
 {/if}
 
-<style></style>
+<hot-dialog
+	bind:this={dialogRef}
+	class="login-dialog"
+	open={toggleTaskCompleteConfirmation}
+	onsl-hide={() => {
+		toggleTaskCompleteConfirmation = false;
+	}}
+	noHeader
+>
+	<h5>
+		You have only mapped{' '}
+		<span>
+			{taskSubmission?.submission_count}/{taskSubmission?.feature_count}
+		</span>{' '}
+		features in the task area. <br /> Are you sure you wish to mark this task as complete?
+	</h5>
+	<div>
+		<sl-button
+			onclick={() => {
+				toggleTaskCompleteConfirmation = false;
+			}}
+			variant="default"
+			size="small"
+			class="green"
+			onkeydown={(e: KeyboardEvent) => {
+				if (e.key === 'Enter') {
+					toggleTaskCompleteConfirmation = false;
+				}
+			}}
+			role="button"
+			tabindex="0"
+		>
+			<span>{m['dialog_task_actions.continue_mapping']()}</span>
+		</sl-button>
+		<sl-button
+			onclick={() => {
+				if (!taskStore.selectedTaskId) return;
+				finishTask(projectData?.id, taskStore.selectedTaskId);
+			}}
+			variant="default"
+			size="small"
+			class="green"
+			onkeydown={(e: KeyboardEvent) => {
+				if (e.key === 'Enter') {
+					if (!taskStore.selectedTaskId) return;
+					finishTask(projectData?.id, taskStore.selectedTaskId);
+				}
+			}}
+			role="button"
+			tabindex="0"
+		>
+			<span>{m['dialog_task_actions.complete_mapping']()}</span>
+		</sl-button>
+	</div>
+</hot-dialog>
