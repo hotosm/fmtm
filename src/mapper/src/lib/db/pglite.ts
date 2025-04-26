@@ -1,3 +1,4 @@
+import type { PGliteWithSync } from '@electric-sql/pglite-sync';
 import { PGlite } from '@electric-sql/pglite';
 import { electricSync } from '@electric-sql/pglite-sync';
 
@@ -18,7 +19,7 @@ import indexes from '$migrations/init/shared/4-indexes.sql?raw';
 // initDb is only run once per session, no matter how many
 // times the +layout.ts load() function is called
 let dbPromise: ReturnType<typeof initDb> | null = null;
-export function getDbOnce(): Promise<PGlite> {
+export function getDbOnce(): Promise<PGliteWithSync> {
 	if (!dbPromise) {
 		dbPromise = getDb();
 	}
@@ -28,7 +29,7 @@ export function getDbOnce(): Promise<PGlite> {
 // Try to open existing DB and test schema, else initialise schema from scratch.
 // The tradeoff is slower performance on, first load but then better performance
 // every time after.
-export const getDb = async (): Promise<PGlite> => {
+export const getDb = async (): Promise<PGliteWithSync> => {
 	if (dbPromise) {
 		return dbPromise; // Return the existing promise if already in progress
 	}
@@ -106,7 +107,7 @@ async function cleanupIndexedDb(dbName: string): Promise<boolean> {
 	});
 }
 
-const initDb = async (): Promise<PGlite> => {
+const initDb = async (): Promise<PGliteWithSync> => {
 	// By default PGLite uses postgres user and database
 	// We need to bootstrap by creating fmtm user and database
 	// Then reconnect to the new db as the user
