@@ -28,14 +28,14 @@
 	import More from '$lib/components/more/index.svelte';
 	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
-	import ProjectInfo from '$lib/components/more/project-info.svelte';
 	import Editor from '$lib/components/editor/editor.svelte';
 
 	interface Props {
 		data: PageData;
 	}
 
-	let { data }: Props = $props();
+	const { data } = $props();
+	const { db, project, projectId } = data;
 
 	let webFormsRef: HTMLElement | undefined = $state();
 	let displayWebFormsDrawer = $state(false);
@@ -53,30 +53,29 @@
 	const commonStore = getCommonStore();
 	const alertStore = getAlertStore();
 
-	const taskEventStream = getTaskEventStream(data.projectId);
-	const entityStatusStream = getEntityStatusStream(data.projectId);
-	const newBadGeomStream = getNewBadGeomStream(data.projectId);
+	const taskEventStream = getTaskEventStream(projectId);
+	const newBadGeomStream = getNewBadGeomStream(projectId);
 
 	const selectedEntityId = $derived(entitiesStore.selectedEntity);
 	const latestEvent = $derived(taskStore.latestEvent);
 	const commentMention = $derived(taskStore.commentMention);
 
 	// Set useOdkCollect override to disable webforms in app
-	if (data.project.use_odk_collect) {
+	if (project.use_odk_collect) {
 		commonStore.setUseOdkCollectOverride(true);
 	}
 
 	// Update the geojson task states when a new event is added
 	$effect(() => {
 		if (latestEvent) {
-			taskStore.appendTaskStatesToFeatcol(data.project.tasks);
+			taskStore.appendTaskStatesToFeatcol(project.tasks);
 		}
 	});
 
 	$effect(() => {
 		let taskIdIndexMap: Record<number, number> = {};
-		if (data?.project?.tasks && data?.project?.tasks?.length > 0) {
-			data?.project?.tasks?.forEach((task: ProjectTask) => {
+		if (project?.tasks && project?.tasks?.length > 0) {
+			project?.tasks?.forEach((task: ProjectTask) => {
 				taskIdIndexMap[task.id] = task.project_task_index;
 			});
 		}
@@ -99,7 +98,7 @@
 	});
 
 	function zoomToTask(taskId: number, fitOptions?: Record<string, any> = { duration: 0 }) {
-		const taskObj = data.project.tasks.find((task: ProjectTask) => task.id === taskId);
+		const taskObj = project.tasks.find((task: ProjectTask) => task.id === taskId);
 
 		if (!taskObj) return;
 		// Set as selected task for buttons
@@ -121,7 +120,10 @@
 
 		// In store/tasks.svelte.ts
 		await taskStore.subscribeToEvents(taskEventStream);
-		await taskStore.appendTaskStatesToFeatcol(data.project.tasks);
+		await taskStore.appendTaskStatesToFeatcol(project.tasks);
+
+		const geomLog = await db.query('SELECT * FROM public.geometrylog;');
+		console.log(geomLog)
 	});
 
 	onDestroy(() => {
@@ -130,7 +132,7 @@
 	});
 
 	$effect(() => {
-		entitiesStore.syncEntityStatus(data.projectId);
+		entitiesStore.syncEntityStatus(projectId);
 	});
 
 	$effect(() => {
@@ -139,7 +141,7 @@
 
 		if (entitiesStore.entitiesList?.length === 0) return;
 		async function getEntityStatus() {
-			entityStatusStream = getEntityStatusStream(data.projectId);
+			entityStatusStream = getEntityStatusStream(projectId);
 			await entitiesStore.subscribeToEntityStatusUpdates(entityStatusStream, entitiesStore.entitiesList);
 		}
 
@@ -152,17 +154,17 @@
 
 	$effect(() => {
 		// if project loaded for the first time, set projectSetupStep to 1 else get it from localStorage
-		if (!localStorage.getItem(`project-${data.projectId}-setup`)) {
+		if (!localStorage.getItem(`project-${projectId}-setup`)) {
 			// if webforms enabled, avoid project load in odk step
 			if (commonStore.enableWebforms) {
-				localStorage.setItem(`project-${data.projectId}-setup`, projectSetupStepEnum['task_selection'].toString());
+				localStorage.setItem(`project-${projectId}-setup`, projectSetupStepEnum['task_selection'].toString());
 				projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['task_selection']);
 			} else {
-				localStorage.setItem(`project-${data.projectId}-setup`, projectSetupStepEnum['odk_project_load'].toString());
+				localStorage.setItem(`project-${projectId}-setup`, projectSetupStepEnum['odk_project_load'].toString());
 				projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['odk_project_load']);
 			}
 		} else {
-			const projectStep = localStorage.getItem(`project-${data.projectId}-setup`);
+			const projectStep = localStorage.getItem(`project-${projectId}-setup`);
 			projectSetupStepStore.setProjectSetupStep(projectStep ? +projectStep : 0);
 		}
 		// if project loaded for the first time then show qrcode tab
@@ -195,29 +197,29 @@
 		}
 		try {
 			isGeometryCreationLoading = true;
-			const entity = await entitiesStore.createEntity(data.projectId, {
+			const entity = await entitiesStore.createEntity(projectId, {
 				type: 'FeatureCollection',
 				features: [{ type: 'Feature', geometry: newFeatureGeom, properties: {} }],
 			});
-			await entitiesStore.createGeomRecord(data.projectId, {
+			await entitiesStore.createGeomRecord(projectId, {
 				status: 'NEW',
 				geojson: { type: 'Feature', geometry: newFeatureGeom, properties: { entity_id: entity.uuid } },
-				project_id: data.projectId,
+				project_id: projectId,
 			});
-			entitiesStore.syncEntityStatus(data.projectId);
+			entitiesStore.syncEntityStatus(projectId);
 			cancelMapNewFeatureInODK();
 
 			if (commonStore.enableWebforms) {
 				await entitiesStore.setSelectedEntity(entity.uuid);
 				openedActionModal = null;
-				entitiesStore.updateEntityStatus(data.projectId, {
+				entitiesStore.updateEntityStatus(projectId, {
 					entity_id: entity.uuid,
 					status: 1,
 					label: entity?.currentVersion?.label,
 				});
 				displayWebFormsDrawer = true;
 			} else {
-				openOdkCollectNewFeature(data?.project?.odk_form_id, entity.uuid);
+				openOdkCollectNewFeature(project?.odk_form_id, entity.uuid);
 			}
 		} catch (error) {
 			alertStore.setAlert({ message: 'Unable to create entity', variant: 'danger' });
@@ -295,12 +297,12 @@
 		toggleActionModal={(value) => {
 			openedActionModal = value;
 		}}
-		projectOutlineCoords={data.project.outline.coordinates}
-		projectId={data.projectId}
-		entitiesUrl={data.project.data_extract_url}
-		primaryGeomType={data.project.primary_geom_type}
+		projectOutlineCoords={project.outline.coordinates}
+		projectId={projectId}
+		entitiesUrl={project.data_extract_url}
+		primaryGeomType={project.primary_geom_type}
 		draw={isDrawEnabled}
-		drawGeomType={data.project?.new_geom_type}
+		drawGeomType={project?.new_geom_type}
 		handleDrawnGeom={(drawInstance, geom) => {
 			newFeatureDrawInstance = drawInstance;
 			newFeatureGeom = geom;
@@ -354,7 +356,7 @@
 			openedActionModal = value ? 'task-modal' : null;
 		}}
 		selectedTab={commonStore.selectedTab}
-		projectData={data?.project}
+		projectData={project}
 		clickMapNewFeature={() => {
 			openedActionModal = null;
 			isDrawEnabled = true;
@@ -366,27 +368,27 @@
 			openedActionModal = value ? 'entity-modal' : null;
 		}}
 		selectedTab={commonStore.selectedTab}
-		projectData={data?.project}
+		projectData={project}
 		bind:displayWebFormsDrawer
 	/>
 	{#if commonStore.selectedTab !== 'map'}
 		<BottomSheet onClose={() => tabGroup.show('map')}>
 			{#if commonStore.selectedTab === 'events'}
-				<More projectData={data?.project} zoomToTask={(taskId) => zoomToTask(taskId)}></More>
+				<More projectData={project} zoomToTask={(taskId) => zoomToTask(taskId)}></More>
 			{/if}
 			{#if commonStore.selectedTab === 'offline'}
-				<BasemapComponent projectId={data.project.id}></BasemapComponent>
+				<BasemapComponent projectId={project.id}></BasemapComponent>
 			{/if}
 			{#if commonStore.selectedTab === 'qrcode'}
 				<QRCodeComponent
 					class="map-qr"
 					{infoDialogRef}
-					projectName={data.project.name}
-					projectOdkToken={data.project.odk_token}
+					projectName={project.name}
+					projectOdkToken={project.odk_token}
 				>
 					<!-- Open ODK Button (Hide if it's project walkthrough step) -->
 					{#if +(projectSetupStepStore.projectSetupStep || 0) !== projectSetupStepEnum['odk_project_load']}
-						<sl-button size="small" variant="primary" href="odkcollect://form/{data.project.odk_form_id}">
+						<sl-button size="small" variant="primary" href="odkcollect://form/{project.odk_form_id}">
 							<span>{m['odk.open']()}</span></sl-button
 						>
 					{/if}
@@ -394,8 +396,8 @@
 			{/if}
 			{#if commonStore.selectedTab === 'instructions'}
 				<p class="bottom-sheet-header">{m['stack_group.instructions']()}</p>
-				{#if data?.project?.per_task_instructions}
-					<Editor editable={false} content={data?.project?.per_task_instructions} />
+				{#if project?.per_task_instructions}
+					<Editor editable={false} content={project?.per_task_instructions} />
 				{:else}
 					<div class="active-stack-instructions">
 						<p>{m['index.no_instructions']()}</p>
@@ -433,7 +435,7 @@
 					e.detail.name !== 'qrcode' &&
 					+(projectSetupStepStore.projectSetupStep || 0) === projectSetupStepEnum['odk_project_load']
 				) {
-					localStorage.setItem(`project-${data.projectId}-setup`, projectSetupStepEnum['task_selection'].toString());
+					localStorage.setItem(`project-${projectId}-setup`, projectSetupStepEnum['task_selection'].toString());
 					projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['task_selection']);
 				}
 			}}
@@ -464,7 +466,7 @@
 	<OdkWebFormsWrapper
 		bind:webFormsRef
 		bind:display={displayWebFormsDrawer}
-		projectId={data?.projectId}
+		projectId={projectId}
 		entityId={selectedEntityId || undefined}
 		taskId={taskStore.selectedTaskIndex || undefined}
 	/>
