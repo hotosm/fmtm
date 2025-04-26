@@ -1,3 +1,5 @@
+import type { PGliteWithSync } from '@electric-sql/pglite-sync';
+
 import { getLocalStorage, setLocalStorage } from '$lib/fs/local-storage.svelte';
 import type { Basemap } from '$lib/utils/basemaps';
 import { getBasemapList } from '$lib/utils/basemaps';
@@ -24,6 +26,7 @@ interface AlertDetails {
 	message: string;
 }
 
+let db: PGliteWithSync;
 let alert: AlertDetails = $state({ variant: 'default', message: '' });
 let projectSetupStep: number | null = $state(null);
 let projectBasemaps: Basemap[] = $state([]);
@@ -67,6 +70,10 @@ function getCommonStore() {
 	}
 
 	return {
+		get db() {
+			return db;
+		},
+		setDb: (newDb: PGliteWithSync) => (db = newDb),
 		get selectedTab() {
 			return selectedTab;
 		},
