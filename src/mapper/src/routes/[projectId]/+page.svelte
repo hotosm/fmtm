@@ -28,15 +28,14 @@
 	import More from '$lib/components/more/index.svelte';
 	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
-	import ProjectInfo from '$lib/components/more/project-info.svelte';
 	import Editor from '$lib/components/editor/editor.svelte';
 
 	interface Props {
 		data: PageData;
 	}
 
-	let { data }: Props = $props();
-	const { project, projectId } = data;
+	const { data } = $props();
+	const { db, project, projectId } = data;
 
 	let webFormsRef: HTMLElement | undefined = $state();
 	let displayWebFormsDrawer = $state(false);
@@ -293,7 +292,7 @@
 			openedActionModal = value;
 		}}
 		projectOutlineCoords={project.outline.coordinates}
-		{projectId}
+		projectId={projectId}
 		entitiesUrl={project.data_extract_url}
 		primaryGeomType={project.primary_geom_type}
 		draw={isDrawEnabled}
@@ -456,7 +455,7 @@
 	<OdkWebFormsWrapper
 		bind:webFormsRef
 		bind:display={displayWebFormsDrawer}
-		{projectId}
+		projectId={projectId}
 		entityId={selectedEntityId || undefined}
 		taskId={taskStore.selectedTaskIndex || undefined}
 	/>
