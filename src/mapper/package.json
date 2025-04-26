@@ -16,7 +16,8 @@
 		"format": "prettier --plugin prettier-plugin-svelte --write .",
 		"test:integration": "playwright test",
 		"test:unit": "vitest",
-		"cleanup": "pnpm dlx knip"
+		"cleanup": "pnpm dlx knip",
+		"init-db": "node src/lib/db/init.js"
 	},
 	"devDependencies": {
 		"@inlang/paraglide-js": "^2.0.0-beta.26",
