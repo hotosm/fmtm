@@ -35,7 +35,7 @@
 	}
 
 	const { data } = $props();
-	const { db, project, projectId } = data;
+	const { project, projectId } = data;
 
 	let webFormsRef: HTMLElement | undefined = $state();
 	let displayWebFormsDrawer = $state(false);
@@ -51,6 +51,7 @@
 	const taskStore = getTaskStore();
 	const entitiesStore = getEntitiesStatusStore();
 	const commonStore = getCommonStore();
+	const { db } = commonStore;
 	const alertStore = getAlertStore();
 
 	const taskEventStream = getTaskEventStream(projectId);
@@ -65,7 +66,7 @@
 	// Update the geojson task states when a new event is added
 	$effect(() => {
 		if (latestEvent) {
-			taskStore.appendTaskStatesToFeatcol(project.tasks);
+			taskStore.appendTaskStatesToFeatcol(db, projectId, project.tasks);
 		}
 	});
 
@@ -99,7 +100,7 @@
 
 		if (!taskObj) return;
 		// Set as selected task for buttons
-		taskStore.setSelectedTaskId(taskObj.id, taskObj?.task_index);
+		taskStore.setSelectedTaskId(db, taskObj.id, taskObj?.task_index);
 
 		const taskPolygon = polygon(taskObj.outline.coordinates);
 		const taskBuffer = buffer(taskPolygon, 5, { units: 'meters' });
@@ -114,10 +115,7 @@
 
 	onMount(async () => {
 		await entitiesStore.subscribeToNewBadGeom(newBadGeomStream);
-
-		// In store/tasks.svelte.ts
-		await taskStore.subscribeToEvents(taskEventStream);
-		await taskStore.appendTaskStatesToFeatcol(project.tasks);
+		await taskStore.appendTaskStatesToFeatcol(db, projectId, project.tasks);
 	});
 
 	onDestroy(() => {

@@ -44,6 +44,7 @@
 	import Geolocation from '$lib/components/map/geolocation.svelte';
 	import FlatGeobuf from '$lib/components/map/flatgeobuf-layer.svelte';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
+	import { getCommonStore } from '$store/common.svelte.ts';
 	import { getProjectSetupStepStore, getProjectBasemapStore } from '$store/common.svelte.ts';
 	import { readFileFromOPFS } from '$lib/fs/opfs.ts';
 	import { loadOfflinePmtiles } from '$lib/map/basemaps.ts';
@@ -92,6 +93,8 @@
 
 	const cssValue = (property: string) => getComputedStyle(document.documentElement).getPropertyValue(property).trim();
 
+	const commonStore = getCommonStore();
+	const { db } = commonStore;
 	const taskStore = getTaskStore();
 	const projectSetupStepStore = getProjectSetupStepStore();
 	const entitiesStore = getEntitiesStatusStore();
@@ -232,7 +235,7 @@
 		if (clickedTaskFeature && clickedTaskFeature?.length > 0) {
 			taskAreaClicked = true;
 			const clickedTaskId = clickedTaskFeature[0]?.properties?.fid;
-			taskStore.setSelectedTaskId(clickedTaskId, clickedTaskFeature[0]?.properties?.task_index);
+			taskStore.setSelectedTaskId(db, clickedTaskId, clickedTaskFeature[0]?.properties?.task_index);
 			if (+(projectSetupStepStore.projectSetupStep || 0) === projectSetupStepEnum['task_selection']) {
 				localStorage.setItem(`project-${projectId}-setup`, projectSetupStepEnum['complete_setup']);
 				projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['complete_setup']);
@@ -424,7 +427,7 @@
 	on:click={(_e) => {
 		// deselect everything on click, to allow for re-selection
 		// if the user clicks on a feature layer directly (on:click)
-		taskStore.setSelectedTaskId(null, null);
+		taskStore.setSelectedTaskId(db, null, null);
 		taskAreaClicked = false;
 		toggleActionModal(null);
 		entitiesStore.setSelectedEntity(null);
