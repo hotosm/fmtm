@@ -25,20 +25,6 @@
 	);
 	let dialogRef;
 	let toggleTaskCompleteConfirmation: boolean = $state(false);
-
-	const markTaskAsComplete = () => {
-		if (!taskStore.selectedTaskId) return;
-		if (taskSubmission && taskSubmission?.submission_count < taskSubmission?.feature_count) {
-			// if entity submission is incomplete, show confirmation modal
-			toggleTaskCompleteConfirmation = true;
-			// if task has no entities, show confirmation modal
-		} else if (!taskSubmission) {
-			toggleTaskCompleteConfirmation = true;
-			// otherwise, just mark task as complete
-		} else {
-			finishTask(projectData?.id, taskStore.selectedTaskId);
-		}
-	};
 </script>
 
 {#if taskStore.selectedTaskId && selectedTab === 'map' && isTaskActionModalOpen && (taskStore.selectedTaskState === 'UNLOCKED_TO_MAP' || taskStore.selectedTaskState === 'LOCKED_FOR_MAPPING')}
@@ -143,14 +129,14 @@
 					<sl-button
 						disabled={entitiesStore.syncEntityStatusLoading}
 						onclick={() => {
-							markTaskAsComplete();
+							toggleTaskCompleteConfirmation = true;
 						}}
 						variant="default"
 						size="small"
 						class="green"
 						onkeydown={(e: KeyboardEvent) => {
 							if (e.key === 'Enter') {
-								markTaskAsComplete();
+								toggleTaskCompleteConfirmation = true;
 							}
 						}}
 						role="button"
@@ -176,7 +162,9 @@
 >
 	<h5 class="dialog-text">
 		{#if taskSubmission}
-			You have only mapped{' '}
+			You have {#if taskSubmission?.submission_count < taskSubmission?.feature_count}
+				{' '}only{' '}
+			{/if}mapped{' '}
 			<span class="text-highlight">
 				{taskSubmission?.submission_count}/{taskSubmission?.feature_count}
 			</span>
