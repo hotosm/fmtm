@@ -5,6 +5,7 @@
 	import type { ProjectData } from '$lib/types';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
 	import { getEntitiesStatusStore } from '$store/entities.svelte';
+	import { unicodeBold } from '$lib/utils/text.ts';
 
 	type Props = {
 		isTaskActionModalOpen: boolean;
@@ -131,7 +132,7 @@
 						onclick={() => {
 							toggleTaskCompleteConfirmation = true;
 						}}
-						variant="default"
+						variant="primary"
 						size="small"
 						class="green"
 						onkeydown={(e: KeyboardEvent) => {
@@ -162,15 +163,21 @@
 >
 	<h5 class="dialog-text">
 		{#if taskSubmission}
-			You have {#if taskSubmission?.submission_count < taskSubmission?.feature_count}
-				{' '}only{' '}
-			{/if}mapped{' '}
-			<span class="text-highlight">
-				{taskSubmission?.submission_count}/{taskSubmission?.feature_count}
-			</span>
-			features in the task area.{' '}
+			<!-- Subtle difference to include 'only' in the text here -->
+			{#if taskSubmission?.submission_count < taskSubmission?.feature_count}
+				{m['popup.task_complete_only_total_mapped']({
+					totalMapped: unicodeBold(`${taskSubmission?.submission_count}/${taskSubmission?.feature_count}`),
+				})}
+				<br>
+			{:else}
+				{m['popup.task_complete_total_mapped']({
+					totalMapped: unicodeBold(`${taskSubmission?.submission_count}/${taskSubmission?.feature_count}`),
+				})}
+				<br>
+			{/if}
 		{/if}
-		Are you sure you wish to mark this task as complete?
+		<!--  The confirmation dialog is always displayed -->
+		{m['popup.task_complete_confirm']()}
 	</h5>
 	<div class="button-wrapper">
 		<sl-button
@@ -196,7 +203,7 @@
 				finishTask(projectData?.id, taskStore.selectedTaskId);
 				toggleTaskCompleteConfirmation = false;
 			}}
-			variant="default"
+			variant="primary"
 			size="small"
 			class="green"
 			onkeydown={(e: KeyboardEvent) => {

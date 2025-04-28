@@ -15,7 +15,7 @@
 }
 
 .task-action-dialog .dialog-text {
-	--at-apply: font-normal text-neutral-800 mb-4;
+	--at-apply: font-normal text-center text-neutral-800 mb-4;
 }
 
 .task-action-dialog .dialog-text .text-highlight {
