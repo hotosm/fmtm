@@ -34,7 +34,7 @@
 		data: PageData;
 	}
 
-	const { data } = $props();
+	const { data }: Props = $props();
 	const { project, projectId } = data;
 
 	let webFormsRef: HTMLElement | undefined = $state();
