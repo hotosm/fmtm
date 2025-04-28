@@ -159,6 +159,11 @@ class Settings(BaseSettings):
     FMTM_DOMAIN: str
     FMTM_DEV_PORT: Optional[str] = "7050"
 
+    DEFAULT_ORG_NAME: Optional[str] = "HOTOSM"
+    DEFAULT_ORG_URL: Optional[str] = "https://hotosm.org"
+    DEFAULT_ORG_EMAIL: Optional[str] = "syadmin@hotosm.org"
+    DEFAULT_ORG_LOGO_URL: Optional[str] = None
+
     EXTRA_CORS_ORIGINS: Optional[str | list[str]] = None
 
     @property

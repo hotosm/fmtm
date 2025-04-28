@@ -17,8 +17,10 @@
 #
 """Logic for organisation management."""
 
+from io import BytesIO
 from textwrap import dedent
 
+import httpx
 from fastapi import (
     Request,
     UploadFile,
@@ -67,10 +69,10 @@ async def init_admin_org(db: Connection) -> None:
 
     # Create HOTOSM org
     org_in = OrganisationIn(
-        name="HOTOSM",
-        description="Humanitarian OpenStreetMap Team.",
-        url="https://hotosm.org",
-        associated_email="sysadmin@hotosm.org",
+        name=settings.DEFAULT_ORG_NAME,
+        description="Default organisation",
+        url=settings.DEFAULT_ORG_URL,
+        associated_email=settings.DEFAULT_ORG_EMAIL,
         odk_central_url=settings.ODK_CENTRAL_URL,
         odk_central_user=settings.ODK_CENTRAL_USER,
         odk_central_password=settings.ODK_CENTRAL_PASSWD.get_secret_value()
@@ -78,20 +80,27 @@ async def init_admin_org(db: Connection) -> None:
         else "",
         approved=True,
     )
-    with open("/opt/app/images/hot-org-logo.png", "rb") as logo_file:
-        org_logo = UploadFile(
-            file=logo_file,
-            filename="hot-org-logo.png",
-            headers={"Content-Type": "image/png"},
-        )
 
-        hotosm_org = await DbOrganisation.create(
-            db,
-            org_in,
-            admin_user.sub,
-            org_logo,
-            ignore_conflict=True,
-        )
+    org_logo = None
+    if settings.DEFAULT_ORG_LOGO_URL:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(settings.DEFAULT_ORG_LOGO_URL)
+            content_type = response.headers.get("Content-Type", "")
+
+            if response.status_code == 200 and content_type.startswith("image/"):
+                org_logo = UploadFile(
+                    file=BytesIO(response.content),
+                    filename="logo.png",
+                    headers={"Content-Type": content_type},
+                )
+
+    hotosm_org = await DbOrganisation.create(
+        db,
+        org_in,
+        admin_user.sub,
+        org_logo,
+        ignore_conflict=True,
+    )
 
     # Make admin user manager of HOTOSM
     if hotosm_org:
