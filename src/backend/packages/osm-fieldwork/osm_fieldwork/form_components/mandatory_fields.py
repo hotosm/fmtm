@@ -86,6 +86,7 @@ def _get_mandatory_fields(
     Return the mandatory fields data for form creation.
     
     Args:
+        use_odk_collect: Mode of data collection
         new_geom_type: The geometry type (POINT, POLYGON, LINESTRING)
         need_verification_fields: Whether to include verification fields
     
@@ -127,13 +128,13 @@ def _get_mandatory_fields(
         geom_field = geom_type_mapping[new_geom_type]
 
         fields.append(
-            {
+            add_label_translations({
                 "type": geom_field,
                 "name": "new_feature",
                 "appearance": "placement-map",
                 "relevant": "${feature}= ''",
                 "required": "yes",
-            }
+            })
         )
     fields.extend([
         {
