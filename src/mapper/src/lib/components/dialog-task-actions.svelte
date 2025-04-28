@@ -28,9 +28,13 @@
 
 	const markTaskAsComplete = () => {
 		if (!taskStore.selectedTaskId) return;
-		// there may be tasks with no features, so allow those tasks to skip the confirmation step
 		if (taskSubmission && taskSubmission?.submission_count < taskSubmission?.feature_count) {
+			// if entity submission is incomplete, show confirmation modal
 			toggleTaskCompleteConfirmation = true;
+			// if task has no entities, show confirmation modal
+		} else if (!taskSubmission) {
+			toggleTaskCompleteConfirmation = true;
+			// otherwise, just mark task as complete
 		} else {
 			finishTask(projectData?.id, taskStore.selectedTaskId);
 		}
@@ -171,11 +175,14 @@
 	noHeader
 >
 	<h5 class="dialog-text">
-		You have only mapped{' '}
-		<span class="text-highlight">
-			{taskSubmission?.submission_count}/{taskSubmission?.feature_count}
-		</span>{' '}
-		features in the task area. Are you sure you wish to mark this task as complete?
+		{#if taskSubmission}
+			You have only mapped{' '}
+			<span class="text-highlight">
+				{taskSubmission?.submission_count}/{taskSubmission?.feature_count}
+			</span>
+			features in the task area.{' '}
+		{/if}
+		Are you sure you wish to mark this task as complete?
 	</h5>
 	<div class="button-wrapper">
 		<sl-button
