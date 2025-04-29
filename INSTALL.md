@@ -2,7 +2,7 @@
 
 ## Software Requirements
 
-It is recommended to run FMTM on a Linux-based machine.
+It is recommended to run Field-TM on a Linux-based machine.
 
 > This includes MacOS, but some [tools must be substituted][1].
 >
@@ -13,13 +13,13 @@ the following software installed and configured on your system:
 
 > If running Debian/Ubuntu, the install script below does this for you.
 
-[Git][3] to clone the FMTM repository.
+[Git][3] to clone the Field-TM repository.
 
 [Docker][4]
-to run FMTM inside containers.
+to run Field-TM inside containers.
 
 [Docker Compose][5]
-for easy orchestration of the FMTM services.
+for easy orchestration of the Field-TM services.
 
 > This is Docker Compose V2, the official Docker CLI plugin.
 >
@@ -52,7 +52,7 @@ If more details are required, check out the
   - [Easy Install](#easy-install)
   - [Manual Install](#manual-install)
     - [Table of Contents](#table-of-contents)
-    - [Clone the FMTM repository](#clone-the-fmtm-repository)
+    - [Clone the Field-TM repository](#clone-the-field-tm-repository)
     - [Setup Your Local Environment](#setup-your-local-environment)
       - [1. Setup OSM OAUTH 2.0](#1-setup-osm-oauth-20)
       - [2. Create an `.env` File](#2-create-an-env-file)
@@ -64,12 +64,9 @@ If more details are required, check out the
     - [Setup ODK Central User (Optional)](#setup-odk-central-user-optional)
     - [Set Up Monitoring (Optional)](#set-up-monitoring-optional)
     - [Check Authentication (Optional)](#check-authentication-optional)
-  - [Alternative Operating Systems](#alternative-operating-systems)
-    - [Windows](#windows)
-    - [MacOS](#macos)
-    - [A Note on Docker Desktop](#a-note-on-docker-desktop)
+    - [Configure Custom Branding](#configure-custom-branding)
 
-### Clone the FMTM repository
+### Clone the Field-TM repository
 
 Clone the repository to your local machine using the following command:
 
@@ -86,18 +83,18 @@ These steps are essential to run and test your code!
 
 #### 1. Setup OSM OAuth 2.0
 
-The FMTM uses OAuth with OSM to authenticate users.
+The Field-TM uses OAuth with OSM to authenticate users.
 
-To properly configure your FMTM project, you will need to create keys for OSM.
+To properly configure your Field-TM project, you will need to create keys for OSM.
 
-1. [Login to OSM][28]
+1. [Login to OSM][7]
    (_If you do not have an account yet, click the signup
    button at the top navigation bar to create one_).
 
    Click the drop down arrow on the top right of the navigation bar
    and select My Settings.
 
-2. Register your FMTM instance to OAuth 2 applications.
+2. Register your Field-TM instance to OAuth 2 applications.
 
    Put your login redirect url as `http://127.0.0.1:7051/osmauth` if running locally,
    or for production replace with https://{YOUR_DOMAIN}/osmauth
@@ -105,7 +102,7 @@ To properly configure your FMTM project, you will need to create keys for OSM.
    > Note: `127.0.0.1` is required for debugging instead of `localhost`
    > due to OSM restrictions.
 
-   ![image][29]
+   ![image][8]
 
 3. Add required permissions:
 
@@ -131,19 +128,19 @@ bash scripts/1-environment/gen-env.sh
 > <http://fmtm.localhost:7050,http://some.other.domain>
 >
 > Note: It is possible to generate the auth pub/priv key manually using:
-> openssl genrsa -out fmtm-private.pem 4096
-> openssl rsa -in fmtm-private.pem -pubout -out fmtm-private.pem
+> openssl genrsa -out field-tm-private.pem 4096
+> openssl rsa -in field-tm-private.pem -pubout -out field-tm-private.pem
 
 ### Start the API with Docker
 
-This is the easiest way to get started with FMTM.
+This is the easiest way to get started with Field-TM.
 
 Docker runs each service inside **containers**, fully isolated from your
 host operating system.
 
 #### Select the install type
 
-Determine the what type of FMTM install you would like:
+Determine the what type of Field-TM install you would like:
 
 ```text
 main - the latest production
@@ -211,7 +208,7 @@ http://fmtm.localhost:7050
 
 ### Setup ODK Central User (Optional)
 
-The FMTM uses ODK Central to store ODK data.
+The Field-TM uses ODK Central to store ODK data.
 
 - By default, the docker setup includes a Central server.
 - The credentials should have been provided in your `.env`
@@ -254,79 +251,92 @@ Once you have deployed, you will need to check that you can properly authenticat
 4. If you see an error instead, double check your credentials and
    redirect URL in the openstreetmap.org settings.
 
-That's it, you have successfully set up FMTM!!
+### Frontend Customization (Optional)
 
-## Alternative Operating Systems
+- It's possible to tailor the mapper portion of Field-TM to your needs
+  (the main app that users will see).
+- There is a `config.json` file that is used to dynamically modify the frontend
+  deployment:
 
-### Windows
+  ```json
+  {
+    "logoUrl": "/favicon.svg",
+    "logoText": "Humanitarian OpenStreetMap Team",
+    "cssFile": "https://cdn.jsdelivr.net/npm/@hotosm/ui@0.2.0-b6/dist/style.css",
+    "enableWebforms": false,
+    "loginProviders": {
+      "osm": true,
+      "google": true
+    },
+    "sidebarItemsOverride": []
+  }
+  ```
 
-Windows Subsystem for Linux (WSL) can be used to run Docker.
+- This is read from the bundled Minio S3 bucket called `fmtm-data`:
+  `https://s3.{YOUR_FIELDTM_DOMAIN}/fmtm-data/frontend/config.json`
+- Under the `fmtm-data/frontend` path you can modify the `config.json`,
+  and also upload things like CSS files and logos.
 
-This will run a Linux machine inside Windows very efficiently.
+### Configure Custom Branding
 
-To install follow the
-[official instructions][30].
+- It's possible to replace the HOTOSM logo and change the colour scheme for your
+  deployment.
+- This file will be automatically picked up and used to style your application.
+  By default, Field-TM will fallback to the bundled `config.json`.
 
-Then continue with the FMTM [installation][31].
+  ```json
+  {
+      ...
+      "logoUrl": "/favicon.svg",
+      "logoText": "Humanitarian OpenStreetMap Team",
+      "cssFile": "https://cdn.jsdelivr.net/npm/@hotosm/ui@0.2.0-b6/dist/style.css"
+  }
+  ```
 
-### MacOS
+### Configure Custom Sidebar Elements
 
-[Colima][32] is recommended
-to run `docker` and `docker compose` commands.
+- By default Field-TM has a few items in the sidebar, like a link to a support
+  page, and other resources.
+- These links can be overridden using the `sidebarItemsOverride` parameter in
+  the `config.json`, which expects format:
 
-Install colima, docker, docker compose using brew:
+  ```json
+  {
+      ...
+      "sidebarItemsOverride": [
+          {
+              "name": "Your Website",
+              "path": "https://yourwebsite.com"
+          },
+          {
+              "name": "Support",
+              "path": "https://docs.fmtm.dev/about/about/"
+          }
+      ]
+  }
+  ```
 
-```sh
-brew install colima
-brew install docker docker-compose
-```
+### Enabled / Disable Auth Providers
 
-Then configure the docker compose plugin to work on MacOS:
+- We are continually adding new OAuth provider options.
 
-```sh
-mkdir -p ~/.docker/cli-plugins
+  ```json
+  {
+    ...
+      "loginProviders": {
+          "osm": true,
+          "google": true
+      }
+  }
+  ```
 
-ln -sfn $(brew --prefix)/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/docker-compose
-```
+That's it, you have successfully set up Field-TM!!
 
-Run Colima:
-
-```sh
-colima start
-```
-
-Then continue with the FMTM [installation][33].
-
-> Note: only tagged backend images are multi-architecture, supporting
-> MacOS. The regular images for fast continuous deployment are not:
-> `backend:development`, `backend:staging`, `backend:main`.
-
-### A Note on Docker Desktop
-
-While in theory FMTM should run using Docker-Desktop, it has not
-been tested.
-
-The authors opinion is that the official Linux Docker Daemon
-should be installed in WSL or MacOS, instead of using Docker Desktop.
-
-> Colima is a wrapper to run the Docker Daemon.
-
-Although Docker Desktop may have a user friendly GUI, it simply
-runs docker commands inside a Linux virtual machine underneath.
-
-It is often easier and more flexible to do this yourself.
-Plus it gives you access to all other other tools available
-in a Linux operating system!
-
-[1]: #alternative-operating-systems "tools must be substituted"
-[2]: #alternative-operating-systems "Windows Subsystem for Linux"
+[1]: ./dev/Setup.md#alternative-operating-systems "MacOS container tools"
+[2]: ./dev/Setup.md#alternative-operating-systems "Windows Subsystem for Linux"
 [3]: https://git-scm.com/ "Git"
 [4]: https://docs.docker.com/engine/install/ "Docker"
 [5]: https://docs.docker.com/compose/install "Docker Compose"
 [6]: https://docs.fmtm.dev/dev/Setup/ "dev docs"
-[28]: https://www.openstreetmap.org/login "Login to OSM"
-[29]: https://user-images.githubusercontent.com/36752999/216319298-1444a62f-ba6b-4439-bb4f-2075fdf03291.png "image"
-[30]: https://learn.microsoft.com/en-us/windows/wsl/install "official instructions"
-[31]: #software-requirements "installation"
-[32]: https://github.com/abiosoft/colima "Colima"
-[33]: #software-requirements "installation"
+[7]: https://www.openstreetmap.org/login "Login to OSM"
+[8]: https://user-images.githubusercontent.com/36752999/216319298-1444a62f-ba6b-4439-bb4f-2075fdf03291.png "image"

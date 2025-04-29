@@ -1,19 +1,19 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Routes associated with data submission to and from ODK Central."""
 
@@ -24,6 +24,7 @@ from typing import Annotated, Optional
 import geojson
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse, Response
+from osm_fieldwork.OdkCentralAsync import OdkCentral
 from psycopg import Connection
 from pyodk._endpoints.submissions import Submission as CentralSubmissionOut
 
@@ -75,14 +76,14 @@ async def create_submission(
 
     However, for now ODK Web Forms do not have direct ODK Central access
     configured. Meaning we must handle getting forms and submitting new
-    data to ODK Central within FMTM.
+    data to ODK Central within Field-TM.
 
     This endpoint helps to facilitate, by allowing submission, alongside
     any form attachments, via the ODK Central REST API (via pyodk),
     """
     project = project_user.get("project")
 
-    return await submission_crud.create_new_submission(
+    new_submission = await submission_crud.create_new_submission(
         project.odk_credentials,
         project.odkid,
         project.odk_form_id,
@@ -90,6 +91,16 @@ async def create_submission(
         device_id,
         submission_attachments,
     )
+
+    # Ensure S3 photos are upload to S3 after upload
+    async with OdkCentral(
+        url=project.odk_credentials.odk_central_url,
+        user=project.odk_credentials.odk_central_user,
+        passwd=project.odk_credentials.odk_central_password,
+    ) as odk_central:
+        await odk_central.s3_sync()
+
+    return new_submission
 
 
 @router.get("/download")
@@ -453,11 +464,11 @@ async def conflate_geojson(
         ) from e
 
 
-@router.get("/{submission_id}/photos")
+@router.get("/{submission_id}/photos", response_model=dict[str, str])
 async def submission_photos(
     submission_id: str,
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
-) -> dict:
+):
     """This api returns the submission detail of individual submission.
 
     NOTE Prerequisites:

@@ -1,0 +1,70 @@
+# Copyright (c) Humanitarian OpenStreetMap Team
+#
+# This file is part of Field-TM.
+#
+#     Field-TM is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     Field-TM is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
+#
+
+# Check if a dotenv variable is present
+[no-cd]
+[no-exit-message]
+_dotenv-check key:
+  #!/usr/bin/env sh
+  if [ -z "${{ key }}" ]; then
+      echo "Environment variable {{ key }} is not set."
+      exit 1
+  fi
+
+# Update a variable in the .env file
+[no-cd]
+dotenv-update key value:
+  #!/usr/bin/env sh
+
+  var_name={{key}}
+  var_value={{value}}
+  var_pattern="^${var_name}="
+  new_var="${var_name}=${var_value}"
+
+  if grep -Eq "${var_pattern}" .env; then
+    sed -i "s|${var_pattern}.*|${new_var}|" .env
+  else
+    echo "${new_var}" >> .env
+  fi
+
+# Configure web-forms for the mapper frontend (local only)
+[no-cd]
+enable-webforms:
+  #!/usr/bin/env sh
+  set -e
+
+  CONTAINER=fmtm-central-1
+  CONFIG_PATH=src/mapper/static/config.json
+  CONTAINER_CONFIG_PATH=/usr/odk/config.json
+
+  # Copy config into container
+  docker cp "$CONFIG_PATH" "$CONTAINER":"$CONTAINER_CONFIG_PATH"
+
+  # Modify JSON using jq inside the container
+  docker exec "$CONTAINER" sh -c \
+    "jq '.enableWebforms = true' '${CONTAINER_CONFIG_PATH}' > '${CONTAINER_CONFIG_PATH}.tmp' && mv '${CONTAINER_CONFIG_PATH}.tmp' '${CONTAINER_CONFIG_PATH}'"
+
+  # Upload updated config to S3
+  docker exec "$CONTAINER" mc cp "$CONTAINER_CONFIG_PATH" s3/fmtm-data/frontend/config.json
+
+# Merge in translations from weblate
+[no-cd]
+merge-translations:
+  git remote add weblate https://hosted.weblate.org/git/hotosm/field-tm-mapper-ui || true
+  git fetch weblate
+  git merge weblate/development

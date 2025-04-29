@@ -18,7 +18,7 @@ type uploadAreaPropType = {
   title: string;
   label: string;
   data: FileType[] | string;
-  onUploadFile: (updatedFiles: FileType[]) => void;
+  onUploadFile: (updatedFiles: FileType[], ref: React.RefObject<HTMLInputElement | null>) => void;
   acceptedInput: string;
 };
 
@@ -45,14 +45,15 @@ const UploadArea = ({ title, label, acceptedInput, data, onUploadFile }: uploadA
     fileInputRef?.current?.click();
   };
 
-  const changeHandler = (event) => {
+  const changeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { files } = event.target;
-    const fileList = Object.values(files).map((item: any) => {
-      const file = item;
+    if (!files) return;
+    const fileList = Object.values(files).map((fileItem) => {
+      const file = fileItem;
       const id = uuidv4();
       return { id, file: file, previewURL: URL.createObjectURL(file) };
     });
-    onUploadFile(fileList);
+    onUploadFile(fileList, fileInputRef);
   };
 
   const handleDeleteFile = (id: string) => {
@@ -60,7 +61,7 @@ const UploadArea = ({ title, label, acceptedInput, data, onUploadFile }: uploadA
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-    return onUploadFile(updatedList);
+    return onUploadFile(updatedList, fileInputRef);
   };
 
   return (
@@ -103,13 +104,13 @@ const UploadArea = ({ title, label, acceptedInput, data, onUploadFile }: uploadA
               return null;
             });
             if (fileList.length > 0) {
-              onUploadFile([fileList.at(fileList.length - 1) as FileType]);
+              onUploadFile([fileList.at(fileList.length - 1) as FileType], fileInputRef);
             } else {
-              onUploadFile(data as FileType[]);
+              onUploadFile(data as FileType[], fileInputRef);
             }
           }
         }}
-        className="fmtm-cursor-pointer fmtm-border-[1px] fmtm-border-[#D8D8D8] fmtm-border-dashed fmtm-rounded-md fmtm-flex fmtm-flex-col fmtm-gap-2 fmtm-py-4"
+        className="fmtm-cursor-pointer fmtm-border-[1px] fmtm-border-[#D8D8D8] fmtm-border-dashed fmtm-rounded-md fmtm-flex fmtm-flex-col fmtm-gap-1 fmtm-py-2"
       >
         <input
           className="fmtm-hidden"
@@ -119,25 +120,23 @@ const UploadArea = ({ title, label, acceptedInput, data, onUploadFile }: uploadA
           onChange={changeHandler}
         />
         <div className="fmtm-flex fmtm-justify-center">
-          <AssetModules.CloudUploadOutlinedIcon style={{ fontSize: '32px' }} className="fmtm-text-primaryRed" />
+          <AssetModules.CloudUploadOutlinedIcon style={{ fontSize: '24px' }} className="fmtm-text-primaryRed" />
         </div>
-        <div className="fmtm-text-body-md fmtm-text-center fmtm-text-sm fmtm-text-[#757575] fmtm-font-archivo fmtm-font-semibold fmtm-tracking-wide">
-          {label}
-        </div>
+        <p className="fmtm-body-md fmtm-text-center fmtm-text-grey-600">{label}</p>
       </div>
       {selectedFiles?.length > 0 && (
         <div className="fmtm-mt-4 fmtm-w-full">
           {selectedFiles?.map((item, i) => (
-            <div key={item.id} className="fmtm-flex fmtm-items-center fmtm-h-20 fmtm-w-full">
+            <div key={item.id} className="fmtm-flex fmtm-items-center fmtm-w-full">
               {acceptedInput.includes('image') ? (
                 <img src={item.previewURL} className="fmtm-h-full fmtm-z-50" />
               ) : (
-                <div className="fmtm-p-3 fmtm-rounded-full fmtm-bg-red-50">
-                  <AssetModules.DescriptionIcon className="!fmtm-text-[2rem] fmtm-text-[#4C4C4C]" />
+                <div className="fmtm-p-1 fmtm-rounded-full fmtm-bg-red-50">
+                  <AssetModules.DescriptionIcon className="!fmtm-text-[1.5rem] fmtm-text-[#4C4C4C]" />
                 </div>
               )}
-              <div className="fmtm-flex-1 fmtm-text-ellipsis fmtm-truncate fmtm-ml-4" title={item.file.name}>
-                {item.file.name}
+              <div className="fmtm-flex-1 fmtm-text-ellipsis fmtm-truncate fmtm-ml-4" title={item?.file?.name}>
+                {item?.file?.name}
               </div>
               <div className="fmtm-flex">
                 <div
@@ -147,7 +146,7 @@ const UploadArea = ({ title, label, acceptedInput, data, onUploadFile }: uploadA
                   onClick={() => handleDeleteFile(item.id)}
                   className="fmtm-px-4"
                 >
-                  <AssetModules.DeleteIcon className="fmtm-text-grey-400 hover:fmtm-text-[#FF4538]" />
+                  <AssetModules.DeleteIcon className="fmtm-text-grey-400 hover:fmtm-text-[#FF4538] !fmtm-text-[1.2rem]" />
                 </div>
               </div>
             </div>

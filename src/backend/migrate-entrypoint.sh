@@ -58,6 +58,10 @@ check_all_s3_vars_present() {
         echo "Environment variable S3_SECRET_KEY is not set."
         exit 1
     fi
+    if [ -z "${S3_BUCKET_NAME}" ]; then
+        echo "Environment variable S3_BUCKET_NAME is not set."
+        exit 1
+    fi
     if [ -z "${S3_BACKUP_BUCKET_NAME}" ]; then
         echo "Environment variable S3_BACKUP_BUCKET_NAME is not set."
         exit 1
@@ -67,6 +71,7 @@ check_all_s3_vars_present() {
     export S3_ENDPOINT="${S3_ENDPOINT//\"/}"
     export S3_ACCESS_KEY="${S3_ACCESS_KEY//\"/}"
     export S3_SECRET_KEY="${S3_SECRET_KEY//\"/}"
+    export S3_BUCKET_NAME="${S3_BUCKET_NAME//\"/}"
     export S3_BACKUP_BUCKET_NAME="${S3_BACKUP_BUCKET_NAME//\"/}"
 }
 
@@ -84,6 +89,26 @@ wait_for_db() {
     done
 
     echo "Timed out waiting for the database to become available."
+    exit 1  # Exit with an error code
+}
+
+wait_for_s3() {
+    max_retries=10
+    retry_interval=5
+
+    for ((i = 0; i < max_retries; i++)); do
+        http_status=$(curl --silent --head --write-out "%{http_code}" --output /dev/null "${S3_ENDPOINT}/minio/health/live")
+
+        if [[ "$http_status" == "200" ]]; then
+            echo "S3 is available (HTTP $http_status)."
+            return 0  # S3 is available, exit successfully
+        fi
+
+        echo "S3 is not yet available (HTTP $http_status). Retrying in ${retry_interval} seconds..."
+        sleep ${retry_interval}
+    done
+
+    echo "Timed out waiting for S3 to become available."
     exit 1  # Exit with an error code
 }
 
@@ -152,6 +177,18 @@ check_if_missing_migrations() {
     done
 }
 
+init_buckets() {
+    BACKUP_BUCKET_NAME=${S3_BACKUP_BUCKET_NAME}
+    echo "Ensuring S3 bucket ${BUCKET_NAME} exists"
+    mc alias set s3 "${S3_ENDPOINT}" "${S3_ACCESS_KEY}" "${S3_SECRET_KEY}"
+
+    mc mb "s3/${S3_BUCKET_NAME}" --ignore-existing
+    mc anonymous set download "s3/${S3_BUCKET_NAME}"
+
+    mc mb "s3/${BACKUP_BUCKET_NAME}" --ignore-existing
+    mc anonymous set download "s3/${BACKUP_BUCKET_NAME}"
+}
+
 backup_db() {
     echo "Backing up database, prior to migrations."
     db_backup_file="$HOME/fmtm_pre_migrate_$(date +'%Y%m%d%H%M%S').dump"
@@ -171,9 +208,6 @@ backup_db() {
 
     BUCKET_NAME=${S3_BACKUP_BUCKET_NAME}
     echo "Uploading to S3 bucket ${BUCKET_NAME}"
-    mc alias set s3 "${S3_ENDPOINT}" "${S3_ACCESS_KEY}" "${S3_SECRET_KEY}"
-    mc mb "s3/${BUCKET_NAME}" --ignore-existing
-    mc anonymous set download "s3/${BUCKET_NAME}"
     mc cp "${db_backup_file}" "s3/${BUCKET_NAME}/pre-migrate/"
 
     pretty_echo "Backup complete: $db_backup_file to bucket ${BUCKET_NAME}/pre-migrate/"
@@ -211,7 +245,7 @@ SQL
 ### Script START ###
 ####################
 
-pretty_echo "### Script Start ###"
+pretty_echo "### Migrations Start ###"
 
 # Var: array of migration files to run
 scripts_to_execute=()
@@ -220,6 +254,8 @@ scripts_to_execute=()
 check_all_db_vars_present
 check_all_s3_vars_present
 wait_for_db
+wait_for_s3
+init_buckets
 db_url="postgresql://${FMTM_DB_USER}:${FMTM_DB_PASSWORD}@${FMTM_DB_HOST}/${FMTM_DB_NAME}"
 
 # Apply schema, if needed
@@ -234,7 +270,7 @@ if [ ${#scripts_to_execute[@]} -gt 0 ]; then
 else
     pretty_echo "No new migrations found."
 fi
-pretty_echo "### Script End: Migrations Complete ###"
+pretty_echo "### Migrations End ###"
 
 ####################
 ###  Script END  ###

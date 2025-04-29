@@ -1,6 +1,7 @@
 type authDetailsType = {
 	id: number;
 	username: string;
+	email_address?: string;
 	picture: string;
 	role: string;
 	// Here we omit project_roles and orgs_managed as they are not needed
@@ -10,10 +11,11 @@ type authDetailsType = {
 	// orgs_managed: number[];
 };
 
-import { refreshCookies } from '$lib/utils/login';
+import { refreshCookies } from '$lib/api/login';
 
 let authDetails: authDetailsType | null = $state(null);
 let isLoginModalOpen: boolean = $state(false);
+let refreshCookieResponse: Record<string, any> | null = $state(null);
 
 function getLoginStore() {
 	return {
@@ -22,6 +24,9 @@ function getLoginStore() {
 		},
 		get isLoginModalOpen() {
 			return isLoginModalOpen;
+		},
+		get refreshCookieResponse() {
+			return refreshCookieResponse;
 		},
 		setAuthDetails: (authData: authDetailsType) => {
 			authDetails = authData;
@@ -33,6 +38,9 @@ function getLoginStore() {
 			authDetails = null;
 			// Re-add temp auth cookies
 			await refreshCookies();
+		},
+		setRefreshCookieResponse: (data: Record<string, any>) => {
+			refreshCookieResponse = data;
 		},
 	};
 }

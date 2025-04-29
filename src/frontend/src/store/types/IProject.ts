@@ -21,14 +21,13 @@ export type ProjectStateTypes = {
   downloadDataExtractLoading: boolean;
   taskModalStatus: boolean;
   toggleGenerateMbTilesModal: boolean;
-  mobileFooterSelection: string;
+  mobileFooterSelection: '' | 'projectInfo' | 'activities' | 'comment';
   projectDetailsLoading: boolean;
   projectDashboardDetail: projectDashboardDetailTypes | null;
   entityOsmMap: EntityOsmMap[];
   entityOsmMapLoading: boolean;
   updateEntityStateLoading: boolean;
   projectDashboardLoading: boolean;
-  geolocationStatus: boolean;
   projectCommentsList: projectCommentsListTypes[];
   projectPostCommentsLoading: boolean;
   projectGetCommentsLoading: boolean;

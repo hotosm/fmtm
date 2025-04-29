@@ -3,6 +3,9 @@ import type { ShapeData } from '@electric-sql/client';
 import type { Feature, FeatureCollection } from 'geojson';
 import type { LngLatLike } from 'svelte-maplibre';
 
+import type { EntityStatusPayload } from '$lib/types';
+import { getAlertStore } from './common.svelte';
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 type entitiesStatusListType = {
@@ -19,6 +22,7 @@ type entitiesListType = {
 	osm_id: number;
 	status: number;
 	updated_at: string | null;
+	submission_ids: string;
 };
 
 type entitiesShapeType = {
@@ -41,8 +45,15 @@ type newBadGeomType<T> = {
 	task_id: number;
 };
 
+type taskSubmissionInfoType = {
+	task_id: number;
+	index: number;
+	submission_count: number;
+	feature_count: number;
+};
+
 let userLocationCoord: LngLatLike | undefined = $state();
-let selectedEntity: number | null = $state(null);
+let selectedEntity: string | null = $state(null);
 let entitiesShape: Shape;
 let geomShape: Shape;
 let entitiesStatusList: entitiesStatusListType[] = $state([]);
@@ -53,6 +64,9 @@ let updateEntityStatusLoading: boolean = $state(false);
 let selectedEntityCoordinate: entityIdCoordinateMapType | null = $state(null);
 let entityToNavigate: entityIdCoordinateMapType | null = $state(null);
 let toggleGeolocation: boolean = $state(false);
+let entitiesList: entitiesListType[] = $state([]);
+let taskSubmissionInfo: taskSubmissionInfoType[] = $state([]);
+let alertStore = getAlertStore();
 
 function getEntityStatusStream(projectId: number): ShapeStream | undefined {
 	if (!projectId) {
@@ -80,6 +94,35 @@ function getNewBadGeomStream(projectId: number): ShapeStream | undefined {
 	});
 }
 
+function setTaskSubmissionInfo(entities: entitiesListType[]) {
+	const taskEntityMap = entities?.reduce((acc: Record<number, entitiesListType[]>, item) => {
+		if (!acc[item?.task_id]) {
+			acc[item.task_id] = [];
+		}
+		acc[item.task_id].push(item);
+		return acc;
+	}, {});
+
+	const taskInfo = Object.entries(taskEntityMap).map(([taskId, taskEntities]) => {
+		// Calculate feature_count
+		const featureCount = taskEntities.length;
+		let submissionCount = 0;
+		// Calculate submission_count
+		taskEntities.forEach((entity) => {
+			if (entity.status > 1) {
+				submissionCount++;
+			}
+		});
+		return {
+			task_id: +taskId,
+			index: +taskId,
+			submission_count: submissionCount,
+			feature_count: featureCount,
+		};
+	});
+	taskSubmissionInfo = taskInfo;
+}
+
 function getEntitiesStatusStore() {
 	async function subscribeToEntityStatusUpdates(
 		entitiesStream: ShapeStream | undefined,
@@ -88,15 +131,17 @@ function getEntitiesStatusStore() {
 		if (!entitiesStream) return;
 		entitiesShape = new Shape(entitiesStream);
 
+		// use Map for quick lookups
+		if (!entitiesList) return;
+		const entityMap = new Map(entitiesList.map((entity) => [entity.id, entity.osm_id]));
+
 		entitiesShape.subscribe((entities: ShapeData) => {
 			const rows: entitiesShapeType[] = entities.rows;
-			if (rows && Array.isArray(rows)) {
-				entitiesStatusList = rows?.map((entity) => {
-					return {
-						...entity,
-						osmid: entitiesList?.find((entityx) => entityx.id === entity.entity_id)?.osm_id,
-					};
-				});
+			if (Array.isArray(rows)) {
+				entitiesStatusList = rows.map((entity) => ({
+					...entity,
+					osmid: entityMap.get(entity.entity_id) || null,
+				}));
 			}
 		});
 	}
@@ -134,16 +179,22 @@ function getEntitiesStatusStore() {
 	async function syncEntityStatus(projectId: number) {
 		try {
 			syncEntityStatusLoading = true;
-			await fetch(`${API_URL}/projects/${projectId}/entities/statuses`, {
+			const entityStatusResponse = await fetch(`${API_URL}/projects/${projectId}/entities/statuses`, {
 				credentials: 'include',
 			});
+			if (!entityStatusResponse.ok) {
+				throw Error('Failed to get entities for project');
+			}
+			const responseJson = await entityStatusResponse.json();
+			entitiesList = responseJson;
 			syncEntityStatusLoading = false;
+			setTaskSubmissionInfo(responseJson);
 		} catch (error) {
 			syncEntityStatusLoading = false;
 		}
 	}
 
-	async function updateEntityStatus(projectId: number, payload: Record<string, any>) {
+	async function updateEntityStatus(projectId: number, payload: EntityStatusPayload) {
 		try {
 			updateEntityStatusLoading = true;
 			await fetch(`${import.meta.env.VITE_API_URL}/projects/${projectId}/entity/status`, {
@@ -157,6 +208,51 @@ function getEntitiesStatusStore() {
 			updateEntityStatusLoading = false;
 		} catch (error) {
 			updateEntityStatusLoading = false;
+		}
+	}
+
+	async function createEntity(projectId: number, payload: FeatureCollection) {
+		try {
+			const resp = await fetch(`${import.meta.env.VITE_API_URL}/central/entity?project_id=${projectId}`, {
+				method: 'POST',
+				body: JSON.stringify(payload),
+				headers: {
+					'Content-type': 'application/json',
+				},
+				credentials: 'include',
+			});
+			if (!resp.ok) {
+				const errorData = await resp.json();
+				throw new Error(errorData.detail);
+			}
+			return await resp.json();
+		} catch (error: any) {
+			alertStore.setAlert({
+				variant: 'danger',
+				message: error.message || 'Failed to create entity',
+			});
+		}
+	}
+
+	async function createGeomRecord(projectId: number, payload: Record<string, any>) {
+		try {
+			const resp = await fetch(`${import.meta.env.VITE_API_URL}/projects/${projectId}/geometry/records`, {
+				method: 'POST',
+				body: JSON.stringify(payload),
+				headers: {
+					'Content-type': 'application/json',
+				},
+				credentials: 'include',
+			});
+			if (!resp.ok) {
+				const errorData = await resp.json();
+				throw new Error(errorData.detail);
+			}
+		} catch (error: any) {
+			alertStore.setAlert({
+				variant: 'danger',
+				message: error.message || 'Failed to create geometry record',
+			});
 		}
 	}
 
@@ -177,6 +273,8 @@ function getEntitiesStatusStore() {
 		setSelectedEntity: setSelectedEntity,
 		syncEntityStatus: syncEntityStatus,
 		updateEntityStatus: updateEntityStatus,
+		createEntity: createEntity,
+		createGeomRecord: createGeomRecord,
 		setSelectedEntityCoordinate: setSelectedEntityCoordinate,
 		setEntityToNavigate: setEntityToNavigate,
 		setToggleGeolocation: setToggleGeolocation,
@@ -211,6 +309,12 @@ function getEntitiesStatusStore() {
 		},
 		get userLocationCoord() {
 			return userLocationCoord;
+		},
+		get entitiesList() {
+			return entitiesList;
+		},
+		get taskSubmissionInfo() {
+			return taskSubmissionInfo;
 		},
 	};
 }

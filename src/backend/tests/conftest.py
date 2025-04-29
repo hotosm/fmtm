@@ -1,19 +1,19 @@
 # Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Configuration and fixtures for PyTest."""
 
@@ -42,8 +42,11 @@ from app.config import encrypt_value, settings
 from app.db.database import db_conn
 from app.db.enums import CommunityType, OrganisationType, TaskEvent, UserRole
 from app.db.models import (
+    DbGeometryLog,
     DbOrganisation,
     DbProject,
+    DbProjectTeam,
+    DbProjectTeamUser,
     DbTask,
     DbTaskEvent,
     slugify,
@@ -52,7 +55,7 @@ from app.main import get_application
 from app.organisations.organisation_deps import get_organisation
 from app.organisations.organisation_schemas import OrganisationIn
 from app.projects import project_crud
-from app.projects.project_schemas import ProjectIn
+from app.projects.project_schemas import GeometryLogIn, ProjectIn, ProjectTeamIn
 from app.tasks.task_schemas import TaskEventIn
 from app.users.user_deps import get_user
 from tests.test_data import test_data_path
@@ -93,14 +96,34 @@ async def admin_user(db):
     db_user = await get_or_create_user(
         db,
         AuthUser(
-            sub="fmtm|1",
+            sub="osm|1",
             username="localadmin",
             role=UserRole.ADMIN,
         ),
     )
 
     return FMTMUser(
-        id=db_user.id,
+        sub=db_user.sub,
+        username=db_user.username,
+        role=UserRole[db_user.role],
+        profile_img=db_user.profile_img,
+    )
+
+
+@pytest_asyncio.fixture(scope="function")
+async def new_mapper_user(db):
+    """A test user."""
+    db_user = await get_or_create_user(
+        db,
+        AuthUser(
+            sub="osm|2",
+            username="local mapper",
+            role=UserRole.MAPPER,
+        ),
+    )
+
+    return FMTMUser(
+        sub=db_user.sub,
         username=db_user.username,
         role=UserRole[db_user.role],
         profile_img=db_user.profile_img,
@@ -114,7 +137,7 @@ async def organisation(db):
 
 
 @pytest_asyncio.fixture(scope="function")
-async def organisation_data(admin_user):
+async def organisation_data():
     """A test organisation using the test user."""
     organisation_name = "svcfmtm hot org"
     slug = slugify(organisation_name)
@@ -155,7 +178,7 @@ async def new_organisation(db, admin_user, organisation_data):
     new_organisation = await DbOrganisation.create(
         db,
         new_organisation_data,
-        admin_user.id,
+        admin_user.sub,
         None,
     )
     return new_organisation
@@ -210,12 +233,13 @@ async def project(db, admin_user, organisation):
                 ]
             ],
         },
-        author_id=admin_user.id,
+        author_sub=admin_user.sub,
         organisation_id=organisation.id,
         odkid=odkproject.get("id"),
+        xlsform_content=b"Dummy XLSForm content",
     )
 
-    # Create FMTM Project
+    # Create Field-TM Project
     try:
         new_project = await DbProject.create(db, project_metadata)
         log.debug(f"Project returned: {new_project}")
@@ -230,6 +254,25 @@ async def project(db, admin_user, organisation):
     assert isinstance(project_all_data.bbox, list)
     assert isinstance(project_all_data.bbox[0], float)
     return project_all_data
+
+
+@pytest_asyncio.fixture(scope="function")
+async def project_team(db, project, admin_user):
+    """Create a project team."""
+    team_metadata = ProjectTeamIn(
+        project_id=project.id,
+        name="Test Team",
+        users=[],
+    )
+    team = await DbProjectTeam.create(db, team_metadata)
+    await DbProjectTeamUser.create(db, team.team_id, [admin_user.sub])
+
+    # Get project team, including users
+    team = await DbProjectTeam.one(db, team.team_id)
+    return {
+        "project": project,
+        "team": team,
+    }
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -277,16 +320,35 @@ async def tasks(project, db):
 @pytest_asyncio.fixture(scope="function")
 async def task_event(db, project, tasks, admin_user):
     """Create a new task event in the database."""
-    user = await get_user(admin_user.id, db)
-    for task in tasks:
-        new_event = TaskEventIn(
-            task_id=task.id,
-            user_id=user.id,
-            event=TaskEvent.MAP,
-            comment="We added a comment!",
-        )
-        db_task_event = await DbTaskEvent.create(db, new_event)
+    user = await get_user(admin_user.sub, db)
+    task = tasks[0]
+    new_event = TaskEventIn(
+        task_id=task.id,
+        user_sub=user.sub,
+        event=TaskEvent.MAP,
+        comment="We added a comment!",
+    )
+    db_task_event = await DbTaskEvent.create(db, new_event)
     return db_task_event
+
+
+@pytest_asyncio.fixture(scope="function")
+async def task_events(db, project, tasks, admin_user):
+    """Create a new task event in the database."""
+    user = await get_user(admin_user.sub, db)
+    task = tasks[0]
+    validate_event = TaskEventIn(
+        task_id=task.id,
+        user_sub=user.sub,
+        event=TaskEvent.GOOD,
+    )
+    await DbTaskEvent.create(db, validate_event)
+    finish_event = TaskEventIn(
+        task_id=task.id,
+        user_sub=user.sub,
+        event=TaskEvent.FINISH,
+    )
+    await DbTaskEvent.create(db, finish_event)
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -295,7 +357,7 @@ async def odk_project(db, client, project, tasks):
     with open(f"{test_data_path}/data_extract_kathmandu.geojson", "rb") as f:
         data_extracts = json.dumps(json.load(f))
     log.debug(f"Uploading custom data extracts: {str(data_extracts)[:100]}...")
-    data_extract_s3_path = await project_crud.upload_custom_geojson_extract(
+    data_extract_s3_path = await project_crud.upload_geojson_data_extract(
         db,
         project.id,
         data_extracts,
@@ -484,6 +546,43 @@ async def project_data():
     data.update(**odk_creds_decrypted.model_dump())
 
     return data
+
+
+@pytest_asyncio.fixture(scope="function")
+async def geom_log_data(project, tasks):
+    """Sample data for creating a geom log."""
+    task = tasks[0]
+    geom_log_data = {
+        "geojson": {
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [85.3012091, 27.7122369],
+                        [85.3012129, 27.7121403],
+                        [85.3013408, 27.7121442],
+                        [85.3013371, 27.7122408],
+                        [85.3012441, 27.712238],
+                        [85.3012091, 27.7122369],
+                    ]
+                ],
+            },
+            "properties": {"osm_id": 650958368},
+        },
+        "status": "NEW",
+        "project_id": project.id,
+        "task_id": task.id,
+    }
+    return geom_log_data
+
+
+@pytest_asyncio.fixture(scope="function")
+async def geom_log(db, geom_log_data):
+    """A test organisation."""
+    geom_log = GeometryLogIn(**geom_log_data)
+    geometry_log = await DbGeometryLog.create(db, geom_log)
+    return geometry_log
 
 
 @pytest_asyncio.fixture(scope="function")

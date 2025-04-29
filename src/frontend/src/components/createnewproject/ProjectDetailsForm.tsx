@@ -19,22 +19,42 @@ import { UserActions } from '@/store/slices/UserSlice';
 import CoreModules from '@/shared/CoreModules';
 import { useIsAdmin } from '@/hooks/usePermissions';
 import { isEmpty } from '@/utilfunctions/commonUtils';
+import AssetModules from '@/shared/AssetModules';
+import Chips from '@/components/common/Chips';
+import { project_visibility } from '@/types/enums';
+import { projectVisibilityOptionsType } from '@/store/types/ICreateProject';
+import RadioButton from '@/components/common/RadioButton';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
+
+const projectVisibilityOptions: projectVisibilityOptionsType[] = [
+  {
+    name: 'project_visibility',
+    value: project_visibility.PUBLIC,
+    label: 'Public',
+  },
+  {
+    name: 'project_visibility',
+    value: project_visibility.PRIVATE,
+    label: 'Private',
+  },
+];
 
 const ProjectDetailsForm = ({ flag }) => {
   useDocumentTitle('Create Project: Project Details');
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const isAdmin = useIsAdmin();
+  const { hostname } = window.location;
+  const defaultHashtags = ['#Field-TM', `#${hostname}-{project_id}`];
 
   const projectDetails = useAppSelector((state) => state.createproject.projectDetails);
   const organisationListData = useAppSelector((state) => state.createproject.organisationList);
   const organisationListLoading = useAppSelector((state) => state.createproject.organisationListLoading);
   const userList = useAppSelector((state) => state.user.userListForSelect)?.map((user) => ({
-    id: user.id,
+    id: user.sub,
     label: user.username,
-    value: user.id,
+    value: user.sub,
   }));
   const userListLoading = useAppSelector((state) => state.user.userListLoading);
   const authDetails = CoreModules.useAppSelector((state) => state.login.authDetails);
@@ -46,6 +66,8 @@ const ProjectDetailsForm = ({ flag }) => {
     hasODKCredentials: item?.odk_central_url ? true : false,
   }));
   const [hasODKCredentials, setHasODKCredentials] = useState(false);
+  const [userSearchText, setUserSearchText] = useState('');
+  const [hashtag, setHashtag] = useState('');
 
   const submission = () => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData(values));
@@ -105,6 +127,23 @@ const ProjectDetailsForm = ({ flag }) => {
       handleCustomChange('odk_central_password', '');
     }
   }, [values.useDefaultODKCredentials]);
+
+  useEffect(() => {
+    if (!userSearchText) return;
+    if (!values.organisation_id && userSearchText) {
+      dispatch(CommonActions.SetSnackBar({ message: 'Please select an organization', variant: 'warning' }));
+      return;
+    }
+
+    dispatch(
+      GetUserListForSelect(`${VITE_API_URL}/users`, {
+        search: userSearchText,
+        page: 1,
+        results_per_page: 30,
+        org_id: values.organisation_id,
+      }),
+    );
+  }, [userSearchText]);
 
   useEffect(() => {
     if (isEmpty(organisationList)) return;
@@ -216,16 +255,14 @@ const ProjectDetailsForm = ({ flag }) => {
               onChange={(value: any) => {
                 handleCustomChange('project_admins', value);
               }}
-              placeholder="Search for FMTM users"
+              placeholder="Search for Field-TM users"
               className="naxatw-w-1/5 naxatw-min-w-[9rem]"
               multiple
               checkBox
               isLoading={userListLoading}
               handleApiSearch={(value) => {
                 if (value) {
-                  dispatch(
-                    GetUserListForSelect(`${VITE_API_URL}/users`, { search: value, page: 1, results_per_page: 30 }),
-                  );
+                  setUserSearchText(value);
                 } else {
                   dispatch(UserActions.SetUserListForSelect([]));
                 }
@@ -234,19 +271,53 @@ const ProjectDetailsForm = ({ flag }) => {
           </div>
           {/* Hashtags */}
           <div>
-            <InputTextField
-              id="hashtags"
-              label="Hashtags"
-              value={values?.hashtags}
-              onChange={(e) => {
-                handleCustomChange('hashtags', e.target.value);
-              }}
-              fieldType="text"
-              errorMsg={errors.hashtag}
-            />
+            <div className="fmtm-flex fmtm-items-end">
+              <InputTextField
+                id="hashtags"
+                label="Hashtags"
+                value={hashtag}
+                onChange={(e) => {
+                  setHashtag(e.target.value);
+                }}
+                fieldType="text"
+                errorMsg={errors.hashtag}
+                classNames="fmtm-flex-1"
+              />
+              <Button
+                disabled={!hashtag.trim()}
+                variant="primary-red"
+                className="!fmtm-rounded-full fmtm-w-8 fmtm-h-8 fmtm-max-h-8 fmtm-max-w-8 fmtm-mx-2 fmtm-mb-[2px]"
+                onClick={() => {
+                  if (!hashtag.trim()) return;
+                  handleCustomChange('hashtags', [...values.hashtags, hashtag]);
+                  setHashtag('');
+                }}
+              >
+                <AssetModules.AddIcon />
+              </Button>
+            </div>
+            <div className="fmtm-flex fmtm-items-center fmtm-flex-wrap fmtm-gap-2 fmtm-my-2">
+              {defaultHashtags.map((tag, i) => (
+                <div
+                  key={i}
+                  className="fmtm-body-md fmtm-px-2 fmtm-border-[1px] fmtm-bg-grey-100 fmtm-rounded-[40px] fmtm-flex fmtm-w-fit fmtm-items-center fmtm-gap-1"
+                >
+                  <p>{tag}</p>
+                </div>
+              ))}
+              <Chips
+                data={values.hashtags}
+                clearChip={(i) => {
+                  handleCustomChange(
+                    'hashtags',
+                    values.hashtags.filter((_, index) => index !== i),
+                  );
+                }}
+              />
+            </div>
             <p className="fmtm-text-sm fmtm-text-gray-500 fmtm-leading-4 fmtm-mt-2">
-              *Hashtags related to what is being mapped. By default #FMTM is included. Hashtags are sometimes used for
-              analysis later, but should be human informative and not overused, #group #event
+              *Hashtags related to what is being mapped. By default {defaultHashtags} is included. Hashtags are
+              sometimes used for analysis later, but should be human informative and not overused, #group #event
             </p>
           </div>
           {/* Custom TMS */}
@@ -288,6 +359,19 @@ const ProjectDetailsForm = ({ flag }) => {
               editable={true}
             />
           </div>
+          <RadioButton
+            value={values?.visibility || ''}
+            topic="Project Type"
+            options={projectVisibilityOptions}
+            direction="row"
+            onChangeData={(value) => {
+              handleCustomChange('visibility', value);
+            }}
+            errorMsg={errors.visibility}
+            hoveredOption={() => {
+              dispatch(CreateProjectActions.SetDescriptionToFocus('projectdetails-visibility'));
+            }}
+          />
           <div className="fmtm-w-fit fmtm-mx-auto fmtm-mt-10">
             <Button variant="primary-red" type="submit">
               NEXT

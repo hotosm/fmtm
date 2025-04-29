@@ -76,6 +76,26 @@ wait_for_db() {
     exit 1  # Exit with an error code
 }
 
+wait_for_s3() {
+    max_retries=10
+    retry_interval=5
+
+    for ((i = 0; i < max_retries; i++)); do
+        http_status=$(curl --silent --head --write-out "%{http_code}" --output /dev/null "${S3_ENDPOINT}/minio/health/live")
+
+        if [[ "$http_status" == "200" ]]; then
+            echo "S3 is available (HTTP $http_status)."
+            return 0  # S3 is available, exit successfully
+        fi
+
+        echo "S3 is not yet available (HTTP $http_status). Retrying in ${retry_interval} seconds..."
+        sleep ${retry_interval}
+    done
+
+    echo "Timed out waiting for S3 to become available."
+    exit 1  # Exit with an error code
+}
+
 backup_db() {
     local db_host="$1"
     local db_user="$2"
@@ -117,13 +137,14 @@ echo "Waiting 5 minutes (for migrations) before first backup."
 sleep 600
 
 while true; do
-    ### FMTM Backup ###
-    pretty_echo "### Backup FMTM $(date +%Y-%m-%d_%H:%M:%S) ###"
+    ### Field-TM Backup ###
+    pretty_echo "### Backup Field-TM $(date +%Y-%m-%d_%H:%M:%S) ###"
     check_fmtm_db_vars_present
     wait_for_db "${FMTM_DB_HOST:-fmtm-db}"
+    wait_for_s3
     backup_db "${FMTM_DB_HOST:-fmtm-db}" "${FMTM_DB_USER:-fmtm}" \
         "${FMTM_DB_NAME:-fmtm}" "${FMTM_DB_PASSWORD}"
-    pretty_echo "### Backup FMTM Complete ###"
+    pretty_echo "### Backup Field-TM Complete ###"
 
     ### ODK Backup ###
     # Only run ODK Central DB Backups if the database is included in the stack

@@ -1,19 +1,19 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Pydantic schemas for Projects for usage in endpoints."""
 
@@ -33,8 +33,19 @@ from pydantic.functional_validators import field_validator, model_validator
 
 from app.central.central_schemas import ODKCentralDecrypted, ODKCentralIn
 from app.config import decrypt_value, encrypt_value
-from app.db.enums import BackgroundTaskStatus, GeomStatus, ProjectPriority
-from app.db.models import DbBackgroundTask, DbBasemap, DbProject, slugify
+from app.db.enums import (
+    BackgroundTaskStatus,
+    GeomStatus,
+    ProjectPriority,
+    ProjectVisibility,
+)
+from app.db.models import (
+    DbBackgroundTask,
+    DbBasemap,
+    DbProject,
+    DbProjectTeam,
+    slugify,
+)
 from app.db.postgis_utils import geojson_to_featcol, merge_polygons
 
 
@@ -158,15 +169,15 @@ class ProjectInBase(DbProject):
 
     @model_validator(mode="after")
     def append_fmtm_hashtag_and_slug(self) -> Self:
-        """Append the #FMTM hashtag and add URL slug."""
+        """Append the #Field-TM hashtag and add URL slug."""
         # NOTE the slug is set here as the field_validator above
         # does not seem to work?
         self.slug = slugify(self.name)
 
         if not self.hashtags:
-            self.hashtags = ["#FMTM"]
-        elif "#FMTM" not in self.hashtags:
-            self.hashtags.append("#FMTM")
+            self.hashtags = ["#Field-TM"]
+        elif "#Field-TM" not in self.hashtags:
+            self.hashtags.append("#Field-TM")
         return self
 
 
@@ -220,24 +231,25 @@ class ProjectSummary(BaseModel):
 
     id: int
     name: str
-    organisation_id: int
-    priority: ProjectPriority
+    organisation_id: Optional[int]
+    priority: Optional[ProjectPriority]
 
-    outline: Optional[Polygon]
+    # FIXME Do we need outline in summary?
+    # outline: Optional[Polygon]
     hashtags: Optional[list[str]]
     location_str: Optional[str] = None
     short_description: Optional[str] = None
+    visibility: Optional[ProjectVisibility] = None
 
     # Calculated
     organisation_logo: Optional[str] = None
     centroid: Optional[Point]
     total_tasks: Optional[int] = 0
     num_contributors: Optional[int] = 0
-    # FIXME we could add the following to the project summary cards
-    # Also required uncommenting of the DbProject fields
-    # tasks_mapped: Optional[int] = 0
-    # tasks_validated: Optional[int] = 0
-    # tasks_bad: Optional[int] = 0
+    total_submissions: Optional[int] = 0
+    tasks_mapped: Optional[int] = 0
+    tasks_validated: Optional[int] = 0
+    tasks_bad: Optional[int] = 0
 
 
 class PaginationInfo(BaseModel):
@@ -350,3 +362,30 @@ class BackgroundTaskStatus(BaseModel):
 
     status: str
     message: Optional[str] = None
+
+
+class ProjectTeamUser(BaseModel):
+    """Single user with name and image for project team."""
+
+    sub: str
+    username: str
+    profile_img: Optional[str] = None
+
+
+class ProjectTeam(DbProjectTeam):
+    """Project team."""
+
+    users: list[ProjectTeamUser] = []
+
+
+class ProjectTeamOne(DbProjectTeam):
+    """Project team without users."""
+
+    users: list[ProjectTeamUser] = Field(exclude=True)
+
+
+class ProjectTeamIn(ProjectTeamOne):
+    """Create a new project team."""
+
+    # Exclude, as the uuid is generated in the database
+    team_id: Annotated[Optional[UUID], Field(exclude=True)] = None

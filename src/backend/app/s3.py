@@ -1,7 +1,5 @@
-"""Initialise the S3 buckets for FMTM to function."""
+"""Initialise the S3 buckets for Field-TM to function."""
 
-import json
-import sys
 from io import BytesIO
 from typing import Any
 
@@ -262,33 +260,21 @@ async def delete_all_objs_under_prefix(bucket_name: str, s3_path: str) -> bool:
     return True
 
 
-def create_bucket_if_not_exists(client: Minio, bucket_name: str, is_public: bool):
-    """Checks if a bucket exits, else creates it."""
-    if not client.bucket_exists(bucket_name):
-        log.info(f"Creating S3 bucket: {bucket_name}")
-        client.make_bucket(bucket_name)
-        if is_public:
-            log.info("Setting public (anonymous) download policy")
-            policy = policy = {
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Effect": "Allow",
-                        "Principal": {"AWS": "*"},
-                        "Action": ["s3:GetBucketLocation", "s3:ListBucket"],
-                        "Resource": f"arn:aws:s3:::{bucket_name}",
-                    },
-                    {
-                        "Effect": "Allow",
-                        "Principal": {"AWS": "*"},
-                        "Action": "s3:GetObject",
-                        "Resource": f"arn:aws:s3:::{bucket_name}/*",
-                    },
-                ],
-            }
-            client.set_bucket_policy(bucket_name, json.dumps(policy))
-    else:
-        log.debug(f"S3 bucket already exists: {bucket_name}")
+def strip_presigned_url_for_local_dev(url: str) -> str:
+    """Helper for local development handling docker URL + pre-signing.
+
+    For local dev only, we need to iterate through and replace S3_ENDPOINT
+    with S3_DOWNLOAD_ROOT, due to internal docker name used for S3 URL.
+    The bucket is also public in local dev, so we remove pre-signed portion
+    of URL, giving us direct access without a signature mismatch
+    """
+    host_accessible_url = url.replace(settings.S3_ENDPOINT, settings.S3_DOWNLOAD_ROOT)
+    try:
+        split_url_on_presign_vars = host_accessible_url.split("?")
+        return split_url_on_presign_vars[0]
+    except Exception as e:
+        log.debug(f"Failed to convert S3 URL for local development: {e}")
+        return url
 
 
 def is_connection_secure(minio_url: str):
@@ -310,28 +296,3 @@ def is_connection_secure(minio_url: str):
         raise ValueError(err)
 
     return stripped_url, secure
-
-
-def startup_init_buckets():
-    """Wrapper to create defined buckets at startup."""
-    # Logging
-    log.remove()
-    log.add(
-        sys.stderr,
-        level=settings.LOG_LEVEL,
-        format=(
-            "{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} "
-            "| {name}:{function}:{line} | {message}"
-        ),
-        colorize=True,
-        backtrace=True,  # More detailed tracebacks
-        catch=True,  # Prevent app crashes
-    )
-
-    # Init S3 Buckets
-    client = s3_client()
-    create_bucket_if_not_exists(client, settings.S3_BUCKET_NAME, is_public=True)
-
-
-if __name__ == "__main__":
-    startup_init_buckets()

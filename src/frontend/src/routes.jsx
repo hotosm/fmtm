@@ -5,7 +5,7 @@ import MainView from '@/views/MainView';
 import ProtectedRoute from '@/utilities/ProtectedRoute';
 import NotFoundPage from '@/views/NotFound404';
 import Organisation from '@/views/Organisation';
-import CreateEditOrganization from '@/views/CreateEditOrganization';
+import CreateOrganization from '@/views/CreateOrganization';
 import ApproveOrganization from '@/views/ApproveOrganization';
 import OsmAuth from '@/views/OsmAuth';
 import PlaywrightTempLogin from '@/views/PlaywrightTempLogin';
@@ -13,11 +13,14 @@ import SubmissionDetails from '@/views/SubmissionDetails';
 import CreateNewProject from '@/views/CreateNewProject';
 import UnderConstruction from '@/views/UnderConstruction';
 import ErrorBoundary from '@/views/ErrorBoundary';
-import ProjectDetailsV2 from '@/views/ProjectDetailsV2';
+import ProjectDetails from '@/views/ProjectDetails';
 import ProjectSubmissions from '@/views/ProjectSubmissions';
 import ManageProject from '@/views/ManageProject';
 import ManageUsers from '@/views/ManageUsers';
 import DataConflation from '@/views/DataConflation';
+import OrganizationDashboard from '@/views/OrganizationDashboard';
+import ManageOrganization from '@/views/ManageOrganization';
+import Invite from '@/views/Invite';
 
 const routes = createBrowserRouter([
   {
@@ -32,7 +35,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/manage/organization',
+        path: '/organization',
         element: (
           <ProtectedRoute>
             <ErrorBoundary>
@@ -42,27 +45,17 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/manage/organization/new',
+        path: '/organization/new',
         element: (
           <ProtectedRoute>
             <ErrorBoundary>
-              <CreateEditOrganization />
+              <CreateOrganization />
             </ErrorBoundary>
           </ProtectedRoute>
         ),
       },
       {
-        path: '/manage/organization/edit/:id',
-        element: (
-          <ProtectedRoute>
-            <ErrorBoundary>
-              <CreateEditOrganization />
-            </ErrorBoundary>
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/manage/organization/approve/:id',
+        path: '/organization/approve/:id',
         element: (
           <ProtectedRoute>
             <ErrorBoundary>
@@ -101,7 +94,7 @@ const routes = createBrowserRouter([
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
               <ErrorBoundary>
-                <ProjectDetailsV2 />
+                <ProjectDetails />
               </ErrorBoundary>
             </Suspense>
           </ProtectedRoute>
@@ -208,6 +201,18 @@ const routes = createBrowserRouter([
         ),
       },
       {
+        path: '/manage/organization/:id',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <ErrorBoundary>
+                <ManageOrganization />
+              </ErrorBoundary>
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: '/manage/project/:id',
         element: (
           <ProtectedRoute>
@@ -244,8 +249,32 @@ const routes = createBrowserRouter([
         ),
       },
       {
+        path: '/organization/:id',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <ErrorBoundary>
+                <OrganizationDashboard />
+              </ErrorBoundary>
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: '*',
         element: <NotFoundPage />,
+      },
+      {
+        path: '/invite',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <ErrorBoundary>
+                <Invite />
+              </ErrorBoundary>
+            </Suspense>
+          </ProtectedRoute>
+        ),
       },
     ],
   },

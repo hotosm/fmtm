@@ -19,27 +19,6 @@ import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import { taskSplitOptionsType } from '@/store/types/ICreateProject';
 import DescriptionSection from '@/components/createnewproject/Description';
 
-const taskSplitOptions: taskSplitOptionsType[] = [
-  {
-    name: 'define_tasks',
-    value: task_split_type.DIVIDE_ON_SQUARE,
-    label: 'Divide into square tasks',
-    disabled: false,
-  },
-  {
-    name: 'define_tasks',
-    value: task_split_type.CHOOSE_AREA_AS_TASK,
-    label: 'Use uploaded AOI as task areas',
-    disabled: false,
-  },
-  {
-    name: 'define_tasks',
-    value: task_split_type.TASK_SPLITTING_ALGORITHM,
-    label: 'Task Splitting Algorithm',
-    disabled: false,
-  },
-];
-
 const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalFeature, xlsFormFile }) => {
   useDocumentTitle('Create Project: Split Tasks');
   const dispatch = useAppDispatch();
@@ -65,6 +44,32 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
   const isFgbFetching = useAppSelector((state) => state.createproject.isFgbFetching);
   const toggleSplittedGeojsonEdit = useAppSelector((state) => state.createproject.toggleSplittedGeojsonEdit);
   const additionalFeatureGeojson = useAppSelector((state) => state.createproject.additionalFeatureGeojson);
+
+  const usesDataExtract = !!dataExtractGeojson?.features?.length;
+  const taskSplitOptions: taskSplitOptionsType[] = [
+    {
+      name: 'define_tasks',
+      value: task_split_type.DIVIDE_ON_SQUARE,
+      label: 'Divide into square tasks',
+      disabled: false,
+    },
+    {
+      name: 'define_tasks',
+      value: task_split_type.CHOOSE_AREA_AS_TASK,
+      label: 'Use uploaded AOI as task areas',
+      disabled: false,
+    },
+    {
+      name: 'define_tasks',
+      value: task_split_type.TASK_SPLITTING_ALGORITHM,
+      label: 'Task Splitting Algorithm',
+      disabled: !usesDataExtract,
+    },
+  ];
+
+  // convert dataExtractGeojson to file object to upload to /upload-data-extract endpoint
+  const dataExtractBlob = new Blob([JSON.stringify(dataExtractGeojson)], { type: 'application/json' });
+  const dataExtractGeojsonFile = new File([dataExtractBlob], 'outline.json', { type: 'application/json' });
 
   useEffect(() => {
     const featureCount =
@@ -123,8 +128,8 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
       task_split_type: taskSplittingMethod,
       // "uploaded_form": projectDetails.uploaded_form,
       hashtags: projectDetails.hashtags,
-      data_extract_url: projectDetails.data_extract_url,
       custom_tms_url: projectDetails.custom_tms_url,
+      visibility: projectDetails.visibility,
     };
     // Append osm_category if set
     if (projectDetails.osmFormSelectionName) {
@@ -149,12 +154,12 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
         `${import.meta.env.VITE_API_URL}/projects?org_id=${projectDetails.organisation_id}`,
         projectData,
         taskAreaGeojsonFile,
-        xlsFormFile,
-        customDataExtractUpload,
-        projectDetails.dataExtractType === 'osm_data_extract',
-        additionalFeature,
+        xlsFormFile?.file,
+        customDataExtractUpload?.file || dataExtractGeojsonFile,
+        additionalFeature?.file,
         projectDetails.project_admins as number[],
         combinedFeaturesCount,
+        projectDetails.dataExtractType === 'no_data_extract',
       ),
     );
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData({ ...projectDetails, ...formValues }));

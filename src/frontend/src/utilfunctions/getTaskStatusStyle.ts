@@ -1,9 +1,10 @@
 import { Fill, Icon, Stroke, Style } from 'ol/style';
-import { asArray, asString } from 'ol/color';
-import { getCenter } from 'ol/extent';
+import { asArray } from 'ol/color';
 import { Point } from 'ol/geom';
 import AssetModules from '@/shared/AssetModules';
 import { GeoGeomTypesEnum } from '@/types/enums';
+import { centroid } from '@turf/centroid';
+import getFeatureGeojson from '@/components/MapComponent/OpenLayersComponent/helpers/getFeatureGeojson';
 
 function createPolygonStyle(fillColor: string, strokeColor: string) {
   return new Style({
@@ -43,7 +44,8 @@ function createIconStyle(iconSrc: string, scale: number = 0.8, color: any = 'red
       opacity: 1,
     }),
     geometry: function (feature) {
-      const polygonCentroid = getCenter(feature.getGeometry().getExtent());
+      const polygonCoord = getFeatureGeojson(feature, {});
+      const polygonCentroid = centroid(polygonCoord)?.geometry?.coordinates;
       return new Point(polygonCentroid);
     },
   });
@@ -64,11 +66,11 @@ const getTaskStatusStyle = (feature: Record<string, any>, mapTheme: Record<strin
   const borderStrokeColor = isTaskStatusLocked && taskLockedByUser ? secondaryStrokeColor : strokeColor;
 
   const lockedPolygonStyle = createPolygonStyle(
-    mapTheme.palette.mapFeatureColors.locked_for_mapping,
+    mapTheme.palette.mapFeatureColors.LOCKED_FOR_MAPPING,
     borderStrokeColor,
   );
   const lockedValidationStyle = createPolygonStyle(
-    mapTheme.palette.mapFeatureColors.locked_for_validation,
+    mapTheme.palette.mapFeatureColors.LOCKED_FOR_VALIDATION,
     borderStrokeColor,
   );
   const iconStyle = createIconStyle(AssetModules.LockPng);
@@ -81,7 +83,7 @@ const getTaskStatusStyle = (feature: Record<string, any>, mapTheme: Record<strin
         width: 3,
       }),
       fill: new Fill({
-        color: mapTheme.palette.mapFeatureColors.ready,
+        color: mapTheme.palette.mapFeatureColors.UNLOCKED_TO_MAP,
       }),
     }),
     LOCKED_FOR_MAPPING: [lockedPolygonStyle, iconStyle],
@@ -91,7 +93,7 @@ const getTaskStatusStyle = (feature: Record<string, any>, mapTheme: Record<strin
         width: 3,
       }),
       fill: new Fill({
-        color: mapTheme.palette.mapFeatureColors.mapped,
+        color: mapTheme.palette.mapFeatureColors.UNLOCKED_TO_VALIDATE,
       }),
     }),
     LOCKED_FOR_VALIDATION: [lockedValidationStyle, redIconStyle],
@@ -101,7 +103,7 @@ const getTaskStatusStyle = (feature: Record<string, any>, mapTheme: Record<strin
         width: 3,
       }),
       fill: new Fill({
-        color: mapTheme.palette.mapFeatureColors.validated,
+        color: mapTheme.palette.mapFeatureColors.UNLOCKED_DONE,
       }),
     }),
   };

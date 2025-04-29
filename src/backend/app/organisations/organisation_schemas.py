@@ -1,19 +1,19 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Pydantic models for Organisations."""
 
@@ -39,7 +39,7 @@ class OrganisationInBase(ODKCentralIn, DbOrganisation):
 
     @model_validator(mode="after")
     def append_fmtm_hashtag_and_slug(self) -> Self:
-        """Append the #FMTM hashtag and add URL slug."""
+        """Append the #Field-TM hashtag and add URL slug."""
         # NOTE the slug is set here as a field_validator
         # does not seem to work?
         self.slug = slugify(self.name)
@@ -63,7 +63,7 @@ class OrganisationUpdate(OrganisationInBase):
 def parse_organisation_input(
     name: Optional[str] = Form(None),
     slug: Optional[str] = Form(None),
-    created_by: Optional[int] = Form(None),
+    created_by: Optional[str] = Form(None),
     community_type: CommunityType = Form(None),
     description: Optional[str] = Form(None),
     associated_email: Optional[str] = Form(None),
@@ -111,3 +111,11 @@ class OrganisationOut(BaseModel):
     url: Optional[str]
     associated_email: Optional[str]
     odk_central_url: Optional[str]
+
+
+class OrgManagersOut(BaseModel):
+    """Detail of Organisation Managers."""
+
+    user_sub: str
+    username: str
+    profile_img: Optional[str] = None

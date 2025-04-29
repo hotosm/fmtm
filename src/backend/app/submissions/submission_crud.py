@@ -1,19 +1,19 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Functions for task submissions."""
 
@@ -27,6 +27,7 @@ from typing import Optional
 from fastapi import HTTPException, Response
 from loguru import logger as log
 from psycopg import Connection
+from pyodk._endpoints.submissions import Submission
 from pyodk._utils.config import CentralConfig
 from pyodk.client import Client
 
@@ -41,6 +42,7 @@ from app.config import settings
 from app.db.enums import HTTPStatus
 from app.db.models import DbProject
 from app.projects import project_crud
+from app.s3 import strip_presigned_url_for_local_dev
 
 # async def convert_json_to_osm(file_path):
 #     """Wrapper for osm-fieldwork json2osm."""
@@ -164,8 +166,16 @@ async def get_submission_by_project(
         ValueError: If the submission file cannot be found.
 
     """
+    hashtags = project.hashtags
     xform = get_odk_form(project.odk_credentials)
-    return xform.listSubmissions(project.odkid, project.odk_form_id, filters)
+    data = xform.listSubmissions(project.odkid, project.odk_form_id, filters)
+
+    def add_hashtags(item):
+        item["hashtags"] = hashtags
+        return item
+
+    data["value"] = list(map(add_hashtags, data["value"]))
+    return data
 
 
 async def get_submission_detail(
@@ -204,7 +214,7 @@ async def create_new_submission(
     submission_xml: str,
     device_id: Optional[str] = None,
     submission_attachments: Optional[dict[str, BytesIO]] = None,
-):
+) -> Submission:
     """Create a new submission in ODK Central, using pyodk REST endpoint."""
     submission_attachments = submission_attachments or {}  # Ensure always a dict
     attachment_filepaths = []
@@ -251,12 +261,11 @@ async def get_submission_photos(
             project.odkid, project.odk_form_id, submission_id
         )
 
-    # Iterate through and replace S3_ENDPOINT with S3_DOWNLOAD_ROOT,
-    # in case the S3 endpoint is containerised / local network
-    submission_photos = {
-        filename: url.replace(settings.S3_ENDPOINT, settings.S3_DOWNLOAD_ROOT)
-        for filename, url in submission_photos.items()
-    }
+    if settings.DEBUG:
+        submission_photos = {
+            filename: strip_presigned_url_for_local_dev(url)
+            for filename, url in submission_photos.items()
+        }
 
     return submission_photos
 

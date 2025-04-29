@@ -1,12 +1,15 @@
 <script lang="ts">
+	import '$styles/dialog-entities-actions.css';
 	import { distance } from '@turf/distance';
 	import type { Coord } from '@turf/helpers';
+	import type { SlDialog, SlDrawer } from '@shoelace-style/shoelace';
+
+	import { m } from '$translations/messages.js';
 	import { TaskStatusEnum, type ProjectData } from '$lib/types';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
-	import { getAlertStore } from '$store/common.svelte.ts';
+	import { getAlertStore, getCommonStore } from '$store/common.svelte.ts';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
 	import { mapTask } from '$lib/db/events';
-	import type { SlDialog } from '@shoelace-style/shoelace';
 
 	type statusType = 'READY' | 'OPENED_IN_ODK' | 'SURVEY_SUBMITTED' | 'MARKED_BAD' | 'VALIDATED';
 	type Props = {
@@ -14,37 +17,45 @@
 		toggleTaskActionModal: (value: boolean) => void;
 		selectedTab: string;
 		projectData: ProjectData;
+		displayWebFormsDrawer: Boolean;
 	};
-
 	function getStatusStyle(status: statusType) {
 		switch (status) {
 			case 'READY':
-				return 'bg-gray-100 text-gray-700';
+				return 'bg-neutral-100 text-neutral-700';
 			case 'OPENED_IN_ODK':
-				return 'bg-yellow-100 text-yellow-700';
+				return 'bg-warning-100 text-warning-700';
 			case 'SURVEY_SUBMITTED':
-				return 'bg-green-100 text-green-700';
+				return 'bg-success-100 text-success-700';
 			case 'MARKED_BAD':
-				return 'bg-red-100 text-red-700';
+				return 'bg-danger-100 text-danger-700';
 			case 'VALIDATED':
 				return 'bg-blue-100 text-blue-700';
 		}
 	}
 
-	let { isTaskActionModalOpen, toggleTaskActionModal, selectedTab, projectData }: Props = $props();
+	let {
+		isTaskActionModalOpen,
+		toggleTaskActionModal,
+		selectedTab,
+		projectData,
+		displayWebFormsDrawer = $bindable(false),
+	}: Props = $props();
+
+	const entitiesStore = getEntitiesStatusStore();
+	const alertStore = getAlertStore();
+	const commonStore = getCommonStore();
+	const taskStore = getTaskStore();
 
 	let dialogRef: SlDialog | null = $state(null);
 	let toggleDistanceWarningDialog = $state(false);
 	let showCommentsPopup: boolean = $state(false);
 
-	const entitiesStore = getEntitiesStatusStore();
-	const alertStore = getAlertStore();
-	const taskStore = getTaskStore();
+	// use Map for quick lookups
+	let entityMap = $derived(new Map(entitiesStore.entitiesStatusList.map((entity) => [entity.entity_id, entity])));
 
-	const selectedEntityOsmId = $derived(entitiesStore.selectedEntity);
-	const selectedEntity = $derived(
-		entitiesStore.entitiesStatusList?.find((entity) => entity.osmid === selectedEntityOsmId),
-	);
+	const selectedEntityId = $derived(entitiesStore.selectedEntity || '');
+	const selectedEntity = $derived(entityMap.get(selectedEntityId));
 	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
 	const entityToNavigate = $derived(entitiesStore.entityToNavigate);
 	const entityComments = $derived(
@@ -72,6 +83,7 @@
 				entitiesStore.updateEntityStatus(projectData.id, {
 					entity_id: entityUuid,
 					status: 1,
+					// NOTE here we don't translate the field as English values are always saved as the Entity label
 					label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osmid}`,
 				});
 
@@ -103,7 +115,7 @@
 			if (!coordFrom) {
 				alertStore.setAlert({
 					message:
-						'This project has distance constraint enabled. Please enable device geolocation for optimal functionality',
+						m['dialog_entities_actions.distance_constraint'](),
 					variant: 'warning',
 				});
 				return;
@@ -113,7 +125,7 @@
 			if (entityDistance && entityDistance > projectData?.geo_restrict_distance_meters) {
 				// Feature is far away from user, warn user
 				alertStore.setAlert({
-					message: `The feature must be within ${projectData?.geo_restrict_distance_meters} meters of your location`,
+					message: `${m['dialog_entities_actions.feature_must_be']()} ${projectData?.geo_restrict_distance_meters} ${m['dialog_entities_actions.meters_location']()}`,
 					variant: 'warning',
 				});
 				return;
@@ -136,7 +148,7 @@
 
 	const navigateToEntity = () => {
 		if (!entitiesStore.toggleGeolocation) {
-			alertStore.setAlert({ message: 'Please enable geolocation to navigate to the entity.', variant: 'warning' });
+			alertStore.setAlert({ message: m['dialog_entities_actions.enable_location'](), variant: 'warning' });
 			return;
 		}
 		entitiesStore.setEntityToNavigate(selectedEntityCoordinate);
@@ -144,14 +156,13 @@
 </script>
 
 {#if isTaskActionModalOpen && selectedTab === 'map' && selectedEntity}
-	<div class="font-barlow flex justify-center !w-[100vw] absolute bottom-[4rem] left-0 pointer-events-none z-50">
+	<div class="task-action-modal">
 		<div
-			class="bg-white w-full font-regular md:max-w-[580px] pointer-events-auto px-4 py-3 sm:py-4 rounded-t-3xl max-h-[60vh] overflow-y-scroll"
+			class="content"
 		>
-			<div class="flex justify-end">
+			<div class="icon">
 				<hot-icon
 					name="close"
-					class="!text-[1.5rem] text-[#52525B] cursor-pointer hover:text-red-600 duration-200"
 					onclick={() => toggleTaskActionModal(false)}
 					onkeydown={(e: KeyboardEvent) => {
 						if (e.key === 'Enter') {
@@ -162,52 +173,52 @@
 					tabindex="0"
 				></hot-icon>
 			</div>
-			<div class="flex flex-col gap-4">
-				<p class="text-[#333] text-lg font-semibold">Feature {selectedEntity?.osmid}</p>
-				<div class="flex flex-col gap-2">
-					<div class="flex">
-						<p class="min-w-[6.25rem] text-[#2B2B2B]">Task Id</p>
+			<div class="section-container">
+				<p class="selected-title">{m['popup.feature']()} {selectedEntity?.osmid}</p>
+				<div class="section">
+					<div class="item">
+						<p class="label">{m['popup.task_id']()}</p>
 						:
-						<p class="text-[#161616] font-medium ml-2">{selectedEntity?.task_id}</p>
+						<p class="value">{selectedEntity?.task_id}</p>
 					</div>
-					<div class="flex">
-						<p class="min-w-[6.25rem] text-[#2B2B2B]">Entity Uuid</p>
+					<div class="item">
+						<p class="label">{m['dialog_entities_actions.entity_uuid']()}</p>
 						:
-						<p class="break-all text-[#161616] font-medium ml-2">{selectedEntity?.entity_id}</p>
+						<p class="value">{selectedEntity?.entity_id}</p>
 					</div>
-					<div class="flex items-center">
-						<p class="min-w-[6.25rem] text-[#2B2B2B]">Status</p>
+					<div class="item items-center">
+						<p class="label">{m['dialog_entities_actions.status']()}</p>
 						:
 						<p
-							class={`text-[#161616] font-medium capitalize border-[1px] border-solid ml-2 py-1 px-3 rounded-full ${getStatusStyle(selectedEntity?.status)}`}
+							class={`${getStatusStyle(selectedEntity?.status)}`}
 						>
-							{selectedEntity?.status?.replaceAll('_', ' ')?.toLowerCase()}
+							{m[`entity_states.${selectedEntity?.status}`]()}
 						</p>
 					</div>
 					{#if entityComments?.length > 0}
-						<div class="flex">
-							<p class="min-w-[6.25rem] text-[#2B2B2B]">Comments</p>
+						<div class="dialog-comments">
+							<p class="label">{m['dialog_entities_actions.comments']()}</p>
 							:
-							<div class="flex flex-col ml-2 gap-2 flex-1">
+							<div class="dialog-comments-list">
 								{#each entityComments?.slice(0, 2) as comment}
-									<div class="bg-[#F6F5F5] rounded px-2 py-1">
-										<div class="flex items-center justify-between mb-1">
+									<div class="dialog-comment">
+										<div class="dialog-comment-content">
 											<p>{comment?.username}</p>
-											<div class="flex items-center gap-2">
-												<hot-icon name="clock-history" class="!text-[0.8rem] text-red-600 cursor-pointer"></hot-icon>
-												<p class="text-sm">{comment?.created_at?.split(' ')[0]}</p>
+											<div class="dialog-comment-info">
+												<hot-icon name="clock-history"></hot-icon>
+												<p class="created-at">{comment?.created_at?.split(' ')[0]}</p>
 											</div>
 										</div>
-										<p class="font-medium">
+										<p class="dialog-comment-text">
 											{comment?.comment?.replace(/#submissionId:uuid:[\w-]+|#featureId:[\w-]+/g, '')?.trim()}
 										</p>
 									</div>
 								{/each}
 								{#if entityComments?.length > 2}
-									<div class="flex items-center gap-2">
-										<div class="h-[1px] bg-gray-200 flex flex-1"></div>
+									<div class="dialog-comment-see-all">
+										<div class="dialog-comment-see-all-empty"></div>
 										<div
-											class="text-sm text-gray-600 hover:text-gray-800 cursor-pointer font-light"
+											class="dialog-comment-see-all-link"
 											onclick={() => (showCommentsPopup = true)}
 											onkeydown={(e: KeyboardEvent) => {
 												if (e.key === 'Enter') {
@@ -226,12 +237,12 @@
 					{/if}
 				</div>
 				{#if selectedEntity?.status !== 'SURVEY_SUBMITTED' && selectedEntity?.status !== 'VALIDATED'}
-					<div class="flex gap-2">
+					<div class="entity">
 						<sl-button
-							disabled={entityToNavigate?.entityId === selectedEntity?.osmid}
+							disabled={entityToNavigate?.entityId === selectedEntity?.entity_id}
 							variant="default"
 							size="small"
-							class="secondary flex-grow"
+							class="entity-button-to"
 							onclick={() => {
 								navigateToEntity();
 							}}
@@ -243,29 +254,65 @@
 							role="button"
 							tabindex="0"
 						>
-							<hot-icon slot="prefix" name="direction" class="!text-[1rem] cursor-pointer duration-200"></hot-icon>
-							<span class="font-barlow font-medium text-sm">NAVIGATE HERE</span>
+							<hot-icon slot="prefix" name="direction"></hot-icon>
+							<span>{m['popup.navigate_here']()}</span>
 						</sl-button>
-						<sl-button
-							loading={entitiesStore.updateEntityStatusLoading}
-							variant="default"
-							size="small"
-							class="primary flex-grow"
-							onclick={() => {
-								handleMapFeature();
-							}}
-							onkeydown={(e: KeyboardEvent) => {
-								if (e.key === 'Enter') {
+						{#if commonStore.enableWebforms === false}
+							<sl-button
+								loading={entitiesStore.updateEntityStatusLoading}
+								variant="primary"
+								size="small"
+								onclick={() => {
 									handleMapFeature();
-								}
-							}}
-							role="button"
-							tabindex="0"
-						>
-							<hot-icon slot="prefix" name="location" class="!text-[1rem] text-white cursor-pointer duration-200"
-							></hot-icon>
-							<span class="font-barlow font-medium text-sm">MAP FEATURE IN ODK</span>
-						</sl-button>
+								}}
+								onkeydown={(e: KeyboardEvent) => {
+									if (e.key === 'Enter') {
+										handleMapFeature();
+									}
+								}}
+								role="button"
+								tabindex="0"
+							>
+								<hot-icon slot="prefix" name="location"
+								></hot-icon>
+								<span>{m['popup.map_in_odk']()}</span>
+							</sl-button>
+						{/if}
+						{#if commonStore.enableWebforms}
+							<sl-button
+								loading={entitiesStore.updateEntityStatusLoading}
+								variant="primary"
+								size="small"
+								onclick={() => {
+									toggleTaskActionModal(false);
+									entitiesStore.updateEntityStatus(projectData.id, {
+										entity_id: selectedEntity?.entity_id,
+										status: 1,
+										// NOTE here we don't translate the field as English values are always saved as the Entity label
+										label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osmid}`,
+									});
+									displayWebFormsDrawer = true;
+								}}
+								onkeydown={(e: KeyboardEvent) => {
+									if (e.key === 'Enter') {
+										toggleTaskActionModal(false);
+										entitiesStore.updateEntityStatus(projectData.id, {
+											entity_id: selectedEntity?.entity_id,
+											status: 1,
+											// NOTE here we don't translate the field as English values are always saved as the Entity label
+											label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osmid}`,
+										});
+										displayWebFormsDrawer = true;
+									}
+								}}
+								role="button"
+								tabindex="0"
+							>
+								<hot-icon slot="prefix" name="location"
+								></hot-icon>
+								<span>{m['dialog_entities_actions.collect_data']()}</span>
+							</sl-button>
+						{/if}
 					</div>
 				{/if}
 			</div>
@@ -276,16 +323,16 @@
 {#if entitiesStore.selectedEntityCoordinate?.coordinate && entitiesStore.userLocationCoord}
 	<hot-dialog
 		bind:this={dialogRef}
-		class="dialog-overview z-50 font-barlow font-regular"
+		class="entity-dialog"
 		open={toggleDistanceWarningDialog}
 		onsl-hide={() => {
 			toggleDistanceWarningDialog = false;
 		}}
 		noHeader
 	>
-		<div class="flex items-start flex-col">
-			<p class="text-base mb-5 text-gray-700">
-				Your are <b
+		<div class="entity-dialog-content">
+			<p class="entity-dialog-youare">
+				{m['dialog_entities_actions.you_are']()} <b
 					>{(
 						distance(
 							entitiesStore.selectedEntityCoordinate?.coordinate as Coord,
@@ -293,13 +340,13 @@
 							{ units: 'kilometers' },
 						) * 1000
 					).toFixed(2)}m</b
-				> away from the feature. Are you sure you want to map this feature?
+				> {m['dialog_entities_actions.away_sure']()}
 			</p>
-			<div class="flex gap-2 ml-auto">
+			<div class="entity-dialog-actions">
 				<sl-button
 					variant="default"
 					size="small"
-					class="secondary flex-grow"
+					class="secondary"
 					onclick={() => (toggleDistanceWarningDialog = false)}
 					onkeydown={(e: KeyboardEvent) => {
 						if (e.key === 'Enter') {
@@ -309,12 +356,11 @@
 					role="button"
 					tabindex="0"
 				>
-					<span class="font-barlow font-medium text-sm">NO</span>
+					<span>NO</span>
 				</sl-button>
 				<sl-button
-					variant="default"
+					variant="primary"
 					size="small"
-					class="primary flex-grow"
 					onclick={() => {
 						mapFeature();
 						toggleDistanceWarningDialog = false;
@@ -328,7 +374,7 @@
 					role="button"
 					tabindex="0"
 				>
-					<span class="font-barlow font-medium text-sm">YES</span>
+					<span>YES</span>
 				</sl-button>
 			</div>
 		</div>
@@ -337,23 +383,23 @@
 
 <hot-dialog
 	label="Feature Comments"
-	class="dialog-overview z-50 font-barlow font-regular"
+	class="feature-comments-dialog"
 	open={showCommentsPopup}
 	onsl-hide={() => {
 		showCommentsPopup = false;
 	}}
 >
-	<div class="flex flex-col gap-3">
+	<div class="feature-comments">
 		{#each entityComments as comment}
-			<div class="bg-[#F6F5F5] rounded px-2 py-1">
-				<div class="flex items-center justify-between mb-2">
+			<div class="feature-comment">
+				<div class="feature-comment-meta">
 					<p>{comment?.username}</p>
-					<div class="flex items-center gap-2">
-						<hot-icon name="clock-history" class="!text-[0.8rem] text-red-600 cursor-pointer"></hot-icon>
-						<p class="text-sm">{comment?.created_at?.split(' ')[0]}</p>
+					<div class="feature-comment-history">
+						<hot-icon name="clock-history"></hot-icon>
+						<p>{comment?.created_at?.split(' ')[0]}</p>
 					</div>
 				</div>
-				<p class="font-medium">
+				<p>
 					{comment?.comment?.replace(/#submissionId:uuid:[\w-]+|#featureId:[\w-]+/g, '')?.trim()}
 				</p>
 			</div>

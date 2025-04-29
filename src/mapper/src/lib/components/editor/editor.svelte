@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import '$styles/button.css';
+	import '$styles/editor.css';
 	import { Editor } from '@tiptap/core';
 	import StarterKit from '@tiptap/starter-kit';
+	import Link from '@tiptap/extension-link';
+	import Image from '@tiptap/extension-image';
+
 	import Toolbar from '$lib/components/editor/toolbar.svelte';
-	import '$lib/components/editor/editor.css';
 
 	type Props = {
 		editable: boolean;
@@ -20,13 +23,21 @@
 	onMount(() => {
 		editor = new Editor({
 			element: element,
-			extensions: [StarterKit],
+			extensions: [
+				StarterKit,
+				Link.configure({
+					validate: (href: string) => /^https?:\/\//.test(href),
+				}),
+				Image.configure({
+					inline: true,
+				}),
+			],
 			content: content,
 			onTransaction: () => {
 				editor = editor;
 			},
 			editable: editable,
-			onUpdate: ({ editor }) => {
+			onUpdate: ({ /** editor **/ }) => {
 				setEditorHtmlContent && setEditorHtmlContent(editor.getHTML());
 			},
 		});
@@ -40,13 +51,13 @@
 	});
 </script>
 
-<div>
-	<div style={`border: ${editable ? '1px' : '0px'} solid #c2c2c2;`} class="rounded-md">
+<div class="editor-wrapper">
+	<div class="editor ${editable ? 'editable' : 'non-editable'}">
 		{#if editor && editable}
 			<Toolbar {editor} />
 		{/if}
 
-		<div class={`${editable ? 'h-[80px] overflow-y-scroll pt-[3px]' : 'h-full'}`}>
+		<div class="bottom">
 			<div bind:this={element}></div>
 		</div>
 	</div>

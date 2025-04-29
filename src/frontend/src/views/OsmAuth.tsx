@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { LoginActions } from '@/store/slices/LoginSlice';
 import { getUserDetailsFromApi } from '@/utilfunctions/login';
 import { useAppDispatch } from '@/types/reduxTypes';
+import { Loader2 } from 'lucide-react';
 
 function OsmAuth() {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ function OsmAuth() {
       if (authCode) {
         try {
           const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/auth/callback?code=${authCode}&state=${state}`,
+            `${import.meta.env.VITE_API_URL}/auth/callback/osm?code=${authCode}&state=${state}`,
             { credentials: 'include' },
           );
 
@@ -43,9 +44,10 @@ function OsmAuth() {
 
           if (requestedPath) {
             sessionStorage.removeItem('requestedPath');
-            if (requestedPath.includes('mapnow')) {
+            const { protocol, hostname, port } = window.location;
+            if (hostname.startsWith('mapper.')) {
               // redirect to mapper frontend (navigate doesn't work as it's on svelte)
-              window.location.href = `${window.location.origin}${requestedPath}`;
+              window.location.href = `${protocol}//mapper.${hostname}${port ? `:${port}` : ''}/${requestedPath}`;
             } else {
               // Call /auth/me to populate the user details in the header
               const apiUser = await getUserDetailsFromApi();
@@ -72,7 +74,16 @@ function OsmAuth() {
     return <div>Error: {error}</div>;
   }
 
-  return <>{!isReadyToRedirect ? null : <div>redirecting</div>}</>;
+  return (
+    <>
+      {!isReadyToRedirect ? null : (
+        <div className="fmtm-h-full fmtm-flex fmtm-flex-col fmtm-justify-center fmtm-items-center">
+          <Loader2 className="fmtm-h-10 fmtm-w-10 fmtm-animate-spin fmtm-text-primaryRed" />
+          <h3 className="fmtm-text-grey-700 fmtm-font-semibold">Signing in...</h3>
+        </div>
+      )}
+    </>
+  );
 }
 
 export default OsmAuth;

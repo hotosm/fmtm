@@ -1,19 +1,19 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
 """User dependencies for use in Depends."""
@@ -29,13 +29,11 @@ from app.db.enums import HTTPStatus
 from app.db.models import DbUser
 
 
-async def get_user(
-    id: str | int, db: Annotated[Connection, Depends(db_conn)]
-) -> DbUser:
+async def get_user(sub: str, db: Annotated[Connection, Depends(db_conn)]) -> DbUser:
     """Return a user from the DB, else exception.
 
     Args:
-        id (str | int): The user ID (integer) or username (string) to check.
+        sub (str): The user ID with provider.
         db (Connection): The database connection.
 
     Returns:
@@ -45,12 +43,6 @@ async def get_user(
         HTTPException: Raised with a 404 status code if the user is not found.
     """
     try:
-        try:
-            # Is ID (int)
-            id = int(id)
-        except ValueError:
-            # Is username (str)
-            pass
-        return await DbUser.one(db, id)
+        return await DbUser.one(db, sub)
     except KeyError as e:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(e)) from e

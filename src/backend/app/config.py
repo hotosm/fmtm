@@ -1,19 +1,19 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Config file for Pydantic and FastAPI, using environment variables."""
 
@@ -148,7 +148,7 @@ class Settings(BaseSettings):
         case_sensitive=True, env_file=".env", extra="allow"
     )
 
-    APP_NAME: str = "FMTM"
+    APP_NAME: str = "Field-TM"
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"
     ENCRYPTION_KEY: SecretStr
@@ -188,9 +188,11 @@ class Settings(BaseSettings):
                 else ""
             )
             default_origins.append(f"http://{domain}{local_server_port}")
+            default_origins.append(f"http://mapper.{domain}{local_server_port}")
         else:
-            # Add the main FMTM domain
+            # Add the main Field-TM domains (UI + Mapper UI)
             default_origins.append(f"https://{domain}")
+            default_origins.append(f"https://mapper.{domain}")
 
         # Process `extra_origins` if provided
         if isinstance(extra_origins, str):
@@ -236,16 +238,57 @@ class Settings(BaseSettings):
 
     OSM_CLIENT_ID: str
     OSM_CLIENT_SECRET: SecretStr
-    OSM_SECRET_KEY: SecretStr
     # NOTE www is required for now
     # https://github.com/openstreetmap/operations/issues/951#issuecomment-1748717154
     OSM_URL: HttpUrlStr = "https://www.openstreetmap.org"
     OSM_SCOPE: list[str] = ["read_prefs", "send_messages"]
-    OSM_LOGIN_REDIRECT_URI: str = "http://127.0.0.1:7051/osmauth"
+    OSM_SECRET_KEY: SecretStr
 
-    S3_ENDPOINT: str = "http://s3:9000"
-    S3_ACCESS_KEY: Optional[str] = ""
-    S3_SECRET_KEY: Optional[SecretStr] = ""
+    @computed_field
+    @property
+    def manager_osm_login_redirect_uri(self) -> str:
+        """The constructed OSM redirect URL for manager frontend.
+
+        Must be set in the OAuth2 config for the openstreetmap profile.
+        """
+        if self.DEBUG:
+            uri = "http://127.0.0.1:7051/osmauth"
+        else:
+            uri = f"https://{self.FMTM_DOMAIN}/osmauth"
+        return uri
+
+    @computed_field
+    @property
+    def mapper_osm_login_redirect_uri(self) -> str:
+        """The constructed OSM redirect URL for mapper frontend.
+
+        Must be set in the OAuth2 config for the openstreetmap profile.
+        """
+        if self.DEBUG:
+            uri = "http://127.0.0.1:7057/osmauth"
+        else:
+            uri = f"https://mapper.{self.FMTM_DOMAIN}/osmauth"
+        return uri
+
+    GOOGLE_CLIENT_ID: Optional[str] = ""
+    GOOGLE_CLIENT_SECRET: Optional[SecretStr] = ""
+
+    @computed_field
+    @property
+    def google_login_redirect_uri(self) -> str:
+        """The constructed Google redirect URL for mapper frontend.
+
+        Must be set in the OAuth2 config for the Google profile.
+        """
+        if self.DEBUG:
+            uri = "http://127.0.0.1:7057/googleauth"
+        else:
+            uri = f"https://mapper.{self.FMTM_DOMAIN}/googleauth"
+        return uri
+
+    S3_ENDPOINT: str
+    S3_ACCESS_KEY: str
+    S3_SECRET_KEY: SecretStr
     S3_BUCKET_NAME: str = "fmtm-data"
     S3_DOWNLOAD_ROOT: Optional[str] = None
 
@@ -330,7 +373,7 @@ def get_cipher_suite():
     # use for our JWT signing. Ideally this needs 48 characters, but for now
     # we are stuck at 32 char to maintain support with Fernet (reuse the same key).
     #
-    # However this would require a migration for all existing instances of FMTM.
+    # However this would require a migration for all existing instances of Field-TM.
     return Fernet(settings.ENCRYPTION_KEY.get_secret_value())
 
 

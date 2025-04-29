@@ -1,19 +1,19 @@
 # Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Logic for integration routes."""
 
@@ -42,7 +42,7 @@ from app.db.models import DbOdkEntities, DbUser
 
 async def generate_api_token(
     db: Connection,
-    user_id: int,
+    user_sub: str,
 ) -> str:
     """Generate a new API token for a given user."""
     async with db.cursor(row_factory=class_row(DbUser)) as cur:
@@ -50,14 +50,14 @@ async def generate_api_token(
             """
                 UPDATE users
                 SET api_key = %(api_key)s
-                WHERE id = %(user_id)s
+                WHERE sub = %(user_sub)s
                 RETURNING *;
             """,
-            {"user_id": user_id, "api_key": token_urlsafe(32)},
+            {"user_sub": user_sub, "api_key": token_urlsafe(32)},
         )
         db_user = await cur.fetchone()
         if not db_user.api_key:
-            msg = f"Failed to generate API Key for user ({user_id})"
+            msg = f"Failed to generate API Key for user ({user_sub})"
             log.error(msg)
             raise ValueError(msg)
 
@@ -68,7 +68,7 @@ async def update_entity_status_in_fmtm(
     db: Connection,
     odk_event: OdkCentralWebhookRequest,
 ):
-    """Update the status for an Entity in the FMTM db."""
+    """Update the status for an Entity in the Field-TM db."""
     log.debug(f"Webhook called with event ({odk_event.type.value})")
 
     if odk_event.type == OdkWebhookEvents.UPDATE_ENTITY:
@@ -79,7 +79,7 @@ async def update_entity_status_in_fmtm(
             log.warning(f"Missing entity state in webhook event: {odk_event.data}")
             return HTTPException(
                 status_code=HTTPStatus.BAD_REQUEST,
-                content="Missing entity state property",
+                detail="Missing entity state property",
             )
 
         try:
@@ -92,12 +92,12 @@ async def update_entity_status_in_fmtm(
             )
             return HTTPException(
                 status_code=HTTPStatus.BAD_REQUEST,
-                content="Invalid entity state",
+                detail="Invalid entity state",
             )
 
         log.debug(
             f"Updating entity ({str(odk_event.id)}) status "
-            f"in FMTM db to ({new_entity_state})"
+            f"in Field-TM db to ({new_entity_state})"
         )
         update_success = await DbOdkEntities.update(
             db,

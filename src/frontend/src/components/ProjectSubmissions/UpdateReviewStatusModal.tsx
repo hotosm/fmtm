@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
+import Mentions from 'rc-mentions';
 import { Modal } from '@/components/common/Modal';
 import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 import { reviewListType } from '@/models/submission/submissionModel';
 import { DeleteGeometry, PostGeometry, UpdateReviewStateService } from '@/api/SubmissionService';
-import TextArea from '@/components/common/TextArea';
 import Button from '@/components/common/Button';
 import { GetGeometryLog, PostProjectComments, UpdateEntityState } from '@/api/Project';
 import { entity_state } from '@/types/enums';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import { task_event } from '@/types/enums';
 import { featureType } from '@/store/types/ISubmissions';
+import '@/styles/rc-mentions.css';
+import { GetUserNames } from '@/api/User';
+import { UserActions } from '@/store/slices/UserSlice';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -23,7 +26,6 @@ const initialReviewState = {
   entity_id: null,
   label: null,
   feature: null,
-  featureId: null,
 };
 
 // Note these id values must be camelCase to match what ODK Central requires
@@ -44,11 +46,36 @@ const reviewList: reviewListType[] = [
 
 const UpdateReviewStatusModal = () => {
   const dispatch = useAppDispatch();
+  const { Option } = Mentions;
+
   const [noteComments, setNoteComments] = useState('');
   const [reviewStatus, setReviewStatus] = useState('');
+  const [searchText, setSearchText] = useState('');
+
   const updateReviewStatusModal = useAppSelector((state) => state.submission.updateReviewStatusModal);
   const updateReviewStateLoading = useAppSelector((state) => state.submission.updateReviewStateLoading);
-  const badGeomLogList = useAppSelector((state) => state?.project?.badGeomLogList);
+  const badGeomLogList = useAppSelector((state) => state.project.badGeomLogList);
+  const userNames = useAppSelector((state) => state.user.userNames);
+  const getUserNamesLoading = useAppSelector((state) => state.user.getUserNamesLoading);
+
+  useEffect(() => {
+    if (!updateReviewStatusModal.projectId) return;
+    if (!searchText) {
+      dispatch(UserActions.SetUserNames([]));
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      if (!updateReviewStatusModal.projectId) return;
+      dispatch(
+        GetUserNames(`${VITE_API_URL}/users/usernames`, {
+          project_id: updateReviewStatusModal.projectId,
+          search: searchText,
+        }),
+      );
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchText]);
 
   useEffect(() => {
     setReviewStatus(updateReviewStatusModal.reviewState);
@@ -65,8 +92,7 @@ const UpdateReviewStatusModal = () => {
       !updateReviewStatusModal.projectId ||
       !updateReviewStatusModal.taskId ||
       !updateReviewStatusModal.entity_id ||
-      !updateReviewStatusModal.taskUid ||
-      !updateReviewStatusModal.featureId
+      !updateReviewStatusModal.taskUid
     ) {
       return;
     }
@@ -132,7 +158,7 @@ const UpdateReviewStatusModal = () => {
           `${VITE_API_URL}/tasks/${updateReviewStatusModal?.taskUid}/event?project_id=${updateReviewStatusModal?.projectId}`,
           {
             task_id: +updateReviewStatusModal?.taskUid,
-            comment: `#submissionId:${updateReviewStatusModal?.instanceId} #featureId:${updateReviewStatusModal?.featureId} ${noteComments}`,
+            comment: `#submissionId:${updateReviewStatusModal?.instanceId} #featureId:${updateReviewStatusModal?.entity_id} ${noteComments}`,
             event: task_event.COMMENT,
           },
         ),
@@ -168,12 +194,25 @@ const UpdateReviewStatusModal = () => {
               </button>
             ))}
           </div>
-          <TextArea
-            rows={4}
-            onChange={(e) => setNoteComments(e.target.value)}
-            value={noteComments}
-            label="Note & Comments"
-          />
+          <div>
+            <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold">Note & Comments</p>
+            <Mentions
+              value={noteComments}
+              onChange={setNoteComments}
+              onSearch={(search) => {
+                setSearchText(search);
+              }}
+              notFoundContent={
+                getUserNamesLoading ? 'Searching...' : searchText ? 'Search for a user' : 'User not found'
+              }
+            >
+              {userNames?.map((user) => (
+                <Option key={user.sub} value={user.username}>
+                  {user.username}
+                </Option>
+              ))}
+            </Mentions>
+          </div>
           <div className="fmtm-grid fmtm-grid-cols-2 fmtm-gap-4 fmtm-mt-8">
             <Button
               variant="secondary-red"

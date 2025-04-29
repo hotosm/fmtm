@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
-import type { Polygon } from 'geojson';
-import type { MapGeomTypes } from '$constants/enums.ts';
+import type { Point, Polygon } from 'geojson';
+import { m } from '$translations/messages.js';
 
 export type ProjectTask = {
 	id: number;
@@ -43,6 +43,7 @@ export interface ProjectData {
 	tasks: ProjectTask[];
 	geo_restrict_distance_meters: number;
 	geo_restrict_force_error: boolean;
+	use_odk_collect: boolean;
 }
 
 export interface ZoomToTaskEventDetail {
@@ -55,17 +56,13 @@ export type TaskStatus = {
 	UNLOCKED_TO_VALIDATE: string;
 	LOCKED_FOR_VALIDATION: string;
 	UNLOCKED_DONE: string;
-	// INVALIDATED: string;
-	// BAD: string;
-	// SPLIT: string;
-	// ARCHIVED: string;
 };
 export const TaskStatusEnum: TaskStatus = Object.freeze({
-	UNLOCKED_TO_MAP: 'UNLOCKED_TO_MAP',
-	LOCKED_FOR_MAPPING: 'LOCKED_FOR_MAPPING',
-	UNLOCKED_TO_VALIDATE: 'UNLOCKED_TO_VALIDATE',
-	LOCKED_FOR_VALIDATION: 'LOCKED_FOR_VALIDATION',
-	UNLOCKED_DONE: 'UNLOCKED_DONE',
+	UNLOCKED_TO_MAP: m['task_states.UNLOCKED_TO_MAP'](),
+	LOCKED_FOR_MAPPING: m['task_states.LOCKED_FOR_MAPPING'](),
+	UNLOCKED_TO_VALIDATE: m['task_states.UNLOCKED_TO_VALIDATE'](),
+	LOCKED_FOR_VALIDATION: m['task_states.LOCKED_FOR_VALIDATION'](),
+	UNLOCKED_DONE: m['task_states.UNLOCKED_DONE'](),
 });
 
 export type TaskEvent = {
@@ -74,10 +71,6 @@ export type TaskEvent = {
 	VALIDATE: string;
 	GOOD: string;
 	BAD: string;
-	// SPLIT: string;
-	// MERGE: string;
-	// ASSIGN: string;
-	// COMMENT: string;
 };
 export const TaskEventEnum: TaskEvent = Object.freeze({
 	MAP: 'MAP',
@@ -115,4 +108,36 @@ export type TaskEventType = {
 	task_id: number;
 	user_id: number;
 	username: string;
+};
+
+export type projectType = {
+	centroid: Point;
+	hashtags: string[];
+	id: number;
+	location_str: string | null;
+	name: string;
+	num_contributors: number;
+	organisation_id: number;
+	organisation_logo: string | null;
+	outline: Polygon;
+	priority: number;
+	short_description: string;
+	total_tasks: string;
+};
+
+export type paginationType = {
+	has_next: boolean;
+	has_prev: boolean;
+	next_num: number | null;
+	page: number | null;
+	pages: number | null;
+	prev_num: number | null;
+	per_page: number;
+	total: number | null;
+};
+
+export type EntityStatusPayload = {
+	entity_id: UUID;
+	status: number;
+	// label: string, // label is now automatically determined
 };

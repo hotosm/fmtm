@@ -1,34 +1,68 @@
 import path from 'path';
 import { defineConfig } from 'vitest/config';
-import { VitePWA } from 'vite-plugin-pwa';
+import type { VitePWAOptions } from 'vite-plugin-pwa';
+import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { sveltekit } from '@sveltejs/kit/vite';
-import { paraglide } from '@inlang/paraglide-vite';
+import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import UnoCSS from 'unocss/vite';
 import extractorSvelte from '@unocss/extractor-svelte';
+
+const pwaOptions: Partial<VitePWAOptions> = {
+	registerType: 'autoUpdate',
+	devOptions: {
+		enabled: true,
+	},
+	manifest: {
+		name: 'Field-TM',
+		short_name: 'Field-TM',
+		description: 'Coordinated field mapping for Open Mapping campaigns.',
+		display: 'standalone',
+		theme_color: '#d63f3f',
+		background_color: '#d63f3f',
+		icons: [
+			{
+				src: 'pwa-64x64.png',
+				sizes: '64x64',
+				type: 'image/png',
+			},
+			{
+				src: 'pwa-192x192.png',
+				sizes: '192x192',
+				type: 'image/png',
+			},
+			{
+				src: 'pwa-512x512.png',
+				sizes: '512x512',
+				type: 'image/png',
+			},
+			{
+				src: 'maskable-icon-512x512.png',
+				sizes: '512x512',
+				type: 'image/png',
+				purpose: 'maskable',
+			},
+		],
+	},
+};
 
 export default defineConfig({
 	plugins: [
 		sveltekit(),
-		paraglide({
+		SvelteKitPWA(pwaOptions),
+		paraglideVitePlugin({
 			project: './project.inlang',
 			outdir: './src/translations',
 		}),
 		UnoCSS({
 			extractors: [extractorSvelte()],
 		}),
-		VitePWA({
-			registerType: 'autoUpdate',
-			devOptions: {
-				enabled: true,
-			},
-		}),
 	],
 	server: {
 		host: true,
-		port: 7055,
+		port: 7057,
 	},
 	preview: {
-		port: 7055,
+		port: 7057,
 	},
 	resolve: {
 		alias: {

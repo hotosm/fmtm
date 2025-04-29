@@ -1,4 +1,4 @@
-import { userType } from '@/models/user/userModel';
+import { projectUserInvites, userType } from '@/models/user/userModel';
 import { paginationType } from './ICommon';
 
 export type UserStateTypes = {
@@ -7,4 +7,10 @@ export type UserStateTypes = {
   updateUserRoleLoading: boolean;
   userListForSelect: userType[];
   userListForSelectLoading: boolean;
+  getUserNamesLoading: boolean;
+  userNames: Pick<userType, 'sub' | 'username'>[];
+  inviteNewUserPending: boolean;
+  getProjectUserInvitesLoading: boolean;
+  projectUserInvitesList: projectUserInvites[];
+  projectUserInvitesError: string[];
 };

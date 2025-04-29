@@ -1,21 +1,21 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
-"""Logic for FMTM project routes."""
+"""Logic for Field-TM project routes."""
 
 import json
 import subprocess
@@ -26,15 +26,15 @@ from textwrap import dedent
 from traceback import format_exc
 from typing import Optional, Union
 
+import aiohttp
 import geojson
 import geojson_pydantic
-import requests
 from asgiref.sync import async_to_sync
 from fastapi import HTTPException, Request
 from loguru import logger as log
 from osm_login_python.core import Auth
 from osm_rawdata.postgres import PostgresClient
-from psycopg import Connection
+from psycopg import Connection, sql
 from psycopg.rows import class_row
 
 from app.auth.providers.osm import get_osm_token, send_osm_message
@@ -125,15 +125,16 @@ async def get_projects_featcol(
 async def generate_data_extract(
     aoi: geojson.FeatureCollection | geojson.Feature | dict,
     extract_config: Optional[BytesIO] = None,
+    centroid: bool = False,
 ) -> str:
     """Request a new data extract in flatgeobuf format.
 
     Args:
-        db (Connection): The database connection.
         aoi (geojson.FeatureCollection | geojson.Feature | dict]):
             Area of interest for data extraction.
         extract_config (Optional[BytesIO], optional):
             Configuration for data extraction. Defaults to None.
+        centroid (bool): Generate centroid of polygons.
 
     Raises:
         HTTPException:
@@ -141,7 +142,7 @@ async def generate_data_extract(
 
     Returns:
         str:
-            URL for the flatgeobuf data extract.
+            URL for the geojson data extract.
     """
     if not extract_config:
         raise HTTPException(
@@ -156,7 +157,7 @@ async def generate_data_extract(
         if settings.RAW_DATA_API_AUTH_TOKEN
         else None,
     )
-    fgb_url = pg.execQuery(
+    geojson_url = pg.execQuery(
         aoi,
         extra_params={
             "fileName": (
@@ -164,14 +165,14 @@ async def generate_data_extract(
                 if settings.RAW_DATA_API_AUTH_TOKEN
                 else "fmtm_extract"
             ),
-            "outputType": "fgb",
+            "outputType": "geojson",
             "bind_zip": False,
             "useStWithin": False,
-            "fgb_wrap_geoms": True,
+            "centroid": centroid,
         },
     )
 
-    if not fgb_url:
+    if not geojson_url:
         msg = "Could not get download URL for data extract. Did the API change?"
         log.error(msg)
         raise HTTPException(
@@ -179,7 +180,7 @@ async def generate_data_extract(
             detail=msg,
         )
 
-    return fgb_url
+    return geojson_url
 
 
 # ---------------------------
@@ -288,7 +289,7 @@ async def get_or_set_data_extract_url(
     return url
 
 
-async def upload_custom_extract_to_s3(
+async def upload_data_extract_to_s3(
     db: Connection,
     project_id: int,
     fgb_content: bytes,
@@ -307,7 +308,7 @@ async def upload_custom_extract_to_s3(
     log.debug(f"Uploading custom data extract for project ({project.id})")
 
     fgb_obj = BytesIO(fgb_content)
-    s3_fgb_path = f"{project.organisation_id}/{project_id}/custom_extract.fgb"
+    s3_fgb_path = f"{project.organisation_id}/{project_id}/data_extract.fgb"
 
     log.debug(f"Uploading fgb to S3 path: /{s3_fgb_path}")
     add_obj_to_bucket(
@@ -333,45 +334,7 @@ async def upload_custom_extract_to_s3(
     return s3_fgb_full_url
 
 
-async def upload_custom_fgb_extract(
-    db: Connection,
-    project_id: int,
-    fgb_content: bytes,
-) -> str:
-    """Upload a flatgeobuf data extract.
-
-    FIXME how can we validate this has the required fields for geojson conversion?
-    Requires:
-        "id"
-        "osm_id"
-        "tags"
-        "version"
-        "changeset"
-        "timestamp"
-
-    Args:
-        db (Connection): The database connection.
-        project_id (int): The ID of the project.
-        fgb_content (bytes): Content of read flatgeobuf file.
-
-    Returns:
-        str: URL to fgb file in S3.
-    """
-    featcol = await flatgeobuf_to_featcol(db, fgb_content)
-
-    if not featcol:
-        msg = f"Failed extracting geojson from flatgeobuf for project ({project_id})"
-        log.error(msg)
-        raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg)
-
-    return await upload_custom_extract_to_s3(
-        db,
-        project_id,
-        fgb_content,
-    )
-
-
-async def upload_custom_geojson_extract(
+async def upload_geojson_data_extract(
     db: Connection,
     project_id: int,
     geojson_raw: Union[str, bytes],
@@ -381,13 +344,13 @@ async def upload_custom_geojson_extract(
     Args:
         db (Connection): The database connection.
         project_id (int): The ID of the project.
-        geojson_raw (str): The custom data extracts contents.
+        geojson_raw (str): The data extracts contents.
 
     Returns:
         str: URL to fgb file in S3.
     """
     project = await project_deps.get_project_by_id(db, project_id)
-    log.debug(f"Uploading custom data extract for project ({project.id})")
+    log.debug(f"Uploading data extract for project ({project.id})")
 
     featcol = parse_geojson_file_to_featcol(geojson_raw)
     featcol_single_geom_type = featcol_keep_single_geom_type(featcol)
@@ -411,7 +374,7 @@ async def upload_custom_geojson_extract(
         log.error(msg)
         raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=msg)
 
-    return await upload_custom_extract_to_s3(
+    return await upload_data_extract_to_s3(
         db,
         project_id,
         fgb_data,
@@ -444,16 +407,17 @@ async def generate_odk_central_project_content(
     project_odk_form_id: str,
     odk_credentials: central_schemas.ODKCentralDecrypted,
     xlsform: BytesIO,
-    task_extract_dict: dict[int, geojson.FeatureCollection],
-    entity_properties: list[str],
+    task_extract_dict: Optional[dict[int, geojson.FeatureCollection]] = None,
+    entity_properties: Optional[list[str]] = None,
 ) -> str:
     """Populate the project in ODK Central with XForm, Appuser, Permissions."""
-    # The ODK Dataset (Entity List) must exist prior to main XLSForm
-    entities_list = await central_crud.task_geojson_dict_to_entity_values(
-        task_extract_dict
-    )
+    entities_list = []
+    if task_extract_dict:
+        entities_list = await central_crud.task_geojson_dict_to_entity_values(
+            task_extract_dict
+        )
 
-    log.debug("Creating main ODK Entity list for project: features")
+    log.debug("Creating project ODK dataset named 'features'")
     await central_crud.create_entity_list(
         odk_credentials,
         project_odk_id,
@@ -489,98 +453,102 @@ async def generate_project_files(
     QR code (appuser), ODK XForm, ODK Entities from OSM data extract.
 
     Args:
-        project_id(int): id of the FMTM project.
+        project_id(int): id of the Field-TM project.
         background_task_id (uuid): the task_id of the background task.
         db (Connection): The database connection, newly generated.
 
     Returns:
         bool: True if success.
     """
-    project = await DbProject.one(db, project_id, warn_on_missing_token=False)
-    log.info(f"Starting generate_project_files for project {project_id}")
+    try:
+        project = await project_deps.get_project_by_id(db, project_id)
+        log.info(f"Starting generate_project_files for project {project_id}")
 
-    # Extract data extract from flatgeobuf
-    log.debug("Getting data extract geojson from flatgeobuf")
-    feature_collection = await get_project_features_geojson(db, project)
+        # Extract data extract from flatgeobuf
+        log.debug("Getting data extract geojson from flatgeobuf")
+        feature_collection = await get_project_features_geojson(db, project)
 
-    # Get properties to create datasets
-    entity_properties = list(
-        feature_collection.get("features")[0].get("properties").keys()
-    )
-    entity_properties.append("submission_ids")
+        first_feature = next(
+            iter(feature_collection.get("features", [])), {}
+        )  # Get first feature or {}
 
-    # Split extract by task area
-    log.debug("Splitting data extract per task area")
-    # TODO in future this splitting could be removed if the task_id is
-    # no longer used in the XLSForm for the map filter
-    task_extract_dict = await split_geojson_by_task_areas(
-        db, feature_collection, project_id
-    )
+        if first_feature and "properties" in first_feature:  # Check if properties exist
+            # FIXME perhaps this should be done in the SQL code?
+            entity_properties = list(first_feature["properties"].keys()) + [
+                "submission_ids"
+            ]
 
-    # Get ODK Project details
-    project_odk_id = project.odkid
-    project_xlsform = project.xlsform_content
-    project_odk_form_id = project.odk_form_id
-    project_odk_creds = project.odk_credentials
+            log.debug("Splitting data extract per task area")
+            # TODO in future this splitting could be removed if the task_id is
+            # no longer used in the XLSForm for the map filter
+            task_extract_dict = await split_geojson_by_task_areas(
+                db, feature_collection, project_id
+            )
+        else:
+            # NOTE the entity properties are generated by the form `save_to` field
+            # NOTE automatically anyway
+            entity_properties = []
+            task_extract_dict = {}
 
-    if not project_odk_creds:
-        # get default credentials
-        project_odk_creds = await get_default_odk_creds()
+        # Get ODK Project details
+        project_odk_id = project.odkid
+        project_xlsform = project.xlsform_content
+        project_odk_form_id = project.odk_form_id
+        project_odk_creds = project.odk_credentials
 
-    odk_token = await generate_odk_central_project_content(
-        project_odk_id,
-        project_odk_form_id,
-        project_odk_creds,
-        BytesIO(project_xlsform),
-        task_extract_dict,
-        entity_properties,
-    )
-    log.debug(
-        f"Setting encrypted odk token for FMTM project ({project_id}) "
-        f"ODK project {project_odk_id}: {type(odk_token)} ({odk_token[:15]}...)"
-    )
-    await DbProject.update(
-        db,
-        project_id,
-        project_schemas.ProjectUpdate(
-            odk_token=odk_token,
-        ),
-    )
+        if not project_odk_creds:
+            # get default credentials
+            project_odk_creds = await get_default_odk_creds()
 
-    task_feature_counts = [
-        (
-            task.id,
-            len(task_extract_dict.get(task.project_task_index, {}).get("features", [])),
+        odk_token = await generate_odk_central_project_content(
+            project_odk_id,
+            project_odk_form_id,
+            project_odk_creds,
+            BytesIO(project_xlsform),
+            task_extract_dict,
+            entity_properties,
         )
-        for task in project.tasks
-    ]
-    log.debug(
-        "Setting task feature counts in db for "
-        f"({len(project.tasks if project.tasks else 0)}) tasks",
-    )
-    sql = """
-        WITH task_update(id, feature_count) AS (
-            VALUES {}
+        log.debug(
+            f"Setting encrypted odk token for Field-TM project ({project_id}) "
+            f"ODK project {project_odk_id}: {type(odk_token)} ({odk_token[:15]}...)"
         )
-        UPDATE
-            public.tasks t
-        SET
-            feature_count = tu.feature_count
-        FROM
-            task_update tu
-        WHERE
-            t.id = tu.id;
-    """
-    value_placeholders = ", ".join(
-        f"({task_id}, {feature_count})"
-        for task_id, feature_count in task_feature_counts
-    )
-    formatted_sql = sql.format(value_placeholders)
-    async with db.cursor() as cur:
-        await cur.execute(formatted_sql)
+        await DbProject.update(
+            db,
+            project_id,
+            project_schemas.ProjectUpdate(
+                odk_token=odk_token,
+            ),
+        )
+        task_feature_counts = [
+            (
+                task.id,
+                len(
+                    task_extract_dict.get(task.project_task_index, {}).get(
+                        "features", []
+                    )
+                ),
+            )
+            for task in project.tasks
+        ]
 
-    log.info("Finished generation of project additional files")
-    return True
+        # Use parameterized batch update
+        update_data = [
+            (task_id, feature_count) for task_id, feature_count in task_feature_counts
+        ]
+
+        async with db.cursor() as cur:
+            await cur.executemany(
+                sql.SQL("UPDATE public.tasks SET feature_count = %s WHERE id = %s"),
+                [(fc, tid) for tid, fc in update_data],
+            )
+        return True
+    except Exception as e:
+        log.debug(str(format_exc()))
+        log.exception(
+            f"Error generating project files for project {project_id}: {e}",
+            stack_info=True,
+        )
+        return False
 
 
 async def get_task_geometry(db: Connection, project_id: int):
@@ -631,10 +599,12 @@ async def get_project_features_geojson(
     data_extract_url = db_project.data_extract_url
 
     if not data_extract_url:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail=f"No data extract exists for project ({project_id})",
-        )
+        # raise HTTPException(
+        #     status_code=HTTPStatus.NOT_FOUND,
+        #     detail=f"No data extract exists for project ({project_id})",
+        # )
+        # Return an empty featcol for projects with no existing features
+        return {"type": "FeatureCollection", "features": []}
 
     # If local debug URL, replace with Docker service name
     data_extract_url = data_extract_url.replace(
@@ -642,16 +612,20 @@ async def get_project_features_geojson(
         settings.S3_ENDPOINT,
     )
 
-    with requests.get(data_extract_url) as response:
-        if not response.ok:
-            msg = f"Download failed for data extract, project ({project_id})"
-            log.error(msg)
-            raise HTTPException(
-                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-                detail=msg,
+    async with aiohttp.ClientSession() as session:
+        async with session.get(data_extract_url) as response:
+            if not response.ok:
+                msg = f"Download failed for data extract, project ({project_id})"
+                log.error(msg)
+                raise HTTPException(
+                    status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                    detail=msg,
+                )
+
+            log.debug("Converting FlatGeobuf to GeoJSON")
+            data_extract_geojson = await flatgeobuf_to_featcol(
+                db, await response.read()
             )
-        log.debug("Converting download flatgeobuf to geojson")
-        data_extract_geojson = await flatgeobuf_to_featcol(db, response.content)
 
     if not data_extract_geojson:
         msg = f"Failed to convert flatgeobuf --> geojson for project ({project_id})"
@@ -925,9 +899,12 @@ async def get_paginated_projects(
     db: Connection,
     page: int,
     results_per_page: int,
-    user_id: Optional[int] = None,
+    current_user: Optional[str] = None,
+    org_id: Optional[int] = None,
+    user_sub: Optional[str] = None,
     hashtags: Optional[str] = None,
     search: Optional[str] = None,
+    minimal: bool = False,
 ) -> dict:
     """Helper function to fetch paginated projects with optional filters."""
     if hashtags:
@@ -935,7 +912,13 @@ async def get_paginated_projects(
 
     # Get subset of projects
     projects = await DbProject.all(
-        db, user_id=user_id, hashtags=hashtags, search=search
+        db,
+        current_user=current_user,
+        org_id=org_id,
+        user_sub=user_sub,
+        hashtags=hashtags,
+        search=search,
+        minimal=minimal,
     )
     start_index = (page - 1) * results_per_page
     end_index = start_index + results_per_page
@@ -963,11 +946,11 @@ async def get_project_users_plus_contributions(db: Connection, project_id: int):
     query = """
         SELECT
             u.username as user,
-            COUNT(th.user_id) as contributions
+            COUNT(th.user_sub) as contributions
         FROM
             users u
         JOIN
-            task_events th ON u.id = th.user_id
+            task_events th ON u.sub = th.user_sub
         WHERE
             th.project_id = %(project_id)s
         GROUP BY u.username
@@ -1005,41 +988,8 @@ async def send_project_manager_message(
 
     send_osm_message(
         osm_token=osm_token,
-        osm_id=new_manager.id,
+        osm_sub=new_manager.sub,
         title=f"You have been assigned to project {project.name} as a manager",
         body=message_content,
     )
     log.info(f"Message sent to new project manager ({new_manager.username}).")
-
-
-async def send_invitation_message(
-    request: Request,
-    project: DbProject,
-    invitee_username: str,
-    osm_auth: Auth,
-):
-    """Send an invitation message to a user to join a project."""
-    log.info(f"Sending invitation message to osm user ({invitee_username}).")
-
-    osm_token = get_osm_token(request, osm_auth)
-
-    project_url = f"{settings.FMTM_DOMAIN}/project/{project.id}"
-    if not project_url.startswith("http"):
-        project_url = f"https://{project_url}"
-
-    message_content = dedent(f"""
-        You have been invited to join the project **{project.name}**.
-
-        Please click this link:
-        [Project]({project_url})
-
-        Thank you for being a part of our platform!
-    """)
-
-    send_osm_message(
-        osm_token=osm_token,
-        osm_username=invitee_username,
-        title=f"You have been invited to join the project {project.name}",
-        body=message_content,
-    )
-    log.info(f"Invitation message sent to osm user ({invitee_username}).")

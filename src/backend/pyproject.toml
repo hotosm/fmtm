@@ -1,31 +1,31 @@
 # Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
 [project]
 name = "fmtm"
-version = "2025.1.0"
-description = "Field Mapping Tasking Manager - coordinated field mapping."
+version = "2025.2.0"
+description = "Field Tasking Manager - coordinated field mapping."
 authors = [
     {name = "HOTOSM", email = "sysadmin@hotosm.org"},
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "uvicorn==0.32.0",
+    "uvicorn==0.34.2",
     "uvloop==0.21.0",
     "httptools==0.6.4",
     "fastapi==0.115.3",
@@ -45,32 +45,32 @@ dependencies = [
     "sozipfile==0.3.2",
     "cryptography==43.0.3",
     "pyjwt==2.9.0",
-    "osm-fieldwork==0.21.0",
+    "osm-fieldwork",
     "osm-login-python==2.0.0",
     "osm-rawdata==0.4.2",
     "fmtm-splitter==2.0.0",
-    "pg-nearest-city>=0.2.1",
+    "pg-nearest-city==0.2.1",
     "pyodk",
 ]
 readme = "../../README.md"
-license = {text = "GPL-3.0-only"}
+license = {text = "AGPL-3.0-only"}
 
 [dependency-groups]
 dev = [
-    "pre-commit>=4.0.1",
-    "commitizen>=3.30.0",
-    "itrm>=1.4.15",
+    "pre-commit==4.0.1",
+    "commitizen==3.31.0",
+    "itrm==1.4.15",
 ]
 test = [
     "pytest==8.3.3",
     "pytest-asyncio==0.24.0",
-    "httpx==0.27.2",
+    "httpx==0.28.1",
     "pyinstrument==5.0.1",
-    "coverage>=7.6.4",
-    "coverage-badge>=1.1.2",
+    "coverage==7.6.7",
+    "coverage-badge==1.1.2",
 ]
 debug = [
-    "debugpy>=1.8.7",
+    "debugpy==1.8.13",
 ]
 docs = [
     "mkdocs==1.6.1",
@@ -78,18 +78,18 @@ docs = [
     "mkdocstrings-python==1.12.2",
     "mkdocs-exclude==1.0.2",
     "python-dotenv==1.0.1",
-    "mkdocs-git-revision-date-localized-plugin>=1.3.0",
-    "mdx-truly-sane-lists>=1.3",
+    "mkdocs-git-revision-date-localized-plugin==1.3.0",
+    "mdx-truly-sane-lists==1.3",
 ]
 monitoring = [
-    "sentry-sdk[opentelemetry]>=2.17.0",
-    #"opentelemetry-sdk>=1.27.0",
-    #"opentelemetry-api>=1.27.0",
-    #"opentelemetry-exporter-otlp>=1.27.0",
-    "opentelemetry-instrumentation-fastapi>=0.48b0",
-    "opentelemetry-instrumentation-logging>=0.48b0",
-    "opentelemetry-instrumentation-psycopg2>=0.48b0",
-    "opentelemetry-instrumentation-requests>=0.48b0",
+    "sentry-sdk[opentelemetry]==2.18.0",
+    #"opentelemetry-sdk==1.27.0",
+    #"opentelemetry-api==1.27.0",
+    #"opentelemetry-exporter-otlp==1.27.0",
+    "opentelemetry-instrumentation-fastapi==0.49b1",
+    "opentelemetry-instrumentation-logging==0.49b1",
+    "opentelemetry-instrumentation-psycopg2==0.49b1",
+    "opentelemetry-instrumentation-requests==0.49b1",
 ]
 
 [tool.ruff]
@@ -98,7 +98,6 @@ line-length = 88
 target-version = "py312"
 exclude = [
     ".ruff_cache",
-    "__pypackages__",
     "app/__version__.py",
     "stats",
 ]
@@ -117,20 +116,21 @@ extend-immutable-calls = [
     "fastapi.Security",
 ]
 
-[tool.pyright]
-extraPaths = ["__pypackages__/3.12/lib/"]
-
 [tool.pytest.ini_options]
 addopts = "-ra -q"
 testpaths = [
     "tests",
+    "package_tests",
+]
+pythonpath = [
+    "package_tests",
 ]
 asyncio_mode="auto"
 asyncio_default_fixture_loop_scope="session"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "2025.1.0"
+version = "2025.2.0"
 version_files = [
     "pyproject.toml:version",
     "app/__version__.py",
@@ -147,9 +147,13 @@ large_file_skip_byte_limit = 30000  # Required to process fmtm_base_schema.sql
 exclude_rules = "CP05, RF02"  # Avoid capitalisation of enums
 
 [tool.codespell]
-skip = "contrib/*.py,*languages_and_countries.py,*pnpm-lock.yaml,*CHANGELOG.md,src/mapper/src/lib/migrations/*"
+skip = "contrib/*.py,*languages_and_countries.py,*pnpm-lock.yaml,*CHANGELOG.md,src/mapper/src/lib/migrations/*,src/mapper/messages/*,src/backend/packages/osm-fieldwork/osm_fieldwork/form_components/*,src/backend/packages/osm-fieldwork/osm_fieldwork/update_form.py,src/backend/packages/osm-fieldwork/tests/test_data/*"
 ignore-words-list = "ProjectIn"
 write-changes = true
 
 [tool.uv.sources]
+osm-fieldwork = { workspace = true }
 pyodk = { git = "https://github.com/hotosm/pyodk", rev = "master-modified" }
+
+[tool.uv.workspace]
+members = ["packages/*"]

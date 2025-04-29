@@ -1,19 +1,19 @@
 # Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
 """ODK Central dependency wrappers."""
@@ -21,6 +21,7 @@
 from contextlib import asynccontextmanager
 from io import BytesIO
 from pathlib import Path
+from typing import Optional
 
 from fastapi import UploadFile
 from fastapi.exceptions import HTTPException
@@ -79,3 +80,13 @@ async def validate_xlsform_extension(xlsform: UploadFile):
 async def read_xlsform(xlsform: UploadFile) -> BytesIO:
     """Read an XLSForm, validate extension, return wrapped in BytesIO."""
     return await validate_xlsform_extension(xlsform)
+
+
+async def read_form_media(
+    media_uploads: list[UploadFile],
+) -> Optional[dict[str, BytesIO]]:
+    """Read all uploaded form media for upload to ODK Central."""
+    file_data_dict = {
+        file.filename: BytesIO(await file.read()) for file in media_uploads
+    }
+    return file_data_dict

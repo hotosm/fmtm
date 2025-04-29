@@ -1,18 +1,18 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
-# This file is part of FMTM.
+# Copyright (c) Humanitarian OpenStreetMap Team
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
 name: fmtm-main
@@ -20,6 +20,8 @@ name: fmtm-main
 volumes:
   fmtm_frontend:
     name: fmtm-frontend-main
+  fmtm_mapper_frontend:
+    name: fmtm-mapper-frontend-main
   fmtm_db_data:
     name: fmtm-db-data-main
   fmtm_data:
@@ -32,39 +34,88 @@ volumes:
     name: fmtm-tiles-main
   certs:
     name: fmtm-certs-main
-  certbot_data:
-    name: fmtm-certbot-data-main
 
 networks:
   fmtm-net:
     name: fmtm-main
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.20.30.0/24
 
 services:
   proxy:
-    image: "ghcr.io/hotosm/fmtm/proxy:main"
+    image: "bunkerity/bunkerweb-all-in-one:${BUNKERWEB_TAG:-1.6.2-rc1}"
     depends_on:
-      api:
-        condition: service_started
-      certbot:
-        condition: service_completed_successfully
-      s3:
-        condition: service_healthy
+      # Frontends must be built and available first
       ui:
         condition: service_completed_successfully
-      electric:
-        condition: service_started
     volumes:
-      - fmtm_frontend:/usr/share/nginx/html/fmtm
-      - certs:/etc/letsencrypt
-      - certbot_data:/var/www/certbot
+      # - certs:/etc/letsencrypt
+      - certs:/data
+      - fmtm_frontend:/var/www/html/fmtm.hotosm.org:ro
+      - fmtm_mapper_frontend:/var/www/html/mapper.fmtm.hotosm.org:ro
     environment:
-      FMTM_DOMAIN: ${FMTM_DOMAIN}
-      FMTM_API_DOMAIN: ${FMTM_API_DOMAIN:-api.${FMTM_DOMAIN}}
-      FMTM_S3_DOMAIN: ${FMTM_S3_DOMAIN:-s3.${FMTM_DOMAIN}}
-      FMTM_SYNC_DOMAIN: ${FMTM_SYNC_DOMAIN:-sync.${FMTM_DOMAIN}}
+      # General
+      BUNKERWEB_INSTANCES: proxy:5000
+      LOG_LEVEL: notice
+      USE_BUNKERNET: no
+      DISABLE_DEFAULT_SERVER: yes
+      API_WHITELIST_IP: 127.0.0.0/8 10.20.30.0/24
+      # Avoid running ModSec rules on internal service calls
+      WHITELIST_IP: 10.20.30.0/24
+      WHITELIST_URI: https://fmtm.hotosm.org
+      MULTISITE: yes
+      USE_REVERSE_PROXY: yes
+      # Required for electric headers electric-offset, electric-handle, electric-schema,electric-cursor,electric-up-to-date
+      KEEP_UPSTREAM_HEADERS: yes
+      REVERSE_PROXY_INTERCEPT_ERRORS: no
+      ALLOWED_METHODS: OPTIONS|HEAD|GET|POST|PATCH|PUT|DELETE
+      USE_REAL_IP: yes
+      SERVE_FILES: yes
+      USE_BACKUP: no
+      USE_METRICS: no
+      # USE_ANTIBOT: yes
+      USE_LIMIT_CONN: yes
+      USE_BAD_BEHAVIOR: no
+      USE_LIMIT_REQ: yes
+      USE_MODSECURITY: yes
+      USE_GZIP: yes
+      # On client, brotli is preferred over gzip if both are enabled
+      USE_BROTLI: yes
+      # For OpenTelemetry (Allow-Headers are what the browser can include in the REQUEST headers)
+      CUSTOM_HEADER: "Access-Control-Allow-Headers: DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,traceparent,tracestate"
+      AUTO_LETS_ENCRYPT: yes
+      EMAIL_LETS_ENCRYPT: ${CERT_EMAIL}
+      # USE_LETS_ENCRYPT_STAGING: yes
+      # Reverse proxy configs
+      SERVER_NAME: fmtm.hotosm.org mapper.fmtm.hotosm.org api.fmtm.hotosm.org s3.fmtm.hotosm.org sync.fmtm.hotosm.org odk.fmtm.hotosm.org
+      # We need this to allow for client-side routing in the SPA (from index.html)
+      fmtm.hotosm.org_ERRORS: 404=/index.html
+      mapper.fmtm.hotosm.org_ERRORS: 404=/index.html
+      mapper.fmtm.hotosm.org_MAX_CLIENT_SIZE: 1G
+      # We allow accelerometer, camera, fullscreen, geolocation, magnetometer, gyroscope
+      mapper.fmtm.hotosm.org_PERMISSIONS_POLICY: accelerometer=(self), ambient-light-sensor=(), attribution-reporting=(), autoplay=(), battery=(), bluetooth=(), browsing-topics=(), camera=(self), compute-pressure=(), display-capture=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(self), gamepad=(), geolocation=(self), gyroscope=(self), hid=(), identity-credentials-get=(), idle-detection=(), local-fonts=(), magnetometer=(self), microphone=(), midi=(), otp-credentials=(), payment=(), picture-in-picture=(), publickey-credentials-create=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), speaker-selection=(), storage-access=(), usb=(), web-share=(), window-management=(), xr-spatial-tracking=(), interest-cohort=()
+      api.fmtm.hotosm.org_REVERSE_PROXY_HOST: http://api:8000
+      api.fmtm.hotosm.org_MAX_CLIENT_SIZE: 1G
+      # Increase timeout slightly for long project creation requests
+      api.fmtm.hotosm.org_REVERSE_PROXY_READ_TIMEOUT: 90s
+      s3.fmtm.hotosm.org_REVERSE_PROXY_HOST: http://s3:9000
+      s3.fmtm.hotosm.org_MAX_CLIENT_SIZE: 10G
+      # CORS must be enabled for Minio to work
+      s3.fmtm.hotosm.org_USE_CORS: yes
+      s3.fmtm.hotosm.org_CORS_ALLOW_ORIGIN: https://fmtm.hotosm.org
+      sync.fmtm.hotosm.org_REVERSE_PROXY_HOST: http://electric:3000
+      sync.fmtm.hotosm.org_MAX_CLIENT_SIZE: 1G
+      # CORS must be enabled for Electric to work
+      sync.fmtm.hotosm.org_USE_CORS: yes
+      sync.fmtm.hotosm.org_CORS_ALLOW_ORIGIN: https://mapper.fmtm.hotosm.org
+      sync.fmtm.hotosm.org_CORS_ALLOW_METHODS: GET, HEAD, DELETE, OPTIONS
+      # Expose-Headers are RESPONSE headers the browser is allowed to access
+      sync.fmtm.hotosm.org_CORS_EXPOSE_HEADERS: electric-offset,electric-handle,electric-schema,electric-cursor,electric-up-to-date
     ports:
-      - 80:80
-      - 443:443
+      - 80:8080
+      - 443:8443
     networks:
       - fmtm-net
     restart: "unless-stopped"
@@ -107,6 +158,8 @@ services:
   backups:
     image: "ghcr.io/hotosm/fmtm/backend:main"
     depends_on:
+      proxy:
+        condition: service_healthy
       fmtm-db:
         condition: service_healthy
       s3:
@@ -123,21 +176,3 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-
-  certbot:
-    image: "ghcr.io/hotosm/fmtm/proxy:certs-init-main"
-    volumes:
-      - certs:/etc/letsencrypt
-      - certbot_data:/var/www/certbot
-    environment:
-      FMTM_DOMAIN: ${FMTM_DOMAIN}
-      FMTM_API_DOMAIN: ${FMTM_API_DOMAIN:-api.${FMTM_DOMAIN}}
-      FMTM_S3_DOMAIN: ${FMTM_S3_DOMAIN:-s3.${FMTM_DOMAIN}}
-      FMTM_SYNC_DOMAIN: ${FMTM_SYNC_DOMAIN:-sync.${FMTM_DOMAIN}}
-      CERT_EMAIL: ${CERT_EMAIL}
-    ports:
-      - 80:80
-      - 443:443
-    networks:
-      - fmtm-net
-    restart: "on-failure:2"

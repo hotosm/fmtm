@@ -1,18 +1,18 @@
 # Copyright (c) Humanitarian OpenStreetMap Team
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 ARG PYTHON_IMG_TAG=3.12
 ARG UV_IMG_TAG=0.5.2
@@ -90,11 +90,13 @@ RUN apt-get update --quiet \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=uv /uv /usr/local/bin/uv
 COPY pyproject.toml uv.lock /_lock/
+COPY packages /_lock/packages
 # Ensure caching & install with or without monitoring, depending on flag
 RUN --mount=type=cache,target=/root/.cache <<EOT
     uv sync \
         --project /_lock \
         --locked \
+        --no-editable \
         --no-dev \
         --no-install-project \
     $(if [ -z "$MONITORING" ]; then \
@@ -157,7 +159,7 @@ COPY scheduler/ /opt/scheduler/
 RUN useradd -u 1001 -m -c "fmtm account" -d /home/appuser -s /bin/false appuser \
     && mkdir -p /opt/logs \
     && chown -R appuser:appuser /opt /home/appuser \
-    && chmod +x /app-entrypoint.sh /migrate-entrypoint.sh /backup-entrypoint.sh
+    && chmod +x /app-entrypoint.sh /migrate-entrypoint.sh /backup-entrypoint.sh /opt/scheduler/*.py
 # Add log volume for persistence
 VOLUME /opt/logs
 # Change to non-root user
@@ -167,9 +169,21 @@ USER appuser
 # Add certificates to use ODK Central over SSL (HTTPS, required)
 FROM runtime AS add-odk-certs
 USER root
-# Add the SSL cert for debug odkcentral
-COPY --from=ghcr.io/hotosm/fmtm/proxy:debug \
-    /etc/nginx/central-fullchain.crt /usr/local/share/ca-certificates/
+# Add the SSL cert for local odkcentral install (debugging only)
+RUN echo 'LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUI5RENDQVhtZ0F3SUJBZ0lVWXFyb\
+0dWRVdsK204eU9OY2pUU2pCWThkckN3d0NnWUlLb1pJemowRUF3SXcKRlRFVE1CRUdBMVVFQXd3S2Iy\
+UnJZMlZ1ZEhKaGJEQWdGdzB5TkRBM01qTXhNakF6TVRWYUdBOHlNVEkwTURZeQpPVEV5TURNeE5Wb3d\
+GVEVUTUJFR0ExVUVBd3dLYjJSclkyVnVkSEpoYkRCMk1CQUdCeXFHU000OUFnRUdCU3VCCkJBQWlBMk\
+lBQktSZmpOQVFzWUI0ekNXckdETHdKNEVIRDRTNW5rL1Z3aG00TmYwN203c0RTai9RTzlYK0JnNjIKe\
+WlMbWVzT1ZMRExHRklpZXZ2aHIrZkxNY0YwUDQwN0FWKytER1o5bXZ6VmNwMVdZMlE5NllpTVVuelM3\
+MWx0RQo4K3BXbFBmanRLT0JoekNCaERBZEJnTlZIUTRFRmdRVWNVekZsNUpWN1dUM045VUhxbmhSRHl\
+WT3ZjY3dId1lEClZSMGpCQmd3Rm9BVWNVekZsNUpWN1dUM045VUhxbmhSRHlWT3ZjY3dEd1lEVlIwVE\
+FRSC9CQVV3QXdFQi96QXgKQmdOVkhSRUVLakFvZ2dwdlpHdGpaVzUwY21Gc2doUXFMbTlrYXk1bWJYU\
+nRMbXh2WTJGc2FHOXpkSWNFQ2hRZQpNakFLQmdncWhrak9QUVFEQWdOcEFEQm1BakVBb2xuOGRubmlQ\
+N0dKSEJPQW4rTHVCV0ZhaUY1NHFZRmpTYyt1Clpia1cwY1pyNWw2VnZ6WVlBdGdWbUtOdTB5WWRBakV\
+BMWlvT2JRTERYdDV3S1JPWjV5VUtmbys2T21IbTV1NWkKQU5LUHd2MExqc2ZIYk5hbzJMWnduK0VxTj\
+NtdUpPNXEKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=' \
+| base64 -d > /usr/local/share/ca-certificates/central.crt
 RUN update-ca-certificates
 
 
@@ -178,10 +192,12 @@ FROM add-odk-certs AS debug
 USER appuser
 COPY --from=uv /uv /usr/local/bin/uv
 COPY pyproject.toml uv.lock /_lock/
+COPY packages /_lock/packages
 RUN --mount=type=cache,target=/root/.cache <<EOT
     uv sync \
         --project /_lock \
         --locked \
+        --no-editable \
         --no-install-project \
         --group debug \
         --group test \

@@ -11,6 +11,7 @@ import { CommonActions } from '@/store/slices/CommonSlice';
 import { isStatusSuccess } from '@/utilfunctions/commonUtils';
 import { AppDispatch } from '@/store/Store';
 import isEmpty from '@/utilfunctions/isEmpty';
+import { NavigateFunction } from 'react-router-dom';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -19,11 +20,11 @@ const CreateProjectService = (
   projectData: any,
   taskAreaGeojson: any,
   formUpload: any,
-  dataExtractFile: File | null,
-  isOsmExtract: boolean,
+  dataExtractFile: File,
   additionalFeature: any,
   projectAdmins: number[],
   combinedFeaturesCount: number,
+  isEmptyDataExtract: boolean,
 ) => {
   return async (dispatch: AppDispatch) => {
     dispatch(CreateProjectActions.CreateProjectLoading(true));
@@ -41,7 +42,9 @@ const CreateProjectService = (
       await dispatch(CreateProjectActions.PostProjectDetails(projectCreateResp));
 
       if (!hasAPISuccess) {
-        throw new Error(`Request failed with status ${projectCreateResp.status}`);
+        const msg = `Request failed with status ${projectCreateResp.status}`;
+        console.error(msg);
+        throw new Error(msg);
       }
       projectId = projectCreateResp.id;
 
@@ -51,29 +54,34 @@ const CreateProjectService = (
       );
 
       if (!hasAPISuccess) {
-        throw new Error(`Request failed`);
+        const msg = `Request failed`;
+        console.error(msg);
+        throw new Error(msg);
       }
 
       // Upload data extract
       let extractResponse;
-      if (isOsmExtract) {
-        // Generated extract from raw-data-api
-        extractResponse = await API.get(
-          `${VITE_API_URL}/projects/data-extract-url?project_id=${projectId}&url=${projectData.data_extract_url}`,
-        );
+      if (isEmptyDataExtract) {
+        // Manually set response as we don't call an API
+        extractResponse = { status: 200 };
       } else if (dataExtractFile) {
-        // post custom data extract
         const dataExtractFormData = new FormData();
-        dataExtractFormData.append('custom_extract_file', dataExtractFile);
+        dataExtractFormData.append('data_extract_file', dataExtractFile);
         extractResponse = await API.post(
-          `${VITE_API_URL}/projects/upload-custom-extract?project_id=${projectId}`,
+          `${VITE_API_URL}/projects/upload-data-extract?project_id=${projectId}`,
           dataExtractFormData,
         );
+      } else {
+        const msg = 'No dataExtractFile or EmptyDataExtractwas set';
+        console.error(msg);
+        throw new Error(msg);
       }
       hasAPISuccess = isStatusSuccess(extractResponse.status);
 
       if (!hasAPISuccess) {
-        throw new Error(`Request failed with status ${extractResponse.status}`);
+        const msg = `Request failed with status ${extractResponse.status}`;
+        console.error(msg);
+        throw new Error(msg);
       }
 
       // post additional feature if available
@@ -84,7 +92,9 @@ const CreateProjectService = (
 
         hasAPISuccess = postAdditionalFeature;
         if (!hasAPISuccess) {
-          throw new Error(`Request failed`);
+          const msg = `Request failed`;
+          console.error(msg);
+          throw new Error(msg);
         }
       }
 
@@ -102,14 +112,16 @@ const CreateProjectService = (
 
       hasAPISuccess = generateProjectFile;
       if (!hasAPISuccess) {
-        throw new Error(`Request failed`);
+        const msg = `Request failed`;
+        console.error(msg);
+        throw new Error(msg);
       }
 
       // assign project admins
       if (!isEmpty(projectAdmins)) {
-        const promises = projectAdmins?.map(async (id: any) => {
+        const promises = projectAdmins?.map(async (sub: any) => {
           await dispatch(
-            AssignProjectManager(`${VITE_API_URL}/projects/add-manager`, { id, project_id: projectId as number }),
+            AssignProjectManager(`${VITE_API_URL}/projects/add-manager`, { sub, project_id: projectId as number }),
           );
         });
         await Promise.all(promises);
@@ -118,7 +130,7 @@ const CreateProjectService = (
       // dispatch(CreateProjectActions.CreateProjectLoading(false));
     } catch (error: any) {
       if (projectId) {
-        await dispatch(DeleteProjectService(`${VITE_API_URL}/projects/${projectId}`, false));
+        await dispatch(DeleteProjectService(`${VITE_API_URL}/projects/${projectId}`));
       }
 
       await dispatch(CreateProjectActions.GenerateProjectError(true));
@@ -168,7 +180,9 @@ const UploadTaskAreasService = (url: string, filePayload: any) => {
         isAPISuccess = isStatusSuccess(postNewProjectDetails.status);
 
         if (!isAPISuccess) {
-          throw new Error(`Request failed with status ${postNewProjectDetails.status}`);
+          const msg = `Request failed with status ${postNewProjectDetails.status}`;
+          console.error(msg);
+          throw new Error(msg);
         }
       } catch (error: any) {
         isAPISuccess = false;
@@ -211,7 +225,9 @@ const GenerateProjectFilesService = (url: string, projectData: any, formUpload: 
       });
 
       if (!isStatusSuccess(response.status)) {
-        throw new Error(`Request failed with status ${response.status}`);
+        const msg = `Request failed with status ${response.status}`;
+        console.error(msg);
+        throw new Error(msg);
       }
 
       // If warning provided, then inform user
@@ -531,23 +547,19 @@ const ValidateCustomForm = (url: string, formUpload: any) => {
   };
 };
 
-const DeleteProjectService = (url: string, hasRedirect: boolean = true) => {
+const DeleteProjectService = (url: string, navigate?: NavigateFunction) => {
   return async (dispatch: AppDispatch) => {
     const deleteProject = async (url: string) => {
       try {
+        dispatch(CreateProjectActions.SetProjectDeletePending(true));
         await API.delete(url);
         dispatch(
           CommonActions.SetSnackBar({
-            message: `Project deleted. ${hasRedirect && 'Redirecting...'}`,
+            message: `Project deleted`,
             variant: 'success',
           }),
         );
-        // Redirect to homepage
-        if (hasRedirect) {
-          setTimeout(() => {
-            window.location.href = '/';
-          }, 2000);
-        }
+        if (navigate) navigate('/');
       } catch (error) {
         if (error.response.status === 404) {
           dispatch(
@@ -556,8 +568,9 @@ const DeleteProjectService = (url: string, hasRedirect: boolean = true) => {
               variant: 'success',
             }),
           );
-        } else {
         }
+      } finally {
+        dispatch(CreateProjectActions.SetProjectDeletePending(false));
       }
     };
 
@@ -565,7 +578,7 @@ const DeleteProjectService = (url: string, hasRedirect: boolean = true) => {
   };
 };
 
-const AssignProjectManager = (url: string, params: { id: number; project_id: number }) => {
+const AssignProjectManager = (url: string, params: { sub: number; project_id: number }) => {
   return async (dispatch: AppDispatch) => {
     const assignProjectManager = async () => {
       try {

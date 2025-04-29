@@ -1,30 +1,42 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
-"""Logic for FMTM tasks."""
+"""Logic for Field-TM tasks."""
 
 from datetime import datetime, timedelta, timezone
+from textwrap import dedent
 
+from fastapi import (
+    Request,
+)
+from loguru import logger as log
+from osm_login_python.core import Auth
 from psycopg import Connection
 from psycopg.rows import class_row
 
+from app.auth.auth_schemas import ProjectUserDict
+from app.auth.providers.osm import (
+    get_osm_token,
+    send_osm_message,
+)
 from app.central.central_crud import get_entities_data, update_entity_mapping_status
+from app.config import settings
 from app.db.enums import EntityState
-from app.db.models import DbOdkEntities, DbProject
+from app.db.models import DbOdkEntities, DbProject, DbProjectTeam, DbTask
 from app.db.postgis_utils import timestamp
 from app.tasks import task_schemas
 
@@ -127,7 +139,7 @@ async def unlock_old_locked_tasks(db, project_id):
     """Unlock tasks locked for more than 3 days."""
     unlock_query = """
         WITH svc_user AS (
-            SELECT id AS svc_user_id, username AS svc_username
+            SELECT sub, username
             FROM users
             WHERE username = 'svcfmtm'
         ),
@@ -159,7 +171,7 @@ async def unlock_old_locked_tasks(db, project_id):
             task_id,
             project_id,
             event,
-            user_id,
+            user_sub,
             state,
             created_at,
             username
@@ -169,12 +181,70 @@ async def unlock_old_locked_tasks(db, project_id):
             fe.task_id,
             fe.project_id,
             'RESET'::taskevent,
-            svc.svc_user_id,
+            svc.sub,
             'UNLOCKED_TO_MAP'::mappingstate,
             NOW(),
-            svc.svc_username
+            svc.username
         FROM filtered_events fe
         CROSS JOIN svc_user svc;
     """
     async with db.cursor() as cur:
         await cur.execute(unlock_query, {"project_id": project_id})
+
+
+async def send_task_assignment_notifications(
+    request: Request,
+    osm_auth: Auth,
+    team: DbProjectTeam,
+    project_user: ProjectUserDict,
+    task: DbTask,
+    assignee_sub: str,
+):
+    """Send OSM notifications to team members or assignee for task assignment."""
+    osm_token = get_osm_token(request, osm_auth)
+    project = project_user.get("project")
+    user = project_user.get("user")
+
+    project_url = f"{settings.FMTM_DOMAIN}/project/{project.id}"
+    if not project_url.startswith("http"):
+        project_url = f"https://{project_url}"
+
+    if assignee_sub:
+        assignee_message_content = dedent(f"""
+            You have been assigned to task **{task.project_task_index}** in project
+            **{project.name}** by **{user.username}**.
+
+            [View Project]({project_url})
+
+            Thank you for being a part of our platform!
+        """)
+
+        send_osm_message(
+            osm_token=osm_token,
+            title=f"Task Assignment in {project.name}",
+            body=assignee_message_content,
+            osm_sub=assignee_sub,
+        )
+
+        log.info(f"OSM notification sent to {assignee_sub} for task {task.id}")
+
+    elif team:
+        team_message_content = dedent(f"""
+            You have been assigned to task **{task.project_task_index}** in project
+            **{project.name}** by **{user.username}** as a part of team
+            **{team.team_name}**.
+
+            [View Project]({project_url})
+
+            Thank you for being a part of our platform!
+        """)
+
+        for user in team.users:
+            send_osm_message(
+                osm_token=osm_token,
+                title=f"Task Assignment in {project.name}",
+                body=team_message_content,
+                osm_sub=user["sub"],
+            )
+
+        log.info(f"OSM notifications sent to {team.users} for task {task.id}")

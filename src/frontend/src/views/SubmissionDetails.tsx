@@ -62,7 +62,7 @@ const SubmissionDetails = () => {
           </p>
         </>
       );
-    } else if (typeof value === 'object' && Object.values(value).includes('Point')) {
+    } else if (typeof value === 'object' && value !== null && Object.values(value).includes('Point')) {
       return (
         <>
           {renderValue(
@@ -73,7 +73,7 @@ const SubmissionDetails = () => {
           {renderValue(value?.properties?.accuracy, 'accuracy')}
         </>
       );
-    } else if (typeof value === 'object') {
+    } else if (typeof value === 'object' && value !== null) {
       return (
         <ul className="fmtm-flex fmtm-flex-col fmtm-gap-1">
           <Accordion
@@ -204,7 +204,6 @@ const SubmissionDetails = () => {
                         entity_id: restSubmissionDetails?.feature,
                         label: restSubmissionDetails?.meta?.entity?.label,
                         feature: convertCoordinateStringToFeature('xlocation', restSubmissionDetails?.xlocation),
-                        featureId: restSubmissionDetails?.xid,
                       }),
                     );
                   }}

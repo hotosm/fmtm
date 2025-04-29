@@ -5,6 +5,7 @@ Adapted and updated from
 in osm-fieldwork.
 
 The full specification for XLSForms can be found [here](https://xlsform.org/en/).
+A cheatsheet reference for XLSForm can be found [here](https://datafordev.com/wp-content/uploads/2021/02/datafordev-xlsform-cheat-sheet-v1.pdf).
 
 ## XLSForm & ODK Terms
 
@@ -77,7 +78,25 @@ A few terms should be explained:
 
 ## Translations
 
-- Fields for translations...
+- Ideally two letter ISO codes should be used, along with a label,
+  e.g. `image::english(en)`.
+- Note the important thing is consistency of usage. The ISO codes
+  are not actually validated. So as long as they match `en`
+  throughout the form, everything should work.
+- As a consequence, it is entirely valid to use language variants,
+  such as `pt-BR` for Brazilian Portuguese, _as long as you are
+  consistent_.
+
+### Media Files Gotcha
+
+- In the `choices` label, if you include any translated fields, such
+  as `label::spanish(es)`, then references to media files **must**
+  also be translated.
+- For example, you need to have an image field for every available
+  translation in your form: `image::english(en)=file.jpg` and
+  `image::spanish(es)=file.jpg`.
+- The image file could be the same for each language, or a
+  different file for each language.
 
 ## Creating Entities
 
@@ -142,9 +161,9 @@ The example CSV can be downloaded
 
 ### 3. From Code (API)
 
-### Injected Fields in the FMTM XLS Form
+### Injected Fields in the Field-TM XLS Form
 
-During project creation in the Field Mapping Tasking Manager (FMTM), specific
+During project creation in the Field Tasking Manager (Field-TM), specific
 fields and questions are automatically injected into the XLS form to assess
 digitization status and support the data conflation process. Below is an
 overview of the injected fields and their purposes:
@@ -158,7 +177,7 @@ overview of the injected fields and their purposes:
    of new feature.
    Note: One of these two options must be filled up to proceed.
 5. We also dedicate few rows for calculating OSM ID,
-   Task ID and mapping status used on FMTM.
+   Task ID and mapping status used on Field-TM.
 6. We then ask mappers to answer if the feature exist in reality?
    If yes, user proceeds with form submission.
 7. If no, the user is prompted to capture an image (if available) and the form

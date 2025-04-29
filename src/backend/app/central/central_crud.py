@@ -1,19 +1,19 @@
-# Copyright (c) 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Logic for interaction with ODK Central & data."""
 
@@ -22,6 +22,8 @@ import json
 from asyncio import gather
 from datetime import datetime
 from io import BytesIO, StringIO
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Optional, Union
 from uuid import uuid4
 
@@ -29,8 +31,10 @@ import geojson
 from fastapi import HTTPException
 from loguru import logger as log
 from osm_fieldwork.OdkCentral import OdkAppUser, OdkForm, OdkProject
-from osm_fieldwork.update_xlsform import append_mandatory_fields
+from osm_fieldwork.update_xlsform import append_field_mapping_fields
 from psycopg import Connection
+from pyodk._utils.config import CentralConfig
+from pyodk.client import Client
 from pyxform.xls2xform import convert as xform_convert
 
 from app.central import central_deps, central_schemas
@@ -42,6 +46,7 @@ from app.db.postgis_utils import (
     javarosa_to_geojson_geom,
     parse_geojson_file_to_featcol,
 )
+from app.s3 import strip_presigned_url_for_local_dev
 
 
 def get_odk_project(odk_central: Optional[central_schemas.ODKCentralDecrypted] = None):
@@ -146,13 +151,13 @@ def create_odk_project(
 ):
     """Create a project on a remote ODK Server.
 
-    Appends FMTM to the project name to help identify on shared servers.
+    Appends Field-TM to the project name to help identify on shared servers.
     """
     project = get_odk_project(odk_central)
 
     try:
-        log.debug(f"Attempting ODKCentral project creation: FMTM {name}")
-        result = project.createProject(f"FMTM {name}")
+        log.debug(f"Attempting ODKCentral project creation: Field-TM {name}")
+        result = project.createProject(f"Field-TM {name}")
 
         # Sometimes createProject returns a list if fails
         if isinstance(result, dict):
@@ -276,17 +281,19 @@ async def append_fields_to_user_xlsform(
     xlsform: BytesIO,
     form_name: str = "buildings",
     additional_entities: Optional[list[str]] = None,
-    existing_id: Optional[str] = None,
     new_geom_type: Optional[DbGeomType] = DbGeomType.POLYGON,
+    need_verification_fields: bool = True,
+    use_odk_collect: bool = False,
 ) -> tuple[str, BytesIO]:
     """Helper to return the intermediate XLSForm prior to convert."""
-    log.debug("Appending mandatory FMTM fields to XLSForm")
-    return await append_mandatory_fields(
+    log.debug("Appending mandatory Field-TM fields to XLSForm")
+    return await append_field_mapping_fields(
         xlsform,
         form_name=form_name,
         additional_entities=additional_entities,
-        existing_id=existing_id,
         new_geom_type=new_geom_type,
+        need_verification_fields=need_verification_fields,
+        use_odk_collect=use_odk_collect,
     )
 
 
@@ -294,16 +301,18 @@ async def validate_and_update_user_xlsform(
     xlsform: BytesIO,
     form_name: str = "buildings",
     additional_entities: Optional[list[str]] = None,
-    existing_id: Optional[str] = None,
     new_geom_type: Optional[DbGeomType] = DbGeomType.POLYGON,
+    need_verification_fields: bool = True,
+    use_odk_collect: bool = False,
 ) -> BytesIO:
     """Wrapper to append mandatory fields and validate user uploaded XLSForm."""
     xform_id, updated_file_bytes = await append_fields_to_user_xlsform(
         xlsform,
         form_name=form_name,
         additional_entities=additional_entities,
-        existing_id=existing_id,
         new_geom_type=new_geom_type,
+        need_verification_fields=need_verification_fields,
+        use_odk_collect=use_odk_collect,
     )
 
     # Validate and return the form
@@ -567,6 +576,7 @@ async def create_entity_list(
         )
         # Step 2: populate the Entities
         if entities_list:
+            log.debug(f"Creating project ODK entities for dataset: {dataset_name}")
             await odk_central.createEntities(
                 odk_id,
                 dataset_name,
@@ -738,7 +748,7 @@ async def get_entities_data(
         log.exception(f"Error: {e}", stack_info=True)
         msg = f"Getting entity data failed for ODK project ({odk_id})"
         raise HTTPException(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            status_code=HTTPStatus.NOT_FOUND,
             detail=msg,
         ) from e
 
@@ -914,8 +924,8 @@ async def get_appuser_token(
 
         # delete if app_user already exists
         if odk_app_user:
-            app_user_id = odk_app_user[0].get("id")
-            appuser.delete(project_odk_id, app_user_id)
+            app_user_sub = odk_app_user[0].get("id")
+            appuser.delete(project_odk_id, app_user_sub)
 
         # create new app_user
         appuser_name = "fmtm_user"
@@ -924,7 +934,7 @@ async def get_appuser_token(
         )
         appuser_json = appuser.create(project_odk_id, appuser_name)
         appuser_token = appuser_json.get("token")
-        appuser_id = appuser_json.get("id")
+        appuser_sub = appuser_json.get("id")
 
         odk_url = odk_credentials.odk_central_url
 
@@ -933,7 +943,7 @@ async def get_appuser_token(
         response = appuser.updateRole(
             projectId=project_odk_id,
             xform=xform_id,
-            actorId=appuser_id,
+            actorId=appuser_sub,
         )
         if not response.ok:
             try:
@@ -958,3 +968,55 @@ async def get_appuser_token(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail="An error occurred while creating the app user token.",
         ) from e
+
+
+async def upload_form_media(
+    xform_id: str,
+    project_odk_id: int,
+    odk_credentials: central_schemas.ODKCentralDecrypted,
+    media_attachments: dict[str, BytesIO],
+):
+    """Upload form media attachments to ODK."""
+    attachment_filepaths = []
+
+    # Write all uploaded data to temp files for upload (required by PyODK)
+    # We must use TemporaryDir and preserve the uploaded file names
+    with TemporaryDirectory() as temp_dir:
+        for file_name, file_data in media_attachments.items():
+            temp_path = Path(temp_dir) / file_name
+            with open(temp_path, "wb") as temp_file:
+                temp_file.write(file_data.getvalue())
+            attachment_filepaths.append(temp_path)
+
+        pyodk_config = CentralConfig(
+            base_url=odk_credentials.odk_central_url,
+            username=odk_credentials.odk_central_user,
+            password=odk_credentials.odk_central_password,
+        )
+        with Client(pyodk_config) as client:
+            return client.forms.update(
+                project_id=project_odk_id,
+                form_id=xform_id,
+                attachments=attachment_filepaths,
+            )
+
+
+async def get_form_media(
+    xform_id: str,
+    project_odk_id: int,
+    odk_credentials: central_schemas.ODKCentralDecrypted,
+):
+    """Get a list of form media attachments with their URLs."""
+    async with central_deps.get_async_odk_form(odk_credentials) as async_odk_form:
+        form_attachment_urls = await async_odk_form.getFormAttachmentUrls(
+            project_odk_id,
+            xform_id,
+        )
+
+    if settings.DEBUG:
+        form_attachment_urls = {
+            filename: strip_presigned_url_for_local_dev(url)
+            for filename, url in form_attachment_urls.items()
+        }
+
+    return form_attachment_urls

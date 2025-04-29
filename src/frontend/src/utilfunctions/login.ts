@@ -1,5 +1,5 @@
 // The /auth/me endpoint does an UPSERT in the database, ensuring the user
-// exists in the FMTM DB
+// exists in the Field-TM DB
 export const getUserDetailsFromApi = async () => {
   try {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
@@ -34,7 +34,7 @@ export const refreshCookies = async () => {
 
 export const osmLoginRedirect = async () => {
   try {
-    const resp = await fetch(`${import.meta.env.VITE_API_URL}/auth/osm-login`);
+    const resp = await fetch(`${import.meta.env.VITE_API_URL}/auth/login/osm/management`);
     const data = await resp.json();
     window.location = data.login_url;
   } catch (error) {

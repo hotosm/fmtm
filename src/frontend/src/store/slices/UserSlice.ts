@@ -20,6 +20,11 @@ export const initialState: UserStateTypes = {
   updateUserRoleLoading: false,
   userListForSelect: [],
   userListForSelectLoading: false,
+  userNames: [],
+  projectUserInvitesList: [],
+  getUserNamesLoading: false,
+  inviteNewUserPending: false,
+  projectUserInvitesError: [],
 };
 
 const UserSlice = createSlice({
@@ -34,7 +39,7 @@ const UserSlice = createSlice({
     },
     UpdateUserList: (state, action: PayloadAction<userType>) => {
       state.userList.results = state.userList.results.map((user) =>
-        user.id === action.payload.id ? action.payload : user,
+        user.sub === action.payload.sub ? action.payload : user,
       );
     },
     SetUpdateUserRoleLoading: (state, action: PayloadAction<boolean>) => {
@@ -45,6 +50,24 @@ const UserSlice = createSlice({
     },
     SetUserListForSelectLoading: (state, action: PayloadAction<boolean>) => {
       state.userListLoading = action.payload;
+    },
+    SetUserNames: (state, action: PayloadAction<UserStateTypes['userNames']>) => {
+      state.userNames = action.payload;
+    },
+    GetUserNamesLoading: (state, action: PayloadAction<boolean>) => {
+      state.getUserNamesLoading = action.payload;
+    },
+    InviteNewUserPending: (state, action: PayloadAction<boolean>) => {
+      state.inviteNewUserPending = action.payload;
+    },
+    SetProjectUserInvites: (state, action: PayloadAction<UserStateTypes['projectUserInvitesList']>) => {
+      state.projectUserInvitesList = action.payload;
+    },
+    GetProjectUserInvitesLoading: (state, action: PayloadAction<boolean>) => {
+      state.getProjectUserInvitesLoading = action.payload;
+    },
+    SetProjectUserInvitesError: (state, action: PayloadAction<string[]>) => {
+      state.projectUserInvitesError = action.payload;
     },
   },
 });

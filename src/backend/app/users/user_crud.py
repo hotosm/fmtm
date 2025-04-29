@@ -1,19 +1,19 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Logic for user routes."""
 
@@ -22,12 +22,15 @@ from datetime import datetime, timedelta, timezone
 from textwrap import dedent
 from typing import Optional
 
+from fastapi import Request
 from loguru import logger as log
+from osm_login_python.core import Auth
 from psycopg import Connection
 from psycopg.rows import class_row
 
-from app.auth.providers.osm import send_osm_message
-from app.db.models import DbUser
+from app.auth.providers.osm import get_osm_token, send_osm_message
+from app.config import settings
+from app.db.models import DbProject, DbUser
 from app.projects.project_crud import get_pagination
 
 SVC_OSM_TOKEN = os.getenv("SVC_OSM_TOKEN", None)
@@ -54,7 +57,7 @@ async def process_inactive_users(
             async with db.cursor(row_factory=class_row(DbUser)) as cur:
                 await cur.execute(
                     """
-                    SELECT id, username, last_login_at
+                    SELECT sub, username, last_login_at
                     FROM users
                     WHERE last_login_at < %(warning_date)s
                     AND last_login_at >= %(next_warning_date)s;
@@ -69,7 +72,7 @@ async def process_inactive_users(
             for user in users_to_warn:
                 if SVC_OSM_TOKEN:
                     await send_warning_email_or_osm(
-                        user.id, user.username, days, SVC_OSM_TOKEN
+                        user.sub, user.username, days, SVC_OSM_TOKEN
                     )
                 else:
                     log.warning(
@@ -82,7 +85,7 @@ async def process_inactive_users(
         async with db.cursor(row_factory=class_row(DbUser)) as cur:
             await cur.execute(
                 """
-                SELECT id, username
+                SELECT sub, username
                 FROM users
                 WHERE last_login_at < %(deletion_threshold)s;
                 """,
@@ -92,11 +95,11 @@ async def process_inactive_users(
 
         for user in users_to_delete:
             log.info(f"Deleting user {user.username} due to inactivity.")
-            await DbUser.delete(db, user.id)
+            await DbUser.delete(db, user.sub)
 
 
 async def send_warning_email_or_osm(
-    user_id: int,
+    user_sub: str,
     username: str,
     days_remaining: int,
     osm_token: str,
@@ -117,11 +120,48 @@ async def send_warning_email_or_osm(
 
     send_osm_message(
         osm_token=osm_token,
-        osm_id=user_id,
-        title="FMTM account deletion warning",
+        osm_sub=user_sub,
+        title="Field-TM account deletion warning",
         body=message_content,
     )
     log.info(f"Sent warning to {username}: {days_remaining} days remaining.")
+
+
+async def send_invitation_osm_message(
+    request: Request,
+    project: DbProject,
+    invitee_username: str,
+    osm_auth: Auth,
+    invite_url: str,
+):
+    """Send an invitation message to a user to join a project."""
+    log.info(f"Sending invitation message to osm user ({invitee_username}).")
+
+    osm_token = get_osm_token(request, osm_auth)
+
+    project_url = f"{settings.FMTM_DOMAIN}/project/{project.id}"
+    if not project_url.startswith("http"):
+        project_url = f"https://{project_url}"
+
+    message_content = dedent(f"""
+        You have been invited to join the project **{project.name}**.
+
+        To accept the invitation, please click the link below:
+        [Accept Invitation]({invite_url})
+
+        You may use this link after accepting the invitation to view the project:
+        [Project]({project_url})
+
+        Thank you for being a part of our platform!
+    """)
+
+    send_osm_message(
+        osm_token=osm_token,
+        osm_username=invitee_username,
+        title=f"You have been invited to join the project {project.name}",
+        body=message_content,
+    )
+    log.info(f"Invitation message sent to osm user ({invitee_username}).")
 
 
 async def get_paginated_users(
@@ -132,13 +172,16 @@ async def get_paginated_users(
 ) -> dict:
     """Helper function to fetch paginated users with optional filters."""
     # Get subset of users
-    users = await DbUser.all(db, search=search)
+    users = await DbUser.all(db, search=search) or []
     start_index = (page - 1) * results_per_page
     end_index = start_index + results_per_page
-    paginated_users = users[start_index:end_index]
+
+    if not users:
+        paginated_users = []
+    else:
+        paginated_users = users[start_index:end_index]
 
     pagination = await get_pagination(
         page, len(paginated_users), results_per_page, len(users)
     )
-
     return {"results": paginated_users, "pagination": pagination}

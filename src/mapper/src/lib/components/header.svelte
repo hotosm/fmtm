@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { setLanguageTag, onSetLanguageTag, availableLanguageTags } from "$translations/runtime.js";
+	import '$styles/header.css';
+	import { onMount, onDestroy } from 'svelte';
 	import type { SlDrawer, SlTooltip } from '@shoelace-style/shoelace';
 	// FIXME this is a workaround to re-import, as using sl-dropdown
 	// and sl-menu prevents selection of values!
@@ -8,17 +8,18 @@
 	import '@shoelace-style/shoelace/dist/components/dropdown/dropdown.js';
 	import '@shoelace-style/shoelace/dist/components/menu/menu.js';
 	import '@shoelace-style/shoelace/dist/components/menu-item/menu-item.js';
+	import type { SlSelectEvent } from '@shoelace-style/shoelace/dist/events';
 
-	import * as m from "$translations/messages.js";
-	import HotLogo from '$assets/images/hot-logo.svg';
-	import HotLogoText from '$assets/images/hot-logo-text.svg';
+	import { setLocale as setParaglideLocale, locales } from '$translations/runtime.js';
+	import { m } from '$translations/messages.js';
 	import Login from '$lib/components/login.svelte';
 	import { getLoginStore } from '$store/login.svelte.ts';
-	import { drawerItems as menuItems } from '$constants/drawerItems.ts';
-	import { revokeCookies } from '$lib/utils/login';
+	import { defaultDrawerItems } from '$constants/drawerItems.ts';
+	import { revokeCookies } from '$lib/api/login';
 	import { getAlertStore } from '$store/common.svelte';
 	import { getCommonStore, getProjectSetupStepStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
+	import { goto } from '$app/navigation';
 
 	let drawerRef: SlDrawer | undefined = $state();
 	let drawerOpenButtonRef: SlTooltip | undefined = $state();
@@ -31,11 +32,6 @@
 		+(projectSetupStepStore.projectSetupStep || 0) === projectSetupStepEnum['odk_project_load'],
 	);
 
-	// Trigger from paraglide-js, when the locale changes
-	onSetLanguageTag((newLocale: string) => {
-		commonStore.setLocale(newLocale);
-	});
-
 	const handleSignOut = async () => {
 		try {
 			await revokeCookies();
@@ -47,32 +43,53 @@
 		}
 	};
 
-	onMount(() => {
-		setLanguageTag(commonStore.locale);
+	const handleLocaleSelect = (event: SlSelectEvent) => {
+		const selectedItem = event.detail.item;
+		commonStore.setLocale(selectedItem.value);
+		console.log(selectedItem.value)
+		setParaglideLocale(selectedItem.value); // paraglide function for UI changes (causes reload)
+	};
 
+	let sidebarMenuItems = $derived(commonStore.config?.sidebarItemsOverride.length > 0 ? commonStore.config?.sidebarItemsOverride : defaultDrawerItems)
+
+	onMount(() => {
 		// Handle locale change
 		const container = document.querySelector('.locale-selection');
-		const dropdown = container.querySelector('sl-dropdown');
-		dropdown.addEventListener('sl-select', event => {
-			const selectedItem = event.detail.item;
-			setLanguageTag(selectedItem.value);
-		});
+		const dropdown = container?.querySelector('sl-dropdown');
+		dropdown?.addEventListener('sl-select', handleLocaleSelect);
+
+	});
+
+	onDestroy(() => {
+		const container = document.querySelector('.locale-selection');
+		const dropdown = container?.querySelector('sl-dropdown');
+		dropdown?.removeEventListener('sl-select', handleLocaleSelect);
 	});
 </script>
-
-<div class="p-3 flex items-center justify-between font-barlow">
-	<div class="flex items-center gap-1">
-		<a href={window.location.origin}><img src={HotLogo} alt="hot-logo" class="h-[2.2rem] sm:h-[3rem]" /></a>
-		<img src={HotLogoText} alt="hot-logo" class="h-[2.2rem] sm:h-[3rem]" />
+<div class="header">
+	<div
+		onclick={() => goto('/')}
+		onkeydown={(e) => {
+			if (e.key === 'Enter') goto('/');
+		}}
+		role="button"
+		tabindex="0"
+		class="logo"
+		aria-label="Home"
+	>
+		<img src={commonStore.config?.logoUrl} alt="hot-logo"/>
+		<span class="logo-text">
+			{commonStore.config?.logoText}
+		</span>
 	</div>
-	<div class="flex items-center gap-4">
+	<div class="nav">
 		<!-- profile image and username display -->
 		{#if loginStore?.getAuthDetails?.username}
-			<div class="flex items-center gap-2">
+			<div class="user">
 				{#if !loginStore?.getAuthDetails?.picture}
 					<hot-icon
 						name="person-fill"
-						class="!text-[1.5rem] text-[#52525B] leading-0 cursor-pointer text-red-600 duration-200"
+						class=""
 						onclick={() => {}}
 						onkeydown={() => {}}
 						role="button"
@@ -82,18 +99,15 @@
 					<img
 						src={loginStore?.getAuthDetails?.picture}
 						alt="profile"
-						class="w-[1.8rem] h-[1.8rem] min-w-[1.8rem] min-h-[1.8rem] max-w-[1.8rem] max-h-[1.8rem] rounded-full"
 					/>
 				{/if}
-				<p
-					class="font-medium text-sm sm:text-base text-ellipsis whitespace-nowrap overflow-hidden max-w-[6rem] sm:max-w-fit"
-				>
+				<p class="username">
 					{loginStore?.getAuthDetails?.username}
 				</p>
 			</div>
 		{:else}
 			<hot-button
-				class="hover:bg-gray-50 rounded"
+				class="login-link"
 				variant="text"
 				size="small"
 				onclick={() => {
@@ -107,7 +121,7 @@
 				role="button"
 				tabindex="0"
 			>
-				<span class="font-barlow font-medium text-base">SIGN IN</span>
+				<span>{m['header.sign_in']()}</span>
 			</hot-button>
 		{/if}
 
@@ -115,8 +129,7 @@
 		{#snippet drawerOpenButton()}
 			<hot-icon
 				name="list"
-				class="!text-[1.8rem] text-[#52525B] leading-0 cursor-pointer hover:text-red-600 duration-200"
-				style={isFirstLoad ? 'background-color: var(--hot-color-yellow-300);' : ''}
+				class="drawer-icon ${isFirstLoad && !commonStore.enableWebforms ? 'drawer-icon-firstload' : ''}"
 				onclick={() => {
 					drawerRef?.show();
 				}}
@@ -128,7 +141,7 @@
 			></hot-icon>
 		{/snippet}
 		<!-- add tooltip on first load -->
-		{#if isFirstLoad}
+		{#if isFirstLoad && !commonStore.enableWebforms}
 			<hot-tooltip
 				bind:this={drawerOpenButtonRef}
 				content="First download the custom ODK Collect app here"
@@ -150,30 +163,31 @@
 <Login />
 
 <hot-drawer bind:this={drawerRef} class="drawer-overview">
-	<div class="flex flex-col gap-8 px-4">
+	<div class="content">
 		<div class="locale-selection">
 			<sl-dropdown>
 				<hot-button slot="trigger" caret>
-					<hot-icon name="translate"></hot-icon> {commonStore.locale}
+					<hot-icon name="translate"></hot-icon>
+					{commonStore.locale}
 				</hot-button>
 				<sl-menu>
-					{#each availableLanguageTags as locale}
+					{#each locales as locale}
 						<sl-menu-item value={locale}>{locale}</sl-menu-item>
 					{/each}
 				</sl-menu>
 			</sl-dropdown>
 		</div>
-		{#each menuItems as menu}
+		{#each sidebarMenuItems as item}
 			<a
 				target="_blank"
 				rel="noopener noreferrer"
-				href={menu.path}
-				class="hover:text-red-600 cursor-pointer duration-200 decoration-none text-black font-barlow">{menu.name}</a
+				href={item.path}
+				class="menu-item">{item.name}</a
 			>
 		{/each}
 		{#if loginStore?.getAuthDetails?.username}
 			<hot-button
-				class="primary rounded"
+				class="sign-out"
 				variant="primary"
 				size="small"
 				onclick={handleSignOut}
@@ -185,7 +199,7 @@
 				role="button"
 				tabindex="0"
 			>
-			{#key commonStore.locale}<span class="font-barlow font-medium text-base">{m.sign_out()}</span>{/key}
+				{#key commonStore.locale}<span>{m['header.sign_out']()}</span>{/key}
 			</hot-button>
 		{/if}
 	</div>

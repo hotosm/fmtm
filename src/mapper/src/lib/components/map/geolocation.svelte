@@ -1,9 +1,11 @@
 <script lang="ts">
+	import '$styles/map-geolocation.css';
 	import { Control, ControlButton, ControlGroup, GeoJSON, SymbolLayer, type LngLatLike } from 'svelte-maplibre';
 	import type { FeatureCollection } from 'geojson';
 	import MapLibreGlDirections, { LoadingIndicatorControl } from '@maplibre/maplibre-gl-directions';
 
-	import { GetDeviceRotation } from '$lib/utils/getDeviceRotation';
+	import { m } from "$translations/messages.js";
+	import { GetDeviceRotation } from '$lib/map/get-device-rotation.ts';
 	import { getAlertStore } from '$store/common.svelte.ts';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
 	import { getCommonStore } from '$store/common.svelte.ts';
@@ -23,7 +25,7 @@
 
 	let rotationDeg: number | undefined = $state();
 	let watchId: number | undefined = $state();
-	let directions: MapLibreGlDirections = $state();
+	let directions: MapLibreGlDirections | undefined = $state();
 	let entityDistance: number = $state(0);
 	let tooltipRef: any = $state();
 
@@ -38,27 +40,30 @@
 					map.addImage('location', image.data);
 				}
 			});
-			directions = new MapLibreGlDirections(map, {
-				// custom styled direction layer
-				layers,
-				sensitiveWaypointLayers: ['maplibre-gl-directions-waypoint'],
-				sensitiveSnappointLayers: ['maplibre-gl-directions-snappoint'],
-				sensitiveRoutelineLayers: ['maplibre-gl-directions-routeline'],
-				sensitiveAltRoutelineLayers: ['maplibre-gl-directions-alt-routeline'],
-			});
-			directions.interactive = false;
-			map.addControl(new LoadingIndicatorControl(directions));
-			directions.clear();
 
-			directions.on('fetchroutesend', (ev) => {
-				entityDistance = ev.data?.routes[0].distance as number;
-			});
+			if (!directions) {
+				directions = new MapLibreGlDirections(map, {
+					// custom styled direction layer
+					layers,
+					sensitiveWaypointLayers: ['maplibre-gl-directions-waypoint'],
+					sensitiveSnappointLayers: ['maplibre-gl-directions-snappoint'],
+					sensitiveRoutelineLayers: ['maplibre-gl-directions-routeline'],
+					sensitiveAltRoutelineLayers: ['maplibre-gl-directions-alt-routeline'],
+				});
+				directions.interactive = false;
+				map.addControl(new LoadingIndicatorControl(directions));
+				directions.clear();
 
-			directions.on('removewaypoint', () => {
-				if (directions.waypoints.length < 2) {
-					entityDistance = 0;
-				}
-			});
+				directions.on('fetchroutesend', (ev) => {
+					entityDistance = ev.data?.routes[0].distance as number;
+				});
+
+				directions.on('removewaypoint', () => {
+					if (directions.waypoints.length < 2) {
+						entityDistance = 0;
+					}
+				});
+			}
 		}
 	});
 
@@ -216,7 +221,7 @@
 	}
 </script>
 
-<Control class="flex flex-col gap-y-2" position="top-left">
+<Control class="geolocation" position="top-left">
 	<ControlGroup>
 		<hot-tooltip
 			bind:this={tooltipRef}
@@ -224,20 +229,17 @@
 			hoist
 			open
 			trigger="manual"
-			style="--max-width: fit-content"
 			onclick={() => tooltipRef.hide()}
 			onkeydown={(e: KeyboardEvent) => {
 				e.key === 'Enter' && tooltipRef.hide();
 			}}
 			role="button"
 			tabindex="0"
+			class="tooltip"
 		>
-			<div slot="content" class="flex items-center gap-1">
-				<span>For the best experience, turn on location</span>
-				<button
-					class="text-white rounded"
-					style="border: white 1px solid; width: fit-content; padding-left: 10px; padding-right: 10px">Got it!</button
-				>
+			<div slot="content" class="content">
+				<span>{m['map.enable_geolocation']()}</span>
+				<button class="button">{m['map.enable_geolocation_got_it']()}</button>
 			</div>
 			<ControlButton
 				title="Geolocation"
@@ -251,7 +253,7 @@
 			>
 				<hot-icon
 					name="geolocate"
-					class={`!text-[1.2rem] cursor-pointer  duration-200 ${entitiesStore.toggleGeolocation ? 'text-red-600' : 'text-[#52525B]'}`}
+					class={`geolocate-icon ${entitiesStore.toggleGeolocation ? 'toggle' : 'not-toggle'}`}
 				></hot-icon>
 			</ControlButton>
 		</hot-tooltip>
@@ -280,9 +282,9 @@
 {/if}
 
 {#if entitiesStore.toggleGeolocation && entityToNavigate}
-	<div class="font-barlow w-full flex justify-center absolute z-10 bottom-2 pointer-events-none">
-		<div class="bg-white rounded-md py-2 px-4 flex items-center gap-6 pointer-events-auto shadow-md z-10">
-			<p class="text-black text-base font-medium">Distance: {entityDistance}m</p>
+	<div class="geolocation-exit">
+		<div class="content">
+			<p class="distance">{m['geolocation.distance']()}: {entityDistance}m</p>
 			<sl-button
 				onclick={exitNavigationMode}
 				onkeydown={(e: KeyboardEvent) => {
@@ -291,10 +293,9 @@
 				role="button"
 				tabindex="0"
 				size="small"
-				class="secondary"
 				disabled={entitiesStore.syncEntityStatusLoading}
 			>
-				<span class="text-sm">Exit Navigation</span>
+				<span>{m['map.exit_navigation']()}</span>
 			</sl-button>
 		</div>
 	</div>
