@@ -163,7 +163,7 @@ class Settings(BaseSettings):
     DEFAULT_ORG_URL: Optional[str] = "https://hotosm.org"
     DEFAULT_ORG_EMAIL: Optional[str] = "syadmin@hotosm.org"
     DEFAULT_ORG_LOGO_URL: Optional[str] = (
-        "https://img.freepik.com/free-vector/colorful-bird-illustration-gradient_343694-1741.jpg"
+        "https://raw.githubusercontent.com/hotosm/fmtm/refs/heads/development/src/frontend/public/hot-org-logo.png"
     )
 
     EXTRA_CORS_ORIGINS: Optional[str | list[str]] = None

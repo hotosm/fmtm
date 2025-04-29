@@ -20,7 +20,7 @@
 from io import BytesIO
 from textwrap import dedent
 
-import httpx
+import aiohttp
 from fastapi import (
     Request,
     UploadFile,
@@ -82,17 +82,23 @@ async def init_admin_org(db: Connection) -> None:
     )
 
     org_logo = None
-    if settings.DEFAULT_ORG_LOGO_URL:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(settings.DEFAULT_ORG_LOGO_URL)
-            content_type = response.headers.get("Content-Type", "")
+    if logo_url := settings.DEFAULT_ORG_LOGO_URL:
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.get(logo_url) as response:
+                    response.raise_for_status()
+                    content_type = response.headers.get("Content-Type", "")
 
-            if response.status_code == 200 and content_type.startswith("image/"):
-                org_logo = UploadFile(
-                    file=BytesIO(response.content),
-                    filename="logo.png",
-                    headers={"Content-Type": content_type},
-                )
+                    if content_type.startswith("image/"):
+                        org_logo = UploadFile(
+                            file=BytesIO(await response.read()),
+                            filename="logo.png",
+                            headers={"Content-Type": content_type},
+                        )
+                    else:
+                        log.debug(f"Invalid content type for logo: {content_type}")
+            except aiohttp.ClientError as e:
+                log.debug(f"Failed to fetch logo from {logo_url}: {e}")
 
     hotosm_org = await DbOrganisation.create(
         db,
