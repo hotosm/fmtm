@@ -19,20 +19,6 @@
 		projectData: ProjectData;
 		displayWebFormsDrawer: Boolean;
 	};
-	function getStatusStyle(status: statusType) {
-		switch (status) {
-			case 'READY':
-				return 'bg-neutral-100 text-neutral-700';
-			case 'OPENED_IN_ODK':
-				return 'bg-warning-100 text-warning-700';
-			case 'SURVEY_SUBMITTED':
-				return 'bg-success-100 text-success-700';
-			case 'MARKED_BAD':
-				return 'bg-danger-100 text-danger-700';
-			case 'VALIDATED':
-				return 'bg-blue-100 text-blue-700';
-		}
-	}
 
 	let {
 		isTaskActionModalOpen,
@@ -186,7 +172,7 @@
 					<div class="item items-center">
 						<p class="label">{m['dialog_entities_actions.status']()}</p>
 						:
-						<p class={`${getStatusStyle(selectedEntity?.status)}`}>
+						<p class={`status ${selectedEntity?.status}`}>
 							{m[`entity_states.${selectedEntity?.status}`]()}
 						</p>
 					</div>
