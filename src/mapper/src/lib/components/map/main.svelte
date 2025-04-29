@@ -226,7 +226,7 @@
 				entityId: clickedEntityId,
 				coordinate: entityCentroid?.geometry?.coordinates,
 			});
-		} else if (clickedNewEntityFeature && clickedNewEntityFeature?.length > 0 && clickedFeatures?.length < 1) {
+		} else if (clickedNewEntityFeature && clickedNewEntityFeature?.length > 0 && clickedFeatures?.length < 2) {
 			// if clicked coordinate contains new entity only
 			const entityCentroid = centroid(clickedNewEntityFeature[0].geometry);
 			const clickedEntityId = clickedNewEntityFeature[0]?.properties?.entity_id;
@@ -258,9 +258,11 @@
 			clickedFeatures?.length < 2
 		) {
 			// if clicked coordinate contains either one uploaded entity or new entity, open entity actions modal
+			selectedFeatures = [];
 			toggleActionModal('entity-modal');
 		} else if (clickedTaskFeature && clickedTaskFeature?.length > 0 && clickedFeatures?.length === 0) {
 			// if clicked coordinate doesn't contain any entity but only task, open task actions modal
+			selectedFeatures = [];
 			toggleActionModal('task-modal');
 		} else {
 			// else close the modal
