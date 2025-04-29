@@ -114,8 +114,7 @@
 			// Geolocation not enabled, warn user
 			if (!coordFrom) {
 				alertStore.setAlert({
-					message:
-						m['dialog_entities_actions.distance_constraint'](),
+					message: m['dialog_entities_actions.distance_constraint'](),
 					variant: 'warning',
 				});
 				return;
@@ -157,9 +156,7 @@
 
 {#if isTaskActionModalOpen && selectedTab === 'map' && selectedEntity}
 	<div class="task-action-modal">
-		<div
-			class="content"
-		>
+		<div class="content">
 			<div class="icon">
 				<hot-icon
 					name="close"
@@ -189,9 +186,7 @@
 					<div class="item items-center">
 						<p class="label">{m['dialog_entities_actions.status']()}</p>
 						:
-						<p
-							class={`${getStatusStyle(selectedEntity?.status)}`}
-						>
+						<p class={`${getStatusStyle(selectedEntity?.status)}`}>
 							{m[`entity_states.${selectedEntity?.status}`]()}
 						</p>
 					</div>
@@ -273,8 +268,7 @@
 								role="button"
 								tabindex="0"
 							>
-								<hot-icon slot="prefix" name="location"
-								></hot-icon>
+								<hot-icon slot="prefix" name="location"></hot-icon>
 								<span>{m['popup.map_in_odk']()}</span>
 							</sl-button>
 						{/if}
@@ -308,8 +302,7 @@
 								role="button"
 								tabindex="0"
 							>
-								<hot-icon slot="prefix" name="location"
-								></hot-icon>
+								<hot-icon slot="prefix" name="location"></hot-icon>
 								<span>{m['dialog_entities_actions.collect_data']()}</span>
 							</sl-button>
 						{/if}
@@ -332,7 +325,8 @@
 	>
 		<div class="entity-dialog-content">
 			<p class="entity-dialog-youare">
-				{m['dialog_entities_actions.you_are']()} <b
+				{m['dialog_entities_actions.you_are']()}
+				<b
 					>{(
 						distance(
 							entitiesStore.selectedEntityCoordinate?.coordinate as Coord,
@@ -340,7 +334,8 @@
 							{ units: 'kilometers' },
 						) * 1000
 					).toFixed(2)}m</b
-				> {m['dialog_entities_actions.away_sure']()}
+				>
+				{m['dialog_entities_actions.away_sure']()}
 			</p>
 			<div class="entity-dialog-actions">
 				<sl-button
