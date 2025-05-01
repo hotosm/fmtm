@@ -50,7 +50,7 @@
 	import { loadOfflinePmtiles } from '$lib/map/basemaps.ts';
 	import { projectSetupStep as projectSetupStepEnum, MapGeomTypes } from '$constants/enums.ts';
 	import { baseLayers, osmStyle, pmtilesStyle } from '$constants/baseLayers.ts';
-	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
+	import { getEntitiesStatusStore, addStatusToGeojsonProperty } from '$store/entities.svelte.ts';
 	import { clickOutside } from '$lib/map/click-outside.ts';
 
 	type bboxType = [number, number, number, number];
@@ -116,11 +116,6 @@
 		...taskStore.featcol,
 		features: taskStore.featcol?.features?.map((feat) => centroid(feat?.geometry, { properties: feat.properties })),
 	});
-	// use Map for quick lookups
-	let entityMapByEntity = $derived(
-		new Map(entitiesStore.entitiesStatusList.map((entity) => [entity.entity_id, entity])),
-	);
-	let entityMapByOsm = $derived(new Map(entitiesStore.entitiesStatusList.map((entity) => [entity.osmid, entity])));
 	// Trigger adding the PMTiles layer to baselayers, if PmtilesUrl is set
 	let allBaseLayers: maplibregl.StyleSpecification[] = $derived(
 		projectBasemapStore.projectPmtilesUrl
@@ -331,40 +326,6 @@
 			}
 		}
 	});
-
-	function addStatusToGeojsonProperty(geojsonData: FeatureCollection, entityType: '' | 'new'): FeatureCollection {
-		if (entityType === 'new') {
-			return {
-				...geojsonData,
-				features: geojsonData.features.map((feature) => {
-					const entity = entityMapByEntity.get(feature?.properties?.entity_id);
-					return {
-						...feature,
-						properties: {
-							...feature.properties,
-							status: entity?.status,
-							entity_id: entity?.entity_id,
-						},
-					};
-				}),
-			};
-		} else {
-			return {
-				...geojsonData,
-				features: geojsonData.features.map((feature) => {
-					const entity = entityMapByOsm.get(feature?.properties?.osm_id);
-					return {
-						...feature,
-						properties: {
-							...feature.properties,
-							status: entity?.status,
-							entity_id: entity?.entity_id,
-						},
-					};
-				}),
-			};
-		}
-	}
 
 	function zoomToProject() {
 		const taskBuffer = buffer(taskStore.featcol, 5, { units: 'meters' });
@@ -577,7 +538,7 @@
 			extractGeomCols={true}
 			promoteId="id"
 			processGeojson={(geojsonData) => addStatusToGeojsonProperty(geojsonData, '')}
-			geojsonUpdateDependency={[entityMapByEntity, entityMapByOsm]}
+			geojsonUpdateDependency={[entitiesStore.entityMapByEntity, entitiesStore.entityMapByOsm]}
 		>
 			{#if primaryGeomType === MapGeomTypes.POLYGON}
 				<FillLayer
@@ -647,7 +608,7 @@
 			{/if}
 		</FlatGeobuf>
 	{/if}
-	<GeoJSON id="bad-geoms" data={entitiesStore.badGeomList}>
+	<GeoJSON id="bad-geoms" data={entitiesStore.badGeomFeatcol}>
 		{#if drawGeomType === MapGeomTypes.POLYGON}
 			<FillLayer
 				id="bad-geom-fill-layer"
@@ -681,7 +642,7 @@
 			/>
 		{/if}
 	</GeoJSON>
-	<GeoJSON id="new-geoms" data={addStatusToGeojsonProperty(entitiesStore.newGeomList, 'new')}>
+	<GeoJSON id="new-geoms" data={addStatusToGeojsonProperty(entitiesStore.newGeomFeatcol, 'new')}>
 		{#if drawGeomType === MapGeomTypes.POLYGON}
 			<FillLayer
 				id="new-entity-polygon-layer"
