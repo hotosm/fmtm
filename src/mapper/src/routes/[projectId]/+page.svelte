@@ -23,8 +23,8 @@
 	import type { ProjectTask } from '$lib/types';
 	import { openOdkCollectNewFeature } from '$lib/odk/collect';
 	import { convertDateToTimeAgo } from '$lib/utils/datetime';
-	import { getTaskStore, getTaskEventStream } from '$store/tasks.svelte.ts';
-	import { getEntitiesStatusStore, getEntityStatusStream, getNewBadGeomStream } from '$store/entities.svelte.ts';
+	import { getTaskStore } from '$store/tasks.svelte.ts';
+	import { getEntitiesStatusStore, getNewBadGeomStore } from '$store/entities.svelte.ts';
 	import More from '$lib/components/more/index.svelte';
 	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
@@ -50,12 +50,14 @@
 
 	const taskStore = getTaskStore();
 	const entitiesStore = getEntitiesStatusStore();
+	const newBadGeomStore = getNewBadGeomStore();
 	const commonStore = getCommonStore();
 	const { db } = commonStore;
 	const alertStore = getAlertStore();
 
-	const taskEventStream = getTaskEventStream(db, projectId);
-	const newBadGeomStream = getNewBadGeomStream(projectId);
+	let taskEventStream: ShapeStream | undefined;
+	let newBadGeomStream: ShapeStream | undefined;
+	let entityStatusStream: ShapeStream | undefined;
 
 	const selectedEntityId = $derived(entitiesStore.selectedEntity);
 	const latestEvent = $derived(taskStore.latestEvent);
@@ -117,12 +119,20 @@
 	}
 
 	onMount(async () => {
-		await entitiesStore.subscribeToNewBadGeom(newBadGeomStream);
+		taskEventStream = await taskStore.getTaskEventStream(db, projectId);
+		newBadGeomStream = await newBadGeomStore.getNewBadGeomStream(db, projectId);
+		newBadGeomStream = await entitiesStore.getEntityStatusStream(db, projectId);
+
+		// Note we need this for now, as the task outlines are from API, while task
+		// events are from pglite / sync. We pass through the task outlines.
 		await taskStore.appendTaskStatesToFeatcol(db, projectId, project.tasks);
 	});
 
 	onDestroy(() => {
 		taskEventStream?.unsubscribeAll();
+		newBadGeomStream?.unsubscribeAll();
+		entityStatusStream?.unsubscribeAll();
+
 		taskStore.clearTaskStates();
 	});
 
@@ -130,21 +140,6 @@
 		entitiesStore.syncEntityStatus(projectId);
 	});
 
-	$effect(() => {
-		entitiesStore.entitiesList;
-		let entityStatusStream: ShapeStream | undefined;
-
-		if (entitiesStore.entitiesList?.length === 0) return;
-		async function getEntityStatus() {
-			entityStatusStream = getEntityStatusStream(projectId);
-			await entitiesStore.subscribeToEntityStatusUpdates(entityStatusStream, entitiesStore.entitiesList);
-		}
-
-		getEntityStatus();
-		return () => {
-			entityStatusStream?.unsubscribeAll();
-		};
-	});
 	const projectSetupStepStore = getProjectSetupStepStore();
 
 	$effect(() => {
@@ -196,7 +191,7 @@
 				type: 'FeatureCollection',
 				features: [{ type: 'Feature', geometry: newFeatureGeom, properties: {} }],
 			});
-			await entitiesStore.createGeomRecord(projectId, {
+			await newBadGeomStore.createGeomRecord(projectId, {
 				status: 'NEW',
 				geojson: { type: 'Feature', geometry: newFeatureGeom, properties: { entity_id: entity.uuid } },
 				project_id: projectId,
