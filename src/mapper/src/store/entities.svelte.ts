@@ -211,7 +211,9 @@ function getEntitiesStatusStore() {
 		});
 		taskSubmissionInfo = taskInfo;
 	}
-	async function syncEntityStatus(projectId: number) {
+
+	// Manually sync the entity status via button (if local db gets out of sync with backend)
+	async function syncEntityStatus(db: PGliteWithSync, projectId: number) {
 		try {
 			syncEntityStatusLoading = true;
 			const entityStatusResponse = await fetch(`${API_URL}/projects/${projectId}/entities/statuses`, {
@@ -220,9 +222,10 @@ function getEntitiesStatusStore() {
 			if (!entityStatusResponse.ok) {
 				throw Error('Failed to get entities for project');
 			}
-			const responseJson: entitiesApiResponse[] = await entityStatusResponse.json();
 
-			entitiesList = responseJson.map((entity: entitiesApiResponse) => ({
+			const responseJson: entitiesApiResponse[] = await entityStatusResponse.json();
+			// Convert API response into our internal entity shape
+			const newEntities = responseJson.map((entity: entitiesApiResponse) => ({
 				entity_id: entity.id,
 				status: EntityStatusNameMap[entity.status],
 				project_id: projectId,
@@ -231,6 +234,30 @@ function getEntitiesStatusStore() {
 				osm_id: entity.osm_id,
 			}));
 			syncEntityStatusLoading = false;
+
+			// Replace in-memory list from store
+			entitiesList = newEntities;
+
+			// Clear odk_entities table first in local db, then re-add data
+			// FIXME we should sync any pending entities first, if in the staging table
+			await db.exec(`DELETE FROM odk_entities WHERE project_id = $1;`, [projectId]);
+			for (const entity of newEntities) {
+				await db.run(
+					`INSERT INTO odk_entities (entity_id, status, project_id, task_id, submission_ids, osm_id)
+					VALUES ($1, $2, $3, $4, $5, $6)`,
+					[
+						entity.entity_id,
+						entity.status,
+						entity.project_id,
+						entity.task_id,
+						JSON.stringify(entity.submission_ids),
+						entity.osm_id,
+					],
+				);
+			}
+
+			// FIXME should we also be calling _setTaskSubmissionInfo in other places
+			// where we set the entity statuses?
 			_setTaskSubmissionInfo(responseJson);
 		} catch (error) {
 			syncEntityStatusLoading = false;

@@ -132,10 +132,6 @@
 		taskStore.clearTaskStates();
 	});
 
-	$effect(() => {
-		entitiesStore.syncEntityStatus(projectId);
-	});
-
 	const projectSetupStepStore = getProjectSetupStepStore();
 
 	$effect(() => {
@@ -192,7 +188,6 @@
 				geojson: { type: 'Feature', geometry: newFeatureGeom, properties: { entity_id: entity.uuid } },
 				project_id: projectId,
 			});
-			entitiesStore.syncEntityStatus(projectId);
 			cancelMapNewFeatureInODK();
 
 			if (commonStore.enableWebforms) {
