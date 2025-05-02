@@ -2,7 +2,7 @@
 
 ## Software Requirements
 
-It is recommended to run FMTM on a Linux-based machine.
+It is recommended to run Field-TM on a Linux-based machine.
 
 > This includes MacOS, but some [tools must be substituted][1].
 >
@@ -13,13 +13,13 @@ the following software installed and configured on your system:
 
 > If running Debian/Ubuntu, the install script below does this for you.
 
-[Git][3] to clone the FMTM repository.
+[Git][3] to clone the Field-TM repository.
 
 [Docker][4]
-to run FMTM inside containers.
+to run Field-TM inside containers.
 
 [Docker Compose][5]
-for easy orchestration of the FMTM services.
+for easy orchestration of the Field-TM services.
 
 > This is Docker Compose V2, the official Docker CLI plugin.
 >
@@ -52,7 +52,7 @@ If more details are required, check out the
   - [Easy Install](#easy-install)
   - [Manual Install](#manual-install)
     - [Table of Contents](#table-of-contents)
-    - [Clone the FMTM repository](#clone-the-fmtm-repository)
+    - [Clone the Field-TM repository](#clone-the-field-tm-repository)
     - [Setup Your Local Environment](#setup-your-local-environment)
       - [1. Setup OSM OAUTH 2.0](#1-setup-osm-oauth-20)
       - [2. Create an `.env` File](#2-create-an-env-file)
@@ -64,9 +64,9 @@ If more details are required, check out the
     - [Setup ODK Central User (Optional)](#setup-odk-central-user-optional)
     - [Set Up Monitoring (Optional)](#set-up-monitoring-optional)
     - [Check Authentication (Optional)](#check-authentication-optional)
-    - [Configure Custom Branding](#configure-custom-branding-optional)
+    - [Configure Custom Branding](#configure-custom-branding)
 
-### Clone the FMTM repository
+### Clone the Field-TM repository
 
 Clone the repository to your local machine using the following command:
 
@@ -83,9 +83,9 @@ These steps are essential to run and test your code!
 
 #### 1. Setup OSM OAuth 2.0
 
-The FMTM uses OAuth with OSM to authenticate users.
+The Field-TM uses OAuth with OSM to authenticate users.
 
-To properly configure your FMTM project, you will need to create keys for OSM.
+To properly configure your Field-TM project, you will need to create keys for OSM.
 
 1. [Login to OSM][7]
    (_If you do not have an account yet, click the signup
@@ -94,7 +94,7 @@ To properly configure your FMTM project, you will need to create keys for OSM.
    Click the drop down arrow on the top right of the navigation bar
    and select My Settings.
 
-2. Register your FMTM instance to OAuth 2 applications.
+2. Register your Field-TM instance to OAuth 2 applications.
 
    Put your login redirect url as `http://127.0.0.1:7051/osmauth` if running locally,
    or for production replace with https://{YOUR_DOMAIN}/osmauth
@@ -128,19 +128,19 @@ bash scripts/1-environment/gen-env.sh
 > <http://fmtm.localhost:7050,http://some.other.domain>
 >
 > Note: It is possible to generate the auth pub/priv key manually using:
-> openssl genrsa -out fmtm-private.pem 4096
-> openssl rsa -in fmtm-private.pem -pubout -out fmtm-private.pem
+> openssl genrsa -out field-tm-private.pem 4096
+> openssl rsa -in field-tm-private.pem -pubout -out field-tm-private.pem
 
 ### Start the API with Docker
 
-This is the easiest way to get started with FMTM.
+This is the easiest way to get started with Field-TM.
 
 Docker runs each service inside **containers**, fully isolated from your
 host operating system.
 
 #### Select the install type
 
-Determine the what type of FMTM install you would like:
+Determine the what type of Field-TM install you would like:
 
 ```text
 main - the latest production
@@ -208,7 +208,7 @@ http://fmtm.localhost:7050
 
 ### Setup ODK Central User (Optional)
 
-The FMTM uses ODK Central to store ODK data.
+The Field-TM uses ODK Central to store ODK data.
 
 - By default, the docker setup includes a Central server.
 - The credentials should have been provided in your `.env`
@@ -251,28 +251,86 @@ Once you have deployed, you will need to check that you can properly authenticat
 4. If you see an error instead, double check your credentials and
    redirect URL in the openstreetmap.org settings.
 
-### Configure Custom Branding (Optional)
+### Frontend Customization (Optional)
 
-- It's possible to replace the HOTOSM logo and change the colour scheme for your
-  deployment.
-- By default the `config.json` configuration is:
+- It's possible to tailor the mapper portion of Field-TM to your needs
+  (the main app that users will see).
+- There is a `config.json` file that is used to dynamically modify the frontend
+  deployment:
 
   ```json
   {
     "logoUrl": "/favicon.svg",
     "logoText": "Humanitarian OpenStreetMap Team",
-    "cssFile": "https://cdn.jsdelivr.net/npm/@hotosm/ui@0.2.0-b6/dist/style.css"
+    "cssFile": "https://cdn.jsdelivr.net/npm/@hotosm/ui@0.2.0-b6/dist/style.css",
+    "enableWebforms": false,
+    "loginProviders": {
+      "osm": true,
+      "google": true
+    },
+    "sidebarItemsOverride": []
   }
   ```
 
-- To change the logo and styling, upload your logo and custom CSS file to a publicly
-  accessible URL (uploading to the bundle Minio S3 bucket is a good choice).
-- Then update the `config.json` values and upload this file to the location:
-  `https://s3.{YOUR_FIELDTM_DOMAIN}/fmtm-data/frontend/config.json`.
-- This file will be automatically picked up and used to style your application.
-  By default, FieldTM will fallback to the bundled `config.json`.
+- This is read from the bundled Minio S3 bucket called `fmtm-data`:
+  `https://s3.{YOUR_FIELDTM_DOMAIN}/fmtm-data/frontend/config.json`
+- Under the `fmtm-data/frontend` path you can modify the `config.json`,
+  and also upload things like CSS files and logos.
 
-That's it, you have successfully set up FieldTM!!
+### Configure Custom Branding
+
+- It's possible to replace the HOTOSM logo and change the colour scheme for your
+  deployment.
+- This file will be automatically picked up and used to style your application.
+  By default, Field-TM will fallback to the bundled `config.json`.
+
+  ```json
+  {
+      ...
+      "logoUrl": "/favicon.svg",
+      "logoText": "Humanitarian OpenStreetMap Team",
+      "cssFile": "https://cdn.jsdelivr.net/npm/@hotosm/ui@0.2.0-b6/dist/style.css"
+  }
+  ```
+
+### Configure Custom Sidebar Elements
+
+- By default Field-TM has a few items in the sidebar, like a link to a support
+  page, and other resources.
+- These links can be overridden using the `sidebarItemsOverride` parameter in
+  the `config.json`, which expects format:
+
+  ```json
+  {
+      ...
+      "sidebarItemsOverride": [
+          {
+              "name": "Your Website",
+              "path": "https://yourwebsite.com"
+          },
+          {
+              "name": "Support",
+              "path": "https://docs.fmtm.dev/about/about/"
+          }
+      ]
+  }
+  ```
+
+### Enabled / Disable Auth Providers
+
+- We are continually adding new OAuth provider options.
+
+  ```json
+  {
+    ...
+      "loginProviders": {
+          "osm": true,
+          "google": true
+      }
+  }
+  ```
+
+That's it, you have successfully set up Field-TM!!
 
 [1]: ./dev/Setup.md#alternative-operating-systems "MacOS container tools"
 [2]: ./dev/Setup.md#alternative-operating-systems "Windows Subsystem for Linux"

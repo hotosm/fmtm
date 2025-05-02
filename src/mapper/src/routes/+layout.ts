@@ -1,6 +1,6 @@
 import type { PageLoad } from './$types';
 import { getLoginStore } from '$store/login.svelte.ts';
-import { refreshCookies, getUserDetailsFromApi } from '$lib/utils/login';
+import { refreshCookies, getUserDetailsFromApi } from '$lib/api/login';
 // NOTE we can't prerender as we are using dynamic routing [projectId]
 export const prerender = false;
 export const ssr = false;
@@ -18,6 +18,7 @@ export const load: PageLoad = async ({ fetch }) => {
 			Login + user details
 		*/
 		let apiUser = await refreshCookies(fetch);
+		loginStore.setRefreshCookieResponse(apiUser);
 		if (apiUser?.username !== 'svcfmtm') {
 			// Call /auth/me to populate the user details in the header
 			apiUser = await getUserDetailsFromApi(fetch);

@@ -21,8 +21,24 @@ import { useIsAdmin } from '@/hooks/usePermissions';
 import { isEmpty } from '@/utilfunctions/commonUtils';
 import AssetModules from '@/shared/AssetModules';
 import Chips from '@/components/common/Chips';
+import { project_visibility } from '@/types/enums';
+import { projectVisibilityOptionsType } from '@/store/types/ICreateProject';
+import RadioButton from '@/components/common/RadioButton';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
+
+const projectVisibilityOptions: projectVisibilityOptionsType[] = [
+  {
+    name: 'project_visibility',
+    value: project_visibility.PUBLIC,
+    label: 'Public',
+  },
+  {
+    name: 'project_visibility',
+    value: project_visibility.PRIVATE,
+    label: 'Private',
+  },
+];
 
 const ProjectDetailsForm = ({ flag }) => {
   useDocumentTitle('Create Project: Project Details');
@@ -30,7 +46,7 @@ const ProjectDetailsForm = ({ flag }) => {
   const navigate = useNavigate();
   const isAdmin = useIsAdmin();
   const { hostname } = window.location;
-  const defaultHashtags = ['#FMTM', `#${hostname}-{project_id}`];
+  const defaultHashtags = ['#Field-TM', `#${hostname}-{project_id}`];
 
   const projectDetails = useAppSelector((state) => state.createproject.projectDetails);
   const organisationListData = useAppSelector((state) => state.createproject.organisationList);
@@ -239,7 +255,7 @@ const ProjectDetailsForm = ({ flag }) => {
               onChange={(value: any) => {
                 handleCustomChange('project_admins', value);
               }}
-              placeholder="Search for FMTM users"
+              placeholder="Search for Field-TM users"
               className="naxatw-w-1/5 naxatw-min-w-[9rem]"
               multiple
               checkBox
@@ -343,6 +359,28 @@ const ProjectDetailsForm = ({ flag }) => {
               editable={true}
             />
           </div>
+          <RadioButton
+            value={values?.visibility || ''}
+            topic="Project Type"
+            options={projectVisibilityOptions}
+            direction="row"
+            onChangeData={(value) => {
+              handleCustomChange('visibility', value);
+            }}
+            errorMsg={errors.visibility}
+            hoveredOption={() => {
+              dispatch(CreateProjectActions.SetDescriptionToFocus('projectdetails-visibility'));
+            }}
+          />
+          <CustomCheckbox
+            key="use_odk_collect"
+            label="Use ODK Collect Mobile App (instead of Web Forms)"
+            checked={values.use_odk_collect}
+            onCheckedChange={() => {
+              handleCustomChange('use_odk_collect', !values.use_odk_collect);
+            }}
+            className="fmtm-text-black"
+          />
           <div className="fmtm-w-fit fmtm-mx-auto fmtm-mt-10">
             <Button variant="primary-red" type="submit">
               NEXT

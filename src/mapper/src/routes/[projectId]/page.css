@@ -137,7 +137,7 @@ sl-tab hot-icon {
 }
 
 .dialog-overview .manual-qr-gif {
-	border: 1px solid #ededed;
+	border: 1px solid var(--sl-color-neutral-200);
 }
 
 /* Drawer */
@@ -149,4 +149,8 @@ sl-tab hot-icon {
 
 .web-forms-drawer sl-tab hot-icon {
 	--at-apply: text-[1.7rem] sm: text-[2rem];
+}
+
+.bottom-sheet-header {
+	--at-apply: mb-2 font-bold text-lg;
 }

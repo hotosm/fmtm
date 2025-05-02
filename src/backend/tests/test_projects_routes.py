@@ -1,19 +1,19 @@
 # Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Tests for project routes."""
 
@@ -224,10 +224,10 @@ async def test_unsupported_crs(project_data, crs):
 @pytest.mark.parametrize(
     "hashtag_input, expected_output",
     [
-        ("tag1, tag2, tag3", ["#tag1", "#tag2", "#tag3", "#FMTM"]),
-        ("tag1   tag2    tag3", ["#tag1", "#tag2", "#tag3", "#FMTM"]),
-        ("tag1, tag2 tag3    tag4", ["#tag1", "#tag2", "#tag3", "#tag4", "#FMTM"]),
-        ("TAG1, tag2 #TAG3", ["#TAG1", "#tag2", "#TAG3", "#FMTM"]),
+        ("tag1, tag2, tag3", ["#tag1", "#tag2", "#tag3", "#Field-TM"]),
+        ("tag1   tag2    tag3", ["#tag1", "#tag2", "#tag3", "#Field-TM"]),
+        ("tag1, tag2 tag3    tag4", ["#tag1", "#tag2", "#tag3", "#tag4", "#Field-TM"]),
+        ("TAG1, tag2 #TAG3", ["#TAG1", "#tag2", "#TAG3", "#Field-TM"]),
     ],
 )
 async def test_project_hashtags(
@@ -243,7 +243,7 @@ async def test_project_hashtags(
 
 
 async def test_delete_project(client, admin_user, project):
-    """Test deleting a FMTM project, plus ODK Central project."""
+    """Test deleting a Field-TM project, plus ODK Central project."""
     response = await client.delete(f"/projects/{project.id}")
     assert response.status_code == 204
 
@@ -263,8 +263,8 @@ async def test_create_odk_project():
         result = create_odk_project("Test Project", odk_credentials)
 
     assert result == {"status": "success"}
-    # FMTM gets appended to project name by default
-    mock_project.createProject.assert_called_once_with("FMTM Test Project")
+    # Field-TM gets appended to project name by default
+    mock_project.createProject.assert_called_once_with("Field-TM Test Project")
 
 
 async def test_upload_data_extracts(client, project):
@@ -372,7 +372,7 @@ async def test_update_project(client, admin_user, project):
         "short_description": "updated short description",
         "description": "updated description",
         "osm_category": "healthcare",
-        "hashtags": "#FMTM anothertag",
+        "hashtags": "#Field-TM anothertag",
     }
 
     response = await client.patch(f"/projects/{project.id}", json=updated_project_data)
@@ -391,7 +391,7 @@ async def test_update_project(client, admin_user, project):
     assert response_data["osm_category"] == updated_project_data["osm_category"]
     assert sorted(response_data["hashtags"]) == sorted(
         [
-            "#FMTM",
+            "#Field-TM",
             f"#{settings.FMTM_DOMAIN}-{response_data['id']}",
             "#anothertag",
         ]
@@ -559,7 +559,7 @@ async def test_update_and_download_project_form(client, project):
         "app.central.central_deps.read_xlsform", return_value=xls_file
     ) and patch("app.central.central_crud.update_project_xform", return_value=None):
         response = await client.post(
-            f"projects/update-form?project_id={project.id}",
+            f"central/update-form?project_id={project.id}",
             data={"xform_id": "test-xform-id"},
             files={
                 "xlsform": (
@@ -576,7 +576,7 @@ async def test_update_and_download_project_form(client, project):
         )
 
         # Test downloading the updated XLSForm
-        response = await client.get(f"projects/download-form/{project.id}")
+        response = await client.get(f"central/download-form?project_id={project.id}")
 
         assert response.status_code == 200
         assert (
@@ -630,15 +630,17 @@ async def test_add_new_project_manager(client, project, new_mapper_user):
     )
 
 
-async def test_create_entity(client, db, odk_project, tasks):
+async def test_create_entity(client, db, project, odk_project, tasks):
     """Test creating an entity and verifying task_id matching within task boundary."""
+    # NOTE here we need odk_project fixture to ensure the project exists
+
     # Sample GeoJSON with a point that would lie inside a task boundary
     geojson = {
         "type": "FeatureCollection",
         "features": [
             {
                 "type": "Feature",
-                "properties": {"project_id": odk_project.id},
+                "properties": {"project_id": project.id},
                 "geometry": {"type": "Point", "coordinates": [85.30125, 27.7122]},
             }
         ],
@@ -646,7 +648,7 @@ async def test_create_entity(client, db, odk_project, tasks):
     project_task_index_list = [task.project_task_index for task in tasks]
 
     response = await client.post(
-        f"projects/{odk_project.id}/create-entity", json=geojson
+        f"central/entity?project_id={project.id}", json=geojson
     )
     assert response.status_code == 200
     data = response.json()

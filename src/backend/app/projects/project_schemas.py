@@ -1,19 +1,19 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Pydantic schemas for Projects for usage in endpoints."""
 
@@ -33,7 +33,12 @@ from pydantic.functional_validators import field_validator, model_validator
 
 from app.central.central_schemas import ODKCentralDecrypted, ODKCentralIn
 from app.config import decrypt_value, encrypt_value
-from app.db.enums import BackgroundTaskStatus, GeomStatus, ProjectPriority
+from app.db.enums import (
+    BackgroundTaskStatus,
+    GeomStatus,
+    ProjectPriority,
+    ProjectVisibility,
+)
 from app.db.models import (
     DbBackgroundTask,
     DbBasemap,
@@ -164,15 +169,15 @@ class ProjectInBase(DbProject):
 
     @model_validator(mode="after")
     def append_fmtm_hashtag_and_slug(self) -> Self:
-        """Append the #FMTM hashtag and add URL slug."""
+        """Append the #Field-TM hashtag and add URL slug."""
         # NOTE the slug is set here as the field_validator above
         # does not seem to work?
         self.slug = slugify(self.name)
 
         if not self.hashtags:
-            self.hashtags = ["#FMTM"]
-        elif "#FMTM" not in self.hashtags:
-            self.hashtags.append("#FMTM")
+            self.hashtags = ["#Field-TM"]
+        elif "#Field-TM" not in self.hashtags:
+            self.hashtags.append("#Field-TM")
         return self
 
 
@@ -234,6 +239,7 @@ class ProjectSummary(BaseModel):
     hashtags: Optional[list[str]]
     location_str: Optional[str] = None
     short_description: Optional[str] = None
+    visibility: Optional[ProjectVisibility] = None
 
     # Calculated
     organisation_logo: Optional[str] = None

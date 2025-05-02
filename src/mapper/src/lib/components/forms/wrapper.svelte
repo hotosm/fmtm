@@ -4,11 +4,10 @@
 	import { getCommonStore } from '$store/common.svelte.ts';
 	import { getLoginStore } from '$store/login.svelte.ts';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
-	import { fetchBlobUrl, fetchFormMediBlobUrls } from '$lib/utils/fetch.ts';
+	import { fetchBlobUrl, fetchFormMediBlobUrls } from '$lib/api/fetch';
+	import { m } from '$translations/messages.js';
 
 	import type { Action } from 'svelte/action';
-
-	const CUSTOM_UPLOAD_ELEMENT_ID = '95c6807c-82b4-4208-b5df-5a3e795227b0';
 
 	const API_URL = import.meta.env.VITE_API_URL;
 	type Props = {
@@ -18,6 +17,7 @@
 		taskId: number | undefined;
 		webFormsRef: HTMLElement | undefined;
 	};
+
 	const commonStore = getCommonStore();
 	const loginStore = getLoginStore();
 	const entitiesStore = getEntitiesStatusStore();
@@ -32,56 +32,26 @@
 	let odkForm: any;
 	let startDate: string | undefined;
 
-	let pic: any;
+	let drawerLabel = $state('');
+	let uploading = $state(false);
+	let uploadingMessage = $state('');
 
-	const formXmlPromise = fetchBlobUrl(`${API_URL}/projects/${projectId}/form-xml`);
+	const formXmlPromise = fetchBlobUrl(`${API_URL}/central/form-xml?project_id=${projectId}`);
 
 	const odkWebFormPromise = fetchBlobUrl('https://hotosm.github.io/web-forms/odk-web-form.js');
 
 	const formMediaPromise = fetchFormMediBlobUrls(projectId!);
 
-	function handleMutation(iframe: HTMLIFrameElement) {
-		if (!iframe.contentDocument) return;
-		if (!odkForm) return;
-		if (!webFormsRef) return;
-
-		// check if we've already added the custom upload input
-		if (iframe.contentDocument.getElementById(CUSTOM_UPLOAD_ELEMENT_ID)) return;
-
-		const uploadControl = odkForm.getChildren().find((n: any) => n.constructor.name === 'UploadControl');
-		const uploadControlNode = webFormsRef.querySelector(`[id='${uploadControl.nodeId}_container']`);
-		if (!uploadControlNode) return;
-
-		const controlText = iframe.contentDocument.createElement('div');
-		controlText.id = CUSTOM_UPLOAD_ELEMENT_ID;
-		controlText.className = 'control-text';
-		controlText.style.marginBottom = '.75rem';
-
-		const label = iframe.contentDocument.createElement('label');
-		label.style.fontWeight = '400';
-		label.style.lineHeight = '1.8rem';
-		const span = iframe.contentDocument.createElement('span');
-		span.textContent = uploadControl.engineState.label.chunks.map((chunk: any) => chunk.asString).join(' ');
-		label.appendChild(span);
-		controlText.appendChild(label);
-		const inputWrapper = iframe.contentDocument.createElement('div');
-		const input = iframe.contentDocument.createElement('input');
-		input.id = CUSTOM_UPLOAD_ELEMENT_ID;
-		input.addEventListener('change', () => {
-			pic = input.files?.[0];
-		});
-		input.type = 'file';
-		inputWrapper.appendChild(input);
-
-		uploadControlNode.innerHTML = '';
-		uploadControlNode.appendChild(controlText);
-		uploadControlNode.appendChild(inputWrapper);
-	}
 	function handleSubmit(payload: any) {
 		(async () => {
 			if (!payload.detail) return;
+			if (!projectId) return;
 
-			let submission_xml = await payload.detail[0].data.instanceFile.text();
+			const { instanceFile, attachments = [] } = await payload.detail[0].data[0];
+			let submission_xml = await instanceFile.text();
+
+			// missing start, end, today, phonenumber, deviceid, username, email, instruction
+			// included xid, xlocation, task_id, status,image number
 
 			// entity id isn't included in the payload by default because we marked it as not relevant earlier
 			// (in order to hide it from the user's display)
@@ -99,10 +69,6 @@
 				submission_xml = submission_xml.replace('<email/>', `<email>${authDetails?.email_address}</email>`);
 			}
 
-			if (pic && pic?.name) {
-				submission_xml = submission_xml.replace('<image/>', `<image>${pic?.name}</image>`);
-			}
-
 			if (entitiesStore.userLocationCoord) {
 				const [longitude, latitude] = entitiesStore.userLocationCoord as [number, number];
 				// add 0.0 for altitude and 10.0 for accuracy as defaults
@@ -112,19 +78,35 @@
 			const url = `${API_URL}/submission?project_id=${projectId}`;
 			var data = new FormData();
 			data.append('submission_xml', submission_xml);
-			if (pic && pic?.name) {
-				data.append('submission_files', pic);
-			}
+			attachments.forEach((attachment: File) => {
+				data.append('submission_files', attachment);
+			});
+
+			uploadingMessage = m['forms.uploading']() || 'uploading';
+			uploading = true;
+
 			// Submit the XML + any submission media
 			await fetch(url, {
 				method: 'POST',
 				body: data,
 			});
 
-			// Set the entity status to SURVEY_SUBMITTED (2)
+			uploading = false;
+
+			let entityStatus = null;
+			if (submission_xml.includes('<feature_exists>no</feature_exists>')) {
+				entityStatus = 6; // MARKED_BAD
+			} else if (submission_xml.includes('<digitisation_correct>no</digitisation_correct>')) {
+				entityStatus = 6; // MARKED_BAD
+			} else if (entitiesStore.newGeomList.features.find((feature) => feature.properties?.entity_id === entityId)) {
+				entityStatus = 3; // NEW_GEOM
+			} else {
+				entityStatus = 2; // SURVEY_SUBMITTED
+			}
+
 			entitiesStore.updateEntityStatus(projectId, {
 				entity_id: selectedEntity?.entity_id,
-				status: 2,
+				status: entityStatus,
 				// NOTE here we don't translate the field as English values are always saved as the Entity label
 				label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osmid}`,
 			});
@@ -135,8 +117,38 @@
 	function handleOdkForm(evt: any) {
 		if (evt?.detail?.[0]) {
 			odkForm = evt.detail[0];
+
 			// over-write default language
-			setFormLanguage(commonStore.locale);
+			const target = `(${commonStore.locale.toLowerCase()})`;
+
+			// language in OdkWebForm corresponding to app language
+			const lang = odkForm.languages.find((it: any) => it?.language.toLowerCase().includes(target));
+
+			// dictionary of languages and the numbers of translations for each
+			const lang_translations = Object.fromEntries(
+				odkForm.languages.map(({ language }: { language: string }) => [
+					language,
+					odkForm.definition.model.itextTranslations
+						.get(language)
+						?.children.filter((node: any) => ![undefined, null, '', '-'].includes(node.children[0].value)).length || 0,
+				]),
+			);
+
+			// the maximum number of text translations for a language
+			// this gives us the upper bound of how much a "fully translated" form should have
+			const maxTranslations = Math.max(...(Object.values(lang_translations) as number[]));
+
+			// only consider languages with at least 50% of translations enough to enable that language for display
+			const displayableLanguages = odkForm.languages.filter(
+				({ language }: { language: string }) => lang_translations[language] / maxTranslations > 0.5,
+			);
+
+			// check if language has enough valid translations to display
+			if (displayableLanguages.includes(lang)) {
+				odkForm?.setLanguage(lang);
+			} else {
+				drawerLabel = m['forms.default_language_warning']() || '';
+			}
 
 			const nodes = odkForm.getChildren();
 
@@ -163,15 +175,7 @@
 			}
 		}
 	}
-	const setFormLanguage = (newLocale: string) => {
-		if (odkForm) {
-			const target = `(${newLocale.toLowerCase()})`;
-			const match = odkForm.languages.find((it: any) => it?.language.toLowerCase().includes(target));
-			if (match) {
-				odkForm?.setLanguage(match);
-			}
-		}
-	};
+
 	$effect(() => {
 		// making sure we re-run whenever one of the following reactive variables changes
 		display;
@@ -181,32 +185,24 @@
 			startDate = new Date().toISOString();
 		}
 	});
-	$effect(() => {
-		if (commonStore.locale) {
-			setFormLanguage(commonStore.locale);
-		}
-	});
 
 	const handleIframe: Action = (node) => {
 		$effect(() => {
 			const iframe = node as unknown as HTMLIFrameElement;
 
 			// we want to rerun this $effect function whenever a new iframe is rendered
-			const observer = new MutationObserver(() => handleMutation(iframe));
 			const intervalId = setInterval(() => {
 				webFormsRef = iframe?.contentDocument?.querySelector('odk-web-form') || undefined;
 				if (webFormsRef) {
 					clearInterval(intervalId);
 					webFormsRef.addEventListener('submit', handleSubmit);
 					webFormsRef.addEventListener('odkForm', handleOdkForm);
-					observer.observe(webFormsRef, { attributes: true, childList: true, subtree: true });
 				}
 			}, 10);
 
 			// clear interval when re-run
 			return () => {
 				clearInterval(intervalId);
-				observer.disconnect();
 			};
 		});
 	};
@@ -236,13 +232,32 @@
 				{#await formXmlPromise then formXml}
 					{#await formMediaPromise then formMedia}
 						{#key entityId}
-							<iframe
-								class="iframe"
-								style:height="100%"
-								use:handleIframe
-								title="odk-web-forms-wrapper"
-								src={`./web-forms.html?projectId=${projectId}&entityId=${entityId}&formXml=${formXml}&language=${commonStore.locale}&odkWebFormUrl=${odkWebFormUrl}&formMedia=${encodeURIComponent(JSON.stringify(formMedia))}`}
-							></iframe>
+							{#key commonStore.locale}
+								{#if uploading}
+									<div id="web-forms-uploader">
+										<div id="uploading-inner">
+											<div id="spinner"></div>
+											{uploadingMessage}
+										</div>
+									</div>
+								{:else}
+									{#if drawerLabel}
+										<div
+											style="font-size: 10pt; left: 0; padding: 10px; position: absolute; right: 0; text-align: center;"
+										>
+											{drawerLabel}
+										</div>
+									{/if}
+									<iframe
+										class="iframe"
+										style:border="none"
+										style:height="100%"
+										use:handleIframe
+										title="odk-web-forms-wrapper"
+										src={`./web-forms.html?projectId=${projectId}&entityId=${entityId}&formXml=${formXml}&odkWebFormUrl=${odkWebFormUrl}&formMedia=${encodeURIComponent(JSON.stringify(formMedia))}&cssFile=${commonStore.config?.cssFileWebformsOverride || ''}`}
+									></iframe>
+								{/if}
+							{/key}
 						{/key}
 					{/await}
 				{/await}
@@ -250,3 +265,32 @@
 		{/if}
 	{/await}
 </hot-drawer>
+
+<style>
+	/* from https://www.w3schools.com/howto/howto_css_loader.asp */
+	#spinner {
+		border: 16px solid var(--sl-color-neutral-300); 
+		border-top: 16px solid solid var(--sl-color-primary-700);
+		border-radius: 50%;
+		width: 120px;
+		height: 120px;
+		animation: spin 2s linear infinite;
+	}
+
+	@keyframes spin {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+
+	#uploading-inner {
+		font-size: 30px;
+		left: 50%;
+		position: absolute;
+		transform: translate(-50%, -50%);
+		top: 40%;
+	}
+</style>

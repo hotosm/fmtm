@@ -1,21 +1,21 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
-"""Endpoints for FMTM projects."""
+"""Endpoints for Field-TM projects."""
 
 import json
 import os
@@ -45,7 +45,6 @@ from loguru import logger as log
 from osm_fieldwork.data_models import data_models_path, get_choices
 from pg_nearest_city import AsyncNearestCity
 from psycopg import Connection
-from psycopg.rows import dict_row
 
 from app.auth.auth_deps import login_required, public_endpoint
 from app.auth.auth_schemas import AuthUser, OrgUserDict, ProjectUserDict
@@ -69,7 +68,6 @@ from app.db.models import (
     DbUserRole,
 )
 from app.db.postgis_utils import (
-    add_required_geojson_properties,
     check_crs,
     featcol_keep_single_geom_type,
     flatgeobuf_to_featcol,
@@ -240,7 +238,7 @@ async def get_odk_entities_osm_ids(
 async def get_odk_entities_task_ids(
     project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ):
-    """Get the ODK entities linked FMTM Task IDs."""
+    """Get the ODK entities linked Field-TM Task IDs."""
     project = project_user.get("project")
     return await central_crud.get_entities_data(
         project.odk_credentials,
@@ -371,20 +369,6 @@ async def get_categories(current_user: Annotated[AuthUser, Depends(login_require
         get_choices()
     )  # categories are fetched from osm_fieldwork.data_models.get_choices()
     return categories
-
-
-@router.get("/download-form/{project_id}")
-async def download_form(
-    project_user: Annotated[ProjectUserDict, Depends(mapper)],
-):
-    """Download the XLSForm for a project."""
-    project = project_user.get("project")
-
-    headers = {
-        "Content-Disposition": f"attachment; filename={project.id}_xlsform.xlsx",
-        "Content-Type": "application/media",
-    }
-    return Response(content=project.xlsform_content, headers=headers)
 
 
 @router.get("/features/download")
@@ -541,48 +525,6 @@ async def task_split(
     )
     log.debug("COMPLETE task splitting")
     return features
-
-
-@router.post("/validate-form")
-async def validate_form(
-    # NOTE we do not set any roles on this endpoint yet
-    # FIXME once sub project creation implemented, this should be manager only
-    current_user: Annotated[AuthUser, Depends(login_required)],
-    xlsform: Annotated[BytesIO, Depends(central_deps.read_xlsform)],
-    debug: bool = False,
-):
-    """Basic validity check for uploaded XLSForm.
-
-    Parses the form using ODK pyxform to check that it is valid.
-
-    If the `debug` param is used, the form is returned for inspection.
-    NOTE that this debug form has additional fields appended and should
-        not be used for FMTM project creation.
-
-    NOTE this provides a basic sanity check, some fields are omitted
-    so the form is not usable in production:
-        - additional_entities
-        - new_geom_type
-    """
-    if debug:
-        xform_id, updated_form = await central_crud.append_fields_to_user_xlsform(
-            xlsform,
-        )
-        return StreamingResponse(
-            updated_form,
-            media_type=(
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            ),
-            headers={"Content-Disposition": f"attachment; filename={xform_id}.xlsx"},
-        )
-    else:
-        await central_crud.validate_and_update_user_xlsform(
-            xlsform,
-        )
-        return JSONResponse(
-            status_code=HTTPStatus.OK,
-            content={"message": "Your form is valid"},
-        )
 
 
 @router.post("/preview-split-by-square", response_model=FeatureCollection)
@@ -780,50 +722,6 @@ async def add_new_project_manager(
     return Response(status_code=HTTPStatus.OK)
 
 
-@router.post("/update-form")
-async def update_project_form(
-    xlsform: Annotated[BytesIO, Depends(central_deps.read_xlsform)],
-    db: Annotated[Connection, Depends(db_conn)],
-    project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
-    xform_id: str = Form(...),
-    # FIXME add back in capability to update osm_category
-    # osm_category: XLSFormType = Form(...),
-):
-    """Update the XForm data in ODK Central & FMTM DB."""
-    project = project_user_dict["project"]
-
-    # Update ODK Central form data
-    await central_crud.update_project_xform(
-        xform_id,
-        project.odkid,
-        xlsform,
-        project.odk_credentials,
-    )
-
-    sql = """
-        UPDATE projects
-        SET
-            xlsform_content = %(xls_data)s
-        WHERE
-            id = %(project_id)s
-        RETURNING id, hashtags;
-    """
-    async with db.cursor() as cur:
-        await cur.execute(
-            sql,
-            {
-                "xls_data": xlsform.getvalue(),
-                "project_id": project.id,
-            },
-        )
-        await db.commit()
-
-    return JSONResponse(
-        status_code=HTTPStatus.OK,
-        content={"message": f"Successfully updated the form for project {project.id}"},
-    )
-
-
 @router.get("/{project_id}/users", response_model=list[UserRolesOut])
 async def get_project_users(
     db: Annotated[Connection, Depends(db_conn)],
@@ -871,101 +769,6 @@ async def add_additional_entity_list(
     return Response(status_code=HTTPStatus.OK)
 
 
-@router.post("/{project_id}/create-entity")
-async def add_new_entity(
-    db: Annotated[Connection, Depends(db_conn)],
-    project_user_dict: Annotated[ProjectUserDict, Depends(mapper)],
-    geojson: FeatureCollection,
-):
-    """Create an Entity for the project in ODK.
-
-    NOTE a FeatureCollection must be uploaded.
-    """
-    try:
-        project = project_user_dict.get("project")
-        project_odk_id = project.odkid
-        project_odk_creds = project.odk_credentials
-
-        featcol_dict = geojson.model_dump()
-        features = featcol_dict.get("features")
-        if not features or not isinstance(features, list):
-            raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST, detail="Invalid GeoJSON format"
-            )
-
-        # Add required properties and extract entity data
-        featcol = add_required_geojson_properties(featcol_dict)
-        featcol["features"][0]["properties"]["project_id"] = project.id
-
-        # Get task_id of the feature if inside task boundary
-        async with db.cursor(row_factory=dict_row) as cur:
-            await cur.execute(
-                """
-                SELECT t.project_task_index AS task_id
-                FROM tasks t
-                WHERE t.project_id = %s
-                AND ST_Within(
-                    ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326),
-                    t.outline
-                )
-                LIMIT 1;
-                """,
-                (project.id, json.dumps(features[0].get("geometry"))),
-            )
-            result = await cur.fetchone()
-
-        task_id = ""
-        if result and (task_id := result.get("task_id")):
-            featcol["features"][0]["properties"]["task_id"] = task_id
-
-        entities_list = await central_crud.task_geojson_dict_to_entity_values(
-            {task_id: featcol}
-        )
-
-        if not entities_list:
-            raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST, detail="No valid entities found"
-            )
-
-        # Create entity in ODK
-        return await central_crud.create_entity(
-            project_odk_creds,
-            project_odk_id,
-            properties=list(featcol["features"][0]["properties"].keys()),
-            entity=entities_list[0],
-            dataset_name="features",
-        )
-
-    except HTTPException as http_err:
-        log.error(f"HTTP error: {http_err.detail}")
-        raise
-    except Exception as e:
-        log.exception("Unexpected error during entity creation")
-        raise HTTPException(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail="Entity creation failed",
-        ) from e
-
-
-@router.get("/{project_id}/form-xml")
-async def get_project_form_xml_route(
-    project_user: Annotated[ProjectUserDict, Depends(mapper)],
-) -> str:
-    """Get the raw XML from ODK Central for a project."""
-    project = project_user.get("project")
-    odk_creds = project.odk_credentials
-    odkid = project.odkid
-    odk_form_id = project.odk_form_id
-    # Run separate thread in event loop to avoid blocking with sync code
-    form_xml = await run_in_threadpool(
-        central_crud.get_project_form_xml,
-        odk_creds,
-        odkid,
-        odk_form_id,
-    )
-    return Response(content=form_xml, media_type="application/xml")
-
-
 @router.post("/{project_id}/generate-project-data")
 async def generate_files(
     db: Annotated[Connection, Depends(db_conn)],
@@ -1003,10 +806,11 @@ async def generate_files(
     project = project_user_dict.get("project")
     project_id = project.id
     new_geom_type = project.new_geom_type
+    use_odk_collect = project.use_odk_collect or False
+    form_name = f"FMTM_Project_{project.id}"
+    project_contains_existing_feature = True if combined_features_count else False
 
     log.debug(f"Generating additional files for project: {project.id}")
-
-    form_name = f"FMTM_Project_{project.id}"
 
     # Validate uploaded form
     await central_crud.validate_and_update_user_xlsform(
@@ -1014,14 +818,18 @@ async def generate_files(
         form_name=form_name,
         additional_entities=additional_entities,
         new_geom_type=new_geom_type,
+        # If we are only mapping new features, then verification is irrelevant
+        need_verification_fields=project_contains_existing_feature,
+        use_odk_collect=use_odk_collect,
     )
-    xlsform = xlsform_upload
 
     xform_id, project_xlsform = await central_crud.append_fields_to_user_xlsform(
-        xlsform=xlsform,
+        xlsform=xlsform_upload,
         form_name=form_name,
         additional_entities=additional_entities,
         new_geom_type=new_geom_type,
+        need_verification_fields=project_contains_existing_feature,
+        use_odk_collect=use_odk_collect,
     )
     # Write XLS form content to db
     xlsform_bytes = project_xlsform.getvalue()
@@ -1193,7 +1001,7 @@ async def upload_project_task_boundaries(
 @router.post("", response_model=project_schemas.ProjectOut)
 async def create_project(
     project_info: project_schemas.ProjectIn,
-    org_user_dict: Annotated[AuthUser, Depends(org_admin)],
+    org_user_dict: Annotated[OrgUserDict, Depends(org_admin)],
     db: Annotated[Connection, Depends(db_conn)],
 ):
     """Create a project in ODK Central and the local database.
@@ -1245,7 +1053,7 @@ async def create_project(
         country_full_name = countries.get(location.country, location.country)
         project_info.location_str = f"{location.city},{country_full_name}"
 
-    # Create the project in the FMTM DB
+    # Create the project in the Field-TM DB
     project_info.odkid = odkproject["id"]
     project_info.author_sub = db_user.sub
     try:
@@ -1281,7 +1089,7 @@ async def delete_project(
     await delete_all_objs_under_prefix(
         settings.S3_BUCKET_NAME, f"/{project.organisation_id}/{project.id}"
     )
-    # Delete FMTM project
+    # Delete Field-TM project
     await DbProject.delete(db, project.id)
 
     log.info(f"Deletion of project {project.id} successful")
@@ -1307,7 +1115,7 @@ async def read_project(
 async def read_project_minimal(
     project_id: int,
     db: Annotated[Connection, Depends(db_conn)],
-    current_user: Annotated[AuthUser, Depends(public_endpoint)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ):
     """Get a specific project by ID, with minimal metadata.
 

@@ -1,19 +1,19 @@
 # Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
 """Auth dependencies, for restricted routes and cookie handling."""
@@ -76,20 +76,20 @@ async def login_required(
     if settings.DEBUG:
         return AuthUser(sub="osm|1", username="localadmin", role=UserRole.ADMIN)
 
-    # Extract access token only from the FMTM cookie
-    extracted_token = access_token or get_cookie_value(
-        request,
-        settings.cookie_name,  # FMTM cookie
-    )
-    if extracted_token:
-        return await _authenticate_cookie_token(extracted_token)
-
-    # Else try API token
+    # API Key should take priority if provided
     if x_api_key:
         if not db:
             raise RuntimeError("Database connection is required for API key auth")
         db_user = await _validate_api_token(db, x_api_key)
         return AuthUser(**db_user.model_dump())
+
+    # Else, extract access token only from the Field-TM cookie
+    extracted_token = access_token or get_cookie_value(
+        request,
+        settings.cookie_name,  # Field-TM cookie
+    )
+    if extracted_token:
+        return await _authenticate_cookie_token(extracted_token)
 
     raise HTTPException(
         status_code=HTTPStatus.UNAUTHORIZED,

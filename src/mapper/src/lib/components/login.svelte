@@ -2,7 +2,7 @@
 	import '$styles/login.css';
 	import OSMLogo from '$assets/images/osm-logo.png';
 	import GoogleLogo from '$assets/images/google-logo.svg';
-	import { loginRedirect } from '$lib/utils/login';
+	import { loginRedirect } from '$lib/api/login';
 	import { getLoginStore } from '$store/login.svelte.ts';
 	import type { LoginProviderKey } from '$store/common.svelte.ts';
 	import { getCommonStore } from '$store/common.svelte.ts';
@@ -23,7 +23,7 @@
 		google: {
 			name: 'Sign in with Google',
 			image: GoogleLogo,
-		}
+		},
 	};
 	// Determine enabled providers from config (default enabled, unless disabled)
 	const loginOptions: LoginOption[] = Object.entries(ALL_LOGIN_PROVIDERS)

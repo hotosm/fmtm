@@ -27,6 +27,7 @@ import FolderManagedIcon from '@/assets/icons/folderManagedIcon.svg';
 import boltIcon from '@/assets/icons/boltIcon.svg';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/RadixComponents/Resizable';
 import TaskList from '@/components/ProjectDetails/Tabs/TaskList';
+import { Tooltip } from '@mui/material';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -65,9 +66,9 @@ const ProjectDetails = () => {
 
   useEffect(() => {
     if (projectInfo.name) {
-      document.title = `${projectInfo.name} - HOT Field Mapping Tasking Manager`;
+      document.title = `${projectInfo.name} - HOT Field Tasking Manager`;
     } else {
-      document.title = 'HOT Field Mapping Tasking Manager';
+      document.title = 'HOT Field Tasking Manager';
     }
   }, [projectInfo.name]);
 
@@ -174,7 +175,14 @@ const ProjectDetails = () => {
               className="!fmtm-w-[1.125rem] fmtm-mx-1 hover:fmtm-text-black hover:fmtm-scale-125 !fmtm-duration-200 fmtm-cursor-pointer"
               onClick={() => navigate('/')}
             />
-            <h5>{projectInfo.name}</h5>
+            <h5 className="fmtm-line-clamp-1" title={projectInfo.name}>
+              {projectInfo.name}
+            </h5>
+            {projectInfo.visibility === 'PRIVATE' && (
+              <Tooltip title="Private Project" arrow>
+                <AssetModules.LockOutlinedIcon className="fmtm-text-red-medium !fmtm-text-[19px] fmtm-mx-1 fmtm-cursor-pointer" />
+              </Tooltip>
+            )}
           </div>
           <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
             <Button

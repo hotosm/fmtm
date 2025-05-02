@@ -1,19 +1,19 @@
 # Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Configuration and fixtures for PyTest."""
 
@@ -34,7 +34,6 @@ from httpx import ASGITransport, AsyncClient
 from loguru import logger as log
 from psycopg import AsyncConnection
 
-from app.auth.auth_routes import get_or_create_user
 from app.auth.auth_schemas import AuthUser, FMTMUser
 from app.central import central_crud, central_schemas
 from app.central.central_schemas import ODKCentralDecrypted, ODKCentralIn
@@ -57,6 +56,7 @@ from app.organisations.organisation_schemas import OrganisationIn
 from app.projects import project_crud
 from app.projects.project_schemas import GeometryLogIn, ProjectIn, ProjectTeamIn
 from app.tasks.task_schemas import TaskEventIn
+from app.users.user_crud import get_or_create_user
 from app.users.user_deps import get_user
 from tests.test_data import test_data_path
 
@@ -239,7 +239,7 @@ async def project(db, admin_user, organisation):
         xlsform_content=b"Dummy XLSForm content",
     )
 
-    # Create FMTM Project
+    # Create Field-TM Project
     try:
         new_project = await DbProject.create(db, project_metadata)
         log.debug(f"Project returned: {new_project}")

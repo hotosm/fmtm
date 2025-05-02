@@ -28,7 +28,8 @@
 	import More from '$lib/components/more/index.svelte';
 	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
-	import type { SlDrawer } from '@shoelace-style/shoelace';
+	import ProjectInfo from '$lib/components/more/project-info.svelte';
+	import Editor from '$lib/components/editor/editor.svelte';
 
 	interface Props {
 		data: PageData;
@@ -46,7 +47,7 @@
 	let isDrawEnabled: boolean = $state(false);
 	let latestEventTime: string = $state('');
 	let isGeometryCreationLoading: boolean = $state(false);
-	
+
 	const taskStore = getTaskStore();
 	const entitiesStore = getEntitiesStatusStore();
 	const commonStore = getCommonStore();
@@ -59,7 +60,11 @@
 	const selectedEntityId = $derived(entitiesStore.selectedEntity);
 	const latestEvent = $derived(taskStore.latestEvent);
 	const commentMention = $derived(taskStore.commentMention);
-	const enableWebforms = $derived(commonStore.config?.enableWebforms || false);
+
+	// Set useOdkCollect override to disable webforms in app
+	if (data.project.use_odk_collect) {
+		commonStore.setUseOdkCollectOverride(true);
+	}
 
 	// Update the geojson task states when a new event is added
 	$effect(() => {
@@ -93,7 +98,7 @@
 		return () => clearInterval(interval); // Cleanup interval on unmount
 	});
 
-	function zoomToTask(taskId: number, fitOptions?: Record<string, any> =  {duration: 0}) {
+	function zoomToTask(taskId: number, fitOptions?: Record<string, any> = { duration: 0 }) {
 		const taskObj = data.project.tasks.find((task: ProjectTask) => task.id === taskId);
 
 		if (!taskObj) return;
@@ -121,6 +126,7 @@
 
 	onDestroy(() => {
 		taskEventStream?.unsubscribeAll();
+		taskStore.clearTaskStates();
 	});
 
 	$effect(() => {
@@ -148,7 +154,7 @@
 		// if project loaded for the first time, set projectSetupStep to 1 else get it from localStorage
 		if (!localStorage.getItem(`project-${data.projectId}-setup`)) {
 			// if webforms enabled, avoid project load in odk step
-			if (enableWebforms) {
+			if (commonStore.enableWebforms) {
 				localStorage.setItem(`project-${data.projectId}-setup`, projectSetupStepEnum['task_selection'].toString());
 				projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['task_selection']);
 			} else {
@@ -200,7 +206,19 @@
 			});
 			entitiesStore.syncEntityStatus(data.projectId);
 			cancelMapNewFeatureInODK();
-			openOdkCollectNewFeature(data?.project?.odk_form_id, entity.uuid);
+
+			if (commonStore.enableWebforms) {
+				await entitiesStore.setSelectedEntity(entity.uuid);
+				openedActionModal = null;
+				entitiesStore.updateEntityStatus(data.projectId, {
+					entity_id: entity.uuid,
+					status: 1,
+					label: entity?.currentVersion?.label,
+				});
+				displayWebFormsDrawer = true;
+			} else {
+				openOdkCollectNewFeature(data?.project?.odk_form_id, entity.uuid);
+			}
 		} catch (error) {
 			alertStore.setAlert({ message: 'Unable to create entity', variant: 'danger' });
 		} finally {
@@ -211,10 +229,7 @@
 
 <!-- There is a new event to display in the top right corner -->
 {#if latestEvent}
-	<div
-		id="notification-banner"
-		class="floating-msg"
-	>
+	<div id="notification-banner" class="floating-msg">
 		<b>{latestEventTime}</b>&nbsp;| {latestEvent.event}
 		on task {taskStore.taskIdIndexMap[latestEvent.task_id]} by {latestEvent.username || 'anon'}
 	</div>
@@ -245,10 +260,10 @@
 				</sl-button>
 				<sl-button
 					onclick={() => {
-						zoomToTask(commentMention.task_id, { duration: 0, padding:	{bottom: 325} });
+						zoomToTask(commentMention.task_id, { duration: 0, padding: { bottom: 325 } });
 						const osmId = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
 						entitiesStore.setSelectedEntity(osmId);
-						openedActionModal = 'entity-modal'
+						openedActionModal = 'entity-modal';
 						taskStore.dismissCommentMention();
 					}}
 					onkeydown={(e: KeyboardEvent) => {
@@ -297,7 +312,7 @@
 	{#if newFeatureGeom}
 		<div class="proceed-dialog">
 			<div class="proceed-dialog-content">
-				<p>Is the geometry in the correct place?</p>
+				<p>{m['map.geometry_correct_place']()}</p>
 				<div class="buttons">
 					<sl-button
 						onclick={() => {
@@ -363,31 +378,34 @@
 				<BasemapComponent projectId={data.project.id}></BasemapComponent>
 			{/if}
 			{#if commonStore.selectedTab === 'qrcode'}
-				<QRCodeComponent class="map-qr" {infoDialogRef} projectName={data.project.name} projectOdkToken={data.project.odk_token}>
+				<QRCodeComponent
+					class="map-qr"
+					{infoDialogRef}
+					projectName={data.project.name}
+					projectOdkToken={data.project.odk_token}
+				>
 					<!-- Open ODK Button (Hide if it's project walkthrough step) -->
 					{#if +(projectSetupStepStore.projectSetupStep || 0) !== projectSetupStepEnum['odk_project_load']}
-						<sl-button
-							size="small"
-							variant="primary"
-							href="odkcollect://form/{data.project.odk_form_id}"
-						>
+						<sl-button size="small" variant="primary" href="odkcollect://form/{data.project.odk_form_id}">
 							<span>{m['odk.open']()}</span></sl-button
 						>
 					{/if}
 				</QRCodeComponent>
 			{/if}
+			{#if commonStore.selectedTab === 'instructions'}
+				<p class="bottom-sheet-header">{m['stack_group.instructions']()}</p>
+				{#if data?.project?.per_task_instructions}
+					<Editor editable={false} content={data?.project?.per_task_instructions} />
+				{:else}
+					<div class="active-stack-instructions">
+						<p>{m['index.no_instructions']()}</p>
+					</div>
+				{/if}
+			{/if}
 		</BottomSheet>
-		<hot-dialog
-			bind:this={infoDialogRef}
-			class="dialog-overview"
-			no-header
-		>
+		<hot-dialog bind:this={infoDialogRef} class="dialog-overview" no-header>
 			<div class="content">
-				<img
-					src={ImportQrGif}
-					alt="manual process of importing qr code gif"
-					class="manual-qr-gif"
-				/>
+				<img src={ImportQrGif} alt="manual process of importing qr code gif" class="manual-qr-gif" />
 				<sl-button
 					onclick={() => infoDialogRef?.hide()}
 					onkeydown={(e: KeyboardEvent) => {
@@ -424,14 +442,19 @@
 			<sl-tab slot="nav" panel="map">
 				<hot-icon name="map"></hot-icon>
 			</sl-tab>
-			<sl-tab slot="nav" panel="offline">
-				<hot-icon name="wifi-off"></hot-icon>
-			</sl-tab>
-			{#if (!enableWebforms)}
+			{#if !commonStore.enableWebforms}
+				<sl-tab slot="nav" panel="offline">
+					<hot-icon name="wifi-off"></hot-icon>
+				</sl-tab>
 				<sl-tab slot="nav" panel="qrcode">
 					<hot-icon name="qr-code"></hot-icon>
 				</sl-tab>
-			 {/if}
+			{/if}
+			{#if commonStore.enableWebforms}
+				<sl-tab slot="nav" panel="instructions">
+					<hot-icon name="description"></hot-icon>
+				</sl-tab>
+			{/if}
 			<sl-tab slot="nav" panel="events">
 				<hot-icon name="three-dots"></hot-icon>
 			</sl-tab>
@@ -446,4 +469,3 @@
 		taskId={taskStore.selectedTaskIndex || undefined}
 	/>
 </div>
-

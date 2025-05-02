@@ -1,21 +1,21 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
-"""Logic for FMTM tasks."""
+"""Logic for Field-TM tasks."""
 
 from datetime import datetime, timedelta, timezone
 from textwrap import dedent
@@ -139,7 +139,7 @@ async def unlock_old_locked_tasks(db, project_id):
     """Unlock tasks locked for more than 3 days."""
     unlock_query = """
         WITH svc_user AS (
-            SELECT id AS svc_user_sub, username AS svc_username
+            SELECT sub, username
             FROM users
             WHERE username = 'svcfmtm'
         ),
@@ -181,10 +181,10 @@ async def unlock_old_locked_tasks(db, project_id):
             fe.task_id,
             fe.project_id,
             'RESET'::taskevent,
-            svc.svc_user_sub,
+            svc.sub,
             'UNLOCKED_TO_MAP'::mappingstate,
             NOW(),
-            svc.svc_username
+            svc.username
         FROM filtered_events fe
         CROSS JOIN svc_user svc;
     """

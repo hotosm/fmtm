@@ -14,7 +14,6 @@ import {
   AccessTimeFilled as AccessTimeFilledIcon,
   Lock as LockIcon,
   Fullscreen as FullscreenIcon,
-  MyLocation as MyLocationIcon,
   GridView as GridViewIcon,
   Add as AddIcon,
   FormatAlignCenter as FormatAlignCenterIcon,
@@ -102,6 +101,8 @@ import {
   BarChartOutlined as BarChartOutlinedIcon,
   MapOutlined as MapOutlinedIcon,
   HistoryOutlined as HistoryOutlinedIcon,
+  LockOutlined as LockOutlinedIcon,
+  ContentCopy as ContentCopyIcon,
 } from '@mui/icons-material';
 import LockPng from '@/assets/images/lock.png';
 import RedLockPng from '@/assets/images/red-lock.png';
@@ -132,7 +133,6 @@ export default {
   AccessTimeFilledIcon,
   LockIcon,
   FullscreenIcon,
-  MyLocationIcon,
   GridViewIcon,
   AddIcon,
   FormatAlignCenterIcon,
@@ -218,4 +218,6 @@ export default {
   BarChartOutlinedIcon,
   MapOutlinedIcon,
   HistoryOutlinedIcon,
+  LockOutlinedIcon,
+  ContentCopyIcon,
 };

@@ -1,19 +1,19 @@
 # Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Pydantic models for parsing database rows.
 
@@ -254,6 +254,8 @@ class DbUser(BaseModel):
         skip: Optional[int] = None,
         limit: Optional[int] = None,
         search: Optional[str] = None,
+        username: Optional[str] = None,
+        signin_type: Optional[str] = None,
     ) -> Optional[list[Self]]:
         """Fetch all users."""
         filters = []
@@ -262,6 +264,14 @@ class DbUser(BaseModel):
         if search:
             filters.append("username ILIKE %(search)s")
             params["search"] = f"%{search}%"
+
+        if username:
+            filters.append("username = %(username)s")
+            params["username"] = username
+
+        if signin_type:
+            filters.append("sub LIKE %(signin_type)s")
+            params["signin_type"] = f"{signin_type}|%"
 
         sql = f"""
             SELECT * FROM users
@@ -1432,6 +1442,7 @@ class DbProject(BaseModel):
     new_geom_type: Optional[DbGeomType] = None  # when new geometries are drawn
     geo_restrict_distance_meters: Optional[PositiveInt] = None
     geo_restrict_force_error: Optional[bool] = None
+    use_odk_collect: Optional[bool] = None
     hashtags: Optional[list[str]] = None
     due_date: Optional[AwareDatetime] = None
     updated_at: Optional[AwareDatetime] = None
@@ -1647,12 +1658,10 @@ class DbProject(BaseModel):
     ) -> Optional[list[Self]]:
         """Fetch all projects with optional filters for user, hashtags, and search."""
         access_info = await cls._get_user_access_level(db, current_user)
-        filters, params, needs_user_roles_join = cls._build_query_filters(
+        filters, params = cls._build_query_filters(
             skip, limit, org_id, user_sub, hashtags, search, access_info
         )
-        sql = cls._construct_sql_query(
-            filters, minimal, skip, limit, needs_user_roles_join
-        )
+        sql = cls._construct_sql_query(filters, minimal, skip, limit)
 
         # Execute query and return results
         async with db.cursor(row_factory=class_row(cls)) as cur:
@@ -1700,9 +1709,7 @@ class DbProject(BaseModel):
 
         # Add visibility filter based on user authorization
         visibility_filter = cls._build_visibility_filter(access_info)
-        needs_user_roles_join = False
         if visibility_filter:
-            needs_user_roles_join = True
             filters.append(visibility_filter)
 
         params = {
@@ -1722,7 +1729,7 @@ class DbProject(BaseModel):
         if access_info["managed_org_ids"]:
             params["managed_org_ids"] = access_info["managed_org_ids"]
 
-        return filters, params, needs_user_roles_join
+        return filters, params
 
     @classmethod
     def _build_visibility_filter(cls, access_info: dict) -> Optional[str]:
@@ -1746,7 +1753,11 @@ class DbProject(BaseModel):
                 p.visibility = 'PUBLIC'
                 OR (
                     p.visibility = 'PRIVATE'
-                    AND ur.user_sub = %(current_user_sub)s
+                    AND EXISTS (
+                        SELECT 1 FROM user_roles ur
+                        WHERE ur.project_id = p.id
+                        AND ur.user_sub = %(current_user_sub)s
+                    )
                 )
             )
         """
@@ -1758,21 +1769,13 @@ class DbProject(BaseModel):
         minimal: bool,
         skip: Optional[int],
         limit: Optional[int],
-        needs_user_roles_join: Optional[bool] = False,
     ) -> str:
         """Construct SQL query based on filters and query type."""
         where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
 
-        # Only join user_roles if needed for private visibility check
-        if needs_user_roles_join:
-            user_roles_join = "LEFT JOIN user_roles ur ON ur.project_id = p.id"
-        else:
-            user_roles_join = ""
-
         sql = f"""
             WITH filtered_projects AS (
                 SELECT p.* FROM projects p
-                {user_roles_join}
                 {where_clause}
             )
         """
@@ -2011,7 +2014,7 @@ class DbOdkEntities(BaseModel):
             bool: Success or failure.
         """
         log.info(
-            f"Updating FMTM database Entities for project {project_id} "
+            f"Updating Field-TM database Entities for project {project_id} "
             f"with ({len(entities)}) features in batches of {batch_size}"
         )
 
@@ -2067,7 +2070,7 @@ class DbOdkEntities(BaseModel):
     async def update(
         cls, db: Connection, entity_uuid: str, entity_update: "OdkEntitiesUpdate"
     ) -> bool:
-        """Update the entity value in the FMTM db."""
+        """Update the entity value in the Field-TM db."""
         model_dump = dump_and_check_model(entity_update)
         placeholders = [f"{key} = %({key})s" for key in model_dump.keys()]
         sql = f"""
@@ -2222,7 +2225,7 @@ class DbBackgroundTask(BaseModel):
 class DbBasemap(BaseModel):
     """Table tiles_path.
 
-    TODO for now we generate the basemap entry in FMTM.
+    TODO for now we generate the basemap entry in Field-TM.
     TODO In future we will use a basemap generator microservice
     TODO that will handle the basemap generation db entries.
     TODO https://github.com/hotosm/basemap-api

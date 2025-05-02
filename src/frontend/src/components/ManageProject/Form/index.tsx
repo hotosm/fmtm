@@ -40,7 +40,7 @@ const FormUpdate = ({ projectId }) => {
       return;
     }
     dispatch(
-      PostFormUpdate(`${API_URL}/projects/update-form?project_id=${projectId}`, {
+      PostFormUpdate(`${API_URL}/central/update-form?project_id=${projectId}`, {
         xformId: xFormId,
         // osm_category: selectedCategory,
         upload: uploadForm && uploadForm?.[0]?.file,
@@ -49,7 +49,7 @@ const FormUpdate = ({ projectId }) => {
   };
 
   return (
-    <div className="fmtm-relative fmtm-flex fmtm-flex-col fmtm-w-full fmtm-h-full">
+    <div className="fmtm-relative fmtm-flex fmtm-flex-col fmtm-w-full fmtm-h-full fmtm-bg-white">
       <div className="fmtm-py-5 lg:fmtm-py-10 fmtm-px-5 lg:fmtm-px-9 fmtm-flex fmtm-flex-col fmtm-gap-y-5 fmtm-flex-1 fmtm-overflow-y-scroll scrollbar">
         <div>
           <p className="fmtm-text-base">⚠️ IMPORTANT ⚠️</p>
@@ -58,7 +58,9 @@ const FormUpdate = ({ projectId }) => {
             <a
               className="fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-underline"
               onClick={() =>
-                dispatch(DownloadProjectForm(`${API_URL}/projects/download-form/${projectId}`, 'form', projectId))
+                dispatch(
+                  DownloadProjectForm(`${API_URL}/central/download-form?project_id=${projectId}`, 'form', projectId),
+                )
               }
             >
               download

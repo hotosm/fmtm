@@ -1,8 +1,6 @@
-import { getAlertStore, getCommonStore } from '$store/common.svelte.ts';
+import { getAlertStore } from '$store/common.svelte.ts';
 
-const commonStore = getCommonStore();
 const alertStore = getAlertStore();
-const enableWebforms = commonStore.config?.enableWebforms || false;
 
 export function openOdkCollectNewFeature(xFormId: string, entityId: string) {
 	if (!xFormId || !entityId) {
@@ -16,9 +14,6 @@ export function openOdkCollectNewFeature(xFormId: string, entityId: string) {
 			variant: 'warning',
 			message: 'Requires a mobile phone with ODK Collect.',
 		});
-	} else if (enableWebforms) {
-		// TODO can we open the webform directly, instead of needing to click
-		// TODO the 'Collect Data' button?
 	} else {
 		// TODO we need to update the form to support task_id=${}&
 		document.location.href = `odkcollect://form/${xFormId}?feature=${entityId}`;

@@ -14,8 +14,8 @@
 	import { m } from '$translations/messages.js';
 	import Login from '$lib/components/login.svelte';
 	import { getLoginStore } from '$store/login.svelte.ts';
-	import { drawerItems as menuItems } from '$constants/drawerItems.ts';
-	import { revokeCookies } from '$lib/utils/login';
+	import { defaultDrawerItems } from '$constants/drawerItems.ts';
+	import { revokeCookies } from '$lib/api/login';
 	import { getAlertStore } from '$store/common.svelte';
 	import { getCommonStore, getProjectSetupStepStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
@@ -31,7 +31,6 @@
 	let isFirstLoad = $derived(
 		+(projectSetupStepStore.projectSetupStep || 0) === projectSetupStepEnum['odk_project_load'],
 	);
-	const enableWebforms = $derived(commonStore.config?.enableWebforms || false);
 
 	const handleSignOut = async () => {
 		try {
@@ -47,14 +46,18 @@
 	const handleLocaleSelect = (event: SlSelectEvent) => {
 		const selectedItem = event.detail.item;
 		commonStore.setLocale(selectedItem.value);
+		console.log(selectedItem.value)
 		setParaglideLocale(selectedItem.value); // paraglide function for UI changes (causes reload)
 	};
+
+	let sidebarMenuItems = $derived(commonStore.config?.sidebarItemsOverride.length > 0 ? commonStore.config?.sidebarItemsOverride : defaultDrawerItems)
 
 	onMount(() => {
 		// Handle locale change
 		const container = document.querySelector('.locale-selection');
 		const dropdown = container?.querySelector('sl-dropdown');
 		dropdown?.addEventListener('sl-select', handleLocaleSelect);
+
 	});
 
 	onDestroy(() => {
@@ -72,14 +75,9 @@
 		role="button"
 		tabindex="0"
 		class="logo"
+		aria-label="Home"
 	>
-		<img src={commonStore.config?.logoUrl} alt="hot-logo" />
-		<!-- The approach below is finicky - can loading the logo via CSS work nicely? -->
-		<!-- <a href={window.location.origin} 
-			class="inline-block flex h-[2.2rem] sm:h-[3rem] w-[2.2rem] sm:w-[3rem] bg-no-repeat bg-cover"
-			style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/45/Humanitarian_OpenStreetMap_Team_logo.svg');"
-			aria-label="Home"
-		></a> -->
+		<img src={commonStore.config?.logoUrl} alt="hot-logo"/>
 		<span class="logo-text">
 			{commonStore.config?.logoText}
 		</span>
@@ -131,7 +129,7 @@
 		{#snippet drawerOpenButton()}
 			<hot-icon
 				name="list"
-				class="drawer-icon ${isFirstLoad && !enableWebforms ? 'drawer-icon-firstload' : ''}"
+				class="drawer-icon ${isFirstLoad && !commonStore.enableWebforms ? 'drawer-icon-firstload' : ''}"
 				onclick={() => {
 					drawerRef?.show();
 				}}
@@ -143,7 +141,7 @@
 			></hot-icon>
 		{/snippet}
 		<!-- add tooltip on first load -->
-		{#if isFirstLoad && !enableWebforms}
+		{#if isFirstLoad && !commonStore.enableWebforms}
 			<hot-tooltip
 				bind:this={drawerOpenButtonRef}
 				content="First download the custom ODK Collect app here"
@@ -179,12 +177,12 @@
 				</sl-menu>
 			</sl-dropdown>
 		</div>
-		{#each menuItems as menu}
+		{#each sidebarMenuItems as item}
 			<a
 				target="_blank"
 				rel="noopener noreferrer"
-				href={menu.path}
-				class="menu-item">{menu.name}</a
+				href={item.path}
+				class="menu-item">{item.name}</a
 			>
 		{/each}
 		{#if loginStore?.getAuthDetails?.username}

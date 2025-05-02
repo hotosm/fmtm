@@ -1,11 +1,11 @@
 import { m } from '$translations/messages.js';
 
-type drawerItemsType = {
+export type drawerItemsType = {
 	name: string;
 	path: string;
 };
 
-export const drawerItems: drawerItemsType[] = [
+export const defaultDrawerItems: drawerItemsType[] = [
 	{
 		name: m['header.about'](),
 		path: 'https://docs.fmtm.dev/about/about/',
@@ -17,6 +17,10 @@ export const drawerItems: drawerItemsType[] = [
 	{
 		name: m['header.support'](),
 		path: 'https://github.com/hotosm/fmtm/issues/',
+	},
+	{
+		name: m['header.translate'](),
+		path: 'https://hosted.weblate.org/engage/hotosm',
 	},
 	{
 		name: m['header.download_custom_odk_collect'](),

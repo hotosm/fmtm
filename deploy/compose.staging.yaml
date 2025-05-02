@@ -1,18 +1,18 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
-# This file is part of FMTM.
+# Copyright (c) Humanitarian OpenStreetMap Team
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
 name: fmtm-stage
@@ -100,6 +100,9 @@ services:
       # We need this to allow for client-side routing in the SPA (from index.html)
       stage.fmtm.hotosm.org_ERRORS: 404=/index.html
       mapper.stage.fmtm.hotosm.org_ERRORS: 404=/index.html
+      mapper.stage.fmtm.hotosm.org_MAX_CLIENT_SIZE: 1G
+      # We allow accelerometer, camera, fullscreen, geolocation, magnetometer, gyroscope
+      mapper.stage.fmtm.hotosm.org_PERMISSIONS_POLICY: accelerometer=(self), ambient-light-sensor=(), attribution-reporting=(), autoplay=(), battery=(), bluetooth=(), browsing-topics=(), camera=(self), compute-pressure=(), display-capture=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(self), gamepad=(), geolocation=(self), gyroscope=(self), hid=(), identity-credentials-get=(), idle-detection=(), local-fonts=(), magnetometer=(self), microphone=(), midi=(), otp-credentials=(), payment=(), picture-in-picture=(), publickey-credentials-create=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), speaker-selection=(), storage-access=(), usb=(), web-share=(), window-management=(), xr-spatial-tracking=(), interest-cohort=()
       api.stage.fmtm.hotosm.org_REVERSE_PROXY_HOST: http://api:8000
       api.stage.fmtm.hotosm.org_MAX_CLIENT_SIZE: 1G
       # Increase timeout slightly for long project creation requests

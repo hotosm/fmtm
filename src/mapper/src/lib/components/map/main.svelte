@@ -46,11 +46,11 @@
 	import { getTaskStore } from '$store/tasks.svelte.ts';
 	import { getProjectSetupStepStore, getProjectBasemapStore } from '$store/common.svelte.ts';
 	import { readFileFromOPFS } from '$lib/fs/opfs.ts';
-	import { loadOfflinePmtiles } from '$lib/utils/basemaps.ts';
+	import { loadOfflinePmtiles } from '$lib/map/basemaps.ts';
 	import { projectSetupStep as projectSetupStepEnum, MapGeomTypes } from '$constants/enums.ts';
 	import { baseLayers, osmStyle, pmtilesStyle } from '$constants/baseLayers.ts';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
-	import { clickOutside } from '$lib/utils/clickOutside.ts';
+	import { clickOutside } from '$lib/map/click-outside.ts';
 
 	type bboxType = [number, number, number, number];
 
@@ -78,11 +78,7 @@
 		handleDrawnGeom,
 	}: Props = $props();
 
-	const cssValue = property => (
-		getComputedStyle(document.documentElement)
-				.getPropertyValue(property)
-				.trim()
-	)
+	const cssValue = (property) => getComputedStyle(document.documentElement).getPropertyValue(property).trim();
 
 	const taskStore = getTaskStore();
 	const projectSetupStepStore = getProjectSetupStepStore();
@@ -101,15 +97,19 @@
 	let selectedStyleUrl: string | undefined = $state(undefined);
 
 	let fillLayerColors = {
-		'UNLOCKED_TO_MAP': '#ffffff',
-		'LOCKED_FOR_MAPPING': '#008099',
-		'UNLOCKED_TO_VALIDATE': '#ade6ef',
-		'LOCKED_FOR_VALIDATION': '#fceca4',
-		'UNLOCKED_DONE': '#40ac8c',
-		'default': '#c5fbf5',
-		'primary': 'red'
+		UNLOCKED_TO_MAP: '#ffffff',
+		LOCKED_FOR_MAPPING: '#008099',
+		UNLOCKED_TO_VALIDATE: '#ade6ef',
+		LOCKED_FOR_VALIDATION: '#fceca4',
+		UNLOCKED_DONE: '#40ac8c',
+		default: '#c5fbf5',
+		primary: 'red',
 	};
 
+	let taskCentroidGeojson = $derived({
+		...taskStore.featcol,
+		features: taskStore.featcol?.features?.map((feat) => centroid(feat?.geometry, { properties: feat.properties })),
+	});
 	// use Map for quick lookups
 	let entityMapByEntity = $derived(
 		new Map(entitiesStore.entitiesStatusList.map((entity) => [entity.entity_id, entity])),
@@ -366,30 +366,28 @@
 	}
 
 	onMount(async () => {
-
 		// Give the browser a tick to apply all styles
 		requestAnimationFrame(() => {
 			setTimeout(() => {
+				// Load color from CSS variables
+				const unlockedToMapColor = cssValue('--sl-color-neutral-300');
+				const lockedForMappingColor = cssValue('--sl-color-warning-700');
+				const unlockedToValidateColor = cssValue('--sl-color-primary-400');
+				const lockedForValidationColor = cssValue('--sl-color-success-700');
+				const unlockedDoneColor = cssValue('--sl-color-success-700');
+				const primary = cssValue('--sl-color-primary-700');
 
-			// Load color from CSS variables
-			const unlockedToMapColor = cssValue("--sl-color-neutral-300");
-			const lockedForMappingColor = cssValue("--sl-color-warning-700");
-			const unlockedToValidateColor = cssValue("--sl-color-primary-400");
-			const lockedForValidationColor = cssValue("--sl-color-success-700");
-			const unlockedDoneColor = cssValue("--sl-color-success-700");
-			const primary = cssValue("--sl-color-primary-700");
-
-			// Replace your color variables with the ones fetched from CSS
-			fillLayerColors = {
-				'UNLOCKED_TO_MAP': unlockedToMapColor || fillLayerColors['UNLOCKED_TO_MAP'],
-				'LOCKED_FOR_MAPPING': lockedForMappingColor || fillLayerColors['LOCKED_FOR_MAPPING'],
-				'UNLOCKED_TO_VALIDATE': unlockedToValidateColor || fillLayerColors['UNLOCKED_TO_VALIDATE'],
-				'LOCKED_FOR_VALIDATION': lockedForValidationColor || fillLayerColors['LOCKED_FOR_VALIDATION'],
-				'UNLOCKED_DONE': unlockedDoneColor || fillLayerColors['UNLOCKED_DONE'],
-				'default': fillLayerColors['default'], // Keep default color as is
-				'primary': primary || fillLayerColors['primary'],
-			};
-		}, 100);
+				// Replace your color variables with the ones fetched from CSS
+				fillLayerColors = {
+					UNLOCKED_TO_MAP: unlockedToMapColor || fillLayerColors['UNLOCKED_TO_MAP'],
+					LOCKED_FOR_MAPPING: lockedForMappingColor || fillLayerColors['LOCKED_FOR_MAPPING'],
+					UNLOCKED_TO_VALIDATE: unlockedToValidateColor || fillLayerColors['UNLOCKED_TO_VALIDATE'],
+					LOCKED_FOR_VALIDATION: lockedForValidationColor || fillLayerColors['LOCKED_FOR_VALIDATION'],
+					UNLOCKED_DONE: unlockedDoneColor || fillLayerColors['UNLOCKED_DONE'],
+					default: fillLayerColors['default'], // Keep default color as is
+					primary: primary || fillLayerColors['primary'],
+				};
+			}, 100);
 		});
 
 		// Register pmtiles protocol
@@ -468,8 +466,7 @@
 	<Control class="control" position="top-left">
 		<ControlGroup>
 			<ControlButton title="Zoom to project" on:click={zoomToProject}
-				><hot-icon name="crop-free" class="icon"
-				></hot-icon></ControlButton
+				><hot-icon name="crop-free" class="icon"></hot-icon></ControlButton
 			>
 		</ControlGroup></Control
 	>
@@ -501,11 +498,7 @@
 			}}
 			tabindex="0"
 		>
-			<img
-				class="basemap-icon"
-				src={selectedStyleUrl}
-				alt="Basemap Icon"
-			/>
+			<img class="basemap-icon" src={selectedStyleUrl} alt="Basemap Icon" />
 		</div>
 		<div
 			aria-label="toggle legend"
@@ -519,10 +512,7 @@
 			}}
 			tabindex="0"
 		>
-			<hot-icon
-				name="legend-toggle"
-				class="icon"
-			></hot-icon>
+			<hot-icon name="legend-toggle" class="icon"></hot-icon>
 		</div>
 	</Control>
 	<!-- Add the Geolocation GeoJSON layer to the map -->
@@ -536,11 +526,16 @@
 				'fill-color': [
 					'match',
 					['get', 'state'],
-					'UNLOCKED_TO_MAP', fillLayerColors['UNLOCKED_TO_MAP'],
-					'LOCKED_FOR_MAPPING', fillLayerColors['LOCKED_FOR_MAPPING'],
-					'UNLOCKED_TO_VALIDATE', fillLayerColors['UNLOCKED_TO_VALIDATE'],
-					'LOCKED_FOR_VALIDATION', fillLayerColors['LOCKED_FOR_VALIDATION'],
-					'UNLOCKED_DONE', fillLayerColors['UNLOCKED_DONE'],
+					'UNLOCKED_TO_MAP',
+					fillLayerColors['UNLOCKED_TO_MAP'],
+					'LOCKED_FOR_MAPPING',
+					fillLayerColors['LOCKED_FOR_MAPPING'],
+					'UNLOCKED_TO_VALIDATE',
+					fillLayerColors['UNLOCKED_TO_VALIDATE'],
+					'LOCKED_FOR_VALIDATION',
+					fillLayerColors['LOCKED_FOR_VALIDATION'],
+					'UNLOCKED_DONE',
+					fillLayerColors['UNLOCKED_DONE'],
 					fillLayerColors['default'], // default color if no match,
 				],
 				'fill-opacity': hoverStateFilter(0.3, 0),
@@ -548,17 +543,23 @@
 			beforeLayerType="symbol"
 			manageHoverState
 		/>
-		<!-- TODO: colors values should be dynamic -->
 		<LineLayer
 			layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 			paint={{
-				'line-color': ['case', ['==', ['get', 'fid'], taskStore.selectedTaskId], fillLayerColors['primary'], fillLayerColors['primary']],
+				'line-color': [
+					'case',
+					['==', ['get', 'fid'], taskStore.selectedTaskId],
+					fillLayerColors['primary'],
+					fillLayerColors['primary'],
+				],
 				'line-width': 3,
 				'line-opacity': ['case', ['==', ['get', 'fid'], taskStore.selectedTaskId], 1, 0.35],
 			}}
 			beforeLayerType="symbol"
 			manageHoverState
 		/>
+	</GeoJSON>
+	<GeoJSON id="tasks-centroid" data={taskCentroidGeojson} promoteId="fid">
 		<SymbolLayer
 			applyToClusters={false}
 			hoverCursor="pointer"
@@ -571,130 +572,125 @@
 					'LOCKED_FOR_VALIDATION',
 					'',
 				],
+				'symbol-placement': 'point',
 				'icon-allow-overlap': true,
 			}}
 		/>
 	</GeoJSON>
 	<!-- The features / entities -->
 	{#if entitiesUrl}
-	<FlatGeobuf
-		id="entities"
-		url={entitiesUrl}
-		extent={taskStore.selectedTaskGeom}
-		extractGeomCols={true}
-		promoteId="id"
-		processGeojson={(geojsonData) => addStatusToGeojsonProperty(geojsonData, '')}
-		geojsonUpdateDependency={[entityMapByEntity, entityMapByOsm]}
-	>
-		{#if primaryGeomType === MapGeomTypes.POLYGON}
-			<!-- TODO: colors values should be dynamic -->
-			<FillLayer
-				id="entity-polygon-layer"
-				paint={{
-					'fill-opacity': ['match', ['get', 'status'], 'MARKED_BAD', 0, 0.6],
-					'fill-color': [
-						'match',
-						['get', 'status'],
-						'READY',
-						'#9c9a9a',
-						'OPENED_IN_ODK',
-						'#fae15f',
-						'SURVEY_SUBMITTED',
-						'#71bf86',
-						'VALIDATED',
-						'#71bf86',
-						'MARKED_BAD',
-						'#fa1100',
-						'#c5fbf5', // default color if no match is found
-					],
-					'fill-outline-color': [
-						'match',
-						['get', 'status'],
-						'READY',
-						'#000000',
-						'OPENED_IN_ODK',
-						'#ffd603',
-						'SURVEY_SUBMITTED',
-						'#32a852',
-						'MARKED_BAD',
-						'#fa1100',
-						'#c5fbf5',
-					],
-				}}
-				beforeLayerType="symbol"
-				manageHoverState
-			/>
-			<!-- TODO: colors values should be dynamic -->
-			<LineLayer
-				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
-				paint={{
-					'line-color': '#fa1100',
-					'line-width': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0],
-					'line-opacity': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0.35],
-				}}
-				beforeLayerType="symbol"
-				manageHoverState
-			/>
-		{:else if primaryGeomType === MapGeomTypes.POINT}
-			<!-- TODO: colors values should be dynamic -->
-			<SymbolLayer
-				id="entity-point-layer"
-				applyToClusters={false}
-				hoverCursor="pointer"
-				manageHoverState
-				layout={{
-					'icon-image': [
-						'match',
-						['get', 'status'],
-						'READY',
-						'MAP_PIN_GREY',
-						'OPENED_IN_ODK',
-						'MAP_PIN_YELLOW',
-						'SURVEY_SUBMITTED',
-						'MAP_PIN_GREEN',
-						'VALIDATED',
-						'MAP_PIN_BLUE',
-						'MARKED_BAD',
-						'MAP_PIN_RED',
-						'#c5fbf5', // default color if no match is found
-					],
-					'icon-allow-overlap': true,
-					'icon-size': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1.6, 1],
-				}}
-			/>
-		{/if}
-	</FlatGeobuf>
+		<FlatGeobuf
+			id="entities"
+			url={entitiesUrl}
+			extent={taskStore.selectedTaskGeom}
+			extractGeomCols={true}
+			promoteId="id"
+			processGeojson={(geojsonData) => addStatusToGeojsonProperty(geojsonData, '')}
+			geojsonUpdateDependency={[entityMapByEntity, entityMapByOsm]}
+		>
+			{#if primaryGeomType === MapGeomTypes.POLYGON}
+				<FillLayer
+					id="entity-polygon-layer"
+					paint={{
+						'fill-opacity': ['match', ['get', 'status'], 'MARKED_BAD', 0, 0.6],
+						'fill-color': [
+							'match',
+							['get', 'status'],
+							'READY',
+							cssValue('--sl-color-neutral-300'),
+							'OPENED_IN_ODK',
+							cssValue('--sl-color-warning-700'),
+							'SURVEY_SUBMITTED',
+							cssValue('--sl-color-success-700'),
+							'VALIDATED',
+							cssValue('--sl-color-success-500'),
+							'MARKED_BAD',
+							cssValue('--sl-color-danger-700'),
+							cssValue('--sl-color-primary-700'), // default color if no match is found
+						],
+						'fill-outline-color': [
+							'match',
+							['get', 'status'],
+							'READY',
+							cssValue('--sl-color-neutral-1000'),
+							'OPENED_IN_ODK',
+							cssValue('--sl-color-warning-900'),
+							'SURVEY_SUBMITTED',
+							cssValue('--sl-color-success-900'),
+							'MARKED_BAD',
+							cssValue('--sl-color-danger-900'),
+							cssValue('--sl-color-primary-700'),
+						],
+					}}
+					beforeLayerType="symbol"
+					manageHoverState
+				/>
+				<LineLayer
+					layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+					paint={{
+						'line-color': cssValue('--sl-color-primary-700'),
+						'line-width': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0],
+						'line-opacity': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0.35],
+					}}
+					beforeLayerType="symbol"
+					manageHoverState
+				/>
+			{:else if primaryGeomType === MapGeomTypes.POINT}
+				<SymbolLayer
+					id="entity-point-layer"
+					applyToClusters={false}
+					hoverCursor="pointer"
+					manageHoverState
+					layout={{
+						'icon-image': [
+							'match',
+							['get', 'status'],
+							'READY',
+							'MAP_PIN_GREY',
+							'OPENED_IN_ODK',
+							'MAP_PIN_YELLOW',
+							'SURVEY_SUBMITTED',
+							'MAP_PIN_GREEN',
+							'VALIDATED',
+							'MAP_PIN_BLUE',
+							'MARKED_BAD',
+							'MAP_PIN_RED',
+							cssValue('--sl-color-primary-700'), // default color if no match is found
+						],
+						'icon-allow-overlap': true,
+						'icon-size': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1.6, 1],
+					}}
+				/>
+			{/if}
+		</FlatGeobuf>
 	{/if}
 	<GeoJSON id="bad-geoms" data={entitiesStore.badGeomList}>
 		{#if drawGeomType === MapGeomTypes.POLYGON}
-			<!-- TODO: colors values should be dynamic -->
 			<FillLayer
 				id="bad-geom-fill-layer"
 				hoverCursor="pointer"
 				paint={{
-					'fill-color': '#fa1100',
+					'fill-color': cssValue('--sl-color-primary-700'),
 					'fill-opacity': 0.3,
 				}}
 				beforeLayerType="symbol"
 				manageHoverState
 			/>
-			<!-- TODO: colors values should be dynamic -->
 			<LineLayer
 				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 				paint={{
-					'line-color': '#fa1100',
+					'line-color': cssValue('--sl-color-primary-700'),
 					'line-width': lineWidth,
 				}}
 				beforeLayerType="symbol"
 				manageHoverState
 			/>
 		{:else if drawGeomType === MapGeomTypes.POINT}
-			<!-- TODO: colors values should be dynamic -->
 			<CircleLayer
 				id="bad-geom-circle-layer"
 				hoverCursor="pointer"
 				paint={{
-					'circle-color': '#fa1100',
+					'circle-color': cssValue('--sl-color-primary-700'),
 					'circle-opacity': 0.4,
 					'circle-radius': circleRadius,
 					'circle-stroke-opacity': hoverStateFilter(0, 1),
@@ -704,7 +700,6 @@
 	</GeoJSON>
 	<GeoJSON id="new-geoms" data={addStatusToGeojsonProperty(entitiesStore.newGeomList, 'new')}>
 		{#if drawGeomType === MapGeomTypes.POLYGON}
-			<!-- TODO: colors values should be dynamic -->
 			<FillLayer
 				id="new-entity-polygon-layer"
 				paint={{
@@ -713,39 +708,38 @@
 						'match',
 						['get', 'status'],
 						'READY',
-						'#9c9a9a',
+						cssValue('--sl-color-neutral-300'),
 						'OPENED_IN_ODK',
-						'#fae15f',
+						cssValue('--sl-color-warning-700'),
 						'SURVEY_SUBMITTED',
-						'#71bf86',
+						cssValue('--sl-color-success-700'),
 						'VALIDATED',
-						'#71bf86',
+						cssValue('--sl-color-success-500'),
 						'MARKED_BAD',
-						'#fa1100',
-						'#c5fbf5',
+						cssValue('--sl-color-danger-700'),
+						cssValue('--sl-color-primary-700'), // default color if no match is found
 					],
 					'fill-outline-color': [
 						'match',
 						['get', 'status'],
 						'READY',
-						'#000000',
+						cssValue('--sl-color-neutral-1000'),
 						'OPENED_IN_ODK',
-						'#ffd603',
+						cssValue('--sl-color-warning-900'),
 						'SURVEY_SUBMITTED',
-						'#32a852',
+						cssValue('--sl-color-success-900'),
 						'MARKED_BAD',
-						'#fa1100',
-						'#c5fbf5',
+						cssValue('--sl-color-danger-900'),
+						cssValue('--sl-color-primary-700'),
 					],
 				}}
 				beforeLayerType="symbol"
 				manageHoverState
 			/>
-			<!-- TODO: colors values should be dynamic -->
 			<LineLayer
 				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 				paint={{
-					'line-color': '#fa1100',
+					'line-color': cssValue('--sl-color-primary-700'),
 					'line-width': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0],
 					'line-opacity': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0.35],
 				}}
@@ -754,7 +748,6 @@
 			/>
 		{:else if drawGeomType === MapGeomTypes.POINT}
 			<!-- id="new-geom-symbol-layer" -->
-			 <!-- TODO: colors values should be dynamic -->
 			<SymbolLayer
 				id="new-entity-point-layer"
 				applyToClusters={false}
@@ -774,7 +767,7 @@
 						'MAP_PIN_BLUE',
 						'MARKED_BAD',
 						'MAP_PIN_RED',
-						'#c5fbf5', // default color if no match is found
+						cssValue('--sl-color-primary-700'), // default color if no match is found
 					],
 					'icon-allow-overlap': true,
 					'icon-size': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1.6, 1],

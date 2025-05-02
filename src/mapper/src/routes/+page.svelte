@@ -6,6 +6,8 @@
 	import ProjectCardSkeleton from '$lib/components/project-summary/project-card-skeleton.svelte';
 	import type { SlInputEvent } from '@shoelace-style/shoelace';
 	import type { paginationType, projectType } from '$lib/types';
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	const API_URL = import.meta.env.VITE_API_URL;
 
@@ -45,6 +47,7 @@
 			projectListLoading = true;
 			const response = await fetch(
 				`${API_URL}/projects/summaries?page=${page}&search=${search}&results_per_page=12&minimal=true`,
+				{credentials: 'include'}
 			);
 			const projectResponse = (await response.json()) as { results: projectType[]; pagination: paginationType };
 			projectList = projectResponse.results;
@@ -58,6 +61,14 @@
 
 	$effect(() => {
 		fetchProjects(paginationPage, debouncedSearch);
+	});
+
+	onMount(() => {
+		// if requestedPath set, redirect to the desired path (in our case we have requestedPath set to invite url)
+		const requestedPath = sessionStorage.getItem('requestedPath');
+		if (requestedPath) {
+			goto(requestedPath);
+		}
 	});
 </script>
 

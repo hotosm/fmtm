@@ -1,24 +1,24 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Endpoints for users and role."""
 
 from datetime import datetime, timezone
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import (
     APIRouter,
@@ -34,11 +34,13 @@ from loguru import logger as log
 from psycopg import Connection
 
 from app.auth.auth_deps import AuthUser, login_required
+from app.auth.auth_schemas import OrgUserDict
 from app.auth.providers.osm import check_osm_user, init_osm_auth
 from app.auth.roles import (
     ProjectUserDict,
     field_manager,
     mapper,
+    org_admin,
     super_admin,
     validator,
 )
@@ -65,13 +67,16 @@ router = APIRouter(
 @router.get("", response_model=user_schemas.PaginatedUsers)
 async def get_users(
     db: Annotated[Connection, Depends(db_conn)],
-    _: Annotated[DbUser, Depends(super_admin)],
+    _: Annotated[OrgUserDict, Depends(org_admin)],
     page: int = Query(1, ge=1),
     results_per_page: int = Query(13, le=100),
     search: str = "",
+    signin_type: Literal["osm", "google"] = Query(
+        "osm", description="Filter by signin type (osm or google)"
+    ),
 ):
     """Get all user details."""
-    return await get_paginated_users(db, page, results_per_page, search)
+    return await get_paginated_users(db, page, results_per_page, search, signin_type)
 
 
 @router.get("/usernames", response_model=list[user_schemas.Usernames])
@@ -79,9 +84,12 @@ async def get_userlist(
     db: Annotated[Connection, Depends(db_conn)],
     _: Annotated[DbUser, Depends(validator)],
     search: str = "",
+    signin_type: Literal["osm", "google"] = Query(
+        "osm", description="Filter by signin type (osm or google)"
+    ),
 ):
     """Get all user list with info such as id and username."""
-    users = await DbUser.all(db, search=search)
+    users = await DbUser.all(db, search=search, signin_type=signin_type)
     if not users:
         return []
     return [
@@ -129,21 +137,56 @@ async def invite_new_user(
     user_in: user_schemas.UserInviteIn,
     osm_auth=Depends(init_osm_auth),
 ):
-    """Invite a new user to a project.
+    """Invite a user to a project.
 
+    If the user already exists, directly assign the role to the user.
+    If the user does not exist, create an invite and send an email or OSM message.
+    The invite URL is user specific with a token that expires after 7 days.
     - Including `osm_username` will send an OSM message notification (including email).
     - Including `email` will send an email to the user.
-    - It's also possible to omit both fields and send the returned invite URL to the
-      user via other means (e.g. mobile message).
+    - It's also possible to send the returned invite URL to the user via other means
+    (e.g. mobile message).
     """
     project = project_user_dict.get("project")
+    osm_user_exists = False
+
+    if user_in.osm_username:
+        if osm_user_exists := await check_osm_user(user_in.osm_username):
+            username = user_in.osm_username
+            signin_type = "osm"
+        else:
+            raise HTTPException(
+                status_code=HTTPStatus.NOT_FOUND,
+                detail=f"OSM user not found: {user_in.osm_username}",
+            )
+    elif user_in.email and user_in.email.endswith("@gmail.com"):
+        username = user_in.email.split("@")[0]
+        signin_type = "google"
+    else:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="Either osm username or google email must be provided.",
+        )
+
+    # The user is unique by username and auth provider
+    if users := await DbUser.all(db, username=username, signin_type=signin_type):
+        user = users[0]
+        latest_role = await DbUserRole.create(db, project.id, user.sub, user_in.role)
+
+        return JSONResponse(
+            status_code=HTTPStatus.CREATED,
+            content={
+                "message": f"User {user.username} already exists. "
+                f"Role Assigned: {latest_role.role.value}."
+            },
+        )
 
     new_invite = await DbUserInvite.create(db, project.id, user_in)
 
     # Generate invite URL
     # TODO create frontend page to handle /invite
     # TODO save token from URL in localStorage
-    # TODO ask user to login to FMTM first, present options
+    # TODO ask user to login to Field-TM first, present options
     # TODO once logged in and redirected back to frontend
     # TODO read the localStorage `invite` key, and call the
     # TODO /users/invite/{token} endpoint.
@@ -156,22 +199,14 @@ async def invite_new_user(
         invite_url = f"https://{settings.FMTM_DOMAIN}/invite?token={new_invite.token}"
 
     # Notify via OSM message
-    osm_username = user_in.osm_username
-    if osm_username:
-        osm_user_exists = await check_osm_user(osm_username)
-
-        if not osm_user_exists:
-            raise HTTPException(
-                status_code=HTTPStatus.NOT_FOUND,
-                detail=f"User does not exist in OpenStreetMap: {osm_username}",
-            )
-
+    if osm_user_exists:
         background_tasks.add_task(
             send_invitation_osm_message,
             request=request,
             project=project,
-            invitee_username=osm_username,
+            invitee_username=username,
             osm_auth=osm_auth,
+            invite_url=invite_url,
         )
 
     # TODO Notify via email (consider options)
@@ -189,7 +224,15 @@ async def accept_invite(
     invite = await DbUserInvite.one(db, token)
     if not invite or invite.is_expired():
         raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN, detail="Invite has expired (valid 7 days)"
+            status_code=HTTPStatus.FORBIDDEN, detail="Invite has expired"
+        )
+
+    if (invite.osm_username and invite.osm_username != current_user.username) or (
+        invite.email and invite.email != current_user.email
+    ):
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail="Invite is not for the current user.",
         )
 
     # Create the role for the user / project
