@@ -889,7 +889,7 @@
 									role="button"
 									tabindex="0"
 								>
-									Cancel
+									{m['popup.cancel']()}
 								</sl-button>
 								<sl-button
 									variant="primary"
@@ -905,7 +905,7 @@
 									role="button"
 									tabindex="0"
 								>
-									Map this feature
+									{m['popup.map_this_feature']()}
 								</sl-button>
 							{:else}
 								<sl-button
@@ -924,7 +924,7 @@
 									role="button"
 									tabindex="0"
 								>
-									Select this Feature
+									{m['popup.select_this_feature']()}
 								</sl-button>
 							{/if}
 						</div>
