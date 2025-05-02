@@ -423,9 +423,9 @@
 				label="Settings"
 				disabled={entitiesStore.syncEntityStatusLoading}
 				class={`sync-button ${entitiesStore.syncEntityStatusLoading && 'animate-spin'}`}
-				onclick={async () => await entitiesStore.syncEntityStatus(projectId)}
+				onclick={async () => await entitiesStore.syncEntityStatus(db, projectId)}
 				onkeydown={async (e: KeyboardEvent) => {
-					e.key === 'Enter' && (await entitiesStore.syncEntityStatus(projectId));
+					e.key === 'Enter' && (await entitiesStore.syncEntityStatus(db, projectId));
 				}}
 				role="button"
 				tabindex="0"
