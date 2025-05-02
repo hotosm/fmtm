@@ -62,7 +62,7 @@
 		setMapRef: (map: maplibregl.Map | undefined) => void;
 		primaryGeomType: MapGeomTypes;
 		draw?: boolean;
-		drawGeomType: MapGeomTypes | undefined;
+		drawGeomType: MapGeomTypes;
 		handleDrawnGeom?: ((drawInstance: any, geojson: GeoJSONGeometry) => void) | null;
 	}
 
@@ -77,6 +77,18 @@
 		drawGeomType,
 		handleDrawnGeom,
 	}: Props = $props();
+
+	const primaryGeomLayerMapping = {
+		POINT: 'entity-point-layer',
+		POLYGON: 'entity-polygon-layer',
+		LINESTRING: 'entity-line-layer',
+	};
+
+	const newGeomLayerMapping = {
+		POINT: 'new-entity-point-layer',
+		POLYGON: 'new-entity-polygon-layer',
+		LINESTRING: 'new-entity-line-layer',
+	};
 
 	const cssValue = (property) => getComputedStyle(document.documentElement).getPropertyValue(property).trim();
 
@@ -178,24 +190,9 @@
 
 	// using this function since outside click of entity layer couldn't be tracked via FillLayer
 	function handleMapClick(e: maplibregl.MapMouseEvent) {
-		let entityLayerName: string;
-		let newEntityLayerName: string;
-		switch (drawGeomType) {
-			case MapGeomTypes.POINT:
-				entityLayerName = 'entity-point-layer';
-				newEntityLayerName = 'new-entity-point-layer';
-				break;
-			case MapGeomTypes.POLYGON:
-				entityLayerName = 'entity-polygon-layer';
-				newEntityLayerName = 'new-entity-polygon-layer';
-				break;
-			case MapGeomTypes.LINESTRING:
-				entityLayerName = 'entity-line-layer';
-				newEntityLayerName = 'new-entity-line-layer';
-				break;
-			default:
-				throw new Error(`Unsupported geometry type: ${drawGeomType}`);
-		}
+		let entityLayerName: string = primaryGeomLayerMapping[primaryGeomType];
+		let newEntityLayerName: string = newGeomLayerMapping[drawGeomType];
+
 		// returns list of features of entity layer present on that clicked point
 		const clickedEntityFeature =
 			map?.queryRenderedFeatures(e.point, {
