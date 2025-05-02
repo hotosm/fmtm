@@ -208,11 +208,17 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
     if (!map) return;
 
     const handleClick = (evt) => {
+      // always reset selected entity ID on any map click
       dispatch(ProjectActions.SetSelectedEntityId(null));
+
+      // get features from layer excluding 'project-area'(task layer) i.e. get feature from data-extract & new-geoms layer
       const entityFeatures = map.getFeaturesAtPixel(evt.pixel, {
         layerFilter: (layer) => layer.get('name') !== 'project-area',
       });
+
+      // if the clicked point contains entity-related features, handle them; otherwise, check for task features
       if (!isEmpty(entityFeatures)) {
+        // store entities in overlappingEntityFeatures to show selection popup if multiple are present at the clicked point
         if (entityFeatures.length > 1) {
           setSelectedTaskArea(undefined);
           setOverlappingEntityFeatures(entityFeatures);
@@ -357,68 +363,67 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
         </div>
         <MapControlComponent map={map} projectName={projectInfo?.name || ''} pmTileLayerUrl={customBasemapUrl} />
       </MapComponent>
-      <div
-        className={`fmtm-duration-1000 fmtm-z-[10002] fmtm-h-fit fmtm-bg-white fmtm-p-5 fmtm-flex fmtm-flex-col ${
-          overlappingEntityFeatures.length > 1
-            ? 'fmtm-bottom-[4.4rem] md:fmtm-top-[50%] md:-fmtm-translate-y-[35%] fmtm-right-0 fmtm-w-[100vw] md:fmtm-w-[50vw] md:fmtm-max-w-fit'
-            : 'fmtm-top-[calc(100vh)] md:fmtm-top-[calc(40vh)] md:fmtm-left-[calc(100vw)] fmtm-w-[100vw] md:fmtm-max-w-[23rem]'
-        } fmtm-fixed fmtm-rounded-xl fmtm-border-opacity-50`}
-      >
-        <div title="Close" className="fmtm-ml-auto">
-          <AssetModules.CloseIcon
-            style={{ width: '20px' }}
-            className="hover:fmtm-text-primaryRed fmtm-cursor-pointer"
-            onClick={() => {
-              setOverlappingEntityFeatures([]);
-              dispatch(ProjectActions.SetSelectedEntityId(null));
-            }}
-          />
-        </div>
-        {overlappingEntityFeatures?.map((feature, i) => {
-          const featureProperties = feature.getProperties();
-          const id = featureProperties?.entity_id || featureProperties?.osm_id;
-          return (
-            <div className="fmtm-py-4 fmtm-border-b">
-              <p className="fmtm-font-semibold fmtm-mb-1">
-                {i + 1}. {id}
-              </p>
-              {selectedEntityId === id ? (
-                <div className="fmtm-flex fmtm-gap-2 fmtm-w-full">
+      {/* show entity selection popup only if multiple features overlap at the clicked point */}
+      {overlappingEntityFeatures.length > 1 && (
+        <div
+          className={`fmtm-z-[10002] fmtm-h-fit fmtm-bg-white fmtm-p-5 fmtm-flex fmtm-flex-col fmtm-bottom-[4.4rem] md:fmtm-top-[50%] md:-fmtm-translate-y-[35%] fmtm-right-0 fmtm-w-[100vw] md:fmtm-w-[50vw] md:fmtm-max-w-fit fmtm-fixed fmtm-rounded-xl fmtm-border-opacity-50`}
+        >
+          <div title="Close" className="fmtm-ml-auto">
+            <AssetModules.CloseIcon
+              style={{ width: '20px' }}
+              className="hover:fmtm-text-primaryRed fmtm-cursor-pointer"
+              onClick={() => {
+                setOverlappingEntityFeatures([]);
+                dispatch(ProjectActions.SetSelectedEntityId(null));
+              }}
+            />
+          </div>
+          {overlappingEntityFeatures?.map((feature, i) => {
+            const featureProperties = feature.getProperties();
+            const id = featureProperties?.entity_id || featureProperties?.osm_id;
+            return (
+              <div className="fmtm-py-4 fmtm-border-b">
+                <p className="fmtm-font-semibold fmtm-mb-1">
+                  {i + 1}. {id}
+                </p>
+                {selectedEntityId === id ? (
+                  <div className="fmtm-flex fmtm-gap-2 fmtm-w-full">
+                    <Button
+                      className="!fmtm-w-1/2"
+                      variant="primary-grey"
+                      onClick={() => {
+                        dispatch(ProjectActions.SetSelectedEntityId(null));
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      className="!fmtm-w-1/2"
+                      variant="primary-red"
+                      onClick={() => {
+                        handleFeatureClick(featureProperties, feature);
+                        setOverlappingEntityFeatures([]);
+                      }}
+                    >
+                      Map this feature
+                    </Button>
+                  </div>
+                ) : (
                   <Button
-                    className="!fmtm-w-1/2"
-                    variant="primary-grey"
-                    onClick={() => {
-                      dispatch(ProjectActions.SetSelectedEntityId(null));
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    className="!fmtm-w-1/2"
+                    className="!fmtm-w-full"
                     variant="primary-red"
                     onClick={() => {
-                      handleFeatureClick(featureProperties, feature);
-                      setOverlappingEntityFeatures([]);
+                      dispatch(ProjectActions.SetSelectedEntityId(id));
                     }}
                   >
-                    Map this feature
+                    Select this feature
                   </Button>
-                </div>
-              ) : (
-                <Button
-                  className="!fmtm-w-full"
-                  variant="primary-red"
-                  onClick={() => {
-                    dispatch(ProjectActions.SetSelectedEntityId(id));
-                  }}
-                >
-                  Select this feature
-                </Button>
-              )}
-            </div>
-          );
-        })}
-      </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </>
   );
 };
