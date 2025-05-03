@@ -1,6 +1,10 @@
 <!doctype html>
 <html>
 	<head>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap" rel="stylesheet">
+
 		<style>
 			.columns-pack label.value-option.no-buttons {
 				background-color: lightgray;
@@ -78,7 +82,9 @@
 				stylesheet.rel = 'stylesheet';
 				stylesheet.type = 'text/css';
 				stylesheet.href = cssFile;
-				document.getElementsByTagName('head')[0].appendChild(stylesheet);
+				// we append to the body and not the head in order that the css file
+				// more easily over-rides other styles that Web Forms injects into the head
+				document.getElementsByTagName('body')[0].appendChild(stylesheet);
 			}
 
 			const style = document.createElement('style');
