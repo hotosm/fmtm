@@ -18,7 +18,7 @@
 		ControlButton,
 		CircleLayer,
 	} from 'svelte-maplibre';
-	import maplibre from 'maplibre-gl';
+	import maplibre, { type MapGeoJSONFeature } from 'maplibre-gl';
 	import { MaplibreTerradrawControl } from '@watergis/maplibre-gl-terradraw';
 	import { Protocol } from 'pmtiles';
 	import { polygon } from '@turf/helpers';
@@ -62,7 +62,7 @@
 		setMapRef: (map: maplibregl.Map | undefined) => void;
 		primaryGeomType: MapGeomTypes;
 		draw?: boolean;
-		drawGeomType: MapGeomTypes | undefined;
+		drawGeomType: MapGeomTypes;
 		handleDrawnGeom?: ((drawInstance: any, geojson: GeoJSONGeometry) => void) | null;
 	}
 
@@ -77,6 +77,18 @@
 		drawGeomType,
 		handleDrawnGeom,
 	}: Props = $props();
+
+	const primaryGeomLayerMapping = {
+		POINT: 'entity-point-layer',
+		POLYGON: 'entity-polygon-layer',
+		LINESTRING: 'entity-line-layer',
+	};
+
+	const newGeomLayerMapping = {
+		POINT: 'new-entity-point-layer',
+		POLYGON: 'new-entity-polygon-layer',
+		LINESTRING: 'new-entity-line-layer',
+	};
 
 	const cssValue = (property) => getComputedStyle(document.documentElement).getPropertyValue(property).trim();
 
@@ -95,6 +107,7 @@
 	let expanding = true; // Whether the line is expanding
 	let selectedControl: 'layer-switcher' | 'legend' | null = $state(null);
 	let selectedStyleUrl: string | undefined = $state(undefined);
+	let selectedFeatures: MapGeoJSONFeature[] = $state([]);
 
 	let fillLayerColors = {
 		UNLOCKED_TO_MAP: '#ffffff',
@@ -177,37 +190,32 @@
 
 	// using this function since outside click of entity layer couldn't be tracked via FillLayer
 	function handleMapClick(e: maplibregl.MapMouseEvent) {
-		let entityLayerName: string;
-		let newEntityLayerName: string;
-		switch (drawGeomType) {
-			case MapGeomTypes.POINT:
-				entityLayerName = 'entity-point-layer';
-				newEntityLayerName = 'new-entity-point-layer';
-				break;
-			case MapGeomTypes.POLYGON:
-				entityLayerName = 'entity-polygon-layer';
-				newEntityLayerName = 'new-entity-polygon-layer';
-				break;
-			case MapGeomTypes.LINESTRING:
-				entityLayerName = 'entity-line-layer';
-				newEntityLayerName = 'new-entity-line-layer';
-				break;
-			default:
-				throw new Error(`Unsupported geometry type: ${drawGeomType}`);
-		}
+		let entityLayerName: string = primaryGeomLayerMapping[primaryGeomType];
+		let newEntityLayerName: string = newGeomLayerMapping[drawGeomType];
+
 		// returns list of features of entity layer present on that clicked point
-		const clickedEntityFeature = map?.queryRenderedFeatures(e.point, {
-			layers: [entityLayerName],
-		});
-		const clickedNewEntityFeature = map?.queryRenderedFeatures(e.point, {
-			layers: [newEntityLayerName],
-		});
+		const clickedEntityFeature =
+			map?.queryRenderedFeatures(e.point, {
+				layers: [entityLayerName],
+			}) || [];
+		const clickedNewEntityFeature =
+			map?.queryRenderedFeatures(e.point, {
+				layers: [newEntityLayerName],
+			}) || [];
+
+		const clickedFeatures = [...clickedEntityFeature, ...clickedNewEntityFeature];
+		// if clicked coordinate contain more than multiple entities, assign it to a variable
+		if (clickedFeatures.length > 1) {
+			selectedFeatures = clickedFeatures;
+		}
+
 		// returns list of features of task layer present on that clicked point
 		const clickedTaskFeature = map?.queryRenderedFeatures(e.point, {
 			layers: ['task-fill-layer'],
 		});
-		// if clicked point contains entity then set it's osm id else set null to store
-		if (clickedEntityFeature && clickedEntityFeature?.length > 0) {
+
+		if (clickedEntityFeature && clickedEntityFeature?.length > 0 && clickedFeatures?.length < 2) {
+			// if clicked coordinate contains uploaded entity only
 			const entityCentroid = centroid(clickedEntityFeature[0].geometry);
 			const clickedEntityId = clickedEntityFeature[0]?.properties?.entity_id;
 			entitiesStore.setSelectedEntity(clickedEntityId);
@@ -215,7 +223,8 @@
 				entityId: clickedEntityId,
 				coordinate: entityCentroid?.geometry?.coordinates,
 			});
-		} else if (clickedNewEntityFeature && clickedNewEntityFeature?.length > 0) {
+		} else if (clickedNewEntityFeature && clickedNewEntityFeature?.length > 0 && clickedFeatures?.length < 2) {
+			// if clicked coordinate contains new entity only
 			const entityCentroid = centroid(clickedNewEntityFeature[0].geometry);
 			const clickedEntityId = clickedNewEntityFeature[0]?.properties?.entity_id;
 			entitiesStore.setSelectedEntity(clickedEntityId);
@@ -224,6 +233,7 @@
 				coordinate: entityCentroid?.geometry?.coordinates,
 			});
 		} else {
+			// if clicked coordinate doesn't contain any entity, clear the entity states
 			entitiesStore.setSelectedEntity(null);
 			entitiesStore.setSelectedEntityCoordinate(null);
 		}
@@ -240,13 +250,19 @@
 		}
 
 		if (
-			(clickedEntityFeature && clickedEntityFeature?.length > 0) ||
-			(clickedNewEntityFeature && clickedNewEntityFeature?.length > 0)
+			((clickedEntityFeature && clickedEntityFeature?.length > 0) ||
+				(clickedNewEntityFeature && clickedNewEntityFeature?.length > 0)) &&
+			clickedFeatures?.length < 2
 		) {
+			// if clicked coordinate contains either one uploaded entity or new entity, open entity actions modal
+			selectedFeatures = [];
 			toggleActionModal('entity-modal');
-		} else if (clickedTaskFeature && clickedTaskFeature?.length > 0) {
+		} else if (clickedTaskFeature && clickedTaskFeature?.length > 0 && clickedFeatures?.length === 0) {
+			// if clicked coordinate doesn't contain any entity but only task, open task actions modal
+			selectedFeatures = [];
 			toggleActionModal('task-modal');
 		} else {
+			// else close the modal
 			toggleActionModal(null);
 		}
 	}
@@ -543,7 +559,6 @@
 			beforeLayerType="symbol"
 			manageHoverState
 		/>
-		<!-- TODO: colors values should be dynamic -->
 		<LineLayer
 			layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 			paint={{
@@ -590,7 +605,6 @@
 			geojsonUpdateDependency={[entityMapByEntity, entityMapByOsm]}
 		>
 			{#if primaryGeomType === MapGeomTypes.POLYGON}
-				<!-- TODO: colors values should be dynamic -->
 				<FillLayer
 					id="entity-polygon-layer"
 					paint={{
@@ -599,39 +613,38 @@
 							'match',
 							['get', 'status'],
 							'READY',
-							'#9c9a9a',
+							cssValue('--sl-color-neutral-300'),
 							'OPENED_IN_ODK',
-							'#fae15f',
+							cssValue('--sl-color-warning-700'),
 							'SURVEY_SUBMITTED',
-							'#71bf86',
+							cssValue('--sl-color-success-700'),
 							'VALIDATED',
-							'#71bf86',
+							cssValue('--sl-color-success-500'),
 							'MARKED_BAD',
-							'#fa1100',
-							'#c5fbf5', // default color if no match is found
+							cssValue('--sl-color-danger-700'),
+							cssValue('--sl-color-primary-700'), // default color if no match is found
 						],
 						'fill-outline-color': [
 							'match',
 							['get', 'status'],
 							'READY',
-							'#000000',
+							cssValue('--sl-color-neutral-1000'),
 							'OPENED_IN_ODK',
-							'#ffd603',
+							cssValue('--sl-color-warning-900'),
 							'SURVEY_SUBMITTED',
-							'#32a852',
+							cssValue('--sl-color-success-900'),
 							'MARKED_BAD',
-							'#fa1100',
-							'#c5fbf5',
+							cssValue('--sl-color-danger-900'),
+							cssValue('--sl-color-primary-700'),
 						],
 					}}
 					beforeLayerType="symbol"
 					manageHoverState
 				/>
-				<!-- TODO: colors values should be dynamic -->
 				<LineLayer
 					layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 					paint={{
-						'line-color': '#fa1100',
+						'line-color': cssValue('--sl-color-primary-700'),
 						'line-width': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0],
 						'line-opacity': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0.35],
 					}}
@@ -639,7 +652,6 @@
 					manageHoverState
 				/>
 			{:else if primaryGeomType === MapGeomTypes.POINT}
-				<!-- TODO: colors values should be dynamic -->
 				<SymbolLayer
 					id="entity-point-layer"
 					applyToClusters={false}
@@ -659,7 +671,7 @@
 							'MAP_PIN_BLUE',
 							'MARKED_BAD',
 							'MAP_PIN_RED',
-							'#c5fbf5', // default color if no match is found
+							cssValue('--sl-color-primary-700'), // default color if no match is found
 						],
 						'icon-allow-overlap': true,
 						'icon-size': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1.6, 1],
@@ -670,34 +682,31 @@
 	{/if}
 	<GeoJSON id="bad-geoms" data={entitiesStore.badGeomList}>
 		{#if drawGeomType === MapGeomTypes.POLYGON}
-			<!-- TODO: colors values should be dynamic -->
 			<FillLayer
 				id="bad-geom-fill-layer"
 				hoverCursor="pointer"
 				paint={{
-					'fill-color': '#fa1100',
+					'fill-color': cssValue('--sl-color-primary-700'),
 					'fill-opacity': 0.3,
 				}}
 				beforeLayerType="symbol"
 				manageHoverState
 			/>
-			<!-- TODO: colors values should be dynamic -->
 			<LineLayer
 				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 				paint={{
-					'line-color': '#fa1100',
+					'line-color': cssValue('--sl-color-primary-700'),
 					'line-width': lineWidth,
 				}}
 				beforeLayerType="symbol"
 				manageHoverState
 			/>
 		{:else if drawGeomType === MapGeomTypes.POINT}
-			<!-- TODO: colors values should be dynamic -->
 			<CircleLayer
 				id="bad-geom-circle-layer"
 				hoverCursor="pointer"
 				paint={{
-					'circle-color': '#fa1100',
+					'circle-color': cssValue('--sl-color-primary-700'),
 					'circle-opacity': 0.4,
 					'circle-radius': circleRadius,
 					'circle-stroke-opacity': hoverStateFilter(0, 1),
@@ -707,7 +716,6 @@
 	</GeoJSON>
 	<GeoJSON id="new-geoms" data={addStatusToGeojsonProperty(entitiesStore.newGeomList, 'new')}>
 		{#if drawGeomType === MapGeomTypes.POLYGON}
-			<!-- TODO: colors values should be dynamic -->
 			<FillLayer
 				id="new-entity-polygon-layer"
 				paint={{
@@ -716,39 +724,38 @@
 						'match',
 						['get', 'status'],
 						'READY',
-						'#9c9a9a',
+						cssValue('--sl-color-neutral-300'),
 						'OPENED_IN_ODK',
-						'#fae15f',
+						cssValue('--sl-color-warning-700'),
 						'SURVEY_SUBMITTED',
-						'#71bf86',
+						cssValue('--sl-color-success-700'),
 						'VALIDATED',
-						'#71bf86',
+						cssValue('--sl-color-success-500'),
 						'MARKED_BAD',
-						'#fa1100',
-						'#c5fbf5',
+						cssValue('--sl-color-danger-700'),
+						cssValue('--sl-color-primary-700'), // default color if no match is found
 					],
 					'fill-outline-color': [
 						'match',
 						['get', 'status'],
 						'READY',
-						'#000000',
+						cssValue('--sl-color-neutral-1000'),
 						'OPENED_IN_ODK',
-						'#ffd603',
+						cssValue('--sl-color-warning-900'),
 						'SURVEY_SUBMITTED',
-						'#32a852',
+						cssValue('--sl-color-success-900'),
 						'MARKED_BAD',
-						'#fa1100',
-						'#c5fbf5',
+						cssValue('--sl-color-danger-900'),
+						cssValue('--sl-color-primary-700'),
 					],
 				}}
 				beforeLayerType="symbol"
 				manageHoverState
 			/>
-			<!-- TODO: colors values should be dynamic -->
 			<LineLayer
 				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 				paint={{
-					'line-color': '#fa1100',
+					'line-color': cssValue('--sl-color-primary-700'),
 					'line-width': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0],
 					'line-opacity': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0.35],
 				}}
@@ -757,7 +764,6 @@
 			/>
 		{:else if drawGeomType === MapGeomTypes.POINT}
 			<!-- id="new-geom-symbol-layer" -->
-			<!-- TODO: colors values should be dynamic -->
 			<SymbolLayer
 				id="new-entity-point-layer"
 				applyToClusters={false}
@@ -777,7 +783,7 @@
 						'MAP_PIN_BLUE',
 						'MARKED_BAD',
 						'MAP_PIN_RED',
-						'#c5fbf5', // default color if no match is found
+						cssValue('--sl-color-primary-700'), // default color if no match is found
 					],
 					'icon-allow-overlap': true,
 					'icon-size': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1.6, 1],
@@ -845,3 +851,86 @@
 		<Legend isOpen={selectedControl === 'legend'} />
 	</div>
 </div>
+
+{#if selectedFeatures?.length > 1}
+	<div class="select-entities-modal">
+		<div class="content">
+			<div class="icon">
+				<hot-icon
+					name="close"
+					onclick={() => (selectedFeatures = [])}
+					onkeydown={(e: KeyboardEvent) => {
+						if (e.key === 'Enter') {
+							selectedFeatures = [];
+						}
+					}}
+					role="button"
+					tabindex="0"
+				></hot-icon>
+			</div>
+
+			<div>
+				{#each selectedFeatures as feature, index}
+					<div class="entity">
+						<div class="header">
+							<h5>{index + 1}. {feature.properties.entity_id}</h5>
+							<p class={`status ${feature.properties.status}`}>{m[`entity_states.${feature.properties.status}`]()}</p>
+						</div>
+						<div class="button-wrapper">
+							{#if entitiesStore.selectedEntity && entitiesStore.selectedEntity === feature.properties.entity_id}
+								<sl-button
+									variant="secondary"
+									size="small"
+									onclick={() => {
+										entitiesStore.setSelectedEntity(null);
+										entitiesStore.setSelectedEntityCoordinate(null);
+									}}
+									onkeydown={() => {}}
+									role="button"
+									tabindex="0"
+								>
+									{m['popup.cancel']()}
+								</sl-button>
+								<sl-button
+									variant="primary"
+									size="small"
+									onclick={() => {
+										selectedFeatures = [];
+										toggleActionModal('entity-modal');
+									}}
+									onkeydown={() => {
+										selectedFeatures = [];
+										toggleActionModal('entity-modal');
+									}}
+									role="button"
+									tabindex="0"
+								>
+									{m['popup.map_this_feature']()}
+								</sl-button>
+							{:else}
+								<sl-button
+									variant="primary"
+									size="small"
+									onclick={() => {
+										const entityCentroid = centroid(feature.geometry);
+										const clickedEntityId = feature?.properties?.entity_id;
+										entitiesStore.setSelectedEntity(clickedEntityId);
+										entitiesStore.setSelectedEntityCoordinate({
+											entityId: clickedEntityId,
+											coordinate: entityCentroid?.geometry?.coordinates,
+										});
+									}}
+									onkeydown={() => {}}
+									role="button"
+									tabindex="0"
+								>
+									{m['popup.select_this_feature']()}
+								</sl-button>
+							{/if}
+						</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+	</div>
+{/if}

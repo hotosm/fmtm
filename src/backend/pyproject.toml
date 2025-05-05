@@ -18,7 +18,7 @@
 
 [project]
 name = "fmtm"
-version = "2025.2.0"
+version = "2025.2.1"
 description = "Field Tasking Manager - coordinated field mapping."
 authors = [
     {name = "HOTOSM", email = "sysadmin@hotosm.org"},
@@ -59,10 +59,10 @@ license = {text = "AGPL-3.0-only"}
 dev = [
     "pre-commit==4.0.1",
     "commitizen==3.31.0",
-    "itrm==1.4.15",
+    "itrm==1.4.21",
 ]
 test = [
-    "pytest==8.3.3",
+    "pytest==8.3.5",
     "pytest-asyncio==0.24.0",
     "httpx==0.28.1",
     "pyinstrument==5.0.1",
@@ -70,7 +70,7 @@ test = [
     "coverage-badge==1.1.2",
 ]
 debug = [
-    "debugpy==1.8.13",
+    "debugpy==1.8.14",
 ]
 docs = [
     "mkdocs==1.6.1",
@@ -130,7 +130,7 @@ asyncio_default_fixture_loop_scope="session"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "2025.2.0"
+version = "2025.2.1"
 version_files = [
     "pyproject.toml:version",
     "app/__version__.py",

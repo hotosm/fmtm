@@ -34,7 +34,6 @@ from httpx import ASGITransport, AsyncClient
 from loguru import logger as log
 from psycopg import AsyncConnection
 
-from app.auth.auth_routes import get_or_create_user
 from app.auth.auth_schemas import AuthUser, FMTMUser
 from app.central import central_crud, central_schemas
 from app.central.central_schemas import ODKCentralDecrypted, ODKCentralIn
@@ -57,6 +56,7 @@ from app.organisations.organisation_schemas import OrganisationIn
 from app.projects import project_crud
 from app.projects.project_schemas import GeometryLogIn, ProjectIn, ProjectTeamIn
 from app.tasks.task_schemas import TaskEventIn
+from app.users.user_crud import get_or_create_user
 from app.users.user_deps import get_user
 from tests.test_data import test_data_path
 
@@ -82,7 +82,7 @@ async def app() -> AsyncGenerator[FastAPI, Any]:
 async def db() -> AsyncConnection:
     """The psycopg async database connection using psycopg3."""
     db_conn = await AsyncConnection.connect(
-        settings.FMTM_DB_URL.unicode_string(),
+        settings.FMTM_DB_URL,
     )
     try:
         yield db_conn
