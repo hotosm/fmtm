@@ -95,7 +95,7 @@ async def get_userlist(
 
 
 @router.get("/user-role-options")
-async def get_user_roles(_: Annotated[DbUser, Depends(mapper)]):
+async def get_user_roles(_: Annotated[DbUser, Depends(mapper())]):
     """Check for available user role options."""
     user_roles = {}
     for role in UserRoleEnum:
