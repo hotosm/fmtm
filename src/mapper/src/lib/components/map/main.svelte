@@ -206,7 +206,7 @@
 			// if clicked coordinate contains uploaded entity only
 			const entityCentroid = centroid(clickedEntityFeature[0].geometry);
 			const clickedEntityId = clickedEntityFeature[0]?.properties?.entity_id;
-			entitiesStore.setSelectedEntity(clickedEntityId);
+			entitiesStore.setSelectedEntityId(clickedEntityId);
 			entitiesStore.setSelectedEntityCoordinate({
 				entityId: clickedEntityId,
 				coordinate: entityCentroid?.geometry?.coordinates,
@@ -215,14 +215,14 @@
 			// if clicked coordinate contains new entity only
 			const entityCentroid = centroid(clickedNewEntityFeature[0].geometry);
 			const clickedEntityId = clickedNewEntityFeature[0]?.properties?.entity_id;
-			entitiesStore.setSelectedEntity(clickedEntityId);
+			entitiesStore.setSelectedEntityId(clickedEntityId);
 			entitiesStore.setSelectedEntityCoordinate({
 				entityId: clickedEntityId,
 				coordinate: entityCentroid?.geometry?.coordinates,
 			});
 		} else {
 			// if clicked coordinate doesn't contain any entity, clear the entity states
-			entitiesStore.setSelectedEntity(null);
+			entitiesStore.setSelectedEntityId(null);
 			entitiesStore.setSelectedEntityCoordinate(null);
 		}
 
@@ -391,7 +391,7 @@
 		taskStore.setSelectedTaskId(db, null, null);
 		taskAreaClicked = false;
 		toggleActionModal(null);
-		entitiesStore.setSelectedEntity(null);
+		entitiesStore.setSelectedEntityId(null);
 	}}
 	images={[
 		{ id: 'MAP_PIN_GREY', url: MapPinGrey },
@@ -421,11 +421,11 @@
 			<sl-icon-button
 				name="arrow-repeat"
 				label="Settings"
-				disabled={entitiesStore.syncEntityStatusLoading}
-				class={`sync-button ${entitiesStore.syncEntityStatusLoading && 'animate-spin'}`}
-				onclick={async () => await entitiesStore.syncEntityStatus(db, projectId)}
+				disabled={entitiesStore.syncEntityStatusManuallyLoading}
+				class={`sync-button ${entitiesStore.syncEntityStatusManuallyLoading && 'animate-spin'}`}
+				onclick={async () => await entitiesStore.syncEntityStatusManually(db, projectId)}
 				onkeydown={async (e: KeyboardEvent) => {
-					e.key === 'Enter' && (await entitiesStore.syncEntityStatus(db, projectId));
+					e.key === 'Enter' && (await entitiesStore.syncEntityStatusManually(db, projectId));
 				}}
 				role="button"
 				tabindex="0"
@@ -646,6 +646,7 @@
 		{#if drawGeomType === MapGeomTypes.POLYGON}
 			<FillLayer
 				id="new-entity-polygon-layer"
+				hoverCursor="pointer"
 				paint={{
 					'fill-opacity': ['match', ['get', 'status'], 'MARKED_BAD', 0, 0.6],
 					'fill-color': [
@@ -803,7 +804,7 @@
 								onclick={() => {
 									const entityCentroid = centroid(feature.geometry);
 									const clickedEntityId = feature?.properties?.entity_id;
-									entitiesStore.setSelectedEntity(clickedEntityId);
+									entitiesStore.setSelectedEntityId(clickedEntityId);
 									entitiesStore.setSelectedEntityCoordinate({
 										entityId: clickedEntityId,
 										coordinate: entityCentroid?.geometry?.coordinates,
