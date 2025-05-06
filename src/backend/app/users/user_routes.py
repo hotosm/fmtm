@@ -72,7 +72,7 @@ async def get_users(
     results_per_page: int = Query(13, le=100),
     search: str = "",
     signin_type: Literal["osm", "google"] = Query(
-        "osm", description="Filter by signin type (osm or google)"
+        None, description="Filter by signin type (osm or google)"
     ),
 ):
     """Get all user details."""
@@ -84,7 +84,7 @@ async def get_userlist(
     db: Annotated[Connection, Depends(db_conn)],
     search: str = "",
     signin_type: Literal["osm", "google"] = Query(
-        "osm", description="Filter by signin type (osm or google)"
+        None, description="Filter by signin type (osm or google)"
     ),
 ):
     """Get all user list with info such as id and username."""
