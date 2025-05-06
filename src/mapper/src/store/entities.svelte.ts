@@ -79,7 +79,6 @@ function getEntitiesStatusStore() {
 
 		entitiesUnsubscribe = entitiesSync.stream.subscribe(
 			async (entities: ShapeData[]) => {
-				console.log(entities);
 				// Create map for faster lookup
 				const rows: DbEntity[] = entities
 					.filter((item): item is { value: DbEntity } => 'value' in item && item.value !== null)
