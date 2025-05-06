@@ -79,6 +79,7 @@ function getEntitiesStatusStore() {
 
 		entitiesUnsubscribe = entitiesSync.stream.subscribe(
 			async (entities: ShapeData[]) => {
+				console.log(entities);
 				// Create map for faster lookup
 				const rows: DbEntity[] = entities
 					.filter((item): item is { value: DbEntity } => 'value' in item && item.value !== null)
@@ -396,6 +397,7 @@ function getNewBadGeomStore() {
 				const badRows = rows.filter((row) => row.status === 'BAD').map((row) => row.geojson);
 				const newRows = rows.filter((row) => row.status === 'NEW').map((row) => row.geojson);
 
+				// Append new or bad geom to existing featcol overlay
 				badGeomFeatcol = {
 					...badGeomFeatcol,
 					features: [...badGeomFeatcol.features, ...badRows],

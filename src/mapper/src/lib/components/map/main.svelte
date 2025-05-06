@@ -656,7 +656,11 @@
 						cssValue('--entity-ready'),
 						'OPENED_IN_ODK',
 						cssValue('--entity-opened-in-odk'),
+						// For mapped new geometries, we have NEW_GEOM status instead,
+						// but for legacy projects we also check SURVEY_SUBMITTED
 						'SURVEY_SUBMITTED',
+						cssValue('--entity-survey-submitted'),
+						'NEW_GEOM',
 						cssValue('--entity-survey-submitted'),
 						'VALIDATED',
 						cssValue('--entity-validated'),
@@ -698,7 +702,11 @@
 						'MAP_PIN_GREY',
 						'OPENED_IN_ODK',
 						'MAP_PIN_YELLOW',
+						// For mapped new geometries, we have NEW_GEOM status instead,
+						// but for legacy projects we also check SURVEY_SUBMITTED
 						'SURVEY_SUBMITTED',
+						'MAP_PIN_GREEN',
+						'NEW_GEOM',
 						'MAP_PIN_GREEN',
 						'VALIDATED',
 						'MAP_PIN_BLUE',
