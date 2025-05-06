@@ -18,7 +18,7 @@
 		ControlButton,
 		CircleLayer,
 	} from 'svelte-maplibre';
-	import maplibre from 'maplibre-gl';
+	import maplibre, { type MapGeoJSONFeature } from 'maplibre-gl';
 	import { MaplibreTerradrawControl } from '@watergis/maplibre-gl-terradraw';
 	import { Protocol } from 'pmtiles';
 	import { polygon } from '@turf/helpers';
@@ -62,7 +62,7 @@
 		setMapRef: (map: maplibregl.Map | undefined) => void;
 		primaryGeomType: MapGeomTypes;
 		draw?: boolean;
-		drawGeomType: MapGeomTypes | undefined;
+		drawGeomType: MapGeomTypes;
 		handleDrawnGeom?: ((drawInstance: any, geojson: GeoJSONGeometry) => void) | null;
 	}
 
@@ -78,7 +78,19 @@
 		handleDrawnGeom,
 	}: Props = $props();
 
-	const cssValue = (property) => getComputedStyle(document.documentElement).getPropertyValue(property).trim();
+	const primaryGeomLayerMapping = {
+		POINT: 'entity-point-layer',
+		POLYGON: 'entity-polygon-layer',
+		LINESTRING: 'entity-line-layer',
+	};
+
+	const newGeomLayerMapping = {
+		POINT: 'new-entity-point-layer',
+		POLYGON: 'new-entity-polygon-layer',
+		LINESTRING: 'new-entity-line-layer',
+	};
+
+	const cssValue = (property: string) => getComputedStyle(document.documentElement).getPropertyValue(property).trim();
 
 	const taskStore = getTaskStore();
 	const projectSetupStepStore = getProjectSetupStepStore();
@@ -95,16 +107,7 @@
 	let expanding = true; // Whether the line is expanding
 	let selectedControl: 'layer-switcher' | 'legend' | null = $state(null);
 	let selectedStyleUrl: string | undefined = $state(undefined);
-
-	let fillLayerColors = {
-		UNLOCKED_TO_MAP: '#ffffff',
-		LOCKED_FOR_MAPPING: '#008099',
-		UNLOCKED_TO_VALIDATE: '#ade6ef',
-		LOCKED_FOR_VALIDATION: '#fceca4',
-		UNLOCKED_DONE: '#40ac8c',
-		default: '#c5fbf5',
-		primary: 'red',
-	};
+	let selectedFeatures: MapGeoJSONFeature[] = $state([]);
 
 	let taskCentroidGeojson = $derived({
 		...taskStore.featcol,
@@ -177,37 +180,32 @@
 
 	// using this function since outside click of entity layer couldn't be tracked via FillLayer
 	function handleMapClick(e: maplibregl.MapMouseEvent) {
-		let entityLayerName: string;
-		let newEntityLayerName: string;
-		switch (drawGeomType) {
-			case MapGeomTypes.POINT:
-				entityLayerName = 'entity-point-layer';
-				newEntityLayerName = 'new-entity-point-layer';
-				break;
-			case MapGeomTypes.POLYGON:
-				entityLayerName = 'entity-polygon-layer';
-				newEntityLayerName = 'new-entity-polygon-layer';
-				break;
-			case MapGeomTypes.LINESTRING:
-				entityLayerName = 'entity-line-layer';
-				newEntityLayerName = 'new-entity-line-layer';
-				break;
-			default:
-				throw new Error(`Unsupported geometry type: ${drawGeomType}`);
-		}
+		let entityLayerName: string = primaryGeomLayerMapping[primaryGeomType];
+		let newEntityLayerName: string = newGeomLayerMapping[drawGeomType];
+
 		// returns list of features of entity layer present on that clicked point
-		const clickedEntityFeature = map?.queryRenderedFeatures(e.point, {
-			layers: [entityLayerName],
-		});
-		const clickedNewEntityFeature = map?.queryRenderedFeatures(e.point, {
-			layers: [newEntityLayerName],
-		});
+		const clickedEntityFeature =
+			map?.queryRenderedFeatures(e.point, {
+				layers: [entityLayerName],
+			}) || [];
+		const clickedNewEntityFeature =
+			map?.queryRenderedFeatures(e.point, {
+				layers: [newEntityLayerName],
+			}) || [];
+
+		const clickedFeatures = [...clickedEntityFeature, ...clickedNewEntityFeature];
+		// if clicked coordinate contain more than multiple entities, assign it to a variable
+		if (clickedFeatures.length > 1) {
+			selectedFeatures = clickedFeatures;
+		}
+
 		// returns list of features of task layer present on that clicked point
 		const clickedTaskFeature = map?.queryRenderedFeatures(e.point, {
 			layers: ['task-fill-layer'],
 		});
-		// if clicked point contains entity then set it's osm id else set null to store
-		if (clickedEntityFeature && clickedEntityFeature?.length > 0) {
+
+		if (clickedEntityFeature && clickedEntityFeature?.length > 0 && clickedFeatures?.length < 2) {
+			// if clicked coordinate contains uploaded entity only
 			const entityCentroid = centroid(clickedEntityFeature[0].geometry);
 			const clickedEntityId = clickedEntityFeature[0]?.properties?.entity_id;
 			entitiesStore.setSelectedEntity(clickedEntityId);
@@ -215,7 +213,8 @@
 				entityId: clickedEntityId,
 				coordinate: entityCentroid?.geometry?.coordinates,
 			});
-		} else if (clickedNewEntityFeature && clickedNewEntityFeature?.length > 0) {
+		} else if (clickedNewEntityFeature && clickedNewEntityFeature?.length > 0 && clickedFeatures?.length < 2) {
+			// if clicked coordinate contains new entity only
 			const entityCentroid = centroid(clickedNewEntityFeature[0].geometry);
 			const clickedEntityId = clickedNewEntityFeature[0]?.properties?.entity_id;
 			entitiesStore.setSelectedEntity(clickedEntityId);
@@ -224,6 +223,7 @@
 				coordinate: entityCentroid?.geometry?.coordinates,
 			});
 		} else {
+			// if clicked coordinate doesn't contain any entity, clear the entity states
 			entitiesStore.setSelectedEntity(null);
 			entitiesStore.setSelectedEntityCoordinate(null);
 		}
@@ -240,13 +240,19 @@
 		}
 
 		if (
-			(clickedEntityFeature && clickedEntityFeature?.length > 0) ||
-			(clickedNewEntityFeature && clickedNewEntityFeature?.length > 0)
+			((clickedEntityFeature && clickedEntityFeature?.length > 0) ||
+				(clickedNewEntityFeature && clickedNewEntityFeature?.length > 0)) &&
+			clickedFeatures?.length < 2
 		) {
+			// if clicked coordinate contains either one uploaded entity or new entity, open entity actions modal
+			selectedFeatures = [];
 			toggleActionModal('entity-modal');
-		} else if (clickedTaskFeature && clickedTaskFeature?.length > 0) {
+		} else if (clickedTaskFeature && clickedTaskFeature?.length > 0 && clickedFeatures?.length === 0) {
+			// if clicked coordinate doesn't contain any entity but only task, open task actions modal
+			selectedFeatures = [];
 			toggleActionModal('task-modal');
 		} else {
+			// else close the modal
 			toggleActionModal(null);
 		}
 	}
@@ -366,30 +372,6 @@
 	}
 
 	onMount(async () => {
-		// Give the browser a tick to apply all styles
-		requestAnimationFrame(() => {
-			setTimeout(() => {
-				// Load color from CSS variables
-				const unlockedToMapColor = cssValue('--sl-color-neutral-300');
-				const lockedForMappingColor = cssValue('--sl-color-warning-700');
-				const unlockedToValidateColor = cssValue('--sl-color-primary-400');
-				const lockedForValidationColor = cssValue('--sl-color-success-700');
-				const unlockedDoneColor = cssValue('--sl-color-success-700');
-				const primary = cssValue('--sl-color-primary-700');
-
-				// Replace your color variables with the ones fetched from CSS
-				fillLayerColors = {
-					UNLOCKED_TO_MAP: unlockedToMapColor || fillLayerColors['UNLOCKED_TO_MAP'],
-					LOCKED_FOR_MAPPING: lockedForMappingColor || fillLayerColors['LOCKED_FOR_MAPPING'],
-					UNLOCKED_TO_VALIDATE: unlockedToValidateColor || fillLayerColors['UNLOCKED_TO_VALIDATE'],
-					LOCKED_FOR_VALIDATION: lockedForValidationColor || fillLayerColors['LOCKED_FOR_VALIDATION'],
-					UNLOCKED_DONE: unlockedDoneColor || fillLayerColors['UNLOCKED_DONE'],
-					default: fillLayerColors['default'], // Keep default color as is
-					primary: primary || fillLayerColors['primary'],
-				};
-			}, 100);
-		});
-
 		// Register pmtiles protocol
 		if (!maplibre.config.REGISTERED_PROTOCOLS.hasOwnProperty('pmtiles')) {
 			let protocol = new Protocol();
@@ -489,11 +471,13 @@
 			aria-label="layer switcher"
 			onclick={() => {
 				selectedControl = 'layer-switcher';
+				toggleActionModal(null);
 			}}
 			role="button"
 			onkeydown={(e) => {
 				if (e.key === 'Enter') {
 					selectedControl = 'layer-switcher';
+					toggleActionModal(null);
 				}
 			}}
 			tabindex="0"
@@ -503,11 +487,15 @@
 		<div
 			aria-label="toggle legend"
 			class="toggle-legend"
-			onclick={() => (selectedControl = 'legend')}
+			onclick={() => {
+				selectedControl = 'legend';
+				toggleActionModal(null);
+			}}
 			role="button"
 			onkeydown={(e) => {
 				if (e.key === 'Enter') {
 					selectedControl = 'legend';
+					toggleActionModal(null);
 				}
 			}}
 			tabindex="0"
@@ -527,16 +515,16 @@
 					'match',
 					['get', 'state'],
 					'UNLOCKED_TO_MAP',
-					fillLayerColors['UNLOCKED_TO_MAP'],
+					cssValue('--task-unlocked-to-map'),
 					'LOCKED_FOR_MAPPING',
-					fillLayerColors['LOCKED_FOR_MAPPING'],
+					cssValue('--task-locked-for-mapping'),
 					'UNLOCKED_TO_VALIDATE',
-					fillLayerColors['UNLOCKED_TO_VALIDATE'],
+					cssValue('--task-unlocked-to-validate'),
 					'LOCKED_FOR_VALIDATION',
-					fillLayerColors['LOCKED_FOR_VALIDATION'],
+					cssValue('--task-locked-for-validation'),
 					'UNLOCKED_DONE',
-					fillLayerColors['UNLOCKED_DONE'],
-					fillLayerColors['default'], // default color if no match,
+					cssValue('--task-unlocked-done'),
+					cssValue('--task-unlocked-to-map'), // default color if no match,
 				],
 				'fill-opacity': hoverStateFilter(0.3, 0),
 			}}
@@ -549,8 +537,8 @@
 				'line-color': [
 					'case',
 					['==', ['get', 'fid'], taskStore.selectedTaskId],
-					fillLayerColors['primary'],
-					fillLayerColors['primary'],
+					cssValue('--task-outline-selected'),
+					cssValue('--task-outline'),
 				],
 				'line-width': 3,
 				'line-opacity': ['case', ['==', ['get', 'fid'], taskStore.selectedTaskId], 1, 0.35],
@@ -597,29 +585,16 @@
 							'match',
 							['get', 'status'],
 							'READY',
-							cssValue('--sl-color-neutral-300'),
+							cssValue('--entity-ready'),
 							'OPENED_IN_ODK',
-							cssValue('--sl-color-warning-700'),
+							cssValue('--entity-opened-in-odk'),
 							'SURVEY_SUBMITTED',
-							cssValue('--sl-color-success-700'),
+							cssValue('--entity-survey-submitted'),
 							'VALIDATED',
-							cssValue('--sl-color-success-500'),
+							cssValue('--entity-validated'),
 							'MARKED_BAD',
-							cssValue('--sl-color-danger-700'),
-							cssValue('--sl-color-primary-700'), // default color if no match is found
-						],
-						'fill-outline-color': [
-							'match',
-							['get', 'status'],
-							'READY',
-							cssValue('--sl-color-neutral-1000'),
-							'OPENED_IN_ODK',
-							cssValue('--sl-color-warning-900'),
-							'SURVEY_SUBMITTED',
-							cssValue('--sl-color-success-900'),
-							'MARKED_BAD',
-							cssValue('--sl-color-danger-900'),
-							cssValue('--sl-color-primary-700'),
+							cssValue('--entity-marked-bad'),
+							cssValue('--entity-ready'), // default color if no match is found
 						],
 					}}
 					beforeLayerType="symbol"
@@ -628,9 +603,14 @@
 				<LineLayer
 					layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 					paint={{
-						'line-color': cssValue('--sl-color-primary-700'),
-						'line-width': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0],
-						'line-opacity': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0.35],
+						'line-color': [
+							'case',
+							['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''],
+							cssValue('--entity-outline-selected'),
+							cssValue('--entity-outline'),
+						],
+						'line-width': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0.7],
+						'line-opacity': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 1],
 					}}
 					beforeLayerType="symbol"
 					manageHoverState
@@ -708,29 +688,16 @@
 						'match',
 						['get', 'status'],
 						'READY',
-						cssValue('--sl-color-neutral-300'),
+						cssValue('--entity-ready'),
 						'OPENED_IN_ODK',
-						cssValue('--sl-color-warning-700'),
+						cssValue('--entity-opened-in-odk'),
 						'SURVEY_SUBMITTED',
-						cssValue('--sl-color-success-700'),
+						cssValue('--entity-survey-submitted'),
 						'VALIDATED',
-						cssValue('--sl-color-success-500'),
+						cssValue('--entity-validated'),
 						'MARKED_BAD',
-						cssValue('--sl-color-danger-700'),
-						cssValue('--sl-color-primary-700'), // default color if no match is found
-					],
-					'fill-outline-color': [
-						'match',
-						['get', 'status'],
-						'READY',
-						cssValue('--sl-color-neutral-1000'),
-						'OPENED_IN_ODK',
-						cssValue('--sl-color-warning-900'),
-						'SURVEY_SUBMITTED',
-						cssValue('--sl-color-success-900'),
-						'MARKED_BAD',
-						cssValue('--sl-color-danger-900'),
-						cssValue('--sl-color-primary-700'),
+						cssValue('--entity-marked-bad'),
+						cssValue('--entity-ready'), // default color if no match is found
 					],
 				}}
 				beforeLayerType="symbol"
@@ -739,9 +706,14 @@
 			<LineLayer
 				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 				paint={{
-					'line-color': cssValue('--sl-color-primary-700'),
-					'line-width': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0],
-					'line-opacity': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0.35],
+					'line-color': [
+						'case',
+						['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''],
+						cssValue('--entity-outline-selected'),
+						cssValue('--entity-outline'),
+					],
+					'line-width': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0.7],
+					'line-opacity': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 1],
 				}}
 				beforeLayerType="symbol"
 				manageHoverState
@@ -835,3 +807,56 @@
 		<Legend isOpen={selectedControl === 'legend'} />
 	</div>
 </div>
+
+{#if selectedFeatures?.length > 1}
+	<div class="select-entities-modal">
+		<div class="content">
+			<div class="icon">
+				<hot-icon
+					name="close"
+					onclick={() => (selectedFeatures = [])}
+					onkeydown={(e: KeyboardEvent) => {
+						if (e.key === 'Enter') {
+							selectedFeatures = [];
+						}
+					}}
+					role="button"
+					tabindex="0"
+				></hot-icon>
+			</div>
+
+			<div>
+				{#each selectedFeatures as feature, index}
+					<div class="entity">
+						<div class="header">
+							<h5>{index + 1}. {feature.properties.entity_id}</h5>
+							<p class={`status ${feature.properties.status}`}>{m[`entity_states.${feature.properties.status}`]()}</p>
+						</div>
+						<div class="button-wrapper">
+							<sl-button
+								variant="primary"
+								size="small"
+								onclick={() => {
+									const entityCentroid = centroid(feature.geometry);
+									const clickedEntityId = feature?.properties?.entity_id;
+									entitiesStore.setSelectedEntity(clickedEntityId);
+									entitiesStore.setSelectedEntityCoordinate({
+										entityId: clickedEntityId,
+										coordinate: entityCentroid?.geometry?.coordinates,
+									});
+									selectedFeatures = [];
+									toggleActionModal('entity-modal');
+								}}
+								onkeydown={() => {}}
+								role="button"
+								tabindex="0"
+							>
+								{m['popup.select_this_feature']()}
+							</sl-button>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+	</div>
+{/if}

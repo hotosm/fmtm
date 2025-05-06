@@ -198,7 +198,8 @@ def merge_dataframes(
                     add_label_translations({
                         "type": ["begin group"],
                         "name": ["survey_questions"],
-                        "relevant": "${feature_exists} = 'yes'",
+                        # Status 3 means collecting new feature
+                        "relevant": "(${feature_exists} = 'yes') or (${status} != '3')",
                     })
                 )
             ),
@@ -340,14 +341,11 @@ async def append_field_mapping_fields(
 
 
 def _get_form_components(
-        use_odk_collect: bool, 
-        new_geom_type: DbGeomType, 
+        use_odk_collect: bool,
+        new_geom_type: DbGeomType,
         need_verification_fields: bool
     ) -> dict:
     """Select appropriate form components based on target platform."""
-    # only add verification questions if new feature type is Polygon
-    need_verification_fields = new_geom_type == DbGeomType.POLYGON and need_verification_fields
-
     if use_odk_collect:
         # Here we modify digitisation_df to include the `new_feature` field
         # NOTE we set digitisation_correct to 'yes' if the user is drawing a new geometry
