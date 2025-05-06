@@ -4,14 +4,7 @@ import type { ShapeData } from '@electric-sql/client';
 import type { Feature, FeatureCollection } from 'geojson';
 import type { LngLatLike } from 'svelte-maplibre';
 
-import type {
-	EntitiesDbType,
-	EntityStatusPayload,
-	entitiesApiResponse,
-	entitiesShapeType,
-	entitiesListType,
-	entityStatusOptions,
-} from '$lib/types';
+import type { DbEntity, EntityStatusPayload, entitiesApiResponse, DbEntity, entityStatusOptions } from '$lib/types';
 import { EntityStatusNameMap } from '$lib/types';
 import { getAlertStore } from './common.svelte';
 import { createLocalEntities } from '$lib/db/entities';
@@ -42,20 +35,21 @@ let entitiesUnsubscribe: (() => void) | null = $state(null);
 let newBadGeomUnsubscribe: (() => void) | null = $state(null);
 
 let userLocationCoord: LngLatLike | undefined = $state();
-let selectedEntity: string | null = $state(null);
-let entitiesList: entitiesListType[] = $state([]);
+let selectedEntityId: string | null = $state(null);
+let entitiesList: DbEntity[] = $state([]);
+let selectedEntity: DbEntity | null = $derived(
+	entitiesList.find((entity) => entity.entity_id === selectedEntityId) ?? null,
+);
 // Map from entity_id to osm_id
 let entityMap = $derived(new Map(entitiesList.map((entity) => [entity.entity_id, entity.osm_id])));
 // Map from entity_id to full entity data
 let entityMapByEntity = $derived(new Map(entitiesList.map((entity) => [entity.entity_id, entity])));
 // Map from osm_id to full entity data (only include defined osm_ids)
-let entityMapByOsm = $derived(
-	new Map(entitiesList.filter((e) => e.osm_id !== undefined).map((entity) => [entity.osm_id!, entity])),
-);
+let entityMapByOsm = $derived(new Map(entitiesList.map((entity) => [entity.osm_id!, entity])));
 
 let badGeomFeatcol: FeatureCollection = $state({ type: 'FeatureCollection', features: [] });
 let newGeomFeatcol: FeatureCollection = $state({ type: 'FeatureCollection', features: [] });
-let syncEntityStatusLoading: boolean = $state(false);
+let syncEntityStatusManuallyLoading: boolean = $state(false);
 let updateEntityStatusLoading: boolean = $state(false);
 let selectedEntityCoordinate: entityIdCoordinateMapType | null = $state(null);
 let entityToNavigate: entityIdCoordinateMapType | null = $state(null);
@@ -124,8 +118,8 @@ function getEntitiesStatusStore() {
 		entitiesUnsubscribe = entitiesSync.stream.subscribe(
 			(entities: ShapeData[]) => {
 				// Create map for faster lookup
-				const rows: entitiesShapeType[] = entities
-					.filter((item): item is { value: entitiesShapeType } => 'value' in item && item.value !== null)
+				const rows: DbEntity[] = entities
+					.filter((item): item is { value: DbEntity } => 'value' in item && item.value !== null)
 					.map((item) => item.value);
 
 				const newEntitiesList = rows.map((entity) => ({
@@ -133,6 +127,8 @@ function getEntitiesStatusStore() {
 					status: entity.status,
 					project_id: projectId,
 					task_id: entity.task_id,
+					osm_id: entity.osm_id,
+					submission_ids: entity.submission_ids,
 				}));
 
 				// Merge, replacing by entity_id
@@ -161,20 +157,14 @@ function getEntitiesStatusStore() {
 
 	async function getInitialEntities(db: PGliteWithSync, projectId: number) {
 		const dbEntities = await db.query(`SELECT * FROM odk_entities WHERE project_id = $1;`, [projectId]);
-		entitiesList = dbEntities.rows.map((entity: EntitiesDbType) => ({
+		entitiesList = dbEntities.rows.map((entity: DbEntity) => ({
 			entity_id: entity.entity_id,
 			status: entity.status,
 			project_id: projectId,
 			task_id: entity.task_id,
+			osm_id: entity.osm_id,
+			submission_ids: entity.submission_ids,
 		}));
-	}
-
-	async function setSelectedEntity(entityOsmId: number | null) {
-		selectedEntity = entityOsmId;
-	}
-
-	async function setSelectedEntityCoordinate(entityCoordinate: entityIdCoordinateMapType | null) {
-		selectedEntityCoordinate = entityCoordinate;
 	}
 
 	function _calculateTaskSubmissionCounts() {
@@ -188,7 +178,7 @@ function getEntitiesStatusStore() {
 			{} as Record<entityStatusOptions, number>,
 		);
 
-		const taskEntityMap = entitiesList?.reduce((acc: Record<number, entitiesListType[]>, item) => {
+		const taskEntityMap = entitiesList?.reduce((acc: Record<number, DbEntity[]>, item) => {
 			if (!acc[item?.task_id]) {
 				acc[item.task_id] = [];
 			}
@@ -222,9 +212,9 @@ function getEntitiesStatusStore() {
 	}
 
 	// Manually sync the entity status via button (if local db gets out of sync with backend)
-	async function syncEntityStatus(db: PGliteWithSync, projectId: number) {
+	async function syncEntityStatusManually(db: PGliteWithSync, projectId: number) {
 		try {
-			syncEntityStatusLoading = true;
+			syncEntityStatusManuallyLoading = true;
 			const entityStatusResponse = await fetch(`${API_URL}/projects/${projectId}/entities/statuses`, {
 				credentials: 'include',
 			});
@@ -234,7 +224,7 @@ function getEntitiesStatusStore() {
 
 			const responseJson: entitiesApiResponse[] = await entityStatusResponse.json();
 			// Convert API response into our internal entity shape
-			const newEntitiesList: entitiesListType[] = responseJson.map((entity: entitiesApiResponse) => ({
+			const newEntitiesList: DbEntity[] = responseJson.map((entity: entitiesApiResponse) => ({
 				entity_id: entity.id,
 				status: EntityStatusNameMap[entity.status],
 				project_id: projectId,
@@ -242,7 +232,7 @@ function getEntitiesStatusStore() {
 				submission_ids: entity.submission_ids,
 				osm_id: entity.osm_id,
 			}));
-			syncEntityStatusLoading = false;
+			syncEntityStatusManuallyLoading = false;
 
 			// Replace in-memory list from store
 			entitiesList = newEntitiesList;
@@ -252,7 +242,7 @@ function getEntitiesStatusStore() {
 			await createLocalEntities(db, newEntitiesList);
 			_calculateTaskSubmissionCounts();
 		} catch (error) {
-			syncEntityStatusLoading = false;
+			syncEntityStatusManuallyLoading = false;
 		}
 	}
 
@@ -287,6 +277,7 @@ function getEntitiesStatusStore() {
 				const errorData = await resp.json();
 				throw new Error(errorData.detail);
 			}
+			// Response is the ODK Central entity details JSON
 			return await resp.json();
 		} catch (error: any) {
 			alertStore.setAlert({
@@ -311,14 +302,18 @@ function getEntitiesStatusStore() {
 	return {
 		getEntityStatusStream: getEntityStatusStream,
 		unsubscribeEntitiesStream: unsubscribeEntitiesStream,
-		setSelectedEntity: setSelectedEntity,
-		syncEntityStatus: syncEntityStatus,
+		syncEntityStatusManually: syncEntityStatusManually,
 		updateEntityStatus: updateEntityStatus,
 		createEntity: createEntity,
-		setSelectedEntityCoordinate: setSelectedEntityCoordinate,
 		setEntityToNavigate: setEntityToNavigate,
 		setToggleGeolocation: setToggleGeolocation,
 		setUserLocationCoordinate: setUserLocationCoordinate,
+		get selectedEntityId() {
+			return selectedEntityId;
+		},
+		setSelectedEntityId(clickedEntityId: string) {
+			selectedEntityId = clickedEntityId;
+		},
 		get selectedEntity() {
 			return selectedEntity;
 		},
@@ -337,14 +332,17 @@ function getEntitiesStatusStore() {
 		get newGeomFeatcol() {
 			return newGeomFeatcol;
 		},
-		get syncEntityStatusLoading() {
-			return syncEntityStatusLoading;
+		get syncEntityStatusManuallyLoading() {
+			return syncEntityStatusManuallyLoading;
 		},
 		get updateEntityStatusLoading() {
 			return updateEntityStatusLoading;
 		},
 		get selectedEntityCoordinate() {
 			return selectedEntityCoordinate;
+		},
+		setSelectedEntityCoordinate(newEntityCoordinate: entityIdCoordinateMapType | null) {
+			selectedEntityCoordinate = newEntityCoordinate;
 		},
 		get entityToNavigate() {
 			return entityToNavigate;

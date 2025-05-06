@@ -36,8 +36,7 @@
 	let toggleDistanceWarningDialog = $state(false);
 	let showCommentsPopup: boolean = $state(false);
 
-	const selectedEntityId = $derived(entitiesStore.selectedEntity || '');
-	const selectedEntity = $derived(entitiesStore.entityMap.get(selectedEntityId));
+	const selectedEntity = $derived(entitiesStore.selectedEntity);
 	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
 	const entityToNavigate = $derived(entitiesStore.entityToNavigate);
 	const entityComments = $derived(
@@ -46,7 +45,7 @@
 				(event) =>
 					event.event === 'COMMENT' &&
 					event.comment?.startsWith('#submissionId:uuid:') &&
-					`#featureId:${entitiesStore.selectedEntity}` === event.comment?.split(' ')?.[1],
+					`#featureId:${selectedEntity?.entity_id}` === event.comment?.split(' ')?.[1],
 			)
 			?.reverse(),
 	);
@@ -144,13 +143,13 @@
 					name="close"
 					onclick={() => {
 						toggleTaskActionModal(false);
-						entitiesStore.setSelectedEntity(null);
+						entitiesStore.setSelectedEntityId(null);
 						entitiesStore.setSelectedEntityCoordinate(null);
 					}}
 					onkeydown={(e: KeyboardEvent) => {
 						if (e.key === 'Enter') {
 							toggleTaskActionModal(false);
-							entitiesStore.setSelectedEntity(null);
+							entitiesStore.setSelectedEntityId(null);
 							entitiesStore.setSelectedEntityCoordinate(null);
 						}
 					}}

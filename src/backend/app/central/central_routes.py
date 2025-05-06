@@ -311,6 +311,7 @@ async def add_new_entity(
     """Create an Entity for the project in ODK.
 
     NOTE a FeatureCollection must be uploaded.
+    Returns the entity details response from Central, including 'uuid' field.
     """
     try:
         project = project_user_dict.get("project")

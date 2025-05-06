@@ -1,8 +1,17 @@
 import type { PGliteWithSync } from '@electric-sql/pglite-sync';
-import type { entitiesListType } from '$lib/types';
+import type { DbEntity } from '$lib/types';
 import { applyDataToTableWithCsvCopy } from '$lib/db/helpers';
 
-export async function createLocalEntity(db: PGliteWithSync, entity: entitiesListType) {
+export async function updateEntityStatus(db: PGliteWithSync, entity_id: string, status: number) {
+	await db.query(
+		`UPDATE odk_entities (status)
+        WHERE entity_id = $1
+        VALUES ($2)`,
+		[entity_id, status],
+	);
+}
+
+export async function createLocalEntity(db: PGliteWithSync, entity: DbEntity) {
 	await db.query(
 		`INSERT INTO odk_entities (
             entity_id,
@@ -18,14 +27,14 @@ export async function createLocalEntity(db: PGliteWithSync, entity: entitiesList
 }
 
 // An optimised insert for multiple geom records in bulk
-export async function createLocalEntities(db: PGliteWithSync, entities: entitiesListType[]) {
+export async function createLocalEntities(db: PGliteWithSync, entities: DbEntity[]) {
 	// The entities are already in Record format, however we ensure all undefined or empty strings are set to null for insert
 	const dataObj = entities.map((entity) => ({
 		entity_id: entity.entity_id,
 		status: entity.status,
 		project_id: entity.project_id,
 		task_id: entity.task_id,
-		osm_id: entity.osm_id ?? null,
+		osm_id: entity.osm_id,
 		submission_ids: entity.submission_ids === '' ? null : entity.submission_ids,
 	}));
 
