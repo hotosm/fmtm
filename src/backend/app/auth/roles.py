@@ -34,7 +34,7 @@ from app.auth.auth_deps import login_required, public_endpoint
 from app.auth.auth_logic import get_uid
 from app.auth.auth_schemas import AuthUser, OrgUserDict, ProjectUserDict
 from app.db.database import db_conn
-from app.db.enums import HTTPStatus, ProjectRole, ProjectVisibility
+from app.db.enums import HTTPStatus, ProjectRole, ProjectStatus, ProjectVisibility
 from app.db.models import DbProject, DbUser
 from app.organisations.organisation_deps import get_organisation
 from app.projects.project_deps import get_project, get_project_by_id
@@ -98,8 +98,11 @@ async def check_access(
                                 SELECT 1
                                 FROM projects
                                 WHERE id = %(project_id)s
-                                AND status = 'COMPLETED'::public.projectstatus
-                            )
+                                    AND status IN (
+                                            'COMPLETED'::public.projectstatus,
+                                            'ARCHIVED'::public.projectstatus
+                                        )
+                                    )
                         )
                         AND (
                             -- Check to see if user is org admin
@@ -269,6 +272,15 @@ async def wrap_check_access(
     check_completed: bool = False,
 ) -> ProjectUserDict:
     """Wrap check_access call with HTTPException."""
+    if check_completed and project.status in [
+        ProjectStatus.COMPLETED,
+        ProjectStatus.ARCHIVED,
+    ]:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail=f"Project is locked since it is in {project.status.value} state.",
+        )
+
     db_user = await check_access(
         user_data,
         db,
