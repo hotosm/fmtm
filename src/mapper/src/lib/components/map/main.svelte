@@ -50,7 +50,7 @@
 	import { loadOfflinePmtiles } from '$lib/map/basemaps.ts';
 	import { projectSetupStep as projectSetupStepEnum, MapGeomTypes } from '$constants/enums.ts';
 	import { baseLayers, osmStyle, pmtilesStyle } from '$constants/baseLayers.ts';
-	import { getEntitiesStatusStore, addStatusToGeojsonProperty } from '$store/entities.svelte.ts';
+	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
 	import { clickOutside } from '$lib/map/click-outside.ts';
 
 	type bboxType = [number, number, number, number];
@@ -537,8 +537,8 @@
 			extent={taskStore.selectedTaskGeom}
 			extractGeomCols={true}
 			promoteId="id"
-			processGeojson={(geojsonData) => addStatusToGeojsonProperty(geojsonData, '')}
-			geojsonUpdateDependency={[entitiesStore.entityMapByEntity, entitiesStore.entityMapByOsm]}
+			processGeojson={(geojsonData) => entitiesStore.addStatusToGeojsonProperty(geojsonData, '')}
+			geojsonUpdateDependency={[entitiesStore.entitiesList]}
 		>
 			{#if primaryGeomType === MapGeomTypes.POLYGON}
 				<FillLayer
@@ -642,7 +642,7 @@
 			/>
 		{/if}
 	</GeoJSON>
-	<GeoJSON id="new-geoms" data={addStatusToGeojsonProperty(entitiesStore.newGeomFeatcol, 'new')}>
+	<GeoJSON id="new-geoms" data={entitiesStore.addStatusToGeojsonProperty(entitiesStore.newGeomFeatcol, 'new')}>
 		{#if drawGeomType === MapGeomTypes.POLYGON}
 			<FillLayer
 				id="new-entity-polygon-layer"
