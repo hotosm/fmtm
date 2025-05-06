@@ -11,6 +11,8 @@ import { LoginActions } from '@/store/slices/LoginSlice';
 import { AppDispatch } from '@/store/Store';
 import { NavigateFunction } from 'react-router-dom';
 
+const VITE_API_URL = import.meta.env.VITE_API_URL;
+
 function appendObjectToFormData(formData: FormData, object: Record<string, any>) {
   for (const [key, value] of Object.entries(object)) {
     // if (key === 'logo') {
@@ -300,7 +302,7 @@ export const AddOrganizationAdminService = (url: string, user: string[], org_id:
     try {
       const addOrganizationAdmin = async (url: string, params: { user_sub: string; org_id: number }) => {
         try {
-          const response = await axios.post(
+          await axios.post(
             url,
             {},
             {
@@ -320,6 +322,7 @@ export const AddOrganizationAdminService = (url: string, user: string[], org_id:
         await addOrganizationAdmin(url, { user_sub, org_id });
       });
       await Promise.all(promises);
+      dispatch(GetOrganizationAdminsService(`${VITE_API_URL}/organisation/org-admins`, { org_id: +org_id }));
     } finally {
       dispatch(OrganisationAction.SetAddOrganizationAdminPending(false));
     }
@@ -345,7 +348,7 @@ export const DeleteOrganizationAdminService = (
       } catch (error) {
         dispatch(
           CommonActions.SetSnackBar({
-            message: error.response.data?.detail || 'Failed to fetch organization admins',
+            message: error.response.data?.detail || 'Failed to delete organization admin',
           }),
         );
       } finally {
