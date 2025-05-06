@@ -21,8 +21,7 @@
 	const commonStore = getCommonStore();
 	const loginStore = getLoginStore();
 	const entitiesStore = getEntitiesStatusStore();
-	const selectedEntityId = $derived(entitiesStore.selectedEntity || '');
-	const selectedEntity = $derived(entitiesStore.entityMap.get(selectedEntityId));
+	const selectedEntity = $derived(entitiesStore.selectedEntity);
 	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
 
 	let { display = $bindable(false), entityId, webFormsRef = $bindable(undefined), projectId, taskId }: Props = $props();

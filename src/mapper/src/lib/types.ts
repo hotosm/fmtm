@@ -139,14 +139,7 @@ export type paginationType = {
 export type EntityStatusPayload = {
 	entity_id: UUID;
 	status: number;
-	// label: string, // label is now automatically determined
-};
-
-export type EntitiesDbType = {
-	entity_id: UUID;
-	status: string;
-	project_id: number;
-	task_id: number;
+	label: string; // there is no easy way to automatically determine this
 };
 
 export type entityStatusOptions =
@@ -174,19 +167,11 @@ export type entitiesApiResponse = {
 	submission_ids: string;
 };
 
-export type entitiesShapeType = {
+export type DbEntity = {
 	entity_id: string;
 	status: entityStatusOptions;
 	project_id: number;
 	task_id: number;
-};
-
-// What we actually use in the frontend (a merger from API / ShapeStream / DB)
-export type entitiesListType = {
-	entity_id: string;
-	status: entityStatusOptions;
-	project_id: number;
-	task_id: number;
-	osm_id?: number | undefined;
-	submission_ids?: string | undefined;
+	osm_id: number;
+	submission_ids: string;
 };

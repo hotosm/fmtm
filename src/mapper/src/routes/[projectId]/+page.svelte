@@ -59,7 +59,6 @@
 	let entityStatusStream: ShapeStream | undefined;
 	let newBadGeomStream: ShapeStream | undefined;
 
-	const selectedEntityId = $derived(entitiesStore.selectedEntity);
 	const latestEvent = $derived(taskStore.latestEvent);
 	const commentMention = $derived(taskStore.commentMention);
 
@@ -195,7 +194,7 @@
 			cancelMapNewFeatureInODK();
 
 			if (commonStore.enableWebforms) {
-				await entitiesStore.setSelectedEntity(entity.uuid);
+				await entitiesStore.setSelectedEntityId(entity.uuid);
 				openedActionModal = null;
 				entitiesStore.updateEntityStatus(projectId, {
 					entity_id: entity.uuid,
@@ -248,17 +247,24 @@
 				<sl-button
 					onclick={() => {
 						zoomToTask(commentMention.task_id, { duration: 0, padding: { bottom: 325 } });
-						const osmId = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
-						entitiesStore.setSelectedEntity(osmId);
+						const osmIdStr = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
+						const osmId = Number(osmIdStr);
+						const entity = entitiesStore.entityMapByOsm.get(osmId);
+						if (entity) {
+							entitiesStore.setSelectedEntityId(entity.entity_id);
+						}
 						openedActionModal = 'entity-modal';
 						taskStore.dismissCommentMention();
 					}}
 					onkeydown={(e: KeyboardEvent) => {
 						if (e.key === 'Enter') {
-							const osmId = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
-							if (osmId) {
-								entitiesStore.setSelectedEntity(osmId);
+							const osmIdStr = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
+							const osmId = Number(osmIdStr);
+							const entity = entitiesStore.entityMapByOsm.get(osmId);
+							if (entity) {
+								entitiesStore.setSelectedEntityId(entity.entity_id);
 							}
+							openedActionModal = 'entity-modal';
 							taskStore.dismissCommentMention();
 						}
 					}}
@@ -452,7 +458,7 @@
 		bind:webFormsRef
 		bind:display={displayWebFormsDrawer}
 		projectId={projectId}
-		entityId={selectedEntityId || undefined}
+		entityId={entitiesStore.selectedEntityId || undefined}
 		taskId={taskStore.selectedTaskIndex || undefined}
 	/>
 </div>
