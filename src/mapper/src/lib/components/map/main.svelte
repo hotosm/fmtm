@@ -471,11 +471,13 @@
 			aria-label="layer switcher"
 			onclick={() => {
 				selectedControl = 'layer-switcher';
+				toggleActionModal(null);
 			}}
 			role="button"
 			onkeydown={(e) => {
 				if (e.key === 'Enter') {
 					selectedControl = 'layer-switcher';
+					toggleActionModal(null);
 				}
 			}}
 			tabindex="0"
@@ -485,11 +487,15 @@
 		<div
 			aria-label="toggle legend"
 			class="toggle-legend"
-			onclick={() => (selectedControl = 'legend')}
+			onclick={() => {
+				selectedControl = 'legend';
+				toggleActionModal(null);
+			}}
 			role="button"
 			onkeydown={(e) => {
 				if (e.key === 'Enter') {
 					selectedControl = 'legend';
+					toggleActionModal(null);
 				}
 			}}
 			tabindex="0"
