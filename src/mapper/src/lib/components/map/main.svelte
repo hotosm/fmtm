@@ -609,7 +609,6 @@
 							cssValue('--entity-outline-selected'),
 							cssValue('--entity-outline'),
 						],
-
 						'line-width': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0.7],
 						'line-opacity': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 1],
 					}}
@@ -689,29 +688,16 @@
 						'match',
 						['get', 'status'],
 						'READY',
-						cssValue('--sl-color-neutral-300'),
+						cssValue('--entity-ready'),
 						'OPENED_IN_ODK',
-						cssValue('--sl-color-warning-700'),
+						cssValue('--entity-opened-in-odk'),
 						'SURVEY_SUBMITTED',
-						cssValue('--sl-color-success-700'),
+						cssValue('--entity-survey-submitted'),
 						'VALIDATED',
-						cssValue('--sl-color-success-500'),
+						cssValue('--entity-validated'),
 						'MARKED_BAD',
-						cssValue('--sl-color-danger-700'),
-						cssValue('--sl-color-primary-700'), // default color if no match is found
-					],
-					'fill-outline-color': [
-						'match',
-						['get', 'status'],
-						'READY',
-						cssValue('--sl-color-neutral-1000'),
-						'OPENED_IN_ODK',
-						cssValue('--sl-color-warning-900'),
-						'SURVEY_SUBMITTED',
-						cssValue('--sl-color-success-900'),
-						'MARKED_BAD',
-						cssValue('--sl-color-danger-900'),
-						cssValue('--sl-color-primary-700'),
+						cssValue('--entity-marked-bad'),
+						cssValue('--entity-ready'), // default color if no match is found
 					],
 				}}
 				beforeLayerType="symbol"
@@ -720,9 +706,14 @@
 			<LineLayer
 				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 				paint={{
-					'line-color': cssValue('--sl-color-primary-700'),
-					'line-width': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0],
-					'line-opacity': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0.35],
+					'line-color': [
+						'case',
+						['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''],
+						cssValue('--entity-outline-selected'),
+						cssValue('--entity-outline'),
+					],
+					'line-width': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0.7],
+					'line-opacity': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 1],
 				}}
 				beforeLayerType="symbol"
 				manageHoverState
