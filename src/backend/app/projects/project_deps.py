@@ -49,15 +49,6 @@ async def get_project_by_id(db: Connection, project_id: int, minimal: bool = Fal
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(e)) from e
 
 
-async def get_active_project(project: Annotated[DbProject, Depends(get_project)]):
-    """Check if the project is not completed."""
-    if project.status == "COMPLETED":
-        raise HTTPException(
-            status_code=403, detail="Project is locked as it is completed."
-        )
-    return project
-
-
 async def check_project_dup_name(db: Connection, name: str):
     """Simple check if project already exists with name."""
     # Check if the project name already exists
