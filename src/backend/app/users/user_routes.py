@@ -67,7 +67,7 @@ router = APIRouter(
 @router.get("", response_model=user_schemas.PaginatedUsers)
 async def get_users(
     db: Annotated[Connection, Depends(db_conn)],
-    _: Annotated[OrgUserDict, Depends(org_admin)],
+    _: Annotated[OrgUserDict, Depends(super_admin)],
     page: int = Query(1, ge=1),
     results_per_page: int = Query(13, le=100),
     search: str = "",
@@ -82,7 +82,6 @@ async def get_users(
 @router.get("/usernames", response_model=list[user_schemas.Usernames])
 async def get_userlist(
     db: Annotated[Connection, Depends(db_conn)],
-    _: Annotated[DbUser, Depends(validator)],
     search: str = "",
     signin_type: Literal["osm", "google"] = Query(
         "osm", description="Filter by signin type (osm or google)"
