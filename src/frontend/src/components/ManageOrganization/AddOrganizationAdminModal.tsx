@@ -39,9 +39,12 @@ const AddOrganizationAdminModal = () => {
     );
   };
 
-  const assignOrganizationAdmins = () => {
+  const assignOrganizationAdmins = async () => {
     if (!organizationId) return;
-    dispatch(AddOrganizationAdminService(`${VITE_API_URL}/organisation/new-admin`, selectedAdmins, +organizationId));
+    await dispatch(
+      AddOrganizationAdminService(`${VITE_API_URL}/organisation/new-admin`, selectedAdmins, +organizationId),
+    );
+    setToggleModal(false);
   };
 
   useEffect(() => {
