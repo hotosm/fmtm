@@ -98,9 +98,9 @@ const ManageAdmins = () => {
     dispatch(GetOrganizationAdminsService(`${VITE_API_URL}/organisation/org-admins`, { org_id: +organizationId }));
   }, [organizationId]);
 
-  const removeOrgAdmin = (user_sub: string) => {
+  const removeOrgAdmin = async (user_sub: string) => {
     if (!organizationId) return;
-    dispatch(
+    await dispatch(
       DeleteOrganizationAdminService(
         `${VITE_API_URL}/organisation/org-admin/${user_sub}`,
         {
@@ -110,6 +110,7 @@ const ManageAdmins = () => {
         organizationAdmins,
       ),
     );
+    setToggleDeleteOrgModal(false);
   };
 
   return (
