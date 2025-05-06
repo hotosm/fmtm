@@ -8,6 +8,7 @@ import { getTimeDiff } from '$lib/utils/datetime';
 
 const loginStore = getLoginStore();
 
+let eventsUnsubscribe: (() => void) | null = $state(null);
 let featcol: FeatureCollection = $state({ type: 'FeatureCollection', features: [] });
 let latestEvent: TaskEventType | null = $state(null);
 let events: TaskEventType[] = $state([]);
@@ -44,7 +45,7 @@ function getTaskStore() {
 			initialInsertMethod: 'csv', // performance boost on initial sync
 		});
 
-		taskEventSync.stream.subscribe(
+		eventsUnsubscribe = taskEventSync.stream.subscribe(
 			(taskEvent: ShapeData[]) => {
 				// Filter only rows that have a .value (actual data changes)
 				const rows: TaskEventType[] = taskEvent
@@ -77,6 +78,13 @@ function getTaskStore() {
 		);
 
 		return taskEventSync;
+	}
+
+	function unsubscribeEventStream() {
+		if (eventsUnsubscribe) {
+			eventsUnsubscribe();
+			eventsUnsubscribe = null;
+		}
 	}
 
 	async function appendTaskStatesToFeatcol(db: PGliteWithSync, projectId: number, projectTasks: ProjectTask[]) {
@@ -146,6 +154,7 @@ function getTaskStore() {
 	}
 	return {
 		getTaskEventStream: getTaskEventStream,
+		unsubscribeEventStream: unsubscribeEventStream,
 		// The task areas / status colours displayed on the map
 		appendTaskStatesToFeatcol: appendTaskStatesToFeatcol,
 		setSelectedTaskId: setSelectedTaskId,

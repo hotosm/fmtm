@@ -26,7 +26,9 @@ CREATE TABLE public.odk_entities (
     entity_id UUID NOT NULL,
     status public.entitystate NOT NULL,
     project_id integer NOT NULL,
-    task_id integer
+    task_id integer,
+    osm_id integer,
+    submission_ids character varying
 );
 ALTER TABLE public.odk_entities OWNER TO fmtm;
 

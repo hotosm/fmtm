@@ -48,6 +48,7 @@ export const getDb = async (): Promise<PGliteWithSync> => {
 				extensions: {
 					electric: electricSync(),
 				},
+				// debug: 2  // show postgres logs for easier debugging
 			});
 
 			const tableCheck = await db.query(`
@@ -119,6 +120,8 @@ const initDb = async (): Promise<PGliteWithSync> => {
 				SELECT * FROM pg_user where usename = 'fmtm'
 			) THEN
 				CREATE USER fmtm WITH PASSWORD 'fmtm';
+				-- Required permission for copying from CSV
+				GRANT pg_read_server_files TO fmtm;
 			END IF;
 		END $$;
 	`);
