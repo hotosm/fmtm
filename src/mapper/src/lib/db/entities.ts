@@ -2,12 +2,12 @@ import type { PGliteWithSync } from '@electric-sql/pglite-sync';
 import type { DbEntity } from '$lib/types';
 import { applyDataToTableWithCsvCopy } from '$lib/db/helpers';
 
-export async function updateEntityStatus(db: PGliteWithSync, entity_id: string, status: number) {
+export async function updateLocalEntityStatus(db: PGliteWithSync, entity: DbEntity) {
 	await db.query(
-		`UPDATE odk_entities (status)
-        WHERE entity_id = $1
-        VALUES ($2)`,
-		[entity_id, status],
+		`UPDATE odk_entities
+         SET status = $2
+         WHERE entity_id = $1`,
+		[entity.entity_id, entity.status],
 	);
 }
 
