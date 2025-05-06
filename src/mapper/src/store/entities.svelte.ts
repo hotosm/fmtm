@@ -4,10 +4,10 @@ import type { ShapeData } from '@electric-sql/client';
 import type { Feature, FeatureCollection } from 'geojson';
 import type { LngLatLike } from 'svelte-maplibre';
 
-import type { DbEntity, EntityStatusPayload, entitiesApiResponse, DbEntity, entityStatusOptions } from '$lib/types';
+import type { DbEntity, EntityStatusPayload, entitiesApiResponse, entityStatusOptions } from '$lib/types';
 import { EntityStatusNameMap } from '$lib/types';
 import { getAlertStore } from './common.svelte';
-import { createLocalEntities } from '$lib/db/entities';
+import { createLocalEntities, updateLocalEntityStatus } from '$lib/db/entities';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -40,12 +40,8 @@ let entitiesList: DbEntity[] = $state([]);
 let selectedEntity: DbEntity | null = $derived(
 	entitiesList.find((entity) => entity.entity_id === selectedEntityId) ?? null,
 );
-// Map from entity_id to osm_id
-let entityMap = $derived(new Map(entitiesList.map((entity) => [entity.entity_id, entity.osm_id])));
-// Map from entity_id to full entity data
-let entityMapByEntity = $derived(new Map(entitiesList.map((entity) => [entity.entity_id, entity])));
-// Map from osm_id to full entity data (only include defined osm_ids)
-let entityMapByOsm = $derived(new Map(entitiesList.map((entity) => [entity.osm_id!, entity])));
+// Map each entity_id to the entity data, for faster lookup in map
+let entityMap = $derived(new Map(entitiesList.map((entity) => [entity.entity_id, entity])));
 
 let badGeomFeatcol: FeatureCollection = $state({ type: 'FeatureCollection', features: [] });
 let newGeomFeatcol: FeatureCollection = $state({ type: 'FeatureCollection', features: [] });
@@ -56,40 +52,6 @@ let entityToNavigate: entityIdCoordinateMapType | null = $state(null);
 let toggleGeolocation: boolean = $state(false);
 let taskSubmissionInfo: taskSubmissionInfoType[] = $state([]);
 let alertStore = getAlertStore();
-
-function addStatusToGeojsonProperty(geojsonData: FeatureCollection, entityType: '' | 'new'): FeatureCollection {
-	if (entityType === 'new') {
-		return {
-			...geojsonData,
-			features: geojsonData.features.map((feature) => {
-				const entity = entityMapByEntity.get(feature?.properties?.entity_id);
-				return {
-					...feature,
-					properties: {
-						...feature.properties,
-						status: entity?.status,
-						entity_id: entity?.entity_id,
-					},
-				};
-			}),
-		};
-	} else {
-		return {
-			...geojsonData,
-			features: geojsonData.features.map((feature) => {
-				const entity = entityMapByOsm.get(feature?.properties?.osm_id);
-				return {
-					...feature,
-					properties: {
-						...feature.properties,
-						status: entity?.status,
-						entity_id: entity?.entity_id,
-					},
-				};
-			}),
-		};
-	}
-}
 
 function getEntitiesStatusStore() {
 	async function getEntityStatusStream(db: PGliteWithSync, projectId: number): Promise<ShapeStream | undefined> {
@@ -116,28 +78,28 @@ function getEntitiesStatusStore() {
 		_calculateTaskSubmissionCounts();
 
 		entitiesUnsubscribe = entitiesSync.stream.subscribe(
-			(entities: ShapeData[]) => {
+			async (entities: ShapeData[]) => {
 				// Create map for faster lookup
 				const rows: DbEntity[] = entities
 					.filter((item): item is { value: DbEntity } => 'value' in item && item.value !== null)
 					.map((item) => item.value);
 
-				const newEntitiesList = rows.map((entity) => ({
-					entity_id: entity.entity_id,
-					status: entity.status,
-					project_id: projectId,
-					task_id: entity.task_id,
-					osm_id: entity.osm_id,
-					submission_ids: entity.submission_ids,
-				}));
+				// Map current list for faster lookups
+				const entityMapClone = new Map(entitiesList.map((e) => [e.entity_id, e]));
 
-				// Merge, replacing by entity_id
-				const entityMap = new Map(entitiesList.map((e) => [e.entity_id, e]));
-				for (const entity of newEntitiesList) {
-					entityMap.set(entity.entity_id, entity);
+				for (const entity of rows) {
+					const updatedEntity = {
+						...entityMapClone.get(entity.entity_id), // fallback to existing data
+						...entity, // overwrite with new status
+					};
+					entityMapClone.set(entity.entity_id, updatedEntity);
+					// Store value in local db for persistence across restarts
+					await updateLocalEntityStatus(db, entity);
 				}
 
-				entitiesList = Array.from(entityMap.values());
+				// Set the reactive store var for updates
+				entitiesList = Array.from(entityMapClone.values());
+
 				_calculateTaskSubmissionCounts();
 			},
 			(error: FetchError) => {
@@ -165,6 +127,40 @@ function getEntitiesStatusStore() {
 			osm_id: entity.osm_id,
 			submission_ids: entity.submission_ids,
 		}));
+	}
+
+	function addStatusToGeojsonProperty(geojsonData: FeatureCollection, entityType: '' | 'new'): FeatureCollection {
+		if (entityType === 'new') {
+			return {
+				...geojsonData,
+				features: geojsonData.features.map((feature) => {
+					const entity = entityMap.get(feature?.properties?.entity_id);
+					return {
+						...feature,
+						properties: {
+							...feature.properties,
+							status: entity?.status,
+							entity_id: entity?.entity_id,
+						},
+					};
+				}),
+			};
+		} else {
+			return {
+				...geojsonData,
+				features: geojsonData.features.map((feature) => {
+					const entity = getEntityByOsmId(feature?.properties?.osm_id);
+					return {
+						...feature,
+						properties: {
+							...feature.properties,
+							status: entity?.status,
+							entity_id: entity?.entity_id,
+						},
+					};
+				}),
+			};
+		}
 	}
 
 	function _calculateTaskSubmissionCounts() {
@@ -299,10 +295,19 @@ function getEntitiesStatusStore() {
 		userLocationCoord = coordinate;
 	}
 
+	function getEntityByOsmId(osmId: number): DbEntity | undefined {
+		return entitiesList.find((entity) => entity.osm_id === osmId);
+	}
+
+	function getOsmIdByEntityId(entityId: string): number | undefined {
+		return entityMap.get(entityId)?.osm_id;
+	}
+
 	return {
 		getEntityStatusStream: getEntityStatusStream,
 		unsubscribeEntitiesStream: unsubscribeEntitiesStream,
 		syncEntityStatusManually: syncEntityStatusManually,
+		addStatusToGeojsonProperty: addStatusToGeojsonProperty,
 		updateEntityStatus: updateEntityStatus,
 		createEntity: createEntity,
 		setEntityToNavigate: setEntityToNavigate,
@@ -311,7 +316,7 @@ function getEntitiesStatusStore() {
 		get selectedEntityId() {
 			return selectedEntityId;
 		},
-		setSelectedEntityId(clickedEntityId: string) {
+		setSelectedEntityId(clickedEntityId: string | null) {
 			selectedEntityId = clickedEntityId;
 		},
 		get selectedEntity() {
@@ -320,12 +325,8 @@ function getEntitiesStatusStore() {
 		get entityMap() {
 			return entityMap;
 		},
-		get entityMapByEntity() {
-			return entityMapByEntity;
-		},
-		get entityMapByOsm() {
-			return entityMapByOsm;
-		},
+		getEntityByOsmId: getEntityByOsmId,
+		getOsmIdByEntityId: getOsmIdByEntityId,
 		get badGeomFeatcol() {
 			return badGeomFeatcol;
 		},
@@ -468,4 +469,4 @@ function getNewBadGeomStore() {
 	};
 }
 
-export { getEntitiesStatusStore, getNewBadGeomStore, addStatusToGeojsonProperty };
+export { getEntitiesStatusStore, getNewBadGeomStore };

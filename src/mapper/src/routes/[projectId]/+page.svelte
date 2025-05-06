@@ -249,7 +249,7 @@
 						zoomToTask(commentMention.task_id, { duration: 0, padding: { bottom: 325 } });
 						const osmIdStr = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
 						const osmId = Number(osmIdStr);
-						const entity = entitiesStore.entityMapByOsm.get(osmId);
+						const entity = entitiesStore.getEntityByOsmId(osmId);
 						if (entity) {
 							entitiesStore.setSelectedEntityId(entity.entity_id);
 						}
@@ -260,7 +260,7 @@
 						if (e.key === 'Enter') {
 							const osmIdStr = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
 							const osmId = Number(osmIdStr);
-							const entity = entitiesStore.entityMapByOsm.get(osmId);
+							const entity = entitiesStore.getEntityByOsmId(osmId);
 							if (entity) {
 								entitiesStore.setSelectedEntityId(entity.entity_id);
 							}
