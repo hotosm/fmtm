@@ -56,8 +56,8 @@
 	const alertStore = getAlertStore();
 
 	let taskEventStream: ShapeStream | undefined;
-	let newBadGeomStream: ShapeStream | undefined;
 	let entityStatusStream: ShapeStream | undefined;
+	let newBadGeomStream: ShapeStream | undefined;
 
 	const selectedEntityId = $derived(entitiesStore.selectedEntity);
 	const latestEvent = $derived(taskStore.latestEvent);
@@ -120,8 +120,8 @@
 
 	onMount(async () => {
 		taskEventStream = await taskStore.getTaskEventStream(db, projectId);
+		entityStatusStream = await entitiesStore.getEntityStatusStream(db, projectId);
 		newBadGeomStream = await newBadGeomStore.getNewBadGeomStream(db, projectId);
-		newBadGeomStream = await entitiesStore.getEntityStatusStream(db, projectId);
 
 		// Note we need this for now, as the task outlines are from API, while task
 		// events are from pglite / sync. We pass through the task outlines.
@@ -129,9 +129,9 @@
 	});
 
 	onDestroy(() => {
-		taskEventStream?.unsubscribeAll();
-		newBadGeomStream?.unsubscribeAll();
-		entityStatusStream?.unsubscribeAll();
+		taskStore.unsubscribeEventStream();
+		entitiesStore.unsubscribeEntitiesStream();
+		newBadGeomStore.unsubscribeNewBadGeomStream();
 
 		taskStore.clearTaskStates();
 	});

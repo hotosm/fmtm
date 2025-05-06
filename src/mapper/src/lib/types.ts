@@ -149,7 +149,13 @@ export type EntitiesDbType = {
 	task_id: number;
 };
 
-type entityStatusOptions = 'READY' | 'OPENED_IN_ODK' | 'SURVEY_SUBMITTED' | 'NEW_GEOM' | 'MARKED_BAD' | 'VALIDATED';
+export type entityStatusOptions =
+	| 'READY'
+	| 'OPENED_IN_ODK'
+	| 'SURVEY_SUBMITTED'
+	| 'NEW_GEOM'
+	| 'MARKED_BAD'
+	| 'VALIDATED';
 export const EntityStatusNameMap: Record<number, entityStatusOptions> = {
 	0: 'READY',
 	1: 'OPENED_IN_ODK',
@@ -157,4 +163,30 @@ export const EntityStatusNameMap: Record<number, entityStatusOptions> = {
 	3: 'NEW_GEOM',
 	5: 'VALIDATED',
 	6: 'MARKED_BAD',
+};
+
+export type entitiesApiResponse = {
+	id: string;
+	task_id: number;
+	osm_id: number;
+	status: number;
+	updated_at: string | null;
+	submission_ids: string;
+};
+
+export type entitiesShapeType = {
+	entity_id: string;
+	status: entityStatusOptions;
+	project_id: number;
+	task_id: number;
+};
+
+// What we actually use in the frontend (a merger from API / ShapeStream / DB)
+export type entitiesListType = {
+	entity_id: string;
+	status: entityStatusOptions;
+	project_id: number;
+	task_id: number;
+	osm_id?: number | undefined;
+	submission_ids?: string | undefined;
 };

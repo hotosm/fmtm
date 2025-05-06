@@ -4,37 +4,19 @@ import type { ShapeData } from '@electric-sql/client';
 import type { Feature, FeatureCollection } from 'geojson';
 import type { LngLatLike } from 'svelte-maplibre';
 
-import type { EntitiesDbType, EntityStatusPayload, entityStatusOptions } from '$lib/types';
+import type {
+	EntitiesDbType,
+	EntityStatusPayload,
+	entitiesApiResponse,
+	entitiesShapeType,
+	entitiesListType,
+	entityStatusOptions,
+} from '$lib/types';
 import { EntityStatusNameMap } from '$lib/types';
 import { getAlertStore } from './common.svelte';
+import { createLocalEntities } from '$lib/db/entities';
 
 const API_URL = import.meta.env.VITE_API_URL;
-
-type entitiesApiResponse = {
-	id: string;
-	task_id: number;
-	osm_id: number;
-	status: number;
-	updated_at: string | null;
-	submission_ids: string;
-};
-
-type entitiesShapeType = {
-	entity_id: string;
-	status: entityStatusOptions;
-	project_id: number;
-	task_id: number;
-};
-
-// What we actually use in the frontend (a merger from API / ShapeStream / DB)
-type entitiesListType = {
-	entity_id: string;
-	status: entityStatusOptions;
-	project_id: number;
-	task_id: number;
-	osm_id?: number | undefined;
-	submission_ids?: string | undefined;
-};
 
 type entityIdCoordinateMapType = {
 	entityId: string;
@@ -55,6 +37,9 @@ type taskSubmissionInfoType = {
 	submission_count: number;
 	feature_count: number;
 };
+
+let entitiesUnsubscribe: (() => void) | null = $state(null);
+let newBadGeomUnsubscribe: (() => void) | null = $state(null);
 
 let userLocationCoord: LngLatLike | undefined = $state();
 let selectedEntity: string | null = $state(null);
@@ -134,15 +119,16 @@ function getEntitiesStatusStore() {
 
 		// Populate initial entity statuses
 		await getInitialEntities(db, projectId);
+		_calculateTaskSubmissionCounts();
 
-		entitiesSync.stream.subscribe(
+		entitiesUnsubscribe = entitiesSync.stream.subscribe(
 			(entities: ShapeData[]) => {
 				// Create map for faster lookup
 				const rows: entitiesShapeType[] = entities
 					.filter((item): item is { value: entitiesShapeType } => 'value' in item && item.value !== null)
 					.map((item) => item.value);
 
-				const newEntities = rows.map((entity) => ({
+				const newEntitiesList = rows.map((entity) => ({
 					entity_id: entity.entity_id,
 					status: entity.status,
 					project_id: projectId,
@@ -151,11 +137,12 @@ function getEntitiesStatusStore() {
 
 				// Merge, replacing by entity_id
 				const entityMap = new Map(entitiesList.map((e) => [e.entity_id, e]));
-				for (const entity of newEntities) {
+				for (const entity of newEntitiesList) {
 					entityMap.set(entity.entity_id, entity);
 				}
 
 				entitiesList = Array.from(entityMap.values());
+				_calculateTaskSubmissionCounts();
 			},
 			(error: FetchError) => {
 				console.error('entity sync error', error);
@@ -163,6 +150,13 @@ function getEntitiesStatusStore() {
 		);
 
 		return entitiesSync;
+	}
+
+	function unsubscribeEntitiesStream() {
+		if (entitiesUnsubscribe) {
+			entitiesUnsubscribe();
+			entitiesUnsubscribe = null;
+		}
 	}
 
 	async function getInitialEntities(db: PGliteWithSync, projectId: number) {
@@ -183,8 +177,18 @@ function getEntitiesStatusStore() {
 		selectedEntityCoordinate = entityCoordinate;
 	}
 
-	function _setTaskSubmissionInfo(entities: entitiesApiResponse[]) {
-		const taskEntityMap = entities?.reduce((acc: Record<number, entitiesListType[]>, item) => {
+	function _calculateTaskSubmissionCounts() {
+		if (!entitiesList) return;
+
+		const StatusToCode: Record<entityStatusOptions, number> = Object.entries(EntityStatusNameMap).reduce(
+			(acc, [codeStr, status]) => {
+				acc[status] = Number(codeStr);
+				return acc;
+			},
+			{} as Record<entityStatusOptions, number>,
+		);
+
+		const taskEntityMap = entitiesList?.reduce((acc: Record<number, entitiesListType[]>, item) => {
 			if (!acc[item?.task_id]) {
 				acc[item.task_id] = [];
 			}
@@ -196,12 +200,15 @@ function getEntitiesStatusStore() {
 			// Calculate feature_count
 			const featureCount = taskEntities.length;
 			let submissionCount = 0;
+
 			// Calculate submission_count
 			taskEntities.forEach((entity) => {
-				if (entity.status > 1) {
+				const statusCode = StatusToCode[entity.status];
+				if (statusCode > 1) {
 					submissionCount++;
 				}
 			});
+
 			return {
 				task_id: +taskId,
 				index: +taskId,
@@ -209,6 +216,8 @@ function getEntitiesStatusStore() {
 				feature_count: featureCount,
 			};
 		});
+
+		// Set submission info in store
 		taskSubmissionInfo = taskInfo;
 	}
 
@@ -225,7 +234,7 @@ function getEntitiesStatusStore() {
 
 			const responseJson: entitiesApiResponse[] = await entityStatusResponse.json();
 			// Convert API response into our internal entity shape
-			const newEntities = responseJson.map((entity: entitiesApiResponse) => ({
+			const newEntitiesList: entitiesListType[] = responseJson.map((entity: entitiesApiResponse) => ({
 				entity_id: entity.id,
 				status: EntityStatusNameMap[entity.status],
 				project_id: projectId,
@@ -236,29 +245,12 @@ function getEntitiesStatusStore() {
 			syncEntityStatusLoading = false;
 
 			// Replace in-memory list from store
-			entitiesList = newEntities;
+			entitiesList = newEntitiesList;
 
 			// Clear odk_entities table first in local db, then re-add data
-			// FIXME we should sync any pending entities first, if in the staging table
-			await db.exec(`DELETE FROM odk_entities WHERE project_id = $1;`, [projectId]);
-			for (const entity of newEntities) {
-				await db.run(
-					`INSERT INTO odk_entities (entity_id, status, project_id, task_id, submission_ids, osm_id)
-					VALUES ($1, $2, $3, $4, $5, $6)`,
-					[
-						entity.entity_id,
-						entity.status,
-						entity.project_id,
-						entity.task_id,
-						JSON.stringify(entity.submission_ids),
-						entity.osm_id,
-					],
-				);
-			}
-
-			// FIXME should we also be calling _setTaskSubmissionInfo in other places
-			// where we set the entity statuses?
-			_setTaskSubmissionInfo(responseJson);
+			await db.query(`DELETE FROM odk_entities WHERE project_id = $1;`, [projectId]);
+			await createLocalEntities(db, newEntitiesList);
+			_calculateTaskSubmissionCounts();
 		} catch (error) {
 			syncEntityStatusLoading = false;
 		}
@@ -318,6 +310,7 @@ function getEntitiesStatusStore() {
 
 	return {
 		getEntityStatusStream: getEntityStatusStream,
+		unsubscribeEntitiesStream: unsubscribeEntitiesStream,
 		setSelectedEntity: setSelectedEntity,
 		syncEntityStatus: syncEntityStatus,
 		updateEntityStatus: updateEntityStatus,
@@ -395,7 +388,7 @@ function getNewBadGeomStore() {
 		await getInitialGeomRecords(db, projectId);
 
 		// Append new geoms created to the existing state
-		newBadGeomSync.stream.subscribe(
+		newBadGeomUnsubscribe = newBadGeomSync.stream.subscribe(
 			(geoms: ShapeData[]) => {
 				const rows: newBadGeomType<'NEW' | 'BAD'>[] = geoms
 					.filter((item): item is { value: newBadGeomType<'NEW' | 'BAD'> } => 'value' in item && item.value !== null)
@@ -419,6 +412,13 @@ function getNewBadGeomStore() {
 		);
 
 		return newBadGeomSync;
+	}
+
+	function unsubscribeNewBadGeomStream() {
+		if (newBadGeomUnsubscribe) {
+			newBadGeomUnsubscribe();
+			newBadGeomUnsubscribe = null;
+		}
 	}
 
 	async function getInitialGeomRecords(db: PGliteWithSync, projectId: number) {
@@ -465,6 +465,7 @@ function getNewBadGeomStore() {
 
 	return {
 		getNewBadGeomStream: getNewBadGeomStream,
+		unsubscribeNewBadGeomStream: unsubscribeNewBadGeomStream,
 		createGeomRecord: createGeomRecord,
 	};
 }
