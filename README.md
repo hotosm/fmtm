@@ -23,7 +23,7 @@
 | **Tech Stack** | | ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi) ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![Svelte](https://img.shields.io/badge/Svelte-4A4A55?style=for-the-badge&logo=svelte) ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) ![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?style=for-the-badge&logo=kubernetes&logoColor=white) ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white) |
 | **Code Style** | | [![Backend Style](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/format.json&labelColor=202235)](https://github.com/astral-sh/ruff) [![Frontend Style](https://img.shields.io/badge/code%20style-prettier-F7B93E?logo=Prettier)](https://github.com/prettier/prettier) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com) |
 | **Quality** | | [![Coverage](https://docs.fmtm.dev/coverage.svg)](https://docs.fmtm.dev/coverage.html) [![Translation](https://hosted.weblate.org/widget/hotosm/field-tm-mapper-ui/svg-badge.svg)](https://hosted.weblate.org/engage/hotosm) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9218/badge)](https://www.bestpractices.dev/projects/9218) |
-| **Community** | | [![Slack](https://img.shields.io/badge/Slack-Join%20the%20community!-d63f3f?style=for-the-badge&logo=slack&logoColor=d63f3f)](https://slack.hotosm.org) [![All Contributors](https://img.shields.io/github/all-contributors/hotosm/fmtm?color=ee8449&style=flat-square)](#contributors-) |
+| **Community** | | [![Slack](https://img.shields.io/badge/Slack-Join%20the%20community!-d63f3f?style=for-the-badge&logo=slack&logoColor=d63f3f)](https://slack.hotosm.org) [![All Contributors](https://img.shields.io/github/contributors/hotosm/fmtm?logo=github)](#contributors-) |
 | **Other Info** | | [![docs](https://github.com/hotosm/fmtm/blob/development/docs/images/docs_badge.svg?raw=true)](https://docs.fmtm.dev/) [![dev-roadmap](https://github.com/hotosm/fmtm/blob/development/docs/images/dev_roadmap_badge.svg?raw=true)](https://roadmap.fmtm.dev) [![timeline](https://github.com/hotosm/fmtm/blob/development/docs/images/timeline_badge.svg?raw=true)](https://docs.fmtm.dev/timeline) [![license-code](https://img.shields.io/github/license/hotosm/fmtm.svg)](https://github.com/hotosm/fmtm/blob/main/LICENSE.md) [![license-translations](https://img.shields.io/badge/license:translations-CC%20BY%204.0-orange.svg)](https://github.com/hotosm/fmtm/blob/main/src/mapper/messages/LICENSE.md) |
 
 </div>
@@ -124,12 +124,12 @@ Alternatively see the [docs](https://docs.fmtm.dev) for various deployment guide
 | ✅ | 📱 navigation and capability for routing to map features | Since [v2024.5.0][2] |
 | ✅ | 🖥️ organization creation and management | Since [v2024.5.0][2] |
 | ✅ | 📱 better support for mapping **new** points, lines, polygons | Since [v2025.1.0][3] |
-| ✅ | 📱 seamless mapping in the same app (Web Forms, no ODK Collect) | Expected [v2025.2.0][4] |
-| ✅ | 🖥️ user role management per project | Expected [v2025.2.0][4] |
-| ✅ | 🖥️ inviting users to projects via invite link | Expected [v2025.2.0][4] |
-| ✅ | 🖥️ optional private projects to restrict access | Expected [v2025.2.0][4] |
-| ✅ | 📱 fully translated mapper UI and survey in any language | Expected [v2025.2.0][4] |
-| ✅ | 📱 custom Field-TM deployments with updated branding | Expected [v2025.2.0][4] |
+| ✅ | 📱 seamless mapping in the same app (Web Forms, no ODK Collect) | Since [v2025.2.0][4] |
+| ✅ | 🖥️ user role management per project | Since [v2025.2.0][4] |
+| ✅ | 🖥️ inviting users to projects via invite link | Since [v2025.2.0][4] |
+| ✅ | 🖥️ optional private projects to restrict access | Since [v2025.2.0][4] |
+| ✅ | 📱 fully translated mapper UI and survey in any language | Since [v2025.2.0][4] |
+| ✅ | 📱 custom Field-TM deployments with updated branding | Since [v2025.2.0][4] |
 | 🔄 | 📱 fully offline field mapping (local-first design) | – |
 | 🔄 | 🖥️ simplify project creation with basic / advanced workflows | – |
 | 📅 | 🖥️ pre-defined OpenStreetMap forms for easy OSM mapping | – |

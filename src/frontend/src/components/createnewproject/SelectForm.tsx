@@ -83,7 +83,9 @@ const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
 
   useEffect(() => {
     if (xlsFormFile && !customFileValidity) {
-      dispatch(ValidateCustomForm(`${VITE_API_URL}/central/validate-form`, xlsFormFile?.file));
+      dispatch(
+        ValidateCustomForm(`${VITE_API_URL}/central/validate-form`, xlsFormFile?.file, projectDetails.use_odk_collect),
+      );
     }
   }, [xlsFormFile]);
 
@@ -156,7 +158,7 @@ const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
                   </a>{' '}
                   {`will help with merging the final data back to OSM.`}
                 </p>
-                <p className="fmtm-text-base fmtm-mt-2">
+                <div className="fmtm-text-base fmtm-mt-2">
                   <Tooltip
                     arrow
                     placement="bottom"
@@ -172,7 +174,7 @@ const SelectForm = ({ flag, _geojsonFile, xlsFormFile, setXlsFormFile }) => {
                       </a>
                     </div>
                   </Tooltip>
-                </p>
+                </div>
                 <p className="fmtm-text-base fmtm-mt-2">
                   <a
                     href={`https://xlsforms.fmtm.dev?url=${VITE_API_URL}/helper/download-template-xlsform?form_type=${formValues.formExampleSelection}`}

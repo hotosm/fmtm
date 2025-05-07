@@ -203,9 +203,6 @@ async def get_odk_entities_mapping_statuses(
         project.odk_credentials,
         project.odkid,
     )
-    # First update the Entity statuses in the db
-    # FIXME this is a hack and in the long run should be replaced
-    # https://github.com/hotosm/fmtm/issues/1841
     await DbOdkEntities.upsert(db, project.id, entities)
     return entities
 
@@ -518,7 +515,7 @@ async def task_split(
     features = await run_in_threadpool(
         lambda: split_by_sql(
             merged_boundary,
-            settings.FMTM_DB_URL.unicode_string(),
+            settings.FMTM_DB_URL,
             num_buildings=no_of_buildings,
             osm_extract=parsed_extract,
         )
@@ -568,7 +565,7 @@ async def preview_split_by_square(
 
     return split_by_square(
         boundary_featcol,
-        settings.FMTM_DB_URL.unicode_string(),
+        settings.FMTM_DB_URL,
         meters=dimension_meters,
         osm_extract=parsed_extract,
     )
@@ -806,15 +803,11 @@ async def generate_files(
     project = project_user_dict.get("project")
     project_id = project.id
     new_geom_type = project.new_geom_type
-
-    # Project requirement if they need to use odk-collect
     use_odk_collect = project.use_odk_collect or False
+    form_name = f"FMTM_Project_{project.id}"
+    project_contains_existing_feature = True if combined_features_count else False
 
     log.debug(f"Generating additional files for project: {project.id}")
-
-    form_name = f"FMTM_Project_{project.id}"
-
-    project_contains_existing_feature = True if combined_features_count else False
 
     # Validate uploaded form
     await central_crud.validate_and_update_user_xlsform(
@@ -1005,7 +998,7 @@ async def upload_project_task_boundaries(
 @router.post("", response_model=project_schemas.ProjectOut)
 async def create_project(
     project_info: project_schemas.ProjectIn,
-    org_user_dict: Annotated[AuthUser, Depends(org_admin)],
+    org_user_dict: Annotated[OrgUserDict, Depends(org_admin)],
     db: Annotated[Connection, Depends(db_conn)],
 ):
     """Create a project in ODK Central and the local database.
@@ -1119,7 +1112,7 @@ async def read_project(
 async def read_project_minimal(
     project_id: int,
     db: Annotated[Connection, Depends(db_conn)],
-    current_user: Annotated[AuthUser, Depends(public_endpoint)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper)],
 ):
     """Get a specific project by ID, with minimal metadata.
 

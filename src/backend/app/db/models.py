@@ -1658,12 +1658,10 @@ class DbProject(BaseModel):
     ) -> Optional[list[Self]]:
         """Fetch all projects with optional filters for user, hashtags, and search."""
         access_info = await cls._get_user_access_level(db, current_user)
-        filters, params, needs_user_roles_join = cls._build_query_filters(
+        filters, params = cls._build_query_filters(
             skip, limit, org_id, user_sub, hashtags, search, access_info
         )
-        sql = cls._construct_sql_query(
-            filters, minimal, skip, limit, needs_user_roles_join
-        )
+        sql = cls._construct_sql_query(filters, minimal, skip, limit)
 
         # Execute query and return results
         async with db.cursor(row_factory=class_row(cls)) as cur:
@@ -1711,9 +1709,7 @@ class DbProject(BaseModel):
 
         # Add visibility filter based on user authorization
         visibility_filter = cls._build_visibility_filter(access_info)
-        needs_user_roles_join = False
         if visibility_filter:
-            needs_user_roles_join = True
             filters.append(visibility_filter)
 
         params = {
@@ -1733,7 +1729,7 @@ class DbProject(BaseModel):
         if access_info["managed_org_ids"]:
             params["managed_org_ids"] = access_info["managed_org_ids"]
 
-        return filters, params, needs_user_roles_join
+        return filters, params
 
     @classmethod
     def _build_visibility_filter(cls, access_info: dict) -> Optional[str]:
@@ -1757,7 +1753,11 @@ class DbProject(BaseModel):
                 p.visibility = 'PUBLIC'
                 OR (
                     p.visibility = 'PRIVATE'
-                    AND ur.user_sub = %(current_user_sub)s
+                    AND EXISTS (
+                        SELECT 1 FROM user_roles ur
+                        WHERE ur.project_id = p.id
+                        AND ur.user_sub = %(current_user_sub)s
+                    )
                 )
             )
         """
@@ -1769,21 +1769,13 @@ class DbProject(BaseModel):
         minimal: bool,
         skip: Optional[int],
         limit: Optional[int],
-        needs_user_roles_join: Optional[bool] = False,
     ) -> str:
         """Construct SQL query based on filters and query type."""
         where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
 
-        # Only join user_roles if needed for private visibility check
-        if needs_user_roles_join:
-            user_roles_join = "LEFT JOIN user_roles ur ON ur.project_id = p.id"
-        else:
-            user_roles_join = ""
-
         sql = f"""
             WITH filtered_projects AS (
                 SELECT p.* FROM projects p
-                {user_roles_join}
                 {where_clause}
             )
         """
@@ -2001,6 +1993,8 @@ class DbOdkEntities(BaseModel):
     status: EntityState
     project_id: int
     task_id: int
+    osm_id: int
+    submission_ids: str
 
     @classmethod
     async def upsert(
@@ -2032,7 +2026,7 @@ class DbOdkEntities(BaseModel):
             batch = entities[batch_start : batch_start + batch_size]
             sql = """
                 INSERT INTO public.odk_entities
-                    (entity_id, status, project_id, task_id)
+                    (entity_id, status, project_id, task_id, osm_id, submission_ids)
                 VALUES
             """
 
@@ -2045,20 +2039,26 @@ class DbOdkEntities(BaseModel):
                     f"(%({entity_index}_entity_id)s, "
                     f"%({entity_index}_status)s, "
                     f"%({entity_index}_project_id)s, "
-                    f"%({entity_index}_task_id)s)"
+                    f"%({entity_index}_task_id)s,"
+                    f"%({entity_index}_osm_id)s,"
+                    f"%({entity_index}_submission_ids)s)"
                 )
                 data[f"{entity_index}_entity_id"] = entity["id"]
                 data[f"{entity_index}_status"] = EntityState(int(entity["status"])).name
                 data[f"{entity_index}_project_id"] = project_id
                 task_id = entity["task_id"]
                 data[f"{entity_index}_task_id"] = int(task_id) if task_id else None
+                data[f"{entity_index}_osm_id"] = entity["osm_id"]
+                data[f"{entity_index}_submission_ids"] = entity["submission_ids"]
 
             sql += (
                 ", ".join(values)
                 + """
                 ON CONFLICT (entity_id) DO UPDATE SET
                     status = EXCLUDED.status,
-                    task_id = EXCLUDED.task_id
+                    task_id = EXCLUDED.task_id,
+                    osm_id = EXCLUDED.osm_id,
+                    submission_ids = EXCLUDED.submission_ids
                 RETURNING True;
             """
             )

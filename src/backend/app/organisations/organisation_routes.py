@@ -113,7 +113,7 @@ async def delete_unapproved_org(
     """Delete an unapproved organisation.
 
     NOTE this endpoint is required as
-        org_user_dict: Annotated[AuthUser, Depends(org_admin)]
+        org_user_dict: Annotated[OrgUserDict, Depends(org_admin)]
     will also check if the organisation is approved and error if it's not.
     This is an ADMIN-only endpoint for deleting unapproved orgs.
     """
@@ -189,12 +189,13 @@ async def add_new_organisation_admin(
 @router.get("/org-admins", response_model=list[OrgManagersOut])
 async def get_organisation_admins(
     db: Annotated[Connection, Depends(db_conn)],
-    org_user_dict: Annotated[OrgUserDict, Depends(org_admin)],
+    organisation: Annotated[DbOrganisation, Depends(org_exists)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
 ):
     """Get the list of organisation admins."""
     org_managers = await DbOrganisationManagers.get(
         db,
-        org_user_dict.get("org").id,
+        organisation.id,
     )
     return org_managers
 
@@ -211,7 +212,7 @@ async def get_organisation_detail(
 @router.patch("/{org_id}", response_model=OrganisationOut)
 async def update_organisation(
     db: Annotated[Connection, Depends(db_conn)],
-    org_user_dict: Annotated[AuthUser, Depends(org_admin)],
+    org_user_dict: Annotated[OrgUserDict, Depends(org_admin)],
     new_values: OrganisationUpdate = Depends(parse_organisation_input),
     logo: UploadFile = File(None),
 ):
@@ -223,7 +224,7 @@ async def update_organisation(
 @router.delete("/{org_id}")
 async def delete_org(
     db: Annotated[Connection, Depends(db_conn)],
-    org_user_dict: Annotated[AuthUser, Depends(org_admin)],
+    org_user_dict: Annotated[OrgUserDict, Depends(org_admin)],
 ):
     """Delete an organisation."""
     org = org_user_dict.get("org")

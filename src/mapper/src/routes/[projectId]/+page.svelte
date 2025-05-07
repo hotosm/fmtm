@@ -23,8 +23,8 @@
 	import type { ProjectTask } from '$lib/types';
 	import { openOdkCollectNewFeature } from '$lib/odk/collect';
 	import { convertDateToTimeAgo } from '$lib/utils/datetime';
-	import { getTaskStore, getTaskEventStream } from '$store/tasks.svelte.ts';
-	import { getEntitiesStatusStore, getEntityStatusStream, getNewBadGeomStream } from '$store/entities.svelte.ts';
+	import { getTaskStore } from '$store/tasks.svelte.ts';
+	import { getEntitiesStatusStore, getNewBadGeomStore } from '$store/entities.svelte.ts';
 	import More from '$lib/components/more/index.svelte';
 	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
@@ -34,7 +34,7 @@
 		data: PageData;
 	}
 
-	const { data } = $props();
+	const { data }: Props = $props();
 	const { project, projectId } = data;
 
 	let webFormsRef: HTMLElement | undefined = $state();
@@ -50,14 +50,15 @@
 
 	const taskStore = getTaskStore();
 	const entitiesStore = getEntitiesStatusStore();
+	const newBadGeomStore = getNewBadGeomStore();
 	const commonStore = getCommonStore();
 	const { db } = commonStore;
 	const alertStore = getAlertStore();
 
-	const taskEventStream = getTaskEventStream(db, projectId);
-	const newBadGeomStream = getNewBadGeomStream(projectId);
+	let taskEventStream: ShapeStream | undefined;
+	let entityStatusStream: ShapeStream | undefined;
+	let newBadGeomStream: ShapeStream | undefined;
 
-	const selectedEntityId = $derived(entitiesStore.selectedEntity);
 	const latestEvent = $derived(taskStore.latestEvent);
 	const commentMention = $derived(taskStore.commentMention);
 
@@ -117,33 +118,23 @@
 	}
 
 	onMount(async () => {
-		await entitiesStore.subscribeToNewBadGeom(newBadGeomStream);
+		taskEventStream = await taskStore.getTaskEventStream(db, projectId);
+		entityStatusStream = await entitiesStore.getEntityStatusStream(db, projectId);
+		newBadGeomStream = await newBadGeomStore.getNewBadGeomStream(db, projectId);
+
+		// Note we need this for now, as the task outlines are from API, while task
+		// events are from pglite / sync. We pass through the task outlines.
 		await taskStore.appendTaskStatesToFeatcol(db, projectId, project.tasks);
 	});
 
 	onDestroy(() => {
-		taskEventStream?.unsubscribeAll();
+		taskStore.unsubscribeEventStream();
+		entitiesStore.unsubscribeEntitiesStream();
+		newBadGeomStore.unsubscribeNewBadGeomStream();
+
+		taskStore.clearTaskStates();
 	});
 
-	$effect(() => {
-		entitiesStore.syncEntityStatus(projectId);
-	});
-
-	$effect(() => {
-		entitiesStore.entitiesList;
-		let entityStatusStream: ShapeStream | undefined;
-
-		if (entitiesStore.entitiesList?.length === 0) return;
-		async function getEntityStatus() {
-			entityStatusStream = getEntityStatusStream(projectId);
-			await entitiesStore.subscribeToEntityStatusUpdates(entityStatusStream, entitiesStore.entitiesList);
-		}
-
-		getEntityStatus();
-		return () => {
-			entityStatusStream?.unsubscribeAll();
-		};
-	});
 	const projectSetupStepStore = getProjectSetupStepStore();
 
 	$effect(() => {
@@ -195,16 +186,15 @@
 				type: 'FeatureCollection',
 				features: [{ type: 'Feature', geometry: newFeatureGeom, properties: {} }],
 			});
-			await entitiesStore.createGeomRecord(projectId, {
+			await newBadGeomStore.createGeomRecord(projectId, {
 				status: 'NEW',
 				geojson: { type: 'Feature', geometry: newFeatureGeom, properties: { entity_id: entity.uuid } },
 				project_id: projectId,
 			});
-			entitiesStore.syncEntityStatus(projectId);
 			cancelMapNewFeatureInODK();
 
 			if (commonStore.enableWebforms) {
-				await entitiesStore.setSelectedEntity(entity.uuid);
+				await entitiesStore.setSelectedEntityId(entity.uuid);
 				openedActionModal = null;
 				entitiesStore.updateEntityStatus(projectId, {
 					entity_id: entity.uuid,
@@ -257,17 +247,24 @@
 				<sl-button
 					onclick={() => {
 						zoomToTask(commentMention.task_id, { duration: 0, padding: { bottom: 325 } });
-						const osmId = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
-						entitiesStore.setSelectedEntity(osmId);
+						const osmIdStr = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
+						const osmId = Number(osmIdStr);
+						const entity = entitiesStore.getEntityByOsmId(osmId);
+						if (entity) {
+							entitiesStore.setSelectedEntityId(entity.entity_id);
+						}
 						openedActionModal = 'entity-modal';
 						taskStore.dismissCommentMention();
 					}}
 					onkeydown={(e: KeyboardEvent) => {
 						if (e.key === 'Enter') {
-							const osmId = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
-							if (osmId) {
-								entitiesStore.setSelectedEntity(osmId);
+							const osmIdStr = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
+							const osmId = Number(osmIdStr);
+							const entity = entitiesStore.getEntityByOsmId(osmId);
+							if (entity) {
+								entitiesStore.setSelectedEntityId(entity.entity_id);
 							}
+							openedActionModal = 'entity-modal';
 							taskStore.dismissCommentMention();
 						}
 					}}
@@ -292,7 +289,7 @@
 			openedActionModal = value;
 		}}
 		projectOutlineCoords={project.outline.coordinates}
-		projectId={projectId}
+		{projectId}
 		entitiesUrl={project.data_extract_url}
 		primaryGeomType={project.primary_geom_type}
 		draw={isDrawEnabled}
@@ -374,12 +371,7 @@
 				<BasemapComponent projectId={project.id}></BasemapComponent>
 			{/if}
 			{#if commonStore.selectedTab === 'qrcode'}
-				<QRCodeComponent
-					class="map-qr"
-					{infoDialogRef}
-					projectName={project.name}
-					projectOdkToken={project.odk_token}
-				>
+				<QRCodeComponent class="map-qr" {infoDialogRef} projectName={project.name} projectOdkToken={project.odk_token}>
 					<!-- Open ODK Button (Hide if it's project walkthrough step) -->
 					{#if +(projectSetupStepStore.projectSetupStep || 0) !== projectSetupStepEnum['odk_project_load']}
 						<sl-button size="small" variant="primary" href="odkcollect://form/{project.odk_form_id}">
@@ -460,8 +452,8 @@
 	<OdkWebFormsWrapper
 		bind:webFormsRef
 		bind:display={displayWebFormsDrawer}
-		projectId={projectId}
-		entityId={selectedEntityId || undefined}
+		{projectId}
+		entityId={entitiesStore.selectedEntityId || undefined}
 		taskId={taskStore.selectedTaskIndex || undefined}
 	/>
 </div>

@@ -4,7 +4,7 @@
 	import { getCommonStore } from '$store/common.svelte.ts';
 	import { getLoginStore } from '$store/login.svelte.ts';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
-	import { fetchBlobUrl, fetchFormMediBlobUrls } from '$lib/utils/fetch.ts';
+	import { fetchBlobUrl, fetchFormMediBlobUrls } from '$lib/api/fetch';
 	import { m } from '$translations/messages.js';
 
 	import type { Action } from 'svelte/action';
@@ -21,10 +21,7 @@
 	const commonStore = getCommonStore();
 	const loginStore = getLoginStore();
 	const entitiesStore = getEntitiesStatusStore();
-	// use Map for quick lookups
-	let entityMap = $derived(new Map(entitiesStore.entitiesStatusList.map((entity) => [entity.entity_id, entity])));
-	const selectedEntityId = $derived(entitiesStore.selectedEntity || '');
-	const selectedEntity = $derived(entityMap.get(selectedEntityId));
+	const selectedEntity = $derived(entitiesStore.selectedEntity);
 	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
 
 	let { display = $bindable(false), entityId, webFormsRef = $bindable(undefined), projectId, taskId }: Props = $props();
@@ -33,6 +30,8 @@
 	let startDate: string | undefined;
 
 	let drawerLabel = $state('');
+	let uploading = $state(false);
+	let uploadingMessage = $state('');
 
 	const formXmlPromise = fetchBlobUrl(`${API_URL}/central/form-xml?project_id=${projectId}`);
 
@@ -79,18 +78,24 @@
 			attachments.forEach((attachment: File) => {
 				data.append('submission_files', attachment);
 			});
+
+			uploadingMessage = m['forms.uploading']() || 'uploading';
+			uploading = true;
+
 			// Submit the XML + any submission media
 			await fetch(url, {
 				method: 'POST',
 				body: data,
 			});
 
+			uploading = false;
+
 			let entityStatus = null;
 			if (submission_xml.includes('<feature_exists>no</feature_exists>')) {
 				entityStatus = 6; // MARKED_BAD
 			} else if (submission_xml.includes('<digitisation_correct>no</digitisation_correct>')) {
 				entityStatus = 6; // MARKED_BAD
-			} else if (entitiesStore.newGeomList.features.find((feature) => feature.properties?.entity_id === entityId)) {
+			} else if (entitiesStore.newGeomFeatcol.features.find((feature) => feature.properties?.entity_id === entityId)) {
 				entityStatus = 3; // NEW_GEOM
 			} else {
 				entityStatus = 2; // SURVEY_SUBMITTED
@@ -100,7 +105,7 @@
 				entity_id: selectedEntity?.entity_id,
 				status: entityStatus,
 				// NOTE here we don't translate the field as English values are always saved as the Entity label
-				label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osmid}`,
+				label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osm_id}`,
 			});
 
 			display = false;
@@ -155,8 +160,8 @@
 
 			nodes.find((it: any) => it.definition.nodeset === '/data/task_id')?.setValueState(`${taskId}`);
 
-			if (selectedEntity?.osmid) {
-				nodes.find((it: any) => it.definition.nodeset === '/data/xid')?.setValueState(`${selectedEntity?.osmid}`);
+			if (selectedEntity?.osm_id) {
+				nodes.find((it: any) => it.definition.nodeset === '/data/xid')?.setValueState(`${selectedEntity?.osm_id}`);
 			}
 
 			if (selectedEntityCoordinate) {
@@ -225,17 +230,30 @@
 					{#await formMediaPromise then formMedia}
 						{#key entityId}
 							{#key commonStore.locale}
-								<div style="font-size: 10pt; left: 0; padding: 10px; position: absolute; right: 0; text-align: center;">
-									{drawerLabel}
-								</div>
-								<iframe
-									class="iframe"
-									style:border="none"
-									style:height="100%"
-									use:handleIframe
-									title="odk-web-forms-wrapper"
-									src={`./web-forms.html?projectId=${projectId}&entityId=${entityId}&formXml=${formXml}&odkWebFormUrl=${odkWebFormUrl}&formMedia=${encodeURIComponent(JSON.stringify(formMedia))}`}
-								></iframe>
+								{#if uploading}
+									<div id="web-forms-uploader">
+										<div id="uploading-inner">
+											<div id="spinner"></div>
+											{uploadingMessage}
+										</div>
+									</div>
+								{:else}
+									{#if drawerLabel}
+										<div
+											style="font-size: 10pt; left: 0; padding: 10px; position: absolute; right: 0; text-align: center;"
+										>
+											{drawerLabel}
+										</div>
+									{/if}
+									<iframe
+										class="iframe"
+										style:border="none"
+										style:height="100%"
+										use:handleIframe
+										title="odk-web-forms-wrapper"
+										src={`./web-forms.html?projectId=${projectId}&entityId=${entityId}&formXml=${formXml}&odkWebFormUrl=${odkWebFormUrl}&formMedia=${encodeURIComponent(JSON.stringify(formMedia))}&cssFile=${commonStore.config?.cssFileWebformsOverride || ''}`}
+									></iframe>
+								{/if}
 							{/key}
 						{/key}
 					{/await}
@@ -244,3 +262,32 @@
 		{/if}
 	{/await}
 </hot-drawer>
+
+<style>
+	/* from https://www.w3schools.com/howto/howto_css_loader.asp */
+	#spinner {
+		border: 16px solid var(--sl-color-neutral-300); 
+		border-top: 16px solid solid var(--sl-color-primary-700);
+		border-radius: 50%;
+		width: 120px;
+		height: 120px;
+		animation: spin 2s linear infinite;
+	}
+
+	@keyframes spin {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+
+	#uploading-inner {
+		font-size: 30px;
+		left: 50%;
+		position: absolute;
+		transform: translate(-50%, -50%);
+		top: 40%;
+	}
+</style>

@@ -1,6 +1,6 @@
 {
 	"name": "field-tm-mapper",
-	"version": "2025.1.1",
+	"version": "2025.2.1",
 	"type": "module",
 	"license": "(AGPL-3.0-only OR CC-BY-4.0)",
 	"private": true,
@@ -20,7 +20,7 @@
 		"init-db": "node src/lib/db/init.js"
 	},
 	"devDependencies": {
-		"@inlang/paraglide-js": "^2.0.0-beta.26",
+		"@inlang/paraglide-js": "^2.0.12",
 		"@playwright/test": "^1.49.0",
 		"@sveltejs/adapter-static": "^3.0.6",
 		"@sveltejs/kit": "^2.9.0",

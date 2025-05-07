@@ -21,7 +21,7 @@ import base64
 import os
 from enum import Enum
 from functools import lru_cache
-from typing import Annotated, Any, Optional, Union
+from typing import Annotated, Optional, Union
 
 from cryptography.fernet import Fernet
 from pydantic import (
@@ -159,6 +159,13 @@ class Settings(BaseSettings):
     FMTM_DOMAIN: str
     FMTM_DEV_PORT: Optional[str] = "7050"
 
+    DEFAULT_ORG_NAME: Optional[str] = "HOTOSM"
+    DEFAULT_ORG_URL: Optional[str] = "https://hotosm.org"
+    DEFAULT_ORG_EMAIL: Optional[str] = "syadmin@hotosm.org"
+    DEFAULT_ORG_LOGO_URL: Optional[str] = (
+        "https://raw.githubusercontent.com/hotosm/fmtm/refs/heads/development/src/frontend/public/hot-org-logo.png"
+    )
+
     EXTRA_CORS_ORIGINS: Optional[str | list[str]] = None
 
     @property
@@ -218,7 +225,7 @@ class Settings(BaseSettings):
 
     @field_validator("FMTM_DB_URL", mode="after")
     @classmethod
-    def assemble_db_connection(cls, v: Optional[str], info: ValidationInfo) -> Any:
+    def assemble_db_connection(cls, v: Optional[str], info: ValidationInfo) -> str:
         """Build Postgres connection from environment variables."""
         if isinstance(v, str):
             return v
@@ -229,7 +236,7 @@ class Settings(BaseSettings):
             host=info.data.get("FMTM_DB_HOST"),
             path=info.data.get("FMTM_DB_NAME", ""),
         )
-        return pg_url
+        return pg_url.unicode_string()
 
     ODK_CENTRAL_URL: Optional[HttpUrlStr] = ""
     ODK_CENTRAL_USER: Optional[str] = ""

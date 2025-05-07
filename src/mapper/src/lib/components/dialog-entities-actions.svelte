@@ -11,7 +11,6 @@
 	import { getTaskStore } from '$store/tasks.svelte.ts';
 	import { mapTask } from '$lib/db/events';
 
-	type statusType = 'READY' | 'OPENED_IN_ODK' | 'SURVEY_SUBMITTED' | 'MARKED_BAD' | 'VALIDATED';
 	type Props = {
 		isTaskActionModalOpen: boolean;
 		toggleTaskActionModal: (value: boolean) => void;
@@ -19,20 +18,6 @@
 		projectData: ProjectData;
 		displayWebFormsDrawer: Boolean;
 	};
-	function getStatusStyle(status: statusType) {
-		switch (status) {
-			case 'READY':
-				return 'bg-neutral-100 text-neutral-700';
-			case 'OPENED_IN_ODK':
-				return 'bg-warning-100 text-warning-700';
-			case 'SURVEY_SUBMITTED':
-				return 'bg-success-100 text-success-700';
-			case 'MARKED_BAD':
-				return 'bg-danger-100 text-danger-700';
-			case 'VALIDATED':
-				return 'bg-blue-100 text-blue-700';
-		}
-	}
 
 	let {
 		isTaskActionModalOpen,
@@ -51,11 +36,7 @@
 	let toggleDistanceWarningDialog = $state(false);
 	let showCommentsPopup: boolean = $state(false);
 
-	// use Map for quick lookups
-	let entityMap = $derived(new Map(entitiesStore.entitiesStatusList.map((entity) => [entity.entity_id, entity])));
-
-	const selectedEntityId = $derived(entitiesStore.selectedEntity || '');
-	const selectedEntity = $derived(entityMap.get(selectedEntityId));
+	const selectedEntity = $derived(entitiesStore.selectedEntity);
 	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
 	const entityToNavigate = $derived(entitiesStore.entityToNavigate);
 	const entityComments = $derived(
@@ -64,7 +45,7 @@
 				(event) =>
 					event.event === 'COMMENT' &&
 					event.comment?.startsWith('#submissionId:uuid:') &&
-					`#featureId:${entitiesStore.selectedEntity}` === event.comment?.split(' ')?.[1],
+					`#featureId:${selectedEntity?.entity_id}` === event.comment?.split(' ')?.[1],
 			)
 			?.reverse(),
 	);
@@ -84,7 +65,7 @@
 					entity_id: entityUuid,
 					status: 1,
 					// NOTE here we don't translate the field as English values are always saved as the Entity label
-					label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osmid}`,
+					label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osm_id}`,
 				});
 
 				if (taskStore.selectedTaskId && taskStore.selectedTaskState === TaskStatusEnum['UNLOCKED_TO_MAP']) {
@@ -114,8 +95,7 @@
 			// Geolocation not enabled, warn user
 			if (!coordFrom) {
 				alertStore.setAlert({
-					message:
-						m['dialog_entities_actions.distance_constraint'](),
+					message: m['dialog_entities_actions.distance_constraint'](),
 					variant: 'warning',
 				});
 				return;
@@ -157,16 +137,20 @@
 
 {#if isTaskActionModalOpen && selectedTab === 'map' && selectedEntity}
 	<div class="task-action-modal">
-		<div
-			class="content"
-		>
+		<div class="content">
 			<div class="icon">
 				<hot-icon
 					name="close"
-					onclick={() => toggleTaskActionModal(false)}
+					onclick={() => {
+						toggleTaskActionModal(false);
+						entitiesStore.setSelectedEntityId(null);
+						entitiesStore.setSelectedEntityCoordinate(null);
+					}}
 					onkeydown={(e: KeyboardEvent) => {
 						if (e.key === 'Enter') {
 							toggleTaskActionModal(false);
+							entitiesStore.setSelectedEntityId(null);
+							entitiesStore.setSelectedEntityCoordinate(null);
 						}
 					}}
 					role="button"
@@ -174,7 +158,7 @@
 				></hot-icon>
 			</div>
 			<div class="section-container">
-				<p class="selected-title">{m['popup.feature']()} {selectedEntity?.osmid}</p>
+				<p class="selected-title">{m['popup.feature']()} {selectedEntity?.osm_id}</p>
 				<div class="section">
 					<div class="item">
 						<p class="label">{m['popup.task_id']()}</p>
@@ -189,9 +173,7 @@
 					<div class="item items-center">
 						<p class="label">{m['dialog_entities_actions.status']()}</p>
 						:
-						<p
-							class={`${getStatusStyle(selectedEntity?.status)}`}
-						>
+						<p class={`status ${selectedEntity?.status}`}>
 							{m[`entity_states.${selectedEntity?.status}`]()}
 						</p>
 					</div>
@@ -273,8 +255,7 @@
 								role="button"
 								tabindex="0"
 							>
-								<hot-icon slot="prefix" name="location"
-								></hot-icon>
+								<hot-icon slot="prefix" name="location"></hot-icon>
 								<span>{m['popup.map_in_odk']()}</span>
 							</sl-button>
 						{/if}
@@ -289,7 +270,7 @@
 										entity_id: selectedEntity?.entity_id,
 										status: 1,
 										// NOTE here we don't translate the field as English values are always saved as the Entity label
-										label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osmid}`,
+										label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osm_id}`,
 									});
 									displayWebFormsDrawer = true;
 								}}
@@ -300,7 +281,7 @@
 											entity_id: selectedEntity?.entity_id,
 											status: 1,
 											// NOTE here we don't translate the field as English values are always saved as the Entity label
-											label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osmid}`,
+											label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osm_id}`,
 										});
 										displayWebFormsDrawer = true;
 									}
@@ -308,8 +289,7 @@
 								role="button"
 								tabindex="0"
 							>
-								<hot-icon slot="prefix" name="location"
-								></hot-icon>
+								<hot-icon slot="prefix" name="location"></hot-icon>
 								<span>{m['dialog_entities_actions.collect_data']()}</span>
 							</sl-button>
 						{/if}
@@ -332,7 +312,8 @@
 	>
 		<div class="entity-dialog-content">
 			<p class="entity-dialog-youare">
-				{m['dialog_entities_actions.you_are']()} <b
+				{m['dialog_entities_actions.you_are']()}
+				<b
 					>{(
 						distance(
 							entitiesStore.selectedEntityCoordinate?.coordinate as Coord,
@@ -340,7 +321,8 @@
 							{ units: 'kilometers' },
 						) * 1000
 					).toFixed(2)}m</b
-				> {m['dialog_entities_actions.away_sure']()}
+				>
+				{m['dialog_entities_actions.away_sure']()}
 			</p>
 			<div class="entity-dialog-actions">
 				<sl-button
