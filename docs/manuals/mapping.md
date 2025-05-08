@@ -201,8 +201,8 @@ Sometimes the feature does not exist on the map yet!
 
 ### Repeat The Process
 
-- After ODK collect based form submission, you have to get back to Field-TM and select the
-  another feature for mapping.
+- After ODK collect based form submission, you have to get back to
+  Field-TM and select the another feature for mapping.
 - After webform based form submission, you will automatically get back to mapper's
   page where you can select another feature for mapping.
 - You also also have to click the **Sync Status** button to see the feature
