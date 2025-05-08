@@ -154,12 +154,12 @@ In most cases we are submitting a survey about a feature that already exists.
       The legend explaining these colours can be opened on the map:
 
       ![legend](https://github.com/user-attachments/assets/280fd927-b71e-4336-a89a-1672e8de687b)
-      
+
 ### Select An Existing Feature via webform
 
 Webform is the new functionality added on FMTM, where mappers can directly
-fill up and upload form via same browser without installing odk collect 
-mobile application. 
+fill up and upload form via same browser without installing odk collect
+mobile application.
 
 - Click on a task area: the features within will be displayed.
 - Now click on a feature you wish to map: a popup will appear.
@@ -168,13 +168,11 @@ mobile application.
 
   ![image](https://github.com/user-attachments/assets/b4a6901b-5c9e-4c45-b25d-ceb4dc299eae)
 
-
 !!!note
 
-    Currently, we need to have stable internet connection to upload the survey. 
-    We expect offline saving of form on local and sync when 
-    internet is available functionality on next release. 
-
+    Currently, we need to have stable internet connection to upload the survey.
+    We expect offline saving of form on local and sync when
+    internet is available functionality on next release.
 
 ### Mapping A New Feature
 
@@ -187,7 +185,7 @@ Sometimes the feature does not exist on the map yet!
 - In case of odk collect, you will be redirected to odk collect to fill
   out the survey data for the newly created feature.
 - In case of webform used for that project, form will be opened on
-  the same browser and you can fill out the survey for that feature. 
+  the same browser and you can fill out the survey for that feature.
   ![IMG_20250109_160816](https://github.com/user-attachments/assets/98b70f5a-4db8-46cb-84ae-58bec07c82c1)
 
 !!! note
@@ -206,7 +204,7 @@ Sometimes the feature does not exist on the map yet!
 - After ODK collect based form submission, you have to get back to Field-TM and select the
   another feature for mapping.
 - After webform based form submission, you will automatically get back to mapper's
-  page where you can select another feature for mapping. 
+  page where you can select another feature for mapping.
 - You also also have to click the **Sync Status** button to see the feature
   turn green.
 
@@ -223,4 +221,4 @@ Sometimes the feature does not exist on the map yet!
 
 ## Upcoming improvements
 
-Refer the milestone: https://github.com/hotosm/fmtm/milestone/49
+Refer the milestone: <https://github.com/hotosm/fmtm/milestone/49>
