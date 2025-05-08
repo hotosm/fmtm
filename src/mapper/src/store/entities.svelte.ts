@@ -52,6 +52,8 @@ let entityToNavigate: entityIdCoordinateMapType | null = $state(null);
 let toggleGeolocation: boolean = $state(false);
 let taskSubmissionInfo: taskSubmissionInfoType[] = $state([]);
 let alertStore = getAlertStore();
+let entitiesSync: any = $state(undefined);
+let newBadGeomSync: any = $state(undefined);
 
 function getEntitiesStatusStore() {
 	async function getEntityStatusStream(db: PGliteWithSync, projectId: number): Promise<ShapeStream | undefined> {
@@ -59,7 +61,7 @@ function getEntitiesStatusStore() {
 			return;
 		}
 
-		const entitiesSync = await db.electric.syncShapeToTable({
+		entitiesSync = await db.electric.syncShapeToTable({
 			shape: {
 				url: `${import.meta.env.VITE_SYNC_URL}/v1/shape`,
 				params: {
@@ -77,7 +79,7 @@ function getEntitiesStatusStore() {
 		await getInitialEntities(db, projectId);
 		_calculateTaskSubmissionCounts();
 
-		entitiesUnsubscribe = entitiesSync.stream.subscribe(
+		entitiesUnsubscribe = entitiesSync?.stream.subscribe(
 			async (entities: ShapeData[]) => {
 				// Create map for faster lookup
 				const rows: DbEntity[] = entities
@@ -112,6 +114,7 @@ function getEntitiesStatusStore() {
 
 	function unsubscribeEntitiesStream() {
 		if (entitiesUnsubscribe) {
+			entitiesSync?.unsubscribe();
 			entitiesUnsubscribe();
 			entitiesUnsubscribe = null;
 		}
@@ -369,7 +372,7 @@ function getNewBadGeomStore() {
 			return;
 		}
 
-		const newBadGeomSync = await db.electric.syncShapeToTable({
+		newBadGeomSync = await db.electric.syncShapeToTable({
 			shape: {
 				url: `${import.meta.env.VITE_SYNC_URL}/v1/shape`,
 				params: {
@@ -416,6 +419,7 @@ function getNewBadGeomStore() {
 
 	function unsubscribeNewBadGeomStream() {
 		if (newBadGeomUnsubscribe) {
+			newBadGeomSync?.unsubscribe();
 			newBadGeomUnsubscribe();
 			newBadGeomUnsubscribe = null;
 		}
