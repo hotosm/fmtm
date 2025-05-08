@@ -24,6 +24,7 @@ let taskIdIndexMap: Record<number, number> = $state({});
 let commentMention: TaskEventType | null = $state(null);
 
 let userDetails = $derived(loginStore.getAuthDetails);
+let taskEventSync: any = $state(undefined);
 
 function getTaskStore() {
 	async function getTaskEventStream(db: PGliteWithSync, projectId: number): Promise<ShapeStream | undefined> {
@@ -31,7 +32,7 @@ function getTaskStore() {
 			return;
 		}
 
-		const taskEventSync = await db.electric.syncShapeToTable({
+		taskEventSync = await db.electric.syncShapeToTable({
 			shape: {
 				url: `${import.meta.env.VITE_SYNC_URL}/v1/shape`,
 				params: {
@@ -45,7 +46,7 @@ function getTaskStore() {
 			initialInsertMethod: 'csv', // performance boost on initial sync
 		});
 
-		eventsUnsubscribe = taskEventSync.stream.subscribe(
+		eventsUnsubscribe = taskEventSync?.stream.subscribe(
 			(taskEvent: ShapeData[]) => {
 				// Filter only rows that have a .value (actual data changes)
 				const rows: TaskEventType[] = taskEvent
@@ -82,6 +83,7 @@ function getTaskStore() {
 
 	function unsubscribeEventStream() {
 		if (eventsUnsubscribe) {
+			taskEventSync.unsubscribe();
 			eventsUnsubscribe();
 			eventsUnsubscribe = null;
 		}

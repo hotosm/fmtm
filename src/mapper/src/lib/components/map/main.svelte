@@ -249,9 +249,12 @@
 			// if clicked coordinate doesn't contain any entity but only task, open task actions modal
 			selectedFeatures = [];
 			toggleActionModal('task-modal');
-		} else {
-			// else close the modal
+		} else if (clickedFeatures?.length > 1) {
+			// if multiple entities present
 			toggleActionModal(null);
+		} else {
+			// clear task states i.e. unselect task and it's extract if clicked coordinate doesn't contain any entity or task
+			taskStore.setSelectedTaskId(db, null, null);
 		}
 	}
 
@@ -388,7 +391,6 @@
 	on:click={(_e) => {
 		// deselect everything on click, to allow for re-selection
 		// if the user clicks on a feature layer directly (on:click)
-		taskStore.setSelectedTaskId(db, null, null);
 		taskAreaClicked = false;
 		toggleActionModal(null);
 		entitiesStore.setSelectedEntityId(null);
@@ -569,12 +571,12 @@
 					paint={{
 						'line-color': [
 							'case',
-							['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''],
+							['==', ['get', 'entity_id'], entitiesStore.selectedEntity?.entity_id || ''],
 							cssValue('--entity-outline-selected'),
 							cssValue('--entity-outline'),
 						],
-						'line-width': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0.7],
-						'line-opacity': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 1],
+						'line-width': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity?.entity_id || ''], 1, 0.7],
+						'line-opacity': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity?.entity_id || ''], 1, 1],
 					}}
 					beforeLayerType="symbol"
 					manageHoverState
@@ -599,10 +601,10 @@
 							'MAP_PIN_BLUE',
 							'MARKED_BAD',
 							'MAP_PIN_RED',
-							cssValue('--sl-color-primary-700'), // default color if no match is found
+							'MAP_PIN_GREY', // default color if no match is found
 						],
 						'icon-allow-overlap': true,
-						'icon-size': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1.6, 1],
+						'icon-size': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity?.entity_id || ''], 1.6, 1],
 					}}
 				/>
 			{/if}
@@ -677,12 +679,12 @@
 				paint={{
 					'line-color': [
 						'case',
-						['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''],
+						['==', ['get', 'entity_id'], entitiesStore.selectedEntity?.entity_id || ''],
 						cssValue('--entity-outline-selected'),
 						cssValue('--entity-outline'),
 					],
-					'line-width': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 0.7],
-					'line-opacity': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1, 1],
+					'line-width': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity?.entity_id || ''], 1, 0.7],
+					'line-opacity': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity?.entity_id || ''], 1, 1],
 				}}
 				beforeLayerType="symbol"
 				manageHoverState
@@ -712,10 +714,10 @@
 						'MAP_PIN_BLUE',
 						'MARKED_BAD',
 						'MAP_PIN_RED',
-						cssValue('--sl-color-primary-700'), // default color if no match is found
+						'MAP_PIN_GREY', // default color if no match is found
 					],
 					'icon-allow-overlap': true,
-					'icon-size': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity || ''], 1.6, 1],
+					'icon-size': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity?.entity_id || ''], 1.6, 1],
 				}}
 			/>
 		{/if}
