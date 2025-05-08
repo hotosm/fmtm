@@ -252,6 +252,8 @@
 		} else {
 			// else close the modal
 			toggleActionModal(null);
+			// clear task states i.e. unselect task and it's extract if clicked coordinate doesn't contain any entity or task
+			taskStore.setSelectedTaskId(db, null, null);
 		}
 	}
 
@@ -388,7 +390,6 @@
 	on:click={(_e) => {
 		// deselect everything on click, to allow for re-selection
 		// if the user clicks on a feature layer directly (on:click)
-		taskStore.setSelectedTaskId(db, null, null);
 		taskAreaClicked = false;
 		toggleActionModal(null);
 		entitiesStore.setSelectedEntityId(null);
