@@ -110,7 +110,8 @@ All project manager permissions are granted to the organisation manager.
 
 ## Steps To Create A Project In Field-TM
 
-Project creation access is provided to users who have organisation admin or higher level of permission.
+Project creation access is provided to users who have organisation admin or
+higher level of permission.
 
 Go to [fmtm] <https://fmtm.hotosm.org/>
 
@@ -127,9 +128,11 @@ Go to [fmtm] <https://fmtm.hotosm.org/>
     - If you want to use drone imagery or any other high resolution base imagery,
     you can add the TMS layer from this step.
 
-    - You can also choose whether you want to create public or private project in Field-TM.
-    - You can also choose the option whether you want mappers to use ODK collect mobile
-    application or webform during this step. By default, webform will be used.
+    - You can also choose whether you want to create public or private project
+      in Field-TM.
+    - You can also choose the option whether you want mappers to use ODK collect
+      mobile application or webform during this step. By default, webform will be
+      used.
 
     - Finally click Next to proceed.
 
@@ -166,7 +169,8 @@ Go to [fmtm] <https://fmtm.hotosm.org/>
     - Select an option under 'What type of geometry?'
     - If you want to upload your own, click in Upload custom mapdata or else
       go with the default one of fetch data from OSM.
-    - You can also go for 'no existing data' option, if you want to collect map features as well in field.
+    - You can also go for 'no existing data' option, if you want to collect map
+      features as well in field.
     - You can also upload additional map feature to have multiple feature
       selection supported.
 
@@ -374,15 +378,19 @@ dashboard you need.
 
 ### Invite Users
 
-You can invite users (mappers and project managers to your project). If the user already exist on Feild-TM,
-they will be directly assigned role. If they are not available on Field-TM db, the email invitation will
+You can invite users (mappers and project managers to your project).
+If the user already exists in Feild-TM, they will be directly assigned role.
+
+If they are not registered on Field-TM,, the email invitation will
 be sent, following which users can get necessary permission to that project.
 You can invite users either through osm username or gmail.
 
 1. Choose the mode of invitation, either through osm or gmail.
-2. Provide respective osm username or email address. You can invite multiple users at a time.
+2. Provide respective osm username or email address. You can invite
+   multiple users at a time.
 3. Assign the role to users and click on invite.
-4. In case of gmail invitation, copy the link and share to that user through other media.
+4. In case of gmail invitation, copy the link and share to that user
+   through other media.
 
 ## Help and Support
 
