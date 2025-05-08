@@ -249,9 +249,10 @@
 			// if clicked coordinate doesn't contain any entity but only task, open task actions modal
 			selectedFeatures = [];
 			toggleActionModal('task-modal');
-		} else {
-			// else close the modal
+		} else if (clickedFeatures?.length > 1) {
+			// if multiple entities present
 			toggleActionModal(null);
+		} else {
 			// clear task states i.e. unselect task and it's extract if clicked coordinate doesn't contain any entity or task
 			taskStore.setSelectedTaskId(db, null, null);
 		}
