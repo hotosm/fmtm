@@ -52,6 +52,7 @@
 	const entitiesStore = getEntitiesStatusStore();
 	const newBadGeomStore = getNewBadGeomStore();
 	const commonStore = getCommonStore();
+	// Destructure and get the db variable from commonStore
 	const { db } = commonStore;
 	const alertStore = getAlertStore();
 
@@ -285,7 +286,7 @@
 			openedActionModal = value;
 		}}
 		projectOutlineCoords={project.outline.coordinates}
-		{projectId}
+		projectId={projectId}
 		entitiesUrl={project.data_extract_url}
 		primaryGeomType={project.primary_geom_type}
 		draw={isDrawEnabled}
@@ -448,7 +449,7 @@
 	<OdkWebFormsWrapper
 		bind:webFormsRef
 		bind:display={displayWebFormsDrawer}
-		{projectId}
+		projectId={projectId}
 		entityId={entitiesStore.selectedEntityId || undefined}
 		taskId={taskStore.selectedTaskIndex || undefined}
 	/>
