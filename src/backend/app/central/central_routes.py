@@ -124,7 +124,9 @@ async def validate_form(
 async def update_project_form(
     xlsform: Annotated[BytesIO, Depends(central_deps.read_xlsform)],
     db: Annotated[Connection, Depends(db_conn)],
-    project_user_dict: Annotated[ProjectUserDict, Depends(project_manager)],
+    project_user_dict: Annotated[
+        ProjectUserDict, Depends(project_manager(check_completed=True))
+    ],
     xform_id: str = Form(...),
     # FIXME add back in capability to update osm_category
     # osm_category: XLSFormType = Form(...),
@@ -166,7 +168,7 @@ async def update_project_form(
 
 @router.get("/download-form")
 async def download_form(
-    project_user: Annotated[ProjectUserDict, Depends(mapper)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper())],
 ):
     """Download the XLSForm for a project."""
     project = project_user.get("project")
@@ -180,7 +182,7 @@ async def download_form(
 
 @router.post("/refresh-appuser-token")
 async def refresh_appuser_token(
-    current_user: Annotated[AuthUser, Depends(project_manager)],
+    current_user: Annotated[AuthUser, Depends(project_manager())],
     db: Annotated[Connection, Depends(db_conn)],
 ):
     """Refreshes the token for the app user associated with a specific project.
@@ -229,7 +231,7 @@ async def refresh_appuser_token(
 
 @router.post("/upload-form-media")
 async def upload_form_media(
-    current_user: Annotated[AuthUser, Depends(project_manager)],
+    current_user: Annotated[AuthUser, Depends(project_manager())],
     media_attachments: Annotated[
         dict[str, BytesIO], Depends(central_deps.read_form_media)
     ],
@@ -273,7 +275,7 @@ async def upload_form_media(
 
 @router.post("/get-form-media", response_model=dict[str, str])
 async def get_form_media(
-    project_user: Annotated[ProjectUserDict, Depends(mapper)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper())],
 ):
     """Return the project form attachments as a list of files."""
     project = project_user.get("project")
@@ -305,7 +307,9 @@ async def get_form_media(
 @router.post("/entity")
 async def add_new_entity(
     db: Annotated[Connection, Depends(db_conn)],
-    project_user_dict: Annotated[ProjectUserDict, Depends(mapper)],
+    project_user_dict: Annotated[
+        ProjectUserDict, Depends(mapper(check_completed=True))
+    ],
     geojson: FeatureCollection,
 ):
     """Create an Entity for the project in ODK.
@@ -381,7 +385,7 @@ async def add_new_entity(
 
 @router.get("/form-xml")
 async def get_project_form_xml_route(
-    project_user: Annotated[ProjectUserDict, Depends(mapper)],
+    project_user: Annotated[ProjectUserDict, Depends(mapper())],
 ) -> str:
     """Get the raw XML from ODK Central for a project."""
     project = project_user.get("project")
