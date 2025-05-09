@@ -36,6 +36,7 @@
 	}
 
 	let { data }: Props = $props();
+	const { project, projectId } = data;
 
 	let webFormsRef: HTMLElement | undefined = $state();
 	let displayWebFormsDrawer = $state(false);
@@ -47,9 +48,6 @@
 	let isDrawEnabled: boolean = $state(false);
 	let latestEventTime: string = $state('');
 	let isGeometryCreationLoading: boolean = $state(false);
-
-	const projectId = $derived(data.projectId);
-	const project = $derived(data.project);
 
 	const taskStore = getTaskStore();
 	const entitiesStore = getEntitiesStatusStore();
