@@ -61,6 +61,7 @@
 	const selectedEntityId = $derived(entitiesStore.selectedEntity);
 	const latestEvent = $derived(taskStore.latestEvent);
 	const commentMention = $derived(taskStore.commentMention);
+	commonStore.setUseOdkCollectOverride(project.use_odk_collect);
 
 	// Update the geojson task states when a new event is added
 	$effect(() => {
@@ -113,7 +114,6 @@
 	}
 
 	onMount(async () => {
-		commonStore.setEnableWebforms(!project.use_odk_collect);
 		await entitiesStore.subscribeToNewBadGeom(newBadGeomStream);
 
 		// In store/tasks.svelte.ts
