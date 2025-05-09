@@ -31,7 +31,8 @@ let projectBasemaps: Basemap[] = $state([]);
 let projectPmtilesUrl: string | null = $state(null);
 let selectedTab: string = $state('map');
 let config: ConfigJson | null = $state(null);
-let enableWebforms = $state(false);
+let useOdkCollectOverride: boolean = $state(false);
+let enableWebforms = $derived<boolean>(!useOdkCollectOverride && config?.enableWebforms ? true : false);
 
 function getCommonStore() {
 	function getLocaleFromStorage() {
@@ -79,7 +80,7 @@ function getCommonStore() {
 			return config;
 		},
 		setConfig: (fetchedConfig: ConfigJson) => (config = fetchedConfig),
-		setEnableWebforms: (isEnabled: boolean) => (enableWebforms = isEnabled),
+		setUseOdkCollectOverride: (isEnabled: boolean) => (useOdkCollectOverride = isEnabled),
 		get enableWebforms() {
 			return enableWebforms;
 		},
