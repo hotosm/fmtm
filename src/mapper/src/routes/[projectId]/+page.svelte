@@ -64,11 +64,6 @@
 	const latestEvent = $derived(taskStore.latestEvent);
 	const commentMention = $derived(taskStore.commentMention);
 
-	// Set useOdkCollect override to disable webforms in app
-	if (project.use_odk_collect) {
-		commonStore.setUseOdkCollectOverride(true);
-	}
-
 	// Update the geojson task states when a new event is added
 	$effect(() => {
 		if (latestEvent) {
@@ -120,6 +115,7 @@
 	}
 
 	onMount(async () => {
+		commonStore.setEnableWebforms(!project.use_odk_collect);
 		await entitiesStore.subscribeToNewBadGeom(newBadGeomStream);
 
 		// In store/tasks.svelte.ts
