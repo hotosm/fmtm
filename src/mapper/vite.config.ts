@@ -12,6 +12,14 @@ const pwaOptions: Partial<VitePWAOptions> = {
 	devOptions: {
 		enabled: true,
 	},
+	// // cache all the imports, including favicon
+	workbox: {
+		navigateFallback: 'app.html', // when the user refreshes, we go back to this page
+		globPatterns: ['**/*.{js,css,html}', '**/*.{ico,svg,png,jpg,gif}'],
+		// maximumFileSizeToCacheInBytes: 3000000,
+	},
+	// cache all the static assets in the static folder
+	includeAssets: ['**/*'],
 	manifest: {
 		name: 'Field-TM',
 		short_name: 'Field-TM',
@@ -47,6 +55,8 @@ const pwaOptions: Partial<VitePWAOptions> = {
 				src: 'screenshot-mapper.jpeg',
 				sizes: '1280x720',
 				type: 'image/jpeg',
+				form_factor: 'wide',
+				label: 'Mapper App',
 			},
 		],
 	},
