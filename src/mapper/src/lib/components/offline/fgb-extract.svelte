@@ -1,19 +1,33 @@
 <script lang="ts">
 	import { writeOfflineExtract } from '$lib/map/extracts';
+	import { getAlertStore } from '$store/common.svelte';
+	import { getEntitiesStatusStore } from '$store/entities.svelte';
 	import { m } from '$translations/messages.js';
 
 	interface Props {
 		projectId: number;
 		extract_url: string;
 	}
+
 	let { projectId, extract_url }: Props = $props();
+
+	const entitiesStore = getEntitiesStatusStore();
+	const alertStore = getAlertStore();
+
+	const storeFeaturesOffline = () => {
+		if (!entitiesStore.fgbOpfsUrl) {
+			writeOfflineExtract(projectId, extract_url);
+		} else {
+			alertStore.setAlert({ message: 'Feautre extracts already stored offline', variant: 'default' });
+		}
+	};
 </script>
 
 <div class="extract">
 	<hot-button
-		onclick={() => writeOfflineExtract(projectId, extract_url)}
+		onclick={() => storeFeaturesOffline()}
 		onkeydown={(e: KeyboardEvent) => {
-			e.key === 'Enter' && writeOfflineExtract(projectId, extract_url);
+			e.key === 'Enter' && storeFeaturesOffline();
 		}}
 		role="button"
 		tabindex="0"
