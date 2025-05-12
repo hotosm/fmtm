@@ -147,7 +147,7 @@ async def invite_new_user(
     project = project_user_dict.get("project")
 
     if user_in.osm_username:
-        if osm_user_exists := await check_osm_user(user_in.osm_username):
+        if await check_osm_user(user_in.osm_username):
             username = user_in.osm_username
             signin_type = "osm"
             domain = settings.FMTM_DOMAIN
