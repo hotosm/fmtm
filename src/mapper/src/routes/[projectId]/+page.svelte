@@ -29,6 +29,8 @@
 	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
 	import Editor from '$lib/components/editor/editor.svelte';
+	import { readFileFromOPFS } from '$lib/fs/opfs';
+	import { loadOfflineExtract } from '$lib/map/extracts';
 
 	interface Props {
 		data: PageData;
@@ -119,6 +121,11 @@
 		entityStatusStream = await entitiesStore.getEntityStatusStream(db, projectId);
 		newBadGeomStream = await newBadGeomStore.getNewBadGeomStream(db, projectId);
 
+		const offlineExtractFile = await readFileFromOPFS(`${projectId}/extract.fgb`);
+		if (offlineExtractFile) {
+			await loadOfflineExtract(projectId);
+		}
+
 		// Note we need this for now, as the task outlines are from API, while task
 		// events are from pglite / sync. We pass through the task outlines.
 		await taskStore.appendTaskStatesToFeatcol(db, projectId, project.tasks);
@@ -130,6 +137,7 @@
 		newBadGeomStore.unsubscribeNewBadGeomStream();
 
 		taskStore.clearTaskStates();
+		entitiesStore.setFgbOpfsUrl('');
 	});
 
 	const projectSetupStepStore = getProjectSetupStepStore();
@@ -286,7 +294,7 @@
 			openedActionModal = value;
 		}}
 		projectOutlineCoords={project.outline.coordinates}
-		projectId={projectId}
+		{projectId}
 		entitiesUrl={project.data_extract_url}
 		primaryGeomType={project.primary_geom_type}
 		draw={isDrawEnabled}
@@ -365,7 +373,7 @@
 				<More projectData={project} zoomToTask={(taskId) => zoomToTask(taskId)}></More>
 			{/if}
 			{#if commonStore.selectedTab === 'offline'}
-				<BasemapComponent projectId={project.id}></BasemapComponent>
+				<BasemapComponent projectId={project.id} {project}></BasemapComponent>
 			{/if}
 			{#if commonStore.selectedTab === 'qrcode'}
 				<QRCodeComponent class="map-qr" {infoDialogRef} projectName={project.name} projectOdkToken={project.odk_token}>
@@ -449,7 +457,7 @@
 	<OdkWebFormsWrapper
 		bind:webFormsRef
 		bind:display={displayWebFormsDrawer}
-		projectId={projectId}
+		{projectId}
 		entityId={entitiesStore.selectedEntityId || undefined}
 		taskId={taskStore.selectedTaskIndex || undefined}
 	/>
