@@ -42,6 +42,13 @@ const pwaOptions: Partial<VitePWAOptions> = {
 				purpose: 'maskable',
 			},
 		],
+		screenshots: [
+			{
+				src: 'screenshot-mapper.jpeg',
+				sizes: '1280x720',
+				type: 'image/jpeg',
+			},
+		],
 	},
 };
 
@@ -75,11 +82,13 @@ export default defineConfig({
 			$styles: path.resolve('./src/styles'),
 			$assets: path.resolve('./src/assets'),
 			$translations: path.resolve('./src/translations'),
+			$migrations: path.resolve('/migrations'),
 		},
 	},
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}'],
 	},
+	// assetsInclude: ['**/*.tar.gz'],
 	optimizeDeps: {
 		exclude: ['@electric-sql/pglite'],
 	},
