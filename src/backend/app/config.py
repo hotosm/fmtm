@@ -373,6 +373,7 @@ class Settings(BaseSettings):
         """Check if email settings are configured."""
         return bool(self.SMTP_HOST and self.EMAILS_FROM_EMAIL)
 
+
 @lru_cache
 def get_settings():
     """Cache settings when accessed throughout app."""

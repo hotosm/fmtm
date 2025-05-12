@@ -17,9 +17,9 @@
 #
 """Logic for user routes."""
 
-from email.message import EmailMessage
 import os
 from datetime import datetime, timedelta, timezone
+from email.message import EmailMessage
 from textwrap import dedent
 from typing import Literal, Optional
 
@@ -219,6 +219,7 @@ async def send_warning_email_or_osm(
     )
     log.info(f"Sent warning to {username}: {days_remaining} days remaining.")
 
+
 async def send_mail(
     user_email: str,
     title: str,
@@ -237,12 +238,13 @@ async def send_mail(
     await aiosmtplib.send(
         message,
         sender=settings.SMTP_USER,
-        recipients = [user_email],
+        recipients=[user_email],
         hostname=settings.SMTP_HOST,
         port=settings.SMTP_PORT,
         username=settings.SMTP_USER,
         password=settings.SMTP_PASSWORD,
     )
+
 
 async def send_invitation_message(
     request: Request,

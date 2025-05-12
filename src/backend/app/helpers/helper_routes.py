@@ -17,16 +17,16 @@
 #
 """Routes to help with common processes in the Field-TM workflow."""
 
-from email.message import EmailMessage
-import aiosmtplib
 import csv
 import json
+from email.message import EmailMessage
 from io import BytesIO, StringIO
 from pathlib import Path
 from textwrap import dedent
 from typing import Annotated
 from uuid import uuid4
 
+import aiosmtplib
 import requests
 from fastapi import (
     APIRouter,
@@ -354,7 +354,7 @@ async def send_test_email():
         message,
         sender=settings.SMTP_USER,
         # NOTE this is a test email, so use your own email address to receive it
-        recipients = [], # List of receipient email addresses
+        recipients=[],  # List of recipient email addresses
         hostname=settings.SMTP_HOST,
         port=settings.SMTP_PORT,
         username=settings.SMTP_USER,

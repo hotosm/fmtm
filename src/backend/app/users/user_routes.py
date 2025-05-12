@@ -186,8 +186,7 @@ async def invite_new_user(
 
     if settings.DEBUG:
         invite_url = (
-            f"http://{domain}:{settings.FMTM_DEV_PORT}"
-            f"/invite?token={new_invite.token}"
+            f"http://{domain}:{settings.FMTM_DEV_PORT}/invite?token={new_invite.token}"
         )
     else:
         invite_url = f"https://{domain}/invite?token={new_invite.token}"
