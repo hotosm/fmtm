@@ -117,27 +117,18 @@
 		tabGroup.show('map');
 	}
 
-	/* 
-		Check if Fgb extract exists in OPFS 
-		if exist, load
-		else, if the content-length is less than 2MB, download
-	*/
+	// if the content-length is less than 2MB, download
 	const storeFgbExtractOffline = async () => {
-		const offlineExtractFile = await readFileFromOPFS(`${projectId}/extract.fgb`);
-		if (offlineExtractFile) {
-			loadOfflineExtract(projectId);
-		} else {
-			const response = await fetch(project.data_extract_url, {
-				method: 'HEAD',
-			});
-			const contentLength = response.headers.get('Content-Length');
-			if (!contentLength) return;
+		const response = await fetch(project.data_extract_url, {
+			method: 'HEAD',
+		});
+		const contentLength = response.headers.get('Content-Length');
+		if (!contentLength) return;
 
-			const maxAutoDownloadSize = 2 * 1024 * 1024; // 2MB
-			const fileSize = parseInt(contentLength, 10);
-			if (fileSize <= maxAutoDownloadSize) {
-				writeOfflineExtract(projectId, project.data_extract_url);
-			}
+		const maxAutoDownloadSize = 2 * 1024 * 1024; // 2MB
+		const fileSize = parseInt(contentLength, 10);
+		if (fileSize <= maxAutoDownloadSize) {
+			writeOfflineExtract(projectId, project.data_extract_url);
 		}
 	};
 
@@ -149,6 +140,13 @@
 		// Note we need this for now, as the task outlines are from API, while task
 		// events are from pglite / sync. We pass through the task outlines.
 		taskStore.appendTaskStatesToFeatcol(db, projectId, project.tasks);
+
+		// check if Fgb extract exists in OPFS
+		const offlineExtractFile = await readFileFromOPFS(`${projectId}/extract.fgb`);
+		if (offlineExtractFile) {
+			loadOfflineExtract(projectId);
+			return;
+		}
 
 		// 30s delay to avoid race conditions
 		timeout = setTimeout(() => {
