@@ -127,6 +127,7 @@
 	"offline": {
 		"features": "Features",
 		"basemaps": "Basemaps",
-		"store_features_offline": "Store Features Offline"
+		"store_features_offline": "Store Features Offline",
+		"features_offline_info": "Feauture extracts already stored offline"
 	}
 }

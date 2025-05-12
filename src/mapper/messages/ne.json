@@ -127,6 +127,7 @@
 	"offline": {
 		"features": "फिचरहरू",
 		"basemaps": "बेसम्याप",
-		"store_features_offline": "फिचर अफलाइन भण्डारण गर्नुहोस्"
+		"store_features_offline": "फिचर अफलाइन भण्डारण गर्नुहोस्",
+		"features_offline_info": "फिचर पहिले नै अफलाइन भण्डारण गरिएका छन्"
 	}
 }

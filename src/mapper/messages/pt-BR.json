@@ -127,6 +127,7 @@
 	"offline": {
 		"features": "recursos",
 		"basemaps": "mapas base",
-		"store_features_offline": "armazenar recursos off-line"
+		"store_features_offline": "armazenar recursos off-line",
+		"features_offline_info": "Extratos de recursos já armazenados offline"
 	}
 }

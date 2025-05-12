@@ -18,7 +18,7 @@
 		if (!entitiesStore.fgbOpfsUrl) {
 			writeOfflineExtract(projectId, extract_url);
 		} else {
-			alertStore.setAlert({ message: 'Feautre extracts already stored offline', variant: 'default' });
+			alertStore.setAlert({ message: m['offline.features_offline_info'](), variant: 'default' });
 		}
 	};
 </script>
@@ -35,6 +35,6 @@
 		class="button"
 	>
 		<hot-icon slot="prefix" name="download" class="icon"></hot-icon>
-		<span>{m['offline.store_features_offline']()}</span>
+		<span>{m['offline.features_offline_info']()}</span>
 	</hot-button>
 </div>
