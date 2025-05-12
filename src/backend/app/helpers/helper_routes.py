@@ -17,6 +17,8 @@
 #
 """Routes to help with common processes in the Field-TM workflow."""
 
+from email.message import EmailMessage
+import aiosmtplib
 import csv
 import json
 from io import BytesIO, StringIO
@@ -333,3 +335,32 @@ async def send_test_osm_message(
         return HTTPException(status_code=HTTPStatus.CONFLICT, detail=msg)
 
     return Response(status_code=HTTPStatus.OK)
+
+
+@router.post("/send-test-email")
+async def send_test_email():
+    """Sends a test email using real SMTP settings."""
+    if not settings.emails_enabled:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_IMPLEMENTED,
+            detail="Email sending has not been implemented yet.",
+        )
+    message = EmailMessage()
+    message["Subject"] = "Test email from Field-TM"
+    message.set_content("This is a test email sent from Field-TM.")
+
+    log.info("Sending test email to recipients")
+    await aiosmtplib.send(
+        message,
+        sender=settings.SMTP_USER,
+        # NOTE this is a test email, so use your own email address to receive it
+        recipients = [], # List of receipient email addresses
+        hostname=settings.SMTP_HOST,
+        port=settings.SMTP_PORT,
+        username=settings.SMTP_USER,
+        password=settings.SMTP_PASSWORD,
+    )
+
+    return Response(
+        status_code=HTTPStatus.OK,
+    )
