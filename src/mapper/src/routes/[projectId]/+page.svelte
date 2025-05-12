@@ -16,7 +16,7 @@
 	import BottomSheet from '$lib/components/bottom-sheet.svelte';
 	import MapComponent from '$lib/components/map/main.svelte';
 	import QRCodeComponent from '$lib/components/qrcode.svelte';
-	import BasemapComponent from '$lib/components/offline/basemaps.svelte';
+	import OfflineComponent from '$lib/components/offline/index.svelte';
 	import DialogTaskActions from '$lib/components/dialog-task-actions.svelte';
 	import DialogEntityActions from '$lib/components/dialog-entities-actions.svelte';
 	import OdkWebFormsWrapper from '$lib/components/forms/wrapper.svelte';
@@ -373,7 +373,7 @@
 				<More projectData={project} zoomToTask={(taskId) => zoomToTask(taskId)}></More>
 			{/if}
 			{#if commonStore.selectedTab === 'offline'}
-				<BasemapComponent projectId={project.id} {project}></BasemapComponent>
+				<OfflineComponent projectId={project.id} {project} />
 			{/if}
 			{#if commonStore.selectedTab === 'qrcode'}
 				<QRCodeComponent class="map-qr" {infoDialogRef} projectName={project.name} projectOdkToken={project.odk_token}>
