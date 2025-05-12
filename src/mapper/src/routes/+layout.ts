@@ -1,7 +1,8 @@
 import 'virtual:uno.css';
-import type { PageLoad } from './$types';
+import type { LayoutLoad } from './$types';
 import { error } from '@sveltejs/kit';
 
+import { getDbOnce } from '$lib/db/pglite';
 import { getLoginStore } from '$store/login.svelte.ts';
 import { refreshCookies, getUserDetailsFromApi } from '$lib/api/login';
 
@@ -9,9 +10,10 @@ import { refreshCookies, getUserDetailsFromApi } from '$lib/api/login';
 export const prerender = false;
 export const ssr = false;
 
-export const load: PageLoad = async ({ fetch }) => {
+export const load: LayoutLoad = async ({ fetch }) => {
 	let config;
 	const loginStore = getLoginStore();
+	const dbPromise = getDbOnce(); // Don't await here to allow loading spinner in layout.svelte
 
 	try {
 		/*
@@ -45,6 +47,7 @@ export const load: PageLoad = async ({ fetch }) => {
 	}
 
 	return {
+		dbPromise,
 		config,
 	};
 };

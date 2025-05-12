@@ -37,7 +37,7 @@
 	}
 
 	const { data }: Props = $props();
-	const { project, projectId } = data;
+	const { project, projectId, db } = data;
 
 	let webFormsRef: HTMLElement | undefined = $state();
 	let displayWebFormsDrawer = $state(false);
@@ -55,8 +55,6 @@
 	const entitiesStore = getEntitiesStatusStore();
 	const newBadGeomStore = getNewBadGeomStore();
 	const commonStore = getCommonStore();
-	// Destructure and get the db variable from commonStore
-	const { db } = commonStore;
 	const alertStore = getAlertStore();
 
 	let taskEventStream: ShapeStream | undefined;
@@ -65,6 +63,8 @@
 
 	const latestEvent = $derived(taskStore.latestEvent);
 	const commentMention = $derived(taskStore.commentMention);
+	// Make db accessible via store
+	commonStore.setDb(db);
 	commonStore.setUseOdkCollectOverride(project.use_odk_collect);
 
 	// Update the geojson task states when a new event is added

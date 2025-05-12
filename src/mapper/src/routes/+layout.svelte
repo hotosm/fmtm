@@ -9,7 +9,6 @@
 	import { useRegisterSW } from 'virtual:pwa-register/svelte';
 	import type { RegisterSWOptions } from 'vite-plugin-pwa/types';
 
-	import { getDbOnce } from '$lib/db/pglite';
 	import { getCommonStore, getAlertStore } from '$store/common.svelte.ts';
 	import Toast from '$lib/components/toast.svelte';
 	import Header from '$lib/components/header.svelte';
@@ -20,6 +19,7 @@
 	const commonStore = getCommonStore();
 	const alertStore = getAlertStore();
 	commonStore.setConfig(data.config);
+	let dbPromise = data.dbPromise;
 
 	// Required for PWA to work with svelte
 	const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
@@ -35,12 +35,6 @@
 			alertStore.setAlert({ message: 'Ready for offline use.', variant: 'default', duration: 2000 });
         },
     });
-
-	// Start DB loading immediately, outside of onMount
-	const dbPromise = getDbOnce().then((db) => {
-		commonStore.setDb(db);
-		return db;
-	});
 
 	onMount(async () => {
 		// Dynamically inject CSS specified in config
@@ -70,5 +64,7 @@
 		</div>
 	{:then db}
 		{@render children?.({ data, db })}
+	{:catch error}
+		<p class="text-red-500 p-4">Error loading PGLite: {error.message}</p>
 	{/await}
 </main>

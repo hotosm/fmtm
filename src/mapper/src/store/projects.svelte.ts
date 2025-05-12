@@ -46,7 +46,7 @@ function getProjectStore() {
 		}
 	}
 
-	function parseProjectList(projects: projectType[]): projectType[] {
+	function _parseProjectList(projects: projectType[]): projectType[] {
 		return projects.map((project) => ({
 			id: project.id,
 			name: project.name,
@@ -63,7 +63,7 @@ function getProjectStore() {
 
 		// We only actually need a minimal number of fields for the project summaries
 		// (the project details are updated when a specific project is loaded via API)
-		const dataObj = parseProjectList(apiProject);
+		const dataObj = _parseProjectList(apiProject);
 
 		// Clear local db table and populate with latest search results
 		await db.query(`DELETE FROM projects;`);
@@ -74,7 +74,7 @@ function getProjectStore() {
 		if (!db) return;
 
 		const localProjects = await db.query(`SELECT * FROM projects;`);
-		projectList = parseProjectList(localProjects?.rows);
+		projectList = _parseProjectList(localProjects?.rows);
 	}
 
 	return {

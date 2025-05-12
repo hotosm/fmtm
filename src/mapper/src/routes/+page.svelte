@@ -4,7 +4,6 @@
 	import { online } from 'svelte/reactivity/window';
 	import type { SlInputEvent } from '@shoelace-style/shoelace';
 
-	import type { paginationType, projectType } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { getCommonStore } from '$store/common.svelte';
 	import { getProjectStore } from '$store/projects.svelte';
