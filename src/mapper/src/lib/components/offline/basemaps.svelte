@@ -13,14 +13,17 @@
 	import type { Basemap } from '$lib/map/basemaps';
 	import { getProjectBasemapStore } from '$store/common.svelte.ts';
 	import { loadOnlinePmtiles, writeOfflinePmtiles } from '$lib/map/basemaps';
-	import { m } from "$translations/messages.js";
+	import { m } from '$translations/messages.js';
+	import type { ProjectData } from '$lib/types';
+	import { writeOfflineExtract } from '$lib/map/extracts';
 
 	interface Props {
 		projectId: number;
 		children?: Snippet;
+		project: ProjectData;
 	}
 
-	let { projectId, children }: Props = $props();
+	let { projectId, children, project }: Props = $props();
 	const basemapStore = getProjectBasemapStore();
 	let selectedBasemap: Basemap | null = $state(null);
 
@@ -81,8 +84,7 @@
 			size="small"
 			class="button"
 		>
-			<hot-icon slot="prefix" name="download" class="icon"
-			></hot-icon>
+			<hot-icon slot="prefix" name="download" class="icon"></hot-icon>
 			<span>{m['basemaps.show_on_map']()}</span>
 		</hot-button>
 
@@ -96,8 +98,7 @@
 			size="small"
 			class="button"
 		>
-			<hot-icon slot="prefix" name="download" class="icon"
-			></hot-icon>
+			<hot-icon slot="prefix" name="download" class="icon"></hot-icon>
 			<span>{m['basemaps.store_offline']()}</span>
 		</hot-button>
 
@@ -113,11 +114,27 @@
 			size="small"
 			class="button"
 		>
-			<hot-icon slot="prefix" name="download" class="icon"
-			></hot-icon>
+			<hot-icon slot="prefix" name="download" class="icon"></hot-icon>
 			<span>{m['basemaps.download_mbtiles']()}</span>
 		</hot-button>
 	{/if}
 
 	{@render children?.()}
+</div>
+
+<!-- TODO: update UI -->
+<div class="extracts">
+	<hot-button
+		onclick={() => writeOfflineExtract(projectId, project?.data_extract_url)}
+		onkeydown={(e: KeyboardEvent) => {
+			e.key === 'Enter' && window.open(selectedBasemap?.url);
+		}}
+		role="button"
+		tabindex="0"
+		size="small"
+		class="button"
+	>
+		<hot-icon slot="prefix" name="download" class="icon"></hot-icon>
+		<span>Store features offline</span>
+	</hot-button>
 </div>
