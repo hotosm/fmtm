@@ -46,7 +46,7 @@ function getProjectStore() {
 		}
 	}
 
-	function parseProjectList(projects: any[]): projectType[] {
+	function parseProjectList(projects: projectType[]): projectType[] {
 		return projects.map((project) => ({
 			id: project.id,
 			name: project.name,
@@ -74,7 +74,7 @@ function getProjectStore() {
 		if (!db) return;
 
 		const localProjects = await db.query(`SELECT * FROM projects;`);
-		projectList = parseProjectList(localProjects);
+		projectList = parseProjectList(localProjects?.rows);
 	}
 
 	return {
