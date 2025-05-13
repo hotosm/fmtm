@@ -469,7 +469,7 @@
 						variant="primary"
 						loading={isGeometryCreationLoading}
 					>
-						<span>PROCEED</span>
+						<span>{m['popup.proceed']()}</span>
 					</sl-button>
 				</div>
 			</div>
