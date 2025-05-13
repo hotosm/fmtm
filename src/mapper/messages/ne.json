@@ -105,7 +105,8 @@
 		"comments": "टिप्पणीहरू",
 		"entity_uuid": "Entity UUID",
 		"collect_data": "डाटा संकलन गर्नुहोस्",
-		"entity_delete_confirmation": "के तपाईं यो फिचर मेटाउन निश्चित हुनुहुन्छ?"
+		"entity_delete_confirmation": "के तपाईं यो फिचर मेटाउन निश्चित हुनुहुन्छ?",
+		"contact_pm_for_entity_deletion": "सिर्जनाकर्ताले मात्र यो फिचर मेटाउन सक्छ। कृपया परियोजना प्रबन्धकलाई सम्पर्क गर्नुहोस्।"
 	},
 	"dialog_task_actions": {
 		"complete_mapping": "म्यापिङ सम्पन्न गर्नुहोस्",

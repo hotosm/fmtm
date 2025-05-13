@@ -105,7 +105,8 @@
 		"comments": "Comments",
 		"entity_uuid": "Entity Uuid",
 		"collect_data": "COLLECT DATA",
-		"entity_delete_confirmation": "Are you sure you want to delete this feature?"
+		"entity_delete_confirmation": "Are you sure you want to delete this feature?",
+		"contact_pm_for_entity_deletion": "Only the creator can delete this feature. Please contact the project manager"
 	},
 	"dialog_task_actions": {
 		"complete_mapping": "COMPLETE MAPPING",
