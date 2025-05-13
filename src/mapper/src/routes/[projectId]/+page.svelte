@@ -31,6 +31,7 @@
 	import Editor from '$lib/components/editor/editor.svelte';
 	import { readFileFromOPFS } from '$lib/fs/opfs';
 	import { loadOfflineExtract, writeOfflineExtract } from '$lib/map/extracts';
+	import { getLoginStore } from '$store/login.svelte';
 
 	interface Props {
 		data: PageData;
@@ -55,9 +56,11 @@
 	const entitiesStore = getEntitiesStatusStore();
 	const newBadGeomStore = getNewBadGeomStore();
 	const commonStore = getCommonStore();
+	const alertStore = getAlertStore();
+	const loginStore = getLoginStore();
+
 	// Destructure and get the db variable from commonStore
 	const { db } = commonStore;
-	const alertStore = getAlertStore();
 
 	let taskEventStream: ShapeStream | undefined;
 	let entityStatusStream: ShapeStream | undefined;
@@ -218,7 +221,11 @@
 			});
 			await newBadGeomStore.createGeomRecord(projectId, {
 				status: 'NEW',
-				geojson: { type: 'Feature', geometry: newFeatureGeom, properties: { entity_id: entity.uuid } },
+				geojson: {
+					type: 'Feature',
+					geometry: newFeatureGeom,
+					properties: { entity_id: entity.uuid, user_sub: loginStore.getAuthDetails?.sub },
+				},
 				project_id: projectId,
 			});
 			cancelMapNewFeatureInODK();
@@ -364,7 +371,7 @@
 						variant="primary"
 						loading={isGeometryCreationLoading}
 					>
-						<span>PROCEED</span>
+						<span>{m['popup.proceed']()}</span>
 					</sl-button>
 				</div>
 			</div>
