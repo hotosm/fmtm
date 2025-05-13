@@ -425,14 +425,18 @@ function getEntitiesStatusStore() {
 			// });
 
 			// delete from geomlog table
-			await fetch(`${API_URL}/projects/${project_id}/geometry/records/${geom_id}`, {
+			const geomDeleteResponse = await fetch(`${API_URL}/projects/${project_id}/geometry/records/${geom_id}`, {
 				method: 'DELETE',
 				credentials: 'include',
 			});
+
+			if (!geomDeleteResponse.ok) {
+				throw new Error('Failed to delete geometry');
+			}
 		} catch (error: any) {
 			alertStore.setAlert({
 				variant: 'danger',
-				message: error.message || 'Failed to create entity',
+				message: error.message,
 			});
 		} finally {
 			geomDeleteLoading = false;
