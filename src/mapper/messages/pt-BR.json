@@ -1,5 +1,9 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"common": {
+		"yes": "Yes",
+		"no": "No"
+	},
 	"task_states": {
 		"UNLOCKED_TO_MAP": "Pronto para coleta",
 		"LOCKED_FOR_MAPPING": "Bloqueado para mapeamento",
@@ -51,7 +55,8 @@
 		"task_complete_confirm": "Tem certeza de que deseja marcar esta tarefa como concluída?",
 		"select_this_feature": "Selecione este recurso",
 		"map_this_feature": "Mapeie este recurso",
-		"proceed": "prosseguir"
+		"proceed": "prosseguir",
+		"delete_feature": "Excluir este recurso"
 	},
 	"stack_group": {
 		"project_information": "Informações do projeto",
@@ -98,7 +103,8 @@
 		"status": "Status",
 		"comments": "Comentários",
 		"entity_uuid": "UUID da entidade",
-		"collect_data": "PREENCHER FORMULÁRIO"
+		"collect_data": "PREENCHER FORMULÁRIO",
+		"entity_delete_confirmation": "Tem certeza de que deseja excluir este recurso?"
 	},
 	"dialog_task_actions": {
 		"complete_mapping": "CONCLUIR MAPEAMENTO",
