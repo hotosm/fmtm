@@ -35,8 +35,10 @@
 
 	let db: PGlite | undefined = $derived(commonStore.db);
 	let dialogRef: SlDialog | null = $state(null);
+	let confirmationDialogRef: SlDialog | null = $state(null);
 	let toggleDistanceWarningDialog = $state(false);
 	let showCommentsPopup: boolean = $state(false);
+	let showDeleteEntityPopup: boolean = $state(false);
 
 	const selectedEntity = $derived(entitiesStore.selectedEntity);
 	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
@@ -135,6 +137,14 @@
 		}
 		entitiesStore.setEntityToNavigate(selectedEntityCoordinate);
 	};
+
+	const deleteNewFeature = async (entityId: string) => {
+		const { entity_id, geom_id } = entitiesStore.newGeomFeatcol.features.find(
+			(feature: Record<string, any>) => feature.properties?.entity_id === entityId,
+		)?.properties;
+
+		await entitiesStore.deleteNewEntity(projectData.id, entity_id, geom_id);
+	};
 </script>
 
 {#if isTaskActionModalOpen && selectedTab === 'map' && selectedEntity}
@@ -160,7 +170,27 @@
 				></hot-icon>
 			</div>
 			<div class="section-container">
-				<p class="selected-title">{m['popup.feature']()} {selectedEntity?.osm_id}</p>
+				<div class="header">
+					<p class="selected-title">{m['popup.feature']()} {selectedEntity?.osm_id}</p>
+					{#if selectedEntity?.osm_id < 0}
+						<div
+							onclick={() => {
+								showDeleteEntityPopup = true;
+							}}
+							onkeydown={(e: KeyboardEvent) => {
+								if (e.key === 'Enter') {
+									showDeleteEntityPopup = true;
+								}
+							}}
+							role="button"
+							tabindex="0"
+							class="icon"
+						>
+							<hot-icon name="new-window"></hot-icon>
+							<p class="action">{m['popup.delete_feature']()}</p>
+						</div>
+					{/if}
+				</div>
 				<div class="section">
 					<div class="item">
 						<p class="label">{m['popup.task_id']()}</p>
@@ -385,5 +415,52 @@
 				</p>
 			</div>
 		{/each}
+	</div>
+</hot-dialog>
+
+<!-- new entity delete confirmation -->
+<hot-dialog
+	bind:this={confirmationDialogRef}
+	class="entity-delete-dialog"
+	open={showDeleteEntityPopup}
+	onsl-hide={() => {
+		showDeleteEntityPopup = false;
+	}}
+	noHeader
+>
+	<p class="content">{m['dialog_entities_actions.entity_delete_confirmation']()}</p>
+	<div class="button-wrapper">
+		<sl-button
+			size="small"
+			variant="default"
+			class="secondary"
+			onclick={() => (showDeleteEntityPopup = false)}
+			outline
+			onkeydown={(e: KeyboardEvent) => {
+				if (e.key === 'Enter') {
+					showDeleteEntityPopup = false;
+				}
+			}}
+			role="button"
+			tabindex="0"
+		>
+			<span>{m['common.no']()}</span>
+		</sl-button>
+		<sl-button
+			variant="primary"
+			size="small"
+			onclick={() => {
+				deleteNewFeature(selectedEntity?.entity_id);
+			}}
+			onkeydown={(e: KeyboardEvent) => {
+				if (e.key === 'Enter') {
+					deleteNewFeature(selectedEntity?.entity_id);
+				}
+			}}
+			role="button"
+			tabindex="0"
+		>
+			<span>{m['common.yes']()}</span>
+		</sl-button>
 	</div>
 </hot-dialog>
