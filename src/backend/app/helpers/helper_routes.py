@@ -343,7 +343,7 @@ async def send_test_email():
     if not settings.emails_enabled:
         raise HTTPException(
             status_code=HTTPStatus.NOT_IMPLEMENTED,
-            detail="Email sending has not been implemented yet.",
+            detail="An SMTP server has not been configured.",
         )
     message = EmailMessage()
     message["Subject"] = "Test email from Field-TM"

@@ -227,7 +227,7 @@ async def send_mail(
 ):
     """Sends an email."""
     if not settings.emails_enabled:
-        log.info("Emails are disabled. Skipping sending emails.")
+        log.info("An SMTP server has not been configured.")
         return
     message = EmailMessage()
     message["Subject"] = title
