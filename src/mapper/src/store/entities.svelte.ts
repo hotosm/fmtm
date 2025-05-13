@@ -63,6 +63,7 @@ let taskSubmissionInfo: taskSubmissionInfoType[] = $state([]);
 let alertStore = getAlertStore();
 let entitiesSync: any = $state(undefined);
 let fgbOpfsUrl: string = $state('');
+let geomDeleteLoading: boolean = $state(false);
 
 function getEntitiesStatusStore() {
 	async function getEntityStatusStream(db: PGliteWithSync, projectId: number): Promise<ShapeStream | undefined> {
@@ -414,6 +415,30 @@ function getEntitiesStatusStore() {
 		}
 	}
 
+	async function deleteNewEntity(project_id: number, entity_id: string, geom_id: string) {
+		try {
+			geomDeleteLoading = true;
+			// delete entity from central
+			// await fetch(`${API_URL}/central/entity/${entity_id}?project_id=${project_id}`, {
+			// 	method: 'DELETE',
+			// 	credentials: 'include',
+			// });
+
+			// delete from geomlog table
+			await fetch(`${API_URL}/projects/${project_id}/geometry/records/${geom_id}`, {
+				method: 'DELETE',
+				credentials: 'include',
+			});
+		} catch (error: any) {
+			alertStore.setAlert({
+				variant: 'danger',
+				message: error.message || 'Failed to create entity',
+			});
+		} finally {
+			geomDeleteLoading = false;
+		}
+	}
+
 	function setEntityToNavigate(entityCoordinate: entityIdCoordinateMapType | null) {
 		entityToNavigate = entityCoordinate;
 	}
@@ -446,6 +471,7 @@ function getEntitiesStatusStore() {
 		createEntity: createEntity,
 		updateEntityStatus: updateEntityStatus,
 		createNewSubmission: createNewSubmission,
+		deleteNewEntity: deleteNewEntity,
 		setEntityToNavigate: setEntityToNavigate,
 		setToggleGeolocation: setToggleGeolocation,
 		setUserLocationCoordinate: setUserLocationCoordinate,
