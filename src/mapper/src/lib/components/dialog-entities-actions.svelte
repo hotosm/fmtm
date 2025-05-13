@@ -11,6 +11,7 @@
 	import { getAlertStore, getCommonStore } from '$store/common.svelte.ts';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
 	import { mapTask } from '$lib/db/events';
+	import { getLoginStore } from '$store/login.svelte.ts';
 
 	type Props = {
 		isTaskActionModalOpen: boolean;
@@ -32,6 +33,7 @@
 	const alertStore = getAlertStore();
 	const commonStore = getCommonStore();
 	const taskStore = getTaskStore();
+	const loginStore = getLoginStore();
 
 	let db: PGlite | undefined = $derived(commonStore.db);
 	let dialogRef: SlDialog | null = $state(null);
@@ -139,11 +141,17 @@
 	};
 
 	const deleteNewFeature = async (entityId: string) => {
-		const { entity_id, geom_id } = entitiesStore.newGeomFeatcol.features.find(
+		const { entity_id, geom_id, user_sub } = entitiesStore.newGeomFeatcol.features.find(
 			(feature: Record<string, any>) => feature.properties?.entity_id === entityId,
 		)?.properties;
-
-		await entitiesStore.deleteNewEntity(projectData.id, entity_id, geom_id);
+		if (user_sub && user_sub === loginStore.getAuthDetails?.sub) {
+			await entitiesStore.deleteNewEntity(projectData.id, entity_id, geom_id);
+		} else {
+			alertStore.setAlert({
+				message: m['dialog_entities_actions.contact_pm_for_entity_deletion'](),
+				variant: 'warning',
+			});
+		}
 	};
 </script>
 
