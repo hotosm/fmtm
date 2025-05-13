@@ -178,7 +178,7 @@
 			<div class="section-container">
 				<div class="header">
 					<p class="selected-title">{m['popup.feature']()} {selectedEntity?.osm_id}</p>
-					{#if selectedEntity?.osm_id < 0}
+					{#if selectedEntity?.osm_id < 0 && (selectedEntity?.status === 'READY' || selectedEntity?.status === 'OPENED_IN_ODK')}
 						<div
 							onclick={() => {
 								showDeleteEntityPopup = true;
