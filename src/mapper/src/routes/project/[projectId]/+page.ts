@@ -1,7 +1,7 @@
 import type { PageLoad } from './$types';
 import { error } from '@sveltejs/kit';
 import { online } from 'svelte/reactivity/window';
-import { fetchProjectFromLocalDB, updateLocalDbProjectData } from '$lib/db/projects.ts';
+import { fetchProjectFromLocalDB, upsertLocalDbProjectData } from '$lib/db/projects.ts';
 import type { projectType } from '$lib/types';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -19,6 +19,9 @@ export const load: PageLoad = async ({ parent, params, fetch }) => {
 
 	const { projectId } = params;
 	let project: projectType | undefined;
+
+	const response1 = await db.query(`SELECT * FROM projects;`);
+	console.log(response1);
 
 	if (!online.current) {
 		project = await fetchProjectFromLocalDB(db, projectId);
@@ -40,8 +43,12 @@ export const load: PageLoad = async ({ parent, params, fetch }) => {
 		project = await res.json();
 
 		if (!project) return;
+		const query = await db.query(`select * from projects;`);
+		console.log(query);
 		// Ensure the local database has the extra metadata needed
-		await updateLocalDbProjectData(db, project);
+		await upsertLocalDbProjectData(db, project);
+		const query2 = await db.query(`select * from projects;`);
+		console.log(query2);
 	}
 
 	return {

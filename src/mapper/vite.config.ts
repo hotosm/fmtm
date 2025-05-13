@@ -9,15 +9,23 @@ import UnoCSS from 'unocss/vite';
 import extractorSvelte from '@unocss/extractor-svelte';
 
 const pwaOptions: Partial<VitePWAOptions> = {
+	// This will prompt the user to update and refresh instead of seamlessly in the background
+	// changing this behaviour from autoUpdate back to prompt is quite difficult to do!
 	registerType: 'prompt',
 	injectRegister: 'auto',
+	// Allow testing the PWA during local development
 	devOptions: {
 		enabled: true,
+		// We need this to include /project/ID as well as home page for direct load when offline
+		navigateFallbackAllowlist: [/^\/$/, /^\/\d+$/, /^\/project\/.+$/],
 	},
-	// // cache all the imports, including favicon
+	// // Cache all the imports, including favicon
 	workbox: {
-		navigateFallback: 'index.html', // when the user refreshes, we go back to this page
+		// Don't fallback on document based (e.g. `/some-page`) requests
+		// Even though this says `null` by default, I had to set this specifically to `null` to make it work
+		navigateFallback: null,
 		globPatterns: ['**/*.{js,css,html,wasm,ico,svg,png,jpg,jpeg,gif,webmanifest}'],
+		// This is where the magic happens: routes to cache key to cache to
 		runtimeCaching: [
 			{
 				urlPattern: ({ url }: RouteMatchCallbackOptions) => url.origin === self.location.origin,

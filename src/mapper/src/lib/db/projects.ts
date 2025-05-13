@@ -10,21 +10,25 @@ export async function fetchProjectFromLocalDB(db: PGlite, projectId: string): Pr
 	return localProject;
 }
 
-export async function updateLocalDbProjectData(db: PGlite, projectData: Partial<DbProject>): Promise<void> {
+export async function upsertLocalDbProjectData(db: PGlite, projectData: Partial<DbProject>): Promise<void> {
 	if (!db || !projectData || !projectData.id) return;
 
-	// Filter keys to only include those present in the actual DB schema (excluding 'id')
-	const columns = Object.keys(projectData).filter((key) => key !== 'id' && DB_PROJECT_COLUMNS.has(key));
+	// Filter keys to only include those present in the actual DB schema
+	const columns = Object.keys(projectData).filter((key) => DB_PROJECT_COLUMNS.has(key));
+	if (columns.length === 0) return;
+
+	const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
 	const values = columns.map((key) => projectData[key as keyof DbProject]);
 
-	// Add the ID for the WHERE clause
-	values.push(projectData.id);
+	const updateClause = columns
+		.filter((col) => col !== 'id') // Don't update ID
+		.map((col, i) => `${col} = excluded.${col}`)
+		.join(', ');
 
-	const setClause = columns.map((col, i) => `${col} = $${i + 1}`).join(', ');
 	const sql = `
-		UPDATE projects
-		SET ${setClause}
-		WHERE id = $${columns.length + 1};
+		INSERT INTO projects (${columns.join(', ')})
+		VALUES (${placeholders})
+		ON CONFLICT(id) DO UPDATE SET ${updateClause};
 	`;
 
 	await db.query(sql, values);

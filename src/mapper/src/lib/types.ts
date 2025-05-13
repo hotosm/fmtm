@@ -69,7 +69,7 @@ export interface DbProject {
 	total_submissions?: number;
 }
 
-// This should match the frontend-only/2-tables.sql fields
+// This should match the frontend-only/schema.sql fields
 export const DB_PROJECT_COLUMNS = new Set([
 	'id',
 	'organisation_id',

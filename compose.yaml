@@ -385,6 +385,7 @@ services:
   central-db:
     profiles: ["", "central"]
     image: "ghcr.io/hotosm/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
+    command: -c 'max_connections=300' -c 'wal_level=logical'
     volumes:
       - central_db_data:/var/lib/postgresql/data/
     environment:
