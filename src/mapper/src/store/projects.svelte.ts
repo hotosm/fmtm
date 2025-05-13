@@ -4,6 +4,7 @@ import { online } from 'svelte/reactivity/window';
 import type { projectType, paginationType } from '$lib/types';
 import { getAlertStore } from '$store/common.svelte';
 import { applyDataToTableWithCsvCopy } from '$lib/db/helpers';
+import { m } from '$translations/messages.js';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -25,7 +26,7 @@ let projectListLoading = $state(false);
 function getProjectStore() {
 	async function fetchProjectsFromAPI(db: PGlite, page: number, search: string) {
 		if (!online.current) {
-			alertStore.setAlert({ message: 'You are offline and cannot fetch extra projects', variant: 'danger' });
+			alertStore.setAlert({ message: m['offline.fetch_projects_offline'](), variant: 'danger' });
 			return;
 		}
 

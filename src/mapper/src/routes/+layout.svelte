@@ -13,6 +13,7 @@
 	import Toast from '$lib/components/toast.svelte';
 	import Header from '$lib/components/header.svelte';
 	import OfflineBanner from '$lib/components/offline/offline-banner.svelte';
+	import { m } from '$translations/messages.js';
 
 	let { data, children }: PageProps = $props();
 
@@ -32,7 +33,7 @@
         },
         onOfflineReady() {
             console.log('SW ready for offline')
-			alertStore.setAlert({ message: 'Ready for offline use.', variant: 'default', duration: 2000 });
+			alertStore.setAlert({ message: m['offline.ready_offline'](), variant: 'default', duration: 2000 });
         },
     });
 
