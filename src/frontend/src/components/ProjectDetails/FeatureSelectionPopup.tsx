@@ -8,6 +8,8 @@ import Button from '@/components/common/Button';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { TaskFeatureSelectionProperties } from '@/store/types/ITask';
 import { entity_state } from '@/types/enums';
+import { DeleteNewGeometry } from '@/api/Project';
+import { useIsOrganizationAdmin, useIsProjectManager } from '@/hooks/usePermissions';
 
 type FeatureSelectionPopupPropType = {
   taskId: number | null;
@@ -17,13 +19,27 @@ type FeatureSelectionPopupPropType = {
 const FeatureSelectionPopup = ({ featureProperties, taskId }: FeatureSelectionPopupPropType) => {
   const dispatch = useAppDispatch();
   const params = useParams();
+  const projectId = params.id || '';
+
   const taskModalStatus = useAppSelector((state) => state.project.taskModalStatus);
   const entityOsmMap = useAppSelector((state) => state.project.entityOsmMap);
-  const projectId = params.id || '';
   const entity = entityOsmMap.find(
     (x) => x.osm_id === featureProperties?.osm_id || x.id === featureProperties?.entity_id,
   );
   const submissionIds = entity?.submission_ids ? entity?.submission_ids?.split(',') : [];
+  const projectInfo = useAppSelector((state) => state.project.projectInfo);
+  const newGeomFeatureCollection = useAppSelector((state) => state.project.newGeomFeatureCollection);
+
+  const isProjectManager = useIsProjectManager(projectId);
+  const isOrganizationAdmin = useIsOrganizationAdmin(projectInfo?.organisation_id as number);
+
+  const deleteNewEntity = () => {
+    const geom_id = newGeomFeatureCollection.features.find((feature) => feature?.properties?.entity_id === entity?.id)
+      ?.properties?.geom_id;
+
+    if (!entity?.id || !geom_id) return;
+    dispatch(DeleteNewGeometry(+projectId, entity?.id, geom_id));
+  };
 
   return (
     <div
@@ -55,6 +71,16 @@ const FeatureSelectionPopup = ({ featureProperties, taskId }: FeatureSelectionPo
             />
           </div>
         </div>
+        {(isProjectManager || isOrganizationAdmin) &&
+          entity &&
+          entity?.osm_id < 0 &&
+          (entity_state[entity.status] === 'READY' || entity_state[entity.status] === 'OPENED_IN_ODK') && (
+            <div className="fmtm-gap-2 fmtm-px-3 sm:fmtm-px-5 fmtm-pb-2">
+              <Button variant="secondary-red" className="fmtm-w-full" onClick={() => deleteNewEntity()}>
+                <AssetModules.DeleteOutlinedIcon /> Delete this entity
+              </Button>
+            </div>
+          )}
         {featureProperties?.changeset && (
           <div className="fmtm-h-fit fmtm-px-2 sm:fmtm-px-5 fmtm-py-2 fmtm-border-t">
             <div className="fmtm-flex fmtm-flex-col fmtm-gap-1 fmtm-mt-1">
