@@ -104,7 +104,8 @@
 		"comments": "Comentários",
 		"entity_uuid": "UUID da entidade",
 		"collect_data": "PREENCHER FORMULÁRIO",
-		"entity_delete_confirmation": "Tem certeza de que deseja excluir este recurso?"
+		"entity_delete_confirmation": "Tem certeza de que deseja excluir este recurso?",
+		"contact_pm_for_entity_deletion": "Somente o criador pode excluir este recurso. Entre em contato com o gerente do projeto."
 	},
 	"dialog_task_actions": {
 		"complete_mapping": "CONCLUIR MAPEAMENTO",
