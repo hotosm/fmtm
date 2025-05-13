@@ -1,5 +1,9 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"common": {
+		"yes": "Yes",
+		"no": "No"
+	},
 	"task_states": {
 		"UNLOCKED_TO_MAP": "Ready",
 		"LOCKED_FOR_MAPPING": "Locked For Mapping",
@@ -48,7 +52,8 @@
 		"task_complete_confirm": "Are you sure you wish to mark this task as complete?",
 		"select_this_feature": "Select This Feature",
 		"map_this_feature": "Map This Feature",
-		"proceed": "PROCEED"
+		"proceed": "PROCEED",
+		"delete_feature": "Delete This Feature"
 	},
 	"stack_group": {
 		"project_information": "Project Information",
@@ -99,7 +104,8 @@
 		"status": "Status",
 		"comments": "Comments",
 		"entity_uuid": "Entity Uuid",
-		"collect_data": "COLLECT DATA"
+		"collect_data": "COLLECT DATA",
+		"entity_delete_confirmation": "Are you sure you want to delete this feature?"
 	},
 	"dialog_task_actions": {
 		"complete_mapping": "COMPLETE MAPPING",
