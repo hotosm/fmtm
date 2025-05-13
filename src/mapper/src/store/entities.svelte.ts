@@ -55,6 +55,7 @@ let alertStore = getAlertStore();
 let entitiesSync: any = $state(undefined);
 let newBadGeomSync: any = $state(undefined);
 let fgbOpfsUrl: string = $state('');
+let geomDeleteLoading: boolean = $state(false);
 
 function getEntitiesStatusStore() {
 	async function getEntityStatusStream(db: PGliteWithSync, projectId: number): Promise<ShapeStream | undefined> {
@@ -287,6 +288,34 @@ function getEntitiesStatusStore() {
 		}
 	}
 
+	async function deleteNewEntity(project_id: number, entity_id: string, geom_id: string) {
+		try {
+			geomDeleteLoading = true;
+			// delete entity from central
+			// await fetch(`${API_URL}/central/entity/${entity_id}?project_id=${project_id}`, {
+			// 	method: 'DELETE',
+			// 	credentials: 'include',
+			// });
+
+			// delete from geomlog table
+			const geomDeleteResponse = await fetch(`${API_URL}/projects/${project_id}/geometry/records/${geom_id}`, {
+				method: 'DELETE',
+				credentials: 'include',
+			});
+
+			if (!geomDeleteResponse.ok) {
+				throw new Error('Failed to delete geometry');
+			}
+		} catch (error: any) {
+			alertStore.setAlert({
+				variant: 'danger',
+				message: error.message,
+			});
+		} finally {
+			geomDeleteLoading = false;
+		}
+	}
+
 	function setEntityToNavigate(entityCoordinate: entityIdCoordinateMapType | null) {
 		entityToNavigate = entityCoordinate;
 	}
@@ -318,6 +347,7 @@ function getEntitiesStatusStore() {
 		addStatusToGeojsonProperty: addStatusToGeojsonProperty,
 		updateEntityStatus: updateEntityStatus,
 		createEntity: createEntity,
+		deleteNewEntity: deleteNewEntity,
 		setEntityToNavigate: setEntityToNavigate,
 		setToggleGeolocation: setToggleGeolocation,
 		setUserLocationCoordinate: setUserLocationCoordinate,
@@ -406,7 +436,9 @@ function getNewBadGeomStore() {
 					.map((item) => item.value);
 
 				const badRows = rows.filter((row) => row.status === 'BAD').map((row) => row.geojson);
-				const newRows = rows.filter((row) => row.status === 'NEW').map((row) => row.geojson);
+				const newRows = rows
+					.filter((row) => row.status === 'NEW')
+					.map((row) => ({ ...row.geojson, properties: { ...row.geojson.properties, geom_id: row.id } }));
 
 				// Append new or bad geom to existing featcol overlay
 				badGeomFeatcol = {
