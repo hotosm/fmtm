@@ -309,7 +309,7 @@ services:
       retries: 3
 
   electric:
-    image: "electricsql/electric:${ELECTRIC_TAG:-1.0.11}"
+    image: "electricsql/electric:${ELECTRIC_TAG:-1.0.12}"
     depends_on:
       proxy:
         condition: service_started
@@ -331,6 +331,7 @@ services:
 
   central-db:
     image: "ghcr.io/hotosm/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
+    command: -c 'max_connections=300'
     volumes:
       - central_db_data:/var/lib/postgresql/data/
     environment:
