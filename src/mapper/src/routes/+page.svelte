@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '$styles/page.css';
+	import type { PageData } from './$types';
 	import { onMount } from 'svelte';
 	import { online } from 'svelte/reactivity/window';
 	import type { SlInputEvent } from '@shoelace-style/shoelace';
@@ -11,11 +12,18 @@
 	import ProjectCard from '$lib/components/project-summary/project-card.svelte';
 	import ProjectCardSkeleton from '$lib/components/project-summary/project-card-skeleton.svelte';
 
+	interface Props {
+		data: PageData;
+	}
+
+	const { data }: Props = $props();
+	const { db } = data;
+
 	const commonStore = getCommonStore();
 	const projectStore = getProjectStore();
 
-	// Destructure and get db obj
-	const { db } = commonStore;
+	// Make db accessible via store
+	commonStore.setDb(db);
 
 	let paginationPage = $state(1);
 	let search = $state('');

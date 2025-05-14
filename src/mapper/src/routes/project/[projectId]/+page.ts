@@ -20,9 +20,6 @@ export const load: PageLoad = async ({ parent, params, fetch }) => {
 	const { projectId } = params;
 	let project: projectType | undefined;
 
-	const response1 = await db.query(`SELECT * FROM projects;`);
-	console.log(response1);
-
 	if (!online.current) {
 		project = await fetchProjectFromLocalDB(db, projectId);
 
@@ -43,12 +40,8 @@ export const load: PageLoad = async ({ parent, params, fetch }) => {
 		project = await res.json();
 
 		if (!project) return;
-		const query = await db.query(`select * from projects;`);
-		console.log(query);
 		// Ensure the local database has the extra metadata needed
 		await upsertLocalDbProjectData(db, project);
-		const query2 = await db.query(`select * from projects;`);
-		console.log(query2);
 	}
 
 	return {

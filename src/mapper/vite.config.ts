@@ -9,26 +9,52 @@ import UnoCSS from 'unocss/vite';
 import extractorSvelte from '@unocss/extractor-svelte';
 
 const pwaOptions: Partial<VitePWAOptions> = {
-	// This will prompt the user to update and refresh instead of seamlessly in the background
-	// changing this behaviour from autoUpdate back to prompt is quite difficult to do!
-	registerType: 'prompt',
+	// This ensures that caches are invalidated when the app is updated
+	registerType: 'autoUpdate',
 	injectRegister: 'auto',
+	strategies: 'generateSW',
+
 	// Allow testing the PWA during local development
 	devOptions: {
 		enabled: true,
+		// // Don't fallback on document based (e.g. `/some-page`) requests
 		// We need this to include /project/ID as well as home page for direct load when offline
-		navigateFallbackAllowlist: [/^\/$/, /^\/\d+$/, /^\/project\/.+$/],
+		navigateFallbackAllowlist: [/^\/$/, /^\/project\/.+$/],
+		// Enable this to disable runtime caching for easier debugging
+		// disableRuntimeConfig: true,
 	},
+
 	// // Cache all the imports, including favicon
 	workbox: {
 		// Don't fallback on document based (e.g. `/some-page`) requests
 		// Even though this says `null` by default, I had to set this specifically to `null` to make it work
 		navigateFallback: null,
+
+		// Cache all imports
+		// globPatterns: ["**/*"],
 		globPatterns: ['**/*.{js,css,html,wasm,ico,svg,png,jpg,jpeg,gif,webmanifest}'],
+
 		// This is where the magic happens: routes to cache key to cache to
 		runtimeCaching: [
+			// Handle SPA navigations (e.g., /, /project/123)
+			{
+				urlPattern: ({ request }: RouteMatchCallbackOptions) => request.mode === 'navigate',
+				// Try to get fresh version; fallback when offline
+				// handler: 'StaleWhileRevalidate',
+				handler: 'NetworkFirst',
+				options: {
+					cacheName: 'field-tm-html-pages',
+					networkTimeoutSeconds: 5,
+					expiration: {
+						maxEntries: 50,
+						maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+					},
+				},
+			},
+			// Static assets (e.g., JS, CSS, icons, fonts)
 			{
 				urlPattern: ({ url }: RouteMatchCallbackOptions) => url.origin === self.location.origin,
+				// Serve fast from cache; change infrequently
 				handler: 'CacheFirst',
 				options: {
 					cacheName: 'field-tm-static-assets',
@@ -39,10 +65,14 @@ const pwaOptions: Partial<VitePWAOptions> = {
 				},
 			},
 		],
-		// maximumFileSizeToCacheInBytes: 3000000,
+
+		// We need to cache files up to 15MB to allow for PGLite to be cached
+		maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
 	},
-	// cache all the static assets in the static folder
-	includeAssets: ['**/*'],
+
+	// Cache all the static assets in the static folder
+	includeAssets: ['**/*', 'icons/*.svg'],
+
 	manifest: {
 		name: 'Field-TM',
 		short_name: 'Field-TM',

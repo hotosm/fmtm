@@ -15,7 +15,6 @@
 	import { refreshCookies, getUserDetailsFromApi } from '$lib/api/login';
 	import Toast from '$lib/components/toast.svelte';
 	import Header from '$lib/components/header.svelte';
-	import OfflineBanner from '$lib/components/offline/offline-banner.svelte';
 	import { m } from '$translations/messages.js';
 
 	let { data, children }: PageProps = $props();
@@ -87,7 +86,6 @@
 
 		loginDebounce = setTimeout(() => {
 			if (isOnline) {
-				console.log('logging in')
 				refreshCookiesAndLogin();
 			}
 		}, 200);
@@ -109,9 +107,6 @@
 </svelte:head>
 
 <main class="flex flex-col h-screen overflow-hidden font-barlow">
-	{#if !online.current}
-		<OfflineBanner></OfflineBanner>
-	{/if}
 	<Header></Header>
 	<Toast></Toast>
 
