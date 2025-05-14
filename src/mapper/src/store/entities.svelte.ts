@@ -3,6 +3,7 @@ import type { ShapeStream, FetchError } from '@electric-sql/client';
 import type { ShapeData } from '@electric-sql/client';
 import type { Feature, FeatureCollection } from 'geojson';
 import type { LngLatLike } from 'svelte-maplibre';
+import { v4 as uuidv4 } from 'uuid';
 
 import type { DbEntityType, EntityStatusPayload, entitiesApiResponse, entityStatusOptions } from '$lib/types';
 import { EntityStatusNameMap } from '$lib/types';
@@ -265,7 +266,8 @@ function getEntitiesStatusStore() {
 
 	async function createEntity(projectId: number, payload: FeatureCollection) {
 		try {
-			const resp = await fetch(`${API_URL}/central/entity?project_id=${projectId}`, {
+			const entityUuid = uuidv4();
+			const resp = await fetch(`${API_URL}/central/entity?project_id=${projectId}&entity_uuid=${entityUuid}`, {
 				method: 'POST',
 				body: JSON.stringify(payload),
 				headers: {

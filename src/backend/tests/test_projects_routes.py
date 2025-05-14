@@ -647,8 +647,10 @@ async def test_create_entity(client, db, project, odk_project, tasks):
     }
     project_task_index_list = [task.project_task_index for task in tasks]
 
+    entity_uuid = uuid4()
     response = await client.post(
-        f"central/entity?project_id={project.id}", json=geojson
+        f"central/entity?project_id={project.id}&entity_uuid={entity_uuid}",
+        json=geojson,
     )
     assert response.status_code == 200
     data = response.json()

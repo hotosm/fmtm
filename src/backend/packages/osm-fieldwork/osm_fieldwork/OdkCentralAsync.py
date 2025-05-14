@@ -684,90 +684,11 @@ class OdkDataset(OdkCentral):
             log.error(f"Error fetching entity: {e}")
             return {}
 
-    async def createEntity(
-        self,
-        projectId: int,
-        datasetName: str,
-        label: str,
-        data: dict,
-    ) -> dict:
-        """Create a new Entity in a project dataset (entity list).
+    # NOTE this was removed in favour of the pyodk implementation .create
+    # async def createEntity
 
-        JSON request:
-        {
-        "uuid": "54a405a0-53ce-4748-9788-d23a30cc3afa",
-        "label": "John Doe (88)",
-        "data": {
-            "firstName": "John",
-            "age": "88"
-        }
-        }
-
-        JSON response:
-        {
-        "uuid": "d2e03bf8-cfc9-45c6-ab23-b8bc5b7d9aba",
-        "createdAt": "2024-04-12T15:22:02.148Z",
-        "creatorId": 5,
-        "updatedAt": None,
-        "deletedAt": None,
-        "conflict": None,
-        "currentVersion": {
-            "createdAt": "2024-04-12T15:22:02.148Z",
-            "current": True,
-            "label": "test entity 1",
-            "creatorId": 5,
-            "userAgent": "Python/3.10 aiohttp/3.9.3",
-            "data": {
-                "status": "READY",
-                "geometry": "test"
-            },
-            "version": 1,
-            "baseVersion": None,
-            "dataReceived": {
-                "label": "test entity 1",
-                "status": "READY",
-                "geometry": "test"
-            },
-            "conflictingProperties": None
-        }
-        }
-
-        Args:
-            projectId (int): The ID of the project on ODK Central.
-            datasetName (int): The name of a dataset, specific to a project.
-            label (str): Label for the Entity.
-            data (dict): Key:Value pairs to insert as Entity data.
-
-        Returns:
-            dict: JSON of entity details.
-                The 'uuid' field includes the unique entity identifier.
-        """
-        # The CSV must contain a geometry field to work
-        # TODO also add this validation to uploadMedia if CSV format
-
-        required_fields = ["geometry"]
-        if not all(key in data for key in required_fields):
-            msg = "'geometry' data field is mandatory"
-            log.debug(msg)
-            raise ValueError(msg)
-
-        url = f"{self.base}projects/{projectId}/datasets/{datasetName}/entities"
-        try:
-            async with self.session.post(
-                url,
-                ssl=self.verify,
-                json={
-                    "uuid": str(uuid4()),
-                    "label": label,
-                    "data": data,
-                },
-            ) as response:
-                return await response.json()
-        except aiohttp.ClientError as e:
-            msg = f"Failed to create Entity: {e}"
-            log.error(msg)
-            raise aiohttp.ClientError(msg) from e
-
+    # NOTE this was removed in favour of the pyodk implementation .create_many
+    # async def createEntities
     async def createEntities(
         self,
         projectId: int,

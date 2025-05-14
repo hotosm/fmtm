@@ -25,7 +25,7 @@ from io import BytesIO, StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Optional, Union
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import geojson
 from fastapi import HTTPException
@@ -33,8 +33,7 @@ from loguru import logger as log
 from osm_fieldwork.OdkCentral import OdkAppUser, OdkForm, OdkProject
 from osm_fieldwork.update_xlsform import append_field_mapping_fields
 from psycopg import Connection
-from pyodk._utils.config import CentralConfig
-from pyodk.client import Client
+from pyodk._endpoints.entities import Entity
 from pyxform.xls2xform import convert as xform_convert
 
 from app.central import central_deps, central_schemas
@@ -586,11 +585,12 @@ async def create_entity_list(
 
 async def create_entity(
     odk_creds: central_schemas.ODKCentralDecrypted,
+    entity_uuid: UUID,
     odk_id: int,
     properties: list[str],
     entity: central_schemas.EntityDict,
     dataset_name: str = "features",
-) -> dict:
+) -> Entity:
     """Create a new Entity in ODK."""
     log.info(f"Creating ODK Entity in dataset '{dataset_name}' (ODK ID: {odk_id})")
     try:
@@ -603,8 +603,15 @@ async def create_entity(
             log.error("Missing required entity fields: 'label' or 'data'")
             raise ValueError("Entity must contain 'label' and 'data' fields")
 
-        async with central_deps.get_odk_dataset(odk_creds) as odk_central:
-            response = await odk_central.createEntity(odk_id, dataset_name, label, data)
+        async with central_deps.pyodk_client(odk_creds) as client:
+            response = client.entities.create(
+                label=label,
+                data=data,
+                entity_list_name=dataset_name,
+                project_id=odk_id,
+                uuid=str(entity_uuid),  # pyodk only accepts string UUID
+            )
+
         log.info(f"Entity '{label}' successfully created in ODK")
         return response
 
@@ -988,12 +995,7 @@ async def upload_form_media(
                 temp_file.write(file_data.getvalue())
             attachment_filepaths.append(temp_path)
 
-        pyodk_config = CentralConfig(
-            base_url=odk_credentials.odk_central_url,
-            username=odk_credentials.odk_central_user,
-            password=odk_credentials.odk_central_password,
-        )
-        with Client(pyodk_config) as client:
+        async with central_deps.pyodk_client(odk_credentials) as client:
             return client.forms.update(
                 project_id=project_odk_id,
                 form_id=xform_id,

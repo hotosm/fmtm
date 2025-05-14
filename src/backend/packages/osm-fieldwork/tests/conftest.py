@@ -29,6 +29,8 @@ import pytest
 from pyodk._utils.config import CentralConfig
 from pyodk.client import Client
 
+from app.central.central_deps import pyodk_client
+from app.central.central_schemas import ODKCentral
 from osm_fieldwork.OdkCentral import OdkAppUser, OdkForm, OdkProject
 from osm_fieldwork.OdkCentralAsync import OdkDataset
 
@@ -90,10 +92,21 @@ test_data_dir = Path(__file__).parent / "test_data"
 #     return response.json().get("token")
 
 
+@pytest.fixture(scope="function")
+def pyodk_config() -> CentralConfig:
+    odk_central_url = os.getenv("ODK_CENTRAL_URL")
+    odk_central_user = os.getenv("ODK_CENTRAL_USER")
+    odk_central_password = os.getenv("ODK_CENTRAL_PASSWD", "")
+    return CentralConfig(
+        base_url=odk_central_url,
+        username=odk_central_user,
+        password=odk_central_password,
+    )
+
 @pytest.fixture(scope="session")
-def project():
+def project(pyodk_config):
     """Get persistent ODK Central requests session."""
-    return OdkProject("https://odkcentral:8443", "admin@hotosm.org", "Password1234")
+    return OdkProject(pyodk_config.base_url, pyodk_config.username, pyodk_config.password)
 
 
 @pytest.fixture(scope="session")
@@ -103,13 +116,9 @@ def project_details(project):
 
 
 @pytest.fixture(scope="function")
-def appuser():
+def appuser(pyodk_config):
     """Get appuser for a project."""
-    return OdkAppUser(
-        url="https://odkcentral:8443",
-        user="admin@hotosm.org",
-        passwd="Password1234",
-    )
+    return OdkAppUser(pyodk_config.base_url, pyodk_config.username, pyodk_config.password)
 
 
 @pytest.fixture(scope="function")
@@ -124,14 +133,10 @@ def appuser_details(appuser, project_details):
 
 
 @pytest.fixture(scope="function")
-def odk_form(project_details) -> tuple:
+def odk_form(pyodk_config, project_details) -> tuple:
     """Get appuser for a project."""
     odk_id = project_details.get("id")
-    form = OdkForm(
-        url="https://odkcentral:8443",
-        user="admin@hotosm.org",
-        passwd="Password1234",
-    )
+    form = OdkForm(pyodk_config.base_url, pyodk_config.username, pyodk_config.password)
     return odk_id, form
 
 
@@ -205,14 +210,10 @@ def odk_form__with_attachment_cleanup(odk_form):
 
 
 @pytest.fixture(scope="session")
-async def odk_dataset(project_details) -> tuple:
+async def odk_dataset(pyodk_config, project_details) -> tuple:
     """Get dataset (entity list) for a project."""
     odk_id = project_details.get("id")
-    dataset = OdkDataset(
-        url="https://odkcentral:8443",
-        user="admin@hotosm.org",
-        passwd="Password1234",
-    )
+    dataset = OdkDataset(pyodk_config.base_url, pyodk_config.username, pyodk_config.password)
 
     # Create the dataset
     async with dataset as odk_dataset:
@@ -250,13 +251,23 @@ async def odk_dataset(project_details) -> tuple:
 
 
 @pytest.fixture(scope="session")
-async def odk_dataset_cleanup(odk_dataset):
+async def odk_dataset_cleanup(pyodk_config, odk_dataset):
     """Get Dataset for project, with automatic cleanup after."""
     odk_id, dataset = odk_dataset
 
     dataset_name = "features"
-    async with dataset as odk_dataset:
-        entity_json = await odk_dataset.createEntity(odk_id, dataset_name, "test entity", {"osm_id": "1", "geometry": "test"})
+    odk_creds = ODKCentral(
+        odk_central_url=pyodk_config.base_url,
+        odk_central_user=pyodk_config.username,
+        odk_central_password=pyodk_config.password,
+    )
+    async with pyodk_client(odk_creds) as client:
+        entity_json = client.entities.create(
+            label="test entity",
+            data={"osm_id": "1", "geometry": "test"},
+            entity_list_name=dataset_name,
+            project_id=odk_id,
+        )
     entity_uuid = entity_json.get("uuid")
 
     # Before yield is used in tests
@@ -266,18 +277,6 @@ async def odk_dataset_cleanup(odk_dataset):
     async with dataset as odk_dataset:
         entity_deleted = await odk_dataset.deleteEntity(odk_id, dataset_name, entity_uuid)
         assert entity_deleted
-
-
-@pytest.fixture(scope="function")
-def pyodk_config() -> CentralConfig:
-    odk_central_url = os.getenv("ODK_CENTRAL_URL")
-    odk_central_user = os.getenv("ODK_CENTRAL_USER")
-    odk_central_password = os.getenv("ODK_CENTRAL_PASSWD", "")
-    return CentralConfig(
-        base_url=odk_central_url,
-        username=odk_central_user,
-        password=odk_central_password,
-    )
 
 
 @pytest.fixture(scope="function")
@@ -364,14 +363,9 @@ async def odk_submission(odk_form_cleanup, pyodk_config) -> tuple:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def cleanup():
+def cleanup(pyodk_config):
     """Cleanup projects and forms after all tests (session)."""
-    project = OdkProject(
-        url="https://odkcentral:8443",
-        user="admin@hotosm.org",
-        passwd="Password1234",
-    )
-
+    project = OdkProject(pyodk_config.base_url, pyodk_config.username, pyodk_config.password)
     for item in project.listProjects():
         project_id = item.get("id")
         project.deleteProject(project_id)
