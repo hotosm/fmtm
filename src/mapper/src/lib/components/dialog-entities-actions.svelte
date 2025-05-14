@@ -65,7 +65,7 @@
 					entity_id: entityUuid,
 					status: 1,
 					// NOTE here we don't translate the field as English values are always saved as the Entity label
-					label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osm_id}`,
+					label: `Feature ${selectedEntity?.osm_id}`,
 				});
 
 				if (taskStore.selectedTaskId && taskStore.selectedTaskState === TaskStatusEnum['UNLOCKED_TO_MAP']) {
@@ -270,7 +270,7 @@
 										entity_id: selectedEntity?.entity_id,
 										status: 1,
 										// NOTE here we don't translate the field as English values are always saved as the Entity label
-										label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osm_id}`,
+										label: `Feature ${selectedEntity?.osm_id}`,
 									});
 									displayWebFormsDrawer = true;
 								}}
@@ -281,7 +281,7 @@
 											entity_id: selectedEntity?.entity_id,
 											status: 1,
 											// NOTE here we don't translate the field as English values are always saved as the Entity label
-											label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osm_id}`,
+											label: `Feature ${selectedEntity?.osm_id}`,
 										});
 										displayWebFormsDrawer = true;
 									}

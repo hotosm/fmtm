@@ -519,9 +519,8 @@ async def feature_geojson_to_entity_dict(
         entity_label = f"Additional Feature {uuid4()}"
     else:
         properties["status"] = "0"
-        task_id = properties.get("task_id", None)
         feature_id = feature.get("id", None)
-        entity_label = f"Task {task_id} Feature {feature_id}"
+        entity_label = f"Feature {feature_id}"
 
     return {
         "label": entity_label,
@@ -773,7 +772,7 @@ async def get_entities_data(
 
 
 def entity_to_flat_dict(
-    entity: Optional[dict],
+    entity: dict,
     odk_id: int,
     entity_uuid: str,
     dataset_name: str = "features",
@@ -788,8 +787,11 @@ def entity_to_flat_dict(
             ),
         )
 
-    # Remove dataReceived prior to flatten to avoid conflict with currentVersion
-    entity.get("currentVersion", {}).pop("dataReceived")
+    # Remove dataReceived if present to avoid conflict with currentVersion
+    current_version = entity.get("currentVersion")
+    if isinstance(current_version, dict):
+        current_version.pop("dataReceived", None)
+
     flattened_dict = {}
     flatten_json(entity, flattened_dict)
 
@@ -851,17 +853,20 @@ async def update_entity_mapping_status(
     Returns:
         dict: All Entity data in OData JSON format.
     """
-    async with central_deps.get_odk_dataset(odk_creds) as odk_central:
-        entity = await odk_central.updateEntity(
-            odk_id,
-            dataset_name,
+    async with central_deps.pyodk_client(odk_creds) as client:
+        updated_entity = client.entities.update(
             entity_uuid,
+            entity_list_name=dataset_name,
+            project_id=odk_id,
             label=label,
             data={
                 "status": status,
             },
+            # We don't know the current entity version, so we need this
+            force=True,
         )
-    return entity_to_flat_dict(entity, odk_id, entity_uuid, dataset_name)
+        entity_dict = updated_entity.model_dump()
+    return entity_to_flat_dict(entity_dict, odk_id, entity_uuid, dataset_name)
 
 
 # FIXME replace osm_fieldwork.CSVDump with osm_fieldwork.ODKParsers

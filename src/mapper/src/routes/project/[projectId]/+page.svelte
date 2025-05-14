@@ -9,6 +9,7 @@
 	import { polygon } from '@turf/helpers';
 	import { buffer } from '@turf/buffer';
 	import { bbox } from '@turf/bbox';
+	import { v4 as uuidv4 } from 'uuid';
 	import type SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.component.js';
 	import type SlDialog from '@shoelace-style/shoelace/dist/components/dialog/dialog.component.js';
 
@@ -250,28 +251,30 @@
 		}
 		try {
 			isGeometryCreationLoading = true;
-			const entity = await entitiesStore.createEntity(projectId, {
+			const entityUuid = uuidv4();
+			await entitiesStore.createEntity(projectId, entityUuid, {
 				type: 'FeatureCollection',
 				features: [{ type: 'Feature', geometry: newFeatureGeom, properties: {} }],
 			});
 			await newBadGeomStore.createGeomRecord(projectId, {
 				status: 'NEW',
-				geojson: { type: 'Feature', geometry: newFeatureGeom, properties: { entity_id: entity.uuid } },
+				geojson: { type: 'Feature', geometry: newFeatureGeom, properties: { entity_id: entityUuid } },
 				project_id: projectId,
 			});
 			cancelMapNewFeatureInODK();
 
 			if (commonStore.enableWebforms) {
-				await entitiesStore.setSelectedEntityId(entity.uuid);
+				await entitiesStore.setSelectedEntityId(entityUuid);
 				openedActionModal = null;
+				const entityOsmId = entitiesStore.getOsmIdByEntityId(entityUuid);
 				entitiesStore.updateEntityStatus(projectId, {
-					entity_id: entity.uuid,
+					entity_id: entityUuid,
 					status: 1,
-					label: entity?.currentVersion?.label,
+					label: `Feature ${entityOsmId}`
 				});
 				displayWebFormsDrawer = true;
 			} else {
-				openOdkCollectNewFeature(project?.odk_form_id, entity.uuid);
+				openOdkCollectNewFeature(project?.odk_form_id, entityUuid);
 			}
 		} catch (error) {
 			alertStore.setAlert({ message: 'Unable to create entity', variant: 'danger' });

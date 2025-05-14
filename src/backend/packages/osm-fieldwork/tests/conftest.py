@@ -92,7 +92,7 @@ test_data_dir = Path(__file__).parent / "test_data"
 #     return response.json().get("token")
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def pyodk_config() -> CentralConfig:
     odk_central_url = os.getenv("ODK_CENTRAL_URL")
     odk_central_user = os.getenv("ODK_CENTRAL_USER")
@@ -207,76 +207,6 @@ def odk_form__with_attachment_cleanup(odk_form):
 
     success = xform.deleteForm(odk_id, form_name)
     assert success
-
-
-@pytest.fixture(scope="session")
-async def odk_dataset(pyodk_config, project_details) -> tuple:
-    """Get dataset (entity list) for a project."""
-    odk_id = project_details.get("id")
-    dataset = OdkDataset(pyodk_config.base_url, pyodk_config.username, pyodk_config.password)
-
-    # Create the dataset
-    async with dataset as odk_dataset:
-        created_dataset = await odk_dataset.createDataset(
-            odk_id,
-            "features",
-            [
-                "geometry",
-                "project_id",
-                "task_id",
-                "osm_id",
-                "tags",
-                "version",
-                "changeset",
-                "timestamp",
-                "status",
-            ],
-        )
-        assert created_dataset.get("name") == "features"
-        assert sorted(created_dataset.get("properties", [])) == sorted(
-            [
-                "geometry",
-                "project_id",
-                "task_id",
-                "osm_id",
-                "tags",
-                "version",
-                "changeset",
-                "timestamp",
-                "status",
-            ]
-        )
-
-    return odk_id, dataset
-
-
-@pytest.fixture(scope="session")
-async def odk_dataset_cleanup(pyodk_config, odk_dataset):
-    """Get Dataset for project, with automatic cleanup after."""
-    odk_id, dataset = odk_dataset
-
-    dataset_name = "features"
-    odk_creds = ODKCentral(
-        odk_central_url=pyodk_config.base_url,
-        odk_central_user=pyodk_config.username,
-        odk_central_password=pyodk_config.password,
-    )
-    async with pyodk_client(odk_creds) as client:
-        entity_json = client.entities.create(
-            label="test entity",
-            data={"osm_id": "1", "geometry": "test"},
-            entity_list_name=dataset_name,
-            project_id=odk_id,
-        )
-    entity_uuid = entity_json.get("uuid")
-
-    # Before yield is used in tests
-    yield odk_id, dataset_name, entity_uuid, dataset
-    # After yield is test cleanup
-
-    async with dataset as odk_dataset:
-        entity_deleted = await odk_dataset.deleteEntity(odk_id, dataset_name, entity_uuid)
-        assert entity_deleted
 
 
 @pytest.fixture(scope="function")

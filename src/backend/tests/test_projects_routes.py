@@ -445,7 +445,7 @@ async def test_set_entity_mapping_status(client, odk_project, entities):
         json={
             "entity_id": entity["id"],
             "status": new_status,
-            "label": f"Task {entity['task_id']} Feature {entity['osm_id']}",
+            "label": f"Feature {entity['osm_id']}",
         },
     )
     response_entity = response.json()
