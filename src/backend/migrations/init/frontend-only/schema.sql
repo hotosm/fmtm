@@ -9,6 +9,23 @@
 -- sync the `outline` field of type Geometry (PGLite does not support
 -- PostGIS yet).
 
+-- Enums
+
+CREATE TYPE public.submission_status AS ENUM (
+    'PENDING',
+    'RECEIVED'
+);
+ALTER TYPE public.submission_status OWNER TO fmtm;
+
+CREATE TYPE public.submission_methods AS ENUM (
+    'GET',
+    'POST',
+    'PATCH',
+    'PUT',
+    'DELETE'
+);
+ALTER TYPE public.submission_methods OWNER TO fmtm;
+
 -- Tables
 CREATE TABLE public.projects (
     id integer NOT NULL,
@@ -47,9 +64,25 @@ CREATE TABLE public.projects (
     total_submissions integer
 );
 
+CREATE TABLE public.api_submissions (
+    id integer NOT NULL,
+    url character varying NOT NULL,
+    method public.submission_methods DEFAULT 'POST',
+    payload JSONB,
+    status public.submission_status DEFAULT 'PENDING',
+    retry_count integer DEFAULT 0,
+    error character varying,
+    queued_at timestamp with time zone DEFAULT now(),
+    last_attempt_at timestamp with time zone,
+    success_at timestamp with time zone
+);
+
 -- Constraints
 ALTER TABLE ONLY public.projects
 ADD CONSTRAINT projects_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.api_submissions
+ADD CONSTRAINT api_submissions_pkey PRIMARY KEY (id);
 
 -- Indexes (we do not index on geometry field, as no postgis)
 CREATE INDEX idx_projects_organisation_id
