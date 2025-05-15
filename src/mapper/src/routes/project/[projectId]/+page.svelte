@@ -13,7 +13,19 @@
 	import type SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.component.js';
 	import type SlDialog from '@shoelace-style/shoelace/dist/components/dialog/dialog.component.js';
 
+	import type { ProjectTask } from '$lib/types';
+	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
 	import { m } from '$translations/messages.js';
+	import { DbApiSubmission } from '$lib/db/api-submissions.ts';
+	import { sendNextQueuedSubmissionToApi } from '$lib/api/fetch';
+	import { openOdkCollectNewFeature } from '$lib/odk/collect';
+	import { convertDateToTimeAgo } from '$lib/utils/datetime';
+	import { getTaskStore } from '$store/tasks.svelte.ts';
+	import { getEntitiesStatusStore, getNewBadGeomStore } from '$store/entities.svelte.ts';
+	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
+	import { readFileFromOPFS } from '$lib/fs/opfs';
+	import { loadOfflineExtract, writeOfflineExtract } from '$lib/map/extracts';
+
 	import ImportQrGif from '$assets/images/importQr.gif';
 	import BottomSheet from '$lib/components/bottom-sheet.svelte';
 	import MapComponent from '$lib/components/map/main.svelte';
@@ -22,17 +34,8 @@
 	import DialogTaskActions from '$lib/components/dialog-task-actions.svelte';
 	import DialogEntityActions from '$lib/components/dialog-entities-actions.svelte';
 	import OdkWebFormsWrapper from '$lib/components/forms/wrapper.svelte';
-	import type { ProjectTask } from '$lib/types';
-	import { openOdkCollectNewFeature } from '$lib/odk/collect';
-	import { convertDateToTimeAgo } from '$lib/utils/datetime';
-	import { getTaskStore } from '$store/tasks.svelte.ts';
-	import { getEntitiesStatusStore, getNewBadGeomStore } from '$store/entities.svelte.ts';
 	import More from '$lib/components/more/index.svelte';
-	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
-	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
 	import Editor from '$lib/components/editor/editor.svelte';
-	import { readFileFromOPFS } from '$lib/fs/opfs';
-	import { loadOfflineExtract, writeOfflineExtract } from '$lib/map/extracts';
 
 	interface Props {
 		data: PageData;
@@ -180,6 +183,49 @@
 		if (timeout) clearTimeout(timeout);
 	});
 
+	// Iterate all pending API submissions when connection restored / available
+	// This can handle retries, as the status will only become 'RECEIVED' on API success
+	async function iterateAndSendOfflineSubmissions() {
+		let sent = 0;
+		let failed = 0;
+
+		// Count remaining pending submissions
+		const total = await DbApiSubmission.count(db);
+
+		if (total === 0) {
+			alertStore.setAlert({ message: 'No offline submissions to send.', variant: 'default' });
+			return;
+		}
+
+		while (true) {
+			const result = await sendNextQueuedSubmissionToApi(db);
+
+			if (!result) break; // No more pending entries
+
+			sent++;
+			if (result.success) {
+				alertStore.setAlert({
+					message: `Successfully sent offline data ${sent}/${total} to API`,
+					variant: 'success'
+				});
+				await new Promise((resolve) => setTimeout(resolve, 1000)); // wait 1 second
+			} else {
+				failed++;
+				alertStore.setAlert({
+					message: `Failed to send offline data ${sent}/${total} to API`,
+					variant: 'danger'
+				});
+			}
+		}
+
+		alertStore.setAlert({
+			message: `Finished sending offline data (${sent - failed} succeeded, ${failed} failed).`,
+			variant: failed === 0 ? 'success' : 'warning'
+		});
+
+		// TODO add logic
+	}
+
 	// Subscribe / unsubscribe from streams based on connectivity
 	// note: the effect rune can't accept async, but this is fine
 	// note: we also need to debounce this to prevent infinite loop
@@ -198,6 +244,8 @@
 		subscribeDebounce = setTimeout(() => {
 			if (isOnline) {
 				subscribeToAllStreams();
+				// Also send any pending submissions
+				iterateAndSendOfflineSubmissions();
 			} else {
 				unsubscribeFromAllStreams();
 			}

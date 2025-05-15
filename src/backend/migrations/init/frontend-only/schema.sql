@@ -52,6 +52,7 @@ CREATE TABLE public.api_submissions (
     url character varying NOT NULL,
     method character varying DEFAULT 'POST' CHECK (
         method IN (
+            'HEAD',
             'GET',
             'POST',
             'PATCH',
