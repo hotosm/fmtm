@@ -36,6 +36,7 @@ let selectedTab: string = $state('map');
 let config: ConfigJson | null = $state(null);
 let useOdkCollectOverride: boolean = $state(false);
 let enableWebforms = $derived<boolean>(!useOdkCollectOverride && config?.enableWebforms ? true : false);
+let offlineDataIsSyncing: boolean = $state(false);
 
 function getCommonStore() {
 	function getLocaleFromStorage() {
@@ -90,6 +91,12 @@ function getCommonStore() {
 		setUseOdkCollectOverride: (isEnabled: boolean) => (useOdkCollectOverride = isEnabled),
 		get enableWebforms() {
 			return enableWebforms;
+		},
+		get offlineDataIsSyncing() {
+			return offlineDataIsSyncing;
+		},
+		setOfflineDataIsSyncing(newVal: boolean) {
+			offlineDataIsSyncing = newVal;
 		},
 	};
 }

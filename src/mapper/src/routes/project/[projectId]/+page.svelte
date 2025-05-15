@@ -183,9 +183,21 @@
 		if (timeout) clearTimeout(timeout);
 	});
 
-	// Iterate all pending API submissions when connection restored / available
-	// This can handle retries, as the status will only become 'RECEIVED' on API success
+	/**
+	 * Iterate and attempt to send all pending API submissions from the local database.
+	 * 
+	 * This function is triggered in two scenarios:
+	 *  - Automatically when coming back online (debounced via $effect)
+	 *  - Manually via the sync button in the map UI
+	 * 
+	 * Each submission is sent sequentially. If the API acknowledges receipt (status becomes 'RECEIVED'),
+	 * it is considered a success. Failures are logged but not retried immediately (they remain in 'PENDING').
+	 * 
+	 * Syncing status is tracked via `commonStore.offlineDataIsSyncing` and alerts are shown after each attempt.
+	 */
 	async function iterateAndSendOfflineSubmissions() {
+		if (!db) return;
+
 		let sent = 0;
 		let failed = 0;
 
@@ -193,7 +205,7 @@
 		const total = await DbApiSubmission.count(db);
 
 		if (total === 0) {
-			alertStore.setAlert({ message: 'No offline submissions to send.', variant: 'default' });
+			// Nothing to be done
 			return;
 		}
 
@@ -222,8 +234,6 @@
 			message: `Finished sending offline data (${sent - failed} succeeded, ${failed} failed).`,
 			variant: failed === 0 ? 'success' : 'warning'
 		});
-
-		// TODO add logic
 	}
 
 	// Subscribe / unsubscribe from streams based on connectivity
@@ -244,7 +254,7 @@
 		subscribeDebounce = setTimeout(() => {
 			if (isOnline) {
 				subscribeToAllStreams();
-				// Also send any pending submissions
+				// Also send any pending submissions (no awaiting required)
 				iterateAndSendOfflineSubmissions();
 			} else {
 				unsubscribeFromAllStreams();
@@ -418,6 +428,15 @@
 			newFeatureGeom = geom;
 			// after drawing a feature, allow user to modify the drawn feature
 			newFeatureDrawInstance.setMode('select');
+		}}
+		syncButtonTrigger={async () => {
+			if (!db) return;
+			commonStore.setOfflineDataIsSyncing(true);
+			await iterateAndSendOfflineSubmissions();
+			// Wait 5 seconds for everything to process on the backend, before requesting new data
+			await new Promise((resolve) => setTimeout(resolve, 5000));
+			await entitiesStore.syncEntityStatusManually(db, projectId)
+			commonStore.setOfflineDataIsSyncing(false);
 		}}
 	></MapComponent>
 
