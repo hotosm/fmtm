@@ -421,10 +421,13 @@
 		</ControlGroup></Control
 	>
 	<Control class="control" position="bottom-right">
+		{#if commonStore.offlineSyncPercentComplete}
+			<div class="offline-sync-percent">{commonStore.offlineSyncPercentComplete}%</div>
+		{/if}
 		<div class="content">
 			<sl-icon-button
 				name="arrow-repeat"
-				label="Settings"
+				label="Sync"
 				disabled={entitiesStore.syncEntityStatusManuallyLoading || commonStore.offlineDataIsSyncing}
 				class={`sync-button ${
 					(entitiesStore.syncEntityStatusManuallyLoading || commonStore.offlineDataIsSyncing) && 'animate-spin'
@@ -438,6 +441,7 @@
 			></sl-icon-button>
 		</div>
 		<div
+			class="layer-switcher"
 			aria-label="layer switcher"
 			onclick={() => {
 				selectedControl = 'layer-switcher';

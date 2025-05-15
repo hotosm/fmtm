@@ -49,18 +49,24 @@ export async function fetchFormMediBlobUrls(projectId: number): Promise<{ [filen
 
 type SubmissionResult = { id: number; success: boolean } | undefined;
 
-export async function sendNextQueuedSubmissionToApi(db: PGlite): Promise<SubmissionResult> {
+export async function sendNextQueuedSubmissionToApi(db: PGlite): Promise<SubmissionResult | null> {
 	const nextSubmission = await DbApiSubmission.next(db);
-	if (!nextSubmission) return;
+	if (!nextSubmission) return null;
 
 	try {
 		const fetchOptions = buildFetchOptions(nextSubmission);
 		const response = await fetch(nextSubmission.url, fetchOptions);
 
-		await DbApiSubmission.success(db, nextSubmission.id, response.ok);
+		await DbApiSubmission.update(
+			db,
+			nextSubmission.id,
+			response.ok ? 'RECEIVED' : 'FAILED',
+			response.ok ? null : `HTTP ${response.status}`,
+		);
+
 		return { id: nextSubmission.id, success: response.ok };
 	} catch (err: any) {
-		await DbApiSubmission.failure(db, nextSubmission.id, String(err));
+		await DbApiSubmission.update(db, nextSubmission.id, 'FAILED', String(err));
 		return { id: nextSubmission.id, success: false };
 	}
 }

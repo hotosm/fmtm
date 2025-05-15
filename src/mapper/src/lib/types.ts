@@ -226,7 +226,7 @@ export type DbApiSubmissionType = {
 	content_type: 'application/json' | 'multipart/form-data' | 'application/xml' | 'text/plain';
 	payload: any; // JSONB in Postgres maps to any
 	headers: Record<string, string> | null;
-	status: 'PENDING' | 'RECEIVED';
+	status: 'PENDING' | 'RECEIVED' | 'FAILED';
 	retry_count: number;
 	error: string | null;
 	queued_at: string; // or Date if you parse it

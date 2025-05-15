@@ -162,10 +162,10 @@
 			return;
 		}
 
-		// 30s delay to defer saving data until after initial page load
+		// 20s delay to defer saving data until after initial page load
 		timeout = setTimeout(() => {
 			storeFgbExtractOffline();
-		}, 30000);
+		}, 20000);
 	});
 
 	async function unsubscribeFromAllStreams() {
@@ -203,37 +203,74 @@
 
 		// Count remaining pending submissions
 		const total = await DbApiSubmission.count(db);
-
 		if (total === 0) {
 			// Nothing to be done
 			return;
 		}
 
+		commonStore.setOfflineDataIsSyncing(true);
+		alertStore.setAlert({
+			message: `Found ${total} offline submissions.`,
+			variant: 'default'
+		});
+
+		let processed = 0; // how many attempts made (success + fail)
 		while (true) {
 			const result = await sendNextQueuedSubmissionToApi(db);
-
 			if (!result) break; // No more pending entries
 
-			sent++;
+			processed++;
+
 			if (result.success) {
-				alertStore.setAlert({
-					message: `Successfully sent offline data ${sent}/${total} to API`,
-					variant: 'success'
-				});
-				await new Promise((resolve) => setTimeout(resolve, 1000)); // wait 1 second
+				sent++;
+				// This is bad ux if multiple send in quick succession
+				// alertStore.setAlert({
+				// 	message: `Successfully sent offline data ${sent}/${total} to API`,
+				// 	variant: 'success'
+				// });
 			} else {
 				failed++;
 				alertStore.setAlert({
-					message: `Failed to send offline data ${sent}/${total} to API`,
+					message: `Failed to send offline data ${processed}/${total} to API (Failures: ${failed})`,
 					variant: 'danger'
 				});
 			}
+
+			commonStore.setOfflineSyncPercentComplete((processed / total) * 100);
+			// Wait 1 second until next API call
+			await new Promise((resolve) => setTimeout(resolve, 1000));
 		}
 
-		alertStore.setAlert({
-			message: `Finished sending offline data (${sent - failed} succeeded, ${failed} failed).`,
-			variant: failed === 0 ? 'success' : 'warning'
-		});
+		if (failed < 1) {
+			alertStore.setAlert({
+				message: `Finished sending offline data.`,
+				variant: 'success'
+			});
+			// Clear the table if all sent successfully
+			await DbApiSubmission.clear(db);
+		} else {
+			alertStore.setAlert({
+				message: `Offline sync: (${sent - failed} succeeded, ${failed} failed).`,
+				variant: 'warning'
+			});
+		}
+		commonStore.setOfflineSyncPercentComplete(null);
+		commonStore.setOfflineDataIsSyncing(false);
+	}
+
+	async function triggerOfflineDataSync() {
+		if (!db) return;
+		await iterateAndSendOfflineSubmissions();
+
+		// Wait 3 seconds for everything to process on the backend, before requesting new data
+		// + we need to set spinner again, as set false once offline sync done.
+		// (we have the 3 second gap until syncEntityStatusManually is triggered)
+		commonStore.setOfflineDataIsSyncing(true);
+		await new Promise((resolve) => setTimeout(resolve, 3000));
+		commonStore.setOfflineDataIsSyncing(false);
+
+		// This call has it's own loading param
+		await entitiesStore.syncEntityStatusManually(db, projectId)
 	}
 
 	// Subscribe / unsubscribe from streams based on connectivity
@@ -430,13 +467,7 @@
 			newFeatureDrawInstance.setMode('select');
 		}}
 		syncButtonTrigger={async () => {
-			if (!db) return;
-			commonStore.setOfflineDataIsSyncing(true);
-			await iterateAndSendOfflineSubmissions();
-			// Wait 5 seconds for everything to process on the backend, before requesting new data
-			await new Promise((resolve) => setTimeout(resolve, 5000));
-			await entitiesStore.syncEntityStatusManually(db, projectId)
-			commonStore.setOfflineDataIsSyncing(false);
+			await triggerOfflineDataSync();
 		}}
 	></MapComponent>
 

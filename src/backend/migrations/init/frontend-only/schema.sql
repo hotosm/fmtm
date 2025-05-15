@@ -71,7 +71,7 @@ CREATE TABLE public.api_submissions (
     payload JSONB,
     headers JSONB,
     status character varying DEFAULT 'PENDING' CHECK (
-        status IN ('PENDING', 'RECEIVED')
+        status IN ('PENDING', 'RECEIVED', 'FAILED')
     ),
     retry_count integer DEFAULT 0,
     error character varying,
@@ -79,6 +79,21 @@ CREATE TABLE public.api_submissions (
     last_attempt_at timestamp with time zone,
     success_at timestamp with time zone
 );
+-- As we don't copy data in, need to autoincrement the id
+CREATE SEQUENCE public.api_submissions_seq
+AS integer
+START WITH 1
+INCREMENT BY 1
+NO MINVALUE
+NO MAXVALUE
+CACHE 1;
+ALTER TABLE public.api_submissions_seq OWNER TO fmtm;
+ALTER SEQUENCE public.api_submissions_seq OWNED BY public.api_submissions.id;
+-- Autoincrement PK
+ALTER TABLE ONLY public.api_submissions ALTER COLUMN id SET DEFAULT nextval(
+    'public.api_submissions_seq'::regclass
+);
+
 
 -- Constraints
 ALTER TABLE ONLY public.projects
