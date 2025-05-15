@@ -1,6 +1,8 @@
+import type { PGlite } from '@electric-sql/pglite';
 import type { PGliteWithSync } from '@electric-sql/pglite-sync';
 import type { ShapeStream, FetchError } from '@electric-sql/client';
 import type { ShapeData } from '@electric-sql/client';
+import { online } from 'svelte/reactivity/window';
 import type { Feature, FeatureCollection, Geometry } from 'geojson';
 import type { LngLatLike } from 'svelte-maplibre';
 import type { UUIDTypes } from 'uuid';
@@ -9,6 +11,7 @@ import type { DbEntityType, EntityStatusPayload, entitiesApiResponse, entityStat
 import { EntityStatusNameMap } from '$lib/types';
 import { getAlertStore } from './common.svelte';
 import { DbEntity } from '$lib/db/entities';
+import { DbApiSubmission } from '$lib/db/api-submissions';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -137,6 +140,8 @@ function getEntitiesStatusStore() {
 			task_id: entity.task_id,
 			osm_id: entity.osm_id,
 			submission_ids: entity.submission_ids,
+			is_new: entity.is_new,
+			geometry: entity.geometry,
 		}));
 	}
 
@@ -219,7 +224,7 @@ function getEntitiesStatusStore() {
 	}
 
 	// Manually sync the entity status via button (if local db gets out of sync with backend)
-	async function syncEntityStatusManually(db: PGliteWithSync, projectId: number) {
+	async function syncEntityStatusManually(db: PGlite, projectId: number) {
 		try {
 			syncEntityStatusManuallyLoading = true;
 			const entityStatusResponse = await fetch(`${API_URL}/projects/${projectId}/entities/statuses`, {
@@ -238,6 +243,8 @@ function getEntitiesStatusStore() {
 				task_id: entity.task_id,
 				submission_ids: entity.submission_ids,
 				osm_id: entity.osm_id,
+				is_new: entity.is_new,
+				geometry: entity.geometry,
 			}));
 			syncEntityStatusManuallyLoading = false;
 
@@ -270,24 +277,50 @@ function getEntitiesStatusStore() {
 		}
 	}
 
-	async function createEntity(projectId: number, entityUuid: UUIDTypes, payload: FeatureCollection) {
-		try {
-			const resp = await fetch(`${API_URL}/central/entity?project_id=${projectId}&entity_uuid=${entityUuid}`, {
-				method: 'POST',
-				body: JSON.stringify(payload),
-				headers: {
-					'Content-type': 'application/json',
-				},
-				credentials: 'include',
-			});
-			if (!resp.ok) {
-				const errorData = await resp.json();
-				throw new Error(errorData.detail);
+	async function createEntity(db: PGlite, projectId: number, entityUuid: UUIDTypes, featcol: FeatureCollection) {
+		const entityRequestUrl = `${API_URL}/central/entity?project_id=${projectId}&entity_uuid=${entityUuid}`;
+		const entityRequestMethod = 'POST';
+		const entityRequestPayload = JSON.stringify(featcol);
+		const entityRequestContentType = 'application/json';
+
+		if (online.current) {
+			try {
+				const resp = await fetch(entityRequestUrl, {
+					method: entityRequestMethod,
+					body: entityRequestPayload,
+					headers: {
+						'Content-type': entityRequestContentType,
+					},
+					credentials: 'include',
+				});
+				if (!resp.ok) {
+					const errorData = await resp.json();
+					throw new Error(errorData.detail);
+				}
+			} catch (error: any) {
+				alertStore.setAlert({
+					variant: 'danger',
+					message: error.message || 'Failed to create entity',
+				});
 			}
-		} catch (error: any) {
-			alertStore.setAlert({
-				variant: 'danger',
-				message: error.message || 'Failed to create entity',
+		} else {
+			// Save for later submission + add entity entry to local db
+			await DbApiSubmission.create(db, {
+				url: entityRequestUrl,
+				method: entityRequestMethod,
+				content_type: entityRequestContentType,
+				payload: entityRequestPayload,
+			});
+			await DbEntity.create(db, {
+				entity_id: entityUuid.toString(),
+				status: 'READY',
+				project_id: projectId,
+				task_id: featcol.features[0].properties?.task_id,
+				submission_ids: '',
+				osm_id: featcol.features[0].properties?.osm_id,
+				is_new: true,
+				// FIXME add javarosa geometry here!!
+				geometry: '',
 			});
 		}
 	}
@@ -445,7 +478,7 @@ function getNewBadGeomStore() {
 		}
 	}
 
-	async function getInitialGeomRecords(db: PGliteWithSync, projectId: number) {
+	async function getInitialGeomRecords(db: PGlite, projectId: number) {
 		const dbNewGeoms = await db.query(`SELECT * FROM geometrylog WHERE project_id = $1 AND status = 'NEW';`, [
 			projectId,
 		]);

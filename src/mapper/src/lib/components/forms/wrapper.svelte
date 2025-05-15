@@ -5,7 +5,7 @@
 	import { getLoginStore } from '$store/login.svelte.ts';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
 	import { fetchBlobUrl, fetchCachedBlobUrl, fetchFormMediBlobUrls } from '$lib/api/fetch';
-	import { getDeviceId } from '$lib/utils/device.ts';
+	import { getDeviceId } from '$lib/utils/random';
 	import { geojsonGeomToJavarosa } from '$lib/odk/javarosa.ts';
 	import { m } from '$translations/messages.js';
 
@@ -103,8 +103,6 @@
 				entityStatus = 6; // MARKED_BAD
 			} else if (submission_xml.includes('<digitisation_correct>no</digitisation_correct>')) {
 				entityStatus = 6; // MARKED_BAD
-			} else if (entitiesStore.newGeomFeatcol.features.find((feature) => feature.properties?.entity_id === entityId)) {
-				entityStatus = 3; // NEW_GEOM
 			} else {
 				entityStatus = 2; // SURVEY_SUBMITTED
 			}

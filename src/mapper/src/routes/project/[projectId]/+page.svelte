@@ -25,6 +25,7 @@
 	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
 	import { readFileFromOPFS } from '$lib/fs/opfs';
 	import { loadOfflineExtract, writeOfflineExtract } from '$lib/map/extracts';
+	import { getNewOsmId } from '$lib/utils/random';
 
 	import ImportQrGif from '$assets/images/importQr.gif';
 	import BottomSheet from '$lib/components/bottom-sheet.svelte';
@@ -352,9 +353,14 @@
 		try {
 			isGeometryCreationLoading = true;
 			const entityUuid = uuidv4();
-			await entitiesStore.createEntity(projectId, entityUuid, {
+			const newOsmId = getNewOsmId()
+			await entitiesStore.createEntity(db, projectId, entityUuid, {
 				type: 'FeatureCollection',
-				features: [{ type: 'Feature', geometry: newFeatureGeom, properties: {} }],
+				features: [{ type: 'Feature', geometry: newFeatureGeom, properties: {
+					project_id: projectId,
+					osm_id: newOsmId,
+					task_id: taskStore.selectedTaskIndex || null,
+				}}],
 			});
 			await newBadGeomStore.createGeomRecord(projectId, {
 				status: 'NEW',

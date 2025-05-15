@@ -1,8 +1,8 @@
-import type { PGliteWithSync } from '@electric-sql/pglite-sync';
+import type { PGlite } from '@electric-sql/pglite';
 import type { DbEntityType } from '$lib/types';
 import { applyDataToTableWithCsvCopy } from '$lib/db/helpers';
 
-async function update(db: PGliteWithSync, entity: DbEntityType) {
+async function update(db: PGlite, entity: DbEntityType) {
 	await db.query(
 		`UPDATE odk_entities
          SET status = $2
@@ -11,7 +11,7 @@ async function update(db: PGliteWithSync, entity: DbEntityType) {
 	);
 }
 
-async function create(db: PGliteWithSync, entity: DbEntityType) {
+async function create(db: PGlite, entity: DbEntityType) {
 	await db.query(
 		`INSERT INTO odk_entities (
             entity_id,
@@ -19,15 +19,26 @@ async function create(db: PGliteWithSync, entity: DbEntityType) {
             project_id,
             task_id,
             submission_ids,
-            osm_id
+            osm_id,
+            is_new,
+			geometry
         )
-        VALUES ($1, $2, $3, $4, $5, $6)`,
-		[entity.entity_id, entity.status, entity.project_id, entity.task_id, entity.submission_ids, entity.osm_id],
+        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		[
+			entity.entity_id,
+			entity.status,
+			entity.project_id,
+			entity.task_id,
+			entity.submission_ids,
+			entity.osm_id,
+			entity.is_new,
+			entity.geometry,
+		],
 	);
 }
 
 // An optimised insert for multiple geom records in bulk
-async function bulkCreate(db: PGliteWithSync, entities: DbEntityType[]) {
+async function bulkCreate(db: PGlite, entities: DbEntityType[]) {
 	// The entities are already in Record format, however we ensure all undefined or empty strings are set to null for insert
 	const dataObj = entities.map((entity) => ({
 		entity_id: entity.entity_id,
@@ -36,6 +47,8 @@ async function bulkCreate(db: PGliteWithSync, entities: DbEntityType[]) {
 		task_id: entity.task_id,
 		osm_id: entity.osm_id,
 		submission_ids: entity.submission_ids === '' ? null : entity.submission_ids,
+		is_new: entity.is_new,
+		geometry: entity.geometry === '' ? null : entity.geometry,
 	}));
 
 	await applyDataToTableWithCsvCopy(db, 'odk_entities', dataObj);

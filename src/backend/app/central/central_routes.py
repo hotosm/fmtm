@@ -336,31 +336,32 @@ async def add_new_entity(
 
         # Add required properties and extract entity data
         featcol = add_required_geojson_properties(featcol_dict)
-        featcol["features"][0]["properties"]["project_id"] = project.id
 
-        # Get task_id of the feature if inside task boundary
-        async with db.cursor(row_factory=dict_row) as cur:
-            await cur.execute(
-                """
-                SELECT t.project_task_index AS task_id
-                FROM tasks t
-                WHERE t.project_id = %s
-                AND ST_Within(
-                    ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326),
-                    t.outline
+        # Get task_id of the feature if inside task boundary and not set already
+        # NOTE this should come from the frontend, but might have failed
+        if featcol["features"][0]["properties"].get("task_id", None) is None:
+            async with db.cursor(row_factory=dict_row) as cur:
+                await cur.execute(
+                    """
+                    SELECT t.project_task_index AS task_id
+                    FROM tasks t
+                    WHERE t.project_id = %s
+                    AND ST_Within(
+                        ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326),
+                        t.outline
+                    )
+                    LIMIT 1;
+                    """,
+                    (project.id, json.dumps(features[0].get("geometry"))),
                 )
-                LIMIT 1;
-                """,
-                (project.id, json.dumps(features[0].get("geometry"))),
-            )
-            result = await cur.fetchone()
-
-        task_id = ""
-        if result and (task_id := result.get("task_id")):
-            featcol["features"][0]["properties"]["task_id"] = task_id
+                result = await cur.fetchone()
+            if result:
+                featcol["features"][0]["properties"]["task_id"] = result.get(
+                    "task_id", ""
+                )
 
         entities_list = await central_crud.task_geojson_dict_to_entity_values(
-            {task_id: featcol}
+            {featcol["features"][0]["properties"]["task_id"]: featcol}
         )
 
         if not entities_list:

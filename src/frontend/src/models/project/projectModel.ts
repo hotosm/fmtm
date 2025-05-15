@@ -151,6 +151,8 @@ export type EntityOsmMap = {
   task_id: number;
   updated_at: string;
   submission_ids: string | null;
+  is_new: boolean | null;
+  geometry: string | null;
 };
 
 export type geometryLogResponseType = {

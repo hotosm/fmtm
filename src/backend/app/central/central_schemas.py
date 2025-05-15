@@ -258,6 +258,8 @@ class EntityMappingStatus(EntityOsmID, EntityTaskID):
     updatedAt: Optional[str | datetime] = Field(exclude=True)  # noqa: N815
     status: Optional[EntityState] = None
     submission_ids: Optional[str] = None
+    is_new: Optional[bool] = None
+    geometry: Optional[str] = None
 
     @computed_field
     @property
@@ -269,6 +271,14 @@ class EntityMappingStatus(EntityOsmID, EntityTaskID):
                 "+00:00", "Z"
             )
         return self.updatedAt
+
+    @field_validator("is_new", mode="before")
+    @classmethod
+    def emoji_to_bool(cls, value: str, info: ValidationInfo) -> bool:
+        """Convert ✅ emoji to True values."""
+        if value == "✅":
+            return True
+        return False
 
 
 class EntityMappingStatusIn(BaseModel):
