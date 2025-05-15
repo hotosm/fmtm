@@ -195,8 +195,8 @@
 	 * 
 	 * Syncing status is tracked via `commonStore.offlineDataIsSyncing` and alerts are shown after each attempt.
 	 */
-	async function iterateAndSendOfflineSubmissions() {
-		if (!db) return;
+	async function iterateAndSendOfflineSubmissions(): Promise<boolean> {
+		if (!db) return false;
 
 		let sent = 0;
 		let failed = 0;
@@ -205,7 +205,7 @@
 		const total = await DbApiSubmission.count(db);
 		if (total === 0) {
 			// Nothing to be done
-			return;
+			return true;
 		}
 
 		commonStore.setOfflineDataIsSyncing(true);
@@ -241,6 +241,9 @@
 			await new Promise((resolve) => setTimeout(resolve, 1000));
 		}
 
+		commonStore.setOfflineSyncPercentComplete(null);
+		commonStore.setOfflineDataIsSyncing(false);
+
 		if (failed < 1) {
 			alertStore.setAlert({
 				message: `Finished sending offline data.`,
@@ -248,19 +251,21 @@
 			});
 			// Clear the table if all sent successfully
 			await DbApiSubmission.clear(db);
+			return true;
 		} else {
 			alertStore.setAlert({
 				message: `Offline sync: (${sent - failed} succeeded, ${failed} failed).`,
 				variant: 'warning'
 			});
+			return false;
 		}
-		commonStore.setOfflineSyncPercentComplete(null);
-		commonStore.setOfflineDataIsSyncing(false);
 	}
 
 	async function triggerOfflineDataSync() {
 		if (!db) return;
-		await iterateAndSendOfflineSubmissions();
+		const success = await iterateAndSendOfflineSubmissions();
+		// Return immediately if there were submission failures, to prevent overwriting entities below
+		if (!success) return;
 
 		// Wait 3 seconds for everything to process on the backend, before requesting new data
 		// + we need to set spinner again, as set false once offline sync done.
