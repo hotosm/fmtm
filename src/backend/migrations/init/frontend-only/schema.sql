@@ -9,23 +9,6 @@
 -- sync the `outline` field of type Geometry (PGLite does not support
 -- PostGIS yet).
 
--- Enums
-
-CREATE TYPE public.submission_status AS ENUM (
-    'PENDING',
-    'RECEIVED'
-);
-ALTER TYPE public.submission_status OWNER TO fmtm;
-
-CREATE TYPE public.submission_methods AS ENUM (
-    'GET',
-    'POST',
-    'PATCH',
-    'PUT',
-    'DELETE'
-);
-ALTER TYPE public.submission_methods OWNER TO fmtm;
-
 -- Tables
 CREATE TABLE public.projects (
     id integer NOT NULL,
@@ -67,9 +50,28 @@ CREATE TABLE public.projects (
 CREATE TABLE public.api_submissions (
     id integer NOT NULL,
     url character varying NOT NULL,
-    method public.submission_methods DEFAULT 'POST',
+    method character varying DEFAULT 'POST' CHECK (
+        method IN (
+            'GET',
+            'POST',
+            'PATCH',
+            'PUT',
+            'DELETE'
+        )
+    ),
+    content_type character varying DEFAULT 'application/json' CHECK (
+        content_type IN (
+            'application/json',
+            'multipart/form-data',
+            'application/xml',
+            'text/plain'
+        )
+    ),
     payload JSONB,
-    status public.submission_status DEFAULT 'PENDING',
+    headers JSONB,
+    status character varying DEFAULT 'PENDING' CHECK (
+        status IN ('PENDING', 'RECEIVED')
+    ),
     retry_count integer DEFAULT 0,
     error character varying,
     queued_at timestamp with time zone DEFAULT now(),
