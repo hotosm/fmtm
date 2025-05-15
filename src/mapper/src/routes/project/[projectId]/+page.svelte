@@ -9,7 +9,6 @@
 	import { polygon } from '@turf/helpers';
 	import { buffer } from '@turf/buffer';
 	import { bbox } from '@turf/bbox';
-	import { v4 as uuidv4 } from 'uuid';
 	import type SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.component.js';
 	import type SlDialog from '@shoelace-style/shoelace/dist/components/dialog/dialog.component.js';
 
@@ -352,8 +351,8 @@
 		}
 		try {
 			isGeometryCreationLoading = true;
-			const entityUuid = uuidv4();
-			const newOsmId = getNewOsmId()
+			const entityUuid = crypto.randomUUID();
+			const newOsmId = getNewOsmId();
 			await entitiesStore.createEntity(db, projectId, entityUuid, {
 				type: 'FeatureCollection',
 				features: [{ type: 'Feature', geometry: newFeatureGeom, properties: {
