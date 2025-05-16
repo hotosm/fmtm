@@ -3,13 +3,12 @@ import Mentions from 'rc-mentions';
 import { Modal } from '@/components/common/Modal';
 import { SubmissionActions } from '@/store/slices/SubmissionSlice';
 import { reviewListType } from '@/models/submission/submissionModel';
-import { PostGeometry, UpdateReviewStateService } from '@/api/SubmissionService';
+import { UpdateReviewStateService } from '@/api/SubmissionService';
 import Button from '@/components/common/Button';
 import { PostProjectComments, UpdateEntityState } from '@/api/Project';
 import { entity_state } from '@/types/enums';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import { task_event } from '@/types/enums';
-import { featureType } from '@/store/types/ISubmissions';
 import '@/styles/rc-mentions.css';
 import { GetUserNames } from '@/api/User';
 import { UserActions } from '@/store/slices/UserSlice';
@@ -101,27 +100,6 @@ const UpdateReviewStatusModal = () => {
           },
         ),
       );
-
-      // post bad geometry if submission is marked as hasIssues
-      if (reviewStatus === 'hasIssues') {
-        const badFeature = {
-          ...(updateReviewStatusModal.feature as featureType),
-          properties: {
-            entity_id: updateReviewStatusModal.entity_id,
-            task_id: updateReviewStatusModal.taskUid,
-            instance_id: updateReviewStatusModal.instanceId,
-          },
-        };
-
-        dispatch(
-          PostGeometry(`${VITE_API_URL}/projects/${updateReviewStatusModal.projectId}/geometry/records`, {
-            status: 'BAD',
-            geojson: badFeature,
-            project_id: updateReviewStatusModal.projectId,
-            task_id: +updateReviewStatusModal.taskUid,
-          }),
-        );
-      }
 
       dispatch(
         UpdateEntityState(`${VITE_API_URL}/projects/${updateReviewStatusModal.projectId}/entity/status`, {
