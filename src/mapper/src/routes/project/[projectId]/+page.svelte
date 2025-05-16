@@ -622,6 +622,7 @@
 		bind:webFormsRef
 		bind:display={displayWebFormsDrawer}
 		{projectId}
+		formXml={project.odk_form_xml}
 		entityId={entitiesStore.selectedEntityId || undefined}
 		taskId={taskStore.selectedTaskIndex || undefined}
 	/>

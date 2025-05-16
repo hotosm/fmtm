@@ -4,7 +4,7 @@
 	import { getCommonStore } from '$store/common.svelte.ts';
 	import { getLoginStore } from '$store/login.svelte.ts';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
-	import { fetchBlobUrl, fetchCachedBlobUrl, fetchFormMediBlobUrls } from '$lib/api/fetch';
+	import { fetchCachedBlobUrl, fetchFormMediBlobUrls } from '$lib/api/fetch';
 	import { getDeviceId } from '$lib/utils/random';
 	import { geojsonGeomToJavarosa } from '$lib/odk/javarosa.ts';
 	import { m } from '$translations/messages.js';
@@ -16,6 +16,7 @@
 		display: Boolean;
 		entityId: string | undefined;
 		projectId: number | undefined;
+		formXml: string | undefined;
 		taskId: number | undefined;
 		webFormsRef: HTMLElement | undefined;
 	};
@@ -27,7 +28,7 @@
 	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
 	const selectedEntityGeometry = $derived(entitiesStore.selectedEntityGeometry);
 
-	let { display = $bindable(false), entityId, webFormsRef = $bindable(undefined), projectId, taskId }: Props = $props();
+	let { display = $bindable(false), entityId, webFormsRef = $bindable(undefined), projectId, formXml, taskId }: Props = $props();
 	let drawerRef: SlDrawer;
 	let odkForm: any;
 	let startDate: string | undefined;
@@ -35,8 +36,6 @@
 	let drawerLabel = $state('');
 	let uploading = $state(false);
 	let uploadingMessage = $state('');
-
-	const formXmlPromise = fetchBlobUrl(`${API_URL}/central/form-xml?project_id=${projectId}`);
 
 	const odkWebFormPromise = fetchCachedBlobUrl(
 		'https://hotosm.github.io/web-forms/odk-web-form.js',
@@ -230,37 +229,35 @@
 	{#await odkWebFormPromise then odkWebFormUrl}
 		{#if entityId}
 			{#key projectId}
-				{#await formXmlPromise then formXml}
-					{#await formMediaPromise then formMedia}
-						{#key entityId}
-							{#key commonStore.locale}
-								{#if uploading}
-									<div id="web-forms-uploader">
-										<div id="uploading-inner">
-											<div id="spinner"></div>
-											{uploadingMessage}
-										</div>
+				{#await formMediaPromise then formMedia}
+					{#key entityId}
+						{#key commonStore.locale}
+							{#if uploading}
+								<div id="web-forms-uploader">
+									<div id="uploading-inner">
+										<div id="spinner"></div>
+										{uploadingMessage}
 									</div>
-								{:else}
-									{#if drawerLabel}
-										<div
-											style="font-size: 10pt; left: 0; padding: 10px; position: absolute; right: 0; text-align: center;"
-										>
-											{drawerLabel}
-										</div>
-									{/if}
-									<iframe
-										class="iframe"
-										style:border="none"
-										style:height="100%"
-										use:handleIframe
-										title="odk-web-forms-wrapper"
-										src={`/web-forms.html?projectId=${projectId}&entityId=${entityId}&formXml=${formXml}&odkWebFormUrl=${odkWebFormUrl}&formMedia=${encodeURIComponent(JSON.stringify(formMedia))}&cssFile=${commonStore.config?.cssFileWebformsOverride || ''}`}
-									></iframe>
+								</div>
+							{:else}
+								{#if drawerLabel}
+									<div
+										style="font-size: 10pt; left: 0; padding: 10px; position: absolute; right: 0; text-align: center;"
+									>
+										{drawerLabel}
+									</div>
 								{/if}
-							{/key}
+								<iframe
+									class="iframe"
+									style:border="none"
+									style:height="100%"
+									use:handleIframe
+									title="odk-web-forms-wrapper"
+									src={`/web-forms.html?projectId=${projectId}&entityId=${entityId}&formXml=${formXml}&odkWebFormUrl=${odkWebFormUrl}&formMedia=${encodeURIComponent(JSON.stringify(formMedia))}&cssFile=${commonStore.config?.cssFileWebformsOverride || ''}`}
+								></iframe>
+							{/if}
 						{/key}
-					{/await}
+					{/key}
 				{/await}
 			{/key}
 		{/if}

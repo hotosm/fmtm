@@ -405,12 +405,3 @@ async def add_new_entity(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail="Entity creation failed",
         ) from e
-
-
-@router.get("/form-xml")
-async def get_project_form_xml_route(
-    project_user: Annotated[ProjectUserDict, Depends(mapper)],
-) -> str:
-    """Get the raw XML from ODK Central for a project."""
-    project = project_user.get("project")
-    return Response(content=project.odk_form_xml, media_type="application/xml")

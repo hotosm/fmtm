@@ -19,6 +19,7 @@ export interface APIProject {
 	priority: number;
 	location_str: string;
 	odk_form_id: string;
+	odk_form_xml: string;
 	data_extract_url: string;
 	odk_token: string;
 	organisation_id: number;
@@ -44,6 +45,7 @@ export interface DbProjectType {
 	status: string; // e.g., 'DRAFT' | 'ACTIVE' | ...
 	total_tasks?: string | null;
 	odk_form_id?: string | null;
+	odk_form_xml?: string | null;
 	visibility: string; // e.g., 'PUBLIC' | 'PRIVATE'
 	mapper_level: string; // e.g., 'BEGINNER' | 'INTERMEDIATE'
 	priority?: string | null; // e.g., 'LOW' | 'MEDIUM' | 'HIGH'
@@ -81,6 +83,7 @@ export const DB_PROJECT_COLUMNS = new Set([
 	'status',
 	'total_tasks',
 	'odk_form_id',
+	'odk_form_xml',
 	'visibility',
 	'mapper_level',
 	'priority',

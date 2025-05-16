@@ -366,7 +366,6 @@ function getEntitiesStatusStore() {
 			return badGeomFeatcol;
 		},
 		get newGeomFeatcol() {
-			console.log(newGeomFeatcol);
 			return newGeomFeatcol;
 		},
 		get syncEntityStatusManuallyLoading() {
