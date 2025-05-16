@@ -555,9 +555,14 @@ async def test_update_and_download_project_form(client, project):
     xls_file = BytesIO(updated_xls_content)
     xls_file.name = "form.xlsx"
 
-    with patch(
-        "app.central.central_deps.read_xlsform", return_value=xls_file
-    ) and patch("app.central.central_crud.update_project_xform", return_value=None):
+    with (
+        patch("app.central.central_deps.read_xlsform", return_value=xls_file),
+        patch("app.central.central_crud.update_project_xform", return_value=None),
+        patch(
+            "app.central.central_crud.get_project_form_xml",
+            return_value="<fake-xml></fake-xml>",
+        ),
+    ):
         response = await client.post(
             f"central/update-form?project_id={project.id}",
             data={"xform_id": "test-xform-id"},
