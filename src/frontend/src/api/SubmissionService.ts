@@ -1,11 +1,10 @@
-import axios, { AxiosResponse } from 'axios';
+import { AxiosResponse } from 'axios';
 import {
   submissionContributorsTypes,
   submissionFormFieldsTypes,
   submissionTableDataTypes,
   updateReviewStateType,
   validatedMappedType,
-  geometryLogType,
 } from '@/models/submission/submissionModel';
 import CoreModules from '@/shared/CoreModules';
 import { CommonActions } from '@/store/slices/CommonSlice';

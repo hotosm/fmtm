@@ -60,7 +60,6 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
   const defaultTheme = useAppSelector((state) => state.theme.hotTheme);
 
   const entityOsmMapLoading = useAppSelector((state) => state.project.entityOsmMapLoading);
-  const getGeomLogLoading = useAppSelector((state) => state.project.getGeomLogLoading);
   const syncTaskStateLoading = useAppSelector((state) => state.project.syncTaskStateLoading);
   const newGeomFeatureCollection = useAppSelector((state) => state.project.newGeomFeatureCollection);
   const badGeomFeatureCollection = useAppSelector((state) => state.project.badGeomFeatureCollection);
@@ -356,7 +355,7 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
             variant="primary-red"
             onClick={syncStatus}
             disabled={entityOsmMapLoading}
-            isLoading={entityOsmMapLoading || getGeomLogLoading || syncTaskStateLoading}
+            isLoading={entityOsmMapLoading || syncTaskStateLoading}
           >
             Sync Status
           </Button>

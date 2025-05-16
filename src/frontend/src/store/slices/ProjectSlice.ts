@@ -29,7 +29,6 @@ const initialState: ProjectStateTypes = {
   projectTaskActivity: [],
   projectActivityLoading: false,
   downloadSubmissionLoading: false,
-  getGeomLogLoading: false,
   syncTaskStateLoading: false,
   selectedEntityId: null,
   badGeomFeatureCollection: { type: 'FeatureCollection', features: [] },
