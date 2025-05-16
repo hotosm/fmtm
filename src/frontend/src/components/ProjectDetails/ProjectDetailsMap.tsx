@@ -20,7 +20,7 @@ import { EntityOsmMap } from '@/models/project/projectModel';
 import { isValidUrl } from '@/utilfunctions/urlChecker';
 import { entity_state } from '@/types/enums';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
-import { GetEntityStatusList, GetGeometryLog, SyncTaskState } from '@/api/Project';
+import { GetEntityStatusList, GetOdkEntitiesGeojson, SyncTaskState } from '@/api/Project';
 import MapLegends from '@/components/MapLegends';
 import isEmpty from '@/utilfunctions/isEmpty';
 import AssetModules from '@/shared/AssetModules';
@@ -188,9 +188,14 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
       dispatch(SyncTaskState(`${VITE_API_URL}/tasks`, { project_id: projectId }, taskBoundaryFeatures, geojsonStyles));
   };
 
+  const getOdkEntitiesGeojson = () => {
+    dispatch(GetOdkEntitiesGeojson(`${VITE_API_URL}/projects/${projectId}/entities`));
+  };
+
   const syncStatus = () => {
     getEntityStatusList();
     syncTaskState();
+    getOdkEntitiesGeojson();
   };
 
   const LockedPopup = (properties: Record<string, any>) => {
