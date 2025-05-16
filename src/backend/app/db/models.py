@@ -1425,6 +1425,7 @@ class DbProject(BaseModel):
     visibility: Optional[ProjectVisibility] = None
     osm_category: Optional[str] = None
     odk_form_id: Optional[str] = None
+    odk_form_xml: Optional[str] = None
     xlsform_content: Optional[bytes] = None
     mapper_level: Optional[MappingLevel] = None
     priority: Optional[ProjectPriority] = None
@@ -1990,7 +1991,7 @@ class DbOdkEntities(BaseModel):
     entity_id: UUID
     status: EntityState
     project_id: int
-    task_id: int
+    task_id: Optional[int]
     osm_id: int
     submission_ids: str
     is_new: bool

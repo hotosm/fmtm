@@ -141,11 +141,18 @@ async def update_project_form(
         xlsform,
         project.odk_credentials,
     )
+    form_xml = await run_in_threadpool(
+        central_crud.get_project_form_xml,
+        project.odk_credentials,
+        project.odkid,
+        xform_id,
+    )
 
     sql = """
         UPDATE projects
         SET
-            xlsform_content = %(xls_data)s
+            xlsform_content = %(xls_data)s,
+            odk_form_xml = %(form_xml)s
         WHERE
             id = %(project_id)s
         RETURNING id, hashtags;
@@ -155,6 +162,7 @@ async def update_project_form(
             sql,
             {
                 "xls_data": xlsform.getvalue(),
+                "form_xml": form_xml,
                 "project_id": project.id,
             },
         )
@@ -405,14 +413,4 @@ async def get_project_form_xml_route(
 ) -> str:
     """Get the raw XML from ODK Central for a project."""
     project = project_user.get("project")
-    odk_creds = project.odk_credentials
-    odkid = project.odkid
-    odk_form_id = project.odk_form_id
-    # Run separate thread in event loop to avoid blocking with sync code
-    form_xml = await run_in_threadpool(
-        central_crud.get_project_form_xml,
-        odk_creds,
-        odkid,
-        odk_form_id,
-    )
-    return Response(content=form_xml, media_type="application/xml")
+    return Response(content=project.odk_form_xml, media_type="application/xml")

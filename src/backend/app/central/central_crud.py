@@ -269,7 +269,7 @@ async def read_and_test_xform(input_data: BytesIO) -> None:
 
 
 def get_project_form_xml(
-    odk_creds: central_schemas.ODKCentralDecrypted, odkid: str, odk_form_id: str
+    odk_creds: central_schemas.ODKCentralDecrypted, odkid: int, odk_form_id: str
 ) -> str:
     """Get the XForm from ODK Central as raw XML."""
     xform = get_odk_form(odk_creds)

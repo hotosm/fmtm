@@ -4,9 +4,9 @@ import asyncio
 from functools import partial
 
 from psycopg import AsyncConnection
-from psycopg.rows import class_row
+from psycopg.rows import class_row, scalar_row
 
-from app.central import central_deps, central_schemas
+from app.central import central_crud, central_deps, central_schemas
 from app.config import settings
 
 
@@ -77,12 +77,16 @@ async def insert_into_entities(
     async with central_deps.pyodk_client(odk_creds) as client:
         # Fetch all entity IDs from ODK to validate against geomlog
         loop = asyncio.get_running_loop()
-        odk_entities = await loop.run_in_executor(
-            None,
-            lambda: client.entities.list(
-                project_id=odk_id, entity_list_name="features"
-            ),
+        update_fn = partial(
+            client.entities.list, project_id=odk_id, entity_list_name="features"
         )
+        odk_entities = await loop.run_in_executor(None, update_fn)
+        print("")
+        print("")
+        print("")
+        print(odk_entities)
+        print("")
+        print("")
         existing_entity_ids = {e.uuid for e in odk_entities}
 
         for entity_id, data in geomlog.items():
@@ -122,6 +126,48 @@ async def insert_into_entities(
     return all_success
 
 
+async def copy_xform_xml_to_fieldtm(
+    db: AsyncConnection,
+    fmtm_project_id: int,
+    odk_id: int,
+    odk_creds: central_schemas.ODKCentralDecrypted,
+):
+    """Copy form xml from Central --> FieldTM to access more efficiently."""
+    try:
+        async with db.cursor(row_factory=scalar_row) as cur:
+            await cur.execute(
+                """
+                SELECT odk_form_id FROM projects
+                WHERE id = %(project_id)s;
+            """,
+                {"project_id": fmtm_project_id},
+            )
+            odk_form_id = await cur.fetchone()
+
+        loop = asyncio.get_running_loop()
+        update_fn = partial(
+            central_crud.get_project_form_xml,
+            odk_creds,
+            odk_id,
+            odk_form_id,
+        )
+        form_xml = await loop.run_in_executor(None, update_fn)
+
+        async with db.cursor(row_factory=class_row(dict)) as cur:
+            await cur.execute(
+                """
+                UPDATE projects
+                SET odk_form_xml = %(form_xml)s
+                WHERE id = %(project_id)s;
+            """,
+                {"project_id": fmtm_project_id, "form_xml": form_xml},
+            )
+            print("✅ Copied project Central form XML --> FieldTM db")
+
+    except Exception as e:
+        print(f"❌ Failed copying form XML for ODK ID ({odk_id}): {e}")
+
+
 async def convert_geomlogs_to_odk_entities():
     """Convert geomlog records for project to entities."""
     all_success = False
@@ -157,16 +203,35 @@ async def convert_geomlogs_to_odk_entities():
 
             print(f"✅ is_new property added successfully to project {project['id']}")
 
-            processed_geomlogs = await process_geometrylogs(db, project["id"])
-            all_success = await insert_into_entities(
-                project["odkid"], project["odk_creds"], processed_geomlogs
+            # Check geometrylog table hasn't been deleted (idempotence)
+            async with db.cursor(row_factory=class_row(dict)) as cur:
+                await cur.execute("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables
+                        WHERE table_schema = 'public'
+                        AND table_name = 'geometrylog'
+                    );
+                """)
+                exists_row = await cur.fetchone()
+                exists = exists_row["exists"]
+
+                # Only process if exists
+                if exists:
+                    processed_geomlogs = await process_geometrylogs(db, project["id"])
+                    all_success = await insert_into_entities(
+                        project["odkid"], project["odk_creds"], processed_geomlogs
+                    )
+
+            # Finally, copy the xform xml Central --> FieldTM
+            await copy_xform_xml_to_fieldtm(
+                db, project["id"], project["odkid"], project["odk_creds"]
             )
 
         if all_success:
             async with db.cursor(row_factory=class_row(dict)) as cur:
                 await cur.execute("DROP TABLE IF EXISTS geometrylog;")
                 await cur.execute("DROP INDEX IF EXISTS idx_geometrylog_geojson;")
-                await cur.execute("DROP ENUM public.geomstatus;")
+                await cur.execute("DROP TYPE public.geomstatus;")
                 print("🧹 Dropped geometrylog table after successful migration.")
         else:
             print("⚠️ Not all updates succeeded, geometrylog table was NOT dropped.")
