@@ -62,6 +62,8 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
   const entityOsmMapLoading = useAppSelector((state) => state.project.entityOsmMapLoading);
   const getGeomLogLoading = useAppSelector((state) => state.project.getGeomLogLoading);
   const syncTaskStateLoading = useAppSelector((state) => state.project.syncTaskStateLoading);
+  const newGeomFeatureCollection = useAppSelector((state) => state.project.newGeomFeatureCollection);
+  const badGeomFeatureCollection = useAppSelector((state) => state.project.badGeomFeatureCollection);
 
   useEffect(() => {
     if (!map) return;
@@ -121,7 +123,7 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
 
     return () => clearInterval(interval);
     // TODO: replace badGeomFeatureCollection dependency with other
-  }, [map]);
+  }, [map, badGeomFeatureCollection]);
 
   /**
    * Handles the click event on a project task area.
@@ -304,6 +306,38 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
               zIndex={5}
             />
           )}
+        <VectorLayer
+          geojson={badGeomFeatureCollection}
+          viewProperties={{
+            size: map?.getSize(),
+            padding: [50, 50, 50, 50],
+            constrainResolution: true,
+            duration: 2000,
+          }}
+          layerProperties={{ name: 'bad-entities' }}
+          zIndex={5}
+          style=""
+        />
+        <VectorLayer
+          geojson={newGeomFeatureCollection}
+          viewProperties={{
+            size: map?.getSize(),
+            padding: [50, 50, 50, 50],
+            constrainResolution: true,
+            duration: 2000,
+          }}
+          layerProperties={{ name: 'new-entities' }}
+          zIndex={5}
+          style=""
+          getTaskStatusStyle={(feature) => {
+            const geomType = feature.getGeometry().getType();
+            const featureProperty = feature.getProperties();
+            const status = entity_state[+featureProperty?.status];
+            const isEntitySelected = selectedEntityId ? +selectedEntityId === +featureProperty?.osm_id : false;
+            return getFeatureStatusStyle(geomType, mapTheme, status, isEntitySelected);
+            return;
+          }}
+        />
         <AsyncPopup
           map={map}
           popupUI={LockedPopup}
