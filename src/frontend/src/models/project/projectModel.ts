@@ -154,18 +154,3 @@ export type EntityOsmMap = {
   is_new: boolean | null;
   geometry: string | null;
 };
-
-export type geometryLogResponseType = {
-  id: string;
-  status: 'BAD' | 'NEW';
-  geojson: {
-    type: 'Feature';
-    geometry: {
-      type: string;
-      coordinates: number[][][];
-    };
-    properties: Record<string, any>;
-  };
-  project_id: number;
-  task_id: number;
-};

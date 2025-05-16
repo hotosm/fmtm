@@ -198,6 +198,7 @@ class EntityProperties(BaseModel):
     changeset: Optional[str] = None
     timestamp: Optional[str] = None
     status: Optional[str] = None
+    is_new: Optional[str] = None
 
     @computed_field
     @property
