@@ -124,21 +124,3 @@ export const PostGeometry = (url: string, payload: geometryLogType) => {
     await postGeometry();
   };
 };
-
-export const DeleteGeometry = (url: string) => {
-  return async (dispatch: AppDispatch) => {
-    const deleteGeometry = async () => {
-      try {
-        await axios.delete(url);
-      } catch (error) {
-        dispatch(
-          CommonActions.SetSnackBar({
-            message: 'Failed to delete geometry.',
-          }),
-        );
-      }
-    };
-
-    await deleteGeometry();
-  };
-};

@@ -30,9 +30,6 @@ const initialState: ProjectStateTypes = {
   projectTaskActivity: [],
   projectActivityLoading: false,
   downloadSubmissionLoading: false,
-  badGeomFeatureCollection: { type: 'FeatureCollection', features: [] },
-  newGeomFeatureCollection: { type: 'FeatureCollection', features: [] },
-  badGeomLogList: [],
   getGeomLogLoading: false,
   syncTaskStateLoading: false,
   selectedEntityId: null,
@@ -152,18 +149,6 @@ const ProjectSlice = createSlice({
         return boundary;
       });
       state.projectTaskBoundries = updatedProjectTaskBoundries;
-    },
-    SetGeometryLog(state, action: PayloadAction<geometryLogResponseType[]>) {
-      const geomLog = action.payload;
-      const badGeomLog = geomLog.filter((geom) => geom.status === 'BAD');
-      const badGeomLogGeojson = badGeomLog.map((geom) => geom.geojson);
-      const newGeomLogGeojson = geomLog.filter((geom) => geom.status === 'NEW').map((geom) => geom.geojson);
-      state.badGeomFeatureCollection = { type: 'FeatureCollection', features: badGeomLogGeojson };
-      state.newGeomFeatureCollection = { type: 'FeatureCollection', features: newGeomLogGeojson };
-      state.badGeomLogList = badGeomLog;
-    },
-    SetGeometryLogLoading(state, action: PayloadAction<boolean>) {
-      state.getGeomLogLoading = action.payload;
     },
     SyncTaskStateLoading(state, action: PayloadAction<boolean>) {
       state.syncTaskStateLoading = action.payload;

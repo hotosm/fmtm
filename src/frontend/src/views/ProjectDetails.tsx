@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import '../../node_modules/ol/ol.css';
 import '../styles/home.scss';
 import TaskActivity from '@/components/ProjectDetails/Tabs/TaskActivity';
-import { ProjectById, GetEntityStatusList, GetGeometryLog } from '@/api/Project';
+import { ProjectById, GetEntityStatusList } from '@/api/Project';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import AssetModules from '@/shared/AssetModules';
 import GenerateBasemap from '@/components/GenerateBasemap';
@@ -111,13 +111,8 @@ const ProjectDetails = () => {
     dispatch(GetEntityStatusList(`${VITE_API_URL}/projects/${projectId}/entities/statuses`));
   };
 
-  const getGeometryLog = () => {
-    dispatch(GetGeometryLog(`${VITE_API_URL}/projects/${projectId}/geometry/records`));
-  };
-
   useEffect(() => {
     getEntityStatusList();
-    getGeometryLog();
   }, []);
 
   const getTabContent = (tabState: tabType) => {

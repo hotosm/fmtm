@@ -35,9 +35,6 @@ export type ProjectStateTypes = {
   projectTaskActivity: projectTaskActivity[];
   projectActivityLoading: boolean;
   downloadSubmissionLoading: boolean;
-  badGeomFeatureCollection: FeatureCollectionType;
-  newGeomFeatureCollection: FeatureCollectionType;
-  badGeomLogList: geometryLogResponseType[];
   getGeomLogLoading: boolean;
   syncTaskStateLoading: boolean;
   selectedEntityId: string | null;

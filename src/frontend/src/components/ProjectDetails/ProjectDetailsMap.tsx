@@ -54,8 +54,6 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
   const projectInfo = useAppSelector((state) => state.project.projectInfo);
   const projectTaskBoundaries = useAppSelector((state) => state.project.projectTaskBoundries);
   const entityOsmMap = useAppSelector((state) => state.project.entityOsmMap);
-  const badGeomFeatureCollection = useAppSelector((state) => state.project.badGeomFeatureCollection);
-  const newGeomFeatureCollection = useAppSelector((state) => state.project.newGeomFeatureCollection);
   const customBasemapUrl = useAppSelector((state) => state.project.customBasemapUrl);
   const selectedTask = useAppSelector((state) => state.task.selectedTask);
   const selectedEntityId = useAppSelector((state) => state.project.selectedEntityId);
@@ -122,7 +120,8 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
     }, 50);
 
     return () => clearInterval(interval);
-  }, [map, badGeomFeatureCollection]);
+    // TODO: replace badGeomFeatureCollection dependency with other
+  }, [map]);
 
   /**
    * Handles the click event on a project task area.
@@ -176,10 +175,6 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
     dispatch(GetEntityStatusList(`${VITE_API_URL}/projects/${projectId}/entities/statuses`));
   };
 
-  const getGeometryLog = () => {
-    dispatch(GetGeometryLog(`${VITE_API_URL}/projects/${projectId}/geometry/records`));
-  };
-
   const syncTaskState = () => {
     const taskBoundaryLayer = map
       .getLayers()
@@ -193,7 +188,6 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
 
   const syncStatus = () => {
     getEntityStatusList();
-    getGeometryLog();
     syncTaskState();
   };
 
@@ -283,39 +277,6 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
             }}
           />
         )}
-        <VectorLayer
-          geojson={badGeomFeatureCollection}
-          viewProperties={{
-            size: map?.getSize(),
-            padding: [50, 50, 50, 50],
-            constrainResolution: true,
-            duration: 2000,
-          }}
-          layerProperties={{ name: 'bad-entities' }}
-          zIndex={5}
-          style=""
-        />
-        <VectorLayer
-          geojson={newGeomFeatureCollection}
-          viewProperties={{
-            size: map?.getSize(),
-            padding: [50, 50, 50, 50],
-            constrainResolution: true,
-            duration: 2000,
-          }}
-          layerProperties={{ name: 'new-entities' }}
-          zIndex={5}
-          style=""
-          getTaskStatusStyle={(feature) => {
-            const geomType = feature.getGeometry().getType();
-            const entity = entityOsmMap?.find(
-              (entity) => entity?.id === feature?.getProperties()?.entity_id,
-            ) as EntityOsmMap;
-            const status = entity_state[entity?.status];
-            const isEntitySelected = selectedEntityId === entity?.id;
-            return getFeatureStatusStyle(geomType, mapTheme, status, isEntitySelected);
-          }}
-        />
         {projectInfo.data_extract_url &&
           isValidUrl(projectInfo.data_extract_url) &&
           dataExtractExtent &&
