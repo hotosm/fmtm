@@ -229,7 +229,7 @@ class EntityOsmID(BaseModel):
     @classmethod
     def convert_osm_id(cls, value):
         """Set osm_id to None if empty or invalid."""
-        if value in ("", " "):  # Treat empty strings as None
+        if value in ("", " ", None, "None"):  # Treat empty strings as None
             return None
         try:
             return int(value)  # Convert to integer if possible
@@ -241,13 +241,14 @@ class EntityTaskID(BaseModel):
     """Map of Entity UUID to Field-TM Task ID."""
 
     id: str
+    # Parse as integer
     task_id: Optional[int] = None
 
     @field_validator("task_id", mode="before")
     @classmethod
-    def convert_task_id(cls, value):
+    def convert_task_id_to_int(cls, value: str | None):
         """Set task_id to None if empty or invalid."""
-        if value in ("", " "):  # Treat empty strings as None
+        if value in ("", " ", None, "None"):  # Treat empty strings as None
             return None
         try:
             return int(value)  # Convert to integer if possible
