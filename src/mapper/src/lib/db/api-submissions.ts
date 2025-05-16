@@ -76,6 +76,11 @@ async function update(
 	);
 }
 
+async function deleteById(db: PGlite, id: number): Promise<void> {
+	if (!db) return;
+	await db.query(`DELETE FROM api_submissions WHERE id = $1;`, [id]);
+}
+
 async function clear(db: PGlite): Promise<void> {
 	if (!db) return;
 	await db.query(`DELETE FROM api_submissions;`);
@@ -86,5 +91,6 @@ export const DbApiSubmission = {
 	update,
 	count,
 	next,
+	deleteById,
 	clear,
 };

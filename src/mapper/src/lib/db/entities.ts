@@ -5,7 +5,7 @@ import type { DbEntityType } from '$lib/types';
 import { applyDataToTableWithCsvCopy } from '$lib/db/helpers';
 import { javarosaToGeojsonGeom } from '$lib/odk/javarosa';
 
-async function update(db: PGlite, entity: DbEntityType) {
+async function update(db: PGlite, entity: Partial<DbEntityType>) {
 	await db.query(
 		`UPDATE odk_entities
          SET status = $2
@@ -15,6 +15,8 @@ async function update(db: PGlite, entity: DbEntityType) {
 }
 
 async function create(db: PGlite, entity: DbEntityType) {
+	// Note if we are creating a single entity in the local db, it will always include
+	// the geometry field as it is a newgeom or badgeom record.
 	await db.query(
 		`INSERT INTO odk_entities (
             entity_id,
@@ -26,7 +28,7 @@ async function create(db: PGlite, entity: DbEntityType) {
             is_new,
 			geometry
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 		[
 			entity.entity_id,
 			entity.status,

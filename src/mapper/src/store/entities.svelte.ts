@@ -12,6 +12,7 @@ import { EntityStatusNameMap } from '$lib/types';
 import { getAlertStore } from './common.svelte';
 import { DbEntity } from '$lib/db/entities';
 import { DbApiSubmission } from '$lib/db/api-submissions';
+import { geojsonGeomToJavarosa } from '$lib/odk/javarosa';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -90,7 +91,7 @@ function getEntitiesStatusStore() {
 		});
 
 		// Populate initial entity statuses
-		await getInitialEntities(db, projectId);
+		await setEntitiesListFromDbRecords(db, projectId);
 		_calculateTaskSubmissionCounts();
 
 		entitiesUnsubscribe = entitiesSync?.stream.subscribe(
@@ -134,7 +135,7 @@ function getEntitiesStatusStore() {
 		}
 	}
 
-	async function getInitialEntities(db: PGliteWithSync, projectId: number) {
+	async function setEntitiesListFromDbRecords(db: PGliteWithSync, projectId: number) {
 		const dbEntities = await db.query(`SELECT * FROM odk_entities WHERE project_id = $1;`, [projectId]);
 		entitiesList = dbEntities.rows.map((entity: DbEntityType) => ({
 			entity_id: entity.entity_id,
@@ -246,20 +247,52 @@ function getEntitiesStatusStore() {
 		}
 	}
 
-	async function updateEntityStatus(projectId: number, payload: EntityStatusPayload) {
-		try {
-			updateEntityStatusLoading = true;
-			await fetch(`${API_URL}/projects/${projectId}/entity/status`, {
-				method: 'POST',
-				body: JSON.stringify(payload),
-				headers: {
-					'Content-type': 'application/json',
-				},
-				credentials: 'include',
+	async function updateEntityStatus(db: PGlite, projectId: number, payload: EntityStatusPayload) {
+		const entityRequestUrl = `${API_URL}/projects/${projectId}/entity/status`;
+		const entityRequestMethod = 'POST';
+		const entityRequestPayload = JSON.stringify(payload);
+		const entityRequestContentType = 'application/json';
+
+		if (online.current) {
+			try {
+				updateEntityStatusLoading = true;
+				const resp = await fetch(entityRequestUrl, {
+					method: entityRequestMethod,
+					body: entityRequestPayload,
+					headers: {
+						'Content-type': entityRequestContentType,
+					},
+					credentials: 'include',
+				});
+				if (!resp.ok) {
+					const errorData = await resp.json();
+					throw new Error(errorData.detail);
+				}
+				updateEntityStatusLoading = false;
+			} catch (error: any) {
+				updateEntityStatusLoading = false;
+				alertStore.setAlert({
+					variant: 'danger',
+					message: error.message || 'Failed to update entity',
+				});
+				throw new Error(error);
+			}
+		} else {
+			// Save for later submission + add entity update to local db
+			await DbApiSubmission.create(db, {
+				url: entityRequestUrl,
+				method: entityRequestMethod,
+				content_type: entityRequestContentType,
+				payload: entityRequestPayload,
 			});
-			updateEntityStatusLoading = false;
-		} catch (error) {
-			updateEntityStatusLoading = false;
+
+			// Update entity in localdb
+			await DbEntity.update(db, {
+				entity_id: payload.entity_id,
+				status: EntityStatusNameMap[payload.status],
+			});
+			// Reuse function to get records from db and set svelte store
+			await setEntitiesListFromDbRecords(db, projectId);
 		}
 	}
 
@@ -291,6 +324,11 @@ function getEntitiesStatusStore() {
 				throw new Error(error);
 			}
 		} else {
+			const javarosaGeom = geojsonGeomToJavarosa(featcol.features[0].geometry);
+			if (!javarosaGeom) {
+				throw Error('Could not convert geometry.');
+			}
+
 			// Save for later submission + add entity entry to local db
 			await DbApiSubmission.create(db, {
 				url: entityRequestUrl,
@@ -298,6 +336,8 @@ function getEntitiesStatusStore() {
 				content_type: entityRequestContentType,
 				payload: entityRequestPayload,
 			});
+
+			// Add to localdb
 			await DbEntity.create(db, {
 				entity_id: entityUuid.toString(),
 				status: 'READY',
@@ -306,11 +346,76 @@ function getEntitiesStatusStore() {
 				submission_ids: '',
 				osm_id: featcol.features[0].properties?.osm_id,
 				is_new: true,
-				// FIXME add javarosa geometry here!!
-				geometry: '',
+				geometry: javarosaGeom,
+			});
+			// Reuse function to get records from db and set svelte store
+			await setEntitiesListFromDbRecords(db, projectId);
+		}
+	}
+
+	function _fileToBase64(file: File): Promise<string> {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onload = () => resolve(reader.result as string);
+			reader.onerror = reject;
+			reader.readAsDataURL(file);
+		});
+	}
+
+	async function createNewSubmission(db: PGlite, projectId: number, submissionXml: string, attachments: File[]) {
+		const entityRequestUrl = `${API_URL}/submission?project_id=${projectId}`;
+		const entityRequestMethod = 'POST';
+		const entityRequestContentType = 'multipart/form-data';
+
+		const form = new FormData();
+		form.append('submission_xml', submissionXml);
+		attachments.forEach((file) => {
+			form.append('submission_files', file);
+		});
+
+		if (online.current) {
+			try {
+				const resp = await fetch(entityRequestUrl, {
+					method: entityRequestMethod,
+					body: form,
+					credentials: 'include',
+				});
+				if (!resp.ok) {
+					const errorData = await resp.json();
+					throw new Error(errorData.detail);
+				}
+			} catch (error: any) {
+				alertStore.setAlert({
+					variant: 'danger',
+					message: error.message || 'Failed to submit',
+				});
+				throw new Error(error);
+			}
+		} else {
+			// Save for offline sync
+			const submissionFilesPayload = await Promise.all(
+				attachments.map(async (file) => {
+					const base64 = await _fileToBase64(file);
+					return {
+						name: file.name,
+						type: file.type,
+						base64,
+					};
+				}),
+			);
+
+			await DbApiSubmission.create(db, {
+				url: entityRequestUrl,
+				method: entityRequestMethod,
+				content_type: entityRequestContentType,
+				payload: {
+					form: {
+						submission_xml: submissionXml,
+						submission_files: submissionFilesPayload,
+					},
+				},
 			});
 		}
-		// FIXME we need to append the entity to the store too
 	}
 
 	function setEntityToNavigate(entityCoordinate: entityIdCoordinateMapType | null) {
@@ -342,8 +447,9 @@ function getEntitiesStatusStore() {
 		unsubscribeEntitiesStream: unsubscribeEntitiesStream,
 		syncEntityStatusManually: syncEntityStatusManually,
 		addStatusToGeojsonProperty: addStatusToGeojsonProperty,
-		updateEntityStatus: updateEntityStatus,
 		createEntity: createEntity,
+		updateEntityStatus: updateEntityStatus,
+		createNewSubmission: createNewSubmission,
 		setEntityToNavigate: setEntityToNavigate,
 		setToggleGeolocation: setToggleGeolocation,
 		setUserLocationCoordinate: setUserLocationCoordinate,

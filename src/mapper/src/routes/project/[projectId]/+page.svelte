@@ -191,7 +191,7 @@
 	 * 
 	 * Syncing status is tracked via `commonStore.offlineDataIsSyncing` and alerts are shown after each attempt.
 	 */
-	async function iterateAndSendOfflineSubmissions(): Promise<boolean> {
+	 async function iterateAndSendOfflineSubmissions(): Promise<boolean> {
 		if (!db) return false;
 
 		let sent = 0;
@@ -199,10 +199,7 @@
 
 		// Count remaining pending submissions
 		const total = await DbApiSubmission.count(db);
-		if (total === 0) {
-			// Nothing to be done
-			return true;
-		}
+		if (total === 0) return true; // Nothing to be done
 
 		commonStore.setOfflineDataIsSyncing(true);
 		alertStore.setAlert({
@@ -211,19 +208,70 @@
 		});
 
 		let processed = 0; // how many attempts made (success + fail)
+
 		while (true) {
-			const result = await sendNextQueuedSubmissionToApi(db);
-			if (!result) break; // No more pending entries
+			const row = await DbApiSubmission.first(db);
+			if (!row) break; // No more pending entries
+
+			let success = false;
+
+			try {
+				let options: RequestInit;
+
+				// Handle JSON POSTs
+				if (row.content_type === 'application/json') {
+					options = {
+						method: row.method,
+						body: JSON.stringify(row.payload.body),
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						credentials: 'include'
+					};
+				// Handle multipart FormData posts (base64 encoded attachments)
+				} else if (row.content_type === 'multipart/form-data') {
+					const form = new FormData();
+					form.append('submission_xml', row.payload.form.submission_xml);
+
+					for (const f of row.payload.form.submission_files) {
+						const byteString = atob(f.base64.split(',')[1]);
+						const arrayBuffer = new Uint8Array(byteString.length);
+						for (let i = 0; i < byteString.length; i++) {
+							arrayBuffer[i] = byteString.charCodeAt(i);
+						}
+						const blob = new Blob([arrayBuffer], { type: f.type });
+						const file = new File([blob], f.name, { type: f.type });
+						form.append('submission_files', file);
+					}
+
+					options = {
+						method: row.method,
+						body: form,
+						credentials: 'include'
+					};
+				} else {
+					throw new Error(`Unsupported content_type: ${row.content_type}`);
+				}
+
+				const res = await fetch(row.url, options);
+
+				if (!res.ok) throw new Error(`HTTP ${res.status}`);
+				success = true;
+			} catch (err) {
+				console.error('Offline send failed:', err);
+				success = false;
+			}
 
 			processed++;
 
-			if (result.success) {
+			if (success) {
 				sent++;
 				// This is bad ux if multiple send in quick succession
 				// alertStore.setAlert({
 				// 	message: `Successfully sent offline data ${sent}/${total} to API`,
 				// 	variant: 'success'
 				// });
+				await DbApiSubmission.deleteById(db, row.id);
 			} else {
 				failed++;
 				alertStore.setAlert({
@@ -250,7 +298,7 @@
 			return true;
 		} else {
 			alertStore.setAlert({
-				message: `Offline sync: (${sent - failed} succeeded, ${failed} failed).`,
+				message: `Offline sync: (${sent} succeeded, ${failed} failed).`,
 				variant: 'warning'
 			});
 			return false;
@@ -367,7 +415,7 @@
 				await entitiesStore.setSelectedEntityId(entityUuid);
 				openedActionModal = null;
 				const entityOsmId = entitiesStore.getOsmIdByEntityId(entityUuid);
-				entitiesStore.updateEntityStatus(projectId, {
+				entitiesStore.updateEntityStatus(db, projectId, {
 					entity_id: entityUuid,
 					status: 1,
 					label: `Feature ${entityOsmId}`
@@ -377,6 +425,7 @@
 				openOdkCollectNewFeature(project?.odk_form_id, entityUuid);
 			}
 		} catch (error) {
+			console.error(error);
 			alertStore.setAlert({ message: 'Unable to create entity', variant: 'danger' });
 		} finally {
 			isGeometryCreationLoading = false;
