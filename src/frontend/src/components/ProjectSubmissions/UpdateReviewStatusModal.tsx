@@ -24,7 +24,6 @@ const initialReviewState = {
   taskUid: null,
   entity_id: null,
   label: null,
-  feature: null,
 };
 
 // Note these id values must be camelCase to match what ODK Central requires
