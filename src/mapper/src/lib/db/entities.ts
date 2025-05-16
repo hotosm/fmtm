@@ -1,6 +1,9 @@
 import type { PGlite } from '@electric-sql/pglite';
+import type { Feature } from 'geojson';
+
 import type { DbEntityType } from '$lib/types';
 import { applyDataToTableWithCsvCopy } from '$lib/db/helpers';
+import { javarosaToGeojsonGeom } from '$lib/odk/javarosa';
 
 async function update(db: PGlite, entity: DbEntityType) {
 	await db.query(
@@ -54,8 +57,29 @@ async function bulkCreate(db: PGlite, entities: DbEntityType[]) {
 	await applyDataToTableWithCsvCopy(db, 'odk_entities', dataObj);
 }
 
+// Convert a DbEntity entry to a GeoJSON Feature
+function toGeojsonFeature(entity: DbEntityType): Feature | null {
+	const geometry = javarosaToGeojsonGeom(entity.geometry);
+	if (!geometry) return null;
+
+	return {
+		type: 'Feature',
+		geometry,
+		properties: {
+			entity_id: entity.entity_id,
+			status: entity.status,
+			project_id: entity.project_id,
+			task_id: entity.task_id,
+			osm_id: entity.osm_id,
+			submission_ids: entity.submission_ids,
+			is_new: entity.is_new,
+		},
+	};
+}
+
 export const DbEntity = {
 	create,
 	update,
 	bulkCreate,
+	toGeojsonFeature,
 };

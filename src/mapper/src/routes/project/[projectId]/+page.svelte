@@ -20,7 +20,7 @@
 	import { openOdkCollectNewFeature } from '$lib/odk/collect';
 	import { convertDateToTimeAgo } from '$lib/utils/datetime';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
-	import { getEntitiesStatusStore, getNewBadGeomStore } from '$store/entities.svelte.ts';
+	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
 	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
 	import { readFileFromOPFS } from '$lib/fs/opfs';
 	import { loadOfflineExtract, writeOfflineExtract } from '$lib/map/extracts';
@@ -58,13 +58,11 @@
 
 	const taskStore = getTaskStore();
 	const entitiesStore = getEntitiesStatusStore();
-	const newBadGeomStore = getNewBadGeomStore();
 	const commonStore = getCommonStore();
 	const alertStore = getAlertStore();
 
 	let taskEventStream: ShapeStream | undefined;
 	let entityStatusStream: ShapeStream | undefined;
-	let newBadGeomStream: ShapeStream | undefined;
 	let lastOnlineStatus: boolean | null = $state(null);
 	let subscribeDebounce: ReturnType<typeof setTimeout> | null = $state(null);
 
@@ -145,7 +143,6 @@
 
 		taskEventStream = await taskStore.getTaskEventStream(db, projectId);
 		entityStatusStream = await entitiesStore.getEntityStatusStream(db, projectId);
-		newBadGeomStream = await newBadGeomStore.getNewBadGeomStream(db, projectId);
 	}
 
 	onMount(async () => {
@@ -171,7 +168,6 @@
 	async function unsubscribeFromAllStreams() {
 		taskStore.unsubscribeEventStream();
 		entitiesStore.unsubscribeEntitiesStream();
-		newBadGeomStore.unsubscribeNewBadGeomStream();
 	}
 
 	onDestroy(() => {
@@ -359,12 +355,8 @@
 					project_id: projectId,
 					osm_id: newOsmId,
 					task_id: taskStore.selectedTaskIndex || null,
+					// TODO FIXME add extra params to ensure is_new: true and status: READY
 				}}],
-			});
-			await newBadGeomStore.createGeomRecord(projectId, {
-				status: 'NEW',
-				geojson: { type: 'Feature', geometry: newFeatureGeom, properties: { entity_id: entityUuid } },
-				project_id: projectId,
 			});
 			cancelMapNewFeatureInODK();
 

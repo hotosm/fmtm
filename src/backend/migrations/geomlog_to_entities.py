@@ -166,6 +166,7 @@ async def convert_geomlogs_to_odk_entities():
             async with db.cursor(row_factory=class_row(dict)) as cur:
                 await cur.execute("DROP TABLE IF EXISTS geometrylog;")
                 await cur.execute("DROP INDEX IF EXISTS idx_geometrylog_geojson;")
+                await cur.execute("DROP ENUM public.geomstatus;")
                 print("🧹 Dropped geometrylog table after successful migration.")
         else:
             print("⚠️ Not all updates succeeded, geometrylog table was NOT dropped.")

@@ -71,9 +71,3 @@ CREATE TYPE public.entitystate AS ENUM (
     'MARKED_BAD'
 );
 ALTER TYPE public.entitystate OWNER TO fmtm;
-
-CREATE TYPE public.geomstatus AS ENUM (
-    'BAD',
-    'NEW'
-);
-ALTER TYPE public.geomstatus OWNER TO fmtm;

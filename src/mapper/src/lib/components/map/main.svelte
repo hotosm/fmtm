@@ -552,7 +552,7 @@
 			extent={taskStore.selectedTaskGeom}
 			extractGeomCols={true}
 			promoteId="id"
-			processGeojson={(geojsonData) => entitiesStore.addStatusToGeojsonProperty(geojsonData, '')}
+			processGeojson={(geojsonData) => entitiesStore.addStatusToGeojsonProperty(geojsonData)}
 			geojsonUpdateDependency={[entitiesStore.entitiesList]}
 		>
 			{#if primaryGeomType === MapGeomTypes.POLYGON}
@@ -657,7 +657,7 @@
 			/>
 		{/if}
 	</GeoJSON>
-	<GeoJSON id="new-geoms" data={entitiesStore.addStatusToGeojsonProperty(entitiesStore.newGeomFeatcol, 'new')}>
+	<GeoJSON id="new-geoms" data={entitiesStore.addStatusToGeojsonProperty(entitiesStore.newGeomFeatcol)}>
 		{#if drawGeomType === MapGeomTypes.POLYGON}
 			<FillLayer
 				id="new-entity-polygon-layer"

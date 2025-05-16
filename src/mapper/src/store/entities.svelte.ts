@@ -25,14 +25,6 @@ type entityIdGeometryMapType = {
 	coordinate: Geometry;
 };
 
-type newBadGeomType<T> = {
-	geojson: Feature;
-	id: number;
-	project_id: number;
-	status: T;
-	task_id: number;
-};
-
 type taskSubmissionInfoType = {
 	task_id: number;
 	index: number;
@@ -41,8 +33,6 @@ type taskSubmissionInfoType = {
 };
 
 let entitiesUnsubscribe: (() => void) | null = $state(null);
-let newBadGeomUnsubscribe: (() => void) | null = $state(null);
-
 let userLocationCoord: LngLatLike | undefined = $state();
 let selectedEntityId: string | null = $state(null);
 let entitiesList: DbEntityType[] = $state([]);
@@ -52,8 +42,26 @@ let selectedEntity: DbEntityType | null = $derived(
 // Map each entity_id to the entity data, for faster lookup in map
 let entityMap = $derived(new Map(entitiesList.map((entity) => [entity.entity_id, entity])));
 
-let badGeomFeatcol: FeatureCollection = $state({ type: 'FeatureCollection', features: [] });
-let newGeomFeatcol: FeatureCollection = $state({ type: 'FeatureCollection', features: [] });
+// Derive new and bad geoms to display as an overlay
+let badGeomFeatcol: FeatureCollection = $derived(
+	(): FeatureCollection => ({
+		type: 'FeatureCollection',
+		features: entitiesList
+			.filter((e) => e.status === 'MARKED_BAD')
+			.map(DbEntity.toGeojsonFeature)
+			.filter(Boolean),
+	}),
+);
+let newGeomFeatcol: FeatureCollection = $derived(
+	(): FeatureCollection => ({
+		type: 'FeatureCollection',
+		features: entitiesList
+			.filter((e) => e.is_new)
+			.map(DbEntity.toGeojsonFeature)
+			.filter(Boolean),
+	}),
+);
+
 let syncEntityStatusManuallyLoading: boolean = $state(false);
 let updateEntityStatusLoading: boolean = $state(false);
 let selectedEntityCoordinate: entityIdCoordinateMapType | null = $state(null);
@@ -63,7 +71,6 @@ let toggleGeolocation: boolean = $state(false);
 let taskSubmissionInfo: taskSubmissionInfoType[] = $state([]);
 let alertStore = getAlertStore();
 let entitiesSync: any = $state(undefined);
-let newBadGeomSync: any = $state(undefined);
 let fgbOpfsUrl: string = $state('');
 
 function getEntitiesStatusStore() {
@@ -145,38 +152,21 @@ function getEntitiesStatusStore() {
 		}));
 	}
 
-	function addStatusToGeojsonProperty(geojsonData: FeatureCollection, entityType: '' | 'new'): FeatureCollection {
-		if (entityType === 'new') {
-			return {
-				...geojsonData,
-				features: geojsonData.features.map((feature) => {
-					const entity = entityMap.get(feature?.properties?.entity_id);
-					return {
-						...feature,
-						properties: {
-							...feature.properties,
-							status: entity?.status,
-							entity_id: entity?.entity_id,
-						},
-					};
-				}),
-			};
-		} else {
-			return {
-				...geojsonData,
-				features: geojsonData.features.map((feature) => {
-					const entity = getEntityByOsmId(feature?.properties?.osm_id);
-					return {
-						...feature,
-						properties: {
-							...feature.properties,
-							status: entity?.status,
-							entity_id: entity?.entity_id,
-						},
-					};
-				}),
-			};
-		}
+	function addStatusToGeojsonProperty(geojsonData: FeatureCollection): FeatureCollection {
+		return {
+			...geojsonData,
+			features: geojsonData.features.map((feature) => {
+				const entity = getEntityByOsmId(feature?.properties?.osm_id);
+				return {
+					...feature,
+					properties: {
+						...feature.properties,
+						status: entity?.status,
+						entity_id: entity?.entity_id,
+					},
+				};
+			}),
+		};
 	}
 
 	function _calculateTaskSubmissionCounts() {
@@ -419,112 +409,4 @@ function getEntitiesStatusStore() {
 	};
 }
 
-function getNewBadGeomStore() {
-	async function getNewBadGeomStream(db: PGliteWithSync, projectId: number): Promise<ShapeStream | undefined> {
-		if (!db || !projectId) {
-			return;
-		}
-
-		newBadGeomSync = await db.electric.syncShapeToTable({
-			shape: {
-				url: `${import.meta.env.VITE_SYNC_URL}/v1/shape`,
-				params: {
-					table: 'geometrylog',
-					where: `project_id=${projectId}`,
-				},
-			},
-			table: 'geometrylog',
-			primaryKey: ['id'],
-			shapeKey: 'geometrylog',
-			initialInsertMethod: 'csv', // performance boost on initial sync
-		});
-
-		// Set initial state of newGeom and badGeom from db
-		await getInitialGeomRecords(db, projectId);
-
-		// Append new geoms created to the existing state
-		newBadGeomUnsubscribe = newBadGeomSync.stream.subscribe(
-			(geoms: ShapeData[]) => {
-				const rows: newBadGeomType<'NEW' | 'BAD'>[] = geoms
-					.filter((item): item is { value: newBadGeomType<'NEW' | 'BAD'> } => 'value' in item && item.value !== null)
-					.map((item) => item.value);
-
-				const badRows = rows.filter((row) => row.status === 'BAD').map((row) => row.geojson);
-				const newRows = rows.filter((row) => row.status === 'NEW').map((row) => row.geojson);
-
-				// Append new or bad geom to existing featcol overlay
-				badGeomFeatcol = {
-					...badGeomFeatcol,
-					features: [...badGeomFeatcol.features, ...badRows],
-				};
-				newGeomFeatcol = {
-					...newGeomFeatcol,
-					features: [...newGeomFeatcol.features, ...newRows],
-				};
-			},
-			(error: FetchError) => {
-				console.error('geom sync error', error);
-			},
-		);
-
-		return newBadGeomSync;
-	}
-
-	function unsubscribeNewBadGeomStream() {
-		if (newBadGeomUnsubscribe) {
-			newBadGeomSync?.unsubscribe();
-			newBadGeomUnsubscribe();
-			newBadGeomUnsubscribe = null;
-		}
-	}
-
-	async function getInitialGeomRecords(db: PGlite, projectId: number) {
-		const dbNewGeoms = await db.query(`SELECT * FROM geometrylog WHERE project_id = $1 AND status = 'NEW';`, [
-			projectId,
-		]);
-		const existingNewGeoms = dbNewGeoms.rows.map((row: newBadGeomType<'NEW'>) => row.geojson);
-		newGeomFeatcol = {
-			type: 'FeatureCollection',
-			features: existingNewGeoms,
-		};
-
-		const dbBadGeoms = await db.query(`SELECT * FROM geometrylog WHERE project_id = $1 AND status = 'BAD';`, [
-			projectId,
-		]);
-		const existingBadGeoms = dbBadGeoms.rows.map((row: newBadGeomType<'BAD'>) => row.geojson);
-		badGeomFeatcol = {
-			type: 'FeatureCollection',
-			features: existingBadGeoms,
-		};
-	}
-
-	async function createGeomRecord(projectId: number, payload: Record<string, any>) {
-		try {
-			const resp = await fetch(`${API_URL}/projects/${projectId}/geometry/records`, {
-				method: 'POST',
-				body: JSON.stringify(payload),
-				headers: {
-					'Content-type': 'application/json',
-				},
-				credentials: 'include',
-			});
-			if (!resp.ok) {
-				const errorData = await resp.json();
-				throw new Error(errorData.detail);
-			}
-		} catch (error: any) {
-			alertStore.setAlert({
-				variant: 'danger',
-				message: error.message || 'Failed to create geometry record',
-			});
-		}
-	}
-
-	return {
-		getNewBadGeomStream: getNewBadGeomStream,
-		unsubscribeNewBadGeomStream: unsubscribeNewBadGeomStream,
-		createGeomRecord: createGeomRecord,
-	};
-}
-
-export { getEntitiesStatusStore, getNewBadGeomStore };
+export { getEntitiesStatusStore };

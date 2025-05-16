@@ -255,13 +255,6 @@ class XLSFormType(StrEnum, Enum):
     # waterways = "waterways"
 
 
-class GeomStatus(StrEnum, Enum):
-    """Geometry status."""
-
-    NEW = "NEW"
-    BAD = "BAD"
-
-
 class SubmissionDownloadType(StrEnum, Enum):
     """File type to download for ODK submission data."""
 
