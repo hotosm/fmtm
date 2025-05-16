@@ -22,6 +22,7 @@ import os
 from io import BytesIO
 from pathlib import Path
 from typing import Annotated, List, Optional
+from uuid import UUID
 
 import requests
 import yaml
@@ -1259,3 +1260,39 @@ async def remove_team_users(
     """Add users to a team."""
     await DbProjectTeamUser.delete(db, team.team_id, user_subs)
     return Response(status_code=HTTPStatus.NO_CONTENT)
+
+
+@router.delete("/entity/{entity_uuid}")
+async def delete_entity(
+    db: Annotated[Connection, Depends(db_conn)],
+    project_user_dict: Annotated[ProjectUserDict, Depends(mapper)],
+    entity_uuid: UUID,
+    dataset_name: str = "features",
+):
+    """Delete an Entity from ODK and local database."""
+    try:
+        project = project_user_dict.get("project")
+        project_odk_id = project.odkid
+        project_odk_creds = project.odk_credentials
+
+        log.debug(
+            f"Deleting ODK Entity in dataset '{dataset_name}'(ODK ID: {project_odk_id})"
+        )
+        await central_crud.delete_entity(
+            odk_creds=project_odk_creds,
+            odk_id=project_odk_id,
+            entity_uuid=entity_uuid,
+            dataset_name=dataset_name,
+        )
+        await DbOdkEntities.delete(db, entity_uuid)
+        return {"detail": "Entity deleted successfully"}
+
+    except HTTPException as http_err:
+        log.error(f"HTTP error during deletion: {http_err.detail}")
+        raise
+    except Exception as e:
+        log.exception("Unexpected error during entity deletion")
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail="Entity deletion failed",
+        ) from e
