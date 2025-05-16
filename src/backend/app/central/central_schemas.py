@@ -130,6 +130,8 @@ ENTITY_FIELDS: list[NameTypeMapping] = [
     NameTypeMapping(name="changeset", type="string"),
     NameTypeMapping(name="timestamp", type="datetime"),
     NameTypeMapping(name="status", type="string"),
+    NameTypeMapping(name="submission_ids", type="string"),
+    NameTypeMapping(name="is_new", type="string"),
 ]
 
 RESERVED_KEYS = {

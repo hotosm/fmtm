@@ -349,13 +349,16 @@
 			isGeometryCreationLoading = true;
 			const entityUuid = crypto.randomUUID();
 			const newOsmId = getNewOsmId();
+			// NOTE here the top level 'id' field is also required for the backend processing
+			// NOTE the id field is the osm_id, not the entity id!
 			await entitiesStore.createEntity(db, projectId, entityUuid, {
 				type: 'FeatureCollection',
-				features: [{ type: 'Feature', geometry: newFeatureGeom, properties: {
+				features: [{ type: 'Feature', id: newOsmId, geometry: newFeatureGeom, properties: {
 					project_id: projectId,
 					osm_id: newOsmId,
-					task_id: taskStore.selectedTaskIndex || null,
-					// TODO FIXME add extra params to ensure is_new: true and status: READY
+					task_id: taskStore.selectedTaskIndex || '',
+					is_new: '✅', // NOTE usage of an emoji is valid here
+					status: '0', // TODO update this to use the enum / mapping
 				}}],
 			});
 			cancelMapNewFeatureInODK();

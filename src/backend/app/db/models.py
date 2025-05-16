@@ -2050,7 +2050,9 @@ class DbOdkEntities(BaseModel):
                 data[f"{entity_index}_status"] = EntityState(int(entity["status"])).name
                 data[f"{entity_index}_project_id"] = project_id
                 task_id = entity["task_id"]
-                data[f"{entity_index}_task_id"] = int(task_id) if task_id else None
+                data[f"{entity_index}_task_id"] = (
+                    int(task_id) if task_id not in (None, "", "None") else None
+                )
                 data[f"{entity_index}_osm_id"] = entity["osm_id"]
                 data[f"{entity_index}_submission_ids"] = entity["submission_ids"]
                 data[f"{entity_index}_is_new"] = (

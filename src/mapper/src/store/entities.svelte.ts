@@ -43,24 +43,20 @@ let selectedEntity: DbEntityType | null = $derived(
 let entityMap = $derived(new Map(entitiesList.map((entity) => [entity.entity_id, entity])));
 
 // Derive new and bad geoms to display as an overlay
-let badGeomFeatcol: FeatureCollection = $derived(
-	(): FeatureCollection => ({
-		type: 'FeatureCollection',
-		features: entitiesList
-			.filter((e) => e.status === 'MARKED_BAD')
-			.map(DbEntity.toGeojsonFeature)
-			.filter(Boolean),
-	}),
-);
-let newGeomFeatcol: FeatureCollection = $derived(
-	(): FeatureCollection => ({
-		type: 'FeatureCollection',
-		features: entitiesList
-			.filter((e) => e.is_new)
-			.map(DbEntity.toGeojsonFeature)
-			.filter(Boolean),
-	}),
-);
+let badGeomFeatcol: FeatureCollection = $derived({
+	type: 'FeatureCollection',
+	features: entitiesList
+		.filter((e) => e.status === 'MARKED_BAD')
+		.map(DbEntity.toGeojsonFeature)
+		.filter(Boolean),
+});
+let newGeomFeatcol: FeatureCollection = $derived({
+	type: 'FeatureCollection',
+	features: entitiesList
+		.filter((e) => e.is_new)
+		.map(DbEntity.toGeojsonFeature)
+		.filter(Boolean),
+});
 
 let syncEntityStatusManuallyLoading: boolean = $state(false);
 let updateEntityStatusLoading: boolean = $state(false);
@@ -292,6 +288,7 @@ function getEntitiesStatusStore() {
 					variant: 'danger',
 					message: error.message || 'Failed to create entity',
 				});
+				throw new Error(error);
 			}
 		} else {
 			// Save for later submission + add entity entry to local db
@@ -313,6 +310,7 @@ function getEntitiesStatusStore() {
 				geometry: '',
 			});
 		}
+		// FIXME we need to append the entity to the store too
 	}
 
 	function setEntityToNavigate(entityCoordinate: entityIdCoordinateMapType | null) {
@@ -368,6 +366,7 @@ function getEntitiesStatusStore() {
 			return badGeomFeatcol;
 		},
 		get newGeomFeatcol() {
+			console.log(newGeomFeatcol);
 			return newGeomFeatcol;
 		},
 		get syncEntityStatusManuallyLoading() {
