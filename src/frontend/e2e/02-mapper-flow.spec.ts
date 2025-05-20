@@ -152,7 +152,8 @@ test.describe.skip('mapper flow', () => {
       },
     });
 
-    // await page.getByText('Status: LOCKED_FOR_MAPPING').click();
+    //test PR to replicate issue https://github.com/hotosm/fmtm/issues/1775
+    await page.getByText('Status: LOCKED_FOR_MAPPING').click();
     await expect(page.getByText('Status: LOCKED_FOR_MAPPING')).toBeVisible();
 
     // click entity to confirm task is locked
