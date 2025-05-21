@@ -5,7 +5,8 @@ import { test, expect } from '@playwright/test';
 
 import { openTestProject } from './helpers';
 
-test.describe.skip('mapper flow', () => {
+//removed skip to test workflow| Issue #1775 
+test.describe('mapper flow', () => {
   test('task actions', async ({ browserName, page }) => {
     // Specific for this large test, only run in one browser
     // (playwright.config.ts is configured to run all browsers by default)
