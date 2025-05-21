@@ -3,7 +3,7 @@
 
 import { test, expect } from '@playwright/test';
 
-//removed skip to test workflow| Issue #1775 
+//removed skip to test workflow| Issue #1775
 test('create new project', async ({ browserName, page }) => {
   // Specific for this large test, only run in one browser
   // (playwright.config.ts is configured to run all browsers by default)
