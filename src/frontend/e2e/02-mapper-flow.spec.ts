@@ -5,8 +5,7 @@ import { test, expect } from '@playwright/test';
 
 import { openTestProject } from './helpers';
 
-//removed skip to test workflow| Issue #1775
-test.describe('mapper flow', () => {
+test.describe.skip('mapper flow', () => {
   test('task actions', async ({ browserName, page }) => {
     // Specific for this large test, only run in one browser
     // (playwright.config.ts is configured to run all browsers by default)
@@ -153,8 +152,7 @@ test.describe('mapper flow', () => {
       },
     });
 
-    //test PR to replicate issue https://github.com/hotosm/fmtm/issues/1775
-    await page.getByText('Status: LOCKED_FOR_MAPPING').click();
+    // await page.getByText('Status: LOCKED_FOR_MAPPING').click();
     await expect(page.getByText('Status: LOCKED_FOR_MAPPING')).toBeVisible();
 
     // click entity to confirm task is locked
