@@ -1,3 +1,4 @@
+import type { PGliteWithSync } from '@electric-sql/pglite-sync';
 import { getCookieValue, setCookieValue } from '$lib/fs/cookies';
 import type { Basemap } from '$lib/map/basemaps';
 import { getBasemapList } from '$lib/map/basemaps';
@@ -23,9 +24,11 @@ interface ConfigJson {
 interface AlertDetails {
 	variant: 'success' | 'default' | 'warning' | 'danger';
 	message: string;
+	duration?: number;
 }
 
-let alert: AlertDetails = $state({ variant: 'default', message: '' });
+let db: PGliteWithSync;
+let alert: AlertDetails = $state({ variant: 'default', message: '', duration: 4000 });
 let projectSetupStep: number | null = $state(null);
 let projectBasemaps: Basemap[] = $state([]);
 let projectPmtilesUrl: string | null = $state(null);
@@ -33,6 +36,8 @@ let selectedTab: string = $state('map');
 let config: ConfigJson | null = $state(null);
 let useOdkCollectOverride: boolean = $state(false);
 let enableWebforms = $derived<boolean>(!useOdkCollectOverride && config?.enableWebforms ? true : false);
+let offlineDataIsSyncing: boolean = $state(false);
+let offlineSyncPercentComplete: number | null = $state(null);
 
 function getCommonStore() {
 	function getLocaleFromStorage() {
@@ -68,6 +73,10 @@ function getCommonStore() {
 	}
 
 	return {
+		get db() {
+			return db;
+		},
+		setDb: (newDb: PGliteWithSync) => (db = newDb),
 		get selectedTab() {
 			return selectedTab;
 		},
@@ -84,6 +93,23 @@ function getCommonStore() {
 		get enableWebforms() {
 			return enableWebforms;
 		},
+		get offlineDataIsSyncing() {
+			return offlineDataIsSyncing;
+		},
+		setOfflineDataIsSyncing(newVal: boolean) {
+			offlineDataIsSyncing = newVal;
+		},
+		get offlineSyncPercentComplete() {
+			return offlineSyncPercentComplete;
+		},
+		setOfflineSyncPercentComplete(newVal: number | null) {
+			if (newVal === null) {
+				offlineSyncPercentComplete = newVal;
+			} else {
+				// Round and don't allow more than 100%
+				offlineSyncPercentComplete = Math.min(100, Math.round(newVal));
+			}
+		},
 	};
 }
 
@@ -93,8 +119,12 @@ function getAlertStore() {
 			return alert;
 		},
 		setAlert: (alertDetails: AlertDetails) =>
-			(alert = { variant: alertDetails.variant, message: alertDetails.message }),
-		clearAlert: (alertDetails: AlertDetails) => (alert = { variant: 'default', message: '' }),
+			(alert = {
+				variant: alertDetails.variant,
+				message: alertDetails.message,
+				duration: alertDetails.duration || 4000,
+			}),
+		clearAlert: (alertDetails: AlertDetails) => (alert = { variant: 'default', message: '', duration: 4000 }),
 	};
 }
 

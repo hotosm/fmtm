@@ -2,16 +2,9 @@
 	--at-apply: font-barlow font-medium;
 }
 
-.more-comment {
-	--at-apply: h-full;
-}
-
-.more-no-comment {
-	--at-apply: h-fit;
-}
-
 .more .stack {
-	--at-apply: group flex items-center justify-between hover: bg-neutral-50 rounded-md p-2 duration-200 cursor-pointer;
+	--at-apply: group flex items-center justify-between hover: bg-neutral-50 rounded-md p-2 duration-200 cursor-pointer
+		mb-2;
 }
 
 .more .stack .icon-title {

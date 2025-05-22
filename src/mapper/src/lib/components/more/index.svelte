@@ -5,7 +5,7 @@
 	import Activities from '$lib/components/more/activities.svelte';
 	import ProjectInfo from '$lib/components/more/project-info.svelte';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
-	import type { ProjectData, TaskEventType } from '$lib/types';
+	import type { APIProject, TaskEventType } from '$lib/types';
 	import { m } from '$translations/messages.js';
 	import { getCommonStore } from '$store/common.svelte';
 
@@ -15,11 +15,10 @@
 		id: stackType;
 		icon: string;
 		title: string;
-		show: boolean;
 	};
 
 	type Props = {
-		projectData: ProjectData;
+		projectData: APIProject;
 		zoomToTask: (taskId: number) => void;
 	};
 
@@ -32,25 +31,21 @@
 			id: 'project-info',
 			icon: 'info-circle',
 			title: m['stack_group.project_information'](),
-			show: true,
 		},
 		{
 			id: 'comment',
 			icon: 'chat',
 			title: m['stack_group.comment'](),
-			show: true,
 		},
 		{
 			id: 'instructions',
 			icon: 'description',
 			title: m['stack_group.instructions'](),
-			show: !commonStore.enableWebforms,
 		},
 		{
 			id: 'activities',
 			icon: 'list-ul',
 			title: m['stack_group.activities'](),
-			show: true,
 		},
 	];
 
@@ -90,29 +85,27 @@
 <div class={`more ${activeStack === 'comment' ? 'more-comment' : 'more-no-comment'}`}>
 	{#if activeStack === ''}
 		{#each stackGroup as stack}
-			{#if stack?.show}
-				<div
-					class="stack"
-					onclick={() => {
+			<div
+				class="stack"
+				onclick={() => {
+					activeStack = stack.id;
+					activeStackTitle = stack.title;
+				}}
+				onkeydown={(e) => {
+					if (e.key === 'Enter') {
 						activeStack = stack.id;
 						activeStackTitle = stack.title;
-					}}
-					onkeydown={(e) => {
-						if (e.key === 'Enter') {
-							activeStack = stack.id;
-							activeStackTitle = stack.title;
-						}
-					}}
-					tabindex="0"
-					role="button"
-				>
-					<div class="icon-title">
-						<hot-icon name={stack.icon} class="icon"></hot-icon>
-						<p>{stack.title}</p>
-					</div>
-					<hot-icon name="chevron-right" class="icon-next"></hot-icon>
+					}
+				}}
+				tabindex="0"
+				role="button"
+			>
+				<div class="icon-title">
+					<hot-icon name={stack.icon} class="icon"></hot-icon>
+					<p>{stack.title}</p>
 				</div>
-			{/if}
+				<hot-icon name="chevron-right" class="icon-next"></hot-icon>
+			</div>
 		{/each}
 	{/if}
 

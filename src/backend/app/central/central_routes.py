@@ -20,6 +20,7 @@
 import json
 from io import BytesIO
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, Form, HTTPException
 from fastapi.concurrency import run_in_threadpool
@@ -29,6 +30,7 @@ from loguru import logger as log
 from osm_fieldwork.OdkCentralAsync import OdkCentral
 from psycopg import Connection
 from psycopg.rows import dict_row
+from pyodk._endpoints.entities import Entity
 
 from app.auth.auth_deps import login_required
 from app.auth.auth_schemas import AuthUser, ProjectUserDict
@@ -36,7 +38,7 @@ from app.auth.roles import mapper, project_manager
 from app.central import central_crud, central_deps
 from app.db.database import db_conn
 from app.db.enums import HTTPStatus
-from app.db.models import DbProject
+from app.db.models import DbOdkEntities, DbProject
 from app.db.postgis_utils import add_required_geojson_properties
 from app.projects.project_schemas import ProjectUpdate
 
@@ -139,11 +141,18 @@ async def update_project_form(
         xlsform,
         project.odk_credentials,
     )
+    form_xml = await run_in_threadpool(
+        central_crud.get_project_form_xml,
+        project.odk_credentials,
+        project.odkid,
+        xform_id,
+    )
 
     sql = """
         UPDATE projects
         SET
-            xlsform_content = %(xls_data)s
+            xlsform_content = %(xls_data)s,
+            odk_form_xml = %(form_xml)s
         WHERE
             id = %(project_id)s
         RETURNING id, hashtags;
@@ -153,6 +162,7 @@ async def update_project_form(
             sql,
             {
                 "xls_data": xlsform.getvalue(),
+                "form_xml": form_xml,
                 "project_id": project.id,
             },
         )
@@ -254,7 +264,13 @@ async def upload_form_media(
             user=project_odk_creds.odk_central_user,
             passwd=project_odk_creds.odk_central_password,
         ) as odk_central:
-            await odk_central.s3_sync()
+            try:
+                await odk_central.s3_sync()
+            except Exception:
+                log.warning(
+                    "Fails to sync media to S3 - is the linked ODK Central "
+                    "instance correctly configured?"
+                )
 
         return Response(status_code=HTTPStatus.OK)
 
@@ -288,14 +304,11 @@ async def get_form_media(
             project_odk_id,
             project_odk_creds,
         )
-
     except Exception as e:
-        log.exception(f"Error: {e}")
         msg = (
-            f"Failed to get form media for Field-TM project ({project_id}) "
+            f"Failed to get all form media for Field-TM project ({project_id}) "
             f"ODK project ({project_odk_id}) form ID ({project_xform_id})"
         )
-        log.error(msg)
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
             detail=msg,
@@ -306,11 +319,13 @@ async def get_form_media(
 async def add_new_entity(
     db: Annotated[Connection, Depends(db_conn)],
     project_user_dict: Annotated[ProjectUserDict, Depends(mapper)],
+    entity_uuid: UUID,
     geojson: FeatureCollection,
-):
+) -> Entity:
     """Create an Entity for the project in ODK.
 
     NOTE a FeatureCollection must be uploaded.
+    NOTE response time is reasonably slow ~500ms due to Central round trip.
     """
     try:
         project = project_user_dict.get("project")
@@ -326,31 +341,32 @@ async def add_new_entity(
 
         # Add required properties and extract entity data
         featcol = add_required_geojson_properties(featcol_dict)
-        featcol["features"][0]["properties"]["project_id"] = project.id
 
-        # Get task_id of the feature if inside task boundary
-        async with db.cursor(row_factory=dict_row) as cur:
-            await cur.execute(
-                """
-                SELECT t.project_task_index AS task_id
-                FROM tasks t
-                WHERE t.project_id = %s
-                AND ST_Within(
-                    ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326),
-                    t.outline
+        # Get task_id of the feature if inside task boundary and not set already
+        # NOTE this should come from the frontend, but might have failed
+        if featcol["features"][0]["properties"].get("task_id", None) is None:
+            async with db.cursor(row_factory=dict_row) as cur:
+                await cur.execute(
+                    """
+                    SELECT t.project_task_index AS task_id
+                    FROM tasks t
+                    WHERE t.project_id = %s
+                    AND ST_Within(
+                        ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326),
+                        t.outline
+                    )
+                    LIMIT 1;
+                    """,
+                    (project.id, json.dumps(features[0].get("geometry"))),
                 )
-                LIMIT 1;
-                """,
-                (project.id, json.dumps(features[0].get("geometry"))),
-            )
-            result = await cur.fetchone()
-
-        task_id = ""
-        if result and (task_id := result.get("task_id")):
-            featcol["features"][0]["properties"]["task_id"] = task_id
+                result = await cur.fetchone()
+            if result:
+                featcol["features"][0]["properties"]["task_id"] = result.get(
+                    "task_id", ""
+                )
 
         entities_list = await central_crud.task_geojson_dict_to_entity_values(
-            {task_id: featcol}
+            {featcol["features"][0]["properties"]["task_id"]: featcol}
         )
 
         if not entities_list:
@@ -359,13 +375,22 @@ async def add_new_entity(
             )
 
         # Create entity in ODK
-        return await central_crud.create_entity(
+        new_entity = await central_crud.create_entity(
             project_odk_creds,
+            entity_uuid,
             project_odk_id,
             properties=list(featcol["features"][0]["properties"].keys()),
             entity=entities_list[0],
             dataset_name="features",
         )
+
+        # Sync ODK entities from Central --> FieldTM database (trigger electric sync)
+        project_entities = await central_crud.get_entities_data(
+            project_odk_creds, project_odk_id
+        )
+        await DbOdkEntities.upsert(db, project.id, project_entities)
+
+        return new_entity
 
     except HTTPException as http_err:
         log.error(f"HTTP error: {http_err.detail}")
@@ -377,22 +402,3 @@ async def add_new_entity(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail="Entity creation failed",
         ) from e
-
-
-@router.get("/form-xml")
-async def get_project_form_xml_route(
-    project_user: Annotated[ProjectUserDict, Depends(mapper)],
-) -> str:
-    """Get the raw XML from ODK Central for a project."""
-    project = project_user.get("project")
-    odk_creds = project.odk_credentials
-    odkid = project.odkid
-    odk_form_id = project.odk_form_id
-    # Run separate thread in event loop to avoid blocking with sync code
-    form_xml = await run_in_threadpool(
-        central_crud.get_project_form_xml,
-        odk_creds,
-        odkid,
-        odk_form_id,
-    )
-    return Response(content=form_xml, media_type="application/xml")
