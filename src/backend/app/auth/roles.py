@@ -301,10 +301,15 @@ async def wrap_check_access(
     }
 
 
-def project_manager(check_completed: bool = False):
+class ProjectManager:
     """A wrapper for the project manager to restrict access if project is completed."""
 
-    async def project_manager_dep(
+    def __init__(self, check_completed: bool = False):
+        """Initialize the project manager with check_completed flag."""
+        self.check_completed = check_completed
+
+    async def __call__(
+        self,
         project_id: int,
         db: Annotated[Connection, Depends(db_conn)],
         current_user: Annotated[AuthUser, Depends(login_required)],
@@ -318,10 +323,8 @@ def project_manager(check_completed: bool = False):
             db,
             current_user,
             ProjectRole.PROJECT_MANAGER,
-            check_completed=check_completed,
+            check_completed=self.check_completed,
         )
-
-    return project_manager_dep
 
 
 async def associate_project_manager(
@@ -366,15 +369,19 @@ async def validator(
     )
 
 
-def mapper(check_completed: bool = False):
+class Mapper:
     """A wrapper for the mapper to restrict access if project is completed."""
 
-    async def mapper_dep(
+    def __init__(self, check_completed: bool = False):
+        """Initialize the mapper with check_completed flag."""
+        self.check_completed = check_completed
+
+    async def __call__(
+        self,
         project: Annotated[DbProject, Depends(get_project)],
         db: Annotated[Connection, Depends(db_conn)],
         # Here temp auth token/cookie is allowed
         current_user: Annotated[AuthUser, Depends(public_endpoint)],
-        check_completed: bool = False,
     ) -> ProjectUserDict:
         """A mapper for a specific project.
 
@@ -398,10 +405,8 @@ def mapper(check_completed: bool = False):
             db,
             current_user,
             ProjectRole.MAPPER,
-            check_completed=check_completed,
+            check_completed=self.check_completed,
         )
-
-    return mapper_dep
 
 
 async def project_contributors(
