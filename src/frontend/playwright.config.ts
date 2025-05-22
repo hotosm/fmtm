@@ -34,6 +34,7 @@ export default defineConfig({
       name: 'chromium',
       use: {
         browserName: 'chromium',
+        //removed for testing issue #1775
         // storageState: 'e2e/.auth/user.json',
       },
       dependencies: ['setup'],
