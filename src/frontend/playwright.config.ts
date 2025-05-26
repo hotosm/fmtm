@@ -21,7 +21,7 @@ export default defineConfig({
   reporter: [['html', { host: '0.0.0.0', port: '9323', open: 'on-failure' }]],
   use: {
     // Base URL to use in actions like `await page.goto('/')`.
-    baseURL: 'http://fmtm.dev.test',
+    baseURL: 'http://fmtm.dev.test:7051/',
     // Record a trace for each test, but remove it from successful test runs
     trace: 'retain-on-failure',
   },
@@ -76,4 +76,5 @@ export default defineConfig({
     //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     // },
   ],
+  
 });
