@@ -1,8 +1,11 @@
-import type { PGliteWithSync } from '@electric-sql/pglite-sync';
-import type { DbEntity } from '$lib/types';
-import { applyDataToTableWithCsvCopy } from '$lib/db/helpers';
+import type { PGlite } from '@electric-sql/pglite';
+import type { Feature } from 'geojson';
 
-export async function updateLocalEntityStatus(db: PGliteWithSync, entity: DbEntity) {
+import type { DbEntityType } from '$lib/types';
+import { applyDataToTableWithCsvCopy } from '$lib/db/helpers';
+import { javarosaToGeojsonGeom } from '$lib/odk/javarosa';
+
+async function update(db: PGlite, entity: Partial<DbEntityType>) {
 	await db.query(
 		`UPDATE odk_entities
          SET status = $2
@@ -11,7 +14,9 @@ export async function updateLocalEntityStatus(db: PGliteWithSync, entity: DbEnti
 	);
 }
 
-export async function createLocalEntity(db: PGliteWithSync, entity: DbEntity) {
+async function create(db: PGlite, entity: DbEntityType) {
+	// Note if we are creating a single entity in the local db, it will always include
+	// the geometry field as it is a newgeom or badgeom record.
 	await db.query(
 		`INSERT INTO odk_entities (
             entity_id,
@@ -19,15 +24,26 @@ export async function createLocalEntity(db: PGliteWithSync, entity: DbEntity) {
             project_id,
             task_id,
             submission_ids,
-            osm_id
+            osm_id,
+            is_new,
+			geometry
         )
-        VALUES ($1, $2, $3, $4, $5, $6)`,
-		[entity.entity_id, entity.status, entity.project_id, entity.task_id, entity.submission_ids, entity.osm_id],
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		[
+			entity.entity_id,
+			entity.status,
+			entity.project_id,
+			entity.task_id,
+			entity.submission_ids,
+			entity.osm_id,
+			entity.is_new,
+			entity.geometry,
+		],
 	);
 }
 
 // An optimised insert for multiple geom records in bulk
-export async function createLocalEntities(db: PGliteWithSync, entities: DbEntity[]) {
+async function bulkCreate(db: PGlite, entities: DbEntityType[]) {
 	// The entities are already in Record format, however we ensure all undefined or empty strings are set to null for insert
 	const dataObj = entities.map((entity) => ({
 		entity_id: entity.entity_id,
@@ -36,7 +52,36 @@ export async function createLocalEntities(db: PGliteWithSync, entities: DbEntity
 		task_id: entity.task_id,
 		osm_id: entity.osm_id,
 		submission_ids: entity.submission_ids === '' ? null : entity.submission_ids,
+		is_new: entity.is_new,
+		geometry: entity.geometry === '' ? null : entity.geometry,
 	}));
 
 	await applyDataToTableWithCsvCopy(db, 'odk_entities', dataObj);
 }
+
+// Convert a DbEntity entry to a GeoJSON Feature
+function toGeojsonFeature(entity: DbEntityType): Feature | null {
+	const geometry = javarosaToGeojsonGeom(entity.geometry);
+	if (!geometry) return null;
+
+	return {
+		type: 'Feature',
+		geometry,
+		properties: {
+			entity_id: entity.entity_id,
+			status: entity.status,
+			project_id: entity.project_id,
+			task_id: entity.task_id,
+			osm_id: entity.osm_id,
+			submission_ids: entity.submission_ids,
+			is_new: entity.is_new,
+		},
+	};
+}
+
+export const DbEntity = {
+	create,
+	update,
+	bulkCreate,
+	toGeojsonFeature,
+};

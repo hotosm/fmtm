@@ -97,7 +97,7 @@ const SubmissionDetails = () => {
           <div className="fmtm-capitalize fmtm-text-base fmtm-font-bold fmtm-leading-normal fmtm-text-[#555] fmtm-break-words">
             {key}
           </div>
-          {typeof value === 'string' && value?.includes('.jpg') ? (
+          {typeof value === 'string' && /\.(jpeg|jpg|png|gif|bmp|webp|svg|tiff?|heic|avif)$/i.test(value) ? (
             submissionPhotosLoading ? (
               <CoreModules.Skeleton style={{ width: '16rem', height: '8rem' }} className="!fmtm-rounded-lg" />
             ) : (
@@ -203,7 +203,6 @@ const SubmissionDetails = () => {
                         taskUid: taskUid,
                         entity_id: restSubmissionDetails?.feature,
                         label: restSubmissionDetails?.meta?.entity?.label,
-                        feature: convertCoordinateStringToFeature('xlocation', restSubmissionDetails?.xlocation),
                       }),
                     );
                   }}

@@ -4,6 +4,8 @@
 	import './page.css';
 	import type { PageData } from './$types';
 	import { onMount, onDestroy } from 'svelte';
+	import { online } from 'svelte/reactivity/window';
+	import type { PGlite } from '@electric-sql/pglite';
 	import type { ShapeStream } from '@electric-sql/client';
 	import { polygon } from '@turf/helpers';
 	import { buffer } from '@turf/buffer';
@@ -11,7 +13,20 @@
 	import type SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.component.js';
 	import type SlDialog from '@shoelace-style/shoelace/dist/components/dialog/dialog.component.js';
 
+	import type { ProjectTask, DbProjectType } from '$lib/types';
+	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
 	import { m } from '$translations/messages.js';
+	import { DbProject } from '$lib/db/projects.ts';
+	import { openOdkCollectNewFeature } from '$lib/odk/collect';
+	import { convertDateToTimeAgo } from '$lib/utils/datetime';
+	import { getTaskStore } from '$store/tasks.svelte.ts';
+	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
+	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
+	import { readFileFromOPFS } from '$lib/fs/opfs';
+	import { loadOfflineExtract, writeOfflineExtract } from '$lib/map/extracts';
+	import { getNewOsmId } from '$lib/utils/random';
+	import { iterateAndSendOfflineSubmissions } from '$lib/api/offline';
+
 	import ImportQrGif from '$assets/images/importQr.gif';
 	import BottomSheet from '$lib/components/bottom-sheet.svelte';
 	import MapComponent from '$lib/components/map/main.svelte';
@@ -20,17 +35,8 @@
 	import DialogTaskActions from '$lib/components/dialog-task-actions.svelte';
 	import DialogEntityActions from '$lib/components/dialog-entities-actions.svelte';
 	import OdkWebFormsWrapper from '$lib/components/forms/wrapper.svelte';
-	import type { ProjectTask } from '$lib/types';
-	import { openOdkCollectNewFeature } from '$lib/odk/collect';
-	import { convertDateToTimeAgo } from '$lib/utils/datetime';
-	import { getTaskStore } from '$store/tasks.svelte.ts';
-	import { getEntitiesStatusStore, getNewBadGeomStore } from '$store/entities.svelte.ts';
 	import More from '$lib/components/more/index.svelte';
-	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
-	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
 	import Editor from '$lib/components/editor/editor.svelte';
-	import { readFileFromOPFS } from '$lib/fs/opfs';
-	import { loadOfflineExtract, writeOfflineExtract } from '$lib/map/extracts';
 	import { getLoginStore } from '$store/login.svelte';
 
 	interface Props {
@@ -38,8 +44,11 @@
 	}
 
 	const { data }: Props = $props();
-	const { project, projectId } = data;
+	const { project: initialProject, projectId, dbPromise } = data;
+	let db: PGlite | undefined;
+	let project: DbProjectType | undefined = initialProject;
 
+	let formXmlUrl: string | null = $state(null);
 	let webFormsRef: HTMLElement | undefined = $state();
 	let displayWebFormsDrawer = $state(false);
 
@@ -54,25 +63,21 @@
 
 	const taskStore = getTaskStore();
 	const entitiesStore = getEntitiesStatusStore();
-	const newBadGeomStore = getNewBadGeomStore();
 	const commonStore = getCommonStore();
 	const alertStore = getAlertStore();
 	const loginStore = getLoginStore();
 
-	// Destructure and get the db variable from commonStore
-	const { db } = commonStore;
-
 	let taskEventStream: ShapeStream | undefined;
 	let entityStatusStream: ShapeStream | undefined;
-	let newBadGeomStream: ShapeStream | undefined;
+	let lastOnlineStatus: boolean | null = $state(null);
+	let subscribeDebounce: ReturnType<typeof setTimeout> | null = $state(null);
 
 	const latestEvent = $derived(taskStore.latestEvent);
 	const commentMention = $derived(taskStore.commentMention);
-	commonStore.setUseOdkCollectOverride(project.use_odk_collect);
 
 	// Update the geojson task states when a new event is added
 	$effect(() => {
-		if (latestEvent) {
+		if (db && latestEvent) {
 			taskStore.appendTaskStatesToFeatcol(db, projectId, project.tasks);
 		}
 	});
@@ -135,10 +140,40 @@
 		}
 	};
 
-	onMount(async () => {
+	async function subscribeToAllStreams() {
+		// Ensure unsubscribed first
+		unsubscribeFromAllStreams();
+
 		taskEventStream = await taskStore.getTaskEventStream(db, projectId);
 		entityStatusStream = await entitiesStore.getEntityStatusStream(db, projectId);
-		newBadGeomStream = await newBadGeomStore.getNewBadGeomStream(db, projectId);
+	}
+
+	onMount(async () => {
+		// Get db and make accessible via store
+		db = await dbPromise;
+		commonStore.setDb(db);
+		if (online.current) {
+			// If we got project from API in +page.ts (online),
+			// insert full project details into database
+			await DbProject.upsert(db, project);
+
+			// Only subscribe if currently online (no need to await)
+			subscribeToAllStreams();
+		} else {
+			// Else attempt to get project from localdb
+			project = await DbProject.one(db, projectId);
+			if (!project) {
+				throw error(404, `Project with ID (${projectId}) not found in local storage`);
+			}
+		}
+
+		// Set vars that require upstream project details set (and are not reactive)
+		if (project) {
+			commonStore.setUseOdkCollectOverride(project.use_odk_collect);
+			const { odk_form_xml }: DbProjectType = project;
+			const formXmlBlob = new Blob([odk_form_xml], { type: 'application/xml' });
+			formXmlUrl = URL.createObjectURL(formXmlBlob);
+		}
 
 		// Note we need this for now, as the task outlines are from API, while task
 		// events are from pglite / sync. We pass through the task outlines.
@@ -151,21 +186,80 @@
 			return;
 		}
 
-		// 30s delay to avoid race conditions
+		// 12s delay to defer saving data until after initial page load
 		timeout = setTimeout(() => {
 			storeFgbExtractOffline();
-		}, 30000);
+		}, 12000);
 	});
 
-	onDestroy(() => {
+	async function unsubscribeFromAllStreams() {
 		taskStore.unsubscribeEventStream();
 		entitiesStore.unsubscribeEntitiesStream();
-		newBadGeomStore.unsubscribeNewBadGeomStream();
+	}
 
+	onDestroy(() => {
 		taskStore.clearTaskStates();
 		entitiesStore.setFgbOpfsUrl('');
 
 		if (timeout) clearTimeout(timeout);
+
+		unsubscribeFromAllStreams();
+	});
+
+	async function triggerManualOfflineDataSync() {
+		if (!db) return;
+		const success = await iterateAndSendOfflineSubmissions(db);
+		// Return immediately if there were submission failures, to prevent overwriting entities below
+		if (!success) return;
+
+		// Wait 3 seconds for everything to process on the backend, before requesting new data
+		// + we need to set spinner again, as set false once offline sync done.
+		// (we have the 3 second gap until syncEntityStatusManually is triggered)
+		commonStore.setOfflineDataIsSyncing(true);
+		await new Promise((resolve) => setTimeout(resolve, 3000));
+		commonStore.setOfflineDataIsSyncing(false);
+
+		// This call has it's own loading param
+		await entitiesStore.syncEntityStatusManually(db, projectId);
+	}
+
+	async function handleOnlineSync() {
+		// Also send any pending submissions first
+		const success = await iterateAndSendOfflineSubmissions(db);
+
+		// Once done, subscribe to electric ShapeStreams
+		if (success) {
+			subscribeToAllStreams();
+		} else {
+			console.warn('Offline sync failed; subscribing to latest ShapeStreams anyway...');
+			subscribeToAllStreams();
+		}
+	}
+
+	// Subscribe / unsubscribe from streams based on connectivity
+	// note: the effect rune can't accept async, but this is fine
+	// note: we also need to debounce this to prevent infinite loop
+	$effect(() => {
+		const isOnline = online.current;
+
+		if (isOnline === lastOnlineStatus) return;
+		lastOnlineStatus = isOnline;
+
+		if (subscribeDebounce) {
+			clearTimeout(subscribeDebounce);
+			subscribeDebounce = null;
+		}
+
+		subscribeDebounce = setTimeout(() => {
+			if (isOnline) {
+				// Delay initial sync and subscriptions by 5 seconds after load (reduce memory spike)
+				setTimeout(() => {
+					handleOnlineSync();
+				}, 5000);
+			} else {
+				unsubscribeFromAllStreams();
+			}
+		}, 200);
 	});
 
 	const projectSetupStepStore = getProjectSetupStepStore();
@@ -215,34 +309,44 @@
 		}
 		try {
 			isGeometryCreationLoading = true;
-			const entity = await entitiesStore.createEntity(projectId, {
+			const entityUuid = crypto.randomUUID();
+			const newOsmId = getNewOsmId();
+			// NOTE here the top level 'id' field is also required for the backend processing
+			// NOTE the id field is the osm_id, not the entity id!
+			await entitiesStore.createEntity(db, projectId, entityUuid, {
 				type: 'FeatureCollection',
-				features: [{ type: 'Feature', geometry: newFeatureGeom, properties: {} }],
-			});
-			await newBadGeomStore.createGeomRecord(projectId, {
-				status: 'NEW',
-				geojson: {
-					type: 'Feature',
-					geometry: newFeatureGeom,
-					properties: { entity_id: entity.uuid, user_sub: loginStore.getAuthDetails?.sub },
-				},
-				project_id: projectId,
+				features: [
+					{
+						type: 'Feature',
+						id: newOsmId,
+						geometry: newFeatureGeom,
+						properties: {
+							project_id: projectId,
+							osm_id: newOsmId,
+							task_id: taskStore.selectedTaskIndex || '',
+							is_new: '✅', // NOTE usage of an emoji is valid here
+							status: '0', // TODO update this to use the enum / mapping
+						},
+					},
+				],
 			});
 			cancelMapNewFeatureInODK();
 
 			if (commonStore.enableWebforms) {
-				await entitiesStore.setSelectedEntityId(entity.uuid);
+				await entitiesStore.setSelectedEntityId(entityUuid);
 				openedActionModal = null;
-				entitiesStore.updateEntityStatus(projectId, {
-					entity_id: entity.uuid,
+				const entityOsmId = entitiesStore.getOsmIdByEntityId(entityUuid);
+				entitiesStore.updateEntityStatus(db, projectId, {
+					entity_id: entityUuid,
 					status: 1,
-					label: entity?.currentVersion?.label,
+					label: `Feature ${entityOsmId}`,
 				});
 				displayWebFormsDrawer = true;
 			} else {
-				openOdkCollectNewFeature(project?.odk_form_id, entity.uuid);
+				openOdkCollectNewFeature(project?.odk_form_id, entityUuid);
 			}
 		} catch (error) {
+			console.error(error);
 			alertStore.setAlert({ message: 'Unable to create entity', variant: 'danger' });
 		} finally {
 			isGeometryCreationLoading = false;
@@ -336,6 +440,9 @@
 			newFeatureGeom = geom;
 			// after drawing a feature, allow user to modify the drawn feature
 			newFeatureDrawInstance.setMode('select');
+		}}
+		syncButtonTrigger={async () => {
+			await triggerManualOfflineDataSync();
 		}}
 	></MapComponent>
 
@@ -467,17 +574,12 @@
 			<sl-tab slot="nav" panel="map">
 				<hot-icon name="map"></hot-icon>
 			</sl-tab>
+			<sl-tab slot="nav" panel="offline">
+				<hot-icon name="wifi-off"></hot-icon>
+			</sl-tab>
 			{#if !commonStore.enableWebforms}
-				<sl-tab slot="nav" panel="offline">
-					<hot-icon name="wifi-off"></hot-icon>
-				</sl-tab>
 				<sl-tab slot="nav" panel="qrcode">
 					<hot-icon name="qr-code"></hot-icon>
-				</sl-tab>
-			{/if}
-			{#if commonStore.enableWebforms}
-				<sl-tab slot="nav" panel="instructions">
-					<hot-icon name="description"></hot-icon>
 				</sl-tab>
 			{/if}
 			<sl-tab slot="nav" panel="events">
@@ -490,6 +592,7 @@
 		bind:webFormsRef
 		bind:display={displayWebFormsDrawer}
 		{projectId}
+		formXml={formXmlUrl}
 		entityId={entitiesStore.selectedEntityId || undefined}
 		taskId={taskStore.selectedTaskIndex || undefined}
 	/>

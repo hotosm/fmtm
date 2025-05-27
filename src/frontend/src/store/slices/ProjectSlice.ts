@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import storage from 'redux-persist/lib/storage';
-import { ProjectStateTypes } from '@/store/types/IProject';
-import { geometryLogResponseType } from '@/models/project/projectModel';
+import { featureType, ProjectStateTypes } from '@/store/types/IProject';
 
 const initialState: ProjectStateTypes = {
   projectTaskBoundries: [],
@@ -30,12 +29,11 @@ const initialState: ProjectStateTypes = {
   projectTaskActivity: [],
   projectActivityLoading: false,
   downloadSubmissionLoading: false,
-  badGeomFeatureCollection: { type: 'FeatureCollection', features: [] },
-  newGeomFeatureCollection: { type: 'FeatureCollection', features: [] },
-  badGeomLogList: [],
-  getGeomLogLoading: false,
   syncTaskStateLoading: false,
   selectedEntityId: null,
+  badGeomFeatureCollection: { type: 'FeatureCollection', features: [] },
+  newGeomFeatureCollection: { type: 'FeatureCollection', features: [] },
+  OdkEntitiesGeojsonLoading: false,
 };
 
 const ProjectSlice = createSlice({
@@ -172,6 +170,17 @@ const ProjectSlice = createSlice({
     },
     SetSelectedEntityId(state, action: PayloadAction<string | null>) {
       state.selectedEntityId = action.payload;
+    },
+    SetOdkEntitiesGeojson(state, action: PayloadAction<{ type: 'FeatureCollection'; features: featureType[] }>) {
+      const features = action.payload.features;
+      const newFeatures = features?.filter((feature) => !!feature.properties?.is_new);
+      const badFeatures = features?.filter((feature) => feature.properties?.status === '6');
+
+      state.newGeomFeatureCollection = { type: 'FeatureCollection', features: newFeatures };
+      state.badGeomFeatureCollection = { type: 'FeatureCollection', features: badFeatures };
+    },
+    SetOdkEntitiesGeojsonLoading(state, action: PayloadAction<boolean>) {
+      state.OdkEntitiesGeojsonLoading = action.payload;
     },
   },
 });

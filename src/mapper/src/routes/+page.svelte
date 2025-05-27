@@ -1,10 +1,11 @@
 <script lang="ts">
 	import '$styles/page.css';
-	import { onMount } from 'svelte';
+	import type { PageData } from './$types';
+	import { onMount, onDestroy } from 'svelte';
 	import { online } from 'svelte/reactivity/window';
+	import type { PGlite } from '@electric-sql/pglite';
 	import type { SlInputEvent } from '@shoelace-style/shoelace';
 
-	import type { paginationType, projectType } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { getCommonStore } from '$store/common.svelte';
 	import { getProjectStore } from '$store/projects.svelte';
@@ -12,11 +13,14 @@
 	import ProjectCard from '$lib/components/project-summary/project-card.svelte';
 	import ProjectCardSkeleton from '$lib/components/project-summary/project-card-skeleton.svelte';
 
+	interface Props {
+		data: PageData;
+	}
+
+	let db: PGlite | undefined;
+	const { data }: Props = $props();
 	const commonStore = getCommonStore();
 	const projectStore = getProjectStore();
-
-	// Destructure and get db obj
-	const { db } = commonStore;
 
 	let paginationPage = $state(1);
 	let search = $state('');
@@ -35,10 +39,6 @@
 		return () => clearTimeout(timeoutId);
 	});
 
-	$effect(() => {
-		projectStore.fetchProjectsFromAPI(db, paginationPage, debouncedSearch);
-	});
-
 	onMount(async () => {
 		// if requestedPath set, redirect to the desired path (in our case we have requestedPath set to invite url)
 		const requestedPath = sessionStorage.getItem('requestedPath');
@@ -46,8 +46,16 @@
 			goto(requestedPath);
 		}
 
-		if (!online.current) {
-			await projectStore.fetchProjectsFromLocalDB(db);
+		// Get db and make accessible via store
+		db = await data.dbPromise;
+		commonStore.setDb(db);
+	});
+
+	$effect(() => {
+		if (online.current) {
+			projectStore.fetchProjectsFromAPI(db, paginationPage, debouncedSearch);
+		} else {
+			projectStore.fetchProjectsFromLocalDB(db);
 		}
 	});
 </script>

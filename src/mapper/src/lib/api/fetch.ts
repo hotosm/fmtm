@@ -1,8 +1,15 @@
+import type { PGlite } from '@electric-sql/pglite';
+import type { DbApiSubmissionType } from '$lib/types.ts';
+import { DbApiSubmission } from '$lib/db/api-submissions.ts';
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 const DEFAULT_CACHE_NAME = 'c488ea01-8c52-4a18-a93e-934bc77f1eb8';
 
-export async function fetchCachedBlobUrl(url: string, cacheName: string): Promise<string> {
+async function fetchCachedBlobUrl(url: string, cacheName: string, clean: boolean): Promise<string> {
+	// delete old cache entries
+	if (clean) await clearCacheStorage(url, cacheName);
+
 	const cacheStorage = await caches.open(cacheName || DEFAULT_CACHE_NAME);
 	const response = await cacheStorage.match(url);
 	if (response) {
@@ -10,9 +17,26 @@ export async function fetchCachedBlobUrl(url: string, cacheName: string): Promis
 		return URL.createObjectURL(blob);
 	} else {
 		const response = await fetch(url);
-		cacheStorage.put(url, response);
+		// clone the response stream as it can only be consumed again
+		cacheStorage.put(url, response.clone());
 		const blob = await response.blob();
 		return URL.createObjectURL(blob);
+	}
+}
+
+/**
+ *
+ * @param url - url to look for
+ * @param keep - skip checking this cache
+ */
+async function clearCacheStorage(url: string, skip: string) {
+	const keys = await caches.keys();
+	for (let i = 0; i < keys.length; i++) {
+		const key = keys[i];
+		if (key !== skip) {
+			const cacheStorage = await caches.open(key);
+			await cacheStorage.delete(url);
+		}
 	}
 }
 
@@ -21,13 +45,13 @@ export async function fetchCachedBlobUrl(url: string, cacheName: string): Promis
  * @param url - url to a web resource like a script or xml file
  * @returns {string} object url to the cached fetch response
  */
-export async function fetchBlobUrl(url: string): Promise<string> {
+async function fetchBlobUrl(url: string): Promise<string> {
 	const response = await fetch(url);
 	const blob = await response.blob();
 	return URL.createObjectURL(blob);
 }
 
-export async function fetchFormMediBlobUrls(projectId: number): Promise<{ [filename: string]: string }> {
+async function fetchFormMediBlobUrls(projectId: number): Promise<{ [filename: string]: string }> {
 	if (projectId === undefined) return {};
 
 	const response = await fetch(`${API_URL}/central/get-form-media?project_id=${projectId}`, { method: 'POST' });
@@ -41,3 +65,62 @@ export async function fetchFormMediBlobUrls(projectId: number): Promise<{ [filen
 
 	return formMediaBlobs;
 }
+
+function decodeBase64File(base64: string, name: string, type: string): File {
+	const byteString = atob(base64.split(',')[1]);
+	const arrayBuffer = new Uint8Array(byteString.length);
+	for (let i = 0; i < byteString.length; i++) {
+		arrayBuffer[i] = byteString.charCodeAt(i);
+	}
+	const blob = new Blob([arrayBuffer], { type });
+	return new File([blob], name, { type });
+}
+
+async function getSubmissionFetchOptions(row: DbApiSubmissionType): Promise<RequestInit> {
+	if (row.content_type === 'application/json') {
+		return {
+			method: row.method,
+			body: JSON.stringify(row.payload),
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			credentials: 'include',
+		};
+	}
+
+	if (row.content_type === 'multipart/form-data') {
+		const form = new FormData();
+		form.append('submission_xml', row.payload.form.submission_xml);
+
+		for (const f of row.payload.form.submission_files) {
+			const file = decodeBase64File(f.base64, f.name, f.type);
+			form.append('submission_files', file);
+		}
+
+		return {
+			method: row.method,
+			body: form,
+			credentials: 'include',
+		};
+	}
+
+	throw new Error(`Unsupported content_type: ${row.content_type}`);
+}
+
+async function trySendingSubmission(db: PGlite, row: DbApiSubmissionType): Promise<boolean> {
+	try {
+		const options = await getSubmissionFetchOptions(row);
+		const res = await fetch(row.url, options);
+
+		if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+		await DbApiSubmission.update(db, row.id, 'RECEIVED');
+		return true;
+	} catch (err) {
+		console.error('Offline send failed:', err);
+		await DbApiSubmission.update(db, row.id, 'FAILED', String(err));
+		return false;
+	}
+}
+
+export { fetchCachedBlobUrl, fetchBlobUrl, fetchFormMediBlobUrls, trySendingSubmission };

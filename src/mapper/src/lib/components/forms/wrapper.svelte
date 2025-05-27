@@ -1,30 +1,35 @@
 <script lang="ts">
 	import '$styles/forms.css';
+	import type { Action } from 'svelte/action';
+	import type { PGlite } from '@electric-sql/pglite';
 	import type { SlDrawer } from '@shoelace-style/shoelace';
+
 	import { getCommonStore } from '$store/common.svelte.ts';
 	import { getLoginStore } from '$store/login.svelte.ts';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
-	import { fetchBlobUrl, fetchCachedBlobUrl, fetchFormMediBlobUrls } from '$lib/api/fetch';
+	import { fetchCachedBlobUrl, fetchFormMediBlobUrls } from '$lib/api/fetch';
+	import { getDeviceId } from '$lib/utils/random';
 	import { m } from '$translations/messages.js';
 
-	import type { Action } from 'svelte/action';
-
-	const API_URL = import.meta.env.VITE_API_URL;
 	type Props = {
 		display: Boolean;
 		entityId: string | undefined;
 		projectId: number | undefined;
+		formXml: string | undefined;
 		taskId: number | undefined;
 		webFormsRef: HTMLElement | undefined;
 	};
 
+	const WEB_FORMS_IFRAME_ID = "7f86f661-efd6-4cc6-b068-48dd7eb53dbb";
+
 	const commonStore = getCommonStore();
 	const loginStore = getLoginStore();
 	const entitiesStore = getEntitiesStatusStore();
-	const selectedEntity = $derived(entitiesStore.selectedEntity);
-	const selectedEntityCoordinate = $derived(entitiesStore.selectedEntityCoordinate);
+	let db: PGlite | undefined = $derived(commonStore.db);
 
-	let { display = $bindable(false), entityId, webFormsRef = $bindable(undefined), projectId, taskId }: Props = $props();
+	const selectedEntity = $derived(entitiesStore.selectedEntity);
+
+	let { display = $bindable(false), entityId, webFormsRef = $bindable(undefined), projectId, formXml, taskId }: Props = $props();
 	let drawerRef: SlDrawer;
 	let odkForm: any;
 	let startDate: string | undefined;
@@ -33,14 +38,66 @@
 	let uploading = $state(false);
 	let uploadingMessage = $state('');
 
-	const formXmlPromise = fetchBlobUrl(`${API_URL}/central/form-xml?project_id=${projectId}`);
-
 	const odkWebFormPromise = fetchCachedBlobUrl(
 		'https://hotosm.github.io/web-forms/odk-web-form.js',
 		commonStore.config.cacheName,
+		true // clean old cache entries
 	);
 
+	const webFormPagePromise = fetchCachedBlobUrl("/web-forms.html", commonStore.config.cacheName, true);
+
 	const formMediaPromise = fetchFormMediBlobUrls(projectId!);
+
+	function insertExtraMetadataIntoSubmissionXml(submissionXml: string): string {
+		// missing start, end, today, phonenumber, deviceid, username, email, instruction
+		// included xid, xlocation, task_id, status,image number
+
+		// entity id isn't included in the payload by default because we marked it as not relevant earlier
+		// (in order to hide it from the user's display)
+		submissionXml = submissionXml.replace('<warmup/>', `<warmup/><feature>${entityId}</feature>`);
+
+		submissionXml = submissionXml.replace('<start/>', `<start>${startDate}</start>`);
+		submissionXml = submissionXml.replace('<end/>', `<end>${new Date().toISOString()}</end>`);
+
+		const authDetails = loginStore?.getAuthDetails;
+		if (authDetails?.username) {
+			submissionXml = submissionXml.replace('<username/>', `<username>${authDetails?.username}</username>`);
+		}
+
+		if (authDetails?.email_address) {
+			submissionXml = submissionXml.replace('<email/>', `<email>${authDetails?.email_address}</email>`);
+		}
+
+		if (entitiesStore.userLocationCoord) {
+			const [longitude, latitude] = entitiesStore.userLocationCoord as [number, number];
+			// add 0.0 for altitude and 10.0 for accuracy as defaults
+			submissionXml = submissionXml.replace('<warmup/>', `<warmup>${latitude} ${longitude} 0.0 0.0</warmup>`);
+		}
+
+		submissionXml = submissionXml.replace('<deviceid/>', `<deviceid>${getDeviceId()}</deviceid>`);
+
+		return submissionXml;
+	}
+
+	// We need this as ODK Central does not seem to automatically update the entity status based on submitted data
+	// Using ODK Collect this works, but something in the web-forms workflow is broken to not allow this for now
+	function updateEntityStatusBasedOnSubmissionXml(submissionXml: string) {
+		let entityStatus = null;
+		if (submissionXml.includes('<feature_exists>no</feature_exists>')) {
+			entityStatus = 6; // MARKED_BAD
+		} else if (submissionXml.includes('<digitisation_correct>no</digitisation_correct>')) {
+			entityStatus = 6; // MARKED_BAD
+		} else {
+			entityStatus = 2; // SURVEY_SUBMITTED
+		}
+
+		entitiesStore.updateEntityStatus(db, projectId, {
+			entity_id: selectedEntity?.entity_id,
+			status: entityStatus,
+			// NOTE here we don't translate the field as English values are always saved as the Entity label
+			label: `Feature ${selectedEntity?.osm_id}`,
+		});
+	}
 
 	function handleSubmit(payload: any) {
 		(async () => {
@@ -48,72 +105,21 @@
 			if (!projectId) return;
 
 			const { instanceFile, attachments = [] } = await payload.detail[0].data[0];
-			let submission_xml = await instanceFile.text();
-
-			// missing start, end, today, phonenumber, deviceid, username, email, instruction
-			// included xid, xlocation, task_id, status,image number
-
-			// entity id isn't included in the payload by default because we marked it as not relevant earlier
-			// (in order to hide it from the user's display)
-			submission_xml = submission_xml.replace('<warmup/>', `<warmup/><feature>${entityId}</feature>`);
-
-			submission_xml = submission_xml.replace('<start/>', `<start>${startDate}</start>`);
-			submission_xml = submission_xml.replace('<end/>', `<end>${new Date().toISOString()}</end>`);
-
-			const authDetails = loginStore?.getAuthDetails;
-			if (authDetails?.username) {
-				submission_xml = submission_xml.replace('<username/>', `<username>${authDetails?.username}</username>`);
-			}
-
-			if (authDetails?.email_address) {
-				submission_xml = submission_xml.replace('<email/>', `<email>${authDetails?.email_address}</email>`);
-			}
-
-			if (entitiesStore.userLocationCoord) {
-				const [longitude, latitude] = entitiesStore.userLocationCoord as [number, number];
-				// add 0.0 for altitude and 10.0 for accuracy as defaults
-				submission_xml = submission_xml.replace('<warmup/>', `<warmup>${latitude} ${longitude} 0.0 0.0</warmup>`);
-			}
-
-			const url = `${API_URL}/submission?project_id=${projectId}`;
-			var data = new FormData();
-			data.append('submission_xml', submission_xml);
-			attachments.forEach((attachment: File) => {
-				data.append('submission_files', attachment);
-			});
+			let submissionXml = await instanceFile.text();
+			submissionXml = insertExtraMetadataIntoSubmissionXml(submissionXml);
 
 			uploadingMessage = m['forms.uploading']() || 'uploading';
 			uploading = true;
 
 			// Submit the XML + any submission media
-			await fetch(url, {
-				method: 'POST',
-				body: data,
-			});
+			await entitiesStore.createNewSubmission(db, projectId, submissionXml, attachments);
 
 			uploading = false;
-
-			let entityStatus = null;
-			if (submission_xml.includes('<feature_exists>no</feature_exists>')) {
-				entityStatus = 6; // MARKED_BAD
-			} else if (submission_xml.includes('<digitisation_correct>no</digitisation_correct>')) {
-				entityStatus = 6; // MARKED_BAD
-			} else if (entitiesStore.newGeomFeatcol.features.find((feature) => feature.properties?.entity_id === entityId)) {
-				entityStatus = 3; // NEW_GEOM
-			} else {
-				entityStatus = 2; // SURVEY_SUBMITTED
-			}
-
-			entitiesStore.updateEntityStatus(projectId, {
-				entity_id: selectedEntity?.entity_id,
-				status: entityStatus,
-				// NOTE here we don't translate the field as English values are always saved as the Entity label
-				label: `Task ${selectedEntity?.task_id} Feature ${selectedEntity?.osm_id}`,
-			});
-
+			updateEntityStatusBasedOnSubmissionXml(submissionXml);
 			display = false;
 		})();
 	}
+
 	function handleOdkForm(evt: any) {
 		if (evt?.detail?.[0]) {
 			odkForm = evt.detail[0];
@@ -167,11 +173,8 @@
 				nodes.find((it: any) => it.definition.nodeset === '/data/xid')?.setValueState(`${selectedEntity?.osm_id}`);
 			}
 
-			if (selectedEntityCoordinate) {
-				const [longitude, latitude] = selectedEntityCoordinate.coordinate as unknown as [number, number];
-				nodes
-					.find((it: any) => it.definition.nodeset === '/data/xlocation')
-					?.setValueState(`${latitude} ${longitude} 0.0 0.0`);
+			if (selectedEntity?.geometry) {
+				nodes.find((it: any) => it.definition.nodeset === '/data/xlocation')?.setValueState(selectedEntity?.geometry);
 			}
 		}
 	}
@@ -227,9 +230,9 @@
 	class="forms-wrapper-drawer"
 >
 	{#await odkWebFormPromise then odkWebFormUrl}
-		{#if entityId}
-			{#key projectId}
-				{#await formXmlPromise then formXml}
+		{#await webFormPagePromise then webFormPageUrl}
+			{#if entityId}
+				{#key projectId}
 					{#await formMediaPromise then formMedia}
 						{#key entityId}
 							{#key commonStore.locale}
@@ -254,23 +257,31 @@
 										style:height="100%"
 										use:handleIframe
 										title="odk-web-forms-wrapper"
-										src={`./web-forms.html?projectId=${projectId}&entityId=${entityId}&formXml=${formXml}&odkWebFormUrl=${odkWebFormUrl}&formMedia=${encodeURIComponent(JSON.stringify(formMedia))}&cssFile=${commonStore.config?.cssFileWebformsOverride || ''}`}
+										id={WEB_FORMS_IFRAME_ID}
+										name={WEB_FORMS_IFRAME_ID}
+										src={`${webFormPageUrl}`}
+										data-project-id={projectId}
+										data-entity-id={entityId}
+										data-form-xml={formXml}
+										data-odk-web-form-url={odkWebFormUrl}
+										data-form-media={encodeURIComponent(JSON.stringify(formMedia))}
+										data-css-file={commonStore.config?.cssFileWebformsOverride || ''}
 									></iframe>
 								{/if}
 							{/key}
 						{/key}
 					{/await}
-				{/await}
-			{/key}
-		{/if}
+				{/key}
+			{/if}
+		{/await}
 	{/await}
 </hot-drawer>
 
 <style>
 	/* from https://www.w3schools.com/howto/howto_css_loader.asp */
 	#spinner {
-		border: 16px solid var(--sl-color-neutral-300); 
-		border-top: 16px solid solid var(--sl-color-primary-700);
+		border: 16px solid var(--sl-color-neutral-300);
+		border-top: 16px solid var(--sl-color-primary-700);
 		border-radius: 50%;
 		width: 120px;
 		height: 120px;

@@ -231,13 +231,13 @@ class Settings(BaseSettings):
     FMTM_DB_PASSWORD: Optional[SecretStr] = "fmtm"
     FMTM_DB_NAME: Optional[str] = "fmtm"
 
-    FMTM_DB_URL: Optional[PostgresDsn] = None
+    FMTM_DB_URL: Optional[str] = None
 
-    @field_validator("FMTM_DB_URL", mode="after")
+    @field_validator("FMTM_DB_URL", mode="before")
     @classmethod
     def assemble_db_connection(cls, v: Optional[str], info: ValidationInfo) -> str:
         """Build Postgres connection from environment variables."""
-        if isinstance(v, str):
+        if v and isinstance(v, str):
             return v
         pg_url = PostgresDsn.build(
             scheme="postgresql",
@@ -366,6 +366,22 @@ class Settings(BaseSettings):
         elif self.MONITORING == MonitoringTypes.OPENOBSERVE:
             return OpenObserveSettings()
         return None
+
+    # SMTP Configurations
+    SMTP_TLS: bool = True
+    SMTP_SSL: bool = False
+    SMTP_PORT: int = 587
+    SMTP_HOST: Optional[str] = None
+    SMTP_USER: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    EMAILS_FROM_EMAIL: Optional[str] = None
+    EMAILS_FROM_NAME: Optional[str] = "Field-TM"
+
+    @computed_field
+    @property
+    def emails_enabled(self) -> bool:
+        """Check if email settings are configured."""
+        return bool(self.SMTP_HOST and self.EMAILS_FROM_EMAIL)
 
 
 @lru_cache

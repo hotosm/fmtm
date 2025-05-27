@@ -256,60 +256,67 @@ class OdkForm(OdkCentral):
         self,
         projectId: int,
         xform: str,
-    ) -> dict[str, str]:
-        """Get a dictionary of form attachment names and their pre-signed URLs.
+    ) -> dict[str, Optional[str | bytes]]:
+        """Get a dictionary of form attachment names to pre-signed S3 URLs or raw binary content.
 
         Args:
             projectId (int): The ID of the project on ODK Central.
             xform (str): The XForm ID to get attachments from.
 
         Returns:
-            dict[str, str]: A dictionary mapping attachment names to URLs.
+            dict[str, Optional[Union[str, bytes]]]: A mapping from attachment names to either:
+                - a pre-signed S3 URL (str), or
+                - raw bytes (if file was returned directly),
+                - or None if the attachment couldn't be fetched.
         """
         attachments = await self.listFormAttachments(projectId, xform)
         if not attachments:
             return {}
 
-        async def fetch_url(attachment: dict) -> tuple[str, Optional[str]]:
-            """Fetch the pre-signed URL for a given form attachment filename."""
+        # Filter out dataset attachments
+        filtered_attachments = [
+            att for att in attachments if not att.get("datasetExists")
+        ]
+
+        async def fetch_url(attachment: dict) -> tuple[str, Optional[str | bytes]]:
             filename = attachment["name"]
             url = f"{self.base}projects/{projectId}/forms/{xform}/attachments/{filename}"
-            result = await self.session.get(url, ssl=self.verify, allow_redirects=False)
 
-            if result.status in (301, 302, 303, 307, 308):  # is a redirect to the S3 URL
-                s3_url = result.headers.get("Location")
-                if not s3_url:
-                    try:
-                        text_body = await result.text()
-                    except UnicodeDecodeError:
-                        text_body = "[Binary data]"
-                    log.error(
-                        f"No 'Location' response header for form attachment {filename} from Central: "
-                        f"{text_body}"
+            try:
+                result = await self.session.get(url, ssl=self.verify, allow_redirects=False)
+
+                if result.status >= 400:
+                    log.warning(
+                        f"Failed to fetch form attachment '{filename}' "
+                        f"(status {result.status}) from form '{xform}' (project {projectId})"
                     )
                     return filename, None
 
-            else:
-                try:
-                    log.error(
-                        f"Incorrect response code for form attachment {filename} from Central: "
-                        f"{await result.text()}"
-                    )
-                except UnicodeDecodeError:
-                    log.error(f"Central response code: {result.status}")
-                    log.error(
-                        "Central appears to be returning the binary data instead "
-                        "of the S3 URL. Is Central configured to use S3 storage? "
-                        "Or perhaps the file is simply not uploaded to S3 yet."
-                    )
+                s3_url = result.headers.get("Location")
+                if s3_url:
+                    return filename, s3_url
 
+                # If not a redirect, assume raw binary data is returned
+                try:
+                    content = await result.read()
+                except Exception as read_err:
+                    log.warning(
+                        f"Failed to read binary data for attachment '{filename}' "
+                        f"on form '{xform}' (project {projectId}): {read_err}"
+                    )
+                    return filename, None
+
+                return filename, content
+
+            except Exception as e:
+                log.warning(
+                    f"Exception while fetching form attachment '{filename}' "
+                    f"from form '{xform}' (project {projectId}): {e}"
+                )
                 return filename, None
 
-            return filename, s3_url
-
-        urls = await gather(*(fetch_url(attachment) for attachment in attachments))
-        
-        return {filename: url for filename, url in urls if url is not None}
+        urls = await gather(*(fetch_url(att) for att in filtered_attachments))
+        return {filename: url_or_bytes for filename, url_or_bytes in urls}
 
     async def listSubmissions(self, projectId: int, xform: str):
         """Fetch a list of submission instances for a given form.
@@ -583,53 +590,6 @@ class OdkDataset(OdkCentral):
             log.error(msg)
             raise aiohttp.ClientError(msg) from e
 
-    async def listEntities(
-        self,
-        projectId: int,
-        datasetName: str,
-    ) -> list:
-        """Get all Entities for a project dataset (entity list).
-
-        JSON format:
-        [
-        {
-            "uuid": "uuid:85cb9aff-005e-4edd-9739-dc9c1a829c44",
-            "createdAt": "2018-01-19T23:58:03.395Z",
-            "updatedAt": "2018-03-21T12:45:02.312Z",
-            "deletedAt": "2018-03-21T12:45:02.312Z",
-            "creatorId": 1,
-            "currentVersion": {
-                "label": "John (88)",
-                "data": {
-                    "field1": "value1"
-                },
-                "current": true,
-                "createdAt": "2018-03-21T12:45:02.312Z",
-                "creatorId": 1,
-                "userAgent": "Enketo/3.0.4",
-                "version": 1,
-                "baseVersion": null,
-                "conflictingProperties": null
-            }
-        }
-        ]
-
-        Args:
-            projectId (int): The ID of the project on ODK Central.
-            datasetName (str): The name of a dataset, specific to a project.
-
-        Returns:
-            list: a list of JSON entity metadata, for a dataset.
-        """
-        url = f"{self.base}projects/{projectId}/datasets/{datasetName}/entities"
-        try:
-            async with self.session.get(url, ssl=self.verify) as response:
-                return await response.json()
-        except aiohttp.ClientError as e:
-            msg = f"Error fetching entities: {e}"
-            log.error(msg)
-            raise aiohttp.ClientError(msg) from e
-
     async def getEntity(
         self,
         projectId: int,
@@ -684,89 +644,11 @@ class OdkDataset(OdkCentral):
             log.error(f"Error fetching entity: {e}")
             return {}
 
-    async def createEntity(
-        self,
-        projectId: int,
-        datasetName: str,
-        label: str,
-        data: dict,
-    ) -> dict:
-        """Create a new Entity in a project dataset (entity list).
-
-        JSON request:
-        {
-        "uuid": "54a405a0-53ce-4748-9788-d23a30cc3afa",
-        "label": "John Doe (88)",
-        "data": {
-            "firstName": "John",
-            "age": "88"
-        }
-        }
-
-        JSON response:
-        {
-        "uuid": "d2e03bf8-cfc9-45c6-ab23-b8bc5b7d9aba",
-        "createdAt": "2024-04-12T15:22:02.148Z",
-        "creatorId": 5,
-        "updatedAt": None,
-        "deletedAt": None,
-        "conflict": None,
-        "currentVersion": {
-            "createdAt": "2024-04-12T15:22:02.148Z",
-            "current": True,
-            "label": "test entity 1",
-            "creatorId": 5,
-            "userAgent": "Python/3.10 aiohttp/3.9.3",
-            "data": {
-                "status": "READY",
-                "geometry": "test"
-            },
-            "version": 1,
-            "baseVersion": None,
-            "dataReceived": {
-                "label": "test entity 1",
-                "status": "READY",
-                "geometry": "test"
-            },
-            "conflictingProperties": None
-        }
-        }
-
-        Args:
-            projectId (int): The ID of the project on ODK Central.
-            datasetName (int): The name of a dataset, specific to a project.
-            label (str): Label for the Entity.
-            data (dict): Key:Value pairs to insert as Entity data.
-
-        Returns:
-            dict: JSON of entity details.
-                The 'uuid' field includes the unique entity identifier.
-        """
-        # The CSV must contain a geometry field to work
-        # TODO also add this validation to uploadMedia if CSV format
-
-        required_fields = ["geometry"]
-        if not all(key in data for key in required_fields):
-            msg = "'geometry' data field is mandatory"
-            log.debug(msg)
-            raise ValueError(msg)
-
-        url = f"{self.base}projects/{projectId}/datasets/{datasetName}/entities"
-        try:
-            async with self.session.post(
-                url,
-                ssl=self.verify,
-                json={
-                    "uuid": str(uuid4()),
-                    "label": label,
-                    "data": data,
-                },
-            ) as response:
-                return await response.json()
-        except aiohttp.ClientError as e:
-            msg = f"Failed to create Entity: {e}"
-            log.error(msg)
-            raise aiohttp.ClientError(msg) from e
+    # NOTE we removed a bunch of methods here, replacing with pyodk._endpoints.entities impl
+    # - listEntities
+    # - createEntity
+    # - updateEntity
+    # - deleteEntity
 
     async def createEntities(
         self,
@@ -803,133 +685,6 @@ class OdkDataset(OdkCentral):
                 return await response.json()
         except aiohttp.ClientError as e:
             msg = f"Failed to create Entities: {e}"
-            log.error(msg)
-            raise aiohttp.ClientError(msg) from e
-
-    async def updateEntity(
-        self,
-        projectId: int,
-        datasetName: str,
-        entityUuid: str,
-        label: Optional[str] = None,
-        data: Optional[dict] = None,
-        newVersion: Optional[int] = None,
-    ) -> dict:
-        """Update an existing Entity in a project dataset (entity list).
-
-        The JSON request format is the same as creating, minus the 'uuid' field.
-        The PATCH will only update the specific fields specified, leaving the
-            remainder.
-
-        If no 'newVersion' param is provided, the entity will be force updated
-            in place.
-        If 'newVersion' is provided, this must be a single integer increment
-            from the current version.
-
-        Example response:
-        {
-        "uuid": "71fff014-7518-429b-b97c-1332149efe7a",
-        "createdAt": "2024-04-12T14:22:37.121Z",
-        "creatorId": 5,
-        "updatedAt": "2024-04-12T14:22:37.544Z",
-        "deletedAt": None,
-        "conflict": None,
-        "currentVersion": {
-            "createdAt": "2024-04-12T14:22:37.544Z",
-            "current": True,
-            "label": "new label",
-            "creatorId": 5,
-            "userAgent": "Python/3.10 aiohttp/3.9.3",
-            "data": {
-                "osm_id": "1",
-                "status": "new status",
-                "geometry": "test",
-                "project_id": "100"
-            },
-            "version": 3,
-            "baseVersion": 2,
-            "dataReceived": {
-                "status": "new status",
-                "project_id": "100"
-            },
-            "conflictingProperties": None
-        }
-        }
-
-        Args:
-            projectId (int): The ID of the project on ODK Central.
-            datasetName (int): The name of a dataset, specific to a project.
-            entityUuid (str): Unique itentifier of the entity.
-            label (str): Label for the Entity.
-            data (dict): Key:Value pairs to insert as Entity data.
-            newVersion (int): Integer version to increment to (current version + 1).
-
-        Returns:
-            dict: JSON of entity details.
-                The 'uuid' field includes the unique entity identifier.
-        """
-        if not label and not data:
-            msg = "One of either the 'label' or 'data' fields must be passed"
-            log.debug(msg)
-            raise ValueError(msg)
-
-        json_data = {}
-        if data:
-            json_data["data"] = data
-        if label:
-            json_data["label"] = label
-
-        url = f"{self.base}projects/{projectId}/datasets/{datasetName}/entities/{entityUuid}"
-        if newVersion:
-            url = f"{url}?baseVersion={newVersion - 1}"
-        else:
-            url = f"{url}?force=true"
-
-        try:
-            log.info(
-                f"Updating Entity ({entityUuid}) for ODK project ({projectId}) "
-                f"with params: label={label} data={data} newVersion={newVersion}"
-            )
-            async with self.session.patch(
-                url,
-                ssl=self.verify,
-                json=json_data,
-            ) as response:
-                return await response.json()
-        except aiohttp.ClientError as e:
-            msg = f"Failed to update Entity: {e}"
-            log.error(msg)
-            raise aiohttp.ClientError(msg) from e
-
-    async def deleteEntity(
-        self,
-        projectId: int,
-        datasetName: str,
-        entityUuid: str,
-    ) -> bool:
-        """Delete an Entity in a project dataset (entity list).
-
-        Only performs a soft deletion, so the Entity is actually archived.
-
-        Args:
-            projectId (int): The ID of the project on ODK Central.
-            datasetName (int): The name of a dataset, specific to a project.
-            entityUuid (str): Unique itentifier of the entity.
-
-        Returns:
-            bool: Deletion successful or not.
-        """
-        url = f"{self.base}projects/{projectId}/datasets/{datasetName}/entities/{entityUuid}"
-        log.debug(f"Deleting dataset ({datasetName}) entity UUID ({entityUuid})")
-        try:
-            log.info(f"Deleting Entity ({entityUuid}) for ODK project ({projectId}) and dataset ({datasetName})")
-            async with self.session.delete(url, ssl=self.verify) as response:
-                success = (response_msg := await response.json()).get("success", False)
-                if not success:
-                    log.debug(f"Server returned deletion unsuccessful: {response_msg}")
-                return success
-        except aiohttp.ClientError as e:
-            msg = f"Failed to delete Entity: {e}"
             log.error(msg)
             raise aiohttp.ClientError(msg) from e
 

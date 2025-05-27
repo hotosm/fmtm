@@ -1,6 +1,6 @@
 {
 	"name": "field-tm-mapper",
-	"version": "2025.2.1",
+	"version": "2025.3.0",
 	"type": "module",
 	"license": "(AGPL-3.0-only OR CC-BY-4.0)",
 	"private": true,
@@ -20,7 +20,7 @@
 		"init-db": "node src/lib/db/init.js"
 	},
 	"devDependencies": {
-		"@inlang/paraglide-js": "^2.0.12",
+		"@inlang/paraglide-js": "^2.0.13",
 		"@playwright/test": "^1.49.0",
 		"@sveltejs/adapter-static": "^3.0.8",
 		"@sveltejs/kit": "^2.20.8",
@@ -36,6 +36,7 @@
 		"eslint": "^9.16.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^3.5.1",
+		"jsdom": "^26.1.0",
 		"prettier": "^3.4.1",
 		"prettier-plugin-svelte": "^3.3.3",
 		"svelte": "5.28.2",
@@ -48,8 +49,8 @@
 	},
 	"dependencies": {
 		"@electric-sql/client": "1.0.4",
-		"@electric-sql/pglite": "^0.3.0",
-		"@electric-sql/pglite-sync": "^0.3.2",
+		"@electric-sql/pglite": "^0.3.2",
+		"@electric-sql/pglite-sync": "^0.3.5",
 		"@hotosm/ui": "0.2.0-b5",
 		"@maplibre/maplibre-gl-directions": "^0.7.1",
 		"@shoelace-style/shoelace": "2.17.1",
@@ -64,12 +65,11 @@
 		"@turf/distance": "^7.2.0",
 		"@turf/helpers": "^7.1.0",
 		"@watergis/maplibre-gl-terradraw": "^0.8.1",
-		"flatgeobuf": "^3.36.0",
+		"flatgeobuf": "^3.38.0",
 		"maplibre-gl": "^4.7.1",
 		"pako": "^2.1.0",
-		"pmtiles": "^4.0.1",
+		"pmtiles": "^4.3.0",
 		"svelte-maplibre": "^0.9.14",
-		"uuid": "^11.0.3",
 		"workbox-window": "^7.3.0"
 	},
 	"packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"

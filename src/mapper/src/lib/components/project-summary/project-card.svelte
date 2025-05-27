@@ -1,20 +1,20 @@
 <script lang="ts">
 	import '$styles/project-summary.css';
-	import type { projectType } from '$lib/types';
+	import type { DbProjectType } from '$lib/types';
 	import OsmLogo from '$assets/images/osm-logo.png';
 	import { goto } from '$app/navigation';
 
 	type propType = {
-		project: projectType;
+		project: DbProjectType;
 	};
 
 	const { project }: propType = $props();
 </script>
 
 <div
-	onclick={() => goto(`/${project.id}`)}
+	onclick={() => goto(`/project/${project.id}`)}
 	onkeydown={(e: KeyboardEvent) => {
-		if (e.key === 'Enter') goto(`/${project.id}`);
+		if (e.key === 'Enter') goto(`/project/${project.id}`);
 	}}
 	role="button"
 	tabindex="0"
