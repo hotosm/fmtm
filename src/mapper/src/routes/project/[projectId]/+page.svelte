@@ -313,13 +313,21 @@
 			// NOTE the id field is the osm_id, not the entity id!
 			await entitiesStore.createEntity(db, projectId, entityUuid, {
 				type: 'FeatureCollection',
-				features: [{ type: 'Feature', id: newOsmId, geometry: newFeatureGeom, properties: {
-					project_id: projectId,
-					osm_id: newOsmId,
-					task_id: taskStore.selectedTaskIndex || '',
-					is_new: '✅', // NOTE usage of an emoji is valid here
-					status: '0', // TODO update this to use the enum / mapping
-				}}],
+				features: [
+					{
+						type: 'Feature',
+						id: newOsmId,
+						geometry: newFeatureGeom,
+						properties: {
+							project_id: projectId,
+							osm_id: newOsmId,
+							task_id: taskStore.selectedTaskIndex || '',
+							is_new: '✅', // NOTE usage of an emoji is valid here
+							status: '0', // TODO update this to use the enum / mapping
+							user_sub: loginStore.getAuthDetails?.sub,
+						},
+					},
+				],
 			});
 			cancelMapNewFeatureInODK();
 
