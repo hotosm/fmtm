@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test';
 test('dummy test to replicate #1775 ', async ({ browserName, page }) => {
   test.skip(browserName !== 'chromium', 'Test only for chromium!');
   await page.goto('/');
-  await page.getByText('Login').click();
+  await page.getByText('Explore Projects');
 });
 
 test.skip('create new project', async ({ browserName, page }) => {
