@@ -34,6 +34,7 @@ const initialState: ProjectStateTypes = {
   badGeomFeatureCollection: { type: 'FeatureCollection', features: [] },
   newGeomFeatureCollection: { type: 'FeatureCollection', features: [] },
   OdkEntitiesGeojsonLoading: false,
+  isEntityDeleting: {},
 };
 
 const ProjectSlice = createSlice({
@@ -167,6 +168,15 @@ const ProjectSlice = createSlice({
     },
     SetOdkEntitiesGeojsonLoading(state, action: PayloadAction<boolean>) {
       state.OdkEntitiesGeojsonLoading = action.payload;
+    },
+    SetIsEntityDeleting(state, action: PayloadAction<Record<string, boolean>>) {
+      state.isEntityDeleting = { ...state.isEntityDeleting, ...action.payload };
+    },
+    RemoveNewEntity(state, action) {
+      state.newGeomFeatureCollection = {
+        ...state.newGeomFeatureCollection,
+        features: state.newGeomFeatureCollection.features.filter((feature) => feature?.id !== action.payload),
+      };
     },
   },
 });
