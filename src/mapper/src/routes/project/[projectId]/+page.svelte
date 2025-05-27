@@ -326,6 +326,7 @@
 							task_id: taskStore.selectedTaskIndex || '',
 							is_new: '✅', // NOTE usage of an emoji is valid here
 							status: '0', // TODO update this to use the enum / mapping
+							user_sub: loginStore.getAuthDetails?.sub,
 						},
 					},
 				],
