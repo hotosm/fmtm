@@ -335,23 +335,24 @@ export const GetGeometryLog = (url: string) => {
   };
 };
 
-export const DeleteNewGeometry = (project_id: number, entity_id: string, geom_id: string) => {
+export const DeleteEntity = (url: string, project_id: number, entity_id: string) => {
   return async (dispatch: AppDispatch) => {
-    const deleteNewGeometry = async () => {
+    const deleteEntity = async () => {
       try {
-        // TODO: delete entity from central
-        // await axios.delete(`${VITE_API_URL}/central/entity/${entity_id}?project_id=${project_id}`);
-
-        await axios.delete(`${VITE_API_URL}/projects/${project_id}/geometry/records/${geom_id}`);
+        dispatch(ProjectActions.SetIsEntityDeleting({ [entity_id]: true }));
+        await axios.delete(url, { params: { project_id } });
+        dispatch(ProjectActions.RemoveNewEntity(entity_id));
       } catch (error) {
         dispatch(
           CommonActions.SetSnackBar({
             message: error?.response?.data?.detail || 'Failed to delete entity',
           }),
         );
+      } finally {
+        dispatch(ProjectActions.SetIsEntityDeleting({ [entity_id]: false }));
       }
     };
-    await deleteNewGeometry();
+    await deleteEntity();
   };
 };
 
