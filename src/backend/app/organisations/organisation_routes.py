@@ -1,19 +1,19 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Routes for organisation management."""
 
@@ -189,12 +189,13 @@ async def add_new_organisation_admin(
 @router.get("/org-admins", response_model=list[OrgManagersOut])
 async def get_organisation_admins(
     db: Annotated[Connection, Depends(db_conn)],
-    org_user_dict: Annotated[OrgUserDict, Depends(org_admin)],
+    organisation: Annotated[DbOrganisation, Depends(org_exists)],
+    current_user: Annotated[AuthUser, Depends(login_required)],
 ):
     """Get the list of organisation admins."""
     org_managers = await DbOrganisationManagers.get(
         db,
-        org_user_dict.get("org").id,
+        organisation.id,
     )
     return org_managers
 

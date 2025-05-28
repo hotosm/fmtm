@@ -13,8 +13,24 @@ import useDocumentTitle from '@/utilfunctions/useDocumentTitle';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import AssetModules from '@/shared/AssetModules';
 import Chips from '@/components/common/Chips';
+import RadioButton from '@/components/common/RadioButton';
+import { projectVisibilityOptionsType } from '@/store/types/ICreateProject';
+import { project_visibility } from '@/types/enums';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
+
+const projectVisibilityOptions: projectVisibilityOptionsType[] = [
+  {
+    name: 'project_visibility',
+    value: project_visibility.PUBLIC,
+    label: 'Public',
+  },
+  {
+    name: 'project_visibility',
+    value: project_visibility.PRIVATE,
+    label: 'Private',
+  },
+];
 
 const EditDetails = ({ projectId }) => {
   useDocumentTitle('Manage Project: Project Description');
@@ -49,7 +65,7 @@ const EditDetails = ({ projectId }) => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="fmtm-relative fmtm-w-full fmtm-h-full fmtm-flex fmtm-flex-col fmtm-overflow-hidden"
+      className="fmtm-relative fmtm-w-full fmtm-h-full fmtm-flex fmtm-flex-col fmtm-overflow-hidden fmtm-bg-white"
     >
       <div className="fmtm-py-5 lg:fmtm-py-10 fmtm-px-5 lg:fmtm-px-9 fmtm-flex-1 fmtm-overflow-y-scroll scrollbar fmtm-flex fmtm-flex-col fmtm-gap-6">
         <InputTextField
@@ -129,6 +145,19 @@ const EditDetails = ({ projectId }) => {
             }}
           />
         </div>
+        <RadioButton
+          value={values?.visibility || ''}
+          topic="Project Type"
+          options={projectVisibilityOptions}
+          direction="row"
+          onChangeData={(value) => {
+            handleCustomChange('visibility', value);
+          }}
+          errorMsg={errors.visibility}
+          hoveredOption={() => {
+            dispatch(CreateProjectActions.SetDescriptionToFocus('projectdetails-visibility'));
+          }}
+        />
       </div>
       <div className="fmtm-py-2 fmtm-flex fmtm-items-center fmtm-justify-center fmtm-gap-6 fmtm-shadow-2xl fmtm-z-50">
         <Button variant="primary-red" isLoading={editProjectDetailsLoading} type="submit">

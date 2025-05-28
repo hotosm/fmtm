@@ -1,24 +1,26 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Logic for organisation management."""
 
+from io import BytesIO
 from textwrap import dedent
 
+import aiohttp
 from fastapi import (
     Request,
     UploadFile,
@@ -55,7 +57,7 @@ async def init_admin_org(db: Connection) -> None:
     svc_user = UserIn(
         sub="osm|20386219",
         username="svcfmtm",
-        name="FMTM Service Account",
+        name="Field-TM Service Account",
         email_address=settings.ODK_CENTRAL_USER,
         is_email_verified=True,
         # This API key is used for the Central Webhook service
@@ -67,10 +69,10 @@ async def init_admin_org(db: Connection) -> None:
 
     # Create HOTOSM org
     org_in = OrganisationIn(
-        name="HOTOSM",
-        description="Humanitarian OpenStreetMap Team.",
-        url="https://hotosm.org",
-        associated_email="sysadmin@hotosm.org",
+        name=settings.DEFAULT_ORG_NAME,
+        description="Default organisation",
+        url=settings.DEFAULT_ORG_URL,
+        associated_email=settings.DEFAULT_ORG_EMAIL,
         odk_central_url=settings.ODK_CENTRAL_URL,
         odk_central_user=settings.ODK_CENTRAL_USER,
         odk_central_password=settings.ODK_CENTRAL_PASSWD.get_secret_value()
@@ -78,20 +80,33 @@ async def init_admin_org(db: Connection) -> None:
         else "",
         approved=True,
     )
-    with open("/opt/app/images/hot-org-logo.png", "rb") as logo_file:
-        org_logo = UploadFile(
-            file=logo_file,
-            filename="hot-org-logo.png",
-            headers={"Content-Type": "image/png"},
-        )
 
-        hotosm_org = await DbOrganisation.create(
-            db,
-            org_in,
-            admin_user.sub,
-            org_logo,
-            ignore_conflict=True,
-        )
+    org_logo = None
+    if logo_url := settings.DEFAULT_ORG_LOGO_URL:
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.get(logo_url) as response:
+                    response.raise_for_status()
+                    content_type = response.headers.get("Content-Type", "")
+
+                    if content_type.startswith("image/"):
+                        org_logo = UploadFile(
+                            file=BytesIO(await response.read()),
+                            filename="logo.png",
+                            headers={"Content-Type": content_type},
+                        )
+                    else:
+                        log.debug(f"Invalid content type for logo: {content_type}")
+            except aiohttp.ClientError as e:
+                log.debug(f"Failed to fetch logo from {logo_url}: {e}")
+
+    hotosm_org = await DbOrganisation.create(
+        db,
+        org_in,
+        admin_user.sub,
+        org_logo,
+        ignore_conflict=True,
+    )
 
     # Make admin user manager of HOTOSM
     if hotosm_org:

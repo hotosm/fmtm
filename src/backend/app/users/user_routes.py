@@ -1,24 +1,24 @@
-# Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+# Copyright (c) Humanitarian OpenStreetMap Team
 #
-# This file is part of FMTM.
+# This file is part of Field-TM.
 #
-#     FMTM is free software: you can redistribute it and/or modify
+#     Field-TM is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
 #
-#     FMTM is distributed in the hope that it will be useful,
+#     Field-TM is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
+#     along with Field-TM.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Endpoints for users and role."""
 
 from datetime import datetime, timezone
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import (
     APIRouter,
@@ -79,9 +79,12 @@ async def get_userlist(
     db: Annotated[Connection, Depends(db_conn)],
     _: Annotated[DbUser, Depends(validator)],
     search: str = "",
+    signin_type: Literal["osm", "google"] = Query(
+        "osm", description="Filter by signin type (osm or google)"
+    ),
 ):
     """Get all user list with info such as id and username."""
-    users = await DbUser.all(db, search=search)
+    users = await DbUser.all(db, search=search, signin_type=signin_type)
     if not users:
         return []
     return [
@@ -140,6 +143,7 @@ async def invite_new_user(
     (e.g. mobile message).
     """
     project = project_user_dict.get("project")
+    osm_user_exists = False
 
     if user_in.osm_username:
         if osm_user_exists := await check_osm_user(user_in.osm_username):
@@ -177,7 +181,7 @@ async def invite_new_user(
     # Generate invite URL
     # TODO create frontend page to handle /invite
     # TODO save token from URL in localStorage
-    # TODO ask user to login to FMTM first, present options
+    # TODO ask user to login to Field-TM first, present options
     # TODO once logged in and redirected back to frontend
     # TODO read the localStorage `invite` key, and call the
     # TODO /users/invite/{token} endpoint.
@@ -215,7 +219,7 @@ async def accept_invite(
     invite = await DbUserInvite.one(db, token)
     if not invite or invite.is_expired():
         raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN, detail="Invite has expired (valid 7 days)"
+            status_code=HTTPStatus.FORBIDDEN, detail="Invite has expired"
         )
 
     if (invite.osm_username and invite.osm_username != current_user.username) or (

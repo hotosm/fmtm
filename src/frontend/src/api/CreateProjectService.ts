@@ -119,9 +119,9 @@ const CreateProjectService = (
 
       // assign project admins
       if (!isEmpty(projectAdmins)) {
-        const promises = projectAdmins?.map(async (id: any) => {
+        const promises = projectAdmins?.map(async (sub: any) => {
           await dispatch(
-            AssignProjectManager(`${VITE_API_URL}/projects/add-manager`, { id, project_id: projectId as number }),
+            AssignProjectManager(`${VITE_API_URL}/projects/add-manager`, { sub, project_id: projectId as number }),
           );
         });
         await Promise.all(promises);
@@ -511,7 +511,7 @@ const EditProjectBoundaryService = (url: string, geojsonUpload: any, dimension: 
   };
 };
 
-const ValidateCustomForm = (url: string, formUpload: any) => {
+const ValidateCustomForm = (url: string, formUpload: any, useOdkCollect: boolean) => {
   return async (dispatch: AppDispatch) => {
     dispatch(CreateProjectActions.ValidateCustomFormLoading(true));
 
@@ -519,6 +519,7 @@ const ValidateCustomForm = (url: string, formUpload: any) => {
       try {
         const formUploadFormData = new FormData();
         formUploadFormData.append('xlsform', formUpload);
+        formUploadFormData.append('use_odk_collect', useOdkCollect.toString());
 
         const getTaskSplittingResponse = await axios.post(url, formUploadFormData);
         const resp = getTaskSplittingResponse.data;
@@ -578,7 +579,7 @@ const DeleteProjectService = (url: string, navigate?: NavigateFunction) => {
   };
 };
 
-const AssignProjectManager = (url: string, params: { id: number; project_id: number }) => {
+const AssignProjectManager = (url: string, params: { sub: number; project_id: number }) => {
   return async (dispatch: AppDispatch) => {
     const assignProjectManager = async () => {
       try {

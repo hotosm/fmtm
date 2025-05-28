@@ -15,7 +15,7 @@
 	import Login from '$lib/components/login.svelte';
 	import { getLoginStore } from '$store/login.svelte.ts';
 	import { defaultDrawerItems } from '$constants/drawerItems.ts';
-	import { revokeCookies } from '$lib/utils/login';
+	import { revokeCookies } from '$lib/api/login';
 	import { getAlertStore } from '$store/common.svelte';
 	import { getCommonStore, getProjectSetupStepStore } from '$store/common.svelte.ts';
 	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
@@ -46,6 +46,7 @@
 	const handleLocaleSelect = (event: SlSelectEvent) => {
 		const selectedItem = event.detail.item;
 		commonStore.setLocale(selectedItem.value);
+		console.log(selectedItem.value)
 		setParaglideLocale(selectedItem.value); // paraglide function for UI changes (causes reload)
 	};
 
@@ -74,14 +75,9 @@
 		role="button"
 		tabindex="0"
 		class="logo"
+		aria-label="Home"
 	>
-		<img src={commonStore.config?.logoUrl} alt="hot-logo" />
-		<!-- The approach below is finicky - can loading the logo via CSS work nicely? -->
-		<!-- <a href={window.location.origin} 
-			class="inline-block flex h-[2.2rem] sm:h-[3rem] w-[2.2rem] sm:w-[3rem] bg-no-repeat bg-cover"
-			style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/45/Humanitarian_OpenStreetMap_Team_logo.svg');"
-			aria-label="Home"
-		></a> -->
+		<img src={commonStore.config?.logoUrl} alt="hot-logo"/>
 		<span class="logo-text">
 			{commonStore.config?.logoText}
 		</span>
