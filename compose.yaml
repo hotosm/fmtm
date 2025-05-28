@@ -54,6 +54,7 @@ services:
       # General
       BUNKERWEB_INSTANCES: proxy:5000
       LOG_LEVEL: notice
+      UI_WIZARD: no
       USE_BUNKERNET: no
       DISABLE_DEFAULT_SERVER: yes
       API_WHITELIST_IP: 127.0.0.0/8 10.20.30.0/24
@@ -189,6 +190,7 @@ services:
       additional_contexts:
         - code=src/frontend
       dockerfile: Dockerfile.ui.debug
+      target: build
     volumes:
       - ./src/frontend:/app
       - /app/node_modules/
@@ -207,12 +209,14 @@ services:
       additional_contexts:
         - code=src/mapper
       dockerfile: Dockerfile.ui.debug
+      target: init-db
     volumes:
       - ./src/mapper:/app
       - /app/node_modules/
       - /app/.svelte-kit/
       # - ../ui:/app/node_modules/@hotosm/ui:ro
     environment:
+      - TEST_PWA=${TEST_PWA:-false}
       - VITE_API_URL=http://api.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}
       - VITE_SYNC_URL=http://sync.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}
       - VITE_S3_URL=http://s3.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}
@@ -221,6 +225,8 @@ services:
     networks:
       - fmtm-net
     restart: "unless-stopped"
+    command: >
+      sh -c "if [ \"$TEST_PWA\" = \"true\" ]; then pnpm run build && pnpm run preview; else pnpm run dev; fi"
 
   central:
     profiles: ["", "central"]
@@ -299,7 +305,7 @@ services:
 
   central-webhook:
     profiles: ["", "central"]
-    image: "ghcr.io/hotosm/central-webhook:${ODK_WEBHOOK_TAG:-0.1.0-rc}"
+    image: "ghcr.io/hotosm/central-webhook:${ODK_WEBHOOK_TAG:-0.1.1}"
     depends_on:
       central:
         condition: service_healthy
@@ -342,7 +348,6 @@ services:
   fmtm-db:
     # Temp workaround until https://github.com/postgis/docker-postgis/issues/216
     image: "ghcr.io/hotosm/postgis:${POSTGIS_TAG:-14-3.5-alpine}"
-    command: -c 'max_connections=300' -c 'wal_level=logical'
     volumes:
       - fmtm_db_data:/var/lib/postgresql/data/
     environment:
@@ -354,6 +359,11 @@ services:
     networks:
       - fmtm-net
     restart: "unless-stopped"
+    # Low max_connections for better performance.
+    # See https://richyen.com/postgres/2021/09/03/less-is-more-max-connections.html
+    # and other sources online. Approx (cores * 4 * replicas)
+    # Plus electric-sql defaults to need 20 connections (64+20)
+    command: -c 'max_connections=84' -c 'wal_level=logical'
     healthcheck:
       test: pg_isready -U ${FMTM_DB_USER:-fmtm} -d ${FMTM_DB_NAME:-fmtm}
       start_period: 5s
@@ -362,7 +372,7 @@ services:
       retries: 3
 
   electric:
-    image: "electricsql/electric:${ELECTRIC_TAG:-1.0.4}"
+    image: "electricsql/electric:${ELECTRIC_TAG:-1.0.12}"
     depends_on:
       proxy:
         condition: service_started
@@ -395,6 +405,8 @@ services:
     networks:
       - fmtm-net
     restart: "unless-stopped"
+    # Optimise to a low number of connections, see fmtm-db service
+    command: -c 'max_connections=64'
     healthcheck:
       test: pg_isready -U ${CENTRAL_DB_USER:-odk} -d ${CENTRAL_DB_NAME:-odk}
       start_period: 5s

@@ -22,18 +22,18 @@ const config = {
 			precompress: false,
 			strict: true,
 		}),
-	},
-
-	alias: {
-		$lib: 'src/lib',
-		$components: 'src/components',
-		$store: 'src/store',
-		$routes: 'src/routes',
-		$constants: 'src/constants',
-		$static: 'static',
-		$styles: 'styles',
-		$assets: 'assets',
-		$translations: 'src/translations',
+		alias: {
+			$lib: 'src/lib',
+			$components: 'src/components',
+			$store: 'src/store',
+			$routes: 'src/routes',
+			$constants: 'src/constants',
+			$styles: 'src/styles',
+			$assets: 'src/assets',
+			$translations: 'src/translations',
+			$static: 'static',
+			$migrations: '../backend/migrations',
+		},
 	},
 };
 

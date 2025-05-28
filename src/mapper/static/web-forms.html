@@ -8,8 +8,12 @@
 				background-repeat: no-repeat;
 				background-size: contain;
 				position: relative;
-				height: 50px;
-				width: 75px;
+				height: 200px;
+				height: 30vh;
+				width: calc(50% - 20px);
+				margin-bottom: 10px;
+				margin-right: 10px;
+				box-sizing: border-box;
 			}
 			.columns-pack .p-radiobutton.p-component {
 				display: none;
@@ -55,7 +59,10 @@
 				}
 			};
 
-			const odkWebFormUrl = new URL(window.location.href).searchParams.get('odkWebFormUrl');
+			const iframe = parent.document.getElementById(window.name);
+
+			const odkWebFormUrl = iframe.getAttribute('data-odk-web-form-url');
+
 			const OdkWebForm = (await import(odkWebFormUrl)).default;
 
 			// we created this static html file for a few reasons:
@@ -63,10 +70,21 @@
 			//    was preventing dropdowns from rendering in the web component
 			// 2) we want to load as few libraries as possible to avoid conflicts
 
-			const entityId = new URL(window.location.href).searchParams.get('entityId');
-			const projectId = new URL(window.location.href).searchParams.get('projectId');
-			const formXml = new URL(window.location.href).searchParams.get('formXml');
-			const formMedia = JSON.parse(new URL(window.location.href).searchParams.get('formMedia'));
+			const entityId = iframe.getAttribute('data-entity-id');
+			const projectId = iframe.getAttribute('data-project-id');
+			const formXml = iframe.getAttribute('data-form-xml');
+			const formMedia = JSON.parse(decodeURIComponent(iframe.getAttribute('data-form-media')));
+			const cssFile = iframe.getAttribute('data-css-file');
+
+			if (cssFile) {
+				const stylesheet = document.createElement('link');
+				stylesheet.rel = 'stylesheet';
+				stylesheet.type = 'text/css';
+				stylesheet.href = cssFile;
+				// we append to the body and not the head in order that the css file
+				// more easily over-rides other styles that Web Forms injects into the head
+				document.getElementsByTagName('body')[0].appendChild(stylesheet);
+			}
 
 			const style = document.createElement('style');
 			const formXmlString = await fetch(formXml).then((res) => res.text());

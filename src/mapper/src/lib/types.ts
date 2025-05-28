@@ -10,28 +10,16 @@ export type ProjectTask = {
 	outline: Polygon;
 };
 
-export interface ProjectData {
+export interface APIProject {
 	id: number;
-	odkid: number;
 	name: string;
 	short_description: string;
 	description: string;
 	per_task_instructions: string;
-	outline: {
-		type: string;
-		geometry: {
-			type: string;
-			coordinates: [];
-		};
-		properties: {
-			id: number;
-			bbox: [number, number, number, number];
-		};
-		id: number;
-	};
+	priority: number;
 	location_str: string;
-	osm_category: string;
 	odk_form_id: string;
+	odk_form_xml: string;
 	data_extract_url: string;
 	odk_token: string;
 	organisation_id: number;
@@ -45,6 +33,79 @@ export interface ProjectData {
 	geo_restrict_force_error: boolean;
 	use_odk_collect: boolean;
 }
+
+export interface DbProjectType {
+	id: number;
+	organisation_id?: string | null;
+	name?: string | null;
+	short_description?: string | null;
+	description?: string | null;
+	per_task_instructions?: string | null;
+	location_str?: string | null;
+	status: string; // e.g., 'DRAFT' | 'ACTIVE' | ...
+	total_tasks?: string | null;
+	odk_form_id?: string | null;
+	odk_form_xml?: string | null;
+	visibility: string; // e.g., 'PUBLIC' | 'PRIVATE'
+	mapper_level: string; // e.g., 'BEGINNER' | 'INTERMEDIATE'
+	priority?: string | null; // e.g., 'LOW' | 'MEDIUM' | 'HIGH'
+	featured?: string | null;
+	odk_token?: string | null;
+	data_extract_url?: string | null;
+	hashtags?: string[] | null;
+	custom_tms_url?: string | null;
+	geo_restrict_force_error?: boolean | null;
+	geo_restrict_distance_meters?: number | null;
+	primary_geom_type?: string | null; // e.g., 'POLYGON'
+	new_geom_type?: string | null;
+	use_odk_collect?: boolean | null;
+	created_at: string; // ISO timestamp
+	updated_at?: string | null;
+
+	// API-calculated or client-side only fields
+	organisation_logo?: string | null;
+	outline?: any | null;
+	centroid?: any | null;
+	tasks?: ProjectTask[] | null;
+	num_contributors?: number | null;
+	total_submissions?: number | null;
+}
+
+// This should match the frontend-only/schema.sql fields
+export const DB_PROJECT_COLUMNS = new Set([
+	'id',
+	'organisation_id',
+	'name',
+	'short_description',
+	'description',
+	'per_task_instructions',
+	'location_str',
+	'status',
+	'total_tasks',
+	'odk_form_id',
+	'odk_form_xml',
+	'visibility',
+	'mapper_level',
+	'priority',
+	'featured',
+	'odk_token',
+	'data_extract_url',
+	'hashtags',
+	'custom_tms_url',
+	'geo_restrict_force_error',
+	'geo_restrict_distance_meters',
+	'primary_geom_type',
+	'new_geom_type',
+	'use_odk_collect',
+	'created_at',
+	'updated_at',
+	'organisation_logo',
+	'outline',
+	'centroid',
+	'tasks',
+	'num_contributors',
+	'total_submissions',
+]);
 
 export interface ZoomToTaskEventDetail {
 	taskId: number;
@@ -99,30 +160,15 @@ export type NewEvent = {
 };
 
 export type TaskEventType = {
-	comment: string | null;
-	created_at: string;
-	event: TaskEvent | 'COMMENT';
 	event_id: string;
-	project_id: number;
+	event: TaskEvent | 'COMMENT';
 	state: TaskStatus | null;
+	project_id: number;
 	task_id: number;
 	user_id: number;
 	username: string;
-};
-
-export type projectType = {
-	centroid: Point;
-	hashtags: string[];
-	id: number;
-	location_str: string | null;
-	name: string;
-	num_contributors: number;
-	organisation_id: number;
-	organisation_logo: string | null;
-	outline: Polygon;
-	priority: number;
-	short_description: string;
-	total_tasks: string;
+	comment: string | null;
+	created_at: string;
 };
 
 export type paginationType = {
@@ -139,5 +185,51 @@ export type paginationType = {
 export type EntityStatusPayload = {
 	entity_id: UUID;
 	status: number;
-	// label: string, // label is now automatically determined
+	label: string; // there is no easy way to automatically determine this
+};
+
+export type entityStatusOptions = 'READY' | 'OPENED_IN_ODK' | 'SURVEY_SUBMITTED' | 'MARKED_BAD' | 'VALIDATED';
+export const EntityStatusNameMap: Record<number, entityStatusOptions> = {
+	0: 'READY',
+	1: 'OPENED_IN_ODK',
+	2: 'SURVEY_SUBMITTED',
+	5: 'VALIDATED',
+	6: 'MARKED_BAD',
+};
+
+export type entitiesApiResponse = {
+	id: string;
+	task_id: number;
+	osm_id: number;
+	status: number;
+	updated_at: string | null;
+	submission_ids: string;
+	is_new: boolean;
+	geometry: string | null;
+};
+
+export type DbEntityType = {
+	entity_id: string;
+	status: entityStatusOptions;
+	project_id: number;
+	task_id: number;
+	osm_id: number;
+	submission_ids: string;
+	is_new: boolean;
+	geometry: string | null;
+};
+
+export type DbApiSubmissionType = {
+	id: number;
+	url: string;
+	method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE' | 'HEAD';
+	content_type: 'application/json' | 'multipart/form-data' | 'application/xml' | 'text/plain';
+	payload: any; // JSONB in Postgres maps to any
+	headers: Record<string, string> | null;
+	status: 'PENDING' | 'RECEIVED' | 'FAILED';
+	retry_count: number;
+	error: string | null;
+	queued_at: string; // or Date if you parse it
+	last_attempt_at: string | null;
+	success_at: string | null;
 };

@@ -4,6 +4,8 @@
 	import './page.css';
 	import type { PageData } from './$types';
 	import { onMount, onDestroy } from 'svelte';
+	import { online } from 'svelte/reactivity/window';
+	import type { PGlite } from '@electric-sql/pglite';
 	import type { ShapeStream } from '@electric-sql/client';
 	import { polygon } from '@turf/helpers';
 	import { buffer } from '@turf/buffer';
@@ -11,72 +13,77 @@
 	import type SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.component.js';
 	import type SlDialog from '@shoelace-style/shoelace/dist/components/dialog/dialog.component.js';
 
+	import type { ProjectTask, DbProjectType } from '$lib/types';
+	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
 	import { m } from '$translations/messages.js';
+	import { DbProject } from '$lib/db/projects.ts';
+	import { openOdkCollectNewFeature } from '$lib/odk/collect';
+	import { convertDateToTimeAgo } from '$lib/utils/datetime';
+	import { getTaskStore } from '$store/tasks.svelte.ts';
+	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
+	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
+	import { readFileFromOPFS } from '$lib/fs/opfs';
+	import { loadOfflineExtract, writeOfflineExtract } from '$lib/map/extracts';
+	import { getNewOsmId } from '$lib/utils/random';
+	import { iterateAndSendOfflineSubmissions } from '$lib/api/offline';
+
 	import ImportQrGif from '$assets/images/importQr.gif';
 	import BottomSheet from '$lib/components/bottom-sheet.svelte';
 	import MapComponent from '$lib/components/map/main.svelte';
 	import QRCodeComponent from '$lib/components/qrcode.svelte';
-	import BasemapComponent from '$lib/components/offline/basemaps.svelte';
+	import OfflineComponent from '$lib/components/offline/index.svelte';
 	import DialogTaskActions from '$lib/components/dialog-task-actions.svelte';
 	import DialogEntityActions from '$lib/components/dialog-entities-actions.svelte';
 	import OdkWebFormsWrapper from '$lib/components/forms/wrapper.svelte';
-	import type { ProjectTask } from '$lib/types';
-	import { openOdkCollectNewFeature } from '$lib/odk/collect';
-	import { convertDateToTimeAgo } from '$lib/utils/datetime';
-	import { getTaskStore, getTaskEventStream } from '$store/tasks.svelte.ts';
-	import { getEntitiesStatusStore, getEntityStatusStream, getNewBadGeomStream } from '$store/entities.svelte.ts';
 	import More from '$lib/components/more/index.svelte';
-	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
-	import { projectSetupStep as projectSetupStepEnum } from '$constants/enums.ts';
-	import ProjectInfo from '$lib/components/more/project-info.svelte';
 	import Editor from '$lib/components/editor/editor.svelte';
 
 	interface Props {
 		data: PageData;
 	}
 
-	let { data }: Props = $props();
+	const { data }: Props = $props();
+	const { project: initialProject, projectId, dbPromise } = data;
+	let db: PGlite | undefined;
+	let project: DbProjectType | undefined = initialProject;
 
+	let formXmlUrl: string | null = $state(null);
 	let webFormsRef: HTMLElement | undefined = $state();
 	let displayWebFormsDrawer = $state(false);
 
 	let maplibreMap: maplibregl.Map | undefined = $state(undefined);
-	let tabGroup: SlTabGroup;
+	let tabGroup: SlTabGroup | undefined = $state(undefined);
 	let openedActionModal: 'entity-modal' | 'task-modal' | null = $state(null);
 	let infoDialogRef: SlDialog | null = $state(null);
 	let isDrawEnabled: boolean = $state(false);
 	let latestEventTime: string = $state('');
 	let isGeometryCreationLoading: boolean = $state(false);
+	let timeout: NodeJS.Timeout | undefined = $state();
 
 	const taskStore = getTaskStore();
 	const entitiesStore = getEntitiesStatusStore();
 	const commonStore = getCommonStore();
 	const alertStore = getAlertStore();
 
-	const taskEventStream = getTaskEventStream(data.projectId);
-	const entityStatusStream = getEntityStatusStream(data.projectId);
-	const newBadGeomStream = getNewBadGeomStream(data.projectId);
+	let taskEventStream: ShapeStream | undefined;
+	let entityStatusStream: ShapeStream | undefined;
+	let lastOnlineStatus: boolean | null = $state(null);
+	let subscribeDebounce: ReturnType<typeof setTimeout> | null = $state(null);
 
-	const selectedEntityId = $derived(entitiesStore.selectedEntity);
 	const latestEvent = $derived(taskStore.latestEvent);
 	const commentMention = $derived(taskStore.commentMention);
 
-	// Set useOdkCollect override to disable webforms in app
-	if (data.project.use_odk_collect) {
-		commonStore.setUseOdkCollectOverride(true);
-	}
-
 	// Update the geojson task states when a new event is added
 	$effect(() => {
-		if (latestEvent) {
-			taskStore.appendTaskStatesToFeatcol(data.project.tasks);
+		if (db && latestEvent) {
+			taskStore.appendTaskStatesToFeatcol(db, projectId, project.tasks);
 		}
 	});
 
 	$effect(() => {
 		let taskIdIndexMap: Record<number, number> = {};
-		if (data?.project?.tasks && data?.project?.tasks?.length > 0) {
-			data?.project?.tasks?.forEach((task: ProjectTask) => {
+		if (project?.tasks && project?.tasks?.length > 0) {
+			project?.tasks?.forEach((task: ProjectTask) => {
 				taskIdIndexMap[task.id] = task.project_task_index;
 			});
 		}
@@ -99,11 +106,11 @@
 	});
 
 	function zoomToTask(taskId: number, fitOptions?: Record<string, any> = { duration: 0 }) {
-		const taskObj = data.project.tasks.find((task: ProjectTask) => task.id === taskId);
+		const taskObj = project.tasks.find((task: ProjectTask) => task.id === taskId);
 
 		if (!taskObj) return;
 		// Set as selected task for buttons
-		taskStore.setSelectedTaskId(taskObj.id, taskObj?.task_index);
+		taskStore.setSelectedTaskId(db, taskObj.id, taskObj?.task_index);
 
 		const taskPolygon = polygon(taskObj.outline.coordinates);
 		const taskBuffer = buffer(taskPolygon, 5, { units: 'meters' });
@@ -116,53 +123,158 @@
 		tabGroup.show('map');
 	}
 
+	// if the content-length is less than 2MB, download
+	const storeFgbExtractOffline = async () => {
+		const response = await fetch(project.data_extract_url, {
+			method: 'HEAD',
+		});
+		const contentLength = response.headers.get('Content-Length');
+		if (!contentLength) return;
+
+		const maxAutoDownloadSize = 2 * 1024 * 1024; // 2MB
+		const fileSize = parseInt(contentLength, 10);
+		if (fileSize <= maxAutoDownloadSize) {
+			writeOfflineExtract(projectId, project.data_extract_url);
+		}
+	};
+
+	async function subscribeToAllStreams() {
+		// Ensure unsubscribed first
+		unsubscribeFromAllStreams();
+
+		taskEventStream = await taskStore.getTaskEventStream(db, projectId);
+		entityStatusStream = await entitiesStore.getEntityStatusStream(db, projectId);
+	}
+
 	onMount(async () => {
-		await entitiesStore.subscribeToNewBadGeom(newBadGeomStream);
+		// Get db and make accessible via store
+		db = await dbPromise;
+		commonStore.setDb(db);
+		if (online.current) {
+			// If we got project from API in +page.ts (online),
+			// insert full project details into database
+			await DbProject.upsert(db, project);
 
-		// In store/tasks.svelte.ts
-		await taskStore.subscribeToEvents(taskEventStream);
-		await taskStore.appendTaskStatesToFeatcol(data.project.tasks);
-	});
-
-	onDestroy(() => {
-		taskEventStream?.unsubscribeAll();
-		taskStore.clearTaskStates();
-	});
-
-	$effect(() => {
-		entitiesStore.syncEntityStatus(data.projectId);
-	});
-
-	$effect(() => {
-		entitiesStore.entitiesList;
-		let entityStatusStream: ShapeStream | undefined;
-
-		if (entitiesStore.entitiesList?.length === 0) return;
-		async function getEntityStatus() {
-			entityStatusStream = getEntityStatusStream(data.projectId);
-			await entitiesStore.subscribeToEntityStatusUpdates(entityStatusStream, entitiesStore.entitiesList);
+			// Only subscribe if currently online (no need to await)
+			subscribeToAllStreams();
+		} else {
+			// Else attempt to get project from localdb
+			project = await DbProject.one(db, projectId);
+			if (!project) {
+				throw error(404, `Project with ID (${projectId}) not found in local storage`);
+			}
 		}
 
-		getEntityStatus();
-		return () => {
-			entityStatusStream?.unsubscribeAll();
-		};
+		// Set vars that require upstream project details set (and are not reactive)
+		if (project) {
+			commonStore.setUseOdkCollectOverride(project.use_odk_collect);
+			const { odk_form_xml }: DbProjectType = project;
+			const formXmlBlob = new Blob([odk_form_xml], { type: 'application/xml' });
+			formXmlUrl = URL.createObjectURL(formXmlBlob);
+		}
+
+		// Note we need this for now, as the task outlines are from API, while task
+		// events are from pglite / sync. We pass through the task outlines.
+		taskStore.appendTaskStatesToFeatcol(db, projectId, project.tasks);
+
+		// check if Fgb extract exists in OPFS
+		const offlineExtractFile = await readFileFromOPFS(`${projectId}/extract.fgb`);
+		if (offlineExtractFile) {
+			loadOfflineExtract(projectId);
+			return;
+		}
+
+		// 12s delay to defer saving data until after initial page load
+		timeout = setTimeout(() => {
+			storeFgbExtractOffline();
+		}, 12000);
 	});
+
+	async function unsubscribeFromAllStreams() {
+		taskStore.unsubscribeEventStream();
+		entitiesStore.unsubscribeEntitiesStream();
+	}
+
+	onDestroy(() => {
+		taskStore.clearTaskStates();
+		entitiesStore.setFgbOpfsUrl('');
+
+		if (timeout) clearTimeout(timeout);
+
+		unsubscribeFromAllStreams();
+	});
+	
+	async function triggerManualOfflineDataSync() {
+		if (!db) return;
+		const success = await iterateAndSendOfflineSubmissions(db);
+		// Return immediately if there were submission failures, to prevent overwriting entities below
+		if (!success) return;
+
+		// Wait 3 seconds for everything to process on the backend, before requesting new data
+		// + we need to set spinner again, as set false once offline sync done.
+		// (we have the 3 second gap until syncEntityStatusManually is triggered)
+		commonStore.setOfflineDataIsSyncing(true);
+		await new Promise((resolve) => setTimeout(resolve, 3000));
+		commonStore.setOfflineDataIsSyncing(false);
+
+		// This call has it's own loading param
+		await entitiesStore.syncEntityStatusManually(db, projectId)
+	}
+
+	async function handleOnlineSync() {
+		// Also send any pending submissions first
+		const success = await iterateAndSendOfflineSubmissions(db);
+
+		// Once done, subscribe to electric ShapeStreams
+		if (success) {
+			subscribeToAllStreams();
+		} else {
+			console.warn("Offline sync failed; subscribing to latest ShapeStreams anyway...");
+			subscribeToAllStreams();
+		}
+	}
+
+	// Subscribe / unsubscribe from streams based on connectivity
+	// note: the effect rune can't accept async, but this is fine
+	// note: we also need to debounce this to prevent infinite loop
+	$effect(() => {
+		const isOnline = online.current;
+
+		if (isOnline === lastOnlineStatus) return;
+		lastOnlineStatus = isOnline;
+
+		if (subscribeDebounce) {
+			clearTimeout(subscribeDebounce);
+			subscribeDebounce = null;
+		}
+
+		subscribeDebounce = setTimeout(() => {
+			if (isOnline) {
+				// Delay initial sync and subscriptions by 5 seconds after load (reduce memory spike)
+				setTimeout(() => {
+					handleOnlineSync();
+				}, 5000);
+			} else {
+				unsubscribeFromAllStreams();
+			}
+		}, 200);
+	});
+
 	const projectSetupStepStore = getProjectSetupStepStore();
 
 	$effect(() => {
 		// if project loaded for the first time, set projectSetupStep to 1 else get it from localStorage
-		if (!localStorage.getItem(`project-${data.projectId}-setup`)) {
+		if (!localStorage.getItem(`project-${projectId}-setup`)) {
 			// if webforms enabled, avoid project load in odk step
 			if (commonStore.enableWebforms) {
-				localStorage.setItem(`project-${data.projectId}-setup`, projectSetupStepEnum['task_selection'].toString());
+				localStorage.setItem(`project-${projectId}-setup`, projectSetupStepEnum['task_selection'].toString());
 				projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['task_selection']);
 			} else {
-				localStorage.setItem(`project-${data.projectId}-setup`, projectSetupStepEnum['odk_project_load'].toString());
+				localStorage.setItem(`project-${projectId}-setup`, projectSetupStepEnum['odk_project_load'].toString());
 				projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['odk_project_load']);
 			}
 		} else {
-			const projectStep = localStorage.getItem(`project-${data.projectId}-setup`);
+			const projectStep = localStorage.getItem(`project-${projectId}-setup`);
 			projectSetupStepStore.setProjectSetupStep(projectStep ? +projectStep : 0);
 		}
 		// if project loaded for the first time then show qrcode tab
@@ -195,31 +307,37 @@
 		}
 		try {
 			isGeometryCreationLoading = true;
-			const entity = await entitiesStore.createEntity(data.projectId, {
+			const entityUuid = crypto.randomUUID();
+			const newOsmId = getNewOsmId();
+			// NOTE here the top level 'id' field is also required for the backend processing
+			// NOTE the id field is the osm_id, not the entity id!
+			await entitiesStore.createEntity(db, projectId, entityUuid, {
 				type: 'FeatureCollection',
-				features: [{ type: 'Feature', geometry: newFeatureGeom, properties: {} }],
+				features: [{ type: 'Feature', id: newOsmId, geometry: newFeatureGeom, properties: {
+					project_id: projectId,
+					osm_id: newOsmId,
+					task_id: taskStore.selectedTaskIndex || '',
+					is_new: '✅', // NOTE usage of an emoji is valid here
+					status: '0', // TODO update this to use the enum / mapping
+				}}],
 			});
-			await entitiesStore.createGeomRecord(data.projectId, {
-				status: 'NEW',
-				geojson: { type: 'Feature', geometry: newFeatureGeom, properties: { entity_id: entity.uuid } },
-				project_id: data.projectId,
-			});
-			entitiesStore.syncEntityStatus(data.projectId);
 			cancelMapNewFeatureInODK();
 
 			if (commonStore.enableWebforms) {
-				await entitiesStore.setSelectedEntity(entity.uuid);
+				await entitiesStore.setSelectedEntityId(entityUuid);
 				openedActionModal = null;
-				entitiesStore.updateEntityStatus(data.projectId, {
-					entity_id: entity.uuid,
+				const entityOsmId = entitiesStore.getOsmIdByEntityId(entityUuid);
+				entitiesStore.updateEntityStatus(db, projectId, {
+					entity_id: entityUuid,
 					status: 1,
-					label: entity?.currentVersion?.label,
+					label: `Feature ${entityOsmId}`
 				});
 				displayWebFormsDrawer = true;
 			} else {
-				openOdkCollectNewFeature(data?.project?.odk_form_id, entity.uuid);
+				openOdkCollectNewFeature(project?.odk_form_id, entityUuid);
 			}
 		} catch (error) {
+			console.error(error);
 			alertStore.setAlert({ message: 'Unable to create entity', variant: 'danger' });
 		} finally {
 			isGeometryCreationLoading = false;
@@ -261,17 +379,24 @@
 				<sl-button
 					onclick={() => {
 						zoomToTask(commentMention.task_id, { duration: 0, padding: { bottom: 325 } });
-						const osmId = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
-						entitiesStore.setSelectedEntity(osmId);
+						const osmIdStr = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
+						const osmId = Number(osmIdStr);
+						const entity = entitiesStore.getEntityByOsmId(osmId);
+						if (entity) {
+							entitiesStore.setSelectedEntityId(entity.entity_id);
+						}
 						openedActionModal = 'entity-modal';
 						taskStore.dismissCommentMention();
 					}}
 					onkeydown={(e: KeyboardEvent) => {
 						if (e.key === 'Enter') {
-							const osmId = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
-							if (osmId) {
-								entitiesStore.setSelectedEntity(osmId);
+							const osmIdStr = commentMention?.comment?.split(' ')?.[1]?.replace('#featureId:', '');
+							const osmId = Number(osmIdStr);
+							const entity = entitiesStore.getEntityByOsmId(osmId);
+							if (entity) {
+								entitiesStore.setSelectedEntityId(entity.entity_id);
 							}
+							openedActionModal = 'entity-modal';
 							taskStore.dismissCommentMention();
 						}
 					}}
@@ -295,17 +420,20 @@
 		toggleActionModal={(value) => {
 			openedActionModal = value;
 		}}
-		projectOutlineCoords={data.project.outline.coordinates}
-		projectId={data.projectId}
-		entitiesUrl={data.project.data_extract_url}
-		primaryGeomType={data.project.primary_geom_type}
+		projectOutlineCoords={project.outline.coordinates}
+		{projectId}
+		entitiesUrl={project.data_extract_url}
+		primaryGeomType={project.primary_geom_type}
 		draw={isDrawEnabled}
-		drawGeomType={data.project?.new_geom_type}
+		drawGeomType={project?.new_geom_type}
 		handleDrawnGeom={(drawInstance, geom) => {
 			newFeatureDrawInstance = drawInstance;
 			newFeatureGeom = geom;
 			// after drawing a feature, allow user to modify the drawn feature
 			newFeatureDrawInstance.setMode('select');
+		}}
+		syncButtonTrigger={async () => {
+			await triggerManualOfflineDataSync();
 		}}
 	></MapComponent>
 
@@ -354,7 +482,7 @@
 			openedActionModal = value ? 'task-modal' : null;
 		}}
 		selectedTab={commonStore.selectedTab}
-		projectData={data?.project}
+		projectData={project}
 		clickMapNewFeature={() => {
 			openedActionModal = null;
 			isDrawEnabled = true;
@@ -366,27 +494,22 @@
 			openedActionModal = value ? 'entity-modal' : null;
 		}}
 		selectedTab={commonStore.selectedTab}
-		projectData={data?.project}
+		projectData={project}
 		bind:displayWebFormsDrawer
 	/>
 	{#if commonStore.selectedTab !== 'map'}
 		<BottomSheet onClose={() => tabGroup.show('map')}>
 			{#if commonStore.selectedTab === 'events'}
-				<More projectData={data?.project} zoomToTask={(taskId) => zoomToTask(taskId)}></More>
+				<More projectData={project} zoomToTask={(taskId) => zoomToTask(taskId)}></More>
 			{/if}
 			{#if commonStore.selectedTab === 'offline'}
-				<BasemapComponent projectId={data.project.id}></BasemapComponent>
+				<OfflineComponent projectId={project.id} {project} />
 			{/if}
 			{#if commonStore.selectedTab === 'qrcode'}
-				<QRCodeComponent
-					class="map-qr"
-					{infoDialogRef}
-					projectName={data.project.name}
-					projectOdkToken={data.project.odk_token}
-				>
+				<QRCodeComponent class="map-qr" {infoDialogRef} projectName={project.name} projectOdkToken={project.odk_token}>
 					<!-- Open ODK Button (Hide if it's project walkthrough step) -->
 					{#if +(projectSetupStepStore.projectSetupStep || 0) !== projectSetupStepEnum['odk_project_load']}
-						<sl-button size="small" variant="primary" href="odkcollect://form/{data.project.odk_form_id}">
+						<sl-button size="small" variant="primary" href="odkcollect://form/{project.odk_form_id}">
 							<span>{m['odk.open']()}</span></sl-button
 						>
 					{/if}
@@ -394,8 +517,8 @@
 			{/if}
 			{#if commonStore.selectedTab === 'instructions'}
 				<p class="bottom-sheet-header">{m['stack_group.instructions']()}</p>
-				{#if data?.project?.per_task_instructions}
-					<Editor editable={false} content={data?.project?.per_task_instructions} />
+				{#if project?.per_task_instructions}
+					<Editor editable={false} content={project?.per_task_instructions} />
 				{:else}
 					<div class="active-stack-instructions">
 						<p>{m['index.no_instructions']()}</p>
@@ -433,7 +556,7 @@
 					e.detail.name !== 'qrcode' &&
 					+(projectSetupStepStore.projectSetupStep || 0) === projectSetupStepEnum['odk_project_load']
 				) {
-					localStorage.setItem(`project-${data.projectId}-setup`, projectSetupStepEnum['task_selection'].toString());
+					localStorage.setItem(`project-${projectId}-setup`, projectSetupStepEnum['task_selection'].toString());
 					projectSetupStepStore.setProjectSetupStep(projectSetupStepEnum['task_selection']);
 				}
 			}}
@@ -442,17 +565,12 @@
 			<sl-tab slot="nav" panel="map">
 				<hot-icon name="map"></hot-icon>
 			</sl-tab>
+			<sl-tab slot="nav" panel="offline">
+				<hot-icon name="wifi-off"></hot-icon>
+			</sl-tab>
 			{#if !commonStore.enableWebforms}
-				<sl-tab slot="nav" panel="offline">
-					<hot-icon name="wifi-off"></hot-icon>
-				</sl-tab>
 				<sl-tab slot="nav" panel="qrcode">
 					<hot-icon name="qr-code"></hot-icon>
-				</sl-tab>
-			{/if}
-			{#if commonStore.enableWebforms}
-				<sl-tab slot="nav" panel="instructions">
-					<hot-icon name="description"></hot-icon>
 				</sl-tab>
 			{/if}
 			<sl-tab slot="nav" panel="events">
@@ -464,8 +582,9 @@
 	<OdkWebFormsWrapper
 		bind:webFormsRef
 		bind:display={displayWebFormsDrawer}
-		projectId={data?.projectId}
-		entityId={selectedEntityId || undefined}
+		{projectId}
+		formXml={formXmlUrl}
+		entityId={entitiesStore.selectedEntityId || undefined}
 		taskId={taskStore.selectedTaskIndex || undefined}
 	/>
 </div>

@@ -46,6 +46,8 @@ the Field-TM aims to solve the problem of **coordinating** field mapping campaig
 > [docs](https://docs.fmtm.dev) page, and the
 > [FAQ](https://docs.fmtm.dev/about/faq).
 
+![fmtm-splash][6]
+
 ## How Field-TM Works
 
 1. Project is created in an area with three things:
@@ -130,9 +132,9 @@ Alternatively see the [docs](https://docs.fmtm.dev) for various deployment guide
 | ✅ | 🖥️ optional private projects to restrict access | Since [v2025.2.0][4] |
 | ✅ | 📱 fully translated mapper UI and survey in any language | Since [v2025.2.0][4] |
 | ✅ | 📱 custom Field-TM deployments with updated branding | Since [v2025.2.0][4] |
-| 🔄 | 📱 fully offline field mapping (local-first design) | – |
+| ✅ | 📱 fully offline field mapping (local-first design) | Since [v2025.3.0][7] |
 | 🔄 | 🖥️ simplify project creation with basic / advanced workflows | – |
-| 📅 | 🖥️ pre-defined OpenStreetMap forms for easy OSM mapping | – |
+| 🔄 | 🖥️ pre-defined OpenStreetMap forms for easy OSM mapping | – |
 | 📅 | 🖥️ integration with other mobile apps: EveryDoor, StreetComplete | – |
 | 📅 | 🖥️ integration with other ODK server types: Ona.io, Kobo | – |
 | 📅 | 🖥️ multiple approaches to task splitting algorithm | – |
@@ -235,9 +237,12 @@ Thanks goes to these wonderful people:
 
 ## Repo Activity
 
-![Field-TM Repo Activity](https://repobeats.axiom.co/api/embed/4c670cc740c638c52d6c2e822fe78a999d3994fc.svg "Repobeats analytics image")
+![Field-TM Repo Activity][5]
 
 [1]: https://github.com/hotosm/fmtm/releases/tag/2024.4.0 "Beta Release"
 [2]: https://github.com/hotosm/fmtm/releases/tag/2024.5.0 "Mapper Frontend"
 [3]: https://github.com/hotosm/fmtm/releases/tag/2025.1.0 "New Geoms"
 [4]: https://github.com/hotosm/fmtm/releases/tag/2025.2.0 "Web Forms"
+[5]: https://repobeats.axiom.co/api/embed/4c670cc740c638c52d6c2e822fe78a999d3994fc.svg "Repobeats analytics image"
+[6]: https://raw.githubusercontent.com/hotosm/fmtm/development/src/mapper/static/screenshot-mapper.jpeg "Mapper Page Screenshot"
+[7]: https://github.com/hotosm/fmtm/releases/tag/2025.3.0 "Offline Mode"

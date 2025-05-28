@@ -1,30 +1,27 @@
 <script lang="ts">
 	import '$styles/page.css';
-	import { getAlertStore } from '$store/common.svelte';
+	import type { PageData } from './$types';
+	import { onMount, onDestroy } from 'svelte';
+	import { online } from 'svelte/reactivity/window';
+	import type { PGlite } from '@electric-sql/pglite';
+	import type { SlInputEvent } from '@shoelace-style/shoelace';
+
+	import { goto } from '$app/navigation';
+	import { getCommonStore } from '$store/common.svelte';
+	import { getProjectStore } from '$store/projects.svelte';
 	import Pagination from '$lib/components/pagination.svelte';
 	import ProjectCard from '$lib/components/project-summary/project-card.svelte';
 	import ProjectCardSkeleton from '$lib/components/project-summary/project-card-skeleton.svelte';
-	import type { SlInputEvent } from '@shoelace-style/shoelace';
-	import type { paginationType, projectType } from '$lib/types';
-	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
 
-	const API_URL = import.meta.env.VITE_API_URL;
+	interface Props {
+		data: PageData;
+	}
 
-	const alertStore = getAlertStore();
+	let db: PGlite | undefined;
+	const { data }: Props = $props();
+	const commonStore = getCommonStore();
+	const projectStore = getProjectStore();
 
-	let projectList = $state<projectType[]>([]);
-	let projectPagination = $state<paginationType>({
-		has_next: false,
-		has_prev: false,
-		next_num: null,
-		page: null,
-		pages: null,
-		prev_num: null,
-		per_page: 12,
-		total: null,
-	});
-	let projectListLoading = $state(false);
 	let paginationPage = $state(1);
 	let search = $state('');
 	let debouncedSearch = $state('');
@@ -42,32 +39,23 @@
 		return () => clearTimeout(timeoutId);
 	});
 
-	const fetchProjects = async (page: number, search: string) => {
-		try {
-			projectListLoading = true;
-			const response = await fetch(
-				`${API_URL}/projects/summaries?page=${page}&search=${search}&results_per_page=12&minimal=true`,
-				{credentials: 'include'}
-			);
-			const projectResponse = (await response.json()) as { results: projectType[]; pagination: paginationType };
-			projectList = projectResponse.results;
-			projectPagination = projectResponse.pagination;
-		} catch (error: any) {
-			alertStore.setAlert({ message: error || 'Unable to create entity', variant: 'danger' });
-		} finally {
-			projectListLoading = false;
-		}
-	};
-
-	$effect(() => {
-		fetchProjects(paginationPage, debouncedSearch);
-	});
-
-	onMount(() => {
+	onMount(async () => {
 		// if requestedPath set, redirect to the desired path (in our case we have requestedPath set to invite url)
 		const requestedPath = sessionStorage.getItem('requestedPath');
 		if (requestedPath) {
 			goto(requestedPath);
+		}
+
+		// Get db and make accessible via store
+		db = await data.dbPromise;
+		commonStore.setDb(db);
+	});
+
+	$effect(() => {
+		if (online.current) {
+			projectStore.fetchProjectsFromAPI(db, paginationPage, debouncedSearch);
+		} else {
+			projectStore.fetchProjectsFromLocalDB(db);
 		}
 	});
 </script>
@@ -87,25 +75,25 @@
 		<div
 			class="overflow-y-scroll grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:fmtm-grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 pb-2"
 		>
-			{#if projectListLoading}
+			{#if projectStore.projectListLoading}
 				{#each Array.from({ length: 12 }) as itr}
 					<ProjectCardSkeleton />
 				{/each}
-			{:else if projectList?.length === 0}
+			{:else if projectStore.projectList?.length === 0}
 				<div>No projects found</div>
 			{:else}
-				{#each projectList as project}
+				{#each projectStore.projectList as project}
 					<ProjectCard {project} />
 				{/each}
 			{/if}
 		</div>
 	</div>
 	<Pagination
-		showing={projectList?.length}
-		totalCount={projectPagination?.total || 0}
-		currentPage={projectPagination?.page || 0}
-		isLoading={projectListLoading}
-		pageSize={projectPagination?.per_page}
+		showing={projectStore.projectList?.length}
+		totalCount={projectStore.projectPagination?.total || 0}
+		currentPage={projectStore.projectPagination?.page || 0}
+		isLoading={projectStore.projectListLoading}
+		pageSize={projectStore.projectPagination?.per_page}
 		handlePageChange={(page) => {
 			paginationPage = page;
 		}}

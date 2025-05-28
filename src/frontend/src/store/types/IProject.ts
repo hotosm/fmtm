@@ -1,7 +1,6 @@
 import {
   downloadProjectFormLoadingType,
   EntityOsmMap,
-  geometryLogResponseType,
   projectDashboardDetailTypes,
   projectInfoType,
   projectTaskBoundriesType,
@@ -35,11 +34,11 @@ export type ProjectStateTypes = {
   projectTaskActivity: projectTaskActivity[];
   projectActivityLoading: boolean;
   downloadSubmissionLoading: boolean;
+  syncTaskStateLoading: boolean;
+  selectedEntityId: string | null;
   badGeomFeatureCollection: FeatureCollectionType;
   newGeomFeatureCollection: FeatureCollectionType;
-  badGeomLogList: geometryLogResponseType[];
-  getGeomLogLoading: boolean;
-  syncTaskStateLoading: boolean;
+  OdkEntitiesGeojsonLoading: boolean;
 };
 
 type projectCommentsListTypes = {

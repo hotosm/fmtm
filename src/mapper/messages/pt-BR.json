@@ -29,7 +29,10 @@
 		"exit_navigation": "Sair da navegação",
 		"click_on_a_task": "CLIQUE EM UM PONTO PARA INICIAR MAPEAMENTO",
 		"click_on_the_map": "Clique no mapa para criar um novo ponto",
-		"geometry_correct_place": "A geometria está no local correto?"
+		"geometry_correct_place": "A geometria está no local correto?",
+		"distance": "Distância",
+		"no_orientation_sensors": "Não é possível lidar com a orientação do dispositivo. Seu navegador não é compatível com sensores de orientação do dispositivo.",
+		"legend_features": "Legenda (Pontos)"
 	},
 	"popup": {
 		"task": "Tarefa",
@@ -45,16 +48,15 @@
 		"collect_data": "PREENCHER FORMULÁRIO",
 		"task_complete_total_mapped": "Você mapeou {totalMapped} recursos na área da tarefa.",
 		"task_complete_only_total_mapped": "Você mapeou apenas {totalMapped} recursos na área da tarefa.",
-		"task_complete_confirm": "Tem certeza de que deseja marcar esta tarefa como concluída?"
+		"task_complete_confirm": "Tem certeza de que deseja marcar esta tarefa como concluída?",
+		"select_this_feature": "Selecione este recurso",
+		"map_this_feature": "Mapeie este recurso"
 	},
 	"stack_group": {
 		"project_information": "Informações do projeto",
 		"comment": "Comentário",
 		"instructions": "Instruções",
 		"activities": "Histórico de atividades"
-	},
-	"legend": {
-		"features": "Legenda (Pontos)"
 	},
 	"odk": {
 		"open": "Abrir ODK",
@@ -91,8 +93,7 @@
 		"meters_location": "metros da sua localização",
 		"enable_location": "Ative sua localização para navegar até o objeto.",
 		"map_in_webforms": "MAPEAR NOS FORMULÁRIOS WEB DO ODK",
-		"you_are": "Você está",
-		"away_sure": "Ih, parece que você está longe desse ponto. Tem certeza de que deseja mapeá-lo?",
+		"far_away_confirm": "Você está a {distance} de distância do recurso. Tem certeza de que deseja mapear esse recurso?",
 		"status": "Status",
 		"comments": "Comentários",
 		"entity_uuid": "UUID da entidade",
@@ -114,12 +115,18 @@
 	"index": {
 		"no_instructions": "Sem instruções"
 	},
-	"geolocation": {
-		"distance": "Distância"
-	},
 	"download": "BAIXAR",
+	"error_downloading": "Erro no download.",
 	"forms": {
 		"default_language_warning": "Exibindo o formulário no idioma padrão porque não há uma versão em português do formulário.",
 		"uploading": "carregando"
+	},
+	"offline": {
+		"features": "recursos",
+		"basemaps": "mapas base",
+		"store_features_offline": "armazenar recursos off-line",
+		"features_offline_info": "Extratos de recursos já armazenados offline",
+		"fetch_projects_offline": "Você está off-line e não pode buscar projetos extras",
+		"ready_offline": "Pronto para uso off-line."
 	}
 }
