@@ -3,14 +3,7 @@
 
 import { test, expect } from '@playwright/test';
 
-//add dummy test for testing issue #1775
-test('dummy test to replicate #1775 ', async ({ browserName, page }) => {
-  test.skip(browserName !== 'chromium', 'Test only for chromium!');
-  await page.goto('/');
-  await page.getByText('Explore Projects');
-});
-
-test.skip('create new project', async ({ browserName, page }) => {
+test('create new project', async ({ browserName, page }) => {
   // Specific for this large test, only run in one browser
   // (playwright.config.ts is configured to run all browsers by default)
   test.skip(browserName !== 'chromium', 'Test only for chromium!');
