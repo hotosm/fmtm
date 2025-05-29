@@ -21,7 +21,7 @@ export default defineConfig({
   reporter: [['html', { host: '0.0.0.0', port: '9323', open: 'on-failure' }]],
   use: {
     // Base URL to use in actions like `await page.goto('/')`.
-    baseURL: 'http://fmtm.dev.test',
+    baseURL: 'http://fmtm.dev.test:7051/',
     // Record a trace for each test, but remove it from successful test runs
     trace: 'retain-on-failure',
   },
@@ -34,7 +34,8 @@ export default defineConfig({
       name: 'chromium',
       use: {
         browserName: 'chromium',
-        storageState: 'e2e/.auth/user.json',
+        //removed for testing issue #1775
+        // storageState: 'e2e/.auth/user.json',
       },
       dependencies: ['setup'],
     },
