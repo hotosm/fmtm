@@ -332,7 +332,7 @@ def add_required_geojson_properties(
                 or properties.get("fid")  # fid is typical from tools like QGIS
                 # Random id
                 # NOTE 32-bit int is max supported by standard postgres Integer
-                # 0 to 1073741823
+                # 0 to 1073741823 (collision chance is extremely low for ≤20k entities)
                 or getrandbits(30)
             )
 
