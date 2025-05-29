@@ -124,7 +124,8 @@ services:
   api:
     image: "ghcr.io/hotosm/fmtm/backend:${TAG_OVERRIDE:-debug}"
     build:
-      context: src/backend
+      context: src
+      dockerfile: backend/Dockerfile
       target: "${TARGET_OVERRIDE:-debug}"
       args:
         APP_VERSION: "${TAG_OVERRIDE:-debug}"
@@ -362,7 +363,8 @@ services:
     # Low max_connections for better performance.
     # See https://richyen.com/postgres/2021/09/03/less-is-more-max-connections.html
     # and other sources online. Approx (cores * 4 * replicas)
-    command: -c 'max_connections=64' -c 'wal_level=logical'
+    # Plus electric-sql defaults to need 20 connections (64+20)
+    command: -c 'max_connections=84' -c 'wal_level=logical'
     healthcheck:
       test: pg_isready -U ${FMTM_DB_USER:-fmtm} -d ${FMTM_DB_NAME:-fmtm}
       start_period: 5s
