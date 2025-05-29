@@ -293,13 +293,7 @@ function getEntitiesStatusStore() {
 		}
 	}
 
-	async function createEntity(
-		db: PGlite,
-		projectId: number,
-		entityUuid: UUID,
-		userSub: string,
-		featcol: FeatureCollection,
-	) {
+	async function createEntity(db: PGlite, projectId: number, entityUuid: UUID, featcol: FeatureCollection) {
 		const entityRequestUrl = `${API_URL}/central/entity?project_id=${projectId}&entity_uuid=${entityUuid}`;
 		const entityRequestMethod = 'POST';
 		const entityRequestPayload = JSON.stringify(featcol);
@@ -349,7 +343,7 @@ function getEntitiesStatusStore() {
 				submission_ids: '',
 				osm_id: featcol.features[0].properties?.osm_id,
 				geometry: javarosaGeom,
-				created_by: userSub,
+				created_by: featcol.features[0].properties?.created_by,
 			});
 			// Reuse function to get records from db and set svelte store
 			await setEntitiesListFromDbRecords(db, projectId);

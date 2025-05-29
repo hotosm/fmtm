@@ -20,6 +20,7 @@
 	import { openOdkCollectNewFeature } from '$lib/odk/collect';
 	import { convertDateToTimeAgo } from '$lib/utils/datetime';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
+	import { getLoginStore } from '$store/login.svelte.ts';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
 	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
 	import { readFileFromOPFS } from '$lib/fs/opfs';
@@ -60,6 +61,7 @@
 	let isGeometryCreationLoading: boolean = $state(false);
 	let timeout: NodeJS.Timeout | undefined = $state();
 
+	const loginStore = getLoginStore();
 	const taskStore = getTaskStore();
 	const entitiesStore = getEntitiesStatusStore();
 	const commonStore = getCommonStore();
@@ -311,7 +313,7 @@
 			const newOsmId = getNewOsmId();
 			// NOTE here the top level 'id' field is also required for the backend processing
 			// NOTE the id field is the osm_id, not the entity id!
-			await entitiesStore.createEntity(db, projectId, entityUuid, loginStore.getAuthDetails?.sub, {
+			await entitiesStore.createEntity(db, projectId, entityUuid, {
 				type: 'FeatureCollection',
 				features: [
 					{
