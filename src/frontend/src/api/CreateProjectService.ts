@@ -66,17 +66,16 @@ const CreateProjectService = (
       if (!hasAPISuccess) throw new Error();
 
       // 3. upload data extract
-      let extractResponse;
       if (isEmptyDataExtract) {
         // manually set response as we don't call an API
-        extractResponse = { status: 200 };
       } else if (dataExtractFile) {
-        const dataExtractFormData = new FormData();
-        dataExtractFormData.append('data_extract_file', dataExtractFile);
-        extractResponse = await API.post(
-          `${VITE_API_URL}/projects/upload-data-extract?project_id=${projectId}`,
-          dataExtractFormData,
+        hasAPISuccess = await dispatch(
+          UploadDataExtractService(
+            `${VITE_API_URL}/projects/upload-data-extract?project_id=${projectId}`,
+            dataExtractFile,
+          ),
         );
+        if (!hasAPISuccess) throw new Error();
       } else {
         dispatch(
           CommonActions.SetSnackBar({
@@ -85,9 +84,6 @@ const CreateProjectService = (
         );
         throw new Error();
       }
-
-      hasAPISuccess = isStatusSuccess(extractResponse.status);
-      if (!hasAPISuccess) throw new Error();
 
       // 4. post additional feature if available
       if (additionalFeature) {
@@ -188,6 +184,33 @@ const UploadTaskAreasService = (url: string, filePayload: any) => {
     };
 
     return await postUploadArea(url, filePayload);
+  };
+};
+
+const UploadDataExtractService = (url: string, file: any) => {
+  return async (dispatch: AppDispatch) => {
+    const postUploadDataExtract = async (url: string, file: any) => {
+      let isAPISuccess = true;
+      try {
+        const dataExtractFormData = new FormData();
+        dataExtractFormData.append('data_extract_file', file);
+        await axios.post(url, dataExtractFormData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      } catch (error: any) {
+        isAPISuccess = false;
+        dispatch(
+          CommonActions.SetSnackBar({
+            message: JSON.stringify(error?.response?.data?.detail) || 'Upload data extract failed',
+          }),
+        );
+      }
+      return isAPISuccess;
+    };
+
+    return await postUploadDataExtract(url, file);
   };
 };
 
