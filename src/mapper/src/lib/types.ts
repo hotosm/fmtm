@@ -204,8 +204,8 @@ export type entitiesApiResponse = {
 	status: number;
 	updated_at: string | null;
 	submission_ids: string;
-	is_new: boolean;
 	geometry: string | null;
+	created_by: string | null;
 };
 
 export type DbEntityType = {
@@ -215,8 +215,8 @@ export type DbEntityType = {
 	task_id: number;
 	osm_id: number;
 	submission_ids: string;
-	is_new: boolean;
 	geometry: string | null;
+	created_by: string | null;
 };
 
 export type DbApiSubmissionType = {

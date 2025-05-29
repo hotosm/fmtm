@@ -49,7 +49,7 @@ let badGeomFeatcol: FeatureCollection = $derived({
 let newGeomFeatcol: FeatureCollection = $derived({
 	type: 'FeatureCollection',
 	features: entitiesList
-		.filter((e) => e.is_new)
+		.filter((e) => e.created_by !== '')
 		.map(DbEntity.toGeojsonFeature)
 		.filter(Boolean),
 });
@@ -139,8 +139,8 @@ function getEntitiesStatusStore() {
 			task_id: entity.task_id,
 			osm_id: entity.osm_id,
 			submission_ids: entity.submission_ids,
-			is_new: entity.is_new,
 			geometry: entity.geometry,
+			created_by: entity.created_by,
 		}));
 	}
 
@@ -227,8 +227,8 @@ function getEntitiesStatusStore() {
 				task_id: entity.task_id,
 				submission_ids: entity.submission_ids,
 				osm_id: entity.osm_id,
-				is_new: entity.is_new,
 				geometry: entity.geometry,
+				created_by: entity.created_by,
 			}));
 			syncEntityStatusManuallyLoading = false;
 
@@ -293,7 +293,13 @@ function getEntitiesStatusStore() {
 		}
 	}
 
-	async function createEntity(db: PGlite, projectId: number, entityUuid: UUID, featcol: FeatureCollection) {
+	async function createEntity(
+		db: PGlite,
+		projectId: number,
+		entityUuid: UUID,
+		userSub: string,
+		featcol: FeatureCollection,
+	) {
 		const entityRequestUrl = `${API_URL}/central/entity?project_id=${projectId}&entity_uuid=${entityUuid}`;
 		const entityRequestMethod = 'POST';
 		const entityRequestPayload = JSON.stringify(featcol);
@@ -342,8 +348,8 @@ function getEntitiesStatusStore() {
 				task_id: featcol.features[0].properties?.task_id,
 				submission_ids: '',
 				osm_id: featcol.features[0].properties?.osm_id,
-				is_new: true,
 				geometry: javarosaGeom,
+				created_by: userSub,
 			});
 			// Reuse function to get records from db and set svelte store
 			await setEntitiesListFromDbRecords(db, projectId);

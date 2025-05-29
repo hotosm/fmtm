@@ -311,7 +311,7 @@
 			const newOsmId = getNewOsmId();
 			// NOTE here the top level 'id' field is also required for the backend processing
 			// NOTE the id field is the osm_id, not the entity id!
-			await entitiesStore.createEntity(db, projectId, entityUuid, {
+			await entitiesStore.createEntity(db, projectId, entityUuid, loginStore.getAuthDetails?.sub, {
 				type: 'FeatureCollection',
 				features: [
 					{
@@ -322,9 +322,8 @@
 							project_id: projectId,
 							osm_id: newOsmId,
 							task_id: taskStore.selectedTaskIndex || '',
-							is_new: '✅', // NOTE usage of an emoji is valid here
 							status: '0', // TODO update this to use the enum / mapping
-							user_sub: loginStore.getAuthDetails?.sub,
+							created_by: loginStore.getAuthDetails?.sub,
 						},
 					},
 				],
