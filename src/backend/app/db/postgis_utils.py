@@ -715,18 +715,14 @@ def merge_polygons(
             properties = feature["properties"]
             geom = shape(feature["geometry"])
             
-            # Handle LineString geometries by converting to Polygon
             if isinstance(geom, (LineString, MultiLineString)):
                 if isinstance(geom, MultiLineString):
-                    # Convert each LineString to a Polygon using buffer
                     for line in geom.geoms:
-                        # Create a small buffer around the line to form a polygon
-                        buffered = line.buffer(0.0001)  # Approximately 11 meters at equator
+                        buffered = line.buffer(0.0001)  
                         if buffered.is_valid:
                             geom_list.append(buffered)
                 else:
-                    # Create a small buffer around the line to form a polygon
-                    buffered = geom.buffer(0.0001)  # Approximately 11 meters at equator
+                    buffered = geom.buffer(0.0001)  
                     if buffered.is_valid:
                         geom_list.append(buffered)
                 continue
