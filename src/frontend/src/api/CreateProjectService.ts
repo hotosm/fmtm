@@ -43,7 +43,7 @@ const CreateProjectService = (
         const errorMessage =
           typeof errorResponse === 'string'
             ? errorResponse || 'Something went wrong. Please try again.'
-            : `Following errors occured while creating project: ${errorResponse?.map((err) => `\n${err?.msg}`)}`;
+            : `Following errors occurred while creating project: ${errorResponse?.map((err) => `\n${err?.msg}`)}`;
 
         dispatch(
           CommonActions.SetSnackBar({
