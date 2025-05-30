@@ -49,7 +49,7 @@ let badGeomFeatcol: FeatureCollection = $derived({
 let newGeomFeatcol: FeatureCollection = $derived({
 	type: 'FeatureCollection',
 	features: entitiesList
-		.filter((e) => e.is_new)
+		.filter((e) => e.created_by !== '')
 		.map(DbEntity.toGeojsonFeature)
 		.filter(Boolean),
 });
@@ -139,8 +139,8 @@ function getEntitiesStatusStore() {
 			task_id: entity.task_id,
 			osm_id: entity.osm_id,
 			submission_ids: entity.submission_ids,
-			is_new: entity.is_new,
 			geometry: entity.geometry,
+			created_by: entity.created_by,
 		}));
 	}
 
@@ -227,8 +227,8 @@ function getEntitiesStatusStore() {
 				task_id: entity.task_id,
 				submission_ids: entity.submission_ids,
 				osm_id: entity.osm_id,
-				is_new: entity.is_new,
 				geometry: entity.geometry,
+				created_by: entity.created_by,
 			}));
 			syncEntityStatusManuallyLoading = false;
 
@@ -342,8 +342,8 @@ function getEntitiesStatusStore() {
 				task_id: featcol.features[0].properties?.task_id,
 				submission_ids: '',
 				osm_id: featcol.features[0].properties?.osm_id,
-				is_new: true,
 				geometry: javarosaGeom,
+				created_by: featcol.features[0].properties?.created_by,
 			});
 			// Reuse function to get records from db and set svelte store
 			await setEntitiesListFromDbRecords(db, projectId);
@@ -476,6 +476,7 @@ function getEntitiesStatusStore() {
 		deleteNewEntity: deleteNewEntity,
 		updateEntityStatus: updateEntityStatus,
 		createNewSubmission: createNewSubmission,
+		deleteNewEntity: deleteNewEntity,
 		setEntityToNavigate: setEntityToNavigate,
 		setToggleGeolocation: setToggleGeolocation,
 		setUserLocationCoordinate: setUserLocationCoordinate,

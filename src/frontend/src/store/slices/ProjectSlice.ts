@@ -174,7 +174,7 @@ const ProjectSlice = createSlice({
     },
     SetOdkEntitiesGeojson(state, action: PayloadAction<{ type: 'FeatureCollection'; features: featureType[] }>) {
       const features = action.payload.features;
-      const newFeatures = features?.filter((feature) => !!feature.properties?.is_new);
+      const newFeatures = features?.filter((feature) => !!feature.properties?.created_by);
       const badFeatures = features?.filter((feature) => feature.properties?.status === '6');
 
       state.newGeomFeatureCollection = { type: 'FeatureCollection', features: newFeatures };
