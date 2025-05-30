@@ -141,11 +141,11 @@
 	};
 
 	const deleteNewFeature = async (entityId: string) => {
-		const { entity_id, geom_id, user_sub } = entitiesStore.newGeomFeatcol.features.find(
+		const { entity_id, created_by } = entitiesStore.newGeomFeatcol.features.find(
 			(feature: Record<string, any>) => feature.properties?.entity_id === entityId,
 		)?.properties;
-		if (user_sub && user_sub === loginStore.getAuthDetails?.sub) {
-			await entitiesStore.deleteNewEntity(projectData.id, entity_id, geom_id);
+		if (created_by && created_by === loginStore.getAuthDetails?.sub) {
+			await entitiesStore.deleteNewEntity(projectData.id, entity_id);
 		} else {
 			alertStore.setAlert({
 				message: m['dialog_entities_actions.contact_pm_for_entity_deletion'](),
@@ -353,7 +353,8 @@
 		<div class="entity-dialog-content">
 			<p class="entity-dialog-distance-confirm">
 				{m['dialog_entities_actions.far_away_confirm']({
-					distance: `${(distance(
+					distance: `${(
+						distance(
 							entitiesStore.selectedEntityCoordinate?.coordinate as Coord,
 							entitiesStore.userLocationCoord as Coord,
 							{ units: 'kilometers' },
