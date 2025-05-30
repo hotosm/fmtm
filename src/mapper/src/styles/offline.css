@@ -51,5 +51,5 @@
 }
 
 .offline .data-download {
-	--at-apply: flex flex-col gap-2 mt-5 rounded-md mr-1;
+	--at-apply: flex flex-col gap-2 pt-3 pb-8 rounded-md mr-1;
 }

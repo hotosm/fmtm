@@ -11,8 +11,43 @@
 	const commonStore = getCommonStore();
 	const alertStore = getAlertStore();
 	let db: PGlite | undefined = $derived(commonStore.db);
-    let apiSubmissions: DbApiSubmissionType[] | undefined = $state(0);
-    let apiFailures: DbApiSubmissionType[] | undefined = $state(0);
+    let apiSubmissions: DbApiSubmissionType[] | undefined = $state([]);
+    let apiFailures: DbApiSubmissionType[] | undefined = $state([]);
+    let apiSubmissionsFormatted: Record<string, string>[] | undefined = $derived(
+	apiSubmissions?.map((x: DbApiSubmissionType) => ({
+            id: x.id.toString(),
+            submissionType: getSubmissionType(x.url),
+            queuedAt: formatDate(x.queued_at),
+            lastAttemptAt: x.last_attempt_at ? formatDate(x.last_attempt_at) : 'N/A',
+            successAt: x.success_at ? formatDate(x.success_at) : 'N/A',
+            retries: x.retry_count.toString(),
+            error: x.error ?? 'None'
+        }))
+    );
+
+    function getSubmissionType(url: string): string {
+        if (url.includes('status')) {
+            return 'Feature Status Update';
+        } else if (url.includes('entity')) {
+            return 'New Feature';
+        } else if (url.includes('submission')) {
+            return 'New Submission';
+        } else {
+            return 'Unknown';
+        }
+    }
+
+    function formatDate(isoString: string): string {
+        const date = new Date(isoString);
+        return new Intl.DateTimeFormat('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+        }).format(date);
+    }
 
     function parseCsvAndDownload(data: DbApiSubmissionType[]): void {
         if (!data || data.length === 0) {
@@ -115,33 +150,21 @@
 		<span>{m['offline.download_csv']()}</span>
 	</hot-button>
 
-    {#if apiSubmissions?.length}
+    {#if apiSubmissionsFormatted?.length}
         <h3>Queued API Submissions</h3>
         <sl-carousel class="scroll-hint" pagination style="--scroll-hint: 10%;">
-        {#each apiSubmissions as submission}
-            <sl-carousel-item>
-            <ul>
-                <li><strong>ID:</strong> {submission.id}</li>
-                <li><strong>URL:</strong> {submission.url}</li>
-                <li><strong>Method:</strong> {submission.method}</li>
-                <li><strong>Content-Type:</strong> {submission.content_type}</li>
-                <li><strong>Status:</strong> {submission.status}</li>
-                <li><strong>Retry Count:</strong> {submission.retry_count}</li>
-                <li><strong>Error:</strong> {submission.error || 'None'}</li>
-                <li><strong>Queued At:</strong> {submission.queued_at}</li>
-                <li><strong>Last Attempt At:</strong> {submission.last_attempt_at || 'N/A'}</li>
-                <li><strong>Success At:</strong> {submission.success_at || 'N/A'}</li>
-                <li>
-                <strong>Payload:</strong>
-                <pre>{JSON.stringify(submission.payload, null, 2)}</pre>
-                </li>
-                <li>
-                <strong>Headers:</strong>
-                <pre>{JSON.stringify(submission.headers, null, 2)}</pre>
-                </li>
-            </ul>
-            </sl-carousel-item>
-        {/each}
+            {#each apiSubmissionsFormatted as submission}
+                <sl-carousel-item>
+                    <ul>
+                        <li><strong>ID:</strong> {submission.id}</li>
+                        <li><strong>Type:</strong> {submission.submissionType}</li>
+                        <li><strong>Queued At:</strong> {submission.queuedAt}</li>
+                        <li><strong>Last Attempt At:</strong> {submission.lastAttemptAt}</li>
+                        <li><strong>Retry Count:</strong> {submission.retries}</li>
+                        <li><strong>Error:</strong> {submission.error}</li>
+                    </ul>
+                </sl-carousel-item>
+            {/each}
         </sl-carousel>
     {:else}
         <p>No queued submissions found.</p>
