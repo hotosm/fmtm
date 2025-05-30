@@ -38,7 +38,6 @@
 	import OdkWebFormsWrapper from '$lib/components/forms/wrapper.svelte';
 	import More from '$lib/components/more/index.svelte';
 	import Editor from '$lib/components/editor/editor.svelte';
-	import { getLoginStore } from '$store/login.svelte';
 
 	interface Props {
 		data: PageData;
@@ -67,7 +66,6 @@
 	const entitiesStore = getEntitiesStatusStore();
 	const commonStore = getCommonStore();
 	const alertStore = getAlertStore();
-	const loginStore = getLoginStore();
 
 	let taskEventStream: ShapeStream | undefined;
 	let entityStatusStream: ShapeStream | undefined;
