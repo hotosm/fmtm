@@ -14,14 +14,14 @@ import { TaskActions } from '@/store/slices/TaskSlice';
 import { AppDispatch } from '@/store/Store';
 import { featureType } from '@/store/types/IProject';
 
+const VITE_API_URL = import.meta.env.VITE_API_URL;
+
 export const ProjectById = (projectId: string) => {
   return async (dispatch: AppDispatch) => {
     const fetchProjectById = async (projectId: string) => {
       try {
         dispatch(ProjectActions.SetProjectDetialsLoading(true));
-        const project = await CoreModules.axios.get(
-          `${import.meta.env.VITE_API_URL}/projects/${projectId}?project_id=${projectId}`,
-        );
+        const project = await CoreModules.axios.get(`${VITE_API_URL}/projects/${projectId}?project_id=${projectId}`);
         const projectResp: projectInfoType = project.data;
         const persistingValues = projectResp.tasks.map((data) => {
           return {
@@ -162,7 +162,7 @@ export const GenerateProjectTiles = (url: string, projectId: string, data: objec
     const generateProjectTiles = async (url: string, projectId: string) => {
       try {
         await CoreModules.axios.post(url, data);
-        dispatch(GetTilesList(`${import.meta.env.VITE_API_URL}/projects/${projectId}/tiles`));
+        dispatch(GetTilesList(`${VITE_API_URL}/projects/${projectId}/tiles`));
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));
       } catch (error) {
         dispatch(ProjectActions.SetGenerateProjectTilesLoading(false));

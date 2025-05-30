@@ -34,6 +34,7 @@ const initialState: ProjectStateTypes = {
   badGeomFeatureCollection: { type: 'FeatureCollection', features: [] },
   newGeomFeatureCollection: { type: 'FeatureCollection', features: [] },
   OdkEntitiesGeojsonLoading: false,
+  isEntityDeleting: {},
 };
 
 const ProjectSlice = createSlice({
@@ -159,7 +160,7 @@ const ProjectSlice = createSlice({
     },
     SetOdkEntitiesGeojson(state, action: PayloadAction<{ type: 'FeatureCollection'; features: featureType[] }>) {
       const features = action.payload.features;
-      const newFeatures = features?.filter((feature) => !!feature.properties?.is_new);
+      const newFeatures = features?.filter((feature) => !!feature.properties?.created_by);
       const badFeatures = features?.filter((feature) => feature.properties?.status === '6');
 
       state.newGeomFeatureCollection = { type: 'FeatureCollection', features: newFeatures };
@@ -167,6 +168,15 @@ const ProjectSlice = createSlice({
     },
     SetOdkEntitiesGeojsonLoading(state, action: PayloadAction<boolean>) {
       state.OdkEntitiesGeojsonLoading = action.payload;
+    },
+    SetIsEntityDeleting(state, action: PayloadAction<Record<string, boolean>>) {
+      state.isEntityDeleting = { ...state.isEntityDeleting, ...action.payload };
+    },
+    RemoveNewEntity(state, action) {
+      state.newGeomFeatureCollection = {
+        ...state.newGeomFeatureCollection,
+        features: state.newGeomFeatureCollection.features.filter((feature) => feature?.id !== action.payload),
+      };
     },
   },
 });

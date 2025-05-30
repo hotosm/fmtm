@@ -49,7 +49,7 @@ let badGeomFeatcol: FeatureCollection = $derived({
 let newGeomFeatcol: FeatureCollection = $derived({
 	type: 'FeatureCollection',
 	features: entitiesList
-		.filter((e) => e.is_new)
+		.filter((e) => e.created_by !== '')
 		.map(DbEntity.toGeojsonFeature)
 		.filter(Boolean),
 });
@@ -63,6 +63,7 @@ let taskSubmissionInfo: taskSubmissionInfoType[] = $state([]);
 let alertStore = getAlertStore();
 let entitiesSync: any = $state(undefined);
 let fgbOpfsUrl: string = $state('');
+let geomDeleteLoading: boolean = $state(false);
 
 function getEntitiesStatusStore() {
 	async function getEntityStatusStream(db: PGliteWithSync, projectId: number): Promise<ShapeStream | undefined> {
@@ -138,8 +139,8 @@ function getEntitiesStatusStore() {
 			task_id: entity.task_id,
 			osm_id: entity.osm_id,
 			submission_ids: entity.submission_ids,
-			is_new: entity.is_new,
 			geometry: entity.geometry,
+			created_by: entity.created_by,
 		}));
 	}
 
@@ -226,8 +227,8 @@ function getEntitiesStatusStore() {
 				task_id: entity.task_id,
 				submission_ids: entity.submission_ids,
 				osm_id: entity.osm_id,
-				is_new: entity.is_new,
 				geometry: entity.geometry,
+				created_by: entity.created_by,
 			}));
 			syncEntityStatusManuallyLoading = false;
 
@@ -341,8 +342,8 @@ function getEntitiesStatusStore() {
 				task_id: featcol.features[0].properties?.task_id,
 				submission_ids: '',
 				osm_id: featcol.features[0].properties?.osm_id,
-				is_new: true,
 				geometry: javarosaGeom,
+				created_by: featcol.features[0].properties?.created_by,
 			});
 			// Reuse function to get records from db and set svelte store
 			await setEntitiesListFromDbRecords(db, projectId);
@@ -414,6 +415,34 @@ function getEntitiesStatusStore() {
 		}
 	}
 
+	async function deleteNewEntity(project_id: number, entity_id: string, geom_id: string) {
+		try {
+			geomDeleteLoading = true;
+			// delete entity from central
+			// await fetch(`${API_URL}/central/entity/${entity_id}?project_id=${project_id}`, {
+			// 	method: 'DELETE',
+			// 	credentials: 'include',
+			// });
+
+			// delete from geomlog table
+			const geomDeleteResponse = await fetch(`${API_URL}/projects/${project_id}/geometry/records/${geom_id}`, {
+				method: 'DELETE',
+				credentials: 'include',
+			});
+
+			if (!geomDeleteResponse.ok) {
+				throw new Error('Failed to delete geometry');
+			}
+		} catch (error: any) {
+			alertStore.setAlert({
+				variant: 'danger',
+				message: error.message,
+			});
+		} finally {
+			geomDeleteLoading = false;
+		}
+	}
+
 	function setEntityToNavigate(entityCoordinate: entityIdCoordinateMapType | null) {
 		entityToNavigate = entityCoordinate;
 	}
@@ -446,6 +475,7 @@ function getEntitiesStatusStore() {
 		createEntity: createEntity,
 		updateEntityStatus: updateEntityStatus,
 		createNewSubmission: createNewSubmission,
+		deleteNewEntity: deleteNewEntity,
 		setEntityToNavigate: setEntityToNavigate,
 		setToggleGeolocation: setToggleGeolocation,
 		setUserLocationCoordinate: setUserLocationCoordinate,

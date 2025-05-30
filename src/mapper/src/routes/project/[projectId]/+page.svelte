@@ -20,6 +20,7 @@
 	import { openOdkCollectNewFeature } from '$lib/odk/collect';
 	import { convertDateToTimeAgo } from '$lib/utils/datetime';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
+	import { getLoginStore } from '$store/login.svelte.ts';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
 	import { getProjectSetupStepStore, getCommonStore, getAlertStore } from '$store/common.svelte.ts';
 	import { readFileFromOPFS } from '$lib/fs/opfs';
@@ -60,6 +61,7 @@
 	let isGeometryCreationLoading: boolean = $state(false);
 	let timeout: NodeJS.Timeout | undefined = $state();
 
+	const loginStore = getLoginStore();
 	const taskStore = getTaskStore();
 	const entitiesStore = getEntitiesStatusStore();
 	const commonStore = getCommonStore();
@@ -313,13 +315,20 @@
 			// NOTE the id field is the osm_id, not the entity id!
 			await entitiesStore.createEntity(db, projectId, entityUuid, {
 				type: 'FeatureCollection',
-				features: [{ type: 'Feature', id: newOsmId, geometry: newFeatureGeom, properties: {
-					project_id: projectId,
-					osm_id: newOsmId,
-					task_id: taskStore.selectedTaskIndex || '',
-					is_new: '✅', // NOTE usage of an emoji is valid here
-					status: '0', // TODO update this to use the enum / mapping
-				}}],
+				features: [
+					{
+						type: 'Feature',
+						id: newOsmId,
+						geometry: newFeatureGeom,
+						properties: {
+							project_id: projectId,
+							osm_id: newOsmId,
+							task_id: taskStore.selectedTaskIndex || '',
+							status: '0', // TODO update this to use the enum / mapping
+							created_by: loginStore.getAuthDetails?.sub,
+						},
+					},
+				],
 			});
 			cancelMapNewFeatureInODK();
 
@@ -469,7 +478,7 @@
 						variant="primary"
 						loading={isGeometryCreationLoading}
 					>
-						<span>PROCEED</span>
+						<span>{m['popup.proceed']()}</span>
 					</sl-button>
 				</div>
 			</div>
