@@ -344,6 +344,9 @@ def add_required_geojson_properties(
                 or getrandbits(30)
             )
 
+            if isinstance(osm_id, str) and "/" in osm_id:
+                osm_id = osm_id.split("/")[0]
+
             # Ensure negative osm_id if it's derived
             # NOTE this is important to denote the geom is not from OSM
             if not properties.get("osm_id"):
