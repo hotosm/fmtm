@@ -175,7 +175,33 @@ export const getFeatureStatusStyle = (
       ),
     };
   } else if (geomType === GeoGeomTypesEnum.LINESTRING) {
-    console.warn('linestring style not set');
+    geojsonStyles = {
+      READY: createFeaturePolygonStyle(
+        mapTheme.palette.entityStatusColors.ready,
+        0.2,
+        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(0,0,0,0.5)',
+      ),
+      OPENED_IN_ODK: createFeaturePolygonStyle(
+        mapTheme.palette.entityStatusColors.opened_in_odk,
+        0.2,
+        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(0,0,0,0.5)',
+      ),
+      SURVEY_SUBMITTED: createFeaturePolygonStyle(
+        mapTheme.palette.entityStatusColors.survey_submitted,
+        1,
+        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(0,0,0,0.5)',
+      ),
+      MARKED_BAD: createFeaturePolygonStyle(
+        mapTheme.palette.entityStatusColors.marked_bad,
+        1,
+        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(0,0,0,0.5)',
+      ),
+      VALIDATED: createFeaturePolygonStyle(
+        mapTheme.palette.entityStatusColors.validated,
+        1,
+        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(0,0,0,0.5)',
+      ),
+    };
   }
 
   return geojsonStyles[mappingStatus];
