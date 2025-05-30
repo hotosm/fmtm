@@ -694,9 +694,11 @@ def merge_polygons(
     featcol: geojson.FeatureCollection,
     dissolve_polygon: bool = False,
 ) -> geojson.FeatureCollection:
-    """Merge multiple Polygons/MultiPolygons or LineStrings/MultiLineStrings into a single Polygon.
+    """Merge multiple Polygons/MultiPolygons or LineStrings/MultiLineStrings 
+    into a single Polygon.
 
-    It is used to create a single polygon boundary. LineStrings are converted to Polygons using buffer.
+    It is used to create a single polygon boundary. LineStrings are converted to
+      Polygons using buffer.
 
     Args:
         featcol: a FeatureCollection containing geometries.
