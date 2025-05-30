@@ -86,7 +86,6 @@ async def lifespan(
     app: FastAPI,  # dead: disable
 ) -> AsyncIterator[None]:
     """FastAPI startup/shutdown event."""
-    
     log.debug("Starting up FastAPI server.")
 
     # Create a pooled db connection and make available in lifespan state
