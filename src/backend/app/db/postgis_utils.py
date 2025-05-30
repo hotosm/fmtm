@@ -702,7 +702,6 @@ def merge_polygons(
     featcol: geojson.FeatureCollection,
     dissolve_polygon: bool = False,
 ) -> geojson.FeatureCollection:
-        
     """Merge multiple Polygons/MultiPolygons or LineStrings/MultiLineStrings
     into a single Polygon.
 
@@ -716,7 +715,6 @@ def merge_polygons(
     Returns:
         geojson.FeatureCollection: a FeatureCollection of a single Polygon.
     """
-
     geom_list = []
     properties = {}
 

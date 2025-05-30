@@ -135,10 +135,7 @@ def get_application() -> FastAPI:
 
     _app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.EXTRA_CORS_ORIGINS + [
-            "http://fmtm.localhost:7057",
-            "https://9ceb-64-255-143-168.ngrok-free.app"
-        ],
+        allow_origins=settings.EXTRA_CORS_ORIGINS,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
