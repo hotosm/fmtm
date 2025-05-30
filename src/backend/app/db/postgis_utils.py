@@ -715,7 +715,6 @@ def merge_polygons(
     Returns:
         geojson.FeatureCollection: a FeatureCollection of a single Polygon.
     """
-        
     geom_list = []
     properties = {}
 
