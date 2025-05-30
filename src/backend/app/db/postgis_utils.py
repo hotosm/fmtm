@@ -32,7 +32,15 @@ from osm_rawdata.postgres import PostgresClient
 from psycopg import Connection, ProgrammingError
 from psycopg.rows import class_row, dict_row
 from psycopg.types.json import Json
-from shapely.geometry import MultiPolygon, Point, Polygon, mapping, shape, LineString, MultiLineString
+from shapely.geometry import (
+    LineString,
+    MultiLineString,
+    MultiPolygon,
+    Point,
+    Polygon,
+    mapping,
+    shape,
+)
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
@@ -339,8 +347,8 @@ def add_required_geojson_properties(
             # Ensure negative osm_id if it's derived
             # NOTE this is important to denote the geom is not from OSM
             if not properties.get("osm_id"):
-                if(osm_id is type(str) and "/" in osm_id ):
-                    osm_id = osm_id.split('/')[-1]
+                if osm_id is type(str) and "/" in osm_id:
+                    osm_id = osm_id.split("/")[-1]
                 osm_id = -abs(int(osm_id))
 
             feature["id"] = str(osm_id)
@@ -716,15 +724,15 @@ def merge_polygons(
         for feature in features:
             properties = feature["properties"]
             geom = shape(feature["geometry"])
-            
+
             if isinstance(geom, (LineString, MultiLineString)):
                 if isinstance(geom, MultiLineString):
                     for line in geom.geoms:
-                        buffered = line.buffer(0.0001)  
+                        buffered = line.buffer(0.0001)
                         if buffered.is_valid:
                             geom_list.append(buffered)
                 else:
-                    buffered = geom.buffer(0.0001)  
+                    buffered = geom.buffer(0.0001)
                     if buffered.is_valid:
                         geom_list.append(buffered)
                 continue
@@ -746,7 +754,7 @@ def merge_polygons(
 
         # Merge all geometries into a single polygon
         merged_geom = create_single_polygon(MultiPolygon(geom_list), dissolve_polygon)
-        
+
         # Ensure we have a valid polygon
         if not merged_geom.is_valid:
             merged_geom = merged_geom.buffer(0)  # Clean the geometry

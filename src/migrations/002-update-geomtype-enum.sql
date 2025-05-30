@@ -1,4 +1,3 @@
-
 -- ## Migration reset the _migrations table.
 
 -- Start a transaction
