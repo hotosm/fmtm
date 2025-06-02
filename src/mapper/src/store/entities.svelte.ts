@@ -415,7 +415,7 @@ function getEntitiesStatusStore() {
 		}
 	}
 
-	async function deleteNewEntity(project_id: number, entity_id: string) {
+	async function deleteNewEntity(db: PGlite, project_id: number, entity_id: string) {
 		try {
 			geomDeleteLoading = true;
 			const geomDeleteResponse = await fetch(`${API_URL}/projects/entity/${entity_id}?project_id=${project_id}`, {
@@ -423,7 +423,9 @@ function getEntitiesStatusStore() {
 				credentials: 'include',
 			});
 
-			if (!geomDeleteResponse.ok) {
+			if (geomDeleteResponse.ok) {
+				syncEntityStatusManually(db, project_id);
+			} else {
 				throw new Error('Failed to delete geometry');
 			}
 		} catch (error: any) {
@@ -469,7 +471,6 @@ function getEntitiesStatusStore() {
 		deleteNewEntity: deleteNewEntity,
 		updateEntityStatus: updateEntityStatus,
 		createNewSubmission: createNewSubmission,
-		deleteNewEntity: deleteNewEntity,
 		setEntityToNavigate: setEntityToNavigate,
 		setToggleGeolocation: setToggleGeolocation,
 		setUserLocationCoordinate: setUserLocationCoordinate,

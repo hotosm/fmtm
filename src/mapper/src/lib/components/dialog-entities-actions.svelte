@@ -145,7 +145,8 @@
 			(feature: Record<string, any>) => feature.properties?.entity_id === entityId,
 		)?.properties;
 		if (created_by && created_by === loginStore.getAuthDetails?.sub) {
-			await entitiesStore.deleteNewEntity(projectData.id, entity_id);
+			await entitiesStore.deleteNewEntity(db, projectData.id, entity_id);
+			showDeleteEntityPopup = false;
 		} else {
 			alertStore.setAlert({
 				message: m['dialog_entities_actions.contact_pm_for_entity_deletion'](),
