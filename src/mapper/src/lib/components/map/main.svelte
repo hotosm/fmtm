@@ -631,7 +631,12 @@
 						],
 						'circle-radius': 8,
 						'circle-stroke-width': 1,
-						'circle-stroke-color': '#fff',
+						'circle-stroke-color': [
+							'case',
+							['==', ['get', 'entity_id'], entitiesStore.selectedEntity?.entity_id || ''],
+							cssValue('--entity-outline-selected'),
+							cssValue('--entity-outline'),
+						],
 					}}
 				></CircleLayer>
 			{/if}
