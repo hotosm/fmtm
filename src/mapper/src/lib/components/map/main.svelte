@@ -718,32 +718,36 @@
 				manageHoverState
 			/>
 		{:else if drawGeomType === MapGeomTypes.POINT}
-			<!-- id="new-geom-symbol-layer" -->
-			<SymbolLayer
+			<CircleLayer
 				id="new-entity-point-layer"
 				applyToClusters={false}
 				hoverCursor="pointer"
-				manageHoverState
-				layout={{
-					'icon-image': [
+				paint={{
+					'circle-color': [
 						'match',
 						['get', 'status'],
 						'READY',
-						'MAP_PIN_GREY',
+						cssValue('--entity-ready'),
 						'OPENED_IN_ODK',
-						'MAP_PIN_YELLOW',
+						cssValue('--entity-opened-in-odk'),
 						'SURVEY_SUBMITTED',
-						'MAP_PIN_GREEN',
+						cssValue('--entity-survey-submitted'),
 						'VALIDATED',
-						'MAP_PIN_BLUE',
+						cssValue('--entity-validated'),
 						'MARKED_BAD',
-						'MAP_PIN_RED',
-						'MAP_PIN_GREY', // default color if no match is found
+						cssValue('--entity-marked-bad'),
+						cssValue('--entity-ready'),
 					],
-					'icon-allow-overlap': true,
-					'icon-size': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity?.entity_id || ''], 1.6, 1],
+					'circle-radius': 8,
+					'circle-stroke-width': 1,
+					'circle-stroke-color': [
+						'case',
+						['==', ['get', 'entity_id'], entitiesStore.selectedEntity?.entity_id || ''],
+						cssValue('--entity-outline-selected'),
+						cssValue('--entity-outline'),
+					],
 				}}
-			/>
+			></CircleLayer>
 		{/if}
 	</GeoJSON>
 
