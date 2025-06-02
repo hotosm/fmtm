@@ -93,9 +93,9 @@ const CreateEditOrganizationForm = ({ organizationId }: { organizationId: string
 
   useEffect(() => {
     if (!values?.fillODKCredentials) {
-      handleCustomChange('odk_central_url', null);
-      handleCustomChange('odk_central_user', null);
-      handleCustomChange('odk_central_password', null);
+      handleCustomChange('odk_central_url', '');
+      handleCustomChange('odk_central_user', '');
+      handleCustomChange('odk_central_password', '');
     }
   }, [values?.fillODKCredentials]);
 
