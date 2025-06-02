@@ -339,7 +339,6 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
             const status = entity_state[+featureProperty?.status];
             const isEntitySelected = selectedEntityId ? +selectedEntityId === +featureProperty?.osm_id : false;
             return getFeatureStatusStyle(geomType, mapTheme, status, isEntitySelected);
-            return;
           }}
         />
         <AsyncPopup
