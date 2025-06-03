@@ -32,6 +32,15 @@ function createFeaturePolygonStyle(color: string, strokeOpacity: number = 1, str
   });
 }
 
+function createFeatureLineStyle(strokeColor: string) {
+  return new Style({
+    stroke: new Stroke({
+      color: strokeColor,
+      width: 3,
+    }),
+  });
+}
+
 function createIconStyle(iconSrc: string, scale: number = 0.8, color: any = 'red') {
   return new Style({
     image: new Icon({
@@ -174,33 +183,13 @@ export const getFeatureStatusStyle = (
         isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(0,0,0,0.5)',
       ),
     };
-  } else if (geomType === GeoGeomTypesEnum.LINESTRING) {
+  } else if (geomType === 'LineString') {
     geojsonStyles = {
-      READY: createFeaturePolygonStyle(
-        mapTheme.palette.entityStatusColors.ready,
-        0.2,
-        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(0,0,0,0.5)',
-      ),
-      OPENED_IN_ODK: createFeaturePolygonStyle(
-        mapTheme.palette.entityStatusColors.opened_in_odk,
-        0.2,
-        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(0,0,0,0.5)',
-      ),
-      SURVEY_SUBMITTED: createFeaturePolygonStyle(
-        mapTheme.palette.entityStatusColors.survey_submitted,
-        1,
-        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(0,0,0,0.5)',
-      ),
-      MARKED_BAD: createFeaturePolygonStyle(
-        mapTheme.palette.entityStatusColors.marked_bad,
-        1,
-        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(0,0,0,0.5)',
-      ),
-      VALIDATED: createFeaturePolygonStyle(
-        mapTheme.palette.entityStatusColors.validated,
-        1,
-        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(0,0,0,0.5)',
-      ),
+      READY: createFeatureLineStyle(mapTheme.palette.lineEntityStatusColors.ready),
+      OPENED_IN_ODK: createFeatureLineStyle(mapTheme.palette.lineEntityStatusColors.opened_in_odk),
+      SURVEY_SUBMITTED: createFeatureLineStyle(mapTheme.palette.lineEntityStatusColors.survey_submitted),
+      MARKED_BAD: createFeatureLineStyle(mapTheme.palette.lineEntityStatusColors.marked_bad),
+      VALIDATED: createFeatureLineStyle(mapTheme.palette.lineEntityStatusColors.validated),
     };
   }
 
