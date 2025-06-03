@@ -358,7 +358,7 @@
 		}
 
 		const interval = setInterval(() => {
-			if (drawGeomType === MapGeomTypes.POLYGON) {
+			if (drawGeomType === MapGeomTypes.POLYGON || drawGeomType === MapGeomTypes.POLYLINE) {
 				if (expanding) {
 					lineWidth += 0.3;
 					if (lineWidth >= 4) expanding = false; // Maximum width
@@ -682,6 +682,16 @@
 					'circle-radius': circleRadius,
 					'circle-stroke-opacity': hoverStateFilter(0, 1),
 				}}
+			/>
+		{:else if drawGeomType === MapGeomTypes.POLYLINE}
+			<LineLayer
+				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+				paint={{
+					'line-color': cssValue('--sl-color-primary-700'),
+					'line-width': lineWidth,
+				}}
+				beforeLayerType="symbol"
+				manageHoverState
 			/>
 		{/if}
 	</GeoJSON>
