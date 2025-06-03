@@ -65,8 +65,8 @@
 		primaryGeomType: MapGeomTypes;
 		draw?: boolean;
 		drawGeomType: MapGeomTypes;
-		syncButtonTrigger: (() => void);
-		handleDrawnGeom?: ((drawInstance: any, geojson: GeoJSONGeometry) => void);
+		syncButtonTrigger: () => void;
+		handleDrawnGeom?: (drawInstance: any, geojson: GeoJSONGeometry) => void;
 	}
 
 	let {
@@ -85,13 +85,13 @@
 	const primaryGeomLayerMapping = {
 		POINT: 'entity-point-layer',
 		POLYGON: 'entity-polygon-layer',
-		LINESTRING: 'entity-line-layer',
+		POLYLINE: 'entity-line-layer',
 	};
 
 	const newGeomLayerMapping = {
 		POINT: 'new-entity-point-layer',
 		POLYGON: 'new-entity-polygon-layer',
-		LINESTRING: 'new-entity-line-layer',
+		POLYLINE: 'new-entity-line-layer',
 	};
 
 	const cssValue = (property: string) => getComputedStyle(document.documentElement).getPropertyValue(property).trim();
@@ -436,7 +436,7 @@
 				}`}
 				onclick={async () => syncButtonTrigger()}
 				onkeydown={async (e: KeyboardEvent) => {
-					e.key === 'Enter' && (syncButtonTrigger());
+					e.key === 'Enter' && syncButtonTrigger();
 				}}
 				role="button"
 				tabindex="0"
@@ -592,32 +592,32 @@
 					manageHoverState
 				/>
 			{:else if primaryGeomType === MapGeomTypes.POINT}
-                <SymbolLayer
-                    id="entity-point-layer"
-                    applyToClusters={false}
-                    hoverCursor="pointer"
-                    manageHoverState
-                    layout={{
-                        'icon-image': [
-                            'match',
-                            ['get', 'status'],
-                            'READY',
-                            'MAP_PIN_GREY',
-                            'OPENED_IN_ODK',
-                            'MAP_PIN_YELLOW',
-                            'SURVEY_SUBMITTED',
-                            'MAP_PIN_GREEN',
-                            'VALIDATED',
-                            'MAP_PIN_BLUE',
-                            'MARKED_BAD',
-                            'MAP_PIN_RED',
-                            'MAP_PIN_GREY', // default color if no match is found
-                        ],
-                        'icon-allow-overlap': true,
-                        'icon-size': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity?.entity_id || ''], 1.6, 1],
-                    }}
-                />
-				{:else if primaryGeomType === MapGeomTypes.LINESTRING}
+				<SymbolLayer
+					id="entity-point-layer"
+					applyToClusters={false}
+					hoverCursor="pointer"
+					manageHoverState
+					layout={{
+						'icon-image': [
+							'match',
+							['get', 'status'],
+							'READY',
+							'MAP_PIN_GREY',
+							'OPENED_IN_ODK',
+							'MAP_PIN_YELLOW',
+							'SURVEY_SUBMITTED',
+							'MAP_PIN_GREEN',
+							'VALIDATED',
+							'MAP_PIN_BLUE',
+							'MARKED_BAD',
+							'MAP_PIN_RED',
+							'MAP_PIN_GREY', // default color if no match is found
+						],
+						'icon-allow-overlap': true,
+						'icon-size': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity?.entity_id || ''], 1.6, 1],
+					}}
+				/>
+			{:else if primaryGeomType === MapGeomTypes.POLYLINE}
 				<LineLayer
 					id="entity-line-layer"
 					layout={{ 'line-cap': 'round', 'line-join': 'round' }}
@@ -637,8 +637,13 @@
 							cssValue('--entity-marked-bad'),
 							cssValue('--entity-ready'), // default color if no match is found
 						],
-						'line-width': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity?.entity_id || ''], 3, 2],
-						'line-opacity': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity?.entity_id || ''], 1, 0.8],
+						'line-width': ['case', ['==', ['get', 'entity_id'], entitiesStore.selectedEntity?.entity_id || ''], 4, 3],
+						'line-opacity': [
+							'case',
+							['==', ['get', 'entity_id'], entitiesStore.selectedEntity?.entity_id || ''],
+							1,
+							0.8,
+						],
 					}}
 					beforeLayerType="symbol"
 					manageHoverState
