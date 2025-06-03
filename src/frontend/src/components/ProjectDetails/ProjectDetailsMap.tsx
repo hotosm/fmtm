@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { Stroke, Style } from 'ol/style';
+import { Circle, Fill, Stroke, Style } from 'ol/style';
 import MapStyles from '@/hooks/MapStyles';
 import { MapContainer as MapComponent, useOLMap } from '@/components/MapComponent/OpenLayersComponent';
 import { VectorLayer } from '@/components/MapComponent/OpenLayersComponent/Layers';
@@ -115,11 +115,28 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
       }
 
       // apply style to the layer
-      layer?.setStyle(
-        new Style({
-          stroke: new Stroke({ color: 'rgb(215,63,62,1)', width: width }),
-        }),
-      );
+      if (projectInfo.primary_geom_type === 'POINT') {
+        layer?.setStyle(
+          new Style({
+            image: new Circle({
+              fill: new Fill({
+                color: mapTheme.palette.entityStatusColors.marked_bad,
+              }),
+              stroke: new Stroke({
+                color: 'rgb(215,63,62,1)',
+                width: width,
+              }),
+              radius: 8,
+            }),
+          }),
+        );
+      } else {
+        layer?.setStyle(
+          new Style({
+            stroke: new Stroke({ color: 'rgb(215,63,62,1)', width: width }),
+          }),
+        );
+      }
     }, 50);
 
     return () => clearInterval(interval);
