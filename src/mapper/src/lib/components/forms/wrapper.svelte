@@ -81,7 +81,7 @@
 			submissionXml = submissionXml.replace('<warmup/>', `<warmup>${latitude} ${longitude} 0.0 0.0</warmup>`);
 		}
 
-		submissionXml = submissionXml.replace('<deviceid/>', `<deviceid>${getDeviceId()}</deviceid>`);
+		submissionXml = submissionXml.replace('<deviceid/>', `<deviceid>fmtm.hotosm.org:${getDeviceId()}</deviceid>`);
 
 		return submissionXml;
 	}
