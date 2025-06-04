@@ -152,7 +152,7 @@ const ClusterLayer = ({
   }, [map, vectorLayer, zoomToLayer]);
 
   useEffect(() => {
-    if (!map) return;
+    if (!map || !mapOnClick) return;
     map.on('singleclick', (evt) => {
       let area_no_9_extent = null;
       map.forEachFeatureAtPixel(
@@ -167,7 +167,6 @@ const ClusterLayer = ({
         map.getView().fit(area_no_9_extent, {
           duration: 1000,
           padding: [50, 50, 50, 50],
-          // maxZoom: 11,
         });
       }
     });
