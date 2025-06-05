@@ -206,7 +206,7 @@ async def send_organisation_approval_request(
 
     if request_odk_server:
         message_content += (
-            f"\nThe user has requested access to the "
+            f"\nThe organisation creator has requested access to the "
             f"{primary_organisation.name} ODK server at "
             f"{primary_organisation.odk_central_url}. "
             "Please arrange setup.\n"
