@@ -36,9 +36,10 @@ services:
     hostname: fmtm.dev.test
     environment:
       VITE_API_URL: "http://fmtm.dev.test:8000"
-    command: --port 80
+    ports:
+      - "7051:7051"
     healthcheck:
-      test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/80' || exit 1
+      test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/7051' || exit 1
       interval: 5s
       retries: 3
       start_period: 5s
@@ -63,9 +64,9 @@ services:
       # Starts the proxy and all other services
       proxy:
         condition: service_healthy
-      api:
-        # Override: must be healthy before tests run
-        condition: service_healthy
+      # api:
+      #   # Override: must be healthy before tests run
+      #   condition: service_healthy
       ui:
         # Override: must be healthy before tests run
         condition: service_healthy
