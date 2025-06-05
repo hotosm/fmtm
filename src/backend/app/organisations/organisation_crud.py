@@ -183,8 +183,6 @@ async def send_organisation_approval_request(
     request_odk_server: bool,
 ):
     """Notify primary organisation about new organisation's creation."""
-    organisation_url = f"{settings.FMTM_DOMAIN}/organization/{organisation.id}"
-
     if settings.DEBUG:
         organisation_url = f"http://{settings.FMTM_DOMAIN}:{settings.FMTM_DEV_PORT}/organization/{organisation.id}"
     else:
