@@ -212,8 +212,6 @@ async def send_organisation_approval_request(
             "Please arrange setup.\n"
         )
 
-    message_content += "\nThank you for being a part of our platform!"
-
     await send_mail(
         user_email=primary_organisation.associated_email,
         title=title,
