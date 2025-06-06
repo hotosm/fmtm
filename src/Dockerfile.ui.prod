@@ -1,10 +1,12 @@
 FROM docker.io/node:22-slim AS base
+ARG VITE_FMTM_DOMAIN
 ARG VITE_API_URL
 ARG VITE_SYNC_URL
 ARG VITE_S3_URL
 ENV VITE_API_URL=${VITE_API_URL} \
     VITE_SYNC_URL=${VITE_SYNC_URL} \
     VITE_S3_URL=${VITE_S3_URL} \
+    VITE_FMTM_DOMAIN=${VITE_FMTM_DOMAIN} \
     PNPM_HOME="/pnpm" \
     PATH="$PATH:/pnpm"
 # FIXME this npm install is a workaround due to https://github.com/nodejs/corepack/issues/627
@@ -40,6 +42,7 @@ RUN pnpm run build
 FROM docker.io/rclone/rclone:1 AS prod
 ARG APP_VERSION
 ARG COMMIT_REF
+ARG VITE_FMTM_DOMAIN
 ARG VITE_API_URL
 ARG VITE_SYNC_URL
 ARG VITE_S3_URL
@@ -47,6 +50,7 @@ LABEL org.hotosm.fmtm.app-name="frontend" \
       org.hotosm.fmtm.app-version="${APP_VERSION}" \
       org.hotosm.fmtm.git-commit-ref="${COMMIT_REF:-none}" \
       org.hotosm.fmtm.maintainer="sysadmin@hotosm.org" \
+      org.hotosm.fmtm.fmtm-domain="${VITE_FMTM_DOMAIN}" \
       org.hotosm.fmtm.api-url="${VITE_API_URL}" \
       org.hotosm.fmtm.sync-url="${VITE_SYNC_URL}" \
       org.hotosm.fmtm.s3-url="${VITE_S3_URL}"

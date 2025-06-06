@@ -20,6 +20,9 @@
 		webFormsRef: HTMLElement | undefined;
 	};
 
+	// if VITE_FMTM_DOMAIN is not set, use hostname but with first subdomain removed (like mapper.fmtm.localhost to fmtm.localhost)
+	const FMTM_DOMAIN = import.meta.env.VITE_FMTM_DOMAIN || window.location.hostname.split(".").slice(1).join(".");
+
 	const WEB_FORMS_IFRAME_ID = "7f86f661-efd6-4cc6-b068-48dd7eb53dbb";
 
 	const commonStore = getCommonStore();
@@ -82,7 +85,7 @@
 			submissionXml = submissionXml.replace('<warmup/>', `<warmup>${latitude} ${longitude} 0.0 0.0</warmup>`);
 		}
 
-		submissionXml = submissionXml.replace('<deviceid/>', `<deviceid>${getDeviceId()}</deviceid>`);
+		submissionXml = submissionXml.replace('<deviceid/>', `<deviceid>${FMTM_DOMAIN}:${getDeviceId()}</deviceid>`);
 
 		return submissionXml;
 	}

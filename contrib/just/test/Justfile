@@ -82,6 +82,7 @@ mapper-preview:
   cd {{justfile_directory()}}/src/mapper
   pnpm install
   VITE_API_URL=http://api.fmtm.localhost:7050 \
+    VITE_FMTM_DOMAIN=fmtm.localhost \
     VITE_SYNC_URL=http://sync.fmtm.localhost:7050 \
     VITE_S3_URL=http://s3.fmtm.localhost:7050 \
     pnpm run build

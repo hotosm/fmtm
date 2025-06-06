@@ -178,6 +178,7 @@ services:
       dockerfile: Dockerfile.ui.prod
       args:
         APP_VERSION: ${GIT_BRANCH}
+        VITE_FMTM_DOMAIN: ${FMTM_DOMAIN}
         VITE_API_URL: https://${FMTM_API_DOMAIN:-api.${FMTM_DOMAIN}}
         VITE_SYNC_URL: https://${FMTM_SYNC_DOMAIN:-sync.${FMTM_DOMAIN}}
         VITE_S3_URL: https://${FMTM_SYNC_DOMAIN:-sync.${FMTM_DOMAIN}}

@@ -56,6 +56,7 @@ frontend-dev:
   cd {{justfile_directory()}}/src/frontend
 
   pnpm install
+  VITE_FMTM_DOMAIN=fmtm.hotosm.org \
   VITE_API_URL=https://api.stage.fmtm.hotosm.org \
   pnpm run dev
 
@@ -67,6 +68,7 @@ mapper-frontend-dev:
   cd {{justfile_directory()}}/src/mapper
 
   pnpm install
+  VITE_FMTM_DOMAIN=fmtm.hotosm.org \
   VITE_API_URL=https://api.stage.fmtm.hotosm.org \
   VITE_SYNC_URL=https://sync.stage.fmtm.hotosm.org \
   VITE_S3_URL=https://s3.stage.fmtm.hotosm.org \
