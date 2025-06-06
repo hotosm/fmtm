@@ -873,6 +873,7 @@ async def update_entity_mapping_status(
         entity_uuid (str): The unique entity UUID for ODK Central.
         label (str): New label, with emoji prepended for status.
         status (EntityState): New EntityState to assign, in string form.
+        submission_ids (str): UUID (instanceID) of each submission.
         dataset_name (str): Override the default dataset / Entity list name 'features'.
 
     Returns:
