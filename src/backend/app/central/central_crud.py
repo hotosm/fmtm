@@ -860,6 +860,7 @@ async def update_entity_mapping_status(
     entity_uuid: str,
     label: str,
     status: EntityState,
+    submission_ids: Optional[str]=None,
     dataset_name: str = "features",
 ) -> dict:
     """Update the Entity mapping status.
@@ -884,6 +885,9 @@ async def update_entity_mapping_status(
             project_id=odk_id,
             label=label,
             data={
+                "status": status,
+                "submission_ids": submission_ids
+            } if submission_ids else {
                 "status": status,
             },
             # We don't know the current entity version, so we need this
