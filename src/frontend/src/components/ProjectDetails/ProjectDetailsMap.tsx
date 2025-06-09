@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { Stroke, Style } from 'ol/style';
+import { Circle, Fill, Stroke, Style } from 'ol/style';
 import MapStyles from '@/hooks/MapStyles';
 import { MapContainer as MapComponent, useOLMap } from '@/components/MapComponent/OpenLayersComponent';
 import { VectorLayer } from '@/components/MapComponent/OpenLayersComponent/Layers';
@@ -18,12 +18,14 @@ import getTaskStatusStyle, { getFeatureStatusStyle } from '@/utilfunctions/getTa
 import Button from '@/components/common/Button';
 import { EntityOsmMap } from '@/models/project/projectModel';
 import { isValidUrl } from '@/utilfunctions/urlChecker';
-import { entity_state } from '@/types/enums';
+import { entity_state, GeoGeomTypesEnum } from '@/types/enums';
 import { ProjectActions } from '@/store/slices/ProjectSlice';
 import { GetEntityStatusList, GetOdkEntitiesGeojson, SyncTaskState } from '@/api/Project';
 import MapLegends from '@/components/MapLegends';
 import isEmpty from '@/utilfunctions/isEmpty';
 import AssetModules from '@/shared/AssetModules';
+import { ClusterLayer } from '@/components/MapComponent/OpenLayersComponent/Layers';
+import { defaultStyles } from '@/components/MapComponent/OpenLayersComponent/helpers/styleUtils';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -113,11 +115,28 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
       }
 
       // apply style to the layer
-      layer?.setStyle(
-        new Style({
-          stroke: new Stroke({ color: 'rgb(215,63,62,1)', width: width }),
-        }),
-      );
+      if (projectInfo.primary_geom_type === 'POINT') {
+        layer?.setStyle(
+          new Style({
+            image: new Circle({
+              fill: new Fill({
+                color: mapTheme.palette.entityStatusColors.marked_bad,
+              }),
+              stroke: new Stroke({
+                color: 'rgb(215,63,62,1)',
+                width: width,
+              }),
+              radius: 8,
+            }),
+          }),
+        );
+      } else {
+        layer?.setStyle(
+          new Style({
+            stroke: new Stroke({ color: 'rgb(215,63,62,1)', width: width }),
+          }),
+        );
+      }
     }, 50);
 
     return () => clearInterval(interval);
@@ -228,7 +247,12 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
             setOverlappingEntityFeatures([]);
           }
           const feature = entityFeatures[0];
-          handleFeatureClick(feature.getProperties(), feature);
+          let featureProperties = feature.getProperties();
+
+          if (featureProperties.features) {
+            featureProperties = featureProperties.features[0].getProperties();
+          }
+          handleFeatureClick(featureProperties, feature);
         }
       } else {
         if (overlappingEntityFeatures.length > 1) {
@@ -239,7 +263,8 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
         });
         if (isEmpty(taskFeatures)) return;
         const feature = taskFeatures[0];
-        handleTaskClick(feature.getProperties(), feature);
+        const featureProperties = feature.getProperties();
+        handleTaskClick(featureProperties, feature);
       }
     };
 
@@ -286,7 +311,30 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
         {projectInfo.data_extract_url &&
           isValidUrl(projectInfo.data_extract_url) &&
           dataExtractExtent &&
-          selectedTask && (
+          selectedTask &&
+          (projectInfo.primary_geom_type && GeoGeomTypesEnum[projectInfo.primary_geom_type] === 'Point' ? (
+            <ClusterLayer
+              map={map}
+              fgbUrl={projectInfo.data_extract_url}
+              fgbExtent={dataExtractExtent}
+              zIndex={100}
+              visibleOnMap={true}
+              style={{
+                ...defaultStyles,
+                background_color: '#D73F37',
+                color: '#eb9f9f',
+                opacity: 90,
+              }}
+              getIndividualStyle={(featureProperty) => {
+                const entity = entityOsmMap?.find(
+                  (entity) => entity?.osm_id === featureProperty?.osm_id,
+                ) as EntityOsmMap;
+                const status = entity_state[entity?.status];
+                const isEntitySelected = selectedEntityId === entity?.osm_id;
+                return getFeatureStatusStyle('Point', mapTheme, status, isEntitySelected);
+              }}
+            />
+          ) : (
             <VectorLayer
               fgbUrl={projectInfo.data_extract_url}
               fgbExtent={dataExtractExtent}
@@ -309,7 +357,7 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
               zoomToLayer
               zIndex={5}
             />
-          )}
+          ))}
         <VectorLayer
           geojson={badGeomFeatureCollection}
           viewProperties={{
@@ -339,7 +387,6 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
             const status = entity_state[+featureProperty?.status];
             const isEntitySelected = selectedEntityId ? +selectedEntityId === +featureProperty?.osm_id : false;
             return getFeatureStatusStyle(geomType, mapTheme, status, isEntitySelected);
-            return;
           }}
         />
         <AsyncPopup
