@@ -176,15 +176,6 @@ const CreateEditOrganizationForm = ({ organizationId }: { organizationId: string
             errorMsg={errors.odk_server_type}
             required
           />
-          {/* <CustomCheckbox
-            key="fillODKCredentials"
-            label="Fill ODK credentials now"
-            checked={values.fillODKCredentials}
-            onCheckedChange={() => {
-              handleCustomChange('fillODKCredentials', !values.fillODKCredentials);
-            }}
-            className="fmtm-text-black"
-          /> */}
           {values?.odk_server_type === 'OWN' && (
             <div className="fmtm-flex fmtm-flex-col fmtm-gap-6">
               <InputTextField
