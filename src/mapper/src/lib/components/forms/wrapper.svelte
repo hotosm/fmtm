@@ -20,7 +20,10 @@
 		webFormsRef: HTMLElement | undefined;
 	};
 
-	const WEB_FORMS_IFRAME_ID = "7f86f661-efd6-4cc6-b068-48dd7eb53dbb";
+	const WEB_FORMS_IFRAME_ID = '7f86f661-efd6-4cc6-b068-48dd7eb53dbb';
+
+	// example: convert mapper.fmtm.localhost to fmtm.localhost
+	const FMTM_DOMAIN = window.location.hostname.replace('mapper.', '');
 
 	const commonStore = getCommonStore();
 	const loginStore = getLoginStore();
@@ -65,6 +68,7 @@
 
 		submissionXml = submissionXml.replace('<start/>', `<start>${startDate}</start>`);
 		submissionXml = submissionXml.replace('<end/>', `<end>${new Date().toISOString()}</end>`);
+		submissionXml = submissionXml.replace('<today/>', `<today>${new Date().toISOString().split("T")[0]}</today>`);
 
 		const authDetails = loginStore?.getAuthDetails;
 		if (authDetails?.username) {
@@ -81,7 +85,7 @@
 			submissionXml = submissionXml.replace('<warmup/>', `<warmup>${latitude} ${longitude} 0.0 0.0</warmup>`);
 		}
 
-		submissionXml = submissionXml.replace('<deviceid/>', `<deviceid>${getDeviceId()}</deviceid>`);
+		submissionXml = submissionXml.replace('<deviceid/>', `<deviceid>${FMTM_DOMAIN}:${getDeviceId()}</deviceid>`);
 
 		return submissionXml;
 	}
@@ -98,11 +102,19 @@
 			entityStatus = 2; // SURVEY_SUBMITTED
 		}
 
+		const submissionIdMatch = submissionXml.match(/<submission_ids>(.*?)<\/submission_ids>/);
+		let submissionIds = submissionIdMatch?.[1] ?? '';
+		
+		if (selectedEntity?.submission_ids) {
+			submissionIds = `${selectedEntity.submission_ids},${submissionIds}`;
+		}
+
 		entitiesStore.updateEntityStatus(db, projectId, {
 			entity_id: selectedEntity?.entity_id,
 			status: entityStatus,
 			// NOTE here we don't translate the field as English values are always saved as the Entity label
 			label: `Feature ${selectedEntity?.osm_id}`,
+			submission_ids: submissionIds,
 		});
 	}
 
@@ -268,8 +280,7 @@
 									{/if}
 									<iframe
 										class="iframe"
-										style:border="none"
-										style:height="100%"
+										style="border: none; height: 100%; height: -webkit-fill-available;"
 										use:handleIframe
 										title="odk-web-forms-wrapper"
 										id={WEB_FORMS_IFRAME_ID}
@@ -295,7 +306,7 @@
 <style>
 	/* from https://www.w3schools.com/howto/howto_css_loader.asp */
 	#spinner {
-		border: 16px solid var(--sl-color-neutral-300);
+		border: 16px solid var(--sl-color-neutral-300); 
 		border-top: 16px solid var(--sl-color-primary-700);
 		border-radius: 50%;
 		width: 120px;
