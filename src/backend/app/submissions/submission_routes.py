@@ -352,7 +352,9 @@ async def submission_table(
             else review_filter
         )
 
-    data = await submission_crud.get_submission_by_project(project, filters)
+    data = await submission_crud.get_submission_by_project(
+        project, filters, use_osm_fieldwork=True
+    )
     total_count = data.get("@odata.count", 0)
     submissions = data.get("value", [])
     if review_state == "received":
