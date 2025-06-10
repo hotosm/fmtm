@@ -77,7 +77,8 @@
 
 	// Update the geojson task states when a new event is added
 	$effect(() => {
-		if (db && latestEvent) {
+		latestEvent;
+		if (db) {
 			taskStore.appendTaskStatesToFeatcol(db, projectId, project.tasks);
 		}
 	});
