@@ -3,7 +3,7 @@
 	import type { PGlite } from '@electric-sql/pglite';
 	import { distance } from '@turf/distance';
 	import type { Coord } from '@turf/helpers';
-	import type { SlDialog, SlDrawer } from '@shoelace-style/shoelace';
+	import type { SlDialog } from '@shoelace-style/shoelace';
 
 	import { m } from '$translations/messages.js';
 	import { TaskStatusEnum, type APIProject } from '$lib/types';
@@ -56,13 +56,11 @@
 			?.reverse(),
 	);
 
-	const mapFeature = () => {
+	const mapFeatureInODKApp = () => {
 		const xformId = projectData?.odk_form_id;
 		const entityUuid = selectedEntity?.entity_id;
 
-		if (!xformId || !entityUuid) {
-			return;
-		}
+		if (!xformId || !entityUuid) return;
 
 		const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 		if (isMobile) {
@@ -82,6 +80,25 @@
 			document.location.href = `odkcollect://form/${xformId}?feature=${entityUuid}`;
 		} else {
 			alertStore.setAlert({ message: 'Requires a mobile phone with ODK Collect.', variant: 'warning' });
+		}
+	};
+
+	const mapFeatureInWebForms = () => {
+		toggleTaskActionModal(false);
+		entitiesStore.updateEntityStatus(db, projectData.id, {
+			entity_id: selectedEntity?.entity_id,
+			status: 1,
+			// NOTE here we don't translate the field as English values are always saved as the Entity label
+			label: `Feature ${selectedEntity?.osm_id}`,
+		});
+		displayWebFormsDrawer = true;
+	};
+
+	const mapFeature = () => {
+		if (commonStore.enableWebforms) {
+			mapFeatureInWebForms();
+		} else {
+			mapFeatureInODKApp();
 		}
 	};
 
@@ -266,13 +283,9 @@
 							variant="default"
 							size="small"
 							class="entity-button-to"
-							onclick={() => {
-								navigateToEntity();
-							}}
+							onclick={() => navigateToEntity()}
 							onkeydown={(e: KeyboardEvent) => {
-								if (e.key === 'Enter') {
-									navigateToEntity();
-								}
+								if (e.key === 'Enter') navigateToEntity();
 							}}
 							role="button"
 							tabindex="0"
@@ -280,18 +293,14 @@
 							<hot-icon slot="prefix" name="direction"></hot-icon>
 							<span>{m['popup.navigate_here']()}</span>
 						</sl-button>
-						{#if commonStore.enableWebforms === false}
+						{#if !commonStore.enableWebforms}
 							<sl-button
 								loading={entitiesStore.updateEntityStatusLoading}
 								variant="primary"
 								size="small"
-								onclick={() => {
-									handleMapFeature();
-								}}
+								onclick={() => handleMapFeature()}
 								onkeydown={(e: KeyboardEvent) => {
-									if (e.key === 'Enter') {
-										handleMapFeature();
-									}
+									if (e.key === 'Enter') handleMapFeature();
 								}}
 								role="button"
 								tabindex="0"
@@ -299,33 +308,14 @@
 								<hot-icon slot="prefix" name="location"></hot-icon>
 								<span>{m['popup.map_in_odk']()}</span>
 							</sl-button>
-						{/if}
-						{#if commonStore.enableWebforms}
+						{:else}
 							<sl-button
 								loading={entitiesStore.updateEntityStatusLoading}
 								variant="primary"
 								size="small"
-								onclick={() => {
-									toggleTaskActionModal(false);
-									entitiesStore.updateEntityStatus(db, projectData.id, {
-										entity_id: selectedEntity?.entity_id,
-										status: 1,
-										// NOTE here we don't translate the field as English values are always saved as the Entity label
-										label: `Feature ${selectedEntity?.osm_id}`,
-									});
-									displayWebFormsDrawer = true;
-								}}
+								onclick={() => handleMapFeature()}
 								onkeydown={(e: KeyboardEvent) => {
-									if (e.key === 'Enter') {
-										toggleTaskActionModal(false);
-										entitiesStore.updateEntityStatus(db, projectData.id, {
-											entity_id: selectedEntity?.entity_id,
-											status: 1,
-											// NOTE here we don't translate the field as English values are always saved as the Entity label
-											label: `Feature ${selectedEntity?.osm_id}`,
-										});
-										displayWebFormsDrawer = true;
-									}
+									if (e.key === 'Enter') handleMapFeature();
 								}}
 								role="button"
 								tabindex="0"
@@ -370,9 +360,7 @@
 					class="secondary"
 					onclick={() => (toggleDistanceWarningDialog = false)}
 					onkeydown={(e: KeyboardEvent) => {
-						if (e.key === 'Enter') {
-							toggleDistanceWarningDialog = false;
-						}
+						if (e.key === 'Enter') toggleDistanceWarningDialog = false;
 					}}
 					role="button"
 					tabindex="0"
@@ -433,9 +421,7 @@
 	bind:this={confirmationDialogRef}
 	class="entity-delete-dialog"
 	open={showDeleteEntityPopup}
-	onsl-hide={() => {
-		showDeleteEntityPopup = false;
-	}}
+	onsl-hide={() => (showDeleteEntityPopup = false)}
 	noHeader
 >
 	<p class="content">{m['dialog_entities_actions.entity_delete_confirmation']()}</p>
@@ -447,9 +433,7 @@
 			onclick={() => (showDeleteEntityPopup = false)}
 			outline
 			onkeydown={(e: KeyboardEvent) => {
-				if (e.key === 'Enter') {
-					showDeleteEntityPopup = false;
-				}
+				if (e.key === 'Enter') showDeleteEntityPopup = false;
 			}}
 			role="button"
 			tabindex="0"
@@ -459,13 +443,9 @@
 		<sl-button
 			variant="primary"
 			size="small"
-			onclick={() => {
-				deleteNewFeature(selectedEntity?.entity_id);
-			}}
+			onclick={() => deleteNewFeature(selectedEntity?.entity_id)}
 			onkeydown={(e: KeyboardEvent) => {
-				if (e.key === 'Enter') {
-					deleteNewFeature(selectedEntity?.entity_id);
-				}
+				if (e.key === 'Enter') deleteNewFeature(selectedEntity?.entity_id);
 			}}
 			role="button"
 			tabindex="0"
