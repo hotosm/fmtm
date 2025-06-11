@@ -146,7 +146,6 @@ async def get_submission_count_of_a_project(project: DbProject):
 async def get_submission_by_project(
     project: DbProject,
     filters: dict,
-    use_osm_fieldwork: bool = False,
 ):
     """Get submission by project.
 
@@ -156,9 +155,6 @@ async def get_submission_by_project(
         project (DbProject): The database project object.
         filters (dict): The filters to apply directly to submissions
             in odk central.
-        use_osm_fieldwork (bool): If True, uses osm-fieldwork package to fetch
-            submissions instead of pyodk.
-            If False, uses pyodk to fetch submissions.
 
     Returns:
         Tuple[int, List]: A tuple containing the total number of submissions and
@@ -169,19 +165,18 @@ async def get_submission_by_project(
 
     """
     hashtags = project.hashtags
-
-    if use_osm_fieldwork:
-        xform = get_odk_form(project.odk_credentials)
-        data = xform.listSubmissions(project.odkid, project.odk_form_id, filters)
-    else:
-        async with pyodk_client(project.odk_credentials) as client:
-            data = client.submissions.get_table(
-                project_id=project.odkid,
-                form_id=project.odk_form_id,
-                filter=filters,
-                table_name="Submissions",
-                expand="*",
-            )
+    async with pyodk_client(project.odk_credentials) as client:
+        data = client.submissions.get_table(
+            project_id=project.odkid,
+            form_id=project.odk_form_id,
+            table_name="Submissions",
+            skip=filters.get("$skip"),
+            top=filters.get("$top"),
+            count=filters.get("$count"),
+            wkt=filters.get("$wkt"),
+            filter=filters.get("$filter"),
+            expand="*",
+        )
 
     def add_hashtags(item):
         item["hashtags"] = hashtags
