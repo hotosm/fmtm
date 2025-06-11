@@ -6,7 +6,7 @@
 	import type { SlDialog } from '@shoelace-style/shoelace';
 
 	import { m } from '$translations/messages.js';
-	import { TaskStatusEnum, type APIProject } from '$lib/types';
+	import { type APIProject } from '$lib/types';
 	import { getEntitiesStatusStore } from '$store/entities.svelte.ts';
 	import { getAlertStore, getCommonStore } from '$store/common.svelte.ts';
 	import { getTaskStore } from '$store/tasks.svelte.ts';
@@ -56,6 +56,20 @@
 			?.reverse(),
 	);
 
+	const updateEntityTaskStatus = () => {
+		if (selectedEntity?.status === 'READY') {
+			entitiesStore.updateEntityStatus(db, projectData.id, {
+				entity_id: selectedEntity?.entity_id,
+				status: 1,
+				// NOTE here we don't translate the field as English values are always saved as the Entity label
+				label: `Feature ${selectedEntity?.osm_id}`,
+			});
+
+			if (taskStore.selectedTaskId && taskStore.selectedTaskState === 'UNLOCKED_TO_MAP')
+				mapTask(projectData?.id, taskStore.selectedTaskId);
+		}
+	};
+
 	const mapFeatureInODKApp = () => {
 		const xformId = projectData?.odk_form_id;
 		const entityUuid = selectedEntity?.entity_id;
@@ -64,18 +78,7 @@
 
 		const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 		if (isMobile) {
-			if (selectedEntity?.status === 'READY') {
-				entitiesStore.updateEntityStatus(db, projectData.id, {
-					entity_id: entityUuid,
-					status: 1,
-					// NOTE here we don't translate the field as English values are always saved as the Entity label
-					label: `Feature ${selectedEntity?.osm_id}`,
-				});
-
-				if (taskStore.selectedTaskId && taskStore.selectedTaskState === TaskStatusEnum['UNLOCKED_TO_MAP']) {
-					mapTask(projectData?.id, taskStore.selectedTaskId);
-				}
-			}
+			updateEntityTaskStatus();
 			// Load entity in ODK Collect by intent
 			document.location.href = `odkcollect://form/${xformId}?feature=${entityUuid}`;
 		} else {
@@ -85,12 +88,7 @@
 
 	const mapFeatureInWebForms = () => {
 		toggleTaskActionModal(false);
-		entitiesStore.updateEntityStatus(db, projectData.id, {
-			entity_id: selectedEntity?.entity_id,
-			status: 1,
-			// NOTE here we don't translate the field as English values are always saved as the Entity label
-			label: `Feature ${selectedEntity?.osm_id}`,
-		});
+		updateEntityTaskStatus();
 		displayWebFormsDrawer = true;
 	};
 
