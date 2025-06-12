@@ -182,7 +182,6 @@ async def approve_organisation(
     )
     # Set organisation requester as organisation manager
     if approved_org.created_by:
-        print("here")
         await DbOrganisationManagers.create(
             db, approved_org.id, approved_org.created_by
         )
