@@ -183,12 +183,16 @@ async def send_approval_message(
 
 
 async def send_organisation_approval_request(
+    request: Request,
     organisation: DbOrganisation,
+    db: Connection,
     requester: str,
     primary_organisation: DbOrganisation,
+    osm_auth: Auth,
     request_odk_server: bool,
 ):
     """Notify primary organisation about new organisation's creation."""
+    osm_token = get_osm_token(request, osm_auth)
     if settings.DEBUG:
         organisation_url = f"http://{settings.FMTM_DOMAIN}:{settings.FMTM_DEV_PORT}/organization/approve/{organisation.id}"
     else:
@@ -196,6 +200,8 @@ async def send_organisation_approval_request(
             f"https://{settings.FMTM_DOMAIN}/organization/{organisation.id}"
         )
 
+    admins = await DbUser.all(db, role=UserRole.ADMIN)
+    admin_usernames = [admin.username for admin in admins]
     title = f"Creation of a new organization {organisation.name} was requested"
     message_content = dedent(f"""
         A new organisation **{organisation.name}** has been created by **{requester}**.
@@ -218,11 +224,22 @@ async def send_organisation_approval_request(
             "The access can be granted during the organisation's approval.\n"
         )
 
+    # Send email notification to primary organisation through their associated email
+    # This was included because the primary organisation admins may not be OSM users
     await send_mail(
-        user_email=primary_organisation.associated_email,
+        user_emails=[primary_organisation.associated_email],
         title=title,
         message_content=message_content,
     )
+
+    # Send OSM messages to all admins
+    for username in admin_usernames:
+        send_osm_message(
+            osm_token=osm_token,
+            osm_username=username,
+            title=title,
+            body=message_content,
+        )
     log.info(
         "Notification about organisation creation sent at "
         f"{primary_organisation.associated_email}."

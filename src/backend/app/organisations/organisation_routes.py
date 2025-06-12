@@ -68,11 +68,13 @@ async def get_organisations(
 @router.post("", response_model=OrganisationOut)
 async def create_organisation(
     background_tasks: BackgroundTasks,
+    request: Request,
     db: Annotated[Connection, Depends(db_conn)],
     current_user: Annotated[AuthUser, Depends(login_required)],
     # Depends required below to allow logo upload
     org_in: OrganisationIn = Depends(parse_organisation_input),
     logo: Optional[UploadFile] = File(None),
+    osm_auth=Depends(init_osm_auth),
     request_odk_server: bool = False,
 ) -> OrganisationOut:
     """Create an organisation with the given details.
@@ -90,9 +92,12 @@ async def create_organisation(
     primary_organisation = await DbOrganisation.primary_org(db)
     background_tasks.add_task(
         organisation_crud.send_organisation_approval_request,
+        request=request,
         organisation=organisation,
+        db=db,
         requester=current_user.username,
         primary_organisation=primary_organisation,
+        osm_auth=osm_auth,
         request_odk_server=request_odk_server,
     )
     return organisation
@@ -177,6 +182,7 @@ async def approve_organisation(
     )
     # Set organisation requester as organisation manager
     if approved_org.created_by:
+        print("here")
         await DbOrganisationManagers.create(
             db, approved_org.id, approved_org.created_by
         )
