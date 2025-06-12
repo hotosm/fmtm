@@ -27,19 +27,13 @@ const VITE_API_URL = import.meta.env.VITE_API_URL;
 const primaryGeomOptions = [
   { name: 'primary_geom_type', value: 'POLYGON', label: 'Polygons (e.g. buildings)' },
   { name: 'primary_geom_type', value: 'POINT', label: 'Points (e.g. POIs)' },
-  { name: 'primary_geom_type', value: 'LINESTRING', label: 'Lines (e.g. roads, rivers)' },
+  { name: 'primary_geom_type', value: 'POLYLINE', label: 'Lines (e.g. roads, rivers)' },
 ];
 
 const newGeomOptions = [
   { name: 'new_geom_type', value: 'POLYGON', label: 'Polygons' },
   { name: 'new_geom_type', value: 'POINT', label: 'Points' },
-  { name: 'new_geom_type', value: 'LINESTRING', label: 'Lines' },
-];
-
-const dataExtractOptions = [
-  { name: 'data_extract', value: 'osm_data_extract', label: 'Fetch data from OSM' },
-  { name: 'data_extract', value: 'custom_data_extract', label: 'Upload custom map data' },
-  { name: 'data_extract', value: 'no_data_extract', label: 'No existing data' },
+  { name: 'new_geom_type', value: 'POLYLINE', label: 'Lines' },
 ];
 
 const DataExtract = ({
@@ -113,6 +107,17 @@ const DataExtract = ({
     values: formValues,
     errors,
   }: any = useForm(projectDetails, submission, DataExtractValidation);
+
+  const dataExtractOptions = [
+    {
+      name: 'data_extract',
+      value: 'osm_data_extract',
+      label: 'Fetch data from OSM',
+      disabled: formValues.primaryGeomType === 'POLYLINE',
+    },
+    { name: 'data_extract', value: 'custom_data_extract', label: 'Upload custom map data' },
+    { name: 'data_extract', value: 'no_data_extract', label: 'No existing data' },
+  ];
 
   const getFileFromGeojson = (geojson) => {
     // Create a File object from the geojson Blob
@@ -318,7 +323,10 @@ const DataExtract = ({
                         name="primary_geom_type"
                         value={option.value}
                         checked={formValues.primaryGeomType === option.value}
-                        onChange={(e) => handleCustomChange('primaryGeomType', e.target.value)}
+                        onChange={(e) => {
+                          handleCustomChange('primaryGeomType', e.target.value);
+                          handleCustomChange('dataExtractType', null);
+                        }}
                       />
                       {option.label}
                     </label>

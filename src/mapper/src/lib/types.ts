@@ -186,6 +186,7 @@ export type EntityStatusPayload = {
 	entity_id: UUID;
 	status: number;
 	label: string; // there is no easy way to automatically determine this
+	submission_ids?: string;
 };
 
 export type entityStatusOptions = 'READY' | 'OPENED_IN_ODK' | 'SURVEY_SUBMITTED' | 'MARKED_BAD' | 'VALIDATED';
@@ -204,8 +205,8 @@ export type entitiesApiResponse = {
 	status: number;
 	updated_at: string | null;
 	submission_ids: string;
-	is_new: boolean;
 	geometry: string | null;
+	created_by: string | null;
 };
 
 export type DbEntityType = {
@@ -215,8 +216,8 @@ export type DbEntityType = {
 	task_id: number;
 	osm_id: number;
 	submission_ids: string;
-	is_new: boolean;
 	geometry: string | null;
+	created_by: string | null;
 };
 
 export type DbApiSubmissionType = {
