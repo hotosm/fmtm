@@ -154,6 +154,7 @@ async def send_approval_message(
     creator_sub: str,
     organisation_name: str,
     osm_auth: Auth,
+    set_primary_org_odk_server: bool = False,
 ):
     """Send message to the organisation creator after approval."""
     log.info(f"Sending approval message to organisation creator ({creator_sub}).")
@@ -164,8 +165,13 @@ async def send_approval_message(
         Your organisation **{organisation_name}** has been approved.
 
         You can now manage your organisation freely.
-
-        Thank you for being a part of our platform!
+    """)
+    if set_primary_org_odk_server:
+        message_content += dedent("""
+            It has also been granted access to the ODK server.
+        """)
+    message_content += dedent("""
+        \nThank you for being a part of our platform!
     """)
     send_osm_message(
         osm_token=osm_token,
@@ -184,7 +190,7 @@ async def send_organisation_approval_request(
 ):
     """Notify primary organisation about new organisation's creation."""
     if settings.DEBUG:
-        organisation_url = f"http://{settings.FMTM_DOMAIN}:{settings.FMTM_DEV_PORT}/organization/{organisation.id}"
+        organisation_url = f"http://{settings.FMTM_DOMAIN}:{settings.FMTM_DEV_PORT}/organization/approve/{organisation.id}"
     else:
         organisation_url = (
             f"https://{settings.FMTM_DOMAIN}/organization/{organisation.id}"
@@ -209,7 +215,7 @@ async def send_organisation_approval_request(
             f"\nThe organisation creator has requested access to the "
             f"{primary_organisation.name} ODK server at "
             f"{primary_organisation.odk_central_url}. "
-            "Please arrange setup.\n"
+            "The access can be granted during the organisation's approval.\n"
         )
 
     await send_mail(

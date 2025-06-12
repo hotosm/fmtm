@@ -40,7 +40,7 @@ from app.db.database import db_conn
 from app.db.enums import HTTPStatus
 from app.db.models import DbOrganisation, DbOrganisationManagers
 from app.organisations import organisation_crud
-from app.organisations.organisation_deps import org_exists
+from app.organisations.organisation_deps import get_org_odk_creds, org_exists
 from app.organisations.organisation_schemas import (
     OrganisationIn,
     OrganisationOut,
@@ -150,6 +150,7 @@ async def approve_organisation(
     db: Annotated[Connection, Depends(db_conn)],
     current_user: Annotated[AuthUser, Depends(super_admin)],
     osm_auth=Depends(init_osm_auth),
+    set_primary_org_odk_server: bool = False,
 ):
     """Approve the organisation request made by the user.
 
@@ -158,10 +159,21 @@ async def approve_organisation(
     A background task notifies the organisation creator.
     """
     log.info(f"Approving organisation ({org_id}).")
+    primary_organisation = await DbOrganisation.primary_org(db)
+    primary_org_odk_creds = await get_org_odk_creds(primary_organisation)
+    if set_primary_org_odk_server:
+        org_update = OrganisationUpdate(
+            odk_central_url=primary_org_odk_creds.odk_central_url,
+            odk_central_user=primary_org_odk_creds.odk_central_user,
+            odk_central_password=primary_org_odk_creds.odk_central_password,
+            approved=True,
+        )
+    else:
+        org_update = OrganisationUpdate(approved=True)
     approved_org = await DbOrganisation.update(
         db,
         org_id,
-        OrganisationUpdate(approved=True),
+        org_update,
     )
     # Set organisation requester as organisation manager
     if approved_org.created_by:
@@ -176,6 +188,7 @@ async def approve_organisation(
             creator_sub=approved_org.created_by,
             organisation_name=approved_org.name,
             osm_auth=osm_auth,
+            set_primary_org_odk_server=set_primary_org_odk_server,
         )
 
     return approved_org
