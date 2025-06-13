@@ -274,56 +274,54 @@
 						</div>
 					{/if}
 				</div>
-				{#if selectedEntity?.status !== 'SURVEY_SUBMITTED' && selectedEntity?.status !== 'VALIDATED'}
-					<div class="entity">
+				<div class="entity">
+					<sl-button
+						disabled={entityToNavigate?.entityId === selectedEntity?.entity_id}
+						variant="default"
+						size="small"
+						class="entity-button-to"
+						onclick={() => navigateToEntity()}
+						onkeydown={(e: KeyboardEvent) => {
+							if (e.key === 'Enter') navigateToEntity();
+						}}
+						role="button"
+						tabindex="0"
+					>
+						<hot-icon slot="prefix" name="direction"></hot-icon>
+						<span>{m['popup.navigate_here']()}</span>
+					</sl-button>
+					{#if !commonStore.enableWebforms}
 						<sl-button
-							disabled={entityToNavigate?.entityId === selectedEntity?.entity_id}
-							variant="default"
+							loading={entitiesStore.updateEntityStatusLoading}
+							variant="primary"
 							size="small"
-							class="entity-button-to"
-							onclick={() => navigateToEntity()}
+							onclick={() => handleMapFeature()}
 							onkeydown={(e: KeyboardEvent) => {
-								if (e.key === 'Enter') navigateToEntity();
+								if (e.key === 'Enter') handleMapFeature();
 							}}
 							role="button"
 							tabindex="0"
 						>
-							<hot-icon slot="prefix" name="direction"></hot-icon>
-							<span>{m['popup.navigate_here']()}</span>
+							<hot-icon slot="prefix" name="location"></hot-icon>
+							<span>{m['popup.map_in_odk']()}</span>
 						</sl-button>
-						{#if !commonStore.enableWebforms}
-							<sl-button
-								loading={entitiesStore.updateEntityStatusLoading}
-								variant="primary"
-								size="small"
-								onclick={() => handleMapFeature()}
-								onkeydown={(e: KeyboardEvent) => {
-									if (e.key === 'Enter') handleMapFeature();
-								}}
-								role="button"
-								tabindex="0"
-							>
-								<hot-icon slot="prefix" name="location"></hot-icon>
-								<span>{m['popup.map_in_odk']()}</span>
-							</sl-button>
-						{:else}
-							<sl-button
-								loading={entitiesStore.updateEntityStatusLoading}
-								variant="primary"
-								size="small"
-								onclick={() => handleMapFeature()}
-								onkeydown={(e: KeyboardEvent) => {
-									if (e.key === 'Enter') handleMapFeature();
-								}}
-								role="button"
-								tabindex="0"
-							>
-								<hot-icon slot="prefix" name="location"></hot-icon>
-								<span>{m['dialog_entities_actions.collect_data']()}</span>
-							</sl-button>
-						{/if}
-					</div>
-				{/if}
+					{:else}
+						<sl-button
+							loading={entitiesStore.updateEntityStatusLoading}
+							variant="primary"
+							size="small"
+							onclick={() => handleMapFeature()}
+							onkeydown={(e: KeyboardEvent) => {
+								if (e.key === 'Enter') handleMapFeature();
+							}}
+							role="button"
+							tabindex="0"
+						>
+							<hot-icon slot="prefix" name="location"></hot-icon>
+							<span>{m['dialog_entities_actions.collect_data']()}</span>
+						</sl-button>
+					{/if}
+				</div>
 			</div>
 		</div>
 	</div>
