@@ -229,7 +229,7 @@ const ProjectDetailsForm = ({ flag }) => {
             {hasODKCredentials && (
               <CustomCheckbox
                 key="useDefaultODKCredentials"
-                label="Use default ODK credentials"
+                label="Use default or requested ODK credentials"
                 checked={values.useDefaultODKCredentials}
                 onCheckedChange={() => {
                   handleCustomChange('useDefaultODKCredentials', !values.useDefaultODKCredentials);
