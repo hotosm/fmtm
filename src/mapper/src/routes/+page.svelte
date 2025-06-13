@@ -50,10 +50,11 @@
 		db = await data.dbPromise;
 		commonStore.setDb(db);
 
+		// Get the project summaries on load, depending if online or offline
 		if (online.current) {
 			projectStore.fetchProjectsFromAPI(db, paginationPage, debouncedSearch);
 		} else {
-			await projectStore.fetchProjectsFromLocalDB(db);
+			projectStore.fetchProjectsFromLocalDB(db);
 		}
 	});
 </script>

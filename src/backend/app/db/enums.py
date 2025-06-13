@@ -48,6 +48,7 @@ class ProjectStatus(StrEnum, Enum):
     DRAFT = "DRAFT"
     PUBLISHED = "PUBLISHED"
     ARCHIVED = "ARCHIVED"
+    COMPLETED = "COMPLETED"
 
 
 class OrganisationType(StrEnum, Enum):
@@ -233,7 +234,7 @@ class DbGeomType(StrEnum, Enum):
 
     POINT = "POINT"
     POLYGON = "POLYGON"
-    LINESTRING = "LINESTRING"
+    POLYLINE = "POLYLINE"
 
 
 class XLSFormType(StrEnum, Enum):

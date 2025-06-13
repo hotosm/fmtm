@@ -13,6 +13,7 @@ import tables from '$migrations/init/shared/2-tables.sql?raw';
 import constraints from '$migrations/init/shared/3-constraints.sql?raw';
 import indexes from '$migrations/init/shared/4-indexes.sql?raw';
 import frontendOnlySchema from '$migrations/init/frontend-only/schema.sql?raw';
+const migrationFiles = import.meta.glob('$migrations/*.sql', { as: 'raw', eager: true });
 
 // To prevent loading the PGLite database twice, we wrap the
 // initDb function in a top-level singleton that guarantees
@@ -26,10 +27,42 @@ export function getDbOnce(): Promise<PGlite> {
 	return dbPromise;
 }
 
+// NOTE here I had the idea to create the db structure in advance,
+// NOTE export the blob as part of the build, then import at every
+// NOTE start. The problem is the output is about 4MB gzipped, so
+// NOTE this isn't any better than attempting bootstrap each time.
+export async function loadDbFromDump(dbUrl: string = DB_URL, dbDumpData: string | Blob | Uint8Array): Promise<PGlite> {
+	console.warn('DB not initialized, loading from tarball...');
+	// Can be from a URL in browser environment
+	// e.g. import dbDumpUrl from '$migrations/init/pgdata.tar.gz?url';
+
+	let dbDumpBlob: Blob;
+
+	if (typeof window !== 'undefined' && typeof fetch === 'function' && typeof dbDumpData === 'string') {
+		// Browser environment
+		const response = await fetch(dbDumpData);
+		dbDumpBlob = await response.blob();
+	} else {
+		// Node.js environment (Vitest, etc.)
+		dbDumpBlob = dbDumpData instanceof Blob ? dbDumpData : new Blob([dbDumpData], { type: 'application/x-gzip' });
+	}
+
+	return new PGlite(dbUrl, {
+		// debug: 1,
+		username: 'fmtm',
+		database: 'fmtm',
+		loadDataDir: dbDumpBlob,
+		relaxedDurability: true,
+		extensions: {
+			electric: electricSync(),
+		},
+	});
+}
+
 // Try to open existing DB and test schema, else initialise schema from scratch.
 // The tradeoff is slower performance on, first load but then better performance
 // every time after.
-export const getDb = async (): Promise<PGlite> => {
+const getDb = async (): Promise<PGlite> => {
 	if (dbPromise) {
 		return dbPromise; // Return the existing promise if already in progress
 	}
@@ -64,35 +97,27 @@ export const getDb = async (): Promise<PGlite> => {
 				throw new Error('Database schema is not initialised yet. Re-creating.');
 			}
 
+			await applyMigrations(db);
+
 			return db;
 		} catch (e) {
-			// NOTE here I had the idea to create the db structure in advance,
-			// NOTE export the blob as part of the build, then import at every
-			// NOTE start. The problem is the output is about 4MB gzipped, so
-			// NOTE this isn't any better than attempting bootstrap each time.
-			// import dbDumpUrl from '$migrations/init/pgdata.tar.gz?url';
-			// console.warn('DB not initialized, loading from tarball...');
-			// // Fetch dump and load it
-			// const response = await fetch(dbDumpUrl);
-			// const dbDumpBlob = await response.blob();
-			// const db = new PGlite(DB_URL, {
-			// 	debug: 1,
-			// 	username: 'fmtm',
-			// 	database: 'fmtm',
-			// 	loadDataDir: dbDumpBlob,
-			// 	relaxedDurability: true,
-			// 	extensions: {
-			// 		electric: electricSync(),
-			// 	},
-			// });
-
-			console.warn('Database not initialized, creating schema...');
+			// return loadDbFromDump();
 			return initDb();
 		}
 	})();
 
 	return dbPromise;
 };
+
+async function applyMigrations(db: PGlite): Promise<void> {
+	const sorted = Object.entries(migrationFiles)
+		.sort(([a], [b]) => a.localeCompare(b))
+		.map(([, sql]) => sql);
+
+	for (const sql of sorted) {
+		await db.exec(sql);
+	}
+}
 
 async function cleanupIndexedDb(dbName: string): Promise<boolean> {
 	return new Promise((resolve) => {
@@ -112,6 +137,8 @@ const initDb = async (): Promise<PGlite> => {
 	// By default PGLite uses postgres user and database
 	// We need to bootstrap by creating fmtm user and database
 	// Then reconnect to the new db as the user
+	console.warn('Database not initialized, creating schema...');
+
 	const boostrapDb = new PGlite(DB_URL);
 	await boostrapDb.query(`
 		DO $$
@@ -150,6 +177,8 @@ const initDb = async (): Promise<PGlite> => {
 		${indexes}
 		${frontendOnlySchema}
 	`);
+
+	await applyMigrations(finalDb);
 
 	return finalDb;
 };
