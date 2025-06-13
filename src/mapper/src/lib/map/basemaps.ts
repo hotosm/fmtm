@@ -61,35 +61,83 @@ export async function loadOfflinePmtiles(projectId: number) {
 	basemapStore.setProjectPmtilesUrl(pmtilesUrl);
 }
 
-async function downloadBasemap(url: string | undefined): Promise<ArrayBuffer> {
-	let basemapData: ArrayBuffer = new ArrayBuffer(0);
+async function downloadBasemap(
+	url: string | undefined,
+	onProgress?: (percent: number) => void,
+	// default to 10 minutes, as firefox sets 60s, chrome 300s
+	timeoutMs = 10 * 60 * 1000,
+): Promise<ArrayBuffer> {
+	if (!url) return new ArrayBuffer(0);
 
-	if (!url) return basemapData;
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
 	try {
-		const downloadResponse = await fetch(url);
+		const response = await fetch(url, { signal: controller.signal });
 
-		if (!downloadResponse.ok) {
-			throw new Error('Failed to download mbtiles');
+		clearTimeout(timeout);
+
+		if (!response.ok || !response.body) {
+			throw new Error('Failed to download basemap');
 		}
 
-		basemapData = await downloadResponse.arrayBuffer();
-		if (!basemapData) {
-			throw new Error('Basemap contained no data');
+		const contentLengthHeader = response.headers.get('Content-Length');
+		const contentLength = contentLengthHeader ? parseInt(contentLengthHeader, 10) : null;
+
+		const reader = response.body.getReader();
+		const chunks: Uint8Array[] = [];
+		let receivedLength = 0;
+
+		while (true) {
+			const { done, value } = await reader.read();
+			if (done) break;
+			if (value) {
+				chunks.push(value);
+				receivedLength += value.length;
+
+				if (onProgress) {
+					if (contentLength) {
+						onProgress((receivedLength / contentLength) * 100);
+					} else {
+						// Fallback: unknown total size
+						onProgress(0); // Unknown progress
+					}
+				}
+			}
 		}
-	} catch (error) {
-		console.error('Error downloading basemaps:', error);
+
+		const result = new Uint8Array(receivedLength);
+		let position = 0;
+		for (const chunk of chunks) {
+			result.set(chunk, position);
+			position += chunk.length;
+		}
+		return result.buffer;
+	} catch (error: any) {
+		if (error.name === 'AbortError') {
+			console.warn('Timeout downloading basemap', error);
+		} else {
+			console.error('Error downloading basemaps:', error);
+		}
+
 		alertStore.setAlert({
 			variant: 'danger',
 			message: m['error_downloading'](),
 		});
-	} finally {
-		return basemapData;
+
+		return new ArrayBuffer(0);
 	}
 }
 
-export async function writeOfflinePmtiles(projectId: number, url: string | undefined) {
-	const data = await downloadBasemap(url);
+export async function writeOfflinePmtiles(
+	projectId: number,
+	url: string | undefined,
+	onProgress?: (percent: number) => void,
+) {
+	const data = await downloadBasemap(url, onProgress);
+
+	// Ensure final update to 100% in case it wasn't hit exactly
+	if (onProgress) onProgress(100);
 
 	// Copy to OPFS filesystem for offline use
 	const filePath = `${projectId}/basemap.pmtiles`;

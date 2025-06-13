@@ -132,9 +132,9 @@ Alternatively see the [docs](https://docs.fmtm.dev) for various deployment guide
 | ✅ | 🖥️ optional private projects to restrict access | Since [v2025.2.0][4] |
 | ✅ | 📱 fully translated mapper UI and survey in any language | Since [v2025.2.0][4] |
 | ✅ | 📱 custom Field-TM deployments with updated branding | Since [v2025.2.0][4] |
-| 🔄 | 📱 fully offline field mapping (local-first design) | – |
+| ✅ | 📱 fully offline field mapping (local-first design) | Since [v2025.3.0][7] |
 | 🔄 | 🖥️ simplify project creation with basic / advanced workflows | – |
-| 📅 | 🖥️ pre-defined OpenStreetMap forms for easy OSM mapping | – |
+| 🔄 | 🖥️ pre-defined OpenStreetMap forms for easy OSM mapping | – |
 | 📅 | 🖥️ integration with other mobile apps: EveryDoor, StreetComplete | – |
 | 📅 | 🖥️ integration with other ODK server types: Ona.io, Kobo | – |
 | 📅 | 🖥️ multiple approaches to task splitting algorithm | – |
@@ -217,6 +217,7 @@ Thanks goes to these wonderful people:
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="http://danieljdufour.com"><img src="https://avatars.githubusercontent.com/u/4313463?v=4?s=100" width="100px;" alt="Daniel J. Dufour"/><br /><sub><b>Daniel J. Dufour</b></sub></a><br /><a href="#ideas-DanielJDufour" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/hotosm/fmtm/commits?author=DanielJDufour" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Joshua-Tihabwangye"><img src="https://avatars.githubusercontent.com/u/143622860?v=4?s=100" width="100px;" alt="Joshua-T-Walker"/><br /><sub><b>Joshua-T-Walker</b></sub></a><br /><a href="https://github.com/hotosm/fmtm/commits?author=Joshua-Tihabwangye" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://mapconcierge.com"><img src="https://avatars.githubusercontent.com/u/416977?v=4?s=100" width="100px;" alt="Taichi FURUHASHI"/><br /><sub><b>Taichi FURUHASHI</b></sub></a><br /><a href="#translation-mapconcierge" title="Translation">🌍</a></td>
     </tr>
   </tbody>
   <tfoot>
@@ -245,3 +246,4 @@ Thanks goes to these wonderful people:
 [4]: https://github.com/hotosm/fmtm/releases/tag/2025.2.0 "Web Forms"
 [5]: https://repobeats.axiom.co/api/embed/4c670cc740c638c52d6c2e822fe78a999d3994fc.svg "Repobeats analytics image"
 [6]: https://raw.githubusercontent.com/hotosm/fmtm/development/src/mapper/static/screenshot-mapper.jpeg "Mapper Page Screenshot"
+[7]: https://github.com/hotosm/fmtm/releases/tag/2025.3.0 "Offline Mode"
