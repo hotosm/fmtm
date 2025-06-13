@@ -13,6 +13,7 @@ import { radioOptionsType } from '@/models/organisation/organisationModel';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import UploadArea from '@/components/common/UploadArea';
 import { CommonActions } from '@/store/slices/CommonSlice';
+import { CustomCheckbox } from '@/components/common/Checkbox';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -164,19 +165,30 @@ const CreateEditOrganizationForm = ({ organizationId }: { organizationId: string
             required
             errorMsg={errors.description}
           />
-          <RadioButton
-            topic="ODK Server Type"
-            options={odkTypeOptions}
-            direction="column"
-            value={values.odk_server_type}
-            onChangeData={(value) => {
-              handleCustomChange('odk_server_type', value);
-            }}
-            className="fmtm-text-base fmtm-text-[#7A7676] fmtm-mt-1"
-            errorMsg={errors.odk_server_type}
-            required
-          />
-          {values?.odk_server_type === 'OWN' && (
+          {!organizationId && (
+            <RadioButton
+              topic="ODK Server Type"
+              options={odkTypeOptions}
+              direction="column"
+              value={values.odk_server_type}
+              onChangeData={(value) => {
+                handleCustomChange('odk_server_type', value);
+              }}
+              className="fmtm-text-base fmtm-text-[#7A7676] fmtm-mt-1"
+              errorMsg={errors.odk_server_type}
+              required
+            />
+          )}
+          {organizationId && (
+            <CustomCheckbox
+              label="Update ODK Credentials"
+              checked={values?.update_odk_credentials}
+              onCheckedChange={(checked) => {
+                handleCustomChange('update_odk_credentials', checked);
+              }}
+            />
+          )}
+          {(values?.odk_server_type === 'OWN' || values?.update_odk_credentials) && (
             <div className="fmtm-flex fmtm-flex-col fmtm-gap-6">
               <InputTextField
                 id="odk_central_url"
