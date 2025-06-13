@@ -62,6 +62,7 @@ let alertStore = getAlertStore();
 let entitiesSync: any = $state(undefined);
 let fgbOpfsUrl: string = $state('');
 let geomDeleteLoading: boolean = $state(false);
+let selectedEntityJavaRosaGeom: string | null = $state(null);
 
 function getEntitiesStatusStore() {
 	async function getEntityStatusStream(db: PGliteWithSync, projectId: number): Promise<ShapeStream | undefined> {
@@ -460,6 +461,10 @@ function getEntitiesStatusStore() {
 		fgbOpfsUrl = url;
 	}
 
+	function setSelectedEntityJavaRosaGeom(geom: string | null) {
+		selectedEntityJavaRosaGeom = geom;
+	}
+
 	return {
 		getEntityStatusStream: getEntityStatusStream,
 		unsubscribeEntitiesStream: unsubscribeEntitiesStream,
@@ -473,6 +478,7 @@ function getEntitiesStatusStore() {
 		setToggleGeolocation: setToggleGeolocation,
 		setUserLocationCoordinate: setUserLocationCoordinate,
 		setFgbOpfsUrl: setFgbOpfsUrl,
+		setSelectedEntityJavaRosaGeom: setSelectedEntityJavaRosaGeom,
 		get selectedEntityId() {
 			return selectedEntityId;
 		},
@@ -522,6 +528,9 @@ function getEntitiesStatusStore() {
 		},
 		get fgbOpfsUrl() {
 			return fgbOpfsUrl;
+		},
+		get selectedEntityJavaRosaGeom() {
+			return selectedEntityJavaRosaGeom;
 		},
 	};
 }
