@@ -56,7 +56,7 @@ const ManageProject = () => {
     dispatch(GetIndividualProjectDetails(`${VITE_API_URL}/projects/${projectId}?project_id=${projectId}`));
   }, [projectId]);
 
-  if (!isProjectManager && !isOrganizationAdmin) return <NoAccessComponent />;
+  if (!projectDetailsLoading && !isProjectManager && !isOrganizationAdmin) return <NoAccessComponent />;
 
   return (
     <div className="fmtm-h-full fmtm-flex fmtm-flex-col fmtm-py-3 fmtm-gap-5">
