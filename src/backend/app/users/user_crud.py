@@ -21,7 +21,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 from textwrap import dedent
-from typing import List, Literal, Optional
+from typing import Literal, Optional
 
 import aiosmtplib
 import markdown
@@ -221,7 +221,7 @@ async def send_warning_email_or_osm(
 
 
 async def send_mail(
-    user_emails: List[str],
+    user_emails: list[str],
     title: str,
     message_content: str,
 ):
