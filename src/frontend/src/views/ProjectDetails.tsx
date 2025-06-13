@@ -28,7 +28,7 @@ import boltIcon from '@/assets/icons/boltIcon.svg';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/RadixComponents/Resizable';
 import TaskList from '@/components/ProjectDetails/Tabs/TaskList';
 import { Tooltip } from '@mui/material';
-import { Skeleton } from '@/components/common/Skeleton';
+import { Skeleton } from '@/components/Skeletons';
 import { useIsOrganizationAdmin, useIsProjectManager } from '@/hooks/usePermissions';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
