@@ -23,7 +23,7 @@ from typing import Optional
 from pydantic import AwareDatetime, BaseModel
 from pydantic.functional_serializers import field_serializer
 
-from app.db.enums import ReviewStateEnum, ProjectStatus
+from app.db.enums import ProjectStatus, ReviewStateEnum
 from app.db.postgis_utils import timestamp
 
 
