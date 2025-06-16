@@ -951,7 +951,7 @@ async def generate_basemap(
 async def update_project(
     new_data: project_schemas.ProjectUpdate,
     project_user_dict: Annotated[
-        ProjectUserDict, Depends(ProjectManager(check_completed=True))
+        ProjectUserDict, Depends(ProjectManager())
     ],
     db: Annotated[Connection, Depends(db_conn)],
 ):
