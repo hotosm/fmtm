@@ -285,16 +285,11 @@ async def set_odk_entities_mapping_status(
     """
     project = project_user.get("project")
     new_status = EntityState(int(entity_details.status)).name
-    update_success = await DbOdkEntities.update(
+    await DbOdkEntities.update(
         db,
         entity_details.entity_id,
         OdkEntitiesUpdate(status=new_status),
     )
-    if not update_success:
-        raise HTTPException(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail=f"Error updating entity ({entity_details.entity_id})",
-        )
     return await central_crud.update_entity_mapping_status(
         project.odk_credentials,
         project.odkid,
