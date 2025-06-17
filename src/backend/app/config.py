@@ -389,7 +389,7 @@ class Settings(BaseSettings):
 def get_settings():
     """Cache settings when accessed throughout app."""
     _settings = Settings()
-
+    _settings.DEBUG = True
     if _settings.DEBUG:
         # Enable detailed Python async debugger
         os.environ["PYTHONASYNCIODEBUG"] = "1"
