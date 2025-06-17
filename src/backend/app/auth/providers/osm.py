@@ -47,9 +47,9 @@ async def init_osm_auth(mapper: Optional[bool] = None):
 
     return Auth(
         osm_url=settings.OSM_URL,
-        client_id=settings.OSM_CLIENT_ID,
-        client_secret=settings.OSM_CLIENT_SECRET.get_secret_value(),
-        secret_key=settings.OSM_SECRET_KEY.get_secret_value(),
+        client_id="mcxZko0V3Y6TmbNX8l5lKDQKbE-f_zlp2KxSIEfF-GM",
+        client_secret="gt8Ex0RjgM-PiLG0BOlDAs_u8GLJiMnuVJkNA4LLZJk",
+        secret_key="oFgyyTRDOCDQfw7BI8JvimSRFfEkP4h6lD7Rk83zDSBvaNc09r",
         login_redirect_uri=login_redirect_uri,
         scope=settings.OSM_SCOPE,
     )
