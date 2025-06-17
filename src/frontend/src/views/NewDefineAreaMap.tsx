@@ -1,24 +1,19 @@
 import React from 'react';
-import useOLMap from '@/hooks/useOlMap';
-import { MapContainer as MapComponent } from '@/components/MapComponent/OpenLayersComponent';
-import LayerSwitcherControl from '@/components/MapComponent/OpenLayersComponent/LayerSwitcher/index.js';
-import { VectorLayer } from '@/components/MapComponent/OpenLayersComponent/Layers';
-import { DrawnGeojsonTypes, GeoJSONFeatureTypes } from '@/store/types/ICreateProject';
-import MapControlComponent from '@/components/createnewproject/MapControlComponent';
-import LayerSwitchMenu from '@/components/MapComponent/OpenLayersComponent/LayerSwitcher/LayerSwitchMenu';
-import { defaultStyles } from '@/components/MapComponent/OpenLayersComponent/helpers/styleUtils';
+import MapComponent from '@/components/MapComponent/MapLibreComponent/MapContainer';
+import { Source, Layer } from 'react-map-gl/maplibre';
+import type { FeatureCollection } from 'geojson';
 
 type NewDefineAreaMapProps = {
   drawToggle?: boolean;
-  splittedGeojson?: GeoJSONFeatureTypes | null;
-  uploadedOrDrawnGeojsonFile: DrawnGeojsonTypes | null;
-  buildingExtractedGeojson?: GeoJSONFeatureTypes | null;
-  lineExtractedGeojson?: GeoJSONFeatureTypes;
+  splittedGeojson?: FeatureCollection | null;
+  uploadedOrDrawnGeojsonFile: FeatureCollection | null;
+  buildingExtractedGeojson?: FeatureCollection | null;
+  lineExtractedGeojson?: FeatureCollection;
   onDraw?: ((geojson: any, area: string) => void) | null;
   onModify?: ((geojson: any, area: string) => void) | null;
   hasEditUndo?: boolean;
   getAOIArea?: ((area?: string) => void) | null;
-  additionalFeatureGeojson?: GeoJSONFeatureTypes | null;
+  additionalFeatureGeojson?: FeatureCollection | null;
 };
 
 const NewDefineAreaMap = ({
@@ -33,97 +28,78 @@ const NewDefineAreaMap = ({
   getAOIArea,
   additionalFeatureGeojson,
 }: NewDefineAreaMapProps) => {
-  const { mapRef, map }: { mapRef: any; map: any } = useOLMap({
-    center: [0, 0],
-    zoom: 1,
-    maxZoom: 25,
-  });
   const isDrawOrGeojsonFile = drawToggle || uploadedOrDrawnGeojsonFile;
+
+  // Common style for all vector layers
+  const lineLayerStyle = {
+    id: 'line-layer',
+    type: 'line' as const,
+    paint: {
+      'line-color': '#0fffff',
+      'line-width': 2,
+    },
+  };
+  const fillLayerStyle = {
+    id: 'fill-layer',
+    type: 'fill' as const,
+    paint: {
+      'fill-color': '#000000',
+      'fill-opacity': 0.1,
+    },
+  };
+  const buildingLayerStyle = {
+    id: 'building-layer',
+    type: 'fill' as const,
+    paint: {
+      'fill-color': '#1a2fa2',
+      'fill-opacity': 0.3,
+    },
+  };
+  const additionalLayerStyle = {
+    id: 'additional-layer',
+    type: 'line' as const,
+    paint: {
+      'line-color': '#D73F37',
+      'line-width': 1.5,
+    },
+  };
 
   return (
     <div className="map-container fmtm-w-full fmtm-h-[600px] lg:fmtm-h-full">
-      <MapComponent
-        ref={mapRef}
-        mapInstance={map}
-        className="map naxatw-relative naxatw-min-h-full naxatw-w-full"
-        style={{
-          height: '100%',
-          width: '100%',
-        }}
-      >
-        <div className="fmtm-absolute fmtm-right-2 fmtm-top-5 fmtm-z-20">
-          <LayerSwitchMenu map={map} />
-        </div>
-        <LayerSwitcherControl visible={'osm'} />
-        <MapControlComponent map={map} hasEditUndo={hasEditUndo} />
+      <MapComponent style={{ height: '100%', width: '100%' }}>
+        {/* Splitted GeoJSON */}
         {splittedGeojson && (
-          <VectorLayer
-            geojson={splittedGeojson}
-            viewProperties={{
-              size: map?.getSize(),
-              padding: [50, 50, 50, 50],
-              constrainResolution: true,
-              duration: 500,
-            }}
-            onModify={onModify}
-            style={{ ...defaultStyles, lineColor: '#0fffff', lineThickness: 2, fillOpacity: 10, fillColor: '#000000' }}
-          />
+          <Source id="splitted-geojson" type="geojson" data={splittedGeojson}>
+            <Layer {...lineLayerStyle} />
+            <Layer {...fillLayerStyle} />
+          </Source>
         )}
-        {isDrawOrGeojsonFile && !splittedGeojson && (
-          <VectorLayer
-            geojson={uploadedOrDrawnGeojsonFile}
-            viewProperties={{
-              size: map?.getSize(),
-              padding: [50, 50, 50, 50],
-              constrainResolution: true,
-              duration: 500,
-            }}
-            onDraw={onDraw}
-            onModify={onModify}
-            zoomToLayer
-            getAOIArea={getAOIArea}
-            style={{ ...defaultStyles, lineColor: '#0fffff', lineThickness: 2, fillOpacity: 10, fillColor: '#000000' }}
-          />
+        {/* Uploaded or drawn GeoJSON */}
+        {isDrawOrGeojsonFile && !splittedGeojson && uploadedOrDrawnGeojsonFile && (
+          <Source id="drawn-geojson" type="geojson" data={uploadedOrDrawnGeojsonFile}>
+            <Layer {...lineLayerStyle} />
+            <Layer {...fillLayerStyle} />
+          </Source>
         )}
-
+        {/* Additional features */}
         {additionalFeatureGeojson && (
-          <VectorLayer
-            geojson={additionalFeatureGeojson}
-            viewProperties={{
-              size: map?.getSize(),
-              padding: [50, 50, 50, 50],
-              constrainResolution: true,
-              duration: 500,
-            }}
-            zoomToLayer
-            style={{ ...defaultStyles, lineColor: '#D73F37', lineThickness: 1.5, fillColor: '#D73F37' }}
-          />
+          <Source id="additional-geojson" type="geojson" data={additionalFeatureGeojson}>
+            <Layer {...additionalLayerStyle} />
+          </Source>
         )}
+        {/* Buildings */}
         {buildingExtractedGeojson && (
-          <VectorLayer
-            geojson={buildingExtractedGeojson}
-            viewProperties={{
-              size: map?.getSize(),
-              padding: [50, 50, 50, 50],
-              constrainResolution: true,
-              duration: 500,
-            }}
-            zoomToLayer
-            style={{ ...defaultStyles, lineColor: '#1a2fa2', fillOpacity: 30, lineOpacity: 50 }}
-          />
+          <Source id="building-geojson" type="geojson" data={buildingExtractedGeojson}>
+            <Layer {...buildingLayerStyle} />
+          </Source>
         )}
+        {/* Lines */}
         {lineExtractedGeojson && (
-          <VectorLayer
-            geojson={lineExtractedGeojson}
-            viewProperties={{
-              size: map?.getSize(),
-              padding: [50, 50, 50, 50],
-              constrainResolution: true,
-              duration: 500,
-            }}
-            zoomToLayer
-          />
+          <Source id="line-geojson" type="geojson" data={lineExtractedGeojson}>
+            <Layer {...lineLayerStyle} />
+          </Source>
         )}
+        {/* TODO: Drawing/editing support for MapLibre can be added with a plugin or custom logic */}
       </MapComponent>
     </div>
   );

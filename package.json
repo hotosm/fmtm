@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "@mapbox/mapbox-gl-draw": "^1.5.0",
+    "@types/mapbox__mapbox-gl-draw": "^1.4.9",
+    "@types/react-router-dom": "^5.3.3",
+    "maplibre-gl": "^5.6.0",
+    "react-map-gl": "^8.0.4",
+    "react-maplibre-gl": "^1.0.8",
+    "react-router-dom": "^5.3.4"
+  },
+  "devDependencies": {
+    "@types/react-map-gl": "^6.1.7"
+  }
+}

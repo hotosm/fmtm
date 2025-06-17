@@ -1,68 +1,45 @@
-import { Fill, Icon, Stroke, Style } from 'ol/style';
-import { asArray } from 'ol/color';
-import { Point } from 'ol/geom';
 import AssetModules from '@/shared/AssetModules';
 import { GeoGeomTypesEnum } from '@/types/enums';
-import { centroid } from '@turf/centroid';
-import getFeatureGeojson from '@/components/MapComponent/OpenLayersComponent/helpers/getFeatureGeojson';
 
 function createPolygonStyle(fillColor: string, strokeColor: string) {
-  return new Style({
-    stroke: new Stroke({
-      color: strokeColor,
-      width: 3,
-    }),
-    fill: new Fill({
-      color: fillColor,
-    }),
-    zIndex: 10,
-  });
+  return {
+    'fill-color': fillColor,
+    'fill-opacity': 0.6,
+    'stroke-color': strokeColor,
+    'stroke-width': 2,
+  };
 }
 
 function createFeaturePolygonStyle(color: string, strokeOpacity: number = 1, strokeColor: string) {
-  return new Style({
-    stroke: new Stroke({
-      color: strokeColor,
-      width: 1,
-      opacity: strokeOpacity,
-    }),
-    fill: new Fill({
-      color: color,
-    }),
-  });
+  return {
+    'fill-color': color,
+    'fill-opacity': 0.6,
+    'stroke-color': strokeColor,
+    'stroke-width': 1,
+    'stroke-opacity': strokeOpacity,
+  };
 }
 
 function createFeatureLineStyle(strokeColor: string) {
-  return new Style({
-    stroke: new Stroke({
-      color: strokeColor,
-      width: 3,
-    }),
-  });
+  return {
+    'stroke-color': strokeColor,
+    'stroke-width': 3,
+  };
 }
 
-function createIconStyle(iconSrc: string, scale: number = 0.8, color: any = 'red') {
-  return new Style({
-    image: new Icon({
-      anchor: [0.5, 1],
-      scale: scale,
-      anchorXUnits: 'fraction',
-      anchorYUnits: 'pixels',
-      src: iconSrc,
-      color: color,
-      opacity: 1,
-    }),
-    geometry: function (feature) {
-      const polygonCoord = getFeatureGeojson(feature, {});
-      const polygonCentroid = centroid(polygonCoord)?.geometry?.coordinates;
-      return new Point(polygonCentroid);
-    },
-  });
-}
-
-function updateRbgAlpha(colorString: string, alphaVal: number) {
-  const val = asArray(colorString);
-  return `rgb(${val.slice(0, 3).join(',')},${alphaVal})`;
+function createIconStyle(iconSrc: string, scale: number = 0.8) {
+  return {
+    'icon-image': iconSrc,
+    'icon-size': scale,
+    'icon-anchor': [0.5, 1],
+    'icon-offset': [0, 0],
+    'icon-opacity': 1,
+    'text-field': '',
+    'text-font': [],
+    'text-size': 0,
+    'text-offset': [0, 0],
+    'text-anchor': 'middle',
+  };
 }
 
 const strokeColor = 'rgb(0,0,0,0.3)';
@@ -86,35 +63,23 @@ const getTaskStatusStyle = (feature: Record<string, any>, mapTheme: Record<strin
   const redIconStyle = createIconStyle(AssetModules.RedLockPng);
 
   const geojsonStyles = {
-    UNLOCKED_TO_MAP: new Style({
-      stroke: new Stroke({
-        color: borderStrokeColor,
-        width: 3,
-      }),
-      fill: new Fill({
-        color: mapTheme.palette.mapFeatureColors.UNLOCKED_TO_MAP,
-      }),
-    }),
+    UNLOCKED_TO_MAP: {
+      'fill-color': mapTheme.palette.mapFeatureColors.UNLOCKED_TO_MAP,
+      'stroke-color': borderStrokeColor,
+      'stroke-width': 3,
+    },
     LOCKED_FOR_MAPPING: [lockedPolygonStyle, iconStyle],
-    UNLOCKED_TO_VALIDATE: new Style({
-      stroke: new Stroke({
-        color: borderStrokeColor,
-        width: 3,
-      }),
-      fill: new Fill({
-        color: mapTheme.palette.mapFeatureColors.UNLOCKED_TO_VALIDATE,
-      }),
-    }),
+    UNLOCKED_TO_VALIDATE: {
+      'fill-color': mapTheme.palette.mapFeatureColors.UNLOCKED_TO_VALIDATE,
+      'stroke-color': borderStrokeColor,
+      'stroke-width': 3,
+    },
     LOCKED_FOR_VALIDATION: [lockedValidationStyle, redIconStyle],
-    UNLOCKED_DONE: new Style({
-      stroke: new Stroke({
-        color: borderStrokeColor,
-        width: 3,
-      }),
-      fill: new Fill({
-        color: mapTheme.palette.mapFeatureColors.UNLOCKED_DONE,
-      }),
-    }),
+    UNLOCKED_DONE: {
+      'fill-color': mapTheme.palette.mapFeatureColors.UNLOCKED_DONE,
+      'stroke-color': borderStrokeColor,
+      'stroke-width': 3,
+    },
   };
   return geojsonStyles[status];
 };
@@ -132,27 +97,27 @@ export const getFeatureStatusStyle = (
       READY: createIconStyle(
         AssetModules.MapPinGrey,
         isEntitySelected ? 2 : 1,
-        updateRbgAlpha(mapTheme.palette.entityStatusColors.ready, 1),
+        mapTheme.palette.entityStatusColors.ready,
       ),
       OPENED_IN_ODK: createIconStyle(
         AssetModules.MapPinGrey,
         isEntitySelected ? 2 : 1,
-        updateRbgAlpha(mapTheme.palette.entityStatusColors.opened_in_odk, 1),
+        mapTheme.palette.entityStatusColors.opened_in_odk,
       ),
       SURVEY_SUBMITTED: createIconStyle(
         AssetModules.MapPinGrey,
         isEntitySelected ? 2 : 1,
-        updateRbgAlpha(mapTheme.palette.entityStatusColors.survey_submitted, 1),
+        mapTheme.palette.entityStatusColors.survey_submitted,
       ),
       MARKED_BAD: createIconStyle(
         AssetModules.MapPinGrey,
         isEntitySelected ? 2 : 1,
-        updateRbgAlpha(mapTheme.palette.entityStatusColors.marked_bad, 1),
+        mapTheme.palette.entityStatusColors.marked_bad,
       ),
       VALIDATED: createIconStyle(
         AssetModules.MapPinGrey,
         isEntitySelected ? 1.5 : 1,
-        updateRbgAlpha(mapTheme.palette.entityStatusColors.validated, 1),
+        mapTheme.palette.entityStatusColors.validated,
       ),
     };
   } else if (geomType === GeoGeomTypesEnum.POLYGON) {

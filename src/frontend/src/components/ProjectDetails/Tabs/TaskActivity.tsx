@@ -1,8 +1,6 @@
 /* eslint-disable react/jsx-key */
 import React, { useEffect, useState } from 'react';
 import AssetModules from '@/shared/AssetModules';
-import { Feature } from 'ol';
-import { Polygon } from 'ol/geom';
 import { useAppSelector } from '@/types/reduxTypes';
 import { projectTaskActivity } from '@/store/types/IProject';
 import { projectTaskBoundriesType } from '@/models/project/projectModel';
@@ -13,11 +11,9 @@ import ShowingCountSkeleton from '@/components/Skeletons/ProjectDetails/ShowingC
 type taskActivityType = {
   defaultTheme: any;
   state: projectTaskBoundriesType[];
-  params: Record<string, any>;
-  map: any;
 };
 
-const TaskActivity = ({ defaultTheme, state, params, map }: taskActivityType) => {
+const TaskActivity = ({ defaultTheme, state }: taskActivityType) => {
   const [searchText, setSearchText] = useState<string>('');
   const [taskHistories, setTaskHistories] = useState<projectTaskActivity[]>([]);
   const [allActivities, setAllActivities] = useState(0);
@@ -42,26 +38,6 @@ const TaskActivity = ({ defaultTheme, state, params, map }: taskActivityType) =>
       setTaskHistories(taskHistories);
     }
   }, [state, searchText, projectTaskActivityList, selectedTask]);
-
-  const zoomToTask = (taskId: number | null) => {
-    let geojson: Record<string, any> = {};
-    const index = state.findIndex((project) => project.id == params.id);
-    if (index != -1) {
-      const taskIndex = state[index]?.taskBoundries.findIndex((task) => task?.id == taskId);
-      if (index != -1) {
-        geojson = state[index]?.taskBoundries[taskIndex]?.outline;
-      }
-    }
-
-    const olFeature = new Feature({
-      geometry: new Polygon(geojson?.coordinates).transform('EPSG:4326', 'EPSG:3857'),
-    });
-    // Get the extent of the OpenLayers feature
-    const extent = olFeature.getGeometry()?.getExtent();
-    map.getView().fit(extent, {
-      padding: [0, 0, 0, 0],
-    });
-  };
 
   const ActivitiesCard = ({ taskEvent }: { taskEvent: projectTaskActivity }) => {
     const actionDate = taskEvent?.created_at?.split('T')[0];
@@ -98,7 +74,7 @@ const TaskActivity = ({ defaultTheme, state, params, map }: taskActivityType) =>
             </div>
           </div>
         </div>
-        <div title="Zoom to Task" onClick={() => zoomToTask(selectedTask)}>
+        <div title="Zoom to Task">
           <AssetModules.MapIcon
             className="fmtm-text-[#9B9999] hover:fmtm-text-[#555555] fmtm-cursor-pointer"
             style={{ fontSize: '20px' }}
