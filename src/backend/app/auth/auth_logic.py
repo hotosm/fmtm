@@ -138,7 +138,7 @@ def create_jwt_tokens(input_data: dict) -> tuple[str, str]:
     # Set refresh token expiry to 7 days
     refresh_token_data = {**input_data, "exp": int(time()) + 86400 * 7}
 
-    encryption_key = settings.ENCRYPTION_KEY.get_secret_value()
+    encryption_key = "pIxxYIXe4oAVHI36lTveyc97FKK2O_l2VHeiuqU-K_4="
     algorithm = settings.JWT_ENCRYPTION_ALGORITHM
 
     access_token = jwt.encode(access_token_data, encryption_key, algorithm=algorithm)
@@ -156,7 +156,7 @@ def refresh_jwt_token(
     payload["exp"] = int(time()) + expiry_seconds
     return jwt.encode(
         payload,
-        settings.ENCRYPTION_KEY.get_secret_value(),
+        "pIxxYIXe4oAVHI36lTveyc97FKK2O_l2VHeiuqU-K_4=",
         algorithm=settings.JWT_ENCRYPTION_ALGORITHM,
     )
 
@@ -178,7 +178,7 @@ def verify_jwt_token(token: str, ignore_expiry: bool = False) -> dict:
     try:
         return jwt.decode(
             token,
-            settings.ENCRYPTION_KEY.get_secret_value(),
+            "pIxxYIXe4oAVHI36lTveyc97FKK2O_l2VHeiuqU-K_4=",
             algorithms=[settings.JWT_ENCRYPTION_ALGORITHM],
             audience=settings.FMTM_DOMAIN,
             options={"verify_exp": False if ignore_expiry else True},
