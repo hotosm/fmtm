@@ -1,8 +1,8 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable react/jsx-no-useless-fragment */
-import React from 'react';
-import '../map.scss';
+import React from "react";
+import "../map.scss";
 
 const { Children, cloneElement } = React;
 
@@ -16,7 +16,9 @@ const MapContainer = ({ children, mapInstance = null, ref, ...rest }) => {
       {childrenCount < 1 ? (
         <></>
       ) : childrenCount > 1 ? (
-        Children.map(children, (child) => (child ? cloneElement(child, { ...props, ref: null }) : <></>))
+        Children.map(children, (child) =>
+          child ? cloneElement(child, { ...props, ref: null }) : <></>,
+        )
       ) : (
         cloneElement(children, { ...props, ref: null })
       )}
@@ -30,6 +32,6 @@ const MapContainer = ({ children, mapInstance = null, ref, ...rest }) => {
 //   mapInstance: PropTypes.oneOfType([PropTypes.object, PropTypes.number]),
 // };
 
-MapContainer.displayName = 'MapContainer';
+MapContainer.displayName = "MapContainer";
 
 export default MapContainer;

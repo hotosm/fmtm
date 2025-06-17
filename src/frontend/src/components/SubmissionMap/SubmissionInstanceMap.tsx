@@ -27,11 +27,7 @@ const SubmissionInstanceMap = ({ featureGeojson }: submissionInstanceMapPropType
     filter: ['has', 'point_count'] as any,
     paint: {
       'circle-color': '#D73F37',
-      'circle-radius': [
-        'step',
-        ['get', 'point_count'],
-        20, 10, 30, 50, 40
-      ] as any,
+      'circle-radius': ['step', ['get', 'point_count'], 20, 10, 30, 50, 40] as any,
       'circle-opacity': 0.9,
     },
   };
@@ -71,17 +67,10 @@ const SubmissionInstanceMap = ({ featureGeojson }: submissionInstanceMapPropType
 
   return (
     <div className="map-container" style={{ height: '100%' }}>
-      <MapComponent
-        style={{ height: '100%', width: '100%' }}
-        onClick={onMapClick}
-      >
+      <MapComponent style={{ height: '100%', width: '100%' }} onClick={onMapClick}>
         {/* Vector Layer */}
         {featureGeojson?.vectorLayerGeojson?.type && (
-          <Source
-            id="vector-source"
-            type="geojson"
-            data={featureGeojson.vectorLayerGeojson}
-          >
+          <Source id="vector-source" type="geojson" data={featureGeojson.vectorLayerGeojson}>
             <Layer {...vectorLayer} />
           </Source>
         )}

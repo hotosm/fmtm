@@ -1,9 +1,9 @@
 /* eslint-disable no-promise-executor-return */
-import * as olExtent from 'ol/extent';
-import { Point } from 'ol/geom';
-import VectorLayer from 'ol/layer/Vector';
-import VectorTileLayer from 'ol/layer/VectorTile';
-import { fromLonLat } from 'ol/proj';
+import * as olExtent from "ol/extent";
+import { Point } from "ol/geom";
+import VectorLayer from "ol/layer/Vector";
+import VectorTileLayer from "ol/layer/VectorTile";
+import { fromLonLat } from "ol/proj";
 
 export function zoomToLatLng(map, latLng, options = {}) {
   const [lat, lng] = latLng;
@@ -43,7 +43,7 @@ export async function getOverallLayerExtent(map) {
     if (layer instanceof VectorTileLayer) {
       // eslint-disable-next-line
       await new Promise((resolve) =>
-        layerArr[i].getSource().on('tileloadend', async (evt) => {
+        layerArr[i].getSource().on("tileloadend", async (evt) => {
           const feature = await evt.tile.getFeatures();
           feature.forEach((feat) => {
             const featureExtent = feat.getExtent();

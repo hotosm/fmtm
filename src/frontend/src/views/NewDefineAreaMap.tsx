@@ -67,7 +67,7 @@ const NewDefineAreaMap = ({
   return (
     <div className="map-container fmtm-w-full fmtm-h-[600px] lg:fmtm-h-full">
       <MapComponent style={{ height: '100%', width: '100%' }}>
-        {/* Splitted GeoJSON */}
+        {/* Split GeoJSON */}
         {splittedGeojson && (
           <Source id="splitted-geojson" type="geojson" data={splittedGeojson}>
             <Layer {...lineLayerStyle} />

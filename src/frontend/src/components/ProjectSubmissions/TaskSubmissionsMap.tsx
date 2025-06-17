@@ -199,9 +199,7 @@ const TaskSubmissionsMap = () => {
           width: '100%',
         }}
       >
-        {taskBoundaries && (
-          <></>
-        )}
+        {taskBoundaries && <></>}
         <div className="fmtm-absolute fmtm-bottom-2 fmtm-left-2 sm:fmtm-bottom-5 sm:fmtm-left-5 fmtm-z-50 fmtm-rounded-lg">
           <Accordion
             body={<TaskSubmissionsMapLegend legendColorArray={legendColorArray} />}
@@ -216,9 +214,7 @@ const TaskSubmissionsMap = () => {
           />
         </div>
         {taskInfo?.length > 0 && <></>}
-        {dataExtractUrl && isValidUrl(dataExtractUrl) && (
-          <></>
-        )}
+        {dataExtractUrl && isValidUrl(dataExtractUrl) && <></>}
       </MapComponent>
     </CoreModules.Box>
   );

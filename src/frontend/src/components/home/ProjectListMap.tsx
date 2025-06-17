@@ -34,11 +34,7 @@ const ProjectListMap = () => {
     filter: ['has', 'point_count'] as any,
     paint: {
       'circle-color': '#D73F37',
-      'circle-radius': [
-        'step',
-        ['get', 'point_count'],
-        20, 10, 30, 50, 40
-      ] as any,
+      'circle-radius': ['step', ['get', 'point_count'], 20, 10, 30, 50, 40] as any,
       'circle-opacity': 0.9,
     },
   };
@@ -90,21 +86,20 @@ const ProjectListMap = () => {
   }, []);
 
   // Handle click on unclustered point
-  const onMapClick = useCallback((event) => {
-    if (!event.features || event.features.length === 0) return;
-    const feature = event.features[0];
-    if (!feature.properties?.id) return;
-    navigate(`/project/${feature.properties.id}`);
-  }, [navigate]);
+  const onMapClick = useCallback(
+    (event) => {
+      if (!event.features || event.features.length === 0) return;
+      const feature = event.features[0];
+      if (!feature.properties?.id) return;
+      navigate(`/project/${feature.properties.id}`);
+    },
+    [navigate],
+  );
 
   return (
     <div className="lg:fmtm-order-last lg:fmtm-w-[50%] fmtm-h-[33rem] lg:fmtm-h-full fmtm-bg-gray-300 fmtm-mx-0 lg:fmtm-mx-4 fmtm-mb-2 fmtm-rounded-lg fmtm-overflow-hidden">
       <div className="map-container" style={{ height: '100%' }}>
-        <MapComponent
-          style={{ height: '100%', width: '100%' }}
-          onLoad={onMapLoad}
-          onClick={onMapClick}
-        >
+        <MapComponent style={{ height: '100%', width: '100%' }} onLoad={onMapLoad} onClick={onMapClick}>
           <Source
             id="projects"
             type="geojson"

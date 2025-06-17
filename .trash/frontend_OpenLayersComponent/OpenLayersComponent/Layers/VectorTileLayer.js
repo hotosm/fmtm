@@ -1,19 +1,22 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from "react";
 // import * as olExtent from 'ol/extent';
-import VectorTile from 'ol/layer/VectorTile';
-import MVT from 'ol/format/MVT';
-import VectorTileSource from 'ol/source/VectorTile';
-import { transformExtent } from 'ol/proj';
-import Stroke from 'ol/style/Stroke';
-import Style from 'ol/style/Style';
-import { getStyles, defaultStyles } from '@/components/MapComponent/OpenLayersComponent/helpers/styleUtils';
-import { isExtentValid } from '@/components/MapComponent/OpenLayersComponent/helpers/layerUtils';
+import VectorTile from "ol/layer/VectorTile";
+import MVT from "ol/format/MVT";
+import VectorTileSource from "ol/source/VectorTile";
+import { transformExtent } from "ol/proj";
+import Stroke from "ol/style/Stroke";
+import Style from "ol/style/Style";
+import {
+  getStyles,
+  defaultStyles,
+} from "@/components/MapComponent/OpenLayersComponent/helpers/styleUtils";
+import { isExtentValid } from "@/components/MapComponent/OpenLayersComponent/helpers/layerUtils";
 
-const selectElement = 'singleselect';
+const selectElement = "singleselect";
 
 const selectedCountry = new Style({
   stroke: new Stroke({
-    color: 'rgba(255,255,255,0.8)',
+    color: "rgba(255,255,255,0.8)",
     width: 3,
   }),
   // fill: new Fill({
@@ -37,13 +40,13 @@ const VectorTileLayer = ({
   const vectorTileLayer = useMemo(
     () =>
       new VectorTile({
-        renderMode: 'hybrid',
+        renderMode: "hybrid",
         // declutter: true,
       }),
     [],
   );
 
-  vectorTileLayer.setProperties({ name: 'site' });
+  vectorTileLayer.setProperties({ name: "site" });
 
   // add source to layer
   useEffect(() => {
@@ -51,12 +54,12 @@ const VectorTileLayer = ({
 
     const requestHeader = new Headers();
     if (authToken) {
-      requestHeader.append('Authorization', `Token ${authToken}`);
+      requestHeader.append("Authorization", `Token ${authToken}`);
     }
 
     const vectorTileSource = new VectorTileSource({
       // format: new MVT({ featureClass: Feature }),
-      format: new MVT({ idProperty: 'id' }),
+      format: new MVT({ idProperty: "id" }),
       maxZoom: 19,
       url,
       transition: 0,
@@ -100,7 +103,9 @@ const VectorTileLayer = ({
   // set style
   useEffect(() => {
     if (!map || !visibleOnMap || setStyle) return;
-    vectorTileLayer.setStyle((feature, resolution) => getStyles({ style, feature, resolution }));
+    vectorTileLayer.setStyle((feature, resolution) =>
+      getStyles({ style, feature, resolution }),
+    );
   }, [map, style, vectorTileLayer, visibleOnMap, setStyle]);
 
   // set z-index
@@ -157,7 +162,7 @@ const VectorTileLayer = ({
     if (!hoverEffect) return null;
     const selectionLayer = new VectorTile({
       map,
-      renderMode: 'vector',
+      renderMode: "vector",
       source: vectorTileLayer.getSource(),
       // eslint-disable-next-line consistent-return
       style: (feature) => {
@@ -179,7 +184,7 @@ const VectorTileLayer = ({
           return;
         }
         const fid = feature.getId();
-        if (selectElement.startsWith('singleselect')) {
+        if (selectElement.startsWith("singleselect")) {
           selection = {};
         }
         // add selected feature to lookup
@@ -188,16 +193,16 @@ const VectorTileLayer = ({
         selectionLayer.changed();
       });
     }
-    map.on('pointermove', pointerMovefn);
+    map.on("pointermove", pointerMovefn);
     return () => {
-      map.un('pointermove', pointerMovefn);
+      map.un("pointermove", pointerMovefn);
     };
   }, [vectorTileLayer]);
 
   // zoom to layer
   useEffect(() => {
     if (!map || !vectorTileLayer || !zoomToLayer || !bbox) return;
-    const transformedExtent = transformExtent(bbox, 'EPSG:4326', 'EPSG:3857');
+    const transformedExtent = transformExtent(bbox, "EPSG:4326", "EPSG:3857");
     if (!isExtentValid(transformedExtent)) return;
     map.getView().fit(transformedExtent, {
       padding: [50, 50, 50, 50],
@@ -207,7 +212,10 @@ const VectorTileLayer = ({
   }, [map, vectorTileLayer, zoomToLayer, bbox]);
 
   // cleanup
-  useEffect(() => () => map && map.removeLayer(vectorTileLayer), [map, vectorTileLayer]);
+  useEffect(
+    () => () => map && map.removeLayer(vectorTileLayer),
+    [map, vectorTileLayer],
+  );
 
   return null;
 };

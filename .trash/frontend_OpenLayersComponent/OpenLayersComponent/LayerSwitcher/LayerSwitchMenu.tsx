@@ -1,20 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import osmImg from '@/assets/images/osmLayer.png';
-import satelliteImg from '@/assets/images/satelliteLayer.png';
-import { useAppSelector } from '@/types/reduxTypes';
-import { useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import osmImg from "@/assets/images/osmLayer.png";
+import satelliteImg from "@/assets/images/satelliteLayer.png";
+import { useAppSelector } from "@/types/reduxTypes";
+import { useLocation } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuPortal,
-} from '@/components/common/Dropdown';
-import { Tooltip } from '@mui/material';
+} from "@/components/common/Dropdown";
+import { Tooltip } from "@mui/material";
 
 export const layerIcons = {
   Satellite: satelliteImg,
   OSM: osmImg,
-  'TMS Layer': satelliteImg,
+  "TMS Layer": satelliteImg,
 };
 
 type layerCardPropType = {
@@ -23,23 +23,29 @@ type layerCardPropType = {
   active: boolean;
 };
 
-const LayerCard = ({ layer, changeBaseLayerHandler, active }: layerCardPropType) => {
+const LayerCard = ({
+  layer,
+  changeBaseLayerHandler,
+  active,
+}: layerCardPropType) => {
   return (
     <li
       className={`fmtm-flex fmtm-justify-center fmtm-items-center fmtm-flex-col fmtm-cursor-pointer fmtm-group/layer`}
       onClick={() => changeBaseLayerHandler(layer)}
       onKeyDown={() => changeBaseLayerHandler(layer)}
     >
-      {layer === 'None' ? (
+      {layer === "None" ? (
         <div
           className={`fmtm-w-[3rem] fmtm-duration-200 fmtm-h-[3rem] fmtm-rounded-md group-hover/layer:fmtm-border-primaryRed fmtm-border-[2px] ${
-            active ? '!fmtm-border-primaryRed' : 'fmtm-border-grey-100'
+            active ? "!fmtm-border-primaryRed" : "fmtm-border-grey-100"
           }`}
         ></div>
       ) : (
         <img
           className={`group-hover/layer:fmtm-border-primaryRed fmtm-w-[3rem] fmtm-h-[3rem] fmtm-border-[2px] fmtm-bg-contain fmtm-rounded-md ${
-            active ? '!fmtm-border-primaryRed fmtm-duration-200' : 'fmtm-border-grey-100'
+            active
+              ? "!fmtm-border-primaryRed fmtm-duration-200"
+              : "fmtm-border-grey-100"
           }`}
           src={layerIcons[layer] ? layerIcons[layer] : satelliteImg}
           alt={`${layer} Layer`}
@@ -47,7 +53,7 @@ const LayerCard = ({ layer, changeBaseLayerHandler, active }: layerCardPropType)
       )}
       <p
         className={`fmtm-body-sm fmtm-flex fmtm-justify-center group-hover/layer:fmtm-text-primaryRed fmtm-duration-200 ${
-          active ? 'fmtm-text-primaryRed' : ''
+          active ? "fmtm-text-primaryRed" : ""
         }`}
       >
         {layer}
@@ -56,41 +62,52 @@ const LayerCard = ({ layer, changeBaseLayerHandler, active }: layerCardPropType)
   );
 };
 
-const LayerSwitchMenu = ({ map, pmTileLayerUrl = null }: { map: any; pmTileLayerUrl?: any }) => {
+const LayerSwitchMenu = ({
+  map,
+  pmTileLayerUrl = null,
+}: {
+  map: any;
+  pmTileLayerUrl?: any;
+}) => {
   const { pathname } = useLocation();
-  const [baseLayers, setBaseLayers] = useState<string[]>(['OSM', 'Satellite', 'None']);
+  const [baseLayers, setBaseLayers] = useState<string[]>([
+    "OSM",
+    "Satellite",
+    "None",
+  ]);
   const [hasPMTile, setHasPMTile] = useState(false);
-  const [activeLayer, setActiveLayer] = useState('OSM');
-  const [activeTileLayer, setActiveTileLayer] = useState('');
+  const [activeLayer, setActiveLayer] = useState("OSM");
+  const [activeTileLayer, setActiveTileLayer] = useState("");
   const [isLayerMenuOpen, setIsLayerMenuOpen] = useState(false);
   const projectInfo = useAppSelector((state) => state.project.projectInfo);
 
   useEffect(() => {
     if (
       !projectInfo?.custom_tms_url ||
-      !pathname.includes('project') ||
-      baseLayers.includes('TMS Layer') ||
+      !pathname.includes("project") ||
+      baseLayers.includes("TMS Layer") ||
       !map ||
       baseLayers?.length === 0
     )
       return;
-    setBaseLayers((prev) => [...prev, 'TMS Layer']);
+    setBaseLayers((prev) => [...prev, "TMS Layer"]);
   }, [projectInfo, pathname, map]);
 
   useEffect(() => {
-    if (!pmTileLayerUrl || baseLayers.includes('Custom')) return;
+    if (!pmTileLayerUrl || baseLayers.includes("Custom")) return;
     setHasPMTile(true);
-    setActiveTileLayer('Custom');
+    setActiveTileLayer("Custom");
   }, [pmTileLayerUrl]);
 
   const changeBaseLayer = (baseLayerTitle: string) => {
     const allLayers = map.getLayers();
     const filteredBaseLayers: Record<string, any> = allLayers.array_.find(
-      (layer) => layer?.values_?.title == 'Base maps',
+      (layer) => layer?.values_?.title == "Base maps",
     );
-    const baseLayersCollection: Record<string, any>[] = filteredBaseLayers?.values_?.layers.array_;
+    const baseLayersCollection: Record<string, any>[] =
+      filteredBaseLayers?.values_?.layers.array_;
     baseLayersCollection
-      ?.filter((bLayer) => bLayer?.values_?.title !== 'Custom')
+      ?.filter((bLayer) => bLayer?.values_?.title !== "Custom")
       ?.forEach((baseLayer) => {
         if (baseLayer?.values_?.title === baseLayerTitle) {
           baseLayer.setVisible(true);
@@ -104,30 +121,43 @@ const LayerSwitchMenu = ({ map, pmTileLayerUrl = null }: { map: any; pmTileLayer
   const toggleTileLayer = (layerTitle: string) => {
     const allLayers = map.getLayers();
     const filteredBaseLayers: Record<string, any> = allLayers.array_.find(
-      (layer) => layer?.values_?.title == 'Base maps',
+      (layer) => layer?.values_?.title == "Base maps",
     );
-    const baseLayersCollection: Record<string, any>[] = filteredBaseLayers?.values_?.layers.array_;
+    const baseLayersCollection: Record<string, any>[] =
+      filteredBaseLayers?.values_?.layers.array_;
 
-    const tileLayer = baseLayersCollection?.find((baseLayer) => baseLayer?.values_?.title === layerTitle);
+    const tileLayer = baseLayersCollection?.find(
+      (baseLayer) => baseLayer?.values_?.title === layerTitle,
+    );
     if (tileLayer) {
       const isLayerVisible = tileLayer.getVisible();
       tileLayer.setVisible(!isLayerVisible);
-      setActiveTileLayer(!isLayerVisible ? layerTitle : '');
+      setActiveTileLayer(!isLayerVisible ? layerTitle : "");
     }
   };
 
   return (
     <div className="fmtm-w-6 fmtm-h-6 fmtm-max-w-6 fmtm-max-h-6">
-      <DropdownMenu modal={false} onOpenChange={(status) => setIsLayerMenuOpen(status)}>
+      <DropdownMenu
+        modal={false}
+        onOpenChange={(status) => setIsLayerMenuOpen(status)}
+      >
         <DropdownMenuTrigger className="fmtm-outline-none">
-          <Tooltip title="Base Maps" placement={isLayerMenuOpen ? 'bottom' : 'left'} arrow>
+          <Tooltip
+            title="Base Maps"
+            placement={isLayerMenuOpen ? "bottom" : "left"}
+            arrow
+          >
             <div
               style={{
-                backgroundImage: activeLayer === 'None' ? 'none' : `url(${layerIcons[activeLayer] || satelliteImg})`,
-                backgroundColor: 'white',
+                backgroundImage:
+                  activeLayer === "None"
+                    ? "none"
+                    : `url(${layerIcons[activeLayer] || satelliteImg})`,
+                backgroundColor: "white",
               }}
               className={`fmtm-relative fmtm-group fmtm-order-4 fmtm-w-6 fmtm-h-6 fmtm-max-w-6 fmtm-max-h-6 fmtm-cursor-pointer fmtm-bg-contain ${
-                activeLayer === 'None' ? '!fmtm-border-primaryRed' : ''
+                activeLayer === "None" ? "!fmtm-border-primaryRed" : ""
               }`}
             ></div>
           </Tooltip>
@@ -160,8 +190,8 @@ const LayerSwitchMenu = ({ map, pmTileLayerUrl = null }: { map: any; pmTileLayer
                     <LayerCard
                       key="Custom"
                       layer="Custom"
-                      changeBaseLayerHandler={() => toggleTileLayer('Custom')}
-                      active={'Custom' === activeTileLayer}
+                      changeBaseLayerHandler={() => toggleTileLayer("Custom")}
+                      active={"Custom" === activeTileLayer}
                     />
                   </div>
                 </div>

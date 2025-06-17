@@ -1,29 +1,38 @@
 /* eslint-disable no-console */
 /* eslint-disable consistent-return */
-import React, { useEffect, useRef, useState } from 'react';
-import { get } from 'ol/proj';
-import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style.js';
-import GeoJSON from 'ol/format/GeoJSON';
-import { Vector as VectorSource } from 'ol/source';
-import OLVectorLayer from 'ol/layer/Vector';
-import { defaultStyles, getStyles } from '@/components/MapComponent/OpenLayersComponent/helpers/styleUtils';
-import { isExtentValid } from '@/components/MapComponent/OpenLayersComponent/helpers/layerUtils';
-import { Draw, Modify, Snap, Select, defaults as defaultInteractions } from 'ol/interaction.js';
-import { getArea } from 'ol/sphere';
-import { valid } from 'geojson-validation';
-import Point from 'ol/geom/Point.js';
-import MultiPoint from 'ol/geom/MultiPoint.js';
-import { buffer } from 'ol/extent';
-import { bbox as OLBbox } from 'ol/loadingstrategy';
-import { geojson as FGBGeoJson } from 'flatgeobuf';
+import React, { useEffect, useRef, useState } from "react";
+import { get } from "ol/proj";
+import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style.js";
+import GeoJSON from "ol/format/GeoJSON";
+import { Vector as VectorSource } from "ol/source";
+import OLVectorLayer from "ol/layer/Vector";
+import {
+  defaultStyles,
+  getStyles,
+} from "@/components/MapComponent/OpenLayersComponent/helpers/styleUtils";
+import { isExtentValid } from "@/components/MapComponent/OpenLayersComponent/helpers/layerUtils";
+import {
+  Draw,
+  Modify,
+  Snap,
+  Select,
+  defaults as defaultInteractions,
+} from "ol/interaction.js";
+import { getArea } from "ol/sphere";
+import { valid } from "geojson-validation";
+import Point from "ol/geom/Point.js";
+import MultiPoint from "ol/geom/MultiPoint.js";
+import { buffer } from "ol/extent";
+import { bbox as OLBbox } from "ol/loadingstrategy";
+import { geojson as FGBGeoJson } from "flatgeobuf";
 
-import { isValidUrl } from '@/utilfunctions/urlChecker';
+import { isValidUrl } from "@/utilfunctions/urlChecker";
 
-const selectElement = 'singleselect';
+const selectElement = "singleselect";
 
 const selectedCountry = new Style({
   stroke: new Stroke({
-    color: '#008099',
+    color: "#008099",
     width: 3,
   }),
   // fill: new Fill({
@@ -81,13 +90,16 @@ const VectorLayer = ({
       // features: select.getFeatures(),
       source: vectorLayerSource,
     });
-    modify.on('modifyend', function (e) {
+    modify.on("modifyend", function (e) {
       var geoJSONFormat = new GeoJSON();
 
-      var geoJSONString = geoJSONFormat.writeFeatures(vectorLayer.getSource().getFeatures(), {
-        dataProjection: 'EPSG:4326',
-        featureProjection: 'EPSG:3857',
-      });
+      var geoJSONString = geoJSONFormat.writeFeatures(
+        vectorLayer.getSource().getFeatures(),
+        {
+          dataProjection: "EPSG:4326",
+          featureProjection: "EPSG:3857",
+        },
+      );
       const features = vectorLayer.getSource().getFeatures();
       const area = formatArea(features);
 
@@ -104,12 +116,15 @@ const VectorLayer = ({
   }, [map, vectorLayer, onModify]);
 
   const formatArea = function (features) {
-    const totalArea = features?.reduce((acc, curr) => acc + getArea(curr.getGeometry()), 0);
+    const totalArea = features?.reduce(
+      (acc, curr) => acc + getArea(curr.getGeometry()),
+      0,
+    );
     let output;
     if (totalArea > 10000) {
-      output = Math.round((totalArea / 1000000) * 100) / 100 + ' km\xB2';
+      output = Math.round((totalArea / 1000000) * 100) / 100 + " km\xB2";
     } else {
-      output = Math.round(totalArea * 100) / 100 + ' m\xB2';
+      output = Math.round(totalArea * 100) / 100 + " m\xB2";
     }
     return output;
   };
@@ -126,15 +141,15 @@ const VectorLayer = ({
 
     const draw = new Draw({
       source: source,
-      type: 'Polygon',
+      type: "Polygon",
     });
 
-    draw.on('drawend', function (e) {
+    draw.on("drawend", function (e) {
       const feature = e.feature;
       const geojsonFormat = new GeoJSON();
       const newGeojson = geojsonFormat.writeFeature(feature, {
-        dataProjection: 'EPSG:4326',
-        featureProjection: 'EPSG:3857',
+        dataProjection: "EPSG:4326",
+        featureProjection: "EPSG:3857",
       });
 
       const geometry = feature.getGeometry();
@@ -154,10 +169,10 @@ const VectorLayer = ({
     const bufferedExtent = buffer(originalExtent, bufferMeters);
 
     const minPoint = new Point([bufferedExtent[0], bufferedExtent[1]]);
-    minPoint.transform('EPSG:3857', 'EPSG:4326');
+    minPoint.transform("EPSG:3857", "EPSG:4326");
 
     const maxPoint = new Point([bufferedExtent[2], bufferedExtent[3]]);
-    maxPoint.transform('EPSG:3857', 'EPSG:4326');
+    maxPoint.transform("EPSG:3857", "EPSG:4326");
 
     return {
       minX: minPoint.getCoordinates()[0],
@@ -171,11 +186,11 @@ const VectorLayer = ({
     // Only include features that intersect extent
     let geomCoord;
 
-    if (geom.getType() === 'Point') {
+    if (geom.getType() === "Point") {
       geomCoord = geom.getCoordinates();
-    } else if (geom.getType() === 'Polygon') {
+    } else if (geom.getType() === "Polygon") {
       geomCoord = geom.getInteriorPoint().getCoordinates();
-    } else if (geom.getType() === 'LineString') {
+    } else if (geom.getType() === "LineString") {
       geomCoord = geom.getExtent();
     }
 
@@ -190,10 +205,13 @@ const VectorLayer = ({
     const fgbRequestIdRef = ++latestFgbRequestIdRef.current;
     this.clear();
     let filteredFeatures = [];
-    for await (let feature of FGBGeoJson.deserialize(fgbUrl, fgbBoundingBox(fgbExtent.getExtent()))) {
+    for await (let feature of FGBGeoJson.deserialize(
+      fgbUrl,
+      fgbBoundingBox(fgbExtent.getExtent()),
+    )) {
       if (fgbRequestIdRef !== latestFgbRequestIdRef.current) return; // only process latest response
 
-      if (extractGeomCol && feature.geometry.type === 'GeometryCollection') {
+      if (extractGeomCol && feature.geometry.type === "GeometryCollection") {
         // Extract first geom from geomcollection
         feature = {
           ...feature,
@@ -201,8 +219,8 @@ const VectorLayer = ({
         };
       }
       let extractGeom = new GeoJSON().readFeature(feature, {
-        dataProjection: 'EPSG:4326',
-        featureProjection: 'EPSG:3857',
+        dataProjection: "EPSG:4326",
+        featureProjection: "EPSG:3857",
       });
 
       // Clip geoms to another geometry (i.e. ST_Within)
@@ -239,7 +257,7 @@ const VectorLayer = ({
     const geoJsonVectorLyr = new OLVectorLayer({
       source: new VectorSource({
         features: new GeoJSON().readFeatures(geojson, {
-          featureProjection: get('EPSG:3857'),
+          featureProjection: get("EPSG:3857"),
         }),
       }),
       declutter: true,
@@ -250,21 +268,24 @@ const VectorLayer = ({
 
     const handleClick = (evt) => {
       var pixel = evt.pixel;
-      const feature = map.forEachFeatureAtPixel(pixel, function (feature, layer) {
-        if (layer === geoJsonVectorLyr) {
-          return feature;
-        }
-      });
+      const feature = map.forEachFeatureAtPixel(
+        pixel,
+        function (feature, layer) {
+          if (layer === geoJsonVectorLyr) {
+            return feature;
+          }
+        },
+      );
 
       triggerMapClick(feature);
     };
 
-    map.on('click', handleClick);
+    map.on("click", handleClick);
 
     setVectorLayer(geoJsonVectorLyr);
     return () => {
       setVectorLayer(null);
-      map.un('click', handleClick);
+      map.un("click", handleClick);
     };
   }, [map, geojson]);
 
@@ -282,22 +303,25 @@ const VectorLayer = ({
     const handleClick = (evt) => {
       const pixel = evt.pixel;
 
-      const feature = map.forEachFeatureAtPixel(pixel, function (feature, layer) {
-        if (layer === fgbVectorLayer) {
-          return feature;
-        }
-      });
+      const feature = map.forEachFeatureAtPixel(
+        pixel,
+        function (feature, layer) {
+          if (layer === fgbVectorLayer) {
+            return feature;
+          }
+        },
+      );
 
       triggerMapClick(feature);
     };
 
-    map.on('click', handleClick);
+    map.on("click", handleClick);
 
     setVectorLayer(fgbVectorLayer);
 
     return () => {
       setVectorLayer(null);
-      map.un('click', handleClick);
+      map.un("click", handleClick);
     };
   }, [fgbUrl, fgbExtent]);
 
@@ -329,7 +353,7 @@ const VectorLayer = ({
               image: new CircleStyle({
                 radius: 5,
                 fill: new Fill({
-                  color: 'orange',
+                  color: "orange",
                 }),
               }),
               geometry: function (feature) {
@@ -378,7 +402,7 @@ const VectorLayer = ({
     if (!map || !vectorLayer || !hoverEffect) return;
     const selectionLayer = new OLVectorLayer({
       map,
-      renderMode: 'vector',
+      renderMode: "vector",
       source: vectorLayer.getSource(),
       style: (feature) => {
         if (feature.getId() in selection) {
@@ -400,7 +424,7 @@ const VectorLayer = ({
           return;
         }
         const fid = feature.getId();
-        if (selectElement.startsWith('singleselect')) {
+        if (selectElement.startsWith("singleselect")) {
           selection = {};
         }
         // add selected feature to lookup
@@ -410,16 +434,16 @@ const VectorLayer = ({
         selectionLayer.changed();
       });
     };
-    map.on('pointermove', pointerMovefn);
+    map.on("pointermove", pointerMovefn);
     return () => {
-      map.un('pointermove', pointerMovefn);
+      map.un("pointermove", pointerMovefn);
     };
   }, [vectorLayer, hoverEffect]);
 
   // ROTATE ICON IMAGE ACCORDING TO ORIENTATION
   useEffect(() => {
     if (!map) return;
-    if (typeof rotation === 'number') {
+    if (typeof rotation === "number") {
       // const mapRotation = map.getView().getRotation();
       setStyle?.getImage().setRotation(rotation);
     }

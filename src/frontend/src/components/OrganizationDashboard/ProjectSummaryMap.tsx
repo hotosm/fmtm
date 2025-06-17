@@ -27,11 +27,7 @@ const ProjectSummaryMap = () => {
     filter: ['has', 'point_count'] as any,
     paint: {
       'circle-color': '#D73F37',
-      'circle-radius': [
-        'step',
-        ['get', 'point_count'],
-        20, 10, 30, 50, 40
-      ] as any,
+      'circle-radius': ['step', ['get', 'point_count'], 20, 10, 30, 50, 40] as any,
       'circle-opacity': 0.9,
     },
   };
@@ -83,20 +79,19 @@ const ProjectSummaryMap = () => {
   }, []);
 
   // Handle click on unclustered point
-  const onMapClick = useCallback((event) => {
-    if (!event.features || event.features.length === 0) return;
-    const feature = event.features[0];
-    if (!feature.properties?.project_id) return;
-    history.push(`/project/${feature.properties.project_id}`);
-  }, [history]);
+  const onMapClick = useCallback(
+    (event) => {
+      if (!event.features || event.features.length === 0) return;
+      const feature = event.features[0];
+      if (!feature.properties?.project_id) return;
+      history.push(`/project/${feature.properties.project_id}`);
+    },
+    [history],
+  );
 
   return (
     <div className="fmtm-w-full fmtm-h-full fmtm-rounded-lg fmtm-overflow-hidden">
-      <MapComponent
-        style={{ height: '100%', width: '100%' }}
-        onLoad={onMapLoad}
-        onClick={onMapClick}
-      >
+      <MapComponent style={{ height: '100%', width: '100%' }} onLoad={onMapLoad} onClick={onMapClick}>
         <Source
           id="projects"
           type="geojson"

@@ -79,11 +79,7 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature }: Proj
       >
         {/* Render task boundaries as GeoJSON source/layer */}
         {taskBoundariesLayer && (
-          <Source
-            id="task-boundaries"
-            type="geojson"
-            data={taskBoundariesLayer}
-          >
+          <Source id="task-boundaries" type="geojson" data={taskBoundariesLayer}>
             <Layer {...taskBoundaryLayerStyle} />
           </Source>
         )}

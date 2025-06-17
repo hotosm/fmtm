@@ -21,9 +21,7 @@ const ConflationMap = () => {
         onFeatureClick={(feature) => {
           dispatch(
             DataConflationActions.SetSelectedFeatureOSMId(
-              feature?.getProperties()?.xid
-                ? feature.getProperties().xid
-                : feature.getProperties()?.osm_id.toString(),
+              feature?.getProperties()?.xid ? feature.getProperties().xid : feature.getProperties()?.osm_id.toString(),
             ),
           );
         }}

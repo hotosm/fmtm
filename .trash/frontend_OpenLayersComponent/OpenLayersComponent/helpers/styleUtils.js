@@ -1,7 +1,7 @@
-import { Fill, Stroke, Style, Icon, Circle, Text } from 'ol/style';
+import { Fill, Stroke, Style, Icon, Circle, Text } from "ol/style";
 
 export function hexToRgba(hex, opacity = 100) {
-  if (!hex) return '';
+  if (!hex) return "";
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   const r = parseInt(result[1], 16);
   const g = parseInt(result[2], 16);
@@ -24,52 +24,56 @@ export function getRandomColor() {
 }
 
 export const defaultStyles = {
-  lineColor: '#000000',
+  lineColor: "#000000",
   lineOpacity: 70,
-  fillColor: '#1a2fa2',
+  fillColor: "#1a2fa2",
   fillOpacity: 50,
   lineThickness: 1,
   circleRadius: 3,
   dashline: 0,
   showLabel: false,
   customLabelText: null,
-  labelField: '',
-  labelFont: 'Calibri',
+  labelField: "",
+  labelFont: "Calibri",
   labelFontSize: 14,
-  labelColor: '#000000',
+  labelColor: "#000000",
   labelOpacity: 100,
   labelOutlineWidth: 3,
-  labelOutlineColor: '#ffffff',
+  labelOutlineColor: "#ffffff",
   labelOffsetX: 0,
   labelOffsetY: 0,
-  labelText: 'normal',
+  labelText: "normal",
   labelMaxResolution: 400,
-  labelAlign: 'center',
-  labelBaseline: 'middle',
+  labelAlign: "center",
+  labelBaseline: "middle",
   labelRotationDegree: 0,
-  labelFontWeight: 'normal',
-  labelPlacement: 'point',
+  labelFontWeight: "normal",
+  labelPlacement: "point",
   labelMaxAngleDegree: 45.0,
   labelOverflow: false,
   labelLineHeight: 1,
   visibleOnMap: true,
   icon: {},
   showSublayer: false,
-  sublayerColumnName: '',
+  sublayerColumnName: "",
   sublayer: {},
 };
 
 export const municipalStyles = {
   ...defaultStyles,
   fillOpacity: 0,
-  lineColor: '#ffffff',
+  lineColor: "#ffffff",
 };
 
 export const defaultRasterStyles = {
   opacity: 100,
 };
 
-export const sublayerKeysException = ['showSublayer', 'sublayerColumnName', 'sublayer'];
+export const sublayerKeysException = [
+  "showSublayer",
+  "sublayerColumnName",
+  "sublayer",
+];
 
 function createIconMarker(style) {
   const {
@@ -82,14 +86,21 @@ function createIconMarker(style) {
     // anchorXUnits: 'fraction',
     // anchorYUnits: 'pixels',
     scale: scale || 0.9,
-    crossOrigin: 'anonymous',
+    crossOrigin: "anonymous",
     // imgSize: [1500, 1500],
     src: url,
   });
 }
 
 function createCircleMarker(style) {
-  const { lineColor, lineOpacity, fillColor, fillOpacity, lineThickness, circleRadius } = style;
+  const {
+    lineColor,
+    lineOpacity,
+    fillColor,
+    fillOpacity,
+    lineThickness,
+    circleRadius,
+  } = style;
   return new Circle({
     radius: circleRadius,
     stroke: new Stroke({
@@ -105,12 +116,12 @@ function createCircleMarker(style) {
 function stringDivider(str, width, spaceReplacer) {
   if (str.length > width) {
     let p = width;
-    while (p > 0 && str[p] !== ' ' && str[p] !== '-') {
+    while (p > 0 && str[p] !== " " && str[p] !== "-") {
       p -= 1;
     }
     if (p > 0) {
       let left;
-      if (str.substring(p, p + 1) === '-') {
+      if (str.substring(p, p + 1) === "-") {
         left = str.substring(0, p + 1);
       } else {
         left = str.substring(0, p);
@@ -129,16 +140,21 @@ function truncString(str, n) {
 function getText(style, feature, resolution) {
   const type = style.labelText;
   const maxResolution = style.labelMaxResolution;
-  let text = style.showLabel ? style.customLabelText || feature.get(style.labelField)?.toString() || '' : '';
+  let text = style.showLabel
+    ? style.customLabelText || feature.get(style.labelField)?.toString() || ""
+    : "";
 
   if (resolution > maxResolution) {
-    text = '';
-  } else if (type === 'hide') {
-    text = '';
-  } else if (type === 'shorten') {
+    text = "";
+  } else if (type === "hide") {
+    text = "";
+  } else if (type === "shorten") {
     text = truncString(text, 12);
-  } else if (type === 'wrap' && (!style.labelPlacement || style.labelPlacement !== 'line')) {
-    text = stringDivider(text, 16, '\n');
+  } else if (
+    type === "wrap" &&
+    (!style.labelPlacement || style.labelPlacement !== "line")
+  ) {
+    text = stringDivider(text, 16, "\n");
   }
 
   return text;
@@ -164,7 +180,7 @@ function createTextStyle(style, feature, resolution) {
   } = style;
   const font = labelFont
     ? `${labelFontWeight} ${labelFontSize}px/${labelLineHeight || 1} ${labelFont}`
-    : '14px Calibri';
+    : "14px Calibri";
   return new Text({
     text: getText(style, feature, resolution),
     font,
@@ -195,7 +211,14 @@ export function generateLayerStylePoint(style, feature, resolution) {
 }
 
 export function generateLayerStylePolygon(style, feature, resolution) {
-  const { lineColor, lineOpacity, fillColor, fillOpacity, lineThickness, dashline } = style;
+  const {
+    lineColor,
+    lineOpacity,
+    fillColor,
+    fillOpacity,
+    lineThickness,
+    dashline,
+  } = style;
   return new Style({
     stroke: new Stroke({
       color: hexToRgba(lineColor, lineOpacity),
@@ -225,13 +248,13 @@ export function generateLayerStyleLine(style, feature, resolution) {
 export function getStyles({ style, feature, resolution }) {
   const geometryType = feature.getGeometry().getType();
   switch (geometryType) {
-    case 'Point':
+    case "Point":
       return generateLayerStylePoint(style, feature, resolution);
-    case 'Polygon':
+    case "Polygon":
       return generateLayerStylePolygon(style, feature, resolution);
-    case 'LineString':
+    case "LineString":
       return generateLayerStyleLine(style, feature, resolution);
-    case 'MultiLineString':
+    case "MultiLineString":
       return generateLayerStyleLine(style, feature, resolution);
 
     default:
