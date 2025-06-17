@@ -36,8 +36,8 @@ from app.config import decrypt_value, encrypt_value
 from app.db.enums import (
     BackgroundTaskStatus,
     ProjectPriority,
+    ProjectStatus,
     ProjectVisibility,
-    ProjectStatus
 )
 from app.db.models import (
     DbBackgroundTask,
