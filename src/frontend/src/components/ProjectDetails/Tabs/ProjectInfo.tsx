@@ -52,9 +52,7 @@ const ProjectInfo: React.FC = () => {
   }, null);
 
   const projectTotalFeatures: number = projectEntities.length;
-  const projectMappedFeatures: number = projectEntities.filter(
-    (entity: EntityOsmMap) => entity.status === entity_state.SURVEY_SUBMITTED,
-  ).length;
+  const projectMappedFeatures: number = projectEntities.filter((entity: EntityOsmMap) => entity.status > 1).length;
 
   useEffect(() => {
     if (paraRef.current) {
