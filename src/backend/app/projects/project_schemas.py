@@ -37,6 +37,7 @@ from app.db.enums import (
     BackgroundTaskStatus,
     ProjectPriority,
     ProjectVisibility,
+    ProjectStatus
 )
 from app.db.models import (
     DbBackgroundTask,
@@ -219,6 +220,7 @@ class ProjectSummary(BaseModel):
     hashtags: Optional[list[str]]
     location_str: Optional[str] = None
     short_description: Optional[str] = None
+    status: Optional[ProjectStatus] = None
     visibility: Optional[ProjectVisibility] = None
 
     # Calculated
