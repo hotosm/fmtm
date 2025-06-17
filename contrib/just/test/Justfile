@@ -30,7 +30,7 @@ backend:
 [no-cd]
 api:
   docker compose up -d
-  docker compose run --rm api pytest tests
+  docker compose run api pytest tests -s
 
 # Test osm-fieldwork package only
 [no-cd]

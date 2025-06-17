@@ -50,6 +50,7 @@ services:
       - central_frontend:/var/www/html/odk.fmtm.localhost:ro
     ports:
       - ${FMTM_DEV_PORT:-7050}:8080
+      - 443:8443
     environment:
       # General
       BUNKERWEB_INSTANCES: proxy:5000
@@ -161,7 +162,7 @@ services:
     env_file:
       - .env
     ports:
-      - "7052-7055:8000"
+      - "7055:8000"
       - "5678-5679:5678"
     networks:
       - fmtm-net
