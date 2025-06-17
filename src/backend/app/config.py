@@ -151,6 +151,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "Field-TM"
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"
+    PYODK_LOG_LEVEL: str = "CRITICAL"
     ENCRYPTION_KEY: SecretStr
     # NOTE HS384 is used for simplicity of implementation and compatibility with
     # existing Fernet based database value encryption
@@ -161,7 +162,7 @@ class Settings(BaseSettings):
 
     DEFAULT_ORG_NAME: Optional[str] = "HOTOSM"
     DEFAULT_ORG_URL: Optional[str] = "https://hotosm.org"
-    DEFAULT_ORG_EMAIL: Optional[str] = "syadmin@hotosm.org"
+    DEFAULT_ORG_EMAIL: Optional[str] = "sysadmin@hotosm.org"
     DEFAULT_ORG_LOGO_URL: Optional[str] = (
         "https://raw.githubusercontent.com/hotosm/fmtm/refs/heads/development/src/frontend/public/hot-org-logo.png"
     )

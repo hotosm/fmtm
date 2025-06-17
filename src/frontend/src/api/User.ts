@@ -56,19 +56,16 @@ export const UpdateUserRole = (url: string, payload: { role: 'READ_ONLY' | 'ADMI
   };
 };
 
-export const GetUserListForSelect = (
-  url: string,
-  params: { page: number; org_id: number; results_per_page: number; search: string },
-) => {
+export const GetUserListForSelect = (url: string, params: { search: string; signin_type?: 'osm' | 'google' }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(UserActions.SetUserListForSelectLoading(true));
 
     const getUserList = async (url: string) => {
       try {
-        const response: AxiosResponse<{ results: userType[]; pagination: paginationType }> = await axios.get(url, {
+        const response: AxiosResponse<{ sub: string; username: string }[]> = await axios.get(url, {
           params,
         });
-        dispatch(UserActions.SetUserListForSelect(response.data.results));
+        dispatch(UserActions.SetUserListForSelect(response.data));
       } catch (error) {
       } finally {
         dispatch(UserActions.SetUserListForSelectLoading(false));
@@ -79,7 +76,10 @@ export const GetUserListForSelect = (
   };
 };
 
-export const GetUserNames = (url: string, params: { org_id?: number; project_id?: number; search: string }) => {
+export const GetUserNames = (
+  url: string,
+  params: { org_id?: number; project_id?: number; search: string; signin_type?: 'osm' | 'google' },
+) => {
   return async (dispatch: AppDispatch) => {
     const getUserNames = async (url: string, params: { org_id?: number; project_id?: number }) => {
       try {

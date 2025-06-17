@@ -46,26 +46,6 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
   const additionalFeatureGeojson = useAppSelector((state) => state.createproject.additionalFeatureGeojson);
 
   const usesDataExtract = !!dataExtractGeojson?.features?.length;
-  const taskSplitOptions: taskSplitOptionsType[] = [
-    {
-      name: 'define_tasks',
-      value: task_split_type.DIVIDE_ON_SQUARE,
-      label: 'Divide into square tasks',
-      disabled: false,
-    },
-    {
-      name: 'define_tasks',
-      value: task_split_type.CHOOSE_AREA_AS_TASK,
-      label: 'Use uploaded AOI as task areas',
-      disabled: false,
-    },
-    {
-      name: 'define_tasks',
-      value: task_split_type.TASK_SPLITTING_ALGORITHM,
-      label: 'Task Splitting Algorithm',
-      disabled: !usesDataExtract,
-    },
-  ];
 
   // convert dataExtractGeojson to file object to upload to /upload-data-extract endpoint
   const dataExtractBlob = new Blob([JSON.stringify(dataExtractGeojson)], { type: 'application/json' });
@@ -131,6 +111,7 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
       custom_tms_url: projectDetails.custom_tms_url,
       visibility: projectDetails.visibility,
       use_odk_collect: projectDetails.use_odk_collect,
+      status: 'PUBLISHED',
     };
     // Append osm_category if set
     if (projectDetails.osmFormSelectionName) {
@@ -179,6 +160,27 @@ const SplitTasks = ({ flag, setGeojsonFile, customDataExtractUpload, additionalF
     values: formValues,
     errors,
   }: any = useForm(projectDetails, submission, DefineTaskValidation);
+
+  const taskSplitOptions: taskSplitOptionsType[] = [
+    {
+      name: 'define_tasks',
+      value: task_split_type.DIVIDE_ON_SQUARE,
+      label: 'Divide into square tasks',
+      disabled: false,
+    },
+    {
+      name: 'define_tasks',
+      value: task_split_type.CHOOSE_AREA_AS_TASK,
+      label: 'Use uploaded AOI as task areas',
+      disabled: false,
+    },
+    {
+      name: 'define_tasks',
+      value: task_split_type.TASK_SPLITTING_ALGORITHM,
+      label: 'Task Splitting Algorithm',
+      disabled: !usesDataExtract || formValues.primaryGeomType === 'POLYLINE',
+    },
+  ];
 
   const generateTaskBasedOnSelection = (e) => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsData({ ...projectDetails, ...formValues }));
