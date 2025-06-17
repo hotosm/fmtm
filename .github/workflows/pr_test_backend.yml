@@ -22,7 +22,7 @@ jobs:
       pre_command: docker compose up -d && docker compose exec api /app-entrypoint.sh
       compose_file: "compose.yaml"
       compose_service: api
-      compose_command: pytest
+      compose_command: pytest -s
       cache_extra_imgs: |
         "ghcr.io/hotosm/postgis:${{ vars.POSTGIS_TAG }}"
         "docker.io/minio/minio:${{ vars.MINIO_TAG }}"
