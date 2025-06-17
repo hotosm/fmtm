@@ -514,10 +514,12 @@ async def project_submission_dashboard(
     project = project_user.get("project")
     details = await submission_crud.get_dashboard_detail(db, project)
     details["slug"] = project.slug
+    details["organisation_id"] = project.organisation_id
     details["organisation_name"] = project.organisation_name
     details["created_at"] = project.created_at
     details["organisation_logo"] = project.organisation_logo
     details["last_active"] = project.last_active
+    details["status"] = project.status
     return details
 
 
