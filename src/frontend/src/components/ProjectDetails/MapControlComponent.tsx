@@ -1,11 +1,5 @@
-import React, { useState } from 'react';
-import AssetModules from '@/shared/AssetModules';
-// @ts-ignore
-import VectorLayer from 'ol/layer/Vector';
-import { ProjectActions } from '@/store/slices/ProjectSlice';
-import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
+import React from 'react';
 import ProjectOptions from '@/components/ProjectDetails/ProjectOptions';
-import LayerSwitchMenu from '../MapComponent/OpenLayersComponent/LayerSwitcher/LayerSwitchMenu';
 import { Tooltip } from '@mui/material';
 import {
   DropdownMenu,
@@ -17,28 +11,27 @@ import {
 type mapControlComponentType = {
   map: any;
   projectName: string;
-  pmTileLayerUrl: any;
 };
 
 const btnList = [
   {
     id: 'add',
-    icon: <AssetModules.AddIcon className="!fmtm-text-[1rem]" />,
+    icon: <span>+</span>,
     title: 'Zoom In',
   },
   {
     id: 'minus',
-    icon: <AssetModules.RemoveIcon className="!fmtm-text-[1rem]" />,
+    icon: <span>-</span>,
     title: 'Zoom Out',
   },
   {
     id: 'taskBoundries',
-    icon: <AssetModules.CropFreeIcon className="!fmtm-text-[1rem]" />,
+    icon: <span>#</span>,
     title: 'Zoom to Project',
   },
 ];
 
-const MapControlComponent = ({ map, projectName, pmTileLayerUrl }: mapControlComponentType) => {
+const MapControlComponent = ({ map, projectName }: mapControlComponentType) => {
   const handleOnClick = (btnId) => {
     const actualZoom = map.getView().getZoom();
     if (btnId === 'add') {
@@ -46,25 +39,13 @@ const MapControlComponent = ({ map, projectName, pmTileLayerUrl }: mapControlCom
     } else if (btnId === 'minus') {
       map.getView().setZoom(actualZoom - 1);
     } else if (btnId === 'taskBoundries') {
-      const layers = map.getAllLayers();
-      let extent;
-      layers.map((layer) => {
-        if (layer instanceof VectorLayer) {
-          const layerName = layer.getProperties().name;
-          if (layerName === 'project-area') {
-            extent = layer.getSource().getExtent();
-          }
-        }
-      });
-      map.getView().fit(extent, {
-        padding: [10, 10, 10, 10],
-      });
+      // TODO: Implement zoom to project logic using MapLibre or remove if obsolete.
     }
   };
 
   return (
     <div className="fmtm-absolute fmtm-bottom-24 md:fmtm-bottom-10 fmtm-right-3 fmtm-z-[45] fmtm-flex fmtm-flex-col fmtm-border-[1px]  fmtm-border-grey-300 fmtm-rounded fmtm-overflow-hidden">
-      <LayerSwitchMenu map={map} pmTileLayerUrl={pmTileLayerUrl} />
+      {/* TODO: Refactor this component to use MapLibre logic or remove if obsolete. */}
       {btnList.map((btn) => (
         <Tooltip title={btn.title} placement="left" arrow key={btn.title}>
           <div

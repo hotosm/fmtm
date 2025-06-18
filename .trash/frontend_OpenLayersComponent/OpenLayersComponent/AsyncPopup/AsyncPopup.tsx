@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { renderToString } from 'react-dom/server';
-import Overlay from 'ol/Overlay';
-import { getCenter } from 'ol/extent';
-import './asyncpopup.scss';
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { renderToString } from "react-dom/server";
+import Overlay from "ol/Overlay";
+import { getCenter } from "ol/extent";
+import "./asyncpopup.scss";
 
 type asyncPopupPropType = {
   map: any;
@@ -23,7 +23,7 @@ function hasKey(obj, key) {
   return Object.keys(obj).some((item) => item === key);
 }
 
-const layerIds = ['code'];
+const layerIds = ["code"];
 
 const AsyncPopup = ({
   map,
@@ -34,9 +34,9 @@ const AsyncPopup = ({
   onPopupClose,
   closePopup = false,
   loading = false,
-  showOnHover = 'click',
-  primaryKey = 'uid',
-  popupId = 'popupx',
+  showOnHover = "click",
+  primaryKey = "uid",
+  popupId = "popupx",
   className,
 }: asyncPopupPropType) => {
   const popupRef = useRef<any>(null);
@@ -44,14 +44,14 @@ const AsyncPopup = ({
   const [coordinates, setCoordinates] = useState<any>(null);
   const [overlay, setOverlay] = useState<any>(null);
   const [properties, setProperties] = useState(null);
-  const [popupHTML, setPopupHTML] = useState<HTMLBodyElement | string>('');
+  const [popupHTML, setPopupHTML] = useState<HTMLBodyElement | string>("");
 
   // add overlay to popupRef
   useEffect(() => {
     if (!map || !popupRef.current) return;
     const overlayInstance = new Overlay({
       element: popupRef.current,
-      positioning: 'center-center',
+      positioning: "center-center",
       id: popupId,
       autoPan: {
         animation: {
@@ -66,7 +66,7 @@ const AsyncPopup = ({
   const closePopupFn = useCallback(() => {
     if (!popupCloserRef.current || !overlay) return;
     overlay.setPosition(undefined);
-    setPopupHTML('');
+    setPopupHTML("");
     setProperties(null);
     if (popupCloserRef?.current instanceof HTMLElement) {
       popupCloserRef.current.blur();
@@ -86,7 +86,7 @@ const AsyncPopup = ({
       if (popupRef.current && !popupRef?.current?.contains(event.target)) {
         // alert('You clicked outside of me!');
         overlay.setPosition(undefined);
-        setPopupHTML('');
+        setPopupHTML("");
         setProperties(null);
         if (popupCloserRef?.current instanceof HTMLElement) {
           popupCloserRef?.current.blur();
@@ -94,10 +94,10 @@ const AsyncPopup = ({
       }
     }
     // Bind the event listener
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
       // Unbind the event listener on clean up
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [overlay]);
   // get properties and coordinates of feature
@@ -107,7 +107,7 @@ const AsyncPopup = ({
 
     map.on(showOnHover, (evt) => {
       overlay.setPosition(undefined);
-      setPopupHTML('');
+      setPopupHTML("");
       setProperties(null);
       if (popupCloserRef?.current instanceof HTMLElement) {
         popupCloserRef.current?.blur();
@@ -127,7 +127,8 @@ const AsyncPopup = ({
       const { [primaryKey]: primaryKeyValue } = featureProperties;
       if (
         layerIds.includes(primaryKeyValue) ||
-        (hasKey(featureProperties, primaryKey) && featureProperties?.[primaryKey])
+        (hasKey(featureProperties, primaryKey) &&
+          featureProperties?.[primaryKey])
       ) {
         setProperties(featureProperties);
         setCoordinates(coordinate);
@@ -143,7 +144,7 @@ const AsyncPopup = ({
   useEffect(() => {
     if (!map || !properties) return;
     const { layerId } = properties;
-    if (layerIds.includes(layerId) || hasKey(properties, 'layer')) {
+    if (layerIds.includes(layerId) || hasKey(properties, "layer")) {
       fetchPopupData(properties);
     }
     // eslint-disable-next-line

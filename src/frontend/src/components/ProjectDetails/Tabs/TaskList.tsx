@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Feature } from 'ol';
-import { Polygon } from 'ol/geom';
 import { useParams } from 'react-router-dom';
 import { useAppSelector } from '@/types/reduxTypes';
 import { task_state_labels } from '@/types/enums';
@@ -16,7 +14,7 @@ import isEmpty from '@/utilfunctions/isEmpty';
 import Select2 from '@/components/common/Select2';
 import { taskStatusList } from '@/constants/taskStatusListConstants';
 
-type taskListPropType = { map: any; setSelectedTab: (tab: 'task_activity') => void };
+type taskListPropType = { setSelectedTab: (tab: 'task_activity') => void };
 
 type taskListType = {
   task_state: string | undefined;
@@ -27,8 +25,8 @@ type taskListType = {
   feature_count: number;
 };
 
-const TaskList = ({ map, setSelectedTab }: taskListPropType) => {
-  const params = useParams();
+const TaskList = ({ setSelectedTab }: taskListPropType) => {
+  const params: any = useParams();
   const dispatch = useDispatch();
   const projectId: string | undefined = params.id;
 
@@ -76,15 +74,7 @@ const TaskList = ({ map, setSelectedTab }: taskListPropType) => {
   }, [taskList, filter]);
 
   const zoomToTask = (taskIndex: string) => {
-    let geojson: Record<string, any> | undefined = taskBoundaries?.find((task) => task.index === +taskIndex)?.outline;
-    if (!geojson) return;
-    const olFeature = new Feature({
-      geometry: new Polygon(geojson?.coordinates).transform('EPSG:4326', 'EPSG:3857'),
-    });
-    const extent = olFeature.getGeometry()?.getExtent();
-    map.getView().fit(extent, {
-      padding: [0, 0, 0, 0],
-    });
+    // MapLibre or stub logic for zooming to task
   };
 
   const showTaskHistory = (taskIndex: string) => {

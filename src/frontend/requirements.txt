@@ -1,0 +1,73 @@
+# Frontend requirements for development (Node.js/TypeScript)
+# Install using: pnpm install (preferred) or npm install
+
+# Core React and TypeScript
+react
+react-dom
+typescript
+
+# MapLibre and mapping
+maplibre-gl
+react-map-gl
+@mapbox/mapbox-gl-draw
+@types/mapbox__mapbox-gl-draw
+
+# Routing
+react-router-dom
+@types/react-router-dom
+
+# UI and styling
+@mui/material
+@mui/icons-material
+@mui/system
+@radix-ui/react-checkbox
+@radix-ui/react-dialog
+@radix-ui/react-dropdown-menu
+@radix-ui/react-icons
+@radix-ui/react-popover
+@radix-ui/react-select
+@radix-ui/react-switch
+
+# State management
+react-redux
+@reduxjs/toolkit
+redux
+redux-persist
+
+# Utilities
+clsx
+axios
+date-fns
+geojson-validation
+flatgeobuf
+pako
+qrcode-generator
+
+# Dev tools
+eslint
+prettier
+@types/node
+@types/react
+@types/react-dom
+@types/geojson
+
+# Testing
+@playwright/test
+vitest
+
+# Tailwind CSS
+postcss
+tailwindcss
+tailwind-merge
+tailwindcss-animate
+
+# Other
+lucide-react
+cmdk
+html2canvas
+react-datepicker
+react-lazy-load-image-component
+react-loading-skeleton
+react-resizable-panels
+react-spinners
+recharts

@@ -2,16 +2,8 @@ import React, { useCallback, useState, useEffect } from 'react';
 import CoreModules from '@/shared/CoreModules';
 import { MapContainer as MapComponent } from '@/components/MapComponent/OpenLayersComponent';
 import { useOLMap } from '@/components/MapComponent/OpenLayersComponent';
-import LayerSwitcherControl from '@/components/MapComponent/OpenLayersComponent/LayerSwitcher';
-import { VectorLayer } from '@/components/MapComponent/OpenLayersComponent/Layers';
-import { Vector as VectorSource } from 'ol/source';
-import GeoJSON from 'ol/format/GeoJSON';
-import { get } from 'ol/proj';
-import { getStyles } from '@/components/MapComponent/OpenLayersComponent/helpers/styleUtils';
-import { basicGeojsonTemplate } from '@/utilities/mapUtils';
 import TaskSubmissionsMapLegend from '@/components/ProjectSubmissions/TaskSubmissionsMapLegend';
 import Accordion from '@/components/common/Accordion';
-import AsyncPopup from '@/components/MapComponent/OpenLayersComponent/AsyncPopup/AsyncPopup';
 import {
   colorCodesType,
   taskWiseSubmissionCount,
@@ -22,11 +14,8 @@ import {
 import { isValidUrl } from '@/utilfunctions/urlChecker';
 import { projectInfoType, projectTaskBoundriesType } from '@/models/project/projectModel';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
-import LayerSwitchMenu from '../MapComponent/OpenLayersComponent/LayerSwitcher/LayerSwitchMenu';
-import { defaultStyles } from '@/components/MapComponent/OpenLayersComponent/helpers/styleUtils';
 
 export const municipalStyles = {
-  ...defaultStyles,
   fillOpacity: 0,
   lineColor: '#008099',
   dashline: 5,
@@ -108,7 +97,7 @@ const TaskSubmissionsMap = () => {
       return;
     }
     const taskGeojsonFeatureCollection = {
-      ...basicGeojsonTemplate,
+      type: 'FeatureCollection',
       features: [
         ...projectTaskBoundries?.[0]?.taskBoundries?.map((task) => ({
           type: 'Feature',
@@ -127,17 +116,12 @@ const TaskSubmissionsMap = () => {
     if (!taskBoundaries) return;
     if (!selectedTask) return;
     const filteredSelectedTaskGeojson = {
-      ...basicGeojsonTemplate,
+      type: 'FeatureCollection',
       features: taskBoundaries?.features?.filter((task) => task?.properties?.fid === selectedTask),
     };
-    const vectorSource = new VectorSource({
-      features: new GeoJSON().readFeatures(filteredSelectedTaskGeojson, {
-        featureProjection: get('EPSG:3857'),
-      }),
-    });
-    const extent = vectorSource.getExtent();
+    const extent = filteredSelectedTaskGeojson.features[0]?.geometry;
 
-    setDataExtractExtent(vectorSource.getFeatures()[0]?.getGeometry());
+    setDataExtractExtent(extent);
     setDataExtractUrl(projectInfo.data_extract_url);
 
     map.getView().fit(extent, {
@@ -164,11 +148,7 @@ const TaskSubmissionsMap = () => {
       stylex.showLabel = true;
       const choroplethColor = getChoroplethColor(getTaskSubmissionCount, legendColorArray);
       stylex.fillColor = choroplethColor;
-      return getStyles({
-        style: stylex,
-        feature,
-        resolution,
-      });
+      return stylex;
     },
     [taskWiseSubmissionCount],
   );
@@ -219,27 +199,7 @@ const TaskSubmissionsMap = () => {
           width: '100%',
         }}
       >
-        <div className="fmtm-absolute fmtm-right-2 fmtm-top-3 fmtm-z-20">
-          <LayerSwitchMenu map={map} />
-        </div>
-        <LayerSwitcherControl visible={'osm'} />
-        {taskBoundaries && (
-          <VectorLayer
-            setStyle={(feature, resolution) =>
-              setChoropleth({ ...municipalStyles, lineThickness: 3 }, feature, resolution)
-            }
-            geojson={taskBoundaries}
-            mapOnClick={taskOnSelect}
-            viewProperties={{
-              size: map?.getSize(),
-              padding: [50, 50, 50, 50],
-              constrainResolution: true,
-              duration: 2000,
-            }}
-            zoomToLayer
-            zIndex={5}
-          />
-        )}
+        {taskBoundaries && <></>}
         <div className="fmtm-absolute fmtm-bottom-2 fmtm-left-2 sm:fmtm-bottom-5 sm:fmtm-left-5 fmtm-z-50 fmtm-rounded-lg">
           <Accordion
             body={<TaskSubmissionsMapLegend legendColorArray={legendColorArray} />}
@@ -253,10 +213,8 @@ const TaskSubmissionsMap = () => {
             collapsed={true}
           />
         </div>
-        {taskInfo?.length > 0 && <AsyncPopup map={map} popupUI={taskSubmissionsPopupUI} primaryKey="fid" />}
-        {dataExtractUrl && isValidUrl(dataExtractUrl) && (
-          <VectorLayer fgbUrl={dataExtractUrl} fgbExtent={dataExtractExtent} zIndex={15} />
-        )}
+        {taskInfo?.length > 0 && <></>}
+        {dataExtractUrl && isValidUrl(dataExtractUrl) && <></>}
       </MapComponent>
     </CoreModules.Box>
   );

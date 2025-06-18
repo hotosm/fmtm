@@ -1,22 +1,22 @@
-import { useEffect, useState } from 'react';
-import AnimatedCluster from 'ol-ext/layer/AnimatedCluster';
-import * as olExtent from 'ol/extent';
-import GeoJSON from 'ol/format/GeoJSON';
-import Stroke from 'ol/style/Stroke';
-import Style from 'ol/style/Style';
-import Fill from 'ol/style/Fill';
-import { Cluster, OSM as OSMSource } from 'ol/source';
-import { Text, Circle } from 'ol/style';
-import VectorSource from 'ol/source/Vector';
-import SelectCluster from 'ol-ext/interaction/SelectCluster';
-import { hexToRgba } from '@/components/MapComponent/OpenLayersComponent/helpers/styleUtils';
+import { useEffect, useState } from "react";
+import AnimatedCluster from "ol-ext/layer/AnimatedCluster";
+import * as olExtent from "ol/extent";
+import GeoJSON from "ol/format/GeoJSON";
+import Stroke from "ol/style/Stroke";
+import Style from "ol/style/Style";
+import Fill from "ol/style/Fill";
+import { Cluster, OSM as OSMSource } from "ol/source";
+import { Text, Circle } from "ol/style";
+import VectorSource from "ol/source/Vector";
+import SelectCluster from "ol-ext/interaction/SelectCluster";
+import { hexToRgba } from "@/components/MapComponent/OpenLayersComponent/helpers/styleUtils";
 
 function setAsyncStyle(style, feature, getIndividualStyle) {
   const styleCache = {};
-  const size = feature?.get('features')?.length;
+  const size = feature?.get("features")?.length;
   let stylex = styleCache[size];
   if (size === 1) {
-    const featureProperty = feature?.get('features')[0].getProperties();
+    const featureProperty = feature?.get("features")[0].getProperties();
     stylex = getIndividualStyle(featureProperty);
     styleCache[size] = stylex;
     return stylex;
@@ -36,9 +36,9 @@ function setAsyncStyle(style, feature, getIndividualStyle) {
       text: new Text({
         text: size.toString(),
         fill: new Fill({
-          color: '#fff',
+          color: "#fff",
         }),
-        font: '16px Arial',
+        font: "16px Arial",
       }),
     });
     styleCache[size] = stylex;
@@ -57,14 +57,17 @@ const ClusterLayer = ({
   getIndividualStyle,
 }) => {
   const [vectorLayer, setVectorLayer] = useState(null);
-  useEffect(() => () => map && vectorLayer && map.removeLayer(vectorLayer), [map, vectorLayer]);
+  useEffect(
+    () => () => map && vectorLayer && map.removeLayer(vectorLayer),
+    [map, vectorLayer],
+  );
 
   useEffect(() => {
     if (!map || !layerSource || !layerSource.features) return;
     const sourceOSM = new OSMSource();
     const vectorSource = new VectorSource({
       features: new GeoJSON().readFeatures(layerSource, {
-        defaultDataProjection: 'EPSG:3857',
+        defaultDataProjection: "EPSG:3857",
         featureProjection: sourceOSM.getProjection(),
       }),
     });
@@ -96,7 +99,9 @@ const ClusterLayer = ({
         const features = vectorLayer.getSource().getFeatures();
         const extent = olExtent.createEmpty();
         features.forEach((feat) =>
-          feat.values_?.features.forEach((feature) => olExtent.extend(extent, feature.getGeometry().getExtent())),
+          feat.values_?.features.forEach((feature) =>
+            olExtent.extend(extent, feature.getGeometry().getExtent()),
+          ),
         );
         map.getView().fit(extent, {
           padding: [50, 50, 50, 50],
@@ -107,7 +112,7 @@ const ClusterLayer = ({
 
   useEffect(() => {
     if (!map) return;
-    map.on('singleclick', (evt) => {
+    map.on("singleclick", (evt) => {
       let area_no_9_extent = null;
       map.forEachFeatureAtPixel(
         evt.pixel,
@@ -127,14 +132,14 @@ const ClusterLayer = ({
     });
 
     return () => {
-      map.un('singleclick', () => {});
+      map.un("singleclick", () => {});
     };
   }, [map]);
 
   useEffect(() => {
     if (!map) return;
 
-    map.on('singleclick', (evt) => {
+    map.on("singleclick", (evt) => {
       const features = map.getFeaturesAtPixel(evt.pixel);
       if (features.length > 0) {
         const featureProperties = features[0].getProperties();
@@ -148,7 +153,7 @@ const ClusterLayer = ({
     });
 
     return () => {
-      map.un('singleclick', () => {});
+      map.un("singleclick", () => {});
     };
   }, [map]);
 
@@ -161,7 +166,10 @@ const ClusterLayer = ({
     }
   }, [map, vectorLayer, visibleOnMap]);
 
-  useEffect(() => () => map && map.removeLayer(vectorLayer), [map, vectorLayer]);
+  useEffect(
+    () => () => map && map.removeLayer(vectorLayer),
+    [map, vectorLayer],
+  );
 
   useEffect(() => {
     if (!map) return;
@@ -180,7 +188,7 @@ const ClusterLayer = ({
 
     function clusterSingleFeatureStyle(clusterMember) {
       // Call for expandedFeatures pass a resolution instead
-      const isExpandedFeature = clusterMember.get('selectclusterfeature');
+      const isExpandedFeature = clusterMember.get("selectclusterfeature");
 
       if (isExpandedFeature) {
         const feature = clusterMember.getProperties().features[0];
