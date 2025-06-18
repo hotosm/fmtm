@@ -11,6 +11,7 @@ import OsmAuth from '@/views/OsmAuth';
 import PlaywrightTempLogin from '@/views/PlaywrightTempLogin';
 import SubmissionDetails from '@/views/SubmissionDetails';
 import CreateNewProject from '@/views/CreateNewProject';
+import CreateProject from '@/views/CreateProject';
 import UnderConstruction from '@/views/UnderConstruction';
 import ErrorBoundary from '@/views/ErrorBoundary';
 import ProjectDetails from '@/views/ProjectDetails';
@@ -95,6 +96,18 @@ const routes = createBrowserRouter([
             <Suspense fallback={<div>Loading...</div>}>
               <ErrorBoundary>
                 <ProjectDetails />
+              </ErrorBoundary>
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/create-new-project',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <ErrorBoundary>
+                <CreateProject />
               </ErrorBoundary>
             </Suspense>
           </ProtectedRoute>
