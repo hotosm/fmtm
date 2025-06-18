@@ -15,6 +15,8 @@ on:
 jobs:
   pytest:
     uses: hotosm/gh-workflows/.github/workflows/test_compose.yml@3.2.0
+    env:
+      DEBUG_OVERRIDE: True
     with:
       image_name: ghcr.io/${{ github.repository }}/backend
       build_context: src

@@ -158,6 +158,8 @@ services:
         condition: service_completed_successfully
       s3:
         condition: service_healthy
+    environment:
+      - DEBUG=${DEBUG_OVERRIDE:-false}
     env_file:
       - .env
     ports:
