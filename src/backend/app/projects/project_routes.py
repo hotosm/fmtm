@@ -52,12 +52,9 @@ from app.auth.auth_schemas import AuthUser, OrgUserDict, ProjectUserDict
 from app.auth.providers.osm import init_osm_auth
 from app.auth.roles import Mapper, ProjectManager, org_admin
 from app.central import central_crud, central_deps, central_schemas
-from app.central.central_schemas import (
-    OdkEntitiesUpdate,
-)
 from app.config import settings
 from app.db.database import db_conn
-from app.db.enums import DbGeomType, EntityState, HTTPStatus, ProjectRole, XLSFormType
+from app.db.enums import DbGeomType, HTTPStatus, ProjectRole, XLSFormType
 from app.db.languages_and_countries import countries
 from app.db.models import (
     DbBackgroundTask,
