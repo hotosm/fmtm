@@ -555,7 +555,7 @@ async def client(app: FastAPI, db: AsyncConnection):
     # NOTE this is marginally slower, but required else tests fail
     app.dependency_overrides[db_conn] = lambda: db
 
-    log.debug(f"Testing backend workflow")
+    log.debug("Testing backend workflow")
 
     async with LifespanManager(app) as manager:
         async with AsyncClient(
