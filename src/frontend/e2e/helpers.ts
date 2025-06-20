@@ -7,7 +7,5 @@ export async function openTestProject(page: Page) {
     .getByText(/^Project Create Playwright/)
     .first()
     .click();
-  await page.waitForTimeout(4000);
+  await page.waitForTimeout(4500); //changed for testing purposes, will be reverted later
 }
-
-// adding for backend workflow testing purposes
