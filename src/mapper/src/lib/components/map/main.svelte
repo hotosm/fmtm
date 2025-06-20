@@ -706,7 +706,17 @@
 			/>
 		{:else if drawGeomType === MapGeomTypes.POINT}
 			<CircleLayer
-				id="bad-geom-circle-layer"
+				id="bad-geom-circle-point-layer"
+				hoverCursor="pointer"
+				paint={{
+					'circle-color': cssValue('--entity-marked-bad'),
+					'circle-radius': 8,
+					'circle-stroke-width': 1,
+					'circle-stroke-color': cssValue('--entity-outline'),
+				}}
+			/>
+			<CircleLayer
+				id="bad-geom-circle-highlight-layer"
 				hoverCursor="pointer"
 				paint={{
 					'circle-color': cssValue('--sl-color-primary-700'),

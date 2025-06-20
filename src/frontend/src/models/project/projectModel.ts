@@ -1,5 +1,4 @@
-import { GeoGeomTypesEnum } from '@/types/enums';
-import { project_status } from '@/types/enums';
+import { project_status, GeoGeomTypesEnum } from '@/types/enums';
 
 export type osmTag = {
   string: string;

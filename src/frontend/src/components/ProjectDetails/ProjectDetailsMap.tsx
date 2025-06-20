@@ -120,14 +120,16 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
           new Style({
             image: new Circle({
               fill: new Fill({
-                color: mapTheme.palette.entityStatusColors.marked_bad,
+                color: 'rgba(250,17,0,0.4)',
               }),
               stroke: new Stroke({
-                color: 'rgb(215,63,62,1)',
-                width: width,
+                color: 'rgba(250,17,0,0.4)',
+                width: width * 4,
               }),
               radius: 8,
+              declutterMode: 'obstacle',
             }),
+            zIndex: 1,
           }),
         );
       } else {
@@ -232,7 +234,7 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
 
       // get features from layer excluding 'project-area'(task layer) i.e. get feature from data-extract & new-geoms layer
       const entityFeatures = map.getFeaturesAtPixel(evt.pixel, {
-        layerFilter: (layer) => layer.get('name') !== 'project-area',
+        layerFilter: (layer) => !['bad-entities-point', 'bad-entities', 'project-area'].includes(layer.get('name')),
       });
 
       // if the clicked point contains entity-related features, handle them; otherwise, check for task features
@@ -312,7 +314,8 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
           isValidUrl(projectInfo.data_extract_url) &&
           dataExtractExtent &&
           selectedTask &&
-          (projectInfo.primary_geom_type && GeoGeomTypesEnum[projectInfo.primary_geom_type] === 'Point' ? (
+          (projectInfo.primary_geom_type &&
+          GeoGeomTypesEnum[projectInfo.primary_geom_type] === GeoGeomTypesEnum.POINT ? (
             <ClusterLayer
               map={map}
               fgbUrl={projectInfo.data_extract_url}
@@ -358,6 +361,25 @@ const ProjectDetailsMap = ({ setSelectedTaskArea, setSelectedTaskFeature, setMap
               zIndex={5}
             />
           ))}
+        {(projectInfo.primary_geom_type === GeoGeomTypesEnum.POINT ||
+          projectInfo.new_geom_type === GeoGeomTypesEnum.POINT) && (
+          <VectorLayer
+            geojson={badGeomFeatureCollection}
+            viewProperties={{
+              size: map?.getSize(),
+              padding: [50, 50, 50, 50],
+              constrainResolution: true,
+              duration: 2000,
+            }}
+            layerProperties={{ name: 'bad-entities-point' }}
+            zIndex={5}
+            style=""
+            getTaskStatusStyle={(feature) => {
+              const geomType = feature.getGeometry().getType();
+              return getFeatureStatusStyle(geomType, mapTheme, 'MARKED_BAD', false);
+            }}
+          />
+        )}
         <VectorLayer
           geojson={badGeomFeatureCollection}
           viewProperties={{

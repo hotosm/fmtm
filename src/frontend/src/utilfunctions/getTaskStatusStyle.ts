@@ -30,7 +30,9 @@ function createPointStyle(fillColor: string, strokeColor: string) {
         width: 1,
       }),
       radius: 8,
+      declutterMode: 'obstacle',
     }),
+    zIndex: 5,
   });
 }
 
@@ -66,6 +68,7 @@ function createIconStyle(iconSrc: string, scale: number = 0.8, color: any = 'red
       src: iconSrc,
       color: color,
       opacity: 1,
+      declutterMode: 'obstacle',
     }),
     geometry: function (feature) {
       const polygonCoord = getFeatureGeojson(feature, {});
@@ -141,31 +144,30 @@ export const getFeatureStatusStyle = (
   isEntitySelected: boolean,
 ) => {
   let geojsonStyles;
-
-  if (geomType === GeoGeomTypesEnum.POINT) {
+  if (geomType === 'Point') {
     geojsonStyles = {
       READY: createPointStyle(
         mapTheme.palette.entityStatusColors.ready,
-        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(0,0,0,0.5)',
+        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(255,255,255,1)',
       ),
       OPENED_IN_ODK: createPointStyle(
         mapTheme.palette.entityStatusColors.opened_in_odk,
-        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(0,0,0,0.5)',
+        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(255,255,255,1)',
       ),
       SURVEY_SUBMITTED: createPointStyle(
         mapTheme.palette.entityStatusColors.survey_submitted,
-        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(0,0,0,0.5)',
+        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(255,255,255,1)',
       ),
       MARKED_BAD: createPointStyle(
         mapTheme.palette.entityStatusColors.marked_bad,
-        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(0,0,0,0.5)',
+        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(255,255,255,1)',
       ),
       VALIDATED: createPointStyle(
         mapTheme.palette.entityStatusColors.validated,
-        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(0,0,0,0.5)',
+        isEntitySelected ? 'rgb(224,10,7,1)' : 'rgb(255,255,255,1)',
       ),
     };
-  } else if (geomType === GeoGeomTypesEnum.POLYGON) {
+  } else if (geomType === 'Polygon') {
     geojsonStyles = {
       READY: createFeaturePolygonStyle(
         mapTheme.palette.entityStatusColors.ready,
