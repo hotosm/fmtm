@@ -549,13 +549,10 @@ async def project_data():
 
 @pytest_asyncio.fixture(scope="function")
 async def client(app: FastAPI, db: AsyncConnection):
-    """The FastAPI test server. change for testing!"""
-    # change for testing purposes, will be reverted later
+    """The FastAPI test server."""
     # Override server db connection to use same as in conftest
     # NOTE this is marginally slower, but required else tests fail
     app.dependency_overrides[db_conn] = lambda: db
-
-    log.debug(f"Testing backend workflow")
 
     async with LifespanManager(app) as manager:
         async with AsyncClient(
@@ -564,6 +561,3 @@ async def client(app: FastAPI, db: AsyncConnection):
             follow_redirects=True,
         ) as ac:
             yield ac
-
-
-# adding for backend workflow testing purposes
