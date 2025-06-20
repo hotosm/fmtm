@@ -17,6 +17,7 @@ jobs:
     uses: hotosm/gh-workflows/.github/workflows/test_compose.yml@3.2.0
     env:
       DEBUG_OVERRIDE: True
+    uses: hotosm/gh-workflows/.github/workflows/test_compose.yml@3.2.2
     with:
       image_name: ghcr.io/${{ github.repository }}/backend
       build_context: src
