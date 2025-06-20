@@ -9,3 +9,5 @@ export async function openTestProject(page: Page) {
     .click();
   await page.waitForTimeout(4000);
 }
+
+// adding for backend workflow testing purposes
