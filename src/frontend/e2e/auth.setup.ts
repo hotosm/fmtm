@@ -20,5 +20,4 @@ setup.skip('authenticate', async ({ browserName, page }) => {
 
   // Save authentication state
   await page.context().storageState({ path: authFile });
-  //test pr from forked repos
 });
