@@ -561,3 +561,5 @@ async def client(app: FastAPI, db: AsyncConnection):
             follow_redirects=True,
         ) as ac:
             yield ac
+
+# adding comment for testing purposes
