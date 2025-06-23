@@ -12,6 +12,7 @@ import Forbidden from '@/views/Forbidden';
 import Stepper from '@/components/CreateProject/Stepper';
 import Button from '@/components/common/Button';
 import AssetModules from '@/shared/AssetModules';
+import Map from '@/components/CreateProject/Map';
 
 const CreateProject = () => {
   const hasManagedAnyOrganization = useHasManagedAnyOrganization();
@@ -62,7 +63,9 @@ const CreateProject = () => {
         </div>
 
         {/* map container */}
-        <div className="fmtm-col-span-12 sm:fmtm-col-span-5 lg:fmtm-col-span-4 fmtm-h-[20rem] sm:fmtm-h-full fmtm-rounded-xl fmtm-bg-white"></div>
+        <div className="fmtm-col-span-12 sm:fmtm-col-span-5 lg:fmtm-col-span-4 fmtm-h-[20rem] sm:fmtm-h-full fmtm-rounded-xl fmtm-bg-white">
+          <Map />
+        </div>
       </div>
     </div>
   );
