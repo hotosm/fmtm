@@ -18,7 +18,9 @@
 """Functions for task submissions."""
 
 import json
+import tempfile
 import uuid
+from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -29,7 +31,7 @@ from loguru import logger as log
 from psycopg import Connection
 from pyodk._endpoints.submissions import Submission
 
-from app.central import central_schemas
+from app.central import central_crud, central_schemas
 from app.central.central_crud import (
     get_odk_form,
 )
@@ -40,7 +42,10 @@ from app.config import settings
 from app.db.enums import HTTPStatus
 from app.db.models import DbProject
 from app.projects import project_crud
-from app.s3 import strip_presigned_url_for_local_dev
+from app.s3 import (
+    add_file_to_bucket,
+    strip_presigned_url_for_local_dev,
+)
 
 # async def convert_json_to_osm(file_path):
 #     """Wrapper for osm-fieldwork json2osm."""
@@ -288,3 +293,59 @@ async def get_dashboard_detail(db: Connection, project: DbProject):
         "total_tasks": len(project.tasks),
         "total_contributors": len(contributors_dict),
     }
+
+
+async def get_project_submission_geojson(project, filters):
+    """Fetch submissions and convert to GeoJSON."""
+    data = await get_submission_by_project(project, filters)
+    submission_json = data.get("value", [])
+
+    return await central_crud.convert_odk_submission_json_to_geojson(submission_json)
+
+
+async def upload_submission_geojson_to_s3(project, submission_geojson):
+    """Handles submission GeoJSON generation and upload to S3 for a single project."""
+    submission_s3_path = f"{project.organisation_id}/{project.id}/submission.geojson"
+    log.debug(f"Uploading submission to S3 path: {submission_s3_path}")
+
+    with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".geojson") as tmp:
+        json.dump(submission_geojson, tmp)
+        tmp.flush()
+        add_file_to_bucket(
+            settings.S3_BUCKET_NAME,
+            submission_s3_path,
+            tmp.name,
+            content_type="application/geo+json",
+        )
+        log.info(
+            f"Uploaded submission geojson of project {project.id} to S3: "
+            f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}/{submission_s3_path}"
+        )
+
+
+async def trigger_upload_submissions(
+    db: Connection,
+):
+    """Upload the submission geojson to S3.
+
+    Returns the S3 path.
+    """
+    all_projects_query = "SELECT id FROM projects"
+    async with db.cursor() as cur:
+        await cur.execute(all_projects_query)
+        active_projects = await cur.fetchall()
+
+    time_now = datetime.now(timezone.utc)
+    threedaysago = (time_now - timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+    for (project_id,) in active_projects:
+        log.info(f"Processing project {project_id} for submission upload to S3")
+        project = await DbProject.one(db, project_id, True)
+        recent_entities = await central_crud.get_entities_data(
+            project.odk_credentials,
+            project.odkid,
+            filter_date=threedaysago,
+        )
+        if recent_entities:
+            submission_geojson = await get_project_submission_geojson(project, {})
+            await upload_submission_geojson_to_s3(project, submission_geojson)
