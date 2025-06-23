@@ -17,8 +17,8 @@
 #
 """Functions for task submissions."""
 
+import asyncio
 import json
-import tempfile
 import uuid
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
@@ -43,7 +43,7 @@ from app.db.enums import HTTPStatus
 from app.db.models import DbProject
 from app.projects import project_crud
 from app.s3 import (
-    add_file_to_bucket,
+    add_obj_to_bucket,
     strip_presigned_url_for_local_dev,
 )
 
@@ -307,20 +307,18 @@ async def upload_submission_geojson_to_s3(project, submission_geojson):
     """Handles submission GeoJSON generation and upload to S3 for a single project."""
     submission_s3_path = f"{project.organisation_id}/{project.id}/submission.geojson"
     log.debug(f"Uploading submission to S3 path: {submission_s3_path}")
+    submission_geojson_bytes = BytesIO(json.dumps(submission_geojson).encode("utf-8"))
 
-    with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".geojson") as tmp:
-        json.dump(submission_geojson, tmp)
-        tmp.flush()
-        add_file_to_bucket(
-            settings.S3_BUCKET_NAME,
-            submission_s3_path,
-            tmp.name,
-            content_type="application/geo+json",
-        )
-        log.info(
-            f"Uploaded submission geojson of project {project.id} to S3: "
-            f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}/{submission_s3_path}"
-        )
+    add_obj_to_bucket(
+        settings.S3_BUCKET_NAME,
+        submission_geojson_bytes,
+        submission_s3_path,
+        content_type="application/geo+json",
+    )
+    log.info(
+        f"Uploaded submission geojson of project {project.id} to S3: "
+        f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}/{submission_s3_path}"
+    )
 
 
 async def trigger_upload_submissions(
@@ -330,7 +328,7 @@ async def trigger_upload_submissions(
 
     Returns the S3 path.
     """
-    all_projects_query = "SELECT id FROM projects"
+    all_projects_query = "SELECT id FROM projects;"
     async with db.cursor() as cur:
         await cur.execute(all_projects_query)
         active_projects = await cur.fetchall()
@@ -339,6 +337,7 @@ async def trigger_upload_submissions(
     threedaysago = (time_now - timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
     for (project_id,) in active_projects:
+        await asyncio.sleep(0.5)
         log.info(f"Processing project {project_id} for submission upload to S3")
         project = await DbProject.one(db, project_id, True)
         recent_entities = await central_crud.get_entities_data(
