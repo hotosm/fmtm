@@ -390,6 +390,24 @@
       "contributions": [
         "translation"
       ]
+    },
+    {
+      "login": "ajvs",
+      "name": "Ajee",
+      "avatar_url": "https://avatars.githubusercontent.com/u/16050172?v=4",
+      "profile": "https://github.com/ajvs",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "trendspotter",
+      "name": "Jiří Podhorecký",
+      "avatar_url": "https://avatars.githubusercontent.com/u/15286128?v=4",
+      "profile": "https://spotter.ngo",
+      "contributions": [
+        "translation"
+      ]
     }
   ],
   "contributorsPerLine": 7,
