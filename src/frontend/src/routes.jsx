@@ -102,7 +102,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/create-new-project',
+        path: '/create',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
