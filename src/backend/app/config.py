@@ -308,6 +308,7 @@ class Settings(BaseSettings):
     S3_ACCESS_KEY: str
     S3_SECRET_KEY: SecretStr
     S3_BUCKET_NAME: str = "fmtm-data"
+    S3_PRIVATE_BUCKET_NAME: str = "fmtm-private-data"
     S3_DOWNLOAD_ROOT: Optional[str] = None
 
     @field_validator("S3_DOWNLOAD_ROOT", mode="before")
