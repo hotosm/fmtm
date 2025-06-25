@@ -39,7 +39,7 @@ from app.central.central_deps import get_async_odk_form, pyodk_client
 
 # from osm_fieldwork.json2osm import json2osm
 from app.config import settings
-from app.db.enums import HTTPStatus
+from app.db.enums import HTTPStatus, ProjectStatus
 from app.db.models import DbProject
 from app.projects import project_crud
 from app.s3 import (
@@ -305,6 +305,16 @@ async def get_project_submission_geojson(project, filters):
 
 async def upload_submission_geojson_to_s3(project, submission_geojson):
     """Handles submission GeoJSON generation and upload to S3 for a single project."""
+    # FIXME Maybe upload the skipped projects to S3 in private buckets in the future?
+    if project.visibility not in ["PUBLIC", "INVITE_ONLY"] or project.status in [
+        ProjectStatus.COMPLETED,
+        ProjectStatus.ARCHIVED,
+    ]:
+        log.info(
+            f"Skipping submission upload for project {project.id} with visibility "
+            f"{project.visibility} and status {project.status}"
+        )
+        return
     submission_s3_path = f"{project.organisation_id}/{project.id}/submission.geojson"
     log.debug(f"Uploading submission to S3 path: {submission_s3_path}")
     submission_geojson_bytes = BytesIO(json.dumps(submission_geojson).encode("utf-8"))
