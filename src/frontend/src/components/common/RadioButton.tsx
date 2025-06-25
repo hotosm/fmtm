@@ -11,7 +11,7 @@ interface IRadioButton {
 interface RadioButtonProps {
   topic?: string;
   options: IRadioButton[];
-  direction: 'row' | 'column';
+  direction?: 'row' | 'column';
   onChangeData: (value: string) => void;
   value: string;
   errorMsg?: string;
@@ -23,7 +23,7 @@ interface RadioButtonProps {
 const RadioButton: React.FC<RadioButtonProps> = ({
   topic,
   options,
-  direction,
+  direction = 'column',
   onChangeData,
   value,
   errorMsg,
