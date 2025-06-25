@@ -26,6 +26,7 @@ export interface selectPropType
   enableSearchbar?: boolean;
   handleApiSearch?: (e: string) => void;
   name?: string;
+  ref?: React.Ref<HTMLButtonElement> | null;
 }
 export type selectOptionsType = {
   label: string;
@@ -54,6 +55,7 @@ function Select2({
   checkBox = false,
   enableSearchbar = true,
   handleApiSearch, // if search is handled on backend
+  ref = null,
 }: selectPropType) {
   const dispatch = useDispatch();
 
@@ -127,9 +129,10 @@ function Select2({
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild ref={triggerRef}>
           <button
+            ref={ref}
             disabled={disabled}
             className={cn(
-              'fmtm-group fmtm-flex fmtm-items-center fmtm-justify-between fmtm-gap-2 fmtm-border-[1px] fmtm-border-gray-300 fmtm-h-[2.3rem] fmtm-rounded-md disabled:!fmtm-cursor-not-allowed fmtm-px-3',
+              'fmtm-group fmtm-flex fmtm-items-center fmtm-justify-between fmtm-gap-2 fmtm-border-[1px] fmtm-border-gray-300 fmtm-h-[2.3rem] fmtm-rounded-md disabled:!fmtm-cursor-not-allowed fmtm-px-3 focus:fmtm-border-[#D73F37] focus:fmtm-ring-[#D73F37]/50 focus:fmtm-ring-[3px]',
               className,
             )}
             onClick={() => setOpen(true)}
