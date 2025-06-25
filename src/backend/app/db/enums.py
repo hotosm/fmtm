@@ -205,6 +205,7 @@ class ProjectVisibility(StrEnum, Enum):
 
     PUBLIC = "PUBLIC"
     PRIVATE = "PRIVATE"
+    SENSITIVE = "SENSITIVE"
     INVITE_ONLY = "INVITE_ONLY"
 
 
