@@ -66,10 +66,6 @@ check_all_s3_vars_present() {
         echo "Environment variable S3_BACKUP_BUCKET_NAME is not set."
         exit 1
     fi
-    if [ -z "${S3_PRIVATE_BUCKET_NAME}" ]; then
-        echo "Environment variable S3_PRIVATE_BUCKET_NAME is not set."
-        exit 1
-    fi
 
     # Strip any extra unrequired "quotes"
     export S3_ENDPOINT="${S3_ENDPOINT//\"/}"
@@ -77,7 +73,6 @@ check_all_s3_vars_present() {
     export S3_SECRET_KEY="${S3_SECRET_KEY//\"/}"
     export S3_BUCKET_NAME="${S3_BUCKET_NAME//\"/}"
     export S3_BACKUP_BUCKET_NAME="${S3_BACKUP_BUCKET_NAME//\"/}"
-    export S3_PRIVATE_BUCKET_NAME="${S3_PRIVATE_BUCKET_NAME//\"/}"
 }
 
 wait_for_db() {
@@ -198,9 +193,6 @@ init_buckets() {
 
     mc mb "s3/${BACKUP_BUCKET_NAME}" --ignore-existing
     mc anonymous set download "s3/${BACKUP_BUCKET_NAME}"
-
-    mc mb "s3/${S3_PRIVATE_BUCKET_NAME}" --ignore-existing
-    mc anonymous set none "s3/${S3_PRIVATE_BUCKET_NAME}"
 }
 
 backup_db() {

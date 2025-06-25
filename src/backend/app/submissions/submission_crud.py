@@ -310,14 +310,14 @@ async def upload_submission_geojson_to_s3(project, submission_geojson):
     submission_geojson_bytes = BytesIO(json.dumps(submission_geojson).encode("utf-8"))
 
     add_obj_to_bucket(
-        settings.S3_PRIVATE_BUCKET_NAME,
+        settings.S3_BUCKET_NAME,
         submission_geojson_bytes,
         submission_s3_path,
         content_type="application/geo+json",
     )
     log.info(
         f"Uploaded submission geojson of project {project.id} to S3: "
-        f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_PRIVATE_BUCKET_NAME}/{submission_s3_path}"
+        f"{settings.S3_DOWNLOAD_ROOT}/{settings.S3_BUCKET_NAME}/{submission_s3_path}"
     )
 
 
