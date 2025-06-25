@@ -52,12 +52,9 @@ from app.auth.auth_schemas import AuthUser, OrgUserDict, ProjectUserDict
 from app.auth.providers.osm import init_osm_auth
 from app.auth.roles import Mapper, ProjectManager, org_admin
 from app.central import central_crud, central_deps, central_schemas
-from app.central.central_schemas import (
-    OdkEntitiesUpdate,
-)
 from app.config import settings
 from app.db.database import db_conn
-from app.db.enums import DbGeomType, EntityState, HTTPStatus, ProjectRole, XLSFormType
+from app.db.enums import DbGeomType, HTTPStatus, ProjectRole, XLSFormType
 from app.db.languages_and_countries import countries
 from app.db.models import (
     DbBackgroundTask,
@@ -284,12 +281,6 @@ async def set_odk_entities_mapping_status(
     }
     """
     project = project_user.get("project")
-    new_status = EntityState(int(entity_details.status)).name
-    await DbOdkEntities.update(
-        db,
-        entity_details.entity_id,
-        OdkEntitiesUpdate(status=new_status),
-    )
     return await central_crud.update_entity_mapping_status(
         project.odk_credentials,
         project.odkid,
@@ -783,7 +774,6 @@ async def generate_files(
     project_user_dict: Annotated[ProjectUserDict, Depends(ProjectManager())],
     background_tasks: BackgroundTasks,
     xlsform_upload: Annotated[BytesIO, Depends(central_deps.read_xlsform)],
-    additional_entities: Annotated[Optional[list[str]], None] = None,
     combined_features_count: Annotated[int, Form()] = 0,
 ):
     """Generate additional content to initialise the project.
@@ -800,8 +790,6 @@ async def generate_files(
 
     Args:
         xlsform_upload (UploadFile): The XLSForm for the project data collection.
-        additional_entities (list[str]): If additional Entity lists need to be
-            created (i.e. the project form references multiple geometries).
         combined_features_count (int): Total count of features to be mapped, plus
             additional dataset features, determined by frontend.
         db (Connection): The database connection.
@@ -824,7 +812,6 @@ async def generate_files(
     await central_crud.validate_and_update_user_xlsform(
         xlsform=xlsform_upload,
         form_name=form_name,
-        additional_entities=additional_entities,
         new_geom_type=new_geom_type,
         # If we are only mapping new features, then verification is irrelevant
         need_verification_fields=project_contains_existing_feature,
@@ -834,7 +821,6 @@ async def generate_files(
     xform_id, project_xlsform = await central_crud.append_fields_to_user_xlsform(
         xlsform=xlsform_upload,
         form_name=form_name,
-        additional_entities=additional_entities,
         new_geom_type=new_geom_type,
         need_verification_fields=project_contains_existing_feature,
         use_odk_collect=use_odk_collect,
