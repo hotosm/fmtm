@@ -1,16 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
+import { valid } from 'geojson-validation';
 import { useIsAdmin } from '@/hooks/usePermissions';
 
 import { GetUserListForSelect } from '@/api/User';
 import { UserActions } from '@/store/slices/UserSlice';
+import { convertFileToGeojson } from '@/utilfunctions/convertFileToGeojson';
+import { fileType } from '@/store/types/ICommon';
+import { CommonActions } from '@/store/slices/CommonSlice';
 
 import { CustomCheckbox } from '@/components/common/Checkbox';
 import FieldLabel from '@/components/common/FieldLabel';
 import { Input } from '@/components/RadixComponents/Input';
 import Select2 from '@/components/common/Select2';
 import { Textarea } from '@/components/RadixComponents/TextArea';
+import { uploadAreaOptions } from './constants';
+import Button from '@/components/common/Button';
+import RadioButton from '@/components/common/RadioButton';
+import UploadAreaComponent from '@/components/common/UploadArea';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -60,6 +68,37 @@ const BasicDetails = () => {
     const selectedOrg = organisationList.find((org) => org.value === orgIdInt);
     setValue('hasODKCredentials', selectedOrg?.hasODKCredentials);
     setValue('useDefaultODKCredentials', selectedOrg?.hasODKCredentials);
+  };
+
+  const changeFileHandler = async (file: fileType, fileInputRef: React.RefObject<HTMLInputElement | null>) => {
+    if (!file) {
+      resetFile();
+      return;
+    }
+
+    const fileObject = file?.file;
+    const convertedGeojson = await convertFileToGeojson(fileObject);
+    const isGeojsonValid = valid(convertedGeojson, true);
+
+    if (isGeojsonValid?.length === 0) {
+      setValue('uploadedAOIFile', file);
+      setValue('AOIGeojson', convertedGeojson);
+    } else {
+      setValue('uploadedAOI File', null);
+      setValue('AOIGeojson', null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      dispatch(
+        CommonActions.SetSnackBar({
+          message: `The uploaded GeoJSON is invalid and contains the following errors: ${isGeojsonValid?.map((error) => `\n${error}`)}`,
+          duration: 10000,
+        }),
+      );
+    }
+  };
+
+  const resetFile = () => {
+    setValue('uploadedAOIFile', null);
+    setValue('AOIGeojson', null);
   };
 
   const organisationList = organisationListData.map((org) => ({
@@ -170,6 +209,51 @@ const BasicDetails = () => {
           )}
         />
       </div>
+
+      <div>
+        <FieldLabel label="Project Area" astric className="fmtm-mb-1" />
+        <Controller
+          control={control}
+          name="uploadAreaSelection"
+          render={({ field }) => (
+            <RadioButton value={field.value} options={uploadAreaOptions} onChangeData={field.onChange} />
+          )}
+        />
+      </div>
+      {values.uploadAreaSelection === 'draw' && (
+        <div>
+          <p className="fmtm-text-gray-700 fmtm-pb-2 fmtm-text-sm">Draw a polygon on the map to plot the area</p>
+          {values.AOIGeojson && (
+            <>
+              <Button variant="secondary-grey" onClick={() => resetFile()}>
+                Reset
+              </Button>
+              <p className="fmtm-text-gray-700 fmtm-mt-2 fmtm-text-xs">
+                Total Area: <span className="fmtm-font-bold">{values.AOIArea}</span>
+              </p>
+            </>
+          )}
+        </div>
+      )}
+      {values.uploadAreaSelection === 'upload_file' && (
+        <div className="fmtm-my-2">
+          <FieldLabel label="Select one of the option to upload area" astric className="fmtm-mb-1" />
+          <UploadAreaComponent
+            title=""
+            label="Please upload .geojson, .json file"
+            data={values.uploadedAOIFile ? [values.uploadedAOIFile] : []}
+            onUploadFile={(updatedFiles, fileInputRef) => {
+              changeFileHandler(updatedFiles?.[0] as fileType, fileInputRef);
+            }}
+            acceptedInput=".geojson, .json"
+          />
+          {values.AOIGeojson && (
+            <p className="fmtm-text-gray-700 fmtm-mt-2 fmtm-text-xs">
+              Total Area: <span className="fmtm-font-bold">{values.AOIArea}</span>
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 };
