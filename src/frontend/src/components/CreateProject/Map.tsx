@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import useOLMap from '@/hooks/useOlMap';
 
 import { MapContainer as MapComponent } from '@/components/MapComponent/OpenLayersComponent';
@@ -18,6 +18,8 @@ type propsType = {
   onModify?: ((geojson: any, area: string) => void) | null;
   hasEditUndo?: boolean;
   getAOIArea?: ((area?: string) => void) | null;
+  toggleEdit?: boolean;
+  setToggleEdit?: (value: boolean) => void;
 };
 
 const Map = ({
@@ -30,6 +32,8 @@ const Map = ({
   onModify,
   hasEditUndo,
   getAOIArea,
+  toggleEdit,
+  setToggleEdit,
 }: propsType) => {
   const { mapRef, map }: { mapRef: any; map: any } = useOLMap({
     center: [0, 0],
@@ -50,7 +54,7 @@ const Map = ({
         }}
       >
         <LayerSwitcherControl visible={'osm'} />
-        <MapControls hasEditUndo={hasEditUndo} />
+        <MapControls hasEditUndo={hasEditUndo} toggleEdit={toggleEdit} setToggleEdit={setToggleEdit} />
 
         {isDrawOrGeojsonFile && !splittedGeojson && (
           <VectorLayer

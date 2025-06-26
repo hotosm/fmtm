@@ -31,7 +31,7 @@ const btnList = [
   },
 ];
 
-const MapControls = ({ map, hasEditUndo }: mapControlComponentType) => {
+const MapControls = ({ map, hasEditUndo, toggleEdit, setToggleEdit }: mapControlComponentType) => {
   const handleOnClick = (btnId) => {
     const actualZoom = map.getView().getZoom();
     if (btnId === 'add') {
@@ -39,6 +39,7 @@ const MapControls = ({ map, hasEditUndo }: mapControlComponentType) => {
     } else if (btnId === 'minus') {
       map.getView().setZoom(actualZoom - 1);
     } else if (btnId === 'edit') {
+      setToggleEdit(!toggleEdit);
     }
   };
 
