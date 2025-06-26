@@ -104,6 +104,7 @@ import {
   HistoryOutlined as HistoryOutlinedIcon,
   LockOutlined as LockOutlinedIcon,
   ContentCopy as ContentCopyIcon,
+  InfoOutlined as InfoOutlineIcon,
 } from '@mui/icons-material';
 import LockPng from '@/assets/images/lock.png';
 import RedLockPng from '@/assets/images/red-lock.png';
@@ -222,4 +223,5 @@ export default {
   HistoryOutlinedIcon,
   LockOutlinedIcon,
   ContentCopyIcon,
+  InfoOutlineIcon,
 };
