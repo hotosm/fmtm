@@ -16,8 +16,8 @@ import Button from '@/components/common/Button';
 import AssetModules from '@/shared/AssetModules';
 import Map from '@/components/CreateProject/Map';
 import {
-  basicDetailsValidationSchema,
   createProjectValidationSchema,
+  basicDetailsValidationSchema,
   mapDataValidationSchema,
   projectDetailsValidationSchema,
   splitTasksValidationSchema,
@@ -83,8 +83,11 @@ const CreateProject = () => {
     resolver: zodResolver(validationSchema[step]),
   });
 
-  const { handleSubmit, formState, watch, setValue } = formMethods;
+  const { handleSubmit, formState, watch, setValue, trigger } = formMethods;
+  const { errors } = formState;
   const values = watch();
+  console.log(values, 'values');
+  console.log(errors, 'errors');
 
   const form = {
     1: <BasicDetails />,
@@ -95,7 +98,25 @@ const CreateProject = () => {
   };
 
   const onSubmit = (data) => {
-    setStep(step + 1);
+    if (step < 5) setStep(step + 1);
+  };
+
+  const createDraftProject = async () => {
+    const isValidationSuccess = await trigger(undefined, { shouldFocus: true });
+
+    if (!isValidationSuccess) return;
+    const { name, short_description, description, organisation_id, project_admins, AOIGeojson, uploadedAOIFile } =
+      values;
+    const payload = {
+      name,
+      short_description,
+      description,
+      organisation_id,
+      project_admins,
+      AOIGeojson,
+      uploadedAOIFile,
+    };
+    console.log(payload, 'payload');
   };
 
   return (
@@ -122,7 +143,7 @@ const CreateProject = () => {
             {/* buttons */}
             <div className="fmtm-flex fmtm-justify-between fmtm-items-center fmtm-px-5 fmtm-py-3 fmtm-shadow-2xl">
               {step === 1 && (
-                <Button variant="secondary-grey" onClick={() => {}}>
+                <Button variant="secondary-grey" onClick={createDraftProject}>
                   Save as Draft
                 </Button>
               )}
@@ -143,6 +164,7 @@ const CreateProject = () => {
           <Map
             drawToggle={values.uploadAreaSelection === 'draw' && step === 1}
             uploadedOrDrawnGeojsonFile={values.AOIGeojson}
+            buildingExtractedGeojson={values.dataExtractGeojson}
             onDraw={
               values.AOIGeojson || values.uploadAreaSelection === 'upload_file'
                 ? null
