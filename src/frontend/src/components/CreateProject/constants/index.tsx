@@ -66,3 +66,15 @@ export const uploadAreaOptions: uploadAreaOptionsType[] = [
     label: 'Upload File',
   },
 ];
+
+export const primaryGeomOptions = [
+  { name: 'primary_geom_type', value: 'POLYGON', label: 'Polygons (e.g. buildings)' },
+  { name: 'primary_geom_type', value: 'POINT', label: 'Points (e.g. POIs)' },
+  { name: 'primary_geom_type', value: 'POLYLINE', label: 'Lines (e.g. roads, rivers)' },
+];
+
+export const newGeomOptions = [
+  { name: 'new_geom_type', value: 'POLYGON', label: 'Polygons' },
+  { name: 'new_geom_type', value: 'POINT', label: 'Points' },
+  { name: 'new_geom_type', value: 'POLYLINE', label: 'Lines' },
+];
