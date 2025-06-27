@@ -72,6 +72,7 @@ const UploadSurvey = () => {
             <Select2
               options={sortedFormExampleList || []}
               value={field.value}
+              choose="label"
               onChange={(value: any) => {
                 field.onChange(value);
               }}
