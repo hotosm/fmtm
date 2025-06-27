@@ -43,7 +43,7 @@ const Map = ({
   const isDrawOrGeojsonFile = drawToggle || uploadedOrDrawnGeojsonFile;
 
   return (
-    <div className="map-container fmtm-w-full fmtm-h-[600px] lg:fmtm-h-full">
+    <div className="map-container fmtm-w-full fmtm-h-full">
       <MapComponent
         ref={mapRef}
         mapInstance={map}
