@@ -278,7 +278,11 @@ general project creation steps above. However, project creator should be conscio
   as new feature in field.
 - Task splitting algorithm is disabled when mapping road network. Project creator may choose to
   divide into squares or use multipolygon as each polygon will be treated as a task.
-  !!! Note: you can only survey features of one geometry type in a project Unless you choose mixed geometry type for new feature.
+  
+  !!! Note: you can only survey features of one geometry type in a project Unless you choose 
+  mixed geometry type for new feature.
+
+![](image.png)
 
 ## Steps To View Your Submissions and Infographics
 
