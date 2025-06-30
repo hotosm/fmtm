@@ -18,6 +18,7 @@ import RadioButton from '@/components/common/RadioButton';
 import Switch from '@/components/common/Switch';
 import Button from '@/components/common/Button';
 import UploadArea from '@/components/common/UploadArea';
+import ErrorMessage from '@/components/common/ErrorMessage';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -25,7 +26,8 @@ const MapData = () => {
   const dispatch = useAppDispatch();
 
   const form = useFormContext();
-  const { watch, control, setValue } = form;
+  const { watch, control, setValue, formState } = form;
+  const { errors } = formState;
   const values = watch();
 
   const [fetchingOSMData, setFetchingOSMData] = useState(false);
@@ -145,8 +147,8 @@ const MapData = () => {
 
   return (
     <div className="fmtm-flex fmtm-flex-col fmtm-gap-[1.125rem] fmtm-w-full">
-      <div>
-        <FieldLabel label="What type of geometry do you wish to map?" astric className="fmtm-mb-1" />
+      <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+        <FieldLabel label="What type of geometry do you wish to map?" astric />
         <Controller
           control={control}
           name="primaryGeomType"
@@ -154,11 +156,12 @@ const MapData = () => {
             <RadioButton value={field.value} options={primaryGeomOptions} onChangeData={field.onChange} />
           )}
         />
+        {errors?.primaryGeomType?.message && <ErrorMessage message={errors.primaryGeomType.message as string} />}
       </div>
 
       {values.primaryGeomType === GeoGeomTypesEnum.POINT && (
         <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
-          <FieldLabel label="Include polygon centroids" className="fmtm-mb-1" />
+          <FieldLabel label="Include polygon centroids" />
           <Controller
             control={control}
             name="includeCentroid"
@@ -170,19 +173,27 @@ const MapData = () => {
       )}
 
       <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
-        <FieldLabel label="I want to use a mix of geometry types" className="fmtm-mb-1" />
+        <FieldLabel label="I want to use a mix of geometry types" />
         <Controller
           control={control}
           name="useMixedGeomTypes"
           render={({ field }) => (
-            <Switch ref={field.ref} checked={field.value} onCheckedChange={field.onChange} className="" />
+            <Switch
+              ref={field.ref}
+              checked={field.value}
+              onCheckedChange={(value) => {
+                field.onChange(value);
+                setValue('newGeomType', null);
+              }}
+              className=""
+            />
           )}
         />
       </div>
 
       {values.useMixedGeomTypes && (
-        <div>
-          <FieldLabel label="New geometries collected should be of type" astric className="fmtm-mb-1" />
+        <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+          <FieldLabel label="New geometries collected should be of type" astric />
           <Controller
             control={control}
             name="newGeomType"
@@ -190,10 +201,11 @@ const MapData = () => {
               <RadioButton value={field.value} options={newGeomOptions} onChangeData={field.onChange} />
             )}
           />
+          {errors?.useMixedGeomTypes?.message && <ErrorMessage message={errors.useMixedGeomTypes.message as string} />}
         </div>
       )}
-      <div>
-        <FieldLabel label="Upload your own map data or use OSM" astric className="fmtm-mb-1" />
+      <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+        <FieldLabel label="Upload your own map data or use OSM" astric />
         <Controller
           control={control}
           name="dataExtractType"
@@ -201,8 +213,11 @@ const MapData = () => {
             <RadioButton value={field.value} options={dataExtractOptions} onChangeData={field.onChange} />
           )}
         />
+        {errors?.dataExtractType?.message && <ErrorMessage message={errors.dataExtractType.message as string} />}
+      </div>
 
-        {values.dataExtractType === 'osm_data_extract' && (
+      {values.dataExtractType === 'osm_data_extract' && (
+        <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
           <Button
             variant="primary-red"
             onClick={() => {
@@ -213,27 +228,33 @@ const MapData = () => {
           >
             Fetch OSM Data
           </Button>
-        )}
+          {errors?.dataExtractGeojson?.message && (
+            <ErrorMessage message={errors.dataExtractGeojson.message as string} />
+          )}
+        </div>
+      )}
 
-        {values.dataExtractType === 'custom_data_extract' && (
-          <>
-            <FieldLabel label="Upload Map Data" astric className="fmtm-mb-1" />
-            <UploadArea
-              title=""
-              label="The supported file formats are .geojson, .json, .fgb"
-              data={values.customDataExtractFile ? [values.customDataExtractFile] : []}
-              onUploadFile={(updatedFiles, fileInputRef) => {
-                changeFileHandler(updatedFiles?.[0] as fileType, fileInputRef);
-              }}
-              acceptedInput=".geojson,.json,.fgb"
-            />
-          </>
-        )}
-        <p className="fmtm-text-gray-500">
-          Total number of features:{' '}
-          <span className="fmtm-font-bold">{values.dataExtractGeojson?.features?.length || 0}</span>
-        </p>
-      </div>
+      {values.dataExtractType === 'custom_data_extract' && (
+        <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+          <FieldLabel label="Upload Map Data" astric />
+          <UploadArea
+            title=""
+            label="The supported file formats are .geojson, .json, .fgb"
+            data={values.customDataExtractFile ? [values.customDataExtractFile] : []}
+            onUploadFile={(updatedFiles, fileInputRef) => {
+              changeFileHandler(updatedFiles?.[0] as fileType, fileInputRef);
+            }}
+            acceptedInput=".geojson,.json,.fgb"
+          />
+          {errors?.customDataExtractFile?.message && (
+            <ErrorMessage message={errors.customDataExtractFile.message as string} />
+          )}
+        </div>
+      )}
+      <p className="fmtm-text-gray-500 fmtm-text-sm">
+        Total number of features:{' '}
+        <span className="fmtm-font-bold">{values.dataExtractGeojson?.features?.length || 0}</span>
+      </p>
     </div>
   );
 };
