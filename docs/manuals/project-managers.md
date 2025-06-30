@@ -164,8 +164,6 @@ Go to [fmtm] <https://fmtm.hotosm.org/>
   go with the default one of fetch data from OSM.
 - You can also go for 'no existing data' option, if you want to collect map
   features as well in field.
-- You can also upload additional map feature to have multiple feature
-  selection supported.
 
   ![image](https://github.com/user-attachments/assets/8df7c0fc-9a14-4d2d-bfdf-9fb8d9e92b89)
 
@@ -177,9 +175,10 @@ Go to [fmtm] <https://fmtm.hotosm.org/>
 - Option 3: The task splitting algorithm which splits
   the tasks with average number of features which is provided by project
   creator.
-  - The task splitting may take few seconds to few minutes considering
+- The task splitting may take few seconds to few minutes considering
     the feature count and size of AOI. Click on "Submit" to create project.
-
+    
+!!! Note: If you choose to create a project with no existing features, tasking splitting option would be disabled. 
     ![image](https://github.com/user-attachments/assets/7eeaf7ed-c13d-4444-aeeb-d71aed4fee8e)
 
 ### Project Creation Tips
@@ -230,9 +229,6 @@ Go to [fmtm] <https://fmtm.hotosm.org/>
   from OSM.
 - Currently, available types of survey features are Buildings and
   Healthcare only. We plan to add more types of features moving ahead.
-- Project managers can also upload supporting map features. Note that
-  these secondary features can’t be surveyed but selected for respective
-  primary features.
 
 #### XLS Form Preparation
 
@@ -265,6 +261,24 @@ Go to [fmtm] <https://fmtm.hotosm.org/>
 - One option is to use your own organisations ODK server, if available.
 - Another is to request access to use HOT's ODK server, which is free
   to use for public project creation.
+
+### Road Survey Project Creation Tips
+
+Most of the steps for creating project for road survey is similar to 
+general project creation steps above. However, project creator should be concious on few steps.
+
+- In step 3, Choose the xls survey form for highway survey. You can
+  also upload custom xls form for road survey. We will provide option to download
+   xls form for road survey in upcoming release. 
+- In step 4, Choose the line as a map feature type. If you want to create new feature as lines then you
+  don't need to click on checkbox for mix of geometry types. If you wish to collect new feature
+   on other geometry type then you need to click and select the respective geometry type.
+- Fetching data from osm for linear feature is under development. So, project manager need to
+  upload road feature data manually or go with no existing feature and create road network
+  as new feature in field.
+- Task splitting algorithm is disabled when mapping road network. Project creator may choose to
+  divide into squares or use multipolygon as each polygon will be treated as a task. 
+ !!! Note: you can only survey features of one geometry type in a project Unless you choose mixed geometry type for new feature. 
 
 ## Steps To View Your Submissions and Infographics
 
