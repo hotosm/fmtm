@@ -15,6 +15,20 @@ import { NavigateFunction } from 'react-router-dom';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
+export const CreateDraftProjectService = (url: string, payload: Record<string, any>, params: Record<string, any>) => {
+  return async (dispatch: AppDispatch) => {
+    try {
+      dispatch(CreateProjectActions.CreateDraftProjectLoading(true));
+
+      await axios.post(url, payload, { params });
+      dispatch(CommonActions.SetSnackBar({ message: 'Draft project created successfully', variant: 'success' }));
+    } catch (error) {
+    } finally {
+      dispatch(CreateProjectActions.CreateDraftProjectLoading(false));
+    }
+  };
+};
+
 const CreateProjectService = (
   url: string,
   projectData: any,
@@ -267,30 +281,6 @@ const OrganisationService = (url: string) => {
   };
 };
 
-const GetDividedTaskFromGeojson = (url: string, projectData: Record<string, any>) => {
-  return async (dispatch: AppDispatch) => {
-    dispatch(CreateProjectActions.SetDividedTaskFromGeojsonLoading(true));
-
-    const getDividedTaskFromGeojson = async (url: string, projectData: Record<string, any>) => {
-      try {
-        const dividedTaskFormData = new FormData();
-        dividedTaskFormData.append('project_geojson', projectData.geojson);
-        dividedTaskFormData.append('dimension_meters', projectData.dimension);
-        const getGetDividedTaskFromGeojsonResponse = await axios.post(url, dividedTaskFormData);
-        const resp: splittedGeojsonType = getGetDividedTaskFromGeojsonResponse.data;
-        dispatch(CreateProjectActions.SetIsTasksSplit({ key: 'divide_on_square', value: true }));
-        dispatch(CreateProjectActions.SetIsTasksSplit({ key: 'task_splitting_algorithm', value: false }));
-        dispatch(CreateProjectActions.SetDividedTaskGeojson(resp));
-      } catch (error) {
-      } finally {
-        dispatch(CreateProjectActions.SetDividedTaskFromGeojsonLoading(false));
-      }
-    };
-
-    await getDividedTaskFromGeojson(url, projectData);
-  };
-};
-
 const GetIndividualProjectDetails = (url: string) => {
   return async (dispatch: AppDispatch) => {
     dispatch(CreateProjectActions.SetIndividualProjectDetailsLoading(true));
@@ -323,6 +313,31 @@ const GetIndividualProjectDetails = (url: string) => {
   };
 };
 
+const GetDividedTaskFromGeojson = (url: string, projectData: Record<string, any>) => {
+  return async (dispatch: AppDispatch) => {
+    dispatch(CreateProjectActions.GetTaskSplittingPreview(null));
+    dispatch(CreateProjectActions.SetDividedTaskFromGeojsonLoading(true));
+
+    const getDividedTaskFromGeojson = async (url: string, projectData: Record<string, any>) => {
+      try {
+        const dividedTaskFormData = new FormData();
+        dividedTaskFormData.append('project_geojson', projectData.geojson);
+        dividedTaskFormData.append('dimension_meters', projectData.dimension);
+        const getGetDividedTaskFromGeojsonResponse = await axios.post(url, dividedTaskFormData);
+        const resp: splittedGeojsonType = getGetDividedTaskFromGeojsonResponse.data;
+        dispatch(CreateProjectActions.SetIsTasksSplit({ key: 'divide_on_square', value: true }));
+        dispatch(CreateProjectActions.SetIsTasksSplit({ key: 'task_splitting_algorithm', value: false }));
+        dispatch(CreateProjectActions.SetDividedTaskGeojson(resp));
+      } catch (error) {
+      } finally {
+        dispatch(CreateProjectActions.SetDividedTaskFromGeojsonLoading(false));
+      }
+    };
+
+    await getDividedTaskFromGeojson(url, projectData);
+  };
+};
+
 const TaskSplittingPreviewService = (
   url: string,
   projectAoiFile: any,
@@ -330,6 +345,7 @@ const TaskSplittingPreviewService = (
   dataExtractFile: any,
 ) => {
   return async (dispatch: AppDispatch) => {
+    dispatch(CreateProjectActions.SetDividedTaskGeojson(null));
     dispatch(CreateProjectActions.GetTaskSplittingPreviewLoading(true));
 
     const getTaskSplittingGeojson = async (url: string, projectAoiFile: any, dataExtractFile: any) => {
