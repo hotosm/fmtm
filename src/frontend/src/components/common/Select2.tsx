@@ -9,6 +9,7 @@ import AssetModules from '@/shared/AssetModules';
 import { useAppSelector } from '@/types/reduxTypes';
 import { useDispatch } from 'react-redux';
 import { CommonActions } from '@/store/slices/CommonSlice';
+import isEmpty from '@/utilfunctions/isEmpty';
 
 export interface selectPropType
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'onFocus' | 'onAbort'> {
@@ -260,14 +261,14 @@ function Select2({
           </div>
         </PopoverContent>
       </Popover>
-      {multiple && Array.isArray(value) && (
+      {multiple && Array.isArray(value) && !isEmpty(value) && (
         <div className="fmtm-flex fmtm-flex-wrap fmtm-gap-2 fmtm-pt-2">
           {value?.map((val) => (
             <div
               key={val}
               className="fmtm-bg-[#F5F5F5] fmtm-rounded-full fmtm-px-2 fmtm-py-1 fmtm-border-[1px] fmtm-border-[#D7D7D7] fmtm-text-[#484848] fmtm-flex fmtm-items-center fmtm-gap-1"
             >
-              <p>
+              <p className="fmtm-text-xs">
                 {handleApiSearch && name
                   ? [...previousSelectedOptions[name as string], ...options]?.find((option) => option.value === val)
                       ?.label
@@ -275,7 +276,7 @@ function Select2({
               </p>
               <AssetModules.CloseIcon
                 onClick={() => handleSelect(val)}
-                className="!fmtm-text-[1.125rem] fmtm-cursor-pointer hover:fmtm-text-red-600"
+                className="!fmtm-text-xs fmtm-cursor-pointer hover:fmtm-text-red-600"
               />
             </div>
           ))}
