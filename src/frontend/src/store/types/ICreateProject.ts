@@ -5,6 +5,7 @@ export type CreateProjectStateTypes = {
   editProjectResponse?: EditProjectResponseTypes | null;
   projectDetails: Partial<ProjectDetailsTypes>;
   projectDetailsResponse: EditProjectResponseTypes | null;
+  createDraftProjectLoading: boolean;
   projectDetailsLoading: boolean;
   editProjectDetailsLoading: boolean;
   formExampleList: FormCategoryListTypes[];
@@ -19,7 +20,6 @@ export type CreateProjectStateTypes = {
   dividedTaskGeojson: null | splittedGeojsonType;
   formUpdateLoading: boolean;
   taskSplittingGeojsonLoading: boolean;
-  taskSplittingGeojson: splittedGeojsonType | null;
   updateBoundaryLoading: boolean;
   drawnGeojson: DrawnGeojsonTypes | null;
   drawToggle: boolean;
@@ -39,6 +39,8 @@ export type CreateProjectStateTypes = {
   task_num_buildings: number | null;
   task_split_dimension: number | null;
   isProjectDeletePending: boolean;
+  splitGeojsonBySquares: splittedGeojsonType | null;
+  splitGeojsonByAlgorithm: splittedGeojsonType | null;
 };
 export type ValidateCustomFormResponse = {
   detail: { message: string; possible_reason: string };

@@ -24,6 +24,7 @@ export const initialState: CreateProjectStateTypes = {
     use_odk_collect: false,
   },
   projectDetailsResponse: null,
+  createDraftProjectLoading: false,
   projectDetailsLoading: false,
   editProjectDetailsLoading: false,
   formExampleList: [],
@@ -56,12 +57,17 @@ export const initialState: CreateProjectStateTypes = {
   customFileValidity: false,
   descriptionToFocus: null,
   isProjectDeletePending: false,
+  splitGeojsonBySquares: null,
+  splitGeojsonByAlgorithm: null,
 };
 
 const CreateProject = createSlice({
   name: 'createproject',
   initialState: initialState,
   reducers: {
+    CreateDraftProjectLoading(state, action: PayloadAction<boolean>) {
+      state.createDraftProjectLoading = action.payload;
+    },
     CreateProjectLoading(state, action: PayloadAction<boolean>) {
       state.projectDetailsLoading = action.payload;
     },
@@ -127,6 +133,7 @@ const CreateProject = createSlice({
     },
     SetDividedTaskGeojson(state, action: PayloadAction<CreateProjectStateTypes['dividedTaskGeojson']>) {
       state.dividedTaskGeojson = action.payload;
+      state.splitGeojsonBySquares = action.payload;
     },
     SetDrawnGeojson(state, action) {
       state.drawnGeojson = action.payload;
@@ -154,9 +161,9 @@ const CreateProject = createSlice({
     GetTaskSplittingPreviewLoading(state, action: PayloadAction<boolean>) {
       state.taskSplittingGeojsonLoading = action.payload;
     },
-    GetTaskSplittingPreview(state, action: PayloadAction<CreateProjectStateTypes['taskSplittingGeojson']>) {
+    GetTaskSplittingPreview(state, action: PayloadAction<CreateProjectStateTypes['dividedTaskGeojson']>) {
       state.dividedTaskGeojson = action.payload;
-      state.taskSplittingGeojson = action.payload;
+      state.splitGeojsonByAlgorithm = action.payload;
     },
     SetEditProjectBoundaryServiceLoading(state, action: PayloadAction<boolean>) {
       state.updateBoundaryLoading = action.payload;
