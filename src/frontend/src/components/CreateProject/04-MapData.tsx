@@ -104,7 +104,7 @@ const MapData = () => {
   // Generate OSM data extract
   const generateDataExtract = async () => {
     const dataExtractRequestFormData = new FormData();
-    const projectAoiGeojsonFile = getFileFromGeojson(values.AOIGeojson);
+    const projectAoiGeojsonFile = getFileFromGeojson(values.outline);
 
     dataExtractRequestFormData.append('geojson_file', projectAoiGeojsonFile);
     dataExtractRequestFormData.append('osm_category', values.formExampleSelection);
@@ -115,7 +115,7 @@ const MapData = () => {
     setFetchingOSMData(true);
     try {
       const response = await axios.post(`${VITE_API_URL}/projects/generate-data-extract`, dataExtractRequestFormData, {
-        params: { project_id: 4 },
+        params: { project_id: 2 },
       });
 
       const dataExtractGeojsonUrl = response.data.url;
@@ -217,8 +217,9 @@ const MapData = () => {
 
         {values.dataExtractType === 'custom_data_extract' && (
           <>
+            <FieldLabel label="Upload Map Data" astric className="fmtm-mb-1" />
             <UploadArea
-              title="Upload Map Data"
+              title=""
               label="The supported file formats are .geojson, .json, .fgb"
               data={values.customDataExtractFile ? [values.customDataExtractFile] : []}
               onUploadFile={(updatedFiles, fileInputRef) => {

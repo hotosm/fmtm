@@ -82,10 +82,10 @@ const BasicDetails = () => {
 
     if (isGeojsonValid?.length === 0) {
       setValue('uploadedAOIFile', file);
-      setValue('AOIGeojson', convertedGeojson);
+      setValue('outline', convertedGeojson);
     } else {
       setValue('uploadedAOI File', null);
-      setValue('AOIGeojson', null);
+      setValue('outline', null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       dispatch(
         CommonActions.SetSnackBar({
@@ -98,7 +98,7 @@ const BasicDetails = () => {
 
   const resetFile = () => {
     setValue('uploadedAOIFile', null);
-    setValue('AOIGeojson', null);
+    setValue('outline', null);
   };
 
   const organisationList = organisationListData.map((org) => ({
@@ -223,13 +223,13 @@ const BasicDetails = () => {
       {values.uploadAreaSelection === 'draw' && (
         <div>
           <p className="fmtm-text-gray-700 fmtm-pb-2 fmtm-text-sm">Draw a polygon on the map to plot the area</p>
-          {values.AOIGeojson && (
+          {values.outline && (
             <>
               <Button variant="secondary-grey" onClick={() => resetFile()}>
                 Reset
               </Button>
               <p className="fmtm-text-gray-700 fmtm-mt-2 fmtm-text-xs">
-                Total Area: <span className="fmtm-font-bold">{values.AOIArea}</span>
+                Total Area: <span className="fmtm-font-bold">{values.outlineArea}</span>
               </p>
             </>
           )}
@@ -247,9 +247,9 @@ const BasicDetails = () => {
             }}
             acceptedInput=".geojson, .json"
           />
-          {values.AOIGeojson && (
+          {values.outline && (
             <p className="fmtm-text-gray-700 fmtm-mt-2 fmtm-text-xs">
-              Total Area: <span className="fmtm-font-bold">{values.AOIArea}</span>
+              Total Area: <span className="fmtm-font-bold">{values.outlineArea}</span>
             </p>
           )}
         </div>
