@@ -9,6 +9,7 @@ import { fileType } from '@/store/types/ICommon';
 import Select2 from '@/components/common/Select2';
 import FieldLabel from '@/components/common/FieldLabel';
 import UploadArea from '@/components/common/UploadArea';
+import ErrorMessage from '@/components/common/ErrorMessage';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -25,7 +26,8 @@ const UploadSurvey = () => {
     .map((form) => ({ id: form.id, label: form.title, value: form.id }));
 
   const form = useFormContext();
-  const { watch, control, setValue } = form;
+  const { watch, control, setValue, formState } = form;
+  const { errors } = formState;
   const values = watch();
 
   // fetch all form categories
@@ -63,8 +65,8 @@ const UploadSurvey = () => {
 
   return (
     <div className="fmtm-flex fmtm-flex-col fmtm-gap-[1.125rem] fmtm-w-full">
-      <div>
-        <FieldLabel label="What are you surveying?" astric className="fmtm-mb-1" />
+      <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+        <FieldLabel label="What are you surveying?" astric />
         <Controller
           control={control}
           name="formExampleSelection"
@@ -82,6 +84,10 @@ const UploadSurvey = () => {
             />
           )}
         />
+        {errors?.formExampleSelection?.message && (
+          <ErrorMessage message={errors.formExampleSelection.message as string} />
+        )}
+
         <p className="fmtm-body-sm fmtm-mt-2 fmtm-text-[#9B9999]">
           Selecting a form based on OpenStreetMap{' '}
           <a
@@ -122,8 +128,8 @@ const UploadSurvey = () => {
         </p>
       </div>
 
-      <div className="fmtm-my-2">
-        <FieldLabel label="Select one of the option to upload area" astric className="fmtm-mb-1" />
+      <div className="fmtm-my-2 fmtm-flex fmtm-flex-col fmtm-gap-1">
+        <FieldLabel label="Upload Form" astric />
         <UploadArea
           title=""
           label="The supported file formats are .xlsx, .xls, .xml"
@@ -139,6 +145,7 @@ const UploadSurvey = () => {
             <p className="fmtm-text-base">Validating form...</p>
           </div>
         )}
+        {errors?.xlsFormFile?.message && <ErrorMessage message={errors.xlsFormFile.message as string} />}
       </div>
     </div>
   );

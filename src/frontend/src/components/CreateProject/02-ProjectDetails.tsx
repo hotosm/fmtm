@@ -10,6 +10,7 @@ import Chips from '@/components/common/Chips';
 import { Input } from '@/components/RadixComponents/Input';
 import Switch from '@/components/common/Switch';
 import RichTextEditor from '@/components/common/Editor/Editor';
+import ErrorMessage from '@/components/common/ErrorMessage';
 
 const ProjectDetails = () => {
   const { hostname } = window.location;
@@ -17,7 +18,8 @@ const ProjectDetails = () => {
   const [hashtag, setHashtag] = useState('');
 
   const form = useFormContext();
-  const { watch, register, control, setValue } = form;
+  const { watch, register, control, setValue, formState } = form;
+  const { errors } = formState;
 
   const values = watch();
 
@@ -27,8 +29,8 @@ const ProjectDetails = () => {
 
   return (
     <div className="fmtm-flex fmtm-flex-col fmtm-gap-[1.125rem] fmtm-w-full">
-      <div>
-        <FieldLabel label="Project Type" astric className="fmtm-mb-1" />
+      <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+        <FieldLabel label="Project Type" astric />
         <Controller
           control={control}
           name="visibility"
@@ -38,10 +40,9 @@ const ProjectDetails = () => {
         />
       </div>
 
-      <div>
+      <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
         <FieldLabel
           label="Hashtags"
-          className="fmtm-mb-1"
           tooltipMessage={`Hashtags relate to what is being mapped. By default ${defaultHashtags} is included. Hashtags are sometimes
           used for analysis later, but should be human informative and not overused, #group #event`}
         />
@@ -82,7 +83,7 @@ const ProjectDetails = () => {
       </div>
 
       <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
-        <FieldLabel label="Use a custom TMS basemap" className="fmtm-mb-1" />
+        <FieldLabel label="Use a custom TMS basemap" />
         <Controller
           control={control}
           name="hasCustomTMS"
@@ -93,14 +94,17 @@ const ProjectDetails = () => {
       </div>
 
       {values.hasCustomTMS && (
-        <div>
-          <FieldLabel label="TMS URL" astric className="fmtm-mb-1" />
+        <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+          <FieldLabel label="TMS URL" astric />
           <Input {...register('custom_tms_url')} />
+          {errors?.uploadAreaSelection?.message && (
+            <ErrorMessage message={errors.uploadAreaSelection.message as string} />
+          )}
         </div>
       )}
 
-      <div>
-        <FieldLabel label="Instructions" className="fmtm-mb-1" />
+      <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+        <FieldLabel label="Instructions" />
         <Controller
           control={control}
           name="per_task_instructions"
@@ -111,7 +115,7 @@ const ProjectDetails = () => {
       </div>
 
       <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
-        <FieldLabel label="Use ODK Collect Mobile App (instead of Web Forms)" className="fmtm-mb-1" />
+        <FieldLabel label="Use ODK Collect Mobile App (instead of Web Forms)" />
         <Controller
           control={control}
           name="use_odk_collect"

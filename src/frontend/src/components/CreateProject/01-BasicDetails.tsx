@@ -19,6 +19,7 @@ import { uploadAreaOptions } from './constants';
 import Button from '@/components/common/Button';
 import RadioButton from '@/components/common/RadioButton';
 import UploadAreaComponent from '@/components/common/UploadArea';
+import ErrorMessage from '@/components/common/ErrorMessage';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -40,7 +41,8 @@ const BasicDetails = () => {
   const userListLoading = useAppSelector((state) => state.user.userListLoading);
 
   const form = useFormContext();
-  const { watch, register, control, setValue } = form;
+  const { watch, register, control, setValue, formState } = form;
+  const { errors } = formState;
 
   const values = watch();
 
@@ -110,29 +112,32 @@ const BasicDetails = () => {
 
   return (
     <div className="fmtm-flex fmtm-flex-col fmtm-gap-[1.125rem] fmtm-w-full">
-      <div>
-        <FieldLabel label="Project Name" astric className="fmtm-mb-1" />
+      <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+        <FieldLabel label="Project Name" astric />
         <Input {...register('name')} />
+        {errors?.name?.message && <ErrorMessage message={errors.name.message as string} />}
       </div>
 
-      <div>
-        <FieldLabel label="Short Description" astric className="fmtm-mb-1" />
+      <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+        <FieldLabel label="Short Description" astric />
         <div className="relative">
           <Textarea {...register('short_description')} maxLength={200} />
           <p className="fmtm-text-xs fmtm-absolute fmtm-bottom-1 fmtm-right-2 fmtm-text-gray-400">
             {values.short_description.length}/200
           </p>
         </div>
+        {errors?.short_description?.message && <ErrorMessage message={errors.short_description.message as string} />}
       </div>
 
-      <div>
-        <FieldLabel label="Description" astric className="fmtm-mb-1" />
+      <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+        <FieldLabel label="Description" astric />
         <Textarea {...register('description')} />
+        {errors?.description?.message && <ErrorMessage message={errors.description.message as string} />}
       </div>
 
-      <div>
+      <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
         {/* preselect organization if user org-admin & manages only one org */}
-        <FieldLabel label="Organization Name" astric className="fmtm-mb-1" />
+        <FieldLabel label="Organization Name" astric />
         <Controller
           control={control}
           name="organisation_id"
@@ -151,6 +156,7 @@ const BasicDetails = () => {
             />
           )}
         />
+        {errors?.organisation_id?.message && <ErrorMessage message={errors.organisation_id.message as string} />}
       </div>
 
       {values.organisation_id && values.hasODKCredentials && (
@@ -161,30 +167,35 @@ const BasicDetails = () => {
           onCheckedChange={(value) => {
             setValue('useDefaultODKCredentials', value);
           }}
-          className="fmtm-text-black"
+          className="fmtm-text-black fmtm-button fmtm-text-sm"
           labelClickable={values.useDefaultODKCredentials}
         />
       )}
 
       {values.organisation_id && !values.useDefaultODKCredentials && (
         <>
-          <div>
-            <FieldLabel label="ODK Central URL" astric className="fmtm-mb-1" />
+          <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+            <FieldLabel label="ODK Central URL" astric />
             <Input {...register('odk_central_url')} />
+            {errors?.odk_central_url?.message && <ErrorMessage message={errors.odk_central_url.message as string} />}
           </div>
-          <div>
-            <FieldLabel label="ODK Central Email" astric className="fmtm-mb-1" />
+          <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+            <FieldLabel label="ODK Central Email" astric />
             <Input {...register('odk_central_user')} />
+            {errors?.odk_central_user?.message && <ErrorMessage message={errors.odk_central_user.message as string} />}
           </div>
-          <div>
-            <FieldLabel label="ODK Central Password" astric className="fmtm-mb-1" />
+          <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+            <FieldLabel label="ODK Central Password" astric />
             <Input {...register('odk_central_password')} />
+            {errors?.odk_central_password?.message && (
+              <ErrorMessage message={errors.odk_central_password.message as string} />
+            )}
           </div>
         </>
       )}
 
-      <div>
-        <FieldLabel label="Assign Project Admin" astric className="fmtm-mb-1" />
+      <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+        <FieldLabel label="Assign Project Admin" astric />
         <Controller
           control={control}
           name="project_admins"
@@ -208,10 +219,11 @@ const BasicDetails = () => {
             />
           )}
         />
+        {errors?.project_admins?.message && <ErrorMessage message={errors.project_admins.message as string} />}
       </div>
 
-      <div>
-        <FieldLabel label="Project Area" astric className="fmtm-mb-1" />
+      <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+        <FieldLabel label="Project Area" astric />
         <Controller
           control={control}
           name="uploadAreaSelection"
@@ -219,10 +231,14 @@ const BasicDetails = () => {
             <RadioButton value={field.value} options={uploadAreaOptions} onChangeData={field.onChange} />
           )}
         />
+        {errors?.uploadAreaSelection?.message && (
+          <ErrorMessage message={errors.uploadAreaSelection.message as string} />
+        )}
       </div>
       {values.uploadAreaSelection === 'draw' && (
         <div>
           <p className="fmtm-text-gray-700 fmtm-pb-2 fmtm-text-sm">Draw a polygon on the map to plot the area</p>
+          {errors?.outline?.message && <ErrorMessage message={errors.outline.message as string} />}
           {values.outline && (
             <>
               <Button variant="secondary-grey" onClick={() => resetFile()}>
@@ -236,8 +252,8 @@ const BasicDetails = () => {
         </div>
       )}
       {values.uploadAreaSelection === 'upload_file' && (
-        <div className="fmtm-my-2">
-          <FieldLabel label="Select one of the option to upload area" astric className="fmtm-mb-1" />
+        <div className="fmtm-my-2 fmtm-flex fmtm-flex-col fmtm-gap-1">
+          <FieldLabel label="Select one of the option to upload area" astric />
           <UploadAreaComponent
             title=""
             label="Please upload .geojson, .json file"
@@ -247,6 +263,7 @@ const BasicDetails = () => {
             }}
             acceptedInput=".geojson, .json"
           />
+          {errors?.uploadedAOIFile?.message && <ErrorMessage message={errors.uploadedAOIFile.message as string} />}
           {values.outline && (
             <p className="fmtm-text-gray-700 fmtm-mt-2 fmtm-text-xs">
               Total Area: <span className="fmtm-font-bold">{values.outlineArea}</span>
