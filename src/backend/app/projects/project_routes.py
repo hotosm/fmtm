@@ -619,9 +619,9 @@ async def get_data_extract(
 
     geojson_url = await project_crud.generate_data_extract(
         clean_boundary_geojson,
+        project.id,
         extract_config,
         centroid,
-        project.id,
     )
 
     return JSONResponse(status_code=HTTPStatus.OK, content={"url": geojson_url})
