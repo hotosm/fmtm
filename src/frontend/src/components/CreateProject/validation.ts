@@ -1,16 +1,13 @@
 import { z } from 'zod/v4';
 import { isValidUrl } from '@/utilfunctions/urlChecker';
-import { project_visibility, task_split_type } from '@/types/enums';
-
-// Utility regex
-const noUnderscore = /^[^_]+$/;
+import { data_extract_type, GeoGeomTypesEnum, project_visibility, task_split_type } from '@/types/enums';
 
 export const basicDetailsValidationSchema = z
   .object({
     name: z
       .string()
       .min(1, 'Project Name is Required')
-      .regex(noUnderscore, 'Project Name should not contain _ (underscore)'),
+      .regex(/^[^_]+$/, 'Project Name should not contain _ (underscore)'),
     short_description: z.string().min(1, 'Short Description is Required'),
     description: z.string().min(1, 'Description is Required'),
     organisation_id: z.number({ error: 'Organization is Required' }),
@@ -121,7 +118,44 @@ export const uploadSurveyValidationSchema = z
     }
   });
 
-export const mapDataValidationSchema = z.object({});
+export const mapDataValidationSchema = z
+  .object({
+    primaryGeomType: z.enum(GeoGeomTypesEnum, { error: 'Primary Geometry Type must be selected' }),
+    includeCentroid: z.boolean(),
+    useMixedGeomTypes: z.boolean(),
+    newGeomType: z.union([z.enum(GeoGeomTypesEnum), z.null()]).optional(),
+    dataExtractType: z.enum(data_extract_type, { error: 'Data Extract Type must be selected' }),
+    customDataExtractFile: z.any().optional(),
+    dataExtractGeojson: z.any().optional(),
+  })
+  .check((ctx) => {
+    const values = ctx.value;
+
+    if (values.useMixedGeomTypes && !values.newGeomType) {
+      ctx.issues.push({
+        input: values.newGeomType,
+        path: ['newGeomType'],
+        message: 'New Geometry Type must be selected',
+        code: 'custom',
+      });
+    }
+    if (values.dataExtractType === data_extract_type.OSM && !values.dataExtractGeojson) {
+      ctx.issues.push({
+        input: values.dataExtractGeojson,
+        path: ['dataExtractGeojson'],
+        message: 'Data extract is Required',
+        code: 'custom',
+      });
+    }
+    if (values.dataExtractType === data_extract_type.CUSTOM && !values.customDataExtractFile) {
+      ctx.issues.push({
+        input: values.customDataExtractFile,
+        path: ['customDataExtractFile'],
+        message: 'File is Required',
+        code: 'custom',
+      });
+    }
+  });
 
 export const splitTasksValidationSchema = z
   .object({
@@ -149,7 +183,6 @@ export const splitTasksValidationSchema = z
         path: ['dimension'],
       });
     }
-
     if (
       values.task_split_type === task_split_type.TASK_SPLITTING_ALGORITHM &&
       values.average_buildings_per_task !== undefined &&
@@ -163,7 +196,6 @@ export const splitTasksValidationSchema = z
         path: ['average_buildings_per_task'],
       });
     }
-
     if (values.task_split_type === task_split_type.DIVIDE_ON_SQUARE && !values.splitGeojsonBySquares) {
       ctx.issues.push({
         message: 'Please generate the task splitting GeoJSON by squares',
@@ -172,7 +204,6 @@ export const splitTasksValidationSchema = z
         path: ['splitGeojsonBySquares'],
       });
     }
-
     if (values.task_split_type === task_split_type.TASK_SPLITTING_ALGORITHM && !values.splitGeojsonByAlgorithm) {
       ctx.issues.push({
         message: 'Please generate the task splitting GeoJSON by algorithm',
