@@ -261,4 +261,5 @@ async def simple_heartbeat():
     """Simple ping/pong API response."""
     return Response(status_code=HTTPStatus.OK)
 
-#for testing issue 1775
+
+# for testing issue 1775
