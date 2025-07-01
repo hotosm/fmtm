@@ -106,7 +106,7 @@ const SplitTasks = () => {
           control={control}
           name="task_split_type"
           render={({ field }) => (
-            <RadioButton value={field.value} options={taskSplitOptions} onChangeData={field.onChange} />
+            <RadioButton value={field.value} options={taskSplitOptions} onChangeData={field.onChange} ref={field.ref} />
           )}
         />
       </div>
@@ -135,30 +135,28 @@ const SplitTasks = () => {
       {[task_split_type.DIVIDE_ON_SQUARE, task_split_type.TASK_SPLITTING_ALGORITHM].includes(
         values.task_split_type,
       ) && (
-        <div className="fmtm-mt-6 fmtm-pb-3">
-          <div className="fmtm-flex fmtm-items-center fmtm-gap-4">
-            <Button
-              variant="primary-red"
-              isLoading={dividedTaskLoading || taskSplittingGeojsonLoading}
-              onClick={generateTaskBasedOnSelection}
-              disabled={
-                (values.task_split_type === task_split_type.DIVIDE_ON_SQUARE && !values.dimension) ||
-                (values.task_split_type === task_split_type.TASK_SPLITTING_ALGORITHM &&
-                  !values.average_buildings_per_task)
-                  ? true
-                  : false
-              }
-            >
-              Click to generate task
-              <AssetModules.SettingsIcon />
-            </Button>
-          </div>
+        <div className="fmtm-flex fmtm-items-center fmtm-gap-4">
+          <Button
+            variant="primary-red"
+            isLoading={dividedTaskLoading || taskSplittingGeojsonLoading}
+            onClick={generateTaskBasedOnSelection}
+            disabled={
+              (values.task_split_type === task_split_type.DIVIDE_ON_SQUARE && !values.dimension) ||
+              (values.task_split_type === task_split_type.TASK_SPLITTING_ALGORITHM &&
+                !values.average_buildings_per_task)
+                ? true
+                : false
+            }
+          >
+            Click to generate task
+            <AssetModules.SettingsIcon />
+          </Button>
         </div>
       )}
 
       {values.task_split_type && (
         <div>
-          <p className="fmtm-text-gray-500 fmtm-mt-5 fmtm-mb-2">
+          <p className="fmtm-text-gray-500 fmtm-text-sm">
             Total number of task:{' '}
             <span className="fmtm-font-bold">
               {values.dividedTaskGeojson?.features?.length || values.outline?.features?.length || 1}

@@ -101,6 +101,9 @@ const BasicDetails = () => {
   const resetFile = () => {
     setValue('uploadedAOIFile', null);
     setValue('outline', null);
+
+    if (values.customDataExtractFile) setValue('customDataExtractFile', null);
+    if (values.dataExtractGeojson) setValue('dataExtractGeojson', null);
   };
 
   const organisationList = organisationListData.map((org) => ({
@@ -228,7 +231,12 @@ const BasicDetails = () => {
           control={control}
           name="uploadAreaSelection"
           render={({ field }) => (
-            <RadioButton value={field.value} options={uploadAreaOptions} onChangeData={field.onChange} />
+            <RadioButton
+              value={field.value}
+              options={uploadAreaOptions}
+              onChangeData={field.onChange}
+              ref={field.ref}
+            />
           )}
         />
         {errors?.uploadAreaSelection?.message && (

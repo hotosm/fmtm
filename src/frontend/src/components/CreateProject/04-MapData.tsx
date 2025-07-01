@@ -153,7 +153,12 @@ const MapData = () => {
           control={control}
           name="primaryGeomType"
           render={({ field }) => (
-            <RadioButton value={field.value} options={primaryGeomOptions} onChangeData={field.onChange} />
+            <RadioButton
+              value={field.value}
+              options={primaryGeomOptions}
+              onChangeData={field.onChange}
+              ref={field.ref}
+            />
           )}
         />
         {errors?.primaryGeomType?.message && <ErrorMessage message={errors.primaryGeomType.message as string} />}
@@ -198,7 +203,7 @@ const MapData = () => {
             control={control}
             name="newGeomType"
             render={({ field }) => (
-              <RadioButton value={field.value} options={newGeomOptions} onChangeData={field.onChange} />
+              <RadioButton value={field.value} options={newGeomOptions} onChangeData={field.onChange} ref={field.ref} />
             )}
           />
           {errors?.newGeomType?.message && <ErrorMessage message={errors.newGeomType.message as string} />}
@@ -217,6 +222,7 @@ const MapData = () => {
                 field.onChange(value);
                 if (value === data_extract_type.NONE) resetMapDataFile();
               }}
+              ref={field.ref}
             />
           )}
         />
