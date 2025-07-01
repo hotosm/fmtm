@@ -9,7 +9,7 @@ import { newGeomOptions, primaryGeomOptions } from './constants';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import { dataExtractGeojsonType } from '@/store/types/ICreateProject';
 import { convertFileToGeojson } from '@/utilfunctions/convertFileToGeojson';
-import { GeoGeomTypesEnum } from '@/types/enums';
+import { data_extract_type, GeoGeomTypesEnum } from '@/types/enums';
 import { useAppDispatch } from '@/types/reduxTypes';
 import { fileType } from '@/store/types/ICommon';
 
@@ -35,12 +35,12 @@ const MapData = () => {
   const dataExtractOptions = [
     {
       name: 'data_extract',
-      value: 'osm_data_extract',
+      value: data_extract_type.OSM,
       label: 'Fetch data from OSM',
       disabled: values.primaryGeomType === 'POLYLINE',
     },
-    { name: 'data_extract', value: 'custom_data_extract', label: 'Upload custom map data' },
-    { name: 'data_extract', value: 'no_data_extract', label: 'No existing data' },
+    { name: 'data_extract', value: data_extract_type.CUSTOM, label: 'Upload custom map data' },
+    { name: 'data_extract', value: data_extract_type.NONE, label: 'No existing data' },
   ];
 
   const changeFileHandler = async (file: fileType, fileInputRef: React.RefObject<HTMLInputElement | null>) => {
@@ -201,7 +201,7 @@ const MapData = () => {
               <RadioButton value={field.value} options={newGeomOptions} onChangeData={field.onChange} />
             )}
           />
-          {errors?.useMixedGeomTypes?.message && <ErrorMessage message={errors.useMixedGeomTypes.message as string} />}
+          {errors?.newGeomType?.message && <ErrorMessage message={errors.newGeomType.message as string} />}
         </div>
       )}
       <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
@@ -210,7 +210,14 @@ const MapData = () => {
           control={control}
           name="dataExtractType"
           render={({ field }) => (
-            <RadioButton value={field.value} options={dataExtractOptions} onChangeData={field.onChange} />
+            <RadioButton
+              value={field.value}
+              options={dataExtractOptions}
+              onChangeData={(value) => {
+                field.onChange(value);
+                if (value === data_extract_type.NONE) resetMapDataFile();
+              }}
+            />
           )}
         />
         {errors?.dataExtractType?.message && <ErrorMessage message={errors.dataExtractType.message as string} />}
