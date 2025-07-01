@@ -18,6 +18,7 @@ interface RadioButtonProps {
   className?: string;
   required?: boolean;
   hoveredOption?: (option: string | null) => void;
+  ref?: React.Ref<HTMLInputElement> | null;
 }
 
 const RadioButton: React.FC<RadioButtonProps> = ({
@@ -30,6 +31,7 @@ const RadioButton: React.FC<RadioButtonProps> = ({
   className,
   required,
   hoveredOption,
+  ref,
 }) => (
   <div>
     {topic && (
@@ -40,7 +42,7 @@ const RadioButton: React.FC<RadioButtonProps> = ({
       </div>
     )}
     <div className={`fmtm-flex ${direction === 'column' ? 'fmtm-flex-col' : 'fmtm-flex-wrap fmtm-gap-x-16'}`}>
-      {options.map((option) => {
+      {options.map((option, i) => {
         return (
           <div
             onMouseOver={() => hoveredOption && hoveredOption(option.value)}
@@ -51,11 +53,12 @@ const RadioButton: React.FC<RadioButtonProps> = ({
             }`}
           >
             <input
+              ref={i === 0 ? ref : null}
               type="radio"
               id={option.label?.toString()}
               name={option.name}
               value={option.value}
-              className={`fmtm-accent-primaryRed fmtm-cursor-pointer ${
+              className={`custom-radio fmtm-outline-none fmtm-accent-primaryRed fmtm-cursor-pointer focus:fmtm-border-[#D73F37] focus:fmtm-ring-[#D73F37]/50 focus:fmtm-ring-[3px] ${
                 option?.disabled === true ? 'fmtm-cursor-not-allowed' : ''
               }`}
               onChange={(e) => {

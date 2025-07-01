@@ -109,7 +109,7 @@ const UploadArea = ({ title, label, acceptedInput, data, onUploadFile }: uploadA
             }
           }
         }}
-        className="fmtm-cursor-pointer fmtm-border-[1px] fmtm-border-[#D8D8D8] fmtm-border-dashed fmtm-rounded-md fmtm-flex fmtm-flex-col fmtm-gap-1 fmtm-py-2"
+        className="fmtm-cursor-pointer fmtm-border-[1px] fmtm-border-[#D8D8D8] fmtm-border-dashed fmtm-rounded-md fmtm-flex fmtm-flex-col fmtm-gap-1 fmtm-py-2 focus:fmtm-border-[#D73F37] focus:fmtm-ring-[#D73F37]/50 focus:fmtm-ring-[3px]"
       >
         <input
           className="fmtm-hidden"
