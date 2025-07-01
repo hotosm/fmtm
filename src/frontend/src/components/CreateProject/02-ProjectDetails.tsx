@@ -97,9 +97,7 @@ const ProjectDetails = () => {
         <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
           <FieldLabel label="TMS URL" astric />
           <Input {...register('custom_tms_url')} />
-          {errors?.uploadAreaSelection?.message && (
-            <ErrorMessage message={errors.uploadAreaSelection.message as string} />
-          )}
+          {errors?.custom_tms_url?.message && <ErrorMessage message={errors.custom_tms_url.message as string} />}
         </div>
       )}
 
