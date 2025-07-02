@@ -134,13 +134,14 @@ const CreateProject = () => {
 
             {/* buttons */}
             <div className="fmtm-flex fmtm-justify-between fmtm-items-center fmtm-px-5 fmtm-py-3 fmtm-shadow-2xl">
-              {step === 1 && !projectId ? (
-                <Button variant="secondary-grey" onClick={createDraftProject} isLoading={createDraftProjectLoading}>
-                  Save as Draft
-                </Button>
-              ) : (
-                <span></span>
-              )}
+              {step === 1 &&
+                (!projectId ? (
+                  <Button variant="secondary-grey" onClick={createDraftProject} isLoading={createDraftProjectLoading}>
+                    Save as Draft
+                  </Button>
+                ) : (
+                  <span></span>
+                ))}
               {step > 1 && (
                 <Button variant="link-grey" onClick={() => setStep(step - 1)}>
                   <AssetModules.ArrowBackIosIcon className="!fmtm-text-sm" /> Previous
