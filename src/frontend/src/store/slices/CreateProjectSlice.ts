@@ -1,4 +1,4 @@
-import { CreateProjectStateTypes } from '@/store/types/ICreateProject';
+import { CreateProjectStateTypes, ProjectDetailsTypes } from '@/store/types/ICreateProject';
 import { project_visibility, task_split_type } from '@/types/enums';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
@@ -59,6 +59,8 @@ export const initialState: CreateProjectStateTypes = {
   isProjectDeletePending: false,
   splitGeojsonBySquares: null,
   splitGeojsonByAlgorithm: null,
+  basicProjectDetailsLoading: false,
+  basicProjectDetails: null,
 };
 
 const CreateProject = createSlice({
@@ -224,6 +226,20 @@ const CreateProject = createSlice({
     },
     SetProjectDeletePending(state, action: PayloadAction<boolean>) {
       state.isProjectDeletePending = action.payload;
+    },
+    GetBasicProjectDetailsLoading(state, action: PayloadAction<boolean>) {
+      state.basicProjectDetailsLoading = action.payload;
+    },
+    SetBasicProjectDetails(
+      state,
+      action: PayloadAction<
+        { id: number } & Pick<
+          ProjectDetailsTypes,
+          'name' | 'short_description' | 'description' | 'organisation_id' | 'outline'
+        >
+      >,
+    ) {
+      state.basicProjectDetails = action.payload;
     },
   },
 });

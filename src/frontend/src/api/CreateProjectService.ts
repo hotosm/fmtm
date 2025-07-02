@@ -12,14 +12,44 @@ import { isStatusSuccess } from '@/utilfunctions/commonUtils';
 import { AppDispatch } from '@/store/Store';
 import isEmpty from '@/utilfunctions/isEmpty';
 import { NavigateFunction } from 'react-router-dom';
+import { createProjectValidationSchema } from '@/components/CreateProject/validation';
+import { z } from 'zod/v4';
+import { ProjectDetailsTypes } from '@/store/types/ICreateProject';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
+
+export const GetBasicProjectDetails = (url: string) => {
+  return async (dispatch: AppDispatch) => {
+    try {
+      dispatch(CreateProjectActions.GetBasicProjectDetailsLoading(true));
+      const response: AxiosResponse<{ id: number } & ProjectDetailsTypes> = await axios.get(url);
+      const { id, name, short_description, description, organisation_id, outline } = response.data;
+      dispatch(
+        CreateProjectActions.SetBasicProjectDetails({
+          id,
+          name,
+          short_description,
+          description,
+          organisation_id,
+          outline,
+        }),
+      );
+    } catch (error) {
+      dispatch(
+        CommonActions.SetSnackBar({
+          message: JSON.stringify(error?.response?.data?.detail) || 'Error fetching basic project details',
+        }),
+      );
+    } finally {
+      dispatch(CreateProjectActions.GetBasicProjectDetailsLoading(false));
+    }
+  };
+};
 
 export const CreateDraftProjectService = (url: string, payload: Record<string, any>, params: Record<string, any>) => {
   return async (dispatch: AppDispatch) => {
     try {
       dispatch(CreateProjectActions.CreateDraftProjectLoading(true));
-
       await axios.post(url, payload, { params });
       dispatch(CommonActions.SetSnackBar({ message: 'Draft project created successfully', variant: 'success' }));
     } catch (error) {
@@ -29,7 +59,22 @@ export const CreateDraftProjectService = (url: string, payload: Record<string, a
   };
 };
 
-const CreateProjectService = (
+export const CreateProjectService = (
+  url: string,
+  projectId: number,
+  formData: z.infer<typeof createProjectValidationSchema>,
+) => {
+  return async (dispatch: AppDispatch) => {
+    try {
+      dispatch(CreateProjectActions.CreateProjectLoading(true));
+    } catch (error) {
+    } finally {
+      dispatch(CreateProjectActions.CreateProjectLoading(false));
+    }
+  };
+};
+
+const CreateProjectServiceDeprecated = (
   url: string,
   projectData: any,
   taskAreaGeojson: any,
@@ -567,7 +612,7 @@ const AssignProjectManager = (url: string, params: { sub: number; project_id: nu
 
 export {
   UploadTaskAreasService,
-  CreateProjectService,
+  CreateProjectServiceDeprecated,
   FormCategoryService,
   GenerateProjectFilesService,
   OrganisationService,

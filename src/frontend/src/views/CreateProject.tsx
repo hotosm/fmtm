@@ -24,9 +24,10 @@ import {
   uploadSurveyValidationSchema,
 } from '@/components/CreateProject/validation';
 import { z } from 'zod/v4';
-import { useAppDispatch } from '@/types/reduxTypes';
-import { CreateDraftProjectService, OrganisationService } from '@/api/CreateProjectService';
+import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
+import { CreateDraftProjectService, GetBasicProjectDetails, OrganisationService } from '@/api/CreateProjectService';
 import { defaultValues } from '@/components/CreateProject/constants/defaultValues';
+import { useParams } from 'react-router-dom';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -45,8 +46,23 @@ const CreateProject = () => {
   if (!hasManagedAnyOrganization) return <Forbidden />;
 
   const dispatch = useAppDispatch();
+  const params = useParams();
+
+  const projectId = params.id ? +params.id : null;
   const [step, setStep] = useState(1);
   const [toggleEdit, setToggleEdit] = useState(false);
+  const createDraftProjectLoading = useAppSelector((state) => state.createproject.createDraftProjectLoading);
+  const basicProjectDetails = useAppSelector((state) => state.createproject.basicProjectDetails);
+
+  useEffect(() => {
+    if (!projectId) return;
+    dispatch(GetBasicProjectDetails(`${VITE_API_URL}/projects/${projectId}/minimal`));
+  }, [projectId]);
+
+  useEffect(() => {
+    if (!basicProjectDetails) return;
+    reset({ ...defaultValues, ...basicProjectDetails });
+  }, [basicProjectDetails]);
 
   useEffect(() => {
     dispatch(
@@ -59,7 +75,8 @@ const CreateProject = () => {
     resolver: zodResolver(validationSchema[step]),
   });
 
-  const { handleSubmit, watch, setValue, trigger } = formMethods;
+  const { handleSubmit, watch, setValue, trigger, formState, reset } = formMethods;
+  const { dirtyFields } = formState;
   const values = watch();
 
   const form = {
@@ -117,10 +134,12 @@ const CreateProject = () => {
 
             {/* buttons */}
             <div className="fmtm-flex fmtm-justify-between fmtm-items-center fmtm-px-5 fmtm-py-3 fmtm-shadow-2xl">
-              {step === 1 && (
-                <Button variant="secondary-grey" onClick={createDraftProject}>
+              {step === 1 && !projectId ? (
+                <Button variant="secondary-grey" onClick={createDraftProject} isLoading={createDraftProjectLoading}>
                   Save as Draft
                 </Button>
+              ) : (
+                <span></span>
               )}
               {step > 1 && (
                 <Button variant="link-grey" onClick={() => setStep(step - 1)}>
@@ -128,7 +147,8 @@ const CreateProject = () => {
                 </Button>
               )}
               <Button variant="primary-grey" type="submit">
-                {step === 5 ? 'Submit' : 'Next'} <AssetModules.ArrowForwardIosIcon className="!fmtm-text-sm" />
+                {step === 5 ? 'Submit' : 'Next'}{' '}
+                <AssetModules.ArrowForwardIosIcon className="!fmtm-text-sm !fmtm-ml-auto" />
               </Button>
             </div>
           </form>
