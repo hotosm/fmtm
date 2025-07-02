@@ -77,7 +77,7 @@ const SplitTasks = () => {
         TaskSplittingPreviewService(
           `${VITE_API_URL}/projects/task-split`,
           drawnGeojsonFile,
-          values?.average_buildings_per_task,
+          values?.average_buildings_per_task as number,
           values.dataExtractType === 'osm_data_extract' ? null : dataExtractFile,
         ),
       );
@@ -115,7 +115,12 @@ const SplitTasks = () => {
           control={control}
           name="task_split_type"
           render={({ field }) => (
-            <RadioButton value={field.value} options={taskSplitOptions} onChangeData={field.onChange} ref={field.ref} />
+            <RadioButton
+              value={field.value || ''}
+              options={taskSplitOptions}
+              onChangeData={field.onChange}
+              ref={field.ref}
+            />
           )}
         />
         {errors?.task_split_type?.message && <ErrorMessage message={errors.task_split_type.message as string} />}
@@ -150,35 +155,36 @@ const SplitTasks = () => {
         </div>
       )}
 
-      {[task_split_type.DIVIDE_ON_SQUARE, task_split_type.TASK_SPLITTING_ALGORITHM].includes(
-        values.task_split_type,
-      ) && (
-        <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
-          <Button
-            ref={generateBtnRef}
-            variant="primary-red"
-            isLoading={dividedTaskLoading || taskSplittingGeojsonLoading}
-            onClick={generateTaskBasedOnSelection}
-            disabled={
-              (values.task_split_type === task_split_type.DIVIDE_ON_SQUARE && !values.dimension) ||
-              (values.task_split_type === task_split_type.TASK_SPLITTING_ALGORITHM &&
-                !values.average_buildings_per_task)
-                ? true
-                : false
-            }
-            shouldFocus
-          >
-            Click to generate task
-            <AssetModules.SettingsIcon />
-          </Button>
-          {errors?.splitGeojsonBySquares?.message && (
-            <ErrorMessage message={errors.splitGeojsonBySquares.message as string} />
-          )}
-          {errors?.splitGeojsonByAlgorithm?.message && (
-            <ErrorMessage message={errors.splitGeojsonByAlgorithm.message as string} />
-          )}
-        </div>
-      )}
+      {values.task_split_type &&
+        [task_split_type.DIVIDE_ON_SQUARE, task_split_type.TASK_SPLITTING_ALGORITHM].includes(
+          values.task_split_type,
+        ) && (
+          <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+            <Button
+              ref={generateBtnRef}
+              variant="primary-red"
+              isLoading={dividedTaskLoading || taskSplittingGeojsonLoading}
+              onClick={generateTaskBasedOnSelection}
+              disabled={
+                (values.task_split_type === task_split_type.DIVIDE_ON_SQUARE && !values.dimension) ||
+                (values.task_split_type === task_split_type.TASK_SPLITTING_ALGORITHM &&
+                  !values.average_buildings_per_task)
+                  ? true
+                  : false
+              }
+              shouldFocus
+            >
+              Click to generate task
+              <AssetModules.SettingsIcon />
+            </Button>
+            {errors?.splitGeojsonBySquares?.message && (
+              <ErrorMessage message={errors.splitGeojsonBySquares.message as string} />
+            )}
+            {errors?.splitGeojsonByAlgorithm?.message && (
+              <ErrorMessage message={errors.splitGeojsonByAlgorithm.message as string} />
+            )}
+          </div>
+        )}
 
       {values.task_split_type && (
         <div>

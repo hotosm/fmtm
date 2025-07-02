@@ -202,6 +202,7 @@ export const splitTasksValidationSchema = z
     average_buildings_per_task: z.number().optional(),
     splitGeojsonBySquares: z.any().optional(),
     splitGeojsonByAlgorithm: z.any().optional(),
+    dividedTaskGeojson: z.any().optional(),
   })
   .check((ctx) => {
     const values = ctx.value;
