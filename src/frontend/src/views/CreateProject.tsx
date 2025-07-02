@@ -28,6 +28,7 @@ import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import { CreateDraftProjectService, GetBasicProjectDetails, OrganisationService } from '@/api/CreateProjectService';
 import { defaultValues } from '@/components/CreateProject/constants/defaultValues';
 import { useParams } from 'react-router-dom';
+import FormFieldSkeletonLoader from '@/components/Skeletons/common/FormFieldSkeleton';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -53,6 +54,7 @@ const CreateProject = () => {
   const [toggleEdit, setToggleEdit] = useState(false);
   const createDraftProjectLoading = useAppSelector((state) => state.createproject.createDraftProjectLoading);
   const basicProjectDetails = useAppSelector((state) => state.createproject.basicProjectDetails);
+  const basicProjectDetailsLoading = useAppSelector((state) => state.createproject.basicProjectDetailsLoading);
 
   useEffect(() => {
     if (!projectId) return;
@@ -130,7 +132,9 @@ const CreateProject = () => {
             onSubmit={handleSubmit(onSubmit)}
             className="fmtm-flex fmtm-flex-col fmtm-col-span-12 sm:fmtm-col-span-7 lg:fmtm-col-span-5 sm:fmtm-h-full fmtm-overflow-y-hidden fmtm-rounded-xl fmtm-bg-white fmtm-my-2 sm:fmtm-my-0"
           >
-            <div className="fmtm-flex-1 fmtm-overflow-y-scroll scrollbar fmtm-px-10 fmtm-py-8">{form[step]}</div>
+            <div className="fmtm-flex-1 fmtm-overflow-y-scroll scrollbar fmtm-px-10 fmtm-py-8">
+              {basicProjectDetailsLoading && projectId ? <FormFieldSkeletonLoader count={4} /> : form[step]}
+            </div>
 
             {/* buttons */}
             <div className="fmtm-flex fmtm-justify-between fmtm-items-center fmtm-px-5 fmtm-py-3 fmtm-shadow-2xl">
@@ -147,7 +151,7 @@ const CreateProject = () => {
                   <AssetModules.ArrowBackIosIcon className="!fmtm-text-sm" /> Previous
                 </Button>
               )}
-              <Button variant="primary-grey" type="submit">
+              <Button variant="primary-grey" type="submit" disabled={basicProjectDetailsLoading}>
                 {step === 5 ? 'Submit' : 'Next'}{' '}
                 <AssetModules.ArrowForwardIosIcon className="!fmtm-text-sm !fmtm-ml-auto" />
               </Button>
