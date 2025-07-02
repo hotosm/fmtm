@@ -1,4 +1,4 @@
-import React, { use, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import BasicDetails from '@/components/CreateProject/01-BasicDetails';
 import ProjectDetails from '@/components/CreateProject/02-ProjectDetails';
@@ -23,36 +23,12 @@ import {
   splitTasksValidationSchema,
   uploadSurveyValidationSchema,
 } from '@/components/CreateProject/validation';
-import { z } from 'zod';
-import { project_visibility } from '@/types/enums';
+import { z } from 'zod/v4';
 import { useAppDispatch } from '@/types/reduxTypes';
-import { OrganisationService } from '@/api/CreateProjectService';
+import { CreateDraftProjectService, OrganisationService } from '@/api/CreateProjectService';
+import { defaultValues } from '@/components/CreateProject/constants/defaultValues';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
-
-const defaultValues: z.infer<typeof createProjectValidationSchema> = {
-  // 01 Basic Details
-  name: '',
-  short_description: '',
-  description: '',
-  organisation_id: null,
-  useDefaultODKCredentials: false,
-  odk_central_url: '',
-  odk_central_user: '',
-  odk_central_password: '',
-  project_admins: [],
-  per_task_instructions: '',
-  AOIGeojson: undefined,
-  AOIArea: undefined,
-  uploadAreaSelection: '',
-  uploadedAOIFile: undefined,
-
-  visibility: project_visibility.PUBLIC,
-  hashtags: [],
-  hasCustomTMS: false,
-  custom_tms_url: '',
-  use_odk_collect: false,
-};
 
 const validationSchema = {
   1: basicDetailsValidationSchema,
@@ -83,11 +59,8 @@ const CreateProject = () => {
     resolver: zodResolver(validationSchema[step]),
   });
 
-  const { handleSubmit, formState, watch, setValue, trigger } = formMethods;
-  const { errors } = formState;
+  const { handleSubmit, watch, setValue, trigger } = formMethods;
   const values = watch();
-  console.log(values, 'values');
-  console.log(errors, 'errors');
 
   const form = {
     1: <BasicDetails />,
@@ -97,7 +70,7 @@ const CreateProject = () => {
     5: <SplitTasks />,
   };
 
-  const onSubmit = (data) => {
+  const onSubmit = (data: z.infer<typeof createProjectValidationSchema>) => {
     if (step < 5) setStep(step + 1);
   };
 
@@ -105,18 +78,20 @@ const CreateProject = () => {
     const isValidationSuccess = await trigger(undefined, { shouldFocus: true });
 
     if (!isValidationSuccess) return;
-    const { name, short_description, description, organisation_id, project_admins, AOIGeojson, uploadedAOIFile } =
-      values;
+    const { name, short_description, description, organisation_id, project_admins, outline, uploadedAOIFile } = values;
     const payload = {
       name,
       short_description,
       description,
       organisation_id,
       project_admins,
-      AOIGeojson,
+      outline,
       uploadedAOIFile,
     };
-    console.log(payload, 'payload');
+    const params = {
+      org_id: organisation_id,
+    };
+    dispatch(CreateDraftProjectService(`${VITE_API_URL}/projects/stub`, payload, params));
   };
 
   return (
@@ -163,34 +138,34 @@ const CreateProject = () => {
         <div className="fmtm-col-span-12 sm:fmtm-col-span-5 lg:fmtm-col-span-4 fmtm-h-[20rem] sm:fmtm-h-full fmtm-rounded-xl fmtm-bg-white fmtm-overflow-hidden">
           <Map
             drawToggle={values.uploadAreaSelection === 'draw' && step === 1}
-            uploadedOrDrawnGeojsonFile={values.AOIGeojson}
+            uploadedOrDrawnGeojsonFile={values.outline}
             buildingExtractedGeojson={values.dataExtractGeojson}
+            splittedGeojson={values.splitGeojsonBySquares || values.splitGeojsonByAlgorithm}
             onDraw={
-              values.AOIGeojson || values.uploadAreaSelection === 'upload_file'
+              values.outline || values.uploadAreaSelection === 'upload_file'
                 ? null
                 : (geojson, area) => {
-                    setValue('AOIGeojson', JSON.parse(geojson));
+                    setValue('outline', JSON.parse(geojson));
                     setValue('uploadedAOIFile', undefined);
                   }
             }
             onModify={
-              toggleEdit && values.AOIGeojson && step === 1
+              toggleEdit && values.outline && step === 1
                 ? (geojson, area) => {
-                    setValue('AOIGeojson', JSON.parse(geojson));
+                    setValue('outline', JSON.parse(geojson));
 
-                    // RESET STATES OF OTHER STEPS
-                    // handleCustomChange('drawnGeojson', geojson);
-                    // dispatch(CreateProjectActions.SetDrawnGeojson(JSON.parse(geojson)));
-                    // dispatch(CreateProjectActions.SetTotalAreaSelection(area));
-                    // dispatch(CreateProjectActions.ClearProjectStepState(formValues));
-                    // setCustomDataExtractUpload(null);
+                    if (values.customDataExtractFile) setValue('customDataExtractFile', null);
+                    if (values.dataExtractGeojson) setValue('dataExtractGeojson', null);
+
+                    if (values.splitGeojsonBySquares) setValue('splitGeojsonBySquares', null);
+                    if (values.splitGeojsonByAlgorithm) setValue('splitGeojsonByAlgorithm', null);
                   }
                 : null
             }
             toggleEdit={toggleEdit}
             setToggleEdit={setToggleEdit}
             getAOIArea={(area) => {
-              if (values.AOIGeojson && area !== values.AOIArea) setValue('AOIArea', area);
+              if (values.outline && area !== values.outlineArea) setValue('outlineArea', area);
             }}
           />
         </div>
