@@ -14,7 +14,7 @@ type FileType =
   | { id: string; file: { name: string }; previewURL: string };
 
 type uploadAreaPropType = {
-  title: string;
+  title?: string;
   label: string;
   data: FileType[] | string;
   onUploadFile: (updatedFiles: FileType[], ref: React.RefObject<HTMLInputElement | null>) => void;
@@ -65,7 +65,7 @@ const UploadArea = ({ title, label, acceptedInput, data, onUploadFile }: uploadA
 
   return (
     <div>
-      <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold ">{title}</p>
+      {title && <p className="fmtm-text-[1rem] fmtm-mb-2 fmtm-font-semibold">{title}</p>}
       <div
         role="button"
         tabIndex={0}
@@ -124,17 +124,20 @@ const UploadArea = ({ title, label, acceptedInput, data, onUploadFile }: uploadA
         <p className="fmtm-body-md fmtm-text-center fmtm-text-grey-600">{label}</p>
       </div>
       {selectedFiles?.length > 0 && (
-        <div className="fmtm-mt-4 fmtm-w-full">
+        <div className="fmtm-mt-2 fmtm-w-full">
           {selectedFiles?.map((item, i) => (
             <div key={item.id} className="fmtm-flex fmtm-items-center fmtm-w-full">
               {acceptedInput.includes('image') ? (
                 <img src={item.previewURL} className="fmtm-h-full fmtm-z-50" />
               ) : (
-                <div className="fmtm-p-1 fmtm-rounded-full fmtm-bg-red-50">
-                  <AssetModules.DescriptionIcon className="!fmtm-text-[1.5rem] fmtm-text-[#4C4C4C]" />
+                <div className="fmtm-w-8 fmtm-h-8 fmtm-rounded-full fmtm-bg-red-light fmtm-flex fmtm-items-center fmtm-justify-center">
+                  <AssetModules.DescriptionIcon className="!fmtm-text-[1.2rem] fmtm-text-[#4C4C4C]" />
                 </div>
               )}
-              <div className="fmtm-flex-1 fmtm-text-ellipsis fmtm-truncate fmtm-ml-4" title={item?.file?.name}>
+              <div
+                className="fmtm-flex-1 fmtm-text-ellipsis fmtm-truncate fmtm-ml-4 fmtm-text-sm"
+                title={item?.file?.name}
+              >
                 {item?.file?.name}
               </div>
               <div className="fmtm-flex">

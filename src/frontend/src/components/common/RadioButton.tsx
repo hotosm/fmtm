@@ -41,7 +41,9 @@ const RadioButton: React.FC<RadioButtonProps> = ({
         </p>
       </div>
     )}
-    <div className={`fmtm-flex ${direction === 'column' ? 'fmtm-flex-col' : 'fmtm-flex-wrap fmtm-gap-x-16'}`}>
+    <div
+      className={`fmtm-flex ${direction === 'column' ? 'fmtm-flex-col fmtm-gap-y-1' : 'fmtm-flex-wrap fmtm-gap-x-16'}`}
+    >
       {options.map((option, i) => {
         return (
           <div
@@ -58,7 +60,7 @@ const RadioButton: React.FC<RadioButtonProps> = ({
               id={option.label?.toString()}
               name={option.name}
               value={option.value}
-              className={`custom-radio fmtm-outline-none fmtm-accent-primaryRed fmtm-cursor-pointer focus:fmtm-border-[#D73F37] focus:fmtm-ring-[#D73F37]/50 focus:fmtm-ring-[3px] ${
+              className={`fmtm-outline-none fmtm-accent-primaryRed fmtm-cursor-pointer focus:fmtm-border-[#D73F37] focus:fmtm-ring-[#D73F37]/50 focus:fmtm-ring-[3px] ${
                 option?.disabled === true ? 'fmtm-cursor-not-allowed' : ''
               }`}
               onChange={(e) => {
@@ -69,7 +71,7 @@ const RadioButton: React.FC<RadioButtonProps> = ({
             />
             <label
               htmlFor={option.label?.toString()}
-              className={`fmtm-text-base fmtm-bg-white fmtm-text-gray-500 fmtm-mb-[2px] fmtm-cursor-pointer fmtm-flex fmtm-items-center fmtm-gap-2  ${className}`}
+              className={`fmtm-text-sm fmtm-bg-white fmtm-text-gray-500 fmtm-mb-[2px] fmtm-cursor-pointer fmtm-flex fmtm-items-center fmtm-gap-2  ${className}`}
             >
               <p className={`${option?.disabled === true ? 'fmtm-cursor-not-allowed' : ''}`}>{option.label}</p>
               <div>{option.icon && option.icon}</div>

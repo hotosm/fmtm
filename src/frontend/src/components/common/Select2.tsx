@@ -133,7 +133,7 @@ function Select2({
             ref={ref}
             disabled={disabled}
             className={cn(
-              'fmtm-group fmtm-flex fmtm-items-center fmtm-justify-between fmtm-gap-2 fmtm-border-[1px] fmtm-border-gray-300 fmtm-h-[2.3rem] fmtm-rounded-md disabled:!fmtm-cursor-not-allowed fmtm-px-3 focus:fmtm-border-[#D73F37] focus:fmtm-ring-[#D73F37]/50 focus:fmtm-ring-[3px]',
+              'fmtm-group fmtm-flex fmtm-items-center fmtm-justify-between fmtm-gap-2 fmtm-border-[1px] fmtm-border-gray-300 fmtm-h-[2.3rem] fmtm-rounded-md disabled:!fmtm-cursor-not-allowed fmtm-px-3 focus:fmtm-border-[#D73F37] focus:fmtm-ring-[#D73F37]/50 focus:fmtm-ring-[3px] fmtm-outline-none',
               className,
             )}
             onClick={() => setOpen(true)}
