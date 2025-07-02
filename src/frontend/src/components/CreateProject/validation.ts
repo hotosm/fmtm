@@ -4,6 +4,7 @@ import { data_extract_type, GeoGeomTypesEnum, project_visibility, task_split_typ
 
 export const basicDetailsValidationSchema = z
   .object({
+    id: z.number().optional(),
     name: z
       .string()
       .trim()
@@ -22,15 +23,10 @@ export const basicDetailsValidationSchema = z
     odk_central_url: z.string().optional(),
     odk_central_user: z.string().optional(),
     odk_central_password: z.string().optional(),
-    project_admins: z.array(z.string()).min(1, 'At least one Project Admin shall be selected'),
-    uploadAreaSelection: z
-      .enum(['draw', 'upload_file'])
-      .nullable()
-      .refine((val) => val !== null, {
-        message: 'Upload Project Area Type must be selected',
-      }),
+    project_admins: z.array(z.string()).optional(),
+    uploadAreaSelection: z.enum(['draw', 'upload_file']).nullable(),
     uploadedAOIFile: z.any().optional(),
-    outline: z.unknown().refine((val) => val !== undefined, {
+    outline: z.any().refine((val) => val !== undefined, {
       message: 'Project AOI is required',
     }),
     outlineArea: z.string().optional(),
@@ -75,6 +71,22 @@ export const basicDetailsValidationSchema = z
         input: values.uploadedAOIFile,
         path: ['uploadedAOIFile'],
         message: 'AOI Geojson File is Required',
+        code: 'custom',
+      });
+    }
+    if (!values.id && values.project_admins?.length === 0) {
+      ctx.issues.push({
+        input: values.project_admins,
+        path: ['project_admins'],
+        message: 'At least one Project Admin shall be selected',
+        code: 'custom',
+      });
+    }
+    if (!values.uploadAreaSelection && !values.id) {
+      ctx.issues.push({
+        input: values.uploadAreaSelection,
+        path: ['uploadAreaSelection'],
+        message: 'Upload Project Area Type must be selected',
         code: 'custom',
       });
     }

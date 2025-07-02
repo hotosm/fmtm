@@ -145,7 +145,7 @@ const BasicDetails = () => {
                 handleOrganizationChange(value);
               }}
               placeholder="Organization Name"
-              disabled={!isAdmin && authDetails?.orgs_managed?.length === 1}
+              disabled={(!isAdmin && authDetails?.orgs_managed?.length === 1) || !!values.id}
               isLoading={organisationListLoading}
               ref={field.ref}
             />
@@ -154,7 +154,7 @@ const BasicDetails = () => {
         {errors?.organisation_id?.message && <ErrorMessage message={errors.organisation_id.message as string} />}
       </div>
 
-      {values.organisation_id && values.hasODKCredentials && (
+      {values.organisation_id && values.hasODKCredentials && !values.id && (
         <CustomCheckbox
           key="useDefaultODKCredentials"
           label="Use default or requested ODK credentials"
@@ -167,7 +167,7 @@ const BasicDetails = () => {
         />
       )}
 
-      {values.organisation_id && !values.useDefaultODKCredentials && (
+      {values.organisation_id && !values.useDefaultODKCredentials && !values.id && (
         <>
           <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
             <FieldLabel label="ODK Central URL" astric />
@@ -189,87 +189,93 @@ const BasicDetails = () => {
         </>
       )}
 
-      <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
-        <FieldLabel label="Assign Project Admin" astric />
-        <Controller
-          control={control}
-          name="project_admins"
-          render={({ field }) => (
-            <Select2
-              options={userList || []}
-              value={field.value}
-              onChange={(value: any) => field.onChange(value)}
-              placeholder="Search for Field-TM users"
-              multiple
-              checkBox
-              isLoading={userListLoading}
-              handleApiSearch={(value) => {
-                if (value) {
-                  setUserSearchText(value);
-                } else {
-                  dispatch(UserActions.SetUserListForSelect([]));
-                }
-              }}
-              ref={field.ref}
-            />
-          )}
-        />
-        {errors?.project_admins?.message && <ErrorMessage message={errors.project_admins.message as string} />}
-      </div>
-
-      <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
-        <FieldLabel label="Project Area" astric />
-        <Controller
-          control={control}
-          name="uploadAreaSelection"
-          render={({ field }) => (
-            <RadioButton
-              value={field.value}
-              options={uploadAreaOptions}
-              onChangeData={field.onChange}
-              ref={field.ref}
-            />
-          )}
-        />
-        {errors?.uploadAreaSelection?.message && (
-          <ErrorMessage message={errors.uploadAreaSelection.message as string} />
-        )}
-      </div>
-      {values.uploadAreaSelection === 'draw' && (
-        <div>
-          <p className="fmtm-text-gray-700 fmtm-pb-2 fmtm-text-sm">Draw a polygon on the map to plot the area</p>
-          {errors?.outline?.message && <ErrorMessage message={errors.outline.message as string} />}
-          {values.outline && (
-            <>
-              <Button variant="secondary-grey" onClick={() => resetFile()}>
-                Reset
-              </Button>
-              <p className="fmtm-text-gray-700 fmtm-mt-2 fmtm-text-xs">
-                Total Area: <span className="fmtm-font-bold">{values.outlineArea}</span>
-              </p>
-            </>
-          )}
+      {!values.id && (
+        <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+          <FieldLabel label="Assign Project Admin" astric />
+          <Controller
+            control={control}
+            name="project_admins"
+            render={({ field }) => (
+              <Select2
+                options={userList || []}
+                value={field.value}
+                onChange={(value: any) => field.onChange(value)}
+                placeholder="Search for Field-TM users"
+                multiple
+                checkBox
+                isLoading={userListLoading}
+                handleApiSearch={(value) => {
+                  if (value) {
+                    setUserSearchText(value);
+                  } else {
+                    dispatch(UserActions.SetUserListForSelect([]));
+                  }
+                }}
+                ref={field.ref}
+              />
+            )}
+          />
+          {errors?.project_admins?.message && <ErrorMessage message={errors.project_admins.message as string} />}
         </div>
       )}
-      {values.uploadAreaSelection === 'upload_file' && (
-        <div className="fmtm-my-2 fmtm-flex fmtm-flex-col fmtm-gap-1">
-          <FieldLabel label="Select one of the option to upload area" astric />
-          <UploadAreaComponent
-            title=""
-            label="Please upload .geojson, .json file"
-            data={values.uploadedAOIFile ? [values.uploadedAOIFile] : []}
-            onUploadFile={(updatedFiles, fileInputRef) => {
-              changeFileHandler(updatedFiles?.[0] as fileType, fileInputRef);
-            }}
-            acceptedInput=".geojson, .json"
-          />
-          {errors?.uploadedAOIFile?.message && <ErrorMessage message={errors.uploadedAOIFile.message as string} />}
-          {values.outline && (
-            <p className="fmtm-text-gray-700 fmtm-mt-2 fmtm-text-xs">
-              Total Area: <span className="fmtm-font-bold">{values.outlineArea}</span>
-            </p>
+
+      {!values.id && (
+        <>
+          <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+            <FieldLabel label="Project Area" astric />
+            <Controller
+              control={control}
+              name="uploadAreaSelection"
+              render={({ field }) => (
+                <RadioButton
+                  value={field.value}
+                  options={uploadAreaOptions}
+                  onChangeData={field.onChange}
+                  ref={field.ref}
+                />
+              )}
+            />
+            {errors?.uploadAreaSelection?.message && (
+              <ErrorMessage message={errors.uploadAreaSelection.message as string} />
+            )}
+          </div>
+          {values.uploadAreaSelection === 'draw' && (
+            <div>
+              <p className="fmtm-text-gray-700 fmtm-pb-2 fmtm-text-sm">Draw a polygon on the map to plot the area</p>
+              {errors?.outline?.message && <ErrorMessage message={errors.outline.message as string} />}
+              {values.outline && (
+                <>
+                  <Button variant="secondary-grey" onClick={() => resetFile()}>
+                    Reset
+                  </Button>
+                  <p className="fmtm-text-gray-700 fmtm-mt-2 fmtm-text-xs">
+                    Total Area: <span className="fmtm-font-bold">{values.outlineArea}</span>
+                  </p>
+                </>
+              )}
+            </div>
           )}
-        </div>
+          {values.uploadAreaSelection === 'upload_file' && (
+            <div className="fmtm-my-2 fmtm-flex fmtm-flex-col fmtm-gap-1">
+              <FieldLabel label="Select one of the option to upload area" astric />
+              <UploadAreaComponent
+                title=""
+                label="Please upload .geojson, .json file"
+                data={values.uploadedAOIFile ? [values.uploadedAOIFile] : []}
+                onUploadFile={(updatedFiles, fileInputRef) => {
+                  changeFileHandler(updatedFiles?.[0] as fileType, fileInputRef);
+                }}
+                acceptedInput=".geojson, .json"
+              />
+              {errors?.uploadedAOIFile?.message && <ErrorMessage message={errors.uploadedAOIFile.message as string} />}
+              {values.outline && (
+                <p className="fmtm-text-gray-700 fmtm-mt-2 fmtm-text-xs">
+                  Total Area: <span className="fmtm-font-bold">{values.outlineArea}</span>
+                </p>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
