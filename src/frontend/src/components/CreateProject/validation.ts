@@ -6,19 +6,30 @@ export const basicDetailsValidationSchema = z
   .object({
     name: z
       .string()
+      .trim()
       .min(1, 'Project Name is Required')
       .regex(/^[^_]+$/, 'Project Name should not contain _ (underscore)'),
-    short_description: z.string().min(1, 'Short Description is Required'),
-    description: z.string().min(1, 'Description is Required'),
-    organisation_id: z.number({ error: 'Organization is Required' }),
+    short_description: z.string().trim().min(1, 'Short Description is Required'),
+    description: z.string().trim().min(1, 'Description is Required'),
+    organisation_id: z
+      .number()
+      .nullable()
+      .refine((val) => val !== null, {
+        message: 'Organization is Required',
+      }),
     hasODKCredentials: z.boolean(),
     useDefaultODKCredentials: z.boolean(),
     odk_central_url: z.string().optional(),
     odk_central_user: z.string().optional(),
     odk_central_password: z.string().optional(),
     project_admins: z.array(z.string()).min(1, 'At least one Project Admin shall be selected'),
-    uploadAreaSelection: z.string().min(1, 'Upload Area Selection is Required'),
-    uploadedAOIFile: z.object({ id: z.string(), file: z.instanceof(File), previewURL: z.string() }).optional(),
+    uploadAreaSelection: z
+      .enum(['draw', 'upload_file'])
+      .nullable()
+      .refine((val) => val !== null, {
+        message: 'Upload Project Area Type must be selected',
+      }),
+    uploadedAOIFile: z.any().optional(),
     outline: z.unknown().refine((val) => val !== undefined, {
       message: 'Project AOI is required',
     }),
@@ -26,8 +37,8 @@ export const basicDetailsValidationSchema = z
   })
   .check((ctx) => {
     const values = ctx.value;
-    if (!values.useDefaultODKCredentials) {
-      if (!values.odk_central_url) {
+    if (values.hasODKCredentials && !values.useDefaultODKCredentials) {
+      if (!values.odk_central_url?.trim()) {
         ctx.issues.push({
           input: values.odk_central_url,
           path: ['odk_central_url'],
@@ -42,7 +53,7 @@ export const basicDetailsValidationSchema = z
           code: 'custom',
         });
       }
-      if (!values.odk_central_user) {
+      if (!values.odk_central_user?.trim()) {
         ctx.issues.push({
           input: values.odk_central_user,
           path: ['odk_central_user'],
@@ -50,7 +61,7 @@ export const basicDetailsValidationSchema = z
           code: 'custom',
         });
       }
-      if (!values.odk_central_password) {
+      if (!values.odk_central_password?.trim()) {
         ctx.issues.push({
           input: values.odk_central_password,
           path: ['odk_central_password'],
@@ -120,11 +131,21 @@ export const uploadSurveyValidationSchema = z
 
 export const mapDataValidationSchema = z
   .object({
-    primaryGeomType: z.enum(GeoGeomTypesEnum, { error: 'Primary Geometry Type must be selected' }),
+    primaryGeomType: z
+      .enum(GeoGeomTypesEnum)
+      .nullable()
+      .refine((val) => val !== null, {
+        message: 'Primary Geometry Type must be selected',
+      }),
     includeCentroid: z.boolean(),
     useMixedGeomTypes: z.boolean(),
     newGeomType: z.union([z.enum(GeoGeomTypesEnum), z.null()]).optional(),
-    dataExtractType: z.enum(data_extract_type, { error: 'Data Extract Type must be selected' }),
+    dataExtractType: z
+      .enum(data_extract_type)
+      .nullable()
+      .refine((val) => val !== null, {
+        message: 'Data Extract Type must be selected',
+      }),
     customDataExtractFile: z.any().optional(),
     dataExtractGeojson: z.any().optional(),
   })
@@ -159,9 +180,12 @@ export const mapDataValidationSchema = z
 
 export const splitTasksValidationSchema = z
   .object({
-    task_split_type: z.enum(task_split_type, {
-      error: 'Task Split Type is Required',
-    }),
+    task_split_type: z
+      .enum(task_split_type)
+      .nullable()
+      .refine((val) => val !== null, {
+        message: 'Task Split Type is Required',
+      }),
     dimension: z.number().optional(),
     average_buildings_per_task: z.number().optional(),
     splitGeojsonBySquares: z.any().optional(),
@@ -198,7 +222,7 @@ export const splitTasksValidationSchema = z
     }
     if (values.task_split_type === task_split_type.DIVIDE_ON_SQUARE && !values.splitGeojsonBySquares) {
       ctx.issues.push({
-        message: 'Please generate the task splitting GeoJSON by squares',
+        message: 'Please generate the task using Divide into squares',
         input: values.splitGeojsonBySquares,
         code: 'custom',
         path: ['splitGeojsonBySquares'],
@@ -206,7 +230,7 @@ export const splitTasksValidationSchema = z
     }
     if (values.task_split_type === task_split_type.TASK_SPLITTING_ALGORITHM && !values.splitGeojsonByAlgorithm) {
       ctx.issues.push({
-        message: 'Please generate the task splitting GeoJSON by algorithm',
+        message: 'Please generate the task using Task Splitting Algorithm',
         input: values.splitGeojsonByAlgorithm,
         code: 'custom',
         path: ['splitGeojsonByAlgorithm'],
@@ -214,10 +238,10 @@ export const splitTasksValidationSchema = z
     }
   });
 
-export const createProjectValidationSchema = {
-  ...basicDetailsValidationSchema,
-  ...projectDetailsValidationSchema,
-  ...uploadSurveyValidationSchema,
-  ...mapDataValidationSchema,
-  ...splitTasksValidationSchema,
-};
+export const createProjectValidationSchema = z.object({
+  ...basicDetailsValidationSchema.shape,
+  ...projectDetailsValidationSchema.shape,
+  ...uploadSurveyValidationSchema.shape,
+  ...mapDataValidationSchema.shape,
+  ...splitTasksValidationSchema.shape,
+});
