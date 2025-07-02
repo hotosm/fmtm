@@ -88,7 +88,7 @@ const UploadSurvey = () => {
           <ErrorMessage message={errors.formExampleSelection.message as string} />
         )}
 
-        <p className="fmtm-body-sm fmtm-mt-2 fmtm-text-[#9B9999]">
+        <p className="fmtm-body-sm fmtm-text-[#9B9999]">
           Selecting a form based on OpenStreetMap{' '}
           <a
             href="https://wiki.openstreetmap.org/wiki/Tags"
@@ -111,27 +111,26 @@ const UploadSurvey = () => {
             <a
               href={`${VITE_API_URL}/helper/download-template-xlsform?form_type=${values.formExampleSelection}`}
               target="_"
-              className={`fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-underline fmtm-w-fit ${!values.formExampleSelection && 'fmtm-opacity-70 fmtm-pointer-events-none'}`}
+              className={`fmtm-text-sm fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-underline fmtm-w-fit ${!values.formExampleSelection && 'fmtm-opacity-70 fmtm-pointer-events-none'}`}
             >
               Download Form
             </a>
           </div>
         </Tooltip>
-        <p className="fmtm-text-base fmtm-mt-2">
+        <p className="fmtm-mt-1">
           <a
             href={`https://xlsforms.fmtm.dev?url=${VITE_API_URL}/helper/download-template-xlsform?form_type=${values.formExampleSelection}`}
             target="_"
-            className="fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-underline"
+            className="fmtm-text-sm fmtm-text-blue-600 hover:fmtm-text-blue-700 fmtm-cursor-pointer fmtm-underline"
           >
             Edit Interactively
           </a>
         </p>
       </div>
 
-      <div className="fmtm-my-2 fmtm-flex fmtm-flex-col fmtm-gap-1">
+      <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
         <FieldLabel label="Upload Form" astric />
         <UploadArea
-          title=""
           label="The supported file formats are .xlsx, .xls, .xml"
           data={values.xlsFormFile ? [values.xlsFormFile] : []}
           onUploadFile={(updatedFiles, fileInputRef) => {
