@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 
 import { task_split_type } from '@/types/enums';
@@ -12,12 +12,14 @@ import FieldLabel from '@/components/common/FieldLabel';
 import RadioButton from '@/components/common/RadioButton';
 import { Input } from '@/components/RadixComponents/Input';
 import Button from '@/components/common/Button';
+import ErrorMessage from '@/components/common/ErrorMessage';
 import AssetModules from '@/shared/AssetModules';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 const SplitTasks = () => {
   const dispatch = useAppDispatch();
+  const generateBtnRef = useRef<HTMLButtonElement>(null);
 
   const splitGeojsonBySquares = useAppSelector((state) => state.createproject.splitGeojsonBySquares);
   const splitGeojsonByAlgorithm = useAppSelector((state) => state.createproject.splitGeojsonByAlgorithm);
@@ -25,7 +27,8 @@ const SplitTasks = () => {
   const taskSplittingGeojsonLoading = useAppSelector((state) => state.createproject.taskSplittingGeojsonLoading);
 
   const form = useFormContext<z.infer<typeof createProjectValidationSchema>>();
-  const { watch, control, register, setValue } = form;
+  const { watch, control, register, setValue, formState } = form;
+  const { errors } = formState;
   const values = watch();
 
   const taskSplitOptions: taskSplitOptionsType[] = [
@@ -98,10 +101,16 @@ const SplitTasks = () => {
     setValue('splitGeojsonByAlgorithm', splitGeojsonByAlgorithm);
   }, [splitGeojsonByAlgorithm]);
 
+  useEffect(() => {
+    if (errors.splitGeojsonBySquares || errors.splitGeojsonByAlgorithm) {
+      generateBtnRef?.current?.focus();
+    }
+  }, [errors.splitGeojsonBySquares, errors.splitGeojsonByAlgorithm]);
+
   return (
     <div className="fmtm-flex fmtm-flex-col fmtm-gap-[1.125rem] fmtm-w-full">
-      <div>
-        <FieldLabel label="New geometries collected should be of type" astric className="fmtm-mb-1" />
+      <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+        <FieldLabel label="Select an option to split your project area" astric />
         <Controller
           control={control}
           name="task_split_type"
@@ -109,34 +118,44 @@ const SplitTasks = () => {
             <RadioButton value={field.value} options={taskSplitOptions} onChangeData={field.onChange} ref={field.ref} />
           )}
         />
+        {errors?.task_split_type?.message && <ErrorMessage message={errors.task_split_type.message as string} />}
       </div>
 
       <div>
-        <p className="fmtm-text-gray-500">
+        <p className="fmtm-text-gray-500 fmtm-text-sm">
           Total number of features:{' '}
           <span className="fmtm-font-bold">{values.dataExtractGeojson?.features?.length || 0}</span>
         </p>
       </div>
 
       {values.task_split_type === task_split_type.DIVIDE_ON_SQUARE && (
-        <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
-          <FieldLabel label="Dimension of square in metres:" />
-          <Input {...register('dimension', { valueAsNumber: true })} className="fmtm-w-20" type="number" />
+        <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+          <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
+            <FieldLabel label="Dimension of square in metres:" />
+            <Input {...register('dimension', { valueAsNumber: true })} className="!fmtm-w-20" type="number" />
+          </div>
+          {errors?.dimension?.message && <ErrorMessage message={errors.dimension.message as string} />}
         </div>
       )}
 
       {values.task_split_type === task_split_type.TASK_SPLITTING_ALGORITHM && (
-        <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
-          <FieldLabel label="Average number of buildings per task:" />
-          <Input {...register('average_buildings_per_task', { valueAsNumber: true })} className="fmtm-w-20" />
+        <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+          <div className="fmtm-flex fmtm-items-center fmtm-gap-2">
+            <FieldLabel label="Average number of buildings per task:" />
+            <Input {...register('average_buildings_per_task', { valueAsNumber: true })} className="!fmtm-w-20" />
+          </div>
+          {errors?.average_buildings_per_task?.message && (
+            <ErrorMessage message={errors.average_buildings_per_task.message as string} />
+          )}
         </div>
       )}
 
       {[task_split_type.DIVIDE_ON_SQUARE, task_split_type.TASK_SPLITTING_ALGORITHM].includes(
         values.task_split_type,
       ) && (
-        <div className="fmtm-flex fmtm-items-center fmtm-gap-4">
+        <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
           <Button
+            ref={generateBtnRef}
             variant="primary-red"
             isLoading={dividedTaskLoading || taskSplittingGeojsonLoading}
             onClick={generateTaskBasedOnSelection}
@@ -147,10 +166,17 @@ const SplitTasks = () => {
                 ? true
                 : false
             }
+            shouldFocus
           >
             Click to generate task
             <AssetModules.SettingsIcon />
           </Button>
+          {errors?.splitGeojsonBySquares?.message && (
+            <ErrorMessage message={errors.splitGeojsonBySquares.message as string} />
+          )}
+          {errors?.splitGeojsonByAlgorithm?.message && (
+            <ErrorMessage message={errors.splitGeojsonByAlgorithm.message as string} />
+          )}
         </div>
       )}
 
