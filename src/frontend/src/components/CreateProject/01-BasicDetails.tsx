@@ -56,14 +56,6 @@ const BasicDetails = () => {
     );
   }, [userSearchText]);
 
-  useEffect(() => {
-    if (!values.useDefaultODKCredentials) {
-      setValue('odk_central_url', '');
-      setValue('odk_central_user', '');
-      setValue('odk_central_password', '');
-    }
-  }, [values.useDefaultODKCredentials]);
-
   const handleOrganizationChange = (orgId: number) => {
     const orgIdInt = orgId && +orgId;
     if (!orgIdInt) return;
