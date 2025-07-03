@@ -25,10 +25,18 @@ import {
 } from '@/components/CreateProject/validation';
 import { z } from 'zod/v4';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
-import { CreateDraftProjectService, GetBasicProjectDetails, OrganisationService } from '@/api/CreateProjectService';
+import {
+  CreateDraftProjectService,
+  CreateProjectService,
+  GetBasicProjectDetails,
+  OrganisationService,
+} from '@/api/CreateProjectService';
 import { defaultValues } from '@/components/CreateProject/constants/defaultValues';
 import { useParams } from 'react-router-dom';
 import FormFieldSkeletonLoader from '@/components/Skeletons/common/FormFieldSkeleton';
+import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
+import { convertGeojsonToJsonFile, getDirtyFieldValues } from '@/utilfunctions';
+import { data_extract_type, task_split_type } from '@/types/enums';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -53,6 +61,7 @@ const CreateProject = () => {
   const [step, setStep] = useState(1);
   const [toggleEdit, setToggleEdit] = useState(false);
   const createDraftProjectLoading = useAppSelector((state) => state.createproject.createDraftProjectLoading);
+  const createProjectLoading = useAppSelector((state) => state.createproject.createProjectLoading);
   const basicProjectDetails = useAppSelector((state) => state.createproject.basicProjectDetails);
   const basicProjectDetailsLoading = useAppSelector((state) => state.createproject.basicProjectDetailsLoading);
 
@@ -62,8 +71,12 @@ const CreateProject = () => {
   }, [projectId]);
 
   useEffect(() => {
-    if (!basicProjectDetails) return;
+    if (!basicProjectDetails || !projectId) return;
     reset({ ...defaultValues, ...basicProjectDetails });
+
+    return () => {
+      dispatch(CreateProjectActions.SetBasicProjectDetails(null));
+    };
   }, [basicProjectDetails]);
 
   useEffect(() => {
@@ -77,7 +90,7 @@ const CreateProject = () => {
     resolver: zodResolver(validationSchema[step]),
   });
 
-  const { handleSubmit, watch, setValue, trigger, formState, reset } = formMethods;
+  const { handleSubmit, watch, setValue, trigger, formState, reset, getValues } = formMethods;
   const { dirtyFields } = formState;
   const values = watch();
 
@@ -87,10 +100,6 @@ const CreateProject = () => {
     3: <UploadSurvey />,
     4: <MapData />,
     5: <SplitTasks />,
-  };
-
-  const onSubmit = (data: z.infer<typeof createProjectValidationSchema>) => {
-    if (step < 5) setStep(step + 1);
   };
 
   const createDraftProject = async () => {
@@ -111,6 +120,60 @@ const CreateProject = () => {
       org_id: organisation_id,
     };
     dispatch(CreateDraftProjectService(`${VITE_API_URL}/projects/stub`, payload, params));
+  };
+
+  const createProject = async () => {
+    const data = getValues();
+    const { name, description, short_description } = data;
+
+    // retrieve updated fields from basic details
+    const dirtyValues = getDirtyFieldValues({ name, description, short_description }, dirtyFields);
+
+    const projectData = {
+      ...dirtyValues,
+      visibility: data.visibility,
+      hashtags: data.hashtags,
+      custom_tms_url: data.custom_tms_url,
+      per_task_instructions: data.per_task_instructions,
+      use_odk_collect: data.use_odk_collect,
+      osm_category: data.formExampleSelection,
+      primary_geom_type: data.primaryGeomType,
+      new_geom_type: data.newGeomType ? data.newGeomType : data.primaryGeomType,
+      task_split_type: data.task_split_type,
+      status: 'PUBLISHED',
+    };
+
+    if (data.task_split_type === task_split_type.TASK_SPLITTING_ALGORITHM) {
+      projectData.task_num_buildings = data.average_buildings_per_task;
+    } else {
+      projectData.task_split_dimension = data.dimension;
+    }
+
+    const taskSplitGeojsonFile = convertGeojsonToJsonFile(
+      data.splitGeojsonByAlgorithm || data.splitGeojsonBySquares || data.outline,
+      'task',
+    );
+    const dataExtractGeojsonFile = convertGeojsonToJsonFile(data.dataExtractGeojson, 'extract');
+
+    const file = { taskSplitGeojsonFile, dataExtractGeojsonFile, xlsFormFile: data.xlsFormFile?.file };
+    const combinedFeaturesCount = data.dataExtractGeojson?.features?.length ?? 0;
+    const isEmptyDataExtract = data.dataExtractType === data_extract_type.NONE;
+
+    dispatch(
+      CreateProjectService(
+        `${VITE_API_URL}/projects?project_id=${projectId}`,
+        data.id as number,
+        projectData,
+        file,
+        combinedFeaturesCount,
+        isEmptyDataExtract,
+      ),
+    );
+  };
+
+  const onSubmit = () => {
+    if (step < 5) setStep(step + 1);
+    if (step === 5) createProject();
   };
 
   return (
@@ -147,11 +210,20 @@ const CreateProject = () => {
                   <span></span>
                 ))}
               {step > 1 && (
-                <Button variant="link-grey" onClick={() => setStep(step - 1)}>
+                <Button
+                  variant="link-grey"
+                  onClick={() => setStep(step - 1)}
+                  disabled={createProjectLoading || basicProjectDetailsLoading}
+                >
                   <AssetModules.ArrowBackIosIcon className="!fmtm-text-sm" /> Previous
                 </Button>
               )}
-              <Button variant="primary-grey" type="submit" disabled={basicProjectDetailsLoading}>
+              <Button
+                variant="primary-grey"
+                type="submit"
+                disabled={basicProjectDetailsLoading}
+                isLoading={createProjectLoading}
+              >
                 {step === 5 ? 'Submit' : 'Next'}{' '}
                 <AssetModules.ArrowForwardIosIcon className="!fmtm-text-sm !fmtm-ml-auto" />
               </Button>
