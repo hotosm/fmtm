@@ -386,7 +386,7 @@ const GetDividedTaskFromGeojson = (url: string, projectData: Record<string, any>
 const TaskSplittingPreviewService = (
   url: string,
   projectAoiFile: any,
-  no_of_buildings: string,
+  no_of_buildings: number,
   dataExtractFile: any,
 ) => {
   return async (dispatch: AppDispatch) => {
