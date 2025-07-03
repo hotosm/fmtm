@@ -26,6 +26,7 @@ export const initialState: CreateProjectStateTypes = {
   },
   projectDetailsResponse: null,
   createDraftProjectLoading: false,
+  createProjectLoading: false,
   projectDetailsLoading: false,
   editProjectDetailsLoading: false,
   formExampleList: [],
@@ -72,7 +73,7 @@ const CreateProject = createSlice({
       state.createDraftProjectLoading = action.payload;
     },
     CreateProjectLoading(state, action: PayloadAction<boolean>) {
-      state.projectDetailsLoading = action.payload;
+      state.createProjectLoading = action.payload;
     },
     PostProjectDetails(state, action) {
       state.projectDetailsResponse = action.payload;
@@ -234,10 +235,11 @@ const CreateProject = createSlice({
     SetBasicProjectDetails(
       state,
       action: PayloadAction<
-        { id: number } & Pick<
-          ProjectDetailsTypes,
-          'name' | 'short_description' | 'description' | 'organisation_id' | 'outline'
-        >
+        | ({ id: number } & Pick<
+            ProjectDetailsTypes,
+            'name' | 'short_description' | 'description' | 'organisation_id' | 'outline'
+          >)
+        | null
       >,
     ) {
       state.basicProjectDetails = action.payload;

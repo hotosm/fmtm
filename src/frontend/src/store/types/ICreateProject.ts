@@ -6,6 +6,7 @@ export type CreateProjectStateTypes = {
   projectDetails: Partial<ProjectDetailsTypes>;
   projectDetailsResponse: EditProjectResponseTypes | null;
   createDraftProjectLoading: boolean;
+  createProjectLoading: boolean;
   projectDetailsLoading: boolean;
   editProjectDetailsLoading: boolean;
   formExampleList: FormCategoryListTypes[];
