@@ -3,12 +3,14 @@ import { Controller, useFormContext } from 'react-hook-form';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import { valid } from 'geojson-validation';
 import { useIsAdmin } from '@/hooks/usePermissions';
+import { z } from 'zod/v4';
 
 import { GetUserListForSelect } from '@/api/User';
 import { UserActions } from '@/store/slices/UserSlice';
 import { convertFileToGeojson } from '@/utilfunctions/convertFileToGeojson';
 import { fileType } from '@/store/types/ICommon';
 import { CommonActions } from '@/store/slices/CommonSlice';
+import { createProjectValidationSchema } from './validation';
 
 import { CustomCheckbox } from '@/components/common/Checkbox';
 import FieldLabel from '@/components/common/FieldLabel';
@@ -40,7 +42,7 @@ const BasicDetails = () => {
   }));
   const userListLoading = useAppSelector((state) => state.user.userListLoading);
 
-  const form = useFormContext();
+  const form = useFormContext<z.infer<typeof createProjectValidationSchema>>();
   const { watch, register, control, setValue, formState } = form;
   const { errors } = formState;
 
@@ -60,8 +62,8 @@ const BasicDetails = () => {
     const orgIdInt = orgId && +orgId;
     if (!orgIdInt) return;
     const selectedOrg = organisationList.find((org) => org.value === orgIdInt);
-    setValue('hasODKCredentials', selectedOrg?.hasODKCredentials);
-    setValue('useDefaultODKCredentials', selectedOrg?.hasODKCredentials);
+    setValue('hasODKCredentials', !!selectedOrg?.hasODKCredentials);
+    setValue('useDefaultODKCredentials', !!selectedOrg?.hasODKCredentials);
   };
 
   const changeFileHandler = async (file: fileType, fileInputRef: React.RefObject<HTMLInputElement | null>) => {
@@ -78,7 +80,7 @@ const BasicDetails = () => {
       setValue('uploadedAOIFile', file);
       setValue('outline', convertedGeojson);
     } else {
-      setValue('uploadedAOI File', null);
+      setValue('uploadedAOIFile', null);
       setValue('outline', null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       dispatch(
@@ -139,7 +141,7 @@ const BasicDetails = () => {
           render={({ field }) => (
             <Select2
               options={organisationList || []}
-              value={field.value}
+              value={field.value as number}
               onChange={(value: any) => {
                 field.onChange(value);
                 handleOrganizationChange(value);
@@ -228,7 +230,7 @@ const BasicDetails = () => {
               name="uploadAreaSelection"
               render={({ field }) => (
                 <RadioButton
-                  value={field.value}
+                  value={field.value as string}
                   options={uploadAreaOptions}
                   onChangeData={field.onChange}
                   ref={field.ref}

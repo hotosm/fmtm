@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
+import { z } from 'zod/v4';
+import { createProjectValidationSchema } from './validation';
 
 import AssetModules from '@/shared/AssetModules';
 import { projectVisibilityOptions } from './constants';
@@ -17,7 +19,7 @@ const ProjectDetails = () => {
   const defaultHashtags = ['#Field-TM', `#${hostname}-{project_id}`];
   const [hashtag, setHashtag] = useState('');
 
-  const form = useFormContext();
+  const form = useFormContext<z.infer<typeof createProjectValidationSchema>>();
   const { watch, register, control, setValue, formState } = form;
   const { errors } = formState;
 

@@ -5,6 +5,8 @@ import { Tooltip } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@/types/reduxTypes';
 import { FormCategoryService, ValidateCustomForm } from '@/api/CreateProjectService';
 import { fileType } from '@/store/types/ICommon';
+import { z } from 'zod/v4';
+import { createProjectValidationSchema } from './validation';
 
 import Select2 from '@/components/common/Select2';
 import FieldLabel from '@/components/common/FieldLabel';
@@ -25,7 +27,7 @@ const UploadSurvey = () => {
     .sort((a, b) => a.title.localeCompare(b.title))
     .map((form) => ({ id: form.id, label: form.title, value: form.id }));
 
-  const form = useFormContext();
+  const form = useFormContext<z.infer<typeof createProjectValidationSchema>>();
   const { watch, control, setValue, formState } = form;
   const { errors } = formState;
   const values = watch();
@@ -73,7 +75,7 @@ const UploadSurvey = () => {
           render={({ field }) => (
             <Select2
               options={sortedFormExampleList || []}
-              value={field.value}
+              value={field.value as string}
               choose="label"
               onChange={(value: any) => {
                 field.onChange(value);

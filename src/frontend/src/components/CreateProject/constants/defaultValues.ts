@@ -28,7 +28,7 @@ export const defaultValues: z.infer<typeof createProjectValidationSchema> = {
   use_odk_collect: false,
 
   // 03 Upload Survey
-  formExampleSelection: null,
+  formExampleSelection: '',
   xlsFormFile: null,
   isXlsFormFileValid: false,
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { z } from 'zod/v4';
 import { Controller, useFormContext } from 'react-hook-form';
 import { geojson as fgbGeojson } from 'flatgeobuf';
 import { valid } from 'geojson-validation';
@@ -9,9 +10,10 @@ import { newGeomOptions, primaryGeomOptions } from './constants';
 import { CommonActions } from '@/store/slices/CommonSlice';
 import { dataExtractGeojsonType } from '@/store/types/ICreateProject';
 import { convertFileToGeojson } from '@/utilfunctions/convertFileToGeojson';
-import { data_extract_type, GeoGeomTypesEnum } from '@/types/enums';
+import { data_extract_type, GeoGeomTypesEnum, task_split_type } from '@/types/enums';
 import { useAppDispatch } from '@/types/reduxTypes';
 import { fileType } from '@/store/types/ICommon';
+import { createProjectValidationSchema } from './validation';
 
 import FieldLabel from '@/components/common/FieldLabel';
 import RadioButton from '@/components/common/RadioButton';
@@ -25,7 +27,7 @@ const VITE_API_URL = import.meta.env.VITE_API_URL;
 const MapData = () => {
   const dispatch = useAppDispatch();
 
-  const form = useFormContext();
+  const form = useFormContext<z.infer<typeof createProjectValidationSchema>>();
   const { watch, control, setValue, formState } = form;
   const { errors } = formState;
   const values = watch();
@@ -110,9 +112,9 @@ const MapData = () => {
 
     dataExtractRequestFormData.append('geojson_file', projectAoiGeojsonFile);
     dataExtractRequestFormData.append('osm_category', values.formExampleSelection);
-    dataExtractRequestFormData.append('geom_type', values.primaryGeomType);
+    dataExtractRequestFormData.append('geom_type', values.primaryGeomType as GeoGeomTypesEnum);
     if (values.primaryGeomType == GeoGeomTypesEnum.POINT)
-      dataExtractRequestFormData.append('centroid', values.includeCentroid);
+      dataExtractRequestFormData.append('centroid', values.includeCentroid ? 'true' : 'false');
 
     setFetchingOSMData(true);
     try {
@@ -154,7 +156,7 @@ const MapData = () => {
           name="primaryGeomType"
           render={({ field }) => (
             <RadioButton
-              value={field.value}
+              value={field.value || ''}
               options={primaryGeomOptions}
               onChangeData={field.onChange}
               ref={field.ref}
@@ -203,7 +205,12 @@ const MapData = () => {
             control={control}
             name="newGeomType"
             render={({ field }) => (
-              <RadioButton value={field.value} options={newGeomOptions} onChangeData={field.onChange} ref={field.ref} />
+              <RadioButton
+                value={field.value || ''}
+                options={newGeomOptions}
+                onChangeData={field.onChange}
+                ref={field.ref}
+              />
             )}
           />
           {errors?.newGeomType?.message && <ErrorMessage message={errors.newGeomType.message as string} />}
@@ -216,7 +223,7 @@ const MapData = () => {
           name="dataExtractType"
           render={({ field }) => (
             <RadioButton
-              value={field.value}
+              value={field.value || ''}
               options={dataExtractOptions}
               onChangeData={(value) => {
                 field.onChange(value);
