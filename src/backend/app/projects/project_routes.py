@@ -622,7 +622,6 @@ async def get_data_extract(
         project.id,
         extract_config,
         centroid,
-        project.id,
     )
 
     return JSONResponse(status_code=HTTPStatus.OK, content={"url": geojson_url})
