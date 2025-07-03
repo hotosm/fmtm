@@ -117,7 +117,7 @@ const MapData = () => {
     setFetchingOSMData(true);
     try {
       const response = await axios.post(`${VITE_API_URL}/projects/generate-data-extract`, dataExtractRequestFormData, {
-        params: { project_id: 2 },
+        params: { project_id: values.id },
       });
 
       const dataExtractGeojsonUrl = response.data.url;
