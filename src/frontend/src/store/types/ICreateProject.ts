@@ -119,6 +119,7 @@ export type ProjectDetailsTypes = {
   hasCustomTMS: boolean;
   xlsFormFileUpload: any;
   primaryGeomType: MapGeomTypes;
+  includeCentroid: boolean;
   useMixedGeomTypes: boolean;
   newGeomType: MapGeomTypes;
   project_admins: number[];

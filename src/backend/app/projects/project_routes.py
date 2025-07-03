@@ -54,14 +54,7 @@ from app.auth.roles import Mapper, ProjectManager, org_admin
 from app.central import central_crud, central_deps, central_schemas
 from app.config import settings
 from app.db.database import db_conn
-from app.db.enums import (
-    DbGeomType,
-    EntityState,
-    HTTPStatus,
-    ProjectRole,
-    ProjectStatus,
-    XLSFormType,
-)
+from app.db.enums import DbGeomType, HTTPStatus, ProjectRole, ProjectStatus, XLSFormType
 from app.db.languages_and_countries import countries
 from app.db.models import (
     DbBackgroundTask,
@@ -626,6 +619,7 @@ async def get_data_extract(
 
     geojson_url = await project_crud.generate_data_extract(
         clean_boundary_geojson,
+        project.id,
         extract_config,
         centroid,
         project.id,

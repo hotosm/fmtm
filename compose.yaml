@@ -28,7 +28,7 @@ volumes:
 
 networks:
   fmtm-net:
-    name: fmtm-${GIT_BRANCH:-local}
+    name: fmtm-local
     ipam:
       driver: default
       config:
@@ -122,13 +122,19 @@ services:
     restart: "unless-stopped"
 
   api:
-    image: "ghcr.io/hotosm/fmtm/backend:${TAG_OVERRIDE:-debug}"
+    image: "ghcr.io/hotosm/field-tm/backend:${TAG_OVERRIDE:-debug}"
     build:
       context: src
       dockerfile: backend/Dockerfile
       target: "${TARGET_OVERRIDE:-debug}"
       args:
         APP_VERSION: "${TAG_OVERRIDE:-debug}"
+      cache_to:
+        - type=registry,ref=ghcr.io/hotosm/field-tm/backend:${TAG_OVERRIDE:-debug}
+        - type=gha
+      cache_from:
+        - type=registry,ref=ghcr.io/hotosm/field-tm/backend:${TAG_OVERRIDE:-debug}
+        - type=gha
     # Uncomment these to debug with a terminal debugger like pdb
     # Then `docker attach fmtm_api` to debug
     # stdin_open: true
@@ -146,6 +152,8 @@ services:
       # External package mounts (testing)
       # - ../osm-rawdata/osm_rawdata:/opt/python/lib/python3.12/site-packages/osm_rawdata:ro
       # - ../fmtm-splitter/fmtm_splitter:/opt/python/lib/python3.12/site-packages/fmtm_splitter:ro
+    environment:
+      DEBUG: ${DEBUG:-True}
     depends_on:
       proxy:
         condition: service_healthy
@@ -185,7 +193,7 @@ services:
           memory: 100M
 
   ui:
-    image: "ghcr.io/hotosm/fmtm/frontend:debug"
+    image: "ghcr.io/hotosm/field-tm/frontend:debug"
     build:
       context: src
       additional_contexts:
@@ -204,7 +212,7 @@ services:
     restart: "unless-stopped"
 
   ui-mapper:
-    image: "ghcr.io/hotosm/fmtm/frontend:mapper"
+    image: "ghcr.io/hotosm/field-tm/frontend:mapper"
     build:
       context: src
       additional_contexts:
@@ -231,7 +239,7 @@ services:
 
   central:
     profiles: ["", "central"]
-    image: "ghcr.io/hotosm/fmtm/odkcentral:${ODK_CENTRAL_TAG:-v2025.2.0}"
+    image: "ghcr.io/hotosm/field-tm/odkcentral:${ODK_CENTRAL_TAG:-v2025.2.0}"
     build:
       context: odkcentral/api
       args:
@@ -298,7 +306,7 @@ services:
     # This service simply builds the frontend to a volume
     # accessible to the proxy, then shuts down
     profiles: ["", "central"]
-    image: "ghcr.io/hotosm/fmtm/odkcentral-ui:${ODK_CENTRAL_TAG:-v2025.2.0}"
+    image: "ghcr.io/hotosm/field-tm/odkcentral-ui:${ODK_CENTRAL_TAG:-v2025.2.0}"
     build:
       context: odkcentral/ui
       args:
@@ -420,7 +428,7 @@ services:
       retries: 3
 
   migrations:
-    image: "ghcr.io/hotosm/fmtm/backend:${TAG_OVERRIDE:-debug}"
+    image: "ghcr.io/hotosm/field-tm/backend:${TAG_OVERRIDE:-debug}"
     depends_on:
       fmtm-db:
         condition: service_healthy
@@ -442,7 +450,7 @@ services:
       test: ["NONE"] # Set the health check test to NONE to disable it
 
   scheduler:
-    image: "ghcr.io/hotosm/fmtm/backend:${TAG_OVERRIDE:-debug}"
+    image: "ghcr.io/hotosm/field-tm/backend:${TAG_OVERRIDE:-debug}"
     depends_on:
       fmtm-db:
         condition: service_healthy

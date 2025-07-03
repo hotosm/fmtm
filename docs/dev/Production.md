@@ -110,7 +110,7 @@ This will map port 5432 on the remote machine to port 5430 on your local machine
 - Backup Field-TM database:
 
   ```bash
-  GIT_BRANCH=development
+  GIT_BRANCH=dev
   backup_filename="fmtm-db-${GIT_BRANCH}-$(date +'%Y-%m-%d').sql.gz"
   echo $backup_filename
 
@@ -129,7 +129,7 @@ This will map port 5432 on the remote machine to port 5430 on your local machine
 - Backup ODK Central database:
 
   ```bash
-  GIT_BRANCH=development
+  GIT_BRANCH=dev
   backup_filename="fmtm-odk-db-${GIT_BRANCH}-$(date +'%Y-%m-%d').sql.gz"
   echo $backup_filename
 
@@ -142,7 +142,7 @@ This will map port 5432 on the remote machine to port 5430 on your local machine
 - Backup the S3 data:
 
 ```bash
-GIT_BRANCH=development
+GIT_BRANCH=dev
 backup_filename="fmtm-s3-${GIT_BRANCH}-$(date +'%Y-%m-%d').tar.gz"
 echo $backup_filename
 
@@ -150,7 +150,7 @@ docker run --rm -i --entrypoint=tar \
 -u 0:0 \
 -v $PWD:/backups -v \
 fmtm-s3-data-${GIT_BRANCH}:/mnt/data \
-ghcr.io/hotosm/fmtm/backend:${GIT_BRANCH} \
+ghcr.io/hotosm/field-tm/backend:${GIT_BRANCH} \
 -cvzf "/backups/$backup_filename" /mnt/data/
 ```
 
@@ -160,7 +160,7 @@ The restore should be as easy as:
 
 ```bash
 # On a different machine (else change the container name)
-GIT_BRANCH=development
+GIT_BRANCH=dev
 backup_filename=fmtm-db-${GIT_BRANCH}-XXXX-XX-XX.sql.gz
 
 cat "$backup_filename" | gunzip | \
@@ -180,7 +180,7 @@ backup_filename=fmtm-s3-${GIT_BRANCH}-XXXX-XX-XX.tar.gz
 docker run --rm -i --entrypoint=tar \
 -u 0:0 --working-dir=/ \
 -v $backup_filename:/$backup_filename -v \
-ghcr.io/hotosm/fmtm/backend:${GIT_BRANCH} \
+ghcr.io/hotosm/field-tm/backend:${GIT_BRANCH} \
 -xvzf "$backup_filename"
 ```
 
@@ -192,7 +192,7 @@ In this case you can import into a fresh db, before
 attaching to the Field-TM containers:
 
 ```bash
-export GIT_BRANCH=development
+export GIT_BRANCH=dev
 
 # Shut down the running database & delete the data
 docker compose -f deploy/compose.$GIT_BRANCH.yaml down -v
@@ -247,7 +247,7 @@ docker compose -f deploy/compose.$GIT_BRANCH.yaml up -d
 
 ### Making a hotfix
 
-- Sometimes fixes just can't wait to go through the development -->
+- Sometimes fixes just can't wait to go through the dev -->
   staging --> production cycle. We need the fix now!
 
 - In this case, a `hotfix` can be made directly to the `main` branch:
