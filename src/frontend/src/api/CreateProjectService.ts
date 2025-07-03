@@ -12,8 +12,6 @@ import { isStatusSuccess } from '@/utilfunctions/commonUtils';
 import { AppDispatch } from '@/store/Store';
 import isEmpty from '@/utilfunctions/isEmpty';
 import { NavigateFunction } from 'react-router-dom';
-import { createProjectValidationSchema } from '@/components/CreateProject/validation';
-import { z } from 'zod/v4';
 import { ProjectDetailsTypes } from '@/store/types/ICreateProject';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
@@ -61,13 +59,71 @@ export const CreateDraftProjectService = (url: string, payload: Record<string, a
 
 export const CreateProjectService = (
   url: string,
-  projectId: number,
-  formData: z.infer<typeof createProjectValidationSchema>,
+  id: number,
+  projectData: Record<string, any>,
+  file: { taskSplitGeojsonFile: File; dataExtractGeojsonFile: File; xlsFormFile: File },
+  combinedFeaturesCount: number,
+  isEmptyDataExtract: boolean,
 ) => {
   return async (dispatch: AppDispatch) => {
     try {
       dispatch(CreateProjectActions.CreateProjectLoading(true));
+
+      // 1. post project details
+      try {
+        await API.patch(url, projectData);
+      } catch (error) {
+        const errorResponse = error?.response?.data?.detail;
+        const errorMessage =
+          typeof errorResponse === 'string'
+            ? errorResponse || 'Something went wrong. Please try again.'
+            : `Following errors occurred while creating project: ${errorResponse?.map((err) => `\n${err?.msg}`)}`;
+
+        dispatch(
+          CommonActions.SetSnackBar({
+            message: errorMessage,
+          }),
+        );
+      }
+
+      // 2. post task boundaries
+      await dispatch(
+        UploadTaskAreasService(`${VITE_API_URL}/projects/${id}/upload-task-boundaries`, file.taskSplitGeojsonFile),
+      );
+
+      // 3. upload data extract
+      if (isEmptyDataExtract) {
+        // manually set response as we don't call an API
+      } else if (file.dataExtractGeojsonFile) {
+        await dispatch(
+          UploadDataExtractService(
+            `${VITE_API_URL}/projects/upload-data-extract?project_id=${id}`,
+            file.dataExtractGeojsonFile,
+          ),
+        );
+      } else {
+        dispatch(
+          CommonActions.SetSnackBar({
+            message: 'No data extract file or empty data extract file was set',
+          }),
+        );
+      }
+
+      // 4. upload form
+      await dispatch(
+        GenerateProjectFilesService(
+          `${VITE_API_URL}/projects/${id}/generate-project-data`,
+          projectData,
+          file.xlsFormFile,
+          combinedFeaturesCount,
+        ),
+      );
     } catch (error) {
+      dispatch(
+        CommonActions.SetSnackBar({
+          message: error?.response?.data?.detail || 'Something went wrong. Please try again.',
+        }),
+      );
     } finally {
       dispatch(CreateProjectActions.CreateProjectLoading(false));
     }
