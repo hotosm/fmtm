@@ -44,13 +44,45 @@ export const GetBasicProjectDetails = (url: string) => {
   };
 };
 
-export const CreateDraftProjectService = (url: string, payload: Record<string, any>, params: Record<string, any>) => {
+export const CreateDraftProjectService = (
+  url: string,
+  payload: Record<string, any>,
+  project_admins: string[],
+  params: Record<string, any>,
+  navigate: NavigateFunction,
+  continueToNextStep: boolean,
+) => {
   return async (dispatch: AppDispatch) => {
     try {
       dispatch(CreateProjectActions.CreateDraftProjectLoading(true));
-      await axios.post(url, payload, { params });
-      dispatch(CommonActions.SetSnackBar({ message: 'Draft project created successfully', variant: 'success' }));
+      const response: AxiosResponse = await axios.post(url, payload, { params });
+
+      if (!isEmpty(project_admins)) {
+        const promises = project_admins?.map(async (sub: any) => {
+          await dispatch(
+            AssignProjectManager(`${VITE_API_URL}/projects/add-manager`, {
+              sub,
+              project_id: response.data.id as number,
+            }),
+          );
+        });
+        await Promise.all(promises);
+      }
+
+      dispatch(
+        CommonActions.SetSnackBar({
+          variant: 'success',
+          message: 'Draft project created successfully',
+        }),
+      );
+      const redirectTo = continueToNextStep ? `/create-project/${response.data.id}?step=2` : `/`;
+      navigate(redirectTo);
     } catch (error) {
+      dispatch(
+        CommonActions.SetSnackBar({
+          message: error?.response?.data?.detail || 'Failed to create draft project',
+        }),
+      );
     } finally {
       dispatch(CreateProjectActions.CreateDraftProjectLoading(false));
     }
@@ -64,6 +96,7 @@ export const CreateProjectService = (
   file: { taskSplitGeojsonFile: File; dataExtractGeojsonFile: File; xlsFormFile: File },
   combinedFeaturesCount: number,
   isEmptyDataExtract: boolean,
+  navigate: NavigateFunction,
 ) => {
   return async (dispatch: AppDispatch) => {
     try {
@@ -118,6 +151,19 @@ export const CreateProjectService = (
           combinedFeaturesCount,
         ),
       );
+
+      dispatch(
+        CommonActions.SetSnackBar({
+          message: 'Project Generation Completed. Redirecting...',
+          variant: 'success',
+          duration: 5000,
+        }),
+      );
+
+      // Add 5-second delay to allow backend Entity generation to catch up
+      const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+      await delay(5000);
+      navigate(`/project/${id}`);
     } catch (error) {
       dispatch(
         CommonActions.SetSnackBar({
