@@ -102,7 +102,7 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: '/create',
+        path: '/create-project/:id',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
@@ -115,6 +115,18 @@ const routes = createBrowserRouter([
       },
       {
         path: '/create-project',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<div>Loading...</div>}>
+              <ErrorBoundary>
+                <CreateProject />
+              </ErrorBoundary>
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/create',
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div>Loading...</div>}>
