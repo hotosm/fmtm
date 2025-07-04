@@ -186,6 +186,26 @@ export const mapDataValidationSchema = z
         code: 'custom',
       });
     }
+    if (
+      values.dataExtractGeojson?.id &&
+      values.primaryGeomType !== values.dataExtractGeojson?.id &&
+      !values.customDataExtractFile
+    ) {
+      ctx.issues.push({
+        input: values.dataExtractGeojson,
+        path: ['dataExtractGeojson'],
+        message: `Please generate data extract for ${values.primaryGeomType?.toLowerCase()}`,
+        code: 'custom',
+      });
+    }
+    if (values.dataExtractType === data_extract_type.OSM && values.customDataExtractFile) {
+      ctx.issues.push({
+        input: values.customDataExtractFile,
+        path: ['dataExtractGeojson'],
+        message: 'Please generate OSM data extract',
+        code: 'custom',
+      });
+    }
   });
 
 export const splitTasksValidationSchema = z

@@ -118,7 +118,13 @@ const SplitTasks = () => {
             <RadioButton
               value={field.value || ''}
               options={taskSplitOptions}
-              onChangeData={field.onChange}
+              onChangeData={(value) => {
+                field.onChange(value);
+                if (value === task_split_type.CHOOSE_AREA_AS_TASK && values.splitGeojsonByAlgorithm)
+                  setValue('splitGeojsonByAlgorithm', null);
+                if (value === task_split_type.CHOOSE_AREA_AS_TASK && values.splitGeojsonBySquares)
+                  setValue('splitGeojsonBySquares', null);
+              }}
               ref={field.ref}
             />
           )}

@@ -21,6 +21,7 @@ import Switch from '@/components/common/Switch';
 import Button from '@/components/common/Button';
 import UploadArea from '@/components/common/UploadArea';
 import ErrorMessage from '@/components/common/ErrorMessage';
+import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
@@ -50,6 +51,11 @@ const MapData = () => {
       resetMapDataFile();
       return;
     }
+    if (values.splitGeojsonByAlgorithm) {
+      dispatch(CreateProjectActions.GetTaskSplittingPreview(null));
+      setValue('splitGeojsonByAlgorithm', null);
+    }
+
     const uploadedFile = file?.file;
     const fileType = uploadedFile.name.split('.').pop();
 
@@ -77,16 +83,20 @@ const MapData = () => {
   const resetMapDataFile = () => {
     setValue('customDataExtractFile', null);
     setValue('dataExtractGeojson', null);
+    if (values.task_split_type === task_split_type.TASK_SPLITTING_ALGORITHM) {
+      dispatch(CreateProjectActions.GetTaskSplittingPreview(null));
+      setValue('task_split_type', null);
+      setValue('splitGeojsonByAlgorithm', null);
+    }
   };
 
   const validateDataExtractGeojson = (
-    extractFeatCol: FeatureCollection,
+    extractFeatCol: FeatureCollection<null, Record<string, any>>,
     fileInputRef: React.RefObject<HTMLInputElement | null>,
   ) => {
     const isGeojsonValid = valid(extractFeatCol, true);
-
     if (isGeojsonValid?.length === 0 && extractFeatCol) {
-      setValue('dataExtractGeojson', extractFeatCol);
+      setValue('dataExtractGeojson', { ...extractFeatCol, id: values.primaryGeomType });
     } else {
       resetMapDataFile();
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -128,13 +138,17 @@ const MapData = () => {
       const geojsonExtractFile = await fetch(dataExtractGeojsonUrl);
       const geojsonExtract = await geojsonExtractFile.json();
       if ((geojsonExtract && (geojsonExtract as dataExtractGeojsonType))?.features?.length > 0) {
-        setValue('dataExtractGeojson', geojsonExtract);
+        setValue('dataExtractGeojson', { ...geojsonExtract, id: values.primaryGeomType });
       } else {
         dispatch(
           CommonActions.SetSnackBar({
             message: 'Map has no features. Please try adjusting the map area.',
           }),
         );
+      }
+      if (values.splitGeojsonByAlgorithm) {
+        dispatch(CreateProjectActions.GetTaskSplittingPreview(null));
+        setValue('splitGeojsonByAlgorithm', null);
       }
     } catch (error) {
       dispatch(
@@ -158,7 +172,10 @@ const MapData = () => {
             <RadioButton
               value={field.value || ''}
               options={primaryGeomOptions}
-              onChangeData={field.onChange}
+              onChangeData={(value) => {
+                field.onChange(value);
+                if (value === GeoGeomTypesEnum.POLYLINE) setValue('dataExtractType', null);
+              }}
               ref={field.ref}
             />
           )}
@@ -216,25 +233,28 @@ const MapData = () => {
           {errors?.newGeomType?.message && <ErrorMessage message={errors.newGeomType.message as string} />}
         </div>
       )}
-      <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
-        <FieldLabel label="Upload your own map data or use OSM" astric />
-        <Controller
-          control={control}
-          name="dataExtractType"
-          render={({ field }) => (
-            <RadioButton
-              value={field.value || ''}
-              options={dataExtractOptions}
-              onChangeData={(value) => {
-                field.onChange(value);
-                if (value === data_extract_type.NONE) resetMapDataFile();
-              }}
-              ref={field.ref}
-            />
-          )}
-        />
-        {errors?.dataExtractType?.message && <ErrorMessage message={errors.dataExtractType.message as string} />}
-      </div>
+
+      {values.primaryGeomType && (
+        <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
+          <FieldLabel label="Upload your own map data or use OSM" astric />
+          <Controller
+            control={control}
+            name="dataExtractType"
+            render={({ field }) => (
+              <RadioButton
+                value={field.value || ''}
+                options={dataExtractOptions}
+                onChangeData={(value) => {
+                  field.onChange(value);
+                  if (value === data_extract_type.NONE) resetMapDataFile();
+                }}
+                ref={field.ref}
+              />
+            )}
+          />
+          {errors?.dataExtractType?.message && <ErrorMessage message={errors.dataExtractType.message as string} />}
+        </div>
+      )}
 
       {values.dataExtractType === 'osm_data_extract' && (
         <div className="fmtm-flex fmtm-flex-col fmtm-gap-1">
@@ -271,10 +291,13 @@ const MapData = () => {
           )}
         </div>
       )}
-      <p className="fmtm-text-gray-500 fmtm-text-sm">
-        Total number of features:{' '}
-        <span className="fmtm-font-bold">{values.dataExtractGeojson?.features?.length || 0}</span>
-      </p>
+
+      {values.dataExtractGeojson && (
+        <p className="fmtm-text-gray-500 fmtm-text-sm">
+          Total number of features:{' '}
+          <span className="fmtm-font-bold">{values.dataExtractGeojson?.features?.length || 0}</span>
+        </p>
+      )}
     </div>
   );
 };
