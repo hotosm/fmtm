@@ -208,6 +208,8 @@ services:
       - ./src/frontend/index.html:/app/index.html
       - ./src/frontend/package.json:/app/package.json
       - ./src/frontend/playwright.config.ts:/app/playwright.config.ts
+      - ./src/frontend/postcss.config.js:/app/postcss.config.js
+      - ./src/frontend/tailwind.config.js:/app/tailwind.config.js
       - ./src/frontend/vite.config.ts:/app/vite.config.ts
     environment:
       - VITE_API_URL=http://api.${FMTM_DOMAIN}:${FMTM_DEV_PORT:-7050}
@@ -232,6 +234,7 @@ services:
       - ./src/mapper/tests:/app/tests
       - ./src/mapper/playwright.config.ts:/app/playwright.config.ts
       - ./src/mapper/svelte.config.js:/app/svelte.config.js
+      - ./src/mapper/uno.config.ts:/app/uno.config.ts
       - ./src/mapper/vite.config.ts:/app/vite.config.ts
     environment:
       - TEST_PWA=${TEST_PWA:-false}
