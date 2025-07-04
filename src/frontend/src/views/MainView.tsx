@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import windowDimention from '@/hooks/WindowDimension';
-import PrimaryAppBar from '@/utilities/PrimaryAppBar';
+import HotosmHeader from '@/components/HotosmHeader';
 import CoreModules from '@/shared/CoreModules';
 import CustomizedSnackbars from '@/utilities/CustomizedSnackbar';
 import { CommonActions } from '@/store/slices/CommonSlice';
@@ -57,7 +57,7 @@ const MainView = () => {
             {popupInParams === 'true' || (pathname.startsWith('/project/') && windowSize.width <= 768) ? (
               <div></div>
             ) : (
-              <PrimaryAppBar />
+              <HotosmHeader />
             )}
             {projectNotFound ? (
               <ProjectNotFound />
