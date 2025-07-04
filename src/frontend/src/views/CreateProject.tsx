@@ -32,7 +32,7 @@ import {
   OrganisationService,
 } from '@/api/CreateProjectService';
 import { defaultValues } from '@/components/CreateProject/constants/defaultValues';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import FormFieldSkeletonLoader from '@/components/Skeletons/common/FormFieldSkeleton';
 import { CreateProjectActions } from '@/store/slices/CreateProjectSlice';
 import { convertGeojsonToJsonFile, getDirtyFieldValues } from '@/utilfunctions';
@@ -56,14 +56,22 @@ const CreateProject = () => {
 
   const dispatch = useAppDispatch();
   const params = useParams();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const step = Number(searchParams.get('step'));
 
   const projectId = params.id ? +params.id : null;
-  const [step, setStep] = useState(1);
   const [toggleEdit, setToggleEdit] = useState(false);
   const createDraftProjectLoading = useAppSelector((state) => state.createproject.createDraftProjectLoading);
   const createProjectLoading = useAppSelector((state) => state.createproject.createProjectLoading);
   const basicProjectDetails = useAppSelector((state) => state.createproject.basicProjectDetails);
   const basicProjectDetailsLoading = useAppSelector((state) => state.createproject.basicProjectDetailsLoading);
+
+  useEffect(() => {
+    if (step < 1 || step > 5 || !values.formExampleSelection) {
+      setSearchParams({ step: '1' });
+    }
+  }, []);
 
   useEffect(() => {
     if (!projectId) return;
@@ -87,7 +95,7 @@ const CreateProject = () => {
 
   const formMethods = useForm<z.infer<typeof createProjectValidationSchema>>({
     defaultValues: defaultValues,
-    resolver: zodResolver(validationSchema[step]),
+    resolver: zodResolver(validationSchema?.[step] || basicDetailsValidationSchema),
   });
 
   const { handleSubmit, watch, setValue, trigger, formState, reset, getValues } = formMethods;
@@ -102,7 +110,7 @@ const CreateProject = () => {
     5: <SplitTasks />,
   };
 
-  const createDraftProject = async () => {
+  const createDraftProject = async (continueToNextStep: boolean) => {
     const isValidationSuccess = await trigger(undefined, { shouldFocus: true });
 
     if (!isValidationSuccess) return;
@@ -112,14 +120,22 @@ const CreateProject = () => {
       short_description,
       description,
       organisation_id,
-      project_admins,
       outline,
       uploadedAOIFile,
     };
     const params = {
       org_id: organisation_id,
     };
-    dispatch(CreateDraftProjectService(`${VITE_API_URL}/projects/stub`, payload, params));
+    dispatch(
+      CreateDraftProjectService(
+        `${VITE_API_URL}/projects/stub`,
+        payload,
+        project_admins as string[],
+        params,
+        navigate,
+        continueToNextStep,
+      ),
+    );
   };
 
   const createProject = async () => {
@@ -167,13 +183,19 @@ const CreateProject = () => {
         file,
         combinedFeaturesCount,
         isEmptyDataExtract,
+        navigate,
       ),
     );
   };
 
   const onSubmit = () => {
-    if (step < 5) setStep(step + 1);
+    if (step === 1 && !projectId) {
+      createDraftProject(true);
+      return;
+    }
     if (step === 5) createProject();
+
+    if (step < 5) setSearchParams({ step: (step + 1).toString() });
   };
 
   return (
@@ -186,7 +208,7 @@ const CreateProject = () => {
       <div className="sm:fmtm-grid fmtm-grid-rows-[auto_1fr] lg:fmtm-grid-rows-1 fmtm-grid-cols-12 fmtm-w-full fmtm-h-[calc(100%-2.344rem)] fmtm-gap-2 lg:fmtm-gap-5 fmtm-mt-3">
         {/* stepper container */}
         <div className="fmtm-col-span-12 lg:fmtm-col-span-3 fmtm-h-fit lg:fmtm-h-full fmtm-bg-white fmtm-rounded-xl">
-          <Stepper step={step} toggleStep={setStep} />
+          <Stepper step={step} toggleStep={(value) => setSearchParams({ step: value.toString() })} />
         </div>
 
         {/* form container */}
@@ -196,37 +218,56 @@ const CreateProject = () => {
             className="fmtm-flex fmtm-flex-col fmtm-col-span-12 sm:fmtm-col-span-7 lg:fmtm-col-span-5 sm:fmtm-h-full fmtm-overflow-y-hidden fmtm-rounded-xl fmtm-bg-white fmtm-my-2 sm:fmtm-my-0"
           >
             <div className="fmtm-flex-1 fmtm-overflow-y-scroll scrollbar fmtm-px-10 fmtm-py-8">
-              {basicProjectDetailsLoading && projectId ? <FormFieldSkeletonLoader count={4} /> : form[step]}
+              {basicProjectDetailsLoading && projectId ? <FormFieldSkeletonLoader count={4} /> : form?.[step]}
             </div>
 
             {/* buttons */}
             <div className="fmtm-flex fmtm-justify-between fmtm-items-center fmtm-px-5 fmtm-py-3 fmtm-shadow-2xl">
-              {step === 1 &&
-                (!projectId ? (
-                  <Button variant="secondary-grey" onClick={createDraftProject} isLoading={createDraftProjectLoading}>
-                    Save as Draft
-                  </Button>
-                ) : (
-                  <span></span>
-                ))}
               {step > 1 && (
                 <Button
                   variant="link-grey"
-                  onClick={() => setStep(step - 1)}
+                  onClick={() => setSearchParams({ step: (step - 1).toString() })}
                   disabled={createProjectLoading || basicProjectDetailsLoading}
                 >
                   <AssetModules.ArrowBackIosIcon className="!fmtm-text-sm" /> Previous
                 </Button>
               )}
-              <Button
-                variant="primary-grey"
-                type="submit"
-                disabled={basicProjectDetailsLoading}
-                isLoading={createProjectLoading}
-              >
-                {step === 5 ? 'Submit' : 'Next'}{' '}
-                <AssetModules.ArrowForwardIosIcon className="!fmtm-text-sm !fmtm-ml-auto" />
-              </Button>
+              {createDraftProjectLoading ? (
+                <div className="fmtm-w-full fmtm-flex fmtm-justify-center">
+                  <Button
+                    variant="secondary-grey"
+                    disabled={createProjectLoading}
+                    isLoading={createDraftProjectLoading}
+                  >
+                    Saving as Draft
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {step === 1 &&
+                    (!projectId ? (
+                      <Button
+                        variant="secondary-grey"
+                        onClick={() => createDraftProject(false)}
+                        isLoading={createDraftProjectLoading}
+                        disabled={createProjectLoading || basicProjectDetailsLoading}
+                      >
+                        Save as Draft
+                      </Button>
+                    ) : (
+                      <span></span>
+                    ))}
+                  <Button
+                    variant="primary-grey"
+                    type="submit"
+                    disabled={createDraftProjectLoading || basicProjectDetailsLoading}
+                    isLoading={createDraftProjectLoading || createProjectLoading}
+                  >
+                    {step === 5 ? 'Submit' : 'Next'}
+                    <AssetModules.ArrowForwardIosIcon className="!fmtm-text-sm !fmtm-ml-auto" />
+                  </Button>
+                </>
+              )}
             </div>
           </form>
         </FormProvider>
