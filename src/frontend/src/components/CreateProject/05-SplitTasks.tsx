@@ -197,11 +197,17 @@ const SplitTasks = () => {
           <p className="fmtm-text-gray-500 fmtm-text-sm">
             Total number of task:{' '}
             <span className="fmtm-font-bold">
-              {values.dividedTaskGeojson?.features?.length || values.outline?.features?.length || 1}
+              {values.splitGeojsonByAlgorithm?.features?.length ||
+                values.splitGeojsonBySquares?.features?.length ||
+                values.outline?.features?.length ||
+                1}
             </span>
           </p>
-          {values.dividedTaskGeojson && (
-            <Button variant="link-grey" onClick={() => downloadSplittedGeojson(values.dividedTaskGeojson)}>
+          {(values.splitGeojsonByAlgorithm?.features?.length || values.splitGeojsonBySquares?.features?.length) && (
+            <Button
+              variant="link-grey"
+              onClick={() => downloadSplittedGeojson(values.splitGeojsonByAlgorithm || values.splitGeojsonBySquares)}
+            >
               <AssetModules.FileDownloadOutlinedIcon />
               Download split geojson
             </Button>
