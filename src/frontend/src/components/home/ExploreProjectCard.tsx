@@ -27,7 +27,7 @@ export default function ExploreProjectCard({ data, className }: { data: projectT
     } else {
       // Else view project via manager frontend (desktop)
       if (data.status === project_status.DRAFT) {
-        navigate(`/create-project/${data.id}`);
+        navigate(`/create-project/${data.id}?step=1`);
       } else {
         navigate(`/project/${data.id}`);
       }
