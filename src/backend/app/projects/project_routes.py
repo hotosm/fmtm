@@ -551,7 +551,6 @@ async def get_data_extract(
 
     # Get extract config file from existing data_models
     geom_type = geom_type.name.lower()
-    extract_config = None
     if osm_category:
         config_filename = XLSFormType(osm_category).name
         data_model = f"{data_models_path}/{config_filename}.yaml"
@@ -563,23 +562,26 @@ async def get_data_extract(
             ("polygon", False): ["ways_poly"],
             ("point", True): ["ways_poly", "nodes"],
             ("point", False): ["nodes"],
-            ("linestring", False): ["ways_line"],
+            ("polyline", False): ["ways_line"],
         }
 
         config["from"] = data_config.get((geom_type, centroid))
-        # Serialize to YAML string
-        yaml_str = yaml.safe_dump(config, sort_keys=False)
+        if osm_category.name == "highways":
+            geom_type = "line"  # line is recognized as a geomtype in raw-data-api
 
-        # Encode to bytes and wrap in BytesIO
-        extract_config = BytesIO(yaml_str.encode("utf-8"))
+        # Convert to JSON string
+        config_json = json.dumps(config, indent=2)
 
-    geojson_url = await project_crud.generate_data_extract(
+    result = await project_crud.generate_data_extract(
         clean_boundary_geojson,
-        extract_config,
+        geom_type,
+        config_json,
         centroid,
     )
 
-    return JSONResponse(status_code=HTTPStatus.OK, content={"url": geojson_url})
+    return JSONResponse(
+        status_code=HTTPStatus.OK, content={"url": result.data.get("download_url")}
+    )
 
 
 @router.get("/data-extract-url")
