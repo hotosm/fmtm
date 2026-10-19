@@ -1,5 +1,7 @@
 # Replace FastAPI with LiteStar as backend framework
 
+> Amended by [0007](./0007-svelte-map-ui.md): map-heavy UI moves to Svelte.
+
 ## Context and Problem Statement
 
 We had a big direction change for FieldTM, see discussions such as:

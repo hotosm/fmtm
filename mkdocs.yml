@@ -94,7 +94,7 @@ nav:
       - Backend: dev/Backend.md
       - Frontend: dev/Frontend.md
       - Production Deployment: dev/Production.md
-      - Code Coverage: coverage.html
+      - Code Coverage: coverage/index.html
   - Utilities:
       - XLSForm Converter: https://getodk.org/xlsform/
       - QRCode Converter: qrcode-util.md
