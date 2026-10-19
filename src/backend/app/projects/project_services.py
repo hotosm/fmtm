@@ -24,6 +24,7 @@ exceptions (not HTTP exceptions), returning plain data structures.
 
 import json
 import logging
+import math
 from asyncio import TimeoutError as AsyncTimeoutError
 from asyncio import get_running_loop
 from dataclasses import dataclass
@@ -177,6 +178,42 @@ class SplitAoiOptions:
     # 0 = disable the cap entirely; set this from background-task callers
     # where there is no proxy budget to protect.
     statement_timeout_ms: Optional[int] = None
+
+
+# Targets for the split recommendation shown in the manual setup flow:
+# keep projects to roughly 100 task areas, ideally with no more than 100
+# buildings per task, and avoid tasks so small they are not worth claiming.
+_RECOMMENDED_MAX_TASKS = 100
+_RECOMMENDED_MIN_BUILDINGS_PER_TASK = 5
+
+
+@dataclass(slots=True)
+class SplitRecommendation:
+    """Suggested split parameters for a given number of features."""
+
+    feature_count: int
+    buildings_per_task: int
+    no_of_tasks: int
+
+
+def recommend_split(feature_count: int) -> Optional[SplitRecommendation]:
+    """Recommend buildings-per-task so a project has ~100 tasks at most.
+
+    E.g. 200 features -> 5/task (40 tasks), 1,000 -> 10/task (100 tasks),
+    10,000 -> 100/task (100 tasks). Returns None when there is nothing to split.
+    """
+    if feature_count <= 0:
+        return None
+    buildings_per_task = max(
+        _RECOMMENDED_MIN_BUILDINGS_PER_TASK,
+        math.ceil(feature_count / _RECOMMENDED_MAX_TASKS),
+    )
+    buildings_per_task = min(buildings_per_task, feature_count)
+    return SplitRecommendation(
+        feature_count=feature_count,
+        buildings_per_task=buildings_per_task,
+        no_of_tasks=math.ceil(feature_count / buildings_per_task),
+    )
 
 
 @dataclass(slots=True)
@@ -960,6 +997,7 @@ async def _split_with_building_algorithm(  # noqa: PLR0913
     include_rivers: bool,
     include_railways: bool,
     include_aeroways: bool,
+    *,
     statement_timeout_ms: Optional[int] = None,
 ) -> dict:
     """Run one of the SQL-backed building-based split algorithms."""

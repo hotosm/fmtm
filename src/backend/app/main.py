@@ -54,6 +54,7 @@ from app.monitoring import (
     set_otel_tracer,
     set_sentry_otel_tracer,
 )
+from app.projects import project_services
 from app.projects.project_crud import read_and_insert_xlsforms
 from app.qfield.qfield_routes import qfield_router
 
@@ -339,6 +340,7 @@ def _configure_template_engine(engine: JinjaTemplateEngine) -> None:
     engine.engine.globals["current_dir"] = get_current_dir
     engine.engine.globals["supported_locales"] = SUPPORTED_LOCALES
     engine.engine.globals["locale_labels"] = LOCALE_LABELS
+    engine.engine.globals["recommend_split"] = project_services.recommend_split
 
     hanko_public_url = settings.HANKO_PUBLIC_URL or settings.HANKO_API_URL or ""
     engine.engine.globals["hanko_public_url"] = hanko_public_url

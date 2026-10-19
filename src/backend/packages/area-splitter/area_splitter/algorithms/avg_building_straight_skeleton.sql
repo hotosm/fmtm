@@ -1,4 +1,22 @@
 /*
+ * Note on linear features (rivers, roads, etc.):
+ *
+ * Clustering in step 3 of the pipeline already partitions buildings by the
+ * split polygons produced from linear features, so each cluster sits on one
+ * side of every river/road. To keep the resulting task polygons on the same
+ * side, the splitline boundaries are unioned into the input to ST_Polygonize
+ * below (see the `skeleton_polygons` CTE). Without this, the polygoniser
+ * only knows about the skeleton lines and the AOI boundary, so a task can
+ * legally extend across a river to reach empty space on the other side.
+ *
+ * A stricter alternative would be to run CG_StraightSkeleton per split
+ * polygon (looping over `splitpolygons`), which is what Voronoi effectively
+ * does via its `ST_Intersection(..., sp.geom)` clip. That produces cleaner
+ * per-partition boundaries but loses the ~7x speedup of running one
+ * skeleton over the whole AOI, so it can push large AOIs past the API
+ * timeout. Reconsider if the current approach still leaks across
+ * splitlines in practice.
+ *
  * Running straight skeleton on (the empty space between) all the buildings
  * together is quite slow. So the idea is to reduce the entities on which to
  * run the algorithm. We do this by running it on hulls each containing a
@@ -142,10 +160,17 @@ create TEMP table taskpolygons AS (
  * ST_Polygonize() fails to form polygons out of such lines.
  */
 -- create table skeleton_lines as select CG_StraightSkeleton(geom) geom from aoi_minus_hulls;
+  -- Union in the splitpolygon boundaries (which include the intersecting
+  -- rivers/roads from step 1) so ST_Polygonize treats them as hard edges
+  -- and task polygons cannot span a linear feature. See the header comment
+  -- for the tradeoff vs. running the skeleton per split polygon.
   skeleton_polygons as
   (select (ST_Dump(ST_Polygonize(ST_UnaryUnion(geom, 0.0000001)))).geom
-    from (select ST_Union(CG_StraightSkeleton(geom),
-                          (select ST_Boundary(geom) from project_aoi))  geom
+    from (select ST_Union(
+                   ST_Union(CG_StraightSkeleton(geom),
+                            (select ST_Boundary(geom) from project_aoi)),
+                   (select ST_Union(ST_Boundary(geom)) from splitpolygons)
+                 ) geom
           from aoi_minus_hulls)
   ),
 

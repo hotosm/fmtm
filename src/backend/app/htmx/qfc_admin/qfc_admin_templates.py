@@ -57,7 +57,7 @@ def render_management_area(
       {_("to")} <code>{html.escape(base_url)}</code>
     </p>
   </div>
-  <wa-button variant="default" size="small"
+  <wa-button variant="default" size="s"
     onclick="document.getElementById('qfc-management').innerHTML='';
              document.getElementById('qfc-login-panel').style.display='block';">
     {_("Log Out")}
@@ -90,7 +90,7 @@ def render_management_area(
     <form hx-get="/qfc-admin/projects/{pid}/collaborators"
           hx-target="#qfc-collabs-{pid}" hx-swap="innerHTML">
       {hidden}
-      <wa-button variant="default" size="small" type="submit">{_("Manage")}</wa-button>
+      <wa-button variant="default" size="s" type="submit">{_("Manage")}</wa-button>
     </form>
   </td>
 </tr>
@@ -172,9 +172,9 @@ def render_collaborators_panel(
       >
         {role_options}
       </select>
-      <wa-button variant="default" size="small" type="submit">{_("Update")}</wa-button>
+      <wa-button variant="default" size="s" type="submit">{_("Update")}</wa-button>
     </form>
-    <wa-button variant="danger" size="small" outline
+    <wa-button variant="danger" size="s" outline
       onclick="document.getElementById('{dialog_id}').show()">{_("Remove")}</wa-button>
   </td>
 </tr>""")
@@ -215,7 +215,7 @@ def render_collaborators_panel(
         hx-target="#{target_id}" hx-swap="innerHTML"
         class="ftm-qfc-add-collab-form">
     {hidden}
-    <wa-input name="new_username" placeholder="{_("Username")}" size="small"
+    <wa-input name="new_username" placeholder="{_("Username")}" size="s"
               required style="flex:1;min-width:8rem"></wa-input>
     <select
       name="new_role"
@@ -224,7 +224,7 @@ def render_collaborators_panel(
     >
       {role_options_add}
     </select>
-    <wa-button variant="primary" size="small" type="submit">
+    <wa-button variant="primary" size="s" type="submit">
       {_("Add Collaborator")}
     </wa-button>
   </form>
@@ -232,14 +232,14 @@ def render_collaborators_panel(
 
     close_btn = f"""
 <div style="text-align:right;margin-bottom:0.5rem">
-  <wa-button variant="default" size="small"
+  <wa-button variant="default" size="s"
     onclick="document.getElementById('{target_id}').innerHTML=''">{_("Close")}</wa-button>
 </div>"""
 
     return f"""<div class="ftm-qfc-collab-panel">
   {close_btn}
   <h4
-    style="margin:0 0 0.75rem;font-family:var(--hot-font-sans-variant-condensed)"
+    style="margin:0 0 0.75rem"
   >{_("Collaborators")}</h4>
   {collab_table}
   {add_form}

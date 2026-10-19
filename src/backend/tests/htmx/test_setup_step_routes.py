@@ -122,6 +122,73 @@ async def test_project_setup_hides_step2_actions_when_data_extract_is_complete(
     assert 'id="preview-data-extract-btn"' not in response.text
 
 
+def _point_feature_collection(count: int) -> dict:
+    return {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": {"type": "Point", "coordinates": [85.3, 27.71]},
+                "properties": {"osm_id": i},
+            }
+            for i in range(count)
+        ],
+    }
+
+
+async def test_project_setup_split_step_shows_feature_count_and_recommendation(
+    client, db, project
+):
+    """Split step should show the extract feature count and suggested split values."""
+    await DbProject.update(
+        db,
+        project.id,
+        DbProject(
+            xlsform_content=b"test xlsform",
+            data_extract_geojson=_point_feature_collection(200),
+        ),
+    )
+    await db.commit()
+
+    response = await client.get(
+        f"/projects/{project.id}",
+        headers={"HX-Request": "true"},
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert 'id="split-feature-count"' in response.text
+    assert "<strong>200</strong>" in response.text
+    assert 'id="no-of-buildings-recommendation"' in response.text
+    assert "Recommendation: 5 (about 40 tasks)" in response.text
+    assert "Recommendation: 40 (about 5 buildings per task)" in response.text
+    assert 'name="no_of_buildings"\n            value="5"' in response.text
+    assert 'name="no_of_tasks"\n            value="40"' in response.text
+
+
+async def test_project_setup_split_step_without_features_has_no_recommendation(
+    client, db, project
+):
+    """Empty extracts skip splitting, so no recommendation should be shown."""
+    await DbProject.update(
+        db,
+        project.id,
+        DbProject(
+            xlsform_content=b"test xlsform",
+            data_extract_geojson={"type": "FeatureCollection", "features": []},
+        ),
+    )
+    await db.commit()
+
+    response = await client.get(
+        f"/projects/{project.id}",
+        headers={"HX-Request": "true"},
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert 'id="split-feature-count"' not in response.text
+    assert "Recommendation:" not in response.text
+
+
 async def test_collect_new_data_only_htmx_sets_empty_feature_collection(
     client, db, project
 ):

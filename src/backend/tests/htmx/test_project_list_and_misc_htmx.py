@@ -221,10 +221,15 @@ async def test_project_listing_renders_cards_and_component_bootstrap(
     assert "Project Status" in response.text
     assert "Sort By" in response.text
     assert 'id="projects-search"' in response.text
-    assert (
-        'rel="stylesheet"\n      href="https://fonts.googleapis.com/css2?family=Archivo'
-    ) in response.text
-    assert "@awesome.me/webawesome/dist/components/card/card.js" in response.text
+    # No webfonts: the design system is system-sans.
+    assert "fonts.googleapis.com/css2" not in response.text
+    assert "fonts.gstatic.com" not in response.text
+    # The import map resolves webawesome-all.js's bare specifiers; without it every
+    # wa-* element renders as bare markup. Raw dist URLs, never jsDelivr's /+esm -
+    # see the comment in layout.html.
+    assert '"@awesome.me/webawesome/dist/components/"' in response.text
+    assert "@hotosm/ui@2.1.0/dist/webawesome-all.js" in response.text
+    assert "webawesome-all.js/+esm" not in response.text
 
 
 async def test_project_listing_shows_empty_state_when_no_projects(client):
@@ -276,6 +281,10 @@ def test_layout_template_renders_locale_selector_in_header():
     assert 'data-locale-switch="pt_br"' in rendered
     assert "ftm-header-lang-menu" in rendered
     assert "landing-footer-social" in rendered
+    assert "Need help or have a request?" in rendered
+    assert 'href="https://roadmap.hotosm.org/#tech-request"' in rendered
+    assert "Submit a tech request" in rendered
+    assert "mailto:" not in rendered
     assert "Field Tasking Manager" in rendered
     assert "FIELD TASKING MANAGER" not in rendered
 

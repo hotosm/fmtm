@@ -41,11 +41,11 @@ from app.auth.auth_deps import (
     login_required,
 )
 from app.auth.auth_schemas import ProjectUserDict
-from app.auth.roles import project_manager
+from app.auth.roles import project_manager, wrap_check_access
 from app.central import central_crud
 from app.config import decrypt_value
 from app.db.database import db_conn
-from app.db.enums import FieldMappingApp
+from app.db.enums import FieldMappingApp, ProjectRole, ProjectVisibility
 from app.db.models import DbProject
 from app.i18n import _
 from app.projects import project_crud
@@ -91,6 +91,28 @@ def _can_delete_project(auth_user: object | None, project: DbProject) -> bool:
     with suppress(Exception):
         return get_user_sub(auth_user) == project.created_by_sub
     return False
+
+
+async def _ensure_project_viewable(
+    db: AsyncConnection,
+    project: DbProject,
+    auth_user: object | None,
+) -> None:
+    """Public projects stay open to guests, private ones need a project role.
+
+    The optional-auth variant of the `mapper` dependency, which cannot be used
+    here as it requires `login_required`.
+    """
+    if project.visibility == ProjectVisibility.PUBLIC:
+        return
+
+    if auth_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=_("You must be logged in to view this project."),
+        )
+
+    await wrap_check_access(project, db, auth_user, ProjectRole.MAPPER)
 
 
 def _mapper_credentials_html(project: DbProject) -> str:
@@ -250,6 +272,7 @@ async def project_details(
     """Render project details page."""
     try:
         project = await DbProject.one(db, project_id)
+        await _ensure_project_viewable(db, project, auth_user)
         form_templates = []
         if not project.xlsform_content:
             form_templates = await central_crud.get_form_list(db)
@@ -327,6 +350,7 @@ async def delete_project_htmx(
     path="/project-qrcode-htmx",
     dependencies={
         "db": Provide(db_conn),
+        "auth_user": Provide(get_optional_auth_user),
     },
 )
 async def project_qrcode_htmx(
@@ -334,8 +358,13 @@ async def project_qrcode_htmx(
     db: AsyncConnection,
     project_id: int = Parameter(),
     username: str = Parameter(default="fieldtm_user"),
+    auth_user: object | None = None,
 ) -> Response:
-    """Generate and return QR code for a published project."""
+    """Generate and return QR code for a published project.
+
+    Gated by the same rule as the project detail page that embeds it: anyone
+    may load a public project, private projects require a project role.
+    """
     try:
         project = await DbProject.one(db, project_id)
     except KeyError:
@@ -344,6 +373,8 @@ async def project_qrcode_htmx(
             media_type="text/html",
             status_code=status.HTTP_404_NOT_FOUND,
         )
+
+    await _ensure_project_viewable(db, project, auth_user)
 
     try:
         # Use CRUD function to generate QR code
@@ -422,7 +453,7 @@ def _render_collaborator_result(
 
     add_more_label = escape(_("Add more collaborators"), quote=True)
     refresh_button = (
-        f'<wa-button type="button" variant="default" size="small" '
+        f'<wa-button type="button" variant="default" size="s" '
         f'hx-get="/projects/{project_id}/qfc-collaborator-form" '
         f'hx-target="#qfc-collaborator-section" hx-swap="outerHTML" '
         f'style="margin-top:8px">{add_more_label}</wa-button>'
