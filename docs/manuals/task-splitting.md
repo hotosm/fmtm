@@ -65,7 +65,10 @@ Needs: AOI polygon, OSM extract, target number of tasks.
 
 [More details about how this algorithm works](https://github.com/hotosm/field-tm/blob/dev/src/backend/packages/area-splitter/docs/algorithms/straight-skeleton.md).
 
-### Split by Roads
+### Split by Roads (not yet available)
+
+> **Note:** this option is still being tested and is not yet shown in
+> the splitting menu.
 
 Task boundaries are exactly the polygons enclosed by roads, rivers,
 railways, aeroways, and non-traversable barriers — no building
@@ -82,14 +85,13 @@ Needs: AOI polygon, OSM extract with roads.
 
 ## Which one to pick
 
-| Situation                               | Use                      |
-| --------------------------------------- | ------------------------ |
-| Very small AOI, one mapper              | No Splitting             |
-| No OSM data, or a sparse area           | Split by Square          |
-| You know how many mappers you have      | Specific Number of Tasks |
-| Standard case, building-dense area      | Average Buildings v2     |
-| Reproducing an older project            | Average Buildings v1     |
-| Street-level mapping (walk/cycle roads) | Split by Roads           |
+| Situation                          | Use                      |
+| ---------------------------------- | ------------------------ |
+| Very small AOI, one mapper         | No Splitting             |
+| No OSM data, or a sparse area      | Split by Square          |
+| You know how many mappers you have | Specific Number of Tasks |
+| Standard case, building-dense area | Average Buildings v2     |
+| Reproducing an older project       | Average Buildings v1     |
 
 ## What the feature-based options do
 

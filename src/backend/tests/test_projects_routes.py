@@ -837,6 +837,27 @@ async def test_split_aoi_total_tasks_passes_num_enumerators(monkeypatch):
     assert len(result["features"]) == 1
 
 
+async def test_split_aoi_rejects_disabled_split_by_roads(monkeypatch):
+    """SPLIT_BY_ROADS is hidden from the UI and must be rejected server-side."""
+    project = Mock(outline={"type": "Polygon", "coordinates": []})
+
+    async def fake_project_one(_db, _project_id):
+        return project
+
+    async def fail_run_sync(*_args):
+        raise AssertionError("Disabled algorithm should not run the splitter")
+
+    monkeypatch.setattr(project_services.DbProject, "one", fake_project_one)
+    monkeypatch.setattr(project_services.to_thread, "run_sync", fail_run_sync)
+
+    with pytest.raises(project_services.ValidationError, match="not available yet"):
+        await project_services.split_aoi(
+            db=Mock(commit=AsyncMock()),
+            project_id=1,
+            options=project_services.SplitAoiOptions(algorithm="SPLIT_BY_ROADS"),
+        )
+
+
 async def test_finalize_odk_project_uses_outline_geometry_for_single_task(
     monkeypatch,
 ):

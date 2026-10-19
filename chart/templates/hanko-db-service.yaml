@@ -1,4 +1,5 @@
-{{- if and .Values.auth.bundled.enabled .Values.auth.bundled.db.enabled -}}
+{{- if .Values.auth.bundled.enabled -}}
+{{- if eq (include "field-tm.hankoDbMode" .) "dedicated" -}}
 apiVersion: v1
 kind: Service
 metadata:
@@ -16,4 +17,5 @@ spec:
   selector:
     {{- include "field-tm.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: hanko-db
+{{- end }}
 {{- end }}

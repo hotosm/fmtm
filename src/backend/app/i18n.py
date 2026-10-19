@@ -239,9 +239,11 @@ def create_locale_cookie_middleware(app: ASGIApp) -> ASGIApp:
         qs = scope.get("query_string", b"").decode("latin-1")
         params = parse_qs(qs)
         lang_values = params.get("lang", [])
-        lang = lang_values[0] if lang_values else None
+        # Persist the same locale resolve_locale renders (normalized, with
+        # base-language fallback), not the raw query value.
+        lang = match_supported_locale(lang_values[0]) if lang_values else None
 
-        if not lang or lang not in SUPPORTED_LOCALES:
+        if not lang:
             await app(scope, receive, send)
             return
 

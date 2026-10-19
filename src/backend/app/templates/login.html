@@ -4,7 +4,16 @@
   <div class="ftm-login-panel">
     <h1 class="ftm-login-title">{{ _("Sign in to Field-TM") }}</h1>
 
-    {% if auth_enabled %}
+    {% if auth_enabled and auth_provider == "bundled" %}
+    <!-- Self-hosted Hanko has no separate login web app, so render the Hanko
+         login form here; hotosm-auth redirects back to return_to afterwards. -->
+    <hotosm-auth
+      hanko-url="{{ hanko_public_url }}"
+      redirect-after-login="{{ return_to or '/' }}"
+      lang="{{ current_locale() }}"
+      show-profile
+    ></hotosm-auth>
+    {% elif auth_enabled %}
     <p>{{ _("Redirecting to the centralized login service.") }}</p>
     <p><a href="{{ login_url }}">{{ _("Continue to login") }}</a></p>
     <script>

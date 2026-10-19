@@ -179,3 +179,46 @@ def test_template_engine_config_handles_disabled_auth_without_hanko_urls(monkeyp
     assert engine.engine.globals["hanko_public_url"] == ""
     assert engine.engine.globals["login_url"] == ""
     assert engine.engine.globals["auth_enabled"] is False
+
+
+def _fake_template_engine():
+    """Minimal stand-in for JinjaTemplateEngine that records globals."""
+
+    class _FakeInnerEngine:
+        def __init__(self):
+            self.globals = {}
+
+        def add_extension(self, _extension):
+            return None
+
+        def install_gettext_callables(self, *_args):
+            return None
+
+    return SimpleNamespace(engine=_FakeInnerEngine())
+
+
+def test_template_engine_config_bundled_auth_uses_own_login_page(monkeypatch):
+    """Bundled Hanko has no login web app, so login_url defaults to /login."""
+    monkeypatch.setattr(main.settings, "AUTH_PROVIDER", AuthProvider.BUNDLED)
+    monkeypatch.setattr(main.settings, "HANKO_PUBLIC_URL", "https://login.field.test")
+    monkeypatch.setattr(main.settings, "LOGIN_URL", None)
+    monkeypatch.setattr(main.settings, "FTM_DOMAIN", "field.test")
+    monkeypatch.setattr(main.settings, "FTM_DEV_PORT", None)
+
+    engine = _fake_template_engine()
+    _configure_template_engine(engine)
+
+    assert engine.engine.globals["login_url"] == "https://field.test/login"
+    assert engine.engine.globals["hanko_public_url"] == "https://login.field.test"
+
+
+def test_template_engine_config_bundled_auth_respects_login_url(monkeypatch):
+    """An explicit LOGIN_URL still overrides the bundled default."""
+    monkeypatch.setattr(main.settings, "AUTH_PROVIDER", AuthProvider.BUNDLED)
+    monkeypatch.setattr(main.settings, "HANKO_PUBLIC_URL", "https://login.field.test")
+    monkeypatch.setattr(main.settings, "LOGIN_URL", "https://auth.example.org/app")
+
+    engine = _fake_template_engine()
+    _configure_template_engine(engine)
+
+    assert engine.engine.globals["login_url"] == "https://auth.example.org/app"

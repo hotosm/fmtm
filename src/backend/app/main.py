@@ -352,10 +352,13 @@ def _configure_template_engine(engine: JinjaTemplateEngine) -> None:
         frontend_url = f"https://{settings.FTM_DOMAIN}"
     engine.engine.globals["frontend_url"] = frontend_url
 
-    # Login page URL. Explicit LOGIN_URL override wins; otherwise derive the
-    # centralized login app from the public Hanko URL.
+    # Login page URL. Explicit LOGIN_URL override wins; otherwise bundled
+    # (self-hosted) Hanko uses Field-TM's own /login page, which embeds the
+    # login form, and other providers use the centralized login app.
     if settings.AUTH_PROVIDER == AuthProvider.DISABLED:
         login_url = ""
+    elif settings.AUTH_PROVIDER == AuthProvider.BUNDLED:
+        login_url = settings.LOGIN_URL or f"{frontend_url}/login"
     else:
         login_url = settings.LOGIN_URL or build_login_app_url(hanko_public_url)
     engine.engine.globals["login_url"] = login_url

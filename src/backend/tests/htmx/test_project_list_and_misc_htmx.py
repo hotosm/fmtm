@@ -3,12 +3,14 @@
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from litestar import status_codes as status
 
 from app.config import AuthProvider, settings
 from app.db.enums import ProjectStatus
 from app.db.models import DbProject
+from app.htmx.landing_routes import _safe_return_path
 from app.htmx.map_helpers import render_leaflet_map
 from app.htmx.project_list_routes import project_listing
 
@@ -380,3 +382,63 @@ async def test_static_image_rejects_unsupported_extension(client):
     """Test static image route blocks unsupported extensions."""
     response = await client.get("/static/images/not-allowed.gif")
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.parametrize(
+    ("return_to", "expected"),
+    [
+        (None, "/"),
+        ("", "/"),
+        ("/new", "/new"),
+        ("/projects/1?tab=map", "/projects/1?tab=map"),
+        ("https://field.test/projects/1?x=1", "/projects/1?x=1"),
+        ("https://evil.example/phish", "/"),
+        ("//evil.example/phish", "/"),
+        ("/\\evil.example", "/"),
+        ("javascript:alert(1)", "/"),
+    ],
+)
+def test_safe_return_path_only_allows_same_origin_paths(return_to, expected):
+    """return_to must never redirect off-site after login."""
+    assert _safe_return_path(return_to, "field.test") == expected
+
+
+def _render_login_page(auth_provider: str) -> str:
+    """Render login.html with the globals the app installs."""
+    templates_dir = Path(__file__).resolve().parents[2] / "app" / "templates"
+    env = Environment(
+        loader=FileSystemLoader(str(templates_dir)),
+        autoescape=select_autoescape(["html", "xml"]),
+    )
+    env.add_extension("jinja2.ext.i18n")
+    env.install_gettext_callables(
+        lambda message: message, lambda s, p, n: s if n == 1 else p
+    )
+    env.globals.update(
+        current_locale=lambda: "en",
+        current_dir=lambda: "ltr",
+        supported_locales=["en"],
+        locale_labels={"en": "English"},
+        auth_enabled=True,
+        auth_provider=auth_provider,
+        hanko_public_url="https://login.field.test",
+        login_url="https://login.hotosm.org/app",
+    )
+    return env.get_template("login.html").render(return_to="/new")
+
+
+def test_login_page_embeds_hanko_form_for_bundled_auth():
+    """Bundled auth renders the login form instead of redirecting to itself."""
+    rendered = _render_login_page("bundled")
+
+    assert "show-profile" in rendered
+    assert 'redirect-after-login="/new"' in rendered
+    assert "window.location.replace" not in rendered
+
+
+def test_login_page_redirects_for_external_login_app():
+    """Non-bundled providers redirect to the external login app."""
+    rendered = _render_login_page("hotosm")
+
+    assert "show-profile" not in rendered
+    assert "window.location.replace" in rendered

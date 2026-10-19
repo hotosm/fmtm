@@ -1051,6 +1051,26 @@ async def _split_with_square_algorithm(
     )
 
 
+# Implemented but hidden from the UI until validated on real projects.
+DISABLED_SPLIT_ALGORITHMS = frozenset({SplittingAlgorithm.SPLIT_BY_ROADS})
+
+
+def _parse_split_algorithm(algorithm: Optional[str]) -> SplittingAlgorithm:
+    """Validate the requested splitting algorithm is known and enabled."""
+    if not algorithm:
+        raise ValidationError("Please select a splitting option.")
+
+    try:
+        algorithm_enum = SplittingAlgorithm(algorithm)
+    except ValueError as err:
+        raise ValidationError(f"Invalid algorithm type: {algorithm}") from err
+
+    if algorithm_enum in DISABLED_SPLIT_ALGORITHMS:
+        raise ValidationError(f"Splitting algorithm {algorithm} is not available yet.")
+
+    return algorithm_enum
+
+
 async def split_aoi(
     db: AsyncConnection,
     project_id: int,
@@ -1076,14 +1096,7 @@ async def split_aoi(
         raise NotFoundError("Project outline not found. Cannot split AOI.")
 
     algorithm = options.algorithm
-
-    if not algorithm:
-        raise ValidationError("Please select a splitting option.")
-
-    try:
-        algorithm_enum = SplittingAlgorithm(algorithm)
-    except ValueError as err:
-        raise ValidationError(f"Invalid algorithm type: {algorithm}") from err
+    algorithm_enum = _parse_split_algorithm(algorithm)
 
     # Handle NO_SPLITTING case
     if algorithm_enum == SplittingAlgorithm.NO_SPLITTING:

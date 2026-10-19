@@ -2,11 +2,14 @@
 
 from types import SimpleNamespace
 
+import pytest
+
 from app.i18n import (
     DEFAULT_LOCALE,
     RTL_LOCALES,
     SUPPORTED_LOCALES,
     _current_locale,
+    create_locale_cookie_middleware,
     get_current_dir,
     get_preferred_locale,
     resolve_locale,
@@ -88,3 +91,45 @@ def test_rtl_locales_are_subset_of_supported():
         assert locale in SUPPORTED_LOCALES, (
             f"{locale} is RTL but not in SUPPORTED_LOCALES"
         )
+
+
+async def _run_cookie_middleware(query_string: bytes) -> list[bytes]:
+    """Run the locale cookie middleware and return any Set-Cookie headers."""
+
+    async def inner_app(_scope, _receive, send):
+        await send({"type": "http.response.start", "status": 200, "headers": []})
+        await send({"type": "http.response.body", "body": b""})
+
+    sent: list[dict] = []
+
+    async def send(message):
+        sent.append(message)
+
+    async def receive():
+        return {"type": "http.request"}
+
+    middleware = create_locale_cookie_middleware(inner_app)
+    await middleware({"type": "http", "query_string": query_string}, receive, send)
+    start = next(m for m in sent if m["type"] == "http.response.start")
+    return [value for name, value in start["headers"] if name == b"set-cookie"]
+
+
+@pytest.mark.parametrize(
+    ("lang", "expected"),
+    [("es", "es"), ("pt_br", "pt_br"), ("PT-BR", "pt_br"), ("fr-CA", "fr")],
+)
+async def test_locale_cookie_persists_resolved_locale(lang, expected):
+    """The cookie should store what resolve_locale renders, not the raw value."""
+    request = make_request(query_params={"lang": lang})
+    assert resolve_locale(request) == expected
+
+    cookies = await _run_cookie_middleware(f"lang={lang}".encode())
+
+    assert len(cookies) == 1
+    assert cookies[0].startswith(f"ftm_locale={expected};".encode())
+
+
+async def test_locale_cookie_not_set_for_unsupported_or_missing_lang():
+    """Unsupported or absent ?lang= values should not set a cookie."""
+    assert await _run_cookie_middleware(b"lang=de-DE") == []
+    assert await _run_cookie_middleware(b"") == []

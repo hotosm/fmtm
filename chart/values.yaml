@@ -88,9 +88,10 @@ volumeMounts: []
 command: []
 args: []
 
-# Self-contained auth: deploy a bundled Hanko instance (+ its own PostGIS db)
-# alongside field-tm, mirroring deploy/compose.login.yaml. Set env.AUTH_PROVIDER
-# to "bundled" (the backend default) to point the backend at it automatically.
+# Self-contained auth: deploy a bundled Hanko instance alongside field-tm,
+# mirroring deploy/compose.login.yaml. When enabled, the backend is pointed at
+# it automatically (AUTH_PROVIDER=bundled, HANKO_API_URL, HANKO_PUBLIC_URL), and
+# the login page is served by field-tm itself at /login.
 auth:
   bundled:
     enabled: false
@@ -106,12 +107,18 @@ auth:
       smtpUser: ""
       smtpPassword: ""
       googleClientSecret: ""
+    # The browser talks to Hanko directly, so it needs a public hostname.
+    # When ingress.enabled=true, a rule for this host is added to the field-tm
+    # Ingress (and to its TLS hosts). Defaults to login.<ingress.host>.
+    ingress:
+      host: ""
     # Non-secret Hanko config. Mirrors contrib/login/hanko-config.tpl.yaml.
     config:
-      # Origin field-tm is served on, e.g. https://field.example.com.
-      allowedOrigin: http://field.localhost
-      cookieDomain: field.localhost
-      redirectUrl: http://field.localhost
+      # Leave empty to derive from ingress.host / ingress.tls.enabled, e.g.
+      # allowedOrigin=https://field.example.com, cookieDomain=field.example.com.
+      allowedOrigin: ""
+      cookieDomain: ""
+      redirectUrl: ""
       smtpHost: ""
       smtpPort: 587
       smtpFromAddress: ""
@@ -119,20 +126,27 @@ auth:
       googleClientId: ""
     resources: {}
     db:
-      # Default is an in-cluster PostGIS database, dedicated to Hanko (kept
-      # separate from the main `db` block). Set to false and provide `host`
-      # below to point at an external database instead.
-      enabled: true
+      # Where Hanko stores its data:
+      #   shared    - (default) a separate database named `auth.database` on the
+      #               chart's in-cluster field-tm db, using the main `db.auth`
+      #               credentials. Created automatically. Requires db.enabled=true.
+      #   dedicated - a separate in-cluster PostGIS deployment just for Hanko.
+      #   external  - an existing Postgres server at `host`. The database must
+      #               already exist (it can live on the same server as field-tm).
+      mode: shared
+      # Image for the dedicated db (and the wait/create-db init container).
       image:
         repository: ghcr.io/hotosm/postgis
         tag: 18-3.6-alpine
         pullPolicy: IfNotPresent
       auth:
+        # username/password are ignored in shared mode (db.auth is used).
         username: hanko
         password: hanko
         database: hanko
-      # Only used when db.enabled=false, to point at an external Hanko database.
+      # Only used when mode=external.
       host: ""
+      # Only used when mode=dedicated.
       resources: {}
       persistence:
         enabled: true

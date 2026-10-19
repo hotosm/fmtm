@@ -467,9 +467,13 @@ additional software.
 
 #### Visualising in PowerBI
 
-PowerBI is free, cross-platform, and well-suited for richer interactive
+PowerBI Desktop is free and well-suited for richer interactive
 dashboards. ODK also has dedicated documentation on this workflow:
 <https://docs.getodk.org/tutorial-mapping-households/>
+
+> **Note:** PowerBI Desktop (used in the steps below) is Windows-only.
+> On Mac or Linux, use the web-based [Power BI service](https://app.powerbi.com)
+> instead, which can connect to an OData feed via a dataflow.
 
 1. Open PowerBI Desktop and click **Get Data → OData feed**.
 2. Paste your OData URL and click **OK**.

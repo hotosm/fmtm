@@ -18,6 +18,8 @@
 
 """Landing page and metrics HTMX routes."""
 
+from urllib.parse import urlsplit, urlunsplit
+
 from litestar import get
 from litestar.di import Provide
 from litestar.plugins.htmx import HTMXRequest, HTMXTemplate
@@ -29,10 +31,34 @@ from app.db.database import db_conn
 from app.htmx.project_list_routes import _create_project_href
 
 
+def _safe_return_path(return_to: str | None, host: str | None) -> str:
+    """Reduce return_to to a same-origin path, to avoid open redirects.
+
+    Callers pass either a path (``/new``) or, from the hotosm-auth header
+    button, the full page URL. Anything pointing at another host becomes ``/``.
+    """
+    if not return_to:
+        return "/"
+    parts = urlsplit(return_to)
+    if parts.netloc and parts.netloc != host:
+        return "/"
+    path = parts.path or "/"
+    # Reject scheme-relative ("//evil.com") or backslash tricks after reduction.
+    if not path.startswith("/") or path.startswith("//") or "\\" in path:
+        return "/"
+    return urlunsplit(("", "", path, parts.query, parts.fragment))
+
+
 @get(path="/login")
 async def login_page(request: HTMXRequest) -> Template:
-    """Render the embedded login page (used for self-hosted deployments)."""
-    return_to = request.query_params.get("return_to") or "/"
+    """Render the login page.
+
+    For bundled (self-hosted) Hanko this embeds the login form directly; for
+    other providers it redirects to the external login app.
+    """
+    return_to = _safe_return_path(
+        request.query_params.get("return_to"), request.headers.get("host")
+    )
     return HTMXTemplate(
         template_name="login.html",
         context={"return_to": return_to},
