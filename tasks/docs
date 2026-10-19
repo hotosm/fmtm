@@ -36,6 +36,8 @@ build output_dir="site":
   cd {{justfile_directory()}}
   just docs openapi
 
+  # Create the output dir on the host, so it is not root-owned by the
+  # container (mkdocs only empties it), and coverage can be copied in below
   rm -rf "{{ output_dir }}"
   mkdir -p "{{ output_dir }}"
 
@@ -44,10 +46,14 @@ build output_dir="site":
     -w /work \
     --entrypoint=/bin/sh \
     ghcr.io/hotosm/gh-workflows/mkdocs:main \
-      -c "\
-        git config --global --add safe.directory /work \
-        && mkdocs build --config-file mkdocs.yml --site-dir {{ output_dir }}
-      "
+      -c 'git config --global --add safe.directory /work \
+        && mkdocs build --config-file mkdocs.yml --site-dir "$1"' \
+      sh "{{ output_dir }}"
+
+  # Include the coverage report (from `just test backend-coverage`), if present
+  if [ -d coverage/htmlcov ]; then
+    cp -R coverage/htmlcov "{{ output_dir }}/coverage"
+  fi
 
 # Run docs website locally in a container
 [no-cd]
@@ -75,9 +81,8 @@ publish output_dir="site":
   #!/usr/bin/env sh
   set -eu
 
-  just test backend-with-coverage-upload
-  
-  just docs openapi
+  cd {{justfile_directory()}}
+  just test backend-coverage
   just docs build "{{ output_dir }}"
 
   docker run --rm \
@@ -85,7 +90,6 @@ publish output_dir="site":
     -w /work \
     --entrypoint=/bin/sh \
     ghcr.io/hotosm/gh-workflows/mkdocs:main \
-      -c "\
-        git config --global --add safe.directory /work \
-        && mkdocs gh-deploy --force --clean \
-      "
+      -c 'git config --global --add safe.directory /work \
+        && ghp-import --no-jekyll --push --force "$1"' \
+      sh "{{ output_dir }}"

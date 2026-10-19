@@ -245,63 +245,39 @@ load url_path:
     -f contrib/load_testing/compose.yaml \
     run --rm k6 run /load-test.js -e url_path={{ url_path }}
 
-# Check coverage for backend tests
+# Check coverage for backend tests and workspace packages
 [no-cd]
 backend-coverage:
   #!/usr/bin/env sh
-  set -eux
+  set -eu
 
+  cd {{justfile_directory()}}
   export TAG_OVERRIDE=ci-dev
+  export TARGET_OVERRIDE=debug
   just build backend
 
-  # Cleanup any missed previous container
-  docker rm --force backend-coverage-run
+  cleanup() {
+    docker rm --force backend-coverage-run >/dev/null 2>&1 || true
+    docker compose -f compose.test.yaml down -v --remove-orphans
+  }
+  trap cleanup EXIT
+  trap 'exit 1' HUP INT TERM
 
-  # Start all service and ensure API has finish init process
-  # Note that compose startup can still return success for partial service startup
-  docker compose -f compose.test.yaml down -v --remove-orphans
+  # Remove old artifacts so failed runs cannot publish stale results.
+  rm -rf coverage
+  cleanup
   docker compose -f compose.test.yaml up --detach
   docker compose -f compose.test.yaml run \
     --name backend-coverage-run \
-    --entrypoint="sh -c" \
-    backend \
-    "coverage run -m pytest \
+    --entrypoint sh \
+    backend -ec \
+    "coverage run --source=app,osm_fieldwork,area_splitter -m pytest \
       && coverage report && coverage html \
-      && coverage-badge -o coverage.svg"
+      && coverage json"
 
-  # Copy generated coverage files out
   mkdir -p coverage
-  docker cp backend-coverage-run:/opt/htmlcov/index.html coverage/coverage.html
-  docker cp backend-coverage-run:/opt/coverage.svg coverage/coverage.svg
-  docker rm backend-coverage-run
-  docker compose -f compose.test.yaml down -v --remove-orphans
-
-# Upload coverage report to gh-pages
-[no-cd]
-upload-coverage:
-  #!/usr/bin/env sh
-  set -eux
-
-  : "${GITHUB_TOKEN:?GITHUB_TOKEN  environment variable must be set}"
-
-  rm -rf tmp_pages
-  mkdir tmp_pages
-  cd tmp_pages
-
-  git init --initial-branch=gh-pages
-  git config user.name "svchot"
-  git config user.email "sysadmin@hotosm.org"
-  git pull "https://x-access-token:${GITHUB_TOKEN}@github.com/hotosm/field-tm.git" gh-pages || echo "No remote branch yet"
-
-  # Copy coverage.svg and coverage.html from main repo
-  cp ../coverage/* .
-
-  git add .
-  git commit -m "docs: update coverage summary and badge" || echo "Nothing to commit"
-  git push --set-upstream "https://x-access-token:${GITHUB_TOKEN}@github.com/hotosm/field-tm.git" HEAD:gh-pages
-
-# Upload coverage report to gh-pages
-[no-cd]
-backend-with-coverage-upload:
-  just test backend-coverage
-  just test upload-coverage
+  docker cp backend-coverage-run:/opt/htmlcov coverage/htmlcov
+  docker cp backend-coverage-run:/opt/coverage.json coverage/coverage.json
+  # Badge is published with the report, at /coverage/badge.json
+  python3 tasks/scripts/shields_badge.py \
+    coverage/coverage.json coverage/htmlcov/badge.json

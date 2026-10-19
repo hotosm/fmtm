@@ -22,7 +22,7 @@
 | :--- | :--- | :--- |
 | **Tech Stack** | | [![Litestar][badge-litestar]][14] [![HTMX][badge-htmx]][15] [![Postgres][badge-postgres]][16] [![Kubernetes][badge-kubernetes]][17] [![Docker][badge-docker]][18] |
 | **Code Style** | | [![Backend Style][badge-ruff]][19] [![Oxfmt][badge-oxfmt]][20] [![pre-commit][badge-pre-commit]][21] [![uv][badge-uv]][32] |
-| **Quality** | | <!-- Coverage badge removed: coverage docs no longer published [![Coverage][badge-coverage]][22] --> [![Translation][badge-translation]][23] [![OpenSSF Best Practices][badge-openssf]][24] |
+| **Quality** | | [![Coverage][badge-coverage]][22] [![Translation][badge-translation]][23] [![OpenSSF Best Practices][badge-openssf]][24] |
 | **Community** | | [![Slack][badge-slack]][25] [![All Contributors][badge-all-contributors]][26] |
 | **Other Info** | | [![docs][badge-docs]][27] [![dev-roadmap][badge-roadmap]][28] [![timeline][badge-timeline]][29] [![license-code][badge-license-code]][30] [![license-translations][badge-license-translations]][31] |
 
@@ -285,6 +285,7 @@ Thanks goes to these wonderful people:
 [19]: https://github.com/astral-sh/ruff "Ruff Format"
 [20]: https://oxc.rs/docs/guide/usage/formatter.html "Oxfmt"
 [21]: https://results.pre-commit.ci/latest/github/hotosm/field-tm/dev "pre-commit"
+[22]: https://docs.field.hotosm.org/coverage/index.html "Coverage Report"
 [23]: https://hosted.weblate.org/engage/hotosm "Weblate"
 [24]: https://www.bestpractices.dev/projects/9218 "OpenSSF Best Practices"
 [25]: https://slack.hotosm.org "HOTOSM Slack"
@@ -313,6 +314,7 @@ Thanks goes to these wonderful people:
 [badge-oxfmt]: https://img.shields.io/badge/code%20style-oxfmt-F7B93E
 [badge-pre-commit]: https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white
 [badge-uv]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json
+[badge-coverage]: https://img.shields.io/endpoint?url=https://docs.field.hotosm.org/coverage/badge.json
 [badge-translation]: https://hosted.weblate.org/widget/hotosm/field-tm/svg-badge.svg
 [badge-openssf]: https://www.bestpractices.dev/projects/9218/badge
 [badge-slack]: https://img.shields.io/badge/Slack-Join%20the%20community!-d63f3f?style=for-the-badge&logo=slack&logoColor=d63f3f

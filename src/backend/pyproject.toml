@@ -59,7 +59,6 @@ test = [
     "httpx==0.28.1",
     "pyinstrument==5.0.3",
     "coverage==7.15.2",
-    "coverage-badge==1.1.2",
     "asgi-lifespan==2.1.0",
 ]
 debug = [
