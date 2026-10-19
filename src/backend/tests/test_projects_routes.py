@@ -39,6 +39,36 @@ from app.projects.project_schemas import CreateProjectRequest, ProjectUpdate
 from app.qfield.qfield_crud import QFieldProjectResult
 
 
+@pytest.mark.parametrize(
+    ("feature_count", "buildings_per_task", "no_of_tasks"),
+    [
+        (3, 3, 1),
+        (50, 5, 10),
+        (200, 5, 40),
+        (1000, 10, 100),
+        (1234, 13, 95),
+        (10000, 100, 100),
+        (25000, 250, 100),
+    ],
+)
+def test_recommend_split_targets_about_100_tasks(
+    feature_count, buildings_per_task, no_of_tasks
+):
+    """Recommendation keeps projects to ~100 tasks with at least 5 buildings each."""
+    recommendation = project_services.recommend_split(feature_count)
+
+    assert recommendation is not None
+    assert recommendation.feature_count == feature_count
+    assert recommendation.buildings_per_task == buildings_per_task
+    assert recommendation.no_of_tasks == no_of_tasks
+
+
+@pytest.mark.parametrize("feature_count", [0, -1])
+def test_recommend_split_returns_none_without_features(feature_count):
+    """Nothing to split means no recommendation."""
+    assert project_services.recommend_split(feature_count) is None
+
+
 def test_create_project_request_split_defaults():
     """API split defaults should match the onboarding UI default."""
     payload = CreateProjectRequest(

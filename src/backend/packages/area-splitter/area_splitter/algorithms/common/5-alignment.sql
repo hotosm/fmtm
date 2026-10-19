@@ -5,6 +5,23 @@ CREATE INDEX taskpolygons_idx
 ON taskpolygons
 USING gist (geom);
 
+-- Internal splitlines (rivers/roads/etc. from step 1), i.e. the boundaries
+-- introduced by linear features but not the outer AOI edge. Used below to
+-- reject neighbour merges whose shared boundary lies along a splitline -
+-- otherwise the small-polygon merge can re-fuse polygons across a river
+-- that the earlier stages deliberately separated. Empty geometry when the
+-- AOI has no intersecting linear features, in which case the filter is a
+-- no-op.
+DROP TABLE IF EXISTS splitline_union;
+CREATE TEMP TABLE splitline_union AS
+    SELECT COALESCE(
+        ST_Difference(
+            (SELECT ST_Union(ST_Boundary(geom)) FROM splitpolygons),
+            (SELECT ST_Boundary(geom) FROM project_aoi)
+        ),
+        'GEOMETRYCOLLECTION EMPTY'::geometry
+    ) AS geom;
+
 -- Merge least feature polygons with neighbouring polygons
 DO $$
 DECLARE
@@ -76,24 +93,31 @@ BEGIN
             -- already gated by ST_Touches + the gist index so only a few
             -- candidate neighbours are scanned per small polygon.
             FOR nearest_neighbor IN
-            SELECT taskid, geom,
-                ST_LENGTH2D(
+            WITH candidates AS (
+                SELECT taskid, geom,
                     ST_Intersection(
                         ST_MakeValid(small_polygon.geom),
                         ST_MakeValid(geom),
                         0.00000001
-                    )
-                ) as shared_bound
-            FROM taskpolygons
-            WHERE taskid NOT IN (SELECT taskid FROM leastfeaturepolygons)
-            AND ST_Touches(small_polygon.geom, geom)
-            AND ST_GEOMETRYTYPE(
-                ST_Intersection(
-                    ST_MakeValid(small_polygon.geom),
-                    ST_MakeValid(geom),
-                    0.00000001
-                )
-            ) != 'ST_Point'
+                    ) AS shared_geom
+                FROM taskpolygons
+                WHERE taskid NOT IN (SELECT taskid FROM leastfeaturepolygons)
+                AND ST_Touches(small_polygon.geom, geom)
+            )
+            SELECT c.taskid, c.geom,
+                ST_LENGTH2D(c.shared_geom) AS shared_bound
+            FROM candidates c, splitline_union s
+            WHERE ST_GEOMETRYTYPE(c.shared_geom) != 'ST_Point'
+              -- Reject if the shared boundary lies mostly on a splitline;
+              -- merging across a river/road would erase the intended
+              -- partition. 0.5 is a heuristic - a small polygon touching
+              -- a neighbour half-along a river is more river-crossing
+              -- than genuine adjacency.
+              AND (
+                ST_LENGTH2D(c.shared_geom) = 0
+                OR ST_LENGTH2D(ST_Intersection(c.shared_geom, s.geom))
+                     / ST_LENGTH2D(c.shared_geom) < 0.5
+              )
             ORDER BY shared_bound DESC  -- Find neighbor polygon based on shared boundary distance
             LIMIT 1
             LOOP
@@ -119,4 +143,5 @@ BEGIN
 END $$;
 
 DROP TABLE IF EXISTS leastfeaturepolygons;
+DROP TABLE IF EXISTS splitline_union;
 -- VACUUM ANALYZE taskpolygons;

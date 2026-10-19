@@ -23,7 +23,6 @@ Docker Compose (dev + prod) / Helm (k8s) / uv / Ruff / pre-commit
 
 ```text
 src/backend/app/          # LiteStar application
-src/backend/app/api/      # JSON API routes
 src/backend/app/htmx/     # HTMX routes (server-rendered UI)
 src/backend/app/templates/ # Jinja2 templates
 src/backend/app/static/   # Static assets (JS, CSS, images)
@@ -57,13 +56,13 @@ just test backend                          # docker test stack
 
 Read `docs/decisions/` before proposing alternatives to these:
 
-- **No SPA.** Manager UI is server-rendered LiteStar + HTMX. A React frontend
-  existed previously and was removed. Do not reintroduce client-side routing or
-  SPA patterns.
-- **No separate frontend build.** Templates and static files are served by the
-  backend. No webpack/vite/node build step.
-- **No incremental migrations.** Schema lives in `src/migrations/init/` as
-  base SQL. Do not add Alembic-style migration files unless maintainers ask.
+- **Two apps** (ADR 0007). The **planner** (Svelte 5 + MapLibre + PGlite,
+  built with Vite) owns all map editing, with files or the Field-TM API as
+  input and output. The **manager** (LiteStar + HTMX) owns storage, forms,
+  basemaps, app setup and users. No map editing in HTMX.
+- **Migrations.** Fresh schema lives in `src/migrations/init/`; upgrades are
+  plain numbered SQL files in `src/migrations/` (keep them, idempotent). No
+  Alembic.
 - **Rootless containers in prod.** Production uses nerdctl/containerd in
   rootless mode, not Docker daemon. The `just prep machine` flow sets this up.
 - **CalVer releases.** Tags are `YYYY.MINOR.PATCH` (e.g. `2026.1.3`), no `v`
@@ -121,6 +120,16 @@ These are non-negotiable regardless of task scope.
 - HTMX: server owns state, use partial responses, no client-side state
   duplication, no JS where HTMX suffices.
 
+### Svelte Patterns
+
+- Svelte 5 runes only (`$state`, `$derived`, `$effect`); no `export let` or stores.
+- TypeScript everywhere. Domain logic (task plan, splitting engine, exports,
+  undo) in plain `.ts` modules, not components.
+- Large GeoJSON in `$state.raw` or pushed straight to MapLibre, not deep `$state`.
+- Maps via `svelte-maplibre-gl` (+ `terradraw`, `pmtiles` extensions).
+- Use the Svelte MCP server (`npx sv add mcp`, or remote
+  `https://mcp.svelte.dev/mcp`); run `svelte-autofixer` on Svelte code until clean.
+
 ### HTMX Patterns
 
 - Route handlers should stay thin: parse request, call service/helpers,
@@ -150,8 +159,8 @@ All new behavior must be tested (success + failure paths).
 
 ## Anti-Patterns
 
-- Reintroducing SPA patterns or client-side routing
-- Adding JS where HTMX/server-rendering covers the flow
+- Map-heavy interaction in HTMX + inline JS (use Svelte)
+- Svelte for pages that are just forms/lists (use HTMX)
 - Large refactors without staged validation
 - Mixing old and new architectural styles in one feature
 - Duplicating logic between HTMX handlers and API handlers
@@ -195,3 +204,14 @@ Assisted-by: <Tool Name>
 When uncertain, ask instead of assuming.
 
 <!-- markdownlint-enable MD013 MD025 -->
+
+---
+
+## Responsible AI Contribution Policy
+
+- Org guidance for AI-assisted contributions: <https://responsibleai.guide>
+- Declare the AI assistance level (0-5) in the PR template honestly. Never
+  lower the declared level to get a PR reviewed.
+- If nobody has read the result, that is level 5: open the PR as a draft.
+- Do not work on issues labelled `good first issue` - they exist for humans.
+- A human is accountable for every merged change.

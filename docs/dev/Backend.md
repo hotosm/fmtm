@@ -102,6 +102,13 @@ To assess coverage of tests, run:
 just test backend-coverage
 ```
 
+Open `coverage/htmlcov/index.html` for coverage of the backend, `osm-fieldwork`,
+and `area-splitter`.
+
+`just docs build` includes an existing report and badge. `just docs publish`
+regenerates coverage and publishes it with the docs at `/coverage/`;
+test failures stop publication.
+
 To assess performance of endpoints:
 
 - We can use the pyinstrument profiler.

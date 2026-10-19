@@ -43,12 +43,12 @@ the Field-TM aims to solve the problem of **coordinating** field mapping campaig
 
 > [!NOTE]
 > More details can be found here:
-> [overview](https://www.hotosm.org/updates/field-mapping-tasking-manager-field-tm),
+> [overview](https://field.hotosm.org/),
 > [timeline](https://docs.field.hotosm.org/timeline),
 > [docs](https://docs.field.hotosm.org) page, and the
 > [FAQ](https://docs.field.hotosm.org/about/faq).
 
-![field-tm-splash][6]
+<!-- TODO: Splash image link [6] gives 404; ![field-tm-splash][6] -->
 
 ## How Field-TM Works
 
@@ -147,6 +147,14 @@ guide for details.
 | ✅ | 📱 ~~fully offline field mapping (local-first design)~~ | [v2025.3.0][7], [removed][8] |
 | ✅ | 🖥️ integration with QField | [v2026.1.0][9] |
 | ✅ | 🖥️ multiple approaches to task splitting algorithm | [v2026.1.0][9] |
+| ✅ | 🖥️ & 📱 interface available in more languages (incl. Nepali, Hausa, Arabic) | [v2026.1.1][33] |
+| ✅ | 🖥️ simpler, step-by-step project creation | [v2026.2.0][34] |
+| ✅ | 📱 simplified mapping in QField via a Field-TM plugin | [v2026.3.0][35] |
+| ✅ | 🖥️ export mapped data from QField projects | [v2026.4.0][36] |
+| ✅ | 🖥️ reuse a Tasking Manager project area | [v2026.4.1][37] |
+| 🔄 | 🖥️ assign tasks to specific mappers before fieldwork starts | – |
+| 📅 | 📱 map points, lines and polygons in the same project | – |
+| 📅 | 🖥️ optional restriction of mapping to the assigned task area | – |
 | 🔄 | 🖥️ pre-defined OpenStreetMap forms for easy OSM mapping | – |
 | 📅 | 🖥️ integration with OSM mobile apps: EveryDoor, StreetComplete | – |
 | 📅 | 🖥️ integration with ChatMap | – |
@@ -262,7 +270,6 @@ Thanks goes to these wonderful people:
 [2]: https://github.com/hotosm/field-tm/releases/tag/2024.5.0 "Mapper Frontend"
 [3]: https://github.com/hotosm/field-tm/releases/tag/2025.1.0 "New Geoms"
 [4]: https://github.com/hotosm/field-tm/releases/tag/2025.2.0 "Web Forms"
-[6]: https://raw.githubusercontent.com/hotosm/field-tm/main/src/mapper/static/screenshot-mapper.jpeg "Mapper Page Screenshot"
 [7]: https://github.com/hotosm/field-tm/releases/tag/2025.3.0 "Offline Mode"
 [8]: https://github.com/hotosm/field-tm/discussions/2878 "Removed offline support"
 [9]: https://github.com/hotosm/field-tm/releases/tag/2026.1.0 "Renewed"
@@ -278,7 +285,7 @@ Thanks goes to these wonderful people:
 [19]: https://github.com/astral-sh/ruff "Ruff Format"
 [20]: https://oxc.rs/docs/guide/usage/formatter.html "Oxfmt"
 [21]: https://results.pre-commit.ci/latest/github/hotosm/field-tm/dev "pre-commit"
-[22]: https://docs.field.hotosm.org/coverage.html "Coverage Report"
+[22]: https://docs.field.hotosm.org/coverage/index.html "Coverage Report"
 [23]: https://hosted.weblate.org/engage/hotosm "Weblate"
 [24]: https://www.bestpractices.dev/projects/9218 "OpenSSF Best Practices"
 [25]: https://slack.hotosm.org "HOTOSM Slack"
@@ -289,6 +296,11 @@ Thanks goes to these wonderful people:
 [30]: https://github.com/hotosm/field-tm/blob/dev/LICENSE.AGPL-3.0.md "Code License"
 [31]: https://github.com/hotosm/field-tm/blob/dev/LICENSE.CC-BY-4.0.md "Translations License"
 [32]: https://github.com/astral-sh/uv "uv"
+[33]: https://github.com/hotosm/field-tm/releases/tag/2026.1.1 "Translations"
+[34]: https://github.com/hotosm/field-tm/releases/tag/2026.2.0 "Simplified Creation"
+[35]: https://github.com/hotosm/field-tm/releases/tag/2026.3.0 "QField Plugin"
+[36]: https://github.com/hotosm/field-tm/releases/tag/2026.4.0 "QField Export"
+[37]: https://github.com/hotosm/field-tm/releases/tag/2026.4.1 "TM Project Area"
 [badge-build-ci]: https://github.com/hotosm/field-tm/actions/workflows/build_ci_img.yml/badge.svg?branch=dev
 [badge-build-odk]: https://github.com/hotosm/field-tm/actions/workflows/build_odk_imgs.yml/badge.svg?branch=dev
 [badge-publish-docs]: https://github.com/hotosm/field-tm/actions/workflows/docs.yml/badge.svg?branch=dev
@@ -302,7 +314,7 @@ Thanks goes to these wonderful people:
 [badge-oxfmt]: https://img.shields.io/badge/code%20style-oxfmt-F7B93E
 [badge-pre-commit]: https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white
 [badge-uv]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json
-[badge-coverage]: https://docs.field.hotosm.org/coverage.svg
+[badge-coverage]: https://img.shields.io/endpoint?url=https://docs.field.hotosm.org/coverage/badge.json
 [badge-translation]: https://hosted.weblate.org/widget/hotosm/field-tm/svg-badge.svg
 [badge-openssf]: https://www.bestpractices.dev/projects/9218/badge
 [badge-slack]: https://img.shields.io/badge/Slack-Join%20the%20community!-d63f3f?style=for-the-badge&logo=slack&logoColor=d63f3f

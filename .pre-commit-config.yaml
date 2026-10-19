@@ -1,7 +1,7 @@
 repos:
   # Versioning: Commit messages & changelog
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.16.3
+    rev: v4.19.2
     hooks:
       - id: commitizen
         stages: [commit-msg]
@@ -9,7 +9,7 @@ repos:
   # Lint / autoformat: Python code
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: "v0.15.16"
+    rev: "v0.17.0"
     hooks:
       # Run the linter
       - id: ruff
@@ -21,7 +21,7 @@ repos:
 
   # Deps: ensure Python uv lockfile is up to date
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.11.19
+    rev: 0.13.0
     hooks:
       - id: uv-lock
         files: src/backend/pyproject.toml
@@ -29,13 +29,13 @@ repos:
 
   # Upgrade: upgrade Python syntax
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.21.2
+    rev: v3.22.0
     hooks:
       - id: pyupgrade
 
   # Lint: code cognitive complexity
   - repo: https://github.com/rohaquinlop/complexipy-pre-commit
-    rev: v5.1.0
+    rev: v8.0.1
     hooks:
       - id: complexipy
 
@@ -48,7 +48,7 @@ repos:
 
   # Spelling: Checks for common misspellings in text files.
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.2
+    rev: v2.4.3
     hooks:
       - id: codespell
         types: [text]
@@ -74,7 +74,7 @@ repos:
         additional_dependencies: ["oxfmt@0.35.0"]
         args:
           [
-            "!cla.json",
+            "!signed-contributors.json",
             "!chart/**",
             "!CHANGELOG.md",
             "!.all-contributorsrc",
@@ -111,7 +111,7 @@ repos:
 
   # Lint & Autoformat: SQL
   - repo: https://github.com/sqlfluff/sqlfluff
-    rev: 4.2.2
+    rev: 4.4.0
     hooks:
       - id: sqlfluff-lint
         files: ^src/migrations/.*\.sql$
@@ -131,7 +131,7 @@ repos:
 
   # Lint: Shell scripts
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.11.0.1
+    rev: v0.11.0.1-1
     hooks:
       - id: shellcheck
         files: ^(?!.*(?:^|/)contrib(?:/|$)).*$
@@ -146,7 +146,7 @@ repos:
 
   # Lint: Markdown
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.48.0
+    rev: v0.49.1
     hooks:
       - id: markdownlint
         args:
@@ -171,3 +171,8 @@ repos:
             --ignore,
             src/backend/packages/area-splitter/CHANGELOG.md,
           ]
+
+  - repo: https://github.com/betterleaks/betterleaks
+    rev: v2.0.0-rc.2
+    hooks:
+      - id: betterleaks
